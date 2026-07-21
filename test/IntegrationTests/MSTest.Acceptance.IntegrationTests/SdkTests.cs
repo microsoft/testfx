@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.MSTestV2.CLIAutomation;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 using Microsoft.Testing.Platform.Helpers;
@@ -31,6 +32,11 @@ public sealed class SdkTests : AcceptanceTestBase<NopAssetFixture>
     $ExtraProperties$
   </PropertyGroup>
 
+  <ItemGroup Condition="'$(TestWithPackagedVSTest)' == 'true'">
+    <PackageDownload Include="Microsoft.TestPlatform" Version="[$(MicrosoftNETTestSdkVersion)]" />
+    <PackageDownload Include="Microsoft.TestPlatform.CLI" Version="[$(MicrosoftNETTestSdkVersion)]" />
+  </ItemGroup>
+
 </Project>
 
 #file UnitTest1.cs
@@ -49,6 +55,16 @@ namespace MSTestSdkTest
 }
 """;
 
+    private const string SingleTestSourceCodeMTP = SingleTestSourceCode + """
+
+        #file global.json
+        {
+          "test": {
+            "runner": "Microsoft.Testing.Platform"
+          }
+        }
+        """;
+
     private const string SingleTestSourceCodeVSTest = SingleTestSourceCode + """
 
         #file global.json
@@ -63,36 +79,41 @@ namespace MSTestSdkTest
 
     [TestMethod]
     [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
-    public async Task RunTests_With_VSTest(string multiTfm, BuildConfiguration buildConfiguration)
+    public async Task RunTests_With_PackagedVSTest(string multiTfm, BuildConfiguration buildConfiguration)
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
             AssetName,
-            SingleTestSourceCodeVSTest
+            SingleTestSourceCode
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
             .PatchCodeWithReplace("$TargetFramework$", multiTfm)
-            .PatchCodeWithReplace("$ExtraProperties$", "<UseVSTest>true</UseVSTest>"));
+            .PatchCodeWithReplace("$ExtraProperties$", "<TestWithPackagedVSTest>true</TestWithPackagedVSTest>"));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {testAsset.TargetAssetPath}", workingDirectory: testAsset.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", workingDirectory: testAsset.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertExitCodeIs(0);
 
-        compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net10\.0\)");
-#if !SKIP_INTERMEDIATE_TARGET_FRAMEWORKS
-        compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net8\.0\)");
-#endif
+        string sources = string.Join(
+            " ",
+            multiTfm.Split(';').Select(tfm =>
+            {
+                var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
+                return $"\"{GetTestApplicationSourcePath(testHost)}\"";
+            }));
+        VSTestConsoleResult result = await VSTestConsoleLocator.RunAsync(
+            sources,
+            cancellationToken: TestContext.CancellationToken);
 
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net462\)");
-        }
+        Assert.AreEqual(0, result.ExitCode, $"Packaged VSTest run failed:{Environment.NewLine}{result.StandardOutput}{Environment.NewLine}{result.StandardError}");
+        Assert.Contains("VSTest version", result.StandardOutput);
+        result.AssertTestRunSummary(0, multiTfm.Split(';').Length, 0, multiTfm.Split(';').Length);
     }
 
     [TestMethod]
     [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
-    public async Task RunTests_With_MSTestRunner_DotnetTest(string multiTfm, BuildConfiguration buildConfiguration)
+    public async Task RunTests_With_DotnetTest_UsesMTP(string multiTfm, BuildConfiguration buildConfiguration)
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
                AssetName,
-               SingleTestSourceCode
+               SingleTestSourceCodeMTP
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                .PatchCodeWithReplace("$TargetFramework$", multiTfm)
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty));
@@ -267,7 +288,7 @@ namespace MSTestSdkTest
                SingleTestSourceCode
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                .PatchCodeWithReplace("$TargetFramework$", multiTfm)
-               .PatchCodeWithReplace("$ExtraProperties$", "<TestingExtensionsProfile>AllMicrosoft</TestingExtensionsProfile>"), addPublicFeeds: true);
+               .PatchCodeWithReplace("$ExtraProperties$", "<TestingExtensionsProfile>AllMicrosoft</TestingExtensionsProfile>"));
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertExitCodeIs(0);
@@ -346,8 +367,7 @@ namespace MSTestSdkTest
                 <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>
                 <!-- Show individual trim/AOT warnings instead of a single IL2104 per assembly -->
                 <TrimmerSingleWarn>false</TrimmerSingleWarn>
-                """),
-            addPublicFeeds: true);
+                """));
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
             $"publish -r {RID} -f {TargetFrameworks.NetCurrent} {testAsset.TargetAssetPath}",

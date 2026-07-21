@@ -43,10 +43,11 @@ public abstract class AcceptanceTestBase
         return combinedPath.Replace(FileNamePlaceholder, $@"{assetName}_{Regex.Escape(tfm)}_{arch}_\d{{15}}\.diag");
     }
 
-    protected static string GetTestExecutablePath(Microsoft.Testing.TestInfrastructure.TestHost testHost)
-        => RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? testHost.FullName
-            : testHost.FullName + ".dll";
+    protected static string GetTestApplicationSourcePath(Microsoft.Testing.TestInfrastructure.TestHost testHost)
+    {
+        string dllPath = Path.Combine(testHost.DirectoryName, $"{Path.GetFileNameWithoutExtension(testHost.FullName)}.dll");
+        return File.Exists(dllPath) ? dllPath : testHost.FullName;
+    }
 
     protected static async Task<Microsoft.Testing.TestInfrastructure.TestHost> CloneTestHostAsync(
         Microsoft.Testing.TestInfrastructure.TestHost testHost,
@@ -238,7 +239,10 @@ public abstract class AcceptanceTestBase<TFixture> : AcceptanceTestBase
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$MicrosoftNETTestSdkVersion$" />
+    <!-- In v5 MSTest always runs on Microsoft.Testing.Platform, so the VSTest meta-package
+         (Microsoft.NET.Test.Sdk) is not required. Referencing it also pulls Microsoft.CodeCoverage,
+         whose build assets inject an older System.Memory (4.0.2.0) into net462 publish output that
+         does not match the auto-generated binding redirect (4.0.5.0) and crashes the host. -->
     <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
     <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
   </ItemGroup>
@@ -260,7 +264,7 @@ public class UnitTest1
 #file global.json
 {
   "test": {
-    "runner": "VSTest"
+    "runner": "Microsoft.Testing.Platform"
   }
 }
 """;

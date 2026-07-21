@@ -83,6 +83,13 @@ function Confirm-NugetPackages {
                 elseif (!(Test-Path -Path (Join-Path $unzipNugetPackageDir $icon) -PathType Leaf)) {
                     $errors += "Package '$packageName' icon '$icon' is not included in the package"
                 }
+
+                if ([string]$metadata.id -eq 'MSTest') {
+                    $dependencyIds = @($metadata.dependencies.group.dependency | ForEach-Object { [string]$_.id })
+                    if ($dependencyIds -contains 'Microsoft.NET.Test.Sdk') {
+                        $errors += "Package '$packageName' must not depend on Microsoft.NET.Test.Sdk because MSTest v5 always runs on Microsoft.Testing.Platform"
+                    }
+                }
             }
 
             $versionIndex = $packageName.LastIndexOf($version)

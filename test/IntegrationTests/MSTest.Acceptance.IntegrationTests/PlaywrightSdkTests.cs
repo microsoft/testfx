@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.MSTestV2.CLIAutomation;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
@@ -41,28 +42,26 @@ public sealed class PlaywrightSdkTests : AcceptanceTestBase<PlaywrightSdkTests.T
     public async Task EnablePlaywrightProperty_WhenUsingVSTest_AllowsToRunPlaywrightTests(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.PlaywrightProjectPath, TestAssetFixture.PlaywrightProjectName, tfm);
-        string exeOrDllName = GetTestExecutablePath(testHost);
-        DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync(
-            $"test {exeOrDllName}",
+        string testApplicationSource = GetTestApplicationSourcePath(testHost);
+
+        VSTestConsoleResult result = await VSTestConsoleLocator.RunAsync(
+            $"\"{testApplicationSource}\"",
             workingDirectory: AssetFixture.PlaywrightProjectPath,
-            failIfReturnValueIsNotZero: false,
-            warnAsError: false,
-            suppressPreviewDotNetMessage: false,
             cancellationToken: TestContext.CancellationToken);
 
-        // Ensure output contains the right platform banner
-        dotnetTestResult.AssertOutputContains("VSTest version");
+        Assert.Contains("VSTest version", result.StandardOutput);
 
         // Depending on the machine, the test might fail due to the browser not being installed.
         // To avoid slowing down the tests, we will not run the installation so depending on machines we have different results.
-        switch (dotnetTestResult.ExitCode)
+        switch (result.ExitCode)
         {
             case 0:
-                dotnetTestResult.AssertOutputContains("Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1");
+                result.AssertTestRunSummary(0, 1, 0, 1);
                 break;
 
             case 1:
-                dotnetTestResult.AssertOutputContains("Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1");
+                Assert.Contains("Microsoft.Playwright.PlaywrightException: Executable doesn't exist", result.StandardOutput);
+                result.AssertTestRunSummary(1, 0, 0, 1);
                 break;
 
             default:
@@ -92,6 +91,8 @@ public sealed class PlaywrightSdkTests : AcceptanceTestBase<PlaywrightSdkTests.T
     <Using Include="System.Text.RegularExpressions" />
     <Using Include="System.Threading.Tasks" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
+    <PackageDownload Include="Microsoft.TestPlatform" Version="[$(MicrosoftNETTestSdkVersion)]" />
+    <PackageDownload Include="Microsoft.TestPlatform.CLI" Version="[$(MicrosoftNETTestSdkVersion)]" />
   </ItemGroup>
 </Project>
 

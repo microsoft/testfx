@@ -24,13 +24,19 @@ public class DotnetTestCliTests : AcceptanceTestBase<NopAssetFixture>
             .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion)
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
             .PatchCodeWithReplace("$EnableMSTestRunner$", string.Empty)
-            .PatchCodeWithReplace("$OutputType$", string.Empty)
+            .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>")
             .PatchCodeWithReplace("$Extra$", string.Empty));
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test {generator.TargetAssetPath}", workingDirectory: generator.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
 
-        // There is whitespace difference in output in parent and public repo that depends on the version of the dotnet SDK used.
-        compilationResult.AssertOutputMatchesRegex(@"Passed!\s+-\s+Failed:\s+0,\s+Passed:\s+1,\s+Skipped:\s+0,\s+Total:\s+1");
+        // MSTest v5 always runs on Microsoft.Testing.Platform, so the generated project opts into the new
+        // dotnet test experience (global.json runner = Microsoft.Testing.Platform) and the output is the MTP
+        // summary rather than the classic VSTest one.
+        compilationResult.AssertOutputContains("Test run summary: Passed!");
+        compilationResult.AssertOutputMatchesRegex(@"total: 1\b");
+        compilationResult.AssertOutputMatchesRegex(@"failed: 0\b");
+        compilationResult.AssertOutputMatchesRegex(@"succeeded: 1\b");
+        compilationResult.AssertOutputMatchesRegex(@"skipped: 0\b");
     }
 
     public TestContext TestContext { get; set; }

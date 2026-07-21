@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.MSTestV2.CLIAutomation;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
@@ -23,17 +24,15 @@ public sealed class AspireSdkTests : AcceptanceTestBase<AspireSdkTests.TestAsset
     public async Task EnableAspireProperty_WhenUsingVSTest_AllowsToRunAspireTests()
     {
         var testHost = TestHost.LocateFrom(AssetFixture.AspireProjectPath, TestAssetFixture.AspireProjectName, TargetFrameworks.NetCurrent);
-        string exeOrDllName = GetTestExecutablePath(testHost);
-        DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync(
-            $"test {exeOrDllName}",
-            workingDirectory: AssetFixture.AspireProjectPath,
-            warnAsError: false,
-            suppressPreviewDotNetMessage: false,
+        string testApplicationSource = GetTestApplicationSourcePath(testHost);
+
+        VSTestConsoleResult result = await VSTestConsoleLocator.RunAsync(
+            $"\"{testApplicationSource}\"",
             cancellationToken: TestContext.CancellationToken);
-        dotnetTestResult.AssertExitCodeIs(0);
-        // Ensure output contains the right platform banner
-        dotnetTestResult.AssertOutputContains("VSTest version");
-        dotnetTestResult.AssertOutputContains("Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1");
+
+        Assert.AreEqual(0, result.ExitCode, $"Packaged VSTest run failed:{Environment.NewLine}{result.StandardOutput}{Environment.NewLine}{result.StandardError}");
+        Assert.Contains("VSTest version", result.StandardOutput);
+        result.AssertTestRunSummary(0, 1, 0, 1);
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
@@ -56,6 +55,8 @@ public sealed class AspireSdkTests : AcceptanceTestBase<AspireSdkTests.TestAsset
   <ItemGroup>
     <Using Include="System.Threading.Tasks" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
+    <PackageDownload Include="Microsoft.TestPlatform" Version="[$(MicrosoftNETTestSdkVersion)]" />
+    <PackageDownload Include="Microsoft.TestPlatform.CLI" Version="[$(MicrosoftNETTestSdkVersion)]" />
   </ItemGroup>
 </Project>
 

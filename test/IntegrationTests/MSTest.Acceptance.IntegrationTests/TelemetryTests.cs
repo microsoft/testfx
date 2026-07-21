@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.MSTestV2.CLIAutomation;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 using Microsoft.Testing.Platform.Helpers;
@@ -129,21 +130,17 @@ public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAsset
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task VSTest_RunTests_Succeeds(string tfm)
     {
-        // Pre-build the VSTest project for this TFM exactly once, then run `dotnet test`
-        // with `--no-build --no-restore` so the build/restore targets that write to
-        // `bin/<tfm>/TelemetryVSTestProject.runtimeconfig.json` do not run per-test.
-        // This removes the GenerateRuntimeConfigurationFiles race that was still flaking
-        // intermittently even with [DoNotParallelize] on the class.
         await AssetFixture.EnsureVSTestProjectBuiltAsync(tfm, TestContext.CancellationToken);
 
-        DotnetMuxerResult testResult = await DotnetCli.RunAsync(
-            $"test -c Release {AssetFixture.VSTestProjectPath} --framework {tfm} --no-build --no-restore",
+        var testHost = TestHost.LocateFrom(AssetFixture.VSTestProjectPath, "TelemetryVSTestProject", tfm);
+        string testApplicationSource = GetTestApplicationSourcePath(testHost);
+        VSTestConsoleResult result = await VSTestConsoleLocator.RunAsync(
+            $"\"{testApplicationSource}\"",
             workingDirectory: AssetFixture.VSTestProjectPath,
-            failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
 
-        Assert.AreEqual(0, testResult.ExitCode, $"dotnet test failed:\n{testResult.StandardOutput}\n{testResult.StandardError}");
-        testResult.AssertOutputContains("Passed!");
+        Assert.AreEqual(0, result.ExitCode, $"Packaged VSTest run failed:{Environment.NewLine}{result.StandardOutput}{Environment.NewLine}{result.StandardError}");
+        result.AssertTestRunSummary(0, 4, 0, 4);
     }
 
     #endregion
@@ -156,16 +153,17 @@ public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAsset
     {
         await AssetFixture.EnsureVSTestProjectBuiltAsync(tfm, TestContext.CancellationToken);
 
-        DotnetMuxerResult testResult = await DotnetCli.RunAsync(
-            $"test -c Release {AssetFixture.VSTestProjectPath} --framework {tfm} --list-tests --no-build --no-restore",
+        var testHost = TestHost.LocateFrom(AssetFixture.VSTestProjectPath, "TelemetryVSTestProject", tfm);
+        string testApplicationSource = GetTestApplicationSourcePath(testHost);
+        VSTestConsoleResult result = await VSTestConsoleLocator.RunAsync(
+            $"\"{testApplicationSource}\" /ListTests",
             workingDirectory: AssetFixture.VSTestProjectPath,
-            failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
 
-        Assert.AreEqual(0, testResult.ExitCode, $"dotnet test --list-tests failed:\n{testResult.StandardOutput}\n{testResult.StandardError}");
-        testResult.AssertOutputContains("PassingTest");
-        testResult.AssertOutputContains("DataDrivenTest");
-        testResult.AssertOutputContains("TestWithTimeout");
+        Assert.AreEqual(0, result.ExitCode, $"Packaged VSTest discovery failed:{Environment.NewLine}{result.StandardOutput}{Environment.NewLine}{result.StandardError}");
+        Assert.Contains("PassingTest", result.StandardOutput);
+        Assert.Contains("DataDrivenTest", result.StandardOutput);
+        Assert.Contains("TestWithTimeout", result.StandardOutput);
     }
 
     #endregion
@@ -215,10 +213,7 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion));
 
-        // Pre-builds the VSTest project for the given TFM exactly once per TFM. Callers can
-        // then invoke `dotnet test ... --no-build --no-restore` to avoid having every test
-        // method redo the build, which is what produces the
-        // `GenerateRuntimeConfigurationFiles` file-in-use races on shared build outputs.
+        // Pre-builds the VSTest project for the given TFM exactly once per TFM.
         public async Task EnsureVSTestProjectBuiltAsync(string targetFramework, CancellationToken cancellationToken)
         {
             await _vstestBuildLock.WaitAsync(cancellationToken);
@@ -305,6 +300,7 @@ public class UnitTest1
 
   <PropertyGroup>
     <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
+    <OutputType>Exe</OutputType>
     <LangVersion>Preview</LangVersion>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
@@ -314,6 +310,8 @@ public class UnitTest1
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$MicrosoftNETTestSdkVersion$" />
     <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
     <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+    <PackageDownload Include="Microsoft.TestPlatform" Version="[$MicrosoftNETTestSdkVersion$]" />
+    <PackageDownload Include="Microsoft.TestPlatform.CLI" Version="[$MicrosoftNETTestSdkVersion$]" />
   </ItemGroup>
 
 </Project>

@@ -6,8 +6,8 @@ using System.Collections;
 namespace MSTest.Acceptance.IntegrationTests;
 
 /// <summary>
-/// Shared helpers for the C++/CLI acceptance tests (<see cref="CppCliVSTestTests"/> and
-/// <see cref="CppCliMtpTests"/>): locating a Visual Studio install with the MSVC toolset and building a
+/// Shared helpers for the <see cref="CppCliMtpTests"/> acceptance tests: locating a Visual Studio
+/// install with the MSVC toolset and building a
 /// child-process environment without the code-coverage profiler variables.
 /// </summary>
 internal static class CppCliTestSupport

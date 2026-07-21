@@ -12,19 +12,15 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 
 /// <summary>
-/// Platform-agnostic discovery/execution orchestrator for the MSTest adapter. It owns the parts that used to
-/// live inside the VSTest <see cref="MSTestDiscoverer"/> / <see cref="MSTestExecutor"/> orchestrators but do not
-/// depend on the VSTest object model: telemetry lifetime, the STA/apartment run wrapper, and the calls into the
-/// platform-services engine (<see cref="MSTestDiscovererHelpers"/>, <see cref="UnitTestDiscoverer"/>,
-/// <see cref="TestExecutionManager"/>).
+/// Platform-agnostic discovery/execution orchestrator for the MSTest adapter. It owns telemetry lifetime, the
+/// STA/apartment run wrapper, and the calls into the platform-services engine
+/// (<see cref="MSTestDiscovererHelpers"/>, <see cref="UnitTestDiscoverer"/>, <see cref="TestExecutionManager"/>).
 /// </summary>
 /// <remarks>
 /// Every input is already neutral (<see cref="IAdapterMessageLogger"/>, <see cref="ITestElementFilterProvider"/>,
 /// <see cref="IUnitTestElementSink"/>, <see cref="ITestResultRecorder"/>, run settings XML, test-run directory),
-/// so both hosts can reach the engine without one going through the other: the VSTest orchestrators unwrap their
-/// <c>IDiscoveryContext</c>/<c>IRunContext</c>/<c>IFrameworkHandle</c> into these neutral inputs, and the native
-/// Microsoft.Testing.Platform framework (<c>MSTestTestFramework</c>) builds them directly — it no longer calls the
-/// VSTest <see cref="MSTestDiscoverer"/> / <see cref="MSTestExecutor"/> classes.
+/// so the native Microsoft.Testing.Platform framework (<c>MSTestTestFramework</c>) builds them directly and drives
+/// the engine.
 /// </remarks>
 internal sealed class MSTestEngine
 {
@@ -50,9 +46,25 @@ internal sealed class MSTestEngine
 #endif
     }
 
+#pragma warning disable CA2255 // The 'ModuleInitializer' attribute should not be used in libraries
+    [ModuleInitializer]
+#pragma warning restore CA2255 // The 'ModuleInitializer' attribute should not be used in libraries
+    internal static void MSTestModuleInitializer()
+        => EnsureAdapterAndFrameworkVersions();
+
+    private static void EnsureAdapterAndFrameworkVersions()
+    {
+        string? adapterVersion = typeof(MSTestEngine).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+        string? frameworkVersion = typeof(TestMethodAttribute).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+        if (adapterVersion is not null && frameworkVersion is not null
+            && adapterVersion != frameworkVersion)
+        {
+            throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, Resource.VersionMismatchBetweenAdapterAndFramework, adapterVersion, frameworkVersion));
+        }
+    }
+
     /// <summary>
-    /// Cancels the in-flight run, if any. Mirrors the VSTest <c>ITestExecutor.Cancel</c> contract for the
-    /// orchestrator that forwards to this engine.
+    /// Cancels the in-flight run, if any.
     /// </summary>
     internal void Cancel()
         => _testRunCancellationToken?.Cancel();
