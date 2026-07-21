@@ -15,11 +15,16 @@ using Microsoft.Testing.Platform.ServerMode.Client;
 // Microsoft.Testing.Platform.Logging here: that would re-introduce an ambiguous LogLevel.
 using DiscoveredTestNodeStateProperty = serverclient::Microsoft.Testing.Platform.Extensions.Messages.DiscoveredTestNodeStateProperty;
 using FailedTestNodeStateProperty = serverclient::Microsoft.Testing.Platform.Extensions.Messages.FailedTestNodeStateProperty;
+using LinePosition = serverclient::Microsoft.Testing.Platform.Extensions.Messages.LinePosition;
+using LinePositionSpan = serverclient::Microsoft.Testing.Platform.Extensions.Messages.LinePositionSpan;
 using LogLevel = serverclient::Microsoft.Testing.Platform.Logging.LogLevel;
 using PassedTestNodeStateProperty = serverclient::Microsoft.Testing.Platform.Extensions.Messages.PassedTestNodeStateProperty;
 using PropertyBag = serverclient::Microsoft.Testing.Platform.Extensions.Messages.PropertyBag;
 using ServerLogMessage = serverclient::Microsoft.Testing.Platform.Logging.ServerLogMessage;
 using SessionUid = serverclient::Microsoft.Testing.Platform.TestHost.SessionUid;
+using StandardErrorProperty = serverclient::Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty;
+using StandardOutputProperty = serverclient::Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty;
+using TestFileLocationProperty = serverclient::Microsoft.Testing.Platform.Extensions.Messages.TestFileLocationProperty;
 using TestNode = serverclient::Microsoft.Testing.Platform.Extensions.Messages.TestNode;
 using TestNodeUpdateMessage = serverclient::Microsoft.Testing.Platform.Extensions.Messages.TestNodeUpdateMessage;
 
@@ -137,6 +142,27 @@ internal sealed class FakeMtpServer : IDisposable
     /// <summary>Pushes a <c>testing/testUpdates/tests</c> notification carrying a failed node.</summary>
     public Task SendFailedTestNodeAsync(Guid runId, string uid, string displayName, string explanation)
         => SendTestNodeAsync(runId, uid, displayName, new PropertyBag(new FailedTestNodeStateProperty(explanation)));
+
+    /// <summary>
+    /// Pushes a <c>testing/testUpdates/tests</c> notification carrying a passed action node that also
+    /// carries captured standard output/error and a source-file location, so the client's convenience
+    /// accessors (<c>StandardOutput</c>, <c>StandardError</c>, <c>FilePath</c>, <c>LineStart</c>,
+    /// <c>LineEnd</c>) can be exercised end to end.
+    /// </summary>
+    public Task SendPassedTestNodeWithDetailsAsync(
+        Guid runId,
+        string uid,
+        string displayName,
+        string standardOutput,
+        string standardError,
+        string filePath,
+        int lineStart,
+        int lineEnd)
+        => SendTestNodeAsync(runId, uid, displayName, new PropertyBag(
+            PassedTestNodeStateProperty.CachedInstance,
+            new StandardOutputProperty(standardOutput),
+            new StandardErrorProperty(standardError),
+            new TestFileLocationProperty(filePath, new LinePositionSpan(new LinePosition(lineStart, 0), new LinePosition(lineEnd, 0)))));
 
     /// <summary>Pushes the completion sentinel (a null <c>Changes</c> array) that the client must skip.</summary>
     public Task SendTestNodesCompletionAsync(Guid runId)

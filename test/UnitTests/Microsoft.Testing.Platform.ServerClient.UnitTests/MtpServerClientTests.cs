@@ -188,6 +188,36 @@ public sealed class MtpServerClientTests
     }
 
     [TestMethod]
+    public async Task TestNodesUpdated_PassedNodeWithDetails_DecodesOutputAndLocation()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        Task<MtpTestNodeUpdateEventArgs> updateTask = WaitForEventAsync<MtpTestNodeUpdateEventArgs>(h => client.TestNodesUpdated += h);
+        await server.SendPassedTestNodeWithDetailsAsync(
+            Guid.NewGuid(),
+            "Ns.Class.TestDetail",
+            "Test Detail",
+            standardOutput: "hello stdout",
+            standardError: "hello stderr",
+            filePath: "/repo/src/Class.cs",
+            lineStart: 41,
+            lineEnd: 47).ConfigureAwait(false);
+
+        MtpTestNodeUpdateEventArgs args = await WithTimeoutAsync(updateTask).ConfigureAwait(false);
+
+        // Exercises the convenience accessors on both serialization paths (net8 System.Text.Json, net462
+        // Jsonite). The line numbers arrive as JSON numbers, so this also covers the numeric coercion.
+        MtpTestNodeUpdate update = args.Changes[0];
+        Assert.AreEqual("passed", update.ExecutionState);
+        Assert.AreEqual("hello stdout", update.StandardOutput);
+        Assert.AreEqual("hello stderr", update.StandardError);
+        Assert.AreEqual("/repo/src/Class.cs", update.FilePath);
+        Assert.AreEqual(41, update.LineStart);
+        Assert.AreEqual(47, update.LineEnd);
+    }
+
+    [TestMethod]
     public async Task TestNodesUpdated_CompletionSentinel_IsSkipped()
     {
         using FakeMtpServer server = new();

@@ -13,6 +13,15 @@ internal interface IMtpServerClient : IDisposable
     /// <summary>
     /// Raised when the server reports test-node state changes (<c>testing/testUpdates/tests</c>).
     /// </summary>
+    /// <remarks>
+    /// Ordering guarantee: the client processes the server's messages on a single ordered read loop and
+    /// only completes a discover/run request after the server's terminal response for that request has
+    /// been read. Because the terminal response always follows the node-update notifications on the wire,
+    /// every handler for a given discover/run has already been invoked by the time the corresponding
+    /// <see cref="DiscoverTestsAsync(CancellationToken)"/> / <see cref="RunTestsAsync(CancellationToken)"/>
+    /// task completes. Consumers therefore do not need a settle delay or completion sentinel — awaiting the
+    /// call is sufficient to have collected every node update.
+    /// </remarks>
     event EventHandler<MtpTestNodeUpdateEventArgs>? TestNodesUpdated;
 
     /// <summary>
@@ -57,31 +66,55 @@ internal interface IMtpServerClient : IDisposable
     /// <summary>
     /// Discovers every test in the application.
     /// </summary>
+    /// <remarks>
+    /// When the returned task completes, every <see cref="TestNodesUpdated"/> handler for this discovery
+    /// has already run (see the event's ordering guarantee).
+    /// </remarks>
     Task DiscoverTestsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Discovers the tests identified by <paramref name="testNodeUids"/>.
     /// </summary>
+    /// <remarks>
+    /// When the returned task completes, every <see cref="TestNodesUpdated"/> handler for this discovery
+    /// has already run (see the event's ordering guarantee).
+    /// </remarks>
     Task DiscoverTestsAsync(IReadOnlyCollection<string> testNodeUids, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Discovers the tests that match the supplied graph filter.
     /// </summary>
+    /// <remarks>
+    /// When the returned task completes, every <see cref="TestNodesUpdated"/> handler for this discovery
+    /// has already run (see the event's ordering guarantee).
+    /// </remarks>
     Task DiscoverTestsWithFilterAsync(string graphFilter, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Runs every test in the application.
     /// </summary>
+    /// <remarks>
+    /// When the returned task completes, every <see cref="TestNodesUpdated"/> handler for this run has
+    /// already run (see the event's ordering guarantee).
+    /// </remarks>
     Task<MtpRunResult> RunTestsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Runs the tests identified by <paramref name="testNodeUids"/>.
     /// </summary>
+    /// <remarks>
+    /// When the returned task completes, every <see cref="TestNodesUpdated"/> handler for this run has
+    /// already run (see the event's ordering guarantee).
+    /// </remarks>
     Task<MtpRunResult> RunTestsAsync(IReadOnlyCollection<string> testNodeUids, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Runs the tests that match the supplied graph filter.
     /// </summary>
+    /// <remarks>
+    /// When the returned task completes, every <see cref="TestNodesUpdated"/> handler for this run has
+    /// already run (see the event's ordering guarantee).
+    /// </remarks>
     Task<MtpRunResult> RunTestsWithFilterAsync(string graphFilter, CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -214,7 +247,9 @@ internal sealed class MtpTestNodeUpdateEventArgs : EventArgs
 
 /// <summary>
 /// A single test-node change. The raw node is exposed as <see cref="Node"/>; the most common fields
-/// are surfaced as convenience accessors.
+/// are surfaced as convenience accessors. Less common or consumer-specific fields (for example
+/// <c>traits</c>, or the <c>vstest.*</c> bridge properties) stay available on <see cref="Node"/> keyed
+/// by their wire name.
 /// </summary>
 internal sealed class MtpTestNodeUpdate
 {
@@ -223,6 +258,11 @@ internal sealed class MtpTestNodeUpdate
     private const string ErrorMessageKey = "error.message";
     private const string ErrorStackTraceKey = "error.stacktrace";
     private const string DurationKey = "time.duration-ms";
+    private const string StandardOutputKey = "standardOutput";
+    private const string StandardErrorKey = "standardError";
+    private const string LocationFileKey = "location.file";
+    private const string LocationLineStartKey = "location.line-start";
+    private const string LocationLineEndKey = "location.line-end";
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MtpTestNodeUpdate"/> class.
@@ -270,8 +310,36 @@ internal sealed class MtpTestNodeUpdate
         }
         : null;
 
+    /// <summary>Gets the captured standard output (wire <c>standardOutput</c>), when the node carries one.</summary>
+    public string? StandardOutput => GetString(StandardOutputKey);
+
+    /// <summary>Gets the captured standard error (wire <c>standardError</c>), when the node carries one.</summary>
+    public string? StandardError => GetString(StandardErrorKey);
+
+    /// <summary>Gets the source file path of the node (wire <c>location.file</c>), when the server reported a location.</summary>
+    public string? FilePath => GetString(LocationFileKey);
+
+    /// <summary>Gets the start line of the node's source location (wire <c>location.line-start</c>), when reported.</summary>
+    public int? LineStart => GetInt32(LocationLineStartKey);
+
+    /// <summary>Gets the end line of the node's source location (wire <c>location.line-end</c>), when reported.</summary>
+    public int? LineEnd => GetInt32(LocationLineEndKey);
+
     private string? GetString(string key)
         => Node.TryGetValue(key, out object? value) ? value as string : null;
+
+    private int? GetInt32(string key) => Node.TryGetValue(key, out object? value)
+        ? value switch
+        {
+            int i => i,
+            long l => (int)l,
+            short s => s,
+            double d => (int)d,
+            float f => (int)f,
+            decimal m => (int)m,
+            _ => null,
+        }
+        : null;
 }
 
 /// <summary>
