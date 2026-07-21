@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Testing.Platform.ServerMode;
@@ -20,7 +20,8 @@ namespace Microsoft.Testing.Platform.ServerMode;
 /// </remarks>
 internal static partial class SerializerUtilities
 {
-    private static bool s_clientSerializersRegistered;
+    private static readonly object ClientSerializersLock = new();
+    private static volatile bool s_clientSerializersRegistered;
 
     /// <summary>
     /// Registers the client-only serializers/deserializers. Idempotent. MUST be called before
@@ -34,8 +35,25 @@ internal static partial class SerializerUtilities
             return;
         }
 
-        s_clientSerializersRegistered = true;
+        lock (ClientSerializersLock)
+        {
+            if (s_clientSerializersRegistered)
+            {
+                return;
+            }
 
+            RegisterClientSerializersCore();
+
+            // Publish LAST: set the flag only after every registration is in place, so a racing caller that
+            // reads the (volatile) flag without the lock can never observe a half-populated serializer set.
+            // The Serializers/Deserializers dictionaries are not concurrent, and FormatterUtilities snapshots
+            // them when it is constructed, so a torn read here would silently drop a serializer.
+            s_clientSerializersRegistered = true;
+        }
+    }
+
+    private static void RegisterClientSerializersCore()
+    {
         // --- Request-argument serializers (the server only deserializes these; the client sends them). ---
         Serializers[typeof(ClientInfo)] = new ObjectSerializer<ClientInfo>(info => new Dictionary<string, object?>
         {
@@ -65,6 +83,13 @@ internal static partial class SerializerUtilities
         // Exit is a parameterless notification; register an (empty) serializer so a caller may pass an
         // ExitRequestArgs instance as the notification params without tripping the missing-serializer path.
         Serializers[typeof(ExitRequestArgs)] = new ObjectSerializer<ExitRequestArgs>(_ => new Dictionary<string, object?>());
+
+        // A server-initiated request (e.g. client/attachDebugger) may be answered with a NON-null result.
+        // ResponseMessage serialization resolves the serializer by the result's runtime type, so register a
+        // pass-through for the dictionary shape a handler returns; without it a non-null result would throw
+        // KeyNotFoundException and hang the response write. Handlers that answer a server request MUST return
+        // a Dictionary<string, object?> (or null); any other runtime type has no registered serializer.
+        Serializers[typeof(Dictionary<string, object?>)] = new ObjectSerializer<Dictionary<string, object?>>(result => result);
 
         // --- Response deserializers (the server only serializes these; the client decodes them). ---
         Deserializers[typeof(Artifact)] = new ObjectDeserializer<Artifact>(properties => new Artifact(

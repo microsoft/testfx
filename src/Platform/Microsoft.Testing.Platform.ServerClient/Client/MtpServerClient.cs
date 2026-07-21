@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.Messages;
@@ -31,6 +31,12 @@ internal sealed class MtpServerClient : IMtpServerClient
     /// </summary>
     /// <param name="connection">The transport connection. Its read loop is started by this constructor.</param>
     /// <param name="options">Client options (name, capabilities, logger). Defaults are used when omitted.</param>
+    /// <remarks>
+    /// Precondition: the connection's formatter must have been created with the client serializers already
+    /// registered — call <see cref="SerializerUtilities.RegisterClientSerializers"/> before building the
+    /// formatter passed to <paramref name="connection"/>. The <see cref="Launch"/> factory does this for you;
+    /// callers that construct a connection directly are responsible for the ordering.
+    /// </remarks>
     public MtpServerClient(MtpJsonRpcConnection connection, MtpServerClientOptions? options = null)
     {
         _connection = connection ?? throw new ArgumentNullException(nameof(connection));

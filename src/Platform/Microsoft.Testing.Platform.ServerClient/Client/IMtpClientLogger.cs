@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Testing.Platform.ServerMode.Client;
@@ -71,5 +71,32 @@ internal sealed class NullMtpClientLogger : IMtpClientLogger
     public void Log(MtpClientLogLevel level, string message)
     {
         // Intentionally empty.
+    }
+}
+
+/// <summary>
+/// Extension helpers for <see cref="IMtpClientLogger"/>.
+/// </summary>
+internal static class MtpClientLoggerExtensions
+{
+    /// <summary>
+    /// Logs a diagnostic message, swallowing any exception the consumer's logger throws. Diagnostics must
+    /// never destabilize the client: a logger that throws must not fail a request, skip process teardown, or
+    /// fault the read loop. Every transport/lifetime log site goes through this instead of calling
+    /// <see cref="IMtpClientLogger.Log"/> directly.
+    /// </summary>
+    /// <param name="logger">The logger to write to.</param>
+    /// <param name="level">Severity of the message.</param>
+    /// <param name="message">The already-formatted message text.</param>
+    public static void SafeLog(this IMtpClientLogger logger, MtpClientLogLevel level, string message)
+    {
+        try
+        {
+            logger.Log(level, message);
+        }
+        catch (Exception)
+        {
+            // A logger must never destabilize the client transport or lifecycle.
+        }
     }
 }

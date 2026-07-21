@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
@@ -24,6 +24,10 @@ internal sealed class MtpServerProcess : IDisposable
     private const string ServerArgument = "--server";
     private const string ClientPortArgument = "--client-port";
     private const string NoBannerArgument = "--no-banner";
+
+    // How often the connect wait re-checks whether the launched process has already exited, so a child
+    // that dies on startup fails fast instead of blocking the full ConnectionTimeout.
+    private static readonly TimeSpan ProcessExitPollInterval = TimeSpan.FromMilliseconds(100);
 
     private readonly TcpListener _listener;
     private readonly Process _process;
@@ -85,6 +89,13 @@ internal sealed class MtpServerProcess : IDisposable
         options ??= new MtpServerClientOptions();
         IMtpClientLogger logger = options.Logger ?? NullMtpClientLogger.Instance;
 
+        // Resolve to an absolute path up front. BuildLaunch derives the working directory from the source
+        // directory and then launches the (possibly relative) source; if both stay relative, launching a
+        // managed dll as `dotnet <relativeDll>` with the working directory already set to that same
+        // relative directory double-nests the lookup. Absolutizing once here keeps the launch and every
+        // diagnostic message consistent regardless of the caller's current directory.
+        source = Path.GetFullPath(source);
+
         // The serializers must be registered BEFORE the formatter is created: the .NET
         // System.Text.Json formatter snapshots the registered serializer/deserializer type sets into
         // its per-type engine at construction time.
@@ -99,7 +110,7 @@ internal sealed class MtpServerProcess : IDisposable
         string fileName = launch.FileName;
         string arguments = launch.Arguments;
         string workingDirectory = launch.WorkingDirectory;
-        logger.Log(MtpClientLogLevel.Debug, $"Launching MTP server '{fileName} {arguments}' (cwd '{workingDirectory}') listening on port {port}.");
+        logger.SafeLog(MtpClientLogLevel.Debug, $"Launching MTP server '{fileName} {arguments}' (cwd '{workingDirectory}') listening on port {port}.");
 
         var startInfo = new ProcessStartInfo
         {
@@ -139,10 +150,26 @@ internal sealed class MtpServerProcess : IDisposable
             process.BeginOutputReadLine();
 
             Task<TcpClient> acceptTask = listener.AcceptTcpClientAsync();
-            if (!acceptTask.Wait(options.ConnectionTimeout))
+
+            // Wait for the app to dial back, but poll the process alongside the accept: if the child exits
+            // early (bad arguments, startup crash) we fail fast with its exit code + captured stderr instead
+            // of blocking the full ConnectionTimeout and then reporting a misleading timeout. Polling
+            // process.HasExited (rather than racing the accept against Process.Exited) keeps this free of a
+            // TaskCompletionSource ordering race.
+            var connectStopwatch = Stopwatch.StartNew();
+            while (!acceptTask.Wait(ProcessExitPollInterval))
             {
-                throw new MtpServerConnectionClosedException(
-                    $"The Microsoft.Testing.Platform application '{source}' did not connect back within {options.ConnectionTimeout.TotalSeconds:N0}s. {GetStandardError(standardError)}");
+                if (process.HasExited)
+                {
+                    throw new MtpServerConnectionClosedException(
+                        $"The Microsoft.Testing.Platform application '{source}' exited with code {process.ExitCode} before connecting back. {GetStandardError(standardError)}");
+                }
+
+                if (connectStopwatch.Elapsed >= options.ConnectionTimeout)
+                {
+                    throw new MtpServerConnectionClosedException(
+                        $"The Microsoft.Testing.Platform application '{source}' did not connect back within {options.ConnectionTimeout.TotalSeconds:N0}s. {GetStandardError(standardError)}");
+                }
             }
 
             acceptedClient = acceptTask.GetAwaiter().GetResult();
@@ -160,7 +187,7 @@ internal sealed class MtpServerProcess : IDisposable
         catch
         {
             acceptedClient?.Dispose();
-            SafeStop(listener);
+            SafeStop(listener, logger);
             SafeKill(process, logger);
             process.Dispose();
             throw;
@@ -239,14 +266,15 @@ internal sealed class MtpServerProcess : IDisposable
         return Path.Combine(directory, appHostFileName);
     }
 
-    private static void SafeStop(TcpListener listener)
+    private static void SafeStop(TcpListener listener, IMtpClientLogger logger)
     {
         try
         {
             listener.Stop();
         }
-        catch (SocketException)
+        catch (SocketException ex)
         {
+            logger.SafeLog(MtpClientLogLevel.Debug, $"Stopping the TCP listener threw: {ex}");
         }
     }
 
@@ -265,7 +293,7 @@ internal sealed class MtpServerProcess : IDisposable
         }
         catch (Exception ex) when (ex is InvalidOperationException or NotSupportedException or Win32Exception)
         {
-            logger.Log(MtpClientLogLevel.Debug, $"Killing the MTP server process threw: {ex}");
+            logger.SafeLog(MtpClientLogLevel.Debug, $"Killing the MTP server process threw: {ex}");
         }
     }
 
@@ -283,11 +311,12 @@ internal sealed class MtpServerProcess : IDisposable
         {
             _client.Dispose();
         }
-        catch (SocketException)
+        catch (SocketException ex)
         {
+            _logger.SafeLog(MtpClientLogLevel.Debug, $"Disposing the accepted client socket threw: {ex}");
         }
 
-        SafeStop(_listener);
+        SafeStop(_listener, _logger);
         SafeKill(_process, _logger);
         _process.Dispose();
     }

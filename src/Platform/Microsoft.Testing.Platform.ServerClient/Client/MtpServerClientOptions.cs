@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Testing.Platform.ServerMode.Client;
@@ -35,6 +35,12 @@ internal sealed class MtpServerClientOptions
     /// <see langword="false"/> the client performs a single discover or run and then exits. Defaults to
     /// <see langword="false"/>.
     /// </summary>
+    /// <remarks>
+    /// This flag only advertises the client's willingness to the server during the handshake; it does not by
+    /// itself guarantee multi-request behavior. Real keep-alive additionally requires the server to negotiate
+    /// it back via <c>ServerCapabilities.MultiRequestSupport</c>. Setting this to <see langword="true"/>
+    /// against a server that does not support it has no effect.
+    /// </remarks>
     public bool IsStateful { get; set; }
 
     /// <summary>

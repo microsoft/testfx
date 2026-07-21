@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Testing.Platform.ServerMode.Client;
@@ -93,7 +93,11 @@ internal sealed class MtpJsonRpcConnection : IDisposable
         await _writeLock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            await _handler.WriteRequestAsync(message, cancellationToken).ConfigureAwait(false);
+            // Acquiring the write lock is cancellable, but the frame write itself is NOT: once a
+            // Content-Length frame starts going out, cancelling mid-write would leave a partial frame on
+            // the wire and the very next write (for example a $/cancelRequest) would desync the server's
+            // framing. Pass CancellationToken.None so a started frame always completes atomically.
+            await _handler.WriteRequestAsync(message, CancellationToken.None).ConfigureAwait(false);
         }
         finally
         {
@@ -124,8 +128,10 @@ internal sealed class MtpJsonRpcConnection : IDisposable
         }
         catch (Exception ex)
         {
-            _logger.Log(MtpClientLogLevel.Error, $"MTP client read loop failed: {ex}");
+            // Fail pending requests FIRST: a caller awaiting a response must be released even if logging
+            // throws. SafeLog additionally guarantees the logger cannot fault this loop.
             FailAllPending(new MtpServerClientException("The MTP client read loop failed.", ex));
+            _logger.SafeLog(MtpClientLogLevel.Error, $"MTP client read loop failed: {ex}");
         }
     }
 
@@ -167,7 +173,7 @@ internal sealed class MtpJsonRpcConnection : IDisposable
         }
         catch (Exception ex)
         {
-            _logger.Log(MtpClientLogLevel.Warning, $"A handler for notification '{notification.Method}' threw: {ex}");
+            _logger.SafeLog(MtpClientLogLevel.Warning, $"A handler for notification '{notification.Method}' threw: {ex}");
         }
     }
 
@@ -184,7 +190,7 @@ internal sealed class MtpJsonRpcConnection : IDisposable
         }
         catch (Exception ex)
         {
-            _logger.Log(MtpClientLogLevel.Warning, $"The handler for server request '{request.Method}' threw: {ex}");
+            _logger.SafeLog(MtpClientLogLevel.Warning, $"The handler for server request '{request.Method}' threw: {ex}");
         }
 
         // Always answer so the server is never left waiting.
@@ -194,7 +200,7 @@ internal sealed class MtpJsonRpcConnection : IDisposable
         }
         catch (Exception ex)
         {
-            _logger.Log(MtpClientLogLevel.Warning, $"Failed to respond to server request '{request.Method}': {ex}");
+            _logger.SafeLog(MtpClientLogLevel.Warning, $"Failed to respond to server request '{request.Method}': {ex}");
         }
     }
 
@@ -219,7 +225,7 @@ internal sealed class MtpJsonRpcConnection : IDisposable
         }
         catch (Exception ex)
         {
-            _logger.Log(MtpClientLogLevel.Debug, $"Failed to send $/cancelRequest for request {id}: {ex}");
+            _logger.SafeLog(MtpClientLogLevel.Debug, $"Failed to send $/cancelRequest for request {id}: {ex}");
         }
     }
 
@@ -250,7 +256,7 @@ internal sealed class MtpJsonRpcConnection : IDisposable
         }
         catch (Exception ex)
         {
-            _logger.Log(MtpClientLogLevel.Debug, $"Disposing the message handler threw: {ex}");
+            _logger.SafeLog(MtpClientLogLevel.Debug, $"Disposing the message handler threw: {ex}");
         }
 
         _readLoopCancellation.Dispose();
