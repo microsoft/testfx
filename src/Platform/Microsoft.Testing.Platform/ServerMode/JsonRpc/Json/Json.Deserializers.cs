@@ -29,7 +29,7 @@ internal sealed partial class Json
                         items.Add(kvp.Name, kvp.Value.GetString());
                         break;
                     case JsonValueKind.Number:
-                        items.Add(kvp.Name, kvp.Value.GetInt32());
+                        items.Add(kvp.Name, ReadNumber(kvp.Value));
                         break;
                     case JsonValueKind.True:
                         items.Add(kvp.Name, true);
@@ -71,7 +71,7 @@ internal sealed partial class Json
                         items.Add(element.GetString());
                         break;
                     case JsonValueKind.Number:
-                        items.Add(element.GetInt32());
+                        items.Add(ReadNumber(element));
                         break;
                     case JsonValueKind.True:
                         items.Add(true);
@@ -299,4 +299,43 @@ internal sealed partial class Json
                   Data: data);
           });
     }
+
+    /// <summary>
+    /// Decodes a JSON number that lands in an untyped <see cref="object"/> slot (a property-bag value or a
+    /// generic array element) into the same .NET numeric type the Jsonite reader (the net462 / netstandard2.0
+    /// path) produces, so both formatter paths hand identical boxed types to consumers.
+    /// </summary>
+    /// <remarks>
+    /// A plain <c>GetInt32()</c> throws <see cref="System.FormatException"/> on the non-Int32 numbers real MTP
+    /// notifications carry (durations as doubles, timestamps / counts as longs). We therefore widen exactly the
+    /// way Jsonite does: an integer becomes <see cref="int"/>, then <see cref="long"/>, then <see cref="ulong"/>;
+    /// a value with a fractional part or exponent (for which the integer <c>TryGet*</c> methods all return
+    /// <see langword="false"/>) becomes <see cref="double"/>. This is a pure superset of the old behavior — every
+    /// value that used to decode as <see cref="int"/> still does, only the ones that used to throw now widen.
+    /// </remarks>
+    // IDE0046 (prefer conditional expression) is suppressed on purpose: collapsing these guarded returns into
+    // a single ?: chain that ends in double gives the whole expression the static type double, so every integer
+    // branch implicitly widens and boxes as double — silently defeating the type preservation this method exists
+    // for (and which the JsonTests regression tests assert). Keep the explicit returns.
+#pragma warning disable IDE0046 // Convert to conditional expression
+    private static object ReadNumber(JsonElement element)
+    {
+        if (element.TryGetInt32(out int intValue))
+        {
+            return intValue;
+        }
+
+        if (element.TryGetInt64(out long longValue))
+        {
+            return longValue;
+        }
+
+        if (element.TryGetUInt64(out ulong ulongValue))
+        {
+            return ulongValue;
+        }
+
+        return element.GetDouble();
+    }
+#pragma warning restore IDE0046 // Convert to conditional expression
 }

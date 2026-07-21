@@ -287,6 +287,55 @@ public sealed class JsonTests
         Assert.IsFalse(capabilities.IsStateful);
     }
 
+    [TestMethod]
+    public void Deserialize_UntypedDictionary_WithNonInt32Numbers_StjPath_PreservesNumericType()
+    {
+        // Arrange
+        // Real MTP notifications carry numbers that are NOT Int32: durations as doubles, timestamps and
+        // counts as longs. The untyped IDictionary<string, object?> deserializer used to call GetInt32() on
+        // every JSON number, which throws FormatException on those values and faulted the whole read loop
+        // on the net8 / System.Text.Json path (the net462 / Jsonite path decodes generically and was fine).
+        Json json = new();
+        const string payload = """
+            { "small": 42, "big": 9999999999, "duration": 40.5 }
+            """;
+
+        // Act
+        IDictionary<string, object?> actual = json.Deserialize<IDictionary<string, object?>>(payload.AsMemory());
+
+        // Assert
+        // Mirror the Jsonite reader exactly: a value that fits Int32 stays int, a larger integer widens to
+        // long, and a value with a fractional part becomes double.
+        Assert.IsInstanceOfType<int>(actual["small"]);
+        Assert.AreEqual(42, actual["small"]);
+        Assert.IsInstanceOfType<long>(actual["big"]);
+        Assert.AreEqual(9999999999L, actual["big"]);
+        Assert.IsInstanceOfType<double>(actual["duration"]);
+        Assert.AreEqual(40.5d, actual["duration"]);
+    }
+
+    [TestMethod]
+    public void Deserialize_UntypedArray_WithNonInt32Numbers_StjPath_PreservesNumericType()
+    {
+        // Arrange
+        // Same fix, applied to the generic object[] array deserializer (server-to-client responses and
+        // notifications carry arrays, e.g. run attachments and test-node changes).
+        Json json = new();
+        const string payload = "[ 42, 9999999999, 40.5 ]";
+
+        // Act
+        object[] actual = json.Deserialize<object[]>(payload.AsMemory());
+
+        // Assert
+        Assert.HasCount(3, actual);
+        Assert.IsInstanceOfType<int>(actual[0]);
+        Assert.AreEqual(42, actual[0]);
+        Assert.IsInstanceOfType<long>(actual[1]);
+        Assert.AreEqual(9999999999L, actual[1]);
+        Assert.IsInstanceOfType<double>(actual[2]);
+        Assert.AreEqual(40.5d, actual[2]);
+    }
+
     private sealed class TestJsonObjectSerializer : JsonObjectSerializer;
 
     private sealed class Person
