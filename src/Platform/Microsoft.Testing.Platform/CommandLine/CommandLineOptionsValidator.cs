@@ -4,7 +4,6 @@
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
-using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Tools;
 
@@ -412,7 +411,10 @@ internal static class CommandLineOptionsValidator
         IReadOnlyList<JsonCommandLineOptionEntry>? jsonCommandLineOptions,
         Dictionary<string, (ICommandLineOptionsProvider Provider, CommandLineOption Option)> providerAndOptionByOptionName)
     {
-        ApplicationStateGuard.Ensure(parseResult is not null);
+        if (parseResult is null)
+        {
+            throw new ArgumentNullException(nameof(parseResult));
+        }
 
         StringBuilder? stringBuilder = null;
         foreach (IGrouping<string, CommandLineParseOption> optionRecords in parseResult.Options.GroupBy(
