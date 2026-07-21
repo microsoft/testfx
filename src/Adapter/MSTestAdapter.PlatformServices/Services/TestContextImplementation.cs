@@ -316,15 +316,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// <param name="propertyValue">The property value.</param>
     /// <returns>True if found.</returns>
     public bool TryGetPropertyValue(string propertyName, out object? propertyValue)
-    {
-        if (_properties == null)
-        {
-            propertyValue = null;
-            return false;
-        }
-
-        return _properties.TryGetValue(propertyName, out propertyValue);
-    }
+        => _properties.TryGetValue(propertyName, out propertyValue);
 
     /// <summary>
     /// Adds the parameter name/value pair to property bag.
