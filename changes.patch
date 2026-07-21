@@ -1,0 +1,1295 @@
+From 6c9fe6207fd3c58be4ea22a6896f05cf165a7d04 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Amaury=20Lev=C3=A9?= <amauryleve@microsoft.com>
+Date: Thu, 9 Jul 2026 22:57:49 +0200
+Subject: [PATCH 1/7] Prevent FileLogger shutdown crash under thread-pool
+ starvation
+
+On the netstandard2.0 build (used by .NET Framework test hosts), FileLogger is disposed synchronously and Dispose() blocks on the async log loop via _logLoop.Wait(). Under thread-pool starvation (e.g. many test processes on a CI/Helix agent), the loop's continuation could be delayed past the flush timeout, causing Dispose() to throw and crash the test host on an otherwise successful run.
+
+Run a fully synchronous drain loop on the non-NETCOREAPP path so the consumer never schedules a continuation and cannot be starved, and make the flush timeout non-fatal (warn instead of throw) in both Dispose() and DisposeAsync().
+
+Relates to https://github.com/dotnet/sdk/issues/55215
+
+Co-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>
+---
+ .../InternalAPI/InternalAPI.Unshipped.txt     |  1 +
+ .../Logging/FileLogger.cs                     | 57 +++++++++++++++----
+ .../SingleConsumerUnboundedChannel.cs         | 31 ++++++++++
+ 3 files changed, 79 insertions(+), 10 deletions(-)
+
+diff --git a/src/Platform/Microsoft.Testing.Platform/InternalAPI/InternalAPI.Unshipped.txt b/src/Platform/Microsoft.Testing.Platform/InternalAPI/InternalAPI.Unshipped.txt
+index 7676911637..a325395005 100644
+--- a/src/Platform/Microsoft.Testing.Platform/InternalAPI/InternalAPI.Unshipped.txt
++++ b/src/Platform/Microsoft.Testing.Platform/InternalAPI/InternalAPI.Unshipped.txt
+@@ -11,6 +11,7 @@ Microsoft.Testing.Platform.Services.ClientCapabilitiesService.Deconstruct(out bo
+ Microsoft.Testing.Platform.Services.ClientCapabilitiesService.Equals(Microsoft.Testing.Platform.Services.ClientCapabilitiesService? other) -> bool
+ Microsoft.Testing.Platform.Services.ClientCapabilitiesService.IsStateful.get -> bool
+ Microsoft.Testing.Platform.Services.ClientCapabilitiesService.IsStateful.init -> void
++Microsoft.Testing.Platform.Messages.SingleConsumerUnboundedChannel<T>.WaitToRead() -> bool
+ Microsoft.Testing.Platform.Services.ClientInfoService.Capabilities.get -> Microsoft.Testing.Platform.Services.IClientCapabilities!
+ Microsoft.Testing.Platform.Services.ClientInfoService.Capabilities.init -> void
+ Microsoft.Testing.Platform.Services.ClientInfoService.ClientInfoService(string! Id, string! Version, Microsoft.Testing.Platform.Services.IClientCapabilities! Capabilities) -> void
+diff --git a/src/Platform/Microsoft.Testing.Platform/Logging/FileLogger.cs b/src/Platform/Microsoft.Testing.Platform/Logging/FileLogger.cs
+index 169ced3fd6..302e6054c3 100644
+--- a/src/Platform/Microsoft.Testing.Platform/Logging/FileLogger.cs
++++ b/src/Platform/Microsoft.Testing.Platform/Logging/FileLogger.cs
+@@ -71,11 +71,21 @@ public FileLogger(
+                 // We want to unlink the caller from the consumer
+                 AllowSynchronousContinuations = false,
+             });
++
++            _logLoop = task.Run(WriteLogToFileAsync, CancellationToken.None);
+ #else
+             _channel = new SingleConsumerUnboundedChannel<string>();
+-#endif
+ 
+-            _logLoop = task.Run(WriteLogToFileAsync, CancellationToken.None);
++            // On .NET Framework (the netstandard2.0 build) the FileLogger is disposed synchronously because there is
++            // no IAsyncDisposable / StreamWriter.DisposeAsync available at runtime, so Dispose blocks on this loop's
++            // task via _logLoop.Wait(). We therefore run a fully synchronous drain loop: passing a synchronous
++            // delegate to Task.Run means the whole loop runs to completion on a single worker thread and blocks on the
++            // channel without ever scheduling a continuation. This makes shutdown immune to thread-pool starvation
++            // (e.g. many test processes running concurrently on a CI / Helix agent), which could otherwise delay the
++            // async continuation past the flush timeout and crash the test host on an otherwise successful run.
++            // See https://github.com/dotnet/sdk/issues/55215.
++            _logLoop = task.Run(WriteLogToFile);
++#endif
+         }
+ 
+         if (_options.FileName is not null)
+@@ -232,6 +242,7 @@ private void EnqueueLog<TState>(LogLevel logLevel, TState state, Exception? exce
+     private string BuildLogEntry<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter, string category)
+         => $"{_clock.UtcNow:O} {category} {logLevel.ToString().ToUpper(CultureInfo.InvariantCulture)} {formatter(state, exception)}";
+ 
++#if NETCOREAPP
+     private async Task WriteLogToFileAsync()
+     {
+         // We do this check out of the try because we want to crash the process if the _channel is null.
+@@ -240,26 +251,41 @@ private async Task WriteLogToFileAsync()
+         try
+         {
+             // We don't need cancellation token because the task will be stopped when the Channel is completed thanks to the call to Complete() inside the Dispose method.
+-#if NETCOREAPP
+             while (await _channel.Reader.WaitToReadAsync().ConfigureAwait(false))
+             {
+                 await _writer.WriteLineAsync(await _channel.Reader.ReadAsync().ConfigureAwait(false)).ConfigureAwait(false);
+             }
++        }
++        catch (Exception ex)
++        {
++            _console.WriteLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.UnexpectedExceptionInFileLoggerErrorMessage, ex));
++        }
++    }
+ #else
+-            while (await _channel.WaitToReadAsync(CancellationToken.None).ConfigureAwait(false))
++    private void WriteLogToFile()
++    {
++        // We do this check out of the try because we want to crash the process if the _channel is null.
++        ApplicationStateGuard.Ensure(_channel is not null);
++
++        try
++        {
++            // We don't need a cancellation token because the loop stops when the channel is completed thanks to the
++            // call to Complete() inside the Dispose method. The wait and the writes are fully synchronous, so this
++            // loop never yields back to the thread pool and cannot be starved during shutdown.
++            while (_channel.WaitToRead())
+             {
+                 while (_channel.TryRead(out string message))
+                 {
+-                    await _writer.WriteLineAsync(message).ConfigureAwait(false);
++                    _writer.WriteLine(message);
+                 }
+             }
+-#endif
+         }
+         catch (Exception ex)
+         {
+             _console.WriteLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.UnexpectedExceptionInFileLoggerErrorMessage, ex));
+         }
+     }
++#endif
+ 
+     [MemberNotNull(nameof(_channel), nameof(_logLoop))]
+     private void EnsureAsyncLogObjectsAreNotNull()
+@@ -279,16 +305,18 @@ public void Dispose()
+         {
+             EnsureAsyncLogObjectsAreNotNull();
+ 
+-            // Wait for all logs to be written
++            // Signal the consumer that no more logs will be written, then wait for it to flush everything.
+ #if NETCOREAPP
+             _channel.Writer.TryComplete();
+ #else
+             _channel.Complete();
+ #endif
+ 
++            // A logger failing to flush must never crash an otherwise successful test run, so on timeout we warn and
++            // continue disposing instead of throwing. See https://github.com/dotnet/sdk/issues/55215.
+             if (!_logLoop.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
+             {
+-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutFlushingLogsErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
++                _console.WriteLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutFlushingLogsErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
+             }
+         }
+ 
+@@ -311,9 +339,18 @@ public async ValueTask DisposeAsync()
+         {
+             EnsureAsyncLogObjectsAreNotNull();
+ 
+-            // Wait for all logs to be written
++            // Wait for all logs to be written. A logger failing to flush must never crash an otherwise successful
++            // test run, so on timeout we warn and continue disposing instead of throwing.
++            // See https://github.com/dotnet/sdk/issues/55215.
+             _channel.Writer.TryComplete();
+-            await _logLoop.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false);
++            try
++            {
++                await _logLoop.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false);
++            }
++            catch (TimeoutException)
++            {
++                _console.WriteLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutFlushingLogsErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
++            }
+         }
+ 
+         _semaphore.Dispose();
+diff --git a/src/Platform/Microsoft.Testing.Platform/Messages/SingleConsumerUnboundedChannel.cs b/src/Platform/Microsoft.Testing.Platform/Messages/SingleConsumerUnboundedChannel.cs
+index c2936dcfe3..353f69135e 100644
+--- a/src/Platform/Microsoft.Testing.Platform/Messages/SingleConsumerUnboundedChannel.cs
++++ b/src/Platform/Microsoft.Testing.Platform/Messages/SingleConsumerUnboundedChannel.cs
+@@ -43,6 +43,10 @@ public void Write(T item)
+ 
+             _items.Enqueue(item);
+ 
++            // Wake up a consumer that is blocked inside the synchronous WaitToRead.
++            // This is a no-op when nobody is waiting on the monitor (e.g. consumers using WaitToReadAsync).
++            Monitor.Pulse(SyncObj);
++
+             // If WaitToReadAsync was called previously, we want to complete the task it returned.
+             // We complete it with value true because we have an item that can be read now.
+             if (_waitingReader is { } waitingReader)
+@@ -58,6 +62,29 @@ public void Write(T item)
+     public bool TryRead(out T item)
+         => _items.TryDequeue(out item);
+ 
++    /// <summary>
++    /// Synchronously blocks the calling thread until an item is available to read or the channel is completed.
++    /// Returns <see langword="true"/> when there may be items to read, or <see langword="false"/> when the channel
++    /// is completed and empty.
++    /// </summary>
++    /// <remarks>
++    /// This is intended for a single dedicated consumer that drains the channel synchronously and therefore does not
++    /// use <see cref="WaitToReadAsync"/>. Because the loop never yields back to the thread pool, it cannot be starved
++    /// (e.g. during process shutdown under heavy thread-pool contention).
++    /// </remarks>
++    public bool WaitToRead()
++    {
++        lock (SyncObj)
++        {
++            while (_items.IsEmpty && !_completed)
++            {
++                Monitor.Wait(SyncObj);
++            }
++
++            return !_items.IsEmpty;
++        }
++    }
++
+     public Task<bool> WaitToReadAsync(CancellationToken cancellationToken)
+     {
+         if (cancellationToken.IsCancellationRequested)
+@@ -110,6 +137,10 @@ public void Complete()
+         {
+             _completed = true;
+ 
++            // Wake up a consumer that is blocked inside the synchronous WaitToRead so it can observe completion.
++            // This is a no-op when nobody is waiting on the monitor (e.g. consumers using WaitToReadAsync).
++            Monitor.Pulse(SyncObj);
++
+             // If there was previously a call to WaitToReadAsync, and we had no items in the queue, and we are completing now.
+             // Then there is nothing to read. So we set the task value to false.
+             if (_waitingReader is { } waitingReader)
+
+From b907342d5618a787d2454c57ef5d59fedcd75205 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Amaury=20Lev=C3=A9?= <amauryleve@microsoft.com>
+Date: Thu, 9 Jul 2026 23:33:56 +0200
+Subject: [PATCH 2/7] Address review: Telemetry API file, null-safety local,
+ API sort order
+
+- Declare SingleConsumerUnboundedChannel<T>.WaitToRead() in the Telemetry project's InternalAPI.Unshipped.txt (the file is linked into that assembly too), fixing the RS0051 build break.
+- Capture _channel into a non-null local in WriteLogToFile to make null-safety explicit for external analyzers.
+- Move the new InternalAPI entry to its sorted position.
+
+Co-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>
+---
+ .../InternalAPI/InternalAPI.Unshipped.txt                    | 1 +
+ .../InternalAPI/InternalAPI.Unshipped.txt                    | 2 +-
+ .../Microsoft.Testing.Platform/Logging/FileLogger.cs         | 5 +++--
+ 3 files changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/src/Platform/Microsoft.Testing.Extensions.Telemetry/InternalAPI/InternalAPI.Unshipped.txt b/src/Platform/Microsoft.Testing.Extensions.Telemetry/InternalAPI/InternalAPI.Unshipped.txt
+index 7dc5c58110..31e6db5b27 100644
+--- a/src/Platform/Microsoft.Testing.Extensions.Telemetry/InternalAPI/InternalAPI.Unshipped.txt
++++ b/src/Platform/Microsoft.Testing.Extensions.Telemetry/InternalAPI/InternalAPI.Unshipped.txt
+@@ -1 +1,2 @@
+ #nullable enable
++Microsoft.Testing.Platform.Messages.SingleConsumerUnboundedChannel<T>.WaitToRead() -> bool
+diff --git a/src/Platform/Microsoft.Testing.Platform/InternalAPI/InternalAPI.Unshipped.txt b/src/Platform/Microsoft.Testing.Platform/InternalAPI/InternalAPI.Unshipped.txt
+index a325395005..70be287f42 100644
+--- a/src/Platform/Microsoft.Testing.Platform/InternalAPI/InternalAPI.Unshipped.txt
++++ b/src/Platform/Microsoft.Testing.Platform/InternalAPI/InternalAPI.Unshipped.txt
+@@ -1,4 +1,5 @@
+ #nullable enable
++Microsoft.Testing.Platform.Messages.SingleConsumerUnboundedChannel<T>.WaitToRead() -> bool
+ const Microsoft.Testing.Platform.ServerMode.JsonRpcStrings.IsStateful = "isStateful" -> string!
+ Microsoft.Testing.Platform.ServerMode.ClientCapabilities.ClientCapabilities(bool DebuggerProvider, bool IsStateful) -> void
+ Microsoft.Testing.Platform.ServerMode.ClientCapabilities.Deconstruct(out bool DebuggerProvider, out bool IsStateful) -> void
+@@ -11,7 +12,6 @@ Microsoft.Testing.Platform.Services.ClientCapabilitiesService.Deconstruct(out bo
+ Microsoft.Testing.Platform.Services.ClientCapabilitiesService.Equals(Microsoft.Testing.Platform.Services.ClientCapabilitiesService? other) -> bool
+ Microsoft.Testing.Platform.Services.ClientCapabilitiesService.IsStateful.get -> bool
+ Microsoft.Testing.Platform.Services.ClientCapabilitiesService.IsStateful.init -> void
+-Microsoft.Testing.Platform.Messages.SingleConsumerUnboundedChannel<T>.WaitToRead() -> bool
+ Microsoft.Testing.Platform.Services.ClientInfoService.Capabilities.get -> Microsoft.Testing.Platform.Services.IClientCapabilities!
+ Microsoft.Testing.Platform.Services.ClientInfoService.Capabilities.init -> void
+ Microsoft.Testing.Platform.Services.ClientInfoService.ClientInfoService(string! Id, string! Version, Microsoft.Testing.Platform.Services.IClientCapabilities! Capabilities) -> void
+diff --git a/src/Platform/Microsoft.Testing.Platform/Logging/FileLogger.cs b/src/Platform/Microsoft.Testing.Platform/Logging/FileLogger.cs
+index 302e6054c3..2094b09ce7 100644
+--- a/src/Platform/Microsoft.Testing.Platform/Logging/FileLogger.cs
++++ b/src/Platform/Microsoft.Testing.Platform/Logging/FileLogger.cs
+@@ -266,15 +266,16 @@ private void WriteLogToFile()
+     {
+         // We do this check out of the try because we want to crash the process if the _channel is null.
+         ApplicationStateGuard.Ensure(_channel is not null);
++        SingleConsumerUnboundedChannel<string> channel = _channel;
+ 
+         try
+         {
+             // We don't need a cancellation token because the loop stops when the channel is completed thanks to the
+             // call to Complete() inside the Dispose method. The wait and the writes are fully synchronous, so this
+             // loop never yields back to the thread pool and cannot be starved during shutdown.
+-            while (_channel.WaitToRead())
++            while (channel.WaitToRead())
+             {
+-                while (_channel.TryRead(out string message))
++                while (channel.TryRead(out string message))
+                 {
+                     _writer.WriteLine(message);
+                 }
+
+From 3cef429e6061c2101572e73bfa22ef2db5efa537 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Amaury=20Lev=C3=A9?= <amauryleve@microsoft.com>
+Date: Fri, 10 Jul 2026 10:59:32 +0200
+Subject: [PATCH 3/7] Avoid writer/stream disposal race on flush timeout
+
+On flush timeout the consumer loop is still running and owns _writer/_fileStream. Falling through to Flush/Dispose them raced with the loop (StreamWriter and its stream aren't thread-safe), which could throw or truncate the log. On timeout we now warn and return without disposing those resources, leaving them for the OS to reclaim at process exit. No data is lost because the writer uses AutoFlush.
+
+Co-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>
+---
+ .../Logging/FileLogger.cs                      | 18 ++++++++++++++++--
+ 1 file changed, 16 insertions(+), 2 deletions(-)
+
+diff --git a/src/Platform/Microsoft.Testing.Platform/Logging/FileLogger.cs b/src/Platform/Microsoft.Testing.Platform/Logging/FileLogger.cs
+index 2094b09ce7..0f0910114a 100644
+--- a/src/Platform/Microsoft.Testing.Platform/Logging/FileLogger.cs
++++ b/src/Platform/Microsoft.Testing.Platform/Logging/FileLogger.cs
+@@ -314,10 +314,17 @@ public void Dispose()
+ #endif
+ 
+             // A logger failing to flush must never crash an otherwise successful test run, so on timeout we warn and
+-            // continue disposing instead of throwing. See https://github.com/dotnet/sdk/issues/55215.
++            // return instead of throwing. See https://github.com/dotnet/sdk/issues/55215.
+             if (!_logLoop.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
+             {
+                 _console.WriteLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutFlushingLogsErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
++
++                // The consumer loop is still running and owns _writer/_fileStream. Disposing them here would race
++                // with the loop (StreamWriter and its stream are not thread-safe), which could throw or truncate the
++                // log. We therefore leave them for the OS to reclaim at process exit. No data is lost because the
++                // writer uses AutoFlush, so every already-written line is already on disk.
++                _disposed = true;
++                return;
+             }
+         }
+ 
+@@ -341,7 +348,7 @@ public async ValueTask DisposeAsync()
+             EnsureAsyncLogObjectsAreNotNull();
+ 
+             // Wait for all logs to be written. A logger failing to flush must never crash an otherwise successful
+-            // test run, so on timeout we warn and continue disposing instead of throwing.
++            // test run, so on timeout we warn and return instead of throwing.
+             // See https://github.com/dotnet/sdk/issues/55215.
+             _channel.Writer.TryComplete();
+             try
+@@ -351,6 +358,13 @@ public async ValueTask DisposeAsync()
+             catch (TimeoutException)
+             {
+                 _console.WriteLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutFlushingLogsErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
++
++                // The consumer loop is still running and owns _writer/_fileStream. Disposing them here would race
++                // with the loop (StreamWriter and its stream are not thread-safe), which could throw or truncate the
++                // log. We therefore leave them for the OS to reclaim at process exit. No data is lost because the
++                // writer uses AutoFlush, so every already-written line is already on disk.
++                _disposed = true;
++                return;
+             }
+         }
+ 
+
+From 2b65b178b3f23dfa4f820bc5f39e0e4666414de7 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Amaury=20Lev=C3=A9?= <amauryleve@microsoft.com>
+Date: Fri, 10 Jul 2026 11:34:39 +0200
+Subject: [PATCH 4/7] Fix constructor consumer-loop ordering, semaphore leak,
+ add chaos test
+
+- HIGH: start the file-logger consumer loop only after _writer is fully initialized. Task.Run could schedule the loop on another thread before _writer was assigned later in the constructor, risking a null-writer dereference. The channel is still created early so Log() can enqueue; only the loop start moves to the end.
+- Dispose the semaphore on the flush-timeout early-return paths in Dispose()/DisposeAsync() to avoid a managed-resource leak. It is not shared with the consumer loop (SyncFlush-only), so it's safe to dispose while the loop still owns the writer/stream.
+- Fix a stale comment: on NETCOREAPP the channel is completed via TryComplete().
+- Add a chaos test that hammers the async-flush path from many threads then disposes, asserting every queued message is drained without loss or crash (repeated across iterations).
+
+Co-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>
+---
+ .../Logging/FileLogger.cs                     | 42 ++++++----
+ .../Logging/FileLoggerTests.cs                | 79 +++++++++++++++++++
+ 2 files changed, 106 insertions(+), 15 deletions(-)
+
+diff --git a/src/Platform/Microsoft.Testing.Platform/Logging/FileLogger.cs b/src/Platform/Microsoft.Testing.Platform/Logging/FileLogger.cs
+index 0f0910114a..6166c43023 100644
+--- a/src/Platform/Microsoft.Testing.Platform/Logging/FileLogger.cs
++++ b/src/Platform/Microsoft.Testing.Platform/Logging/FileLogger.cs
+@@ -71,20 +71,8 @@ public FileLogger(
+                 // We want to unlink the caller from the consumer
+                 AllowSynchronousContinuations = false,
+             });
+-
+-            _logLoop = task.Run(WriteLogToFileAsync, CancellationToken.None);
+ #else
+             _channel = new SingleConsumerUnboundedChannel<string>();
+-
+-            // On .NET Framework (the netstandard2.0 build) the FileLogger is disposed synchronously because there is
+-            // no IAsyncDisposable / StreamWriter.DisposeAsync available at runtime, so Dispose blocks on this loop's
+-            // task via _logLoop.Wait(). We therefore run a fully synchronous drain loop: passing a synchronous
+-            // delegate to Task.Run means the whole loop runs to completion on a single worker thread and blocks on the
+-            // channel without ever scheduling a continuation. This makes shutdown immune to thread-pool starvation
+-            // (e.g. many test processes running concurrently on a CI / Helix agent), which could otherwise delay the
+-            // async continuation past the flush timeout and crash the test host on an otherwise successful run.
+-            // See https://github.com/dotnet/sdk/issues/55215.
+-            _logLoop = task.Run(WriteLogToFile);
+ #endif
+         }
+ 
+@@ -109,6 +97,26 @@ public FileLogger(
+         {
+             AutoFlush = true,
+         };
++
++        // Start the consumer loop only after _writer is fully initialized. The loop dereferences _writer, so starting
++        // it earlier could race with the rest of the constructor and hit a null _writer (Task.Run may schedule the
++        // loop on another thread immediately).
++        if (!_options.SyncFlush)
++        {
++#if NETCOREAPP
++            _logLoop = task.Run(WriteLogToFileAsync, CancellationToken.None);
++#else
++            // On .NET Framework (the netstandard2.0 build) the FileLogger is disposed synchronously because there is
++            // no IAsyncDisposable / StreamWriter.DisposeAsync available at runtime, so Dispose blocks on this loop's
++            // task via _logLoop.Wait(). We therefore run a fully synchronous drain loop: passing a synchronous
++            // delegate to Task.Run means the whole loop runs to completion on a single worker thread and blocks on the
++            // channel without ever scheduling a continuation. This makes shutdown immune to thread-pool starvation
++            // (e.g. many test processes running concurrently on a CI / Helix agent), which could otherwise delay the
++            // async continuation past the flush timeout and crash the test host on an otherwise successful run.
++            // See https://github.com/dotnet/sdk/issues/55215.
++            _logLoop = task.Run(WriteLogToFile);
++#endif
++        }
+     }
+ 
+     public string FileName { get; private set; }
+@@ -250,7 +258,7 @@ private async Task WriteLogToFileAsync()
+ 
+         try
+         {
+-            // We don't need cancellation token because the task will be stopped when the Channel is completed thanks to the call to Complete() inside the Dispose method.
++            // We don't need cancellation token because the task will be stopped when the Channel is completed thanks to the call to TryComplete() inside the Dispose/DisposeAsync method.
+             while (await _channel.Reader.WaitToReadAsync().ConfigureAwait(false))
+             {
+                 await _writer.WriteLineAsync(await _channel.Reader.ReadAsync().ConfigureAwait(false)).ConfigureAwait(false);
+@@ -322,7 +330,9 @@ public void Dispose()
+                 // The consumer loop is still running and owns _writer/_fileStream. Disposing them here would race
+                 // with the loop (StreamWriter and its stream are not thread-safe), which could throw or truncate the
+                 // log. We therefore leave them for the OS to reclaim at process exit. No data is lost because the
+-                // writer uses AutoFlush, so every already-written line is already on disk.
++                // writer uses AutoFlush, so every already-written line is already on disk. The semaphore is not shared
++                // with the consumer loop (it's only used on the SyncFlush path), so it's safe to dispose here.
++                _semaphore.Dispose();
+                 _disposed = true;
+                 return;
+             }
+@@ -362,7 +372,9 @@ public async ValueTask DisposeAsync()
+                 // The consumer loop is still running and owns _writer/_fileStream. Disposing them here would race
+                 // with the loop (StreamWriter and its stream are not thread-safe), which could throw or truncate the
+                 // log. We therefore leave them for the OS to reclaim at process exit. No data is lost because the
+-                // writer uses AutoFlush, so every already-written line is already on disk.
++                // writer uses AutoFlush, so every already-written line is already on disk. The semaphore is not shared
++                // with the consumer loop (it's only used on the SyncFlush path), so it's safe to dispose here.
++                _semaphore.Dispose();
+                 _disposed = true;
+                 return;
+             }
+diff --git a/test/UnitTests/Microsoft.Testing.Platform.UnitTests/Logging/FileLoggerTests.cs b/test/UnitTests/Microsoft.Testing.Platform.UnitTests/Logging/FileLoggerTests.cs
+index cd6719e395..349952c28f 100644
+--- a/test/UnitTests/Microsoft.Testing.Platform.UnitTests/Logging/FileLoggerTests.cs
++++ b/test/UnitTests/Microsoft.Testing.Platform.UnitTests/Logging/FileLoggerTests.cs
+@@ -246,6 +246,85 @@ public void Log_WhenAsyncFlush_StreamWriterIsCalledOnlyWhenLogLevelAllowsIt(LogL
+         }
+     }
+ 
++    // Chaos test for https://github.com/dotnet/sdk/issues/55215.
++    // Stresses the async-flush path: many threads log concurrently and then the logger is disposed while messages are
++    // still queued. Repeated across many iterations to shake out races in consumer-loop startup and shutdown draining.
++    // The logger must never crash, must drain the whole queue on Dispose, and must not lose or corrupt any message.
++    [TestMethod]
++    public void Log_WhenAsyncFlush_ConcurrentLoggingIsDrainedOnDisposeWithoutLoss()
++    {
++        const int iterations = 50;
++        const int producerCount = 8;
++        const int messagesPerProducer = 50;
++
++        var clock = new Mock<IClock>();
++        clock.Setup(x => x.UtcNow).Returns(new DateTimeOffset(2023, 5, 29, 3, 42, 13, TimeSpan.Zero));
++
++        for (int iteration = 0; iteration < iterations; iteration++)
++        {
++            using var memoryStream = new CustomMemoryStream();
++
++            var mockStream = new Mock<IFileStream>();
++            mockStream.Setup(x => x.Stream).Returns(memoryStream);
++            mockStream.Setup(x => x.Name).Returns(FileName);
++            mockStream.Setup(x => x.Dispose());
++#if NETCOREAPP
++            mockStream.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
++#endif
++
++            var mockFileSystem = new Mock<IFileSystem>();
++            mockFileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
++
++            var mockFileStreamFactory = new Mock<IFileStreamFactory>();
++            mockFileStreamFactory
++                .Setup(x => x.Create(It.IsAny<string>(), FileMode.CreateNew, FileAccess.Write, FileShare.Read))
++                .Returns(mockStream.Object);
++
++            var fileLogger = new FileLogger(
++                new(LogFolder, LogPrefix, fileName: FileName, syncFlush: false),
++                LogLevel.Trace,
++                clock.Object,
++                new SystemTask(),
++                _mockConsole.Object,
++                mockFileSystem.Object,
++                mockFileStreamFactory.Object);
++
++            // Release all producers at the same time to maximize contention right after construction.
++            using var startGate = new ManualResetEventSlim(false);
++            var producers = new Task[producerCount];
++            for (int producer = 0; producer < producerCount; producer++)
++            {
++                int producerId = producer;
++                producers[producer] = Task.Run(() =>
++                {
++                    startGate.Wait();
++                    for (int message = 0; message < messagesPerProducer; message++)
++                    {
++                        fileLogger.Log(LogLevel.Trace, $"P{producerId}M{message}", null, Formatter, Category);
++                    }
++                });
++            }
++
++            startGate.Set();
++            Task.WaitAll(producers);
++
++            // Dispose must drain everything still sitting in the queue without crashing.
++            fileLogger.Dispose();
++
++            string content = Encoding.UTF8.GetString(memoryStream.ToArray());
++            string[] lines = content.Split([Environment.NewLine], StringSplitOptions.RemoveEmptyEntries);
++            Assert.AreEqual(producerCount * messagesPerProducer, lines.Length, $"Iteration {iteration}: every queued message must be flushed exactly once.");
++
++            for (int producer = 0; producer < producerCount; producer++)
++            {
++                for (int message = 0; message < messagesPerProducer; message++)
++                {
++                    Assert.Contains($"P{producer}M{message}", content, $"Iteration {iteration}: message P{producer}M{message} was lost or corrupted.");
++                }
++            }
++        }
++    }
++
+     void IDisposable.Dispose()
+         => _memoryStream.Dispose();
+ 
+
+From 9ee246be8287474e9f3a2f9229074bf4fd460f8f Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Amaury=20Lev=C3=A9?= <amauryleve@microsoft.com>
+Date: Fri, 10 Jul 2026 15:01:24 +0200
+Subject: [PATCH 5/7] Harden chaos test: exact-set assertion, HasCount,
+ cancellation token
+
+- Assert against the exact set of message payloads (parsed from each log line) instead of a substring check on the whole content, so prefix-overlapping IDs (P0M1 vs P0M10) can't mask loss/duplication. Also assert the actual-message set has the expected count to catch duplicates.
+- Use Assert.HasCount instead of Assert.AreEqual for the line count (MSTEST0037).
+- Pass TestContext.CancellationToken to Task.Run, ManualResetEventSlim.Wait, and Task.WaitAll (MSTEST0049), with CA1416 suppressions since this test never targets browser.
+
+Co-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>
+---
+ .../Logging/FileLoggerTests.cs                | 33 +++++++++++++------
+ 1 file changed, 23 insertions(+), 10 deletions(-)
+
+diff --git a/test/UnitTests/Microsoft.Testing.Platform.UnitTests/Logging/FileLoggerTests.cs b/test/UnitTests/Microsoft.Testing.Platform.UnitTests/Logging/FileLoggerTests.cs
+index 349952c28f..e6766cb25d 100644
+--- a/test/UnitTests/Microsoft.Testing.Platform.UnitTests/Logging/FileLoggerTests.cs
++++ b/test/UnitTests/Microsoft.Testing.Platform.UnitTests/Logging/FileLoggerTests.cs
+@@ -295,33 +295,46 @@ public void Log_WhenAsyncFlush_ConcurrentLoggingIsDrainedOnDisposeWithoutLoss()
+             for (int producer = 0; producer < producerCount; producer++)
+             {
+                 int producerId = producer;
+-                producers[producer] = Task.Run(() =>
+-                {
+-                    startGate.Wait();
+-                    for (int message = 0; message < messagesPerProducer; message++)
++                producers[producer] = Task.Run(
++                    () =>
+                     {
+-                        fileLogger.Log(LogLevel.Trace, $"P{producerId}M{message}", null, Formatter, Category);
+-                    }
+-                });
++#pragma warning disable CA1416 // ManualResetEventSlim.Wait is unsupported on 'browser' — this test never targets browser
++                        startGate.Wait(TestContext.CancellationToken);
++#pragma warning restore CA1416
++                        for (int message = 0; message < messagesPerProducer; message++)
++                        {
++                            fileLogger.Log(LogLevel.Trace, $"P{producerId}M{message}", null, Formatter, Category);
++                        }
++                    },
++                    TestContext.CancellationToken);
+             }
+ 
+             startGate.Set();
+-            Task.WaitAll(producers);
++#pragma warning disable CA1416 // Task.WaitAll is unsupported on 'browser' — this test never targets browser
++            Task.WaitAll(producers, TestContext.CancellationToken);
++#pragma warning restore CA1416
+ 
+             // Dispose must drain everything still sitting in the queue without crashing.
+             fileLogger.Dispose();
+ 
+             string content = Encoding.UTF8.GetString(memoryStream.ToArray());
+             string[] lines = content.Split([Environment.NewLine], StringSplitOptions.RemoveEmptyEntries);
+-            Assert.AreEqual(producerCount * messagesPerProducer, lines.Length, $"Iteration {iteration}: every queued message must be flushed exactly once.");
++            Assert.HasCount(producerCount * messagesPerProducer, lines, $"Iteration {iteration}: every queued message must be flushed exactly once.");
+ 
++            // Compare against the exact set of expected messages. Each log line ends with the message payload
++            // (the log format is "<timestamp> <category> <level> <message>"), so we extract the last token and
++            // require an exact set match. This detects loss/duplication even for prefix-overlapping IDs such as
++            // "P0M1" vs "P0M10", which a substring check would miss.
++            var actualMessages = new HashSet<string>(lines.Select(line => line[(line.LastIndexOf(' ') + 1)..]));
+             for (int producer = 0; producer < producerCount; producer++)
+             {
+                 for (int message = 0; message < messagesPerProducer; message++)
+                 {
+-                    Assert.Contains($"P{producer}M{message}", content, $"Iteration {iteration}: message P{producer}M{message} was lost or corrupted.");
++                    Assert.Contains($"P{producer}M{message}", actualMessages, $"Iteration {iteration}: message P{producer}M{message} was lost or corrupted.");
+                 }
+             }
++
++            Assert.HasCount(producerCount * messagesPerProducer, actualMessages, $"Iteration {iteration}: no duplicate or unexpected messages must be written.");
+         }
+     }
+ 
+
+From af7066a06734699e2ab59fccbf7c1bd157508d6a Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Amaury=20Lev=C3=A9?= <amauryleve@microsoft.com>
+Date: Fri, 10 Jul 2026 15:33:16 +0200
+Subject: [PATCH 6/7] Signal flush-timeout to caller and fix logger diagnostics
+ accuracy
+
+Address review feedback on the FileLogger shutdown path:
+- Expose FileLogger.IsFileHandleReleased so callers can tell when a flush timeout left the consumer still owning the file. FileLoggerProvider.CheckLogFolderAndMoveToTheNewIfNeededAsync now skips the MoveFile (which would throw an IOException on Windows because the stream is opened with FileShare.Read) when the handle wasn't released, keeping the timeout non-fatal.
+- Make the FileLogger write-loop exception message path-neutral instead of naming WriteLogToFileAsync, which was wrong on the netstandard synchronous path. Regenerated xlf files.
+- Correct the timeout comments: AutoFlush only guarantees already-written records are on disk; records still queued may be lost if the process exits before the loop drains them.
+
+Co-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>
+---
+ .../InternalAPI/InternalAPI.Unshipped.txt     |  1 +
+ .../Logging/FileLogger.cs                     | 26 ++++++++++++++-----
+ .../Logging/FileLoggerProvider.cs             |  9 +++++++
+ .../Resources/PlatformResources.resx          |  4 +--
+ .../Resources/xlf/PlatformResources.cs.xlf    |  6 ++---
+ .../Resources/xlf/PlatformResources.de.xlf    |  6 ++---
+ .../Resources/xlf/PlatformResources.es.xlf    |  6 ++---
+ .../Resources/xlf/PlatformResources.fr.xlf    |  6 ++---
+ .../Resources/xlf/PlatformResources.it.xlf    |  6 ++---
+ .../Resources/xlf/PlatformResources.ja.xlf    |  6 ++---
+ .../Resources/xlf/PlatformResources.ko.xlf    |  6 ++---
+ .../Resources/xlf/PlatformResources.pl.xlf    |  6 ++---
+ .../Resources/xlf/PlatformResources.pt-BR.xlf |  6 ++---
+ .../Resources/xlf/PlatformResources.ru.xlf    |  6 ++---
+ .../Resources/xlf/PlatformResources.tr.xlf    |  6 ++---
+ .../xlf/PlatformResources.zh-Hans.xlf         |  6 ++---
+ .../xlf/PlatformResources.zh-Hant.xlf         |  6 ++---
+ 17 files changed, 71 insertions(+), 47 deletions(-)
+
+diff --git a/src/Platform/Microsoft.Testing.Platform/InternalAPI/InternalAPI.Unshipped.txt b/src/Platform/Microsoft.Testing.Platform/InternalAPI/InternalAPI.Unshipped.txt
+index 5a8a01e895..27062383d4 100644
+--- a/src/Platform/Microsoft.Testing.Platform/InternalAPI/InternalAPI.Unshipped.txt
++++ b/src/Platform/Microsoft.Testing.Platform/InternalAPI/InternalAPI.Unshipped.txt
+@@ -1,5 +1,6 @@
+ #nullable enable
+ Microsoft.Testing.Platform.Helpers.RuntimeFeatureHelper
++Microsoft.Testing.Platform.Logging.FileLogger.IsFileHandleReleased.get -> bool
+ Microsoft.Testing.Platform.Messages.SingleConsumerUnboundedChannel<T>.WaitToRead() -> bool
+ static Microsoft.Testing.Platform.Helpers.RuntimeFeatureHelper.IsMultiThreaded.get -> bool
+ const Microsoft.Testing.Platform.ServerMode.JsonRpcStrings.IsStateful = "isStateful" -> string!
+diff --git a/src/Platform/Microsoft.Testing.Platform/Logging/FileLogger.cs b/src/Platform/Microsoft.Testing.Platform/Logging/FileLogger.cs
+index 6166c43023..850734510b 100644
+--- a/src/Platform/Microsoft.Testing.Platform/Logging/FileLogger.cs
++++ b/src/Platform/Microsoft.Testing.Platform/Logging/FileLogger.cs
+@@ -36,6 +36,14 @@ internal sealed class FileLogger : IDisposable
+ #endif
+     private bool _disposed;
+ 
++    /// <summary>
++    /// Gets a value indicating whether disposal fully drained the logs and released the underlying file handle.
++    /// This is <see langword="false"/> when disposal timed out waiting for the flush: in that case the consumer loop
++    /// may still own the file, so callers that need exclusive access to it (e.g. to move the log file) must not
++    /// proceed. See the dispose methods and https://github.com/dotnet/sdk/issues/55215.
++    /// </summary>
++    public bool IsFileHandleReleased { get; private set; }
++
+     public FileLogger(
+         FileLoggerOptions options,
+         LogLevel logLevel,
+@@ -329,9 +337,11 @@ public void Dispose()
+ 
+                 // The consumer loop is still running and owns _writer/_fileStream. Disposing them here would race
+                 // with the loop (StreamWriter and its stream are not thread-safe), which could throw or truncate the
+-                // log. We therefore leave them for the OS to reclaim at process exit. No data is lost because the
+-                // writer uses AutoFlush, so every already-written line is already on disk. The semaphore is not shared
+-                // with the consumer loop (it's only used on the SyncFlush path), so it's safe to dispose here.
++                // log. We therefore leave them for the OS to reclaim at process exit and leave IsFileHandleReleased
++                // false so callers know the file handle is still held. Records already written are on disk (the writer
++                // uses AutoFlush); any records still queued may be lost if the process exits before the loop drains
++                // them. The semaphore is not shared with the consumer loop (it's only used on the SyncFlush path), so
++                // it's safe to dispose here.
+                 _semaphore.Dispose();
+                 _disposed = true;
+                 return;
+@@ -342,6 +352,7 @@ public void Dispose()
+         _writer.Flush();
+         _writer.Dispose();
+         _fileStream.Dispose();
++        IsFileHandleReleased = true;
+         _disposed = true;
+     }
+ 
+@@ -371,9 +382,11 @@ public async ValueTask DisposeAsync()
+ 
+                 // The consumer loop is still running and owns _writer/_fileStream. Disposing them here would race
+                 // with the loop (StreamWriter and its stream are not thread-safe), which could throw or truncate the
+-                // log. We therefore leave them for the OS to reclaim at process exit. No data is lost because the
+-                // writer uses AutoFlush, so every already-written line is already on disk. The semaphore is not shared
+-                // with the consumer loop (it's only used on the SyncFlush path), so it's safe to dispose here.
++                // log. We therefore leave them for the OS to reclaim at process exit and leave IsFileHandleReleased
++                // false so callers know the file handle is still held. Records already written are on disk (the writer
++                // uses AutoFlush); any records still queued may be lost if the process exits before the loop drains
++                // them. The semaphore is not shared with the consumer loop (it's only used on the SyncFlush path), so
++                // it's safe to dispose here.
+                 _semaphore.Dispose();
+                 _disposed = true;
+                 return;
+@@ -384,6 +397,7 @@ public async ValueTask DisposeAsync()
+         await _writer.FlushAsync().ConfigureAwait(false);
+         await _writer.DisposeAsync().ConfigureAwait(false);
+         await _fileStream.DisposeAsync().ConfigureAwait(false);
++        IsFileHandleReleased = true;
+         _disposed = true;
+     }
+ #endif
+diff --git a/src/Platform/Microsoft.Testing.Platform/Logging/FileLoggerProvider.cs b/src/Platform/Microsoft.Testing.Platform/Logging/FileLoggerProvider.cs
+index b59a9bce0a..dd940185e7 100644
+--- a/src/Platform/Microsoft.Testing.Platform/Logging/FileLoggerProvider.cs
++++ b/src/Platform/Microsoft.Testing.Platform/Logging/FileLoggerProvider.cs
+@@ -55,6 +55,15 @@ public async Task CheckLogFolderAndMoveToTheNewIfNeededAsync(string testResultDi
+         string fileName = Path.GetFileName(FileLogger.FileName);
+         await DisposeHelper.DisposeAsync(FileLogger).ConfigureAwait(false);
+ 
++        // If disposal timed out while flushing, the consumer loop may still own the file handle (the stream was opened
++        // with FileShare.Read, so a move would fail on Windows). Skip the relocation in that degenerate case and keep
++        // the existing logger rather than turning a non-fatal flush timeout into a fatal IOException.
++        // See https://github.com/dotnet/sdk/issues/55215.
++        if (!FileLogger.IsFileHandleReleased)
++        {
++            return;
++        }
++
+         // Move the log file to the new directory
+         _fileSystem.MoveFile(FileLogger.FileName, Path.Combine(testResultDirectory, fileName));
+ 
+diff --git a/src/Platform/Microsoft.Testing.Platform/Resources/PlatformResources.resx b/src/Platform/Microsoft.Testing.Platform/Resources/PlatformResources.resx
+index eba7e4715e..2956cd5720 100644
+--- a/src/Platform/Microsoft.Testing.Platform/Resources/PlatformResources.resx
++++ b/src/Platform/Microsoft.Testing.Platform/Resources/PlatformResources.resx
+@@ -338,9 +338,9 @@
+     <comment>{0} is the timeout in seconds.</comment>
+   </data>
+   <data name="UnexpectedExceptionInFileLoggerErrorMessage" xml:space="preserve">
+-    <value>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
++    <value>An unexpected exception occurred in the 'FileLogger' write loop.
+ {0}</value>
+-    <comment>{0} is the exception ToString output. {Locked="FileLogger.WriteLogToFileAsync"}</comment>
++    <comment>{0} is the exception ToString output. {Locked="FileLogger"}</comment>
+   </data>
+   <data name="RetryFailedAfterTriesErrorMessage" xml:space="preserve">
+     <value>Retry failed after {0} times</value>
+diff --git a/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.cs.xlf b/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.cs.xlf
+index a8f18b45e4..04d3ea79cd 100644
+--- a/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.cs.xlf
++++ b/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.cs.xlf
+@@ -966,11 +966,11 @@ Přečtěte si další informace o telemetrii Microsoft Testing Platform: https:
+         <note />
+       </trans-unit>
+       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
+-        <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
++        <source>An unexpected exception occurred in the 'FileLogger' write loop.
+ {0}</source>
+-        <target state="translated">Ve FileLogger.WriteLogToFileAsync došlo k neočekávané výjimce.
++        <target state="needs-review-translation">Ve FileLogger.WriteLogToFileAsync došlo k neočekávané výjimce.
+ {0}</target>
+-        <note>{0} is the exception ToString output. {Locked="FileLogger.WriteLogToFileAsync"}</note>
++        <note>{0} is the exception ToString output. {Locked="FileLogger"}</note>
+       </trans-unit>
+       <trans-unit id="UnobservedTaskExceptionWarningMessage">
+         <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
+diff --git a/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.de.xlf b/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.de.xlf
+index 3cc0f98381..45d2526dd4 100644
+--- a/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.de.xlf
++++ b/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.de.xlf
+@@ -966,11 +966,11 @@ Weitere Informationen zu Microsoft Testing Platform-Telemetriedaten: https://aka
+         <note />
+       </trans-unit>
+       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
+-        <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
++        <source>An unexpected exception occurred in the 'FileLogger' write loop.
+ {0}</source>
+-        <target state="translated">Unerwartete Ausnahme in "FileLogger.WriteLogToFileAsync".
++        <target state="needs-review-translation">Unerwartete Ausnahme in "FileLogger.WriteLogToFileAsync".
+ {0}</target>
+-        <note>{0} is the exception ToString output. {Locked="FileLogger.WriteLogToFileAsync"}</note>
++        <note>{0} is the exception ToString output. {Locked="FileLogger"}</note>
+       </trans-unit>
+       <trans-unit id="UnobservedTaskExceptionWarningMessage">
+         <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
+diff --git a/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.es.xlf b/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.es.xlf
+index 9029a4b074..f212999a85 100644
+--- a/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.es.xlf
++++ b/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.es.xlf
+@@ -966,11 +966,11 @@ Más información sobre la telemetría de la Plataforma de pruebas de Microsoft:
+         <note />
+       </trans-unit>
+       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
+-        <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
++        <source>An unexpected exception occurred in the 'FileLogger' write loop.
+ {0}</source>
+-        <target state="translated">Se ha producido una excepción inesperada en “FileLogger.WriteLogToFileAsync”.
++        <target state="needs-review-translation">Se ha producido una excepción inesperada en “FileLogger.WriteLogToFileAsync”.
+ {0}</target>
+-        <note>{0} is the exception ToString output. {Locked="FileLogger.WriteLogToFileAsync"}</note>
++        <note>{0} is the exception ToString output. {Locked="FileLogger"}</note>
+       </trans-unit>
+       <trans-unit id="UnobservedTaskExceptionWarningMessage">
+         <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
+diff --git a/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.fr.xlf b/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.fr.xlf
+index c8b87178f9..4864dccadf 100644
+--- a/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.fr.xlf
++++ b/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.fr.xlf
+@@ -966,11 +966,11 @@ En savoir plus sur la télémétrie de la plateforme de tests Microsoft : https:
+         <note />
+       </trans-unit>
+       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
+-        <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
++        <source>An unexpected exception occurred in the 'FileLogger' write loop.
+ {0}</source>
+-        <target state="translated">Une exception inattendue s’est produite dans « FileLogger.WriteLogToFileAsync ».
++        <target state="needs-review-translation">Une exception inattendue s’est produite dans « FileLogger.WriteLogToFileAsync ».
+ {0}</target>
+-        <note>{0} is the exception ToString output. {Locked="FileLogger.WriteLogToFileAsync"}</note>
++        <note>{0} is the exception ToString output. {Locked="FileLogger"}</note>
+       </trans-unit>
+       <trans-unit id="UnobservedTaskExceptionWarningMessage">
+         <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
+diff --git a/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.it.xlf b/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.it.xlf
+index 0fc26c2e8e..48fed02e8d 100644
+--- a/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.it.xlf
++++ b/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.it.xlf
+@@ -966,11 +966,11 @@ Altre informazioni sulla telemetria della piattaforma di test Microsoft: https:/
+         <note />
+       </trans-unit>
+       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
+-        <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
++        <source>An unexpected exception occurred in the 'FileLogger' write loop.
+ {0}</source>
+-        <target state="translated">Eccezione imprevista in 'FileLogger.WriteLogToFileAsync'.
++        <target state="needs-review-translation">Eccezione imprevista in 'FileLogger.WriteLogToFileAsync'.
+ {0}</target>
+-        <note>{0} is the exception ToString output. {Locked="FileLogger.WriteLogToFileAsync"}</note>
++        <note>{0} is the exception ToString output. {Locked="FileLogger"}</note>
+       </trans-unit>
+       <trans-unit id="UnobservedTaskExceptionWarningMessage">
+         <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
+diff --git a/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.ja.xlf b/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.ja.xlf
+index 7b4ecde384..cff43c2c5c 100644
+--- a/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.ja.xlf
++++ b/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.ja.xlf
+@@ -967,11 +967,11 @@ Microsoft Testing Platform テレメトリの詳細: https://aka.ms/testingplatf
+         <note />
+       </trans-unit>
+       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
+-        <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
++        <source>An unexpected exception occurred in the 'FileLogger' write loop.
+ {0}</source>
+-        <target state="translated">'FileLogger.WriteLogToFileAsync' で予期しない例外が発生しました。
++        <target state="needs-review-translation">'FileLogger.WriteLogToFileAsync' で予期しない例外が発生しました。
+ {0}</target>
+-        <note>{0} is the exception ToString output. {Locked="FileLogger.WriteLogToFileAsync"}</note>
++        <note>{0} is the exception ToString output. {Locked="FileLogger"}</note>
+       </trans-unit>
+       <trans-unit id="UnobservedTaskExceptionWarningMessage">
+         <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
+diff --git a/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.ko.xlf b/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.ko.xlf
+index b701d8459d..c214686f27 100644
+--- a/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.ko.xlf
++++ b/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.ko.xlf
+@@ -966,11 +966,11 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
+         <note />
+       </trans-unit>
+       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
+-        <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
++        <source>An unexpected exception occurred in the 'FileLogger' write loop.
+ {0}</source>
+-        <target state="translated">'FileLogger.WriteLogToFileAsync'에서 예기치 않은 예외가 발생했습니다.
++        <target state="needs-review-translation">'FileLogger.WriteLogToFileAsync'에서 예기치 않은 예외가 발생했습니다.
+ {0}</target>
+-        <note>{0} is the exception ToString output. {Locked="FileLogger.WriteLogToFileAsync"}</note>
++        <note>{0} is the exception ToString output. {Locked="FileLogger"}</note>
+       </trans-unit>
+       <trans-unit id="UnobservedTaskExceptionWarningMessage">
+         <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
+diff --git a/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.pl.xlf b/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.pl.xlf
+index 46ba603b81..1abdbcfc31 100644
+--- a/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.pl.xlf
++++ b/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.pl.xlf
+@@ -966,11 +966,11 @@ Więcej informacji o telemetrii platformy testowej firmy Microsoft: https://aka.
+         <note />
+       </trans-unit>
+       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
+-        <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
++        <source>An unexpected exception occurred in the 'FileLogger' write loop.
+ {0}</source>
+-        <target state="translated">Wystąpił nieoczekiwany wyjątek w elemencie „FileLogger.WriteLogToFileAsync”.
++        <target state="needs-review-translation">Wystąpił nieoczekiwany wyjątek w elemencie „FileLogger.WriteLogToFileAsync”.
+ {0}</target>
+-        <note>{0} is the exception ToString output. {Locked="FileLogger.WriteLogToFileAsync"}</note>
++        <note>{0} is the exception ToString output. {Locked="FileLogger"}</note>
+       </trans-unit>
+       <trans-unit id="UnobservedTaskExceptionWarningMessage">
+         <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
+diff --git a/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.pt-BR.xlf b/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.pt-BR.xlf
+index af0ad62dbd..6d85d5fef4 100644
+--- a/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.pt-BR.xlf
++++ b/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.pt-BR.xlf
+@@ -966,11 +966,11 @@ Leia mais sobre a telemetria da Plataforma de Testes da Microsoft: https://aka.m
+         <note />
+       </trans-unit>
+       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
+-        <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
++        <source>An unexpected exception occurred in the 'FileLogger' write loop.
+ {0}</source>
+-        <target state="translated">Ocorreu uma exceção inesperada em "FileLogger.WriteLogToFileAsync".
++        <target state="needs-review-translation">Ocorreu uma exceção inesperada em "FileLogger.WriteLogToFileAsync".
+ {0}</target>
+-        <note>{0} is the exception ToString output. {Locked="FileLogger.WriteLogToFileAsync"}</note>
++        <note>{0} is the exception ToString output. {Locked="FileLogger"}</note>
+       </trans-unit>
+       <trans-unit id="UnobservedTaskExceptionWarningMessage">
+         <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
+diff --git a/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.ru.xlf b/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.ru.xlf
+index a424a69ea7..fb81c8bb07 100644
+--- a/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.ru.xlf
++++ b/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.ru.xlf
+@@ -966,11 +966,11 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
+         <note />
+       </trans-unit>
+       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
+-        <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
++        <source>An unexpected exception occurred in the 'FileLogger' write loop.
+ {0}</source>
+-        <target state="translated">В "FileLogger.WriteLogToFileAsync" произошло непредвиденное исключение.
++        <target state="needs-review-translation">В "FileLogger.WriteLogToFileAsync" произошло непредвиденное исключение.
+ {0}</target>
+-        <note>{0} is the exception ToString output. {Locked="FileLogger.WriteLogToFileAsync"}</note>
++        <note>{0} is the exception ToString output. {Locked="FileLogger"}</note>
+       </trans-unit>
+       <trans-unit id="UnobservedTaskExceptionWarningMessage">
+         <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
+diff --git a/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.tr.xlf b/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.tr.xlf
+index 3e1d58a17b..fd824f7f74 100644
+--- a/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.tr.xlf
++++ b/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.tr.xlf
+@@ -966,11 +966,11 @@ Microsoft Test Platformu telemetrisi hakkında daha fazla bilgi edinin: https://
+         <note />
+       </trans-unit>
+       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
+-        <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
++        <source>An unexpected exception occurred in the 'FileLogger' write loop.
+ {0}</source>
+-        <target state="translated">'FileLogger.WriteLogToFileAsync' içinde beklenmeyen bir özel durum oluştu.
++        <target state="needs-review-translation">'FileLogger.WriteLogToFileAsync' içinde beklenmeyen bir özel durum oluştu.
+ {0}</target>
+-        <note>{0} is the exception ToString output. {Locked="FileLogger.WriteLogToFileAsync"}</note>
++        <note>{0} is the exception ToString output. {Locked="FileLogger"}</note>
+       </trans-unit>
+       <trans-unit id="UnobservedTaskExceptionWarningMessage">
+         <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
+diff --git a/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.zh-Hans.xlf b/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.zh-Hans.xlf
+index 85a8ec4d5f..16f59335b8 100644
+--- a/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.zh-Hans.xlf
++++ b/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.zh-Hans.xlf
+@@ -966,11 +966,11 @@ Microsoft 测试平台会收集使用数据，帮助我们改善体验。该数
+         <note />
+       </trans-unit>
+       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
+-        <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
++        <source>An unexpected exception occurred in the 'FileLogger' write loop.
+ {0}</source>
+-        <target state="translated">"FileLogger.WriteLogToFileAsync" 出现意外异常。
++        <target state="needs-review-translation">"FileLogger.WriteLogToFileAsync" 出现意外异常。
+ {0}</target>
+-        <note>{0} is the exception ToString output. {Locked="FileLogger.WriteLogToFileAsync"}</note>
++        <note>{0} is the exception ToString output. {Locked="FileLogger"}</note>
+       </trans-unit>
+       <trans-unit id="UnobservedTaskExceptionWarningMessage">
+         <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
+diff --git a/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.zh-Hant.xlf b/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.zh-Hant.xlf
+index 0aea3dfde1..dcbd3db14f 100644
+--- a/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.zh-Hant.xlf
++++ b/src/Platform/Microsoft.Testing.Platform/Resources/xlf/PlatformResources.zh-Hant.xlf
+@@ -966,11 +966,11 @@ Microsoft 測試平台會收集使用量資料，以協助我們改善您的體
+         <note />
+       </trans-unit>
+       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
+-        <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
++        <source>An unexpected exception occurred in the 'FileLogger' write loop.
+ {0}</source>
+-        <target state="translated">'FileLogger.WriteLogToFileAsync' 發生未預期的例外狀況。
++        <target state="needs-review-translation">'FileLogger.WriteLogToFileAsync' 發生未預期的例外狀況。
+ {0}</target>
+-        <note>{0} is the exception ToString output. {Locked="FileLogger.WriteLogToFileAsync"}</note>
++        <note>{0} is the exception ToString output. {Locked="FileLogger"}</note>
+       </trans-unit>
+       <trans-unit id="UnobservedTaskExceptionWarningMessage">
+         <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
+
+From c73787a18aea2c74cbe4d7ed354bed3169049f70 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Amaury=20Lev=C3=A9?= <amauryleve@microsoft.com>
+Date: Fri, 10 Jul 2026 15:49:51 +0200
+Subject: [PATCH 7/7] Keep logging alive after flush timeout; add deterministic
+ tests
+
+Address review feedback:
+- FileLoggerProvider.CheckLogFolderAndMoveToTheNewIfNeededAsync no longer returns early on a flush timeout leaving a disposed logger in place (which would make every subsequent diagnostic write throw). It now always installs a fresh logger for the test result directory and only moves the old file when its handle was released, keeping logging alive on the degenerate timeout path.
+- Add an injectable flushTimeout seam on FileLogger so the timeout path is testable deterministically.
+- Add deterministic tests: assert the netstandard build starts the consumer via the synchronous ITask.Run(Action) overload (locking the anti-starvation fix that the async impl would not satisfy), assert IsFileHandleReleased after a clean dispose, and assert the flush timeout is non-fatal (no throw, warning emitted, handle reported not released) using a never-completing consumer and a short timeout.
+
+Co-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>
+---
+ .../InternalAPI/InternalAPI.Unshipped.txt     |   2 +
+ .../Logging/FileLogger.cs                     |  13 +-
+ .../Logging/FileLoggerProvider.cs             |  22 +--
+ .../Logging/FileLoggerTests.cs                | 155 ++++++++++++++++++
+ 4 files changed, 177 insertions(+), 15 deletions(-)
+
+diff --git a/src/Platform/Microsoft.Testing.Platform/InternalAPI/InternalAPI.Unshipped.txt b/src/Platform/Microsoft.Testing.Platform/InternalAPI/InternalAPI.Unshipped.txt
+index 27062383d4..09fc93aa56 100644
+--- a/src/Platform/Microsoft.Testing.Platform/InternalAPI/InternalAPI.Unshipped.txt
++++ b/src/Platform/Microsoft.Testing.Platform/InternalAPI/InternalAPI.Unshipped.txt
+@@ -1,5 +1,6 @@
+ #nullable enable
+ Microsoft.Testing.Platform.Helpers.RuntimeFeatureHelper
++Microsoft.Testing.Platform.Logging.FileLogger.FileLogger(Microsoft.Testing.Platform.Logging.FileLoggerOptions! options, Microsoft.Testing.Platform.Logging.LogLevel logLevel, Microsoft.Testing.Platform.Helpers.IClock! clock, Microsoft.Testing.Platform.Helpers.ITask! task, Microsoft.Testing.Platform.Helpers.IConsole! console, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Helpers.IFileStreamFactory! fileStreamFactory, System.TimeSpan? flushTimeout = null) -> void
+ Microsoft.Testing.Platform.Logging.FileLogger.IsFileHandleReleased.get -> bool
+ Microsoft.Testing.Platform.Messages.SingleConsumerUnboundedChannel<T>.WaitToRead() -> bool
+ static Microsoft.Testing.Platform.Helpers.RuntimeFeatureHelper.IsMultiThreaded.get -> bool
+@@ -32,6 +33,7 @@ static Microsoft.Testing.Platform.Services.ArtifactFileNameSanitizer.ReplaceInva
+ static Microsoft.Testing.Platform.Services.ClientCapabilitiesService.operator !=(Microsoft.Testing.Platform.Services.ClientCapabilitiesService? left, Microsoft.Testing.Platform.Services.ClientCapabilitiesService? right) -> bool
+ static Microsoft.Testing.Platform.Services.ClientCapabilitiesService.operator ==(Microsoft.Testing.Platform.Services.ClientCapabilitiesService? left, Microsoft.Testing.Platform.Services.ClientCapabilitiesService? right) -> bool
+ *REMOVED*Microsoft.Testing.Platform.ServerMode.ClientCapabilities.ClientCapabilities(bool DebuggerProvider) -> void
++*REMOVED*Microsoft.Testing.Platform.Logging.FileLogger.FileLogger(Microsoft.Testing.Platform.Logging.FileLoggerOptions! options, Microsoft.Testing.Platform.Logging.LogLevel logLevel, Microsoft.Testing.Platform.Helpers.IClock! clock, Microsoft.Testing.Platform.Helpers.ITask! task, Microsoft.Testing.Platform.Helpers.IConsole! console, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Helpers.IFileStreamFactory! fileStreamFactory) -> void
+ *REMOVED*Microsoft.Testing.Platform.ServerMode.ClientCapabilities.Deconstruct(out bool DebuggerProvider) -> void
+ *REMOVED*Microsoft.Testing.Platform.Services.ClientInfoService.ClientInfoService(string! Id, string! Version) -> void
+ *REMOVED*Microsoft.Testing.Platform.Services.ClientInfoService.Deconstruct(out string! Id, out string! Version) -> void
+diff --git a/src/Platform/Microsoft.Testing.Platform/Logging/FileLogger.cs b/src/Platform/Microsoft.Testing.Platform/Logging/FileLogger.cs
+index 850734510b..23b42eb82e 100644
+--- a/src/Platform/Microsoft.Testing.Platform/Logging/FileLogger.cs
++++ b/src/Platform/Microsoft.Testing.Platform/Logging/FileLogger.cs
+@@ -28,6 +28,7 @@ internal sealed class FileLogger : IDisposable
+     private readonly IFileStream _fileStream;
+     private readonly StreamWriter _writer;
+     private readonly Task? _logLoop;
++    private readonly TimeSpan _flushTimeout;
+ 
+ #if NETCOREAPP
+     private readonly Channel<string>? _channel;
+@@ -51,12 +52,14 @@ public FileLogger(
+         ITask task,
+         IConsole console,
+         IFileSystem fileSystem,
+-        IFileStreamFactory fileStreamFactory)
++        IFileStreamFactory fileStreamFactory,
++        TimeSpan? flushTimeout = null)
+     {
+         _options = options;
+         _clock = clock;
+         _logLevel = logLevel;
+         _console = console;
++        _flushTimeout = flushTimeout ?? TimeoutHelper.DefaultHangTimeSpanTimeout;
+ 
+         if (_options.SyncFlush)
+         {
+@@ -331,9 +334,9 @@ public void Dispose()
+ 
+             // A logger failing to flush must never crash an otherwise successful test run, so on timeout we warn and
+             // return instead of throwing. See https://github.com/dotnet/sdk/issues/55215.
+-            if (!_logLoop.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
++            if (!_logLoop.Wait(_flushTimeout))
+             {
+-                _console.WriteLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutFlushingLogsErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
++                _console.WriteLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutFlushingLogsErrorMessage, _flushTimeout.TotalSeconds));
+ 
+                 // The consumer loop is still running and owns _writer/_fileStream. Disposing them here would race
+                 // with the loop (StreamWriter and its stream are not thread-safe), which could throw or truncate the
+@@ -374,11 +377,11 @@ public async ValueTask DisposeAsync()
+             _channel.Writer.TryComplete();
+             try
+             {
+-                await _logLoop.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false);
++                await _logLoop.TimeoutAfterAsync(_flushTimeout).ConfigureAwait(false);
+             }
+             catch (TimeoutException)
+             {
+-                _console.WriteLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutFlushingLogsErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
++                _console.WriteLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutFlushingLogsErrorMessage, _flushTimeout.TotalSeconds));
+ 
+                 // The consumer loop is still running and owns _writer/_fileStream. Disposing them here would race
+                 // with the loop (StreamWriter and its stream are not thread-safe), which could throw or truncate the
+diff --git a/src/Platform/Microsoft.Testing.Platform/Logging/FileLoggerProvider.cs b/src/Platform/Microsoft.Testing.Platform/Logging/FileLoggerProvider.cs
+index dd940185e7..37745d4df4 100644
+--- a/src/Platform/Microsoft.Testing.Platform/Logging/FileLoggerProvider.cs
++++ b/src/Platform/Microsoft.Testing.Platform/Logging/FileLoggerProvider.cs
+@@ -53,20 +53,22 @@ public async Task CheckLogFolderAndMoveToTheNewIfNeededAsync(string testResultDi
+         }
+ 
+         string fileName = Path.GetFileName(FileLogger.FileName);
+-        await DisposeHelper.DisposeAsync(FileLogger).ConfigureAwait(false);
++        FileLogger previousLogger = FileLogger;
++        string previousFileName = previousLogger.FileName;
++        await DisposeHelper.DisposeAsync(previousLogger).ConfigureAwait(false);
+ 
+-        // If disposal timed out while flushing, the consumer loop may still own the file handle (the stream was opened
+-        // with FileShare.Read, so a move would fail on Windows). Skip the relocation in that degenerate case and keep
+-        // the existing logger rather than turning a non-fatal flush timeout into a fatal IOException.
+-        // See https://github.com/dotnet/sdk/issues/55215.
+-        if (!FileLogger.IsFileHandleReleased)
++        // If disposal completed cleanly, relocate the log file into the test result directory. If a flush timed out,
++        // the previous consumer loop may still own the file handle (the stream was opened with FileShare.Read, so a
++        // move would fail on Windows) — in that case we leave the old file in place and skip the move rather than
++        // turning a non-fatal flush timeout into a fatal IOException. See https://github.com/dotnet/sdk/issues/55215.
++        if (previousLogger.IsFileHandleReleased)
+         {
+-            return;
++            _fileSystem.MoveFile(previousFileName, Path.Combine(testResultDirectory, fileName));
+         }
+ 
+-        // Move the log file to the new directory
+-        _fileSystem.MoveFile(FileLogger.FileName, Path.Combine(testResultDirectory, fileName));
+-
++        // Always install a fresh logger pointing at the test result directory so subsequent diagnostics keep working.
++        // The previous instance's channel is completed, so writing to it would throw; replacing it here keeps logging
++        // alive even on the degenerate timeout path (the old loop/handle are reclaimed at process exit).
+         FileLogger = new FileLogger(
+             new FileLoggerOptions(testResultDirectory, _options.LogPrefixName, fileName, _options.SyncFlush),
+             LogLevel,
+diff --git a/test/UnitTests/Microsoft.Testing.Platform.UnitTests/Logging/FileLoggerTests.cs b/test/UnitTests/Microsoft.Testing.Platform.UnitTests/Logging/FileLoggerTests.cs
+index e6766cb25d..a0adcf16c3 100644
+--- a/test/UnitTests/Microsoft.Testing.Platform.UnitTests/Logging/FileLoggerTests.cs
++++ b/test/UnitTests/Microsoft.Testing.Platform.UnitTests/Logging/FileLoggerTests.cs
+@@ -338,9 +338,164 @@ public void Log_WhenAsyncFlush_ConcurrentLoggingIsDrainedOnDisposeWithoutLoss()
+         }
+     }
+ 
++    // Deterministic guard for the fix in https://github.com/dotnet/sdk/issues/55215.
++    // On .NET Framework (the netstandard2.0 build) the consumer loop MUST be started with the synchronous
++    // ITask.Run(Action) overload so that Dispose()'s blocking Wait() can never be starved by the thread pool.
++    // The previous implementation used the asynchronous ITask.Run(Func<Task>, ...) overload, which is exactly the
++    // regression this test locks down.
++    [TestMethod]
++    public void FileLogger_WhenAsyncFlush_StartsConsumerLoopWithExpectedTaskOverload()
++    {
++        _mockFileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
++        _mockFileStreamFactory
++            .Setup(x => x.Create(It.IsAny<string>(), FileMode.CreateNew, FileAccess.Write, FileShare.Read))
++            .Returns(_mockStream.Object);
++
++        var recordingTask = new RecordingTask();
++        using (FileLogger fileLogger = new(
++            new(LogFolder, LogPrefix, fileName: FileName, syncFlush: false),
++            LogLevel.Trace,
++            _mockClock.Object,
++            recordingTask,
++            _mockConsole.Object,
++            _mockFileSystem.Object,
++            _mockFileStreamFactory.Object))
++        {
++        }
++
++#if NETCOREAPP
++        Assert.IsTrue(recordingTask.StartedAsynchronousLoop, "netcore must run the awaited async consumer loop.");
++        Assert.IsFalse(recordingTask.StartedSynchronousLoop);
++#else
++        Assert.IsTrue(recordingTask.StartedSynchronousLoop, "netstandard must run a fully synchronous consumer loop that cannot be thread-pool starved during Dispose.");
++        Assert.IsFalse(recordingTask.StartedAsynchronousLoop);
++#endif
++    }
++
++    [TestMethod]
++    public void FileLogger_AfterSuccessfulDispose_ReportsFileHandleReleased()
++    {
++        _mockFileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
++        _mockFileStreamFactory
++            .Setup(x => x.Create(It.IsAny<string>(), FileMode.CreateNew, FileAccess.Write, FileShare.Read))
++            .Returns(_mockStream.Object);
++
++        FileLogger fileLogger = new(
++            new(LogFolder, LogPrefix, fileName: FileName, syncFlush: false),
++            LogLevel.Trace,
++            _mockClock.Object,
++            new SystemTask(),
++            _mockConsole.Object,
++            _mockFileSystem.Object,
++            _mockFileStreamFactory.Object);
++
++        fileLogger.Log(LogLevel.Trace, Message, null, Formatter, Category);
++        fileLogger.Dispose();
++
++        Assert.IsTrue(fileLogger.IsFileHandleReleased);
++    }
++
++    // Deterministic non-fatal-timeout test: the consumer loop never completes (simulating a hung flush), and a short
++    // injected flush timeout forces the timeout branch. Dispose must NOT throw, must warn, and must report that the
++    // file handle was not released so callers (e.g. FileLoggerProvider) can skip the file move.
++    [TestMethod]
++#if NETCOREAPP
++    public async Task FileLogger_WhenFlushTimesOut_IsNonFatalAndReportsHandleNotReleased()
++#else
++    public void FileLogger_WhenFlushTimesOut_IsNonFatalAndReportsHandleNotReleased()
++#endif
++    {
++        _mockFileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
++        _mockFileStreamFactory
++            .Setup(x => x.Create(It.IsAny<string>(), FileMode.CreateNew, FileAccess.Write, FileShare.Read))
++            .Returns(_mockStream.Object);
++
++        FileLogger fileLogger = new(
++            new(LogFolder, LogPrefix, fileName: FileName, syncFlush: false),
++            LogLevel.Trace,
++            _mockClock.Object,
++            new NeverCompletingTask(),
++            _mockConsole.Object,
++            _mockFileSystem.Object,
++            _mockFileStreamFactory.Object,
++            flushTimeout: TimeSpan.FromMilliseconds(50));
++
++        fileLogger.Log(LogLevel.Trace, Message, null, Formatter, Category);
++
++        // Must not throw even though the consumer loop never drains.
++#if NETCOREAPP
++        await fileLogger.DisposeAsync();
++#else
++        fileLogger.Dispose();
++#endif
++
++        Assert.IsFalse(fileLogger.IsFileHandleReleased, "A flush timeout must leave the file handle owned by the still-running consumer.");
++        _mockConsole.Verify(x => x.WriteLine(It.Is<string>(s => s.Contains("Failed to flush logs"))), Times.Once);
++    }
++
+     void IDisposable.Dispose()
+         => _memoryStream.Dispose();
+ 
++    // ITask that records which overload was used to start the file-logger consumer loop, delegating the actual work
++    // to the real SystemTask.
++    private sealed class RecordingTask : ITask
++    {
++        private readonly ITask _inner = new SystemTask();
++
++        public bool StartedSynchronousLoop { get; private set; }
++
++        public bool StartedAsynchronousLoop { get; private set; }
++
++        public Task Run(Func<Task> function, CancellationToken cancellationToken)
++        {
++            StartedAsynchronousLoop = true;
++            return _inner.Run(function, cancellationToken);
++        }
++
++        public Task Run(Action action)
++        {
++            StartedSynchronousLoop = true;
++            return _inner.Run(action);
++        }
++
++        public Task<T> Run<T>(Func<Task<T>?> function, CancellationToken cancellationToken)
++            => _inner.Run(function, cancellationToken);
++
++        public Task RunLongRunning(Func<Task> action, string name, CancellationToken cancellationToken)
++            => _inner.RunLongRunning(action, name, cancellationToken);
++
++        public Task WhenAll(params Task[] tasks) => _inner.WhenAll(tasks);
++
++        public Task Delay(int millisecondDelay) => _inner.Delay(millisecondDelay);
++
++        public Task Delay(TimeSpan timeSpan, CancellationToken cancellationToken) => _inner.Delay(timeSpan, cancellationToken);
++    }
++
++    // ITask whose loop-starting overloads return a task that never completes, simulating a hung consumer so the
++    // dispose-time flush timeout is deterministically triggered without running any real loop.
++    private sealed class NeverCompletingTask : ITask
++    {
++        private readonly ITask _inner = new SystemTask();
++
++        public Task Run(Func<Task> function, CancellationToken cancellationToken)
++            => new TaskCompletionSource<bool>().Task;
++
++        public Task Run(Action action)
++            => new TaskCompletionSource<bool>().Task;
++
++        public Task<T> Run<T>(Func<Task<T>?> function, CancellationToken cancellationToken)
++            => _inner.Run(function, cancellationToken);
++
++        public Task RunLongRunning(Func<Task> action, string name, CancellationToken cancellationToken)
++            => _inner.RunLongRunning(action, name, cancellationToken);
++
++        public Task WhenAll(params Task[] tasks) => _inner.WhenAll(tasks);
++
++        public Task Delay(int millisecondDelay) => _inner.Delay(millisecondDelay);
++
++        public Task Delay(TimeSpan timeSpan, CancellationToken cancellationToken) => _inner.Delay(timeSpan, cancellationToken);
++    }
++
+     private sealed class CustomMemoryStream : MemoryStream
+     {
+         private bool _shouldDispose;
