@@ -895,7 +895,7 @@ public sealed class TerminalTestReporterTests
 
         public void HideCursor() => throw new NotImplementedException();
 
-        public void RenderProgress(TestProgressState?[] progress) => throw new NotImplementedException();
+        public void RenderProgress(TestProgressState?[] progress, TerminalProgressMessageState[] messages) => throw new NotImplementedException();
 
         public void ResetColor()
         {
@@ -942,7 +942,7 @@ public sealed class TerminalTestReporterTests
 
         public void MoveCursorUp(int lineCount) => Events.Add($"MoveCursorUp:{lineCount}");
 
-        public void RenderProgress(TestProgressState?[] progress) => Events.Add("RenderProgress");
+        public void RenderProgress(TestProgressState?[] progress, TerminalProgressMessageState[] messages) => Events.Add("RenderProgress");
 
         public void ResetColor() => Events.Add("ResetColor");
 

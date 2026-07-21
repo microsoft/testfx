@@ -106,3 +106,61 @@ Microsoft.Testing.Platform.Services.CoverageReportReference.CustomFormatName.get
 Microsoft.Testing.Platform.Services.CoverageReportReference.Format.get -> Microsoft.Testing.Platform.Extensions.Messages.CoverageReportFormat
 Microsoft.Testing.Platform.Services.CoverageReportReference.Path.get -> string!
 Microsoft.Testing.Platform.Services.CoverageReportReference.ProducerId.get -> string!
+[TPEXP]Microsoft.Testing.Platform.Builder.IArtifactPostProcessingApplicationBuilder
+[TPEXP]Microsoft.Testing.Platform.Builder.IArtifactPostProcessingApplicationBuilder.ArtifactPostProcessing.get -> Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessingManager!
+[TPEXP]Microsoft.Testing.Platform.Builder.IArtifactPostProcessingApplicationBuilder.Tools.get -> Microsoft.Testing.Platform.Tools.IToolsManager!
+[TPINTERNAL]Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase
+[TPINTERNAL]Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.CommandLineOptionsProviderBase(string! uid, string! version, string! displayName, string! description, System.Collections.Generic.IReadOnlyCollection<Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption!>! commandLineOptions) -> void
+[TPINTERNAL]Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.CommandLineOptionsProviderBase(Microsoft.Testing.Platform.Extensions.IExtension! extension, System.Collections.Generic.IReadOnlyCollection<Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption!>! commandLineOptions) -> void
+[TPINTERNAL]Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.Uid.get -> string!
+[TPINTERNAL]Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.Version.get -> string!
+[TPINTERNAL]Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.DisplayName.get -> string!
+[TPINTERNAL]Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.Description.get -> string!
+[TPINTERNAL]Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+[TPINTERNAL]Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.GetCommandLineOptions() -> System.Collections.Generic.IReadOnlyCollection<Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption!>!
+[TPINTERNAL]virtual Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.ValidateOptionArgumentsAsync(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+[TPINTERNAL]virtual Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.ValidateCommandLineOptionsAsync(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+[TPINTERNAL]static Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.RequiresMainOption(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! options, string![]! subOptionNames, string! mainOptionName, System.Func<string!>! errorMessageFactory) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>?
+[TPINTERNAL]static Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.RequiresMainOption(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! options, string![]! subOptionNames, string![]! mainOptionNames, System.Func<string!>! errorMessageFactory) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>?
+[TPINTERNAL]static Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.ValidateAllowedValuesAsync(string! value, string![]! allowedValues, string! formatString) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessingManager
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessingManager.AddArtifactPostProcessor(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor!>! factory) -> void
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor.SupportedKinds.get -> System.Collections.Generic.IReadOnlyList<string!>!
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor.SupportedFileExtensionsFallback.get -> System.Collections.Generic.IReadOnlyList<string!>!
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor.ProcessAsync(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>! inputs, string! outputDirectory, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact?>!
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact.InputArtifact(string! path, string? kind, string? producingTestModule, string? targetFramework, string? architecture, string? executionId) -> void
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact.Path.get -> string!
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact.Kind.get -> string?
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact.ProducingTestModule.get -> string?
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact.TargetFramework.get -> string?
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact.Architecture.get -> string?
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact.ExecutionId.get -> string?
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact.ProcessedArtifact(string! path, string! kind, string! displayName, string? description) -> void
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact.Path.get -> string!
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact.Kind.get -> string!
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact.DisplayName.get -> string!
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact.Description.get -> string?
+[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.FileArtifact.FileArtifact(System.IO.FileInfo! fileInfo, string! displayName, string? description, string? kind) -> void
+[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.FileArtifact.Kind.get -> string?
+[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.SessionFileArtifact.SessionFileArtifact(Microsoft.Testing.Platform.TestHost.SessionUid sessionUid, System.IO.FileInfo! fileInfo, string! displayName, string? description, string? kind) -> void
+[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.SessionFileArtifact.Kind.get -> string?
+[TPINTERNAL]Microsoft.Testing.Platform.Helpers.IClock
+[TPINTERNAL]Microsoft.Testing.Platform.Helpers.IClock.UtcNow.get -> System.DateTimeOffset
+[TPINTERNAL]static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.GetSystemClock(this System.IServiceProvider! serviceProvider) -> Microsoft.Testing.Platform.Helpers.IClock!
+Microsoft.Testing.Platform.OutputDevice.ProgressMessageOutputDeviceData
+Microsoft.Testing.Platform.OutputDevice.ProgressMessageOutputDeviceData.ProgressMessageOutputDeviceData(string! key, string? message) -> void
+Microsoft.Testing.Platform.OutputDevice.ProgressMessageOutputDeviceData.Key.get -> string!
+Microsoft.Testing.Platform.OutputDevice.ProgressMessageOutputDeviceData.Message.get -> string?
+Microsoft.Testing.Platform.OutputDevice.SessionMessageOutputDeviceData
+Microsoft.Testing.Platform.OutputDevice.SessionMessageOutputDeviceData.SessionMessageOutputDeviceData(string! message) -> void
+Microsoft.Testing.Platform.OutputDevice.SessionMessageOutputDeviceData.Message.get -> string!
+[TPEXP]Microsoft.Testing.Platform.Tools.ITool
+[TPEXP]Microsoft.Testing.Platform.Tools.ITool.Name.get -> string!
+[TPEXP]Microsoft.Testing.Platform.Tools.ITool.RunAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<int>!
+[TPEXP]Microsoft.Testing.Platform.Tools.IToolCommandLineOptionsProvider
+[TPEXP]Microsoft.Testing.Platform.Tools.IToolCommandLineOptionsProvider.ToolName.get -> string!
+[TPEXP]Microsoft.Testing.Platform.Tools.IToolsManager
+[TPEXP]Microsoft.Testing.Platform.Tools.IToolsManager.AddTool(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Tools.ITool!>! toolFactory) -> void
