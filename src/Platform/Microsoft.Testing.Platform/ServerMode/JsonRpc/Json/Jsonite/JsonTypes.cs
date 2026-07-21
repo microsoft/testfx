@@ -39,7 +39,7 @@ using System.Text;
 
 using Microsoft.Testing.Platform.Helpers;
 
-namespace Microsoft.Testing.Platform.ServerMode.JsonRpc.Json.Jsonite
+namespace Jsonite
 {
     /// <summary>
     /// The default object used when a deserializing to an object type.

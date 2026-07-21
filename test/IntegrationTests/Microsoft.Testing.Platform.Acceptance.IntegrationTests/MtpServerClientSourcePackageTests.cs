@@ -331,6 +331,67 @@ public sealed class MtpServerClientSourcePackageTests
             string.Join(Environment.NewLine, missingGuard));
     }
 
+    [TestMethod]
+    public void SourcePackage_JsoniteNamespace_IsPackageQualified_NotTopLevel()
+    {
+        // The pack-time transform rewrites the vendored top-level `namespace Jsonite` to the
+        // package-qualified `Microsoft.Testing.Platform.ServerMode.JsonRpc.Json.Jsonite`. This is the
+        // regression guard for the collision that broke vstest: two `namespace Jsonite` type sets compiled
+        // into one assembly (the package's + vstest CrossPlatEngine's own vendored Jsonite) collide with
+        // CS0436 on net462/netstandard2.0. If anyone drops the pack-time rename (or the platform is packed
+        // raw), this fails. Namespaces have no wire effect, so the "Jsonite" formatter Id literal (wire
+        // identity) must be preserved untouched — asserted below.
+        const string QualifiedNs = "namespace Microsoft.Testing.Platform.ServerMode.JsonRpc.Json.Jsonite";
+        Regex topLevelNamespace = new(@"^namespace Jsonite\s*$", RegexOptions.Multiline);
+        Regex bareUsing = new(@"^using Jsonite;\s*$", RegexOptions.Multiline);
+
+        List<string> leaks = [];
+        bool sawQualifiedNs = false;
+        bool sawWireIdLiteral = false;
+        foreach (string tfm in Package.TargetFrameworks)
+        {
+            foreach (KeyValuePair<string, string> file in Package.PackedTextByTfm[tfm])
+            {
+                if (topLevelNamespace.IsMatch(file.Value))
+                {
+                    leaks.Add($"{tfm}: {file.Key} :: top-level 'namespace Jsonite'");
+                }
+
+                if (bareUsing.IsMatch(file.Value))
+                {
+                    leaks.Add($"{tfm}: {file.Key} :: bare 'using Jsonite;'");
+                }
+
+                if (file.Value.Contains(QualifiedNs, StringComparison.Ordinal))
+                {
+                    sawQualifiedNs = true;
+                }
+
+                // The formatter Id is the wire identity of the Jsonite path and must survive verbatim.
+                if (file.Value.Contains("\"Jsonite\"", StringComparison.Ordinal))
+                {
+                    sawWireIdLiteral = true;
+                }
+            }
+        }
+
+        Assert.IsEmpty(
+            leaks,
+            $"The packed source must not carry the top-level 'Jsonite' namespace (it would collide with a " +
+            $"consumer's own vendored Jsonite). These leaks were found:{Environment.NewLine}" +
+            string.Join(Environment.NewLine, leaks));
+
+        Assert.IsTrue(
+            sawQualifiedNs,
+            $"Expected the packed Jsonite parser to declare the package-qualified '{QualifiedNs}'. " +
+            "The pack-time namespace rewrite did not run.");
+
+        Assert.IsTrue(
+            sawWireIdLiteral,
+            "Expected the packed formatter to preserve the \"Jsonite\" Id literal (wire identity). " +
+            "The namespace rewrite must not touch the quoted token.");
+    }
+
     private static bool IsJsonEngineFile(string logical)
         => logical.Contains(JsonFolder, StringComparison.Ordinal);
 

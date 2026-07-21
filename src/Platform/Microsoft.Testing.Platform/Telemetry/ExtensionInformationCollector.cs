@@ -3,14 +3,13 @@
 
 #if NETCOREAPP
 using System.Text.Json;
+#else
+using Jsonite;
 #endif
 
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Messages;
-#if !NETCOREAPP
-using Microsoft.Testing.Platform.ServerMode.JsonRpc.Json.Jsonite;
-#endif
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.Telemetry;

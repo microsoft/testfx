@@ -213,7 +213,13 @@ This is a source-only package: it injects (as internal source) a client for the 
          enable` + the fixed BCL using preamble this project injects implicitly, de-duped against the
          file's own usings (no CS0105); and
       2. flips every column-0 `public <type>` to `internal` (all linked files are file-scoped-namespace,
-         so top-level types sit at column 0) — the injected source must add NO public API to the consumer.
+         so top-level types sit at column 0) — the injected source must add NO public API to the consumer;
+         and
+      3. rewrites the vendored top-level `namespace Jsonite` (+ `using Jsonite;` + qualified `Jsonite.`)
+         to the package-qualified `Microsoft.Testing.Platform.ServerMode.JsonRpc.Json.Jsonite`, so the
+         packed copy cannot collide (CS0436) with a consumer that vendors its OWN top-level
+         `namespace Jsonite` (vstest's CrossPlatEngine does, on net462/netstandard2.0). The platform keeps
+         top-level `namespace Jsonite`, so this rename lives at pack time only and never fights main.
     Anti-drift holds: the packed source is a pure function of the compiled source set (the transform
     changes only visibility + usings, never the wire), and the contract test asserts packed ==
     transform(compiled). System.Text.Json is deliberately NOT in the preamble, so the shipped
@@ -280,6 +286,20 @@ This is a source-only package: it injects (as internal source) a client for the 
                     sb.Append("using ").Append(ns).Append(";\n");
                 }
             }
+
+            // Rewrite the vendored top-level `Jsonite` namespace (its `namespace Jsonite` declaration,
+            // every `using Jsonite;`, and qualified `Jsonite.` member access) to a package-qualified
+            // namespace. A consumer may vendor its OWN top-level `namespace Jsonite` (vstest's
+            // CrossPlatEngine does), and two `namespace Jsonite` type sets compiled into one assembly on
+            // net462/netstandard2.0 collide with CS0436. Namespaces have ZERO effect on the JSON wire, so
+            // this is behavior-preserving. The transform runs at PACK time only, so the platform keeps
+            // top-level `namespace Jsonite` and this never fights main. The three patterns below never
+            // match the quoted "Jsonite" formatter Id (wire identity) or the JsoniteProperties type name:
+            // `^namespace`/`^using` are anchored line-starts and `\bJsonite\.` requires a trailing dot.
+            const string jsoniteNs = "Microsoft.Testing.Platform.ServerMode.JsonRpc.Json.Jsonite";
+            text = Regex.Replace(text, @"^namespace Jsonite\b", "namespace " + jsoniteNs, RegexOptions.Multiline);
+            text = Regex.Replace(text, @"^using Jsonite;", "using " + jsoniteNs + ";", RegexOptions.Multiline);
+            text = Regex.Replace(text, @"\bJsonite\.", jsoniteNs + ".");
 
             sb.Append(typeRx.Replace(text, delegate(Match m) { return "internal" + m.Groups[1].Value; }));
 

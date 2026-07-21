@@ -3,8 +3,6 @@
 
 #if !NETCOREAPP
 
-using JsoniteJson = Microsoft.Testing.Platform.ServerMode.JsonRpc.Json.Jsonite;
-
 namespace Microsoft.Testing.Platform.UnitTests;
 
 [TestClass]
@@ -13,7 +11,7 @@ public sealed class JsoniteTests
     [TestMethod]
     public void Serialize_DateTimeOffset()
     {
-        string actual = JsoniteJson.Json.Serialize(new DateTimeOffset(2023, 01, 01, 01, 01, 01, 01, TimeSpan.Zero));
+        string actual = Jsonite.Json.Serialize(new DateTimeOffset(2023, 01, 01, 01, 01, 01, 01, TimeSpan.Zero));
 
         // Assert
         Assert.AreEqual("2023-01-01T01:01:01.0010000+00:00", actual.Trim('"'));
@@ -23,7 +21,7 @@ public sealed class JsoniteTests
     public void SerializeJsoniteInvalidStringHighSurrogateAtTheEnd()
     {
         const string Input = "Hello\uD800";
-        string actual = JsoniteJson.Json.Serialize(Input);
+        string actual = Jsonite.Json.Serialize(Input);
         Assert.AreEqual("\"Hello\\uFFFD\"", actual);
     }
 
@@ -31,7 +29,7 @@ public sealed class JsoniteTests
     public void SerializeJsoniteInvalidStringHighSurrogateNotFollowedByLowSurrogate()
     {
         const string Input = "Hello\uD800A";
-        string actual = JsoniteJson.Json.Serialize(Input);
+        string actual = Jsonite.Json.Serialize(Input);
         Assert.AreEqual("\"Hello\\uFFFDA\"", actual);
     }
 
@@ -39,7 +37,7 @@ public sealed class JsoniteTests
     public void SerializeJsoniteInvalidStringLowSurrogateWithoutPreviousHighSurrogate()
     {
         const string Input = "Hello\uDC00A";
-        string actual = JsoniteJson.Json.Serialize(Input);
+        string actual = Jsonite.Json.Serialize(Input);
         Assert.AreEqual("\"Hello\\uFFFDA\"", actual);
     }
 
@@ -47,7 +45,7 @@ public sealed class JsoniteTests
     public void SerializeJsoniteValidSurrogatePair()
     {
         const string Input = "Hello\uD800\uDC00A";
-        string actual = JsoniteJson.Json.Serialize(Input);
+        string actual = Jsonite.Json.Serialize(Input);
         Assert.AreEqual("\"Hello\\uD800\\uDC00A\"", actual);
     }
 
@@ -67,7 +65,7 @@ public sealed class JsoniteTests
             string text = $"{character}";
 
             // Serialize text via Jsonite, this is where the error used to happen.
-            string jsoniteText = JsoniteJson.Json.Serialize(text);
+            string jsoniteText = Jsonite.Json.Serialize(text);
 
             // Serialize text via System.Text.Json to get our control examples, preserving special characters in text is
             // hard, and so we better test against a known, hopefully good state.
@@ -80,10 +78,10 @@ public sealed class JsoniteTests
             string? deserializeJsoniteViaStj = System.Text.Json.JsonSerializer.Deserialize<string>(jsoniteText);
 
             // Make sure we can deserialie messages that VS sends to our server.
-            string? deserializeStjViaJsonite = (string)JsoniteJson.Json.Deserialize(stjText);
+            string? deserializeStjViaJsonite = (string)Jsonite.Json.Deserialize(stjText);
 
             // Make sure we can deserialize messages we produced, to know the Jsonite code is handling all the cases.
-            string? deserializeJsoniteViaJsonite = (string)JsoniteJson.Json.Deserialize(jsoniteText);
+            string? deserializeJsoniteViaJsonite = (string)Jsonite.Json.Deserialize(jsoniteText);
 
             try
             {

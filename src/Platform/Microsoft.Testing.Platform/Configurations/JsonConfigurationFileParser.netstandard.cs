@@ -3,8 +3,9 @@
 
 #if !NETCOREAPP
 
+using Jsonite;
+
 using Microsoft.Testing.Platform.Resources;
-using Microsoft.Testing.Platform.ServerMode.JsonRpc.Json.Jsonite;
 
 namespace Microsoft.Testing.Platform.Configurations;
 

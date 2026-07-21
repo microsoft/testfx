@@ -5,18 +5,17 @@
 //       As such, we have two separate implementations for the serialization code.
 #if NETCOREAPP
 using Microsoft.Testing.Platform.ServerMode.Json;
-#else
-using JsoniteJson = Microsoft.Testing.Platform.ServerMode.JsonRpc.Json.Jsonite;
 #endif
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
 internal sealed class FormatterUtilities
 {
-    // Note: the guard is '!NETCOREAPP' (not 'NETSTANDARD2_0') so that when these files are compiled
-    // as source into a .NET Framework consumer (e.g. net462, which defines neither NETSTANDARD2_0 nor
-    // NETCOREAPP) the dependency-free Jsonite path is selected. This is behavior-preserving for the
-    // platform build: netstandard2.0 still takes this branch, .NETCoreApp still takes the else branch.
+    // The formatter selection mirrors the IMessageFormatter guard (#if NETCOREAPP): System.Text.Json on
+    // .NET, Jsonite everywhere else. Using !NETCOREAPP (rather than NETSTANDARD2_0) keeps this correct when
+    // the file is shipped as source and compiled on .NET Framework (net462), where NETSTANDARD2_0 is not
+    // defined — there the STJ branch (ReadOnlyMemory<char>, Json.Json) does not exist. Behavior is identical
+    // for the platform build, which only ever compiles this file as netstandard2.0 or .NET.
 #if !NETCOREAPP
     internal static IMessageFormatter CreateFormatter()
         => new MessageFormatter();
@@ -26,10 +25,10 @@ internal sealed class FormatterUtilities
         public string Id => "Jsonite";
 
         public T Deserialize<T>(string serializedUtf8Content)
-            => SerializerUtilities.Deserialize<T>((JsoniteJson.JsonObject)JsoniteJson.Json.Deserialize(serializedUtf8Content));
+            => SerializerUtilities.Deserialize<T>((Jsonite.JsonObject)Jsonite.Json.Deserialize(serializedUtf8Content));
 
         public Task<string> SerializeAsync(object obj)
-            => Task.FromResult(JsoniteJson.Json.Serialize(SerializerUtilities.Serialize(obj.GetType(), obj)));
+            => Task.FromResult(Jsonite.Json.Serialize(SerializerUtilities.Serialize(obj.GetType(), obj)));
     }
 #else
     internal static IMessageFormatter CreateFormatter() => new MessageFormatter();
