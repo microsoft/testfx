@@ -11,6 +11,12 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public sealed class TrxIncrementalWriterInterruptionTests
 {
+    private const string ExpectedFaultEvidenceDigest =
+        "45AE4708CD7B0FBC81D1D69273A3CE20F6C9FAD45E068A78CC49465F12192020";
+
+    private const string ExpectedBaselineEvidenceDigest =
+        "68A3FFB46711D86062DD42BED697489449E3B2A7B19CAFB57C6671B6FE221D23";
+
     private static readonly Lazy<TrxPhase3EvidenceReport> Evidence =
         new(TrxPhase3EvidenceMatrix.Create);
 
@@ -24,29 +30,29 @@ public sealed class TrxIncrementalWriterInterruptionTests
         TrxPhase3EvidenceMatrix.AssertOperationCoverage(report, "startup-existing");
         TrxPhase3EvidenceMatrix.AssertOperationCoverage(report, "startup-recoverable");
 
-        TrxPhase3EvidenceObservation truncated = report.Observations.Single(
+        TrxPhase3EvidenceObservation truncated = report.FaultObservations.Single(
             observation => observation.Scenario == "startup-existing"
-                && observation.Dimension == TrxPhase3EvidenceDimension.Operation
+                && observation.Dimension == TrxPhase3EvidenceDimension.OperationFault
                 && observation.OperationIndex == 0);
         Assert.AreEqual(TrxDocumentClassification.Malformed, truncated.Classification, truncated.Diagnostic);
         Assert.AreEqual(0, truncated.TargetLength);
 
         Assert.Contains(
             observation => observation.Scenario == "startup-absent"
-                && observation.Dimension == TrxPhase3EvidenceDimension.Byte
+                && observation.Dimension == TrxPhase3EvidenceDimension.ByteCutFault
                 && observation.Cut == 0
                 && observation.Classification == TrxDocumentClassification.Malformed,
-            report.Observations);
+            report.FaultObservations);
         Assert.Contains(
             observation => observation.Scenario == "startup-absent"
-                && observation.Dimension == TrxPhase3EvidenceDimension.Byte
+                && observation.Dimension == TrxPhase3EvidenceDimension.ByteCutFault
                 && observation.Cut == observation.RequestedBytes
                 && observation.Classification == TrxDocumentClassification.Truthful,
-            report.Observations);
+            report.FaultObservations);
         Assert.Contains(
             observation => observation.Scenario == "startup-recoverable"
                 && observation.Classification == TrxDocumentClassification.Repairable,
-            report.Observations);
+            report.FaultObservations);
     }
 
     [TestMethod]
@@ -62,12 +68,12 @@ public sealed class TrxIncrementalWriterInterruptionTests
         Assert.Contains(
             observation => observation.WriteRole == TrxPhase3WriteRole.ResultTail
                 && observation.Classification == TrxDocumentClassification.Malformed,
-            report.Observations);
+            report.FaultObservations);
         Assert.Contains(
             observation => observation.WriteRole == TrxPhase3WriteRole.ResultTail
                 && observation.Cut == observation.RequestedBytes
                 && observation.Classification == TrxDocumentClassification.ParseableInconsistent,
-            report.Observations);
+            report.FaultObservations);
     }
 
     [TestMethod]
@@ -81,9 +87,9 @@ public sealed class TrxIncrementalWriterInterruptionTests
             "definition-small",
             TrxPhase3WriteRole.Definition);
 
-        TrxPhase3EvidenceObservation largeDefinition = report.Observations.First(
+        TrxPhase3EvidenceObservation largeDefinition = report.FaultObservations.First(
             observation => observation.Scenario == "definition-large-metadata"
-                && observation.Dimension == TrxPhase3EvidenceDimension.Byte
+                && observation.Dimension == TrxPhase3EvidenceDimension.ByteCutFault
                 && observation.WriteRole == TrxPhase3WriteRole.Definition);
         Assert.IsGreaterThan(500, largeDefinition.RequestedBytes);
         TrxPhase3EvidenceMatrix.AssertSelectedLargeCuts(report, "definition-large-metadata", largeDefinition.OperationIndex);
@@ -115,7 +121,7 @@ public sealed class TrxIncrementalWriterInterruptionTests
         Assert.Contains(
             observation => observation.WriteRole == TrxPhase3WriteRole.Counter
                 && observation.Classification == TrxDocumentClassification.ParseableInconsistent,
-            report.Observations);
+            report.FaultObservations);
     }
 
     [TestMethod]
@@ -129,11 +135,11 @@ public sealed class TrxIncrementalWriterInterruptionTests
         Assert.Contains(
             observation => observation.Scenario == "finish-timestamp"
                 && observation.Classification == TrxDocumentClassification.ParseableInconsistent,
-            report.Observations);
+            report.FaultObservations);
         Assert.Contains(
             observation => observation.Scenario == "clean-outcome"
                 && observation.Classification == TrxDocumentClassification.Malformed,
-            report.Observations);
+            report.FaultObservations);
     }
 
     [TestMethod]
@@ -170,20 +176,20 @@ public sealed class TrxIncrementalWriterInterruptionTests
         foreach (TrxPhase3WriteRole role in requiredRoles)
         {
             Assert.Contains(
-                observation => observation.Dimension == TrxPhase3EvidenceDimension.Byte
+                observation => observation.Dimension == TrxPhase3EvidenceDimension.ByteCutFault
                         && observation.WriteRole == role
                         && observation.Cut == 0,
-                report.Observations,
+                report.FaultObservations,
                 $"No zero-byte frozen prefix was recorded for {role}.");
             Assert.Contains(
-                observation => observation.Dimension == TrxPhase3EvidenceDimension.Byte
+                observation => observation.Dimension == TrxPhase3EvidenceDimension.ByteCutFault
                         && observation.WriteRole == role
                         && observation.Cut == observation.RequestedBytes,
-                report.Observations,
+                report.FaultObservations,
                 $"No complete frozen prefix was recorded for {role}.");
         }
 
-        Assert.IsTrue(report.Observations.All(observation => observation.CleanupWasFrozen));
+        Assert.IsTrue(report.FaultObservations.All(observation => observation.CleanupWasFrozen));
     }
 
     [TestMethod]
@@ -191,9 +197,9 @@ public sealed class TrxIncrementalWriterInterruptionTests
     {
         TrxPhase3EvidenceReport report = Evidence.Value;
         TrxPhase3EvidenceMatrix.AssertOperationCoverage(report, "large-payload");
-        foreach (TrxPhase3EvidenceObservation write in report.Observations
+        foreach (TrxPhase3EvidenceObservation write in report.FaultObservations
                      .Where(observation => observation.Scenario == "large-payload"
-                         && observation.Dimension == TrxPhase3EvidenceDimension.Byte)
+                         && observation.Dimension == TrxPhase3EvidenceDimension.ByteCutFault)
                      .GroupBy(observation => observation.OperationIndex)
                      .Select(group => group.First()))
         {
@@ -203,35 +209,55 @@ public sealed class TrxIncrementalWriterInterruptionTests
     }
 
     [TestMethod]
-    public void PaddedWriter_EvidenceDigest_IsStableAndContainsExpectedCounterexamples()
+    public void PaddedWriter_FaultAndBaselineEvidenceCountsAndDigests_AreStableAndDistinct()
     {
         TrxPhase3EvidenceReport report = Evidence.Value;
-
-        Assert.AreEqual(574, report.OperationCaseCount);
-        Assert.AreEqual(5_082, report.ByteCaseCount);
-        Assert.HasCount(5_698, report.Observations);
-        Assert.AreEqual(report.Observations.Count, report.ClassificationCounts.Values.Sum());
-        Assert.AreEqual(4_546, report.ClassificationCounts[TrxDocumentClassification.Malformed]);
-        Assert.AreEqual(719, report.ClassificationCounts[TrxDocumentClassification.ParseableInconsistent]);
-        Assert.AreEqual(22, report.ClassificationCounts[TrxDocumentClassification.Repairable]);
-        Assert.AreEqual(411, report.ClassificationCounts[TrxDocumentClassification.Truthful]);
-        Assert.AreEqual(
-            "A2F70EA25564B1EDA70F4804D7C452E7D286D955F21B262D67ABF0759FCDD62E",
-            report.Digest);
-        Assert.IsTrue(report.Observations.All(observation => observation.WriteRole != TrxPhase3WriteRole.Unknown));
-        Assert.IsTrue(report.Observations.All(observation => observation.Diagnostic.Contains("window=", StringComparison.Ordinal)));
-        Assert.IsTrue(report.Observations.All(observation => observation.Diagnostic.Contains("flushes=", StringComparison.Ordinal)));
-
         TestContext.WriteLine(report.Summary);
+
+        Assert.AreEqual(574, report.OperationFaultCount);
+        Assert.AreEqual(5_082, report.ByteCutFaultCount);
+        Assert.AreEqual(5_656, report.FaultObservationCount);
+        Assert.AreEqual(42, report.BaselineObservationCount);
+        Assert.AreEqual(5_698, report.CombinedObservationCount);
+        Assert.AreEqual(report.FaultObservationCount, report.FaultClassificationCounts.Values.Sum());
+        Assert.AreEqual(report.BaselineObservationCount, report.BaselineClassificationCounts.Values.Sum());
+        Assert.AreEqual(4_545, report.FaultClassificationCounts[TrxDocumentClassification.Malformed]);
+        Assert.AreEqual(719, report.FaultClassificationCounts[TrxDocumentClassification.ParseableInconsistent]);
+        Assert.AreEqual(22, report.FaultClassificationCounts[TrxDocumentClassification.Repairable]);
+        Assert.AreEqual(370, report.FaultClassificationCounts[TrxDocumentClassification.Truthful]);
+        Assert.AreEqual(0, report.BaselineClassificationCounts[TrxDocumentClassification.Malformed]);
+        Assert.AreEqual(0, report.BaselineClassificationCounts[TrxDocumentClassification.ParseableInconsistent]);
+        Assert.AreEqual(0, report.BaselineClassificationCounts[TrxDocumentClassification.Repairable]);
+        Assert.AreEqual(42, report.BaselineClassificationCounts[TrxDocumentClassification.Truthful]);
+        Assert.AreEqual(
+            21,
+            report.BaselineObservations.Count(observation => observation.Dimension == TrxPhase3EvidenceDimension.BaselineBefore));
+        Assert.AreEqual(
+            21,
+            report.BaselineObservations.Count(observation => observation.Dimension == TrxPhase3EvidenceDimension.BaselineAfter));
+        Assert.AreEqual(
+            ExpectedFaultEvidenceDigest,
+            report.FaultDigest,
+            report.Summary);
+        Assert.AreEqual(
+            ExpectedBaselineEvidenceDigest,
+            report.BaselineDigest,
+            report.Summary);
+        Assert.IsTrue(report.FaultObservations.All(observation => observation.WriteRole != TrxPhase3WriteRole.Unknown));
+        Assert.IsTrue(report.FaultObservations.All(observation => observation.Diagnostic.Contains("evidenceCategory=fault;", StringComparison.Ordinal)));
+        Assert.IsTrue(report.BaselineObservations.All(observation => observation.Diagnostic.Contains("evidenceCategory=baseline;", StringComparison.Ordinal)));
+        Assert.IsTrue(report.FaultObservations.All(observation => observation.Diagnostic.Contains("window=", StringComparison.Ordinal)));
+        Assert.IsTrue(report.FaultObservations.All(observation => observation.Diagnostic.Contains("flushes=", StringComparison.Ordinal)));
+        Assert.IsTrue(report.BaselineObservations.All(observation => observation.Classification == TrxDocumentClassification.Truthful));
     }
 }
 
 internal enum TrxPhase3EvidenceDimension
 {
-    BeforeFirst,
-    Operation,
-    Byte,
-    Successful,
+    BaselineBefore,
+    OperationFault,
+    ByteCutFault,
+    BaselineAfter,
 }
 
 internal enum TrxPhase3WriteRole
@@ -283,17 +309,29 @@ internal sealed class TrxPhase3EvidenceObservation
 
 internal sealed class TrxPhase3EvidenceReport
 {
-    public required IReadOnlyList<TrxPhase3EvidenceObservation> Observations { get; init; }
+    public required IReadOnlyList<TrxPhase3EvidenceObservation> FaultObservations { get; init; }
+
+    public required IReadOnlyList<TrxPhase3EvidenceObservation> BaselineObservations { get; init; }
 
     public required IReadOnlyDictionary<string, IReadOnlyList<TrxFileOperationRecord>> BaselineOperations { get; init; }
 
-    public required IReadOnlyDictionary<TrxDocumentClassification, int> ClassificationCounts { get; init; }
+    public required IReadOnlyDictionary<TrxDocumentClassification, int> FaultClassificationCounts { get; init; }
 
-    public required int OperationCaseCount { get; init; }
+    public required IReadOnlyDictionary<TrxDocumentClassification, int> BaselineClassificationCounts { get; init; }
 
-    public required int ByteCaseCount { get; init; }
+    public required int OperationFaultCount { get; init; }
 
-    public required string Digest { get; init; }
+    public required int ByteCutFaultCount { get; init; }
+
+    public int FaultObservationCount => FaultObservations.Count;
+
+    public int BaselineObservationCount => BaselineObservations.Count;
+
+    public int CombinedObservationCount => FaultObservationCount + BaselineObservationCount;
+
+    public required string FaultDigest { get; init; }
+
+    public required string BaselineDigest { get; init; }
 
     public required string Summary { get; init; }
 }
@@ -320,28 +358,32 @@ internal static class TrxPhase3EvidenceMatrix
     public static TrxPhase3EvidenceReport Create()
     {
         List<TrxPhase3Scenario> scenarios = CreateScenarios();
-        List<TrxPhase3EvidenceObservation> observations = [];
+        List<TrxPhase3EvidenceObservation> faultObservations = [];
+        List<TrxPhase3EvidenceObservation> baselineObservations = [];
         var baselineOperations = new Dictionary<string, IReadOnlyList<TrxFileOperationRecord>>(StringComparer.Ordinal);
 
         foreach (TrxPhase3Scenario scenario in scenarios)
         {
-            TrxPhase3Run baseline = Run(scenario, terminationPlan: null, captureSnapshots: true);
-            Assert.IsTrue(baseline.Completed);
+            TrxPhase3Run baselineBeforeFaultSweep = Run(scenario, terminationPlan: null, captureSnapshots: true);
+            Assert.IsTrue(baselineBeforeFaultSweep.Completed);
             Assert.AreEqual(
                 TrxDocumentClassification.Truthful,
-                ClassifyBest(scenario, baseline.TargetBytes, operation: null, cut: null).Classification,
+                ClassifyBest(scenario, baselineBeforeFaultSweep.TargetBytes, operation: null, cut: null).Classification,
                 scenario.Name);
-            baselineOperations.Add(scenario.Name, baseline.Operations);
+            baselineOperations.Add(scenario.Name, baselineBeforeFaultSweep.Operations);
 
-            observations.Add(CreateBeforeFirstObservation(scenario, baseline.PreActSnapshot));
-            for (int operationIndex = 0; operationIndex < baseline.Operations.Count; operationIndex++)
+            baselineObservations.Add(CreateCleanBaselineObservation(
+                scenario,
+                baselineBeforeFaultSweep,
+                TrxPhase3EvidenceDimension.BaselineBefore));
+            for (int operationIndex = 0; operationIndex < baselineBeforeFaultSweep.Operations.Count; operationIndex++)
             {
-                TrxFileOperationRecord operation = baseline.Operations[operationIndex];
-                observations.Add(RunFaultCase(
+                TrxFileOperationRecord operation = baselineBeforeFaultSweep.Operations[operationIndex];
+                faultObservations.Add(RunFaultCase(
                     scenario,
-                    baseline,
+                    baselineBeforeFaultSweep,
                     operation,
-                    TrxPhase3EvidenceDimension.Operation,
+                    TrxPhase3EvidenceDimension.OperationFault,
                     cut: null));
 
                 if (operation.Kind != TrxFileOperationKind.Write)
@@ -349,101 +391,97 @@ internal static class TrxPhase3EvidenceMatrix
                     continue;
                 }
 
-                TrxPhase3WriteRole role = InferWriteRole(scenario, baseline, operation);
+                TrxPhase3WriteRole role = InferWriteRole(scenario, baselineBeforeFaultSweep, operation);
                 IReadOnlyList<int> cuts = scenario.ExhaustiveRoles.Contains(role)
                     ? Enumerable.Range(0, operation.RequestedByteCount + 1).ToArray()
                     : scenario.SelectedRoles.Contains(role)
-                        ? CreateSelectedCuts(GetWrittenBytes(baseline, operation))
+                        ? CreateSelectedCuts(GetWrittenBytes(baselineBeforeFaultSweep, operation))
                         : [];
                 foreach (int cut in cuts)
                 {
-                    observations.Add(RunFaultCase(
+                    faultObservations.Add(RunFaultCase(
                         scenario,
-                        baseline,
+                        baselineBeforeFaultSweep,
                         operation,
-                        TrxPhase3EvidenceDimension.Byte,
+                        TrxPhase3EvidenceDimension.ByteCutFault,
                         cut));
                 }
             }
 
-            TrxDocumentObservation successful = ClassifyBest(
+            TrxPhase3Run baselineAfterFaultSweep = Run(scenario, terminationPlan: null, captureSnapshots: false);
+            Assert.IsTrue(baselineAfterFaultSweep.Completed);
+            Assert.AreSequenceEqual(
+                baselineBeforeFaultSweep.TargetBytes,
+                baselineAfterFaultSweep.TargetBytes,
+                scenario.Name);
+            baselineObservations.Add(CreateCleanBaselineObservation(
                 scenario,
-                baseline.TargetBytes,
-                operation: null,
-                cut: null);
-            observations.Add(new TrxPhase3EvidenceObservation
-            {
-                Scenario = scenario.Name,
-                Dimension = TrxPhase3EvidenceDimension.Successful,
-                OperationIndex = baseline.Operations.Count,
-                OperationKind = null,
-                WriteRole = TrxPhase3WriteRole.None,
-                Offset = 0,
-                RequestedBytes = 0,
-                Cut = null,
-                TargetLength = baseline.TargetBytes.Length,
-                FlushCount = baseline.Operations.Count(operation => operation.Kind == TrxFileOperationKind.Flush),
-                TargetPresent = baseline.TargetPresent,
-                CleanupWasFrozen = true,
-                Classification = successful.Classification,
-                Diagnostic = CreateStableDiagnostic(
-                    scenario.Name,
-                    TrxPhase3EvidenceDimension.Successful,
-                    baseline.Operations.Count,
-                    null,
-                    TrxPhase3WriteRole.None,
-                    0,
-                    0,
-                    null,
-                    baseline.TargetPresent,
-                    baseline.TargetBytes,
-                    baseline.Operations.Count(operation => operation.Kind == TrxFileOperationKind.Flush),
-                    successful.Classification),
-            });
+                baselineAfterFaultSweep,
+                TrxPhase3EvidenceDimension.BaselineAfter));
         }
 
-        IReadOnlyDictionary<TrxDocumentClassification, int> counts = Enum
+        IReadOnlyDictionary<TrxDocumentClassification, int> faultCounts =
+            CountClassifications(faultObservations);
+        IReadOnlyDictionary<TrxDocumentClassification, int> baselineCounts =
+            CountClassifications(baselineObservations);
+        int operationFaults = faultObservations.Count(
+            observation => observation.Dimension == TrxPhase3EvidenceDimension.OperationFault);
+        int byteCutFaults = faultObservations.Count(
+            observation => observation.Dimension == TrxPhase3EvidenceDimension.ByteCutFault);
+        string faultDigest = ComputeDigest(faultObservations.Select(observation => observation.Diagnostic));
+        string baselineDigest = ComputeDigest(baselineObservations.Select(observation => observation.Diagnostic));
+        string faultCountText = string.Join(
+            ",",
+            faultCounts.OrderBy(pair => pair.Key).Select(pair => $"{pair.Key}={pair.Value}"));
+        string baselineCountText = string.Join(
+            ",",
+            baselineCounts.OrderBy(pair => pair.Key).Select(pair => $"{pair.Key}={pair.Value}"));
+        string summary = string.Format(
+            CultureInfo.InvariantCulture,
+            "phase3 scenarios={0}; operationFaults={1}; byteCutFaults={2}; faultObservations={3}; baselineObservations={4}; combinedObservations={5}; faultClassifications=[{6}]; baselineClassifications=[{7}]; faultDigest={8}; baselineDigest={9}",
+            scenarios.Count,
+            operationFaults,
+            byteCutFaults,
+            faultObservations.Count,
+            baselineObservations.Count,
+            faultObservations.Count + baselineObservations.Count,
+            faultCountText,
+            baselineCountText,
+            faultDigest,
+            baselineDigest);
+
+        return new TrxPhase3EvidenceReport
+        {
+            FaultObservations = faultObservations,
+            BaselineObservations = baselineObservations,
+            BaselineOperations = baselineOperations,
+            FaultClassificationCounts = faultCounts,
+            BaselineClassificationCounts = baselineCounts,
+            OperationFaultCount = operationFaults,
+            ByteCutFaultCount = byteCutFaults,
+            FaultDigest = faultDigest,
+            BaselineDigest = baselineDigest,
+            Summary = summary,
+        };
+    }
+
+    private static IReadOnlyDictionary<TrxDocumentClassification, int> CountClassifications(
+        IReadOnlyList<TrxPhase3EvidenceObservation> observations)
+        => Enum
             .GetValues(typeof(TrxDocumentClassification))
             .Cast<TrxDocumentClassification>()
             .ToDictionary(
                 classification => classification,
                 classification => observations.Count(observation => observation.Classification == classification));
-        int operationCases = observations.Count(observation => observation.Dimension == TrxPhase3EvidenceDimension.Operation);
-        int byteCases = observations.Count(observation => observation.Dimension == TrxPhase3EvidenceDimension.Byte);
-        string digest = ComputeDigest(observations.Select(observation => observation.Diagnostic));
-        string countText = string.Join(
-            ",",
-            counts.OrderBy(pair => pair.Key).Select(pair => $"{pair.Key}={pair.Value}"));
-        string summary = string.Format(
-            CultureInfo.InvariantCulture,
-            "phase3 scenarios={0}; operations={1}; byteCuts={2}; observations={3}; classifications=[{4}]; digest={5}",
-            scenarios.Count,
-            operationCases,
-            byteCases,
-            observations.Count,
-            countText,
-            digest);
-
-        return new TrxPhase3EvidenceReport
-        {
-            Observations = observations,
-            BaselineOperations = baselineOperations,
-            ClassificationCounts = counts,
-            OperationCaseCount = operationCases,
-            ByteCaseCount = byteCases,
-            Digest = digest,
-            Summary = summary,
-        };
-    }
 
     public static void AssertOperationCoverage(TrxPhase3EvidenceReport report, string scenario)
     {
         IReadOnlyList<TrxFileOperationRecord> baseline = report.BaselineOperations[scenario];
         TrxPhase3EvidenceObservation[] operationCases =
         [
-            .. report.Observations.Where(
+            .. report.FaultObservations.Where(
                 observation => observation.Scenario == scenario
-                    && observation.Dimension == TrxPhase3EvidenceDimension.Operation),
+                    && observation.Dimension == TrxPhase3EvidenceDimension.OperationFault),
         ];
         Assert.HasCount(baseline.Count, operationCases);
         Assert.AreSequenceEqual(
@@ -474,9 +512,9 @@ internal static class TrxPhase3EvidenceMatrix
     {
         IGrouping<int, TrxPhase3EvidenceObservation>[] writes =
         [
-            .. report.Observations
+            .. report.FaultObservations
                 .Where(observation => observation.Scenario == scenario
-                    && observation.Dimension == TrxPhase3EvidenceDimension.Byte
+                    && observation.Dimension == TrxPhase3EvidenceDimension.ByteCutFault
                     && observation.WriteRole == role)
                 .GroupBy(observation => observation.OperationIndex),
         ];
@@ -498,18 +536,18 @@ internal static class TrxPhase3EvidenceMatrix
     {
         int[] cuts =
         [
-            .. report.Observations
+            .. report.FaultObservations
                 .Where(observation => observation.Scenario == scenario
                     && observation.OperationIndex == operationIndex
-                    && observation.Dimension == TrxPhase3EvidenceDimension.Byte)
+                    && observation.Dimension == TrxPhase3EvidenceDimension.ByteCutFault)
                 .Select(observation => observation.Cut!.Value)
                 .OrderBy(value => value),
         ];
         Assert.IsNotEmpty(cuts);
-        int requested = report.Observations.First(
+        int requested = report.FaultObservations.First(
             observation => observation.Scenario == scenario
                 && observation.OperationIndex == operationIndex
-                && observation.Dimension == TrxPhase3EvidenceDimension.Byte).RequestedBytes;
+                && observation.Dimension == TrxPhase3EvidenceDimension.ByteCutFault).RequestedBytes;
         Assert.Contains(0, cuts);
         Assert.Contains(1, cuts);
         Assert.Contains(requested - 1, cuts);
@@ -533,9 +571,9 @@ internal static class TrxPhase3EvidenceMatrix
     {
         IGrouping<int, TrxPhase3EvidenceObservation>[] cells =
         [
-            .. report.Observations
+            .. report.FaultObservations
                 .Where(observation => observation.Scenario == scenario
-                    && observation.Dimension == TrxPhase3EvidenceDimension.Byte
+                    && observation.Dimension == TrxPhase3EvidenceDimension.ByteCutFault
                     && observation.WriteRole == TrxPhase3WriteRole.Counter)
                 .GroupBy(observation => observation.OperationIndex),
         ];
@@ -619,7 +657,9 @@ internal static class TrxPhase3EvidenceMatrix
         IReadOnlyList<Guid> executionIds,
         IReadOnlyList<TrxExpectedRunningTest>? running = null,
         DateTimeOffset? finishTime = null,
-        string summaryOutcome = "Failed")
+        string summaryOutcome = "Failed",
+        IReadOnlyList<string>? rootChildOrder = null,
+        string? runName = null)
     {
         var expected = new TrxExpectedResult[results.Count];
         for (int i = 0; i < results.Count; i++)
@@ -637,13 +677,13 @@ internal static class TrxPhase3EvidenceMatrix
         return new TrxDocumentExpectation
         {
             RunId = RunId,
-            RunName = RunName,
+            RunName = runName ?? RunName,
             StartTime = StartTime,
             FinishTime = finishTime ?? StartTime,
             SummaryOutcome = summaryOutcome,
             CompletedResults = expected,
             RunningTests = running ?? [],
-            RootChildOrder = PrototypeRootOrder,
+            RootChildOrder = rootChildOrder ?? PrototypeRootOrder,
         };
     }
 
@@ -1117,40 +1157,46 @@ internal static class TrxPhase3EvidenceMatrix
             frozen.Contains(TargetPath) ? frozen.GetFileBytes(TargetPath) : []);
     }
 
-    private static TrxPhase3EvidenceObservation CreateBeforeFirstObservation(
+    private static TrxPhase3EvidenceObservation CreateCleanBaselineObservation(
         TrxPhase3Scenario scenario,
-        TrxVirtualFileSystemSnapshot preAct)
+        TrxPhase3Run baseline,
+        TrxPhase3EvidenceDimension dimension)
     {
-        bool present = preAct.Contains(TargetPath);
-        byte[] bytes = present ? preAct.GetFileBytes(TargetPath) : [];
-        TrxDocumentObservation classification = ClassifyBest(scenario, bytes, operation: null, cut: null, useBeforeOnly: true);
+        Assert.IsTrue(
+            dimension is TrxPhase3EvidenceDimension.BaselineBefore or TrxPhase3EvidenceDimension.BaselineAfter);
+        TrxDocumentObservation classification =
+            ClassifyBest(scenario, baseline.TargetBytes, operation: null, cut: null);
+        int operationIndex = dimension == TrxPhase3EvidenceDimension.BaselineBefore
+            ? -1
+            : baseline.Operations.Count;
+        int flushCount = baseline.Operations.Count(operation => operation.Kind == TrxFileOperationKind.Flush);
         return new TrxPhase3EvidenceObservation
         {
             Scenario = scenario.Name,
-            Dimension = TrxPhase3EvidenceDimension.BeforeFirst,
-            OperationIndex = -1,
+            Dimension = dimension,
+            OperationIndex = operationIndex,
             OperationKind = null,
             WriteRole = TrxPhase3WriteRole.None,
             Offset = 0,
             RequestedBytes = 0,
             Cut = null,
-            TargetLength = bytes.Length,
-            FlushCount = 0,
-            TargetPresent = present,
+            TargetLength = baseline.TargetBytes.Length,
+            FlushCount = flushCount,
+            TargetPresent = baseline.TargetPresent,
             CleanupWasFrozen = true,
             Classification = classification.Classification,
             Diagnostic = CreateStableDiagnostic(
                 scenario.Name,
-                TrxPhase3EvidenceDimension.BeforeFirst,
-                -1,
+                dimension,
+                operationIndex,
                 null,
                 TrxPhase3WriteRole.None,
                 0,
                 0,
                 null,
-                present,
-                bytes,
-                0,
+                baseline.TargetPresent,
+                baseline.TargetBytes,
+                flushCount,
                 classification.Classification),
         };
     }
@@ -1454,10 +1500,16 @@ internal static class TrxPhase3EvidenceMatrix
         byte[] targetBytes,
         int flushCount,
         TrxDocumentClassification classification)
-        => string.Format(
+    {
+        string evidenceCategory = dimension is TrxPhase3EvidenceDimension.OperationFault
+            or TrxPhase3EvidenceDimension.ByteCutFault
+                ? "fault"
+                : "baseline";
+        return string.Format(
             CultureInfo.InvariantCulture,
-            "scenario={0}; dimension={1}; operation={2:D3}:{3}; role={4}; offset={5}; requested={6}; cut={7}; targetPresent={8}; targetLength={9}; flushes={10}; classification={11}; window={12}",
+            "scenario={0}; evidenceCategory={1}; dimension={2}; operation={3:D3}:{4}; role={5}; offset={6}; requested={7}; cut={8}; targetPresent={9}; targetLength={10}; flushes={11}; classification={12}; window={13}",
             scenario,
+            evidenceCategory,
             dimension,
             operationIndex,
             operationKind?.ToString() ?? "-",
@@ -1470,6 +1522,7 @@ internal static class TrxPhase3EvidenceMatrix
             flushCount,
             classification,
             CreateHexWindow(targetBytes, offset + (cut ?? 0)));
+    }
 
     private static string CreateHexWindow(byte[] bytes, long center)
     {

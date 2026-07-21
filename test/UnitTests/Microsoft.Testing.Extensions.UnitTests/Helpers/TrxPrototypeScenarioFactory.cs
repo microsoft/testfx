@@ -279,6 +279,7 @@ internal static class TrxPrototypeScenarioFactory
         {
             Encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true),
             Indent = true,
+            NewLineHandling = NewLineHandling.Entitize,
             OmitXmlDeclaration = false,
         };
         using (var writer = XmlWriter.Create(stream, settings))
@@ -315,7 +316,8 @@ internal static class TrxPrototypeScenarioFactory
                 TestModule,
                 FrameworkUid,
                 FrameworkVersion,
-                FinishTime);
+                FinishTime,
+                NormalizeTrxReportEngineLineEndings);
         }
 
         return new TrxPrototypeScenario
@@ -333,6 +335,9 @@ internal static class TrxPrototypeScenarioFactory
             },
         };
     }
+
+    private static string NormalizeTrxReportEngineLineEndings(string value)
+        => value.Replace("\r\n", "\n").Replace('\r', '\n');
 
     private static TrxTestResult CreateResult(
         string uid,

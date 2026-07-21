@@ -44,6 +44,16 @@ internal sealed class TrxExpectedResult
 
     public required string RelativeResultsDirectory { get; init; }
 
+    public string? StandardOutput { get; init; }
+
+    public string? StandardError { get; init; }
+
+    public string? DebugTrace { get; init; }
+
+    public string? ErrorMessage { get; init; }
+
+    public string? ErrorStackTrace { get; init; }
+
     public required TrxExpectedDefinition Definition { get; init; }
 }
 
@@ -133,10 +143,17 @@ internal static class TrxExpectedResultFactory
         string testModule,
         string frameworkUid,
         string frameworkVersion,
-        DateTimeOffset fallbackTime)
+        DateTimeOffset fallbackTime,
+        Func<string, string>? renderedTextTransform = null)
     {
+        string RenderText(string value)
+        {
+            string sanitized = Sanitize(value);
+            return renderedTextTransform?.Invoke(sanitized) ?? sanitized;
+        }
+
         string executionIdText = executionId.ToString();
-        string displayName = Sanitize(result.DisplayName);
+        string displayName = RenderText(result.DisplayName);
         TrxTestMethodIdentifier? identifier = result.TestMethodIdentifier;
         string className = result.TrxFullyQualifiedTypeName
             ?? (identifier is null
@@ -153,10 +170,10 @@ internal static class TrxExpectedResultFactory
             switch (metadata.Key)
             {
                 case "Owner":
-                    owner ??= Sanitize(metadata.Value);
+                    owner ??= RenderText(metadata.Value);
                     break;
                 case "Description":
-                    description ??= Sanitize(metadata.Value);
+                    description ??= RenderText(metadata.Value);
                     break;
                 case "Priority":
                     if (int.TryParse(metadata.Value, out int priorityValue) && priorityValue != int.MaxValue)
@@ -169,8 +186,8 @@ internal static class TrxExpectedResultFactory
                     properties.Add(
                         new TrxExpectedProperty
                         {
-                            Key = Sanitize(metadata.Key),
-                            Value = Sanitize(metadata.Value),
+                            Key = RenderText(metadata.Key),
+                            Value = RenderText(metadata.Value),
                         });
                     break;
             }
@@ -186,30 +203,43 @@ internal static class TrxExpectedResultFactory
                 ?? "00:00:00",
             StartTime = result.StartTime?.ToUniversalTime() ?? fallbackTime,
             EndTime = result.EndTime?.ToUniversalTime() ?? fallbackTime,
-            ComputerName = Sanitize(computerName),
+            ComputerName = RenderText(computerName),
             TestTypeId = UnitTestTypeId,
             TestListId = UncategorizedTestListId,
             RelativeResultsDirectory = executionIdText,
+            StandardOutput = CreateMessageText(result.Messages, TrxStreamMessageKind.StandardOutput, RenderText),
+            StandardError = CreateMessageText(result.Messages, TrxStreamMessageKind.StandardError, RenderText),
+            DebugTrace = CreateMessageText(result.Messages, TrxStreamMessageKind.DebugOrTrace, RenderText),
+            ErrorMessage = result.ExceptionMessage is null ? null : RenderText(result.ExceptionMessage),
+            ErrorStackTrace = result.ExceptionStackTrace is null ? null : RenderText(result.ExceptionStackTrace),
             Definition = new TrxExpectedDefinition
             {
-                Name = Sanitize(result.TrxTestDefinitionName ?? displayName),
-                Storage = Sanitize(testModule.ToLowerInvariant()),
-                ClassName = Sanitize(className),
-                MethodName = Sanitize(identifier?.MethodName ?? displayName),
-                CodeBase = Sanitize(testModule),
-                AdapterTypeName = Sanitize($"executor://{frameworkUid}/{frameworkVersion}"),
+                Name = RenderText(result.TrxTestDefinitionName ?? displayName),
+                Storage = RenderText(testModule.ToLowerInvariant()),
+                ClassName = RenderText(className),
+                MethodName = RenderText(identifier?.MethodName ?? displayName),
+                CodeBase = RenderText(testModule),
+                AdapterTypeName = RenderText($"executor://{frameworkUid}/{frameworkVersion}"),
                 Priority = priority,
                 Owner = owner,
                 Description = description,
-                Categories = [.. (result.Categories ?? []).Select(Sanitize)],
+                Categories = [.. (result.Categories ?? []).Select(RenderText)],
                 Properties = properties,
             },
         };
     }
 
+    private static string? CreateMessageText(
+        IReadOnlyList<TrxStreamMessage>? messages,
+        TrxStreamMessageKind kind,
+        Func<string, string> renderText)
+    {
+        string[] matching = [.. (messages ?? []).Where(message => message.Kind == kind).Select(message => message.Message ?? string.Empty)];
+        return matching.Length == 0 ? null : renderText(string.Join(Environment.NewLine, matching));
+    }
+
     private static string Sanitize(string value)
     {
-        value = value.Replace("\r\n", "\n").Replace('\r', '\n');
         StringBuilder? builder = null;
         for (int i = 0; i < value.Length; i++)
         {
@@ -551,6 +581,7 @@ internal static class TrxDocumentClassifier
                 errors.Add($"Result[{i}]/@endTime '{resultEnd:O}' is earlier than @startTime '{resultStart:O}'.");
             }
 
+            ValidateOutput(actual, expected, i, errors);
             ValidateRelativeOrder(actual, ["Output", "ResultFiles"], $"Result[{i}] child order", errors);
         }
 
@@ -575,6 +606,41 @@ internal static class TrxDocumentClassifier
                 $"Running[{i}]/@startTime",
                 errors);
         }
+    }
+
+    private static void ValidateOutput(
+        XElement result,
+        TrxExpectedResult expected,
+        int resultIndex,
+        List<string> errors)
+    {
+        XElement? output = result.Element(TeamTest2010Namespace + "Output");
+        string location = $"Result[{resultIndex}]/Output";
+        CompareOptionalValue(
+            $"{location}/StdOut",
+            output?.Element(TeamTest2010Namespace + "StdOut")?.Value,
+            expected.StandardOutput,
+            errors);
+        CompareOptionalValue(
+            $"{location}/StdErr",
+            output?.Element(TeamTest2010Namespace + "StdErr")?.Value,
+            expected.StandardError,
+            errors);
+        CompareOptionalValue(
+            $"{location}/DebugTrace",
+            output?.Element(TeamTest2010Namespace + "DebugTrace")?.Value,
+            expected.DebugTrace,
+            errors);
+        CompareOptionalValue(
+            $"{location}/ErrorInfo/Message",
+            output?.Element(TeamTest2010Namespace + "ErrorInfo")?.Element(TeamTest2010Namespace + "Message")?.Value,
+            expected.ErrorMessage,
+            errors);
+        CompareOptionalValue(
+            $"{location}/ErrorInfo/StackTrace",
+            output?.Element(TeamTest2010Namespace + "ErrorInfo")?.Element(TeamTest2010Namespace + "StackTrace")?.Value,
+            expected.ErrorStackTrace,
+            errors);
     }
 
     private static void ValidateDefinitionAndEntryLinks(

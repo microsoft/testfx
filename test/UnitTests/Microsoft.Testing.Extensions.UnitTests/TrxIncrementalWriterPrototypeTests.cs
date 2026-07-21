@@ -376,10 +376,10 @@ public sealed class TrxIncrementalWriterPrototypeTests
         XElement completed = CompletedResults(document).Single();
         Assert.AreEqual("name é漢😀 e\u0301 مرحبا <&\" control:\\u0001", completed.Attribute("testName")!.Value);
         Assert.AreEqual(
-            "stdout <&> 😀\\u0004\nline",
+            "stdout <&> 😀\\u0004\r\nline",
             completed.Element(Ns + "Output")!.Element(Ns + "StdOut")!.Value);
         Assert.AreEqual(
-            "message <&> 😀\\u0003\nline",
+            "message <&> 😀\\u0003\r\nline",
             completed.Descendants(Ns + "Message").Single().Value);
         XElement property = Required(document, "TestDefinitions").Descendants(Ns + "Property").Single();
         Assert.AreEqual("Custom<&>", property.Element(Ns + "Key")!.Value);
@@ -452,7 +452,7 @@ public sealed class TrxIncrementalWriterPrototypeTests
         XElement[] completed = CompletedResults(document).ToArray();
         Assert.AreEqual(oneLargeMessage, completed[0].Descendants(Ns + "StdOut").Single().Value);
         Assert.AreEqual(
-            string.Join("\n", manyMessages.Select(message => message.Message)),
+            string.Join(Environment.NewLine, manyMessages.Select(message => message.Message)),
             completed[1].Descendants(Ns + "StdErr").Single().Value);
         Assert.AreEqual(0, Required(document, "TestDefinitions").Nodes().OfType<XText>().Sum(text => text.Value.Length));
         Assert.AreEqual(0, Required(document, "TestEntries").Nodes().OfType<XText>().Sum(text => text.Value.Length));
@@ -475,7 +475,7 @@ public sealed class TrxIncrementalWriterPrototypeTests
         Assert.AreSequenceEqual(
             ["StdOut", "StdErr", "DebugTrace", "ErrorInfo"],
             output.Elements().Select(element => element.Name.LocalName).ToArray());
-        Assert.AreEqual("stdout-1\nstdout-2", output.Element(Ns + "StdOut")!.Value);
+        Assert.AreEqual($"stdout-1{Environment.NewLine}stdout-2", output.Element(Ns + "StdOut")!.Value);
         Assert.AreEqual("stderr", output.Element(Ns + "StdErr")!.Value);
         Assert.AreEqual("debug", output.Element(Ns + "DebugTrace")!.Value);
         Assert.AreEqual("exception", output.Descendants(Ns + "Message").Single().Value);

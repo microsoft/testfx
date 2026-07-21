@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming;
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
@@ -146,6 +147,78 @@ public sealed class TrxDocumentClassifierTests
                 candidate => candidate.Contains(error, StringComparison.Ordinal),
                 observation.Errors,
                 name);
+        }
+    }
+
+    [TestMethod]
+    public void Classify_PrototypeRenderersPreserveCrLfAndRejectLfOnlyMutations()
+    {
+        TrxTestResult result = CreateLineEndingResult();
+        Guid executionId = TrxPhase3EvidenceMatrix.ExecutionId(901);
+        const string runName = "line-ending run first\r\nline-ending run second";
+        TrxPrototypeCompletion completion = new()
+        {
+            FinishTime = TrxPhase3EvidenceMatrix.FinishTime,
+            ExitCode = 1,
+        };
+        foreach ((string renderer, byte[] bytes) in RenderPrototypeDocuments(result, executionId, completion, runName))
+        {
+            TrxDocumentExpectation expectation = TrxPhase3EvidenceMatrix.CreateExpectation(
+                [result],
+                [executionId],
+                finishTime: completion.FinishTime,
+                rootChildOrder: ["Times", "TestSettings", "Results", "TestDefinitions", "TestEntries", "TestLists", "ResultSummary"],
+                runName: runName);
+            TrxDocumentObservation truthful = TrxDocumentClassifier.Classify(bytes, expectation);
+            Assert.AreEqual(
+                TrxDocumentClassification.Truthful,
+                truthful.Classification,
+                $"{renderer}: {truthful.Diagnostic}");
+
+            XDocument document = TrxPrototypeScenarioFactory.LoadStrict(bytes);
+            AssertAttributeLineEndingMutationIsDetected(
+                renderer,
+                document,
+                expectation,
+                value => value.Root!.Attribute("name")!,
+                "run name",
+                "TestRun/@name");
+            AssertAttributeLineEndingMutationIsDetected(
+                renderer,
+                document,
+                expectation,
+                value => value.Descendants(Ns + "UnitTestResult").Single().Attribute("testName")!,
+                "test name",
+                "Result[0]/@testName");
+            (string Name, Func<XDocument, XElement> Select, string Error)[] fields =
+            [
+                ("stdout", value => value.Descendants(Ns + "StdOut").Single(), "/Output/StdOut"),
+                ("stderr", value => value.Descendants(Ns + "StdErr").Single(), "/Output/StdErr"),
+                ("debug trace", value => value.Descendants(Ns + "DebugTrace").Single(), "/Output/DebugTrace"),
+                ("error message", value => value.Descendants(Ns + "Message").Single(), "/ErrorInfo/Message"),
+                ("stack trace", value => value.Descendants(Ns + "StackTrace").Single(), "/ErrorInfo/StackTrace"),
+                ("description", value => value.Descendants(Ns + "Description").Single(), "/Description"),
+                ("custom metadata", value => value.Descendants(Ns + "Property").Single().Element(Ns + "Value")!, "properties must be"),
+            ];
+
+            foreach ((string name, Func<XDocument, XElement> select, string error) in fields)
+            {
+                XDocument mutated = Clone(document);
+                XElement field = select(mutated);
+                Assert.Contains("\r\n", field.Value, $"{renderer}: {name}");
+                field.Value = field.Value.Replace("\r\n", "\n");
+
+                TrxDocumentObservation observation = Classify(mutated, expectation);
+
+                Assert.AreEqual(
+                    TrxDocumentClassification.ParseableInconsistent,
+                    observation.Classification,
+                    $"{renderer}: {name}: {observation.Diagnostic}");
+                Assert.Contains(
+                    candidate => candidate.Contains(error, StringComparison.Ordinal),
+                    observation.Errors,
+                    $"{renderer}: {name}");
+            }
         }
     }
 
@@ -324,6 +397,116 @@ public sealed class TrxDocumentClassifierTests
 
     private static async Task<TrxRenderedScenario> RenderMixedAsync()
         => await TrxPrototypeScenarioFactory.RenderAsync(TrxPrototypeScenarioFactory.CreateMixedResultsScenario());
+
+    private static TrxTestResult CreateLineEndingResult()
+        => new()
+        {
+            Uid = TrxPhase3EvidenceMatrix.TestId(901),
+            DisplayName = "line-ending result first\r\nline-ending result second",
+            Outcome = TrxTestOutcome.Failed,
+            StartTime = TrxPhase3EvidenceMatrix.StartTime.AddSeconds(1),
+            EndTime = TrxPhase3EvidenceMatrix.StartTime.AddSeconds(2),
+            Duration = TimeSpan.FromSeconds(1),
+            TrxTestDefinitionName = "LineEnding.Definition",
+            TrxFullyQualifiedTypeName = "Phase3.LineEndingTests",
+            TestMethodIdentifier = new TrxTestMethodIdentifier
+            {
+                Namespace = "Phase3",
+                TypeName = "LineEndingTests",
+                MethodName = "PreservesCrLf",
+            },
+            ExceptionMessage = "message first\r\nmessage second",
+            ExceptionStackTrace = "stack first\r\nstack second",
+            Messages =
+            [
+                new TrxStreamMessage
+                {
+                    Kind = TrxStreamMessageKind.StandardOutput,
+                    Message = "stdout first\r\nstdout second",
+                },
+                new TrxStreamMessage
+                {
+                    Kind = TrxStreamMessageKind.StandardError,
+                    Message = "stderr first\r\nstderr second",
+                },
+                new TrxStreamMessage
+                {
+                    Kind = TrxStreamMessageKind.DebugOrTrace,
+                    Message = "debug first\r\ndebug second",
+                },
+            ],
+            Metadata =
+            [
+                new TrxTestMetadata { Key = "Description", Value = "description first\r\ndescription second" },
+                new TrxTestMetadata { Key = "Custom", Value = "metadata first\r\nmetadata second" },
+            ],
+        };
+
+    private static IReadOnlyList<(string Renderer, byte[] Bytes)> RenderPrototypeDocuments(
+        TrxTestResult result,
+        Guid executionId,
+        TrxPrototypeCompletion completion,
+        string runName)
+    {
+        var renderer = new TrxPrototypeXmlRenderer(
+            TrxPhase3EvidenceMatrix.MachineName,
+            TrxPhase3EvidenceMatrix.TestModule,
+            TrxPhase3EvidenceMatrix.FrameworkUid,
+            TrxPhase3EvidenceMatrix.FrameworkVersion);
+        byte[] compact = renderer.RenderCompact(
+            TrxPhase3EvidenceMatrix.RunId,
+            runName,
+            TrxPhase3EvidenceMatrix.StartTime,
+            [result],
+            [executionId],
+            completion);
+
+        var operations = new TrxFaultInjectingFileOperations(captureSnapshots: false);
+        var journal = new TrxJournalSnapshotPrototype(
+            operations,
+            TrxPhase3EvidenceMatrix.RecoveryPath,
+            TrxPhase3EvidenceMatrix.TargetPath,
+            TrxPhase3EvidenceMatrix.RunId,
+            runName,
+            TrxPhase3EvidenceMatrix.MachineName,
+            TrxPhase3EvidenceMatrix.TestModule,
+            TrxPhase3EvidenceMatrix.FrameworkUid,
+            TrxPhase3EvidenceMatrix.FrameworkVersion,
+            TrxPhase3EvidenceMatrix.StartTime);
+        journal.Append(result, executionId);
+        journal.PublishSnapshot(completion);
+
+        return
+        [
+            ("compact renderer", compact),
+            ("journal snapshot renderer", operations.GetFileBytes(TrxPhase3EvidenceMatrix.TargetPath)),
+        ];
+    }
+
+    private static void AssertAttributeLineEndingMutationIsDetected(
+        string renderer,
+        XDocument document,
+        TrxDocumentExpectation expectation,
+        Func<XDocument, XAttribute> select,
+        string fieldName,
+        string expectedError)
+    {
+        XDocument mutated = Clone(document);
+        XAttribute field = select(mutated);
+        Assert.Contains("\r\n", field.Value, $"{renderer}: {fieldName}");
+        field.Value = field.Value.Replace("\r\n", "\n");
+
+        TrxDocumentObservation observation = Classify(mutated, expectation);
+
+        Assert.AreEqual(
+            TrxDocumentClassification.ParseableInconsistent,
+            observation.Classification,
+            $"{renderer}: {fieldName}: {observation.Diagnostic}");
+        Assert.Contains(
+            candidate => candidate.Contains(expectedError, StringComparison.Ordinal),
+            observation.Errors,
+            $"{renderer}: {fieldName}");
+    }
 
     private static XDocument Clone(XDocument document) => new(document);
 

@@ -361,24 +361,27 @@ internal sealed class TrxJournalSnapshotPrototype
     private byte[] RenderPrefix(DateTimeOffset finishTime)
     {
         XNamespace ns = NamespaceUri;
-        string root = new XElement(
-            ns + "TestRun",
-            new XAttribute("id", _runId),
-            new XAttribute("name", Sanitize(_runName))).ToString(SaveOptions.DisableFormatting);
-        root = root.Substring(0, root.LastIndexOf("/>", StringComparison.Ordinal)) + ">";
-        string times = new XElement(
-            "Times",
-            new XAttribute("creation", FormatTimestamp(_startTime)),
-            new XAttribute("queuing", FormatTimestamp(_startTime)),
-            new XAttribute("start", FormatTimestamp(_startTime)),
-            new XAttribute("finish", FormatTimestamp(finishTime))).ToString(SaveOptions.DisableFormatting);
-        string settings = new XElement(
-            "TestSettings",
-            new XAttribute("name", "default"),
-            new XAttribute("id", Guid.Empty),
+        string root = SerializeElement(
             new XElement(
-                "Deployment",
-                new XAttribute("runDeploymentRoot", Sanitize(_runName)))).ToString(SaveOptions.DisableFormatting);
+                ns + "TestRun",
+                new XAttribute("id", _runId),
+                new XAttribute("name", Sanitize(_runName))));
+        root = root.Substring(0, root.LastIndexOf("/>", StringComparison.Ordinal)) + ">";
+        string times = SerializeElement(
+            new XElement(
+                "Times",
+                new XAttribute("creation", FormatTimestamp(_startTime)),
+                new XAttribute("queuing", FormatTimestamp(_startTime)),
+                new XAttribute("start", FormatTimestamp(_startTime)),
+                new XAttribute("finish", FormatTimestamp(finishTime))));
+        string settings = SerializeElement(
+            new XElement(
+                "TestSettings",
+                new XAttribute("name", "default"),
+                new XAttribute("id", Guid.Empty),
+                new XElement(
+                    "Deployment",
+                    new XAttribute("runDeploymentRoot", Sanitize(_runName)))));
         return Utf8.GetBytes(string.Concat(
             "<?xml version=\"1.0\" encoding=\"utf-8\"?>",
             root,
@@ -395,16 +398,17 @@ internal sealed class TrxJournalSnapshotPrototype
             || counts.Timeout > 0
                 ? "Failed"
                 : "Completed";
-        string testLists = new XElement(
-            "TestLists",
+        string testLists = SerializeElement(
             new XElement(
-                "TestList",
-                new XAttribute("name", "Results Not in a List"),
-                new XAttribute("id", UncategorizedTestListId)),
-            new XElement(
-                "TestList",
-                new XAttribute("name", "All Loaded Results"),
-                new XAttribute("id", "19431567-8539-422a-85D7-44EE4E166BDA"))).ToString(SaveOptions.DisableFormatting);
+                "TestLists",
+                new XElement(
+                    "TestList",
+                    new XAttribute("name", "Results Not in a List"),
+                    new XAttribute("id", UncategorizedTestListId)),
+                new XElement(
+                    "TestList",
+                    new XAttribute("name", "All Loaded Results"),
+                    new XAttribute("id", "19431567-8539-422a-85D7-44EE4E166BDA"))));
         return Utf8.GetBytes(string.Concat(
             "</TestEntries>",
             testLists,
@@ -418,14 +422,15 @@ internal sealed class TrxJournalSnapshotPrototype
 
     private byte[] RenderRunningTest(TrxPrototypeRunningTest running)
         => Utf8.GetBytes(
-            new XElement(
-                "UnitTestResult",
-                new XAttribute("executionId", running.ExecutionId),
-                new XAttribute("testId", TrxPrototypeXmlRenderer.GetTestId(running.Uid)),
-                new XAttribute("testName", Sanitize(running.DisplayName)),
-                new XAttribute("computerName", Sanitize(_machineName)),
-                new XAttribute("startTime", FormatTimestamp(running.StartTime)),
-                new XAttribute("outcome", "InProgress")).ToString(SaveOptions.DisableFormatting));
+            SerializeElement(
+                new XElement(
+                    "UnitTestResult",
+                    new XAttribute("executionId", running.ExecutionId),
+                    new XAttribute("testId", TrxPrototypeXmlRenderer.GetTestId(running.Uid)),
+                    new XAttribute("testName", Sanitize(running.DisplayName)),
+                    new XAttribute("computerName", Sanitize(_machineName)),
+                    new XAttribute("startTime", FormatTimestamp(running.StartTime)),
+                    new XAttribute("outcome", "InProgress"))));
 
     private static string RenderCounters(SnapshotCounts counts)
         => string.Concat(
@@ -520,6 +525,23 @@ internal sealed class TrxJournalSnapshotPrototype
                     nameof(runningTests));
             }
         }
+    }
+
+    private static string SerializeElement(XElement element)
+    {
+        XmlWriterSettings settings = new()
+        {
+            OmitXmlDeclaration = true,
+            Indent = false,
+            NewLineHandling = NewLineHandling.Entitize,
+        };
+        StringBuilder builder = new();
+        using (var writer = XmlWriter.Create(builder, settings))
+        {
+            element.WriteTo(writer);
+        }
+
+        return builder.ToString();
     }
 
     private static string Sanitize(string value)

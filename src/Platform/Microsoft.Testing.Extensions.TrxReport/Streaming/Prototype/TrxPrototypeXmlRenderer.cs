@@ -569,10 +569,11 @@ internal sealed class TrxPrototypeXmlRenderer
 
     private static string CreateRootStart(Guid runId, string runName)
     {
-        string serialized = new XElement(
-            XNamespace.Get(NamespaceUri) + "TestRun",
-            new XAttribute("id", runId),
-            new XAttribute("name", Sanitize(runName))).ToString(SaveOptions.DisableFormatting);
+        string serialized = SerializeElement(
+            new XElement(
+                XNamespace.Get(NamespaceUri) + "TestRun",
+                new XAttribute("id", runId),
+                new XAttribute("name", Sanitize(runName))));
         int emptyElementMarker = serialized.LastIndexOf("/>", StringComparison.Ordinal);
         return serialized.Substring(0, emptyElementMarker) + ">";
     }
@@ -601,7 +602,21 @@ internal sealed class TrxPrototypeXmlRenderer
                     new XAttribute("id", "19431567-8539-422a-85D7-44EE4E166BDA"))));
 
     private static string SerializeElement(XElement element)
-        => element.ToString(SaveOptions.DisableFormatting);
+    {
+        var builder = new StringBuilder();
+        var settings = new XmlWriterSettings
+        {
+            ConformanceLevel = ConformanceLevel.Fragment,
+            NewLineHandling = NewLineHandling.Entitize,
+            OmitXmlDeclaration = true,
+        };
+        using (var writer = XmlWriter.Create(builder, settings))
+        {
+            element.WriteTo(writer);
+        }
+
+        return builder.ToString();
+    }
 
     private static string ToXmlOutcome(TrxTestOutcome outcome)
         => outcome switch
