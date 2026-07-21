@@ -159,25 +159,25 @@ internal sealed class DotnetTestWebSocketClient : NamedPipeConnectionBase, IClie
                 throw;
             }
 
-            object? response = await ReadNextMessageAsync(_stream, cancellationToken).ConfigureAwait(false);
+            object? response;
+            try
+            {
+                response = await ReadNextMessageAsync(_stream, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception ex) when (ex is IOException or ObjectDisposedException or WebSocketException)
+            {
+                // Unlike a named pipe (which reports a clean disconnect as a 0-byte read, i.e. a null response
+                // below), an abrupt WebSocket disconnect - e.g. the peer's process being killed mid-response,
+                // before it can complete the WebSocket close handshake - surfaces here as a thrown exception
+                // instead of a null result. Route it through the same connection-loss handling as a null
+                // response so both failure shapes are indistinguishable to the caller.
+                await HandleMissingResponseAsync(ex).ConfigureAwait(false);
+                throw; // Unreachable: HandleMissingResponseAsync always throws or terminates the process.
+            }
+
             if (response is null)
             {
-                if (!_exitProcessOnConnectionLoss)
-                {
-                    throw new IOException("The WebSocket transport was closed by the peer before a response was received.");
-                }
-
-                try
-                {
-                    await Console.Error.WriteLineAsync($"[DotnetTestWebSocketClient] The WebSocket transport was closed by the peer before a response was received. The peer process likely exited or was killed. Terminating with exit code {(int)ExitCode.GenericFailure}.").ConfigureAwait(false);
-                }
-                catch (Exception ex) when (ex is IOException or ObjectDisposedException or InvalidOperationException or NotSupportedException or ArgumentException or OperationCanceledException)
-                {
-                    // Best-effort diagnostic only; never let logging failures shadow the original problem.
-                }
-
-                _environment.Exit((int)ExitCode.GenericFailure);
-                throw new InvalidOperationException("The WebSocket transport was closed by the peer before a response was received.");
+                await HandleMissingResponseAsync(cause: null).ConfigureAwait(false);
             }
 
             return (TResponse)response!;
@@ -186,6 +186,42 @@ internal sealed class DotnetTestWebSocketClient : NamedPipeConnectionBase, IClie
         {
             _lock.Release();
         }
+    }
+
+    /// <summary>
+    /// Reacts to the transport being closed by the peer before a response was received - whether observed as a
+    /// null/EOF read or as a thrown transport exception (see the two callers in
+    /// <see cref="RequestReplyAsync{TRequest, TResponse}"/>). Mirrors <see cref="NamedPipeClient"/>'s identical
+    /// connection-loss policy: when the primary data channel (<c>exitProcessOnConnectionLoss: true</c>) loses its
+    /// peer there is no way to recover, so the process exits abnormally after a best-effort diagnostic; an
+    /// auxiliary channel (<c>exitProcessOnConnectionLoss: false</c>) instead always throws so the caller can react
+    /// cooperatively.
+    /// </summary>
+    /// <remarks>Never returns normally: either throws, or terminates the process via <c>_environment.Exit</c>.</remarks>
+    private async Task HandleMissingResponseAsync(Exception? cause)
+    {
+        if (!_exitProcessOnConnectionLoss)
+        {
+            throw new IOException("The WebSocket transport was closed by the peer before a response was received.", cause);
+        }
+
+        // Surface a diagnostic on stderr so the user has a chance to understand why this process is exiting. We
+        // deliberately use Console.Error (and not stdout) to avoid corrupting any machine-readable output that
+        // may be flowing through stdout.
+        try
+        {
+            await Console.Error.WriteLineAsync($"[DotnetTestWebSocketClient] The WebSocket transport was closed by the peer before a response was received. The peer process likely exited or was killed. Terminating with exit code {(int)ExitCode.GenericFailure}.").ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is IOException or ObjectDisposedException or InvalidOperationException or NotSupportedException or ArgumentException or OperationCanceledException)
+        {
+            // Best-effort diagnostic only; never let logging failures shadow the original problem.
+        }
+
+        _environment.Exit((int)ExitCode.GenericFailure);
+
+        // _environment.Exit normally terminates the process and never returns. Guard against alternate
+        // IEnvironment implementations (e.g. tests) that don't terminate by throwing explicitly.
+        throw new InvalidOperationException("The WebSocket transport was closed by the peer before a response was received.", cause);
     }
 
     public void Dispose()

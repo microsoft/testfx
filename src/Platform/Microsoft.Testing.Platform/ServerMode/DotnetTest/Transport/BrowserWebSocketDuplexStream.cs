@@ -195,7 +195,7 @@ internal sealed partial class BrowserWebSocketDuplexStream : Stream
     {
         if (_pendingReadOffset >= _pendingRead.Length)
         {
-            string next = await ReceiveAsync(_socket).ConfigureAwait(false);
+            string next = await WaitForReceiveAsync(cancellationToken).ConfigureAwait(false);
 
             // A real protocol frame is always at least 8 bytes (4-byte length header + 4-byte serializer id), so
             // an empty result unambiguously means the JS module resolved the close sentinel (see the 'receive'
@@ -214,6 +214,41 @@ internal sealed partial class BrowserWebSocketDuplexStream : Stream
         Array.Copy(_pendingRead, _pendingReadOffset, buffer, offset, toCopy);
         _pendingReadOffset += toCopy;
         return toCopy;
+    }
+
+    /// <summary>
+    /// Awaits the JS-side <c>receive()</c> promise while honoring <paramref name="cancellationToken"/>, even
+    /// though the promise itself has no cancellation hook across the interop boundary.
+    /// </summary>
+    /// <remarks>
+    /// Without this, a caller that cancels a pending read (e.g. <see cref="DotnetTestWebSocketClient.RequestReplyAsync{TRequest, TResponse}"/>
+    /// racing a timeout, or a shutdown path) would hang until the peer either sends more data or closes the
+    /// socket - on <c>browser-wasm</c>, the very runtime this transport exists for, that would be an unrecoverable
+    /// hang. This races the receive against the token and throws <see cref="OperationCanceledException"/> as
+    /// soon as it fires. The JS promise itself is left pending (its eventual resolution is simply discarded) -
+    /// there is no way to abort it from here - so callers must tear down the connection (which disposes this
+    /// stream and closes the socket) promptly after observing the cancellation, exactly as they already do for
+    /// every other cancellation path in this codebase.
+    /// </remarks>
+    private async Task<string> WaitForReceiveAsync(CancellationToken cancellationToken)
+    {
+        Task<string> receiveTask = ReceiveAsync(_socket);
+        if (!cancellationToken.CanBeCanceled)
+        {
+            return await receiveTask.ConfigureAwait(false);
+        }
+
+        TaskCompletionSource<bool> cancellationTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        using (cancellationToken.Register(static state => ((TaskCompletionSource<bool>)state!).TrySetResult(true), cancellationTcs))
+        {
+            Task completed = await Task.WhenAny(receiveTask, cancellationTcs.Task).ConfigureAwait(false);
+            if (completed == cancellationTcs.Task)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+        }
+
+        return await receiveTask.ConfigureAwait(false);
     }
 
     public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)

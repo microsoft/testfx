@@ -66,7 +66,12 @@ internal sealed class ClientWebSocketDuplexStream : Stream
 
     public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
     {
-        if (_receiveCount == 0)
+        // A loop, not recursion: WebSocket.ReceiveAsync frequently completes synchronously when data is already
+        // buffered (common over loopback), so a recursive retry here would consume a real stack frame per
+        // zero-byte message with no opportunity for the awaited continuation to yield - a peer that sends many
+        // consecutive zero-byte messages (deliberately or due to a bug) could drive that recursion arbitrarily
+        // deep and crash the process with an uncatchable StackOverflowException. A loop has no such bound.
+        while (_receiveCount == 0)
         {
             WebSocketReceiveResult result = await _webSocket.ReceiveAsync(new ArraySegment<byte>(_receiveBuffer), cancellationToken).ConfigureAwait(false);
             if (result.MessageType == WebSocketMessageType.Close)
@@ -77,13 +82,13 @@ internal sealed class ClientWebSocketDuplexStream : Stream
             _receiveOffset = 0;
             _receiveCount = result.Count;
 
-            // A binary frame can legitimately carry zero bytes (e.g. an empty keep-alive); loop rather than
-            // reporting a false EOF. The framing layer above always reads a bounded number of bytes so this
-            // cannot spin indefinitely against a well-behaved peer.
-            if (_receiveCount == 0 && !result.EndOfMessage)
-            {
-                return await ReadAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
-            }
+            // A binary frame (or an individual fragment of one) can legitimately carry zero bytes (e.g. an
+            // empty keep-alive, or a zero-byte fragment followed by more fragments); loop rather than reporting
+            // a false EOF. Only a Close frame (handled above) means the peer actually disconnected - a
+            // zero-byte non-Close result, whether or not it is the final fragment of its message, must not be
+            // returned as 0 (which Stream.Read/ReadAsync conventionally means EOF). The framing layer above
+            // always reads a bounded number of bytes so this cannot spin indefinitely against a well-behaved
+            // peer.
         }
 
         int toCopy = Math.Min(count, _receiveCount);

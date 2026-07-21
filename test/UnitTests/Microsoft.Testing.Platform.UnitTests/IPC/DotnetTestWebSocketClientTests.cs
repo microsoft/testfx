@@ -62,13 +62,6 @@ public sealed class DotnetTestWebSocketClientTests
     }
 
 #if NET
-    // Exercises the full stack end-to-end over a real loopback socket: DotnetTestWebSocketClient.ConnectAsync
-    // (with the auth token propagated as a query parameter) and ClientWebSocketDuplexStream framing, using the
-    // real HandshakeMessage/HandshakeMessageSerializer wire types. The "server" side is a minimal hand-rolled
-    // RFC 6455 opening handshake (HttpListener's WebSocket support is Windows-only, so it cannot be used here)
-    // followed by System.Net.WebSockets.WebSocket.CreateFromStream, then reads/writes frames manually using the
-    // documented wire format (int32 payload length + int32 serializer id + body) so this test does not depend on
-    // NamedPipeConnectionBase (whose framing is already covered directly by the named-pipe transport tests).
     [TestMethod]
     [Timeout(30_000, CooperativeCancellation = true)]
     public async Task ConnectAsync_RequestReplyAsync_RoundTripsRealFramingOverLoopbackWebSocket()
@@ -80,7 +73,7 @@ public sealed class DotnetTestWebSocketClientTests
         {
             int port = ((IPEndPoint)listener.LocalEndpoint).Port;
 
-            Task<(HandshakeMessage Received, string RequestLine)> serverTask = AcceptAndHandleOneRequestAsync(listener, cts.Token);
+            Task<(HandshakeMessage Received, string RequestLine)> serverTask = AcceptReadAndReplyAsync(listener, new Dictionary<byte, string> { [9] = "negotiated-value" }, cts.Token);
 
             IEnvironment environment = new Mock<IEnvironment>().Object;
             DotnetTestWebSocketClient client = new(new Uri($"ws://127.0.0.1:{port}/dotnettest"), "s3cr3t-token", environment, exitProcessOnConnectionLoss: false);
@@ -115,30 +108,193 @@ public sealed class DotnetTestWebSocketClientTests
         }
     }
 
-    private static async Task<(HandshakeMessage Received, string RequestLine)> AcceptAndHandleOneRequestAsync(TcpListener listener, CancellationToken cancellationToken)
+    [TestMethod]
+    [Timeout(30_000, CooperativeCancellation = true)]
+    public async Task ConnectAsync_RequestReplyAsync_RoundTripsLargeMessageSpanningMultipleWebSocketReceives()
+    {
+        // ClientWebSocketDuplexStream's internal receive buffer is 8192 bytes. A property value comfortably
+        // larger than that forces NamedPipeConnectionBase.ReadNextMessageAsync to pull the frame across several
+        // WebSocket receives instead of a single one, exercising the offset/count buffering carried across
+        // ReadAsync calls (_receiveOffset/_receiveCount) that the single-frame round-trip test above never
+        // needs to touch.
+        string largeValue = new('x', 50_000);
+
+        using CancellationTokenSource cts = new(TimeSpan.FromSeconds(25));
+        TcpListener listener = new(IPAddress.Loopback, 0);
+        listener.Start();
+        try
+        {
+            int port = ((IPEndPoint)listener.LocalEndpoint).Port;
+
+            Task<(HandshakeMessage Received, string RequestLine)> serverTask = AcceptReadAndReplyAsync(listener, new Dictionary<byte, string> { [9] = "ok" }, cts.Token);
+
+            IEnvironment environment = new Mock<IEnvironment>().Object;
+            DotnetTestWebSocketClient client = new(new Uri($"ws://127.0.0.1:{port}/dotnettest"), "s3cr3t-token", environment, exitProcessOnConnectionLoss: false);
+            RegisterSerializerViaReflection(client, new HandshakeMessageSerializer(), typeof(HandshakeMessage));
+
+            try
+            {
+                await client.ConnectAsync(cts.Token);
+
+                HandshakeMessage sent = new(new Dictionary<byte, string> { [0] = largeValue });
+                HandshakeMessage response = await client.RequestReplyAsync<HandshakeMessage, HandshakeMessage>(sent, cts.Token);
+                Assert.AreEqual("ok", response.Properties?[9]);
+
+                (HandshakeMessage received, _) = await serverTask;
+                Assert.AreEqual(largeValue, received.Properties?[0]);
+            }
+            finally
+            {
+                client.Dispose();
+            }
+        }
+        finally
+        {
+            listener.Stop();
+        }
+    }
+
+    [TestMethod]
+    [Timeout(30_000, CooperativeCancellation = true)]
+    public async Task RequestReplyAsync_WhenServerClosesWithoutResponding_ThrowsIOException_WhenExitProcessOnConnectionLossIsFalse()
+    {
+        using CancellationTokenSource cts = new(TimeSpan.FromSeconds(25));
+        TcpListener listener = new(IPAddress.Loopback, 0);
+        listener.Start();
+        try
+        {
+            int port = ((IPEndPoint)listener.LocalEndpoint).Port;
+
+            Task serverTask = AcceptReadAndDisconnectWithoutRespondingAsync(listener, cts.Token);
+
+            IEnvironment environment = new Mock<IEnvironment>().Object;
+
+            // exitProcessOnConnectionLoss: false mirrors how DotnetTestConnection opens auxiliary channels: a
+            // dropped connection must surface as an exception the caller can handle, not kill the process. This
+            // is the WebSocket-transport counterpart of NamedPipeClient's identical behavior for exitProcessOnConnectionLoss: false.
+            DotnetTestWebSocketClient client = new(new Uri($"ws://127.0.0.1:{port}/dotnettest"), "s3cr3t-token", environment, exitProcessOnConnectionLoss: false);
+            RegisterSerializerViaReflection(client, new HandshakeMessageSerializer(), typeof(HandshakeMessage));
+
+            try
+            {
+                await client.ConnectAsync(cts.Token);
+
+                HandshakeMessage sent = new(new Dictionary<byte, string> { [0] = "1234" });
+                await Assert.ThrowsExactlyAsync<IOException>(() => client.RequestReplyAsync<HandshakeMessage, HandshakeMessage>(sent, cts.Token));
+
+                // IEnvironment.Exit must never have been called: with exitProcessOnConnectionLoss: false a
+                // connection loss is the caller's problem to handle, not a reason to terminate the process.
+                Mock.Get(environment).Verify(e => e.Exit(It.IsAny<int>()), Times.Never);
+
+                await serverTask;
+            }
+            finally
+            {
+                client.Dispose();
+            }
+        }
+        finally
+        {
+            listener.Stop();
+        }
+    }
+
+    [TestMethod]
+    [Timeout(30_000, CooperativeCancellation = true)]
+    public async Task RequestReplyAsync_WhenCancelled_ThrowsOperationCanceledExceptionAndDoesNotHang()
+    {
+        using CancellationTokenSource testCts = new(TimeSpan.FromSeconds(25));
+        TcpListener listener = new(IPAddress.Loopback, 0);
+        listener.Start();
+        try
+        {
+            int port = ((IPEndPoint)listener.LocalEndpoint).Port;
+
+            // The server accepts the connection and completes the WebSocket handshake, but then deliberately
+            // never reads the request or sends a reply - holding the connection open so RequestReplyAsync would
+            // otherwise wait forever. This isolates cancellation of the read from a peer disconnect (already
+            // covered by the test above): the connection stays healthy, only the caller's token fires.
+            Task<TcpClient> serverAcceptTask = AcceptAndCompleteHandshakeOnlyAsync(listener, testCts.Token);
+
+            IEnvironment environment = new Mock<IEnvironment>().Object;
+            DotnetTestWebSocketClient client = new(new Uri($"ws://127.0.0.1:{port}/dotnettest"), "s3cr3t-token", environment, exitProcessOnConnectionLoss: false);
+            RegisterSerializerViaReflection(client, new HandshakeMessageSerializer(), typeof(HandshakeMessage));
+
+            try
+            {
+                await client.ConnectAsync(testCts.Token);
+
+                using CancellationTokenSource requestCts = new(TimeSpan.FromMilliseconds(200));
+                HandshakeMessage sent = new(new Dictionary<byte, string> { [0] = "1234" });
+
+                // Not ThrowsExactlyAsync: cancelling a pending Stream read/write typically surfaces as
+                // TaskCanceledException (a subclass of OperationCanceledException), not the base type itself -
+                // same convention used elsewhere in this test project (e.g. TaskExtensionsTests).
+                await Assert.ThrowsAsync<OperationCanceledException>(() => client.RequestReplyAsync<HandshakeMessage, HandshakeMessage>(sent, requestCts.Token));
+            }
+            finally
+            {
+                client.Dispose();
+                using TcpClient serverClient = await serverAcceptTask;
+            }
+        }
+        finally
+        {
+            listener.Stop();
+        }
+    }
+
+    private static Task<(HandshakeMessage Result, string RequestLine)> AcceptReadAndReplyAsync(TcpListener listener, Dictionary<byte, string> replyProperties, CancellationToken cancellationToken)
+        => AcceptAndHandleAsync(
+            listener,
+            async (stream, requestPayload, cancellationToken) =>
+            {
+                int serializerId = BitConverter.ToInt32(requestPayload, 0);
+                Assert.AreEqual(HandshakeMessageFieldsId.MessagesSerializerId, serializerId);
+
+                using MemoryStream requestBody = new(requestPayload, 4, requestPayload.Length - 4);
+                HandshakeMessageSerializer serializer = new();
+                var received = (HandshakeMessage)ProtocolSerializerTestHelper.Deserialize(serializer, requestBody);
+
+                HandshakeMessage reply = new(replyProperties);
+                using MemoryStream replyBody = new();
+                ProtocolSerializerTestHelper.Serialize(serializer, reply, replyBody);
+                await WriteFrameAsync(stream, HandshakeMessageFieldsId.MessagesSerializerId, replyBody.ToArray(), cancellationToken);
+
+                return received;
+            },
+            cancellationToken);
+
+    private static Task AcceptReadAndDisconnectWithoutRespondingAsync(TcpListener listener, CancellationToken cancellationToken)
+        => AcceptAndHandleAsync<object?>(
+            listener,
+            (_, _, _) => Task.FromResult<object?>(null),
+            cancellationToken);
+
+    // Shared plumbing for the server-side half of a loopback test: accepts one connection, completes the RFC
+    // 6455 handshake, reads exactly one request frame, hands it to <paramref name="handleRequestAsync"/> (which
+    // may reply, or not - see the two callers above), then closes the connection. Factored out so each scenario
+    // only needs to express what differs about the server's reaction to the request.
+    private static async Task<(T Result, string RequestLine)> AcceptAndHandleAsync<T>(TcpListener listener, Func<Stream, byte[], CancellationToken, Task<T>> handleRequestAsync, CancellationToken cancellationToken)
     {
         using TcpClient tcpClient = await listener.AcceptTcpClientAsync(cancellationToken);
         NetworkStream networkStream = tcpClient.GetStream();
 
-        string requestText = await CompleteServerHandshakeAsync(networkStream, cancellationToken);
+        string requestLine = await CompleteServerHandshakeAsync(networkStream, cancellationToken);
 
         using var serverSocket = WebSocket.CreateFromStream(networkStream, isServer: true, subProtocol: null, keepAliveInterval: Timeout.InfiniteTimeSpan);
         ClientWebSocketDuplexStream stream = new(serverSocket);
 
         byte[] requestPayload = await ReadFrameAsync(stream, cancellationToken);
-        int serializerId = BitConverter.ToInt32(requestPayload, 0);
-        Assert.AreEqual(HandshakeMessageFieldsId.MessagesSerializerId, serializerId);
+        T result = await handleRequestAsync(stream, requestPayload, cancellationToken);
+        return (result, requestLine);
+    }
 
-        using MemoryStream requestBody = new(requestPayload, 4, requestPayload.Length - 4);
-        HandshakeMessageSerializer serializer = new();
-        var received = (HandshakeMessage)ProtocolSerializerTestHelper.Deserialize(serializer, requestBody);
-
-        HandshakeMessage reply = new(new Dictionary<byte, string> { [9] = "negotiated-value" });
-        using MemoryStream replyBody = new();
-        ProtocolSerializerTestHelper.Serialize(serializer, reply, replyBody);
-        await WriteFrameAsync(stream, HandshakeMessageFieldsId.MessagesSerializerId, replyBody.ToArray(), cancellationToken);
-
-        return (received, requestText);
+    private static async Task<TcpClient> AcceptAndCompleteHandshakeOnlyAsync(TcpListener listener, CancellationToken cancellationToken)
+    {
+        TcpClient tcpClient = await listener.AcceptTcpClientAsync(cancellationToken);
+        await CompleteServerHandshakeAsync(tcpClient.GetStream(), cancellationToken);
+        return tcpClient;
     }
 
     // Minimal RFC 6455 server-side opening handshake: read the HTTP request line + headers (up to the blank
