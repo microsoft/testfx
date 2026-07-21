@@ -379,6 +379,139 @@ public sealed class PlatformCommandLineProviderTests
     }
 
     [TestMethod]
+    [DataRow("pipe")]
+    [DataRow("PIPE")]
+    [DataRow("websocket")]
+    [DataRow("WebSocket")]
+    public async Task IsValid_When_DotnetTestTransport_HasAcceptedArgument_AnyCasing(string argument)
+    {
+        var provider = new PlatformCommandLineProvider();
+        CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.DotNetTestTransportOptionKey);
+
+        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [argument]).ConfigureAwait(false);
+        Assert.IsTrue(validateOptionsResult.IsValid);
+    }
+
+    [TestMethod]
+    [DataRow("named-pipe")]
+    [DataRow("http")]
+    [DataRow("")]
+    public async Task IsInvalid_When_DotnetTestTransport_HasUnknownArgument(string argument)
+    {
+        var provider = new PlatformCommandLineProvider();
+        CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.DotNetTestTransportOptionKey);
+
+        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [argument]).ConfigureAwait(false);
+        Assert.IsFalse(validateOptionsResult.IsValid);
+        Assert.AreEqual(
+            string.Format(
+                CultureInfo.InvariantCulture,
+                PlatformResources.PlatformCommandLineDotnetTestTransportInvalidArgument,
+                argument,
+                "'pipe', 'websocket'"),
+            validateOptionsResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task IsValid_When_Server_DotnetTestCli_With_WebSocketTransport_And_EndpointAndToken()
+    {
+        var provider = new PlatformCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            { PlatformCommandLineProvider.ServerOptionKey, ["dotnettestcli"] },
+            { PlatformCommandLineProvider.DotNetTestTransportOptionKey, ["websocket"] },
+            { PlatformCommandLineProvider.DotNetTestWebSocketEndpointOptionKey, ["ws://127.0.0.1:5000/dotnettest"] },
+            { PlatformCommandLineProvider.DotNetTestWebSocketTokenOptionKey, ["some-token"] },
+        };
+
+        ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsTrue(validateOptionsResult.IsValid);
+    }
+
+    [TestMethod]
+    public async Task IsInvalid_When_Server_DotnetTestCli_With_WebSocketTransport_Missing_Endpoint()
+    {
+        var provider = new PlatformCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            { PlatformCommandLineProvider.ServerOptionKey, ["dotnettestcli"] },
+            { PlatformCommandLineProvider.DotNetTestTransportOptionKey, ["websocket"] },
+            { PlatformCommandLineProvider.DotNetTestWebSocketTokenOptionKey, ["some-token"] },
+        };
+
+        ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsFalse(validateOptionsResult.IsValid);
+        Assert.AreEqual(PlatformResources.PlatformCommandLineDotnetTestWebSocketRequiresEndpointAndToken, validateOptionsResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task IsInvalid_When_Server_DotnetTestCli_With_WebSocketTransport_Missing_Token()
+    {
+        var provider = new PlatformCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            { PlatformCommandLineProvider.ServerOptionKey, ["dotnettestcli"] },
+            { PlatformCommandLineProvider.DotNetTestTransportOptionKey, ["websocket"] },
+            { PlatformCommandLineProvider.DotNetTestWebSocketEndpointOptionKey, ["ws://127.0.0.1:5000/dotnettest"] },
+        };
+
+        ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsFalse(validateOptionsResult.IsValid);
+        Assert.AreEqual(PlatformResources.PlatformCommandLineDotnetTestWebSocketRequiresEndpointAndToken, validateOptionsResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task IsInvalid_When_Server_DotnetTestCli_With_Pipe_And_WebSocketTransport_Together()
+    {
+        var provider = new PlatformCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            { PlatformCommandLineProvider.ServerOptionKey, ["dotnettestcli"] },
+            { PlatformCommandLineProvider.DotNetTestPipeOptionKey, ["pipe-name"] },
+            { PlatformCommandLineProvider.DotNetTestTransportOptionKey, ["websocket"] },
+            { PlatformCommandLineProvider.DotNetTestWebSocketEndpointOptionKey, ["ws://127.0.0.1:5000/dotnettest"] },
+            { PlatformCommandLineProvider.DotNetTestWebSocketTokenOptionKey, ["some-token"] },
+        };
+
+        ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsFalse(validateOptionsResult.IsValid);
+        Assert.AreEqual(PlatformResources.PlatformCommandLineDotnetTestTransportConflict, validateOptionsResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task IsInvalid_When_Server_DotnetTestCli_With_Pipe_And_WebSocketEndpoint_Together()
+    {
+        var provider = new PlatformCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            { PlatformCommandLineProvider.ServerOptionKey, ["dotnettestcli"] },
+            { PlatformCommandLineProvider.DotNetTestPipeOptionKey, ["pipe-name"] },
+            { PlatformCommandLineProvider.DotNetTestWebSocketEndpointOptionKey, ["ws://127.0.0.1:5000/dotnettest"] },
+        };
+
+        ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsFalse(validateOptionsResult.IsValid);
+        Assert.AreEqual(PlatformResources.PlatformCommandLineDotnetTestTransportConflict, validateOptionsResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task IsInvalid_When_Server_DotnetTestCli_With_WebSocketOptions_But_Transport_Pipe()
+    {
+        var provider = new PlatformCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            { PlatformCommandLineProvider.ServerOptionKey, ["dotnettestcli"] },
+            { PlatformCommandLineProvider.DotNetTestTransportOptionKey, ["pipe"] },
+            { PlatformCommandLineProvider.DotNetTestWebSocketEndpointOptionKey, ["ws://127.0.0.1:5000/dotnettest"] },
+            { PlatformCommandLineProvider.DotNetTestWebSocketTokenOptionKey, ["some-token"] },
+        };
+
+        ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsFalse(validateOptionsResult.IsValid);
+        Assert.AreEqual(PlatformResources.PlatformCommandLineDotnetTestWebSocketOptionsRequireTransport, validateOptionsResult.ErrorMessage);
+    }
+
+    [TestMethod]
     public void IsListTestsJsonOutput_ReturnsTrueOnlyWhenJsonArgumentSet()
     {
         Assert.IsFalse(PlatformCommandLineProvider.IsListTestsJsonOutput(new TestCommandLineOptions([])));

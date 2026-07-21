@@ -534,6 +534,6 @@ public sealed class ProtocolTests
         // Indirect through a collection so the MSTest analyzer does not flag the comparison of a compile-time
         // constant as "always true" (MSTEST0032).
         string[] versions = [ProtocolConstants.SupportedVersions];
-        Assert.AreEqual("1.0.0;1.1.0;1.2.0;1.3.0;1.4.0", versions[0]);
+        Assert.AreEqual("1.0.0;1.1.0;1.2.0;1.3.0;1.4.0;1.5.0", versions[0]);
     }
 }
