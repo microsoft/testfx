@@ -235,3 +235,5 @@ override Microsoft.Testing.Platform.IPC.ClientWebSocketDuplexStream.Write(byte[]
 override Microsoft.Testing.Platform.IPC.ClientWebSocketDuplexStream.WriteAsync(byte[]! buffer, int offset, int count, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 static Microsoft.Testing.Platform.DotnetTestHelper.TryGetDotnetTestTransport(this Microsoft.Testing.Platform.CommandLine.CommandLineHandler! commandLineHandler, out Microsoft.Testing.Platform.DotnetTestTransportKind transport) -> bool
 static Microsoft.Testing.Platform.IPC.DotnetTestWebSocketClient.BuildAuthenticatedUri(System.Uri! endpoint, string! token) -> System.Uri!
+Microsoft.Testing.Platform.CommandLine.CommandLineArgumentsRedactor
+static Microsoft.Testing.Platform.CommandLine.CommandLineArgumentsRedactor.Redact(string![]! args) -> string!

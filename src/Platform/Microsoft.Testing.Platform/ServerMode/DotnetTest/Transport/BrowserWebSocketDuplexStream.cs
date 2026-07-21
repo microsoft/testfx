@@ -128,6 +128,18 @@ internal sealed partial class BrowserWebSocketDuplexStream : Stream
             });
         }
 
+        // Called when the .NET side cancels a pending receive() (see WaitForReceiveAsync). Clears the waiter so
+        // that a message arriving afterward is queued for the *next* receive() call instead of being handed to
+        // this now-abandoned one and silently lost. Resolving the abandoned promise (rather than leaving it
+        // permanently pending) also lets the JS engine release it instead of holding onto its closure forever.
+        export function cancelReceive(ws) {
+            if (ws._waiter) {
+                const waiter = ws._waiter;
+                ws._waiter = null;
+                waiter.resolve("");
+            }
+        }
+
         export function close(ws) {
             try {
                 ws.close();
@@ -225,10 +237,15 @@ internal sealed partial class BrowserWebSocketDuplexStream : Stream
     /// racing a timeout, or a shutdown path) would hang until the peer either sends more data or closes the
     /// socket - on <c>browser-wasm</c>, the very runtime this transport exists for, that would be an unrecoverable
     /// hang. This races the receive against the token and throws <see cref="OperationCanceledException"/> as
-    /// soon as it fires. The JS promise itself is left pending (its eventual resolution is simply discarded) -
-    /// there is no way to abort it from here - so callers must tear down the connection (which disposes this
-    /// stream and closes the socket) promptly after observing the cancellation, exactly as they already do for
-    /// every other cancellation path in this codebase.
+    /// soon as it fires.
+    /// <para>
+    /// On cancellation, <see cref="CancelReceive"/> is called (best-effort) to clear the abandoned JS-side
+    /// waiter. This is not just cleanup: without it, the *next* message the peer sends after the cancellation
+    /// would resolve the stale, unobserved promise instead of being queued - silently losing that message from
+    /// the point of view of whichever call replaces this one. <see cref="CancelReceive"/> ensures a message that
+    /// arrives after cancellation is queued normally instead. Closing the socket itself is deliberately not part
+    /// of this - a cancelled read must not affect the connection's ability to serve a subsequent read.
+    /// </para>
     /// </remarks>
     private async Task<string> WaitForReceiveAsync(CancellationToken cancellationToken)
     {
@@ -244,6 +261,15 @@ internal sealed partial class BrowserWebSocketDuplexStream : Stream
             Task completed = await Task.WhenAny(receiveTask, cancellationTcs.Task).ConfigureAwait(false);
             if (completed == cancellationTcs.Task)
             {
+                try
+                {
+                    CancelReceive(_socket);
+                }
+                catch (JSException)
+                {
+                    // Best-effort: the socket may already be gone (closed/disposed racing with this cancellation).
+                }
+
                 cancellationToken.ThrowIfCancellationRequested();
             }
         }
@@ -251,10 +277,16 @@ internal sealed partial class BrowserWebSocketDuplexStream : Stream
         return await receiveTask.ConfigureAwait(false);
     }
 
-    public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+    public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
     {
+        // Send() is a synchronous JS call (WebSocket.send buffers the frame internally and returns immediately),
+        // so there is no in-flight operation to race against the token the way WaitForReceiveAsync races a
+        // receive; the only meaningful cancellation behavior is rejecting an already-cancelled token before
+        // doing the (synchronous, uncancellable-once-started) work, exactly like other synchronous-under-the-hood
+        // Stream implementations do.
+        cancellationToken.ThrowIfCancellationRequested();
         Send(_socket, Convert.ToBase64String(buffer, offset, count));
-        return Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 
     protected override void Dispose(bool disposing)
@@ -284,6 +316,9 @@ internal sealed partial class BrowserWebSocketDuplexStream : Stream
 
     [JSImport("receive", ModuleName)]
     private static partial Task<string> ReceiveAsync(JSObject socket);
+
+    [JSImport("cancelReceive", ModuleName)]
+    private static partial void CancelReceive(JSObject socket);
 
     [JSImport("close", ModuleName)]
     private static partial void Close(JSObject socket);

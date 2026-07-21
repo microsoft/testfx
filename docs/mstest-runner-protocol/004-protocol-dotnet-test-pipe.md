@@ -768,6 +768,16 @@ fragmented on the wire by the peer or an intermediary.
 `console.*`). The companion JS module is embedded as a string constant and imported via a `data:` URL, so
 no changes to the generated wasm bootstrap or published asset set are required.
 
+> [!NOTE]
+> **CSP caveat.** The `data:` URL dynamic import relies on the page's Content-Security-Policy permitting it.
+> A strict `script-src` that omits `data:` (and lacks `'unsafe-inline'`/a matching `'nonce-'`/`'sha256-'`
+> hash for the embedded module, or `'strict-dynamic'`) will block the import, and the WebSocket transport will
+> fail to initialize on that page. This is a real constraint under a locked-down CSP, not merely a theoretical
+> one - "no additional assets are required" (above) is true for the wasm bootstrap/publish output, but it is
+> not the same as "works under any CSP". A future revision could ship the module as a conventional `.js` asset
+> (with a `nonce`/hash-friendly `<script>` tag) instead of a `data:` import if this becomes a blocker for a
+> real deployment; that is a follow-up, not something this document should currently claim to solve.
+
 ### 15.4 Authentication and security
 
 There is no OS-level ACL equivalent to `PipeOptions.CurrentUserOnly` for a TCP/WebSocket endpoint, so the
@@ -787,7 +797,12 @@ transport authenticates every connection explicitly:
 - The SDK is expected to bind the listener to loopback (`127.0.0.1`/`::1`) only and to reject connections
   whose token does not match the one it generated for that run/endpoint.
 - **Never log the authenticated URI (or the token) verbatim.** Diagnostics should log only the endpoint's
-  host/port/path, never the query string.
+  host/port/path, never the query string. This is enforced for the platform's own `--diagnostic` log too:
+  the "Command line arguments" line masks the value of `--dotnet-test-websocket-token` (in both its
+  space-separated and `--option=value`/`--option:value` inline forms) via
+  `CommandLineArgumentsRedactor.Redact`, so simply enabling verbose diagnostics can never write the secret to
+  disk. Any future option that carries a secret should be added to that redactor's sensitive-option list
+  rather than relying on callers to remember to mask it themselves.
 
 ### 15.5 Handshake capability signal
 
@@ -820,3 +835,17 @@ include `1.5.0` alongside it, following the same convention as every other addit
 - **The SDK side of this transport (loopback listener/gateway, token generation and validation) is not part
   of this repository.** This document only specifies what the MTP-side client requires from that gateway;
   see the coordinating `dotnet/sdk` change for the server implementation.
+- **`BrowserWebSocketDuplexStream`'s JS-interop cancellation path has compile/publish coverage, not
+  behavioral test coverage.** `ReadAsync`/`WriteAsync` correctly observe `CancellationToken` (`ReadAsync` races
+  the JS `receive()` promise against the token and calls a `cancelReceive` JS function to clear the abandoned
+  waiter so a message arriving after cancellation is queued for the next call instead of being silently lost;
+  `WriteAsync` rejects an already-cancelled token before the - synchronous, uncancellable-once-issued -
+  `WebSocket.send()` call). This code path is exercised by `dotnet publish -r browser-wasm` (confirming the
+  `[JSImport]`/`[JSExport]` signatures are valid for the wasm JS-interop source generator) but **not** by an
+  automated test that actually runs the JS module under a browser/`node` runtime and asserts the
+  cancel-mid-flight and message-not-lost behavior, because doing so end-to-end needs the SDK-side WebSocket
+  gateway from the previous bullet, which does not exist yet. The non-browser adapter's equivalent behavior
+  (`ClientWebSocketDuplexStream`/`DotnetTestWebSocketClient`) *is* covered by a real loopback-socket test
+  (`DotnetTestWebSocketClientTests`), since that path needs no browser/JS host. Once the SDK-side gateway
+  exists, extending `BrowserWasmExecutionTests`-style node-hosted acceptance tests to drive this transport is
+  the natural way to close this gap.
