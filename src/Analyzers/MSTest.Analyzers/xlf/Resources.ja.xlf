@@ -49,7 +49,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="AssemblyFixtureProviderNotSupportedWithNativeAotDescription">
         <source>'[AssemblyFixtureProvider]' discovery relies on walking the runtime assembly reference graph, which is not supported when the runtime cannot generate dynamic code (for example under Native AOT or Blazor WebAssembly AOT). The attribute is ignored in such builds, so the provided assembly initialize and cleanup methods will not run. Declare the '[AssemblyInitialize]' and '[AssemblyCleanup]' methods directly in the test assembly instead.</source>
-        <target state="translated">[AssemblyFixtureProvider] の検出は、ランタイム アセンブリ参照グラフの走査に依存しています。これは、ランタイムが動的コードを生成できない場合 (例: Native AOT または Blazor WebAssembly AOT の場合) はサポートされません。このようなビルドではこの属性は無視されるため、提供されたアセンブリの初期化メソッドとクリーンアップ メソッドは実行されません。代わりに、'[AssemblyInitialize]' メソッドと '[AssemblyCleanup]' メソッドををテスト アセンブリ内で直接宣言してください。</target>
+        <target state="new">'[AssemblyFixtureProvider]' discovery relies on walking the runtime assembly reference graph, which is not supported when the runtime cannot generate dynamic code (for example under Native AOT or Blazor WebAssembly AOT). The attribute is ignored in such builds, so the provided assembly initialize and cleanup methods will not run. Declare the '[AssemblyInitialize]' and '[AssemblyCleanup]' methods directly in the test assembly instead.</target>
         <note>{Locked="[AssemblyFixtureProvider]"}{Locked="[AssemblyInitialize]"}{Locked="[AssemblyCleanup]"}{Locked="Native AOT"}{Locked="Blazor WebAssembly AOT"}</note>
       </trans-unit>
       <trans-unit id="AssemblyFixtureProviderNotSupportedWithNativeAotMessageFormat">
