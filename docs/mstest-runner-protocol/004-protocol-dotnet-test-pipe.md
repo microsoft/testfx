@@ -334,15 +334,17 @@ Property IDs (`HandshakeMessagePropertyNames`):
 | 2 | `Framework` | yes | `RuntimeInformation.FrameworkDescription`. |
 | 3 | `OS` | yes | `RuntimeInformation.OSDescription`. |
 | 4 | `SupportedProtocolVersions` | yes | Semicolon-separated list the host supports (see §10). |
-| 5 | `HostType` | yes | `TestHost`, `TestHostController`, `ServerTestHost`, or `TestHostOrchestrator`. |
+| 5 | `HostType` | yes | `TestHost`, `TestHostController`, `ServerTestHost`, `TestHostOrchestrator`, or `ArtifactPostProcessor`. |
 | 6 | `ModulePath` | yes | Full path of the test application. |
 | 7 | `ExecutionId` | yes | The Execution ID (from the env var). |
 | 8 | `InstanceId` | yes | The per-connection Instance ID. |
 | 9 | `IsIDE` | **reply-only** | Consumer requests full discovery details (see §9). |
-| 10 | `ExecutionMode` | yes | `run`, `help`, or `discover` — lets the SDK detect mismatches (e.g. `--help` leaking into a run). |
+| 10 | `ExecutionMode` | yes | `run`, `help`, `discover`, or `tool` — lets the SDK detect mismatches (e.g. `--help` leaking into a run). |
 | 11 | `OrchestratorFeature` | orchestrator only | The orchestrator extension Uid (e.g. retry). |
 | 12 | `ServerControlPipeName` | **reply-only** | OS name of the reverse control pipe (see §12). |
 | 13 | `AttemptNumber` | test host only | Positive, 1-based retry attempt. Multiple Instance IDs may share one attempt. |
+| 14 | `SupportedPostProcessorKinds` | test host, server test host, test host controller, or artifact post-processor | Semicolon-separated reverse-DNS artifact kinds supported by registered post-processors. |
+| 15 | `SupportedPostProcessorExtensionsLegacy` | test host, server test host, test host controller, or artifact post-processor | Semicolon-separated lowercase file extensions used as a fallback for untagged artifacts. |
 
 ### 8.2 SDK → host: `HandshakeMessage` (reply)
 
@@ -468,8 +470,9 @@ currently running (rendered by non-IDE consumers as a "currently running tests" 
 
 Reports produced files (per-test artifacts, session artifacts, and standalone `FileArtifact`s). Each
 `FileArtifactMessage`: `FullPath`(1), `DisplayName`(2), `Description`(3), `TestUid`(4),
-`TestDisplayName`(5), `SessionUid`(6). Test-scoped artifacts fill `TestUid`/`TestDisplayName`; session
-and standalone artifacts leave them empty.
+`TestDisplayName`(5), `SessionUid`(6), `Kind`(7). `Kind` carries the producer-asserted artifact kind
+used for post-processor routing. Test-scoped artifacts fill `TestUid`/`TestDisplayName`; session and
+standalone artifacts leave them empty.
 
 ### 9.6 `CommandLineOptionMessages` (ID 3)
 

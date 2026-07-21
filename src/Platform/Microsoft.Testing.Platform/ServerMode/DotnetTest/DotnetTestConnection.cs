@@ -33,6 +33,8 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
 
     public static string InstanceId { get; } = Guid.NewGuid().ToString("N");
 
+    string IPushOnlyProtocol.InstanceId => InstanceId;
+
     public DotnetTestConnection(CommandLineHandler commandLineHandler, IEnvironment environment, ITestApplicationModuleInfo testApplicationModuleInfo, ITestApplicationCancellationTokenSource cancellationTokenSource)
         : this(commandLineHandler, environment, testApplicationModuleInfo, cancellationTokenSource, new NopLogger())
     {
@@ -181,7 +183,9 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
     }
 
     private string GetExecutionMode()
-        => _commandLineHandler.IsHelpInvoked()
+        => _commandLineHandler.ParseResult.HasTool
+            ? HandshakeMessageExecutionModes.Tool
+            : _commandLineHandler.IsHelpInvoked()
             ? HandshakeMessageExecutionModes.Help
             : _commandLineHandler.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey)
                 ? HandshakeMessageExecutionModes.Discover

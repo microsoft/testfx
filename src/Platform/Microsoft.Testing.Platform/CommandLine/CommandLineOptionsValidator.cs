@@ -4,8 +4,8 @@
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
-using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
+using Microsoft.Testing.Platform.Tools;
 
 namespace Microsoft.Testing.Platform.CommandLine;
 
@@ -46,6 +46,12 @@ internal static class CommandLineOptionsValidator
 
             return InvalidWithCommandLine(commandLineParseResult, stringBuilder.ToTrimmedString());
         }
+
+        extensionCommandLineOptionsProviders = commandLineParseResult.ToolName is string toolName
+            ? extensionCommandLineOptionsProviders
+                .OfType<IToolCommandLineOptionsProvider>()
+                .Where(provider => provider.ToolName == toolName)
+            : extensionCommandLineOptionsProviders.Where(provider => provider is not IToolCommandLineOptionsProvider);
 
         var extensionOptionsByProvider = extensionCommandLineOptionsProviders.ToDictionary(p => p, p => p.GetCommandLineOptions());
         if (ValidateExtensionOptionsDoNotContainReservedPrefix(extensionOptionsByProvider) is { IsValid: false } result)
@@ -95,6 +101,23 @@ internal static class CommandLineOptionsValidator
 
         // Last validation step
         return await ValidateConfigurationAsync(extensionOptionsByProvider.Keys, systemOptionsByProvider.Keys, commandLineOptions).ConfigureAwait(false);
+    }
+
+    internal static ValidationResult ValidateToolProviders(
+        IEnumerable<IToolCommandLineOptionsProvider> toolProviders,
+        IEnumerable<ICommandLineOptionsProvider> systemProviders)
+    {
+        var toolOptionsByProvider =
+            toolProviders.ToDictionary(provider => (ICommandLineOptionsProvider)provider, provider => provider.GetCommandLineOptions());
+        var systemOptionsByProvider =
+            systemProviders.ToDictionary(provider => provider, provider => provider.GetCommandLineOptions());
+
+        ValidationResult reservedPrefixResult = ValidateExtensionOptionsDoNotContainReservedPrefix(toolOptionsByProvider);
+        return !reservedPrefixResult.IsValid
+            ? reservedPrefixResult
+            : ValidateExtensionOptionsDoNotContainReservedOptions(toolOptionsByProvider, systemOptionsByProvider) is { IsValid: false } reservedOptionResult
+                ? reservedOptionResult
+                : ValidateOptionsAreNotDuplicated(toolOptionsByProvider, systemOptionsByProvider);
     }
 
     private static ValidationResult ValidateExtensionOptionsDoNotContainReservedPrefix(
@@ -388,17 +411,23 @@ internal static class CommandLineOptionsValidator
         IReadOnlyList<JsonCommandLineOptionEntry>? jsonCommandLineOptions,
         Dictionary<string, (ICommandLineOptionsProvider Provider, CommandLineOption Option)> providerAndOptionByOptionName)
     {
-        ApplicationStateGuard.Ensure(parseResult is not null);
+        if (parseResult is null)
+        {
+            throw new ArgumentNullException(nameof(parseResult));
+        }
 
         StringBuilder? stringBuilder = null;
-        foreach (CommandLineParseOption optionRecord in parseResult.Options)
+        foreach (IGrouping<string, CommandLineParseOption> optionRecords in parseResult.Options.GroupBy(
+            record => record.Name,
+            StringComparer.OrdinalIgnoreCase))
         {
-            (ICommandLineOptionsProvider provider, CommandLineOption option) = providerAndOptionByOptionName[optionRecord.Name];
-            ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, optionRecord.Arguments).ConfigureAwait(false);
+            (ICommandLineOptionsProvider provider, CommandLineOption option) = providerAndOptionByOptionName[optionRecords.Key];
+            string[] arguments = [.. optionRecords.SelectMany(record => record.Arguments)];
+            ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, arguments).ConfigureAwait(false);
             if (!result.IsValid)
             {
                 stringBuilder ??= new();
-                stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineInvalidArgumentsForOption, optionRecord.Name, result.ErrorMessage));
+                stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineInvalidArgumentsForOption, optionRecords.Key, result.ErrorMessage));
             }
         }
 

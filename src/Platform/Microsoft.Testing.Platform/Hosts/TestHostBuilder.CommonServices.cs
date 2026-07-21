@@ -13,6 +13,7 @@ using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
 using Microsoft.Testing.Platform.TestHostControllers;
+using Microsoft.Testing.Platform.Tools;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
@@ -221,8 +222,15 @@ internal sealed partial class TestHostBuilder
             // catches that later (ValidateOptionsAreNotDuplicated) and reports a clear error. Skip
             // duplicates here so the normalization step itself doesn't crash for that malformed setup.
             var optionByName = new Dictionary<string, CommandLineOption>(StringComparer.OrdinalIgnoreCase);
+            IEnumerable<ICommandLineOptionsProvider> extensionOptionsProviders =
+                loggingState.CommandLineParseResult.ToolName is string toolName
+                    ? context.CommandLineHandler.ExtensionsCommandLineOptionsProviders
+                        .OfType<IToolCommandLineOptionsProvider>()
+                        .Where(provider => provider.ToolName == toolName)
+                    : context.CommandLineHandler.ExtensionsCommandLineOptionsProviders
+                        .Where(provider => provider is not IToolCommandLineOptionsProvider);
             foreach (ICommandLineOptionsProvider optionsProvider in context.CommandLineHandler.SystemCommandLineOptionsProviders
-                .Concat(context.CommandLineHandler.ExtensionsCommandLineOptionsProviders))
+                .Concat(extensionOptionsProviders))
             {
                 foreach (CommandLineOption option in optionsProvider.GetCommandLineOptions())
                 {
@@ -264,7 +272,7 @@ internal sealed partial class TestHostBuilder
             context.CommandLineHandler,
             jsonCommandLineOptions).ConfigureAwait(false);
 
-        if (!loggingState.CommandLineParseResult.HasTool && !commandLineValidationResult.IsValid)
+        if (!commandLineValidationResult.IsValid)
         {
             await DisplayBannerIfEnabledAsync(context.CommandLineHandler, context.ProxyOutputDevice, context.TestFrameworkCapabilities, context.TestApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
             await context.ProxyOutputDevice.DisplayAsync(context.CommandLineHandler, new ErrorMessageOutputDeviceData(commandLineValidationResult.ErrorMessage), context.TestApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);

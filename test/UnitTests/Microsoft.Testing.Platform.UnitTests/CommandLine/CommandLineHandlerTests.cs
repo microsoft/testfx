@@ -2,11 +2,13 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.Tools;
 
 using Moq;
 
@@ -136,6 +138,77 @@ public sealed class CommandLineHandlerTests
         // Assert
         Assert.IsFalse(result.IsValid);
         Assert.Contains("Option '--userOption' is declared by multiple providers: 'Microsoft Testing Platform command line provider', 'Microsoft Testing Platform command line provider'", result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ParseAndValidateAsync_ToolOptionDoesNotConflictWithNormalExtension()
+    {
+        CommandLineParseResult parseResult = CommandLineParser.Parse([], new SystemEnvironment());
+        ICommandLineOptionsProvider[] providers =
+        [
+            new ExtensionCommandLineProviderMockValidConfiguration("input"),
+            new ToolCommandLineProviderMock("input"),
+        ];
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            parseResult,
+            _systemCommandLineOptionsProviders,
+            providers,
+            Mock.Of<ICommandLineOptions>());
+
+        Assert.IsTrue(result.IsValid);
+    }
+
+    [TestMethod]
+    public async Task ParseAndValidateAsync_UnknownJsonOptionForSelectedTool_ReturnsInvalid()
+    {
+        CommandLineParseResult parseResult = CommandLineParser.Parse(["tool"], new SystemEnvironment());
+        ICommandLineOptionsProvider[] providers =
+        [
+            new ExtensionCommandLineProviderMockValidConfiguration("normal-option"),
+            new ToolCommandLineProviderMock("input"),
+        ];
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            parseResult,
+            _systemCommandLineOptionsProviders,
+            providers,
+            Mock.Of<ICommandLineOptions>(),
+            [new JsonCommandLineOptionEntry("typo", ["value"], isDisabled: false)]);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains("Unknown option '--typo'", result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ParseAndValidateAsync_RepeatedToolOption_ValidatesAggregatedArguments()
+    {
+        CommandLineParseResult parseResult = CommandLineParser.Parse(
+            ["tool", "--input", "first.trx", "--input", "second.trx"],
+            new SystemEnvironment());
+        var provider = new Mock<IToolCommandLineOptionsProvider>();
+        provider.SetupGet(candidate => candidate.ToolName).Returns("tool");
+        provider.SetupGet(candidate => candidate.DisplayName).Returns("tool");
+        provider.SetupGet(candidate => candidate.Uid).Returns("tool");
+        provider.Setup(candidate => candidate.GetCommandLineOptions())
+            .Returns([new("input", "input", new ArgumentArity(2, int.MaxValue), isHidden: false)]);
+        provider.Setup(candidate => candidate.ValidateOptionArgumentsAsync(
+                It.IsAny<CommandLineOption>(),
+                It.IsAny<string[]>()))
+            .Returns<CommandLineOption, string[]>((_, arguments) =>
+                arguments.Length == 2
+                    ? ValidationResult.ValidTask
+                    : ValidationResult.InvalidTask("expected aggregated arguments"));
+        provider.Setup(candidate => candidate.ValidateCommandLineOptionsAsync(It.IsAny<ICommandLineOptions>()))
+            .Returns(ValidationResult.ValidTask);
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            parseResult,
+            _systemCommandLineOptionsProviders,
+            [provider.Object],
+            Mock.Of<ICommandLineOptions>());
+
+        Assert.IsTrue(result.IsValid);
     }
 
     [TestMethod]
@@ -542,6 +615,54 @@ public sealed class CommandLineHandlerTests
         public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions) => throw new NotImplementedException();
 
         public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments) => ValidationResult.ValidTask;
+    }
+
+#pragma warning disable TPEXP // Tool command-line providers are experimental.
+    private sealed class ToolCommandLineProviderMock(string optionName) : IToolCommandLineOptionsProvider
+    {
+        public string ToolName => "tool";
+
+        public string Uid => nameof(ToolCommandLineProviderMock);
+
+        public string Version => "1.0.0";
+
+        public string DisplayName => Uid;
+
+        public string Description => Uid;
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
+            => [new(optionName, optionName, ArgumentArity.ExactlyOne, isHidden: false)];
+
+        public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
+            => ValidationResult.ValidTask;
+
+        public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
+            => ValidationResult.ValidTask;
+    }
+#pragma warning restore TPEXP
+
+    private sealed class ExtensionCommandLineProviderMockValidConfiguration(string optionName) : ICommandLineOptionsProvider
+    {
+        public string Uid => nameof(ExtensionCommandLineProviderMockValidConfiguration);
+
+        public string Version => "1.0.0";
+
+        public string DisplayName => Uid;
+
+        public string Description => Uid;
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
+            => [new(optionName, optionName, ArgumentArity.ExactlyOne, isHidden: false)];
+
+        public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
+            => ValidationResult.ValidTask;
+
+        public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
+            => ValidationResult.ValidTask;
     }
 
     private sealed class ExtensionCommandLineProviderMockInvalidConfiguration : ICommandLineOptionsProvider

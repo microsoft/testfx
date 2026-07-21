@@ -1,0 +1,372 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
+using Microsoft.Testing.Platform.Hosts;
+using Microsoft.Testing.Platform.IPC;
+using Microsoft.Testing.Platform.Services;
+
+namespace Microsoft.Testing.Platform.UnitTests.Extensions.ArtifactPostProcessing;
+
+#pragma warning disable TPEXP // Artifact post-processing is experimental.
+
+[TestClass]
+public sealed class ArtifactPostProcessingTests
+{
+    [TestMethod]
+    public void HandshakeProperties_AreSortedAndDeduplicated()
+    {
+        IArtifactPostProcessor[] processors =
+        [
+            new StubProcessor("first", ["z.kind", "a.kind"], [".TRX"]),
+            new StubProcessor("second", ["a.kind"], [".trx", ".xml"]),
+        ];
+
+        IReadOnlyDictionary<byte, string> properties = ArtifactPostProcessingHandshakeProperties.Create(processors)!;
+
+        Assert.AreEqual("a.kind;z.kind", properties[HandshakeMessagePropertyNames.SupportedPostProcessorKinds]);
+        Assert.AreEqual(".trx;.xml", properties[HandshakeMessagePropertyNames.SupportedPostProcessorExtensionsLegacy]);
+    }
+
+    [TestMethod]
+    public void HandshakeProperties_WithNoCapabilities_ReturnsNull()
+        => Assert.IsNull(ArtifactPostProcessingHandshakeProperties.Create([new StubProcessor("empty", [], [])]));
+
+    [DataRow(HandshakeMessageHostTypes.TestHost, true)]
+    [DataRow(HandshakeMessageHostTypes.ServerTestHost, true)]
+    [DataRow(HandshakeMessageHostTypes.TestHostController, true)]
+    [DataRow(HandshakeMessageHostTypes.TestHostOrchestrator, false)]
+    [TestMethod]
+    public void SupportsArtifactPostProcessing_ReturnsExpectedValue(string hostType, bool expected)
+        => Assert.AreEqual(expected, CommonHost.SupportsArtifactPostProcessing(hostType));
+
+    [DataRow("")]
+    [DataRow(" ")]
+    [TestMethod]
+    public void ProcessedArtifact_BlankKind_ThrowsArgumentException(string kind)
+        => Assert.ThrowsExactly<ArgumentException>(() => new ProcessedArtifact("artifact.trx", kind, "artifact", null));
+
+    [TestMethod]
+    public async Task Manager_BuildsOnlyEnabledProcessors()
+    {
+        ArtifactPostProcessingManager manager = new();
+        manager.AddArtifactPostProcessor(_ => new StubProcessor("enabled", ["kind"], [".ext"]));
+        manager.AddArtifactPostProcessor(_ => new StubProcessor("disabled", ["other"], [".other"], isEnabled: false));
+
+        IReadOnlyList<IArtifactPostProcessor> processors = await manager.BuildAsync(new ServiceProvider());
+
+        Assert.HasCount(1, processors);
+        Assert.AreEqual("enabled", processors[0].Uid);
+    }
+
+    [DataRow("kind;other", ".ext")]
+    [DataRow("kind", ".ext;.other")]
+    [TestMethod]
+    public async Task Manager_CapabilityContainingSeparator_ThrowsInvalidOperationException(string kind, string extension)
+    {
+        ArtifactPostProcessingManager manager = new();
+        manager.AddArtifactPostProcessor(_ => new StubProcessor("processor", [kind], [extension]));
+
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => manager.BuildAsync(new ServiceProvider()));
+    }
+
+    [DataRow("", ".ext")]
+    [DataRow(" ", ".ext")]
+    [DataRow("kind", "")]
+    [DataRow("kind", " ")]
+    [DataRow("kind", "trx")]
+    [DataRow("kind", ".TRX")]
+    [TestMethod]
+    public async Task Manager_InvalidCapability_ThrowsInvalidOperationException(string kind, string extension)
+    {
+        ArtifactPostProcessingManager manager = new();
+        manager.AddArtifactPostProcessor(_ => new StubProcessor("processor", [kind], [extension]));
+
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => manager.BuildAsync(new ServiceProvider()));
+    }
+
+    [TestMethod]
+    public void FindProcessorConflicts_DuplicateCapabilitiesWithinOneProcessor_ReturnsEmpty()
+    {
+        var processor = new StubProcessor("processor", ["kind", "kind"], [".TRX", ".trx"]);
+
+        IReadOnlyDictionary<string, string> conflicts =
+            ArtifactPostProcessingDispatcherTool.FindProcessorConflicts([processor]);
+
+        Assert.IsEmpty(conflicts);
+    }
+
+    [TestMethod]
+    public void FindProcessorConflicts_SameCapabilityAcrossProcessors_ReturnsFirstProcessor()
+    {
+        IArtifactPostProcessor[] processors =
+        [
+            new StubProcessor("first", ["kind"], []),
+            new StubProcessor("second", ["kind"], []),
+        ];
+
+        IReadOnlyDictionary<string, string> conflicts =
+            ArtifactPostProcessingDispatcherTool.FindProcessorConflicts(processors);
+
+        Assert.HasCount(1, conflicts);
+        Assert.AreEqual("first", conflicts["kind"]);
+    }
+
+    [TestMethod]
+    public void FindProcessorConflicts_KindMatchingAnotherProcessorExtension_ReturnsEmpty()
+    {
+        IArtifactPostProcessor[] processors =
+        [
+            new StubProcessor("kind-processor", [".trx"], []),
+            new StubProcessor("extension-processor", [], [".trx"]),
+        ];
+
+        IReadOnlyDictionary<string, string> conflicts =
+            ArtifactPostProcessingDispatcherTool.FindProcessorConflicts(processors);
+
+        Assert.IsEmpty(conflicts);
+    }
+
+    [TestMethod]
+    public void ValidateProcessedArtifact_RejectsInvalidPaths()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"processor-output-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            string inputPath = Path.Combine(directory, "input.trx");
+            string validOutputPath = Path.Combine(directory, "output.trx");
+            string outsidePath = Path.Combine(Path.GetTempPath(), $"outside-{Guid.NewGuid():N}.trx");
+            File.WriteAllText(inputPath, "input");
+            File.WriteAllText(validOutputPath, "output");
+            File.WriteAllText(outsidePath, "outside");
+            var input = new InputArtifact(inputPath, "kind", null, null, null, null);
+
+            ProcessedArtifact validated = ArtifactPostProcessingDispatcherTool.ValidateProcessedArtifact(
+                new ProcessedArtifact(validOutputPath, "kind", "output", null),
+                directory,
+                [input]);
+
+            Assert.AreEqual(Path.GetFullPath(validOutputPath), validated.Path);
+            Assert.ThrowsExactly<InvalidOperationException>(() => ArtifactPostProcessingDispatcherTool.ValidateProcessedArtifact(
+                new ProcessedArtifact(Path.Combine(directory, "missing.trx"), "kind", "missing", null),
+                directory,
+                [input]));
+            Assert.ThrowsExactly<InvalidOperationException>(() => ArtifactPostProcessingDispatcherTool.ValidateProcessedArtifact(
+                new ProcessedArtifact(outsidePath, "kind", "outside", null),
+                directory,
+                [input]));
+            Assert.ThrowsExactly<InvalidOperationException>(() => ArtifactPostProcessingDispatcherTool.ValidateProcessedArtifact(
+                new ProcessedArtifact(inputPath, "kind", "input", null),
+                directory,
+                [input]));
+
+            File.Delete(outsidePath);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void Manifest_LoadsVersionedAttributedInputs()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"artifact-manifest-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        string manifestPath = Path.Combine(directory, "manifest.json");
+        try
+        {
+            File.WriteAllText(
+                manifestPath,
+                $$"""
+                {
+                  "schemaVersion": 1,
+                  "outputDirectory": "{{directory.Replace("\\", "\\\\")}}",
+                  "inputs": [
+                    {
+                      "path": "a.trx",
+                      "kind": "microsoft.testing.trx",
+                      "producingTestModule": "A.dll",
+                      "targetFramework": "net10.0",
+                      "architecture": "x64",
+                      "executionId": "null"
+                    },
+                    {
+                      "path": "legacy.trx",
+                      "kind": null
+                    }
+                  ]
+                }
+                """);
+
+            var manifest = ArtifactPostProcessingManifest.Load(manifestPath);
+
+            Assert.AreEqual(directory, manifest.OutputDirectory);
+            Assert.HasCount(2, manifest.Inputs);
+            Assert.AreEqual("microsoft.testing.trx", manifest.Inputs[0].Kind);
+            Assert.AreEqual("A.dll", manifest.Inputs[0].ProducingTestModule);
+            Assert.AreEqual("null", manifest.Inputs[0].ExecutionId);
+            Assert.IsNull(manifest.Inputs[1].Kind);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void Manifest_WithUnsupportedVersion_ThrowsFormatException()
+    {
+        string manifestPath = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(manifestPath, """{ "schemaVersion": 2, "outputDirectory": "out", "inputs": [] }""");
+
+            FormatException exception = Assert.ThrowsExactly<FormatException>(() => ArtifactPostProcessingManifest.Load(manifestPath));
+
+            Assert.AreEqual(Platform.Resources.PlatformResources.ArtifactPostProcessingManifestInvalid, exception.Message);
+        }
+        finally
+        {
+            File.Delete(manifestPath);
+        }
+    }
+
+    [DataRow("""{ "schemaVersion": "1", "outputDirectory": "out", "inputs": [] }""")]
+    [DataRow("""{ "schemaVersion": 1, "outputDirectory": 123, "inputs": [] }""")]
+    [DataRow("""{ "schemaVersion": 1, "outputDirectory": "out", "inputs": [{ "path": 123 }] }""")]
+    [DataRow("""{ "schemaVersion": 1, "outputDirectory": "out", "inputs": [{ "path": "a.trx", "kind": 123 }] }""")]
+    [DataRow("""{ "schemaVersion": 1, "outputDirectory": "out", "inputs": [{ "path": "a.trx", "kind": {} }] }""")]
+    [DataRow("""{ "schemaVersion": 1, "outputDirectory": "out", "inputs": [{ "path": "a.trx", "executionId": [] }] }""")]
+    [TestMethod]
+    public void Manifest_WithInvalidValueType_ThrowsFormatException(string json)
+    {
+        string manifestPath = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(manifestPath, json);
+
+            Assert.ThrowsExactly<FormatException>(() => ArtifactPostProcessingManifest.Load(manifestPath));
+        }
+        finally
+        {
+            File.Delete(manifestPath);
+        }
+    }
+
+    [TestMethod]
+    public void Manifest_WithMalformedJson_ThrowsFormatException()
+    {
+        string manifestPath = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(manifestPath, """{ "schemaVersion": 1, """);
+
+            Assert.ThrowsExactly<FormatException>(() => ArtifactPostProcessingManifest.Load(manifestPath));
+        }
+        finally
+        {
+            File.Delete(manifestPath);
+        }
+    }
+
+    [TestMethod]
+    public void Manifest_WithInputMissingPath_ThrowsFormatException()
+    {
+        string manifestPath = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(
+                manifestPath,
+                """{ "schemaVersion": 1, "outputDirectory": "out", "inputs": [{ "kind": "microsoft.testing.trx" }] }""");
+
+            Assert.ThrowsExactly<FormatException>(() => ArtifactPostProcessingManifest.Load(manifestPath));
+        }
+        finally
+        {
+            File.Delete(manifestPath);
+        }
+    }
+
+    [DataRow("""{ "schemaVersion": 1, "outputDirectory": "out", "inputs": [{}] }""")]
+    [DataRow("""{ "schemaVersion": 1, "outputDirectory": "out", "inputs": [null] }""")]
+    [TestMethod]
+    public void Manifest_WithEmptyInputEntry_ThrowsFormatException(string json)
+    {
+        string manifestPath = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(manifestPath, json);
+
+            Assert.ThrowsExactly<FormatException>(() => ArtifactPostProcessingManifest.Load(manifestPath));
+        }
+        finally
+        {
+            File.Delete(manifestPath);
+        }
+    }
+
+    [TestMethod]
+    public void Manifest_WithTopLevelArray_ThrowsFormatException()
+    {
+        string manifestPath = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(manifestPath, "[]");
+
+            Assert.ThrowsExactly<FormatException>(() => ArtifactPostProcessingManifest.Load(manifestPath));
+        }
+        finally
+        {
+            File.Delete(manifestPath);
+        }
+    }
+
+    [DataRow("""{ "schemaVersion": 1, "outputDirectory": "out" }""")]
+    [DataRow("""{ "schemaVersion": 1, "outputDirectory": "out", "inputs": "bad" }""")]
+    [DataRow("""{ "schemaVersion": 1, "outputDirectory": "out", "inputs": "[]" }""")]
+    [DataRow("""{ "schemaVersion": 1, "outputDirectory": "out", "inputs": {} }""")]
+    [TestMethod]
+    public void Manifest_WithInputsThatIsNotArray_ThrowsFormatException(string json)
+    {
+        string manifestPath = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(manifestPath, json);
+
+            Assert.ThrowsExactly<FormatException>(() => ArtifactPostProcessingManifest.Load(manifestPath));
+        }
+        finally
+        {
+            File.Delete(manifestPath);
+        }
+    }
+
+    private sealed class StubProcessor(
+        string uid,
+        IReadOnlyList<string> supportedKinds,
+        IReadOnlyList<string> supportedExtensions,
+        bool isEnabled = true) : IArtifactPostProcessor
+    {
+        public string Uid { get; } = uid;
+
+        public string Version => "1.0.0";
+
+        public string DisplayName => Uid;
+
+        public string Description => Uid;
+
+        public IReadOnlyList<string> SupportedKinds { get; } = supportedKinds;
+
+        public IReadOnlyList<string> SupportedFileExtensionsFallback { get; } = supportedExtensions;
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(isEnabled);
+
+        public Task<ProcessedArtifact?> ProcessAsync(
+            IReadOnlyList<InputArtifact> inputs,
+            string outputDirectory,
+            CancellationToken cancellationToken)
+            => Task.FromResult<ProcessedArtifact?>(null);
+    }
+}

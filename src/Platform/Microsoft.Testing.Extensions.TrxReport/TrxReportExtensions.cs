@@ -28,7 +28,7 @@ public static class TrxReportExtensions
     /// <param name="builder">The test application builder.</param>
     public static void AddTrxReportProvider(this ITestApplicationBuilder builder)
     {
-        if (builder is not TestApplicationBuilder testApplicationBuilder)
+        if (builder is not IArtifactPostProcessingApplicationBuilder artifactPostProcessingBuilder)
         {
             throw new InvalidOperationException(ExtensionResources.InvalidTestApplicationBuilderType);
         }
@@ -67,10 +67,16 @@ public static class TrxReportExtensions
         TrxCompareToolCommandLine createTrxCompareToolCommandLine = toolTrxCompareFactory.CreateTrxCompareToolCommandLine();
         builder.CommandLine.AddProvider(() => createTrxCompareToolCommandLine);
 
-        testApplicationBuilder.Tools.AddTool(serviceProvider => toolTrxCompareFactory.CreateTrxCompareTool(
+        artifactPostProcessingBuilder.Tools.AddTool(serviceProvider => toolTrxCompareFactory.CreateTrxCompareTool(
             serviceProvider.GetCommandLineOptions(),
             serviceProvider.GetOutputDevice(),
             serviceProvider.GetRequiredService<ITask>()));
+
+        artifactPostProcessingBuilder.ArtifactPostProcessing.AddArtifactPostProcessor(_ => new TrxArtifactPostProcessor());
+
+        ToolTrxMergeFactory toolTrxMergeFactory = new();
+        builder.CommandLine.AddProvider(toolTrxMergeFactory.CreateCommandLine);
+        artifactPostProcessingBuilder.Tools.AddTool(serviceProvider => toolTrxMergeFactory.CreateTool(serviceProvider.GetCommandLineOptions()));
     }
 
     [UnsupportedOSPlatform("browser")]
