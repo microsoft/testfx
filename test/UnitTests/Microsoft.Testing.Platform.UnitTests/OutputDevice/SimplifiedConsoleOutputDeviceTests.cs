@@ -18,6 +18,8 @@ public sealed class SimplifiedConsoleOutputDeviceTests
     private static readonly IOutputDeviceDataProducer Producer = Mock.Of<IOutputDeviceDataProducer>(
         producer => producer.Uid == "producer");
 
+    public TestContext TestContext { get; set; }
+
     [TestMethod]
     public async Task DisplayAsync_SessionMessage_WritesDurableOutput()
     {
@@ -69,10 +71,126 @@ public sealed class SimplifiedConsoleOutputDeviceTests
         Assert.AreSequenceEqual(new[] { "Restoring", "Restoring" }, device.Messages);
     }
 
-    private static RecordingSimplifiedOutputDevice CreateOutputDevice(IAsyncMonitor asyncMonitor)
+    [TestMethod]
+    public async Task ConsumeAsync_InProgressTest_ReportsOnlyAfterSlowThreshold()
+    {
+        using var asyncMonitor = new SystemAsyncMonitor();
+        var clock = new FakeClock();
+        RecordingSimplifiedOutputDevice device = CreateOutputDevice(asyncMonitor, clock);
+
+        await device.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateTestNodeUpdate("uid", "AsyncHang", new InProgressTestNodeStateProperty()),
+            CancellationToken.None);
+
+        Assert.IsEmpty(device.Messages);
+
+        clock.Advance(TimeSpan.FromSeconds(60));
+        await device.ReportDueSlowTestsAsync();
+
+        Assert.HasCount(1, device.Messages);
+        string message = device.Messages[0]!;
+        Assert.Contains("[slow]", message);
+        Assert.Contains("AsyncHang", message);
+        Assert.Contains("1m", message);
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_CompletedTest_IsRemovedFromSlowTestTracking()
+    {
+        using var asyncMonitor = new SystemAsyncMonitor();
+        var clock = new FakeClock();
+        RecordingSimplifiedOutputDevice device = CreateOutputDevice(asyncMonitor, clock);
+
+        await device.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateTestNodeUpdate("uid", "CompletedTest", new InProgressTestNodeStateProperty()),
+            CancellationToken.None);
+        await device.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateTestNodeUpdate("uid", "CompletedTest", new PassedTestNodeStateProperty()),
+            CancellationToken.None);
+
+        clock.Advance(TimeSpan.FromMinutes(10));
+        await device.ReportDueSlowTestsAsync();
+
+        Assert.IsEmpty(device.Messages);
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_SameNameTests_AreTrackedIndependentlyByUid()
+    {
+        using var asyncMonitor = new SystemAsyncMonitor();
+        var clock = new FakeClock();
+        RecordingSimplifiedOutputDevice device = CreateOutputDevice(asyncMonitor, clock);
+
+        await device.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateTestNodeUpdate("uid-1", "SameName", new InProgressTestNodeStateProperty()),
+            CancellationToken.None);
+        await device.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateTestNodeUpdate("uid-2", "SameName", new InProgressTestNodeStateProperty()),
+            CancellationToken.None);
+        await device.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateTestNodeUpdate("uid-1", "SameName", new PassedTestNodeStateProperty()),
+            CancellationToken.None);
+
+        clock.Advance(TimeSpan.FromSeconds(60));
+        await device.ReportDueSlowTestsAsync();
+
+        Assert.HasCount(1, device.Messages);
+        string message = device.Messages[0]!;
+        Assert.Contains("SameName", message);
+    }
+
+    [TestMethod]
+    public async Task SessionLifecycle_CancelsAndAwaitsCooperativeReporter()
+    {
+        using var asyncMonitor = new SystemAsyncMonitor();
+        RecordingSimplifiedOutputDevice device = CreateOutputDevice(asyncMonitor);
+        ITestSessionContext context = Mock.Of<ITestSessionContext>(
+            x => x.CancellationToken == CancellationToken.None);
+
+        await device.OnTestSessionStartingAsync(context);
+        await device.OnTestSessionStartingAsync(context);
+        await device.OnTestSessionFinishingAsync(context);
+        await device.OnTestSessionFinishingAsync(context);
+    }
+
+    [TestMethod]
+    public async Task CooperativeReporter_WhenTestIsDue_EmitsSlowDiagnostic()
+    {
+        using var asyncMonitor = new SystemAsyncMonitor();
+        var clock = new FakeClock();
+        RecordingSimplifiedOutputDevice device = CreateOutputDevice(asyncMonitor, clock, TimeSpan.FromMilliseconds(1));
+        ITestSessionContext context = Mock.Of<ITestSessionContext>(
+            x => x.CancellationToken == CancellationToken.None);
+
+        await device.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateTestNodeUpdate("uid", "AsyncHang", new InProgressTestNodeStateProperty()),
+            CancellationToken.None);
+        clock.Advance(TimeSpan.FromSeconds(60));
+
+        await device.OnTestSessionStartingAsync(context);
+        Task completedTask = await Task.WhenAny(device.MessageReported, Task.Delay(TimeSpan.FromSeconds(5), TestContext.CancellationToken));
+        await device.OnTestSessionFinishingAsync(context);
+
+        Assert.AreSame(device.MessageReported, completedTask);
+        Assert.Contains("[slow]", await device.MessageReported);
+        Assert.Contains("AsyncHang", await device.MessageReported);
+    }
+
+    private static RecordingSimplifiedOutputDevice CreateOutputDevice(
+        IAsyncMonitor asyncMonitor,
+        FakeClock? clock = null,
+        TimeSpan? slowTestPollInterval = null)
     {
         var moduleInfo = new Mock<ITestApplicationModuleInfo>();
         moduleInfo.Setup(x => x.GetDisplayName()).Returns("testhost");
+        clock ??= new FakeClock();
 
         return new RecordingSimplifiedOutputDevice(
             Mock.Of<IConsole>(),
@@ -81,11 +199,29 @@ public sealed class SimplifiedConsoleOutputDeviceTests
             Mock.Of<IRuntimeFeature>(),
             Mock.Of<IEnvironment>(),
             Mock.Of<IPlatformInformation>(),
-            Mock.Of<IStopPoliciesService>());
+            Mock.Of<IStopPoliciesService>(),
+            TimeSpan.FromSeconds(60),
+            clock.CreateStopwatch,
+            slowTestPollInterval ?? TimeSpan.FromSeconds(1));
     }
+
+    private static TestNodeUpdateMessage CreateTestNodeUpdate(
+        string uid,
+        string displayName,
+        TestNodeStateProperty state)
+        => new(
+            default,
+            new TestNode
+            {
+                Uid = new TestNodeUid(uid),
+                DisplayName = displayName,
+                Properties = new PropertyBag(state),
+            });
 
     private sealed class RecordingSimplifiedOutputDevice : SimplifiedConsoleOutputDeviceBase
     {
+        private readonly TaskCompletionSource<string> _messageReported = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
         public RecordingSimplifiedOutputDevice(
             IConsole console,
             ITestApplicationModuleInfo testApplicationModuleInfo,
@@ -93,21 +229,70 @@ public sealed class SimplifiedConsoleOutputDeviceTests
             IRuntimeFeature runtimeFeature,
             IEnvironment environment,
             IPlatformInformation platformInformation,
-            IStopPoliciesService policiesService)
-            : base(console, testApplicationModuleInfo, asyncMonitor, runtimeFeature, environment, platformInformation, policiesService)
+            IStopPoliciesService policiesService,
+            TimeSpan slowTestThreshold,
+            Func<IStopwatch> createStopwatch,
+            TimeSpan slowTestPollInterval)
+            : base(
+                console,
+                testApplicationModuleInfo,
+                asyncMonitor,
+                runtimeFeature,
+                environment,
+                platformInformation,
+                policiesService,
+                slowTestThreshold,
+                createStopwatch,
+                slowTestPollInterval)
         {
         }
 
         public List<string?> Messages { get; } = [];
 
+        public Task<string> MessageReported => _messageReported.Task;
+
         public override string DisplayName => nameof(RecordingSimplifiedOutputDevice);
 
         public override string Description => nameof(RecordingSimplifiedOutputDevice);
 
-        protected override void ConsoleWarn(string? message) => Messages.Add(message);
+        protected override void ConsoleWarn(string? message) => RecordMessage(message);
 
-        protected override void ConsoleError(string? message) => Messages.Add(message);
+        protected override void ConsoleError(string? message) => RecordMessage(message);
 
-        protected override void ConsoleLog(string? message) => Messages.Add(message);
+        protected override void ConsoleLog(string? message) => RecordMessage(message);
+
+        public Task ReportDueSlowTestsAsync()
+            => ReportSlowTestsOnceAsync(CancellationToken.None);
+
+        private void RecordMessage(string? message)
+        {
+            Messages.Add(message);
+            if (message is not null)
+            {
+                _messageReported.TrySetResult(message);
+            }
+        }
+    }
+
+    private sealed class FakeClock
+    {
+        private TimeSpan _now;
+
+        public void Advance(TimeSpan duration) => _now += duration;
+
+        public IStopwatch CreateStopwatch() => new FakeStopwatch(this, _now);
+
+        private sealed class FakeStopwatch(FakeClock clock, TimeSpan start) : IStopwatch
+        {
+            public TimeSpan Elapsed => clock._now - start;
+
+            public void Start()
+            {
+            }
+
+            public void Stop()
+            {
+            }
+        }
     }
 }
