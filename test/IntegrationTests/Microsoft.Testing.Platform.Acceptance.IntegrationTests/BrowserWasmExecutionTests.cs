@@ -18,7 +18,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 /// <c>node</c> via the same loader, which is what this test uses instead of a real browser.
 /// </para>
 ///
-/// <para>Four complementary assertions, mirroring <see cref="WasmExecutionTests"/>:</para>
+/// <para>Five complementary assertions, mirroring <see cref="WasmExecutionTests"/>:</para>
 /// <list type="number">
 ///   <item>
 ///     <see cref="BrowserWasmBuild_GeneratesTestingPlatformEntryPoint"/> builds for
@@ -45,6 +45,11 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 ///     project that emits a warning and an error through <c>IOutputDevice</c>, and asserts both reach
 ///     the Node output via the <c>[JSImport]</c> console bindings without a JS-interop exception —
 ///     directly guarding the <c>BrowserOutputDevice.JSConsoleWarn</c> fix. Same skip conditions.
+///   </item>
+///   <item>
+///     <see cref="BrowserWasmExecution_RunSettingsEnvironmentVariables_FailsWithClearDiagnostic"/>
+///     verifies that unsupported runsettings environment variables fail with a clear browser-specific
+///     diagnostic rather than a platform exception.
 ///   </item>
 /// </list>
 /// </summary>

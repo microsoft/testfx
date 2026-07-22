@@ -39,9 +39,9 @@ Prerequisites:
   ```
 
 - **.NET 10 is sufficient.** A .NET 11 preview SDK is not required to build or run MSTest
-  on `browser-wasm`; use a .NET 10 SDK with the `wasm-tools-net10` workload. This repository
-  happens to use a newer repo-local SDK, but that is a repository toolchain choice rather
-  than an MSTest browser-WASM prerequisite.
+  on `browser-wasm`; use a .NET 10 SDK with the `wasm-tools` workload. This repository's
+  newer repo-local SDK uses the `wasm-tools-net10` cross-targeting workload, but that is a
+  repository toolchain choice rather than an MSTest browser-WASM prerequisite.
 
 - For the headless run: [Node.js](https://nodejs.org/) on `PATH`.
   For the browser run: any static web server (see step 2b).
