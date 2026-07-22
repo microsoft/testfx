@@ -449,7 +449,8 @@ public sealed class PlatformCommandLineProviderTests
     [DataRow("not-a-uri")]
     [DataRow("https://127.0.0.1:5000/dotnettest")]
     [DataRow("ws://127.0.0.1:5000/dotnettest#fragment")]
-    public async Task IsInvalid_When_WebSocketEndpoint_IsNotAbsoluteWebSocketUriWithoutFragment(string endpoint)
+    [DataRow("ws://user:password@127.0.0.1:5000/dotnettest")]
+    public async Task IsInvalid_When_WebSocketEndpoint_IsNotAbsoluteWebSocketUriWithoutFragmentOrUserInfo(string endpoint)
     {
         var provider = new PlatformCommandLineProvider();
         CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.DotNetTestWebSocketEndpointOptionKey);

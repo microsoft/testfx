@@ -55,7 +55,10 @@ internal static class CommandLineArgumentsRedactor
             {
                 sanitizingEndpointValue = false;
                 bool isSensitive = IsSensitiveOptionName(optionName);
-                if (redactingValuesForCurrentOption && !redactedValueForCurrentOption && !isSensitive)
+                if (redactingValuesForCurrentOption
+                    && !redactedValueForCurrentOption
+                    && !isSensitive
+                    && !IsWebSocketEndpointOptionName(optionName))
                 {
                     // An opaque secret may itself look like an option (for example "-secret"). Diagnostic
                     // logging happens before arity validation, so mask this token rather than leaking it.

@@ -709,8 +709,9 @@ own Execution ID (see §1/§2).
 
 > [!NOTE]
 > This section covers the **transport bootstrap** for the WebSocket alternative to the named pipe. The
-> wire protocol carried over it (framing, serializers, handshake, message catalog, versioning) is exactly
-> what §4-§10 already describe - nothing in this section changes a single byte on the wire.
+> framing and serializer formats carried over it are exactly what §4-§10 describe. Protocol 1.5 adds the
+> optional `Transport` handshake property and advertises the new version; older peers ignore the additive
+> property, so the existing compatibility and version-negotiation model remains unchanged.
 
 ### 15.1 Why a second transport exists
 

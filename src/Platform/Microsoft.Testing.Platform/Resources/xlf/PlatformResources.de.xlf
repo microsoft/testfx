@@ -647,8 +647,8 @@ Akzeptiert optional „text“ (die standardmäsige lesbare Ausgabe) oder „jso
         <note>{Locked="dotnet test"}{Locked="pipe"}{Locked="websocket"}{Locked="--dotnet-test-pipe"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestWebSocketEndpointInvalid">
-        <source>'--dotnet-test-websocket-endpoint' requires an absolute 'ws' or 'wss' URI without a fragment.</source>
-        <target state="new">'--dotnet-test-websocket-endpoint' requires an absolute 'ws' or 'wss' URI without a fragment.</target>
+        <source>'--dotnet-test-websocket-endpoint' requires an absolute 'ws' or 'wss' URI without user information or a fragment.</source>
+        <target state="new">'--dotnet-test-websocket-endpoint' requires an absolute 'ws' or 'wss' URI without user information or a fragment.</target>
         <note>{Locked="--dotnet-test-websocket-endpoint"}{Locked="ws"}{Locked="wss"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestWebSocketEndpointOptionDescription">
