@@ -30,10 +30,7 @@ internal abstract class NamedPipeConnectionBase : NamedPipeBase
     /// 4-byte size header and 4-byte serializer-ID prefix, writes the frame to <paramref name="stream"/>,
     /// flushes, and (on Windows) waits for the pipe to drain.
     /// </summary>
-#if !MTP_MSBUILD_TASKS
-    [UnsupportedOSPlatform("browser")]
-#endif
-    protected async Task WriteMessageAsync(PipeStream stream, INamedPipeSerializer serializer, object message, CancellationToken cancellationToken)
+    protected async Task WriteMessageAsync(Stream stream, INamedPipeSerializer serializer, object message, CancellationToken cancellationToken)
     {
         // Serialize the message body
         _serializationBuffer.Position = 0;
@@ -103,9 +100,9 @@ internal abstract class NamedPipeConnectionBase : NamedPipeBase
             await stream.WriteAsync(_messageBuffer.GetBuffer(), 0, (int)_messageBuffer.Position, cancellationToken).ConfigureAwait(false);
 #endif
             await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && stream is PipeStream pipeStream)
             {
-                stream.WaitForPipeDrain();
+                pipeStream.WaitForPipeDrain();
             }
         }
         finally
@@ -119,12 +116,13 @@ internal abstract class NamedPipeConnectionBase : NamedPipeBase
     /// Reads one complete framed message from <paramref name="stream"/>, deserializes it, and returns
     /// the result.  Returns <see langword="null"/> when the stream reaches EOF (peer disconnected).
     /// </summary>
-#if !MTP_MSBUILD_TASKS
-    [UnsupportedOSPlatform("browser")]
-#endif
-    protected async Task<object?> ReadNextMessageAsync(PipeStream stream, CancellationToken cancellationToken)
+    protected async Task<object?> ReadNextMessageAsync(
+        Stream stream,
+        CancellationToken cancellationToken,
+        int maximumFrameSize = int.MaxValue)
     {
         _messageBuffer.Position = 0;
+        _messageBuffer.SetLength(0);
 
         try
         {
@@ -149,6 +147,11 @@ internal abstract class NamedPipeConnectionBase : NamedPipeBase
             }
 
             int currentMessageSize = BitConverter.ToInt32(_readBuffer, 0);
+            if (currentMessageSize < sizeof(int) || currentMessageSize > maximumFrameSize - sizeof(int))
+            {
+                throw new IOException($"The transport returned an invalid response payload length of {currentMessageSize} bytes.");
+            }
+
             int missingBytesToReadOfWholeMessage = currentMessageSize;
 
             // Read the message body in chunks, using _readBuffer as a transfer buffer.
@@ -184,6 +187,7 @@ internal abstract class NamedPipeConnectionBase : NamedPipeBase
         finally
         {
             _messageBuffer.Position = 0;
+            _messageBuffer.SetLength(0);
         }
     }
 

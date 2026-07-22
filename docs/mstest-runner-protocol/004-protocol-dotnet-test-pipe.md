@@ -1,16 +1,17 @@
-# 004 - `dotnet test` Named-Pipe Protocol
+# 004 - `dotnet test` Binary Protocol
 
-This document is the descriptive specification of the **`dotnet test` pipe protocol** (a.k.a. the
-`dotnettestcli` protocol): the small, versioned, **binary** protocol used over a named pipe between a
-Microsoft.Testing.Platform (MTP) test application and the `dotnet test` implementation shipped in the
-.NET SDK.
+This document is the descriptive specification of the **`dotnettestcli` protocol**: the small,
+versioned, **binary** protocol used between a Microsoft.Testing.Platform (MTP) test application and the
+`dotnet test` implementation shipped in the .NET SDK. The protocol can be bootstrapped over the legacy
+named-pipe transport or over authenticated HTTP request/reply for environments such as
+`browser-wasm`.
 
 It is a *different* protocol from the [JSON-RPC server-mode protocol](./001-protocol-intro.md):
 
 | | JSON-RPC server mode | `dotnet test` pipe protocol (this doc) |
 | --- | --- | --- |
-| Activation | `--server` (or `--server jsonrpc`) | `--server dotnettestcli --dotnet-test-pipe <name>` |
-| Wire format | JSON-RPC 2.0 over stdio / TCP | Custom length-prefixed **binary** framing over a named pipe |
+| Activation | `--server` (or `--server jsonrpc`) | `--server dotnettestcli` plus named-pipe or HTTP bootstrap options |
+| Wire format | JSON-RPC 2.0 over stdio / TCP | Custom length-prefixed **binary** frames over a named pipe or HTTP POST bodies |
 | Shape | Full request/response + notifications, bidirectional | **Push-only** data channel (host → SDK) + auxiliary reverse control channel |
 | Role of the runner | Server | Client (connects out to the SDK's pipe server) |
 
@@ -24,10 +25,10 @@ It is a *different* protocol from the [JSON-RPC server-mode protocol](./001-prot
 > `ServerMode/DotnetTest/DotnetTestProtocolContract.props`.
 >
 > **Shared wire contract vs. per-repo transport.** Only the *wire contract* (serializer/field IDs,
-> message models, serializers, handshake/state constants) is shared source. The **named-pipe transport**
-> (framing loop, buffering, connection-loss reactions, unknown-message handling, pipe-name resolution) is
-> deliberately **not** shared and is implemented independently on each side (`NamedPipeConnectionBase`,
-> `NamedPipeServer`, `NamedPipeClient` are local to testfx). Wherever this document describes transport
+> message models, serializers, handshake/state constants) is shared source. The **transport**
+> (framing loop, buffering, connection-loss reactions, authentication, unknown-message handling, endpoint
+> or pipe-name resolution) is deliberately **not** shared and is implemented independently on each side.
+> Wherever this document describes transport
 > *behavior*, it describes testfx's implementation. The current `dotnet/sdk` data-pipe server implements
 > its own transport and **diverges** in several places (called out inline below); such behaviors are not
 > protocol guarantees and must not be assumed to be symmetric across both sides.
@@ -37,11 +38,15 @@ It is a *different* protocol from the [JSON-RPC server-mode protocol](./001-prot
 ## 1. Terminology
 
 - **Test application / test host** — the MTP-based test executable (the process being run by
-  `dotnet test`). In this protocol it is the **pipe client**.
+  `dotnet test`). In this protocol it is the named-pipe or HTTP **client**.
 - **SDK / `dotnet test`** — the .NET SDK component that launches test applications and renders their
   output. It is the **pipe server** (it creates and listens on the data pipe).
-- **Data pipe** — the primary named pipe, whose OS name is supplied via `--dotnet-test-pipe`. All
-  test data flows host → SDK on it.
+- **Primary channel** — the host-initiated request/reply channel carrying all handshakes and test data.
+  It is either the data pipe or the HTTP gateway endpoint.
+- **Data pipe** — the legacy primary-channel named pipe, whose OS name is supplied via
+  `--dotnet-test-pipe`.
+- **HTTP gateway** — the SDK-side per-run endpoint that receives authenticated binary HTTP POSTs and
+  returns one binary reply per request.
 - **Server-control pipe** — an optional *reverse* named pipe, created and listened on by the SDK, used
   to push control signals (today only session cancellation) SDK → host. Its name is advertised in the
   handshake reply.
@@ -60,22 +65,38 @@ It is a *different* protocol from the [JSON-RPC server-mode protocol](./001-prot
 
 ## 2. Activation & configuration
 
-The SDK starts the test application with:
+The legacy SDK bootstrap remains:
 
 ```text
 <testapp> --server dotnettestcli --dotnet-test-pipe <osPipeName> [other options]
+```
+
+For HTTP the SDK starts the test application with:
+
+```text
+<testapp> --server dotnettestcli
+  --dotnet-test-transport http
+  --dotnet-test-http-endpoint <absoluteUrl>
+  --dotnet-test-http-token <perRunBearerToken>
+  [other options]
 ```
 
 Rules and behavior:
 
 - `--server` accepts zero or one argument. The value `dotnettestcli` (case-insensitive) selects this
   protocol. `--server jsonrpc` (or `--server` with no value) selects JSON-RPC server mode instead.
-- `--server dotnettestcli` **requires** `--dotnet-test-pipe`; command-line validation fails otherwise
-  (`PlatformCommandLineDotnetTestCliRequiresPipe`).
+- Omitting `--dotnet-test-transport` preserves the legacy behavior: `--dotnet-test-pipe` implicitly
+  selects the named-pipe transport.
+- `--dotnet-test-transport` accepts `pipe` or `http`. Explicit `pipe` requires
+  `--dotnet-test-pipe`; explicit `http` requires both HTTP options and rejects a pipe option.
 - `--dotnet-test-pipe` takes **exactly one** argument: the fully-resolved OS pipe name/path the SDK is
   already listening on (see §3).
-- Both options are built-in and **hidden**: the platform omits them from `--help`, so they are only
-  listed by `--info`. They are not meant for direct end-user use.
+- `--dotnet-test-http-endpoint` must be an absolute HTTPS URL. Plain HTTP is accepted only for a
+  loopback host. User information, query strings, and fragments are rejected.
+- `--dotnet-test-http-token` is a non-empty bearer token without whitespace or control characters.
+  It is per-run bootstrap material, must have enough entropy to be unguessable, and must not be logged.
+- All bootstrap options are built-in and **hidden**: the platform omits them from `--help`, so they are
+  only listed by `--info`. They are pre-launch SDK/host integration options, not direct end-user options.
 
 ### Environment variables
 
@@ -87,7 +108,20 @@ Rules and behavior:
 
 ---
 
-## 3. Pipe naming & transport
+## 3. Transport bootstrap & security
+
+| Concern | Named pipe | Authenticated HTTP |
+| --- | --- | --- |
+| Bootstrap | `--dotnet-test-pipe <resolvedName>`; implicit default or `--dotnet-test-transport pipe` | `--dotnet-test-transport http` + endpoint + per-run token |
+| Access control | Current-user pipe ACL on .NET plus OS pipe naming | HTTPS (except loopback HTTP) plus bearer authentication on every POST |
+| Protocol bytes | One complete existing frame per write/read | One complete existing frame per request/response body |
+| Ordering | One request/reply under the client lock | One POST in flight under the same ordering lock |
+| Versioning | Handshake negotiates the existing serializer/message contract | Identical handshake and versions; HTTP is bootstrap/transport only |
+| Disconnect signal | Persistent pipe EOF/write failure | No persistent signal; failure appears on the current or next POST |
+| Browser considerations | Unavailable on browser/WASI | `HttpClient`/fetch; gateway must support CORS/PNA preflight |
+| Cost | Persistent local stream | HTTP headers, possible preflight, and request setup per protocol message |
+
+### 3.1 Named pipe
 
 The pipe is a `System.IO.Pipes` named pipe opened as `PipeDirection.InOut`,
 `PipeTransmissionMode.Byte`, `PipeOptions.Asynchronous`, and — on .NET (Core) — `PipeOptions.CurrentUserOnly`
@@ -117,11 +151,64 @@ The peer uses it verbatim and never recomputes it. This keeps the SDK and host v
 > uses the fully-resolved name verbatim, this divergence is harmless for interop — it only changes *where*
 > the SDK's socket file lands. The test host simply opens a `NamedPipeClient` to `.`/`<name>`.
 
+### 3.2 Authenticated HTTP
+
+The HTTP transport uses ordinary .NET `HttpClient`; on `browser-wasm` this flows through the runtime's
+browser `fetch` implementation. It requires no custom JavaScript shim.
+
+For each host request the client sends:
+
+```http
+POST <per-run-endpoint>
+Authorization: Bearer <per-run-token>
+Content-Type: application/octet-stream
+
+<one complete protocol frame>
+```
+
+The gateway replies with a successful status and `application/octet-stream` body containing exactly one
+complete reply frame. The host validates success status, framing, response type, and the absence of a
+second frame. A semaphore permits exactly one request in flight, preserving the same ordering and
+backpressure as the named pipe. `ConnectAsync` performs no probe: the handshake is the first POST, avoiding
+an otherwise redundant browser preflight.
+
+The SDK-side gateway contract is:
+
+1. Create a unique endpoint and cryptographically strong bearer token for each launched test-application
+   run. Do not reuse either across unrelated runs.
+2. Authenticate every POST before decoding or dispatching its body. Compare credentials without logging
+   them, and never place the token in a URL.
+3. Accept exactly one existing protocol request frame and return exactly one existing protocol reply
+   frame. Do not translate serializer IDs, field IDs, framing, or negotiated versions.
+4. Serialize handling per host connection/run. The host already limits itself to one request in flight;
+   the gateway must not reorder requests across asynchronous handlers.
+5. Keep the endpoint available for the entire run and return explicit non-success status codes for
+   authentication or gateway failures. There is no health polling.
+6. Bound request and response sizes, reject malformed or trailing frames, and avoid buffering/logging
+   bodies in diagnostics because protocol payloads can contain test names, paths, and output.
+
+#### Browser CORS and Private Network Access
+
+An actual browser applies CORS, and may apply Private Network Access (PNA), even when a Node-hosted
+`browser-wasm` acceptance test does not. The gateway must:
+
+- allow the test application's exact origin (not `*` when credentials or policy require a specific
+  origin);
+- allow `POST`, `Authorization`, and `Content-Type`;
+- answer `OPTIONS` preflight without requiring the bearer header that the browser has not sent yet;
+- include the matching CORS response headers on success and error responses;
+- account for PNA preflight when a public or secure origin targets a loopback/private-network gateway
+  (including `Access-Control-Allow-Private-Network: true` where the browser requires it); and
+- use HTTPS for non-loopback endpoints to avoid mixed-content and bootstrap validation failures.
+
+This adds preflight and per-request HTTP overhead compared with a persistent WebSocket or named pipe, but
+substantially reduces browser-specific host code and reuses the platform `HttpClient` stack.
+
 ---
 
 ## 4. Framing
 
-Every message — request and reply, on both the data and control pipes — is a single frame:
+Every message — request and reply, on the primary channel and control pipe — is a single frame:
 
 ```text
 +-------------------------+------------------------+------------------------+
@@ -283,8 +370,8 @@ change or reuse an ID.
 
 ## 7. Request/reply model
 
-Although data flows host → SDK, the transport is still **request/reply** at the frame level: the client
-(host) writes one request frame and blocks reading exactly one reply frame before sending the next. This
+Although data flows host → SDK, the primary channel is entirely **host-initiated request/reply**: the
+host sends one request frame and waits for exactly one reply frame before sending the next. This
 serializes all sends behind a single lock (`RequestReplyAsync` holds a `SemaphoreSlim`), so messages are
 delivered in order.
 
@@ -294,14 +381,15 @@ delivered in order.
 - The one exception is the **handshake**: the SDK replies with a `HandshakeMessage` (§9), not a
   `VoidResponse`.
 
-The protocol is therefore "push-only" from a *semantic* standpoint (the SDK never initiates a data
-request), but every push is acknowledged.
+The protocol is therefore "push-only" from a *semantic* standpoint (the SDK never initiates a primary
+channel request), but every push is acknowledged. HTTP needs no polling because there is no SDK-initiated
+primary-channel traffic to retrieve.
 
 ```mermaid
 sequenceDiagram
     participant H as Test host (client)
     participant S as dotnet test SDK (server)
-    Note over H,S: data pipe, one in-flight message at a time
+    Note over H,S: named pipe or HTTP, one in-flight message at a time
     H->>S: DiscoveredTestMessages / TestResultMessages / ...
     S-->>H: VoidResponse
     H->>S: next message
@@ -312,7 +400,7 @@ sequenceDiagram
 
 ## 8. Handshake & version negotiation
 
-Before any data is sent, the host performs one handshake round-trip on the data pipe.
+Before any data is sent, the host performs one handshake round-trip on the selected primary transport.
 
 ### 8.1 Host → SDK: `HandshakeMessage` (request)
 
@@ -531,7 +619,7 @@ Compatibility rules / assumptions:
 
 ## 11. Connection-loss behavior (assumptions)
 
-The connection-loss semantics differ by pipe and are a core part of the contract.
+Connection-loss detection differs by transport and is a core integration consideration.
 
 **Data pipe (`exitProcessOnConnectionLoss: true`).** If the SDK disconnects there is no way to recover,
 so the host process **exits abnormally** with exit code `GenericFailure` (1). This happens on two paths:
@@ -539,6 +627,14 @@ the host reads EOF where a reply was expected, or a write fails with `IOExceptio
 while sending a request. On the **read-EOF** path the host also writes a diagnostic to stderr before
 exiting; the **write-failure** path calls `Exit(GenericFailure)` directly **without** that diagnostic.
 This is deliberate: if the user kills `dotnet.exe`, the test host must die too rather than orphan.
+
+**HTTP primary channel.** HTTP has no persistent session whose closure can notify an otherwise idle host.
+Gateway loss, DNS/network failure, authentication expiry, or a malformed response is detected by the
+current POST, or by the next POST if the host was idle. A failed request fails the host operation; there
+is no transparent retry because retrying after an ambiguous network failure could duplicate a message.
+Cancellation is passed to `HttpClient.SendAsync` and response-body reads, aborting the in-flight fetch
+without converting expected cancellation into a connection-loss failure. Disposal cancels no completed
+messages and prevents later use.
 
 **Server-control pipe (`exitProcessOnConnectionLoss: false`).** A dropped control pipe must **not** kill
 the test host. This listener runs *inside the test host* as the control-pipe **client**, so an
@@ -566,6 +662,13 @@ faults its server loop instead. Neither behavior is a protocol guarantee.
 Purpose: let the SDK push a control signal (today only session cancellation, e.g. from a global
 `--maximum-failed-tests` or `--timeout`) to the running test host, even while the host is otherwise
 silent.
+
+This reverse channel is explicitly **separate from the HTTP primary transport**. An HTTP handshake reply
+does not activate `ServerControlPipeName`, because named pipes are unavailable to `browser-wasm` and the
+host must not invent polling on the primary endpoint. A future browser-capable reverse-control transport
+requires its own capability/bootstrap contract and is out of scope for the HTTP request/reply gateway.
+Host-local cancellation (for example, the test application's own timeout token) still cancels an
+in-flight HTTP POST normally.
 
 Setup and flow:
 
@@ -602,18 +705,18 @@ feature simply disabled.
 
 ## 13. End-to-end lifecycle
 
-The host builder creates a `DotnetTestConnection` and calls `AfterCommonServiceSetupAsync`, which — when
-`--server dotnettestcli` + `--dotnet-test-pipe` are present — sets/reads the Execution ID env var and
-connects the data-pipe client. The overall flow:
+The host builder creates a `DotnetTestConnection` and calls `AfterCommonServiceSetupAsync`, which selects
+the legacy named pipe or authenticated HTTP from the hidden bootstrap options, sets/reads the Execution ID
+environment variable, and initializes the client. The overall flow:
 
 ```mermaid
 sequenceDiagram
     participant SDK as dotnet test SDK
     participant Host as Test host
 
-    SDK->>SDK: create & listen on data pipe
-    SDK->>Host: launch: --server dotnettestcli --dotnet-test-pipe <name> [--list-tests|--help|...]
-    Host->>SDK: connect data pipe
+    SDK->>SDK: create data pipe or per-run HTTP gateway + token
+    SDK->>Host: launch with named-pipe or HTTP bootstrap [--list-tests|--help|...]
+    Host->>SDK: connect pipe, or initialize HttpClient (no probe)
     Host->>SDK: HandshakeMessage (request)
     SDK-->>Host: HandshakeMessage (reply: negotiated version, [IsIDE], [ServerControlPipeName])
 
@@ -623,7 +726,7 @@ sequenceDiagram
         Host->>SDK: CommandLineOptionMessages
         SDK-->>Host: VoidResponse
     else run / discover
-        opt control channel advertised
+        opt named-pipe transport and control channel advertised
             Host->>SDK: connect control pipe + park WaitForServerControlRequest
         end
         Host->>SDK: TestSessionEvent(TestSessionStart)
@@ -665,11 +768,12 @@ own Execution ID (see §1/§2).
 | Constants (states, versions, handshake props) | `ServerMode/DotnetTest/IPC/Constants.cs` |
 | Serializer registry | `IPC/Serializers/RegisterSerializers.cs` |
 | Serializer primitives / envelope | `IPC/Serializers/BaseSerializer.cs`, `NamedPipeSerializer.cs` |
-| Framing / transport | `IPC/NamedPipeConnectionBase.cs`, `NamedPipeServer.cs`, `NamedPipeClient.cs` |
+| Framing / named-pipe transport | `IPC/NamedPipeConnectionBase.cs`, `NamedPipeServer.cs`, `NamedPipeClient.cs` |
+| HTTP primary transport | `ServerMode/DotnetTest/Transport/DotnetTestHttpClient.cs` |
 | Pipe naming | `NamedPipeServer.GetPipeName` |
 | Message models | `ServerMode/DotnetTest/IPC/Models/*.cs`, `IPC/Models/*.cs` |
 | Message serializers | `ServerMode/DotnetTest/IPC/Serializers/*.cs` |
 | Host connection / handshake / control channel | `ServerMode/DotnetTest/DotnetTestConnection.cs` |
 | Host data consumer (state → message mapping) | `ServerMode/DotnetTest/IPC/DotnetTestDataConsumer.cs` |
 | Shared-source manifest (vendored to dotnet/sdk) | `ServerMode/DotnetTest/DotnetTestProtocolContract.props` |
-| Black-box protocol reference / tests | `test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/DotnetTestPipe/*`, `test/UnitTests/Microsoft.Testing.Platform.DotnetTestProtocolContract.UnitTests/*` |
+| Black-box protocol reference / tests | `test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/DotnetTestPipe/*`, `BrowserWasmExecutionTests.cs`, `test/UnitTests/Microsoft.Testing.Platform.DotnetTestProtocolContract.UnitTests/*` |
