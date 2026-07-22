@@ -621,6 +621,11 @@ Opcionalmente, aceita 'text' (a saída legível por humanos padrão) ou 'json' p
         <target state="translated">''--server {0}'' requer que ''--{1}'' seja especificado.</target>
         <note>{0} is the server protocol value. {1} is the required option name without the leading dashes. {Locked="--server"}{Locked="dotnettestcli"}{Locked="dotnet-test-pipe"}</note>
       </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestCliRequiresTransport">
+        <source>'--server dotnettestcli' requires either '--dotnet-test-pipe' or '--dotnet-test-transport websocket' with both '--dotnet-test-websocket-endpoint' and '--dotnet-test-websocket-token'.</source>
+        <target state="new">'--server dotnettestcli' requires either '--dotnet-test-pipe' or '--dotnet-test-transport websocket' with both '--dotnet-test-websocket-endpoint' and '--dotnet-test-websocket-token'.</target>
+        <note>{Locked="--server dotnettestcli"}{Locked="--dotnet-test-pipe"}{Locked="--dotnet-test-transport websocket"}{Locked="--dotnet-test-websocket-endpoint"}{Locked="--dotnet-test-websocket-token"}</note>
+      </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
         <source>dotnet test pipe.</source>
         <target state="translated">pipe de dotnet test.</target>
@@ -641,6 +646,11 @@ Opcionalmente, aceita 'text' (a saída legível por humanos padrão) ou 'json' p
         <target state="new">Pre-launch transport used to carry the 'dotnet test' pipe protocol. The available values are 'pipe' and 'websocket'. Defaults to 'pipe' (implied whenever only '--dotnet-test-pipe' is specified).</target>
         <note>{Locked="dotnet test"}{Locked="pipe"}{Locked="websocket"}{Locked="--dotnet-test-pipe"}</note>
       </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestWebSocketEndpointInvalid">
+        <source>'--dotnet-test-websocket-endpoint' requires an absolute 'ws' or 'wss' URI without a fragment.</source>
+        <target state="new">'--dotnet-test-websocket-endpoint' requires an absolute 'ws' or 'wss' URI without a fragment.</target>
+        <note>{Locked="--dotnet-test-websocket-endpoint"}{Locked="ws"}{Locked="wss"}</note>
+      </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestWebSocketEndpointOptionDescription">
         <source>The WebSocket endpoint URI the test host connects to when '--dotnet-test-transport websocket' is selected.</source>
         <target state="new">The WebSocket endpoint URI the test host connects to when '--dotnet-test-transport websocket' is selected.</target>
@@ -655,6 +665,11 @@ Opcionalmente, aceita 'text' (a saída legível por humanos padrão) ou 'json' p
         <source>'--dotnet-test-transport websocket' requires both '--dotnet-test-websocket-endpoint' and '--dotnet-test-websocket-token' to be specified.</source>
         <target state="new">'--dotnet-test-transport websocket' requires both '--dotnet-test-websocket-endpoint' and '--dotnet-test-websocket-token' to be specified.</target>
         <note>{Locked="--dotnet-test-transport websocket"}{Locked="--dotnet-test-websocket-endpoint"}{Locked="--dotnet-test-websocket-token"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestWebSocketTokenEmpty">
+        <source>'--dotnet-test-websocket-token' requires a non-empty value.</source>
+        <target state="new">'--dotnet-test-websocket-token' requires a non-empty value.</target>
+        <note>{Locked="--dotnet-test-websocket-token"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestWebSocketTokenOptionDescription">
         <source>The per-run authentication token the test host presents when connecting via '--dotnet-test-transport websocket'.</source>

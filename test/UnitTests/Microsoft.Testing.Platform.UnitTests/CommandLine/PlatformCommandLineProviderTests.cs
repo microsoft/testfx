@@ -343,13 +343,29 @@ public sealed class PlatformCommandLineProviderTests
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
         Assert.IsFalse(validateOptionsResult.IsValid);
+        Assert.AreEqual(PlatformResources.PlatformCommandLineDotnetTestCliRequiresTransport, validateOptionsResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task IsInvalid_When_Server_DotnetTestCli_With_ExplicitPipeTransport_Without_DotnetTestPipe()
+    {
+        var provider = new PlatformCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            { PlatformCommandLineProvider.ServerOptionKey, ["dotnettestcli"] },
+            { PlatformCommandLineProvider.DotNetTestTransportOptionKey, ["pipe"] },
+        };
+
+        ValidationResult result = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+
+        Assert.IsFalse(result.IsValid);
         Assert.AreEqual(
             string.Format(
                 CultureInfo.InvariantCulture,
                 PlatformResources.PlatformCommandLineDotnetTestCliRequiresPipe,
                 PlatformCommandLineProvider.DotnetTestCliProtocolName,
                 PlatformCommandLineProvider.DotNetTestPipeOptionKey),
-            validateOptionsResult.ErrorMessage);
+            result.ErrorMessage);
     }
 
     [TestMethod]
@@ -426,6 +442,49 @@ public sealed class PlatformCommandLineProviderTests
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
         Assert.IsTrue(validateOptionsResult.IsValid);
+    }
+
+    [TestMethod]
+    [DataRow("")]
+    [DataRow("not-a-uri")]
+    [DataRow("https://127.0.0.1:5000/dotnettest")]
+    [DataRow("ws://127.0.0.1:5000/dotnettest#fragment")]
+    public async Task IsInvalid_When_WebSocketEndpoint_IsNotAbsoluteWebSocketUriWithoutFragment(string endpoint)
+    {
+        var provider = new PlatformCommandLineProvider();
+        CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.DotNetTestWebSocketEndpointOptionKey);
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [endpoint]).ConfigureAwait(false);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(PlatformResources.PlatformCommandLineDotnetTestWebSocketEndpointInvalid, result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("ws://127.0.0.1:5000/dotnettest")]
+    [DataRow("wss://localhost/dotnettest?run=1")]
+    public async Task IsValid_When_WebSocketEndpoint_IsAbsoluteWebSocketUriWithoutFragment(string endpoint)
+    {
+        var provider = new PlatformCommandLineProvider();
+        CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.DotNetTestWebSocketEndpointOptionKey);
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [endpoint]).ConfigureAwait(false);
+
+        Assert.IsTrue(result.IsValid);
+    }
+
+    [TestMethod]
+    [DataRow("")]
+    [DataRow(" ")]
+    public async Task IsInvalid_When_WebSocketToken_IsEmpty(string token)
+    {
+        var provider = new PlatformCommandLineProvider();
+        CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.DotNetTestWebSocketTokenOptionKey);
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [token]).ConfigureAwait(false);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(PlatformResources.PlatformCommandLineDotnetTestWebSocketTokenEmpty, result.ErrorMessage);
     }
 
     [TestMethod]

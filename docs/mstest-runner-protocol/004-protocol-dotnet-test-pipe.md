@@ -741,9 +741,10 @@ naming, `WaitForPipeDrain`) stays isolated to the named-pipe implementation.
   already listening on - the test host is always the one that *initiates* the outbound connection, exactly
   mirroring the named-pipe transport where the SDK creates the pipe and the host connects out to it. This
   matters specifically for `browser-wasm`: the page/test host runs inside the browser sandbox and can only
-  make outbound connections; it cannot accept inbound ones.
+  make outbound connections; it cannot accept inbound ones. The URI must be absolute and must not contain a
+  fragment.
 - `--dotnet-test-websocket-token` takes a per-run opaque secret the SDK generated for this connection (see
-  §15.4).
+  §15.4); an empty or whitespace-only token is rejected during command-line validation.
 - All three options are hidden and built-in, like `--dotnet-test-pipe`.
 - Command-line validation (`PlatformCommandLineProvider.ValidateCommandLineOptionsAsync`) rejects
   impossible or incomplete combinations before any connection is attempted: the named-pipe transport on
@@ -835,17 +836,9 @@ include `1.5.0` alongside it, following the same convention as every other addit
 - **The SDK side of this transport (loopback listener/gateway, token generation and validation) is not part
   of this repository.** This document only specifies what the MTP-side client requires from that gateway;
   see the coordinating `dotnet/sdk` change for the server implementation.
-- **`BrowserWebSocketDuplexStream`'s JS-interop cancellation path has compile/publish coverage, not
-  behavioral test coverage.** `ReadAsync`/`WriteAsync` correctly observe `CancellationToken` (`ReadAsync` races
-  the JS `receive()` promise against the token and calls a `cancelReceive` JS function to clear the abandoned
-  waiter so a message arriving after cancellation is queued for the next call instead of being silently lost;
-  `WriteAsync` rejects an already-cancelled token before the - synchronous, uncancellable-once-issued -
-  `WebSocket.send()` call). This code path is exercised by `dotnet publish -r browser-wasm` (confirming the
-  `[JSImport]`/`[JSExport]` signatures are valid for the wasm JS-interop source generator) but **not** by an
-  automated test that actually runs the JS module under a browser/`node` runtime and asserts the
-  cancel-mid-flight and message-not-lost behavior, because doing so end-to-end needs the SDK-side WebSocket
-  gateway from the previous bullet, which does not exist yet. The non-browser adapter's equivalent behavior
-  (`ClientWebSocketDuplexStream`/`DotnetTestWebSocketClient`) *is* covered by a real loopback-socket test
-  (`DotnetTestWebSocketClientTests`), since that path needs no browser/JS host. Once the SDK-side gateway
-  exists, extending `BrowserWasmExecutionTests`-style node-hosted acceptance tests to drive this transport is
-  the natural way to close this gap.
+- **The SDK gateway remains external, but the browser client is behaviorally covered in this repository.**
+  `BrowserWasmExecutionTests` publishes and runs the real `browser-wasm` client under Node against a
+  test-local loopback WebSocket gateway. The tests cover authenticated connect, binary request/reply traffic,
+  the emitted `Transport=WebSocket` handshake property, disconnect, cancellation while the HTTP upgrade is
+  stalled, cancellation of a pending receive without losing the next message, and pre-cancelled writes. This
+  validates the `[JSImport]` path on its target runtime without depending on the production SDK gateway.

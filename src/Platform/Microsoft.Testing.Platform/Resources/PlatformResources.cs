@@ -53,6 +53,8 @@ internal static partial class PlatformResources
 
     internal static string @PlatformCommandLineDotnetTestCliRequiresPipe => GetResourceString("PlatformCommandLineDotnetTestCliRequiresPipe");
 
+    internal static string @PlatformCommandLineDotnetTestCliRequiresTransport => GetResourceString("PlatformCommandLineDotnetTestCliRequiresTransport");
+
     internal static string @PlatformCommandLineDotnetTestTransportInvalidArgument => GetResourceString("PlatformCommandLineDotnetTestTransportInvalidArgument");
 
     internal static string @PlatformCommandLineDotnetTestTransportConflict => GetResourceString("PlatformCommandLineDotnetTestTransportConflict");
@@ -60,6 +62,10 @@ internal static partial class PlatformResources
     internal static string @PlatformCommandLineDotnetTestWebSocketRequiresEndpointAndToken => GetResourceString("PlatformCommandLineDotnetTestWebSocketRequiresEndpointAndToken");
 
     internal static string @PlatformCommandLineDotnetTestWebSocketOptionsRequireTransport => GetResourceString("PlatformCommandLineDotnetTestWebSocketOptionsRequireTransport");
+
+    internal static string @PlatformCommandLineDotnetTestWebSocketEndpointInvalid => GetResourceString("PlatformCommandLineDotnetTestWebSocketEndpointInvalid");
+
+    internal static string @PlatformCommandLineDotnetTestWebSocketTokenEmpty => GetResourceString("PlatformCommandLineDotnetTestWebSocketTokenEmpty");
 
     internal static string @PlatformCommandLinePipeTransportNotSupportedOnBrowser => GetResourceString("PlatformCommandLinePipeTransportNotSupportedOnBrowser");
 

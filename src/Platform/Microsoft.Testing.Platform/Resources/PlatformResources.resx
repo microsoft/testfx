@@ -597,6 +597,10 @@ The default is TestResults in the directory that contains the test application.<
     <value>'--server {0}' requires '--{1}' to be specified.</value>
     <comment>{0} is the server protocol value. {1} is the required option name without the leading dashes. {Locked="--server"}{Locked="dotnettestcli"}{Locked="dotnet-test-pipe"}</comment>
   </data>
+  <data name="PlatformCommandLineDotnetTestCliRequiresTransport" xml:space="preserve">
+    <value>'--server dotnettestcli' requires either '--dotnet-test-pipe' or '--dotnet-test-transport websocket' with both '--dotnet-test-websocket-endpoint' and '--dotnet-test-websocket-token'.</value>
+    <comment>{Locked="--server dotnettestcli"}{Locked="--dotnet-test-pipe"}{Locked="--dotnet-test-transport websocket"}{Locked="--dotnet-test-websocket-endpoint"}{Locked="--dotnet-test-websocket-token"}</comment>
+  </data>
   <data name="PlatformCommandLineSkipBuildersNumberCheckOptionDescription" xml:space="preserve">
     <value>For testing purposes</value>
   </data>
@@ -619,9 +623,17 @@ The default is TestResults in the directory that contains the test application.<
     <value>The WebSocket endpoint URI the test host connects to when '--dotnet-test-transport websocket' is selected.</value>
     <comment>{Locked="--dotnet-test-transport websocket"}</comment>
   </data>
+  <data name="PlatformCommandLineDotnetTestWebSocketEndpointInvalid" xml:space="preserve">
+    <value>'--dotnet-test-websocket-endpoint' requires an absolute 'ws' or 'wss' URI without a fragment.</value>
+    <comment>{Locked="--dotnet-test-websocket-endpoint"}{Locked="ws"}{Locked="wss"}</comment>
+  </data>
   <data name="PlatformCommandLineDotnetTestWebSocketTokenOptionDescription" xml:space="preserve">
     <value>The per-run authentication token the test host presents when connecting via '--dotnet-test-transport websocket'.</value>
     <comment>{Locked="--dotnet-test-transport websocket"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestWebSocketTokenEmpty" xml:space="preserve">
+    <value>'--dotnet-test-websocket-token' requires a non-empty value.</value>
+    <comment>{Locked="--dotnet-test-websocket-token"}</comment>
   </data>
   <data name="PlatformCommandLineDotnetTestTransportConflict" xml:space="preserve">
     <value>'--dotnet-test-pipe' cannot be combined with '--dotnet-test-transport websocket', '--dotnet-test-websocket-endpoint', or '--dotnet-test-websocket-token'. Choose a single transport.</value>

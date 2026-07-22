@@ -107,15 +107,5 @@ internal static class CommandLineArgumentsRedactor
     }
 
     private static bool IsSensitiveOptionName(string optionName)
-    {
-        foreach (string sensitive in SensitiveOptionNames)
-        {
-            if (sensitive.Equals(optionName, StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
+        => SensitiveOptionNames.Any(sensitive => sensitive.Equals(optionName, StringComparison.OrdinalIgnoreCase));
 }

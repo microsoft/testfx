@@ -27,16 +27,16 @@ namespace Microsoft.Testing.Platform.IPC;
 /// proxy). <c>send</c> writes one binary frame per call, mirroring the one-frame-per-<c>WriteAsync</c> contract
 /// the framing layer already relies on for named pipes and the non-browser WebSocket adapter. Frames are
 /// exchanged as base64 strings (see the module source for why) rather than raw bytes. <c>receive</c> returns
-/// the next queued message, or an empty string once the socket has closed (a real protocol frame is always at
-/// least 8 bytes, so this is an unambiguous close sentinel) - messages arriving before the .NET side calls
-/// <c>receive</c> are buffered in a JS-side queue so no data is lost while a request/reply round-trip is in
-/// flight.
+/// the next queued message, or a reserved non-base64 sentinel once the socket has closed - messages arriving
+/// before the .NET side calls <c>receive</c> are buffered in a JS-side queue so no data is lost while a
+/// request/reply round-trip is in flight.
 /// </para>
 /// </remarks>
 [SupportedOSPlatform("browser")]
 internal sealed partial class BrowserWebSocketDuplexStream : Stream
 {
     private const string ModuleName = "Microsoft.Testing.Platform/DotnetTestWebSocket";
+    private const string ClosedSentinel = "__MTP_WEBSOCKET_CLOSED__";
 
     // language=javascript
     private const string ModuleSource = """
@@ -78,7 +78,7 @@ internal sealed partial class BrowserWebSocketDuplexStream : Stream
                     if (ws._waiter) {
                         const waiter = ws._waiter;
                         ws._waiter = null;
-                        waiter.resolve("");
+                        waiter.resolve("__MTP_WEBSOCKET_CLOSED__");
                     }
                 };
             });
@@ -86,8 +86,8 @@ internal sealed partial class BrowserWebSocketDuplexStream : Stream
 
         // Data is exchanged as base64 strings rather than raw byte arrays: the wasm JS-interop source
         // generator does not support marshalling byte[]/Uint8Array across an async (Task-returning) boundary,
-        // but string marshalling is always supported. A real protocol frame is always at least 8 bytes (4-byte
-        // length header + 4-byte serializer id), so an empty string is an unambiguous "socket closed" sentinel.
+        // but string marshalling is always supported. The close sentinel contains characters that are invalid in
+        // base64 so it cannot collide with any legal message, including a zero-length binary message ("").
         function toBase64(bytes) {
             // Avoid spreading very large arrays into String.fromCharCode (call-stack argument limits);
             // build the binary string in bounded chunks instead.
@@ -120,7 +120,7 @@ internal sealed partial class BrowserWebSocketDuplexStream : Stream
             }
 
             if (ws._closed) {
-                return Promise.resolve("");
+                return Promise.resolve("__MTP_WEBSOCKET_CLOSED__");
             }
 
             return new Promise((resolve, reject) => {
@@ -136,7 +136,7 @@ internal sealed partial class BrowserWebSocketDuplexStream : Stream
             if (ws._waiter) {
                 const waiter = ws._waiter;
                 ws._waiter = null;
-                waiter.resolve("");
+                waiter.resolve("__MTP_WEBSOCKET_CLOSED__");
             }
         }
 
@@ -166,11 +166,46 @@ internal sealed partial class BrowserWebSocketDuplexStream : Stream
     /// </summary>
     public static async Task<BrowserWebSocketDuplexStream> ConnectAsync(Uri uri, CancellationToken cancellationToken)
     {
-        s_moduleReady ??= JSHost.ImportAsync(ModuleName, $"data:text/javascript;charset=utf-8;base64,{Convert.ToBase64String(Encoding.UTF8.GetBytes(ModuleSource))}", cancellationToken);
-        await s_moduleReady.ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
 
-        JSObject socket = await OpenAsync(uri.ToString()).ConfigureAwait(false);
-        return new BrowserWebSocketDuplexStream(socket);
+        s_moduleReady ??= JSHost.ImportAsync(ModuleName, $"data:text/javascript;charset=utf-8;base64,{Convert.ToBase64String(Encoding.UTF8.GetBytes(ModuleSource))}", CancellationToken.None);
+        await s_moduleReady.WaitAsync(cancellationToken).ConfigureAwait(false);
+
+        Task<JSObject> openTask = OpenAsync(uri.ToString());
+        try
+        {
+            JSObject socket = await openTask.WaitAsync(cancellationToken).ConfigureAwait(false);
+            return new BrowserWebSocketDuplexStream(socket);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            _ = CloseSocketWhenOpenedAsync(openTask);
+            throw;
+        }
+    }
+
+    private static async Task CloseSocketWhenOpenedAsync(Task<JSObject> openTask)
+    {
+        try
+        {
+            JSObject socket = await openTask.ConfigureAwait(false);
+            try
+            {
+                Close(socket);
+            }
+            catch (JSException)
+            {
+                // Best-effort close after a cancelled connection attempt.
+            }
+            finally
+            {
+                socket.Dispose();
+            }
+        }
+        catch (JSException)
+        {
+            // Observe a connection failure that completed after the caller was already cancelled.
+        }
     }
 
     public override bool CanRead => true;
@@ -184,7 +219,11 @@ internal sealed partial class BrowserWebSocketDuplexStream : Stream
     public override long Position
     {
         get => throw new NotSupportedException();
-        set => throw new NotSupportedException();
+        set
+        {
+            _ = value;
+            throw new NotSupportedException();
+        }
     }
 
     public override void Flush()
@@ -205,21 +244,20 @@ internal sealed partial class BrowserWebSocketDuplexStream : Stream
 
     public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
     {
-        if (_pendingReadOffset >= _pendingRead.Length)
+        while (_pendingReadOffset >= _pendingRead.Length)
         {
             string next = await WaitForReceiveAsync(cancellationToken).ConfigureAwait(false);
 
-            // A real protocol frame is always at least 8 bytes (4-byte length header + 4-byte serializer id), so
-            // an empty result unambiguously means the JS module resolved the close sentinel (see the 'receive'
-            // function above) - the peer went away. Surface EOF exactly like a clean named-pipe disconnect so
-            // the shared connection-loss handling in DotnetTestWebSocketClient applies uniformly.
-            if (next.Length == 0)
+            if (next == ClosedSentinel)
             {
                 return 0;
             }
 
             _pendingRead = Convert.FromBase64String(next);
             _pendingReadOffset = 0;
+
+            // A zero-length binary WebSocket message is legal and is not EOF. Keep receiving until data or the
+            // distinct close sentinel arrives, matching ClientWebSocketDuplexStream.
         }
 
         int toCopy = Math.Min(count, _pendingRead.Length - _pendingReadOffset);
@@ -285,7 +323,15 @@ internal sealed partial class BrowserWebSocketDuplexStream : Stream
         // doing the (synchronous, uncancellable-once-started) work, exactly like other synchronous-under-the-hood
         // Stream implementations do.
         cancellationToken.ThrowIfCancellationRequested();
-        Send(_socket, Convert.ToBase64String(buffer, offset, count));
+        try
+        {
+            Send(_socket, Convert.ToBase64String(buffer, offset, count));
+        }
+        catch (JSException ex)
+        {
+            throw new IOException("The WebSocket send failed.", ex);
+        }
+
         await Task.CompletedTask.ConfigureAwait(false);
     }
 

@@ -147,6 +147,22 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
             return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineDotnetTestTransportInvalidArgument, arguments[0], SupportedDotNetTestTransportValues));
         }
 
+        if (commandOption.Name == DotNetTestWebSocketEndpointOptionKey
+            && arguments is [string endpoint]
+            && (!Uri.TryCreate(endpoint, UriKind.Absolute, out Uri? endpointUri)
+                || endpointUri.Scheme is not ("ws" or "wss")
+                || !RoslynString.IsNullOrEmpty(endpointUri.Fragment)))
+        {
+            return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDotnetTestWebSocketEndpointInvalid);
+        }
+
+        if (commandOption.Name == DotNetTestWebSocketTokenOptionKey
+            && arguments is [string token]
+            && RoslynString.IsNullOrWhiteSpace(token))
+        {
+            return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDotnetTestWebSocketTokenEmpty);
+        }
+
         if (commandOption.Name == ClientPortOptionKey
             && (!int.TryParse(arguments[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out int port)
                 || port < System.Net.IPEndPoint.MinPort
@@ -274,6 +290,7 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
             bool hasTransportOption = commandLineOptions.TryGetOptionArgumentList(DotNetTestTransportOptionKey, out string[]? transportArgs)
                 && transportArgs is { Length: 1 };
             bool isWebSocketTransport = hasTransportOption && DotNetTestTransportWebSocketArgument.Equals(transportArgs![0], StringComparison.OrdinalIgnoreCase);
+            bool isPipeTransport = hasTransportOption && DotNetTestTransportPipeArgument.Equals(transportArgs![0], StringComparison.OrdinalIgnoreCase);
             bool hasEndpoint = commandLineOptions.IsOptionSet(DotNetTestWebSocketEndpointOptionKey);
             bool hasToken = commandLineOptions.IsOptionSet(DotNetTestWebSocketTokenOptionKey);
 
@@ -296,7 +313,10 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
             // given explicitly without the required --dotnet-test-pipe name).
             if (!hasPipe && !isWebSocketTransport)
             {
-                return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineDotnetTestCliRequiresPipe, DotnetTestCliProtocolName, DotNetTestPipeOptionKey));
+                return ValidationResult.InvalidTask(
+                    isPipeTransport
+                        ? string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineDotnetTestCliRequiresPipe, DotnetTestCliProtocolName, DotNetTestPipeOptionKey)
+                        : PlatformResources.PlatformCommandLineDotnetTestCliRequiresTransport);
             }
 
             // 4. WebSocket transport selected (or implied) but incomplete.

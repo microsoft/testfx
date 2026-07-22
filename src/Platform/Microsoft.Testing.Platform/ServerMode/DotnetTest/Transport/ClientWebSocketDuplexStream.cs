@@ -44,7 +44,11 @@ internal sealed class ClientWebSocketDuplexStream : Stream
     public override long Position
     {
         get => throw new NotSupportedException();
-        set => throw new NotSupportedException();
+        set
+        {
+            _ = value;
+            throw new NotSupportedException();
+        }
     }
 
     public override void Flush()

@@ -276,6 +276,8 @@ Microsoft.Testing.Platform.IPC.NamedPipeClient.RequestReplyAsync<TRequest, TResp
 Microsoft.Testing.Platform.IPC.NamedPipeConnectionBase
 Microsoft.Testing.Platform.IPC.NamedPipeConnectionBase.DisposeBuffers() -> void
 Microsoft.Testing.Platform.IPC.NamedPipeConnectionBase.NamedPipeConnectionBase() -> void
+Microsoft.Testing.Platform.IPC.NamedPipeConnectionBase.ReadNextMessageAsync(System.IO.Pipes.PipeStream! stream, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<object?>!
+Microsoft.Testing.Platform.IPC.NamedPipeConnectionBase.WriteMessageAsync(System.IO.Pipes.PipeStream! stream, Microsoft.Testing.Platform.IPC.INamedPipeSerializer! serializer, object! message, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Platform.IPC.NamedPipeServer
 Microsoft.Testing.Platform.IPC.NamedPipeServer.Dispose() -> void
 Microsoft.Testing.Platform.IPC.NamedPipeServer.DisposeAsync() -> System.Threading.Tasks.ValueTask

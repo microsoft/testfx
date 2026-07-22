@@ -62,6 +62,10 @@ public class DotnetTestPipeBaselineTests : AcceptanceTestBase<DotnetTestPipeBase
             "1",
             result.ReceivedHandshake[DotnetTestPipeProtocol.HandshakeProperties.AttemptNumber],
             "A non-retried test host should report attempt 1.");
+        Assert.AreEqual(
+            "NamedPipe",
+            result.ReceivedHandshake[DotnetTestPipeProtocol.HandshakeProperties.Transport],
+            "The legacy pipe path must identify its transport as NamedPipe.");
     }
 
     [TestMethod]
