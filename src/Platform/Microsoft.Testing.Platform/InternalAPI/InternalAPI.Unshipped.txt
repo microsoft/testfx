@@ -132,7 +132,7 @@ Microsoft.Testing.Platform.Services.TestCoverageResult.Description.get -> string
 Microsoft.Testing.Platform.Services.TestCoverageResult.DisplayName.get -> string!
 Microsoft.Testing.Platform.Services.TestCoverageResult.HasThresholdFailure.get -> bool
 Microsoft.Testing.Platform.Services.TestCoverageResult.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
-Microsoft.Testing.Platform.Services.TestCoverageResult.Overall.get -> Microsoft.Testing.Platform.Services.CoverageScopeSummary?
+Microsoft.Testing.Platform.Services.TestCoverageResult.GetOverall(Microsoft.Testing.Platform.TestHost.SessionUid sessionUid) -> Microsoft.Testing.Platform.Services.CoverageScopeSummary?
 Microsoft.Testing.Platform.Services.TestCoverageResult.Reports.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Services.CoverageReportReference!>!
 Microsoft.Testing.Platform.Services.TestCoverageResult.Reset() -> void
 Microsoft.Testing.Platform.Services.TestCoverageResult.Scopes.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Services.CoverageScopeSummary!>!

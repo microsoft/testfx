@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Services;
 
@@ -12,8 +13,10 @@ namespace Microsoft.Testing.Platform.Services;
 /// </summary>
 public interface ITestCoverageResult
 {
-    /// <summary>Gets the overall (whole-run) summary, if reported.</summary>
-    CoverageScopeSummary? Overall { get; }
+    /// <summary>Gets the overall (whole-run) summary for a session, if reported.</summary>
+    /// <param name="sessionUid">The session whose overall summary should be returned.</param>
+    /// <returns>The session's overall summary, or null if none was reported.</returns>
+    CoverageScopeSummary? GetOverall(SessionUid sessionUid);
 
     /// <summary>Gets the per-scope summaries with all metrics correlated per scope.</summary>
     IReadOnlyList<CoverageScopeSummary> Scopes { get; }

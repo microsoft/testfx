@@ -84,7 +84,7 @@ Microsoft.Testing.Platform.Services.ITestCoverageCapabilities
 Microsoft.Testing.Platform.Services.ITestCoverageCapabilities.EnabledProducerUids.get -> System.Collections.Generic.IReadOnlyCollection<string!>!
 Microsoft.Testing.Platform.Services.ITestCoverageCapabilities.SupportsTestCoverageMessages.get -> bool
 Microsoft.Testing.Platform.Services.ITestCoverageResult.HasThresholdFailure.get -> bool
-Microsoft.Testing.Platform.Services.ITestCoverageResult.Overall.get -> Microsoft.Testing.Platform.Services.CoverageScopeSummary?
+Microsoft.Testing.Platform.Services.ITestCoverageResult.GetOverall(Microsoft.Testing.Platform.TestHost.SessionUid sessionUid) -> Microsoft.Testing.Platform.Services.CoverageScopeSummary?
 Microsoft.Testing.Platform.Services.ITestCoverageResult.Reports.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Services.CoverageReportReference!>!
 Microsoft.Testing.Platform.Services.ITestCoverageResult.Scopes.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Services.CoverageScopeSummary!>!
 Microsoft.Testing.Platform.Services.ITestCoverageResult.Thresholds.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage!>!

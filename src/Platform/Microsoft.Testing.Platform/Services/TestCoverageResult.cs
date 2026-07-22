@@ -89,20 +89,18 @@ internal sealed class TestCoverageResult : ITestCoverageResult, IDataConsumer
         }
     }
 
-    public CoverageScopeSummary? Overall
+    public CoverageScopeSummary? GetOverall(SessionUid sessionUid)
     {
-        get
+        foreach (CoverageScopeSummary summary in Scopes)
         {
-            foreach (CoverageScopeSummary summary in Scopes)
+            if (summary.Scope.Level == CoverageScopeLevel.Overall
+                && string.Equals(summary.SessionUid.Value, sessionUid.Value, StringComparison.Ordinal))
             {
-                if (summary.Scope.Level == CoverageScopeLevel.Overall)
-                {
-                    return summary;
-                }
+                return summary;
             }
-
-            return null;
         }
+
+        return null;
     }
 
     public IReadOnlyList<CoverageScopeSummary> Scopes

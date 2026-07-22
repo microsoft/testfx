@@ -56,9 +56,14 @@ public sealed class TestCoverageResultTests
         Assert.AreEqual(CoverageScopeLevel.Overall, result.Scopes[1].Scope.Level);
         Assert.AreEqual(CoverageMetric.Branch, Assert.ContainsSingle(result.Scopes[1].Metrics).Metric);
         Assert.AreEqual(module, result.Scopes[2].Scope);
-        Assert.IsNotNull(result.Overall);
-        Assert.AreEqual(8, result.Overall[CoverageMetric.Line]!.CoveredCount);
-        Assert.AreEqual(10, result.Overall[CoverageMetric.Line]!.CoverableCount);
+        CoverageScopeSummary? firstOverall = result.GetOverall(firstSession);
+        CoverageScopeSummary? secondOverall = result.GetOverall(secondSession);
+        Assert.IsNotNull(firstOverall);
+        Assert.IsNotNull(secondOverall);
+        Assert.AreEqual(8, firstOverall[CoverageMetric.Line]!.CoveredCount);
+        Assert.AreEqual(10, firstOverall[CoverageMetric.Line]!.CoverableCount);
+        Assert.AreEqual(3, secondOverall[CoverageMetric.Branch]!.CoveredCount);
+        Assert.IsNull(result.GetOverall(new SessionUid("missing-session")));
     }
 
     [TestMethod]
@@ -195,7 +200,7 @@ public sealed class TestCoverageResultTests
                 for (int i = 0; i < 500; i++)
                 {
                     _ = result.Scopes;
-                    _ = result.Overall;
+                    _ = result.GetOverall(session);
                     _ = result.Thresholds;
                     _ = result.HasThresholdFailure;
                     _ = result.Reports;
@@ -220,7 +225,7 @@ public sealed class TestCoverageResultTests
         result.Reset();
 
         Assert.IsEmpty(result.Scopes);
-        Assert.IsNull(result.Overall);
+        Assert.IsNull(result.GetOverall(session));
         Assert.IsEmpty(result.Thresholds);
         Assert.IsFalse(result.HasThresholdFailure);
         Assert.IsEmpty(result.Reports);

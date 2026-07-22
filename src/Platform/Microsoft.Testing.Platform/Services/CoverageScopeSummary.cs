@@ -64,7 +64,11 @@ public sealed class CoverageScopeSummary
         }
     }
 
-    /// <summary>Looks up a custom (proprietary) metric by its name; null if absent.</summary>
+    /// <summary>
+    /// Looks up a custom (proprietary) metric by its name; null if absent. If multiple producers report
+    /// the same custom metric name, this returns the first in stable first-seen order; use
+    /// <see cref="Metrics"/> to disambiguate by <see cref="CoverageMetricResult.ProducerId"/>.
+    /// </summary>
     /// <param name="customMetricName">The custom metric name.</param>
     /// <returns>The matching metric result, or null if absent.</returns>
     public CoverageMetricResult? GetCustom(string customMetricName)

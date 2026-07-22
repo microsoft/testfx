@@ -576,8 +576,8 @@ namespace Microsoft.Testing.Platform.Services;
 /// <summary>Correlated, session-scoped view of all coverage data for consumers.</summary>
 public interface ITestCoverageResult
 {
-    /// <summary>Overall (whole-run) summary, if reported.</summary>
-    CoverageScopeSummary? Overall { get; }
+    /// <summary>Overall (whole-run) summary for a session, if reported.</summary>
+    CoverageScopeSummary? GetOverall(SessionUid sessionUid);
 
     /// <summary>Per-scope summaries with all metrics correlated per scope.</summary>
     IReadOnlyList<CoverageScopeSummary> Scopes { get; }
@@ -656,7 +656,10 @@ public sealed class CoverageScopeSummary
         }
     }
 
-    /// <summary>Looks up a custom (proprietary) metric by its name; null if absent.</summary>
+    /// <summary>
+    /// Looks up a custom metric by name. If multiple producers report the same name, returns the
+    /// first in stable first-seen order; use Metrics to disambiguate by ProducerId.
+    /// </summary>
     public CoverageMetricResult? GetCustom(string customMetricName)
     {
         foreach (CoverageMetricResult result in Metrics)

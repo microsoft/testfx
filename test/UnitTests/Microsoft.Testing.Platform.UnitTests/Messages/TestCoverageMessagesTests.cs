@@ -31,6 +31,56 @@ public sealed class TestCoverageMessagesTests
     }
 
     [TestMethod]
+    [DataRow(double.NaN)]
+    [DataRow(-0.1)]
+    [DataRow(100.1)]
+    public void TestCoverageThresholdMessage_InvalidRequiredPercentage_ThrowsArgumentOutOfRangeException(double requiredPercentage)
+    {
+        ArgumentOutOfRangeException exception = Assert.ThrowsExactly<ArgumentOutOfRangeException>(
+            () => CreateThreshold(actualPercentage: 80, requiredPercentage: requiredPercentage));
+
+        Assert.AreEqual("requiredPercentage", exception.ParamName);
+    }
+
+    [TestMethod]
+    [DataRow(double.NaN)]
+    [DataRow(-0.1)]
+    [DataRow(100.1)]
+    public void TestCoverageThresholdMessage_InvalidActualPercentageWithCoverableData_ThrowsArgumentOutOfRangeException(double actualPercentage)
+    {
+        ArgumentOutOfRangeException exception = Assert.ThrowsExactly<ArgumentOutOfRangeException>(
+            () => CreateThreshold(actualPercentage, requiredPercentage: 80));
+
+        Assert.AreEqual("actualPercentage", exception.ParamName);
+    }
+
+    [TestMethod]
+    public void TestCoverageThresholdMessage_NonAggregateWithPopulation_ThrowsArgumentException()
+    {
+        ArgumentException exception = Assert.ThrowsExactly<ArgumentException>(
+            () => CreateThreshold(
+                actualPercentage: 80,
+                requiredPercentage: 75,
+                aggregation: CoverageAggregation.None,
+                aggregatedOver: CoverageScopeLevel.Module));
+
+        Assert.AreEqual("aggregatedOver", exception.ParamName);
+    }
+
+    [TestMethod]
+    public void TestCoverageThresholdMessage_AggregateWithoutPopulation_ThrowsArgumentException()
+    {
+        ArgumentException exception = Assert.ThrowsExactly<ArgumentException>(
+            () => CreateThreshold(
+                actualPercentage: 80,
+                requiredPercentage: 75,
+                aggregation: CoverageAggregation.Minimum,
+                aggregatedOver: null));
+
+        Assert.AreEqual("aggregatedOver", exception.ParamName);
+    }
+
+    [TestMethod]
     [DataRow(-1L, -1L, "coverableCount")]
     [DataRow(-1L, 0L, "coveredCount")]
     [DataRow(2L, 1L, "coveredCount")]
@@ -208,4 +258,20 @@ public sealed class TestCoverageMessagesTests
             "DataWithSessionUid { DisplayName = Test coverage report, Description = References a coverage report artifact., Properties = [] }",
             message.ToString());
     }
+
+    private static TestCoverageThresholdMessage CreateThreshold(
+        double actualPercentage,
+        double requiredPercentage,
+        CoverageAggregation aggregation = CoverageAggregation.None,
+        CoverageScopeLevel? aggregatedOver = null)
+        => new(
+            SessionUid,
+            CoverageScope.Overall,
+            CoverageMetric.Line,
+            aggregation,
+            actualPercentage,
+            requiredPercentage,
+            hasCoverableData: true,
+            producerId: "producer",
+            aggregatedOver: aggregatedOver);
 }
