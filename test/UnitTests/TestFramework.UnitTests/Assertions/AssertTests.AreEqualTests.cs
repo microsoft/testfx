@@ -180,9 +180,10 @@ public partial class AssertTests : TestContainer
                 Strings differ only in case.
                 Strings have same length (1) and differ at 1 location(s). First difference at index 0.
 
-                expected: "i"
-                actual:   "I"
-                culture:  en-EN
+                expected:   "i"
+                actual:     "I"
+                difference: -^
+                culture:    en-EN
 
                 Assert.AreEqual(expected, actual)
                 """);
@@ -1630,8 +1631,9 @@ public partial class AssertTests : TestContainer
                 Assertion failed. Expected strings to be equal.
                 Strings have same length (4) and differ at 1 location(s). First difference at index 0.
 
-                expected: "baaa"
-                actual:   "aaaa"
+                expected:   "baaa"
+                actual:     "aaaa"
+                difference: -^
 
                 Assert.AreEqual("baaa", "aaaa")
                 """);
@@ -1646,8 +1648,9 @@ public partial class AssertTests : TestContainer
                 Assertion failed. Expected strings to be equal.
                 Strings have same length (4) and differ at 1 location(s). First difference at index 3.
 
-                expected: "aaaa"
-                actual:   "aaab"
+                expected:   "aaaa"
+                actual:     "aaab"
+                difference: ----^
 
                 Assert.AreEqual("aaaa", "aaab")
                 """);
@@ -1659,29 +1662,48 @@ public partial class AssertTests : TestContainer
         AssertFailedException ex = action.Should().Throw<AssertFailedException>().Which;
 
         ex.Message.Should().Contain("Strings have same length (4) and differ at 1 location(s). First difference at index 2.");
-        ex.Message.Should().Contain("expected: \"aa\\ta\"");
-        ex.Message.Should().Contain("actual:   \"aa a\"");
+        ex.Message.Should().Contain("expected:   \"aa\\ta\"");
+        ex.Message.Should().Contain("actual:     \"aa a\"");
         ex.Message.Should().Contain("Assert.AreEqual(\"aa\\ta\", \"aa a\")");
     }
 
-    // Long-string truncation is intentionally not yet implemented; documents the current full-string render.
+    public void AreEqualStringDifferenceInMiddle()
+    {
+        Action action = () => Assert.AreEqual("aaXa", "aaba");
+        action.Should().Throw<AssertFailedException>()
+            .Which.Message.Should().Be(
+                """
+                Assertion failed. Expected strings to be equal.
+                Strings have same length (4) and differ at 1 location(s). First difference at index 2.
+
+                expected:   "aaXa"
+                actual:     "aaba"
+                difference: ---^
+
+                Assert.AreEqual("aaXa", "aaba")
+                """);
+    }
+
     public void AreEqualLongStringsShowsFullStrings()
     {
         string expected = new string('a', 100) + "b" + new string('c', 100);
         string actual = new string('a', 100) + "d" + new string('c', 100);
 
         Action action = () => Assert.AreEqual(expected, actual);
-        action.Should().Throw<AssertFailedException>()
-            .Which.Message.Should().Be(
-                """
-                Assertion failed. Expected strings to be equal.
-                Strings have same length (201) and differ at 1 location(s). First difference at index 100.
+        AssertFailedException exception = action.Should().Throw<AssertFailedException>().Which;
 
-                expected: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
-                actual:   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaadcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
-
-                Assert.AreEqual(expected, actual)
-                """);
+        string expectedPreview = GetEvidenceValue(exception.Message, "expected near:");
+        string actualPreview = GetEvidenceValue(exception.Message, "actual near:");
+        string difference = GetEvidenceValue(exception.Message, "difference:");
+        expectedPreview.Should().HaveLength(101).And.Contain("b");
+        actualPreview.Should().HaveLength(101).And.Contain("d");
+        difference.Should().EndWith("^");
+        difference.Length.Should().BeLessThanOrEqualTo(102);
+        exception.Message.Should().Contain($"{Environment.NewLine}{Environment.NewLine}expected: \"{expected}\"{Environment.NewLine}actual:   \"{actual}\"");
+        exception.ExpectedText.Should().Be($"\"{expected}\"");
+        exception.ActualText.Should().Be($"\"{actual}\"");
+        exception.Data["assert.expected"].Should().Be($"\"{expected}\"");
+        exception.Data["assert.actual"].Should().Be($"\"{actual}\"");
     }
 
     public void AreEqualStringWithCultureShouldUseEnhancedMessage()
@@ -1694,8 +1716,9 @@ public partial class AssertTests : TestContainer
             Assertion failed. Expected strings to be equal.
             Strings have same length (4) and differ at 1 location(s). First difference at index 3.
 
-            expected: "aaaa"
-            actual:   "aaab"
+            expected:   "aaaa"
+            actual:     "aaab"
+            difference: ----^
             """);
         ex.Message.Should().Contain($"{Environment.NewLine}culture:");
         ex.Message.Should().EndWith(
@@ -1714,8 +1737,10 @@ public partial class AssertTests : TestContainer
                 Assertion failed. Expected strings to be equal.
                 Strings have different lengths (expected: 4, actual: 3) and differ at 1 location(s). First difference at index 3.
 
-                expected: "aaaa"
-                actual:   "aaa"
+                expected:    "aaaa"
+                actual:      "aaa"
+                difference:  ----^
+                code points: expected U+0061; actual <end>
 
                 Assert.AreEqual("aaaa", "aaa")
                 """);
@@ -1730,8 +1755,10 @@ public partial class AssertTests : TestContainer
                 Assertion failed. Expected strings to be equal.
                 Strings have different lengths (expected: 3, actual: 4) and differ at 1 location(s). First difference at index 3.
 
-                expected: "aaa"
-                actual:   "aaab"
+                expected:    "aaa"
+                actual:      "aaab"
+                difference:  ----^
+                code points: expected <end>; actual U+0062
 
                 Assert.AreEqual("aaa", "aaab")
                 """);
@@ -1747,8 +1774,9 @@ public partial class AssertTests : TestContainer
                 Strings have same length (4) and differ at 1 location(s). First difference at index 3.
                 My custom message
 
-                expected: "aaaa"
-                actual:   "aaab"
+                expected:   "aaaa"
+                actual:     "aaab"
+                difference: ----^
 
                 Assert.AreEqual("aaaa", "aaab")
                 """);
@@ -1763,8 +1791,10 @@ public partial class AssertTests : TestContainer
                 Assertion failed. Expected strings to be equal.
                 Strings have different lengths (expected: 2, actual: 4) and differ at 1 location(s). First difference at index 0.
 
-                expected: "🥰"
-                actual:   "aaab"
+                expected:    "🥰"
+                actual:      "aaab"
+                difference:  -^
+                code points: expected U+1F970; actual U+0061
 
                 Assert.AreEqual("🥰", "aaab")
                 """);
@@ -1781,6 +1811,8 @@ public partial class AssertTests : TestContainer
 
                 expected:    "straße"
                 actual:      "STRAẞE!"
+                difference:  expected [[<end>]]; actual [[!]]
+                code points: expected <end>; actual U+0021
                 ignore case: true
                 culture:     de-DE
 
@@ -1883,4 +1915,182 @@ public partial class AssertTests : TestContainer
 
     public void AreNotEqualStringSpecificWhenDifferentDoesNotThrow()
         => FluentActions.Invoking(() => Assert.AreNotEqual("Straße", "STRASSE!", true, new CultureInfo("de-DE"))).Should().NotThrow();
+
+    public void AreEqualStringDifferenceEscapesMapToRenderedColumns()
+    {
+        (string Expected, string Actual, int MarkerLength)[] cases =
+        [
+            ("a\tX", "a\tY", 4),
+            ("a\nX", "a\nY", 4),
+            ("a\r\nX", "a\r\nY", 6),
+            ("a\"X", "a\"Y", 4),
+            ("a\\X", "a\\Y", 4),
+            ("a\u0001X", "a\u0001Y", 8),
+            ("a\"", "a\\", 2),
+            ("aX", "a\t", 2),
+        ];
+
+        foreach ((string expected, string actual, int markerLength) in cases)
+        {
+            AssertFailedException exception = CaptureAreEqualFailure(() => Assert.AreEqual(expected, actual));
+            string difference = GetEvidenceValue(exception.Message, "difference:");
+
+            difference.Should().Be(new string('-', markerLength) + "^");
+            exception.Message.Should().Contain($"expected:   {AssertionValueRenderer.RenderValue(expected)}");
+            exception.Message.Should().Contain($"actual:     {AssertionValueRenderer.RenderValue(actual)}");
+        }
+    }
+
+    public void AreEqualStringDifferenceEmojiWithAsciiPrefixUsesCaretAndCodePoints()
+    {
+        AssertFailedException exception = CaptureAreEqualFailure(() => Assert.AreEqual("abc🌍", "abc🌎"));
+
+        exception.Message.Should().Contain(
+            """
+            expected:    "abc🌍"
+            actual:      "abc🌎"
+            difference:  ----^
+            code points: expected U+1F30D; actual U+1F30E
+            """);
+    }
+
+    public void AreEqualStringDifferenceComposedAndDecomposedTextUsesScalarDiagnostics()
+    {
+        AssertFailedException exception = CaptureAreEqualFailure(() => Assert.AreEqual("café", "café"));
+
+        exception.Message.Should().Contain(
+            """
+            expected:    "café"
+            actual:      "café"
+            difference:  ----^
+            code points: expected U+00E9; actual U+0065 U+0301
+            """);
+    }
+
+    public void AreEqualStringDifferenceUnpairedSurrogatesAreDeterministic()
+    {
+        string expected = "a\uD800b";
+        string actual = "a\uD801b";
+        AssertFailedException exception = CaptureAreEqualFailure(() => Assert.AreEqual(expected, actual));
+
+        exception.Message.Should().Contain("difference:  --^");
+        exception.Message.Should().Contain("code points: expected U+D800; actual U+D801");
+        exception.ExpectedText.Should().Be(AssertionValueRenderer.RenderValue(expected));
+        exception.ActualText.Should().Be(AssertionValueRenderer.RenderValue(actual));
+    }
+
+    public void AreEqualStringDifferenceUnsafeUnicodePrefixesUseInlineMarkers()
+    {
+        string[] unsafePrefixes =
+        [
+            "🌍",
+            "é",
+            "界",
+            "👩‍💻",
+            "👍🏽",
+            "\U0001F3F4\U000E0067\U000E0062\U000E0065\U000E006E\U000E0067\U000E007F",
+        ];
+
+        foreach (string unsafePrefix in unsafePrefixes)
+        {
+            string commonPrefix = new string('a', 60) + unsafePrefix;
+            string expected = commonPrefix + "X" + new string('z', 60);
+            string actual = commonPrefix + "Y" + new string('z', 60);
+            AssertFailedException exception = CaptureAreEqualFailure(() => Assert.AreEqual(expected, actual));
+
+            GetEvidenceValue(exception.Message, "expected near:").Should().Contain($"{unsafePrefix}[[X]]");
+            GetEvidenceValue(exception.Message, "actual near:").Should().Contain($"{unsafePrefix}[[Y]]");
+            GetEvidenceValue(exception.Message, "difference:").Should().Be("mismatch marked with [[...]]");
+        }
+    }
+
+    public void AreEqualStringSpecificCultureComparisonPreservesUnequalDifferenceCursors()
+    {
+        string expected = "aﬁX";
+        string actual = "AFIY";
+        AssertFailedException exception = CaptureAreEqualFailure(
+            () => Assert.AreEqual(expected, actual, true, new CultureInfo("en-US")));
+
+        exception.Message.Should().Contain("First difference at index 2.");
+        exception.Message.Should().Contain("difference:  expected [[X]]; actual [[Y]]");
+    }
+
+    public void AreEqualGenericAndStringSpecificOverloadsHaveMatchingDiagnostics()
+    {
+        string expected = "aaXa";
+        string actual = "aaba";
+
+        AssertFailedException generic = CaptureAreEqualFailure(() => Assert.AreEqual(expected, actual));
+        AssertFailedException stringSpecific = CaptureAreEqualFailure(() => Assert.AreEqual(expected, actual, false));
+
+        stringSpecific.Message.Should().Be(generic.Message);
+        stringSpecific.ExpectedText.Should().Be(generic.ExpectedText);
+        stringSpecific.ActualText.Should().Be(generic.ActualText);
+    }
+
+    public void AreEqualStringDifferencePreservesCustomValueFormatter()
+    {
+        string expected = "aaXa";
+        string actual = "aaba";
+
+        using (Assert.AddValueFormatter<string>(value => $"<{value}>"))
+        {
+            AssertFailedException exception = CaptureAreEqualFailure(() => Assert.AreEqual(expected, actual));
+
+            exception.Message.Should().Contain(
+                """
+                expected:   <aaXa>
+                actual:     <aaba>
+                difference: expected [[X]]; actual [[b]]
+                """);
+            exception.Message.Should().NotContain("expected near:");
+            exception.ExpectedText.Should().Be("<aaXa>");
+            exception.ActualText.Should().Be("<aaba>");
+            exception.Data["assert.expected"].Should().Be("<aaXa>");
+            exception.Data["assert.actual"].Should().Be("<aaba>");
+        }
+    }
+
+    public void AreEqualHundredThousandCharacterStringsHaveBoundedMiddlePreview()
+        => AssertHundredThousandCharacterPreviewIsBounded(50_000);
+
+    public void AreEqualHundredThousandCharacterStringsHaveBoundedNearEndPreview()
+        => AssertHundredThousandCharacterPreviewIsBounded(99_998);
+
+    private static void AssertHundredThousandCharacterPreviewIsBounded(int differenceIndex)
+    {
+        const int InputLength = 100_000;
+        string expected = new('a', InputLength);
+        char[] actualCharacters = expected.ToCharArray();
+        actualCharacters[differenceIndex] = 'b';
+        string actual = new(actualCharacters);
+
+        AssertFailedException exception = CaptureAreEqualFailure(() => Assert.AreEqual(expected, actual));
+        string expectedPreview = GetEvidenceValue(exception.Message, "expected near:");
+        string actualPreview = GetEvidenceValue(exception.Message, "actual near:");
+        string difference = GetEvidenceValue(exception.Message, "difference:");
+
+        expectedPreview.Length.Should().BeLessThanOrEqualTo(101);
+        actualPreview.Length.Should().BeLessThanOrEqualTo(101);
+        difference.Length.Should().BeLessThanOrEqualTo(102);
+        difference.Count(character => character == '^').Should().Be(1);
+        exception.Message.IndexOf("expected near:", StringComparison.Ordinal)
+            .Should().BeLessThan(exception.Message.IndexOf($"{Environment.NewLine}{Environment.NewLine}expected:", StringComparison.Ordinal));
+        exception.Message.Should().Contain($"expected: \"{expected}\"");
+        exception.Message.Should().Contain($"actual:   \"{actual}\"");
+        exception.ExpectedText.Should().Be($"\"{expected}\"");
+        exception.ActualText.Should().Be($"\"{actual}\"");
+        exception.Data["assert.expected"].Should().Be($"\"{expected}\"");
+        exception.Data["assert.actual"].Should().Be($"\"{actual}\"");
+    }
+
+    private static AssertFailedException CaptureAreEqualFailure(Action action)
+        => action.Should().Throw<AssertFailedException>().Which;
+
+    private static string GetEvidenceValue(string message, string label)
+    {
+        string line = message.Split([Environment.NewLine], StringSplitOptions.None)
+            .Single(line => line.StartsWith(label, StringComparison.Ordinal));
+        return line.Substring(label.Length).TrimStart();
+    }
 }
