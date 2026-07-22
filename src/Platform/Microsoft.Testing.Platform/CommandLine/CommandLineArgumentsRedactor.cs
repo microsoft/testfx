@@ -73,7 +73,7 @@ internal static class CommandLineArgumentsRedactor
                     // Inline form, e.g. '--dotnet-test-websocket-token=<secret>': redact just the value,
                     // preserving the original prefix/name/delimiter exactly.
                     redacted[i] = $"{prefix}{optionName}{delimiter}{RedactedPlaceholder}";
-                    redactingValuesForCurrentOption = false;
+                    redactingValuesForCurrentOption = true;
                     redactedValueForCurrentOption = true;
                 }
                 else if (IsWebSocketEndpointOptionName(optionName))
@@ -83,7 +83,7 @@ internal static class CommandLineArgumentsRedactor
                         : $"{prefix}{optionName}{delimiter}{SanitizeWebSocketEndpoint(inlineValue)}";
                     redactingValuesForCurrentOption = false;
                     redactedValueForCurrentOption = false;
-                    sanitizingEndpointValue = inlineValue is null;
+                    sanitizingEndpointValue = true;
                 }
                 else
                 {
