@@ -1,5 +1,15 @@
 trigger: none
 
+# Seed both cache configurations nightly from trusted main. Keep the existing full pipeline and authoritative
+# Arcade fallback until a hit-bearing run demonstrates that the cache canary is correct and fast.
+schedules:
+  - cron: 0 3 * * *
+    displayName: Nightly MSBuildCache seed
+    branches:
+      include:
+      - main
+    always: true
+
 # Branch(es) that trigger(s) build(s) on PR
 pr:
   branches:
@@ -217,6 +227,7 @@ stages:
               "-NoProfile",
               "-File", "./eng/common/msbuild.ps1",
               "-ci",
+              "-warnAsError:`$false",
               "./TestFx.slnx",
               "/restore",
               "/graph",
@@ -224,7 +235,6 @@ stages:
               "/reportfileaccesses",
               "/nr:false",
               "/t:Build",
-              "/warnaserror",
               "/v:minimal",
               "/p:Configuration=$(_BuildConfig)",
               "/p:RepoRoot=$(Build.SourcesDirectory)\",
@@ -234,9 +244,19 @@ stages:
               "/p:MSBuildCacheLogDirectory=$(Agent.TempDirectory)\MSBuildCache"
             )
 
-            $process = Start-Process $pwsh -ArgumentList $arguments -Wait -PassThru -NoNewWindow
-            if ($process.ExitCode -ne 0) {
-              Write-Host "##vso[task.logissue type=warning]MSBuildCache canary failed with exit code $($process.ExitCode); continuing with the regular Arcade build."
+            $previousPSNativeCommandUseErrorActionPreference = $PSNativeCommandUseErrorActionPreference
+            try {
+              # Unlike Start-Process -Wait, direct native invocation does not wait for detached telemetry descendants.
+              $PSNativeCommandUseErrorActionPreference = $false
+              & $pwsh @arguments
+              $exitCode = $LASTEXITCODE
+            }
+            finally {
+              $PSNativeCommandUseErrorActionPreference = $previousPSNativeCommandUseErrorActionPreference
+            }
+
+            if ($exitCode -ne 0) {
+              Write-Host "##vso[task.logissue type=warning]MSBuildCache canary failed with exit code $exitCode; continuing with the regular Arcade build."
             }
 
             exit 0

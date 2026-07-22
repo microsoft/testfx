@@ -4,7 +4,9 @@
 #if NET7_0_OR_GREATER
 using System.Runtime.InteropServices.JavaScript;
 
+using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.OutputDevice.Terminal;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.OutputDevice;
@@ -15,6 +17,8 @@ namespace Microsoft.Testing.Platform.OutputDevice;
 [SupportedOSPlatform("browser")]
 internal sealed partial class BrowserOutputDevice : SimplifiedConsoleOutputDeviceBase
 {
+    private readonly bool _displayActiveTestProgress;
+
     public BrowserOutputDevice(
         IConsole console,
         ITestApplicationModuleInfo testApplicationModuleInfo,
@@ -22,9 +26,11 @@ internal sealed partial class BrowserOutputDevice : SimplifiedConsoleOutputDevic
         IRuntimeFeature runtimeFeature,
         IEnvironment environment,
         IPlatformInformation platformInformation,
+        ICommandLineOptions commandLineOptions,
         IStopPoliciesService policiesService)
         : base(console, testApplicationModuleInfo, asyncMonitor, runtimeFeature, environment, platformInformation, policiesService)
     {
+        _displayActiveTestProgress = IsProgressEnabled(commandLineOptions);
     }
 
     /// <inheritdoc />
@@ -32,6 +38,8 @@ internal sealed partial class BrowserOutputDevice : SimplifiedConsoleOutputDevic
 
     /// <inheritdoc />
     public override string Description => "Test Platform browser console service using JavaScript interop";
+
+    protected override bool DisplayActiveTestProgress => _displayActiveTestProgress;
 
     [JSImport("globalThis.console.warn")]
     private static partial void JSConsoleWarn(string? message);
@@ -47,6 +55,9 @@ internal sealed partial class BrowserOutputDevice : SimplifiedConsoleOutputDevic
     protected override void ConsoleError(string? message) => JSConsoleError(message);
 
     protected override void ConsoleLog(string? message) => JSConsoleLog(message);
+
+    private static bool IsProgressEnabled(ICommandLineOptions commandLineOptions)
+        => TerminalTestReporterCommandLineOptionsProvider.IsProgressEnabled(commandLineOptions);
 }
 
 #endif
