@@ -787,17 +787,29 @@ internal sealed class HtmlCoverageReportGenerator(ITestCoverageResult coverage)
 ## Correlation key
 
 The read model correlates messages into `CoverageScopeSummary` / threshold / report entries
-using the **full** key, not just `(scope, metric)`:
+using the **full** key for each entry type:
 
 ```text
-(SessionUid, ProducerId, Scope, Metric, CustomMetricName when Metric == Custom)
+Measurement:
+(SessionUid, ProducerId, Scope.Level, Scope.Name, Metric, CustomMetricName when Metric == Custom)
+
+Threshold:
+(SessionUid, ProducerId, Scope.Level, Scope.Name, Metric, CustomMetricName when Metric == Custom,
+ Aggregation, AggregatedOver)
+
+Report:
+(SessionUid, ProducerId, Path)
 ```
 
 - **`SessionUid`** and **`ProducerId`** are included so a multi-session host and multiple
   concurrent collectors never collapse into each other.
+- **`Scope.Level`** and **`Scope.Name`** identify the measured or evaluated scope. Report
+  references use their artifact **`Path`** instead because they have no scope or metric.
 - **`CustomMetricName`** is part of the key whenever `Metric == Custom`. Without it, two
   producers each reporting a different proprietary metric (e.g. MC/DC vs. a vendor metric) would
   both key as `Custom` and overwrite one another.
+- Threshold keys additionally include **`Aggregation`** and **`AggregatedOver`**, so distinct
+  threshold evaluations for the same scope and metric do not overwrite one another.
 - The public `CoverageScopeSummary` and `CoverageReportReference` projections retain
   `SessionUid`, so entries from different sessions remain attributable after correlation.
 - **Duplicate full keys:** if the same full key is published more than once in a session, the

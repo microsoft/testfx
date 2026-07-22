@@ -51,6 +51,23 @@ public sealed class TestCoverageCapabilitiesTests
         Assert.Contains("controller", capabilities.EnabledProducerUids);
     }
 
+    [TestMethod]
+    public void ServiceProviderClone_CreatesPerRequestCapabilitiesSnapshot()
+    {
+        ServiceProvider serviceProvider = new();
+        TestCoverageCapabilities applicationCapabilities = new();
+        serviceProvider.AddService(applicationCapabilities);
+        serviceProvider.AddService(new MockDataProducer("application", typeof(TestCoverageMessage)));
+
+        var perRequestServiceProvider = (ServiceProvider)serviceProvider.Clone();
+        TestCoverageCapabilities perRequestCapabilities = perRequestServiceProvider.GetRequiredService<TestCoverageCapabilities>();
+        perRequestServiceProvider.AddService(new MockDataProducer("request", typeof(TestCoverageMessage)));
+
+        Assert.AreNotSame(applicationCapabilities, perRequestCapabilities);
+        Assert.AreSequenceEqual(new[] { "application" }, applicationCapabilities.EnabledProducerUids);
+        Assert.AreSequenceEqual(new[] { "application", "request" }, perRequestCapabilities.EnabledProducerUids);
+    }
+
     private sealed class MockDataProducer(string uid, params Type[] dataTypesProduced) : IDataProducer
     {
         public Type[] DataTypesProduced { get; } = dataTypesProduced;

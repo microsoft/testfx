@@ -159,7 +159,20 @@ internal sealed class ServiceProvider : IServiceProvider, ICloneable
     public object Clone()
     {
         ServiceProvider clone = new();
-        clone._services.AddRange(Services);
+        foreach (object service in Services)
+        {
+            clone._services.Add(service is TestCoverageCapabilities
+                ? new TestCoverageCapabilities()
+                : service);
+        }
+
+        if (clone.GetServiceInternal(typeof(TestCoverageCapabilities)) is TestCoverageCapabilities capabilities)
+        {
+            foreach (IDataProducer producer in clone._services.OfType<IDataProducer>())
+            {
+                capabilities.RegisterProducer(producer);
+            }
+        }
 
         return clone;
     }
