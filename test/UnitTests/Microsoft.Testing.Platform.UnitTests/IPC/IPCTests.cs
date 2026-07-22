@@ -195,7 +195,7 @@ public sealed class IPCTests
         namedPipeClient.RegisterSerializer(new TextMessageSerializer(), typeof(TextMessage));
         namedPipeClient.RegisterSerializer(new IntMessageSerializer(), typeof(IntMessage));
         namedPipeClient.RegisterSerializer(new LongMessageSerializer(), typeof(LongMessage));
-        namedPipeClient.RegisterSerializer(new LegacyTestHostCompletedRequestSerializer(), typeof(TestHostCompletedRequest));
+        namedPipeClient.RegisterSerializer(new TestHostCompletedRequestSerializer(), typeof(TestHostCompletedRequest));
 
         ManualResetEventSlim manualResetEventSlim = new(false);
         var clientConnected = Task.Run(
@@ -237,7 +237,7 @@ public sealed class IPCTests
         singleConnectionNamedPipeServer.RegisterSerializer(new TextMessageSerializer(), typeof(TextMessage));
         singleConnectionNamedPipeServer.RegisterSerializer(new IntMessageSerializer(), typeof(IntMessage));
         singleConnectionNamedPipeServer.RegisterSerializer(new LongMessageSerializer(), typeof(LongMessage));
-        singleConnectionNamedPipeServer.RegisterSerializer(new TestHostCompletedRequestSerializer(), typeof(TestHostCompletedRequest));
+        singleConnectionNamedPipeServer.RegisterSerializer(new LegacyTestHostCompletedRequestSerializer(), typeof(TestHostCompletedRequest));
         await singleConnectionNamedPipeServer.WaitConnectionAsync(CancellationToken.None);
         manualResetEventSlim.Wait(_testContext.CancellationToken);
 
@@ -250,7 +250,7 @@ public sealed class IPCTests
         Assert.AreEqual(receivedMessages.Dequeue(), new LongMessage(11));
 
         await namedPipeClient.RequestReplyAsync<TestHostCompletedRequest, VoidResponse>(
-            new TestHostCompletedRequest((int)ExitCode.AtLeastOneTestFailed),
+            new TestHostCompletedRequest((int)ExitCode.AtLeastOneTestFailed, (int)ExitCode.CoverageThresholdFailed),
             CancellationToken.None);
         var legacyCompletion = (TestHostCompletedRequest)receivedMessages.Dequeue();
         Assert.AreEqual((int)ExitCode.AtLeastOneTestFailed, legacyCompletion.ExitCode);
