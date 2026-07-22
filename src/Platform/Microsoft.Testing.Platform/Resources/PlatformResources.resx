@@ -601,6 +601,10 @@ The default is TestResults in the directory that contains the test application.<
     <value>'--server dotnettestcli' requires either '--dotnet-test-pipe' or '--dotnet-test-transport websocket' with both '--dotnet-test-websocket-endpoint' and '--dotnet-test-websocket-token'.</value>
     <comment>{Locked="--server dotnettestcli"}{Locked="--dotnet-test-pipe"}{Locked="--dotnet-test-transport websocket"}{Locked="--dotnet-test-websocket-endpoint"}{Locked="--dotnet-test-websocket-token"}</comment>
   </data>
+  <data name="PlatformCommandLineDotnetTestOptionsRequireServer" xml:space="preserve">
+    <value>'--dotnet-test-pipe', '--dotnet-test-transport', '--dotnet-test-websocket-endpoint', and '--dotnet-test-websocket-token' require '--server dotnettestcli'.</value>
+    <comment>{Locked="--dotnet-test-pipe"}{Locked="--dotnet-test-transport"}{Locked="--dotnet-test-websocket-endpoint"}{Locked="--dotnet-test-websocket-token"}{Locked="--server dotnettestcli"}</comment>
+  </data>
   <data name="PlatformCommandLineSkipBuildersNumberCheckOptionDescription" xml:space="preserve">
     <value>For testing purposes</value>
   </data>

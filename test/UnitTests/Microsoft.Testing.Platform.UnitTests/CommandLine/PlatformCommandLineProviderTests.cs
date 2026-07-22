@@ -445,6 +445,29 @@ public sealed class PlatformCommandLineProviderTests
     }
 
     [TestMethod]
+    [DataRow(null)]
+    [DataRow("jsonrpc")]
+    public async Task IsInvalid_When_WebSocketOptions_AreUsedWithoutDotnetTestCliServer(string? serverProtocol)
+    {
+        var provider = new PlatformCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            { PlatformCommandLineProvider.DotNetTestTransportOptionKey, ["websocket"] },
+            { PlatformCommandLineProvider.DotNetTestWebSocketEndpointOptionKey, ["ws://127.0.0.1:5000/dotnettest"] },
+            { PlatformCommandLineProvider.DotNetTestWebSocketTokenOptionKey, ["some-token"] },
+        };
+        if (serverProtocol is not null)
+        {
+            options.Add(PlatformCommandLineProvider.ServerOptionKey, [serverProtocol]);
+        }
+
+        ValidationResult result = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(PlatformResources.PlatformCommandLineDotnetTestOptionsRequireServer, result.ErrorMessage);
+    }
+
+    [TestMethod]
     [DataRow("")]
     [DataRow("not-a-uri")]
     [DataRow("https://127.0.0.1:5000/dotnettest")]

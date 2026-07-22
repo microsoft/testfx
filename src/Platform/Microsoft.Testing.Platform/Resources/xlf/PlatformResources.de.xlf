@@ -626,6 +626,11 @@ Akzeptiert optional „text“ (die standardmäsige lesbare Ausgabe) oder „jso
         <target state="new">'--server dotnettestcli' requires either '--dotnet-test-pipe' or '--dotnet-test-transport websocket' with both '--dotnet-test-websocket-endpoint' and '--dotnet-test-websocket-token'.</target>
         <note>{Locked="--server dotnettestcli"}{Locked="--dotnet-test-pipe"}{Locked="--dotnet-test-transport websocket"}{Locked="--dotnet-test-websocket-endpoint"}{Locked="--dotnet-test-websocket-token"}</note>
       </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestOptionsRequireServer">
+        <source>'--dotnet-test-pipe', '--dotnet-test-transport', '--dotnet-test-websocket-endpoint', and '--dotnet-test-websocket-token' require '--server dotnettestcli'.</source>
+        <target state="new">'--dotnet-test-pipe', '--dotnet-test-transport', '--dotnet-test-websocket-endpoint', and '--dotnet-test-websocket-token' require '--server dotnettestcli'.</target>
+        <note>{Locked="--dotnet-test-pipe"}{Locked="--dotnet-test-transport"}{Locked="--dotnet-test-websocket-endpoint"}{Locked="--dotnet-test-websocket-token"}{Locked="--server dotnettestcli"}</note>
+      </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
         <source>dotnet test pipe.</source>
         <target state="translated">dotnet test pipe.</target>

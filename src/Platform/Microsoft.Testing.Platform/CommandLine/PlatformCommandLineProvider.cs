@@ -283,18 +283,25 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
         // websocket' plus its endpoint/token). Without one of these, the dotnet test connection silently never
         // activates and the application falls back to console mode, leading to confusing behavior. All of these
         // options are internal and are expected to be passed together by 'dotnet test'.
-        if (commandLineOptions.TryGetOptionArgumentList(ServerOptionKey, out string[]? serverProtocolArgs)
+        bool isDotnetTestCliServer = commandLineOptions.TryGetOptionArgumentList(ServerOptionKey, out string[]? serverProtocolArgs)
             && serverProtocolArgs is { Length: 1 }
-            && DotnetTestCliProtocolName.Equals(serverProtocolArgs[0], StringComparison.OrdinalIgnoreCase))
-        {
-            bool hasPipe = commandLineOptions.IsOptionSet(DotNetTestPipeOptionKey);
-            bool hasTransportOption = commandLineOptions.TryGetOptionArgumentList(DotNetTestTransportOptionKey, out string[]? transportArgs)
-                && transportArgs is { Length: 1 };
-            bool isWebSocketTransport = hasTransportOption && DotNetTestTransportWebSocketArgument.Equals(transportArgs![0], StringComparison.OrdinalIgnoreCase);
-            bool isPipeTransport = hasTransportOption && DotNetTestTransportPipeArgument.Equals(transportArgs![0], StringComparison.OrdinalIgnoreCase);
-            bool hasEndpoint = commandLineOptions.IsOptionSet(DotNetTestWebSocketEndpointOptionKey);
-            bool hasToken = commandLineOptions.IsOptionSet(DotNetTestWebSocketTokenOptionKey);
+            && DotnetTestCliProtocolName.Equals(serverProtocolArgs[0], StringComparison.OrdinalIgnoreCase);
+        bool hasPipe = commandLineOptions.IsOptionSet(DotNetTestPipeOptionKey);
+        bool hasTransportOption = commandLineOptions.TryGetOptionArgumentList(DotNetTestTransportOptionKey, out string[]? transportArgs)
+            && transportArgs is { Length: 1 };
+        bool isWebSocketTransport = hasTransportOption && DotNetTestTransportWebSocketArgument.Equals(transportArgs![0], StringComparison.OrdinalIgnoreCase);
+        bool isPipeTransport = hasTransportOption && DotNetTestTransportPipeArgument.Equals(transportArgs![0], StringComparison.OrdinalIgnoreCase);
+        bool hasEndpoint = commandLineOptions.IsOptionSet(DotNetTestWebSocketEndpointOptionKey);
+        bool hasToken = commandLineOptions.IsOptionSet(DotNetTestWebSocketTokenOptionKey);
+        bool hasDotnetTestTransportOptions = hasPipe || hasTransportOption || hasEndpoint || hasToken;
 
+        if (hasDotnetTestTransportOptions && !isDotnetTestCliServer)
+        {
+            return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDotnetTestOptionsRequireServer);
+        }
+
+        if (isDotnetTestCliServer)
+        {
             // 1. Conflict: a pipe name together with anything WebSocket-shaped (explicit websocket transport, an
             // endpoint, or a token) - the two transports are mutually exclusive.
             if (hasPipe && (isWebSocketTransport || hasEndpoint || hasToken))

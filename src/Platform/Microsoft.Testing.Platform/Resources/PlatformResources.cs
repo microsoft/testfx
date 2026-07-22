@@ -55,6 +55,8 @@ internal static partial class PlatformResources
 
     internal static string @PlatformCommandLineDotnetTestCliRequiresTransport => GetResourceString("PlatformCommandLineDotnetTestCliRequiresTransport");
 
+    internal static string @PlatformCommandLineDotnetTestOptionsRequireServer => GetResourceString("PlatformCommandLineDotnetTestOptionsRequireServer");
+
     internal static string @PlatformCommandLineDotnetTestTransportInvalidArgument => GetResourceString("PlatformCommandLineDotnetTestTransportInvalidArgument");
 
     internal static string @PlatformCommandLineDotnetTestTransportConflict => GetResourceString("PlatformCommandLineDotnetTestTransportConflict");
