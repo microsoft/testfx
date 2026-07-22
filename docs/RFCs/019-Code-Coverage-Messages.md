@@ -623,6 +623,8 @@ public sealed class CoverageScopeSummary
         Metrics = Array.AsReadOnly((metrics ?? throw new ArgumentNullException(nameof(metrics))).ToArray());
     }
 
+    public SessionUid SessionUid { get; }
+
     public CoverageScope Scope { get; }
 
     public IReadOnlyList<CoverageMetricResult> Metrics { get; }
