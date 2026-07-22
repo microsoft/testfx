@@ -42,9 +42,9 @@
         <target state="translated">Bloquer le fichier de vidage</target>
         <note />
       </trans-unit>
-      <trans-unit id="HangDumpDeadlineReached">
-        <source>CI deadline reached: taking a hang dump before the run is hard-cancelled.</source>
-        <target state="new">CI deadline reached: taking a hang dump before the run is hard-cancelled.</target>
+      <trans-unit id="HangDumpDeadlineApproaching">
+        <source>CI deadline approaching: taking a hang dump before the run is hard-cancelled.</source>
+        <target state="new">CI deadline approaching: taking a hang dump before the run is hard-cancelled.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpEnvironmentVariableInvalidValueErrorMessage">

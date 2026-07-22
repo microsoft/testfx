@@ -60,6 +60,14 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     private Timer? _activityTimer;
     private DateTimeOffset? _deadlineDumpAt;
     private Timer? _deadlineTimer;
+
+    /// <summary>
+    /// <see cref="Timer"/> throws for due times above ~49.7 days (its internal limit is
+    /// <see cref="uint.MaxValue"/> milliseconds). A deadline that far out is effectively "never"
+    /// for a test run, so we clamp to this maximum instead of throwing during setup.
+    /// </summary>
+    private static readonly TimeSpan MaxTimerDueTime = TimeSpan.FromMilliseconds(uint.MaxValue - 1);
+
     private int _dumpTaken;
     private Task? _waitConnectionTask;
     private Task? _activityIndicatorTask;
@@ -210,6 +218,12 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             {
                 dueTime = TimeSpan.Zero;
             }
+            else if (dueTime > MaxTimerDueTime)
+            {
+                // Clamp far-future deadlines so the Timer ctor does not throw. The run (and this
+                // timer) is disposed long before the clamped due time elapses, so it never fires early.
+                dueTime = MaxTimerDueTime;
+            }
 
             _deadlineTimer = new Timer(
                 _ => TriggerDumpOnce(cancellationToken, triggeredByDeadline: true),
@@ -315,13 +329,13 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         ApplicationStateGuard.Ensure(_testHostProcessInformation is not null);
 
         string dumpReason = triggeredByDeadline
-            ? $"CI deadline reached (dump scheduled at {_deadlineDumpAt:o})"
+            ? $"CI deadline approaching (dump scheduled at {_deadlineDumpAt:o})"
             : $"Hang dump timeout({_activityTimerValue}) expired";
 
         await _logger.LogInformationAsync($"{dumpReason}. Taking hang dump.").ConfigureAwait(false);
         await _outputDisplay.DisplayAsync(
             new ErrorMessageOutputDeviceData(triggeredByDeadline
-                ? ExtensionResources.HangDumpDeadlineReached
+                ? ExtensionResources.HangDumpDeadlineApproaching
                 : string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTimeoutExpired, _activityTimerValue)),
             cancellationToken).ConfigureAwait(false);
 
@@ -433,27 +447,36 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         // Ensure the destination directory exists (templates may include directory separators, e.g. {asm}/{pname}).
         Directory.CreateDirectory(Path.GetDirectoryName(finalDumpFileName)!);
 
-        // The consumer pipe is only present once the test host connected back over it. When the host
-        // wedged during startup and the deadline dump path fired, there is no pipe to ask for the
-        // in-progress tests, so we skip that best-effort list and still take the dump and kill the tree.
+        // The consumer pipe is only usable once the test host connected back over it. A non-null
+        // client is not enough: it is created when the host sends its pipe name but only connected
+        // later, so a deadline dump firing in that window (or a host that wedged during startup)
+        // would hit an unconnected pipe. Treat the in-progress-test list as best-effort: any query
+        // failure is logged and swallowed so it can never block taking the dump and killing the tree.
         if (_namedPipeClient is not null)
         {
-            GetInProgressTestsResponse tests = await _namedPipeClient.RequestReplyAsync<GetInProgressTestsRequest, GetInProgressTestsResponse>(new GetInProgressTestsRequest(), cancellationToken).ConfigureAwait(false);
-            if (tests.Tests.Length > 0)
+            try
             {
-                string hangTestsFileName = Path.ChangeExtension(finalDumpFileName, ".log");
-                using (FileStream fs = File.OpenWrite(hangTestsFileName))
-                using (StreamWriter sw = new(fs))
+                GetInProgressTestsResponse tests = await _namedPipeClient.RequestReplyAsync<GetInProgressTestsRequest, GetInProgressTestsResponse>(new GetInProgressTestsRequest(), cancellationToken).ConfigureAwait(false);
+                if (tests.Tests.Length > 0)
                 {
-                    await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(ExtensionResources.RunningTestsWhileDumping), cancellationToken).ConfigureAwait(false);
-                    foreach ((string testName, int seconds) in tests.Tests)
+                    string hangTestsFileName = Path.ChangeExtension(finalDumpFileName, ".log");
+                    using (FileStream fs = File.OpenWrite(hangTestsFileName))
+                    using (StreamWriter sw = new(fs))
                     {
-                        await sw.WriteLineAsync($"[{TimeSpan.FromSeconds(seconds)}] {testName}").ConfigureAwait(false);
-                        await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData($"[{TimeSpan.FromSeconds(seconds)}] {testName}"), cancellationToken).ConfigureAwait(false);
+                        await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(ExtensionResources.RunningTestsWhileDumping), cancellationToken).ConfigureAwait(false);
+                        foreach ((string testName, int seconds) in tests.Tests)
+                        {
+                            await sw.WriteLineAsync($"[{TimeSpan.FromSeconds(seconds)}] {testName}").ConfigureAwait(false);
+                            await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData($"[{TimeSpan.FromSeconds(seconds)}] {testName}"), cancellationToken).ConfigureAwait(false);
+                        }
                     }
-                }
 
-                await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(hangTestsFileName), ExtensionResources.HangTestListArtifactDisplayName, ExtensionResources.HangTestListArtifactDescription)).ConfigureAwait(false);
+                    await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(hangTestsFileName), ExtensionResources.HangTestListArtifactDisplayName, ExtensionResources.HangTestListArtifactDescription)).ConfigureAwait(false);
+                }
+            }
+            catch (Exception ex)
+            {
+                await _logger.LogDebugAsync($"Could not collect the in-progress tests before dumping (the consumer pipe may not be connected). Continuing with the dump. {ex}").ConfigureAwait(false);
             }
         }
 
