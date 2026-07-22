@@ -68,6 +68,26 @@ public sealed class CommandLineHandlerTests
     }
 
     [TestMethod]
+    [DataRow("-super-secret")]
+    [DataRow("'super'secret'")]
+    public async Task ParseAndValidateAsync_InvalidTokenValue_DoesNotExposeTokenInError(string token)
+    {
+        string[] args = ["--dotnet-test-websocket-token", token];
+        CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            parseResult,
+            _systemCommandLineOptionsProviders,
+            _extensionCommandLineOptionsProviders,
+            new Mock<ICommandLineOptions>().Object);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.DoesNotContain("super-secret", result.ErrorMessage);
+        Assert.DoesNotContain("super'secret", result.ErrorMessage);
+        Assert.Contains("***REDACTED***", result.ErrorMessage);
+    }
+
+    [TestMethod]
     public async Task ParseAndValidateAsync_ValidArgumentWithColonFollowedByValidArgumentWithoutColon_ReturnsTrue()
     {
         string[] args = ["--results-directory", "TestResults", "--timeout:60m", "--ignore-exit-code", "8"];

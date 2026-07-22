@@ -9,6 +9,8 @@ namespace Microsoft.Testing.Platform.CommandLine;
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public sealed class CommandLineParseResult : IEquatable<CommandLineParseResult>
 {
+    private readonly IReadOnlyList<string> _arguments;
+
     /// <summary>
     /// The prefix for options.
     /// </summary>
@@ -34,7 +36,8 @@ public sealed class CommandLineParseResult : IEquatable<CommandLineParseResult>
     {
         ToolName = toolName;
         Options = options;
-        Errors = errors;
+        _arguments = arguments;
+        Errors = errors.Select(RedactError).ToArray();
         CommandLine = CommandLineArgumentsRedactor.Redact([.. arguments]);
     }
 
@@ -54,6 +57,8 @@ public sealed class CommandLineParseResult : IEquatable<CommandLineParseResult>
     public IReadOnlyList<string> Errors { get; }
 
     internal string CommandLine { get; }
+
+    internal string RedactError(string error) => CommandLineArgumentsRedactor.RedactError(error, _arguments);
 
     /// <summary>
     /// Gets a value indicating whether the parsing has errors.

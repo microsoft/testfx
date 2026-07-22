@@ -241,3 +241,5 @@ static Microsoft.Testing.Platform.DotnetTestHelper.TryGetDotnetTestTransport(thi
 static Microsoft.Testing.Platform.IPC.DotnetTestWebSocketClient.BuildAuthenticatedUri(System.Uri! endpoint, string! token) -> System.Uri!
 Microsoft.Testing.Platform.CommandLine.CommandLineArgumentsRedactor
 static Microsoft.Testing.Platform.CommandLine.CommandLineArgumentsRedactor.Redact(string![]! args) -> string!
+static Microsoft.Testing.Platform.CommandLine.CommandLineArgumentsRedactor.RedactError(string! error, System.Collections.Generic.IReadOnlyList<string!>! args) -> string!
+[TPEXP]Microsoft.Testing.Platform.CommandLine.CommandLineParseResult.RedactError(string! error) -> string!

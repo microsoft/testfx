@@ -36,12 +36,49 @@ internal static class CommandLineArgumentsRedactor
     /// out-of-range access) and a repeated option (each occurrence's value(s) are independently redacted).
     /// </remarks>
     public static string Redact(string[] args)
+        => string.Join(" ", RedactArguments(args));
+
+    internal static string RedactError(string error, IReadOnlyList<string> args)
     {
-        if (args.Length == 0)
+        string[] arguments = [.. args];
+        string[] redactedArguments = RedactArguments(arguments);
+        for (int i = 0; i < arguments.Length; i++)
         {
-            return string.Empty;
+            string original = arguments[i];
+            string redacted = redactedArguments[i];
+            if (original == redacted)
+            {
+                continue;
+            }
+
+            if (redacted == RedactedPlaceholder)
+            {
+                error = error.Replace(original, RedactedPlaceholder);
+                string optionNameWithoutPrefix = original.TrimStart('-');
+                if (optionNameWithoutPrefix.Length > 0)
+                {
+                    error = error.Replace(optionNameWithoutPrefix, RedactedPlaceholder);
+                }
+            }
+            else if (redacted.Contains(RedactedPlaceholder))
+            {
+                int delimiterIndex = original.IndexOfAny(['=', ':']);
+                if (delimiterIndex >= 0 && delimiterIndex + 1 < original.Length)
+                {
+                    error = error.Replace(original[(delimiterIndex + 1)..], RedactedPlaceholder);
+                }
+            }
+            else
+            {
+                error = error.Replace(original, redacted);
+            }
         }
 
+        return error;
+    }
+
+    private static string[] RedactArguments(string[] args)
+    {
         string[] redacted = new string[args.Length];
         bool redactingValuesForCurrentOption = false;
         bool redactedValueForCurrentOption = false;
@@ -108,7 +145,7 @@ internal static class CommandLineArgumentsRedactor
             redactedValueForCurrentOption |= redactingValuesForCurrentOption;
         }
 
-        return string.Join(" ", redacted);
+        return redacted;
     }
 
     private static bool TryParseOption(string arg, [NotNullWhen(true)] out string? prefix, [NotNullWhen(true)] out string? optionName, out string? delimiter, out string? inlineValue)
