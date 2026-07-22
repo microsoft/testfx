@@ -742,8 +742,8 @@ naming, `WaitForPipeDrain`) stays isolated to the named-pipe implementation.
   already listening on - the test host is always the one that *initiates* the outbound connection, exactly
   mirroring the named-pipe transport where the SDK creates the pipe and the host connects out to it. This
   matters specifically for `browser-wasm`: the page/test host runs inside the browser sandbox and can only
-  make outbound connections; it cannot accept inbound ones. The URI must be absolute and must not contain a
-  fragment.
+  make outbound connections; it cannot accept inbound ones. The URI must be absolute and must not contain
+  user information or a fragment.
 - `--dotnet-test-websocket-token` takes a per-run opaque secret the SDK generated for this connection (see
   §15.4); an empty or whitespace-only token is rejected during command-line validation.
 - All three options are hidden and built-in, like `--dotnet-test-pipe`.
