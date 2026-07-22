@@ -52,11 +52,13 @@ public sealed class TestFilterProviderAttribute : Attribute
     /// the consuming test assembly. Must be a non-generic class with a public parameterless
     /// constructor.
     /// </param>
-    public TestFilterProviderAttribute(Type filterType)
+    public TestFilterProviderAttribute(
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] Type filterType)
         => FilterType = filterType ?? throw new ArgumentNullException(nameof(filterType));
 
     /// <summary>
     /// Gets the <see cref="ITestFilter"/> implementation registered by this attribute.
     /// </summary>
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
     public Type FilterType { get; }
 }

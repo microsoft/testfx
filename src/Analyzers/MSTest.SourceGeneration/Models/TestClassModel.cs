@@ -79,6 +79,7 @@ internal sealed record TestMethodModel(
     bool IsTestMethod,
     EquatableArray<TestParameterModel> Parameters,
     EquatableArray<AttributeApplicationModel> Attributes,
+    bool AreAttributesComplete,
     EquatableArray<DataRowModel> DataRows,
     EquatableArray<DynamicDataSourceModel> DynamicDataSources);
 
@@ -111,4 +112,5 @@ internal sealed record TestClassModel(
     EquatableArray<TestMethodModel> Methods,
     EquatableArray<TestPropertyModel> Properties,
     EquatableArray<AttributeApplicationModel> Attributes,
+    bool AreAttributesComplete,
     EquatableArray<string> BaseTypeFullyQualifiedNames);
