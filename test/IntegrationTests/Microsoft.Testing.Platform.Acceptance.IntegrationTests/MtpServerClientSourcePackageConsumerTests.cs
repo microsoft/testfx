@@ -86,7 +86,7 @@ public sealed class MtpServerClientSourcePackageConsumerTests : AcceptanceTestBa
                 client.TelemetryReceived += (object? sender, MtpTelemetryEventArgs e) => Console.WriteLine(e.EventName + ": " + e.Metrics.Count);
                 client.AttachmentsReceived += (object? sender, MtpAttachmentsEventArgs e) => Console.WriteLine(e.Attachments.Count);
                 client.ServerRequestHandler =
-                    (string method, IDictionary<string, object?>? parameters, CancellationToken ct) => Task.FromResult<object?>(null);
+                    (string method, IDictionary<string, object?>? parameters, CancellationToken ct) => Task.FromResult<IDictionary<string, object?>?>(null);
 
                 MtpServerCapabilities capabilities = await client.InitializeAsync(cancellationToken);
                 Console.WriteLine(capabilities.ServerName ?? "unknown");

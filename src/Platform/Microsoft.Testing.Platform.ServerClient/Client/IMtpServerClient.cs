@@ -53,10 +53,16 @@ internal interface IMtpServerClient : IDisposable
 
     /// <summary>
     /// Gets or sets an opt-in handler for server-initiated requests (for example the debugger-attach
-    /// request). When <see langword="null"/> the client answers every server request with
-    /// <see langword="null"/>.
+    /// request). The handler receives the request method and parameters and returns the response object
+    /// as a dictionary (or <see langword="null"/> to answer with a null result). When the handler itself
+    /// is <see langword="null"/> the client answers every server request with <see langword="null"/>.
     /// </summary>
-    Func<string, IDictionary<string, object?>?, CancellationToken, Task<object?>>? ServerRequestHandler { get; set; }
+    /// <remarks>
+    /// The result is constrained to <see cref="IDictionary{TKey, TValue}"/> because the server-mode
+    /// response is a JSON object; any implementation is accepted and normalized before it is written, so
+    /// the connection can always answer and the server is never left waiting.
+    /// </remarks>
+    Func<string, IDictionary<string, object?>?, CancellationToken, Task<IDictionary<string, object?>?>>? ServerRequestHandler { get; set; }
 
     /// <summary>
     /// Sends the <c>initialize</c> request and returns the negotiated server capabilities.

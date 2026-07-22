@@ -409,7 +409,7 @@ public sealed class MtpServerClientTests
             _ = parameters;
             _ = cancellationToken;
             observedMethod = method;
-            return Task.FromResult<object?>(null);
+            return Task.FromResult<IDictionary<string, object?>?>(null);
         };
 
         await WithTimeoutAsync(server.SendServerRequestAsync(ClientAttachDebuggerMethod)).ConfigureAwait(false);
@@ -432,7 +432,38 @@ public sealed class MtpServerClientTests
             _ = method;
             _ = parameters;
             _ = cancellationToken;
-            return Task.FromResult<object?>(new Dictionary<string, object?>
+            return Task.FromResult<IDictionary<string, object?>?>(new Dictionary<string, object?>
+            {
+                ["success"] = true,
+                ["detail"] = "attached",
+            });
+        };
+
+        ResponseMessage response = await WithTimeoutAsync(server.SendServerRequestAsync(ClientAttachDebuggerMethod)).ConfigureAwait(false);
+
+        Assert.IsInstanceOfType(response.Result, typeof(IDictionary<string, object?>));
+        var result = (IDictionary<string, object?>)response.Result!;
+        Assert.IsTrue((bool)result["success"]!, "Expected the boolean payload to survive the round trip.");
+        Assert.AreEqual("attached", result["detail"], "Expected the string payload to survive the round trip.");
+    }
+
+    [TestMethod]
+    public async Task ServerInitiatedRequest_WithNonDictionaryIDictionaryResult_RoundTripsResultOverTheWire()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        // A handler may return ANY IDictionary<string, object?>, not just the concrete Dictionary<string,
+        // object?> the response serializer is registered for. The client normalizes the result to that
+        // concrete type before writing, so a SortedDictionary must still round-trip. Before that
+        // normalization the serialize threw on the unregistered runtime type and the server waited forever,
+        // so a regression surfaces here as a timeout.
+        client.ServerRequestHandler = (method, parameters, cancellationToken) =>
+        {
+            _ = method;
+            _ = parameters;
+            _ = cancellationToken;
+            return Task.FromResult<IDictionary<string, object?>?>(new SortedDictionary<string, object?>
             {
                 ["success"] = true,
                 ["detail"] = "attached",

@@ -64,7 +64,7 @@ internal sealed class MtpServerClient : IMtpServerClient
     public event EventHandler<MtpAttachmentsEventArgs>? AttachmentsReceived;
 
     /// <inheritdoc />
-    public Func<string, IDictionary<string, object?>?, CancellationToken, Task<object?>>? ServerRequestHandler { get; set; }
+    public Func<string, IDictionary<string, object?>?, CancellationToken, Task<IDictionary<string, object?>?>>? ServerRequestHandler { get; set; }
 
     /// <inheritdoc />
     public int ProcessId => _process?.ProcessId ?? 0;
@@ -247,10 +247,25 @@ internal sealed class MtpServerClient : IMtpServerClient
 
     private async Task<object?> OnServerRequestAsync(RequestMessage request, CancellationToken cancellationToken)
     {
-        Func<string, IDictionary<string, object?>?, CancellationToken, Task<object?>>? handler = ServerRequestHandler;
-        return handler is null
-            ? null
-            : await handler(request.Method, request.Params as IDictionary<string, object?>, cancellationToken).ConfigureAwait(false);
+        Func<string, IDictionary<string, object?>?, CancellationToken, Task<IDictionary<string, object?>?>>? handler = ServerRequestHandler;
+        if (handler is null)
+        {
+            return null;
+        }
+
+        IDictionary<string, object?>? result = await handler(request.Method, request.Params as IDictionary<string, object?>, cancellationToken).ConfigureAwait(false);
+
+        // The response serializer is registered for the concrete Dictionary<string, object?> the formatter
+        // writes, so normalize any other IDictionary implementation to that exact type. This keeps the
+        // connection's "always answers" guarantee: a non-Dictionary result would otherwise throw on
+        // serialize and the server would wait forever for a response that never comes.
+        if (result is null or Dictionary<string, object?>)
+        {
+            return result;
+        }
+
+        var normalized = new Dictionary<string, object?>(result);
+        return normalized;
     }
 
     private void OnNotificationReceived(NotificationMessage notification)
