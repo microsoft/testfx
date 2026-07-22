@@ -44,6 +44,22 @@ public sealed class TestApplicationResultTests : IDisposable
     }
 
     [TestMethod]
+    public void GetProcessExitCode_WithNoTestsAndCoverageThresholdFailure_ReturnsZeroTests()
+    {
+        Mock<ITestCoverageResult> coverageResult = new();
+        coverageResult.SetupGet(result => result.HasThresholdFailure).Returns(true);
+        using TestApplicationResult testApplicationResult = new(
+            new Mock<IOutputDevice>().Object,
+            new Mock<ICommandLineOptions>().Object,
+            new Mock<IEnvironment>().Object,
+            new Mock<IStopPoliciesService>().Object,
+            null,
+            coverageResult.Object);
+
+        Assert.AreEqual((int)ExitCode.ZeroTests, testApplicationResult.GetProcessExitCode());
+    }
+
+    [TestMethod]
     public async Task GetProcessExitCodeAsync_If_All_Skipped_ByDefault_Returns_Success()
     {
         await _testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(

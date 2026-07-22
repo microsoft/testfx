@@ -156,7 +156,6 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         exitCode = exitCode == ExitCode.Success && _testAdapterTestSessionFailure ? ExitCode.TestAdapterTestSessionFailure : exitCode;
         exitCode = exitCode == ExitCode.Success && _failedTestsCount > 0 ? ExitCode.AtLeastOneTestFailed : exitCode;
         exitCode = exitCode == ExitCode.Success && _policiesService.IsAbortTriggered ? ExitCode.TestSessionAborted : exitCode;
-        exitCode = exitCode == ExitCode.Success && _testCoverageResult?.HasThresholdFailure == true ? ExitCode.CoverageThresholdFailed : exitCode;
 
         // An explicitly-provided `--minimum-expected-tests` governs the count-based verdict and
         // supersedes the ZeroTests (8) verdict below: a run of fewer than N tests yields
@@ -184,6 +183,10 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
                 : _totalRanTests == 0;
             exitCode = exitCode == ExitCode.Success && ranZeroTests ? ExitCode.ZeroTests : exitCode;
         }
+
+        // Coverage thresholds override only an otherwise-successful run. Count-based policies above retain
+        // precedence when no tests ran or the explicit minimum was not met.
+        exitCode = exitCode == ExitCode.Success && _testCoverageResult?.HasThresholdFailure == true ? ExitCode.CoverageThresholdFailed : exitCode;
 
         // Route the verdict through the shared ignore-exit-code policy so `--ignore-exit-code` /
         // TESTINGPLATFORM_EXITCODE_IGNORE are honored consistently with every other exit-code verdict.
