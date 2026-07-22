@@ -970,6 +970,7 @@ public sealed class TerminalTestReporterTests
         var console = new StringBuilderConsole();
         TerminalTestReporter reporter = CreateCoverageReporter(console);
         var summary = new CoverageScopeSummary(
+            new SessionUid("session"),
             CoverageScope.Overall,
             [new CoverageMetricResult(CoverageMetric.Line, coveredCount: 0, coverableCount: 0, producerId: "producer")]);
 
@@ -1036,9 +1037,11 @@ public sealed class TerminalTestReporterTests
         var console = new StringBuilderConsole();
         TerminalTestReporter reporter = CreateCoverageReporter(console);
         var overall = new CoverageScopeSummary(
+            new SessionUid("session"),
             CoverageScope.Overall,
             [new CoverageMetricResult(CoverageMetric.Line, coveredCount: 855, coverableCount: 1000, producerId: "producer")]);
         var module = new CoverageScopeSummary(
+            new SessionUid("session"),
             new CoverageScope(CoverageScopeLevel.Module, "MyModule.dll"),
             [new CoverageMetricResult(CoverageMetric.Branch, coveredCount: 3, coverableCount: 4, producerId: "producer")]);
 
@@ -1073,6 +1076,7 @@ public sealed class TerminalTestReporterTests
         var console = new StringBuilderConsole();
         TerminalTestReporter reporter = CreateCoverageReporter(console);
         var summary = new CoverageScopeSummary(
+            new SessionUid("session"),
             new CoverageScope(CoverageScopeLevel.Module, "Module\nName"),
             [new CoverageMetricResult(
                 CoverageMetric.Custom,
@@ -1086,6 +1090,28 @@ public sealed class TerminalTestReporterTests
         Assert.Contains("Module␊Name - MC/DC␉Metric: 50.0%", console.Output);
         Assert.DoesNotContain("Module\nName", console.Output);
         Assert.DoesNotContain("MC/DC\tMetric", console.Output);
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WhenMetricLabelIsDuplicated_IncludesNormalizedProducerIds()
+    {
+        var console = new StringBuilderConsole();
+        TerminalTestReporter reporter = CreateCoverageReporter(console);
+        var summary = new CoverageScopeSummary(
+            new SessionUid("session"),
+            CoverageScope.Overall,
+            [
+                new CoverageMetricResult(CoverageMetric.Line, coveredCount: 8, coverableCount: 10, producerId: "producer-a"),
+                new CoverageMetricResult(CoverageMetric.Line, coveredCount: 7, coverableCount: 10, producerId: "producer\nb"),
+                new CoverageMetricResult(CoverageMetric.Branch, coveredCount: 6, coverableCount: 10, producerId: "producer-a"),
+            ]);
+
+        reporter.AppendCoverageSummary([summary], []);
+
+        Assert.Contains("Total - Line [producer-a]: 80.0%", console.Output);
+        Assert.Contains("Total - Line [producer␊b]: 70.0%", console.Output);
+        Assert.Contains("Total - Branch: 60.0%", console.Output);
+        Assert.DoesNotContain("Branch [producer-a]", console.Output);
     }
 
     private static TestCoverageThresholdMessage CreateThreshold(

@@ -91,7 +91,7 @@ public sealed class TestCoverageMessagesTests
     public void CoverageReportReference_MissingPath_ThrowsArgumentException(string? path)
     {
         ArgumentException exception = Assert.ThrowsExactly<ArgumentException>(
-            () => new CoverageReportReference(path!, CoverageReportFormat.Cobertura, "producer"));
+            () => new CoverageReportReference(SessionUid, path!, CoverageReportFormat.Cobertura, "producer"));
 
         Assert.AreEqual("path", exception.ParamName);
     }
@@ -102,7 +102,7 @@ public sealed class TestCoverageMessagesTests
     public void CoverageReportReference_MissingProducerId_ThrowsArgumentException(string? producerId)
     {
         ArgumentException exception = Assert.ThrowsExactly<ArgumentException>(
-            () => new CoverageReportReference("coverage.xml", CoverageReportFormat.Cobertura, producerId!));
+            () => new CoverageReportReference(SessionUid, "coverage.xml", CoverageReportFormat.Cobertura, producerId!));
 
         Assert.AreEqual("producerId", exception.ParamName);
     }
@@ -114,7 +114,7 @@ public sealed class TestCoverageMessagesTests
     public void CoverageReportReference_CustomFormatWithoutName_ThrowsArgumentException(string? customFormatName)
     {
         ArgumentException exception = Assert.ThrowsExactly<ArgumentException>(
-            () => new CoverageReportReference("coverage.data", CoverageReportFormat.Custom, "producer", customFormatName));
+            () => new CoverageReportReference(SessionUid, "coverage.data", CoverageReportFormat.Custom, "producer", customFormatName));
 
         Assert.AreEqual("customFormatName", exception.ParamName);
     }
@@ -126,7 +126,7 @@ public sealed class TestCoverageMessagesTests
     public void CoverageReportReference_WellKnownFormatWithCustomName_ThrowsArgumentException(string customFormatName)
     {
         ArgumentException exception = Assert.ThrowsExactly<ArgumentException>(
-            () => new CoverageReportReference("coverage.xml", CoverageReportFormat.Cobertura, "producer", customFormatName));
+            () => new CoverageReportReference(SessionUid, "coverage.xml", CoverageReportFormat.Cobertura, "producer", customFormatName));
 
         Assert.AreEqual("customFormatName", exception.ParamName);
     }
@@ -134,8 +134,9 @@ public sealed class TestCoverageMessagesTests
     [TestMethod]
     public void CoverageReportReference_ValidValues_PopulatesProperties()
     {
-        var report = new CoverageReportReference("coverage.data", CoverageReportFormat.Custom, "producer", "binary");
+        var report = new CoverageReportReference(SessionUid, "coverage.data", CoverageReportFormat.Custom, "producer", "binary");
 
+        Assert.AreEqual(SessionUid, report.SessionUid);
         Assert.AreEqual("coverage.data", report.Path);
         Assert.AreEqual(CoverageReportFormat.Custom, report.Format);
         Assert.AreEqual("producer", report.ProducerId);

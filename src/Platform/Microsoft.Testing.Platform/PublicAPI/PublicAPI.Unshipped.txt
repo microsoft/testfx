@@ -95,17 +95,19 @@ Microsoft.Testing.Platform.Services.CoverageMetricResult.Metric.get -> Microsoft
 Microsoft.Testing.Platform.Services.CoverageMetricResult.Percentage.get -> double
 Microsoft.Testing.Platform.Services.CoverageMetricResult.ProducerId.get -> string!
 Microsoft.Testing.Platform.Services.CoverageScopeSummary
-Microsoft.Testing.Platform.Services.CoverageScopeSummary.CoverageScopeSummary(Microsoft.Testing.Platform.Extensions.Messages.CoverageScope scope, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Services.CoverageMetricResult!>! metrics) -> void
+Microsoft.Testing.Platform.Services.CoverageScopeSummary.CoverageScopeSummary(Microsoft.Testing.Platform.TestHost.SessionUid sessionUid, Microsoft.Testing.Platform.Extensions.Messages.CoverageScope scope, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Services.CoverageMetricResult!>! metrics) -> void
 Microsoft.Testing.Platform.Services.CoverageScopeSummary.GetCustom(string! customMetricName) -> Microsoft.Testing.Platform.Services.CoverageMetricResult?
 Microsoft.Testing.Platform.Services.CoverageScopeSummary.Metrics.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Services.CoverageMetricResult!>!
 Microsoft.Testing.Platform.Services.CoverageScopeSummary.Scope.get -> Microsoft.Testing.Platform.Extensions.Messages.CoverageScope
+Microsoft.Testing.Platform.Services.CoverageScopeSummary.SessionUid.get -> Microsoft.Testing.Platform.TestHost.SessionUid
 Microsoft.Testing.Platform.Services.CoverageScopeSummary.this[Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric metric].get -> Microsoft.Testing.Platform.Services.CoverageMetricResult?
 Microsoft.Testing.Platform.Services.CoverageReportReference
-Microsoft.Testing.Platform.Services.CoverageReportReference.CoverageReportReference(string! path, Microsoft.Testing.Platform.Extensions.Messages.CoverageReportFormat format, string! producerId, string? customFormatName = null) -> void
+Microsoft.Testing.Platform.Services.CoverageReportReference.CoverageReportReference(Microsoft.Testing.Platform.TestHost.SessionUid sessionUid, string! path, Microsoft.Testing.Platform.Extensions.Messages.CoverageReportFormat format, string! producerId, string? customFormatName = null) -> void
 Microsoft.Testing.Platform.Services.CoverageReportReference.CustomFormatName.get -> string?
 Microsoft.Testing.Platform.Services.CoverageReportReference.Format.get -> Microsoft.Testing.Platform.Extensions.Messages.CoverageReportFormat
 Microsoft.Testing.Platform.Services.CoverageReportReference.Path.get -> string!
 Microsoft.Testing.Platform.Services.CoverageReportReference.ProducerId.get -> string!
+Microsoft.Testing.Platform.Services.CoverageReportReference.SessionUid.get -> Microsoft.Testing.Platform.TestHost.SessionUid
 [TPEXP]Microsoft.Testing.Platform.Builder.IArtifactPostProcessingApplicationBuilder
 [TPEXP]Microsoft.Testing.Platform.Builder.IArtifactPostProcessingApplicationBuilder.ArtifactPostProcessing.get -> Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessingManager!
 [TPEXP]Microsoft.Testing.Platform.Builder.IArtifactPostProcessingApplicationBuilder.Tools.get -> Microsoft.Testing.Platform.Tools.IToolsManager!

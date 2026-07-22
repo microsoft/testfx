@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Services;
 
@@ -14,13 +15,18 @@ public sealed class CoverageScopeSummary
     /// <summary>
     /// Initializes a new instance of the <see cref="CoverageScopeSummary"/> class.
     /// </summary>
+    /// <param name="sessionUid">The session this summary belongs to.</param>
     /// <param name="scope">The scope this summary describes.</param>
     /// <param name="metrics">The metrics reported for the scope.</param>
-    public CoverageScopeSummary(CoverageScope scope, IReadOnlyList<CoverageMetricResult> metrics)
+    public CoverageScopeSummary(SessionUid sessionUid, CoverageScope scope, IReadOnlyList<CoverageMetricResult> metrics)
     {
+        SessionUid = sessionUid;
         Scope = scope;
         Metrics = metrics ?? throw new ArgumentNullException(nameof(metrics));
     }
+
+    /// <summary>Gets the session this summary belongs to.</summary>
+    public SessionUid SessionUid { get; }
 
     /// <summary>Gets the scope this summary describes.</summary>
     public CoverageScope Scope { get; }

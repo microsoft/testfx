@@ -44,10 +44,12 @@ public sealed class TestCoverageResultTests
         await ConsumeAsync(result, new TestCoverageMessage(firstSession, CoverageScope.Overall, CoverageMetric.Statement, 9, 10, "producer"));
 
         Assert.HasCount(3, result.Scopes);
+        Assert.AreEqual(firstSession, result.Scopes[0].SessionUid);
         Assert.AreEqual(CoverageScopeLevel.Overall, result.Scopes[0].Scope.Level);
         Assert.HasCount(2, result.Scopes[0].Metrics);
         Assert.AreEqual(CoverageMetric.Line, result.Scopes[0].Metrics[0].Metric);
         Assert.AreEqual(CoverageMetric.Statement, result.Scopes[0].Metrics[1].Metric);
+        Assert.AreEqual(secondSession, result.Scopes[1].SessionUid);
         Assert.AreEqual(CoverageScopeLevel.Overall, result.Scopes[1].Scope.Level);
         Assert.AreEqual(CoverageMetric.Branch, Assert.ContainsSingle(result.Scopes[1].Metrics).Metric);
         Assert.AreEqual(module, result.Scopes[2].Scope);
@@ -92,12 +94,32 @@ public sealed class TestCoverageResultTests
         Assert.HasCount(4, result.Reports);
         Assert.AreEqual("first.xml", result.Reports[0].Path);
         Assert.AreEqual(CoverageReportFormat.OpenCover, result.Reports[0].Format);
+        Assert.AreEqual(session, result.Reports[0].SessionUid);
         Assert.AreEqual("second.info", result.Reports[1].Path);
         Assert.AreEqual(CoverageReportFormat.Lcov, result.Reports[1].Format);
         Assert.AreEqual("other-producer", result.Reports[2].ProducerId);
         Assert.AreEqual(CoverageReportFormat.Cobertura, result.Reports[2].Format);
         Assert.AreEqual("producer", result.Reports[3].ProducerId);
+        Assert.AreEqual(new SessionUid("other-session"), result.Reports[3].SessionUid);
         Assert.AreEqual(CoverageReportFormat.Lcov, result.Reports[3].Format);
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_DuplicateThreshold_ReplacesValueAndPreservesFirstSeenOrder()
+    {
+        TestCoverageResult result = new();
+        SessionUid session = new("session");
+
+        await ConsumeAsync(result, CreateThreshold(session, CoverageMetric.Line, actualPercentage: 70));
+        await ConsumeAsync(result, CreateThreshold(session, CoverageMetric.Branch, actualPercentage: 60));
+        await ConsumeAsync(result, CreateThreshold(session, CoverageMetric.Line, actualPercentage: 90));
+
+        Assert.HasCount(2, result.Thresholds);
+        Assert.AreEqual(CoverageMetric.Line, result.Thresholds[0].Metric);
+        Assert.AreEqual(90, result.Thresholds[0].ActualPercentage);
+        Assert.IsTrue(result.Thresholds[0].Passed);
+        Assert.AreEqual(CoverageMetric.Branch, result.Thresholds[1].Metric);
+        Assert.IsFalse(result.Thresholds[1].Passed);
     }
 
     [TestMethod]
@@ -133,7 +155,8 @@ public sealed class TestCoverageResultTests
         await ConsumeAsync(result, CreateNoDataThreshold(session, treatNoDataAsFailure: true));
 
         Assert.IsTrue(result.HasThresholdFailure);
-        Assert.IsFalse(result.Thresholds[1].Passed);
+        Assert.HasCount(1, result.Thresholds);
+        Assert.IsFalse(result.Thresholds[0].Passed);
     }
 
     private static Task ConsumeAsync(TestCoverageResult result, IData data)
@@ -150,6 +173,21 @@ public sealed class TestCoverageResultTests
             hasCoverableData: false,
             producerId: "producer",
             treatNoDataAsFailure: treatNoDataAsFailure);
+
+    private static TestCoverageThresholdMessage CreateThreshold(
+        SessionUid session,
+        CoverageMetric metric,
+        double actualPercentage)
+        => new(
+            session,
+            CoverageScope.Overall,
+            metric,
+            CoverageAggregation.Total,
+            actualPercentage,
+            requiredPercentage: 80,
+            hasCoverableData: true,
+            producerId: "producer",
+            aggregatedOver: CoverageScopeLevel.Module);
 
     private sealed class MockDataProducer : IDataProducer
     {

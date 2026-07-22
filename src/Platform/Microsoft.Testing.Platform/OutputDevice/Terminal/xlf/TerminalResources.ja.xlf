@@ -112,6 +112,11 @@
         <target state="new">Statement</target>
         <note>Label for statement code coverage in the coverage summary (e.g. 'Total - Statement: 95.0%').</note>
       </trans-unit>
+      <trans-unit id="CoverageMetricWithProducer">
+        <source>{0} [{1}]</source>
+        <target state="new">{0} [{1}]</target>
+        <note>Disambiguates duplicate coverage metric rows. {0} is the metric label and {1} is the coverage producer id.</note>
+      </trans-unit>
       <trans-unit id="CoverageNoData">
         <source>N/A</source>
         <target state="new">N/A</target>

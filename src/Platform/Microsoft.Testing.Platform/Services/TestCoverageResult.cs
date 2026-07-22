@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Services;
 
@@ -22,7 +23,8 @@ internal sealed class TestCoverageResult : ITestCoverageResult, IDataConsumer
     // Preserves first-seen order so the rendered summary is deterministic across runs.
     private readonly List<MeasurementKey> _measurementOrder = [];
 
-    private readonly List<TestCoverageThresholdMessage> _thresholds = [];
+    private readonly Dictionary<ThresholdKey, TestCoverageThresholdMessage> _thresholds = [];
+    private readonly List<ThresholdKey> _thresholdOrder = [];
 
     private readonly Dictionary<ReportKey, CoverageReportReference> _reports = [];
     private readonly List<ReportKey> _reportOrder = [];
@@ -38,13 +40,25 @@ internal sealed class TestCoverageResult : ITestCoverageResult, IDataConsumer
     public Type[] DataTypesConsumed { get; } =
         [typeof(TestCoverageMessage), typeof(TestCoverageThresholdMessage), typeof(TestCoverageReportMessage)];
 
-    public IReadOnlyList<TestCoverageThresholdMessage> Thresholds => _thresholds;
+    public IReadOnlyList<TestCoverageThresholdMessage> Thresholds
+    {
+        get
+        {
+            var result = new List<TestCoverageThresholdMessage>(_thresholdOrder.Count);
+            foreach (ThresholdKey key in _thresholdOrder)
+            {
+                result.Add(_thresholds[key]);
+            }
+
+            return result;
+        }
+    }
 
     public bool HasThresholdFailure
     {
         get
         {
-            foreach (TestCoverageThresholdMessage threshold in _thresholds)
+            foreach (TestCoverageThresholdMessage threshold in Thresholds)
             {
                 if (!threshold.Passed)
                 {
@@ -104,7 +118,7 @@ internal sealed class TestCoverageResult : ITestCoverageResult, IDataConsumer
             var result = new List<CoverageScopeSummary>(order.Count);
             foreach ((string Session, CoverageScope Scope) groupKey in order)
             {
-                result.Add(new CoverageScopeSummary(groupKey.Scope, groups[groupKey]));
+                result.Add(new CoverageScopeSummary(new SessionUid(groupKey.Session), groupKey.Scope, groups[groupKey]));
             }
 
             return result;
@@ -136,6 +150,7 @@ internal sealed class TestCoverageResult : ITestCoverageResult, IDataConsumer
         _measurements.Clear();
         _measurementOrder.Clear();
         _thresholds.Clear();
+        _thresholdOrder.Clear();
         _reports.Clear();
         _reportOrder.Clear();
     }
@@ -163,7 +178,21 @@ internal sealed class TestCoverageResult : ITestCoverageResult, IDataConsumer
                 break;
 
             case TestCoverageThresholdMessage threshold:
-                _thresholds.Add(threshold);
+                var thresholdKey = new ThresholdKey(
+                    threshold.SessionUid.Value,
+                    threshold.ProducerId,
+                    threshold.Scope.Level,
+                    threshold.Scope.Name,
+                    threshold.Metric,
+                    threshold.Metric == CoverageMetric.Custom ? threshold.CustomMetricName : null,
+                    threshold.Aggregation,
+                    threshold.AggregatedOver);
+                if (!_thresholds.ContainsKey(thresholdKey))
+                {
+                    _thresholdOrder.Add(thresholdKey);
+                }
+
+                _thresholds[thresholdKey] = threshold;
                 break;
 
             case TestCoverageReportMessage report:
@@ -174,6 +203,7 @@ internal sealed class TestCoverageResult : ITestCoverageResult, IDataConsumer
                 }
 
                 _reports[reportKey] = new CoverageReportReference(
+                    report.SessionUid,
                     report.ReportPath,
                     report.Format,
                     report.ProducerId,
@@ -191,6 +221,16 @@ internal sealed class TestCoverageResult : ITestCoverageResult, IDataConsumer
         string? Name,
         CoverageMetric Metric,
         string? CustomMetricName);
+
+    private readonly record struct ThresholdKey(
+        string Session,
+        string ProducerId,
+        CoverageScopeLevel Level,
+        string? Name,
+        CoverageMetric Metric,
+        string? CustomMetricName,
+        CoverageAggregation Aggregation,
+        CoverageScopeLevel? AggregatedOver);
 
     private readonly record struct ReportKey(string Session, string ProducerId, string Path);
 }

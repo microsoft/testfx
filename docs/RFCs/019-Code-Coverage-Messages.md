@@ -342,6 +342,8 @@ public sealed class TestCoverageMessage : DataWithSessionUid
         CustomMetricName = customMetricName;
     }
 
+    public SessionUid SessionUid { get; }
+
     public CoverageScope Scope { get; }
 
     public CoverageMetric Metric { get; }
@@ -596,8 +598,12 @@ public sealed class CoverageScopeSummary
     // Public so third-party report generators can construct snapshots in their own unit tests
     // and build fakes of ITestCoverageResult without reflection. Get-only properties still
     // prevent mutation after construction.
-    public CoverageScopeSummary(CoverageScope scope, IReadOnlyList<CoverageMetricResult> metrics)
+    public CoverageScopeSummary(
+        SessionUid sessionUid,
+        CoverageScope scope,
+        IReadOnlyList<CoverageMetricResult> metrics)
     {
+        SessionUid = sessionUid;
         Scope = scope;
         Metrics = metrics ?? throw new ArgumentNullException(nameof(metrics));
     }
@@ -686,16 +692,20 @@ public sealed class CoverageMetricResult
 public sealed class CoverageReportReference
 {
     public CoverageReportReference(
+        SessionUid sessionUid,
         string path,
         CoverageReportFormat format,
         string producerId,
         string? customFormatName = null)
     {
+        SessionUid = sessionUid;
         Path = path;
         Format = format;
         ProducerId = producerId;
         CustomFormatName = customFormatName;
     }
+
+    public SessionUid SessionUid { get; }
 
     public string Path { get; }
 
@@ -770,9 +780,12 @@ using the **full** key, not just `(scope, metric)`:
 - **`CustomMetricName`** is part of the key whenever `Metric == Custom`. Without it, two
   producers each reporting a different proprietary metric (e.g. MC/DC vs. a vendor metric) would
   both key as `Custom` and overwrite one another.
+- The public `CoverageScopeSummary` and `CoverageReportReference` projections retain
+  `SessionUid`, so entries from different sessions remain attributable after correlation.
 - **Duplicate full keys:** if the same full key is published more than once in a session, the
   **last write wins** and the correlator logs a diagnostic. Collectors are expected to emit one
-  final measurement per key; re-emission is treated as a correction, not an aggregation.
+  final measurement, threshold evaluation, or report per key; re-emission is treated as a
+  correction, not an aggregation.
 
 ## Platform wiring
 

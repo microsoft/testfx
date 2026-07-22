@@ -429,13 +429,31 @@ internal sealed partial class TerminalTestReporter
             foreach (CoverageScopeSummary scope in scopes)
             {
                 string scopeLabel = GetCoverageScopeLabel(scope.Scope);
+                Dictionary<(CoverageMetric Metric, string? CustomMetricName), int> metricCounts = [];
+                foreach (CoverageMetricResult metric in scope.Metrics)
+                {
+                    (CoverageMetric Metric, string? CustomMetricName) metricKey = (metric.Metric, metric.CustomMetricName);
+                    metricCounts.TryGetValue(metricKey, out int count);
+                    metricCounts[metricKey] = count + 1;
+                }
+
                 foreach (CoverageMetricResult metric in scope.Metrics)
                 {
                     terminal.Append(DoubleIndentation);
                     string coverageValue = metric.HasCoverableData
                         ? $"{metric.Percentage.ToString("F1", CultureInfo.CurrentCulture)}%"
                         : TerminalResources.CoverageNoData;
-                    terminal.AppendLine($"{scopeLabel} - {GetCoverageMetricLabel(metric.Metric, metric.CustomMetricName)}: {coverageValue}");
+                    string metricLabel = GetCoverageMetricLabel(metric.Metric, metric.CustomMetricName);
+                    if (metricCounts[(metric.Metric, metric.CustomMetricName)] > 1)
+                    {
+                        metricLabel = string.Format(
+                            CultureInfo.CurrentCulture,
+                            TerminalResources.CoverageMetricWithProducer,
+                            metricLabel,
+                            MakeControlCharactersVisible(metric.ProducerId, true));
+                    }
+
+                    terminal.AppendLine($"{scopeLabel} - {metricLabel}: {coverageValue}");
                 }
             }
         }

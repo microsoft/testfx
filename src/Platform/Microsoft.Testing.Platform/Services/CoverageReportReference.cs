@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Services;
 
@@ -15,11 +16,13 @@ public sealed class CoverageReportReference
     /// <summary>
     /// Initializes a new instance of the <see cref="CoverageReportReference"/> class.
     /// </summary>
+    /// <param name="sessionUid">The session this report belongs to.</param>
     /// <param name="path">The path to the report artifact.</param>
     /// <param name="format">The on-disk format of the report.</param>
     /// <param name="producerId">The collector that produced the report; part of the correlation key.</param>
     /// <param name="customFormatName">The custom format name; set only when <paramref name="format"/> is <see cref="CoverageReportFormat.Custom"/>.</param>
     public CoverageReportReference(
+        SessionUid sessionUid,
         string path,
         CoverageReportFormat format,
         string producerId,
@@ -27,11 +30,15 @@ public sealed class CoverageReportReference
     {
         CoverageReportHelper.Validate(path, nameof(path), format, producerId, customFormatName);
 
+        SessionUid = sessionUid;
         Path = path;
         Format = format;
         ProducerId = producerId;
         CustomFormatName = customFormatName;
     }
+
+    /// <summary>Gets the session this report belongs to.</summary>
+    public SessionUid SessionUid { get; }
 
     /// <summary>Gets the path to the report artifact.</summary>
     public string Path { get; }

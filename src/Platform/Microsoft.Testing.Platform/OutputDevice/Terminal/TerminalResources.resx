@@ -403,6 +403,10 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an 
     <value>Method</value>
     <comment>Label for method code coverage in the coverage summary (e.g. 'Total - Method: 95.0%').</comment>
   </data>
+  <data name="CoverageMetricWithProducer" xml:space="preserve">
+    <value>{0} [{1}]</value>
+    <comment>Disambiguates duplicate coverage metric rows. {0} is the metric label and {1} is the coverage producer id.</comment>
+  </data>
   <data name="CoverageMetricFunction" xml:space="preserve">
     <value>Function</value>
     <comment>Label for function code coverage in the coverage summary (e.g. 'Total - Function: 95.0%').</comment>

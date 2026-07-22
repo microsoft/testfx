@@ -75,6 +75,8 @@ internal static partial class TerminalResources
 
     internal static string @CoverageMetricMethod => GetResourceString("CoverageMetricMethod");
 
+    internal static string @CoverageMetricWithProducer => GetResourceString("CoverageMetricWithProducer");
+
     internal static string @CoverageMetricFunction => GetResourceString("CoverageMetricFunction");
 
     internal static string @CoverageMetricBlock => GetResourceString("CoverageMetricBlock");
