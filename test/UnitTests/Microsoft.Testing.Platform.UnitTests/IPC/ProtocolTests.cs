@@ -45,8 +45,9 @@ public sealed class ProtocolTests
     public void TestHostCompletedRequestDeserialize_TruncatedUnfilteredExitCodeThrows(int trailingByteCount)
     {
         var stream = new MemoryStream();
-        stream.Write(BitConverter.GetBytes((int)ExitCode.AtLeastOneTestFailed));
-        stream.Write(new byte[trailingByteCount]);
+        byte[] exitCodeBytes = BitConverter.GetBytes((int)ExitCode.AtLeastOneTestFailed);
+        stream.Write(exitCodeBytes, 0, exitCodeBytes.Length);
+        stream.Write(new byte[trailingByteCount], 0, trailingByteCount);
         stream.Position = 0;
 
         TargetInvocationException wrapper = Assert.ThrowsExactly<TargetInvocationException>(
