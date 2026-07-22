@@ -11,6 +11,7 @@ static Microsoft.Testing.Platform.Hosts.CommonHost.SupportsArtifactPostProcessin
 Microsoft.Testing.Platform.Hosts.TestHostBuilder.ArtifactPostProcessing.get -> Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessingManager!
 const Microsoft.Testing.Platform.IPC.HandshakeMessagePropertyNames.SupportedPostProcessorExtensionsLegacy = 15 -> byte
 const Microsoft.Testing.Platform.IPC.HandshakeMessagePropertyNames.SupportedPostProcessorKinds = 14 -> byte
+const Microsoft.Testing.Platform.IPC.HandshakeMessagePropertyNames.SupportsTestCoverageMessages = 16 -> byte
 static Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingHandshakeProperties.Create(System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor!>! processors) -> System.Collections.Generic.IReadOnlyDictionary<byte, string!>?
 Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool
 Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool.ArtifactPostProcessingDispatcherTool(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor!>! processors, Microsoft.Testing.Platform.ServerMode.IPushOnlyProtocol? protocol, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDevice) -> void
@@ -118,6 +119,12 @@ static Microsoft.Testing.Platform.Extensions.Messages.CoverageMetricHelper.Valid
 static Microsoft.Testing.Platform.Extensions.Messages.CoverageMetricHelper.ValidateProducerId(string! producerId) -> void
 static Microsoft.Testing.Platform.Extensions.Messages.CoverageReportHelper.Validate(string! path, string! pathParameterName, Microsoft.Testing.Platform.Extensions.Messages.CoverageReportFormat format, string! producerId, string? customFormatName) -> void
 Microsoft.Testing.Platform.Services.TestCoverageResult
+Microsoft.Testing.Platform.Services.TestCoverageCapabilities
+Microsoft.Testing.Platform.Services.TestCoverageCapabilities.EnabledProducerUids.get -> System.Collections.Generic.IReadOnlyCollection<string!>!
+Microsoft.Testing.Platform.Services.TestCoverageCapabilities.RegisterProducer(Microsoft.Testing.Platform.Extensions.Messages.IDataProducer! producer) -> void
+Microsoft.Testing.Platform.Services.TestCoverageCapabilities.SupportsTestCoverageMessages.get -> bool
+Microsoft.Testing.Platform.Services.TestCoverageCapabilities.TestCoverageCapabilities() -> void
+static Microsoft.Testing.Platform.ServerMode.ServerTestingCapabilities.SupportsTestCoverageMessages.get -> bool
 Microsoft.Testing.Platform.Services.TestCoverageResult.ConsumeAsync(Microsoft.Testing.Platform.Extensions.Messages.IDataProducer! dataProducer, Microsoft.Testing.Platform.Extensions.Messages.IData! value, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Platform.Services.TestCoverageResult.DataTypesConsumed.get -> System.Type![]!
 Microsoft.Testing.Platform.Services.TestCoverageResult.Description.get -> string!
@@ -129,6 +136,7 @@ Microsoft.Testing.Platform.Services.TestCoverageResult.Reports.get -> System.Col
 Microsoft.Testing.Platform.Services.TestCoverageResult.Reset() -> void
 Microsoft.Testing.Platform.Services.TestCoverageResult.Scopes.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Services.CoverageScopeSummary!>!
 Microsoft.Testing.Platform.Services.TestCoverageResult.TestCoverageResult() -> void
+Microsoft.Testing.Platform.Services.TestCoverageResult.TestCoverageResult(Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory) -> void
 Microsoft.Testing.Platform.Services.TestCoverageResult.Thresholds.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage!>!
 Microsoft.Testing.Platform.Services.TestCoverageResult.Uid.get -> string!
 Microsoft.Testing.Platform.Services.TestCoverageResult.Version.get -> string!
@@ -141,6 +149,7 @@ Microsoft.Testing.Platform.Logging.FileLogger.IsFileHandleReleased.get -> bool
 Microsoft.Testing.Platform.Messages.SingleConsumerUnboundedChannel<T>.WaitToRead() -> bool
 static Microsoft.Testing.Platform.Helpers.RuntimeFeatureHelper.IsMultiThreaded.get -> bool
 const Microsoft.Testing.Platform.ServerMode.JsonRpcStrings.IsStateful = "isStateful" -> string!
+const Microsoft.Testing.Platform.ServerMode.JsonRpcStrings.SupportsTestCoverageMessages = "supportsTestCoverageMessages" -> string!
 Microsoft.Testing.Platform.ServerMode.ClientCapabilities.ClientCapabilities(bool DebuggerProvider, bool IsStateful) -> void
 Microsoft.Testing.Platform.ServerMode.ClientCapabilities.Deconstruct(out bool DebuggerProvider, out bool IsStateful) -> void
 Microsoft.Testing.Platform.ServerMode.ClientCapabilities.IsStateful.get -> bool

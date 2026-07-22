@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
 
@@ -123,6 +124,35 @@ public sealed class TestCoverageResultTests
     }
 
     [TestMethod]
+    public async Task ConsumeAsync_DuplicateKeys_LogsLastWriteWinsCorrections()
+    {
+        RecordingLoggerFactory loggerFactory = new();
+        TestCoverageResult result = new(loggerFactory);
+        SessionUid session = new("session");
+
+        TestCoverageMessage measurement = new(session, CoverageScope.Overall, CoverageMetric.Line, 8, 10, "producer");
+        TestCoverageThresholdMessage threshold = CreateThreshold(session, CoverageMetric.Line, actualPercentage: 80);
+        TestCoverageReportMessage report = new(session, "coverage.xml", CoverageReportFormat.Cobertura, "producer");
+
+        await ConsumeAsync(result, measurement);
+        await ConsumeAsync(result, measurement);
+        await ConsumeAsync(result, threshold);
+        await ConsumeAsync(result, threshold);
+        await ConsumeAsync(result, report);
+        await ConsumeAsync(result, report);
+
+        Assert.HasCount(3, loggerFactory.Messages);
+        foreach (string message in loggerFactory.Messages)
+        {
+            Assert.Contains("last-write-wins", message);
+        }
+
+        _ = Assert.ContainsSingle(loggerFactory.Messages.Where(message => message.Contains(nameof(TestCoverageMessage), StringComparison.Ordinal)));
+        _ = Assert.ContainsSingle(loggerFactory.Messages.Where(message => message.Contains(nameof(TestCoverageThresholdMessage), StringComparison.Ordinal)));
+        _ = Assert.ContainsSingle(loggerFactory.Messages.Where(message => message.Contains(nameof(TestCoverageReportMessage), StringComparison.Ordinal)));
+    }
+
+    [TestMethod]
     public async Task Reset_AccumulatedData_ClearsAllState()
     {
         TestCoverageResult result = new();
@@ -202,5 +232,23 @@ public sealed class TestCoverageResultTests
         public string Description => nameof(MockDataProducer);
 
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+    }
+
+    private sealed class RecordingLoggerFactory : ILoggerFactory, ILogger
+    {
+        public List<string> Messages { get; } = [];
+
+        public ILogger CreateLogger(string categoryName) => this;
+
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+            => Messages.Add(formatter(state, exception));
+
+        public Task LogAsync<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        {
+            Log(logLevel, state, exception, formatter);
+            return Task.CompletedTask;
+        }
     }
 }

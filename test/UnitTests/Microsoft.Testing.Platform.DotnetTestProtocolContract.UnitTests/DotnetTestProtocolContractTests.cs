@@ -84,6 +84,7 @@ public sealed class DotnetTestProtocolContractTests
             [HandshakeMessagePropertyNames.AttemptNumber] = nameof(HandshakeMessagePropertyNames.AttemptNumber),
             [HandshakeMessagePropertyNames.SupportedPostProcessorKinds] = nameof(HandshakeMessagePropertyNames.SupportedPostProcessorKinds),
             [HandshakeMessagePropertyNames.SupportedPostProcessorExtensionsLegacy] = nameof(HandshakeMessagePropertyNames.SupportedPostProcessorExtensionsLegacy),
+            [HandshakeMessagePropertyNames.SupportsTestCoverageMessages] = nameof(HandshakeMessagePropertyNames.SupportsTestCoverageMessages),
         };
 
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.PID), properties[0]);
@@ -102,6 +103,7 @@ public sealed class DotnetTestProtocolContractTests
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.AttemptNumber), properties[13]);
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.SupportedPostProcessorKinds), properties[14]);
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.SupportedPostProcessorExtensionsLegacy), properties[15]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.SupportsTestCoverageMessages), properties[16]);
     }
 
     [TestMethod]

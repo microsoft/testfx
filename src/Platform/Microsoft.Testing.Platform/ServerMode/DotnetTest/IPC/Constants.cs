@@ -95,6 +95,10 @@ internal static class HandshakeMessagePropertyNames
 
     // Semicolon-separated lowercase file extensions used as a compatibility fallback for untagged artifacts.
     internal const byte SupportedPostProcessorExtensionsLegacy = 15;
+
+    // Indicates that the test application understands the first-class test-coverage message contract.
+    // This is protocol support, not a claim that an enabled extension will produce coverage in this run.
+    internal const byte SupportsTestCoverageMessages = 16;
 }
 
 [Embedded]

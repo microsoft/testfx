@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
@@ -45,6 +46,7 @@ internal sealed class ServiceProvider : IServiceProvider, ICloneable
             string.Format(CultureInfo.InvariantCulture, PlatformResources.ServiceProviderServiceAlreadyRegistered, service.GetType()));
 
         _services.Add(service);
+        RegisterCoverageProducer(service);
     }
 
     public void AddServices(object[] services, bool throwIfSameInstanceExit = true)
@@ -69,6 +71,7 @@ internal sealed class ServiceProvider : IServiceProvider, ICloneable
         }
 
         _services.Add(service);
+        RegisterCoverageProducer(service);
         return true;
     }
 
@@ -122,6 +125,22 @@ internal sealed class ServiceProvider : IServiceProvider, ICloneable
 
     public object? GetServiceInternal(Type serviceType, bool skipInternalOnlyExtensions = false)
         => GetServicesInternal(serviceType, stopAtFirst: true, skipInternalOnlyExtensions).FirstOrDefault();
+
+    private void RegisterCoverageProducer(object service)
+    {
+        if (service is TestCoverageCapabilities capabilities)
+        {
+            foreach (IDataProducer producer in _services.OfType<IDataProducer>())
+            {
+                capabilities.RegisterProducer(producer);
+            }
+        }
+        else if (service is IDataProducer producer
+            && GetServiceInternal(typeof(TestCoverageCapabilities)) is TestCoverageCapabilities registeredCapabilities)
+        {
+            registeredCapabilities.RegisterProducer(producer);
+        }
+    }
 
     public object Clone(Func<object, bool> filter)
     {

@@ -176,7 +176,8 @@ internal sealed partial class TestHostBuilder
 
         // Register the single coverage accumulator before the output device is built so the terminal
         // output device can read from it (rather than buffering its own copy of the coverage messages).
-        serviceProvider.AddService(new TestCoverageResult());
+        serviceProvider.AddService(new TestCoverageCapabilities());
+        serviceProvider.AddService(new TestCoverageResult(loggerFactoryProxy));
 
         context.ProxyOutputDevice = await _outputDisplay.BuildAsync(serviceProvider, context.IsJsonRpcProtocol, isPipeProtocol).ConfigureAwait(false);
 

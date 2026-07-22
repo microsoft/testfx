@@ -1114,6 +1114,39 @@ public sealed class TerminalTestReporterTests
         Assert.DoesNotContain("Branch [producer-a]", console.Output);
     }
 
+    [TestMethod]
+    public void AppendCoverageSummary_NonInvariantCurrentCulture_UsesInvariantCoverageNumbers()
+    {
+        CultureInfo originalCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("fr-FR");
+            var console = new StringBuilderConsole();
+            TerminalTestReporter reporter = CreateCoverageReporter(console);
+            var summary = new CoverageScopeSummary(
+                new SessionUid("session"),
+                CoverageScope.Overall,
+                [new CoverageMetricResult(CoverageMetric.Line, coveredCount: 1, coverableCount: 2, producerId: "producer")]);
+            TestCoverageThresholdMessage threshold = CreateThreshold(
+                CoverageScope.Overall,
+                CoverageMetric.Line,
+                CoverageAggregation.None,
+                actual: 79.5,
+                required: 80);
+
+            reporter.AppendCoverageSummary([summary], [threshold]);
+
+            Assert.Contains("Total - Line: 50.0%", console.Output);
+            Assert.Contains("Total - Line: 79.5% < 80.0% threshold", console.Output);
+            Assert.DoesNotContain("50,0%", console.Output);
+            Assert.DoesNotContain("79,5%", console.Output);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+        }
+    }
+
     private static TestCoverageThresholdMessage CreateThreshold(
         CoverageScope scope,
         CoverageMetric metric,

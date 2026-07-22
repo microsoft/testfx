@@ -61,6 +61,10 @@ public class DotnetTestPipeBaselineTests : AcceptanceTestBase<DotnetTestPipeBase
             "1",
             result.ReceivedHandshake[DotnetTestPipeProtocol.HandshakeProperties.AttemptNumber],
             "A non-retried test host should report attempt 1.");
+        Assert.AreEqual(
+            bool.TrueString,
+            result.ReceivedHandshake[DotnetTestPipeProtocol.HandshakeProperties.SupportsTestCoverageMessages],
+            "The test host should advertise support for the first-class test-coverage message contract.");
     }
 
     [TestMethod]

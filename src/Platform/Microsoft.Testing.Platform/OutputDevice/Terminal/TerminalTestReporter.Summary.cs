@@ -441,13 +441,13 @@ internal sealed partial class TerminalTestReporter
                 {
                     terminal.Append(DoubleIndentation);
                     string coverageValue = metric.HasCoverableData
-                        ? $"{metric.Percentage.ToString("F1", CultureInfo.CurrentCulture)}%"
+                        ? $"{metric.Percentage.ToString("F1", CultureInfo.InvariantCulture)}%"
                         : TerminalResources.CoverageNoData;
                     string metricLabel = GetCoverageMetricLabel(metric.Metric, metric.CustomMetricName);
                     if (metricCounts[(metric.Metric, metric.CustomMetricName)] > 1)
                     {
                         metricLabel = string.Format(
-                            CultureInfo.CurrentCulture,
+                            CultureInfo.InvariantCulture,
                             TerminalResources.CoverageMetricWithProducer,
                             metricLabel,
                             MakeControlCharactersVisible(metric.ProducerId, true));
@@ -479,7 +479,7 @@ internal sealed partial class TerminalTestReporter
                 {
                     (string actual, string required) = FormatThresholdPercentages(threshold);
                     comparison = string.Format(
-                        CultureInfo.CurrentCulture,
+                        CultureInfo.InvariantCulture,
                         passed ? TerminalResources.CoverageThresholdPassed : TerminalResources.CoverageThresholdFailed,
                         actual,
                         required);
@@ -499,15 +499,15 @@ internal sealed partial class TerminalTestReporter
 
     private static (string Actual, string Required) FormatThresholdPercentages(TestCoverageThresholdMessage threshold)
     {
-        string actual = threshold.ActualPercentage.ToString("F1", CultureInfo.CurrentCulture);
-        string required = threshold.RequiredPercentage.ToString("F1", CultureInfo.CurrentCulture);
+        string actual = threshold.ActualPercentage.ToString("F1", CultureInfo.InvariantCulture);
+        string required = threshold.RequiredPercentage.ToString("F1", CultureInfo.InvariantCulture);
 
         // Rounding a failed near-boundary result to one decimal can make both operands look equal.
         // Increase precision only for that ambiguous case so the rendered comparison remains truthful.
         if (!threshold.Passed && string.Equals(actual, required, StringComparison.Ordinal))
         {
-            actual = threshold.ActualPercentage.ToString("G17", CultureInfo.CurrentCulture);
-            required = threshold.RequiredPercentage.ToString("G17", CultureInfo.CurrentCulture);
+            actual = threshold.ActualPercentage.ToString("G17", CultureInfo.InvariantCulture);
+            required = threshold.RequiredPercentage.ToString("G17", CultureInfo.InvariantCulture);
         }
 
         return (actual, required);
@@ -552,7 +552,7 @@ internal sealed partial class TerminalTestReporter
         string aggregation = GetCoverageAggregationLabel(threshold.Aggregation);
         string aggregatedOver = GetCoverageScopeLevelLabel(threshold.AggregatedOver.GetValueOrDefault());
         string aggregationLabel = string.Format(
-            CultureInfo.CurrentCulture,
+            CultureInfo.InvariantCulture,
             TerminalResources.CoverageAggregationOver,
             aggregation,
             aggregatedOver);

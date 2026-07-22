@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Services;
@@ -16,6 +17,8 @@ namespace Microsoft.Testing.Platform.Services;
 /// </summary>
 internal sealed class TestCoverageResult : ITestCoverageResult, IDataConsumer
 {
+    private readonly ILoggerFactory? _loggerFactory;
+
     // Full correlation key per RFC 019: (SessionUid, ProducerId, Scope, Metric, CustomMetricName when
     // Metric == Custom). Last write wins for a duplicate full key.
     private readonly Dictionary<MeasurementKey, TestCoverageMessage> _measurements = [];
@@ -28,6 +31,14 @@ internal sealed class TestCoverageResult : ITestCoverageResult, IDataConsumer
 
     private readonly Dictionary<ReportKey, CoverageReportReference> _reports = [];
     private readonly List<ReportKey> _reportOrder = [];
+    private ILogger? _logger;
+
+    public TestCoverageResult()
+    {
+    }
+
+    public TestCoverageResult(ILoggerFactory loggerFactory)
+        => _loggerFactory = loggerFactory;
 
     public string Uid => nameof(TestCoverageResult);
 
@@ -169,13 +180,16 @@ internal sealed class TestCoverageResult : ITestCoverageResult, IDataConsumer
                     coverage.Metric == CoverageMetric.Custom ? coverage.CustomMetricName : null);
 
                 // Last write wins on a duplicate full key, keeping the original position for stable order.
-                if (!_measurements.ContainsKey(measurementKey))
+                bool replacesMeasurement = _measurements.ContainsKey(measurementKey);
+                if (!replacesMeasurement)
                 {
                     _measurementOrder.Add(measurementKey);
                 }
 
                 _measurements[measurementKey] = coverage;
-                break;
+                return replacesMeasurement
+                    ? LogCorrectionAsync(nameof(TestCoverageMessage), coverage.SessionUid.Value, coverage.ProducerId)
+                    : Task.CompletedTask;
 
             case TestCoverageThresholdMessage threshold:
                 var thresholdKey = new ThresholdKey(
@@ -187,17 +201,21 @@ internal sealed class TestCoverageResult : ITestCoverageResult, IDataConsumer
                     threshold.Metric == CoverageMetric.Custom ? threshold.CustomMetricName : null,
                     threshold.Aggregation,
                     threshold.AggregatedOver);
-                if (!_thresholds.ContainsKey(thresholdKey))
+                bool replacesThreshold = _thresholds.ContainsKey(thresholdKey);
+                if (!replacesThreshold)
                 {
                     _thresholdOrder.Add(thresholdKey);
                 }
 
                 _thresholds[thresholdKey] = threshold;
-                break;
+                return replacesThreshold
+                    ? LogCorrectionAsync(nameof(TestCoverageThresholdMessage), threshold.SessionUid.Value, threshold.ProducerId)
+                    : Task.CompletedTask;
 
             case TestCoverageReportMessage report:
                 var reportKey = new ReportKey(report.SessionUid.Value, report.ProducerId, report.ReportPath);
-                if (!_reports.ContainsKey(reportKey))
+                bool replacesReport = _reports.ContainsKey(reportKey);
+                if (!replacesReport)
                 {
                     _reportOrder.Add(reportKey);
                 }
@@ -208,10 +226,24 @@ internal sealed class TestCoverageResult : ITestCoverageResult, IDataConsumer
                     report.Format,
                     report.ProducerId,
                     report.CustomFormatName);
-                break;
+                return replacesReport
+                    ? LogCorrectionAsync(nameof(TestCoverageReportMessage), report.SessionUid.Value, report.ProducerId)
+                    : Task.CompletedTask;
         }
 
         return Task.CompletedTask;
+    }
+
+    private Task LogCorrectionAsync(string messageType, string sessionUid, string producerId)
+    {
+        if (_loggerFactory is null)
+        {
+            return Task.CompletedTask;
+        }
+
+        _logger ??= _loggerFactory.CreateLogger<TestCoverageResult>();
+        return _logger.LogDebugAsync(
+            $"Replacing duplicate {messageType} from producer '{producerId}' for session '{sessionUid}' using last-write-wins correlation.");
     }
 
     private readonly record struct MeasurementKey(

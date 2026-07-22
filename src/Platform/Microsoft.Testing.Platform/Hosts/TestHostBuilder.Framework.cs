@@ -4,6 +4,7 @@
 using Microsoft.Testing.Internal.Framework;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Messages;
@@ -37,6 +38,10 @@ internal sealed partial class TestHostBuilder
         ITestFrameworkCapabilities testFrameworkCapabilities = serviceProvider.GetTestFrameworkCapabilities();
         ITestFramework testFramework = testFrameworkBuilderData.TestFrameworkManager.TestFrameworkFactory(testFrameworkCapabilities, serviceProvider);
         await testFramework.TryInitializeAsync().ConfigureAwait(false);
+        if (testFramework is IDataProducer dataProducer)
+        {
+            serviceProvider.GetRequiredService<TestCoverageCapabilities>().RegisterProducer(dataProducer);
+        }
 
         serviceProvider.AllowTestAdapterFrameworkRegistration = true;
         try

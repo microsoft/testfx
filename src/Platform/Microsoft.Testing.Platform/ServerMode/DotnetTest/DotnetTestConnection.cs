@@ -140,6 +140,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             { HandshakeMessagePropertyNames.ExecutionId,  _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID) ?? string.Empty },
             { HandshakeMessagePropertyNames.InstanceId, InstanceId },
             { HandshakeMessagePropertyNames.ExecutionMode, GetExecutionMode() },
+            { HandshakeMessagePropertyNames.SupportsTestCoverageMessages, bool.TrueString },
         };
 
         if (hostType is HandshakeMessageHostTypes.TestHost or HandshakeMessageHostTypes.ServerTestHost)

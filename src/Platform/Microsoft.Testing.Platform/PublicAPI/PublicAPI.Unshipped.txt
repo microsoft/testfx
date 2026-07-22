@@ -80,6 +80,9 @@ Microsoft.Testing.Platform.Extensions.Messages.TestCoverageReportMessage.Produce
 Microsoft.Testing.Platform.Extensions.Messages.TestCoverageReportMessage.ReportPath.get -> string!
 Microsoft.Testing.Platform.Extensions.Messages.TestCoverageReportMessage.TestCoverageReportMessage(Microsoft.Testing.Platform.TestHost.SessionUid sessionUid, string! reportPath, Microsoft.Testing.Platform.Extensions.Messages.CoverageReportFormat format, string! producerId, string? customFormatName = null) -> void
 Microsoft.Testing.Platform.Services.ITestCoverageResult
+Microsoft.Testing.Platform.Services.ITestCoverageCapabilities
+Microsoft.Testing.Platform.Services.ITestCoverageCapabilities.EnabledProducerUids.get -> System.Collections.Generic.IReadOnlyCollection<string!>!
+Microsoft.Testing.Platform.Services.ITestCoverageCapabilities.SupportsTestCoverageMessages.get -> bool
 Microsoft.Testing.Platform.Services.ITestCoverageResult.HasThresholdFailure.get -> bool
 Microsoft.Testing.Platform.Services.ITestCoverageResult.Overall.get -> Microsoft.Testing.Platform.Services.CoverageScopeSummary?
 Microsoft.Testing.Platform.Services.ITestCoverageResult.Reports.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Services.CoverageReportReference!>!
