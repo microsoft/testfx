@@ -17,6 +17,7 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IEnvironment _environment;
     private readonly IStopPoliciesService _policiesService;
+    private readonly ITestCoverageResult? _testCoverageResult;
     private readonly OpenTelemetryResultHandler? _openTelemetryResultHandler;
     private readonly bool _isDiscovery;
     private int _failedTestsCount;
@@ -30,11 +31,23 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         IEnvironment environment,
         IStopPoliciesService policiesService,
         IPlatformOpenTelemetryService? otelService)
+        : this(outputService, commandLineOptions, environment, policiesService, otelService, testCoverageResult: null)
+    {
+    }
+
+    public TestApplicationResult(
+        IOutputDevice outputService,
+        ICommandLineOptions commandLineOptions,
+        IEnvironment environment,
+        IStopPoliciesService policiesService,
+        IPlatformOpenTelemetryService? otelService,
+        ITestCoverageResult? testCoverageResult)
     {
         _outputService = outputService;
         _commandLineOptions = commandLineOptions;
         _environment = environment;
         _policiesService = policiesService;
+        _testCoverageResult = testCoverageResult;
         if (otelService is not null)
         {
             _openTelemetryResultHandler = new OpenTelemetryResultHandler(otelService);
@@ -143,6 +156,7 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         exitCode = exitCode == ExitCode.Success && _testAdapterTestSessionFailure ? ExitCode.TestAdapterTestSessionFailure : exitCode;
         exitCode = exitCode == ExitCode.Success && _failedTestsCount > 0 ? ExitCode.AtLeastOneTestFailed : exitCode;
         exitCode = exitCode == ExitCode.Success && _policiesService.IsAbortTriggered ? ExitCode.TestSessionAborted : exitCode;
+        exitCode = exitCode == ExitCode.Success && _testCoverageResult?.HasThresholdFailure == true ? ExitCode.CoverageThresholdFailed : exitCode;
 
         // An explicitly-provided `--minimum-expected-tests` governs the count-based verdict and
         // supersedes the ZeroTests (8) verdict below: a run of fewer than N tests yields
