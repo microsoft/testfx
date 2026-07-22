@@ -48,6 +48,7 @@ internal static class MetadataRegistryEmitter
                 sb.AppendLine("[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods | DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.NonPublicProperties)]");
                 sb.AppendLine("public Type Type { get; set; } = null!;");
                 sb.AppendLine("public Attribute[] Attributes { get; set; } = Array.Empty<Attribute>();");
+                sb.AppendLine("public bool AreAttributesComplete { get; set; }");
                 sb.AppendLine("public IReadOnlyList<TestMethodReflectionInfo> Methods { get; set; } = Array.Empty<TestMethodReflectionInfo>();");
                 sb.AppendLine("public IReadOnlyList<TestPropertyReflectionInfo> Properties { get; set; } = Array.Empty<TestPropertyReflectionInfo>();");
                 sb.AppendLine("public IReadOnlyList<TestConstructorReflectionInfo> Constructors { get; set; } = Array.Empty<TestConstructorReflectionInfo>();");
@@ -66,6 +67,7 @@ internal static class MetadataRegistryEmitter
                 sb.AppendLine("public Type[] ParameterTypes { get; set; } = Array.Empty<Type>();");
                 sb.AppendLine("public string[] ParameterNames { get; set; } = Array.Empty<string>();");
                 sb.AppendLine("public Attribute[] Attributes { get; set; } = Array.Empty<Attribute>();");
+                sb.AppendLine("public bool AreAttributesComplete { get; set; }");
                 sb.AppendLine("/// <summary>Materialized argument tuples from <c>[DataRow]</c> attributes (empty for non-data-driven tests). Each <c>object?[]</c> corresponds to one <c>[DataRow]</c> application.</summary>");
                 sb.AppendLine("public IReadOnlyList<object?[]> DataRows { get; set; } = Array.Empty<object?[]>();");
                 sb.AppendLine("/// <summary>Source-generated accessors for this method's <c>[DynamicData]</c> sources (empty when none were resolved), registered with <c>DynamicDataSourceResolver</c> so the data is read without runtime reflection.</summary>");
@@ -117,6 +119,8 @@ internal static class MetadataRegistryEmitter
         sb.AppendLine("using System;");
         sb.AppendLine("using System.Collections.Generic;");
         sb.AppendLine("using System.Threading.Tasks;");
+        sb.AppendLine();
+        sb.AppendLine("#pragma warning disable MSTESTEXP");
         sb.AppendLine();
 
         using (sb.Block($"namespace {GeneratedNamespace}"))
@@ -190,6 +194,7 @@ internal static class MetadataRegistryEmitter
             sb.AppendLine($"Type = typeof({fqn}),");
             EmitAttributesProperty(sb, "Attributes", model.Attributes);
             sb.AppendLine(",");
+            sb.AppendLine($"AreAttributesComplete = {Bool(model.AreAttributesComplete)},");
 
             EmitConstructors(sb, fqn, model);
             sb.AppendLine(",");
@@ -253,6 +258,7 @@ internal static class MetadataRegistryEmitter
                     sb.AppendLine(",");
                     EmitAttributesProperty(sb, "Attributes", method.Attributes);
                     sb.AppendLine(",");
+                    sb.AppendLine($"AreAttributesComplete = {Bool(method.AreAttributesComplete)},");
                     EmitDataRows(sb, method.DataRows);
                     sb.AppendLine(",");
                     EmitDynamicDataSources(sb, method.DynamicDataSources);
