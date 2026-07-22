@@ -523,4 +523,80 @@ public sealed class IgnoreShouldHaveJustificationAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, VerifyCS.Diagnostic().WithLocation(0).WithArguments("MyTestClass"), fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenDerivedTestMethodAttributeHasIgnoreWithoutMessage_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyTestMethodAttribute : TestMethodAttribute { }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [MyTestMethod]
+                [{|#0:Ignore|}]
+                public void TestMethod1()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyTestMethodAttribute : TestMethodAttribute { }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [MyTestMethod]
+                [Ignore("TODO: explain why this is ignored")]
+                public void TestMethod1()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestMethod1"), fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenDerivedTestClassAttributeHasIgnoreWithoutMessage_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyTestClassAttribute : TestClassAttribute { }
+
+            [MyTestClass]
+            [{|#0:Ignore|}]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyTestClassAttribute : TestClassAttribute { }
+
+            [MyTestClass]
+            [Ignore("TODO: explain why this is ignored")]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, VerifyCS.Diagnostic().WithLocation(0).WithArguments("MyTestClass"), fixedCode);
+    }
 }
