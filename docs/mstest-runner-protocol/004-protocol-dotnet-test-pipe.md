@@ -767,7 +767,7 @@ fragmented on the wire by the peer or an intermediary.
 
 `System.Net.WebSockets.ClientWebSocket` throws `PlatformNotSupportedException` on `browser-wasm`, so
 `browser-wasm` uses a dedicated adapter that talks to the browser's native `WebSocket` object through
-`[JSImport]`/`[JSExport]` JS interop (the same pattern `OutputDevice.BrowserOutputDevice` already uses for
+`[JSImport]` JS interop (the same pattern `OutputDevice.BrowserOutputDevice` already uses for
 `console.*`). The companion JS module is embedded as a string constant and imported via a `data:` URL, so
 no changes to the generated wasm bootstrap or published asset set are required.
 

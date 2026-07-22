@@ -59,7 +59,13 @@ internal static class CommandLineArgumentsRedactor
                 }
 
                 error = error.Replace(original, RedactedPlaceholder);
-                string optionNameWithoutPrefix = original.TrimStart('-');
+                string trimmedOriginal = original.Trim();
+                if (trimmedOriginal != original)
+                {
+                    error = error.Replace(trimmedOriginal, RedactedPlaceholder);
+                }
+
+                string optionNameWithoutPrefix = trimmedOriginal.TrimStart('-');
                 if (optionNameWithoutPrefix.Length > 0)
                 {
                     error = error.Replace(optionNameWithoutPrefix, RedactedPlaceholder);

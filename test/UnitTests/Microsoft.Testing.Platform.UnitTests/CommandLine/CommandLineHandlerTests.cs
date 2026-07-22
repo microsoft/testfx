@@ -70,6 +70,7 @@ public sealed class CommandLineHandlerTests
     [TestMethod]
     [DataRow("-super-secret")]
     [DataRow("'super'secret'")]
+    [DataRow(" 'super'secret' ")]
     public async Task ParseAndValidateAsync_InvalidTokenValue_DoesNotExposeTokenInError(string token)
     {
         string[] args = ["--dotnet-test-websocket-token", token];
