@@ -40,7 +40,9 @@ internal sealed partial class BrowserWebSocketDuplexStream : Stream
 
     // language=javascript
     private const string ModuleSource = """
-        export function open(url) {
+        const pendingOpens = new Map();
+
+        export function open(url, connectionId) {
             return new Promise((resolve, reject) => {
                 let ws;
                 try {
@@ -55,11 +57,16 @@ internal sealed partial class BrowserWebSocketDuplexStream : Stream
                 ws._waiter = null;
                 ws._closed = false;
                 ws._openRejected = false;
+                pendingOpens.set(connectionId, { ws, reject });
 
-                ws.onopen = () => resolve(ws);
+                ws.onopen = () => {
+                    pendingOpens.delete(connectionId);
+                    resolve(ws);
+                };
                 ws.onerror = () => {
                     if (!ws._openRejected) {
                         ws._openRejected = true;
+                        pendingOpens.delete(connectionId);
                         reject(new Error("The WebSocket connection failed or was refused by the peer."));
                     }
                 };
@@ -75,6 +82,10 @@ internal sealed partial class BrowserWebSocketDuplexStream : Stream
                 };
                 ws.onclose = () => {
                     ws._closed = true;
+                    if (pendingOpens.delete(connectionId) && !ws._openRejected) {
+                        ws._openRejected = true;
+                        reject(new Error("The WebSocket connection closed before opening."));
+                    }
                     if (ws._waiter) {
                         const waiter = ws._waiter;
                         ws._waiter = null;
@@ -82,6 +93,33 @@ internal sealed partial class BrowserWebSocketDuplexStream : Stream
                     }
                 };
             });
+        }
+
+        export function cancelOpen(connectionId) {
+            const pending = pendingOpens.get(connectionId);
+            if (!pending) {
+                return;
+            }
+
+            pendingOpens.delete(connectionId);
+            pending.ws._openRejected = true;
+            pending.reject(new Error("The WebSocket connection attempt was cancelled."));
+            pending.ws.onopen = () => {
+                try {
+                    pending.ws.close();
+                } catch {
+                    // Best-effort close if the host completes the upgrade after cancellation.
+                }
+            };
+            try {
+                pending.ws.close();
+            } catch {
+                // Best-effort: the host may reject close while the socket is still transitioning.
+            }
+        }
+
+        export function pendingOpenCount() {
+            return pendingOpens.size;
         }
 
         // Data is exchanged as base64 strings rather than raw byte arrays: the wasm JS-interop source
@@ -155,6 +193,7 @@ internal sealed partial class BrowserWebSocketDuplexStream : Stream
         """;
 
     private static Task? s_moduleReady;
+    private static int s_nextConnectionId;
 
     private readonly JSObject _socket;
     private byte[] _pendingRead = [];
@@ -176,7 +215,8 @@ internal sealed partial class BrowserWebSocketDuplexStream : Stream
         s_moduleReady ??= JSHost.ImportAsync(ModuleName, $"data:text/javascript;charset=utf-8;base64,{Convert.ToBase64String(Encoding.UTF8.GetBytes(ModuleSource))}", CancellationToken.None);
         await s_moduleReady.WaitAsync(cancellationToken).ConfigureAwait(false);
 
-        Task<JSObject> openTask = OpenAsync(uri.ToString());
+        int connectionId = Interlocked.Increment(ref s_nextConnectionId);
+        Task<JSObject> openTask = OpenAsync(uri.ToString(), connectionId);
         try
         {
             JSObject socket = await openTask.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -184,6 +224,15 @@ internal sealed partial class BrowserWebSocketDuplexStream : Stream
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
+            try
+            {
+                CancelOpen(connectionId);
+            }
+            catch (JSException)
+            {
+                // Best-effort: opening may have completed or failed while cancellation was being observed.
+            }
+
             _ = CloseSocketWhenOpenedAsync(openTask);
             throw;
         }
@@ -292,6 +341,7 @@ internal sealed partial class BrowserWebSocketDuplexStream : Stream
     /// </remarks>
     private async Task<string> WaitForReceiveAsync(CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         Task<string> receiveTask = ReceiveAsync(_socket);
         if (!cancellationToken.CanBeCanceled)
         {
@@ -368,7 +418,13 @@ internal sealed partial class BrowserWebSocketDuplexStream : Stream
     }
 
     [JSImport("open", ModuleName)]
-    private static partial Task<JSObject> OpenAsync(string url);
+    private static partial Task<JSObject> OpenAsync(string url, int connectionId);
+
+    [JSImport("cancelOpen", ModuleName)]
+    private static partial void CancelOpen(int connectionId);
+
+    [JSImport("pendingOpenCount", ModuleName)]
+    private static partial int GetPendingOpenCount();
 
     [JSImport("send", ModuleName)]
     private static partial void Send(JSObject socket, string base64Data);

@@ -369,7 +369,7 @@ const { runMain } = await dotnet.withApplicationArguments(
     '--dotnet-test-websocket-endpoint', `ws://127.0.0.1:${port}/dotnettest`,
     '--dotnet-test-websocket-token', token).create();
 const exitCode = await runMain();
-await new Promise(resolve => setTimeout(resolve, 100));
+await new Promise(resolve => setTimeout(resolve, 1000));
 server.close();
 
 console.log(`BROWSER_WEBSOCKET_AUTHENTICATED=${authenticated}`);
@@ -635,6 +635,8 @@ if (args[0] == "connect-cancel")
     catch (OperationCanceledException) when (cancellationTokenSource.IsCancellationRequested)
     {
         Console.WriteLine("BROWSER_WEBSOCKET_CONNECT_CANCELLED=true");
+        MethodInfo pendingOpenCount = streamType.GetMethod("GetPendingOpenCount", BindingFlags.NonPublic | BindingFlags.Static)!;
+        Console.WriteLine($"BROWSER_WEBSOCKET_PENDING_OPEN_COUNT={pendingOpenCount.Invoke(null, null)}");
         return 0;
     }
 }
@@ -644,6 +646,19 @@ await successfulConnectTask;
 using Stream stream = (Stream)successfulConnectTask.GetType().GetProperty("Result")!.GetValue(successfulConnectTask)!;
 
 byte[] buffer = new byte[32];
+using CancellationTokenSource preCancelledRead = new();
+preCancelledRead.Cancel();
+try
+{
+    await stream.ReadAsync(buffer, 0, buffer.Length, preCancelledRead.Token);
+    Console.Error.WriteLine("Browser WebSocket read unexpectedly ignored pre-cancellation.");
+    return 6;
+}
+catch (OperationCanceledException)
+{
+    Console.WriteLine("BROWSER_WEBSOCKET_PRE_CANCELLED_READ=true");
+}
+
 Task<int> zeroCountRead = stream.ReadAsync(buffer, 0, 0, CancellationToken.None);
 if (await Task.WhenAny(zeroCountRead, Task.Delay(100)) != zeroCountRead || await zeroCountRead != 0)
 {
@@ -907,6 +922,7 @@ return 0;
             exitCode,
             $"Expected a stalled browser WebSocket upgrade to be cancelled cleanly.{Environment.NewLine}{combined}");
         Assert.Contains("BROWSER_WEBSOCKET_CONNECT_CANCELLED=true", combined);
+        Assert.Contains("BROWSER_WEBSOCKET_PENDING_OPEN_COUNT=0", combined);
     }
 
     [TestMethod]
@@ -928,6 +944,7 @@ return 0;
             exitCode,
             $"Expected browser WebSocket read/write cancellation to complete cleanly.{Environment.NewLine}{combined}");
         Assert.Contains("BROWSER_WEBSOCKET_READ_CANCELLED=true", combined);
+        Assert.Contains("BROWSER_WEBSOCKET_PRE_CANCELLED_READ=true", combined);
         Assert.Contains("BROWSER_WEBSOCKET_MESSAGE_AFTER_CANCEL=after-cancel", combined);
         Assert.Contains("BROWSER_WEBSOCKET_WRITE_CANCELLED=true", combined);
         Assert.Contains("BROWSER_WEBSOCKET_ZERO_COUNT_READ=0", combined);
