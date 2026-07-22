@@ -29,6 +29,12 @@ internal static class AssertionValueRenderer
                 ? AssertionValueFormatterRegistry.Render(value, BuiltInRenderer)
                 : RenderBuiltIn(value);
 
+    /// <summary>
+    /// Determines whether a rendered string is exactly the representation produced by the built-in renderer.
+    /// </summary>
+    internal static bool IsBuiltInStringRendering(string value, string rendered)
+        => string.Equals(rendered, RenderString(value), StringComparison.Ordinal);
+
     private static string RenderBuiltIn(object? value)
         => value switch
         {

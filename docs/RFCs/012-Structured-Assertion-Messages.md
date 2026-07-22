@@ -321,11 +321,11 @@ Assert.ThrowsExactly<ArgumentException>(() => Validate(input))
 
 ```text
 Assertion failed. Expected strings to be equal.
-Strings have same length (327) and differ at 1 location(s). First difference at index 211.
+Strings have same length (277) and differ at 1 location(s). First difference at index 222.
 
 expected near: "...field11  1234.56  field12  1234.56  field13  1234.56  field14  1234.56..."
 actual near:   "...field11  1234.56  field12  1234.56  field13  1234.57  field14  1234.56..."
-difference:    ------------------------------------------------------^
+difference:    -------------------------------------------------------^
 
 expected: "field1  1234.56  field2  1234.56  field3  1234.56  field4  1234.56  field5  1234.56  field6  1234.56  field7  1234.56  field8  1234.56  field9  1234.56  field10  1234.56  field11  1234.56  field12  1234.56  field13  1234.56  field14  1234.56  field15  1234.56  field16  1234.56"
 actual:   "field1  1234.56  field2  1234.56  field3  1234.56  field4  1234.56  field5  1234.56  field6  1234.56  field7  1234.56  field8  1234.56  field9  1234.56  field10  1234.56  field11  1234.56  field12  1234.56  field13  1234.57  field14  1234.56  field15  1234.56  field16  1234.56"
@@ -1045,9 +1045,9 @@ difference: ---^
 For long strings, a bounded context block precedes the unchanged full evidence:
 
 ```text
-expected near: "...field12  1234.56  field13..."
-actual near:   "...field12  1234.57  field13..."
-difference:    -----------------------^
+expected near: "...shared-prefix-before-X-shared-suffix..."
+actual near:   "...shared-prefix-before-Y-shared-suffix..."
+difference:    -------------------------^
 
 expected: "<full expected value>"
 actual:   "<full actual value>"
@@ -1065,6 +1065,8 @@ Preview construction follows these rules:
 6. Culture-aware comparisons retain independent expected and actual cursors. The summary keeps its compatible single first-difference index, while the locator uses the paired positions so collation expansions do not point at the wrong glyph.
 
 The full `expected:` and `actual:` evidence remains rendered exactly as before and follows any bounded preview. The same full rendered strings continue to populate `AssertFailedException.ExpectedText`, `AssertFailedException.ActualText`, `exception.Data["assert.expected"]`, `exception.Data["assert.actual"]`, and the corresponding Microsoft.Testing.Platform protocol fields. Preview ellipses, carets, inline markers, and code-point diagnostics are message-only evidence and never enter those structured fields.
+
+When a custom string value formatter changes either rendered string from the built-in quoted and escaped representation, supplemental raw-derived locator diagnostics are suppressed. The message retains the custom `expected:` and `actual:` evidence and all structured expected/actual fields, but does not add a bounded preview, mismatch fragment, caret, or code-point diagnostics that could reveal the raw string. Formatters for unrelated value types do not affect string locator diagnostics.
 
 The evidence labels are static English labels, consistent with the existing RFC-defined `expected:`, `actual:`, `ignore case:`, and `culture:` labels. They are not sentence resources, so this change does not add `.resx` or XLF entries.
 

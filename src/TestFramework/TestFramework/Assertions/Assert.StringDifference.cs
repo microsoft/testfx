@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -38,6 +38,19 @@ public sealed partial class Assert
         CultureInfo culture,
         bool cultureExplicit)
     {
+        if (!AssertionValueRenderer.IsBuiltInStringRendering(expected, expectedRendered)
+            || !AssertionValueRenderer.IsBuiltInStringRendering(actual, actualRendered))
+        {
+            structured.WithEvidence(CreateStringComparisonEvidence(
+                "expected:",
+                expectedRendered,
+                actualRendered,
+                ignoreCase,
+                culture,
+                cultureExplicit));
+            return;
+        }
+
         StringDifferenceDiagnostic diagnostic = CreateStringDifferenceDiagnostic(
             expected,
             actual,
@@ -100,8 +113,7 @@ public sealed partial class Assert
             int expectedPrefixLength = GetShortPrefixLength(expectedWindow);
             int actualPrefixLength = GetShortPrefixLength(actualWindow);
             bool useCaret =
-                !AssertionValueFormatterRegistry.HasFormatters
-                && !expectedWindow.MismatchRequiresPlaceholder
+                !expectedWindow.MismatchRequiresPlaceholder
                 && !actualWindow.MismatchRequiresPlaceholder
                 && expectedWindow.IsRetainedPrefixSafe
                 && actualWindow.IsRetainedPrefixSafe
@@ -650,20 +662,8 @@ public sealed partial class Assert
         internal StringToken[] After { get; }
 
         internal bool IsRetainedPrefixSafe
-        {
-            get
-            {
-                foreach (StringToken token in Before)
-                {
-                    if (!token.IsSafePrefix)
-                    {
-                        return false;
-                    }
-                }
-
-                return Before.Length == 0 || Before[0].Start == 0;
-            }
-        }
+            => (Before.Length == 0 || Before[0].Start == 0)
+                && Before.All(token => token.IsSafePrefix);
 
         internal bool MismatchRequiresPlaceholder
             => Mismatch is StringToken token && token.RenderedLength > StringDifferencePreviewBudget / 2;
