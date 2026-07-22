@@ -9,7 +9,7 @@ namespace Microsoft.Testing.Platform.UnitTests;
 public sealed class BaseSerializerPrimitiveTests
 {
     [TestMethod]
-    public void WritePrimitives_WritesLittleEndianWireFormat()
+    public void WritePrimitives_WritesNativeEndianWireFormat()
     {
         using var stream = new MemoryStream();
 
@@ -21,32 +21,17 @@ public sealed class BaseSerializerPrimitiveTests
         SerializerProbe.WriteStringValue(stream, "A");
         SerializerProbe.WriteLongSize(stream);
 
-        byte[] expected =
-        [
-            0x04, 0x03, 0x02, 0x01,
-            0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01,
-            0x02, 0x01,
-            0x00,
-            0x01,
-            0x01, 0x00, 0x00, 0x00, 0x41,
-            0x08, 0x00, 0x00, 0x00,
-        ];
+        byte[] expected = [.. BitConverter.GetBytes(0x01020304), .. BitConverter.GetBytes(0x0102030405060708), .. BitConverter.GetBytes((ushort)0x0102), 0x00, 0x01, .. BitConverter.GetBytes(1), 0x41, .. BitConverter.GetBytes(sizeof(long))];
         Assert.AreSequenceEqual(
             expected,
             stream.ToArray());
     }
 
     [TestMethod]
-    public void ReadPrimitives_ReadsLittleEndianWireFormat()
+    public void ReadPrimitives_ReadsNativeEndianWireFormat()
     {
-        using var stream = new MemoryStream(
-            [
-                0x04, 0x03, 0x02, 0x01,
-                0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01,
-                0x02, 0x01,
-                0xFF,
-                0x01, 0x00, 0x00, 0x00, 0x41,
-            ]);
+        byte[] bytes = [.. BitConverter.GetBytes(0x01020304), .. BitConverter.GetBytes(0x0102030405060708), .. BitConverter.GetBytes((ushort)0x0102), 0xFF, .. BitConverter.GetBytes(1), 0x41];
+        using var stream = new MemoryStream(bytes);
 
         Assert.AreEqual(0x01020304, SerializerProbe.ReadIntValue(stream));
         Assert.AreEqual(0x0102030405060708, SerializerProbe.ReadLongValue(stream));

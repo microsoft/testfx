@@ -53,7 +53,15 @@ internal abstract class BaseSerializer
     {
 #if NETCOREAPP
         Span<byte> bytes = stackalloc byte[sizeof(int)];
-        System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(bytes, value);
+        if (BitConverter.IsLittleEndian)
+        {
+            System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(bytes, value);
+        }
+        else
+        {
+            System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(bytes, value);
+        }
+
         stream.Write(bytes);
 #else
         byte[] bytes = BitConverter.GetBytes(value);
@@ -66,7 +74,9 @@ internal abstract class BaseSerializer
 #if NETCOREAPP
         Span<byte> bytes = stackalloc byte[sizeof(int)];
         stream.ReadExactly(bytes);
-        return System.Buffers.Binary.BinaryPrimitives.ReadInt32LittleEndian(bytes);
+        return BitConverter.IsLittleEndian
+            ? System.Buffers.Binary.BinaryPrimitives.ReadInt32LittleEndian(bytes)
+            : System.Buffers.Binary.BinaryPrimitives.ReadInt32BigEndian(bytes);
 #else
         byte[] bytes = new byte[sizeof(int)];
         ReadExactly(stream, bytes, 0, bytes.Length);
@@ -78,7 +88,15 @@ internal abstract class BaseSerializer
     {
 #if NETCOREAPP
         Span<byte> bytes = stackalloc byte[sizeof(long)];
-        System.Buffers.Binary.BinaryPrimitives.WriteInt64LittleEndian(bytes, value);
+        if (BitConverter.IsLittleEndian)
+        {
+            System.Buffers.Binary.BinaryPrimitives.WriteInt64LittleEndian(bytes, value);
+        }
+        else
+        {
+            System.Buffers.Binary.BinaryPrimitives.WriteInt64BigEndian(bytes, value);
+        }
+
         stream.Write(bytes);
 #else
         byte[] bytes = BitConverter.GetBytes(value);
@@ -91,7 +109,9 @@ internal abstract class BaseSerializer
 #if NETCOREAPP
         Span<byte> bytes = stackalloc byte[sizeof(long)];
         stream.ReadExactly(bytes);
-        return System.Buffers.Binary.BinaryPrimitives.ReadInt64LittleEndian(bytes);
+        return BitConverter.IsLittleEndian
+            ? System.Buffers.Binary.BinaryPrimitives.ReadInt64LittleEndian(bytes)
+            : System.Buffers.Binary.BinaryPrimitives.ReadInt64BigEndian(bytes);
 #else
         byte[] bytes = new byte[sizeof(long)];
         ReadExactly(stream, bytes, 0, bytes.Length);
@@ -103,7 +123,15 @@ internal abstract class BaseSerializer
     {
 #if NETCOREAPP
         Span<byte> bytes = stackalloc byte[sizeof(ushort)];
-        System.Buffers.Binary.BinaryPrimitives.WriteUInt16LittleEndian(bytes, value);
+        if (BitConverter.IsLittleEndian)
+        {
+            System.Buffers.Binary.BinaryPrimitives.WriteUInt16LittleEndian(bytes, value);
+        }
+        else
+        {
+            System.Buffers.Binary.BinaryPrimitives.WriteUInt16BigEndian(bytes, value);
+        }
+
         stream.Write(bytes);
 #else
         byte[] bytes = BitConverter.GetBytes(value);
@@ -116,7 +144,9 @@ internal abstract class BaseSerializer
 #if NETCOREAPP
         Span<byte> bytes = stackalloc byte[sizeof(ushort)];
         stream.ReadExactly(bytes);
-        return System.Buffers.Binary.BinaryPrimitives.ReadUInt16LittleEndian(bytes);
+        return BitConverter.IsLittleEndian
+            ? System.Buffers.Binary.BinaryPrimitives.ReadUInt16LittleEndian(bytes)
+            : System.Buffers.Binary.BinaryPrimitives.ReadUInt16BigEndian(bytes);
 #else
         byte[] bytes = new byte[sizeof(ushort)];
         ReadExactly(stream, bytes, 0, bytes.Length);
@@ -125,29 +155,15 @@ internal abstract class BaseSerializer
     }
 
     protected static void WriteBool(Stream stream, bool value)
-    {
-#if NETCOREAPP
-        Span<byte> bytes = stackalloc byte[sizeof(bool)];
-        bytes.Fill(value ? (byte)1 : (byte)0);
-        stream.Write(bytes);
-#else
-        byte[] bytes = BitConverter.GetBytes(value);
-        stream.Write(bytes, 0, bytes.Length);
-#endif
-    }
+        => stream.WriteByte(value ? (byte)1 : (byte)0);
 
     protected static bool ReadBool(Stream stream)
-    {
-#if NETCOREAPP
-        Span<byte> bytes = stackalloc byte[sizeof(bool)];
-        stream.ReadExactly(bytes);
-        return bytes[0] != 0;
-#else
-        byte[] bytes = new byte[sizeof(bool)];
-        ReadExactly(stream, bytes, 0, bytes.Length);
-        return BitConverter.ToBoolean(bytes, 0);
-#endif
-    }
+        => stream.ReadByte() switch
+        {
+            -1 => throw new EndOfStreamException(),
+            0 => false,
+            _ => true,
+        };
 
     // Reads exactly 'count' bytes into 'buffer' starting at 'offset', looping until the request is
     // satisfied or the end of the stream is reached. This centralizes the previously duplicated
