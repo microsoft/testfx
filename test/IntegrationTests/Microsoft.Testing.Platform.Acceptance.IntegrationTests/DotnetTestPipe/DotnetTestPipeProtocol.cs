@@ -64,7 +64,6 @@ internal static class DotnetTestPipeProtocol
         public const byte AttemptNumber = 13;
         public const byte SupportedPostProcessorKinds = 14;
         public const byte SupportedPostProcessorExtensionsLegacy = 15;
-        public const byte Transport = 16;
     }
 
     public static class ServerControlKinds

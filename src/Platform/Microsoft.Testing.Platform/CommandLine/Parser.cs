@@ -101,7 +101,7 @@ internal static class CommandLineParser
             options.Add(new(currentOption, [.. currentOptionArguments]));
         }
 
-        return new CommandLineParseResult(toolName, options, errors, originalArgs, args);
+        return new CommandLineParseResult(toolName, options, errors, originalArgs);
 
         static void ParseOptionAndSeparators(string arg, out string? currentOption, out string? currentArg)
         {
