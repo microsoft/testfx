@@ -25,7 +25,7 @@ public class DotnetTestPipeBaselineTests : AcceptanceTestBase<DotnetTestPipeBase
 
     public TestContext TestContext { get; set; } = null!;
 
-    // The test host (testfx) now advertises protocol 1.0.0, 1.1.0, 1.2.0, 1.3.0, 1.4.0 and 1.5.0. The 1.1.0 bump
+    // The test host (testfx) now advertises protocol 1.0.0 through 1.5.0. The 1.1.0 bump
     // signalled that TerminalOutputDevice is no longer plugged in under the pipe protocol (microsoft/testfx#7161
     // and dotnet/sdk#51615); 1.2.0 added AzureDevOpsLogMessage forwarding; 1.3.0 added generic DisplayMessage
     // (warning/error) forwarding; 1.4.0 added the reverse server-control channel (server-initiated cancellation);

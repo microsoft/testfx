@@ -22,10 +22,160 @@
         <target state="translated">Test oturumu iptal ediliyor...</target>
         <note />
       </trans-unit>
+      <trans-unit id="CodeCoverageSummary">
+        <source>Code Coverage Summary:</source>
+        <target state="new">Code Coverage Summary:</target>
+        <note>Heading printed before the per-scope code coverage percentages in the run summary.</note>
+      </trans-unit>
       <trans-unit id="ConsoleIsAlreadyInBatchingMode">
         <source>Console is already in batching mode.</source>
         <target state="translated">Konsol zaten işlem grubu oluşturma modunda bulunuyor.</target>
         <note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</note>
+      </trans-unit>
+      <trans-unit id="CoverageAggregationAverage">
+        <source>Average</source>
+        <target state="new">Average</target>
+        <note>Label for the average-across-scopes statistic used in a coverage threshold comparison (e.g. 'Line (Average): ...').</note>
+      </trans-unit>
+      <trans-unit id="CoverageAggregationMaximum">
+        <source>Maximum</source>
+        <target state="new">Maximum</target>
+        <note>Label for the maximum-across-scopes statistic used in a coverage threshold comparison (e.g. 'Line (Maximum): ...').</note>
+      </trans-unit>
+      <trans-unit id="CoverageAggregationMinimum">
+        <source>Minimum</source>
+        <target state="new">Minimum</target>
+        <note>Label for the minimum-across-scopes statistic used in a coverage threshold comparison (e.g. 'Line (Minimum): ...').</note>
+      </trans-unit>
+      <trans-unit id="CoverageAggregationOver">
+        <source>{0} over {1}</source>
+        <target state="new">{0} over {1}</target>
+        <note>Coverage threshold aggregation description. {0} is the aggregation label and {1} is the population scope level.</note>
+      </trans-unit>
+      <trans-unit id="CoverageAggregationTotal">
+        <source>Total</source>
+        <target state="new">Total</target>
+        <note>Label for the total (aggregate) statistic used in a coverage threshold comparison (e.g. 'Line (Total): ...').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricBlock">
+        <source>Block</source>
+        <target state="new">Block</target>
+        <note>Label for block code coverage in the coverage summary (e.g. 'Total - Block: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricBranch">
+        <source>Branch</source>
+        <target state="new">Branch</target>
+        <note>Label for branch code coverage in the coverage summary (e.g. 'Total - Branch: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricClass">
+        <source>Class</source>
+        <target state="new">Class</target>
+        <note>Label for class code coverage in the coverage summary (e.g. 'Total - Class: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricComplexity">
+        <source>Complexity</source>
+        <target state="new">Complexity</target>
+        <note>Label for cyclomatic complexity in the coverage summary (e.g. 'Total - Complexity: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricCondition">
+        <source>Condition</source>
+        <target state="new">Condition</target>
+        <note>Label for condition code coverage in the coverage summary (e.g. 'Total - Condition: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricFunction">
+        <source>Function</source>
+        <target state="new">Function</target>
+        <note>Label for function code coverage in the coverage summary (e.g. 'Total - Function: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricInstruction">
+        <source>Instruction</source>
+        <target state="new">Instruction</target>
+        <note>Label for instruction code coverage in the coverage summary (e.g. 'Total - Instruction: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricLine">
+        <source>Line</source>
+        <target state="new">Line</target>
+        <note>Label for line code coverage in the coverage summary (e.g. 'Total - Line: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricMethod">
+        <source>Method</source>
+        <target state="new">Method</target>
+        <note>Label for method code coverage in the coverage summary (e.g. 'Total - Method: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricRegion">
+        <source>Region</source>
+        <target state="new">Region</target>
+        <note>Label for region code coverage in the coverage summary (e.g. 'Total - Region: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricStatement">
+        <source>Statement</source>
+        <target state="new">Statement</target>
+        <note>Label for statement code coverage in the coverage summary (e.g. 'Total - Statement: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricWithProducer">
+        <source>{0} [{1}]</source>
+        <target state="new">{0} [{1}]</target>
+        <note>Disambiguates duplicate coverage metric rows. {0} is the metric label and {1} is the coverage producer id.</note>
+      </trans-unit>
+      <trans-unit id="CoverageNoData">
+        <source>N/A</source>
+        <target state="new">N/A</target>
+        <note>Placeholder shown instead of a percentage when a coverage metric has no coverable data.</note>
+      </trans-unit>
+      <trans-unit id="CoverageScopeAssembly">
+        <source>Assembly</source>
+        <target state="new">Assembly</target>
+        <note>Label for the assembly scope level in coverage threshold aggregation descriptions.</note>
+      </trans-unit>
+      <trans-unit id="CoverageScopeFile">
+        <source>File</source>
+        <target state="new">File</target>
+        <note>Label for the file scope level in coverage threshold aggregation descriptions.</note>
+      </trans-unit>
+      <trans-unit id="CoverageScopeModule">
+        <source>Module</source>
+        <target state="new">Module</target>
+        <note>Label for the module scope level in coverage threshold aggregation descriptions.</note>
+      </trans-unit>
+      <trans-unit id="CoverageScopeNamespace">
+        <source>Namespace</source>
+        <target state="new">Namespace</target>
+        <note>Label for the namespace scope level in coverage threshold aggregation descriptions.</note>
+      </trans-unit>
+      <trans-unit id="CoverageScopeOverall">
+        <source>Total</source>
+        <target state="new">Total</target>
+        <note>Label for the whole-run (overall) scope in the coverage summary (e.g. 'Total - Line: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageScopeType">
+        <source>Type</source>
+        <target state="new">Type</target>
+        <note>Label for the type scope level in coverage threshold aggregation descriptions.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdFailed">
+        <source>{0}% &lt; {1}% threshold</source>
+        <target state="new">{0}% &lt; {1}% threshold</target>
+        <note>Coverage threshold comparison shown when the threshold is not met. {0} is the actual coverage percentage, {1} is the threshold percentage.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdNoDataFailed">
+        <source>No coverable data (failed by policy)</source>
+        <target state="new">No coverable data (failed by policy)</target>
+        <note>Coverage threshold result shown when a scope has no coverable data and the configured policy treats that as a failure.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdNoDataPassed">
+        <source>No coverable data (passed by policy)</source>
+        <target state="new">No coverable data (passed by policy)</target>
+        <note>Coverage threshold result shown when a scope has no coverable data and the configured policy treats that as a pass.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdPassed">
+        <source>{0}% &gt;= {1}% threshold</source>
+        <target state="new">{0}% &gt;= {1}% threshold</target>
+        <note>Coverage threshold comparison shown when the threshold is met. {0} is the actual coverage percentage, {1} is the threshold percentage.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdResults">
+        <source>Coverage Threshold Results:</source>
+        <target state="new">Coverage Threshold Results:</target>
+        <note>Heading printed before the coverage threshold pass/fail comparisons in the run summary.</note>
       </trans-unit>
       <trans-unit id="DiscoveredTestsInAssembly">
         <source>Discovered {0} tests in assembly</source>

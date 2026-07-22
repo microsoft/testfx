@@ -55,6 +55,7 @@ public sealed class GitHubActionsExitCodeTests
     {
         Assert.Contains("--minimum-expected-tests", GitHubActionsExitCode.GetReason(9));
         Assert.Contains("--maximum-failed-tests", GitHubActionsExitCode.GetReason(13));
+        Assert.Contains("coverage threshold", GitHubActionsExitCode.GetReason(14));
     }
 
     [TestMethod]

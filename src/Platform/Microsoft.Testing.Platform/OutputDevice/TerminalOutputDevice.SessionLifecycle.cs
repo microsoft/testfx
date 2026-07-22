@@ -1,9 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Resources;
+using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.OutputDevice;
 
@@ -174,6 +176,18 @@ internal sealed partial class TerminalOutputDevice
             else
             {
                 _terminalTestReporter.PrintOutOfProcessArtifacts();
+            }
+
+            // Coverage messages may be produced in either the test host (in-process) or the
+            // test host controller (out-of-process, e.g. via ITestHostProcessLifetimeHandler),
+            // so render the summary regardless of the process role. We read from the single shared
+            // ITestCoverageResult read model (the same instance the hosts consult for the exit code)
+            // rather than buffering our own copy, so the two can't get out of sync.
+            IReadOnlyList<CoverageScopeSummary> coverageScopes = _testCoverageResult.Scopes;
+            IReadOnlyList<TestCoverageThresholdMessage> coverageThresholds = _testCoverageResult.Thresholds;
+            if (coverageScopes.Count > 0 || coverageThresholds.Count > 0)
+            {
+                _terminalTestReporter.AppendCoverageSummary(coverageScopes, coverageThresholds);
             }
         }
     }
