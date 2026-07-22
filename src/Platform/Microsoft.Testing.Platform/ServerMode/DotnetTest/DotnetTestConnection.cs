@@ -182,7 +182,6 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             { HandshakeMessagePropertyNames.InstanceId, InstanceId },
             { HandshakeMessagePropertyNames.ExecutionMode, GetExecutionMode() },
             { HandshakeMessagePropertyNames.Transport, _transportKind == DotnetTestTransportKind.WebSocket ? HandshakeMessageTransportNames.WebSocket : HandshakeMessageTransportNames.NamedPipe },
-            { HandshakeMessagePropertyNames.SupportsTestCoverageMessages, bool.TrueString },
         };
 
         if (hostType is HandshakeMessageHostTypes.TestHost or HandshakeMessageHostTypes.ServerTestHost)

@@ -65,7 +65,6 @@ internal static class DotnetTestPipeProtocol
         public const byte SupportedPostProcessorKinds = 14;
         public const byte SupportedPostProcessorExtensionsLegacy = 15;
         public const byte Transport = 16;
-        public const byte SupportsTestCoverageMessages = 17;
     }
 
     public static class ServerControlKinds

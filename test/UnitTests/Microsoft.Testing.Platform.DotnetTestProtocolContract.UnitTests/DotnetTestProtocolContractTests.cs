@@ -85,7 +85,6 @@ public sealed class DotnetTestProtocolContractTests
             [HandshakeMessagePropertyNames.SupportedPostProcessorKinds] = nameof(HandshakeMessagePropertyNames.SupportedPostProcessorKinds),
             [HandshakeMessagePropertyNames.SupportedPostProcessorExtensionsLegacy] = nameof(HandshakeMessagePropertyNames.SupportedPostProcessorExtensionsLegacy),
             [HandshakeMessagePropertyNames.Transport] = nameof(HandshakeMessagePropertyNames.Transport),
-            [HandshakeMessagePropertyNames.SupportsTestCoverageMessages] = nameof(HandshakeMessagePropertyNames.SupportsTestCoverageMessages),
         };
 
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.PID), properties[0]);
@@ -105,7 +104,6 @@ public sealed class DotnetTestProtocolContractTests
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.SupportedPostProcessorKinds), properties[14]);
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.SupportedPostProcessorExtensionsLegacy), properties[15]);
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.Transport), properties[16]);
-        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.SupportsTestCoverageMessages), properties[17]);
     }
 
     [TestMethod]
@@ -172,6 +170,6 @@ public sealed class DotnetTestProtocolContractTests
         // Indirect through a collection so the MSTest analyzer does not flag the comparison of a compile-time
         // constant as "always true" (MSTEST0032).
         string[] versions = [ProtocolConstants.SupportedVersions];
-        Assert.AreEqual("1.0.0;1.1.0;1.2.0;1.3.0;1.4.0;1.5.0;1.6.0", versions[0]);
+        Assert.AreEqual("1.0.0;1.1.0;1.2.0;1.3.0;1.4.0;1.5.0", versions[0]);
     }
 }

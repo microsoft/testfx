@@ -11,7 +11,6 @@ static Microsoft.Testing.Platform.Hosts.CommonHost.SupportsArtifactPostProcessin
 Microsoft.Testing.Platform.Hosts.TestHostBuilder.ArtifactPostProcessing.get -> Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessingManager!
 const Microsoft.Testing.Platform.IPC.HandshakeMessagePropertyNames.SupportedPostProcessorExtensionsLegacy = 15 -> byte
 const Microsoft.Testing.Platform.IPC.HandshakeMessagePropertyNames.SupportedPostProcessorKinds = 14 -> byte
-const Microsoft.Testing.Platform.IPC.HandshakeMessagePropertyNames.SupportsTestCoverageMessages = 17 -> byte
 static Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingHandshakeProperties.Create(System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor!>! processors) -> System.Collections.Generic.IReadOnlyDictionary<byte, string!>?
 Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool
 Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool.ArtifactPostProcessingDispatcherTool(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor!>! processors, Microsoft.Testing.Platform.ServerMode.IPushOnlyProtocol? protocol, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDevice) -> void
@@ -249,7 +248,7 @@ const Microsoft.Testing.Platform.CommandLine.PlatformCommandLineProvider.DotNetT
 const Microsoft.Testing.Platform.IPC.HandshakeMessagePropertyNames.Transport = 16 -> byte
 const Microsoft.Testing.Platform.IPC.HandshakeMessageTransportNames.NamedPipe = "NamedPipe" -> string!
 const Microsoft.Testing.Platform.IPC.HandshakeMessageTransportNames.WebSocket = "WebSocket" -> string!
-const Microsoft.Testing.Platform.IPC.ProtocolConstants.SupportedVersions = "1.0.0;1.1.0;1.2.0;1.3.0;1.4.0;1.5.0;1.6.0" -> string!
+const Microsoft.Testing.Platform.IPC.ProtocolConstants.SupportedVersions = "1.0.0;1.1.0;1.2.0;1.3.0;1.4.0;1.5.0" -> string!
 Microsoft.Testing.Platform.DotnetTestTransportKind
 Microsoft.Testing.Platform.DotnetTestTransportKind.NamedPipe = 0 -> Microsoft.Testing.Platform.DotnetTestTransportKind
 Microsoft.Testing.Platform.DotnetTestTransportKind.WebSocket = 1 -> Microsoft.Testing.Platform.DotnetTestTransportKind

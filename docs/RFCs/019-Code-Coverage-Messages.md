@@ -828,8 +828,6 @@ Report:
   generator can query this during a session lifecycle callback and warn when no other producer is
   enabled.
 - Remote negotiation advertises protocol support separately from producer availability:
-  - the `dotnet test` pipe handshake includes the additive
-    `SupportsTestCoverageMessages` property;
   - the JSON-RPC initialize response includes
     `testing.supportsTestCoverageMessages`.
   Producer UIDs are intentionally not negotiated because framework and per-session extensions may

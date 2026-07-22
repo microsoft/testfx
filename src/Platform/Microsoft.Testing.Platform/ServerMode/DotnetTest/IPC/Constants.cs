@@ -104,10 +104,6 @@ internal static class HandshakeMessagePropertyNames
     // negotiated protocol version, but ProtocolConstants.SupportedVersions was still bumped to 1.5.0 alongside it
     // so the negotiated-version state advances in lockstep with the other additive capabilities in this file.
     internal const byte Transport = 16;
-
-    // Indicates that the test application understands the first-class test-coverage message contract.
-    // This is protocol support, not a claim that an enabled extension will produce coverage in this run.
-    internal const byte SupportsTestCoverageMessages = 17;
 }
 
 [Embedded]
@@ -214,7 +210,5 @@ internal static class ProtocolConstants
     // negotiated-version state advances in lockstep with the other additive capabilities in this file. Introduced
     // alongside the WebSocket transport (docs/mstest-runner-protocol/004-protocol-dotnet-test-pipe.md), which is
     // required to bootstrap the dotnettestcli protocol on runtimes without System.IO.Pipes support (browser-wasm).
-    // 1.6.0 adds the SupportsTestCoverageMessages handshake property. This advertises protocol support only;
-    // enabled coverage producers remain application-local and are not negotiated during the handshake.
-    internal const string SupportedVersions = "1.0.0;1.1.0;1.2.0;1.3.0;1.4.0;1.5.0;1.6.0";
+    internal const string SupportedVersions = "1.0.0;1.1.0;1.2.0;1.3.0;1.4.0;1.5.0";
 }
