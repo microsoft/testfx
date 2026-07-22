@@ -53,7 +53,7 @@ internal static class CommandLineArgumentsRedactor
 
             if (redacted == RedactedPlaceholder)
             {
-                if (original.Length == 0)
+                if (RoslynString.IsNullOrWhiteSpace(original))
                 {
                     continue;
                 }

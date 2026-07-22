@@ -8,7 +8,7 @@ namespace Microsoft.Testing.Platform.IPC;
 
 /// <summary>
 /// Adapts a browser-native <c>WebSocket</c> object (reached through JS interop, following the same
-/// <c>[JSImport]</c>/<c>[JSExport]</c> pattern as <see cref="OutputDevice.BrowserOutputDevice"/>) to a duplex
+/// <c>[JSImport]</c> pattern as <see cref="OutputDevice.BrowserOutputDevice"/>) to a duplex
 /// <see cref="Stream"/>, so the transport-neutral framing in <see cref="NamedPipeConnectionBase"/> can drive it
 /// unchanged - the same way <see cref="ClientWebSocketDuplexStream"/> adapts <see cref="System.Net.WebSockets.ClientWebSocket"/>
 /// on non-browser runtimes. <see cref="System.Net.WebSockets.ClientWebSocket"/> is not implemented on

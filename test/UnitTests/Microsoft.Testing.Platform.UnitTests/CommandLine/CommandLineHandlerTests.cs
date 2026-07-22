@@ -88,9 +88,11 @@ public sealed class CommandLineHandlerTests
     }
 
     [TestMethod]
-    public async Task ParseAndValidateAsync_EmptyToken_ReturnsValidationErrorWithoutThrowing()
+    [DataRow("")]
+    [DataRow(" ")]
+    public async Task ParseAndValidateAsync_EmptyToken_ReturnsValidationErrorWithoutThrowing(string token)
     {
-        string[] args = ["--dotnet-test-websocket-token", string.Empty];
+        string[] args = ["--dotnet-test-websocket-token", token];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
 
         ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
