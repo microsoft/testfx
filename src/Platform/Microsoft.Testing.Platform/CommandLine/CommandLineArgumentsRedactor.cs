@@ -100,7 +100,6 @@ internal static class CommandLineArgumentsRedactor
             if (sanitizingEndpointValue)
             {
                 redacted[i] = SanitizeWebSocketEndpoint(arg);
-                sanitizingEndpointValue = false;
                 continue;
             }
 

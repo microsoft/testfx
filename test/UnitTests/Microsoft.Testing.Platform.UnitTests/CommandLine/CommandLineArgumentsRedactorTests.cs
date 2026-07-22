@@ -127,6 +127,24 @@ public sealed class CommandLineArgumentsRedactorTests
     }
 
     [TestMethod]
+    public void Redact_WhenEndpointHasExtraValues_SanitizesEveryValueUntilNextOption()
+    {
+        string[] args =
+        [
+            "--dotnet-test-websocket-endpoint",
+            "ws://localhost/a?token=one",
+            "ws://localhost/b?token=two",
+            "--diagnostic",
+        ];
+
+        string result = CommandLineArgumentsRedactor.Redact(args);
+
+        Assert.DoesNotContain("one", result);
+        Assert.DoesNotContain("two", result);
+        Assert.AreEqual("--dotnet-test-websocket-endpoint ws://localhost/a ws://localhost/b --diagnostic", result);
+    }
+
+    [TestMethod]
     public void Redact_WhenExtraStrayValueFollowsTokenOption_RedactsUntilNextOption()
     {
         // Defensive: even if a caller mistakenly supplies more than one token for the (ArgumentArity.ExactlyOne)

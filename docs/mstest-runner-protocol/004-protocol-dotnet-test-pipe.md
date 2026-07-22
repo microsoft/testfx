@@ -529,7 +529,7 @@ agent.
 
 ## 10. Versioning & compatibility
 
-`SupportedVersions = "1.0.0;1.1.0;1.2.0;1.3.0;1.4.0"`.
+`SupportedVersions = "1.0.0;1.1.0;1.2.0;1.3.0;1.4.0;1.5.0"`.
 
 | Version | What it adds / signals |
 | --- | --- |
@@ -538,6 +538,7 @@ agent.
 | 1.2.0 | Adds `AzureDevOpsLogMessage` (ID 11). Host forwards ADO logging commands (only on an ADO agent). |
 | 1.3.0 | Adds `DisplayMessage` (ID 12). Host forwards warning/error host diagnostics (always). |
 | 1.4.0 | Adds the reverse **server-control** channel (`WaitForServerControlRequest` ID 13, `ServerControlMessage` ID 14). Version is bumped so negotiated state advances in lockstep, but the feature itself is gated on the `ServerControlPipeName` handshake property, not on the version. **testfx-side / pending SDK support:** the current `dotnet/sdk` advertises only `1.0.0`–`1.3.0` and does not vendor serializers 13/14, so it cannot advertise `ServerControlPipeName` or drive the channel yet. In practice the negotiated version tops out at 1.3.0 until the coordinated SDK change lands (see §12). |
+| 1.5.0 | Adds the `Transport` handshake property (ID 16), reported as `NamedPipe` or `WebSocket`. Framing and serializer formats are unchanged; older peers ignore the additive field. |
 
 Compatibility rules / assumptions:
 
