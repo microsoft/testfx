@@ -43,6 +43,23 @@ public sealed class CoverageThresholdExitCodeTests : AcceptanceTestBase<Coverage
         testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
     }
 
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task FailedThreshold_WithIgnoredFailingTest_ReturnsSuccess(string currentTfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            command: $"--ignore-exit-code {(int)ExitCode.AtLeastOneTestFailed}",
+            environmentVariables: new Dictionary<string, string?>
+            {
+                ["COVERAGE_THRESHOLD_STATUS"] = "Failed",
+                ["FAIL_TEST"] = "1",
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+    }
+
     private async Task<TestHostResult> ExecuteAsync(string currentTfm, string thresholdStatus, bool failTest)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);

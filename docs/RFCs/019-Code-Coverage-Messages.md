@@ -620,7 +620,7 @@ public sealed class CoverageScopeSummary
     {
         SessionUid = sessionUid;
         Scope = scope;
-        Metrics = metrics ?? throw new ArgumentNullException(nameof(metrics));
+        Metrics = Array.AsReadOnly((metrics ?? throw new ArgumentNullException(nameof(metrics))).ToArray());
     }
 
     public CoverageScope Scope { get; }

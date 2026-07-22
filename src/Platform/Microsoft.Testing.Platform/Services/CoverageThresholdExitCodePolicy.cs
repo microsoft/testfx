@@ -14,9 +14,9 @@ internal static class CoverageThresholdExitCodePolicy
     /// otherwise returns <paramref name="exitCode"/> unchanged.
     /// </summary>
     /// <remarks>
-    /// Shared by <c>ConsoleTestHost</c> (in-process) and <c>TestHostControllersTestHost</c> (out-of-process)
-    /// so the two exit-code paths cannot drift apart. Both call this only after their own exit code has been
-    /// finalized and all coverage messages have been consumed.
+    /// Used by <c>TestHostControllersTestHost</c> for controller-only threshold messages that arrive after the
+    /// child test host has finalized its exit code. In-process thresholds are part of
+    /// <see cref="ITestApplicationProcessExitCode"/> directly.
     /// </remarks>
     public static int Apply(int exitCode, IServiceProvider serviceProvider)
     {
