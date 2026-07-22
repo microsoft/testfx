@@ -628,7 +628,7 @@ The default is TestResults in the directory that contains the test application.<
     <comment>{Locked="--dotnet-test-transport websocket"}</comment>
   </data>
   <data name="PlatformCommandLineDotnetTestWebSocketEndpointInvalid" xml:space="preserve">
-    <value>'--dotnet-test-websocket-endpoint' requires an absolute 'ws' or 'wss' URI without user information or a fragment.</value>
+    <value>'--dotnet-test-websocket-endpoint' requires an absolute 'ws' or 'wss' URI with a host and without user information or a fragment.</value>
     <comment>{Locked="--dotnet-test-websocket-endpoint"}{Locked="ws"}{Locked="wss"}</comment>
   </data>
   <data name="PlatformCommandLineDotnetTestWebSocketTokenOptionDescription" xml:space="preserve">

@@ -471,6 +471,7 @@ public sealed class PlatformCommandLineProviderTests
     [DataRow("")]
     [DataRow("not-a-uri")]
     [DataRow("https://127.0.0.1:5000/dotnettest")]
+    [DataRow("ws:/dotnettest")]
     [DataRow("ws://127.0.0.1:5000/dotnettest#fragment")]
     [DataRow("ws://user:password@127.0.0.1:5000/dotnettest")]
     public async Task IsInvalid_When_WebSocketEndpoint_IsNotAbsoluteWebSocketUriWithoutFragmentOrUserInfo(string endpoint)

@@ -151,6 +151,7 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
             && arguments is [string endpoint]
             && (!Uri.TryCreate(endpoint, UriKind.Absolute, out Uri? endpointUri)
                 || endpointUri.Scheme is not ("ws" or "wss")
+                || RoslynString.IsNullOrEmpty(endpointUri.Host)
                 || !RoslynString.IsNullOrEmpty(endpointUri.Fragment)
                 || !RoslynString.IsNullOrEmpty(endpointUri.UserInfo)))
         {
