@@ -33,10 +33,20 @@ public sealed class CommandLineParseResult : IEquatable<CommandLineParseResult>
     }
 
     internal CommandLineParseResult(string? toolName, IReadOnlyList<CommandLineParseOption> options, IReadOnlyList<string> errors, IReadOnlyList<string> arguments)
+        : this(toolName, options, errors, arguments, arguments)
+    {
+    }
+
+    internal CommandLineParseResult(
+        string? toolName,
+        IReadOnlyList<CommandLineParseOption> options,
+        IReadOnlyList<string> errors,
+        IReadOnlyList<string> arguments,
+        IReadOnlyList<string> expandedArguments)
     {
         ToolName = toolName;
         Options = options;
-        _arguments = arguments;
+        _arguments = expandedArguments;
         Errors = errors.Select(RedactError).ToArray();
         CommandLine = CommandLineArgumentsRedactor.Redact([.. arguments]);
     }
