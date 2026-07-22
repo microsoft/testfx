@@ -29,7 +29,7 @@
       </trans-unit>
       <trans-unit id="PackagedAppNoApplicationToActivate">
         <source>Cannot activate the packaged Windows app '{0}' (found '{1}'): its manifest declares no &lt;Application&gt;, so there is no Application User Model ID to activate.</source>
-        <target state="new">Cannot activate the packaged Windows app '{0}' (found '{1}'): its manifest declares no &lt;Application&gt;, so there is no Application User Model ID to activate.</target>
+        <target state="translated">Die verpackte Windows-App "{0}" (gefunden "{1}") kann nicht aktiviert werden: Ihr Manifest deklariert keine &lt;Anwendung&gt;, sodass keine Anwendungsbenutzermodell-ID zum Aktivieren vorhanden ist.</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppRegistrationFailed">
