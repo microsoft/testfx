@@ -65,6 +65,8 @@ Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalProgressMessageState.Te
 Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalProgressMessageState.Version.get -> long
 Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporter.UpdateProgressMessage(string! executionId, string! instanceId, string! producerUid, string! key, string? message) -> void
 Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporter.ClearProgressMessages() -> void
+virtual Microsoft.Testing.Platform.OutputDevice.SimplifiedConsoleOutputDeviceBase.DisplayActiveTestProgress.get -> bool
+static Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.IsProgressEnabled(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> bool
 const Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressStateAwareTerminal.MaximumVisibleProgressMessages = 5 -> int
 Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressStateAwareTerminal.UpdateProgressMessage(string! executionId, string! instanceId, string! producerUid, string! key, string? message) -> void
 Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressStateAwareTerminal.ClearProgressMessages() -> void
