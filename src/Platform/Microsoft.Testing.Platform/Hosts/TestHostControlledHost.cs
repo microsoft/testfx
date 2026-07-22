@@ -4,12 +4,17 @@
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
+using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
 [UnsupportedOSPlatform("browser")]
 [StackTraceHidden]
-internal sealed class TestHostControlledHost(NamedPipeClient testHostControllerPipeClient, IHost innerHost, CancellationToken cancellationToken) : IHost, IDisposable
+internal sealed class TestHostControlledHost(
+    NamedPipeClient testHostControllerPipeClient,
+    IHost innerHost,
+    CancellationToken cancellationToken,
+    TestApplicationResult? testApplicationResult = null) : IHost, IDisposable
 #if NETCOREAPP
 #pragma warning disable SA1001 // Commas should be spaced correctly
     , IAsyncDisposable
@@ -19,13 +24,25 @@ internal sealed class TestHostControlledHost(NamedPipeClient testHostControllerP
     private readonly NamedPipeClient _namedPipeClient = testHostControllerPipeClient;
     private readonly IHost _innerHost = innerHost;
     private readonly CancellationToken _cancellationToken = cancellationToken;
+    private readonly TestApplicationResult? _testApplicationResult = testApplicationResult;
+
+    public TestHostControlledHost(
+        NamedPipeClient testHostControllerPipeClient,
+        IHost innerHost,
+        CancellationToken cancellationToken)
+        : this(testHostControllerPipeClient, innerHost, cancellationToken, testApplicationResult: null)
+    {
+    }
 
     public async Task<int> RunAsync()
     {
         int exitCode = await _innerHost.RunAsync().ConfigureAwait(false);
         try
         {
-            await _namedPipeClient.RequestReplyAsync<TestHostCompletedRequest, VoidResponse>(new TestHostCompletedRequest(exitCode), _cancellationToken).ConfigureAwait(false);
+            int unfilteredExitCode = _testApplicationResult?.GetProcessExitCodeWithoutIgnore() ?? exitCode;
+            await _namedPipeClient.RequestReplyAsync<TestHostCompletedRequest, VoidResponse>(
+                new TestHostCompletedRequest(exitCode, unfilteredExitCode),
+                _cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException oc) when (oc.CancellationToken == _cancellationToken)
         {

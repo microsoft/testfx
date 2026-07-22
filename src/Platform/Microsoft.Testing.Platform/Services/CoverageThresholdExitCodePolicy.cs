@@ -10,8 +10,8 @@ internal static class CoverageThresholdExitCodePolicy
     /// <summary>
     /// Applies the coverage-threshold verdict to an already-computed exit code. When the run is otherwise
     /// successful but a coverage threshold failed, returns <see cref="ExitCode.CoverageThresholdFailed"/>
-    /// routed through the shared ignore-exit-code policy (so <c>--ignore-exit-code 14</c> can suppress it);
-    /// otherwise returns <paramref name="exitCode"/> unchanged.
+    /// otherwise returns <paramref name="exitCode"/> unchanged. The caller applies the shared ignore-exit-code
+    /// policy after all verdicts have been combined.
     /// </summary>
     /// <remarks>
     /// Used by <c>TestHostControllersTestHost</c> for controller-only threshold messages that arrive after the
@@ -27,7 +27,7 @@ internal static class CoverageThresholdExitCodePolicy
 
         ITestCoverageResult? coverageResult = serviceProvider.GetService<ITestCoverageResult>();
         return coverageResult?.HasThresholdFailure == true
-            ? ExitCodeIgnorePolicy.Apply((int)ExitCode.CoverageThresholdFailed, serviceProvider.GetCommandLineOptions(), serviceProvider.GetEnvironment())
+            ? (int)ExitCode.CoverageThresholdFailed
             : exitCode;
     }
 }

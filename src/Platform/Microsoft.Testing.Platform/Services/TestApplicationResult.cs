@@ -150,6 +150,9 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
     }
 
     public int GetProcessExitCode()
+        => ExitCodeIgnorePolicy.Apply(GetProcessExitCodeWithoutIgnore(), _commandLineOptions, _environment);
+
+    internal int GetProcessExitCodeWithoutIgnore()
     {
         ExitCode exitCode = ExitCode.Success;
         exitCode = exitCode == ExitCode.Success && _policiesService.IsMaxFailedTestsTriggered ? ExitCode.TestExecutionStoppedForMaxFailedTests : exitCode;
@@ -188,9 +191,7 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         // precedence when no tests ran or the explicit minimum was not met.
         exitCode = exitCode == ExitCode.Success && _testCoverageResult?.HasThresholdFailure == true ? ExitCode.CoverageThresholdFailed : exitCode;
 
-        // Route the verdict through the shared ignore-exit-code policy so `--ignore-exit-code` /
-        // TESTINGPLATFORM_EXITCODE_IGNORE are honored consistently with every other exit-code verdict.
-        return ExitCodeIgnorePolicy.Apply((int)exitCode, _commandLineOptions, _environment);
+        return (int)exitCode;
     }
 
     public async Task SetTestAdapterTestSessionFailureAsync(string errorMessage, CancellationToken cancellationToken)

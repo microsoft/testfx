@@ -41,6 +41,7 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
 
     // This is the exit code received from the test host process via IPC. It might not be the same as the actual exit code.
     private int? _testHostExitCodeReceived;
+    private int? _testHostUnfilteredExitCodeReceived;
 
     private int? _testHostPID;
 
@@ -395,7 +396,7 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
             }
 
             // If we have a process in the middle between the test host controller and the test host process we need to keep it into account.
-            exitCode = testHostProcess.ExitCode;
+            exitCode = _testHostUnfilteredExitCodeReceived ?? testHostProcess.ExitCode;
             if (exitCode == (int)ExitCode.Success && cancellationToken.IsCancellationRequested)
             {
                 // In case of cancellation, only alter exit code if it was success.
@@ -419,11 +420,10 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
                 exitCode = (int)ExitCode.TestHostProcessExitedNonGracefully;
             }
 
-            // Check coverage threshold failures after test execution completes. The child test host has
-            // already applied its own ignore-exit-code policy to its exit code; the shared helper applies the
-            // parent-side coverage verdict and routes it through the same policy so `--ignore-exit-code 14`
-            // can ignore a controller-published threshold failure consistently.
+            // Apply controller-only coverage thresholds to the child's pre-ignore verdict, then apply the
+            // ignore policy exactly once so ignoring a higher-priority child verdict cannot expose coverage 14.
             exitCode = CoverageThresholdExitCodePolicy.Apply(exitCode, ServiceProvider);
+            exitCode = ExitCodeIgnorePolicy.Apply(exitCode, ServiceProvider.GetCommandLineOptions(), ServiceProvider.GetEnvironment());
 
             await _logger.LogInformationAsync($"TestHostControllersTestHost ended with exit code '{exitCode}' (real test host exit code '{testHostProcess.ExitCode}') in '{consoleRunStarted.Elapsed}'").ConfigureAwait(false);
             await DisposeHelper.DisposeAsync(testHostControllerIpc).ConfigureAwait(false);
@@ -505,6 +505,7 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
                 case TestHostCompletedRequest testHostCompletedRequest:
                     _testHostCompletedReceived = true;
                     _testHostExitCodeReceived = testHostCompletedRequest.ExitCode;
+                    _testHostUnfilteredExitCodeReceived = testHostCompletedRequest.UnfilteredExitCode;
                     return Task.FromResult<IResponse>(VoidResponse.CachedInstance);
 
                 case TestHostProcessPIDRequest testHostProcessPIDRequest:

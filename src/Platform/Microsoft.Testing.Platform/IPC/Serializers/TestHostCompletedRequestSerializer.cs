@@ -12,8 +12,11 @@ internal sealed class TestHostCompletedRequestSerializer : NamedPipeSerializer<T
     public override int Id => TestHostCompletedRequestFieldsId.MessagesSerializerId;
 
     protected override TestHostCompletedRequest DeserializeCore(Stream stream)
-        => new(ReadInt(stream));
+        => new(ReadInt(stream), ReadInt(stream));
 
     protected override void SerializeCore(TestHostCompletedRequest objectToSerialize, Stream stream)
-        => WriteInt(stream, objectToSerialize.ExitCode);
+    {
+        WriteInt(stream, objectToSerialize.ExitCode);
+        WriteInt(stream, objectToSerialize.UnfilteredExitCode);
+    }
 }

@@ -152,6 +152,10 @@ Microsoft.Testing.Platform.Messages.SingleConsumerUnboundedChannel<T>.WaitToRead
 static Microsoft.Testing.Platform.Helpers.RuntimeFeatureHelper.IsMultiThreaded.get -> bool
 const Microsoft.Testing.Platform.ServerMode.JsonRpcStrings.IsStateful = "isStateful" -> string!
 const Microsoft.Testing.Platform.ServerMode.JsonRpcStrings.SupportsTestCoverageMessages = "supportsTestCoverageMessages" -> string!
+Microsoft.Testing.Platform.Hosts.TestHostControlledHost.TestHostControlledHost(Microsoft.Testing.Platform.IPC.NamedPipeClient! testHostControllerPipeClient, Microsoft.Testing.Platform.Hosts.IHost! innerHost, System.Threading.CancellationToken cancellationToken, Microsoft.Testing.Platform.Services.TestApplicationResult? testApplicationResult = null) -> void
+Microsoft.Testing.Platform.IPC.Models.TestHostCompletedRequest.TestHostCompletedRequest(int returnCode, int unfilteredReturnCode) -> void
+Microsoft.Testing.Platform.IPC.Models.TestHostCompletedRequest.UnfilteredExitCode.get -> int
+Microsoft.Testing.Platform.Services.TestApplicationResult.GetProcessExitCodeWithoutIgnore() -> int
 Microsoft.Testing.Platform.ServerMode.ClientCapabilities.ClientCapabilities(bool DebuggerProvider, bool IsStateful) -> void
 Microsoft.Testing.Platform.ServerMode.ClientCapabilities.Deconstruct(out bool DebuggerProvider, out bool IsStateful) -> void
 Microsoft.Testing.Platform.ServerMode.ClientCapabilities.IsStateful.get -> bool

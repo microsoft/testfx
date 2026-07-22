@@ -71,6 +71,23 @@ public sealed class CoverageThresholdControllerExitCodeTests : AcceptanceTestBas
         testHostResult.AssertOutputContains("Total - Line (Minimum over Module): 70.0% < 80.0% threshold");
     }
 
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task FailedThreshold_InController_WithIgnoredFailingTest_ReturnsSuccess(string currentTfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            command: $"--ignore-exit-code {(int)ExitCode.AtLeastOneTestFailed}",
+            environmentVariables: new Dictionary<string, string?>
+            {
+                ["COVERAGE_THRESHOLD_STATUS"] = "Failed",
+                ["FAIL_TEST"] = "1",
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string Sources = """
@@ -188,11 +205,14 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
+        IProperty state = Environment.GetEnvironmentVariable("FAIL_TEST") == "1"
+            ? new FailedTestNodeStateProperty()
+            : new PassedTestNodeStateProperty();
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
         {
             Uid = "Test1",
             DisplayName = "Test1",
-            Properties = new PropertyBag(new PassedTestNodeStateProperty()),
+            Properties = new PropertyBag(state),
         }));
 
         context.Complete();

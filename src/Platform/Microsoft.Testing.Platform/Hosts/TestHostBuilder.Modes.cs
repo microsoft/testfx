@@ -243,7 +243,11 @@ internal sealed partial class TestHostBuilder
 
 #pragma warning disable CA1416 // Preserve existing browser behavior while splitting the method.
         IHost actualTestHost = testControllerConnection is not null
-            ? new TestHostControlledHost(testControllerConnection, serverTestHost, context.TestApplicationCancellationTokenSource.CancellationToken)
+            ? new TestHostControlledHost(
+                testControllerConnection,
+                serverTestHost,
+                context.TestApplicationCancellationTokenSource.CancellationToken,
+                context.ServiceProvider.GetRequiredService<TestApplicationResult>())
             : serverTestHost;
 #pragma warning restore CA1416 // Preserve existing browser behavior while splitting the method.
 
@@ -299,7 +303,11 @@ internal sealed partial class TestHostBuilder
 
 #pragma warning disable CA1416 // Preserve existing browser behavior while splitting the method.
         IHost actualTestHost = testControllerConnection is not null
-            ? new TestHostControlledHost(testControllerConnection, consoleHost, context.TestApplicationCancellationTokenSource.CancellationToken)
+            ? new TestHostControlledHost(
+                testControllerConnection,
+                consoleHost,
+                context.TestApplicationCancellationTokenSource.CancellationToken,
+                context.ServiceProvider.GetRequiredService<TestApplicationResult>())
             : consoleHost;
 #pragma warning restore CA1416 // Preserve existing browser behavior while splitting the method.
 
