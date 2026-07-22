@@ -12,7 +12,19 @@ internal sealed class TestHostCompletedRequestSerializer : NamedPipeSerializer<T
     public override int Id => TestHostCompletedRequestFieldsId.MessagesSerializerId;
 
     protected override TestHostCompletedRequest DeserializeCore(Stream stream)
-        => new(ReadInt(stream), ReadInt(stream));
+    {
+        int exitCode = ReadInt(stream);
+        try
+        {
+            return new TestHostCompletedRequest(exitCode, ReadInt(stream));
+        }
+        catch (EndOfStreamException)
+        {
+            // Serializer ID 1 originally carried only ExitCode. Treat a missing second field as a
+            // legacy payload whose filtered and unfiltered verdicts are identical.
+            return new TestHostCompletedRequest(exitCode);
+        }
+    }
 
     protected override void SerializeCore(TestHostCompletedRequest objectToSerialize, Stream stream)
     {
