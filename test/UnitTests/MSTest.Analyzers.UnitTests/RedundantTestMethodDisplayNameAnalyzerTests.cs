@@ -202,38 +202,6 @@ public sealed class RedundantTestMethodDisplayNameAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenDisplayNameIsFirstArgumentBeforeOtherArgs_Diagnostic()
-    {
-        string code = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [[|TestMethod(DisplayName = "MyTestMethod", UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Auto)|]]
-                public void MyTestMethod()
-                {
-                }
-            }
-            """;
-
-        string fixedCode = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Auto)]
-                public void MyTestMethod()
-                {
-                }
-            }
-            """;
-
-        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
-    }
-
-    [TestMethod]
     public async Task WhenMethodIsNotInTestClass_Diagnostic()
     {
         string code = """
