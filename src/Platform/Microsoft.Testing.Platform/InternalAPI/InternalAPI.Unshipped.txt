@@ -249,7 +249,7 @@ const Microsoft.Testing.Platform.CommandLine.PlatformCommandLineProvider.DotNetT
 const Microsoft.Testing.Platform.IPC.HandshakeMessagePropertyNames.Transport = 16 -> byte
 const Microsoft.Testing.Platform.IPC.HandshakeMessageTransportNames.NamedPipe = "NamedPipe" -> string!
 const Microsoft.Testing.Platform.IPC.HandshakeMessageTransportNames.WebSocket = "WebSocket" -> string!
-const Microsoft.Testing.Platform.IPC.ProtocolConstants.SupportedVersions = "1.0.0;1.1.0;1.2.0;1.3.0;1.4.0;1.5.0" -> string!
+const Microsoft.Testing.Platform.IPC.ProtocolConstants.SupportedVersions = "1.0.0;1.1.0;1.2.0;1.3.0;1.4.0;1.5.0;1.6.0" -> string!
 Microsoft.Testing.Platform.DotnetTestTransportKind
 Microsoft.Testing.Platform.DotnetTestTransportKind.NamedPipe = 0 -> Microsoft.Testing.Platform.DotnetTestTransportKind
 Microsoft.Testing.Platform.DotnetTestTransportKind.WebSocket = 1 -> Microsoft.Testing.Platform.DotnetTestTransportKind

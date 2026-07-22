@@ -214,5 +214,7 @@ internal static class ProtocolConstants
     // negotiated-version state advances in lockstep with the other additive capabilities in this file. Introduced
     // alongside the WebSocket transport (docs/mstest-runner-protocol/004-protocol-dotnet-test-pipe.md), which is
     // required to bootstrap the dotnettestcli protocol on runtimes without System.IO.Pipes support (browser-wasm).
-    internal const string SupportedVersions = "1.0.0;1.1.0;1.2.0;1.3.0;1.4.0;1.5.0";
+    // 1.6.0 adds the SupportsTestCoverageMessages handshake property. This advertises protocol support only;
+    // enabled coverage producers remain application-local and are not negotiated during the handshake.
+    internal const string SupportedVersions = "1.0.0;1.1.0;1.2.0;1.3.0;1.4.0;1.5.0;1.6.0";
 }

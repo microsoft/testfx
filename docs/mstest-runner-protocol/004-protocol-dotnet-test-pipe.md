@@ -387,7 +387,7 @@ The SDK replies with its own `HandshakeMessage`. The host reads these properties
 
 ### 8.3 Negotiation algorithm
 
-The host advertises `ProtocolConstants.SupportedVersions` (currently `"1.0.0;1.1.0;1.2.0;1.3.0;1.4.0;1.5.0"`).
+The host advertises `ProtocolConstants.SupportedVersions` (currently `"1.0.0;1.1.0;1.2.0;1.3.0;1.4.0;1.5.0;1.6.0"`).
 The SDK picks the **highest version present in both sets** and returns that single value. The host then:
 
 - Confirms the returned value is in its supported set (compatibility gate).
@@ -530,7 +530,7 @@ agent.
 
 ## 10. Versioning & compatibility
 
-`SupportedVersions = "1.0.0;1.1.0;1.2.0;1.3.0;1.4.0;1.5.0"`.
+`SupportedVersions = "1.0.0;1.1.0;1.2.0;1.3.0;1.4.0;1.5.0;1.6.0"`.
 
 | Version | What it adds / signals |
 | --- | --- |
@@ -540,6 +540,7 @@ agent.
 | 1.3.0 | Adds `DisplayMessage` (ID 12). Host forwards warning/error host diagnostics (always). |
 | 1.4.0 | Adds the reverse **server-control** channel (`WaitForServerControlRequest` ID 13, `ServerControlMessage` ID 14). Version is bumped so negotiated state advances in lockstep, but the feature itself is gated on the `ServerControlPipeName` handshake property, not on the version. **testfx-side / pending SDK support:** the current `dotnet/sdk` advertises only `1.0.0`–`1.3.0` and does not vendor serializers 13/14, so it cannot advertise `ServerControlPipeName` or drive the channel yet. In practice the negotiated version tops out at 1.3.0 until the coordinated SDK change lands (see §12). |
 | 1.5.0 | Adds the `Transport` handshake property (ID 16), reported as `NamedPipe` or `WebSocket`. Framing and serializer formats are unchanged; older peers ignore the additive field. |
+| 1.6.0 | Adds the `SupportsTestCoverageMessages` handshake property (ID 17). This advertises support for the first-class coverage message contract, not the availability of an enabled coverage producer. |
 
 Compatibility rules / assumptions:
 
