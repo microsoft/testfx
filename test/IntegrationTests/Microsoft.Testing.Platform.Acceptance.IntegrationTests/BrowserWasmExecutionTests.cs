@@ -150,7 +150,6 @@ public sealed class UnitTest1
     <ImplicitUsings>enable</ImplicitUsings>
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
-    <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
     <WasmMainJSPath>main.js</WasmMainJSPath>
     <WasmBuildNative>false</WasmBuildNative>
     <PublishTrimmed>false</PublishTrimmed>
@@ -653,12 +652,18 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
 
     private Task<TestAsset> GenerateBrowserWasmCustomHostAssetAsync()
-        => TestAsset.GenerateAssetAsync(
+    {
+        var versions = XDocument.Load(Path.Combine(RootFinder.Find(), "eng", "Versions.props"));
+        string publishedMSTestVersion = versions.Descendants("MSTestVersion").Single().Value;
+
+        return TestAsset.GenerateAssetAsync(
             "BrowserCustomHostProject",
             CustomHostSourceCode
                 .PatchCodeWithReplace("$TargetFramework$", TargetFramework)
                 .PatchCodeWithReplace("$BrowserRid$", WasmRuntime.BrowserRid)
-                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
+                .PatchCodeWithReplace("$MSTestVersion$", publishedMSTestVersion),
+            addPublicFeeds: true);
+    }
 
     private Task<TestAsset> GenerateBrowserWasmRunSettingsAssetAsync()
         => TestAsset.GenerateAssetAsync(
