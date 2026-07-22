@@ -13,6 +13,8 @@ public sealed class TestCoverageResultTests
 {
     private static readonly IDataProducer DummyProducer = new MockDataProducer();
 
+    public TestContext TestContext { get; set; }
+
     [TestMethod]
     public async Task ConsumeAsync_DuplicateMeasurement_ReplacesValueAndPreservesFirstSeenOrder()
     {
@@ -167,6 +169,45 @@ public sealed class TestCoverageResultTests
     }
 
     [TestMethod]
+    public async Task ConcurrentWritesAndSnapshotReads_DoNotThrow()
+    {
+        TestCoverageResult result = new();
+        SessionUid session = new("session");
+        var start = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var writer = Task.Run(
+            async () =>
+            {
+                await start.Task;
+                for (int i = 0; i < 500; i++)
+                {
+                    string producer = $"producer-{i}";
+                    await ConsumeAsync(result, new TestCoverageMessage(session, CoverageScope.Overall, CoverageMetric.Line, 1, 1, producer));
+                    await ConsumeAsync(result, CreateThreshold(session, CoverageMetric.Line, actualPercentage: 100, producer));
+                    await ConsumeAsync(result, new TestCoverageReportMessage(session, $"coverage-{i}.xml", CoverageReportFormat.Cobertura, producer));
+                }
+            },
+            TestContext.CancellationToken);
+        var reader = Task.Run(
+            async () =>
+            {
+                await start.Task;
+                for (int i = 0; i < 500; i++)
+                {
+                    _ = result.Scopes;
+                    _ = result.Overall;
+                    _ = result.Thresholds;
+                    _ = result.HasThresholdFailure;
+                    _ = result.Reports;
+                }
+            },
+            TestContext.CancellationToken);
+
+        start.SetResult(null);
+        await Task.WhenAll(writer, reader);
+    }
+
+    [TestMethod]
     public async Task Reset_AccumulatedData_ClearsAllState()
     {
         TestCoverageResult result = new();
@@ -221,7 +262,8 @@ public sealed class TestCoverageResultTests
     private static TestCoverageThresholdMessage CreateThreshold(
         SessionUid session,
         CoverageMetric metric,
-        double actualPercentage)
+        double actualPercentage,
+        string producerId = "producer")
         => new(
             session,
             CoverageScope.Overall,
@@ -230,7 +272,7 @@ public sealed class TestCoverageResultTests
             actualPercentage,
             requiredPercentage: 80,
             hasCoverableData: true,
-            producerId: "producer",
+            producerId,
             aggregatedOver: CoverageScopeLevel.Module);
 
     private sealed class MockDataProducer : IDataProducer

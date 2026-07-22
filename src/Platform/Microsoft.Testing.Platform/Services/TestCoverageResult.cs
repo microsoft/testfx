@@ -18,6 +18,11 @@ namespace Microsoft.Testing.Platform.Services;
 internal sealed class TestCoverageResult : ITestCoverageResult, IDataConsumer
 {
     private readonly ILoggerFactory? _loggerFactory;
+#if NET9_0_OR_GREATER
+    private readonly Lock _lock = new();
+#else
+    private readonly object _lock = new();
+#endif
 
     // Full correlation key per RFC 019: (SessionUid, ProducerId, Scope, Metric, CustomMetricName when
     // Metric == Custom). Last write wins for a duplicate full key.
@@ -55,13 +60,16 @@ internal sealed class TestCoverageResult : ITestCoverageResult, IDataConsumer
     {
         get
         {
-            var result = new List<TestCoverageThresholdMessage>(_thresholdOrder.Count);
-            foreach (ThresholdKey key in _thresholdOrder)
+            lock (_lock)
             {
-                result.Add(_thresholds[key]);
-            }
+                var result = new List<TestCoverageThresholdMessage>(_thresholdOrder.Count);
+                foreach (ThresholdKey key in _thresholdOrder)
+                {
+                    result.Add(_thresholds[key]);
+                }
 
-            return result;
+                return result;
+            }
         }
     }
 
@@ -101,38 +109,41 @@ internal sealed class TestCoverageResult : ITestCoverageResult, IDataConsumer
     {
         get
         {
-            // Group correlated measurements by (SessionUid, Scope) preserving first-seen order. Two
-            // sessions reporting the same scope are kept as separate summaries; ContainerHint is not part
-            // of scope identity so hints from different producers never split a scope.
-            var order = new List<(string Session, CoverageScope Scope)>();
-            var groups = new Dictionary<(string Session, CoverageScope Scope), List<CoverageMetricResult>>();
-
-            foreach (MeasurementKey key in _measurementOrder)
+            lock (_lock)
             {
-                TestCoverageMessage message = _measurements[key];
-                (string, CoverageScope) groupKey = (message.SessionUid.Value, message.Scope);
-                if (!groups.TryGetValue(groupKey, out List<CoverageMetricResult>? metrics))
+                // Group correlated measurements by (SessionUid, Scope) preserving first-seen order. Two
+                // sessions reporting the same scope are kept as separate summaries; ContainerHint is not part
+                // of scope identity so hints from different producers never split a scope.
+                var order = new List<(string Session, CoverageScope Scope)>();
+                var groups = new Dictionary<(string Session, CoverageScope Scope), List<CoverageMetricResult>>();
+
+                foreach (MeasurementKey key in _measurementOrder)
                 {
-                    metrics = [];
-                    groups[groupKey] = metrics;
-                    order.Add(groupKey);
+                    TestCoverageMessage message = _measurements[key];
+                    (string, CoverageScope) groupKey = (message.SessionUid.Value, message.Scope);
+                    if (!groups.TryGetValue(groupKey, out List<CoverageMetricResult>? metrics))
+                    {
+                        metrics = [];
+                        groups[groupKey] = metrics;
+                        order.Add(groupKey);
+                    }
+
+                    metrics.Add(new CoverageMetricResult(
+                        message.Metric,
+                        message.CoveredCount,
+                        message.CoverableCount,
+                        message.ProducerId,
+                        message.CustomMetricName));
                 }
 
-                metrics.Add(new CoverageMetricResult(
-                    message.Metric,
-                    message.CoveredCount,
-                    message.CoverableCount,
-                    message.ProducerId,
-                    message.CustomMetricName));
-            }
+                var result = new List<CoverageScopeSummary>(order.Count);
+                foreach ((string Session, CoverageScope Scope) groupKey in order)
+                {
+                    result.Add(new CoverageScopeSummary(new SessionUid(groupKey.Session), groupKey.Scope, groups[groupKey]));
+                }
 
-            var result = new List<CoverageScopeSummary>(order.Count);
-            foreach ((string Session, CoverageScope Scope) groupKey in order)
-            {
-                result.Add(new CoverageScopeSummary(new SessionUid(groupKey.Session), groupKey.Scope, groups[groupKey]));
+                return result;
             }
-
-            return result;
         }
     }
 
@@ -140,13 +151,16 @@ internal sealed class TestCoverageResult : ITestCoverageResult, IDataConsumer
     {
         get
         {
-            var result = new List<CoverageReportReference>(_reportOrder.Count);
-            foreach (ReportKey key in _reportOrder)
+            lock (_lock)
             {
-                result.Add(_reports[key]);
-            }
+                var result = new List<CoverageReportReference>(_reportOrder.Count);
+                foreach (ReportKey key in _reportOrder)
+                {
+                    result.Add(_reports[key]);
+                }
 
-            return result;
+                return result;
+            }
         }
     }
 
@@ -158,12 +172,15 @@ internal sealed class TestCoverageResult : ITestCoverageResult, IDataConsumer
     /// </summary>
     public void Reset()
     {
-        _measurements.Clear();
-        _measurementOrder.Clear();
-        _thresholds.Clear();
-        _thresholdOrder.Clear();
-        _reports.Clear();
-        _reportOrder.Clear();
+        lock (_lock)
+        {
+            _measurements.Clear();
+            _measurementOrder.Clear();
+            _thresholds.Clear();
+            _thresholdOrder.Clear();
+            _reports.Clear();
+            _reportOrder.Clear();
+        }
     }
 
     public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
@@ -180,13 +197,18 @@ internal sealed class TestCoverageResult : ITestCoverageResult, IDataConsumer
                     coverage.Metric == CoverageMetric.Custom ? coverage.CustomMetricName : null);
 
                 // Last write wins on a duplicate full key, keeping the original position for stable order.
-                bool replacesMeasurement = _measurements.ContainsKey(measurementKey);
-                if (!replacesMeasurement)
+                bool replacesMeasurement;
+                lock (_lock)
                 {
-                    _measurementOrder.Add(measurementKey);
+                    replacesMeasurement = _measurements.ContainsKey(measurementKey);
+                    if (!replacesMeasurement)
+                    {
+                        _measurementOrder.Add(measurementKey);
+                    }
+
+                    _measurements[measurementKey] = coverage;
                 }
 
-                _measurements[measurementKey] = coverage;
                 return replacesMeasurement
                     ? LogCorrectionAsync(nameof(TestCoverageMessage), coverage.SessionUid.Value, coverage.ProducerId)
                     : Task.CompletedTask;
@@ -201,31 +223,41 @@ internal sealed class TestCoverageResult : ITestCoverageResult, IDataConsumer
                     threshold.Metric == CoverageMetric.Custom ? threshold.CustomMetricName : null,
                     threshold.Aggregation,
                     threshold.AggregatedOver);
-                bool replacesThreshold = _thresholds.ContainsKey(thresholdKey);
-                if (!replacesThreshold)
+                bool replacesThreshold;
+                lock (_lock)
                 {
-                    _thresholdOrder.Add(thresholdKey);
+                    replacesThreshold = _thresholds.ContainsKey(thresholdKey);
+                    if (!replacesThreshold)
+                    {
+                        _thresholdOrder.Add(thresholdKey);
+                    }
+
+                    _thresholds[thresholdKey] = threshold;
                 }
 
-                _thresholds[thresholdKey] = threshold;
                 return replacesThreshold
                     ? LogCorrectionAsync(nameof(TestCoverageThresholdMessage), threshold.SessionUid.Value, threshold.ProducerId)
                     : Task.CompletedTask;
 
             case TestCoverageReportMessage report:
                 var reportKey = new ReportKey(report.SessionUid.Value, report.ProducerId, report.ReportPath);
-                bool replacesReport = _reports.ContainsKey(reportKey);
-                if (!replacesReport)
+                bool replacesReport;
+                lock (_lock)
                 {
-                    _reportOrder.Add(reportKey);
+                    replacesReport = _reports.ContainsKey(reportKey);
+                    if (!replacesReport)
+                    {
+                        _reportOrder.Add(reportKey);
+                    }
+
+                    _reports[reportKey] = new CoverageReportReference(
+                        report.SessionUid,
+                        report.ReportPath,
+                        report.Format,
+                        report.ProducerId,
+                        report.CustomFormatName);
                 }
 
-                _reports[reportKey] = new CoverageReportReference(
-                    report.SessionUid,
-                    report.ReportPath,
-                    report.Format,
-                    report.ProducerId,
-                    report.CustomFormatName);
                 return replacesReport
                     ? LogCorrectionAsync(nameof(TestCoverageReportMessage), report.SessionUid.Value, report.ProducerId)
                     : Task.CompletedTask;
@@ -241,8 +273,14 @@ internal sealed class TestCoverageResult : ITestCoverageResult, IDataConsumer
             return Task.CompletedTask;
         }
 
-        _logger ??= _loggerFactory.CreateLogger<TestCoverageResult>();
-        return _logger.LogDebugAsync(
+        ILogger logger;
+        lock (_lock)
+        {
+            _logger ??= _loggerFactory.CreateLogger<TestCoverageResult>();
+            logger = _logger;
+        }
+
+        return logger.LogDebugAsync(
             $"Replacing duplicate {messageType} from producer '{producerId}' for session '{sessionUid}' using last-write-wins correlation.");
     }
 
