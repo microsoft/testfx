@@ -173,6 +173,47 @@ public sealed class DotnetTestHttpClientTests
     }
 
     [TestMethod]
+    [DataRow(HttpStatusCode.TemporaryRedirect)]
+    [DataRow(HttpStatusCode.PermanentRedirect)]
+    public async Task RequestReplyAsync_RejectsRedirectResponses(HttpStatusCode statusCode)
+    {
+        var handler = new DelegateHttpMessageHandler((_, _) =>
+            Task.FromResult(new HttpResponseMessage(statusCode)
+            {
+                Headers = { Location = new Uri("https://redirect.example/dotnettest") },
+            }));
+
+        using DotnetTestHttpClient client = CreateClient(handler);
+        await client.ConnectAsync(_testContext.CancellationToken);
+
+        IOException exception = await Assert.ThrowsExactlyAsync<IOException>(() =>
+            client.RequestReplyAsync<TestRequest, TestResponse>(
+                TestRequest.Instance,
+                _testContext.CancellationToken));
+        Assert.Contains(((int)statusCode).ToString(CultureInfo.InvariantCulture), exception.Message);
+    }
+
+    [TestMethod]
+    [DataRow(null)]
+    [DataRow("text/plain")]
+    public async Task RequestReplyAsync_RejectsUnexpectedResponseContentType(string? mediaType)
+    {
+        HttpResponseMessage response = CreateResponse(TestResponseFrame());
+        response.Content.Headers.ContentType = mediaType is null ? null : new MediaTypeHeaderValue(mediaType);
+        var handler = new DelegateHttpMessageHandler((_, _) => Task.FromResult(response));
+
+        using DotnetTestHttpClient client = CreateClient(handler);
+        await client.ConnectAsync(_testContext.CancellationToken);
+
+        IOException exception = await Assert.ThrowsExactlyAsync<IOException>(() =>
+            client.RequestReplyAsync<TestRequest, TestResponse>(
+                TestRequest.Instance,
+                _testContext.CancellationToken));
+        Assert.Contains("content type", exception.Message);
+        Assert.Contains(mediaType ?? "missing", exception.Message);
+    }
+
+    [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
     public async Task RequestReplyAsync_RejectsMissingOrMultipleResponseFrames(bool appendSecondFrame)
@@ -216,16 +257,24 @@ public sealed class DotnetTestHttpClientTests
     }
 
     private static HttpResponseMessage CreateResponse(byte[] body)
-        => new(HttpStatusCode.OK)
+    {
+        var content = new ByteArrayContent(body);
+        content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+        return new HttpResponseMessage(HttpStatusCode.OK)
         {
-            Content = new ByteArrayContent(body),
+            Content = content,
         };
+    }
 
     private static HttpResponseMessage CreateChunkedResponse(byte[] body)
-        => new(HttpStatusCode.OK)
+    {
+        var content = new StreamContent(new NonSeekableReadStream(body));
+        content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+        return new HttpResponseMessage(HttpStatusCode.OK)
         {
-            Content = new StreamContent(new NonSeekableReadStream(body)),
+            Content = content,
         };
+    }
 
     private static byte[] TestResponseFrame()
         => [.. BitConverter.GetBytes(sizeof(int)), .. BitConverter.GetBytes(ResponseSerializerId)];
@@ -285,7 +334,11 @@ public sealed class DotnetTestHttpClientTests
         public override long Position
         {
             get => throw new NotSupportedException();
-            set => throw new NotSupportedException();
+            set
+            {
+                _ = value;
+                throw new NotSupportedException();
+            }
         }
 
         public override void Flush()

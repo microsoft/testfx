@@ -38,7 +38,11 @@ internal sealed class DotnetTestHttpClient : NamedPipeConnectionBase, IClient
     private bool _cleanupCompleted;
 
     public DotnetTestHttpClient(Uri endpoint, string authToken)
-        : this(endpoint, authToken, new HttpClient(), disposeHttpClient: true)
+        : this(
+            endpoint,
+            authToken,
+            new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }),
+            disposeHttpClient: true)
     {
     }
 
@@ -121,6 +125,12 @@ internal sealed class DotnetTestHttpClient : NamedPipeConnectionBase, IClient
             {
                 throw new IOException(
                     $"The dotnet test HTTP gateway returned status code {(int)httpResponse.StatusCode} ({httpResponse.ReasonPhrase ?? "unknown"}).");
+            }
+
+            if (!MediaType.Equals(httpResponse.Content.Headers.ContentType?.MediaType, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new IOException(
+                    $"The dotnet test HTTP gateway returned content type '{httpResponse.Content.Headers.ContentType?.MediaType ?? "missing"}' instead of '{MediaType}'.");
             }
 
             if (httpResponse.Content.Headers.ContentLength is long contentLength

@@ -102,7 +102,8 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
 
     public async Task HelpInvokedAsync()
     {
-        RoslynDebug.Assert(_transportClient is not null);
+        IClient transportClient = _transportClient
+            ?? throw new InvalidOperationException("The dotnet test transport client is not connected.");
 
         List<CommandLineOptionMessage> commandLineHelpOptions = [];
         foreach (ICommandLineOptionsProvider commandLineOptionProvider in _commandLineHandler.CommandLineOptionsProviders)
@@ -122,7 +123,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             }
         }
 
-        await _transportClient.RequestReplyAsync<CommandLineOptionMessages, VoidResponse>(new CommandLineOptionMessages(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath(), [.. commandLineHelpOptions.OrderBy(option => option.Name)]), _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
+        await transportClient.RequestReplyAsync<CommandLineOptionMessages, VoidResponse>(new CommandLineOptionMessages(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath(), [.. commandLineHelpOptions.OrderBy(option => option.Name)]), _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
     }
 
     public bool IsIDE { get; private set; }
@@ -145,7 +146,8 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
 
     public async Task<bool> IsCompatibleProtocolAsync(string hostType, IReadOnlyDictionary<byte, string>? additionalHandshakeProperties = null)
     {
-        RoslynDebug.Assert(_transportClient is not null);
+        IClient transportClient = _transportClient
+            ?? throw new InvalidOperationException("The dotnet test transport client is not connected.");
 
         string supportedProtocolVersions = ProtocolConstants.SupportedVersions;
         Dictionary<byte, string> properties = new()
@@ -177,7 +179,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
 
         HandshakeMessage handshakeMessage = new(properties);
 
-        HandshakeMessage response = await _transportClient.RequestReplyAsync<HandshakeMessage, HandshakeMessage>(handshakeMessage, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
+        HandshakeMessage response = await transportClient.RequestReplyAsync<HandshakeMessage, HandshakeMessage>(handshakeMessage, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
         IsIDE = response.Properties?.TryGetValue(HandshakeMessagePropertyNames.IsIDE, out string? isIDEValue) == true &&
             bool.TryParse(isIDEValue, out bool isIDE) &&

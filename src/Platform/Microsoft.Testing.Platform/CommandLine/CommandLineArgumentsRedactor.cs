@@ -23,13 +23,6 @@ internal static class CommandLineArgumentsRedactor
             string arg = args[i];
             if (TryParseOption(arg, out string? prefix, out string? name, out string? delimiter, out string? inlineValue))
             {
-                if (redactNextValue)
-                {
-                    redacted[i] = RedactedPlaceholder;
-                    redactNextValue = false;
-                    continue;
-                }
-
                 bool isToken = PlatformCommandLineProvider.DotNetTestHttpTokenOptionKey.Equals(name, StringComparison.OrdinalIgnoreCase);
                 bool isEndpoint = PlatformCommandLineProvider.DotNetTestHttpEndpointOptionKey.Equals(name, StringComparison.OrdinalIgnoreCase);
                 if (isToken)
