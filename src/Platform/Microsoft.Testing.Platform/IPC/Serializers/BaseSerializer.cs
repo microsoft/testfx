@@ -26,23 +26,49 @@ internal abstract class BaseSerializer
     protected static string ReadString(Stream stream)
     {
         int length = ReadInt(stream);
-        byte[] bytes = new byte[length];
-        ReadExactly(stream, bytes, 0, length);
-        return Encoding.UTF8.GetString(bytes, 0, length);
+        return ReadStringValue(stream, length);
     }
 
     protected static string ReadStringValue(Stream stream, int size)
     {
+#if NETCOREAPP
+        byte[] rented = System.Buffers.ArrayPool<byte>.Shared.Rent(size);
+        try
+        {
+            stream.ReadExactly(rented, 0, size);
+            return Encoding.UTF8.GetString(rented, 0, size);
+        }
+        finally
+        {
+            System.Buffers.ArrayPool<byte>.Shared.Return(rented);
+        }
+#else
         byte[] bytes = new byte[size];
         ReadExactly(stream, bytes, 0, size);
         return Encoding.UTF8.GetString(bytes, 0, size);
+#endif
     }
 
     protected static void WriteString(Stream stream, string str)
     {
+#if NETCOREAPP
+        int maxByteCount = Encoding.UTF8.GetMaxByteCount(str.Length);
+        byte[] rented = System.Buffers.ArrayPool<byte>.Shared.Rent(maxByteCount);
+        try
+        {
+            int byteCount = Encoding.UTF8.GetBytes(str, 0, str.Length, rented, 0);
+            WriteInt(stream, byteCount);
+            stream.Write(rented, 0, byteCount);
+        }
+        finally
+        {
+            System.Buffers.ArrayPool<byte>.Shared.Return(rented);
+        }
+#else
         byte[] bytes = Encoding.UTF8.GetBytes(str);
         WriteInt(stream, bytes.Length);
         stream.Write(bytes, 0, bytes.Length);
+#endif
     }
 
     protected static void WriteSize<T>(Stream stream)
