@@ -90,7 +90,7 @@ open <http://localhost:8080/>). The test run output appears in the browser's dev
 **Console**. Pass Microsoft.Testing.Platform options through the page query string, e.g.
 `index.html?arg=--minimum-expected-tests&arg=1`.
 
-## Debugging: JavaScript host versus managed C#
+## Debugging: JavaScript host versus managed code
 
 `browser-wasm` does not run the test assembly in the `dotnet` process that launches the
 application. This explains the behavior reported in
