@@ -27,6 +27,7 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
 
     private static readonly string SupportedDiscoverTestsValues = $"'{DiscoverTestsTextArgument}', '{DiscoverTestsJsonArgument}'";
     private static readonly string SupportedServerProtocolValues = $"'{JsonRpcProtocolName}', '{DotnetTestCliProtocolName}'";
+    private static readonly string SupportedDotNetTestTransportValues = $"'{DotNetTestTransportPipeArgument}', '{DotNetTestTransportWebSocketArgument}'";
     public const string ResultDirectoryOptionKey = "results-directory";
     public const string IgnoreExitCodeOptionKey = "ignore-exit-code";
     public const string MinimumExpectedTestsOptionKey = "minimum-expected-tests";
@@ -45,6 +46,20 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
     public const string JsonRpcProtocolName = "jsonrpc";
     public const string DotNetTestPipeOptionKey = "dotnet-test-pipe";
     public const string DotnetTestCliProtocolName = "dotnettestcli";
+
+    // Pre-launch transport selection for the 'dotnet test' pipe protocol (a.k.a. dotnettestcli). The wire
+    // protocol (message/serializer/version contract) is transport-neutral; this option only selects which
+    // duplex channel carries it. 'pipe' (the default, implied when only '--dotnet-test-pipe' is given) keeps
+    // the existing System.IO.Pipes behavior byte-for-byte. 'websocket' is required on runtimes that cannot use
+    // named pipes (browser-wasm) and is opt-in elsewhere.
+    public const string DotNetTestTransportOptionKey = "dotnet-test-transport";
+    public const string DotNetTestTransportPipeArgument = "pipe";
+    public const string DotNetTestTransportWebSocketArgument = "websocket";
+
+    // WebSocket-transport-specific endpoint/auth options. Both are required together with
+    // '--dotnet-test-transport websocket' and mutually exclusive with '--dotnet-test-pipe'.
+    public const string DotNetTestWebSocketEndpointOptionKey = "dotnet-test-websocket-endpoint";
+    public const string DotNetTestWebSocketTokenOptionKey = "dotnet-test-websocket-token";
 
     private static readonly string[] VerbosityOptions = ["Trace", "Debug", "Information", "Warning", "Error", "Critical"];
 
@@ -81,7 +96,10 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
         new(SkipBuildersNumberCheckOptionKey, PlatformResources.PlatformCommandLineSkipBuildersNumberCheckOptionDescription, ArgumentArity.Zero, true, isBuiltIn: true),
         new(NoBannerOptionKey, PlatformResources.PlatformCommandLineNoBannerOptionDescription, ArgumentArity.ZeroOrOne, true, isBuiltIn: true),
         new(TestHostControllerPIDOptionKey, PlatformResources.PlatformCommandLineTestHostControllerPIDOptionDescription, ArgumentArity.ZeroOrOne, true, isBuiltIn: true),
-        new(DotNetTestPipeOptionKey, PlatformResources.PlatformCommandLineDotnetTestPipe, ArgumentArity.ExactlyOne, true, isBuiltIn: true)
+        new(DotNetTestPipeOptionKey, PlatformResources.PlatformCommandLineDotnetTestPipe, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
+        new(DotNetTestTransportOptionKey, PlatformResources.PlatformCommandLineDotnetTestTransportOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
+        new(DotNetTestWebSocketEndpointOptionKey, PlatformResources.PlatformCommandLineDotnetTestWebSocketEndpointOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
+        new(DotNetTestWebSocketTokenOptionKey, PlatformResources.PlatformCommandLineDotnetTestWebSocketTokenOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
     ];
 
     public PlatformCommandLineProvider()
@@ -119,6 +137,32 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
             && !DotnetTestCliProtocolName.Equals(arguments[0], StringComparison.OrdinalIgnoreCase))
         {
             return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineServerInvalidArgument, arguments[0], SupportedServerProtocolValues));
+        }
+
+        if (commandOption.Name == DotNetTestTransportOptionKey
+            && arguments.Length == 1
+            && !DotNetTestTransportPipeArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase)
+            && !DotNetTestTransportWebSocketArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase))
+        {
+            return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineDotnetTestTransportInvalidArgument, arguments[0], SupportedDotNetTestTransportValues));
+        }
+
+        if (commandOption.Name == DotNetTestWebSocketEndpointOptionKey
+            && arguments is [string endpoint]
+            && (!Uri.TryCreate(endpoint, UriKind.Absolute, out Uri? endpointUri)
+                || endpointUri.Scheme is not ("ws" or "wss")
+                || RoslynString.IsNullOrEmpty(endpointUri.Host)
+                || !RoslynString.IsNullOrEmpty(endpointUri.Fragment)
+                || !RoslynString.IsNullOrEmpty(endpointUri.UserInfo)))
+        {
+            return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDotnetTestWebSocketEndpointInvalid);
+        }
+
+        if (commandOption.Name == DotNetTestWebSocketTokenOptionKey
+            && arguments is [string token]
+            && RoslynString.IsNullOrWhiteSpace(token))
+        {
+            return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDotnetTestWebSocketTokenEmpty);
         }
 
         if (commandOption.Name == ClientPortOptionKey
@@ -234,16 +278,84 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
             return ValidationResult.InvalidTask(PlatformResources.OnlyOneFilterSupported);
         }
 
-        // The '--server dotnettestcli' protocol path requires '--dotnet-test-pipe' to connect to the
-        // dotnet test pipe. Without it, the dotnet test connection silently never activates and the
-        // application falls back to console mode, leading to confusing behavior. Both options are
-        // internal and are expected to be passed together by 'dotnet test'.
-        if (commandLineOptions.TryGetOptionArgumentList(ServerOptionKey, out string[]? serverProtocolArgs)
+        // The '--server dotnettestcli' protocol path requires exactly one pre-launch transport to carry the
+        // (transport-neutral) wire protocol: either the legacy named pipe ('--dotnet-test-pipe', the default,
+        // implied whenever it alone is given) or an explicit WebSocket transport ('--dotnet-test-transport
+        // websocket' plus its endpoint/token). Without one of these, the dotnet test connection silently never
+        // activates and the application falls back to console mode, leading to confusing behavior. All of these
+        // options are internal and are expected to be passed together by 'dotnet test'.
+        bool isDotnetTestCliServer = commandLineOptions.TryGetOptionArgumentList(ServerOptionKey, out string[]? serverProtocolArgs)
             && serverProtocolArgs is { Length: 1 }
-            && DotnetTestCliProtocolName.Equals(serverProtocolArgs[0], StringComparison.OrdinalIgnoreCase)
-            && !commandLineOptions.IsOptionSet(DotNetTestPipeOptionKey))
+            && DotnetTestCliProtocolName.Equals(serverProtocolArgs[0], StringComparison.OrdinalIgnoreCase);
+        bool hasPipe = commandLineOptions.IsOptionSet(DotNetTestPipeOptionKey);
+        bool hasTransportOption = commandLineOptions.TryGetOptionArgumentList(DotNetTestTransportOptionKey, out string[]? transportArgs)
+            && transportArgs is { Length: 1 };
+        bool isWebSocketTransport = hasTransportOption && DotNetTestTransportWebSocketArgument.Equals(transportArgs![0], StringComparison.OrdinalIgnoreCase);
+        bool isPipeTransport = hasTransportOption && DotNetTestTransportPipeArgument.Equals(transportArgs![0], StringComparison.OrdinalIgnoreCase);
+        bool hasEndpoint = commandLineOptions.IsOptionSet(DotNetTestWebSocketEndpointOptionKey);
+        bool hasToken = commandLineOptions.IsOptionSet(DotNetTestWebSocketTokenOptionKey);
+        bool hasDotnetTestTransportOptions = hasPipe || hasTransportOption || hasEndpoint || hasToken;
+
+        if (hasDotnetTestTransportOptions && !isDotnetTestCliServer)
         {
-            return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineDotnetTestCliRequiresPipe, DotnetTestCliProtocolName, DotNetTestPipeOptionKey));
+            return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDotnetTestOptionsRequireServer);
+        }
+
+        if (isDotnetTestCliServer)
+        {
+            // 1. Conflict: a pipe name together with anything WebSocket-shaped (explicit websocket transport, an
+            // endpoint, or a token) - the two transports are mutually exclusive.
+            if (hasPipe && (isWebSocketTransport || hasEndpoint || hasToken))
+            {
+                return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDotnetTestTransportConflict);
+            }
+
+            // 2. WebSocket-only options given without selecting the WebSocket transport, and no pipe either: the
+            // more specific and actionable message ("these options require --dotnet-test-transport websocket")
+            // beats the generic "no transport selected" message from step 3 below.
+            if (!hasPipe && !isWebSocketTransport && (hasEndpoint || hasToken))
+            {
+                return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDotnetTestWebSocketOptionsRequireTransport);
+            }
+
+            // 3. Nothing selects a transport at all (covers: no options given, or --dotnet-test-transport pipe
+            // given explicitly without the required --dotnet-test-pipe name).
+            if (!hasPipe && !isWebSocketTransport)
+            {
+                return ValidationResult.InvalidTask(
+                    isPipeTransport
+                        ? string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineDotnetTestCliRequiresPipe, DotnetTestCliProtocolName, DotNetTestPipeOptionKey)
+                        : PlatformResources.PlatformCommandLineDotnetTestCliRequiresTransport);
+            }
+
+            // 4. WebSocket transport selected (or implied) but incomplete.
+            if (isWebSocketTransport && (!hasEndpoint || !hasToken))
+            {
+                return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDotnetTestWebSocketRequiresEndpointAndToken);
+            }
+
+            // Reject impossible transport/runtime combinations as early as possible (before we ever try to
+            // construct a NamedPipeClient, which would throw PlatformNotSupportedException deep inside the
+            // connection bootstrap). System.IO.Pipes is not available on either single-threaded wasm runtime.
+            if (hasPipe && OperatingSystem.IsBrowser())
+            {
+                return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLinePipeTransportNotSupportedOnBrowser);
+            }
+
+            if (hasPipe && OperatingSystem.IsWasi())
+            {
+                return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLinePipeTransportNotSupportedOnWasi);
+            }
+
+            // The WebSocket transport is implemented for browser-wasm (via JS interop) and for regular
+            // (non-wasm) runtimes (via System.Net.WebSockets.ClientWebSocket). wasi-wasm has neither a
+            // ClientWebSocket implementation nor an established JS-interop equivalent in this repo, so it is
+            // not yet supported by any transport; fail fast with an actionable message instead of silently
+            // falling back to console mode.
+            if (isWebSocketTransport && OperatingSystem.IsWasi())
+            {
+                return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineWebSocketTransportNotSupportedOnWasi);
+            }
         }
 
         if (commandLineOptions.IsOptionSet(DiagnosticFileLoggerSynchronousWriteOptionKey))

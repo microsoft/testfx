@@ -597,6 +597,14 @@ The default is TestResults in the directory that contains the test application.<
     <value>'--server {0}' requires '--{1}' to be specified.</value>
     <comment>{0} is the server protocol value. {1} is the required option name without the leading dashes. {Locked="--server"}{Locked="dotnettestcli"}{Locked="dotnet-test-pipe"}</comment>
   </data>
+  <data name="PlatformCommandLineDotnetTestCliRequiresTransport" xml:space="preserve">
+    <value>'--server dotnettestcli' requires either '--dotnet-test-pipe' or '--dotnet-test-transport websocket' with both '--dotnet-test-websocket-endpoint' and '--dotnet-test-websocket-token'.</value>
+    <comment>{Locked="--server dotnettestcli"}{Locked="--dotnet-test-pipe"}{Locked="--dotnet-test-transport websocket"}{Locked="--dotnet-test-websocket-endpoint"}{Locked="--dotnet-test-websocket-token"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestOptionsRequireServer" xml:space="preserve">
+    <value>'--dotnet-test-pipe', '--dotnet-test-transport', '--dotnet-test-websocket-endpoint', and '--dotnet-test-websocket-token' require '--server dotnettestcli'.</value>
+    <comment>{Locked="--dotnet-test-pipe"}{Locked="--dotnet-test-transport"}{Locked="--dotnet-test-websocket-endpoint"}{Locked="--dotnet-test-websocket-token"}{Locked="--server dotnettestcli"}</comment>
+  </data>
   <data name="PlatformCommandLineSkipBuildersNumberCheckOptionDescription" xml:space="preserve">
     <value>For testing purposes</value>
   </data>
@@ -606,6 +614,54 @@ The default is TestResults in the directory that contains the test application.<
   <data name="PlatformCommandLineDotnetTestPipe" xml:space="preserve">
     <value>dotnet test pipe.</value>
     <comment>{Locked="dotnet test"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestTransportOptionDescription" xml:space="preserve">
+    <value>Pre-launch transport used to carry the 'dotnet test' pipe protocol. The available values are 'pipe' and 'websocket'. Defaults to 'pipe' (implied whenever only '--dotnet-test-pipe' is specified).</value>
+    <comment>{Locked="dotnet test"}{Locked="pipe"}{Locked="websocket"}{Locked="--dotnet-test-pipe"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestTransportInvalidArgument" xml:space="preserve">
+    <value>'--dotnet-test-transport' received unexpected value '{0}'. Supported values are: {1}.</value>
+    <comment>{0} is the unexpected transport value. {1} is the comma-separated list of supported transport values. {Locked="--dotnet-test-transport"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestWebSocketEndpointOptionDescription" xml:space="preserve">
+    <value>The WebSocket endpoint URI the test host connects to when '--dotnet-test-transport websocket' is selected.</value>
+    <comment>{Locked="--dotnet-test-transport websocket"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestWebSocketEndpointInvalid" xml:space="preserve">
+    <value>'--dotnet-test-websocket-endpoint' requires an absolute 'ws' or 'wss' URI with a host and without user information or a fragment.</value>
+    <comment>{Locked="--dotnet-test-websocket-endpoint"}{Locked="ws"}{Locked="wss"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestWebSocketTokenOptionDescription" xml:space="preserve">
+    <value>The per-run authentication token the test host presents when connecting via '--dotnet-test-transport websocket'.</value>
+    <comment>{Locked="--dotnet-test-transport websocket"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestWebSocketTokenEmpty" xml:space="preserve">
+    <value>'--dotnet-test-websocket-token' requires a non-empty value.</value>
+    <comment>{Locked="--dotnet-test-websocket-token"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestTransportConflict" xml:space="preserve">
+    <value>'--dotnet-test-pipe' cannot be combined with '--dotnet-test-transport websocket', '--dotnet-test-websocket-endpoint', or '--dotnet-test-websocket-token'. Choose a single transport.</value>
+    <comment>{Locked="--dotnet-test-pipe"}{Locked="--dotnet-test-transport websocket"}{Locked="--dotnet-test-websocket-endpoint"}{Locked="--dotnet-test-websocket-token"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestWebSocketRequiresEndpointAndToken" xml:space="preserve">
+    <value>'--dotnet-test-transport websocket' requires both '--dotnet-test-websocket-endpoint' and '--dotnet-test-websocket-token' to be specified.</value>
+    <comment>{Locked="--dotnet-test-transport websocket"}{Locked="--dotnet-test-websocket-endpoint"}{Locked="--dotnet-test-websocket-token"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestWebSocketOptionsRequireTransport" xml:space="preserve">
+    <value>'--dotnet-test-websocket-endpoint' and '--dotnet-test-websocket-token' require '--dotnet-test-transport websocket' to be specified.</value>
+    <comment>{Locked="--dotnet-test-websocket-endpoint"}{Locked="--dotnet-test-websocket-token"}{Locked="--dotnet-test-transport websocket"}</comment>
+  </data>
+  <data name="PlatformCommandLinePipeTransportNotSupportedOnBrowser" xml:space="preserve">
+    <value>The named-pipe transport for '--server dotnettestcli' is not supported when running on browser-wasm (System.IO.Pipes is unavailable). Use '--dotnet-test-transport websocket' with '--dotnet-test-websocket-endpoint' and '--dotnet-test-websocket-token' instead.</value>
+    <comment>{Locked="--server dotnettestcli"}{Locked="System.IO.Pipes"}{Locked="--dotnet-test-transport websocket"}{Locked="--dotnet-test-websocket-endpoint"}{Locked="--dotnet-test-websocket-token"}</comment>
+  </data>
+  <data name="PlatformCommandLinePipeTransportNotSupportedOnWasi" xml:space="preserve">
+    <value>The named-pipe transport for '--server dotnettestcli' is not supported when running on wasi-wasm (System.IO.Pipes is unavailable). No transport is currently implemented for wasi-wasm.</value>
+    <comment>{Locked="--server dotnettestcli"}{Locked="System.IO.Pipes"}</comment>
+  </data>
+  <data name="PlatformCommandLineWebSocketTransportNotSupportedOnWasi" xml:space="preserve">
+    <value>The websocket transport for '--server dotnettestcli' is not supported when running on wasi-wasm. No transport is currently implemented for wasi-wasm.</value>
+    <comment>{Locked="--server dotnettestcli"}</comment>
   </data>
   <data name="TreeNodeFilterDescription" xml:space="preserve">
     <value>Use a tree filter to filter down the tests to execute</value>

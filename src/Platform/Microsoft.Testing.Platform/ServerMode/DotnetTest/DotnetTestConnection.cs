@@ -14,7 +14,6 @@ using Microsoft.Testing.Platform.Tools;
 
 namespace Microsoft.Testing.Platform;
 
-[UnsupportedOSPlatform("browser")]
 internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
 {
     private readonly CommandLineHandler _commandLineHandler;
@@ -23,9 +22,18 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
     private readonly ITestApplicationCancellationTokenSource _cancellationTokenSource;
     private readonly ILogger _logger;
 
-    private NamedPipeClient? _dotnetTestPipeClient;
+    // The connected dotnettestcli transport - a NamedPipeClient (the default, System.IO.Pipes-based) or a
+    // DotnetTestWebSocketClient (required on browser-wasm; optional elsewhere). The wire protocol is identical
+    // over either; only the duplex channel underneath differs. See DotnetTestTransportKind.
+    private IClient? _transportClient;
+    private DotnetTestTransportKind? _transportKind;
 
+    // The reverse "server control" auxiliary channel is a NamedPipeClient regardless of the primary transport
+    // (see IsCompatibleProtocolAsync); it is only ever populated when IsServerControlChannelSupported is true,
+    // which already excludes browser/wasi.
+#pragma warning disable CA1416
     private NamedPipeClient? _serverControlPipeClient;
+#pragma warning restore CA1416
     private Task? _serverControlListenerTask;
     private CancellationTokenSource? _serverControlListenerCts;
     private string? _serverControlPipeName;
@@ -53,17 +61,19 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
         _logger = logger;
     }
 
-    public bool IsServerMode => _dotnetTestPipeClient?.IsConnected == true;
+    public bool IsServerMode => _transportClient?.IsConnected == true;
 
     public Task<IPushOnlyProtocolConsumer> GetDataConsumerAsync()
         => Task.FromResult((IPushOnlyProtocolConsumer)new DotnetTestDataConsumer(this, _environment));
 
     public async Task AfterCommonServiceSetupAsync()
     {
-        // If we are in server mode and the pipe name is provided
-        // then, we need to connect to the pipe server.
+        // If we are in server mode and a transport was selected, connect using it before anything else can run.
+        // PlatformCommandLineProvider.ValidateCommandLineOptionsAsync has already rejected impossible
+        // combinations (e.g. the named-pipe transport on browser-wasm/wasi-wasm, or conflicting/incomplete
+        // transport options), so by the time we get here exactly one well-formed transport is selected.
         if (_commandLineHandler.HasDotnetTestServerOption() &&
-            _commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.DotNetTestPipeOptionKey, out string[]? arguments))
+            _commandLineHandler.TryGetDotnetTestTransport(out DotnetTestTransportKind transport))
         {
             // The execution id is used to identify the test execution
             // We are storing it as an env var so that it can be read by the test host, test host controller and the test host orchestrator
@@ -73,16 +83,45 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
                 _environment.SetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID, Guid.NewGuid().ToString("N"));
             }
 
-            _dotnetTestPipeClient = new(arguments[0], _environment);
-            _dotnetTestPipeClient.RegisterAllSerializers();
+            // CreateNamedPipeClient is never reached on browser/wasi: command-line validation already rejects
+            // the named-pipe transport there (see PlatformCommandLineProvider.ValidateCommandLineOptionsAsync).
+#pragma warning disable CA1416
+            _transportClient = transport == DotnetTestTransportKind.WebSocket
+                ? CreateWebSocketClient()
+                : CreateNamedPipeClient();
+#pragma warning restore CA1416
+            _transportKind = transport;
 
-            await _dotnetTestPipeClient.ConnectAsync(_cancellationTokenSource.CancellationToken).ConfigureAwait(false);
+            await _transportClient.ConnectAsync(_cancellationTokenSource.CancellationToken).ConfigureAwait(false);
         }
+    }
+
+    // Isolated in its own method (rather than inline in AfterCommonServiceSetupAsync) so the
+    // browser/wasi-unsupported annotation is scoped as tightly as possible to just the named-pipe path.
+    [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("wasi")]
+    private NamedPipeClient CreateNamedPipeClient()
+    {
+        ApplicationStateGuard.Ensure(_commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.DotNetTestPipeOptionKey, out string[]? arguments));
+        NamedPipeClient client = new(arguments[0], _environment);
+        client.RegisterAllSerializers();
+        return client;
+    }
+
+    private DotnetTestWebSocketClient CreateWebSocketClient()
+    {
+        ApplicationStateGuard.Ensure(_commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.DotNetTestWebSocketEndpointOptionKey, out string[]? endpointArguments));
+        ApplicationStateGuard.Ensure(_commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.DotNetTestWebSocketTokenOptionKey, out string[]? tokenArguments));
+        DotnetTestWebSocketClient client = new(new Uri(endpointArguments[0], UriKind.Absolute), tokenArguments[0], _environment);
+        client.RegisterAllSerializers();
+        return client;
     }
 
     public async Task HelpInvokedAsync()
     {
-        RoslynDebug.Assert(_dotnetTestPipeClient is not null);
+        RoslynDebug.Assert(_transportClient is not null);
+        IClient transportClient = _transportClient
+            ?? throw new InvalidOperationException("The dotnet test transport client is not initialized.");
 
         List<CommandLineOptionMessage> commandLineHelpOptions = [];
         foreach (ICommandLineOptionsProvider commandLineOptionProvider in _commandLineHandler.CommandLineOptionsProviders)
@@ -102,7 +141,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             }
         }
 
-        await _dotnetTestPipeClient.RequestReplyAsync<CommandLineOptionMessages, VoidResponse>(new CommandLineOptionMessages(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath(), [.. commandLineHelpOptions.OrderBy(option => option.Name)]), _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
+        await transportClient.RequestReplyAsync<CommandLineOptionMessages, VoidResponse>(new CommandLineOptionMessages(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath(), [.. commandLineHelpOptions.OrderBy(option => option.Name)]), _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
     }
 
     public bool IsIDE { get; private set; }
@@ -125,7 +164,9 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
 
     public async Task<bool> IsCompatibleProtocolAsync(string hostType, IReadOnlyDictionary<byte, string>? additionalHandshakeProperties = null)
     {
-        RoslynDebug.Assert(_dotnetTestPipeClient is not null);
+        RoslynDebug.Assert(_transportClient is not null);
+        IClient transportClient = _transportClient
+            ?? throw new InvalidOperationException("The dotnet test transport client is not initialized.");
 
         string supportedProtocolVersions = ProtocolConstants.SupportedVersions;
         Dictionary<byte, string> properties = new()
@@ -140,6 +181,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             { HandshakeMessagePropertyNames.ExecutionId,  _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID) ?? string.Empty },
             { HandshakeMessagePropertyNames.InstanceId, InstanceId },
             { HandshakeMessagePropertyNames.ExecutionMode, GetExecutionMode() },
+            { HandshakeMessagePropertyNames.Transport, _transportKind == DotnetTestTransportKind.WebSocket ? HandshakeMessageTransportNames.WebSocket : HandshakeMessageTransportNames.NamedPipe },
             { HandshakeMessagePropertyNames.SupportsTestCoverageMessages, bool.TrueString },
         };
 
@@ -158,7 +200,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
 
         HandshakeMessage handshakeMessage = new(properties);
 
-        HandshakeMessage response = await _dotnetTestPipeClient.RequestReplyAsync<HandshakeMessage, HandshakeMessage>(handshakeMessage, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
+        HandshakeMessage response = await transportClient.RequestReplyAsync<HandshakeMessage, HandshakeMessage>(handshakeMessage, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
         IsIDE = response.Properties?.TryGetValue(HandshakeMessagePropertyNames.IsIDE, out string? isIDEValue) == true &&
             bool.TryParse(isIDEValue, out bool isIDE) &&
@@ -168,7 +210,13 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             !RoslynString.IsNullOrEmpty(serverControlPipeName))
         {
             _serverControlPipeName = serverControlPipeName;
-            IsServerControlChannelSupported = true;
+
+            // The reverse "server control" channel is itself a named pipe advertised by the SDK, regardless of
+            // which transport carries the primary data channel. On runtimes without named-pipe support
+            // (browser-wasm, wasi-wasm) we cannot open it, so the feature stays off there - the same
+            // best-effort fallback already used when the SDK simply never advertises the property at all. A
+            // WebSocket-based reverse control channel is a natural follow-up but is out of scope here.
+            IsServerControlChannelSupported = !OperatingSystem.IsBrowser() && !OperatingSystem.IsWasi();
         }
 
         if (response.Properties?.TryGetValue(HandshakeMessagePropertyNames.SupportedProtocolVersions, out string? protocolVersion) is true)
@@ -206,33 +254,33 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
 
     public async Task SendMessageAsync(IRequest message)
     {
-        NamedPipeClient dotnetTestPipeClient = _dotnetTestPipeClient
-            ?? throw new InvalidOperationException("The dotnet test pipe client is not connected.");
+        IClient transportClient = _transportClient
+            ?? throw new InvalidOperationException("The dotnet test transport client is not connected.");
 
         switch (message)
         {
             case DiscoveredTestMessages discoveredTestMessages:
-                await dotnetTestPipeClient.RequestReplyAsync<DiscoveredTestMessages, VoidResponse>(discoveredTestMessages, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
+                await transportClient.RequestReplyAsync<DiscoveredTestMessages, VoidResponse>(discoveredTestMessages, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
                 break;
 
             case TestResultMessages testResultMessages:
-                await dotnetTestPipeClient.RequestReplyAsync<TestResultMessages, VoidResponse>(testResultMessages, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
+                await transportClient.RequestReplyAsync<TestResultMessages, VoidResponse>(testResultMessages, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
                 break;
 
             case FileArtifactMessages fileArtifactMessages:
-                await dotnetTestPipeClient.RequestReplyAsync<FileArtifactMessages, VoidResponse>(fileArtifactMessages, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
+                await transportClient.RequestReplyAsync<FileArtifactMessages, VoidResponse>(fileArtifactMessages, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
                 break;
 
             case TestSessionEvent testSessionEvent:
-                await dotnetTestPipeClient.RequestReplyAsync<TestSessionEvent, VoidResponse>(testSessionEvent, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
+                await transportClient.RequestReplyAsync<TestSessionEvent, VoidResponse>(testSessionEvent, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
                 break;
 
             case AzureDevOpsLogMessage azureDevOpsLogMessage:
-                await dotnetTestPipeClient.RequestReplyAsync<AzureDevOpsLogMessage, VoidResponse>(azureDevOpsLogMessage, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
+                await transportClient.RequestReplyAsync<AzureDevOpsLogMessage, VoidResponse>(azureDevOpsLogMessage, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
                 break;
 
             case DisplayMessage displayMessage:
-                await dotnetTestPipeClient.RequestReplyAsync<DisplayMessage, VoidResponse>(displayMessage, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
+                await transportClient.RequestReplyAsync<DisplayMessage, VoidResponse>(displayMessage, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
                 break;
         }
     }
@@ -268,6 +316,10 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
 
         // exitProcessOnConnectionLoss: false - a dropped control pipe must not kill the test host; the listener
         // turns it into a cooperative cancel instead.
+        // NamedPipeClient (and ConnectAndListenForServerControlAsync, which takes one) is unsupported on
+        // browser/wasi, but IsServerControlChannelSupported is only ever true when neither is the current
+        // runtime (see IsCompatibleProtocolAsync), so this whole block is unreachable there.
+#pragma warning disable CA1416 // IsServerControlChannelSupported already excludes browser/wasi at the call site.
         var controlClient = new NamedPipeClient(_serverControlPipeName, _environment, exitProcessOnConnectionLoss: false);
         controlClient.RegisterAllSerializers();
         _serverControlPipeClient = controlClient;
@@ -276,9 +328,12 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
         // slow/absent control server can never delay (or fail) test execution start.
         _serverControlListenerTask = Task.Run(
             () => ConnectAndListenForServerControlAsync(controlClient, onCancelSessionRequestedAsync, _serverControlListenerCts.Token));
+#pragma warning restore CA1416
         return Task.CompletedTask;
     }
 
+    [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("wasi")]
     private async Task ConnectAndListenForServerControlAsync(NamedPipeClient controlClient, Func<CancellationToken, Task> onCancelSessionRequestedAsync, CancellationToken cancellationToken)
     {
         try
@@ -302,6 +357,8 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
         await ListenForServerControlAsync(controlClient, onCancelSessionRequestedAsync, cancellationToken).ConfigureAwait(false);
     }
 
+    [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("wasi")]
     private async Task ListenForServerControlAsync(NamedPipeClient controlClient, Func<CancellationToken, Task> onCancelSessionRequestedAsync, CancellationToken cancellationToken)
     {
         try
@@ -370,7 +427,9 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
         // Framework cancellation of an already-parked overlapped read is not reliable - disposing the stream is
         // what forces it to unblock. We cancelled first (above) so the listener treats the resulting failure as
         // shutdown rather than "host gone => cancel".
+#pragma warning disable CA1416 // _serverControlPipeClient is only ever non-null when IsServerControlChannelSupported was true (excludes browser/wasi).
         _serverControlPipeClient?.Dispose();
+#pragma warning restore CA1416
 
         if (_serverControlListenerTask is { } listenerTask)
         {
@@ -388,7 +447,9 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
         _serverControlListenerCts?.Cancel();
 
         // Disposing the pipe client forces a parked read to abort even where token cancellation alone would not.
+#pragma warning disable CA1416 // _serverControlPipeClient is only ever non-null when IsServerControlChannelSupported was true (excludes browser/wasi).
         _serverControlPipeClient?.Dispose();
+#pragma warning restore CA1416
 
         if (_serverControlListenerTask is { } listenerTask)
         {
@@ -405,7 +466,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
         }
 
         _serverControlListenerCts?.Dispose();
-        _dotnetTestPipeClient?.Dispose();
+        _transportClient?.Dispose();
     }
 
     private async Task TryLogAsync(LogLevel logLevel, string message)

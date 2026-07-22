@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Globalization;
+
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 /// <summary>
@@ -18,7 +20,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 /// <c>node</c> via the same loader, which is what this test uses instead of a real browser.
 /// </para>
 ///
-/// <para>Three complementary assertions, mirroring <see cref="WasmExecutionTests"/>:</para>
+/// <para>Five complementary assertions, mirroring <see cref="WasmExecutionTests"/>:</para>
 /// <list type="number">
 ///   <item>
 ///     <see cref="BrowserWasmBuild_GeneratesTestingPlatformEntryPoint"/> builds for
@@ -36,10 +38,20 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 ///     <c>AtLeastOneTestFailed</c>.
 ///   </item>
 ///   <item>
+///     <see cref="BrowserWasmExecution_CustomHostRunsExistingTestAssemblyWithoutCompetingEntryPoint"/>
+///     publishes a user-authored <c>AddMSTest</c> host that discovers a referenced test assembly,
+///     verifies the build does not emit CS7022, and executes that assembly under Node.
+///   </item>
+///   <item>
 ///     <see cref="BrowserWasmExecution_FrameworkWarningReachesNode"/> publishes a custom-framework
 ///     project that emits a warning and an error through <c>IOutputDevice</c>, and asserts both reach
 ///     the Node output via the <c>[JSImport]</c> console bindings without a JS-interop exception —
 ///     directly guarding the <c>BrowserOutputDevice.JSConsoleWarn</c> fix. Same skip conditions.
+///   </item>
+///   <item>
+///     <see cref="BrowserWasmExecution_RunSettingsEnvironmentVariables_FailsWithClearDiagnostic"/>
+///     verifies that unsupported runsettings environment variables fail with a clear browser-specific
+///     diagnostic rather than a platform exception.
 ///   </item>
 /// </list>
 /// </summary>
@@ -122,6 +134,87 @@ public sealed class UnitTest1
 }
 """;
 
+    // A user-authored browser-wasm entry point that hosts an existing MSTest class library.
+    // EnableMSTestRunner disables Microsoft.NET.Test.Sdk's generated Program while
+    // GenerateTestingPlatformEntryPoint=false prevents MTP from generating a second entry point.
+    // The host deliberately references only the MSTest metapackage; the test library references the
+    // matching TestFramework version, which covers the package-alignment guidance in the sample.
+    private const string CustomHostSourceCode = """
+#file BrowserCustomHostProject.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>$TargetFramework$</TargetFramework>
+    <RuntimeIdentifier>$BrowserRid$</RuntimeIdentifier>
+    <OutputType>Exe</OutputType>
+    <SelfContained>true</SelfContained>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
+    <WasmMainJSPath>main.js</WasmMainJSPath>
+    <WasmBuildNative>false</WasmBuildNative>
+    <PublishTrimmed>false</PublishTrimmed>
+    <NoWarn>$(NoWarn);NETSDK1201</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MSTest" Version="$MSTestVersion$" />
+    <ProjectReference Include="HostedTests\HostedTests.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The referenced project lives below the host only because TestAsset owns one root directory. -->
+    <Compile Remove="HostedTests\**\*.cs" />
+  </ItemGroup>
+
+</Project>
+
+#file main.js
+import { dotnet } from './_framework/dotnet.js';
+const { runMain } = await dotnet.withApplicationArgumentsFromQuery().create();
+const exitCode = await runMain();
+globalThis.mtpExitCode = exitCode;
+
+#file Program.cs
+using HostedTests;
+using Microsoft.Testing.Platform.Builder;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+builder.AddMSTest(() => [typeof(HostedTest).Assembly]);
+using ITestApplication app = await builder.BuildAsync();
+return await app.RunAsync();
+
+#file HostedTests/HostedTests.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>$TargetFramework$</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+  </ItemGroup>
+
+</Project>
+
+#file HostedTests/HostedTest.cs
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace HostedTests;
+
+[TestClass]
+public sealed class HostedTest
+{
+    [TestMethod]
+    public void ExistingAssemblyTest()
+        => Assert.AreEqual(4, 2 + 2);
+}
+""";
+
     // node runner staged next to the published bundle. Boots the browser-wasm app under node (no DOM
     // required — Microsoft.Testing.Platform does not touch the DOM) and maps the .NET exit code onto
     // the node process exit code. Mirrors samples/BrowserPlayground/wwwroot/runtests.mjs.
@@ -131,6 +224,215 @@ const { runMain } = await dotnet.withApplicationArguments(...process.argv.slice(
 const exitCode = await runMain();
 // Set exitCode rather than calling process.exit(): process.exit() can terminate Node before
 // redirected stdout/stderr has flushed, which would truncate the MTP summary this test asserts on.
+process.exitCode = exitCode;
+""";
+
+    private const string NodeWebSocketGatewayRunnerSource = """
+import { createHash } from 'node:crypto';
+import { createServer } from 'node:net';
+import { dotnet } from './_framework/dotnet.js';
+
+const token = 'browser-transport-secret';
+let authenticated = false;
+let transport = null;
+let requestCount = 0;
+let disconnected = false;
+
+function websocketFrame(payload) {
+    if (payload.length < 126) {
+        return Buffer.concat([Buffer.from([0x82, payload.length]), payload]);
+    }
+
+    const header = Buffer.alloc(4);
+    header[0] = 0x82;
+    header[1] = 126;
+    header.writeUInt16BE(payload.length, 2);
+    return Buffer.concat([header, payload]);
+}
+
+function protocolFrame(serializerId, body = Buffer.alloc(0)) {
+    const frame = Buffer.alloc(8 + body.length);
+    frame.writeInt32LE(4 + body.length, 0);
+    frame.writeInt32LE(serializerId, 4);
+    body.copy(frame, 8);
+    return frame;
+}
+
+function handshakeReply() {
+    const version = Buffer.from('1.5.0');
+    const body = Buffer.alloc(2 + 1 + 4 + version.length);
+    body.writeUInt16LE(1, 0);
+    body[2] = 4;
+    body.writeInt32LE(version.length, 3);
+    version.copy(body, 7);
+    return protocolFrame(9, body);
+}
+
+function readHandshakeTransport(body) {
+    let offset = 0;
+    const count = body.readUInt16LE(offset);
+    offset += 2;
+    for (let i = 0; i < count; i++) {
+        const key = body[offset++];
+        const length = body.readInt32LE(offset);
+        offset += 4;
+        const value = body.subarray(offset, offset + length).toString('utf8');
+        offset += length;
+        if (key === 16) {
+            return value;
+        }
+    }
+
+    return null;
+}
+
+function consumeFrames(socket, state) {
+    while (state.buffer.length >= 2) {
+        const first = state.buffer[0];
+        const second = state.buffer[1];
+        let length = second & 0x7f;
+        let offset = 2;
+        if (length === 126) {
+            if (state.buffer.length < 4) return;
+            length = state.buffer.readUInt16BE(2);
+            offset = 4;
+        } else if (length === 127) {
+            if (state.buffer.length < 10) return;
+            length = Number(state.buffer.readBigUInt64BE(2));
+            offset = 10;
+        }
+
+        const masked = (second & 0x80) !== 0;
+        const maskLength = masked ? 4 : 0;
+        if (state.buffer.length < offset + maskLength + length) return;
+
+        let payload = Buffer.from(state.buffer.subarray(offset + maskLength, offset + maskLength + length));
+        if (masked) {
+            const mask = state.buffer.subarray(offset, offset + 4);
+            for (let i = 0; i < payload.length; i++) payload[i] ^= mask[i % 4];
+        }
+
+        state.buffer = state.buffer.subarray(offset + maskLength + length);
+        const opcode = first & 0x0f;
+        if (opcode === 8) {
+            disconnected = true;
+            socket.end();
+            continue;
+        }
+
+        if (opcode !== 2) continue;
+        requestCount++;
+        const serializerId = payload.readInt32LE(4);
+        if (serializerId === 9) {
+            transport = readHandshakeTransport(payload.subarray(8));
+            socket.write(websocketFrame(Buffer.alloc(0)));
+            socket.write(websocketFrame(handshakeReply()));
+        } else {
+            // All post-handshake request/reply messages emitted by this no-op passing framework expect
+            // VoidResponse, matching FakeDotnetTestSdk's named-pipe harness.
+            socket.write(websocketFrame(protocolFrame(0)));
+        }
+    }
+}
+
+const server = createServer(socket => {
+    const state = { upgraded: false, buffer: Buffer.alloc(0) };
+    socket.on('end', () => { disconnected = true; });
+    socket.on('close', () => { disconnected = true; });
+    socket.on('data', chunk => {
+        state.buffer = Buffer.concat([state.buffer, chunk]);
+        if (!state.upgraded) {
+            const end = state.buffer.indexOf('\r\n\r\n');
+            if (end < 0) return;
+            const request = state.buffer.subarray(0, end).toString('utf8');
+            authenticated = request.includes(`dotnetTestToken=${token}`);
+            const key = /^Sec-WebSocket-Key:\s*(.+)$/mi.exec(request)?.[1]?.trim();
+            const accept = createHash('sha1').update(key + '258EAFA5-E914-47DA-95CA-C5AB0DC85B11').digest('base64');
+            socket.write(
+                'HTTP/1.1 101 Switching Protocols\r\n' +
+                'Upgrade: websocket\r\n' +
+                'Connection: Upgrade\r\n' +
+                `Sec-WebSocket-Accept: ${accept}\r\n\r\n`);
+            state.buffer = state.buffer.subarray(end + 4);
+            state.upgraded = true;
+        }
+
+        consumeFrames(socket, state);
+    });
+});
+
+await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+const port = server.address().port;
+const { runMain } = await dotnet.withApplicationArguments(
+    '--server', 'dotnettestcli',
+    '--dotnet-test-transport', 'websocket',
+    '--dotnet-test-websocket-endpoint', `ws://127.0.0.1:${port}/dotnettest`,
+    '--dotnet-test-websocket-token', token).create();
+const exitCode = await runMain();
+await new Promise(resolve => setTimeout(resolve, 1000));
+server.close();
+
+console.log(`BROWSER_WEBSOCKET_AUTHENTICATED=${authenticated}`);
+console.log(`BROWSER_WEBSOCKET_TRANSPORT=${transport}`);
+console.log(`BROWSER_WEBSOCKET_REQUESTS=${requestCount}`);
+console.log(`BROWSER_WEBSOCKET_DISCONNECTED=${disconnected}`);
+process.exitCode = exitCode;
+""";
+
+    private const string NodeStalledWebSocketRunnerSource = """
+import { createServer } from 'node:net';
+import { dotnet } from './_framework/dotnet.js';
+
+const sockets = new Set();
+const server = createServer(socket => {
+    sockets.add(socket);
+    socket.on('close', () => sockets.delete(socket));
+    // Deliberately never complete the HTTP upgrade. BrowserWebSocketDuplexStream.ConnectAsync must still
+    // observe its .NET cancellation token while the browser-native WebSocket remains in CONNECTING state.
+});
+await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+const port = server.address().port;
+const { runMain } = await dotnet.withApplicationArguments('connect-cancel', `ws://127.0.0.1:${port}/stalled`).create();
+const exitCode = await runMain();
+for (const socket of sockets) socket.destroy();
+server.close();
+process.exitCode = exitCode;
+""";
+
+    private const string NodeWebSocketIoCancellationRunnerSource = """
+import { createHash } from 'node:crypto';
+import { createServer } from 'node:net';
+import { dotnet } from './_framework/dotnet.js';
+
+function websocketFrame(payload) {
+    return Buffer.concat([Buffer.from([0x82, payload.length]), payload]);
+}
+
+const server = createServer(socket => {
+    let buffer = Buffer.alloc(0);
+    socket.on('data', chunk => {
+        buffer = Buffer.concat([buffer, chunk]);
+        const end = buffer.indexOf('\r\n\r\n');
+        if (end < 0) return;
+        const request = buffer.subarray(0, end).toString('utf8');
+        const key = /^Sec-WebSocket-Key:\s*(.+)$/mi.exec(request)?.[1]?.trim();
+        const accept = createHash('sha1').update(key + '258EAFA5-E914-47DA-95CA-C5AB0DC85B11').digest('base64');
+        socket.write(
+            'HTTP/1.1 101 Switching Protocols\r\n' +
+            'Upgrade: websocket\r\n' +
+            'Connection: Upgrade\r\n' +
+            `Sec-WebSocket-Accept: ${accept}\r\n\r\n`);
+        socket.removeAllListeners('data');
+        setTimeout(() => socket.write(websocketFrame(Buffer.from('after-cancel'))), 750);
+        setTimeout(() => socket.destroy(), 1500);
+    });
+});
+
+await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+const port = server.address().port;
+const { runMain } = await dotnet.withApplicationArguments(`ws://127.0.0.1:${port}/cancellation`).create();
+const exitCode = await runMain();
+server.close();
 process.exitCode = exitCode;
 """;
 
@@ -289,6 +591,115 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
 }
 """;
 
+    private const string WebSocketCancellationSourceCode = """
+#file BrowserWebSocketCancellationProject.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>$TargetFramework$</TargetFramework>
+    <RuntimeIdentifier>$BrowserRid$</RuntimeIdentifier>
+    <OutputType>Exe</OutputType>
+    <SelfContained>true</SelfContained>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <WasmMainJSPath>main.js</WasmMainJSPath>
+    <WasmBuildNative>false</WasmBuildNative>
+    <PublishTrimmed>false</PublishTrimmed>
+    <NoWarn>$(NoWarn);NETSDK1201</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+  </ItemGroup>
+</Project>
+
+#file main.js
+import { dotnet } from './_framework/dotnet.js';
+const { runMain } = await dotnet.withApplicationArgumentsFromQuery().create();
+globalThis.mtpExitCode = await runMain();
+
+#file Program.cs
+using System.Reflection;
+using Microsoft.Testing.Platform.Builder;
+
+Type streamType = typeof(TestApplication).Assembly.GetType("Microsoft.Testing.Platform.IPC.BrowserWebSocketDuplexStream", throwOnError: true)!;
+MethodInfo connectAsync = streamType.GetMethod("ConnectAsync", BindingFlags.Public | BindingFlags.Static)!;
+if (args[0] == "connect-cancel")
+{
+    using CancellationTokenSource cancellationTokenSource = new(TimeSpan.FromMilliseconds(250));
+    Task connectTask = (Task)connectAsync.Invoke(null, [new Uri(args[1]), cancellationTokenSource.Token])!;
+    try
+    {
+        await connectTask;
+        Console.Error.WriteLine("Browser WebSocket connection unexpectedly completed.");
+        return 1;
+    }
+    catch (OperationCanceledException) when (cancellationTokenSource.IsCancellationRequested)
+    {
+        Console.WriteLine("BROWSER_WEBSOCKET_CONNECT_CANCELLED=true");
+        MethodInfo pendingOpenCount = streamType.GetMethod("GetPendingOpenCount", BindingFlags.NonPublic | BindingFlags.Static)!;
+        Console.WriteLine($"BROWSER_WEBSOCKET_PENDING_OPEN_COUNT={pendingOpenCount.Invoke(null, null)}");
+        return 0;
+    }
+}
+
+Task successfulConnectTask = (Task)connectAsync.Invoke(null, [new Uri(args[0]), CancellationToken.None])!;
+await successfulConnectTask;
+using Stream stream = (Stream)successfulConnectTask.GetType().GetProperty("Result")!.GetValue(successfulConnectTask)!;
+
+byte[] buffer = new byte[32];
+using CancellationTokenSource preCancelledRead = new();
+preCancelledRead.Cancel();
+try
+{
+    await stream.ReadAsync(buffer, 0, buffer.Length, preCancelledRead.Token);
+    Console.Error.WriteLine("Browser WebSocket read unexpectedly ignored pre-cancellation.");
+    return 6;
+}
+catch (OperationCanceledException)
+{
+    Console.WriteLine("BROWSER_WEBSOCKET_PRE_CANCELLED_READ=true");
+}
+
+Task<int> zeroCountRead = stream.ReadAsync(buffer, 0, 0, CancellationToken.None);
+if (await Task.WhenAny(zeroCountRead, Task.Delay(100)) != zeroCountRead || await zeroCountRead != 0)
+{
+    Console.Error.WriteLine("Browser WebSocket zero-count read did not complete immediately.");
+    return 4;
+}
+Console.WriteLine("BROWSER_WEBSOCKET_ZERO_COUNT_READ=0");
+
+using (CancellationTokenSource readCancellation = new(TimeSpan.FromMilliseconds(100)))
+{
+    try
+    {
+        await stream.ReadAsync(buffer, 0, buffer.Length, readCancellation.Token);
+        Console.Error.WriteLine("Browser WebSocket read unexpectedly completed before cancellation.");
+        return 2;
+    }
+    catch (OperationCanceledException) when (readCancellation.IsCancellationRequested)
+    {
+        Console.WriteLine("BROWSER_WEBSOCKET_READ_CANCELLED=true");
+    }
+}
+
+int read = await stream.ReadAsync(buffer, 0, buffer.Length, CancellationToken.None);
+Console.WriteLine($"BROWSER_WEBSOCKET_MESSAGE_AFTER_CANCEL={System.Text.Encoding.UTF8.GetString(buffer, 0, read)}");
+
+using CancellationTokenSource writeCancellation = new();
+writeCancellation.Cancel();
+try
+{
+    await stream.WriteAsync(new byte[] { 1, 2, 3 }, 0, 3, writeCancellation.Token);
+    Console.Error.WriteLine("Browser WebSocket write unexpectedly ignored pre-cancellation.");
+    return 3;
+}
+catch (OperationCanceledException)
+{
+    Console.WriteLine("BROWSER_WEBSOCKET_WRITE_CANCELLED=true");
+}
+
+return 0;
+""";
+
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
@@ -364,6 +775,13 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
             combined.Contains("failed: 1", StringComparison.Ordinal),
             $"Expected 1 failed test in the browser-wasm run summary.{Environment.NewLine}{combined}");
 
+        foreach (string testName in new[] { "PassingTest", "AnotherPassingTest", "FailingTest" })
+        {
+            Assert.IsTrue(
+                combined.Contains($"running {testName}", StringComparison.Ordinal),
+                $"Expected browser-wasm progress output to identify '{testName}' before it ran.{Environment.NewLine}{combined}");
+        }
+
         // Assert the exact "at least one test failed" exit code (2). A generic non-zero check would
         // also pass for a post-run crash or other MTP failure; requiring AtLeastOneTestFailed keeps
         // those from masquerading as the expected failing-test outcome.
@@ -371,6 +789,52 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
             (int)ExitCode.AtLeastOneTestFailed,
             exitCode,
             $"Expected exit code {(int)ExitCode.AtLeastOneTestFailed} (AtLeastOneTestFailed) because one test fails.{Environment.NewLine}{combined}");
+    }
+
+    [TestMethod]
+    public async Task BrowserWasmExecution_CustomHostRunsExistingTestAssemblyWithoutCompetingEntryPoint()
+    {
+        string? node = WasmRuntime.LocateNode();
+        if (node is null)
+        {
+            Assert.Inconclusive(WasmRuntime.NodeUnavailableMessage);
+            return;
+        }
+
+        using TestAsset generator = await GenerateBrowserWasmCustomHostAssetAsync();
+
+        DotnetMuxerResult publishResult = await WasmRuntime.PublishForBrowserAsync(
+            generator.TargetAssetPath, TargetFramework, TestContext.CancellationToken);
+        if (publishResult.ExitCode != 0)
+        {
+            Assert.IsTrue(
+                WasmRuntime.IsMissingWasmToolsWorkload(publishResult),
+                $"'dotnet publish -r browser-wasm' failed for an unexpected reason (not a missing 'wasm-tools' workload).{Environment.NewLine}{publishResult}");
+            Assert.Inconclusive(
+                $"Skipping browser-wasm execution: the 'wasm-tools' workload is not installed.{Environment.NewLine}{publishResult}");
+        }
+
+        string publishOutput = string.Concat(publishResult.StandardOutput, Environment.NewLine, publishResult.StandardError);
+        Assert.IsFalse(
+            publishOutput.Contains("CS7022", StringComparison.Ordinal),
+            $"The custom AddMSTest host must not compile with competing entry points.{Environment.NewLine}{publishResult}");
+
+        string appBundle = WasmRuntime.GetBrowserAppBundlePath(generator.TargetAssetPath, TargetFramework);
+        Assert.IsTrue(
+            Directory.Exists(appBundle),
+            $"Expected the browser-wasm AppBundle directory at '{appBundle}'.");
+
+        (int exitCode, _, _, string combined) = await WasmRuntime.RunUnderNodeAsync(
+            node, appBundle, NodeRunnerSource, TestContext.CancellationToken);
+
+        Assert.IsTrue(
+            combined.Contains("succeeded: 1", StringComparison.Ordinal)
+                && combined.Contains("failed: 0", StringComparison.Ordinal),
+            $"Expected the custom host to execute the referenced test assembly successfully.{Environment.NewLine}{combined}");
+        Assert.AreEqual(
+            (int)ExitCode.Success,
+            exitCode,
+            $"Expected exit code {(int)ExitCode.Success} (Success) for the custom AddMSTest host.{Environment.NewLine}{combined}");
     }
 
     [TestMethod]
@@ -411,6 +875,79 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
             (int)ExitCode.Success,
             exitCode,
             $"Expected exit code {(int)ExitCode.Success} (Success) for the warning asset.{Environment.NewLine}{combined}");
+    }
+
+    [TestMethod]
+    public async Task BrowserWasmExecution_DotnetTestWebSocketTransport_RunsProtocolSession()
+    {
+        string? node = WasmRuntime.LocateNode();
+        if (node is null)
+        {
+            Assert.Inconclusive(WasmRuntime.NodeUnavailableMessage);
+            return;
+        }
+
+        using TestAsset generator = await GenerateBrowserWasmWarningAssetAsync();
+
+        (int exitCode, _, _, string combined) = await PublishAndRunUnderNodeAsync(generator, node, NodeWebSocketGatewayRunnerSource, enableWebSocket: true);
+
+        Assert.AreEqual(
+            (int)ExitCode.Success,
+            exitCode,
+            $"Expected the browser-wasm WebSocket protocol run to succeed.{Environment.NewLine}{combined}");
+        Assert.Contains("BROWSER_WEBSOCKET_AUTHENTICATED=true", combined);
+        Assert.Contains("BROWSER_WEBSOCKET_TRANSPORT=WebSocket", combined);
+        Assert.IsTrue(
+            TryReadMarkerInt(combined, "BROWSER_WEBSOCKET_REQUESTS=", out int requestCount) && requestCount > 1,
+            $"Expected the gateway to receive the handshake plus protocol traffic.{Environment.NewLine}{combined}");
+        Assert.Contains("BROWSER_WEBSOCKET_DISCONNECTED=true", combined);
+    }
+
+    [TestMethod]
+    public async Task BrowserWasmExecution_DotnetTestWebSocketConnect_HonorsCancellationWhileUpgradeIsStalled()
+    {
+        string? node = WasmRuntime.LocateNode();
+        if (node is null)
+        {
+            Assert.Inconclusive(WasmRuntime.NodeUnavailableMessage);
+            return;
+        }
+
+        using TestAsset generator = await GenerateBrowserWasmWebSocketCancellationAssetAsync();
+
+        (int exitCode, _, _, string combined) = await PublishAndRunUnderNodeAsync(generator, node, NodeStalledWebSocketRunnerSource, enableWebSocket: true);
+
+        Assert.AreEqual(
+            (int)ExitCode.Success,
+            exitCode,
+            $"Expected a stalled browser WebSocket upgrade to be cancelled cleanly.{Environment.NewLine}{combined}");
+        Assert.Contains("BROWSER_WEBSOCKET_CONNECT_CANCELLED=true", combined);
+        Assert.Contains("BROWSER_WEBSOCKET_PENDING_OPEN_COUNT=0", combined);
+    }
+
+    [TestMethod]
+    public async Task BrowserWasmExecution_DotnetTestWebSocketReadAndWrite_HonorCancellationWithoutLosingNextMessage()
+    {
+        string? node = WasmRuntime.LocateNode();
+        if (node is null)
+        {
+            Assert.Inconclusive(WasmRuntime.NodeUnavailableMessage);
+            return;
+        }
+
+        using TestAsset generator = await GenerateBrowserWasmWebSocketCancellationAssetAsync();
+
+        (int exitCode, _, _, string combined) = await PublishAndRunUnderNodeAsync(generator, node, NodeWebSocketIoCancellationRunnerSource, enableWebSocket: true);
+
+        Assert.AreEqual(
+            (int)ExitCode.Success,
+            exitCode,
+            $"Expected browser WebSocket read/write cancellation to complete cleanly.{Environment.NewLine}{combined}");
+        Assert.Contains("BROWSER_WEBSOCKET_READ_CANCELLED=true", combined);
+        Assert.Contains("BROWSER_WEBSOCKET_PRE_CANCELLED_READ=true", combined);
+        Assert.Contains("BROWSER_WEBSOCKET_MESSAGE_AFTER_CANCEL=after-cancel", combined);
+        Assert.Contains("BROWSER_WEBSOCKET_WRITE_CANCELLED=true", combined);
+        Assert.Contains("BROWSER_WEBSOCKET_ZERO_COUNT_READ=0", combined);
     }
 
     [TestMethod]
@@ -475,7 +1012,11 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
     // Publishes the generated browser-wasm asset, staging + booting it under Node. Only a missing
     // 'wasm-tools' workload is an acceptable skip (Inconclusive); any other publish failure is a real
     // regression and fails the test. Returns the process exit code plus captured stdout/stderr.
-    private async Task<(int ExitCode, string Output, string Error, string Combined)> PublishAndRunUnderNodeAsync(TestAsset generator, string node)
+    private async Task<(int ExitCode, string Output, string Error, string Combined)> PublishAndRunUnderNodeAsync(
+        TestAsset generator,
+        string node,
+        string runnerSource = NodeRunnerSource,
+        bool enableWebSocket = false)
     {
         DotnetMuxerResult publishResult = await WasmRuntime.PublishForBrowserAsync(
             generator.TargetAssetPath, TargetFramework, TestContext.CancellationToken);
@@ -493,7 +1034,22 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
             Directory.Exists(appBundle),
             $"Expected the browser-wasm AppBundle directory at '{appBundle}'.");
 
-        return await WasmRuntime.RunUnderNodeAsync(node, appBundle, NodeRunnerSource, TestContext.CancellationToken);
+        return await WasmRuntime.RunUnderNodeAsync(node, appBundle, runnerSource, TestContext.CancellationToken, enableWebSocket);
+    }
+
+    private static bool TryReadMarkerInt(string output, string marker, out int value)
+    {
+        int markerIndex = output.IndexOf(marker, StringComparison.Ordinal);
+        if (markerIndex < 0)
+        {
+            value = 0;
+            return false;
+        }
+
+        int valueStart = markerIndex + marker.Length;
+        int valueEnd = output.IndexOfAny(['\r', '\n'], valueStart);
+        string text = valueEnd < 0 ? output[valueStart..] : output[valueStart..valueEnd];
+        return int.TryParse(text, CultureInfo.InvariantCulture, out value);
     }
 
     private Task<TestAsset> GenerateBrowserWasmAssetAsync()
@@ -513,6 +1069,28 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
                 .PatchCodeWithReplace("$WarningText$", WarningText)
                 .PatchCodeWithReplace("$ErrorText$", ErrorText)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
+
+    private Task<TestAsset> GenerateBrowserWasmWebSocketCancellationAssetAsync()
+        => TestAsset.GenerateAssetAsync(
+            "BrowserWebSocketCancellationProject",
+            WebSocketCancellationSourceCode
+                .PatchCodeWithReplace("$TargetFramework$", TargetFramework)
+                .PatchCodeWithReplace("$BrowserRid$", WasmRuntime.BrowserRid)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
+
+    private Task<TestAsset> GenerateBrowserWasmCustomHostAssetAsync()
+    {
+        var versions = XDocument.Load(Path.Combine(RootFinder.Find(), "eng", "Versions.props"));
+        string publishedMSTestVersion = versions.Descendants("MSTestVersion").Single().Value;
+
+        return TestAsset.GenerateAssetAsync(
+            "BrowserCustomHostProject",
+            CustomHostSourceCode
+                .PatchCodeWithReplace("$TargetFramework$", TargetFramework)
+                .PatchCodeWithReplace("$BrowserRid$", WasmRuntime.BrowserRid)
+                .PatchCodeWithReplace("$MSTestVersion$", publishedMSTestVersion),
+            addPublicFeeds: true);
+    }
 
     private Task<TestAsset> GenerateBrowserWasmRunSettingsAssetAsync()
         => TestAsset.GenerateAssetAsync(

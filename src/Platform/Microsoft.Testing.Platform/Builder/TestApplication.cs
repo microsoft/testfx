@@ -186,7 +186,7 @@ public sealed class TestApplication : ITestApplication
 
         string moduleName = testApplicationModuleInfo.GetDisplayName();
         await logger.LogInformationAsync($"Test module: {moduleName}").ConfigureAwait(false);
-        await logger.LogInformationAsync($"Command line arguments: '{(args.Length == 0 ? string.Empty : args.Aggregate((a, b) => $"{a} {b}"))}'").ConfigureAwait(false);
+        await logger.LogInformationAsync($"Command line arguments: '{CommandLineArgumentsRedactor.Redact(args)}'").ConfigureAwait(false);
 
         StringBuilder machineInfo = new();
 #pragma warning disable RS0030 // Do not use banned APIs

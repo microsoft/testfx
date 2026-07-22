@@ -76,6 +76,7 @@ internal sealed class PlatformOutputDeviceManager
                 serviceProvider.GetRuntimeFeature(),
                 serviceProvider.GetEnvironment(),
                 serviceProvider.GetPlatformInformation(),
+                serviceProvider.GetCommandLineOptions(),
                 serviceProvider.GetRequiredService<IStopPoliciesService>());
 #else
             throw new PlatformNotSupportedException(PlatformResources.BrowserPlatformNotSupportedOnOlderFrameworks);

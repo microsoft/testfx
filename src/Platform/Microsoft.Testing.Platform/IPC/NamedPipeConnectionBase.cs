@@ -14,9 +14,11 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.IPC;
 
-// Named-pipe framing/transport shared by NamedPipeServer and NamedPipeClient. This is deliberately NOT part of the
-// source-shared serializer registry (NamedPipeBase): the transport differs per repo (e.g. dotnet/sdk inlines its own
-// read/write loop), so only the registry + serializers are shared. This type stays local to Microsoft.Testing.Platform.
+// Duplex-stream framing/transport shared by NamedPipeServer, NamedPipeClient, and DotnetTestWebSocketClient. This is
+// deliberately NOT part of the source-shared serializer registry (NamedPipeBase): the transport differs per repo
+// (e.g. dotnet/sdk inlines its own read/write loop), so only the registry + serializers are shared. This type stays
+// local to Microsoft.Testing.Platform. It operates on any duplex Stream (PipeStream, a WebSocket-backed Stream, ...);
+// the only pipe-specific behavior (WaitForPipeDrain) is isolated behind an `is PipeStream` check.
 [Embedded]
 [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Disposal is delegated to subclasses via DisposeBuffers().")]
 internal abstract class NamedPipeConnectionBase : NamedPipeBase
@@ -28,12 +30,15 @@ internal abstract class NamedPipeConnectionBase : NamedPipeBase
     /// <summary>
     /// Serializes <paramref name="message"/> using <paramref name="serializer"/>, frames it with a
     /// 4-byte size header and 4-byte serializer-ID prefix, writes the frame to <paramref name="stream"/>,
-    /// flushes, and (on Windows) waits for the pipe to drain.
+    /// flushes, and (on Windows, when <paramref name="stream"/> is a named pipe) waits for the pipe to drain.
     /// </summary>
-#if !MTP_MSBUILD_TASKS
-    [UnsupportedOSPlatform("browser")]
-#endif
-    protected async Task WriteMessageAsync(PipeStream stream, INamedPipeSerializer serializer, object message, CancellationToken cancellationToken)
+    /// <remarks>
+    /// This method is transport-neutral: <paramref name="stream"/> may be a <see cref="PipeStream"/> (the
+    /// named-pipe transport) or any other duplex <see cref="Stream"/> (e.g. a WebSocket-backed duplex stream).
+    /// The only pipe-specific behavior - <see cref="PipeStream.WaitForPipeDrain"/> - is isolated behind an
+    /// <c>is PipeStream</c> check so it only ever runs for the named-pipe transport.
+    /// </remarks>
+    protected async Task WriteMessageAsync(Stream stream, INamedPipeSerializer serializer, object message, CancellationToken cancellationToken)
     {
         // Serialize the message body
         _serializationBuffer.Position = 0;
@@ -103,9 +108,9 @@ internal abstract class NamedPipeConnectionBase : NamedPipeBase
             await stream.WriteAsync(_messageBuffer.GetBuffer(), 0, (int)_messageBuffer.Position, cancellationToken).ConfigureAwait(false);
 #endif
             await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (stream is PipeStream pipeStream && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                stream.WaitForPipeDrain();
+                pipeStream.WaitForPipeDrain();
             }
         }
         finally
@@ -119,10 +124,10 @@ internal abstract class NamedPipeConnectionBase : NamedPipeBase
     /// Reads one complete framed message from <paramref name="stream"/>, deserializes it, and returns
     /// the result.  Returns <see langword="null"/> when the stream reaches EOF (peer disconnected).
     /// </summary>
-#if !MTP_MSBUILD_TASKS
-    [UnsupportedOSPlatform("browser")]
-#endif
-    protected async Task<object?> ReadNextMessageAsync(PipeStream stream, CancellationToken cancellationToken)
+    /// <remarks>
+    /// Transport-neutral: see the remarks on <see cref="WriteMessageAsync"/>.
+    /// </remarks>
+    protected async Task<object?> ReadNextMessageAsync(Stream stream, CancellationToken cancellationToken)
     {
         _messageBuffer.SetLength(0);
 

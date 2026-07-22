@@ -96,9 +96,28 @@ internal static class HandshakeMessagePropertyNames
     // Semicolon-separated lowercase file extensions used as a compatibility fallback for untagged artifacts.
     internal const byte SupportedPostProcessorExtensionsLegacy = 15;
 
+    // Identifies which pre-launch transport carried this handshake: a value from HandshakeMessageTransportNames
+    // ("NamedPipe" or "WebSocket"). The wire protocol is identical over either transport; this property exists
+    // purely for diagnostics/telemetry and future negotiation (e.g. so the SDK can log or validate which
+    // transport a given connecting process actually used). Always sent by the test host / test host controller
+    // / orchestrator; an older SDK that does not recognize the id simply ignores it, so it is not gated on the
+    // negotiated protocol version, but ProtocolConstants.SupportedVersions was still bumped to 1.5.0 alongside it
+    // so the negotiated-version state advances in lockstep with the other additive capabilities in this file.
+    internal const byte Transport = 16;
+
     // Indicates that the test application understands the first-class test-coverage message contract.
     // This is protocol support, not a claim that an enabled extension will produce coverage in this run.
-    internal const byte SupportsTestCoverageMessages = 16;
+    internal const byte SupportsTestCoverageMessages = 17;
+}
+
+[Embedded]
+internal static class HandshakeMessageTransportNames
+{
+    // System.IO.Pipes-based transport (the original, default transport selected via --dotnet-test-pipe).
+    internal const string NamedPipe = "NamedPipe";
+
+    // WebSocket-based transport (selected via --dotnet-test-transport websocket), required on browser-wasm.
+    internal const string WebSocket = "WebSocket";
 }
 
 [Embedded]
@@ -188,5 +207,12 @@ internal static class ProtocolConstants
     // --timeout, ...). The feature is gated on the presence of the handshake property (a capability), not on this
     // version string, so an older SDK that never advertises the pipe leaves the feature disabled. The version is
     // still bumped so the negotiated-version state advances in lockstep.
-    internal const string SupportedVersions = "1.0.0;1.1.0;1.2.0;1.3.0;1.4.0";
+    // 1.5.0 adds the Transport handshake property (HandshakeMessagePropertyNames.Transport): the test host now
+    // always reports which pre-launch transport it connected over ("NamedPipe" or "WebSocket" - see
+    // HandshakeMessageTransportNames). This is a capability-style property gated on presence, not on this version
+    // string, so an older SDK that does not look at it is unaffected; the version is bumped only so the
+    // negotiated-version state advances in lockstep with the other additive capabilities in this file. Introduced
+    // alongside the WebSocket transport (docs/mstest-runner-protocol/004-protocol-dotnet-test-pipe.md), which is
+    // required to bootstrap the dotnettestcli protocol on runtimes without System.IO.Pipes support (browser-wasm).
+    internal const string SupportedVersions = "1.0.0;1.1.0;1.2.0;1.3.0;1.4.0;1.5.0";
 }
