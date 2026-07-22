@@ -188,13 +188,14 @@ public sealed class IPCTests
     [TestMethod]
     public async Task SingleConnectionNamedPipeServer_RequestReplySerialization_Succeeded()
     {
-        Queue<BaseMessage> receivedMessages = new();
+        Queue<object> receivedMessages = new();
         PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
         NamedPipeClient namedPipeClient = new(pipeNameDescription.Name);
         namedPipeClient.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
         namedPipeClient.RegisterSerializer(new TextMessageSerializer(), typeof(TextMessage));
         namedPipeClient.RegisterSerializer(new IntMessageSerializer(), typeof(IntMessage));
         namedPipeClient.RegisterSerializer(new LongMessageSerializer(), typeof(LongMessage));
+        namedPipeClient.RegisterSerializer(new LegacyTestHostCompletedRequestSerializer(), typeof(TestHostCompletedRequest));
 
         ManualResetEventSlim manualResetEventSlim = new(false);
         var clientConnected = Task.Run(
@@ -225,7 +226,7 @@ public sealed class IPCTests
             pipeNameDescription,
             request =>
             {
-                receivedMessages.Enqueue((BaseMessage)request);
+                receivedMessages.Enqueue(request);
                 return Task.FromResult<IResponse>(VoidResponse.CachedInstance);
             },
             new SystemEnvironment(),
@@ -236,6 +237,7 @@ public sealed class IPCTests
         singleConnectionNamedPipeServer.RegisterSerializer(new TextMessageSerializer(), typeof(TextMessage));
         singleConnectionNamedPipeServer.RegisterSerializer(new IntMessageSerializer(), typeof(IntMessage));
         singleConnectionNamedPipeServer.RegisterSerializer(new LongMessageSerializer(), typeof(LongMessage));
+        singleConnectionNamedPipeServer.RegisterSerializer(new TestHostCompletedRequestSerializer(), typeof(TestHostCompletedRequest));
         await singleConnectionNamedPipeServer.WaitConnectionAsync(CancellationToken.None);
         manualResetEventSlim.Wait(_testContext.CancellationToken);
 
@@ -246,6 +248,13 @@ public sealed class IPCTests
 
         await namedPipeClient.RequestReplyAsync<LongMessage, VoidResponse>(new LongMessage(11), CancellationToken.None);
         Assert.AreEqual(receivedMessages.Dequeue(), new LongMessage(11));
+
+        await namedPipeClient.RequestReplyAsync<TestHostCompletedRequest, VoidResponse>(
+            new TestHostCompletedRequest((int)ExitCode.AtLeastOneTestFailed),
+            CancellationToken.None);
+        var legacyCompletion = (TestHostCompletedRequest)receivedMessages.Dequeue();
+        Assert.AreEqual((int)ExitCode.AtLeastOneTestFailed, legacyCompletion.ExitCode);
+        Assert.AreEqual(legacyCompletion.ExitCode, legacyCompletion.UnfilteredExitCode);
 
         Random random = new();
         int currentRound = 100;
@@ -373,5 +382,16 @@ public sealed class IPCTests
         protected override LongMessage DeserializeCore(Stream stream) => new(ReadLong(stream));
 
         protected override void SerializeCore(LongMessage objectToSerialize, Stream stream) => WriteLong(stream, objectToSerialize.Long);
+    }
+
+    private sealed class LegacyTestHostCompletedRequestSerializer
+        : NamedPipeSerializer<TestHostCompletedRequest>, INamedPipeSerializer
+    {
+        public override int Id => TestHostCompletedRequestFieldsId.MessagesSerializerId;
+
+        protected override TestHostCompletedRequest DeserializeCore(Stream stream) => new(ReadInt(stream));
+
+        protected override void SerializeCore(TestHostCompletedRequest objectToSerialize, Stream stream)
+            => WriteInt(stream, objectToSerialize.ExitCode);
     }
 }

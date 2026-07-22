@@ -124,7 +124,7 @@ internal abstract class NamedPipeConnectionBase : NamedPipeBase
 #endif
     protected async Task<object?> ReadNextMessageAsync(PipeStream stream, CancellationToken cancellationToken)
     {
-        _messageBuffer.Position = 0;
+        _messageBuffer.SetLength(0);
 
         try
         {
