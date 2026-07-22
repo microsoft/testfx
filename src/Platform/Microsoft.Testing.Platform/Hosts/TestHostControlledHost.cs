@@ -39,7 +39,9 @@ internal sealed class TestHostControlledHost(
         int exitCode = await _innerHost.RunAsync().ConfigureAwait(false);
         try
         {
-            int unfilteredExitCode = _testApplicationResult?.GetProcessExitCodeWithoutIgnore() ?? exitCode;
+            int unfilteredExitCode = _testApplicationResult?.GetProcessExitCode() == exitCode
+                ? _testApplicationResult.GetProcessExitCodeWithoutIgnore()
+                : exitCode;
             await _namedPipeClient.RequestReplyAsync<TestHostCompletedRequest, VoidResponse>(
                 new TestHostCompletedRequest(exitCode, unfilteredExitCode),
                 _cancellationToken).ConfigureAwait(false);
