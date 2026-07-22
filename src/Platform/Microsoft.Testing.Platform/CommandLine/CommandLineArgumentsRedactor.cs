@@ -58,17 +58,19 @@ internal static class CommandLineArgumentsRedactor
                     continue;
                 }
 
-                error = error.Replace(original, RedactedPlaceholder);
+                error = ReplaceQuotedValue(error, original, RedactedPlaceholder);
                 string trimmedOriginal = original.Trim();
                 if (trimmedOriginal != original)
                 {
-                    error = error.Replace(trimmedOriginal, RedactedPlaceholder);
+                    error = ReplaceQuotedValue(error, trimmedOriginal, RedactedPlaceholder);
                 }
 
                 string optionNameWithoutPrefix = trimmedOriginal.TrimStart('-');
                 if (optionNameWithoutPrefix.Length > 0)
                 {
-                    error = error.Replace(optionNameWithoutPrefix, RedactedPlaceholder);
+                    error = ReplaceQuotedValue(error, optionNameWithoutPrefix, RedactedPlaceholder);
+                    error = error.Replace($"'--{optionNameWithoutPrefix}'", $"'{RedactedPlaceholder}'");
+                    error = error.Replace($"'-{optionNameWithoutPrefix}'", $"'{RedactedPlaceholder}'");
                 }
             }
             else if (redacted.Contains(RedactedPlaceholder))
@@ -86,6 +88,16 @@ internal static class CommandLineArgumentsRedactor
         }
 
         return error;
+    }
+
+    private static string ReplaceQuotedValue(string text, string value, string replacement)
+    {
+        text = text
+            .Replace($"'{value}'", $"'{replacement}'")
+            .Replace($"\"{value}\"", $"\"{replacement}\"");
+        return value.IndexOfAny(['\'', '"']) >= 0
+            ? text.Replace(value, replacement)
+            : text;
     }
 
     private static string[] RedactArguments(string[] args)

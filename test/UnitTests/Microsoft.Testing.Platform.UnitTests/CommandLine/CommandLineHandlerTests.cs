@@ -68,6 +68,29 @@ public sealed class CommandLineHandlerTests
     }
 
     [TestMethod]
+    public async Task ParseAndValidateAsync_ShortInvalidEndpoint_DoesNotCorruptValidationError()
+    {
+        string[] args =
+        [
+            "--server", "dotnettestcli",
+            "--dotnet-test-transport", "websocket",
+            "--dotnet-test-websocket-endpoint", "a",
+            "--dotnet-test-websocket-token", "secret",
+        ];
+        CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            parseResult,
+            _systemCommandLineOptionsProviders,
+            _extensionCommandLineOptionsProviders,
+            new Mock<ICommandLineOptions>().Object);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains("requires an absolute", result.ErrorMessage);
+        Assert.DoesNotContain("***REDACTED***bsolute", result.ErrorMessage);
+    }
+
+    [TestMethod]
     [DataRow("-super-secret")]
     [DataRow("'super'secret'")]
     [DataRow(" 'super'secret' ")]
