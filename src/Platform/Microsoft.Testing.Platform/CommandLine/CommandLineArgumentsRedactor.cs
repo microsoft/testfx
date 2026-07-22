@@ -43,6 +43,7 @@ internal static class CommandLineArgumentsRedactor
 
         string[] redacted = new string[args.Length];
         bool redactingValuesForCurrentOption = false;
+        bool redactedValueForCurrentOption = false;
 
         for (int i = 0; i < args.Length; i++)
         {
@@ -51,12 +52,23 @@ internal static class CommandLineArgumentsRedactor
             if (TryParseOption(arg, out string? prefix, out string? optionName, out string? delimiter, out string? inlineValue))
             {
                 bool isSensitive = IsSensitiveOptionName(optionName);
+                if (redactingValuesForCurrentOption && !redactedValueForCurrentOption && !isSensitive)
+                {
+                    // An opaque secret may itself look like an option (for example "-secret"). Diagnostic
+                    // logging happens before arity validation, so mask this token rather than leaking it.
+                    redacted[i] = RedactedPlaceholder;
+                    redactingValuesForCurrentOption = false;
+                    redactedValueForCurrentOption = true;
+                    continue;
+                }
+
                 if (isSensitive && inlineValue is not null)
                 {
                     // Inline form, e.g. '--dotnet-test-websocket-token=<secret>': redact just the value,
                     // preserving the original prefix/name/delimiter exactly.
                     redacted[i] = $"{prefix}{optionName}{delimiter}{RedactedPlaceholder}";
                     redactingValuesForCurrentOption = false;
+                    redactedValueForCurrentOption = true;
                 }
                 else
                 {
@@ -64,6 +76,7 @@ internal static class CommandLineArgumentsRedactor
                     // one or more separate following tokens - redact those below until the next option.
                     redacted[i] = arg;
                     redactingValuesForCurrentOption = isSensitive;
+                    redactedValueForCurrentOption = false;
                 }
 
                 continue;
@@ -71,6 +84,7 @@ internal static class CommandLineArgumentsRedactor
 
             // Not an option-looking token: it's an argument value for whichever option preceded it.
             redacted[i] = redactingValuesForCurrentOption ? RedactedPlaceholder : arg;
+            redactedValueForCurrentOption |= redactingValuesForCurrentOption;
         }
 
         return string.Join(" ", redacted);

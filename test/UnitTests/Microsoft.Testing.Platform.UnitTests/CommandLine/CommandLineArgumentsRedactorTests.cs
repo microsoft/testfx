@@ -82,6 +82,17 @@ public sealed class CommandLineArgumentsRedactorTests
     }
 
     [TestMethod]
+    public void Redact_WhenSpaceSeparatedTokenLooksLikeOption_MasksToken()
+    {
+        string[] args = ["--dotnet-test-websocket-token", "-secret", "--diagnostic"];
+
+        string result = CommandLineArgumentsRedactor.Redact(args);
+
+        Assert.DoesNotContain("-secret", result);
+        Assert.AreEqual("--dotnet-test-websocket-token ***REDACTED*** --diagnostic", result);
+    }
+
+    [TestMethod]
     public void Redact_WhenExtraStrayValueFollowsTokenOption_RedactsUntilNextOption()
     {
         // Defensive: even if a caller mistakenly supplies more than one token for the (ArgumentArity.ExactlyOne)

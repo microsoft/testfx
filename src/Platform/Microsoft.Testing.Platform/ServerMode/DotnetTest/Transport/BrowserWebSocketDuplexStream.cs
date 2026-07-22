@@ -137,7 +137,12 @@ internal sealed partial class BrowserWebSocketDuplexStream : Stream
                 const waiter = ws._waiter;
                 ws._waiter = null;
                 waiter.resolve("__MTP_WEBSOCKET_CLOSED__");
+                return true;
             }
+
+            // Delivery already claimed and cleared the waiter. The .NET side must consume that completed
+            // receive rather than throw cancellation and strand the delivered payload on an abandoned task.
+            return false;
         }
 
         export function close(ws) {
@@ -299,16 +304,21 @@ internal sealed partial class BrowserWebSocketDuplexStream : Stream
             Task completed = await Task.WhenAny(receiveTask, cancellationTcs.Task).ConfigureAwait(false);
             if (completed == cancellationTcs.Task)
             {
+                bool cancellationWon;
                 try
                 {
-                    CancelReceive(_socket);
+                    cancellationWon = CancelReceive(_socket);
                 }
                 catch (JSException)
                 {
                     // Best-effort: the socket may already be gone (closed/disposed racing with this cancellation).
+                    cancellationWon = true;
                 }
 
-                cancellationToken.ThrowIfCancellationRequested();
+                if (cancellationWon)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
             }
         }
 
@@ -347,8 +357,11 @@ internal sealed partial class BrowserWebSocketDuplexStream : Stream
             {
                 // Best-effort close; the socket may already be gone (peer closed first, page navigating away, ...).
             }
-
-            _disposed = true;
+            finally
+            {
+                _socket.Dispose();
+                _disposed = true;
+            }
         }
 
         base.Dispose(disposing);
@@ -364,7 +377,7 @@ internal sealed partial class BrowserWebSocketDuplexStream : Stream
     private static partial Task<string> ReceiveAsync(JSObject socket);
 
     [JSImport("cancelReceive", ModuleName)]
-    private static partial void CancelReceive(JSObject socket);
+    private static partial bool CancelReceive(JSObject socket);
 
     [JSImport("close", ModuleName)]
     private static partial void Close(JSObject socket);
