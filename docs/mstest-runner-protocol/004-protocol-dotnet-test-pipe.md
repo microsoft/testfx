@@ -345,6 +345,7 @@ Property IDs (`HandshakeMessagePropertyNames`):
 | 13 | `AttemptNumber` | test host only | Positive, 1-based retry attempt. Multiple Instance IDs may share one attempt. |
 | 14 | `SupportedPostProcessorKinds` | test host, server test host, test host controller, or artifact post-processor | Semicolon-separated reverse-DNS artifact kinds supported by registered post-processors. |
 | 15 | `SupportedPostProcessorExtensionsLegacy` | test host, server test host, test host controller, or artifact post-processor | Semicolon-separated lowercase file extensions used as a fallback for untagged artifacts. |
+| 16 | `SupportsTestCoverageMessages` | yes | `"True"` when the host understands the first-class test-coverage message contract. This advertises protocol support only; it does not imply that an enabled extension will produce coverage during the run. |
 
 ### 8.2 SDK → host: `HandshakeMessage` (reply)
 
