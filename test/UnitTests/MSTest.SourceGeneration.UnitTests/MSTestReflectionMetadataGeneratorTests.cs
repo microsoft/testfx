@@ -2954,6 +2954,43 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
+    public void GeneratedMethodAttributes_MarkAsyncMetadataIncomplete()
+    {
+        const string userCode = """
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public sealed class Tests
+                {
+                    [TestMethod]
+                    public async Task AsyncTaskTest()
+                        => await Task.Yield();
+
+                    [TestMethod]
+                    public async void AsyncVoidTest()
+                        => await Task.Yield();
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        int asyncTaskIndex = registry.IndexOf("Name = \"AsyncTaskTest\"", System.StringComparison.Ordinal);
+        int asyncVoidIndex = registry.IndexOf("Name = \"AsyncVoidTest\"", System.StringComparison.Ordinal);
+        int asyncTaskIncompleteIndex = registry.IndexOf("AreAttributesComplete = false", asyncTaskIndex, System.StringComparison.Ordinal);
+        int asyncVoidIncompleteIndex = registry.IndexOf("AreAttributesComplete = false", asyncVoidIndex, System.StringComparison.Ordinal);
+        asyncTaskIndex.Should().BeGreaterThan(-1);
+        asyncVoidIndex.Should().BeGreaterThan(asyncTaskIndex);
+        asyncTaskIncompleteIndex.Should().BeGreaterThan(asyncTaskIndex).And.BeLessThan(asyncVoidIndex);
+        asyncVoidIncompleteIndex.Should().BeGreaterThan(asyncVoidIndex);
+    }
+
+    [TestMethod]
     public void RuntimeRegistration_RegistersCompleteMethodAttributes()
     {
         const string userCode = """

@@ -171,7 +171,10 @@ internal static class TestClassModelBuilder
             IsTestMethod: TestMemberValidationHelper.IsTestMethodAttributePresent(method),
             Parameters: BuildParameters(method),
             Attributes: methodAttributes.Attributes,
-            AreAttributesComplete: methodAttributes.IsComplete,
+            // AsyncStateMachineAttribute is synthesized during lowering and is not returned by
+            // IMethodSymbol.GetAttributes(). Keep async entries non-authoritative so runtime
+            // reflection can observe it, including when rejecting async-void test methods.
+            AreAttributesComplete: methodAttributes.IsComplete && !method.IsAsync,
             DataRows: DataRowBuilder.BuildDataRows(inheritedAttributes),
             DynamicDataSources: DynamicDataSourceBuilder.BuildDynamicDataSources(inheritedAttributes, method, consumingAssembly));
     }
