@@ -6,7 +6,8 @@ namespace Microsoft.Testing.Platform.CommandLine;
 /// <summary>
 /// Formats raw command-line arguments for diagnostics (e.g. the "Command line arguments" line written to the
 /// <c>--diagnostic</c> log) while masking the value(s) of options that carry secrets, so enabling verbose
-/// diagnostics never writes a secret to disk. See
+/// diagnostics never writes a secret to disk. WebSocket endpoint values are also reduced to scheme, host,
+/// port, and path so user-info, query parameters, and fragments cannot leak credentials. See
 /// <c>docs/mstest-runner-protocol/004-protocol-dotnet-test-pipe.md</c> §15.4: the
 /// <c>--dotnet-test-websocket-token</c> value is a per-run authentication secret and must never be logged.
 /// </summary>
@@ -24,8 +25,8 @@ internal static class CommandLineArgumentsRedactor
     /// <summary>
     /// Formats <paramref name="args"/> as a single space-separated string suitable for diagnostics, replacing
     /// the value(s) of any option in <see cref="SensitiveOptionNames"/> with a fixed placeholder. Every other
-    /// argument - including the sensitive option's own name/prefix/delimiter - is preserved exactly, so the
-    /// output otherwise remains as useful for troubleshooting as the raw command line.
+    /// argument - including the sensitive option's own name/prefix/delimiter - is preserved exactly except for
+    /// the sanitized WebSocket endpoint, so the output remains useful for troubleshooting.
     /// </summary>
     /// <remarks>
     /// Mirrors <see cref="CommandLineParser"/>'s own option-detection rule (a token starting with a single '-'
@@ -44,6 +45,7 @@ internal static class CommandLineArgumentsRedactor
         string[] redacted = new string[args.Length];
         bool redactingValuesForCurrentOption = false;
         bool redactedValueForCurrentOption = false;
+        bool sanitizingEndpointValue = false;
 
         for (int i = 0; i < args.Length; i++)
         {
@@ -51,6 +53,7 @@ internal static class CommandLineArgumentsRedactor
 
             if (TryParseOption(arg, out string? prefix, out string? optionName, out string? delimiter, out string? inlineValue))
             {
+                sanitizingEndpointValue = false;
                 bool isSensitive = IsSensitiveOptionName(optionName);
                 if (redactingValuesForCurrentOption && !redactedValueForCurrentOption && !isSensitive)
                 {
@@ -70,6 +73,15 @@ internal static class CommandLineArgumentsRedactor
                     redactingValuesForCurrentOption = false;
                     redactedValueForCurrentOption = true;
                 }
+                else if (IsWebSocketEndpointOptionName(optionName))
+                {
+                    redacted[i] = inlineValue is null
+                        ? arg
+                        : $"{prefix}{optionName}{delimiter}{SanitizeWebSocketEndpoint(inlineValue)}";
+                    redactingValuesForCurrentOption = false;
+                    redactedValueForCurrentOption = false;
+                    sanitizingEndpointValue = inlineValue is null;
+                }
                 else
                 {
                     // Bare option name (no inline value): keep it as-is. If it is sensitive, its value(s) are
@@ -79,6 +91,13 @@ internal static class CommandLineArgumentsRedactor
                     redactedValueForCurrentOption = false;
                 }
 
+                continue;
+            }
+
+            if (sanitizingEndpointValue)
+            {
+                redacted[i] = SanitizeWebSocketEndpoint(arg);
+                sanitizingEndpointValue = false;
                 continue;
             }
 
@@ -122,4 +141,26 @@ internal static class CommandLineArgumentsRedactor
 
     private static bool IsSensitiveOptionName(string optionName)
         => SensitiveOptionNames.Any(sensitive => sensitive.Equals(optionName, StringComparison.OrdinalIgnoreCase));
+
+    private static bool IsWebSocketEndpointOptionName(string optionName)
+        => PlatformCommandLineProvider.DotNetTestWebSocketEndpointOptionKey.Equals(optionName, StringComparison.OrdinalIgnoreCase);
+
+    private static string SanitizeWebSocketEndpoint(string endpoint)
+    {
+        if (!Uri.TryCreate(endpoint, UriKind.Absolute, out Uri? uri)
+            || uri.Scheme is not ("ws" or "wss"))
+        {
+            return RedactedPlaceholder;
+        }
+
+        UriBuilder builder = new(uri)
+        {
+            UserName = string.Empty,
+            Password = string.Empty,
+            Query = string.Empty,
+            Fragment = string.Empty,
+        };
+
+        return builder.Uri.AbsoluteUri;
+    }
 }

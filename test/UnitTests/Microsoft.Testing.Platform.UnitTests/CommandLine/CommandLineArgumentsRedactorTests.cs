@@ -93,6 +93,24 @@ public sealed class CommandLineArgumentsRedactorTests
     }
 
     [TestMethod]
+    [DataRow("--dotnet-test-websocket-endpoint", " ")]
+    [DataRow("--dotnet-test-websocket-endpoint=", "=")]
+    public void Redact_WebSocketEndpoint_RemovesUserInfoQueryAndFragment(string option, string separator)
+    {
+        string[] args = separator == " "
+            ? [option, "ws://user:password@localhost:123/run?dotnetTestToken=secret#fragment"]
+            : [$"{option}ws://user:password@localhost:123/run?dotnetTestToken=secret#fragment"];
+
+        string result = CommandLineArgumentsRedactor.Redact(args);
+
+        Assert.DoesNotContain("user", result);
+        Assert.DoesNotContain("password", result);
+        Assert.DoesNotContain("secret", result);
+        Assert.DoesNotContain("fragment", result);
+        Assert.AreEqual($"--dotnet-test-websocket-endpoint{separator}ws://localhost:123/run", result);
+    }
+
+    [TestMethod]
     public void Redact_WhenExtraStrayValueFollowsTokenOption_RedactsUntilNextOption()
     {
         // Defensive: even if a caller mistakenly supplies more than one token for the (ArgumentArity.ExactlyOne)

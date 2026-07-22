@@ -249,7 +249,7 @@ internal sealed partial class BrowserWebSocketDuplexStream : Stream
 
     public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
     {
-        while (_pendingReadOffset >= _pendingRead.Length)
+        while (count > 0 && _pendingReadOffset >= _pendingRead.Length)
         {
             string next = await WaitForReceiveAsync(cancellationToken).ConfigureAwait(false);
 

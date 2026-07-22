@@ -63,6 +63,20 @@ public sealed class DotnetTestWebSocketClientTests
 
 #if NET
     [TestMethod]
+    public async Task ClientWebSocketDuplexStream_ReadAsync_WithZeroCount_ReturnsImmediatelyWithoutReceiving()
+    {
+        var webSocket = new Mock<WebSocket>();
+        using ClientWebSocketDuplexStream stream = new(webSocket.Object);
+
+        int result = await stream.ReadAsync([], 0, 0, CancellationToken.None);
+
+        Assert.AreEqual(0, result);
+        webSocket.Verify(
+            socket => socket.ReceiveAsync(It.IsAny<ArraySegment<byte>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [TestMethod]
     [Timeout(30_000, CooperativeCancellation = true)]
     public async Task ConnectAsync_RequestReplyAsync_RoundTripsRealFramingOverLoopbackWebSocket()
     {

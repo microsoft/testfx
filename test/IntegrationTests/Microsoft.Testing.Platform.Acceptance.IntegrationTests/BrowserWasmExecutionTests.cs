@@ -553,6 +553,14 @@ await successfulConnectTask;
 using Stream stream = (Stream)successfulConnectTask.GetType().GetProperty("Result")!.GetValue(successfulConnectTask)!;
 
 byte[] buffer = new byte[32];
+Task<int> zeroCountRead = stream.ReadAsync(buffer, 0, 0, CancellationToken.None);
+if (await Task.WhenAny(zeroCountRead, Task.Delay(100)) != zeroCountRead || await zeroCountRead != 0)
+{
+    Console.Error.WriteLine("Browser WebSocket zero-count read did not complete immediately.");
+    return 4;
+}
+Console.WriteLine("BROWSER_WEBSOCKET_ZERO_COUNT_READ=0");
+
 using (CancellationTokenSource readCancellation = new(TimeSpan.FromMilliseconds(100)))
 {
     try
@@ -778,6 +786,7 @@ return 0;
         Assert.Contains("BROWSER_WEBSOCKET_READ_CANCELLED=true", combined);
         Assert.Contains("BROWSER_WEBSOCKET_MESSAGE_AFTER_CANCEL=after-cancel", combined);
         Assert.Contains("BROWSER_WEBSOCKET_WRITE_CANCELLED=true", combined);
+        Assert.Contains("BROWSER_WEBSOCKET_ZERO_COUNT_READ=0", combined);
     }
 
     [TestMethod]

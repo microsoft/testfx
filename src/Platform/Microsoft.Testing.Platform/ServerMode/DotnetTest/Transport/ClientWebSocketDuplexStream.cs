@@ -75,7 +75,7 @@ internal sealed class ClientWebSocketDuplexStream : Stream
         // zero-byte message with no opportunity for the awaited continuation to yield - a peer that sends many
         // consecutive zero-byte messages (deliberately or due to a bug) could drive that recursion arbitrarily
         // deep and crash the process with an uncatchable StackOverflowException. A loop has no such bound.
-        while (_receiveCount == 0)
+        while (count > 0 && _receiveCount == 0)
         {
             WebSocketReceiveResult result = await _webSocket.ReceiveAsync(new ArraySegment<byte>(_receiveBuffer), cancellationToken).ConfigureAwait(false);
             if (result.MessageType == WebSocketMessageType.Close)
