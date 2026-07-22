@@ -18,7 +18,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 /// <c>node</c> via the same loader, which is what this test uses instead of a real browser.
 /// </para>
 ///
-/// <para>Three complementary assertions, mirroring <see cref="WasmExecutionTests"/>:</para>
+/// <para>Five complementary assertions, mirroring <see cref="WasmExecutionTests"/>:</para>
 /// <list type="number">
 ///   <item>
 ///     <see cref="BrowserWasmBuild_GeneratesTestingPlatformEntryPoint"/> builds for
@@ -36,10 +36,20 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 ///     <c>AtLeastOneTestFailed</c>.
 ///   </item>
 ///   <item>
+///     <see cref="BrowserWasmExecution_CustomHostRunsExistingTestAssemblyWithoutCompetingEntryPoint"/>
+///     publishes a user-authored <c>AddMSTest</c> host that discovers a referenced test assembly,
+///     verifies the build does not emit CS7022, and executes that assembly under Node.
+///   </item>
+///   <item>
 ///     <see cref="BrowserWasmExecution_FrameworkWarningReachesNode"/> publishes a custom-framework
 ///     project that emits a warning and an error through <c>IOutputDevice</c>, and asserts both reach
 ///     the Node output via the <c>[JSImport]</c> console bindings without a JS-interop exception —
 ///     directly guarding the <c>BrowserOutputDevice.JSConsoleWarn</c> fix. Same skip conditions.
+///   </item>
+///   <item>
+///     <see cref="BrowserWasmExecution_RunSettingsEnvironmentVariables_FailsWithClearDiagnostic"/>
+///     verifies that unsupported runsettings environment variables fail with a clear browser-specific
+///     diagnostic rather than a platform exception.
 ///   </item>
 /// </list>
 /// </summary>
@@ -119,6 +129,87 @@ public sealed class UnitTest1
     [TestMethod]
     public void FailingTest()
         => Assert.Fail("Intentional failure to verify failures are reported under browser-wasm.");
+}
+""";
+
+    // A user-authored browser-wasm entry point that hosts an existing MSTest class library.
+    // EnableMSTestRunner disables Microsoft.NET.Test.Sdk's generated Program while
+    // GenerateTestingPlatformEntryPoint=false prevents MTP from generating a second entry point.
+    // The host deliberately references only the MSTest metapackage; the test library references the
+    // matching TestFramework version, which covers the package-alignment guidance in the sample.
+    private const string CustomHostSourceCode = """
+#file BrowserCustomHostProject.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>$TargetFramework$</TargetFramework>
+    <RuntimeIdentifier>$BrowserRid$</RuntimeIdentifier>
+    <OutputType>Exe</OutputType>
+    <SelfContained>true</SelfContained>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
+    <WasmMainJSPath>main.js</WasmMainJSPath>
+    <WasmBuildNative>false</WasmBuildNative>
+    <PublishTrimmed>false</PublishTrimmed>
+    <NoWarn>$(NoWarn);NETSDK1201</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MSTest" Version="$MSTestVersion$" />
+    <ProjectReference Include="HostedTests\HostedTests.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The referenced project lives below the host only because TestAsset owns one root directory. -->
+    <Compile Remove="HostedTests\**\*.cs" />
+  </ItemGroup>
+
+</Project>
+
+#file main.js
+import { dotnet } from './_framework/dotnet.js';
+const { runMain } = await dotnet.withApplicationArgumentsFromQuery().create();
+const exitCode = await runMain();
+globalThis.mtpExitCode = exitCode;
+
+#file Program.cs
+using HostedTests;
+using Microsoft.Testing.Platform.Builder;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+builder.AddMSTest(() => [typeof(HostedTest).Assembly]);
+using ITestApplication app = await builder.BuildAsync();
+return await app.RunAsync();
+
+#file HostedTests/HostedTests.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>$TargetFramework$</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+  </ItemGroup>
+
+</Project>
+
+#file HostedTests/HostedTest.cs
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace HostedTests;
+
+[TestClass]
+public sealed class HostedTest
+{
+    [TestMethod]
+    public void ExistingAssemblyTest()
+        => Assert.AreEqual(4, 2 + 2);
 }
 """;
 
@@ -381,6 +472,52 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
     }
 
     [TestMethod]
+    public async Task BrowserWasmExecution_CustomHostRunsExistingTestAssemblyWithoutCompetingEntryPoint()
+    {
+        string? node = WasmRuntime.LocateNode();
+        if (node is null)
+        {
+            Assert.Inconclusive(WasmRuntime.NodeUnavailableMessage);
+            return;
+        }
+
+        using TestAsset generator = await GenerateBrowserWasmCustomHostAssetAsync();
+
+        DotnetMuxerResult publishResult = await WasmRuntime.PublishForBrowserAsync(
+            generator.TargetAssetPath, TargetFramework, TestContext.CancellationToken);
+        if (publishResult.ExitCode != 0)
+        {
+            Assert.IsTrue(
+                WasmRuntime.IsMissingWasmToolsWorkload(publishResult),
+                $"'dotnet publish -r browser-wasm' failed for an unexpected reason (not a missing 'wasm-tools' workload).{Environment.NewLine}{publishResult}");
+            Assert.Inconclusive(
+                $"Skipping browser-wasm execution: the 'wasm-tools' workload is not installed.{Environment.NewLine}{publishResult}");
+        }
+
+        string publishOutput = string.Concat(publishResult.StandardOutput, Environment.NewLine, publishResult.StandardError);
+        Assert.IsFalse(
+            publishOutput.Contains("CS7022", StringComparison.Ordinal),
+            $"The custom AddMSTest host must not compile with competing entry points.{Environment.NewLine}{publishResult}");
+
+        string appBundle = WasmRuntime.GetBrowserAppBundlePath(generator.TargetAssetPath, TargetFramework);
+        Assert.IsTrue(
+            Directory.Exists(appBundle),
+            $"Expected the browser-wasm AppBundle directory at '{appBundle}'.");
+
+        (int exitCode, _, _, string combined) = await WasmRuntime.RunUnderNodeAsync(
+            node, appBundle, NodeRunnerSource, TestContext.CancellationToken);
+
+        Assert.IsTrue(
+            combined.Contains("succeeded: 1", StringComparison.Ordinal)
+                && combined.Contains("failed: 0", StringComparison.Ordinal),
+            $"Expected the custom host to execute the referenced test assembly successfully.{Environment.NewLine}{combined}");
+        Assert.AreEqual(
+            (int)ExitCode.Success,
+            exitCode,
+            $"Expected exit code {(int)ExitCode.Success} (Success) for the custom AddMSTest host.{Environment.NewLine}{combined}");
+    }
+
+    [TestMethod]
     public async Task BrowserWasmExecution_FrameworkWarningReachesNode()
     {
         // Guards the BrowserOutputDevice.JSConsoleWarn binding fix: the other execution test never
@@ -520,6 +657,20 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
                 .PatchCodeWithReplace("$WarningText$", WarningText)
                 .PatchCodeWithReplace("$ErrorText$", ErrorText)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
+
+    private Task<TestAsset> GenerateBrowserWasmCustomHostAssetAsync()
+    {
+        var versions = XDocument.Load(Path.Combine(RootFinder.Find(), "eng", "Versions.props"));
+        string publishedMSTestVersion = versions.Descendants("MSTestVersion").Single().Value;
+
+        return TestAsset.GenerateAssetAsync(
+            "BrowserCustomHostProject",
+            CustomHostSourceCode
+                .PatchCodeWithReplace("$TargetFramework$", TargetFramework)
+                .PatchCodeWithReplace("$BrowserRid$", WasmRuntime.BrowserRid)
+                .PatchCodeWithReplace("$MSTestVersion$", publishedMSTestVersion),
+            addPublicFeeds: true);
+    }
 
     private Task<TestAsset> GenerateBrowserWasmRunSettingsAssetAsync()
         => TestAsset.GenerateAssetAsync(
