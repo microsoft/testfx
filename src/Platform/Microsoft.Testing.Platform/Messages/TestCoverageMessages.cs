@@ -301,9 +301,10 @@ public sealed class TestCoverageThresholdMessage : DataWithSessionUid
             throw new ArgumentException("A non-aggregate evaluation must not specify a population.", nameof(aggregatedOver));
         }
 
-        if (aggregation is not CoverageAggregation.None && aggregatedOver is null)
+        if (aggregation is not CoverageAggregation.None
+            && aggregatedOver is null or CoverageScopeLevel.Overall)
         {
-            throw new ArgumentException("An aggregate evaluation must specify the aggregated population.", nameof(aggregatedOver));
+            throw new ArgumentException("An aggregate evaluation must specify a non-overall aggregated population.", nameof(aggregatedOver));
         }
 
         Scope = scope;

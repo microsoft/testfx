@@ -930,8 +930,8 @@ public sealed class TerminalTestReporterTests
 
         reporter.AppendCoverageSummary([], [threshold]);
 
-        string actual = 79.96d.ToString("G17", CultureInfo.CurrentCulture);
-        string required = 80d.ToString("G17", CultureInfo.CurrentCulture);
+        string actual = 79.96d.ToString("G17", CultureInfo.InvariantCulture);
+        string required = 80d.ToString("G17", CultureInfo.InvariantCulture);
         Assert.Contains($"Total - Line: {actual}% < {required}% threshold", console.Output);
         Assert.DoesNotContain("80.0% < 80.0%", console.Output);
     }

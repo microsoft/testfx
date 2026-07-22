@@ -13,6 +13,24 @@ public sealed class TestCoverageMessagesTests
     private static readonly SessionUid SessionUid = new("session");
 
     [TestMethod]
+    public void TestCoverageThresholdMessage_AggregatedOverOverall_ThrowsArgumentException()
+    {
+        ArgumentException exception = Assert.ThrowsExactly<ArgumentException>(
+            () => new TestCoverageThresholdMessage(
+                SessionUid,
+                CoverageScope.Overall,
+                CoverageMetric.Line,
+                CoverageAggregation.Minimum,
+                actualPercentage: 80,
+                requiredPercentage: 75,
+                hasCoverableData: true,
+                producerId: "producer",
+                aggregatedOver: CoverageScopeLevel.Overall));
+
+        Assert.AreEqual("aggregatedOver", exception.ParamName);
+    }
+
+    [TestMethod]
     [DataRow(-1L, -1L, "coverableCount")]
     [DataRow(-1L, 0L, "coveredCount")]
     [DataRow(2L, 1L, "coveredCount")]
