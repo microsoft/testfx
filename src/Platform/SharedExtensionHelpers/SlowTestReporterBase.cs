@@ -232,7 +232,7 @@ internal abstract class SlowTestReporterBase : IDataConsumer, ITestSessionLifeti
         {
             InProgressTest test = entry.Value;
             TimeSpan elapsed = now - test.StartTime;
-            if (elapsed < test.NextEmitThreshold)
+            if (!test.SlowTestThreshold.IsDue(elapsed))
             {
                 continue;
             }
@@ -244,14 +244,6 @@ internal abstract class SlowTestReporterBase : IDataConsumer, ITestSessionLifeti
             {
                 continue;
             }
-
-            // Exponential backoff so a genuinely stuck test does not spam the log: T, 2T, 4T, ...
-            // Clamp at TimeSpan.MaxValue so a very long-running test cannot overflow Ticks * 2 into a
-            // negative value (which would make the backoff fire on every scan).
-            long currentTicks = test.NextEmitThreshold.Ticks;
-            test.NextEmitThreshold = currentTicks > TimeSpan.MaxValue.Ticks / 2
-                ? TimeSpan.MaxValue
-                : TimeSpan.FromTicks(currentTicks * 2);
 
             try
             {
@@ -271,7 +263,7 @@ internal abstract class SlowTestReporterBase : IDataConsumer, ITestSessionLifeti
             TestName = testName;
             DisplayLabel = displayLabel;
             StartTime = startTime;
-            NextEmitThreshold = threshold;
+            SlowTestThreshold = new(threshold);
         }
 
         public string TestName { get; }
@@ -280,6 +272,6 @@ internal abstract class SlowTestReporterBase : IDataConsumer, ITestSessionLifeti
 
         public DateTimeOffset StartTime { get; }
 
-        public TimeSpan NextEmitThreshold { get; set; }
+        public SlowTestThresholdState SlowTestThreshold { get; }
     }
 }

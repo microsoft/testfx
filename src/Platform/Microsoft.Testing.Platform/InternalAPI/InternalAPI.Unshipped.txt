@@ -212,4 +212,7 @@ Microsoft.Testing.Platform.OutputDevice.SlowTestDiagnostic.DisplayName.get -> st
 Microsoft.Testing.Platform.OutputDevice.SlowTestDiagnostic.Elapsed.get -> System.TimeSpan
 Microsoft.Testing.Platform.OutputDevice.SlowTestDiagnostic.SlowTestDiagnostic(Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid! uid, string! displayName, System.TimeSpan elapsed) -> void
 Microsoft.Testing.Platform.OutputDevice.SlowTestDiagnostic.Uid.get -> Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid!
+Microsoft.Testing.Platform.OutputDevice.SlowTestThresholdState
+Microsoft.Testing.Platform.OutputDevice.SlowTestThresholdState.IsDue(System.TimeSpan elapsed) -> bool
+Microsoft.Testing.Platform.OutputDevice.SlowTestThresholdState.SlowTestThresholdState(System.TimeSpan initialThreshold) -> void
 static Microsoft.Testing.Platform.OutputDevice.ProgressReportingConfiguration.GetThreshold(Microsoft.Testing.Platform.Helpers.IEnvironment! environment, string! variableName, int defaultSeconds) -> System.TimeSpan

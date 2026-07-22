@@ -36,7 +36,7 @@ internal sealed class ActiveTestTracker
         {
             if (!_activeTests.ContainsKey(uid))
             {
-                _activeTests.Add(uid, new(displayName, _createStopwatch(), _slowTestThreshold.Ticks));
+                _activeTests.Add(uid, new(displayName, _createStopwatch(), new(_slowTestThreshold)));
             }
         }
     }
@@ -61,14 +61,13 @@ internal sealed class ActiveTestTracker
             var diagnostics = new List<SlowTestDiagnostic>();
             foreach ((TestNodeUid uid, ActiveTest activeTest) in _activeTests.OrderBy(static pair => pair.Key.Value, StringComparer.Ordinal))
             {
-                long elapsedTicks = activeTest.Stopwatch.Elapsed.Ticks;
-                if (elapsedTicks < activeTest.NextThresholdTicks)
+                TimeSpan elapsed = activeTest.Stopwatch.Elapsed;
+                if (!activeTest.SlowTestThreshold.IsDue(elapsed))
                 {
                     continue;
                 }
 
-                diagnostics.Add(new(uid, activeTest.DisplayName, TimeSpan.FromTicks(elapsedTicks)));
-                activeTest.NextThresholdTicks = GetNextThreshold(activeTest.NextThresholdTicks, elapsedTicks);
+                diagnostics.Add(new(uid, activeTest.DisplayName, elapsed));
             }
 
             return [.. diagnostics];
@@ -83,29 +82,13 @@ internal sealed class ActiveTestTracker
         }
     }
 
-    private static long GetNextThreshold(long currentThresholdTicks, long elapsedTicks)
-    {
-        long nextThresholdTicks = currentThresholdTicks;
-        while (nextThresholdTicks <= elapsedTicks)
-        {
-            if (nextThresholdTicks > long.MaxValue / 2)
-            {
-                return long.MaxValue;
-            }
-
-            nextThresholdTicks *= 2;
-        }
-
-        return nextThresholdTicks;
-    }
-
-    private sealed class ActiveTest(string displayName, IStopwatch stopwatch, long nextThresholdTicks)
+    private sealed class ActiveTest(string displayName, IStopwatch stopwatch, SlowTestThresholdState slowTestThreshold)
     {
         public string DisplayName { get; } = displayName;
 
         public IStopwatch Stopwatch { get; } = stopwatch;
 
-        public long NextThresholdTicks { get; set; } = nextThresholdTicks;
+        public SlowTestThresholdState SlowTestThreshold { get; } = slowTestThreshold;
     }
 }
 
