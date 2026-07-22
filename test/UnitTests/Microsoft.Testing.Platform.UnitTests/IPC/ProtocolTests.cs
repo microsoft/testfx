@@ -39,6 +39,22 @@ public sealed class ProtocolTests
     }
 
     [TestMethod]
+    [DataRow(1)]
+    [DataRow(2)]
+    [DataRow(3)]
+    public void TestHostCompletedRequestDeserialize_TruncatedUnfilteredExitCodeThrows(int trailingByteCount)
+    {
+        var stream = new MemoryStream();
+        stream.Write(BitConverter.GetBytes((int)ExitCode.AtLeastOneTestFailed));
+        stream.Write(new byte[trailingByteCount]);
+        stream.Position = 0;
+
+        TargetInvocationException wrapper = Assert.ThrowsExactly<TargetInvocationException>(
+            () => Deserialize(new TestHostCompletedRequestSerializer(), stream));
+        Assert.IsInstanceOfType<EndOfStreamException>(wrapper.InnerException);
+    }
+
+    [TestMethod]
     public void TestResultMessagesSerializeDeserialize()
     {
         object serializer = new TestResultMessagesSerializer();
@@ -293,6 +309,7 @@ public sealed class ProtocolTests
             { HandshakeMessagePropertyNames.AttemptNumber, nameof(HandshakeMessagePropertyNames.AttemptNumber) },
             { HandshakeMessagePropertyNames.SupportedPostProcessorKinds, nameof(HandshakeMessagePropertyNames.SupportedPostProcessorKinds) },
             { HandshakeMessagePropertyNames.SupportedPostProcessorExtensionsLegacy, nameof(HandshakeMessagePropertyNames.SupportedPostProcessorExtensionsLegacy) },
+            { HandshakeMessagePropertyNames.Transport, nameof(HandshakeMessagePropertyNames.Transport) },
             { HandshakeMessagePropertyNames.SupportsTestCoverageMessages, nameof(HandshakeMessagePropertyNames.SupportsTestCoverageMessages) },
         };
 
@@ -312,7 +329,8 @@ public sealed class ProtocolTests
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.AttemptNumber), properties[13]);
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.SupportedPostProcessorKinds), properties[14]);
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.SupportedPostProcessorExtensionsLegacy), properties[15]);
-        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.SupportsTestCoverageMessages), properties[16]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.Transport), properties[16]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.SupportsTestCoverageMessages), properties[17]);
     }
 
     // The HandshakeMessageExecutionModes string values flow over IPC to
@@ -562,6 +580,6 @@ public sealed class ProtocolTests
         // Indirect through a collection so the MSTest analyzer does not flag the comparison of a compile-time
         // constant as "always true" (MSTEST0032).
         string[] versions = [ProtocolConstants.SupportedVersions];
-        Assert.AreEqual("1.0.0;1.1.0;1.2.0;1.3.0;1.4.0;1.5.0", versions[0]);
+        Assert.AreEqual("1.0.0;1.1.0;1.2.0;1.3.0;1.4.0;1.5.0;1.6.0", versions[0]);
     }
 }
