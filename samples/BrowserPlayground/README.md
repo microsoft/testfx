@@ -202,6 +202,78 @@ as `30s`, `10m`, or `1h`. It can cancel asynchronous/cooperative work, but brows
 single-threaded: code that blocks the runtime thread without yielding cannot be preempted, so
 filtering/bisection remains the reliable way to identify that kind of hang.
 
+## Debugging: JavaScript host versus managed code
+
+`browser-wasm` does not run the test assembly in the `dotnet` process that launches the
+application. This explains the behavior reported in
+[#2196](https://github.com/microsoft/testfx/issues/2196#issuecomment-5032231745): there are
+separate layers:
+
+1. `dotnet run` starts the .NET SDK's `WasmAppHost`.
+2. `WasmAppHost` starts Node or serves the bundle to a browser.
+3. `_framework/dotnet.js` loads the Mono runtime compiled to WebAssembly, and Mono executes
+   the managed test assemblies inside the JavaScript host.
+
+Consequently, attaching Visual Studio's managed debugger to the outer `dotnet` process only
+debugs `WasmAppHost`. It neither follows the child Node process nor establishes the Mono
+WebAssembly debugger-agent/proxy connection needed to resolve C# portable PDBs and managed
+frames. Similarly, a Node or browser JavaScript debugger can inspect the loader, promises,
+event loop, and JavaScript/WebAssembly frames, but that alone does not make C# breakpoints work.
+
+| Host and debugger | What it can debug | Support for this sample |
+| --- | --- | --- |
+| Node inspector, Chrome/Edge DevTools, or the Visual Studio/VS Code JavaScript debugger | `runtests.mjs`, `dotnet.js`, JavaScript interop, and V8/WebAssembly state | Supported. This is JavaScript debugging, not managed C# debugging. |
+| Visual Studio or VS Code managed debugger attached to Node | C# executing inside Mono WebAssembly | No supported .NET 10 workflow is documented for a `browser-wasm` app hosted by Node. |
+| Browser developer tools against the statically served bundle | JavaScript, console output, network activity, and browser WebAssembly state | Supported. The static server used above does not start the .NET managed-debug proxy. |
+| Visual Studio or VS Code through the .NET browser debug proxy | Managed C# in Mono WebAssembly, including breakpoints, stepping, locals, and managed/JavaScript call stacks | Supported by the .NET 10 browser tooling, but the proxy must be part of the launch. It is not provided by `node runtests.mjs`, `http-server`, or `python -m http.server`. |
+
+### Inspect the headless Node host
+
+To diagnose the JavaScript side of a hanging headless run, start Node's inspector and pause
+before the module loads:
+
+```sh
+cd artifacts/bin/BrowserPlayground/Debug/net10.0/browser-wasm/AppBundle
+node --inspect-brk runtests.mjs
+```
+
+Attach with `chrome://inspect` / `edge://inspect`, the
+[VS Code Node.js debugger](https://code.visualstudio.com/docs/nodejs/nodejs-debugging), or
+[Visual Studio's JavaScript debugger for Node.js](https://learn.microsoft.com/en-us/visualstudio/javascript/debug-nodejs?view=visualstudio).
+Use `--inspect` instead of `--inspect-brk` when the test run should start immediately. These
+tools are useful for finding an unresolved JavaScript promise, a blocked host callback, or a
+loader/interop problem. They cannot step through the managed test method.
+
+### Debug managed C# in a real browser
+
+.NET's managed browser debugger uses a proxy between the IDE/browser DevTools protocol and the
+Mono debugger agent. A plain static server is therefore insufficient. The supported .NET 10
+reference flows are:
+
+- [Debug ASP.NET Core Blazor WebAssembly](https://learn.microsoft.com/aspnet/core/blazor/debug?view=aspnetcore-10.0)
+  with Visual Studio or VS Code. The documented `inspectUri` tells the IDE to connect through
+  the framework's debug proxy.
+- The official .NET 10
+  [`wasmbrowser` template launch profile](https://github.com/dotnet/runtime/blob/release/10.0/src/mono/wasm/templates/templates/browser/Properties/launchSettings.json),
+  which contains that proxy `inspectUri`, together with the
+  [`Microsoft.NET.Sdk.WebAssembly` project](https://github.com/dotnet/runtime/blob/release/10.0/src/mono/wasm/templates/templates/browser/browser.0.csproj).
+- The runtime's
+  [`WasmAppHost --debug` support](https://github.com/dotnet/runtime/blob/release/10.0/src/mono/wasm/host/README.md),
+  which starts the browser debug server when a browser host configuration is used.
+
+By contrast, the official .NET 10
+[`wasmconsole` Node template](https://github.com/dotnet/runtime/tree/release/10.0/src/mono/wasm/templates/templates/console)
+has no managed-debug launch profile. BrowserPlayground intentionally keeps its small,
+host-neutral publish/run setup, so it does not check in an IDE launch configuration that would
+pretend to enable managed debugging under Node. If managed breakpoints are required, reproduce
+the failing run through a debug-proxy-enabled browser project rather than attaching to the outer
+`dotnet` process.
+
+The open draft [dotnet/sdk#55389](https://github.com/dotnet/sdk/pull/55389) is related to
+launching WebAssembly test hosts from `dotnet test`, not to managed debugger attachment. Its
+current draft uses standalone execution and assembly exit codes while richer reporting remains
+gated, so do not depend on it for per-test progress, live transport, or Node-hosted C# debugging.
+
 ## Status
 
 Microsoft.Testing.Platform boots on `browser-wasm` (the banner reads

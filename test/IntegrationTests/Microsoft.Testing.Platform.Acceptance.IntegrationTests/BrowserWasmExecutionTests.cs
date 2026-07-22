@@ -455,6 +455,13 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
             combined.Contains("failed: 1", StringComparison.Ordinal),
             $"Expected 1 failed test in the browser-wasm run summary.{Environment.NewLine}{combined}");
 
+        foreach (string testName in new[] { "PassingTest", "AnotherPassingTest", "FailingTest" })
+        {
+            Assert.IsTrue(
+                combined.Contains($"running {testName}", StringComparison.Ordinal),
+                $"Expected browser-wasm progress output to identify '{testName}' before it ran.{Environment.NewLine}{combined}");
+        }
+
         // Assert the exact "at least one test failed" exit code (2). A generic non-zero check would
         // also pass for a post-run crash or other MTP failure; requiring AtLeastOneTestFailed keeps
         // those from masquerading as the expected failing-test outcome.
