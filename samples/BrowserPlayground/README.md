@@ -32,9 +32,13 @@ Prerequisites:
   workload this sample needs (see
   [`eng/restore-toolset.ps1`](../../eng/restore-toolset.ps1) /
   [`eng/restore-toolset.sh`](../../eng/restore-toolset.sh)). If you use a machine-installed
-  SDK instead, install the workload manually:
+  SDK instead, install the workload matching that SDK:
 
   ```sh
+  # .NET 10 SDK
+  dotnet workload install wasm-tools
+
+  # Newer SDK cross-targeting .NET 10
   dotnet workload install wasm-tools-net10
   ```
 

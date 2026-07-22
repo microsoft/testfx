@@ -185,7 +185,7 @@ builder.AddMSTest(() => [typeof(HostedTest).Assembly]);
 using ITestApplication app = await builder.BuildAsync();
 return await app.RunAsync();
 
-#file HostedTests\HostedTests.csproj
+#file HostedTests/HostedTests.csproj
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
@@ -200,7 +200,7 @@ return await app.RunAsync();
 
 </Project>
 
-#file HostedTests\HostedTest.cs
+#file HostedTests/HostedTest.cs
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace HostedTests;
