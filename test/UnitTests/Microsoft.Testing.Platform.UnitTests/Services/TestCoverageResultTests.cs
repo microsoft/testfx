@@ -81,6 +81,20 @@ public sealed class TestCoverageResultTests
     }
 
     [TestMethod]
+    public void CoverageScopeSummary_CallerMutatesMetricList_PreservesSnapshot()
+    {
+        CoverageMetricResult original = new(CoverageMetric.Line, 8, 10, "producer");
+        var metrics = new List<CoverageMetricResult> { original };
+        CoverageScopeSummary summary = new(new SessionUid("session"), CoverageScope.Overall, metrics);
+
+        metrics[0] = new CoverageMetricResult(CoverageMetric.Branch, 1, 10, "producer");
+        metrics.Add(new CoverageMetricResult(CoverageMetric.Method, 2, 10, "producer"));
+
+        Assert.HasCount(1, summary.Metrics);
+        Assert.AreSame(original, summary.Metrics[0]);
+    }
+
+    [TestMethod]
     public async Task ConsumeAsync_DuplicateReport_ReplacesValueAndPreservesFirstSeenOrder()
     {
         TestCoverageResult result = new();

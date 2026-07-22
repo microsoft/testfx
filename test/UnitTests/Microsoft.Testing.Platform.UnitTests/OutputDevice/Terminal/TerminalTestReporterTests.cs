@@ -1115,6 +1115,46 @@ public sealed class TerminalTestReporterTests
     }
 
     [TestMethod]
+    public void AppendCoverageSummary_WhenThresholdLabelIsDuplicated_IncludesNormalizedProducerIds()
+    {
+        var console = new StringBuilderConsole();
+        TerminalTestReporter reporter = CreateCoverageReporter(console);
+        TestCoverageThresholdMessage first = new(
+            new SessionUid("session"),
+            CoverageScope.Overall,
+            CoverageMetric.Line,
+            CoverageAggregation.Total,
+            actualPercentage: 90,
+            requiredPercentage: 80,
+            hasCoverableData: true,
+            producerId: "producer-a",
+            aggregatedOver: CoverageScopeLevel.Module);
+        TestCoverageThresholdMessage second = new(
+            new SessionUid("session"),
+            CoverageScope.Overall,
+            CoverageMetric.Line,
+            CoverageAggregation.Total,
+            actualPercentage: 85,
+            requiredPercentage: 80,
+            hasCoverableData: true,
+            producerId: "producer\nb",
+            aggregatedOver: CoverageScopeLevel.Module);
+        TestCoverageThresholdMessage unique = CreateThreshold(
+            CoverageScope.Overall,
+            CoverageMetric.Branch,
+            CoverageAggregation.None,
+            actual: 90,
+            required: 80);
+
+        reporter.AppendCoverageSummary([], [first, second, unique]);
+
+        Assert.Contains("Total - Line (Total over Module) [producer-a]: 90.0% >= 80.0% threshold", console.Output);
+        Assert.Contains("Total - Line (Total over Module) [producer␊b]: 85.0% >= 80.0% threshold", console.Output);
+        Assert.Contains("Total - Branch: 90.0% >= 80.0% threshold", console.Output);
+        Assert.DoesNotContain("Branch [", console.Output);
+    }
+
+    [TestMethod]
     public void AppendCoverageSummary_NonInvariantCurrentCulture_UsesInvariantCoverageNumbers()
     {
         CultureInfo originalCulture = CultureInfo.CurrentCulture;

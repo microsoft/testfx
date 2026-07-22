@@ -469,6 +469,15 @@ internal sealed partial class TerminalTestReporter
 
             terminal.AppendLine($"{SingleIndentation}{TerminalResources.CoverageThresholdResults}");
 
+            Dictionary<(CoverageScope Scope, CoverageMetric Metric, string? CustomMetricName, CoverageAggregation Aggregation, CoverageScopeLevel? AggregatedOver), int> thresholdCounts = [];
+            foreach (TestCoverageThresholdMessage threshold in thresholds)
+            {
+                (CoverageScope Scope, CoverageMetric Metric, string? CustomMetricName, CoverageAggregation Aggregation, CoverageScopeLevel? AggregatedOver) thresholdKey =
+                    (threshold.Scope, threshold.Metric, threshold.CustomMetricName, threshold.Aggregation, threshold.AggregatedOver);
+                thresholdCounts.TryGetValue(thresholdKey, out int count);
+                thresholdCounts[thresholdKey] = count + 1;
+            }
+
             foreach (TestCoverageThresholdMessage threshold in thresholds)
             {
                 bool passed = threshold.Passed;
@@ -491,7 +500,17 @@ internal sealed partial class TerminalTestReporter
                         : TerminalResources.CoverageThresholdNoDataFailed;
                 }
 
-                terminal.AppendLine($"{GetCoverageThresholdLabel(threshold)}: {comparison}");
+                string thresholdLabel = GetCoverageThresholdLabel(threshold);
+                if (thresholdCounts[(threshold.Scope, threshold.Metric, threshold.CustomMetricName, threshold.Aggregation, threshold.AggregatedOver)] > 1)
+                {
+                    thresholdLabel = string.Format(
+                        CultureInfo.InvariantCulture,
+                        TerminalResources.CoverageMetricWithProducer,
+                        thresholdLabel,
+                        MakeControlCharactersVisible(threshold.ProducerId, true));
+                }
+
+                terminal.AppendLine($"{thresholdLabel}: {comparison}");
                 terminal.ResetColor();
             }
         }
