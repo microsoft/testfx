@@ -84,7 +84,7 @@ internal static class UnitTestElementExtensions
         }
 
         // Set priority if present
-        if (element.Priority != null)
+        if (element.Priority is not null)
         {
             testCase.SetPropertyValue(AdapterTestProperties.PriorityProperty, element.Priority.Value);
         }
@@ -97,7 +97,7 @@ internal static class UnitTestElementExtensions
             }
         }
 
-        if (element.WorkItemIds != null)
+        if (element.WorkItemIds is not null)
         {
             testCase.SetPropertyValue(AdapterTestProperties.WorkItemIdsProperty, element.WorkItemIds);
         }

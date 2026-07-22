@@ -26,7 +26,7 @@ internal static class TcmTestPropertiesProvider
     public static IReadOnlyDictionary<string, object?>? GetTcmProperties(TestPlatformObjectModel.TestCase? testCase)
     {
         // Return empty properties when testCase is null or when test case id is zero.
-        if (testCase == null ||
+        if (testCase is null ||
             testCase.GetPropertyValue<int>(AdapterTestProperties.TestCaseIdProperty, default) == 0)
         {
             return null;
