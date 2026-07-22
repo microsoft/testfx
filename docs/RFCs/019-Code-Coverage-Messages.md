@@ -824,7 +824,9 @@ using the **full** key, not just `(scope, metric)`:
   not have been instantiated when the pipe handshake or JSON-RPC initialize request occurs.
 - `TerminalOutputDevice` consumes `ITestCoverageResult` at session end and renders via
   `TerminalTestReporter.AppendCoverageSummary`, using **localized** `TerminalResources` strings
-  and `CultureInfo.InvariantCulture` numeric formatting.
+  and `CultureInfo.InvariantCulture` numeric formatting. The terminal summary renders only
+  `Overall` and `Module` measurements to keep CI output bounded; detailed namespace/type/file
+  measurements remain available through `ITestCoverageResult`.
 - New exit code `CoverageThresholdFailed = 14`, returned from `ConsoleTestHost` and
   `TestHostControllersTestHost` when `HasThresholdFailure` is true and the run would otherwise
   succeed. The check is extracted into a shared helper to avoid the duplication present in the

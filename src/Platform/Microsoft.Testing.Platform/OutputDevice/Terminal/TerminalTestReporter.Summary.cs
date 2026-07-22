@@ -415,18 +415,20 @@ internal sealed partial class TerminalTestReporter
 
     private static void AppendCoverageSummary(ITerminal terminal, IReadOnlyList<CoverageScopeSummary> scopes, IReadOnlyList<TestCoverageThresholdMessage> thresholds)
     {
-        if (scopes.Count == 0 && thresholds.Count == 0)
+        CoverageScopeSummary[] summaryScopes =
+            [.. scopes.Where(scope => scope.Scope.Level is CoverageScopeLevel.Overall or CoverageScopeLevel.Module)];
+        if (summaryScopes.Length == 0 && thresholds.Count == 0)
         {
             return;
         }
 
         terminal.AppendLine();
 
-        if (scopes.Count > 0)
+        if (summaryScopes.Length > 0)
         {
             terminal.AppendLine($"{SingleIndentation}{TerminalResources.CodeCoverageSummary}");
 
-            foreach (CoverageScopeSummary scope in scopes)
+            foreach (CoverageScopeSummary scope in summaryScopes)
             {
                 string scopeLabel = GetCoverageScopeLabel(scope.Scope);
                 Dictionary<(CoverageMetric Metric, string? CustomMetricName), int> metricCounts = [];
@@ -462,7 +464,7 @@ internal sealed partial class TerminalTestReporter
         {
             // Only separate from the coverage block above when it was actually rendered; otherwise the
             // unconditional blank line at the top of the method already provides the single leading blank.
-            if (scopes.Count > 0)
+            if (summaryScopes.Length > 0)
             {
                 terminal.AppendLine();
             }

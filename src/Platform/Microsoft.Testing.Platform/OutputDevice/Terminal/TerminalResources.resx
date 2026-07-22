@@ -337,7 +337,7 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an 
   </data>
   <data name="CodeCoverageSummary" xml:space="preserve">
     <value>Code Coverage Summary:</value>
-    <comment>Heading printed before the per-module code coverage percentages in the run summary.</comment>
+    <comment>Heading printed before the per-scope code coverage percentages in the run summary.</comment>
   </data>
   <data name="CoverageThresholdResults" xml:space="preserve">
     <value>Coverage Threshold Results:</value>

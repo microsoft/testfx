@@ -1053,6 +1053,21 @@ public sealed class TerminalTestReporterTests
     }
 
     [TestMethod]
+    public void AppendCoverageSummary_WhenOnlyDetailedScopes_WritesNothing()
+    {
+        var console = new StringBuilderConsole();
+        TerminalTestReporter reporter = CreateCoverageReporter(console);
+        var summary = new CoverageScopeSummary(
+            new SessionUid("session"),
+            new CoverageScope(CoverageScopeLevel.Type, "MyNamespace.MyType"),
+            [new CoverageMetricResult(CoverageMetric.Line, coveredCount: 8, coverableCount: 10, producerId: "producer")]);
+
+        reporter.AppendCoverageSummary([summary], []);
+
+        Assert.AreEqual(string.Empty, console.Output);
+    }
+
+    [TestMethod]
     public void AppendCoverageSummary_WhenThresholdHasNamedScopeAndPopulation_RendersBothLabels()
     {
         var console = new StringBuilderConsole();
