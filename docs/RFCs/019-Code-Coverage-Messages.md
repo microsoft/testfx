@@ -342,8 +342,6 @@ public sealed class TestCoverageMessage : DataWithSessionUid
         CustomMetricName = customMetricName;
     }
 
-    public SessionUid SessionUid { get; }
-
     public CoverageScope Scope { get; }
 
     public CoverageMetric Metric { get; }

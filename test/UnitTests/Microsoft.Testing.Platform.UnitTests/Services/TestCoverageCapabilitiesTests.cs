@@ -39,6 +39,18 @@ public sealed class TestCoverageCapabilitiesTests
         Assert.AreSame(capabilities, serviceProvider.GetRequiredService<ITestCoverageCapabilities>());
     }
 
+    [TestMethod]
+    public void RegisterProducers_ControllerDataConsumerProducer_ExposesUid()
+    {
+        TestCoverageCapabilities capabilities = new();
+
+        capabilities.RegisterProducers(
+            [new MockDataConsumerProducer("controller", typeof(TestCoverageThresholdMessage))]);
+
+        Assert.HasCount(1, capabilities.EnabledProducerUids);
+        Assert.Contains("controller", capabilities.EnabledProducerUids);
+    }
+
     private sealed class MockDataProducer(string uid, params Type[] dataTypesProduced) : IDataProducer
     {
         public Type[] DataTypesProduced { get; } = dataTypesProduced;
@@ -52,5 +64,26 @@ public sealed class TestCoverageCapabilitiesTests
         public string Description => Uid;
 
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+    }
+
+    private sealed class MockDataConsumerProducer(string uid, params Type[] dataTypesProduced)
+        : IDataConsumer, IDataProducer
+    {
+        public Type[] DataTypesConsumed => [];
+
+        public Type[] DataTypesProduced { get; } = dataTypesProduced;
+
+        public string Uid { get; } = uid;
+
+        public string Version => "1.0.0";
+
+        public string DisplayName => Uid;
+
+        public string Description => Uid;
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
+            => Task.CompletedTask;
     }
 }

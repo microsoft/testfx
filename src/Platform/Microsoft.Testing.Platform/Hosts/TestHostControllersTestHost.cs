@@ -142,6 +142,10 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
             };
 
             List<IDataConsumer> dataConsumersBuilder = [.. _testHostsInformation.DataConsumer];
+            if (ServiceProvider.GetService<TestCoverageCapabilities>() is { } coverageCapabilities)
+            {
+                coverageCapabilities.RegisterProducers(dataConsumersBuilder);
+            }
 
             // Register the coverage result consumer so that coverage messages published by
             // ITestHostProcessLifetimeHandler extensions in this (controller) process are tracked.

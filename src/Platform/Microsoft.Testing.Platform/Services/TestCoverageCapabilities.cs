@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 
 namespace Microsoft.Testing.Platform.Services;
@@ -43,6 +44,14 @@ internal sealed class TestCoverageCapabilities : ITestCoverageCapabilities
             {
                 _enabledProducerUids.Add(producer.Uid);
             }
+        }
+    }
+
+    public void RegisterProducers(IEnumerable<IDataConsumer> dataConsumers)
+    {
+        foreach (IDataProducer producer in dataConsumers.OfType<IDataProducer>())
+        {
+            RegisterProducer(producer);
         }
     }
 }

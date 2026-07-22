@@ -122,6 +122,7 @@ Microsoft.Testing.Platform.Services.TestCoverageResult
 Microsoft.Testing.Platform.Services.TestCoverageCapabilities
 Microsoft.Testing.Platform.Services.TestCoverageCapabilities.EnabledProducerUids.get -> System.Collections.Generic.IReadOnlyCollection<string!>!
 Microsoft.Testing.Platform.Services.TestCoverageCapabilities.RegisterProducer(Microsoft.Testing.Platform.Extensions.Messages.IDataProducer! producer) -> void
+Microsoft.Testing.Platform.Services.TestCoverageCapabilities.RegisterProducers(System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Extensions.IDataConsumer!>! dataConsumers) -> void
 Microsoft.Testing.Platform.Services.TestCoverageCapabilities.SupportsTestCoverageMessages.get -> bool
 Microsoft.Testing.Platform.Services.TestCoverageCapabilities.TestCoverageCapabilities() -> void
 static Microsoft.Testing.Platform.ServerMode.ServerTestingCapabilities.SupportsTestCoverageMessages.get -> bool
