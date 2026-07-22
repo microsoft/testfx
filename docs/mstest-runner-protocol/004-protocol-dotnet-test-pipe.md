@@ -836,7 +836,10 @@ include `1.5.0` alongside it, following the same convention as every other addit
   is left as a candidate for a future, separately-designed transport if a concrete need arises.
 - **The SDK side of this transport (loopback listener/gateway, token generation and validation) is not part
   of this repository.** This document only specifies what the MTP-side client requires from that gateway;
-  see the coordinating `dotnet/sdk` change for the server implementation.
+  see the coordinating `dotnet/sdk` change for the server implementation. When the SDK launches a
+  `browser-wasm` bundle under Node 20, it must also pass `--experimental-websocket` to Node so the embedded
+  browser adapter can use Node's built-in WebSocket implementation without adding an npm dependency. Real
+  browsers and newer Node versions where `WebSocket` is enabled by default need no extra bootstrap.
 - **The SDK gateway remains external, but the browser client is behaviorally covered in this repository.**
   `BrowserWasmExecutionTests` publishes and runs the real `browser-wasm` client under Node against a
   test-local loopback WebSocket gateway. The tests cover authenticated connect, binary request/reply traffic,

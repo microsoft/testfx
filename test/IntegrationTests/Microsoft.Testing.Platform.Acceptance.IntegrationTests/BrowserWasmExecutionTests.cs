@@ -730,7 +730,7 @@ return 0;
 
         using TestAsset generator = await GenerateBrowserWasmWarningAssetAsync();
 
-        (int exitCode, _, _, string combined) = await PublishAndRunUnderNodeAsync(generator, node, NodeWebSocketGatewayRunnerSource);
+        (int exitCode, _, _, string combined) = await PublishAndRunUnderNodeAsync(generator, node, NodeWebSocketGatewayRunnerSource, enableWebSocket: true);
 
         Assert.AreEqual(
             (int)ExitCode.Success,
@@ -756,7 +756,7 @@ return 0;
 
         using TestAsset generator = await GenerateBrowserWasmWebSocketCancellationAssetAsync();
 
-        (int exitCode, _, _, string combined) = await PublishAndRunUnderNodeAsync(generator, node, NodeStalledWebSocketRunnerSource);
+        (int exitCode, _, _, string combined) = await PublishAndRunUnderNodeAsync(generator, node, NodeStalledWebSocketRunnerSource, enableWebSocket: true);
 
         Assert.AreEqual(
             (int)ExitCode.Success,
@@ -777,7 +777,7 @@ return 0;
 
         using TestAsset generator = await GenerateBrowserWasmWebSocketCancellationAssetAsync();
 
-        (int exitCode, _, _, string combined) = await PublishAndRunUnderNodeAsync(generator, node, NodeWebSocketIoCancellationRunnerSource);
+        (int exitCode, _, _, string combined) = await PublishAndRunUnderNodeAsync(generator, node, NodeWebSocketIoCancellationRunnerSource, enableWebSocket: true);
 
         Assert.AreEqual(
             (int)ExitCode.Success,
@@ -854,7 +854,8 @@ return 0;
     private async Task<(int ExitCode, string Output, string Error, string Combined)> PublishAndRunUnderNodeAsync(
         TestAsset generator,
         string node,
-        string runnerSource = NodeRunnerSource)
+        string runnerSource = NodeRunnerSource,
+        bool enableWebSocket = false)
     {
         DotnetMuxerResult publishResult = await WasmRuntime.PublishForBrowserAsync(
             generator.TargetAssetPath, TargetFramework, TestContext.CancellationToken);
@@ -872,7 +873,7 @@ return 0;
             Directory.Exists(appBundle),
             $"Expected the browser-wasm AppBundle directory at '{appBundle}'.");
 
-        return await WasmRuntime.RunUnderNodeAsync(node, appBundle, runnerSource, TestContext.CancellationToken);
+        return await WasmRuntime.RunUnderNodeAsync(node, appBundle, runnerSource, TestContext.CancellationToken, enableWebSocket);
     }
 
     private static bool TryReadMarkerInt(string output, string marker, out int value)
