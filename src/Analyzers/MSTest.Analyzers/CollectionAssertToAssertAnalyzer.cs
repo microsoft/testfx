@@ -29,25 +29,26 @@ namespace MSTest.Analyzers;
 /// <item><description><c>CollectionAssert.AllItemsAreInstancesOfType(coll, typeof(T))</c> → <c>Assert.AreAllOfType&lt;T&gt;(coll)</c> (uses the generic <c>Assert</c> overload when the type expression is a <c>typeof</c>; otherwise falls back to <c>Assert.AreAllOfType(t, coll)</c> with an argument-order swap)</description></item>
 /// <item><description><c>CollectionAssert.Contains(coll, x)</c> → <c>Assert.Contains(x, coll)</c> (argument order swap)</description></item>
 /// <item><description><c>CollectionAssert.DoesNotContain(coll, x)</c> → <c>Assert.DoesNotContain(x, coll)</c> (argument order swap)</description></item>
+/// <item><description><c>CollectionAssert.IsSubsetOf(a, b)</c> → <c>Assert.IsSubsetOf(a, b)</c></description></item>
+/// <item><description><c>CollectionAssert.IsNotSubsetOf(a, b)</c> → <c>Assert.IsNotSubsetOf(a, b)</c></description></item>
 /// </list>
 /// Overloads of <c>AreEqual</c>/<c>AreNotEqual</c> that take an <c>IComparer</c> are skipped because
 /// <c>Assert.AreSequenceEqual</c> expects an <c>IEqualityComparer&lt;T&gt;</c> (different semantics).
-/// Overloads of <c>AreEquivalent</c>/<c>AreNotEquivalent</c> that take an <c>IEqualityComparer&lt;T&gt;</c>
-/// are also skipped (out of scope for this analyzer). <c>IsSubsetOf</c>/<c>IsNotSubsetOf</c> have no
-/// direct <c>Assert</c> equivalent today and are not handled.
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class CollectionAssertToAssertAnalyzer : DiagnosticAnalyzer
 {
     /// <summary>
     /// Key used by the code-fix to recover the rewrite strategy from the diagnostic properties.
-    /// Values are <see cref="FixKindSimple"/>, <see cref="FixKindSwapTwoArgs"/>, <see cref="FixKindAddInAnyOrder"/>, or <see cref="FixKindInstanceOfType"/>.
+    /// Values are <see cref="FixKindSimple"/>, <see cref="FixKindSwapTwoArgs"/>, <see cref="FixKindAddInAnyOrder"/>,
+    /// <see cref="FixKindAddInAnyOrderAfterComparer"/>, or <see cref="FixKindInstanceOfType"/>.
     /// </summary>
     internal const string FixKindKey = nameof(FixKindKey);
 
     internal const string FixKindSimple = "Simple";
     internal const string FixKindSwapTwoArgs = "SwapTwoArgs";
     internal const string FixKindAddInAnyOrder = "AddInAnyOrder";
+    internal const string FixKindAddInAnyOrderAfterComparer = "AddInAnyOrderAfterComparer";
     internal const string FixKindInstanceOfType = "InstanceOfType";
 
     private static readonly LocalizableResourceString Title = new(nameof(Resources.CollectionAssertToAssertTitle), Resources.ResourceManager, typeof(Resources));
@@ -89,11 +90,15 @@ public sealed class CollectionAssertToAssertAnalyzer : DiagnosticAnalyzer
             "AreNotEqual" when !HasIComparerParameter(targetMethod) => ("AreNotSequenceEqual", FixKindSimple),
             "AreEquivalent" when !targetMethod.IsGenericMethod && !HasIComparerParameter(targetMethod) => ("AreSequenceEqual", FixKindAddInAnyOrder),
             "AreNotEquivalent" when !targetMethod.IsGenericMethod && !HasIComparerParameter(targetMethod) => ("AreNotSequenceEqual", FixKindAddInAnyOrder),
+            "AreEquivalent" when targetMethod.IsGenericMethod && HasIEqualityComparerParameter(targetMethod) => ("AreSequenceEqual", FixKindAddInAnyOrderAfterComparer),
+            "AreNotEquivalent" when targetMethod.IsGenericMethod && HasIEqualityComparerParameter(targetMethod) => ("AreNotSequenceEqual", FixKindAddInAnyOrderAfterComparer),
             "AllItemsAreNotNull" => ("AreAllNotNull", FixKindSimple),
             "AllItemsAreUnique" => ("AreAllDistinct", FixKindSimple),
             "AllItemsAreInstancesOfType" => ("AreAllOfType", FixKindInstanceOfType),
             "Contains" => ("Contains", FixKindSwapTwoArgs),
             "DoesNotContain" => ("DoesNotContain", FixKindSwapTwoArgs),
+            "IsSubsetOf" => ("IsSubsetOf", FixKindSimple),
+            "IsNotSubsetOf" => ("IsNotSubsetOf", FixKindSimple),
             _ => null,
         };
 
@@ -103,7 +108,7 @@ public sealed class CollectionAssertToAssertAnalyzer : DiagnosticAnalyzer
         }
 
         // Sanity-check the operand count for the rewrite strategies that require it.
-        if ((map.FixKind is FixKindSwapTwoArgs or FixKindAddInAnyOrder or FixKindInstanceOfType)
+        if ((map.FixKind is FixKindSwapTwoArgs or FixKindAddInAnyOrder or FixKindAddInAnyOrderAfterComparer or FixKindInstanceOfType)
             && operation.Arguments.Length < 2)
         {
             return;
@@ -128,6 +133,24 @@ public sealed class CollectionAssertToAssertAnalyzer : DiagnosticAnalyzer
             if (type is INamedTypeSymbol named
                 && (named.Name == "IComparer" || named.Name == "IEqualityComparer")
                 && named.ContainingNamespace?.ToDisplayString() is "System.Collections" or "System.Collections.Generic")
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool HasIEqualityComparerParameter(IMethodSymbol method)
+    {
+        foreach (IParameterSymbol parameter in method.Parameters)
+        {
+            if (parameter.Type is INamedTypeSymbol
+                {
+                    Name: "IEqualityComparer",
+                    ContainingNamespace: { } containingNamespace,
+                }
+                && containingNamespace.ToDisplayString() == "System.Collections.Generic")
             {
                 return true;
             }

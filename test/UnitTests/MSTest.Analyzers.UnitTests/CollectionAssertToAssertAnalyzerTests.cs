@@ -231,7 +231,7 @@ public sealed class CollectionAssertToAssertAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenCollectionAssertAreEquivalentWithIEqualityComparer_NoDiagnostic()
+    public async Task WhenCollectionAssertAreEquivalentWithIEqualityComparer_FixesToAreSequenceEqual()
     {
         string code = """
             using System.Collections.Generic;
@@ -246,15 +246,88 @@ public sealed class CollectionAssertToAssertAnalyzerTests
                     IEnumerable<int> a = new List<int> { 1, 2, 3 };
                     IEnumerable<int> b = new List<int> { 3, 2, 1 };
                     var comparer = EqualityComparer<int>.Default;
-                    CollectionAssert.AreEquivalent(a, b, comparer);
-                    CollectionAssert.AreEquivalent(a, b, comparer, "message");
-                    CollectionAssert.AreNotEquivalent(a, b, comparer);
-                    CollectionAssert.AreNotEquivalent(a, b, comparer, "message");
+                    {|#0:CollectionAssert.AreEquivalent(a, b, comparer)|};
+                    {|#1:CollectionAssert.AreEquivalent(a, b, comparer, "message")|};
                 }
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        string fixedCode = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    IEnumerable<int> a = new List<int> { 1, 2, 3 };
+                    IEnumerable<int> b = new List<int> { 3, 2, 1 };
+                    var comparer = EqualityComparer<int>.Default;
+                    Assert.AreSequenceEqual(a, b, comparer, Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder.InAnyOrder);
+                    Assert.AreSequenceEqual(a, b, comparer, Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder.InAnyOrder, "message");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            [
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("AreSequenceEqual", "AreEquivalent"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("AreSequenceEqual", "AreEquivalent"),
+            ],
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenCollectionAssertAreNotEquivalentWithIEqualityComparer_FixesToAreNotSequenceEqual()
+    {
+        string code = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    IEnumerable<int> a = new List<int> { 1, 2, 3 };
+                    IEnumerable<int> b = new List<int> { 3, 2, 1 };
+                    var comparer = EqualityComparer<int>.Default;
+                    {|#0:CollectionAssert.AreNotEquivalent(a, b, comparer)|};
+                    {|#1:CollectionAssert.AreNotEquivalent(a, b, comparer, "message")|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    IEnumerable<int> a = new List<int> { 1, 2, 3 };
+                    IEnumerable<int> b = new List<int> { 3, 2, 1 };
+                    var comparer = EqualityComparer<int>.Default;
+                    Assert.AreNotSequenceEqual(a, b, comparer, Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder.InAnyOrder);
+                    Assert.AreNotSequenceEqual(a, b, comparer, Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder.InAnyOrder, "message");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            [
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("AreNotSequenceEqual", "AreNotEquivalent"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("AreNotSequenceEqual", "AreNotEquivalent"),
+            ],
+            fixedCode);
     }
 
     [TestMethod]
@@ -540,9 +613,8 @@ public sealed class CollectionAssertToAssertAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenCollectionAssertIsSubsetOf_NoDiagnostic()
+    public async Task WhenCollectionAssertIsSubsetOf_FixesToAssertIsSubsetOf()
     {
-        // IsSubsetOf / IsNotSubsetOf have no direct Assert equivalent today; they are out of scope.
         string code = """
             using System.Collections.Generic;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -555,13 +627,85 @@ public sealed class CollectionAssertToAssertAnalyzerTests
                 {
                     var a = new List<int> { 1, 2 };
                     var b = new List<int> { 1, 2, 3 };
-                    CollectionAssert.IsSubsetOf(a, b);
-                    CollectionAssert.IsNotSubsetOf(b, a);
+                    {|#0:CollectionAssert.IsSubsetOf(a, b)|};
+                    {|#1:CollectionAssert.IsSubsetOf(a, b, "message")|};
                 }
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        string fixedCode = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var a = new List<int> { 1, 2 };
+                    var b = new List<int> { 1, 2, 3 };
+                    Assert.IsSubsetOf(a, b);
+                    Assert.IsSubsetOf(a, b, "message");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            [
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsSubsetOf", "IsSubsetOf"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("IsSubsetOf", "IsSubsetOf"),
+            ],
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenCollectionAssertIsNotSubsetOf_FixesToAssertIsNotSubsetOf()
+    {
+        string code = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var a = new List<int> { 1, 2 };
+                    var b = new List<int> { 1, 2, 3 };
+                    {|#0:CollectionAssert.IsNotSubsetOf(b, a)|};
+                    {|#1:CollectionAssert.IsNotSubsetOf(b, a, "message")|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    var a = new List<int> { 1, 2 };
+                    var b = new List<int> { 1, 2, 3 };
+                    Assert.IsNotSubsetOf(b, a);
+                    Assert.IsNotSubsetOf(b, a, "message");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            [
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsNotSubsetOf", "IsNotSubsetOf"),
+                VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(1).WithArguments("IsNotSubsetOf", "IsNotSubsetOf"),
+            ],
+            fixedCode);
     }
 
     [TestMethod]

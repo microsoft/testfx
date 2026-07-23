@@ -652,6 +652,11 @@ Actual: {2}</source>
         <target state="translated">값이 같을 것을 예상했습니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="IsNotSubsetOfFailedSummary">
+        <source>Expected subset to not be a subset of superset.</source>
+        <target state="new">Expected subset to not be a subset of superset.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsNullFailedSummary">
         <source>Expected value to be null.</source>
         <target state="translated">값이 null이어야 합니다.</target>
@@ -660,6 +665,11 @@ Actual: {2}</source>
       <trans-unit id="IsPositiveFailedSummary">
         <source>Expected value to be positive.</source>
         <target state="translated">값이 양수일 것으로 예상했습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsSubsetOfFailedSummary">
+        <source>Expected subset to be a subset of superset.</source>
+        <target state="new">Expected subset to be a subset of superset.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsTrueFailedSummary">

@@ -652,6 +652,11 @@ Gerçekte olan: {2}</target>
         <target state="translated">Beklenen değerlerin eşit olması bekleniyordu.</target>
         <note />
       </trans-unit>
+      <trans-unit id="IsNotSubsetOfFailedSummary">
+        <source>Expected subset to not be a subset of superset.</source>
+        <target state="new">Expected subset to not be a subset of superset.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsNullFailedSummary">
         <source>Expected value to be null.</source>
         <target state="translated">Beklenen değer null olmalı.</target>
@@ -660,6 +665,11 @@ Gerçekte olan: {2}</target>
       <trans-unit id="IsPositiveFailedSummary">
         <source>Expected value to be positive.</source>
         <target state="translated">Beklenen değer pozitif olmalıdır.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsSubsetOfFailedSummary">
+        <source>Expected subset to be a subset of superset.</source>
+        <target state="new">Expected subset to be a subset of superset.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsTrueFailedSummary">

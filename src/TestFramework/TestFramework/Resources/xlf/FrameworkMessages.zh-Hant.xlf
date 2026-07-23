@@ -652,6 +652,11 @@ Actual: {2}</source>
         <target state="translated">預期值相等。</target>
         <note />
       </trans-unit>
+      <trans-unit id="IsNotSubsetOfFailedSummary">
+        <source>Expected subset to not be a subset of superset.</source>
+        <target state="new">Expected subset to not be a subset of superset.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsNullFailedSummary">
         <source>Expected value to be null.</source>
         <target state="translated">預期值可為 null。</target>
@@ -660,6 +665,11 @@ Actual: {2}</source>
       <trans-unit id="IsPositiveFailedSummary">
         <source>Expected value to be positive.</source>
         <target state="translated">預期值為正數。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="IsSubsetOfFailedSummary">
+        <source>Expected subset to be a subset of superset.</source>
+        <target state="new">Expected subset to be a subset of superset.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsTrueFailedSummary">

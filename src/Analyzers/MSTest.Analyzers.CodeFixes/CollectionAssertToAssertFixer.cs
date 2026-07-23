@@ -190,6 +190,18 @@ public sealed class CollectionAssertToAssertFixer : CodeFixProvider
 
                 break;
 
+            case CollectionAssertToAssertAnalyzer.FixKindAddInAnyOrderAfterComparer:
+                newArguments.Add(orderedArguments[0]);
+                newArguments.Add(orderedArguments[1]);
+                newArguments.Add(orderedArguments[2]);
+                newArguments.Add(SyntaxFactory.Argument(CreateInAnyOrderExpression()));
+                for (int i = 3; i < orderedArguments.Length; i++)
+                {
+                    newArguments.Add(orderedArguments[i]);
+                }
+
+                break;
+
             case CollectionAssertToAssertAnalyzer.FixKindInstanceOfType when useGenericAreAllOfType:
                 // Generic `Assert.AreAllOfType<T>(coll, ...)`: drop the `typeof(T)` (ordinal 1)
                 // and keep the collection plus any remaining trailing arguments (e.g. message).

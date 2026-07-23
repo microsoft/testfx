@@ -641,6 +641,12 @@ Actual: {2}</value>
   <data name="DoesNotContainAllFailedSummary" xml:space="preserve">
     <value>Expected collection to not contain all specified items.</value>
   </data>
+  <data name="IsSubsetOfFailedSummary" xml:space="preserve">
+    <value>Expected subset to be a subset of superset.</value>
+  </data>
+  <data name="IsNotSubsetOfFailedSummary" xml:space="preserve">
+    <value>Expected subset to not be a subset of superset.</value>
+  </data>
   <data name="ContainsSingleFailedSummary" xml:space="preserve">
     <value>Expected collection to contain exactly one element.</value>
   </data>

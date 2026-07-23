@@ -457,7 +457,7 @@ public sealed partial class Assert
         ReportAssertFailed(structured);
     }
 
-    private static string? BuildCallSiteWithComparer(string assertionMethodName, string firstArgExpression, string secondArgExpression, bool hasComparer, string firstArgPlaceholder = "<expected>")
+    private static string? BuildCallSiteWithComparer(string assertionMethodName, string firstArgExpression, string secondArgExpression, bool hasComparer, string firstArgPlaceholder = "<expected>", string secondArgPlaceholder = "<collection>")
         => hasComparer
             // No [CallerArgumentExpression] is captured for the comparer parameter, so the third
             // expression slot is always unavailable. Pass the "<comparer>" placeholder directly as
@@ -465,6 +465,6 @@ public sealed partial class Assert
             // "Assert.ContainsAll(<expected>, <collection>, <comparer>)" or
             // "Assert.DoesNotContainAll(<notExpected>, <collection>, <comparer>)") even when callers
             // do not support [CallerArgumentExpression] and the other expressions are also empty.
-            ? FormatCallSiteExpression(assertionMethodName, firstArgExpression, secondArgExpression, expression3: "<comparer>", firstArgPlaceholder, "<collection>", "<comparer>")
-            : FormatCallSiteExpression(assertionMethodName, firstArgExpression, secondArgExpression, firstArgPlaceholder, "<collection>");
+            ? FormatCallSiteExpression(assertionMethodName, firstArgExpression, secondArgExpression, expression3: "<comparer>", firstArgPlaceholder, secondArgPlaceholder, "<comparer>")
+            : FormatCallSiteExpression(assertionMethodName, firstArgExpression, secondArgExpression, firstArgPlaceholder, secondArgPlaceholder);
 }
