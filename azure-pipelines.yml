@@ -18,7 +18,6 @@ trigger:
       - SECURITY.md
       - azure-pipelines-official.yml
       - azure-pipelines-codeql.yml
-      - "**/*.xlf"
 
 # The main-branch CI trigger below keeps the project cache aligned with every product merge. The nightly run still
 # exercises the full authoritative pipeline and consumes the cache read-only.
