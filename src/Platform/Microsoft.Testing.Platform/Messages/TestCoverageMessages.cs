@@ -184,6 +184,8 @@ public readonly struct CoverageScope : IEquatable<CoverageScope>
 /// </summary>
 public sealed class TestCoverageMessage : DataWithSessionUid
 {
+    private readonly CoverageCounts _coverageCounts;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="TestCoverageMessage"/> class.
     /// </summary>
@@ -204,14 +206,12 @@ public sealed class TestCoverageMessage : DataWithSessionUid
         string? customMetricName = null)
         : base("Test coverage", "Reports a code coverage measurement for a scope.", sessionUid)
     {
-        CoverageMetricHelper.ValidateCounts(coveredCount, coverableCount);
+        _coverageCounts = new CoverageCounts(coveredCount, coverableCount);
         CoverageMetricHelper.ValidateProducerId(producerId);
         CoverageMetricHelper.ValidateCustomMetricName(metric, customMetricName);
 
         Scope = scope;
         Metric = metric;
-        CoveredCount = coveredCount;
-        CoverableCount = coverableCount;
         ProducerId = producerId;
         CustomMetricName = customMetricName;
     }
@@ -235,16 +235,16 @@ public sealed class TestCoverageMessage : DataWithSessionUid
     public string? CustomMetricName { get; }
 
     /// <summary>Gets the number of covered units.</summary>
-    public long CoveredCount { get; }
+    public long CoveredCount => _coverageCounts.CoveredCount;
 
     /// <summary>Gets the number of coverable units.</summary>
-    public long CoverableCount { get; }
+    public long CoverableCount => _coverageCounts.CoverableCount;
 
     /// <summary>Gets a value indicating whether there is any coverable data.</summary>
-    public bool HasCoverableData => CoverableCount > 0;
+    public bool HasCoverableData => _coverageCounts.HasCoverableData;
 
     /// <summary>Gets the coverage as a percentage in the range 0–100; 0 when nothing is coverable.</summary>
-    public double Percentage => HasCoverableData ? (double)CoveredCount / CoverableCount * 100d : 0d;
+    public double Percentage => _coverageCounts.Percentage;
 }
 
 /// <summary>Reports the result of a coverage threshold evaluation.</summary>
@@ -441,7 +441,26 @@ public sealed class TestCoverageReportMessage : DataWithSessionUid
     public string ProducerId { get; }
 }
 
-/// <summary>Shared validation for the custom-metric escape hatch.</summary>
+internal readonly struct CoverageCounts
+{
+    internal CoverageCounts(long coveredCount, long coverableCount)
+    {
+        CoverageMetricHelper.ValidateCounts(coveredCount, coverableCount);
+
+        CoveredCount = coveredCount;
+        CoverableCount = coverableCount;
+    }
+
+    internal long CoveredCount { get; }
+
+    internal long CoverableCount { get; }
+
+    internal bool HasCoverableData => CoverableCount > 0;
+
+    internal double Percentage => HasCoverableData ? (double)CoveredCount / CoverableCount * 100d : 0d;
+}
+
+/// <summary>Shared validation for coverage metrics.</summary>
 internal static class CoverageMetricHelper
 {
     public static void ValidateCounts(long coveredCount, long coverableCount)

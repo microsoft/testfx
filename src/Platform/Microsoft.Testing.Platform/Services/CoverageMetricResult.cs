@@ -11,6 +11,8 @@ namespace Microsoft.Testing.Platform.Services;
 /// </summary>
 public sealed class CoverageMetricResult
 {
+    private readonly CoverageCounts _coverageCounts;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="CoverageMetricResult"/> class.
     /// </summary>
@@ -26,13 +28,11 @@ public sealed class CoverageMetricResult
         string producerId,
         string? customMetricName = null)
     {
-        CoverageMetricHelper.ValidateCounts(coveredCount, coverableCount);
+        _coverageCounts = new CoverageCounts(coveredCount, coverableCount);
         CoverageMetricHelper.ValidateProducerId(producerId);
         CoverageMetricHelper.ValidateCustomMetricName(metric, customMetricName);
 
         Metric = metric;
-        CoveredCount = coveredCount;
-        CoverableCount = coverableCount;
         ProducerId = producerId;
         CustomMetricName = customMetricName;
     }
@@ -47,14 +47,14 @@ public sealed class CoverageMetricResult
     public string ProducerId { get; }
 
     /// <summary>Gets the number of covered units.</summary>
-    public long CoveredCount { get; }
+    public long CoveredCount => _coverageCounts.CoveredCount;
 
     /// <summary>Gets the number of coverable units.</summary>
-    public long CoverableCount { get; }
+    public long CoverableCount => _coverageCounts.CoverableCount;
 
     /// <summary>Gets a value indicating whether there is any coverable data.</summary>
-    public bool HasCoverableData => CoverableCount > 0;
+    public bool HasCoverableData => _coverageCounts.HasCoverableData;
 
     /// <summary>Gets the coverage as a percentage in the range 0–100; 0 when nothing is coverable.</summary>
-    public double Percentage => HasCoverableData ? (double)CoveredCount / CoverableCount * 100d : 0d;
+    public double Percentage => _coverageCounts.Percentage;
 }
