@@ -170,12 +170,16 @@ internal sealed class DotnetTestHttpClient : NamedPipeConnectionBase, IClient
                         $"The dotnet test HTTP gateway returned '{response.GetType().Name}' when '{typeof(TResponse).Name}' was expected."),
                 };
             }
-            catch (OperationCanceledException) when (!sendTask.IsCompleted)
+            catch (OperationCanceledException)
             {
-                AbortTransportForIncompleteSend();
-                ObserveAndDisposeIncompleteSend(sendTask, httpRequest);
-                disposeRequest = false;
-                requestLockAcquired = false;
+                AbortTransportAfterCancellation();
+                if (!sendTask.IsCompleted)
+                {
+                    ObserveAndDisposeIncompleteSend(sendTask, httpRequest);
+                    disposeRequest = false;
+                    requestLockAcquired = false;
+                }
+
                 throw;
             }
             finally
@@ -234,7 +238,7 @@ internal sealed class DotnetTestHttpClient : NamedPipeConnectionBase, IClient
         }
     }
 
-    private void AbortTransportForIncompleteSend()
+    private void AbortTransportAfterCancellation()
     {
         lock (_lifecycleLock)
         {

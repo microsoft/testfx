@@ -636,10 +636,10 @@ Automatic redirects are disabled for the same reason: every `3xx` response fails
 of replaying the authenticated frame at another location.
 The implicit `HttpClient` timeout is disabled; cancellation is controlled by the operation token passed
 to `HttpClient.SendAsync` and response-body reads, aborting the in-flight fetch without converting
-expected cancellation into a connection-loss failure. If a handler does not complete its send after
-cancellation, the transport is made terminal and the pending send is observed before its request
-resources are released, so another protocol request cannot overlap it. Disposal cancels no completed
-messages and prevents later use.
+expected cancellation into a connection-loss failure. Cancellation after a request starts makes the
+transport terminal so another protocol request cannot overlap a partially received reply. If a handler
+does not complete its send after cancellation, the pending send is observed before its request resources
+are released. Disposal cancels no completed messages and prevents later use.
 
 **Server-control pipe (`exitProcessOnConnectionLoss: false`).** A dropped control pipe must **not** kill
 the test host. This listener runs *inside the test host* as the control-pipe **client**, so an

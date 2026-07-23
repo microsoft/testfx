@@ -142,6 +142,38 @@ public sealed class DotnetTestHttpClientTests
     }
 
     [TestMethod]
+    public async Task RequestReplyAsync_ResponseBodyCancellationDoesNotAllowOverlappingSend()
+    {
+        int requestCount = 0;
+        var readStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var handler = new DelegateHttpMessageHandler((_, _) =>
+        {
+            Interlocked.Increment(ref requestCount);
+            var content = new StreamContent(new CancellationBlockingReadStream(readStarted));
+            content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = content });
+        });
+
+        using DotnetTestHttpClient client = CreateClient(handler);
+        await client.ConnectAsync(_testContext.CancellationToken);
+        using var cancellationTokenSource = new CancellationTokenSource();
+        Task<TestResponse> activeRequest = client.RequestReplyAsync<TestRequest, TestResponse>(
+            TestRequest.Instance,
+            cancellationTokenSource.Token);
+        await readStarted.Task;
+        Task<TestResponse> waitingRequest = client.RequestReplyAsync<TestRequest, TestResponse>(
+            TestRequest.Instance,
+            _testContext.CancellationToken);
+
+        await cancellationTokenSource.CancelAsync();
+
+        await Assert.ThrowsAsync<OperationCanceledException>(() => activeRequest);
+        await Assert.ThrowsAsync<OperationCanceledException>(() => waitingRequest);
+        Assert.AreEqual(1, requestCount);
+        Assert.IsFalse(client.IsConnected);
+    }
+
+    [TestMethod]
     public async Task RequestReplyAsync_UsesCallerCancellationInsteadOfHttpClientTimeout()
     {
         var handler = new DelegateHttpMessageHandler(async (_, cancellationToken) =>
@@ -442,5 +474,53 @@ public sealed class DotnetTestHttpClientTests
 
             base.Dispose(disposing);
         }
+    }
+
+    private sealed class CancellationBlockingReadStream(TaskCompletionSource readStarted) : Stream
+    {
+        public override bool CanRead => true;
+
+        public override bool CanSeek => false;
+
+        public override bool CanWrite => false;
+
+        public override long Length => throw new NotSupportedException();
+
+        public override long Position
+        {
+            get => throw new NotSupportedException();
+            set
+            {
+                _ = value;
+                throw new NotSupportedException();
+            }
+        }
+
+        public override void Flush()
+        {
+        }
+
+        public override int Read(byte[] buffer, int offset, int count)
+            => throw new NotSupportedException();
+
+        public override async Task<int> ReadAsync(
+            byte[] buffer,
+            int offset,
+            int count,
+            CancellationToken cancellationToken)
+        {
+            readStarted.SetResult();
+            await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+            return 0;
+        }
+
+        public override long Seek(long offset, SeekOrigin origin)
+            => throw new NotSupportedException();
+
+        public override void SetLength(long value)
+            => throw new NotSupportedException();
+
+        public override void Write(byte[] buffer, int offset, int count)
+            => throw new NotSupportedException();
     }
 }
