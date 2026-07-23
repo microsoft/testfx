@@ -168,6 +168,56 @@ public class ConsoleRouterTests : TestContainer
         console.ToString().Should().BeEmpty();
     }
 
+    public void LiveOutputWriterScope_RestoresPreviousWriter()
+    {
+        var firstWriter = new StringWriter();
+        var secondWriter = new StringWriter();
+        MSTestSettings.PopulateSettings(
+            """
+            <RunSettings>
+              <MSTestV2>
+                <CaptureTraceOutput>Live</CaptureTraceOutput>
+              </MSTestV2>
+            </RunSettings>
+            """,
+            null,
+            null);
+
+        try
+        {
+            using (TestContextImplementation.SetLiveOutputWriterForTesting(firstWriter))
+            {
+                TestContextImplementation firstContext = CreateTestContext();
+                using (TestContextImplementation.SetCurrentTestContext(firstContext))
+                {
+                    firstContext.WriteLine("first");
+                }
+
+                using (TestContextImplementation.SetLiveOutputWriterForTesting(secondWriter))
+                {
+                    TestContextImplementation secondContext = CreateTestContext();
+                    using (TestContextImplementation.SetCurrentTestContext(secondContext))
+                    {
+                        secondContext.WriteLine("second");
+                    }
+                }
+
+                TestContextImplementation restoredContext = CreateTestContext();
+                using (TestContextImplementation.SetCurrentTestContext(restoredContext))
+                {
+                    restoredContext.WriteLine("restored");
+                }
+            }
+
+            firstWriter.ToString().Should().Contain("first").And.Contain("restored").And.NotContain("second");
+            secondWriter.ToString().Should().Contain("second").And.NotContain("restored");
+        }
+        finally
+        {
+            MSTestSettings.Reset();
+        }
+    }
+
     public async Task LiveOutput_ConcurrentTestContextAndConsoleWrites_DoNotInvertConsoleWriterLocks()
     {
         TextWriter previousConsoleOut = Console.Out;
@@ -214,7 +264,6 @@ public class ConsoleRouterTests : TestContainer
         finally
         {
             Console.SetOut(previousConsoleOut);
-            TestContextImplementation.ConfigureLiveOutputWriter(previousConsoleOut);
             MSTestSettings.Reset();
         }
     }
@@ -265,7 +314,6 @@ public class ConsoleRouterTests : TestContainer
         finally
         {
             Console.SetOut(previousConsoleOut);
-            TestContextImplementation.ConfigureLiveOutputWriter(previousConsoleOut);
             MSTestSettings.Reset();
         }
     }
@@ -275,7 +323,7 @@ public class ConsoleRouterTests : TestContainer
         TextWriter liveOutputWriter,
         Action<TestContextImplementation> liveWrite)
     {
-        TestContextImplementation.ConfigureLiveOutputWriter(liveOutputWriter);
+        using IDisposable liveOutputWriterScope = TestContextImplementation.SetLiveOutputWriterForTesting(liveOutputWriter);
         TestContextImplementation testContext = CreateTestContext();
         Console.SetOut(new ConsoleOutRouter(capturedWriter, capturedWriter.EnterCurrentWriter));
 

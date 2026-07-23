@@ -39,3 +39,4 @@ static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.UnitTest
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.RuntimeContext.IsMultiThreaded.get -> bool
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestDiscovererHelpers.GetSettingsExceptionMessage(Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.AdapterSettingsException! ex) -> string!
 static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.ConfigureLiveOutputWriter(System.IO.TextWriter! liveOutputWriter) -> void
+static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SetLiveOutputWriterForTesting(System.IO.TextWriter! liveOutputWriter) -> System.IDisposable!
