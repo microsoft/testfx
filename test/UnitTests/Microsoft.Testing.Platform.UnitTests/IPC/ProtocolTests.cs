@@ -310,7 +310,6 @@ public sealed class ProtocolTests
             { HandshakeMessagePropertyNames.AttemptNumber, nameof(HandshakeMessagePropertyNames.AttemptNumber) },
             { HandshakeMessagePropertyNames.SupportedPostProcessorKinds, nameof(HandshakeMessagePropertyNames.SupportedPostProcessorKinds) },
             { HandshakeMessagePropertyNames.SupportedPostProcessorExtensionsLegacy, nameof(HandshakeMessagePropertyNames.SupportedPostProcessorExtensionsLegacy) },
-            { HandshakeMessagePropertyNames.Transport, nameof(HandshakeMessagePropertyNames.Transport) },
         };
 
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.PID), properties[0]);
@@ -329,7 +328,6 @@ public sealed class ProtocolTests
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.AttemptNumber), properties[13]);
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.SupportedPostProcessorKinds), properties[14]);
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.SupportedPostProcessorExtensionsLegacy), properties[15]);
-        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.Transport), properties[16]);
     }
 
     // The HandshakeMessageExecutionModes string values flow over IPC to
