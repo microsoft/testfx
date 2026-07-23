@@ -633,7 +633,9 @@ Gateway loss, DNS/network failure, authentication expiry, or a malformed respons
 current POST, or by the next POST if the host was idle. A failed request fails the host operation; there
 is no transparent retry because retrying after an ambiguous network failure could duplicate a message.
 Automatic redirects are disabled for the same reason: every `3xx` response fails the operation instead
-of replaying the authenticated frame at another location.
+of replaying the authenticated frame at another location. The WASI handler does not implement automatic
+redirects and does not support configuring that property, so the host leaves its default untouched and
+still rejects any returned `3xx` status.
 The implicit `HttpClient` timeout is disabled; cancellation is controlled by the operation token passed
 to `HttpClient.SendAsync` and response-body reads, aborting the in-flight fetch without converting
 expected cancellation into a connection-loss failure. Cancellation after a request starts makes the

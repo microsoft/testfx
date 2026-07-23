@@ -41,7 +41,7 @@ internal sealed class DotnetTestHttpClient : NamedPipeConnectionBase, IClient
         : this(
             endpoint,
             authToken,
-            new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }),
+            CreateHttpClient(),
             disposeHttpClient: true)
     {
     }
@@ -236,6 +236,17 @@ internal sealed class DotnetTestHttpClient : NamedPipeConnectionBase, IClient
             _activeOperations--;
             TryCleanup();
         }
+    }
+
+    private static HttpClient CreateHttpClient()
+    {
+        var handler = new HttpClientHandler();
+        if (!OperatingSystem.IsWasi())
+        {
+            handler.AllowAutoRedirect = false;
+        }
+
+        return new HttpClient(handler);
     }
 
     private void AbortTransportAfterCancellation()
