@@ -27,6 +27,7 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
 
     private static readonly string SupportedDiscoverTestsValues = $"'{DiscoverTestsTextArgument}', '{DiscoverTestsJsonArgument}'";
     private static readonly string SupportedServerProtocolValues = $"'{JsonRpcProtocolName}', '{DotnetTestCliProtocolName}'";
+    private static readonly string SupportedDotNetTestTransportValues = $"'{DotNetTestTransportPipeArgument}', '{DotNetTestTransportHttpArgument}'";
     public const string ResultDirectoryOptionKey = "results-directory";
     public const string IgnoreExitCodeOptionKey = "ignore-exit-code";
     public const string MinimumExpectedTestsOptionKey = "minimum-expected-tests";
@@ -45,6 +46,11 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
     public const string JsonRpcProtocolName = "jsonrpc";
     public const string DotNetTestPipeOptionKey = "dotnet-test-pipe";
     public const string DotnetTestCliProtocolName = "dotnettestcli";
+    public const string DotNetTestTransportOptionKey = "dotnet-test-transport";
+    public const string DotNetTestTransportPipeArgument = "pipe";
+    public const string DotNetTestTransportHttpArgument = "http";
+    public const string DotNetTestHttpEndpointOptionKey = "dotnet-test-http-endpoint";
+    public const string DotNetTestHttpTokenOptionKey = "dotnet-test-http-token";
 
     private static readonly string[] VerbosityOptions = ["Trace", "Debug", "Information", "Warning", "Error", "Critical"];
 
@@ -81,7 +87,10 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
         new(SkipBuildersNumberCheckOptionKey, PlatformResources.PlatformCommandLineSkipBuildersNumberCheckOptionDescription, ArgumentArity.Zero, true, isBuiltIn: true),
         new(NoBannerOptionKey, PlatformResources.PlatformCommandLineNoBannerOptionDescription, ArgumentArity.ZeroOrOne, true, isBuiltIn: true),
         new(TestHostControllerPIDOptionKey, PlatformResources.PlatformCommandLineTestHostControllerPIDOptionDescription, ArgumentArity.ZeroOrOne, true, isBuiltIn: true),
-        new(DotNetTestPipeOptionKey, PlatformResources.PlatformCommandLineDotnetTestPipe, ArgumentArity.ExactlyOne, true, isBuiltIn: true)
+        new(DotNetTestHttpEndpointOptionKey, PlatformResources.PlatformCommandLineDotnetTestHttpEndpointOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
+        new(DotNetTestHttpTokenOptionKey, PlatformResources.PlatformCommandLineDotnetTestHttpTokenOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
+        new(DotNetTestPipeOptionKey, PlatformResources.PlatformCommandLineDotnetTestPipe, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
+        new(DotNetTestTransportOptionKey, PlatformResources.PlatformCommandLineDotnetTestTransportOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true)
     ];
 
     public PlatformCommandLineProvider()
@@ -119,6 +128,32 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
             && !DotnetTestCliProtocolName.Equals(arguments[0], StringComparison.OrdinalIgnoreCase))
         {
             return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineServerInvalidArgument, arguments[0], SupportedServerProtocolValues));
+        }
+
+        if (commandOption.Name == DotNetTestTransportOptionKey
+            && !DotNetTestTransportPipeArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase)
+            && !DotNetTestTransportHttpArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase))
+        {
+            return ValidationResult.InvalidTask(string.Format(
+                CultureInfo.InvariantCulture,
+                PlatformResources.PlatformCommandLineDotnetTestTransportInvalid,
+                arguments[0],
+                SupportedDotNetTestTransportValues));
+        }
+
+        if (commandOption.Name == DotNetTestHttpEndpointOptionKey
+            && !IsValidHttpEndpoint(arguments[0]))
+        {
+            return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDotnetTestHttpEndpointInvalid);
+        }
+
+        if (commandOption.Name == DotNetTestHttpTokenOptionKey
+            && (RoslynString.IsNullOrWhiteSpace(arguments[0])
+                || arguments[0].Any(char.IsWhiteSpace)
+                || arguments[0].Any(char.IsControl)
+                || !System.Net.Http.Headers.AuthenticationHeaderValue.TryParse($"Bearer {arguments[0]}", out _)))
+        {
+            return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDotnetTestHttpTokenInvalid);
         }
 
         if (commandOption.Name == ClientPortOptionKey
@@ -207,6 +242,16 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
             ? ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineMinimumExpectedTestsOptionSingleArgument)
             : ValidationResult.ValidTask;
 
+    private static bool IsValidHttpEndpoint(string value)
+        => Uri.TryCreate(value, UriKind.Absolute, out Uri? endpoint)
+            && endpoint is not null
+            && endpoint.Scheme is "http" or "https"
+            && endpoint.Host.Length > 0
+            && endpoint.UserInfo.Length == 0
+            && endpoint.Query.Length == 0
+            && endpoint.Fragment.Length == 0
+            && (endpoint.Scheme == Uri.UriSchemeHttps || endpoint.IsLoopback);
+
     public override Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
     {
         if (!commandLineOptions.IsOptionSet(DiagnosticOptionKey))
@@ -234,16 +279,61 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
             return ValidationResult.InvalidTask(PlatformResources.OnlyOneFilterSupported);
         }
 
-        // The '--server dotnettestcli' protocol path requires '--dotnet-test-pipe' to connect to the
-        // dotnet test pipe. Without it, the dotnet test connection silently never activates and the
-        // application falls back to console mode, leading to confusing behavior. Both options are
-        // internal and are expected to be passed together by 'dotnet test'.
+        bool hasPipe = commandLineOptions.IsOptionSet(DotNetTestPipeOptionKey);
+        bool hasTransport = commandLineOptions.TryGetOptionArgumentList(DotNetTestTransportOptionKey, out string[]? transportArguments)
+            && transportArguments is { Length: 1 };
+        bool isPipeTransport = hasTransport
+            && DotNetTestTransportPipeArgument.Equals(transportArguments![0], StringComparison.OrdinalIgnoreCase);
+        bool isHttpTransport = hasTransport
+            && DotNetTestTransportHttpArgument.Equals(transportArguments![0], StringComparison.OrdinalIgnoreCase);
+        bool hasHttpEndpoint = commandLineOptions.IsOptionSet(DotNetTestHttpEndpointOptionKey);
+        bool hasHttpToken = commandLineOptions.IsOptionSet(DotNetTestHttpTokenOptionKey);
+
+        if (hasPipe && (isHttpTransport || hasHttpEndpoint || hasHttpToken))
+        {
+            return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDotnetTestTransportConflict);
+        }
+
+        if (!isHttpTransport && (hasHttpEndpoint || hasHttpToken))
+        {
+            return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDotnetTestHttpOptionsRequireTransport);
+        }
+
+        if (isHttpTransport && (!hasHttpEndpoint || !hasHttpToken))
+        {
+            return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDotnetTestHttpRequiresEndpointAndToken);
+        }
+
+        if (isPipeTransport && !hasPipe)
+        {
+            return ValidationResult.InvalidTask(
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    PlatformResources.PlatformCommandLineDotnetTestCliRequiresPipe,
+                    DotnetTestCliProtocolName,
+                    DotNetTestPipeOptionKey));
+        }
+
+        // The '--server dotnettestcli' protocol path requires exactly one pre-launch transport: either the
+        // legacy named pipe (implied by '--dotnet-test-pipe') or authenticated HTTP.
         if (commandLineOptions.TryGetOptionArgumentList(ServerOptionKey, out string[]? serverProtocolArgs)
             && serverProtocolArgs is { Length: 1 }
-            && DotnetTestCliProtocolName.Equals(serverProtocolArgs[0], StringComparison.OrdinalIgnoreCase)
-            && !commandLineOptions.IsOptionSet(DotNetTestPipeOptionKey))
+            && DotnetTestCliProtocolName.Equals(serverProtocolArgs[0], StringComparison.OrdinalIgnoreCase))
         {
-            return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineDotnetTestCliRequiresPipe, DotnetTestCliProtocolName, DotNetTestPipeOptionKey));
+            if (!hasPipe && !isHttpTransport)
+            {
+                return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDotnetTestCliRequiresTransport);
+            }
+
+            if (hasPipe && OperatingSystem.IsBrowser())
+            {
+                return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLinePipeTransportNotSupportedOnBrowser);
+            }
+
+            if (hasPipe && OperatingSystem.IsWasi())
+            {
+                return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLinePipeTransportNotSupportedOnWasi);
+            }
         }
 
         if (commandLineOptions.IsOptionSet(DiagnosticFileLoggerSynchronousWriteOptionKey))
