@@ -50,10 +50,10 @@ internal static class CommandLineParser
             if (currentArg.StartsWith("@", StringComparison.Ordinal))
             {
                 string responseFilePath = currentArg.Substring(1);
-                bool containsSensitiveValue =
-                    PlatformCommandLineProvider.DotNetTestHttpTokenOptionKey.Equals(currentOption, StringComparison.OrdinalIgnoreCase)
-                    || PlatformCommandLineProvider.DotNetTestHttpEndpointOptionKey.Equals(currentOption, StringComparison.OrdinalIgnoreCase);
-                string diagnosticPath = containsSensitiveValue ? "***REDACTED***" : responseFilePath;
+                string redactedResponseFileArgument = CommandLineArgumentsRedactor.RedactArgument([.. args], i);
+                string diagnosticPath = redactedResponseFileArgument.StartsWith("@", StringComparison.Ordinal)
+                    ? redactedResponseFileArgument.Substring(1)
+                    : redactedResponseFileArgument;
                 if (ResponseFileHelper.TryReadResponseFile(responseFilePath, diagnosticPath, errors, out string[]? newArguments))
                 {
                     args.InsertRange(i + 1, newArguments);

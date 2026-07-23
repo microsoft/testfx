@@ -189,6 +189,10 @@ public sealed class CommandLineHandlerTests
     [TestMethod]
     [DataRow("--dotnet-test-http-token", "@secret-token", "secret-token")]
     [DataRow("--dotnet-test-http-endpoint", "@private/run-id", "private/run-id")]
+    [DataRow("---dotnet-test-http-token", "@secret-token", "secret-token")]
+    [DataRow("---dotnet-test-http-endpoint", "@private/run-id", "private/run-id")]
+    [DataRow(" --dotnet-test-http-token", "@secret-token", "secret-token")]
+    [DataRow(" --dotnet-test-http-endpoint", "@private/run-id", "private/run-id")]
     public async Task ParseAndValidateAsync_ResponseFileErrorsRedactSensitivePath(
         string option,
         string responseFileArgument,
