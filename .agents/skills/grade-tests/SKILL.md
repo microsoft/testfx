@@ -200,9 +200,9 @@ Examples (Critical/High and Medium counts → Anti-pattern sub-grade):
 - Always-true literal assertions (`Assert.IsTrue(true)`, `assert True`,
   `expect(true).toBe(true)`) → **F** (verifies nothing; also drives
   Assertion sub-grade to F)
-- All async assertions are silently un-awaited (for example,
-  `Assert.ThrowsAsync` without `await` or an unreturned
-  `expect(promise).resolves`) → F
+- All async assertions are neither awaited nor returned (for example,
+  an `Assert.ThrowsAsync` task or `expect(promise).resolves` chain whose result
+  is silently discarded) → F
 - Self-referential / tautological assertions on bound values
   (`Assert.AreEqual(x, x)`, `assert dto.name == dto.name`) → D
 - Commented-out assertions → D
