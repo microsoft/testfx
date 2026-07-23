@@ -282,6 +282,7 @@ public sealed class DotnetTestHttpClientTests
     [TestMethod]
     [DataRow(null)]
     [DataRow("text/plain")]
+    [DataRow("application/test-only-256-bit-style-token-value")]
     public async Task RequestReplyAsync_RejectsUnexpectedResponseContentType(string? mediaType)
     {
         HttpResponseMessage response = CreateResponse(TestResponseFrame());
@@ -296,7 +297,11 @@ public sealed class DotnetTestHttpClientTests
                 TestRequest.Instance,
                 _testContext.CancellationToken));
         Assert.Contains("content type", exception.Message);
-        Assert.Contains(mediaType ?? "missing", exception.Message);
+        Assert.Contains(mediaType is null ? "no content type" : "unexpected content type", exception.Message);
+        if (mediaType is not null)
+        {
+            Assert.DoesNotContain(mediaType, exception.Message);
+        }
     }
 
     [TestMethod]
@@ -312,7 +317,7 @@ public sealed class DotnetTestHttpClientTests
             client.RequestReplyAsync<TestRequest, TestResponse>(
                 TestRequest.Instance,
                 _testContext.CancellationToken));
-        Assert.Contains("content type 'missing'", exception.Message);
+        Assert.Contains("no content type", exception.Message);
     }
 
     [TestMethod]

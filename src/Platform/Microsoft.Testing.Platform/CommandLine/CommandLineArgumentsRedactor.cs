@@ -8,10 +8,16 @@ internal static class CommandLineArgumentsRedactor
     private const string RedactedPlaceholder = "***REDACTED***";
 
     public static string Redact(string[] args)
+        => string.Join(" ", RedactArguments(args));
+
+    public static string RedactArgument(string[] args, int index)
+        => RedactArguments(args)[index];
+
+    private static string[] RedactArguments(string[] args)
     {
         if (args.Length == 0)
         {
-            return string.Empty;
+            return [];
         }
 
         string[] redacted = new string[args.Length];
@@ -85,7 +91,7 @@ internal static class CommandLineArgumentsRedactor
             }
         }
 
-        return string.Join(" ", redacted);
+        return redacted;
     }
 
     private static bool TryParseOption(

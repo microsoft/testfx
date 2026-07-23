@@ -136,7 +136,9 @@ internal sealed class DotnetTestHttpClient : NamedPipeConnectionBase, IClient
                 if (responseContent is null || !MediaType.Equals(responseMediaType, StringComparison.OrdinalIgnoreCase))
                 {
                     throw new IOException(
-                        $"The dotnet test HTTP gateway returned content type '{responseMediaType ?? "missing"}' instead of '{MediaType}'.");
+                        responseMediaType is null
+                            ? $"The dotnet test HTTP gateway returned no content type; expected '{MediaType}'."
+                            : $"The dotnet test HTTP gateway returned an unexpected content type; expected '{MediaType}'.");
                 }
 
                 if (responseContent.Headers.ContentLength is long contentLength

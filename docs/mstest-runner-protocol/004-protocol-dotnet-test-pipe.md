@@ -8,12 +8,12 @@ named-pipe transport or over authenticated HTTP request/reply for environments s
 
 It is a *different* protocol from the [JSON-RPC server-mode protocol](./001-protocol-intro.md):
 
-| | JSON-RPC server mode | `dotnet test` pipe protocol (this doc) |
+| | JSON-RPC server mode | `dotnet test` binary protocol (this doc) |
 | --- | --- | --- |
 | Activation | `--server` (or `--server jsonrpc`) | `--server dotnettestcli` plus named-pipe or HTTP bootstrap options |
 | Wire format | JSON-RPC 2.0 over stdio / TCP | Custom length-prefixed **binary** frames over a named pipe or HTTP POST bodies |
 | Shape | Full request/response + notifications, bidirectional | **Push-only** data channel (host → SDK) + auxiliary reverse control channel |
-| Role of the runner | Server | Client (connects out to the SDK's pipe server) |
+| Role of the runner | Server | Client (connects to the SDK's named-pipe server or HTTP gateway) |
 
 > [!IMPORTANT]
 > **Source of truth.** The wire contract (serializer IDs, field IDs, handshake/session/state
@@ -40,7 +40,8 @@ It is a *different* protocol from the [JSON-RPC server-mode protocol](./001-prot
 - **Test application / test host** — the MTP-based test executable (the process being run by
   `dotnet test`). In this protocol it is the named-pipe or HTTP **client**.
 - **SDK / `dotnet test`** — the .NET SDK component that launches test applications and renders their
-  output. It is the **pipe server** (it creates and listens on the data pipe).
+  output. It is the named-pipe **server** (creating and listening on the data pipe) or the HTTP
+  **gateway** (hosting the per-run request/reply endpoint).
 - **Primary channel** — the host-initiated request/reply channel carrying all handshakes and test data.
   It is either the data pipe or the HTTP gateway endpoint.
 - **Data pipe** — the legacy primary-channel named pipe, whose OS name is supplied via

@@ -84,7 +84,7 @@ internal static class CommandLineParser
                         string.Format(
                             CultureInfo.InvariantCulture,
                             PlatformResources.CommandLineParserUnexpectedArgument,
-                            CommandLineArgumentsRedactor.Redact([args[i]])));
+                            CommandLineArgumentsRedactor.RedactArgument(originalArgs, i)));
                 }
                 else
                 {
