@@ -113,6 +113,13 @@ Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.TerminalOutputDevic
 *REMOVED*Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.TerminalOutputDevice(Microsoft.Testing.Platform.Helpers.IConsole! console, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.TestHostControllers.ITestHostControllerInfo! testHostControllerInfo, Microsoft.Testing.Platform.Helpers.IAsyncMonitor! asyncMonitor, Microsoft.Testing.Platform.Helpers.IRuntimeFeature! runtimeFeature, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Services.IPlatformInformation! platformInformation, Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Logging.IFileLoggerInformation? fileLoggerInformation, Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory, Microsoft.Testing.Platform.Helpers.IClock! clock, Microsoft.Testing.Platform.Services.IStopPoliciesService! policiesService, Microsoft.Testing.Platform.Services.ITestApplicationCancellationTokenSource! testApplicationCancellationTokenSource) -> void
 Microsoft.Testing.Platform.Services.ExitCodeIgnorePolicy
 Microsoft.Testing.Platform.Services.CoverageThresholdExitCodePolicy
+Microsoft.Testing.Platform.Extensions.Messages.CoverageCounts
+Microsoft.Testing.Platform.Extensions.Messages.CoverageCounts.CoverableCount.get -> long
+Microsoft.Testing.Platform.Extensions.Messages.CoverageCounts.CoverageCounts() -> void
+Microsoft.Testing.Platform.Extensions.Messages.CoverageCounts.CoverageCounts(long coveredCount, long coverableCount) -> void
+Microsoft.Testing.Platform.Extensions.Messages.CoverageCounts.CoveredCount.get -> long
+Microsoft.Testing.Platform.Extensions.Messages.CoverageCounts.HasCoverableData.get -> bool
+Microsoft.Testing.Platform.Extensions.Messages.CoverageCounts.Percentage.get -> double
 Microsoft.Testing.Platform.Extensions.Messages.CoverageMetricHelper
 Microsoft.Testing.Platform.Extensions.Messages.CoverageReportHelper
 static Microsoft.Testing.Platform.Extensions.Messages.CoverageMetricHelper.ValidateCounts(long coveredCount, long coverableCount) -> void
