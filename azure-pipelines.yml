@@ -261,6 +261,7 @@ stages:
 
             exit 0
           displayName: Build solution graph with MSBuildCache
+          continueOnError: true
           condition: and(succeeded(), or(and(eq(variables['Build.Reason'], 'PullRequest'), ne(variables['System.PullRequest.IsFork'], 'True')), and(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))))
           env:
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
