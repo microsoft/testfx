@@ -283,7 +283,7 @@ Score the non-equivalent mutation points:
 | **B** | The primary contract is protected; only one low-risk mutation survives. |
 | **C** | The central outcome is protected, but one or more meaningful secondary mutations survive or lack coverage. |
 | **D** | A high-risk mutation in the claimed behavior survives or lacks coverage, such as a boundary flip, removed validation, or wrong calculation. |
-| **F** | The test would kill no meaningful mutation in the claimed behavior. |
+| **F** | At least one meaningful mutation point exists, and the test would kill none of them. |
 | **N/A** | Production code cannot be resolved. Report as unverified and do not deduct. |
 
 For the report, render mutation resilience as `killed/total killed` (for
