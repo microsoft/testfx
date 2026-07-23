@@ -20,11 +20,11 @@ trigger:
       - azure-pipelines-codeql.yml
       - "**/*.xlf"
 
-# The main-branch CI trigger below keeps the project cache aligned with every product merge. The nightly run is a
-# fallback which refreshes entries before they expire and still exercises the full authoritative pipeline.
+# The main-branch CI trigger below keeps the project cache aligned with every product merge. The nightly run still
+# exercises the full authoritative pipeline and consumes the cache read-only.
 schedules:
   - cron: 0 3 * * *
-    displayName: Nightly MSBuildCache seed
+    displayName: Nightly full validation
     branches:
       include:
       - main
@@ -149,8 +149,8 @@ stages:
 
     - template: /eng/pipelines/steps/install-windows-prereqs.yml
 
-    # Seed from every trusted main merge. PR merge refs are read-only consumers, so a nightly-only seed becomes
-    # stale as soon as main changes and forces the entire 204-node graph to miss until the next night.
+    # Seed from every trusted main merge. PR merge refs are read-only consumers, so the cache must be updated as
+    # soon as main changes to avoid forcing the entire 204-node graph to miss.
     - pwsh: |
         & ./eng/common/msbuild.ps1 -ci -warnAsError:$false ./TestFx.slnx `
           /restore `
@@ -285,9 +285,8 @@ stages:
         # for the project-cache plugin. Keep the regular Arcade build below as the correctness fallback during rollout.
         - pwsh: |
             $pwsh = Join-Path $PSHOME "pwsh.exe"
-            # Azure Pipeline cache entries are immutable. PR merge refs consume entries read-only; trusted main
-            # branch manual/scheduled builds seed entries for subsequent PRs.
-            $remoteCacheIsReadOnly = if ("$(Build.Reason)" -eq "PullRequest") { "true" } else { "false" }
+            # Azure Pipeline cache entries are immutable. The batched main-merge stage is the only remote publisher;
+            # keeping this canary read-only prevents manual or scheduled runs from racing with it.
             $arguments = @(
               "-NoLogo",
               "-NoProfile",
@@ -306,7 +305,7 @@ stages:
               "/p:RepoRoot=$(Build.SourcesDirectory)\",
               "/p:MSBuildCachePackageEnabled=true",
               "/p:MSBuildCacheEnabled=true",
-              "/p:MSBuildCacheRemoteCacheIsReadOnly=$remoteCacheIsReadOnly",
+              "/p:MSBuildCacheRemoteCacheIsReadOnly=true",
               "/p:MSBuildCacheLogDirectory=$(Agent.TempDirectory)\MSBuildCache"
             )
 
