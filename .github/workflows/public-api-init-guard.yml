@@ -42,7 +42,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout PR head with merge-base history
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # Need both the PR branch and main to compute the diff. fetch-depth: 0
           # is the simplest correct option; we can revisit if checkout time
