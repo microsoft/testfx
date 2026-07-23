@@ -87,9 +87,6 @@ internal sealed class DotnetTestPassthroughOutputDevice : IPlatformOutputDevice
 
     private async Task ForwardAzureDevOpsAsync(AzureDevOpsCommandOutputDeviceData commandData, CancellationToken cancellationToken)
     {
-        // The dotnet test pipe protocol (DotnetTestConnection) is never active on browser, so the
-        // browser-unsupported members below are unreachable there; suppress CA1416 accordingly.
-#pragma warning disable CA1416 // Validate platform compatibility
         if (_serviceProvider.GetService<IPushOnlyProtocol>() is not DotnetTestConnection connection
             || !connection.IsLogForwardingSupported)
         {
@@ -97,12 +94,10 @@ internal sealed class DotnetTestPassthroughOutputDevice : IPlatformOutputDevice
         }
 
         await connection.SendMessageAsync(new AzureDevOpsLogMessage(GetExecutionId(), DotnetTestConnection.InstanceId, commandData.Text)).ConfigureAwait(false);
-#pragma warning restore CA1416 // Validate platform compatibility
     }
 
     private async Task ForwardDisplayMessageAsync(byte level, string text, CancellationToken cancellationToken)
     {
-#pragma warning disable CA1416 // Validate platform compatibility
         if (_serviceProvider.GetService<IPushOnlyProtocol>() is not DotnetTestConnection connection
             || !connection.IsDisplayMessageForwardingSupported)
         {
@@ -110,7 +105,6 @@ internal sealed class DotnetTestPassthroughOutputDevice : IPlatformOutputDevice
         }
 
         await connection.SendMessageAsync(new DisplayMessage(GetExecutionId(), DotnetTestConnection.InstanceId, level, text)).ConfigureAwait(false);
-#pragma warning restore CA1416 // Validate platform compatibility
     }
 
     private string? GetExecutionId()

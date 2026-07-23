@@ -207,10 +207,22 @@ Built-in command line providers:
         Hidden: False
         Description: Define the level of the verbosity for the --diagnostic\.
         The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'
+      --dotnet-test-http-endpoint
+        Arity: 1
+        Hidden: True
+        Description: Specifies the authenticated HTTP endpoint for the dotnet test protocol\.
+      --dotnet-test-http-token
+        Arity: 1
+        Hidden: True
+        Description: Specifies the per-run HTTP bearer token for the dotnet test protocol\.
       --dotnet-test-pipe
         Arity: 1
         Hidden: True
         Description: dotnet test pipe\.
+      --dotnet-test-transport
+        Arity: 1
+        Hidden: True
+        Description: Selects the pre-launch transport for the dotnet test protocol\.
       --exit-on-process-exit
         Arity: 1
         Hidden: False

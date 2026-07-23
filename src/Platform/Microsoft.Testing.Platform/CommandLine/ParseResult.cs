@@ -35,7 +35,7 @@ public sealed class CommandLineParseResult : IEquatable<CommandLineParseResult>
         ToolName = toolName;
         Options = options;
         Errors = errors;
-        CommandLine = string.Join(" ", arguments);
+        CommandLine = CommandLineArgumentsRedactor.Redact([.. arguments]);
     }
 
     /// <summary>
