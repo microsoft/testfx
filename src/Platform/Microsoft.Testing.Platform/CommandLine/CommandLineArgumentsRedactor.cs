@@ -31,7 +31,7 @@ internal static class CommandLineArgumentsRedactor
                     redacted[i] = inlineValue is null
                         ? arg
                         : $"{prefix}{name}{delimiter}{RedactedPlaceholder}";
-                    redactNextValue = inlineValue is null;
+                    redactNextValue = true;
                     sanitizeNextEndpoint = false;
                     sensitiveValueConsumed = inlineValue is not null;
                 }
@@ -40,7 +40,7 @@ internal static class CommandLineArgumentsRedactor
                     redacted[i] = inlineValue is null
                         ? arg
                         : $"{prefix}{name}{delimiter}{SanitizeEndpoint(inlineValue)}";
-                    sanitizeNextEndpoint = inlineValue is null;
+                    sanitizeNextEndpoint = true;
                     redactNextValue = false;
                     sensitiveValueConsumed = inlineValue is not null;
                 }

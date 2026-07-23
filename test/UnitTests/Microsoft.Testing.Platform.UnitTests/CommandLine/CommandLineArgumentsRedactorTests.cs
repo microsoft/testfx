@@ -69,6 +69,19 @@ public sealed class CommandLineArgumentsRedactorTests
         => Assert.AreEqual(expected, CommandLineArgumentsRedactor.Redact([argument]));
 
     [TestMethod]
+    public void Redact_MasksExcessValuesAfterInlineSensitiveValue()
+        => Assert.AreEqual(
+            "--dotnet-test-http-token=***REDACTED*** ***REDACTED*** --server dotnettestcli " +
+            "--dotnet-test-http-endpoint=https://gateway.example https://other.example --list-tests",
+            CommandLineArgumentsRedactor.Redact(
+                [
+                    "--dotnet-test-http-token=first-secret", "second-secret",
+                    "--server", "dotnettestcli",
+                    "--dotnet-test-http-endpoint=https://gateway.example/private/run", "https://other.example/secret",
+                    "--list-tests",
+                ]));
+
+    [TestMethod]
     [DataRow("not-a-url")]
     [DataRow("https://user:password@gateway.example/private/run-id")]
     public void Redact_MasksInvalidOrCredentialedEndpoint(string endpoint)
