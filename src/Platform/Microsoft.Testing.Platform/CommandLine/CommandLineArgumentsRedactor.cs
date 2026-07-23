@@ -51,6 +51,13 @@ internal static class CommandLineArgumentsRedactor
                     sanitizeNextEndpoint = false;
                     sensitiveValueConsumed = false;
                 }
+                else if (sanitizeNextEndpoint && !sensitiveValueConsumed)
+                {
+                    redacted[i] = SanitizeEndpoint(arg);
+                    redactNextValue = false;
+                    sanitizeNextEndpoint = false;
+                    sensitiveValueConsumed = false;
+                }
                 else
                 {
                     redacted[i] = arg;

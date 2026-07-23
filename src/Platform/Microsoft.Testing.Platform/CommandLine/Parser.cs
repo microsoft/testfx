@@ -125,9 +125,15 @@ internal static class CommandLineParser
             {
                 if (input.IndexOf('\'', 1, input.Length - 2) != -1)
                 {
+                    const string redactedPlaceholder = "***REDACTED***";
+                    string displayInput =
+                        PlatformCommandLineProvider.DotNetTestHttpTokenOptionKey.Equals(option, StringComparison.OrdinalIgnoreCase)
+                        || PlatformCommandLineProvider.DotNetTestHttpEndpointOptionKey.Equals(option, StringComparison.OrdinalIgnoreCase)
+                            ? redactedPlaceholder
+                            : input;
                     error = option is null
-                        ? string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserUnexpectedSingleQuoteInArgument, input)
-                        : string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserUnexpectedSingleQuoteInArgumentForOption, input, option);
+                        ? string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserUnexpectedSingleQuoteInArgument, displayInput)
+                        : string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserUnexpectedSingleQuoteInArgumentForOption, displayInput, option);
                     return false;
                 }
 

@@ -50,6 +50,13 @@ public sealed class CommandLineArgumentsRedactorTests
             CommandLineArgumentsRedactor.Redact(["--dotnet-test-http-token", "-secret"]));
 
     [TestMethod]
+    public void Redact_OptionShapedEndpointValueDoesNotExposeValue()
+        => Assert.AreEqual(
+            "--dotnet-test-http-endpoint ***REDACTED***",
+            CommandLineArgumentsRedactor.Redact(
+                ["--dotnet-test-http-endpoint", "-https://gateway.example/private/run-id"]));
+
+    [TestMethod]
     public void Redact_MasksEveryPositionalSensitiveValueUntilNextOption()
         => Assert.AreEqual(
             "--dotnet-test-http-token ***REDACTED*** ***REDACTED*** --server dotnettestcli " +
