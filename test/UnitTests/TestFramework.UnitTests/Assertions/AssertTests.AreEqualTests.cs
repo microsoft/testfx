@@ -2059,6 +2059,33 @@ public partial class AssertTests : TestContainer
         }
     }
 
+    public void AreEqualStringDifferenceOversizedTextElementsUsePlaceholder()
+    {
+        string expected = "a" + new string('\u0301', 60) + new string('z', 100);
+        string actual = "b" + new string('\u0301', 60) + new string('z', 100);
+        string preview = $"\"[[<text element>]]{new string('z', 78)}...\"";
+        const string ExpectedCodePoints = "U+0061 U+0301 U+0301 U+0301 U+0301 U+0301 U+0301 U+0301 ... (+53 code points)";
+        const string ActualCodePoints = "U+0062 U+0301 U+0301 U+0301 U+0301 U+0301 U+0301 U+0301 ... (+53 code points)";
+
+        AssertFailedException exception = CaptureAreEqualFailure(() => Assert.AreEqual(expected, actual));
+
+        exception.Message.Should().Be(
+            $"""
+            Assertion failed. Expected strings to be equal.
+            Strings have same length (161) and differ at 1 location(s). First difference at index 0.
+
+            expected near: {preview}
+            actual near:   {preview}
+            difference:    mismatch marked with [[...]]
+            code points:   expected {ExpectedCodePoints}; actual {ActualCodePoints}
+
+            expected: "{expected}"
+            actual:   "{actual}"
+
+            Assert.AreEqual(expected, actual)
+            """);
+    }
+
     public void AreEqualStringSpecificCultureComparisonPreservesUnequalDifferenceCursors()
     {
         string expected = "aﬁX";
