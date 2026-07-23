@@ -6,13 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## <a name="2.4.0" />[2.4.0] - UNRELEASED
 
-See full log [of v4.3.2...v4.4.0](https://github.com/microsoft/testfx/compare/v4.3.2...v4.4.0)
+See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4.3.3...v4.4.0)
 
 ### Added
 
 * Add `--report-azdo-groups <on|off>` and `--report-azdo-annotations <on|off>` toggles to Azure DevOps report extension by @Evangelink in [#9542](https://github.com/microsoft/testfx/pull/9542)
 * Re-print errored assemblies in dotnet test end-of-run recap by @Evangelink in [#9545](https://github.com/microsoft/testfx/pull/9545)
 * Add server-initiated session cancellation to the dotnet test IPC protocol by @Evangelink in [#9549](https://github.com/microsoft/testfx/pull/9549)
+
+## <a name="2.3.3" />[2.3.3] - UNRELEASED
+
+See full log [of v4.3.2...v4.3.3](https://github.com/microsoft/testfx/compare/v4.3.2...v4.3.3)
+
+### Changed
+
+* Produce portable PDBs for official builds so symbols can be published to symbol servers by @Evangelink in [#10006](https://github.com/microsoft/testfx/pull/10006)
+
+### Fixed
+
+* Restore compatibility with the deprecated MSTest.Engine used by source-generated test projects by @Evangelink in [#9938](https://github.com/microsoft/testfx/pull/9938)
+* Regenerate source-generated entry points and extension registrations after the Microsoft.Testing.Platform.MSBuild task assembly is updated by @Evangelink in [#10082](https://github.com/microsoft/testfx/pull/10082)
+* Fix VSTestBridge throwing `IndexOutOfRangeException` when a UID after the first starts with a filter operator by @azat-msft in [#9771](https://github.com/microsoft/testfx/pull/9771)
+* Prevent diagnostic file-logger shutdown from crashing an otherwise successful test run under thread-pool starvation by @Evangelink in [#9802](https://github.com/microsoft/testfx/pull/9802)
+* Fix VSTestBridge interpreting a GUID-shaped fully-qualified test name as a test ID by @Evangelink in [#9794](https://github.com/microsoft/testfx/pull/9794)
+* Support comments in `testconfig.json` on .NET Framework by @Evangelink in [#10144](https://github.com/microsoft/testfx/pull/10144)
 
 ## <a name="2.3.2" />[2.3.2] - 2026-07-13
 

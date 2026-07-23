@@ -13,6 +13,25 @@ namespace Microsoft.Testing.Platform.UnitTests;
 public sealed class CurrentTestApplicationModuleInfoTests
 {
     [TestMethod]
+    public void ExecutableInfo_ToStringRedactsHttpTransportSecrets()
+    {
+        var executable = new ExecutableInfo(
+            "testhost.exe",
+            [
+                "--dotnet-test-http-endpoint", "https://gateway.example/private/run-id",
+                "--dotnet-test-http-token", "secret-token",
+            ],
+            "workspace");
+
+        string diagnostic = executable.ToString();
+
+        Assert.Contains("https://gateway.example", diagnostic);
+        Assert.Contains("***REDACTED***", diagnostic);
+        Assert.DoesNotContain("/private/run-id", diagnostic);
+        Assert.DoesNotContain("secret-token", diagnostic);
+    }
+
+    [TestMethod]
     public void GetCurrentExecutableInfo_AppHost_NoPassedArgs_UsesEnvironmentArgsSkippingProcessPath()
     {
         Mock<IEnvironment> environment = CreateAppHostEnvironment(["myapp.exe", "--filter", "MyTest"]);

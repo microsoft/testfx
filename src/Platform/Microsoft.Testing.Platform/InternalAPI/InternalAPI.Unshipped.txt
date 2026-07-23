@@ -113,6 +113,13 @@ Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.TerminalOutputDevic
 *REMOVED*Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.TerminalOutputDevice(Microsoft.Testing.Platform.Helpers.IConsole! console, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.TestHostControllers.ITestHostControllerInfo! testHostControllerInfo, Microsoft.Testing.Platform.Helpers.IAsyncMonitor! asyncMonitor, Microsoft.Testing.Platform.Helpers.IRuntimeFeature! runtimeFeature, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Services.IPlatformInformation! platformInformation, Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Logging.IFileLoggerInformation? fileLoggerInformation, Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory, Microsoft.Testing.Platform.Helpers.IClock! clock, Microsoft.Testing.Platform.Services.IStopPoliciesService! policiesService, Microsoft.Testing.Platform.Services.ITestApplicationCancellationTokenSource! testApplicationCancellationTokenSource) -> void
 Microsoft.Testing.Platform.Services.ExitCodeIgnorePolicy
 Microsoft.Testing.Platform.Services.CoverageThresholdExitCodePolicy
+Microsoft.Testing.Platform.Extensions.Messages.CoverageCounts
+Microsoft.Testing.Platform.Extensions.Messages.CoverageCounts.CoverableCount.get -> long
+Microsoft.Testing.Platform.Extensions.Messages.CoverageCounts.CoverageCounts() -> void
+Microsoft.Testing.Platform.Extensions.Messages.CoverageCounts.CoverageCounts(long coveredCount, long coverableCount) -> void
+Microsoft.Testing.Platform.Extensions.Messages.CoverageCounts.CoveredCount.get -> long
+Microsoft.Testing.Platform.Extensions.Messages.CoverageCounts.HasCoverableData.get -> bool
+Microsoft.Testing.Platform.Extensions.Messages.CoverageCounts.Percentage.get -> double
 Microsoft.Testing.Platform.Extensions.Messages.CoverageMetricHelper
 Microsoft.Testing.Platform.Extensions.Messages.CoverageReportHelper
 static Microsoft.Testing.Platform.Extensions.Messages.CoverageMetricHelper.ValidateCounts(long coveredCount, long coverableCount) -> void
@@ -179,6 +186,30 @@ Microsoft.Testing.Platform.Services.ClientInfoService.Deconstruct(out string! Id
 override Microsoft.Testing.Platform.Services.ClientCapabilitiesService.Equals(object? obj) -> bool
 override Microsoft.Testing.Platform.Services.ClientCapabilitiesService.GetHashCode() -> int
 override Microsoft.Testing.Platform.Services.ClientCapabilitiesService.ToString() -> string!
+const Microsoft.Testing.Platform.CommandLine.PlatformCommandLineProvider.DotNetTestHttpEndpointOptionKey = "dotnet-test-http-endpoint" -> string!
+const Microsoft.Testing.Platform.CommandLine.PlatformCommandLineProvider.DotNetTestHttpTokenOptionKey = "dotnet-test-http-token" -> string!
+const Microsoft.Testing.Platform.CommandLine.PlatformCommandLineProvider.DotNetTestTransportHttpArgument = "http" -> string!
+const Microsoft.Testing.Platform.CommandLine.PlatformCommandLineProvider.DotNetTestTransportOptionKey = "dotnet-test-transport" -> string!
+const Microsoft.Testing.Platform.CommandLine.PlatformCommandLineProvider.DotNetTestTransportPipeArgument = "pipe" -> string!
+Microsoft.Testing.Platform.CommandLine.CommandLineArgumentsRedactor
+Microsoft.Testing.Platform.DotnetTestTransportKind
+Microsoft.Testing.Platform.DotnetTestTransportKind.Http = 1 -> Microsoft.Testing.Platform.DotnetTestTransportKind
+Microsoft.Testing.Platform.DotnetTestTransportKind.NamedPipe = 0 -> Microsoft.Testing.Platform.DotnetTestTransportKind
+Microsoft.Testing.Platform.IPC.DotnetTestHttpClient
+Microsoft.Testing.Platform.IPC.DotnetTestHttpClient.ConnectAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.IPC.DotnetTestHttpClient.Dispose() -> void
+Microsoft.Testing.Platform.IPC.DotnetTestHttpClient.DotnetTestHttpClient(System.Uri! endpoint, string! authToken, System.Net.Http.HttpClient! httpClient, bool disposeHttpClient) -> void
+Microsoft.Testing.Platform.IPC.DotnetTestHttpClient.DotnetTestHttpClient(System.Uri! endpoint, string! authToken) -> void
+Microsoft.Testing.Platform.IPC.DotnetTestHttpClient.IsConnected.get -> bool
+Microsoft.Testing.Platform.IPC.DotnetTestHttpClient.RequestReplyAsync<TRequest, TResponse>(TRequest request, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<TResponse>!
+Microsoft.Testing.Platform.IPC.NamedPipeConnectionBase.ReadNextMessageAsync(System.IO.Stream! stream, System.Threading.CancellationToken cancellationToken, int maximumFrameSize = 2147483647) -> System.Threading.Tasks.Task<object?>!
+Microsoft.Testing.Platform.IPC.NamedPipeConnectionBase.WriteMessageAsync(System.IO.Stream! stream, Microsoft.Testing.Platform.IPC.INamedPipeSerializer! serializer, object! message, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+static Microsoft.Testing.Platform.CommandLine.CommandLineArgumentsRedactor.Redact(string![]! args) -> string!
+static Microsoft.Testing.Platform.CommandLine.CommandLineArgumentsRedactor.RedactArgument(string![]! args, int index) -> string!
+static ResponseFileHelper.TryReadResponseFile(string! rspFilePath, string! diagnosticPath, System.Collections.Generic.ICollection<string!>! errors, out string![]? newArguments) -> bool
+static Microsoft.Testing.Platform.DotnetTestHelper.TryGetDotnetTestTransport(this Microsoft.Testing.Platform.CommandLine.CommandLineHandler! commandLineHandler, out Microsoft.Testing.Platform.DotnetTestTransportKind transport) -> bool
+*REMOVED*Microsoft.Testing.Platform.IPC.NamedPipeConnectionBase.ReadNextMessageAsync(System.IO.Pipes.PipeStream! stream, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<object?>!
+*REMOVED*Microsoft.Testing.Platform.IPC.NamedPipeConnectionBase.WriteMessageAsync(System.IO.Pipes.PipeStream! stream, Microsoft.Testing.Platform.IPC.INamedPipeSerializer! serializer, object! message, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadFields(System.IO.Stream! stream, System.Func<ushort, int, bool>! tryReadField) -> void
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.TryReadExecutionScopedField(System.IO.Stream! stream, ushort fieldId, int fieldSize, ref string? executionId, ref string? instanceId) -> bool
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteExecutionScopedHeader(System.IO.Stream! stream, string? executionId, string? instanceId, ushort payloadFieldCount) -> void

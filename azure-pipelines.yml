@@ -1,10 +1,29 @@
-trigger: none
+trigger:
+  batch: true
+  branches:
+    include:
+    - main
+  paths:
+    exclude:
+      - .github/**
+      - .gitignore
+      - .devcontainer/*
+      - docs/*
+      - .vscode/*
+      - .markdownlint-cli2.jsonc
+      - .markdownlintignore
+      - CODE_OF_CONDUCT.md
+      - CONTRIBUTING.md
+      - README.md
+      - SECURITY.md
+      - azure-pipelines-official.yml
+      - azure-pipelines-codeql.yml
 
-# Seed both cache configurations nightly from trusted main. Keep the existing full pipeline and authoritative
-# Arcade fallback until a hit-bearing run demonstrates that the cache canary is correct and fast.
+# The main-branch CI trigger below keeps the project cache aligned with every product merge. The nightly run still
+# exercises the full authoritative pipeline and consumes the cache read-only.
 schedules:
   - cron: 0 3 * * *
-    displayName: Nightly MSBuildCache seed
+    displayName: Nightly full validation
     branches:
       include:
       - main
@@ -107,8 +126,54 @@ variables:
 
 stages:
 
+- stage: msbuild_cache_seed
+  displayName: Seed MSBuildCache
+  condition: and(succeeded(), in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  jobs:
+  - job: Windows
+    displayName: Windows $(_BuildConfig)
+    timeoutInMinutes: 30
+    pool:
+      name: NetCore-Public
+      demands: ImageOverride -equals windows.vs2026preview.scout.amd64.open
+    strategy:
+      matrix:
+        Release:
+          _BuildConfig: Release
+        Debug:
+          _BuildConfig: Debug
+    steps:
+    - checkout: self
+      clean: true
+
+    - template: /eng/pipelines/steps/install-windows-prereqs.yml
+
+    # Seed from every trusted main merge. PR merge refs are read-only consumers, so the cache must be updated as
+    # soon as main changes to avoid forcing the entire 204-node graph to miss.
+    - pwsh: |
+        & ./eng/common/msbuild.ps1 -ci -warnAsError:$false ./TestFx.slnx `
+          /restore `
+          /graph `
+          /m `
+          /reportfileaccesses `
+          /nr:false `
+          /t:Build `
+          /v:minimal `
+          /p:Configuration=$(_BuildConfig) `
+          "/p:RepoRoot=$(Build.SourcesDirectory)\" `
+          /p:MSBuildCachePackageEnabled=true `
+          /p:MSBuildCacheEnabled=true `
+          /p:MSBuildCacheRemoteCacheIsReadOnly=false `
+          "/p:MSBuildCacheLogDirectory=$(Agent.TempDirectory)\MSBuildCache"
+        exit $LASTEXITCODE
+      displayName: Seed $(_BuildConfig) project cache
+      env:
+        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
 - stage: build
   displayName: Build
+  dependsOn: []
+  condition: and(succeeded(), not(and(in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))))
   jobs:
 
   # Lightweight job that classifies the PR diff into two scopes (product vs samples)
@@ -219,9 +284,8 @@ stages:
         # for the project-cache plugin. Keep the regular Arcade build below as the correctness fallback during rollout.
         - pwsh: |
             $pwsh = Join-Path $PSHOME "pwsh.exe"
-            # Azure Pipeline cache entries are immutable. PR merge refs consume entries read-only; trusted main
-            # branch manual/scheduled builds seed entries for subsequent PRs.
-            $remoteCacheIsReadOnly = if ("$(Build.Reason)" -eq "PullRequest") { "true" } else { "false" }
+            # Azure Pipeline cache entries are immutable. The batched main-merge stage is the only remote publisher;
+            # keeping this canary read-only prevents manual or scheduled runs from racing with it.
             $arguments = @(
               "-NoLogo",
               "-NoProfile",
@@ -240,7 +304,7 @@ stages:
               "/p:RepoRoot=$(Build.SourcesDirectory)\",
               "/p:MSBuildCachePackageEnabled=true",
               "/p:MSBuildCacheEnabled=true",
-              "/p:MSBuildCacheRemoteCacheIsReadOnly=$remoteCacheIsReadOnly",
+              "/p:MSBuildCacheRemoteCacheIsReadOnly=true",
               "/p:MSBuildCacheLogDirectory=$(Agent.TempDirectory)\MSBuildCache"
             )
 
