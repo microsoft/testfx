@@ -18,11 +18,16 @@
 
   <PropertyGroup Condition="'$(MSBuildCacheEnabled)' == 'true'">
     <!-- Change this value to invalidate all existing testfx cache entries. -->
-    <MSBuildCacheCacheUniverse Condition="'$(MSBuildCacheCacheUniverse)' == ''">testfx-v1</MSBuildCacheCacheUniverse>
+    <!--
+      Azure Pipeline cache entries are immutable. Debug and Release are built in parallel in CI, and some
+      configuration-independent projects otherwise race to publish the same selector/output entries. Keep the
+      configurations in separate universes so one seed cannot fail the other with PipelineCacheItemAlreadyExists.
+    -->
+    <MSBuildCacheCacheUniverse Condition="'$(MSBuildCacheCacheUniverse)' == ''">testfx-v1-$(Configuration)</MSBuildCacheCacheUniverse>
     <MSBuildCacheLocalCacheRootPath Condition="'$(MSBuildCacheLocalCacheRootPath)' == ''">$(RepoRoot)artifacts\msbuild-cache</MSBuildCacheLocalCacheRootPath>
     <MSBuildCacheLocalCacheSizeInMegabytes Condition="'$(MSBuildCacheLocalCacheSizeInMegabytes)' == ''">20480</MSBuildCacheLocalCacheSizeInMegabytes>
     <!-- Visual Studio telemetry writes outside the repository after the project that launched it has finished. -->
-    <MSBuildCacheAllowFileAccessAfterProjectFinishFilePatterns>$(MSBuildCacheAllowFileAccessAfterProjectFinishFilePatterns);\Windows\**;\**\ApplicationInsights.config;\**\AppData\Local\Microsoft\VSApplicationInsights\**;\**\AppData\Local\Microsoft\Windows\INetCache\**</MSBuildCacheAllowFileAccessAfterProjectFinishFilePatterns>
+    <MSBuildCacheAllowFileAccessAfterProjectFinishFilePatterns>$(MSBuildCacheAllowFileAccessAfterProjectFinishFilePatterns);$(WinDir)\**;\**\ApplicationInsights.config;\**\AppData\Local\Microsoft\VSApplicationInsights\**;\**\AppData\Local\Microsoft\Windows\INetCache\**</MSBuildCacheAllowFileAccessAfterProjectFinishFilePatterns>
   </PropertyGroup>
 
   <!-- Language configuration -->
