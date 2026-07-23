@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="ko" original="../GitHubActionsResources.resx">
     <body>
@@ -37,9 +37,14 @@
         <target state="translated">하나 이상의 테스트가 실패했습니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ExitCodeReasonCoverageThresholdFailed">
+        <source>One or more code coverage thresholds were not met.</source>
+        <target state="new">One or more code coverage thresholds were not met.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ExitCodeReasonDependentProcessExited">
         <source>A dependent process exited unexpectedly.</source>
-        <target state="translated">튜닝 프로세스가 예기치 않게 종료되었습니다.</target>
+        <target state="new">A dependent process exited unexpectedly.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeReasonGenericFailure">

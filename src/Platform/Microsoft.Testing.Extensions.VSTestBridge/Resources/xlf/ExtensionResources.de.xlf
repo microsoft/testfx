@@ -9,7 +9,7 @@
       </trans-unit>
       <trans-unit id="RunSettingsEnvironmentVariablesNotSupportedOnBrowser">
         <source>The runsettings 'EnvironmentVariables' section is not supported on browser/WebAssembly platforms, because applying it requires restarting the test host process. Remove the section to run on browser-wasm.</source>
-        <target state="translated">Der runsettings-Abschnitt „EnvironmentVariables“ wird auf Browser-/WebAssembly-Plattformen nicht unterstützt, da für die Anwendung ein Neustart des Testhostprozesses erforderlich ist. Entfernen Sie den Abschnitt, der auf browser-wasm ausgeführt werden soll.</target>
+        <target state="new">The runsettings 'EnvironmentVariables' section is not supported on browser/WebAssembly platforms, because applying it requires restarting the test host process. Remove the section to run on browser-wasm.</target>
         <note>{Locked="runsettings"}{Locked="EnvironmentVariables"}{Locked="browser-wasm"}</note>
       </trans-unit>
       <trans-unit id="RunSettingsOptionDescription">
