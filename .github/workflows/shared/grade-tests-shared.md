@@ -20,7 +20,8 @@
 description: >-
   Grades the new and modified test methods in a pull request and posts a
   single PR comment with a compact per-test scorecard (letter grade A–F,
-  score band, and one-line notes).
+  score band, pseudo-mutation resilience, one-line notes, and concrete
+  improvements for tests graded below A).
 
 permissions:
   contents: read
@@ -272,7 +273,13 @@ refusal branch:
    Step 1.
 2. For each method, the file path **and** the method body (captured in
    Step 1).
-3. The diff context for this PR — the
+3. For each method, the production entry point it exercises and every
+   production body and branch relevant to the behavior claimed by the test,
+   including branches its current input does not reach. Resolve them from the
+   repository using symbol references and call sites; if they cannot be
+   resolved, explicitly pass `production code unavailable` rather than
+   guessing.
+4. The diff context for this PR — the
    `${{ steps.extract.outputs.tsv_path }}` rows already give the changed
    line ranges per file.
 
@@ -309,16 +316,22 @@ not replacements for — the synced skill's rubric:
 Report the **letter grade** and the **score band** only — no
 fake-precise 0–100 number.
 
-### Step 3 — Build the note
+### Step 3 — Preserve the grading details
 
-One short sentence per test (≤ 120 chars) that states the single most
-important reason for the grade **and, whenever the test is not already
-flawless, a concrete suggestion of improvement**. Phrase the suggestion
-as a brief actionable hint (e.g. `… — consider asserting the returned
-value, not just non-null.`). Only when a test is genuinely clean with
-nothing to improve may the note read `No issues found.` — do not invent
-weaknesses to balance the note, but do surface a real improvement when
-one exists, even for A-grade tests.
+Keep the skill's **Mutation**, **Notes**, and **How to improve** fields
+separate:
+
+- **Mutation** is `killed/total killed` (for example, `3/4 killed`),
+  `0/0 (no meaningful points)`, or `N/A` when production code could not be
+  resolved.
+- **Notes** is one short sentence (≤ 120 chars) stating the most important
+  observable reason for the grade.
+- **How to improve** is one short, concrete sentence (≤ 120 chars) for every
+  grade below A. Name the exact input, assertion, expected value, split, or
+  deterministic replacement needed. Use `—` for A-grade tests.
+
+Do not merge the improvement into Notes, give vague advice such as `Add more
+assertions`, or invent weaknesses for an A-grade test.
 
 ### Step 4 — Post the comment
 
@@ -344,23 +357,31 @@ pipe-table) so each cell can use inline HTML like `<code>` and `<br>`.
 ```markdown
 ### 🧪 Test quality grade — PR #${{ github.event.pull_request.number || github.event.issue.number }}
 
-<!-- 2–4 sentence summary: total graded, grade distribution, most common
-issue, and the single most important recommendation. -->
+<!-- 2–4 sentence summary: total graded, grade distribution, most common issue,
+and top recommendation. Include the most important survived/uncovered mutation
+only when one exists. Otherwise state that all meaningful mutations were
+killed, no meaningful mutation points were found (0/0), or production code
+could not be resolved (N/A), whichever applies. For 0/0 or N/A, lead with the
+dominant non-mutation signal instead. -->
 
 <table>
   <thead>
-    <tr><th>Grade</th><th>Test</th><th>Notes</th></tr>
+    <tr><th>Grade</th><th>Test</th><th>Mutation</th><th>Notes</th><th>How to improve</th></tr>
   </thead>
   <tbody>
     <tr>
       <td>A (90–100)</td>
       <td>new <code>ClassName.<br>Method_<br>WhenSomething_<br>ReturnsValue</code></td>
-      <td>…</td>
+      <td>4/4 killed</td>
+      <td>Assertions protect every meaningful mutation in the claimed behavior.</td>
+      <td>—</td>
     </tr>
     <tr>
       <td>C (70–79)</td>
       <td>mod <code>ClassName.<br>OtherMethod</code></td>
-      <td>…</td>
+      <td>1/3 killed</td>
+      <td>Only non-null is checked; default-return mutations survive.</td>
+      <td>Assert the exact value and collection contents.</td>
     </tr>
   </tbody>
 </table>
@@ -414,8 +435,12 @@ Rules for the table:
     Do **not** alter the underlying name — keep every character
     (including the trailing `_`); the `<br>` only changes the visual
     layout, not the copy-paste text.
-- **Column 3 (Notes)**: the one-line note from Step 3, including a
-  concrete suggestion of improvement whenever one exists.
+- **Column 3 (Mutation)**: the pseudo-mutation result as `killed/total killed`,
+  `0/0 (no meaningful points)`, or `N/A`. Equivalent mutations are excluded
+  from the total.
+- **Column 4 (Notes)**: the one-line diagnosis from Step 3.
+- **Column 5 (How to improve)**: the concrete improvement from Step 3 for
+  every grade below A, or `—` for A.
 
 **Important**: Emit **only one** `add-comment` call. The workflow is
 configured with `hide-older-comments: true`, so re-runs will replace any
