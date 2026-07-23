@@ -17,6 +17,7 @@ internal static class CommandLineArgumentsRedactor
         string[] redacted = new string[args.Length];
         bool redactNextValue = false;
         bool sanitizeNextEndpoint = false;
+        bool sensitiveValueConsumed = false;
 
         for (int i = 0; i < args.Length; i++)
         {
@@ -32,6 +33,7 @@ internal static class CommandLineArgumentsRedactor
                         : $"{prefix}{name}{delimiter}{RedactedPlaceholder}";
                     redactNextValue = inlineValue is null;
                     sanitizeNextEndpoint = false;
+                    sensitiveValueConsumed = inlineValue is not null;
                 }
                 else if (isEndpoint)
                 {
@@ -40,18 +42,21 @@ internal static class CommandLineArgumentsRedactor
                         : $"{prefix}{name}{delimiter}{SanitizeEndpoint(inlineValue)}";
                     sanitizeNextEndpoint = inlineValue is null;
                     redactNextValue = false;
+                    sensitiveValueConsumed = inlineValue is not null;
                 }
-                else if (redactNextValue)
+                else if (redactNextValue && !sensitiveValueConsumed)
                 {
                     redacted[i] = RedactedPlaceholder;
                     redactNextValue = false;
                     sanitizeNextEndpoint = false;
+                    sensitiveValueConsumed = false;
                 }
                 else
                 {
                     redacted[i] = arg;
                     redactNextValue = false;
                     sanitizeNextEndpoint = false;
+                    sensitiveValueConsumed = false;
                 }
 
                 continue;
@@ -60,12 +65,12 @@ internal static class CommandLineArgumentsRedactor
             if (redactNextValue)
             {
                 redacted[i] = RedactedPlaceholder;
-                redactNextValue = false;
+                sensitiveValueConsumed = true;
             }
             else if (sanitizeNextEndpoint)
             {
                 redacted[i] = SanitizeEndpoint(arg);
-                sanitizeNextEndpoint = false;
+                sensitiveValueConsumed = true;
             }
             else
             {

@@ -50,6 +50,25 @@ public sealed class CommandLineArgumentsRedactorTests
             CommandLineArgumentsRedactor.Redact(["--dotnet-test-http-token", "-secret"]));
 
     [TestMethod]
+    public void Redact_MasksEveryPositionalSensitiveValueUntilNextOption()
+        => Assert.AreEqual(
+            "--dotnet-test-http-token ***REDACTED*** ***REDACTED*** --server dotnettestcli " +
+            "--dotnet-test-http-endpoint https://gateway.example https://other.example --list-tests",
+            CommandLineArgumentsRedactor.Redact(
+                [
+                    "--dotnet-test-http-token", "first-secret", "second-secret",
+                    "--server", "dotnettestcli",
+                    "--dotnet-test-http-endpoint", "https://gateway.example/private/run", "https://other.example/secret",
+                    "--list-tests",
+                ]));
+
+    [TestMethod]
+    [DataRow("--dotnet-test-http-token=", "--dotnet-test-http-token=***REDACTED***")]
+    [DataRow("--dotnet-test-http-endpoint=", "--dotnet-test-http-endpoint=***REDACTED***")]
+    public void Redact_MasksEmptyInlineSensitiveValue(string argument, string expected)
+        => Assert.AreEqual(expected, CommandLineArgumentsRedactor.Redact([argument]));
+
+    [TestMethod]
     [DataRow("not-a-url")]
     [DataRow("https://user:password@gateway.example/private/run-id")]
     public void Redact_MasksInvalidOrCredentialedEndpoint(string endpoint)
