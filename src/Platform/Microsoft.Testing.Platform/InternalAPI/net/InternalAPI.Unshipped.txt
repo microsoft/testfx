@@ -3,22 +3,6 @@ static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadFields(Syst
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.TryReadExecutionScopedField(System.IO.Stream! stream, ushort fieldId, int fieldSize, ref string? executionId, ref string? instanceId) -> bool
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteExecutionScopedHeader(System.IO.Stream! stream, string? executionId, string? instanceId, ushort payloadFieldCount) -> void
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteListPayload<T>(System.IO.Stream! stream, ushort fieldId, T[]? list, System.Action<System.IO.Stream!, T>! writeItem) -> void
-Microsoft.Testing.Platform.IPC.BrowserWebSocketDuplexStream
-static Microsoft.Testing.Platform.IPC.BrowserWebSocketDuplexStream.ConnectAsync(System.Uri! uri, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.IPC.BrowserWebSocketDuplexStream!>!
-override Microsoft.Testing.Platform.IPC.BrowserWebSocketDuplexStream.CanRead.get -> bool
-override Microsoft.Testing.Platform.IPC.BrowserWebSocketDuplexStream.CanSeek.get -> bool
-override Microsoft.Testing.Platform.IPC.BrowserWebSocketDuplexStream.CanWrite.get -> bool
-override Microsoft.Testing.Platform.IPC.BrowserWebSocketDuplexStream.Flush() -> void
-override Microsoft.Testing.Platform.IPC.BrowserWebSocketDuplexStream.FlushAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
-override Microsoft.Testing.Platform.IPC.BrowserWebSocketDuplexStream.Length.get -> long
-override Microsoft.Testing.Platform.IPC.BrowserWebSocketDuplexStream.Position.get -> long
-override Microsoft.Testing.Platform.IPC.BrowserWebSocketDuplexStream.Position.set -> void
-override Microsoft.Testing.Platform.IPC.BrowserWebSocketDuplexStream.Read(byte[]! buffer, int offset, int count) -> int
-override Microsoft.Testing.Platform.IPC.BrowserWebSocketDuplexStream.ReadAsync(byte[]! buffer, int offset, int count, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<int>!
-override Microsoft.Testing.Platform.IPC.BrowserWebSocketDuplexStream.Seek(long offset, System.IO.SeekOrigin origin) -> long
-override Microsoft.Testing.Platform.IPC.BrowserWebSocketDuplexStream.SetLength(long value) -> void
-override Microsoft.Testing.Platform.IPC.BrowserWebSocketDuplexStream.Write(byte[]! buffer, int offset, int count) -> void
-override Microsoft.Testing.Platform.IPC.BrowserWebSocketDuplexStream.WriteAsync(byte[]! buffer, int offset, int count, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Platform.OutputDevice.BrowserOutputDevice.BrowserOutputDevice(Microsoft.Testing.Platform.Helpers.IConsole! console, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.Helpers.IAsyncMonitor! asyncMonitor, Microsoft.Testing.Platform.Helpers.IRuntimeFeature! runtimeFeature, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Services.IPlatformInformation! platformInformation, Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Services.IStopPoliciesService! policiesService) -> void
 override Microsoft.Testing.Platform.OutputDevice.BrowserOutputDevice.DisplayActiveTestProgress.get -> bool
 *REMOVED*Microsoft.Testing.Platform.OutputDevice.BrowserOutputDevice.BrowserOutputDevice(Microsoft.Testing.Platform.Helpers.IConsole! console, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.Helpers.IAsyncMonitor! asyncMonitor, Microsoft.Testing.Platform.Helpers.IRuntimeFeature! runtimeFeature, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Services.IPlatformInformation! platformInformation, Microsoft.Testing.Platform.Services.IStopPoliciesService! policiesService) -> void

@@ -24,7 +24,6 @@ internal static partial class CommandLineOptionsValidator
 
     private static ValidationResult InvalidWithCommandLine(CommandLineParseResult parseResult, string errorMessage)
     {
-        errorMessage = parseResult.RedactError(errorMessage);
         if (parseResult.CommandLine.Length == 0)
         {
             return ValidationResult.Invalid(errorMessage);

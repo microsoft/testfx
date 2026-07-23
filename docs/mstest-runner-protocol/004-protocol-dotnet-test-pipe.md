@@ -1,28 +1,9 @@
 # 004 - `dotnet test` Named-Pipe Protocol
 
 This document is the descriptive specification of the **`dotnet test` pipe protocol** (a.k.a. the
-`dotnettestcli` protocol): the small, versioned, **binary** protocol used between a
+`dotnettestcli` protocol): the small, versioned, **binary** protocol used over a named pipe between a
 Microsoft.Testing.Platform (MTP) test application and the `dotnet test` implementation shipped in the
 .NET SDK.
-
-> [!IMPORTANT]
-> **Protocol vs. transport.** The wire protocol described in this document - message shapes, serializer
-> IDs, field IDs, the handshake, versioning - is **transport-neutral**. It is defined purely in terms of a
-> duplex byte stream: whoever creates the stream, and how, is a separate concern. Two transports exist
-> today:
->
-> - **Named pipe** (`System.IO.Pipes`, §3) - the original and still-default transport, activated by
->   `--dotnet-test-pipe <name>`. Everything in §3 through §13 below describes this transport unless noted.
-> - **WebSocket** (§15) - required on runtimes that cannot open named pipes (`browser-wasm`), and optional
->   elsewhere, activated by `--dotnet-test-transport websocket` plus `--dotnet-test-websocket-endpoint`
->   and `--dotnet-test-websocket-token`.
->
-> Sections 4 ("Framing"), 5 ("Body serialization format"), 6 ("Serializer registry"), 7 ("Request/reply
-> model"), 8 ("Handshake & version negotiation"), 9 ("Message catalog"), and 10 ("Versioning &
-> compatibility") apply **identically** to both transports - they operate on "the stream", not
-> specifically "the pipe". Only §3 ("Pipe naming & transport") and §11-§12 (connection-loss and the
-> reverse control channel) describe named-pipe-specific behavior; see §15 for the WebSocket equivalents
-> and the (currently pipe-only) gaps.
 
 It is a *different* protocol from the [JSON-RPC server-mode protocol](./001-protocol-intro.md):
 
@@ -89,18 +70,12 @@ Rules and behavior:
 
 - `--server` accepts zero or one argument. The value `dotnettestcli` (case-insensitive) selects this
   protocol. `--server jsonrpc` (or `--server` with no value) selects JSON-RPC server mode instead.
-- `--server dotnettestcli` **requires** exactly one pre-launch transport to be fully specified: either
-  `--dotnet-test-pipe` (the default named-pipe transport, §3) or `--dotnet-test-transport websocket`
-  together with `--dotnet-test-websocket-endpoint` and `--dotnet-test-websocket-token` (§15). Specifying
-  neither, both, or an incomplete WebSocket option set fails command-line validation with an actionable
-  message (`PlatformCommandLineDotnetTestCliRequiresPipe`, `PlatformCommandLineDotnetTestTransportConflict`,
-  `PlatformCommandLineDotnetTestWebSocketRequiresEndpointAndToken`, ...). Selecting the named-pipe transport
-  on a runtime that cannot open one (`browser-wasm`, `wasi-wasm`) also fails validation early instead of
-  crashing deep inside the connection bootstrap.
+- `--server dotnettestcli` **requires** `--dotnet-test-pipe`; command-line validation fails otherwise
+  (`PlatformCommandLineDotnetTestCliRequiresPipe`).
 - `--dotnet-test-pipe` takes **exactly one** argument: the fully-resolved OS pipe name/path the SDK is
   already listening on (see §3).
-- All of these options are built-in and **hidden**: the platform omits them from `--help`, so they are
-  only listed by `--info`. They are not meant for direct end-user use.
+- Both options are built-in and **hidden**: the platform omits them from `--help`, so they are only
+  listed by `--info`. They are not meant for direct end-user use.
 
 ### Environment variables
 
@@ -370,7 +345,6 @@ Property IDs (`HandshakeMessagePropertyNames`):
 | 13 | `AttemptNumber` | test host only | Positive, 1-based retry attempt. Multiple Instance IDs may share one attempt. |
 | 14 | `SupportedPostProcessorKinds` | test host, server test host, test host controller, or artifact post-processor | Semicolon-separated reverse-DNS artifact kinds supported by registered post-processors. |
 | 15 | `SupportedPostProcessorExtensionsLegacy` | test host, server test host, test host controller, or artifact post-processor | Semicolon-separated lowercase file extensions used as a fallback for untagged artifacts. |
-| 16 | `Transport` | yes | Which transport carried this handshake: `NamedPipe` or `WebSocket` (`HandshakeMessageTransportNames`). Diagnostic/negotiation-only - the wire protocol itself never varies by transport. |
 
 ### 8.2 SDK → host: `HandshakeMessage` (reply)
 
@@ -386,7 +360,7 @@ The SDK replies with its own `HandshakeMessage`. The host reads these properties
 
 ### 8.3 Negotiation algorithm
 
-The host advertises `ProtocolConstants.SupportedVersions` (currently `"1.0.0;1.1.0;1.2.0;1.3.0;1.4.0;1.5.0"`).
+The host advertises `ProtocolConstants.SupportedVersions` (currently `"1.0.0;1.1.0;1.2.0;1.3.0;1.4.0"`).
 The SDK picks the **highest version present in both sets** and returns that single value. The host then:
 
 - Confirms the returned value is in its supported set (compatibility gate).
@@ -529,7 +503,7 @@ agent.
 
 ## 10. Versioning & compatibility
 
-`SupportedVersions = "1.0.0;1.1.0;1.2.0;1.3.0;1.4.0;1.5.0"`.
+`SupportedVersions = "1.0.0;1.1.0;1.2.0;1.3.0;1.4.0"`.
 
 | Version | What it adds / signals |
 | --- | --- |
@@ -538,7 +512,6 @@ agent.
 | 1.2.0 | Adds `AzureDevOpsLogMessage` (ID 11). Host forwards ADO logging commands (only on an ADO agent). |
 | 1.3.0 | Adds `DisplayMessage` (ID 12). Host forwards warning/error host diagnostics (always). |
 | 1.4.0 | Adds the reverse **server-control** channel (`WaitForServerControlRequest` ID 13, `ServerControlMessage` ID 14). Version is bumped so negotiated state advances in lockstep, but the feature itself is gated on the `ServerControlPipeName` handshake property, not on the version. **testfx-side / pending SDK support:** the current `dotnet/sdk` advertises only `1.0.0`–`1.3.0` and does not vendor serializers 13/14, so it cannot advertise `ServerControlPipeName` or drive the channel yet. In practice the negotiated version tops out at 1.3.0 until the coordinated SDK change lands (see §12). |
-| 1.5.0 | Adds the `Transport` handshake property (ID 16), reported as `NamedPipe` or `WebSocket`. Framing and serializer formats are unchanged; older peers ignore the additive field. |
 
 Compatibility rules / assumptions:
 
@@ -689,161 +662,14 @@ own Execution ID (see §1/§2).
 | Concern | File(s) |
 | --- | --- |
 | Wire contract (IDs, field IDs) | `ServerMode/DotnetTest/IPC/ObjectFieldIds.cs` |
-| Constants (states, versions, handshake props, transport names) | `ServerMode/DotnetTest/IPC/Constants.cs` |
+| Constants (states, versions, handshake props) | `ServerMode/DotnetTest/IPC/Constants.cs` |
 | Serializer registry | `IPC/Serializers/RegisterSerializers.cs` |
 | Serializer primitives / envelope | `IPC/Serializers/BaseSerializer.cs`, `NamedPipeSerializer.cs` |
-| Shared duplex-stream framing (both transports) | `IPC/NamedPipeConnectionBase.cs` |
-| Named-pipe transport | `IPC/NamedPipeServer.cs`, `IPC/NamedPipeClient.cs` |
+| Framing / transport | `IPC/NamedPipeConnectionBase.cs`, `NamedPipeServer.cs`, `NamedPipeClient.cs` |
 | Pipe naming | `NamedPipeServer.GetPipeName` |
-| WebSocket transport | `ServerMode/DotnetTest/Transport/DotnetTestWebSocketClient.cs`, `ClientWebSocketDuplexStream.cs`, `BrowserWebSocketDuplexStream.cs` |
-| Transport selection / CLI options | `CommandLine/PlatformCommandLineProvider.cs`, `ServerMode/DotnetTest/DotnetTestHelper.cs` (`DotnetTestTransportKind`) |
 | Message models | `ServerMode/DotnetTest/IPC/Models/*.cs`, `IPC/Models/*.cs` |
 | Message serializers | `ServerMode/DotnetTest/IPC/Serializers/*.cs` |
-| Host connection / handshake / control channel / transport dispatch | `ServerMode/DotnetTest/DotnetTestConnection.cs` |
+| Host connection / handshake / control channel | `ServerMode/DotnetTest/DotnetTestConnection.cs` |
 | Host data consumer (state → message mapping) | `ServerMode/DotnetTest/IPC/DotnetTestDataConsumer.cs` |
 | Shared-source manifest (vendored to dotnet/sdk) | `ServerMode/DotnetTest/DotnetTestProtocolContract.props` |
 | Black-box protocol reference / tests | `test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/DotnetTestPipe/*`, `test/UnitTests/Microsoft.Testing.Platform.DotnetTestProtocolContract.UnitTests/*` |
-
----
-
-## 15. WebSocket transport
-
-> [!NOTE]
-> This section covers the **transport bootstrap** for the WebSocket alternative to the named pipe. The
-> framing and serializer formats carried over it are exactly what §4-§10 describe. Protocol 1.5 adds the
-> optional `Transport` handshake property and advertises the new version; older peers ignore the additive
-> property, so the existing compatibility and version-negotiation model remains unchanged.
-
-### 15.1 Why a second transport exists
-
-`System.IO.Pipes` (and therefore the entire transport described in §3) is unavailable on `browser-wasm`
-(and `wasi-wasm`): there is no OS-level named-pipe primitive to open. Before this transport existed, the
-SDK had no way to run a browser-wasm test application through the live `dotnet test` pipe protocol at all
-and had to fall back to a degraded, standalone launch mode. The WebSocket transport gives `dotnet test` a
-bootstrap path that works on any runtime with a WebSocket implementation, so the *same* wire protocol
-(same serializers, same handshake, same message catalog) can be used everywhere.
-
-Protocol and transport are deliberately decoupled: `DotnetTestConnection` talks to an `IClient` (a small
-connect/request-reply abstraction implemented identically in shape by `NamedPipeClient` and
-`DotnetTestWebSocketClient`), and the shared framing in `NamedPipeConnectionBase` operates on a plain
-`Stream` rather than a `PipeStream` specifically. Only `NamedPipeClient`'s pipe-specific behavior (pipe
-naming, `WaitForPipeDrain`) stays isolated to the named-pipe implementation.
-
-### 15.2 Activation
-
-```text
-<testapp> --server dotnettestcli --dotnet-test-transport websocket \
-          --dotnet-test-websocket-endpoint <wsUri> --dotnet-test-websocket-token <token> [other options]
-```
-
-- `--dotnet-test-transport websocket` selects this transport. Omitting `--dotnet-test-transport` (or
-  passing `--dotnet-test-transport pipe`) keeps the named-pipe transport (§2, §3), which remains the
-  default for exact backward compatibility.
-- `--dotnet-test-websocket-endpoint` takes the fully-resolved `ws://` (or `wss://`) URI the SDK/gateway is
-  already listening on - the test host is always the one that *initiates* the outbound connection, exactly
-  mirroring the named-pipe transport where the SDK creates the pipe and the host connects out to it. This
-  matters specifically for `browser-wasm`: the page/test host runs inside the browser sandbox and can only
-  make outbound connections; it cannot accept inbound ones. The URI must be absolute and must not contain
-  user information or a fragment.
-- `--dotnet-test-websocket-token` takes a per-run opaque secret the SDK generated for this connection (see
-  §15.4); an empty or whitespace-only token is rejected during command-line validation.
-- All three options are hidden and built-in, like `--dotnet-test-pipe`.
-- Command-line validation (`PlatformCommandLineProvider.ValidateCommandLineOptionsAsync`) rejects
-  impossible or incomplete combinations before any connection is attempted: the named-pipe transport on
-  `browser-wasm`/`wasi-wasm`, `--dotnet-test-transport websocket` without both endpoint and token,
-  specifying both a pipe and a WebSocket transport, or WebSocket-only options without
-  `--dotnet-test-transport websocket`. `wasi-wasm` currently has **no** working transport at all (see
-  §15.6) and is rejected regardless of which transport was requested.
-
-### 15.3 Framing over WebSocket
-
-Every `NamedPipeConnectionBase.WriteMessageAsync` call writes one already-assembled frame (4-byte length +
-4-byte serializer ID + body) in a single `Stream.WriteAsync`. The WebSocket adapters
-(`ClientWebSocketDuplexStream` for non-browser runtimes, `BrowserWebSocketDuplexStream` for `browser-wasm`)
-map that 1:1 to one **binary** WebSocket message per frame (`endOfMessage: true`). Reads are treated as a
-plain byte stream - consecutive receives are handed back verbatim and buffered across calls - rather than
-relying on WebSocket message boundaries, so the adapters stay correct regardless of how a given frame is
-fragmented on the wire by the peer or an intermediary.
-
-`System.Net.WebSockets.ClientWebSocket` throws `PlatformNotSupportedException` on `browser-wasm`, so
-`browser-wasm` uses a dedicated adapter that talks to the browser's native `WebSocket` object through
-`[JSImport]` JS interop (the same pattern `OutputDevice.BrowserOutputDevice` already uses for
-`console.*`). The companion JS module is embedded as a string constant and imported via a `data:` URL, so
-no changes to the generated wasm bootstrap or published asset set are required.
-
-> [!NOTE]
-> **CSP caveat.** The `data:` URL dynamic import relies on the page's Content-Security-Policy permitting it.
-> A strict `script-src` that omits `data:` (and lacks `'unsafe-inline'`/a matching `'nonce-'`/`'sha256-'`
-> hash for the embedded module, or `'strict-dynamic'`) will block the import, and the WebSocket transport will
-> fail to initialize on that page. This is a real constraint under a locked-down CSP, not merely a theoretical
-> one - "no additional assets are required" (above) is true for the wasm bootstrap/publish output, but it is
-> not the same as "works under any CSP". A future revision could ship the module as a conventional `.js` asset
-> (with a `nonce`/hash-friendly `<script>` tag) instead of a `data:` import if this becomes a blocker for a
-> real deployment; that is a follow-up, not something this document should currently claim to solve.
-
-### 15.4 Authentication and security
-
-There is no OS-level ACL equivalent to `PipeOptions.CurrentUserOnly` for a TCP/WebSocket endpoint, so the
-transport authenticates every connection explicitly:
-
-- The SDK generates a per-run opaque token and passes it via `--dotnet-test-websocket-token`.
-- The test host appends it to the connection URI as a query-string parameter (e.g.
-  `?dotnetTestToken=<token>`) before connecting - see `DotnetTestWebSocketClient.BuildAuthenticatedUri`.
-  This is deliberate, not a workaround: the browser's native `WebSocket` constructor only accepts a URL and
-  an optional subprotocol list, so it **cannot** set an `Authorization` header (or any other custom
-  header) on the upgrade handshake. A query-string token is the same approach ASP.NET Core SignalR uses
-  for its WebSocket transport for the identical reason.
-- **CORS is not authentication and must not be relied on as one.** CORS governs which browser *origins* may
-  *read* a cross-origin response; it says nothing about which *process* may *open* a WebSocket connection
-  to a loopback port in the first place. Any local process that can reach the port can attempt the
-  handshake, so the token is the actual access check, not a defense-in-depth extra.
-- The SDK is expected to bind the listener to loopback (`127.0.0.1`/`::1`) only and to reject connections
-  whose token does not match the one it generated for that run/endpoint.
-- **Never log the authenticated URI (or the token) verbatim.** Diagnostics should log only the endpoint's
-  host/port/path, never the query string. This is enforced for the platform's own `--diagnostic` log too:
-  the "Command line arguments" line masks the value of `--dotnet-test-websocket-token` (in both its
-  space-separated and `--option=value`/`--option:value` inline forms) via
-  `CommandLineArgumentsRedactor.Redact`, so simply enabling verbose diagnostics can never write the secret to
-  disk. Any future option that carries a secret should be added to that redactor's sensitive-option list
-  rather than relying on callers to remember to mask it themselves.
-
-### 15.5 Handshake capability signal
-
-The handshake (§8) gained one additive property, `Transport` (ID 16, `HandshakeMessagePropertyNames.Transport`),
-always sent by the host as `NamedPipe` or `WebSocket` (`HandshakeMessageTransportNames`). It exists purely
-for diagnostics and future negotiation - the wire protocol itself is identical either way - so an older SDK
-that does not look at it is entirely unaffected. `ProtocolConstants.SupportedVersions` was bumped to
-include `1.5.0` alongside it, following the same convention as every other additive capability in §10.
-
-### 15.6 Known gaps and follow-ups (out of scope here)
-
-- **Reverse server-control channel (§12) is named-pipe-only.** The SDK advertises
-  `ServerControlPipeName` as a plain OS pipe name regardless of which transport carried the handshake.
-  `DotnetTestConnection` only opens the reverse channel when the current runtime supports named pipes, so
-  on `browser-wasm` (and `wasi-wasm`) server-initiated cancellation (`--timeout`,
-  `--maximum-failed-tests`, ...) simply stays disabled - the same graceful degradation already used when an
-  older SDK never advertises the pipe at all. A WebSocket-based (or transport-agnostic) reverse control
-  channel is a natural follow-up.
-- **`wasi-wasm` has no transport yet.** It cannot use named pipes (no `System.IO.Pipes` support) and, as of
-  this writing, has neither a working `System.Net.WebSockets.ClientWebSocket` implementation nor an
-  established JS-interop equivalent in this repo (unlike `browser-wasm`, `wasi-wasm` has no browser/JS host
-  to interop with in the first place). Command-line validation rejects both transports on `wasi-wasm`
-  outright with an actionable error rather than silently falling back to a degraded mode. A `wasi-wasm`
-  transport (e.g. once/if a WASI sockets story matures in the .NET runtime) is a separate follow-up.
-- **stdio was considered and deliberately not implemented.** Multiplexing the binary dotnettestcli protocol
-  onto the same stdio streams a test host also uses for its own console output (and that other extensions
-  may write to) would require either a second framing layer on top of the existing one or careful
-  interleaving that risks corrupting either stream. Rather than ship that as a bolted-on special case, it
-  is left as a candidate for a future, separately-designed transport if a concrete need arises.
-- **The SDK side of this transport (loopback listener/gateway, token generation and validation) is not part
-  of this repository.** This document only specifies what the MTP-side client requires from that gateway;
-  see the coordinating `dotnet/sdk` change for the server implementation. When the SDK launches a
-  `browser-wasm` bundle under Node 20, it must also pass `--experimental-websocket` to Node so the embedded
-  browser adapter can use Node's built-in WebSocket implementation without adding an npm dependency. Real
-  browsers and newer Node versions where `WebSocket` is enabled by default need no extra bootstrap.
-- **The SDK gateway remains external, but the browser client is behaviorally covered in this repository.**
-  `BrowserWasmExecutionTests` publishes and runs the real `browser-wasm` client under Node against a
-  test-local loopback WebSocket gateway. The tests cover authenticated connect, binary request/reply traffic,
-  the emitted `Transport=WebSocket` handshake property, disconnect, cancellation while the HTTP upgrade is
-  stalled, cancellation of a pending receive without losing the next message, and pre-cancelled writes. This
-  validates the `[JSImport]` path on its target runtime without depending on the production SDK gateway.

@@ -238,13 +238,13 @@ public static class WasmRuntime
     /// than calling <c>process.exit()</c> so Node drains redirected streams before exiting.
     /// </summary>
     public static async Task<(int ExitCode, string Output, string Error, string Combined)> RunUnderNodeAsync(
-        string node, string appBundle, string nodeRunnerSource, CancellationToken cancellationToken, bool enableWebSocket = false)
+        string node, string appBundle, string nodeRunnerSource, CancellationToken cancellationToken)
     {
         File.WriteAllText(Path.Combine(appBundle, "runtests.mjs"), nodeRunnerSource);
 
         var commandLine = new CommandLine();
         int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
-            $"\"{node}\"{(enableWebSocket ? " --experimental-websocket" : string.Empty)} runtests.mjs",
+            $"\"{node}\" runtests.mjs",
             workingDirectory: appBundle,
             cancellationToken: cancellationToken);
 
