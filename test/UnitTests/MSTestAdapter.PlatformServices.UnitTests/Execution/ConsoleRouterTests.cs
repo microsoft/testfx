@@ -186,7 +186,10 @@ public class ConsoleRouterTests : TestContainer
         try
         {
             var capturedWriter = new LockCycleTextWriter();
-            LockCycleResult capturedWriterResult = await RunLockCycleScenarioAsync(capturedWriter, capturedWriter);
+            LockCycleResult capturedWriterResult = await RunLockCycleScenarioAsync(
+                capturedWriter,
+                capturedWriter,
+                testContext => testContext.WriteLine("test-context"));
             capturedWriterResult.LockInversionObserved.Should().BeTrue(
                 "the controlled writer should reproduce the captured/current console lock inversion");
 
@@ -196,10 +199,14 @@ public class ConsoleRouterTests : TestContainer
                 standardOutput,
                 new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
 
-            LockCycleResult dedicatedWriterResult = await RunLockCycleScenarioAsync(capturedWriter, liveOutputWriter);
+            LockCycleResult dedicatedWriterResult = await RunLockCycleScenarioAsync(
+                capturedWriter,
+                liveOutputWriter,
+                testContext => testContext.WriteLine("test-context"));
 
             dedicatedWriterResult.LockInversionObserved.Should().BeFalse(
                 "TestContext live output must not hold the captured console writer while the standard output stream consults Console.Out");
+            dedicatedWriterResult.TestContextMessages.Should().Contain("test-context");
             dedicatedWriterResult.TestContextOutput.Should().Contain("console-logger");
             capturedWriter.Output.Should().Contain("console-logger").And.Contain("standard-output-write");
             standardOutput.Output.Should().NotStartWith("\uFEFF").And.Contain("test-context");
@@ -212,9 +219,61 @@ public class ConsoleRouterTests : TestContainer
         }
     }
 
+    public async Task LiveTrace_ConcurrentTraceAndConsoleWrites_DoNotInvertConsoleWriterLocks()
+    {
+        TextWriter previousConsoleOut = Console.Out;
+        MSTestSettings.PopulateSettings(
+            """
+            <RunSettings>
+              <MSTestV2>
+                <CaptureTraceOutput>Live</CaptureTraceOutput>
+              </MSTestV2>
+            </RunSettings>
+            """,
+            null,
+            null);
+
+        try
+        {
+            var capturedWriter = new LockCycleTextWriter(reenterCurrentConsoleOnFirstWrite: true);
+            var capturedTraceWriter = new TraceTextWriter(capturedWriter, Mode(TestOutputCaptureMode.Live));
+            LockCycleResult capturedWriterResult = await RunLockCycleScenarioAsync(
+                capturedWriter,
+                capturedWriter,
+                _ => capturedTraceWriter.Write("trace"));
+            capturedWriterResult.LockInversionObserved.Should().BeTrue(
+                "the controlled writer should reproduce the trace/current console lock inversion");
+
+            capturedWriter = new LockCycleTextWriter();
+            var standardOutput = new ReentrantConsoleStream();
+            TextWriter liveOutputWriter = UnitTestRunner.CreateLiveOutputWriter(
+                standardOutput,
+                new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+            var dedicatedTraceWriter = new TraceTextWriter(liveOutputWriter, Mode(TestOutputCaptureMode.Live));
+
+            LockCycleResult dedicatedWriterResult = await RunLockCycleScenarioAsync(
+                capturedWriter,
+                liveOutputWriter,
+                _ => dedicatedTraceWriter.Write("trace"));
+
+            dedicatedWriterResult.LockInversionObserved.Should().BeFalse(
+                "trace live output must not hold the captured console writer while the standard output stream consults Console.Out");
+            dedicatedWriterResult.TraceOutput.Should().Contain("trace");
+            capturedWriter.Output.Should().Contain("console-logger").And.Contain("standard-output-write");
+            standardOutput.Output.Should().NotStartWith("\uFEFF").And.Contain("trace");
+        }
+        finally
+        {
+            Console.SetOut(previousConsoleOut);
+            TestContextImplementation.ConfigureLiveOutputWriter(previousConsoleOut);
+            MSTestSettings.Reset();
+        }
+    }
+
     private async Task<LockCycleResult> RunLockCycleScenarioAsync(
         LockCycleTextWriter capturedWriter,
-        TextWriter liveOutputWriter)
+        TextWriter liveOutputWriter,
+        Action<TestContextImplementation> liveWrite)
     {
         TestContextImplementation.ConfigureLiveOutputWriter(liveOutputWriter);
         TestContextImplementation testContext = CreateTestContext();
@@ -224,7 +283,7 @@ public class ConsoleRouterTests : TestContainer
         {
             using (TestContextImplementation.SetCurrentTestContext(testContext))
             {
-                var testContextWrite = Task.Run(() => testContext.WriteLine("test-context"));
+                var liveOutputWrite = Task.Run(() => liveWrite(testContext));
 
                 var firstWriterTimeout = Task.Delay(WaitTimeout);
                 Task firstWriterEntered = await Task.WhenAny(
@@ -238,14 +297,17 @@ public class ConsoleRouterTests : TestContainer
                 var consoleLoggerWrite = Task.Run(() => Console.Write("console-logger"));
                 capturedWriter.ReleaseCurrentWriter();
 
-                var allWrites = Task.WhenAll(testContextWrite, consoleLoggerWrite);
+                var allWrites = Task.WhenAll(liveOutputWrite, consoleLoggerWrite);
                 Task completedTask = await Task.WhenAny(allWrites, Task.Delay(WaitTimeout));
                 completedTask.Should().BeSameAs(allWrites, "both controlled output paths should complete");
                 await allWrites;
             }
 
-            testContext.GetDiagnosticMessages().Should().Contain("test-context");
-            return new(capturedWriter.LockInversionObserved, testContext.GetAndClearOutput());
+            return new(
+                capturedWriter.LockInversionObserved,
+                testContext.GetDiagnosticMessages(),
+                testContext.GetAndClearOutput(),
+                testContext.GetAndClearTrace());
         }
         finally
         {
@@ -253,10 +315,15 @@ public class ConsoleRouterTests : TestContainer
         }
     }
 
-    private sealed record LockCycleResult(bool LockInversionObserved, string? TestContextOutput);
+    private sealed record LockCycleResult(
+        bool LockInversionObserved,
+        string? TestContextMessages,
+        string? TestContextOutput,
+        string? TraceOutput);
 
     private sealed class LockCycleTextWriter : TextWriter
     {
+        private readonly bool _reenterCurrentConsoleOnFirstWrite;
         private readonly object _capturedWriterLock = new();
         private readonly StringBuilder _output = new();
         private readonly TaskCompletionSource<object?> _capturedWriterEntered = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -266,6 +333,10 @@ public class ConsoleRouterTests : TestContainer
         private int _capturedWriterOwnerThreadId;
         private int _currentWriterEntryCount;
         private int _lockInversionObserved;
+        private int _writeReentryStarted;
+
+        internal LockCycleTextWriter(bool reenterCurrentConsoleOnFirstWrite = false)
+            => _reenterCurrentConsoleOnFirstWrite = reenterCurrentConsoleOnFirstWrite;
 
         public override Encoding Encoding => Encoding.UTF8;
 
@@ -308,6 +379,28 @@ public class ConsoleRouterTests : TestContainer
 
         public override void Write(string? value)
         {
+            if (_reenterCurrentConsoleOnFirstWrite
+                && Interlocked.CompareExchange(ref _writeReentryStarted, 1, 0) == 0)
+            {
+                lock (_capturedWriterLock)
+                {
+                    Volatile.Write(ref _capturedWriterOwnerThreadId, Environment.CurrentManagedThreadId);
+                    try
+                    {
+                        _capturedWriterEntered.TrySetResult(null);
+                        _currentWriterEntered.Task.GetAwaiter().GetResult();
+                        Console.Write("stream-writer-reentry");
+                        _output.Append(value);
+                    }
+                    finally
+                    {
+                        Volatile.Write(ref _capturedWriterOwnerThreadId, 0);
+                    }
+                }
+
+                return;
+            }
+
             if (!Monitor.TryEnter(_capturedWriterLock))
             {
                 if (Volatile.Read(ref _capturedWriterOwnerThreadId) != 0)
