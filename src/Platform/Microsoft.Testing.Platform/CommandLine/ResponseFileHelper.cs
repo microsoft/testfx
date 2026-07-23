@@ -8,7 +8,17 @@ using Microsoft.Testing.Platform.Resources;
 // - https://github.com/dotnet/command-line-api/blob/fa1991f84bc8c384aa636a251398a40e56ee1702/src/System.CommandLine/Parsing/StringExtensions.cs#L316
 internal static class ResponseFileHelper
 {
-    internal static bool TryReadResponseFile(string rspFilePath, ICollection<string> errors, [NotNullWhen(true)] out string[]? newArguments)
+    internal static bool TryReadResponseFile(
+        string rspFilePath,
+        ICollection<string> errors,
+        [NotNullWhen(true)] out string[]? newArguments)
+        => TryReadResponseFile(rspFilePath, rspFilePath, errors, out newArguments);
+
+    internal static bool TryReadResponseFile(
+        string rspFilePath,
+        string diagnosticPath,
+        ICollection<string> errors,
+        [NotNullWhen(true)] out string[]? newArguments)
     {
         try
         {
@@ -17,24 +27,37 @@ internal static class ResponseFileHelper
         }
         catch (FileNotFoundException)
         {
-            errors.Add(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserResponseFileNotFound, rspFilePath));
+            errors.Add(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserResponseFileNotFound, diagnosticPath));
         }
         catch (IOException e)
         {
-            errors.Add(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserFailedToReadResponseFile, rspFilePath, e.ToString()));
+            errors.Add(
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    PlatformResources.CommandLineParserFailedToReadResponseFile,
+                    diagnosticPath,
+                    GetExceptionDetail(e, rspFilePath, diagnosticPath)));
         }
         catch (FormatException e)
         {
             // Use the full exception detail (not just Message) for consistency with the IOException
             // branch above; the response file content that triggered a parsing failure (e.g. an
             // unclosed quote) is easier to diagnose with the complete exception information.
-            errors.Add(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserFailedToReadResponseFile, rspFilePath, e.ToString()));
+            errors.Add(
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    PlatformResources.CommandLineParserFailedToReadResponseFile,
+                    diagnosticPath,
+                    GetExceptionDetail(e, rspFilePath, diagnosticPath)));
         }
 
         newArguments = null;
         return false;
 
         // Local functions
+        static string GetExceptionDetail(Exception exception, string actualPath, string diagnosticPath)
+            => actualPath == diagnosticPath ? exception.ToString() : exception.GetType().Name;
+
         static IEnumerable<string> ExpandResponseFile(string filePath)
         {
             string[] lines = File.ReadAllLines(filePath);

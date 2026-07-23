@@ -47,10 +47,18 @@ internal static class CommandLineParser
         {
             string? currentArg = args[i];
 
-            if (currentArg.StartsWith("@", StringComparison.Ordinal) && ResponseFileHelper.TryReadResponseFile(currentArg.Substring(1), errors, out string[]? newArguments))
+            if (currentArg.StartsWith("@", StringComparison.Ordinal))
             {
-                args.InsertRange(i + 1, newArguments);
-                continue;
+                string responseFilePath = currentArg.Substring(1);
+                bool containsSensitiveValue =
+                    PlatformCommandLineProvider.DotNetTestHttpTokenOptionKey.Equals(currentOption, StringComparison.OrdinalIgnoreCase)
+                    || PlatformCommandLineProvider.DotNetTestHttpEndpointOptionKey.Equals(currentOption, StringComparison.OrdinalIgnoreCase);
+                string diagnosticPath = containsSensitiveValue ? "***REDACTED***" : responseFilePath;
+                if (ResponseFileHelper.TryReadResponseFile(responseFilePath, diagnosticPath, errors, out string[]? newArguments))
+                {
+                    args.InsertRange(i + 1, newArguments);
+                    continue;
+                }
             }
 
             // If it's the first argument and it doesn't start with - then it's the tool name
