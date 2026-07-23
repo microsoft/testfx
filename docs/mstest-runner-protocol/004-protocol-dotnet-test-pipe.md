@@ -633,6 +633,8 @@ This is deliberate: if the user kills `dotnet.exe`, the test host must die too r
 Gateway loss, DNS/network failure, authentication expiry, or a malformed response is detected by the
 current POST, or by the next POST if the host was idle. A failed request fails the host operation; there
 is no transparent retry because retrying after an ambiguous network failure could duplicate a message.
+Once a POST starts, any transport, authentication, framing, or response failure makes the transport
+terminal and cancels queued callers because the SDK and host protocol states may be ambiguous.
 Automatic redirects are disabled for the same reason: every `3xx` response fails the operation instead
 of replaying the authenticated frame at another location. The WASI handler does not implement automatic
 redirects and does not support configuring that property, so the host leaves its default untouched and

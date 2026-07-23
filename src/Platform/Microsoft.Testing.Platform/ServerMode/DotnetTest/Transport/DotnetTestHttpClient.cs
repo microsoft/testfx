@@ -116,13 +116,14 @@ internal sealed class DotnetTestHttpClient : NamedPipeConnectionBase, IClient
             };
             httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _authToken);
 
-            Task<HttpResponseMessage> sendTask = _httpClient.SendAsync(
-                httpRequest,
-                HttpCompletionOption.ResponseHeadersRead,
-                operationCancellationTokenSource.Token);
+            Task<HttpResponseMessage>? sendTask = null;
             bool disposeRequest = true;
             try
             {
+                sendTask = _httpClient.SendAsync(
+                    httpRequest,
+                    HttpCompletionOption.ResponseHeadersRead,
+                    operationCancellationTokenSource.Token);
                 using HttpResponseMessage httpResponse = await sendTask.WaitAsync(operationCancellationTokenSource.Token).ConfigureAwait(false);
 
                 if (!httpResponse.IsSuccessStatusCode)
@@ -172,10 +173,10 @@ internal sealed class DotnetTestHttpClient : NamedPipeConnectionBase, IClient
                         $"The dotnet test HTTP gateway returned '{response.GetType().Name}' when '{typeof(TResponse).Name}' was expected."),
                 };
             }
-            catch (OperationCanceledException)
+            catch
             {
-                AbortTransportAfterCancellation();
-                if (!sendTask.IsCompleted)
+                AbortTransportAfterFailure();
+                if (sendTask is { IsCompleted: false })
                 {
                     ObserveAndDisposeIncompleteSend(sendTask, httpRequest);
                     disposeRequest = false;
@@ -251,7 +252,7 @@ internal sealed class DotnetTestHttpClient : NamedPipeConnectionBase, IClient
         return new HttpClient(handler);
     }
 
-    private void AbortTransportAfterCancellation()
+    private void AbortTransportAfterFailure()
     {
         lock (_lifecycleLock)
         {

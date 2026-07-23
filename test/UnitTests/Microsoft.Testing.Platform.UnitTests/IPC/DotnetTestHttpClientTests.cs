@@ -174,6 +174,38 @@ public sealed class DotnetTestHttpClientTests
     }
 
     [TestMethod]
+    public async Task RequestReplyAsync_FailureCancelsQueuedRequest()
+    {
+        int requestCount = 0;
+        var requestStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseResponse = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var handler = new DelegateHttpMessageHandler(async (_, cancellationToken) =>
+        {
+            Interlocked.Increment(ref requestCount);
+            requestStarted.SetResult();
+            await releaseResponse.Task.WaitAsync(cancellationToken);
+            return new HttpResponseMessage(HttpStatusCode.Unauthorized);
+        });
+
+        using DotnetTestHttpClient client = CreateClient(handler);
+        await client.ConnectAsync(_testContext.CancellationToken);
+        Task<TestResponse> activeRequest = client.RequestReplyAsync<TestRequest, TestResponse>(
+            TestRequest.Instance,
+            _testContext.CancellationToken);
+        await requestStarted.Task;
+        Task<TestResponse> waitingRequest = client.RequestReplyAsync<TestRequest, TestResponse>(
+            TestRequest.Instance,
+            _testContext.CancellationToken);
+
+        releaseResponse.SetResult();
+
+        await Assert.ThrowsExactlyAsync<IOException>(() => activeRequest);
+        await Assert.ThrowsAsync<OperationCanceledException>(() => waitingRequest);
+        Assert.AreEqual(1, requestCount);
+        Assert.IsFalse(client.IsConnected);
+    }
+
+    [TestMethod]
     public async Task RequestReplyAsync_UsesCallerCancellationInsteadOfHttpClientTimeout()
     {
         var handler = new DelegateHttpMessageHandler(async (_, cancellationToken) =>
