@@ -267,7 +267,7 @@ public sealed class DotnetTestHttpClientTests
             client.RequestReplyAsync<TestRequest, TestResponse>(
                 TestRequest.Instance,
                 _testContext.CancellationToken));
-        Assert.Contains("invalid response payload length", exception.Message);
+        Assert.Contains("invalid frame payload length", exception.Message);
     }
 
     [TestMethod]

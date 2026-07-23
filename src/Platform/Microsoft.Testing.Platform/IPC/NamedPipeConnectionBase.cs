@@ -148,7 +148,7 @@ internal abstract class NamedPipeConnectionBase : NamedPipeBase
             int currentMessageSize = BitConverter.ToInt32(_readBuffer, 0);
             if (currentMessageSize < sizeof(int) || currentMessageSize > maximumFrameSize - sizeof(int))
             {
-                throw new IOException($"The transport returned an invalid response payload length of {currentMessageSize} bytes.");
+                throw new IOException($"The transport returned an invalid frame payload length of {currentMessageSize} bytes.");
             }
 
             int missingBytesToReadOfWholeMessage = currentMessageSize;
