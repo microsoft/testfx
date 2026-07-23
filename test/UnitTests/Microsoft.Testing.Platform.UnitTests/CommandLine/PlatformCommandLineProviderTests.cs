@@ -461,14 +461,20 @@ public sealed class PlatformCommandLineProviderTests
     }
 
     [TestMethod]
-    public async Task IsInvalid_When_ExplicitPipeTransportHasNoPipeName()
+    [DataRow(null)]
+    [DataRow("dotnettestcli")]
+    [DataRow("jsonrpc")]
+    public async Task IsInvalid_When_ExplicitPipeTransportHasNoPipeName(string? serverProtocol)
     {
         var provider = new PlatformCommandLineProvider();
         var options = new Dictionary<string, string[]>
         {
-            [PlatformCommandLineProvider.ServerOptionKey] = ["dotnettestcli"],
             [PlatformCommandLineProvider.DotNetTestTransportOptionKey] = ["pipe"],
         };
+        if (serverProtocol is not null)
+        {
+            options[PlatformCommandLineProvider.ServerOptionKey] = [serverProtocol];
+        }
 
         ValidationResult result = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
         Assert.IsFalse(result.IsValid);

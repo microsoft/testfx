@@ -304,6 +304,16 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
             return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDotnetTestHttpRequiresEndpointAndToken);
         }
 
+        if (isPipeTransport && !hasPipe)
+        {
+            return ValidationResult.InvalidTask(
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    PlatformResources.PlatformCommandLineDotnetTestCliRequiresPipe,
+                    DotnetTestCliProtocolName,
+                    DotNetTestPipeOptionKey));
+        }
+
         // The '--server dotnettestcli' protocol path requires exactly one pre-launch transport: either the
         // legacy named pipe (implied by '--dotnet-test-pipe') or authenticated HTTP.
         if (commandLineOptions.TryGetOptionArgumentList(ServerOptionKey, out string[]? serverProtocolArgs)
@@ -312,10 +322,7 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
         {
             if (!hasPipe && !isHttpTransport)
             {
-                return ValidationResult.InvalidTask(
-                    isPipeTransport
-                        ? string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineDotnetTestCliRequiresPipe, DotnetTestCliProtocolName, DotNetTestPipeOptionKey)
-                        : PlatformResources.PlatformCommandLineDotnetTestCliRequiresTransport);
+                return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDotnetTestCliRequiresTransport);
             }
 
             if (hasPipe && OperatingSystem.IsBrowser())
