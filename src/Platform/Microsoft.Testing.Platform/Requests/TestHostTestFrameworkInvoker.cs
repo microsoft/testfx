@@ -3,7 +3,6 @@
 
 using Microsoft.Testing.Platform.Capabilities;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
-using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
@@ -18,7 +17,7 @@ using Microsoft.Testing.Platform.TestHost;
 namespace Microsoft.Testing.Platform.Requests;
 
 [SuppressMessage("Performance", "CA1852: Seal internal types", Justification = "HotReload needs to inherit and override ExecuteRequestAsync")]
-internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : ITestFrameworkInvoker, IOutputDeviceDataProducer, IDataProducer
+internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : ITestFrameworkInvoker, IOutputDeviceDataProducer
 {
     protected IServiceProvider ServiceProvider { get; } = serviceProvider;
 
@@ -29,21 +28,6 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
     public string DisplayName => string.Empty;
 
     public string Description => string.Empty;
-
-#pragma warning disable CS0618 // Type or member is obsolete
-    // TestRequestExecutionTimeInfo is kept only for binary compatibility with the
-    // Microsoft.Testing.Platform.MSBuild <= 2.2.x extension, whose MSBuildConsumer
-    // depends on receiving this message to trigger its end-of-session summary
-    // (HandleSummaryAsync sends the TestRunSummaryRequest over the IPC pipe to
-    // MSBuild). The current in-tree consumer no longer lists this type in its
-    // DataTypesConsumed, so when paired with this newer platform the message is
-    // simply dropped by AsynchronousMessageBus, but the old shipped consumer still
-    // needs it published in order to emit the run summary to MSBuild.
-    // See: https://github.com/microsoft/testfx/pull/8514 (removal),
-    //      https://github.com/microsoft/testfx/pull/8921 (binary-compat restore),
-    //      https://github.com/microsoft/testfx/issues/8925 (remove in next major).
-    public Type[] DataTypesProduced => [typeof(TestRequestExecutionTimeInfo)];
-#pragma warning restore CS0618 // Type or member is obsolete
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
@@ -60,8 +44,6 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
             }
         }
 
-        DateTimeOffset startTime = DateTimeOffset.UtcNow;
-        var stopwatch = Stopwatch.StartNew();
         SessionUid sessionId = ServiceProvider.GetTestSessionContext().SessionUid;
         await logger.LogDebugAsync($"Test session UID: '{sessionId.Value}'").ConfigureAwait(false);
 
@@ -92,14 +74,6 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
             CloseTestSessionResult closeTestSessionResult = await testFramework.CloseTestSessionAsync(new(sessionId, cancellationToken)).ConfigureAwait(false);
             await HandleTestSessionResultAsync(logger, "CloseTestSession", sessionId, closeTestSessionResult.IsSuccess, closeTestSessionResult.WarningMessage, closeTestSessionResult.ErrorMessage, cancellationToken).ConfigureAwait(false);
         }
-
-        DateTimeOffset endTime = DateTimeOffset.UtcNow;
-#pragma warning disable CS0618 // Type or member is obsolete
-        // Republished for binary compatibility with the older Microsoft.Testing.Platform.MSBuild
-        // extension (<= 2.2.x). Current in-tree consumers do not listen for this message, so it
-        // is silently dropped by AsynchronousMessageBus when only the new extension is loaded.
-        await messageBus.PublishAsync(this, new TestRequestExecutionTimeInfo(new TimingInfo(startTime, endTime, stopwatch.Elapsed))).ConfigureAwait(false);
-#pragma warning restore CS0618 // Type or member is obsolete
     }
 
     public virtual async Task ExecuteRequestAsync(ITestFramework testFramework, TestExecutionRequest request, IMessageBus messageBus, CancellationToken cancellationToken)

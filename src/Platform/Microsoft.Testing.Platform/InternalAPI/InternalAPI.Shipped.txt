@@ -594,12 +594,6 @@ Microsoft.Testing.Platform.Extensions.Messages.SerializableKeyValuePairStringPro
 Microsoft.Testing.Platform.Extensions.Messages.SerializableKeyValuePairStringProperty.Key.get -> string!
 Microsoft.Testing.Platform.Extensions.Messages.SerializableKeyValuePairStringProperty.SerializableKeyValuePairStringProperty(string! key, string! value) -> void
 Microsoft.Testing.Platform.Extensions.Messages.SerializableKeyValuePairStringProperty.Value.get -> string!
-Microsoft.Testing.Platform.Extensions.Messages.TestRequestExecutionTimeInfo
-Microsoft.Testing.Platform.Extensions.Messages.TestRequestExecutionTimeInfo.Description.get -> string?
-Microsoft.Testing.Platform.Extensions.Messages.TestRequestExecutionTimeInfo.DisplayName.get -> string!
-Microsoft.Testing.Platform.Extensions.Messages.TestRequestExecutionTimeInfo.TestRequestExecutionTimeInfo() -> void
-Microsoft.Testing.Platform.Extensions.Messages.TestRequestExecutionTimeInfo.TestRequestExecutionTimeInfo(Microsoft.Testing.Platform.Extensions.Messages.TimingInfo timingInfo) -> void
-Microsoft.Testing.Platform.Extensions.Messages.TestRequestExecutionTimeInfo.TimingInfo.get -> Microsoft.Testing.Platform.Extensions.Messages.TimingInfo
 Microsoft.Testing.Platform.Extensions.TestFramework.CloseTestSessionContext.CloseTestSessionContext(Microsoft.Testing.Platform.TestHost.SessionUid sessionUid, System.Threading.CancellationToken cancellationToken) -> void
 Microsoft.Testing.Platform.Extensions.TestFramework.CreateTestSessionContext.CreateTestSessionContext(Microsoft.Testing.Platform.TestHost.SessionUid sessionUid, System.Threading.CancellationToken cancellationToken) -> void
 Microsoft.Testing.Platform.Extensions.TestHost.TestSessionLifetimeHandlersContainer
@@ -2695,7 +2689,6 @@ override Microsoft.Testing.Platform.Extensions.Messages.FailedTestNodeStatePrope
 override Microsoft.Testing.Platform.Extensions.Messages.SerializableKeyValuePairStringProperty.Equals(object? obj) -> bool
 override Microsoft.Testing.Platform.Extensions.Messages.SerializableKeyValuePairStringProperty.GetHashCode() -> int
 override Microsoft.Testing.Platform.Extensions.Messages.SerializableKeyValuePairStringProperty.ToString() -> string!
-override Microsoft.Testing.Platform.Extensions.Messages.TestRequestExecutionTimeInfo.ToString() -> string!
 override Microsoft.Testing.Platform.Extensions.Messages.TimeoutTestNodeStateProperty.PrintMembers(System.Text.StringBuilder! builder) -> void
 override Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.TestNodeDetails.Equals(object? obj) -> bool
 override Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.TestNodeDetails.GetHashCode() -> int

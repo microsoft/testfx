@@ -27,6 +27,7 @@ public class ForwardCompatibilityTests : AcceptanceTestBase<ForwardCompatibility
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string PreviousExtensionVersion = "2.2.1";
+        private const string PreviousMSBuildExtensionVersion = "2.3.0";
 
         private const string ForwardCompatibilityTestCode = """
 #file ForwardCompatibilityTest.csproj
@@ -52,13 +53,8 @@ public class ForwardCompatibilityTests : AcceptanceTestBase<ForwardCompatibility
         <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$PreviousExtensionVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.Telemetry" Version="$PreviousExtensionVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$PreviousExtensionVersion$" />
-        <!--
-            Microsoft.Testing.Platform.MSBuild ships the auto-loaded MSBuildConsumer extension.
-            Pinning it to an older version exercises the scenario where a newer
-            Microsoft.Testing.Platform must still load the older MSBuildConsumer binary without
-            crashing on removed-but-still-referenced internal types (e.g. TestRequestExecutionTimeInfo).
-        -->
-        <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$PreviousExtensionVersion$" />
+        <!-- Use the oldest MSBuild extension that no longer depends on the removed internal execution-time message. -->
+        <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$PreviousMSBuildExtensionVersion$" />
     </ItemGroup>
 </Project>
 
@@ -88,11 +84,7 @@ public class Program
         builder.AddRetryProvider();
         builder.AddAppInsightsTelemetryProvider();
         builder.AddTrxReportProvider();
-        // The MSBuildConsumer is constructed unconditionally when its extension is registered,
-        // even when the MSBuild integration is not active. Registering it here ensures we
-        // exercise the type-load path that previously broke when the platform removed the
-        // internal TestRequestExecutionTimeInfo type that older MSBuildConsumer binaries
-        // reference in their DataTypesConsumed array.
+        // Include the MSBuild extension in forward-compatibility coverage.
         builder.AddMSBuild();
 
         using ITestApplication app = await builder.BuildAsync();
@@ -143,7 +135,8 @@ public class DummyTestFramework : ITestFramework, IDataProducer
                 ForwardCompatibilityTestCode
                 .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$PreviousExtensionVersion$", PreviousExtensionVersion));
+                .PatchCodeWithReplace("$PreviousExtensionVersion$", PreviousExtensionVersion)
+                .PatchCodeWithReplace("$PreviousMSBuildExtensionVersion$", PreviousMSBuildExtensionVersion));
     }
 
     public TestContext TestContext { get; set; }
