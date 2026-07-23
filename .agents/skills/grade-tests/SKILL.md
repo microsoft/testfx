@@ -341,11 +341,13 @@ Produce two sections.
 #### 1. Summary
 
 A short paragraph (2–4 sentences) covering: total tests graded, grade
-distribution, the most important survived or uncovered mutation, the most
-common issue, and the single highest-leverage recommendation.
-If every mutation result is `N/A`, state that production code could not be
-resolved and lead with the dominant assertion, hygiene, or structure signal
-instead of inventing a mutation finding.
+distribution, the most common issue, and the single highest-leverage
+recommendation. Include the most important survived or uncovered mutation
+only when one exists. Otherwise state the applicable result without inventing
+a gap: all meaningful mutations were killed, no meaningful mutation points
+were found (`0/0`), or production code could not be resolved (`N/A`). In the
+latter two cases, lead with the dominant assertion, hygiene, or structure
+signal.
 
 #### 2. Per-test table
 

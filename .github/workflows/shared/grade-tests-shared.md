@@ -355,10 +355,12 @@ pipe-table) so each cell can use inline HTML like `<code>` and `<br>`.
 ```markdown
 ### 🧪 Test quality grade — PR #${{ github.event.pull_request.number || github.event.issue.number }}
 
-<!-- 2–4 sentence summary: total graded, grade distribution, most important
-survived/uncovered mutation, most common issue, and top recommendation.
-If every Mutation value is N/A, state that production code could not be
-resolved and lead with the dominant non-mutation signal instead. -->
+<!-- 2–4 sentence summary: total graded, grade distribution, most common issue,
+and top recommendation. Include the most important survived/uncovered mutation
+only when one exists. Otherwise state that all meaningful mutations were
+killed, no meaningful mutation points were found (0/0), or production code
+could not be resolved (N/A), whichever applies. For 0/0 or N/A, lead with the
+dominant non-mutation signal instead. -->
 
 <table>
   <thead>
