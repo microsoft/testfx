@@ -23,9 +23,23 @@ internal sealed partial class TestContextImplementation
             => Volatile.Write(ref _isActive, 0);
     }
 
+    private sealed class LiveOutputWriterScope(TextWriter? previousLiveOutputWriter) : IDisposable
+    {
+        public void Dispose()
+            => Volatile.Write(ref s_liveOutputWriter, previousLiveOutputWriter);
+    }
+
     // This writer is captured together with the process-wide Console routers and shares their install-once lifetime.
     internal static void ConfigureLiveOutputWriter(TextWriter liveOutputWriter)
         => Volatile.Write(ref s_liveOutputWriter, liveOutputWriter);
+
+    internal static IDisposable SetLiveOutputWriterForTesting(TextWriter liveOutputWriter)
+    {
+        TextWriter? previousLiveOutputWriter = Volatile.Read(ref s_liveOutputWriter);
+        Volatile.Write(ref s_liveOutputWriter, liveOutputWriter);
+
+        return new LiveOutputWriterScope(previousLiveOutputWriter);
+    }
 
     private void WriteLive(string? message, bool appendLine)
     {
