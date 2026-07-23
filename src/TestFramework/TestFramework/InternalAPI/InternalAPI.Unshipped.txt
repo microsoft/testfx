@@ -1,4 +1,5 @@
 #nullable enable
+static Microsoft.VisualStudio.TestTools.UnitTesting.AssertionValueRenderer.IsBuiltInStringRendering(string! value, string! rendered) -> bool
 const Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataOperations.RequiredMemberTypes = (System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes)-1 -> System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes
 static Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataOperations.GetTestMethodDeclaringType(System.Reflection.MethodInfo! methodInfo) -> System.Type?
 static Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceResolver.TryGetData(System.Type! declaringType, string! sourceName, Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType sourceType, object?[]! arguments, out object? data) -> bool
