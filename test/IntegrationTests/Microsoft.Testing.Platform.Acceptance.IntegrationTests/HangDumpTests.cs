@@ -25,6 +25,31 @@ public sealed class HangDumpTests : AcceptanceTestBase<HangDumpTests.TestAssetFi
         Assert.ContainsSingle(dumpFiles, $"Expected single dump file. Found: {Environment.NewLine}{string.Join(Environment.NewLine, dumpFiles)}{Environment.NewLine}{testHostResult}");
     }
 
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task HangDump_AbsoluteDeadline_CreateDump(string tfm)
+    {
+        string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "HangDump", tfm);
+
+        // Inactivity timeout is huge so the classic hang path never fires. The dump is driven purely
+        // by the absolute CI deadline: a few seconds out, with a zero dump margin so it triggers at
+        // the deadline itself. The test hangs (SLEEPTIMEMS2), so the deadline is what takes the dump.
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--hangdump --hangdump-timeout 30m --results-directory {resultDirectory}",
+            new Dictionary<string, string?>
+            {
+                { "SLEEPTIMEMS1", "1000" },
+                { "SLEEPTIMEMS2", "600000" },
+                { "TESTINGPLATFORM_DEADLINE", DateTimeOffset.UtcNow.AddSeconds(8).ToString("o") },
+                { "TESTINGPLATFORM_DEADLINE_DUMP_MARGIN", "0" },
+            },
+            cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertExitCodeIs(ExitCode.TestHostProcessExitedNonGracefully);
+        string[] dumpFiles = Directory.GetFiles(resultDirectory, "HangDump*.dmp", SearchOption.AllDirectories);
+        Assert.ContainsSingle(dumpFiles, $"Expected single dump file. Found: {Environment.NewLine}{string.Join(Environment.NewLine, dumpFiles)}{Environment.NewLine}{testHostResult}");
+    }
+
     [TestMethod]
     public async Task HangDump_WithDotnetTest_CreateDump()
     {

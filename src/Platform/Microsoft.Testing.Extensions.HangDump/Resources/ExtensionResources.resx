@@ -146,6 +146,9 @@
   <data name="HangDumpArtifactDisplayName" xml:space="preserve">
     <value>Hang dump file</value>
   </data>
+  <data name="HangDumpDeadlineApproaching" xml:space="preserve">
+    <value>CI deadline approaching: taking a hang dump before the run is hard-cancelled.</value>
+  </data>
   <data name="HangDumpEnvironmentVariableInvalidValueErrorMessage" xml:space="preserve">
     <value>Environment variable '{0}' is set to '{1}' instead of '{2}'</value>
     <comment>{0} is the environment variable name. {1} is the actual value. {2} is the expected value.</comment>

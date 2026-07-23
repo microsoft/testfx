@@ -16,3 +16,11 @@ static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteExecutionS
 static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteListPayload<T>(System.IO.Stream! stream, ushort fieldId, T[]? list, System.Action<System.IO.Stream!, T>! writeItem) -> void
 const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.Expected = 10 -> ushort
 const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.Actual = 11 -> ushort
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE = "TESTINGPLATFORM_DEADLINE" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE_STOP_MARGIN = "TESTINGPLATFORM_DEADLINE_STOP_MARGIN" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE_DUMP_MARGIN = "TESTINGPLATFORM_DEADLINE_DUMP_MARGIN" -> string!
+Microsoft.Testing.Platform.Helpers.DeadlineHelper
+static Microsoft.Testing.Platform.Helpers.DeadlineHelper.TryGetDeadline(Microsoft.Testing.Platform.Helpers.IEnvironment! environment, out System.DateTimeOffset deadlineUtc) -> bool
+static Microsoft.Testing.Platform.Helpers.DeadlineHelper.GetStopMargin(Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> System.TimeSpan
+static Microsoft.Testing.Platform.Helpers.DeadlineHelper.GetDumpMargin(Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> System.TimeSpan
+static Microsoft.Testing.Platform.Helpers.DeadlineHelper.SubtractSaturating(System.DateTimeOffset instant, System.TimeSpan margin) -> System.DateTimeOffset

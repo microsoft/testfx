@@ -114,6 +114,19 @@ internal sealed partial class TestHostBuilder
             dataConsumersBuilder.Add(abortForMaxFailedTestsExtension);
         }
 
+        var abortAtDeadlineExtension = new AbortAtDeadlineExtension(
+            serviceProvider.GetEnvironment(),
+            serviceProvider.GetSystemClock(),
+            serviceProvider.GetTestFrameworkCapabilities().GetCapability<IGracefulStopTestExecutionCapability>(),
+            serviceProvider.GetTestApplicationCancellationTokenSource(),
+            serviceProvider.GetOutputDevice(),
+            serviceProvider.GetLoggerFactory());
+
+        if (await abortAtDeadlineExtension.IsEnabledAsync().ConfigureAwait(false))
+        {
+            dataConsumersBuilder.Add(abortAtDeadlineExtension);
+        }
+
         AsynchronousMessageBus concreteMessageBusService = new(
             [.. dataConsumersBuilder],
             serviceProvider.GetTestApplicationCancellationTokenSource(),

@@ -60,4 +60,12 @@ internal static class EnvironmentVariableConstants
 
     // Trx
     public const string TESTINGPLATFORM_TRX_TESTRUN_ID = nameof(TESTINGPLATFORM_TRX_TESTRUN_ID);
+
+    // Deadline-aware cancellation. TESTINGPLATFORM_DEADLINE is an absolute wall-clock instant
+    // (ISO 8601 round-trip, parsed to UTC) that the CI runner will hard-cancel the process at.
+    // The margins are the lead time before the deadline at which the platform reacts: graceful
+    // stop (stop scheduling new tests, let reporters finalize) and hang dump (out-of-proc dump).
+    public const string TESTINGPLATFORM_DEADLINE = nameof(TESTINGPLATFORM_DEADLINE);
+    public const string TESTINGPLATFORM_DEADLINE_STOP_MARGIN = nameof(TESTINGPLATFORM_DEADLINE_STOP_MARGIN);
+    public const string TESTINGPLATFORM_DEADLINE_DUMP_MARGIN = nameof(TESTINGPLATFORM_DEADLINE_DUMP_MARGIN);
 }

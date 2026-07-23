@@ -235,6 +235,24 @@ static Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.GetSlowestTe
 *REMOVED*static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.GetSystemClock(this System.IServiceProvider! serviceProvider) -> Microsoft.Testing.Platform.Helpers.IClock!
 *REMOVED*virtual Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.ValidateCommandLineOptionsAsync(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
 *REMOVED*virtual Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.ValidateOptionArgumentsAsync(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE = "TESTINGPLATFORM_DEADLINE" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE_STOP_MARGIN = "TESTINGPLATFORM_DEADLINE_STOP_MARGIN" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE_DUMP_MARGIN = "TESTINGPLATFORM_DEADLINE_DUMP_MARGIN" -> string!
+Microsoft.Testing.Platform.Helpers.DeadlineHelper
+static Microsoft.Testing.Platform.Helpers.DeadlineHelper.TryGetDeadline(Microsoft.Testing.Platform.Helpers.IEnvironment! environment, out System.DateTimeOffset deadlineUtc) -> bool
+static Microsoft.Testing.Platform.Helpers.DeadlineHelper.GetStopMargin(Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> System.TimeSpan
+static Microsoft.Testing.Platform.Helpers.DeadlineHelper.GetDumpMargin(Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> System.TimeSpan
+static Microsoft.Testing.Platform.Helpers.DeadlineHelper.SubtractSaturating(System.DateTimeOffset instant, System.TimeSpan margin) -> System.DateTimeOffset
+Microsoft.Testing.Platform.Extensions.AbortAtDeadlineExtension
+Microsoft.Testing.Platform.Extensions.AbortAtDeadlineExtension.AbortAtDeadlineExtension(Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Helpers.IClock! clock, Microsoft.Testing.Platform.Capabilities.TestFramework.IGracefulStopTestExecutionCapability? capability, Microsoft.Testing.Platform.Services.ITestApplicationCancellationTokenSource! cancellationTokenSource, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDevice, Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory) -> void
+Microsoft.Testing.Platform.Extensions.AbortAtDeadlineExtension.ConsumeAsync(Microsoft.Testing.Platform.Extensions.Messages.IDataProducer! dataProducer, Microsoft.Testing.Platform.Extensions.Messages.IData! value, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.Extensions.AbortAtDeadlineExtension.DataTypesConsumed.get -> System.Type![]!
+Microsoft.Testing.Platform.Extensions.AbortAtDeadlineExtension.Description.get -> string!
+Microsoft.Testing.Platform.Extensions.AbortAtDeadlineExtension.DisplayName.get -> string!
+Microsoft.Testing.Platform.Extensions.AbortAtDeadlineExtension.Dispose() -> void
+Microsoft.Testing.Platform.Extensions.AbortAtDeadlineExtension.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Platform.Extensions.AbortAtDeadlineExtension.Uid.get -> string!
+Microsoft.Testing.Platform.Extensions.AbortAtDeadlineExtension.Version.get -> string!
 Microsoft.Testing.Platform.DotnetTestConnection.DotnetTestConnection(Microsoft.Testing.Platform.CommandLine.CommandLineHandler! commandLineHandler, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.Services.ITestApplicationCancellationTokenSource! cancellationTokenSource, Microsoft.Testing.Platform.Logging.ILogger! logger) -> void
 Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporter.TerminalTestReporter(Microsoft.Testing.Platform.Helpers.IConsole! console, System.Func<bool>! isCancellationRequested, Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions! options, Microsoft.Testing.Platform.Logging.ILogger! logger) -> void
 Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressStateAwareTerminal.TestProgressStateAwareTerminal(Microsoft.Testing.Platform.OutputDevice.Terminal.ITerminal! terminal, System.Func<bool?>! showProgress, Microsoft.Testing.Platform.OutputDevice.Terminal.IProgressRenderer! renderer, Microsoft.Testing.Platform.Logging.ILogger! logger) -> void
