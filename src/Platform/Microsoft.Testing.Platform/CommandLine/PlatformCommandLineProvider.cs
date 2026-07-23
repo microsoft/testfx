@@ -279,43 +279,43 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
             return ValidationResult.InvalidTask(PlatformResources.OnlyOneFilterSupported);
         }
 
+        bool hasPipe = commandLineOptions.IsOptionSet(DotNetTestPipeOptionKey);
+        bool hasTransport = commandLineOptions.TryGetOptionArgumentList(DotNetTestTransportOptionKey, out string[]? transportArguments)
+            && transportArguments is { Length: 1 };
+        bool isPipeTransport = hasTransport
+            && DotNetTestTransportPipeArgument.Equals(transportArguments![0], StringComparison.OrdinalIgnoreCase);
+        bool isHttpTransport = hasTransport
+            && DotNetTestTransportHttpArgument.Equals(transportArguments![0], StringComparison.OrdinalIgnoreCase);
+        bool hasHttpEndpoint = commandLineOptions.IsOptionSet(DotNetTestHttpEndpointOptionKey);
+        bool hasHttpToken = commandLineOptions.IsOptionSet(DotNetTestHttpTokenOptionKey);
+
+        if (hasPipe && (isHttpTransport || hasHttpEndpoint || hasHttpToken))
+        {
+            return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDotnetTestTransportConflict);
+        }
+
+        if (!isHttpTransport && (hasHttpEndpoint || hasHttpToken))
+        {
+            return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDotnetTestHttpOptionsRequireTransport);
+        }
+
+        if (isHttpTransport && (!hasHttpEndpoint || !hasHttpToken))
+        {
+            return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDotnetTestHttpRequiresEndpointAndToken);
+        }
+
         // The '--server dotnettestcli' protocol path requires exactly one pre-launch transport: either the
         // legacy named pipe (implied by '--dotnet-test-pipe') or authenticated HTTP.
         if (commandLineOptions.TryGetOptionArgumentList(ServerOptionKey, out string[]? serverProtocolArgs)
             && serverProtocolArgs is { Length: 1 }
             && DotnetTestCliProtocolName.Equals(serverProtocolArgs[0], StringComparison.OrdinalIgnoreCase))
         {
-            bool hasPipe = commandLineOptions.IsOptionSet(DotNetTestPipeOptionKey);
-            bool hasTransport = commandLineOptions.TryGetOptionArgumentList(DotNetTestTransportOptionKey, out string[]? transportArguments)
-                && transportArguments is { Length: 1 };
-            bool isPipeTransport = hasTransport
-                && DotNetTestTransportPipeArgument.Equals(transportArguments![0], StringComparison.OrdinalIgnoreCase);
-            bool isHttpTransport = hasTransport
-                && DotNetTestTransportHttpArgument.Equals(transportArguments![0], StringComparison.OrdinalIgnoreCase);
-            bool hasHttpEndpoint = commandLineOptions.IsOptionSet(DotNetTestHttpEndpointOptionKey);
-            bool hasHttpToken = commandLineOptions.IsOptionSet(DotNetTestHttpTokenOptionKey);
-
-            if (hasPipe && (isHttpTransport || hasHttpEndpoint || hasHttpToken))
-            {
-                return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDotnetTestTransportConflict);
-            }
-
-            if (!isHttpTransport && (hasHttpEndpoint || hasHttpToken))
-            {
-                return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDotnetTestHttpOptionsRequireTransport);
-            }
-
             if (!hasPipe && !isHttpTransport)
             {
                 return ValidationResult.InvalidTask(
                     isPipeTransport
                         ? string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineDotnetTestCliRequiresPipe, DotnetTestCliProtocolName, DotNetTestPipeOptionKey)
                         : PlatformResources.PlatformCommandLineDotnetTestCliRequiresTransport);
-            }
-
-            if (isHttpTransport && (!hasHttpEndpoint || !hasHttpToken))
-            {
-                return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDotnetTestHttpRequiresEndpointAndToken);
             }
 
             if (hasPipe && OperatingSystem.IsBrowser())

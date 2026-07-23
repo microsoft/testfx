@@ -24,8 +24,8 @@ internal static class CommandLineArgumentsRedactor
             string arg = args[i];
             if (TryParseOption(arg, out string? prefix, out string? name, out string? delimiter, out string? inlineValue))
             {
-                bool isToken = PlatformCommandLineProvider.DotNetTestHttpTokenOptionKey.Equals(name, StringComparison.OrdinalIgnoreCase);
-                bool isEndpoint = PlatformCommandLineProvider.DotNetTestHttpEndpointOptionKey.Equals(name, StringComparison.OrdinalIgnoreCase);
+                bool isToken = IsTokenOption(name);
+                bool isEndpoint = IsEndpointOption(name);
                 if (isToken)
                 {
                     redacted[i] = inlineValue is null
@@ -100,27 +100,50 @@ internal static class CommandLineArgumentsRedactor
         delimiter = null;
         inlineValue = null;
 
-        bool isDoubleDash = arg.Length > 2 && arg[0] == '-' && arg[1] == '-' && arg[2] != '-';
-        bool isSingleDash = !isDoubleDash && arg.Length > 1 && arg[0] == '-' && arg[1] != '-';
-        if (!isDoubleDash && !isSingleDash)
+        int prefixLength = 0;
+        while (prefixLength < arg.Length && arg[prefixLength] == '-')
+        {
+            prefixLength++;
+        }
+
+        bool isValidPrefix = prefixLength is 1 or 2;
+        bool isMalformedPrefix = prefixLength >= 3;
+        if ((!isValidPrefix && !isMalformedPrefix) || prefixLength == arg.Length)
         {
             return false;
         }
 
-        prefix = isDoubleDash ? "--" : "-";
-        string withoutPrefix = arg[prefix.Length..];
+        prefix = arg[..prefixLength];
+        string withoutPrefix = arg[prefixLength..];
         int delimiterIndex = withoutPrefix.IndexOfAny(['=', ':']);
         if (delimiterIndex == -1)
         {
             name = withoutPrefix;
+        }
+        else
+        {
+            name = withoutPrefix[..delimiterIndex];
+            delimiter = withoutPrefix[delimiterIndex].ToString();
+            inlineValue = withoutPrefix[(delimiterIndex + 1)..];
+        }
+
+        if (!isMalformedPrefix || IsTokenOption(name) || IsEndpointOption(name))
+        {
             return true;
         }
 
-        name = withoutPrefix[..delimiterIndex];
-        delimiter = withoutPrefix[delimiterIndex].ToString();
-        inlineValue = withoutPrefix[(delimiterIndex + 1)..];
-        return true;
+        prefix = null;
+        name = null;
+        delimiter = null;
+        inlineValue = null;
+        return false;
     }
+
+    private static bool IsTokenOption(string name)
+        => PlatformCommandLineProvider.DotNetTestHttpTokenOptionKey.Equals(name, StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsEndpointOption(string name)
+        => PlatformCommandLineProvider.DotNetTestHttpEndpointOptionKey.Equals(name, StringComparison.OrdinalIgnoreCase);
 
     private static string SanitizeEndpoint(string endpoint)
         => Uri.TryCreate(endpoint, UriKind.Absolute, out Uri? uri)

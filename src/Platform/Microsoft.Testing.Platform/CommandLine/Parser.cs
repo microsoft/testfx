@@ -80,7 +80,11 @@ internal static class CommandLineParser
             {
                 if (currentOption is null)
                 {
-                    errors.Add(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserUnexpectedArgument, args[i]));
+                    errors.Add(
+                        string.Format(
+                            CultureInfo.InvariantCulture,
+                            PlatformResources.CommandLineParserUnexpectedArgument,
+                            CommandLineArgumentsRedactor.Redact([args[i]])));
                 }
                 else
                 {

@@ -92,6 +92,27 @@ public sealed class CommandLineHandlerTests
     }
 
     [TestMethod]
+    [DataRow("---dotnet-test-http-token=secret-token", "secret-token", "***REDACTED***")]
+    [DataRow("---dotnet-test-http-endpoint=https://gateway.example/private/run", "/private/run", "https://gateway.example")]
+    public async Task ParseAndValidateAsync_MalformedSensitiveOptionPrefixIsRedacted(
+        string argument,
+        string sensitiveFragment,
+        string expectedSafeFragment)
+    {
+        CommandLineParseResult parseResult = CommandLineParser.Parse([argument], new SystemEnvironment());
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            parseResult,
+            _systemCommandLineOptionsProviders,
+            _extensionCommandLineOptionsProviders,
+            new Mock<ICommandLineOptions>().Object);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains(expectedSafeFragment, result.ErrorMessage);
+        Assert.DoesNotContain(sensitiveFragment, result.ErrorMessage);
+    }
+
+    [TestMethod]
     public async Task ParseAndValidateAsync_ValidArgumentWithColonFollowedByValidArgumentWithoutColon_ReturnsTrue()
     {
         string[] args = ["--results-directory", "TestResults", "--timeout:60m", "--ignore-exit-code", "8"];

@@ -57,6 +57,12 @@ public sealed class CommandLineArgumentsRedactorTests
                 ["--dotnet-test-http-endpoint", "-https://gateway.example/private/run-id"]));
 
     [TestMethod]
+    [DataRow("---dotnet-test-http-token=secret", "---dotnet-test-http-token=***REDACTED***")]
+    [DataRow("---dotnet-test-http-endpoint=https://gateway.example/private/run", "---dotnet-test-http-endpoint=https://gateway.example")]
+    public void Redact_MalformedSensitiveOptionPrefixDoesNotExposeValue(string argument, string expected)
+        => Assert.AreEqual(expected, CommandLineArgumentsRedactor.Redact([argument]));
+
+    [TestMethod]
     public void Redact_MasksEveryPositionalSensitiveValueUntilNextOption()
         => Assert.AreEqual(
             "--dotnet-test-http-token ***REDACTED*** ***REDACTED*** --server dotnettestcli " +

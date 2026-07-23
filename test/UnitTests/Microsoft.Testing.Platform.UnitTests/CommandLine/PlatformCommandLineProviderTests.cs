@@ -406,19 +406,40 @@ public sealed class PlatformCommandLineProviderTests
     }
 
     [TestMethod]
-    public async Task IsInvalid_When_HttpTransport_IsIncomplete()
+    [DataRow(true)]
+    [DataRow(false)]
+    public async Task IsInvalid_When_HttpTransport_IsIncomplete(bool includeServer)
     {
         var provider = new PlatformCommandLineProvider();
         var options = new Dictionary<string, string[]>
         {
-            [PlatformCommandLineProvider.ServerOptionKey] = ["dotnettestcli"],
             [PlatformCommandLineProvider.DotNetTestTransportOptionKey] = ["http"],
             [PlatformCommandLineProvider.DotNetTestHttpEndpointOptionKey] = ["https://localhost:1234/dotnettest"],
         };
+        if (includeServer)
+        {
+            options[PlatformCommandLineProvider.ServerOptionKey] = ["dotnettestcli"];
+        }
 
         ValidationResult result = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
         Assert.IsFalse(result.IsValid);
         Assert.AreEqual(PlatformResources.PlatformCommandLineDotnetTestHttpRequiresEndpointAndToken, result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow(PlatformCommandLineProvider.DotNetTestHttpEndpointOptionKey, "https://localhost:1234/dotnettest")]
+    [DataRow(PlatformCommandLineProvider.DotNetTestHttpTokenOptionKey, "valid-token")]
+    public async Task IsInvalid_When_HttpOptionHasNoHttpTransport(string optionName, string optionValue)
+    {
+        var provider = new PlatformCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            [optionName] = [optionValue],
+        };
+
+        ValidationResult result = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(PlatformResources.PlatformCommandLineDotnetTestHttpOptionsRequireTransport, result.ErrorMessage);
     }
 
     [TestMethod]
