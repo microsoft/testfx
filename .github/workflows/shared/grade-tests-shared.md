@@ -273,10 +273,12 @@ refusal branch:
    Step 1.
 2. For each method, the file path **and** the method body (captured in
    Step 1).
-3. For each method, the production entry point it exercises and the relevant
-   production bodies on that path. Resolve them from the repository using
-   symbol references and call sites; if they cannot be resolved, explicitly
-   pass `production code unavailable` rather than guessing.
+3. For each method, the production entry point it exercises and every
+   production body and branch relevant to the behavior claimed by the test,
+   including branches its current input does not reach. Resolve them from the
+   repository using symbol references and call sites; if they cannot be
+   resolved, explicitly pass `production code unavailable` rather than
+   guessing.
 4. The diff context for this PR — the
    `${{ steps.extract.outputs.tsv_path }}` rows already give the changed
    line ranges per file.

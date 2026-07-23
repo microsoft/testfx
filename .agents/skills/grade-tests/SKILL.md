@@ -115,10 +115,12 @@ For each entry in the input list:
    / decorators / fixtures and any helper code that the test calls.
 3. If a method cannot be found, record it as `N/A — method not found` and
    continue. Never invent a body to grade.
-4. Trace the production entry point called by the test, including relevant
-   helpers on the exercised path. If the production code is not supplied,
-   resolve it from the workspace using symbol references and call sites.
-   Record production code as unavailable only after a reasonable lookup fails.
+4. Trace the production entry point called by the test, including every helper
+   and branch relevant to the behavior claimed by the test, even when its
+   current input does not reach that branch. If the production code is not
+   supplied, resolve it from the workspace using symbol references and call
+   sites. Record production code as unavailable only after a reasonable lookup
+   fails.
 
 ### Step 3: Score each test
 
@@ -253,8 +255,9 @@ another test kills the mutation.
 Call the `test-gap-analysis` skill to load its canonical mutation catalog and
 calibration rules, then apply them at this skill's per-test scope:
 
-1. Identify meaningful mutation points on the production path exercised by
-   the test:
+1. Identify meaningful mutation points on every production path relevant to
+   the behavior claimed by the test, including paths its current input does
+   not exercise:
    - boundary changes (`<` ↔ `<=`, index or loop off-by-one);
    - Boolean and logic flips (`&&` ↔ `||`, negated conditions);
    - changed return values (`null`/`None`/`nil`, empty, zero, opposite Boolean);
