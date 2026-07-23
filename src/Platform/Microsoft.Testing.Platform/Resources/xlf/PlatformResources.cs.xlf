@@ -621,10 +621,65 @@ Volitelně přijímá hodnotu „text“ (výchozí výstup čitelný pro člov�
         <target state="translated">Parametr „--server {0}“ vyžaduje zadání hodnoty „--{1}“.</target>
         <note>{0} is the server protocol value. {1} is the required option name without the leading dashes. {Locked="--server"}{Locked="dotnettestcli"}{Locked="dotnet-test-pipe"}</note>
       </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestCliRequiresTransport">
+        <source>'--server dotnettestcli' requires either '--dotnet-test-pipe' or '--dotnet-test-transport websocket' with both '--dotnet-test-websocket-endpoint' and '--dotnet-test-websocket-token'.</source>
+        <target state="new">'--server dotnettestcli' requires either '--dotnet-test-pipe' or '--dotnet-test-transport websocket' with both '--dotnet-test-websocket-endpoint' and '--dotnet-test-websocket-token'.</target>
+        <note>{Locked="--server dotnettestcli"}{Locked="--dotnet-test-pipe"}{Locked="--dotnet-test-transport websocket"}{Locked="--dotnet-test-websocket-endpoint"}{Locked="--dotnet-test-websocket-token"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestOptionsRequireServer">
+        <source>'--dotnet-test-pipe', '--dotnet-test-transport', '--dotnet-test-websocket-endpoint', and '--dotnet-test-websocket-token' require '--server dotnettestcli'.</source>
+        <target state="new">'--dotnet-test-pipe', '--dotnet-test-transport', '--dotnet-test-websocket-endpoint', and '--dotnet-test-websocket-token' require '--server dotnettestcli'.</target>
+        <note>{Locked="--dotnet-test-pipe"}{Locked="--dotnet-test-transport"}{Locked="--dotnet-test-websocket-endpoint"}{Locked="--dotnet-test-websocket-token"}{Locked="--server dotnettestcli"}</note>
+      </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
         <source>dotnet test pipe.</source>
         <target state="translated">dotnet test kanál.</target>
         <note>{Locked="dotnet test"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestTransportConflict">
+        <source>'--dotnet-test-pipe' cannot be combined with '--dotnet-test-transport websocket', '--dotnet-test-websocket-endpoint', or '--dotnet-test-websocket-token'. Choose a single transport.</source>
+        <target state="new">'--dotnet-test-pipe' cannot be combined with '--dotnet-test-transport websocket', '--dotnet-test-websocket-endpoint', or '--dotnet-test-websocket-token'. Choose a single transport.</target>
+        <note>{Locked="--dotnet-test-pipe"}{Locked="--dotnet-test-transport websocket"}{Locked="--dotnet-test-websocket-endpoint"}{Locked="--dotnet-test-websocket-token"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestTransportInvalidArgument">
+        <source>'--dotnet-test-transport' received unexpected value '{0}'. Supported values are: {1}.</source>
+        <target state="new">'--dotnet-test-transport' received unexpected value '{0}'. Supported values are: {1}.</target>
+        <note>{0} is the unexpected transport value. {1} is the comma-separated list of supported transport values. {Locked="--dotnet-test-transport"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestTransportOptionDescription">
+        <source>Pre-launch transport used to carry the 'dotnet test' pipe protocol. The available values are 'pipe' and 'websocket'. Defaults to 'pipe' (implied whenever only '--dotnet-test-pipe' is specified).</source>
+        <target state="new">Pre-launch transport used to carry the 'dotnet test' pipe protocol. The available values are 'pipe' and 'websocket'. Defaults to 'pipe' (implied whenever only '--dotnet-test-pipe' is specified).</target>
+        <note>{Locked="dotnet test"}{Locked="pipe"}{Locked="websocket"}{Locked="--dotnet-test-pipe"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestWebSocketEndpointInvalid">
+        <source>'--dotnet-test-websocket-endpoint' requires an absolute 'ws' or 'wss' URI with a host and without user information or a fragment.</source>
+        <target state="new">'--dotnet-test-websocket-endpoint' requires an absolute 'ws' or 'wss' URI with a host and without user information or a fragment.</target>
+        <note>{Locked="--dotnet-test-websocket-endpoint"}{Locked="ws"}{Locked="wss"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestWebSocketEndpointOptionDescription">
+        <source>The WebSocket endpoint URI the test host connects to when '--dotnet-test-transport websocket' is selected.</source>
+        <target state="new">The WebSocket endpoint URI the test host connects to when '--dotnet-test-transport websocket' is selected.</target>
+        <note>{Locked="--dotnet-test-transport websocket"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestWebSocketOptionsRequireTransport">
+        <source>'--dotnet-test-websocket-endpoint' and '--dotnet-test-websocket-token' require '--dotnet-test-transport websocket' to be specified.</source>
+        <target state="new">'--dotnet-test-websocket-endpoint' and '--dotnet-test-websocket-token' require '--dotnet-test-transport websocket' to be specified.</target>
+        <note>{Locked="--dotnet-test-websocket-endpoint"}{Locked="--dotnet-test-websocket-token"}{Locked="--dotnet-test-transport websocket"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestWebSocketRequiresEndpointAndToken">
+        <source>'--dotnet-test-transport websocket' requires both '--dotnet-test-websocket-endpoint' and '--dotnet-test-websocket-token' to be specified.</source>
+        <target state="new">'--dotnet-test-transport websocket' requires both '--dotnet-test-websocket-endpoint' and '--dotnet-test-websocket-token' to be specified.</target>
+        <note>{Locked="--dotnet-test-transport websocket"}{Locked="--dotnet-test-websocket-endpoint"}{Locked="--dotnet-test-websocket-token"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestWebSocketTokenEmpty">
+        <source>'--dotnet-test-websocket-token' requires a non-empty value.</source>
+        <target state="new">'--dotnet-test-websocket-token' requires a non-empty value.</target>
+        <note>{Locked="--dotnet-test-websocket-token"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestWebSocketTokenOptionDescription">
+        <source>The per-run authentication token the test host presents when connecting via '--dotnet-test-transport websocket'.</source>
+        <target state="new">The per-run authentication token the test host presents when connecting via '--dotnet-test-transport websocket'.</target>
+        <note>{Locked="--dotnet-test-transport websocket"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
         <source>Invalid PID '{0}'
@@ -697,6 +752,16 @@ Volitelně přijímá hodnotu „text“ (výchozí výstup čitelný pro člov�
         <target state="translated">Nezobrazovat úvodní banner, zprávu o autorských právech ani banner telemetrie</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLinePipeTransportNotSupportedOnBrowser">
+        <source>The named-pipe transport for '--server dotnettestcli' is not supported when running on browser-wasm (System.IO.Pipes is unavailable). Use '--dotnet-test-transport websocket' with '--dotnet-test-websocket-endpoint' and '--dotnet-test-websocket-token' instead.</source>
+        <target state="new">The named-pipe transport for '--server dotnettestcli' is not supported when running on browser-wasm (System.IO.Pipes is unavailable). Use '--dotnet-test-transport websocket' with '--dotnet-test-websocket-endpoint' and '--dotnet-test-websocket-token' instead.</target>
+        <note>{Locked="--server dotnettestcli"}{Locked="System.IO.Pipes"}{Locked="--dotnet-test-transport websocket"}{Locked="--dotnet-test-websocket-endpoint"}{Locked="--dotnet-test-websocket-token"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLinePipeTransportNotSupportedOnWasi">
+        <source>The named-pipe transport for '--server dotnettestcli' is not supported when running on wasi-wasm (System.IO.Pipes is unavailable). No transport is currently implemented for wasi-wasm.</source>
+        <target state="new">The named-pipe transport for '--server dotnettestcli' is not supported when running on wasi-wasm (System.IO.Pipes is unavailable). No transport is currently implemented for wasi-wasm.</target>
+        <note>{Locked="--server dotnettestcli"}{Locked="System.IO.Pipes"}</note>
+      </trans-unit>
       <trans-unit id="PlatformCommandLinePortOptionDescription">
         <source>Specify the port of the server.</source>
         <target state="translated">Zadejte port serveru.</target>
@@ -757,6 +822,11 @@ Takes one argument as a time value with an explicit unit suffix. Accepted suffix
         <target state="new">A global test execution timeout.
 Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</target>
         <note>{Locked="'ms'"}{Locked="'mil(s)'"}{Locked="'millisecond(s)'"}{Locked="'s'"}{Locked="'sec(s)'"}{Locked="'second(s)'"}{Locked="'m'"}{Locked="'min(s)'"}{Locked="'minute(s)'"}{Locked="'h'"}{Locked="'hour(s)'"}{Locked="'d'"}{Locked="'day(s)'"}{Locked="'500ms'"}{Locked="'5400s'"}{Locked="'90m'"}{Locked="'1.5h'"}{Locked="'1d'"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineWebSocketTransportNotSupportedOnWasi">
+        <source>The websocket transport for '--server dotnettestcli' is not supported when running on wasi-wasm. No transport is currently implemented for wasi-wasm.</source>
+        <target state="new">The websocket transport for '--server dotnettestcli' is not supported when running on wasi-wasm. No transport is currently implemented for wasi-wasm.</target>
+        <note>{Locked="--server dotnettestcli"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineZeroTestsPolicyInvalidArgument">
         <source>Invalid value '{0}' for '--zero-tests-policy'. Valid values are {1}.</source>
