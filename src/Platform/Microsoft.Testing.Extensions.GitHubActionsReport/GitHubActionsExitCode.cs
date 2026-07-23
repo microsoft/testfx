@@ -59,6 +59,7 @@ internal static class GitHubActionsExitCode
             (int)ExitCode.DependentProcessExited => GitHubActionsResources.ExitCodeReasonDependentProcessExited,
             (int)ExitCode.IncompatibleProtocolVersion => GitHubActionsResources.ExitCodeReasonIncompatibleProtocolVersion,
             (int)ExitCode.TestExecutionStoppedForMaxFailedTests => GitHubActionsResources.ExitCodeReasonTestExecutionStoppedForMaxFailedTests,
+            (int)ExitCode.CoverageThresholdFailed => GitHubActionsResources.ExitCodeReasonCoverageThresholdFailed,
             _ => GitHubActionsResources.ExitCodeReasonUnknown,
         };
 }

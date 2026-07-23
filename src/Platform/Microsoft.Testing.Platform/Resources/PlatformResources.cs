@@ -53,6 +53,28 @@ internal static partial class PlatformResources
 
     internal static string @PlatformCommandLineDotnetTestCliRequiresPipe => GetResourceString("PlatformCommandLineDotnetTestCliRequiresPipe");
 
+    internal static string @PlatformCommandLineDotnetTestCliRequiresTransport => GetResourceString("PlatformCommandLineDotnetTestCliRequiresTransport");
+
+    internal static string @PlatformCommandLineDotnetTestOptionsRequireServer => GetResourceString("PlatformCommandLineDotnetTestOptionsRequireServer");
+
+    internal static string @PlatformCommandLineDotnetTestTransportInvalidArgument => GetResourceString("PlatformCommandLineDotnetTestTransportInvalidArgument");
+
+    internal static string @PlatformCommandLineDotnetTestTransportConflict => GetResourceString("PlatformCommandLineDotnetTestTransportConflict");
+
+    internal static string @PlatformCommandLineDotnetTestWebSocketRequiresEndpointAndToken => GetResourceString("PlatformCommandLineDotnetTestWebSocketRequiresEndpointAndToken");
+
+    internal static string @PlatformCommandLineDotnetTestWebSocketOptionsRequireTransport => GetResourceString("PlatformCommandLineDotnetTestWebSocketOptionsRequireTransport");
+
+    internal static string @PlatformCommandLineDotnetTestWebSocketEndpointInvalid => GetResourceString("PlatformCommandLineDotnetTestWebSocketEndpointInvalid");
+
+    internal static string @PlatformCommandLineDotnetTestWebSocketTokenEmpty => GetResourceString("PlatformCommandLineDotnetTestWebSocketTokenEmpty");
+
+    internal static string @PlatformCommandLinePipeTransportNotSupportedOnBrowser => GetResourceString("PlatformCommandLinePipeTransportNotSupportedOnBrowser");
+
+    internal static string @PlatformCommandLinePipeTransportNotSupportedOnWasi => GetResourceString("PlatformCommandLinePipeTransportNotSupportedOnWasi");
+
+    internal static string @PlatformCommandLineWebSocketTransportNotSupportedOnWasi => GetResourceString("PlatformCommandLineWebSocketTransportNotSupportedOnWasi");
+
     internal static string @PlatformCommandLineExitOnProcessExitSingleArgument => GetResourceString("PlatformCommandLineExitOnProcessExitSingleArgument");
 
     internal static string @PlatformCommandLineDiagnosticOptionIsMissing => GetResourceString("PlatformCommandLineDiagnosticOptionIsMissing");

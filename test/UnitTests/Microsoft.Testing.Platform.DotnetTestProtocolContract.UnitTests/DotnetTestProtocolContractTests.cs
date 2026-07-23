@@ -84,6 +84,7 @@ public sealed class DotnetTestProtocolContractTests
             [HandshakeMessagePropertyNames.AttemptNumber] = nameof(HandshakeMessagePropertyNames.AttemptNumber),
             [HandshakeMessagePropertyNames.SupportedPostProcessorKinds] = nameof(HandshakeMessagePropertyNames.SupportedPostProcessorKinds),
             [HandshakeMessagePropertyNames.SupportedPostProcessorExtensionsLegacy] = nameof(HandshakeMessagePropertyNames.SupportedPostProcessorExtensionsLegacy),
+            [HandshakeMessagePropertyNames.Transport] = nameof(HandshakeMessagePropertyNames.Transport),
         };
 
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.PID), properties[0]);
@@ -102,6 +103,16 @@ public sealed class DotnetTestProtocolContractTests
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.AttemptNumber), properties[13]);
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.SupportedPostProcessorKinds), properties[14]);
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.SupportedPostProcessorExtensionsLegacy), properties[15]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.Transport), properties[16]);
+    }
+
+    [TestMethod]
+    public void HandshakeMessageTransportNames_AreStable()
+    {
+        string[] transports = [HandshakeMessageTransportNames.NamedPipe, HandshakeMessageTransportNames.WebSocket];
+
+        Assert.AreEqual("NamedPipe", transports[0]);
+        Assert.AreEqual("WebSocket", transports[1]);
     }
 
     [TestMethod]
@@ -159,6 +170,6 @@ public sealed class DotnetTestProtocolContractTests
         // Indirect through a collection so the MSTest analyzer does not flag the comparison of a compile-time
         // constant as "always true" (MSTEST0032).
         string[] versions = [ProtocolConstants.SupportedVersions];
-        Assert.AreEqual("1.0.0;1.1.0;1.2.0;1.3.0;1.4.0", versions[0]);
+        Assert.AreEqual("1.0.0;1.1.0;1.2.0;1.3.0;1.4.0;1.5.0", versions[0]);
     }
 }

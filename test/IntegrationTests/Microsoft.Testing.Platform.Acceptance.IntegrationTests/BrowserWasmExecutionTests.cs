@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Globalization;
+
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 /// <summary>
@@ -225,6 +227,215 @@ const exitCode = await runMain();
 process.exitCode = exitCode;
 """;
 
+    private const string NodeWebSocketGatewayRunnerSource = """
+import { createHash } from 'node:crypto';
+import { createServer } from 'node:net';
+import { dotnet } from './_framework/dotnet.js';
+
+const token = 'browser-transport-secret';
+let authenticated = false;
+let transport = null;
+let requestCount = 0;
+let disconnected = false;
+
+function websocketFrame(payload) {
+    if (payload.length < 126) {
+        return Buffer.concat([Buffer.from([0x82, payload.length]), payload]);
+    }
+
+    const header = Buffer.alloc(4);
+    header[0] = 0x82;
+    header[1] = 126;
+    header.writeUInt16BE(payload.length, 2);
+    return Buffer.concat([header, payload]);
+}
+
+function protocolFrame(serializerId, body = Buffer.alloc(0)) {
+    const frame = Buffer.alloc(8 + body.length);
+    frame.writeInt32LE(4 + body.length, 0);
+    frame.writeInt32LE(serializerId, 4);
+    body.copy(frame, 8);
+    return frame;
+}
+
+function handshakeReply() {
+    const version = Buffer.from('1.5.0');
+    const body = Buffer.alloc(2 + 1 + 4 + version.length);
+    body.writeUInt16LE(1, 0);
+    body[2] = 4;
+    body.writeInt32LE(version.length, 3);
+    version.copy(body, 7);
+    return protocolFrame(9, body);
+}
+
+function readHandshakeTransport(body) {
+    let offset = 0;
+    const count = body.readUInt16LE(offset);
+    offset += 2;
+    for (let i = 0; i < count; i++) {
+        const key = body[offset++];
+        const length = body.readInt32LE(offset);
+        offset += 4;
+        const value = body.subarray(offset, offset + length).toString('utf8');
+        offset += length;
+        if (key === 16) {
+            return value;
+        }
+    }
+
+    return null;
+}
+
+function consumeFrames(socket, state) {
+    while (state.buffer.length >= 2) {
+        const first = state.buffer[0];
+        const second = state.buffer[1];
+        let length = second & 0x7f;
+        let offset = 2;
+        if (length === 126) {
+            if (state.buffer.length < 4) return;
+            length = state.buffer.readUInt16BE(2);
+            offset = 4;
+        } else if (length === 127) {
+            if (state.buffer.length < 10) return;
+            length = Number(state.buffer.readBigUInt64BE(2));
+            offset = 10;
+        }
+
+        const masked = (second & 0x80) !== 0;
+        const maskLength = masked ? 4 : 0;
+        if (state.buffer.length < offset + maskLength + length) return;
+
+        let payload = Buffer.from(state.buffer.subarray(offset + maskLength, offset + maskLength + length));
+        if (masked) {
+            const mask = state.buffer.subarray(offset, offset + 4);
+            for (let i = 0; i < payload.length; i++) payload[i] ^= mask[i % 4];
+        }
+
+        state.buffer = state.buffer.subarray(offset + maskLength + length);
+        const opcode = first & 0x0f;
+        if (opcode === 8) {
+            disconnected = true;
+            socket.end();
+            continue;
+        }
+
+        if (opcode !== 2) continue;
+        requestCount++;
+        const serializerId = payload.readInt32LE(4);
+        if (serializerId === 9) {
+            transport = readHandshakeTransport(payload.subarray(8));
+            socket.write(websocketFrame(Buffer.alloc(0)));
+            socket.write(websocketFrame(handshakeReply()));
+        } else {
+            // All post-handshake request/reply messages emitted by this no-op passing framework expect
+            // VoidResponse, matching FakeDotnetTestSdk's named-pipe harness.
+            socket.write(websocketFrame(protocolFrame(0)));
+        }
+    }
+}
+
+const server = createServer(socket => {
+    const state = { upgraded: false, buffer: Buffer.alloc(0) };
+    socket.on('end', () => { disconnected = true; });
+    socket.on('close', () => { disconnected = true; });
+    socket.on('data', chunk => {
+        state.buffer = Buffer.concat([state.buffer, chunk]);
+        if (!state.upgraded) {
+            const end = state.buffer.indexOf('\r\n\r\n');
+            if (end < 0) return;
+            const request = state.buffer.subarray(0, end).toString('utf8');
+            authenticated = request.includes(`dotnetTestToken=${token}`);
+            const key = /^Sec-WebSocket-Key:\s*(.+)$/mi.exec(request)?.[1]?.trim();
+            const accept = createHash('sha1').update(key + '258EAFA5-E914-47DA-95CA-C5AB0DC85B11').digest('base64');
+            socket.write(
+                'HTTP/1.1 101 Switching Protocols\r\n' +
+                'Upgrade: websocket\r\n' +
+                'Connection: Upgrade\r\n' +
+                `Sec-WebSocket-Accept: ${accept}\r\n\r\n`);
+            state.buffer = state.buffer.subarray(end + 4);
+            state.upgraded = true;
+        }
+
+        consumeFrames(socket, state);
+    });
+});
+
+await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+const port = server.address().port;
+const { runMain } = await dotnet.withApplicationArguments(
+    '--server', 'dotnettestcli',
+    '--dotnet-test-transport', 'websocket',
+    '--dotnet-test-websocket-endpoint', `ws://127.0.0.1:${port}/dotnettest`,
+    '--dotnet-test-websocket-token', token).create();
+const exitCode = await runMain();
+await new Promise(resolve => setTimeout(resolve, 1000));
+server.close();
+
+console.log(`BROWSER_WEBSOCKET_AUTHENTICATED=${authenticated}`);
+console.log(`BROWSER_WEBSOCKET_TRANSPORT=${transport}`);
+console.log(`BROWSER_WEBSOCKET_REQUESTS=${requestCount}`);
+console.log(`BROWSER_WEBSOCKET_DISCONNECTED=${disconnected}`);
+process.exitCode = exitCode;
+""";
+
+    private const string NodeStalledWebSocketRunnerSource = """
+import { createServer } from 'node:net';
+import { dotnet } from './_framework/dotnet.js';
+
+const sockets = new Set();
+const server = createServer(socket => {
+    sockets.add(socket);
+    socket.on('close', () => sockets.delete(socket));
+    // Deliberately never complete the HTTP upgrade. BrowserWebSocketDuplexStream.ConnectAsync must still
+    // observe its .NET cancellation token while the browser-native WebSocket remains in CONNECTING state.
+});
+await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+const port = server.address().port;
+const { runMain } = await dotnet.withApplicationArguments('connect-cancel', `ws://127.0.0.1:${port}/stalled`).create();
+const exitCode = await runMain();
+for (const socket of sockets) socket.destroy();
+server.close();
+process.exitCode = exitCode;
+""";
+
+    private const string NodeWebSocketIoCancellationRunnerSource = """
+import { createHash } from 'node:crypto';
+import { createServer } from 'node:net';
+import { dotnet } from './_framework/dotnet.js';
+
+function websocketFrame(payload) {
+    return Buffer.concat([Buffer.from([0x82, payload.length]), payload]);
+}
+
+const server = createServer(socket => {
+    let buffer = Buffer.alloc(0);
+    socket.on('data', chunk => {
+        buffer = Buffer.concat([buffer, chunk]);
+        const end = buffer.indexOf('\r\n\r\n');
+        if (end < 0) return;
+        const request = buffer.subarray(0, end).toString('utf8');
+        const key = /^Sec-WebSocket-Key:\s*(.+)$/mi.exec(request)?.[1]?.trim();
+        const accept = createHash('sha1').update(key + '258EAFA5-E914-47DA-95CA-C5AB0DC85B11').digest('base64');
+        socket.write(
+            'HTTP/1.1 101 Switching Protocols\r\n' +
+            'Upgrade: websocket\r\n' +
+            'Connection: Upgrade\r\n' +
+            `Sec-WebSocket-Accept: ${accept}\r\n\r\n`);
+        socket.removeAllListeners('data');
+        setTimeout(() => socket.write(websocketFrame(Buffer.from('after-cancel'))), 750);
+        setTimeout(() => socket.destroy(), 1500);
+    });
+});
+
+await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+const port = server.address().port;
+const { runMain } = await dotnet.withApplicationArguments(`ws://127.0.0.1:${port}/cancellation`).create();
+const exitCode = await runMain();
+server.close();
+process.exitCode = exitCode;
+""";
+
     // The runsettings XML (declaring an <EnvironmentVariables> section) that the run-settings validation
     // test supplies to the browser-wasm host. It is passed as *content* via the
     // TESTINGPLATFORM_EXPERIMENTAL_VSTEST_RUNSETTINGS environment variable rather than as a file, so the
@@ -378,6 +589,115 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
         context.Complete();
     }
 }
+""";
+
+    private const string WebSocketCancellationSourceCode = """
+#file BrowserWebSocketCancellationProject.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>$TargetFramework$</TargetFramework>
+    <RuntimeIdentifier>$BrowserRid$</RuntimeIdentifier>
+    <OutputType>Exe</OutputType>
+    <SelfContained>true</SelfContained>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <WasmMainJSPath>main.js</WasmMainJSPath>
+    <WasmBuildNative>false</WasmBuildNative>
+    <PublishTrimmed>false</PublishTrimmed>
+    <NoWarn>$(NoWarn);NETSDK1201</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+  </ItemGroup>
+</Project>
+
+#file main.js
+import { dotnet } from './_framework/dotnet.js';
+const { runMain } = await dotnet.withApplicationArgumentsFromQuery().create();
+globalThis.mtpExitCode = await runMain();
+
+#file Program.cs
+using System.Reflection;
+using Microsoft.Testing.Platform.Builder;
+
+Type streamType = typeof(TestApplication).Assembly.GetType("Microsoft.Testing.Platform.IPC.BrowserWebSocketDuplexStream", throwOnError: true)!;
+MethodInfo connectAsync = streamType.GetMethod("ConnectAsync", BindingFlags.Public | BindingFlags.Static)!;
+if (args[0] == "connect-cancel")
+{
+    using CancellationTokenSource cancellationTokenSource = new(TimeSpan.FromMilliseconds(250));
+    Task connectTask = (Task)connectAsync.Invoke(null, [new Uri(args[1]), cancellationTokenSource.Token])!;
+    try
+    {
+        await connectTask;
+        Console.Error.WriteLine("Browser WebSocket connection unexpectedly completed.");
+        return 1;
+    }
+    catch (OperationCanceledException) when (cancellationTokenSource.IsCancellationRequested)
+    {
+        Console.WriteLine("BROWSER_WEBSOCKET_CONNECT_CANCELLED=true");
+        MethodInfo pendingOpenCount = streamType.GetMethod("GetPendingOpenCount", BindingFlags.NonPublic | BindingFlags.Static)!;
+        Console.WriteLine($"BROWSER_WEBSOCKET_PENDING_OPEN_COUNT={pendingOpenCount.Invoke(null, null)}");
+        return 0;
+    }
+}
+
+Task successfulConnectTask = (Task)connectAsync.Invoke(null, [new Uri(args[0]), CancellationToken.None])!;
+await successfulConnectTask;
+using Stream stream = (Stream)successfulConnectTask.GetType().GetProperty("Result")!.GetValue(successfulConnectTask)!;
+
+byte[] buffer = new byte[32];
+using CancellationTokenSource preCancelledRead = new();
+preCancelledRead.Cancel();
+try
+{
+    await stream.ReadAsync(buffer, 0, buffer.Length, preCancelledRead.Token);
+    Console.Error.WriteLine("Browser WebSocket read unexpectedly ignored pre-cancellation.");
+    return 6;
+}
+catch (OperationCanceledException)
+{
+    Console.WriteLine("BROWSER_WEBSOCKET_PRE_CANCELLED_READ=true");
+}
+
+Task<int> zeroCountRead = stream.ReadAsync(buffer, 0, 0, CancellationToken.None);
+if (await Task.WhenAny(zeroCountRead, Task.Delay(100)) != zeroCountRead || await zeroCountRead != 0)
+{
+    Console.Error.WriteLine("Browser WebSocket zero-count read did not complete immediately.");
+    return 4;
+}
+Console.WriteLine("BROWSER_WEBSOCKET_ZERO_COUNT_READ=0");
+
+using (CancellationTokenSource readCancellation = new(TimeSpan.FromMilliseconds(100)))
+{
+    try
+    {
+        await stream.ReadAsync(buffer, 0, buffer.Length, readCancellation.Token);
+        Console.Error.WriteLine("Browser WebSocket read unexpectedly completed before cancellation.");
+        return 2;
+    }
+    catch (OperationCanceledException) when (readCancellation.IsCancellationRequested)
+    {
+        Console.WriteLine("BROWSER_WEBSOCKET_READ_CANCELLED=true");
+    }
+}
+
+int read = await stream.ReadAsync(buffer, 0, buffer.Length, CancellationToken.None);
+Console.WriteLine($"BROWSER_WEBSOCKET_MESSAGE_AFTER_CANCEL={System.Text.Encoding.UTF8.GetString(buffer, 0, read)}");
+
+using CancellationTokenSource writeCancellation = new();
+writeCancellation.Cancel();
+try
+{
+    await stream.WriteAsync(new byte[] { 1, 2, 3 }, 0, 3, writeCancellation.Token);
+    Console.Error.WriteLine("Browser WebSocket write unexpectedly ignored pre-cancellation.");
+    return 3;
+}
+catch (OperationCanceledException)
+{
+    Console.WriteLine("BROWSER_WEBSOCKET_WRITE_CANCELLED=true");
+}
+
+return 0;
 """;
 
     public TestContext TestContext { get; set; } = null!;
@@ -558,6 +878,79 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
     }
 
     [TestMethod]
+    public async Task BrowserWasmExecution_DotnetTestWebSocketTransport_RunsProtocolSession()
+    {
+        string? node = WasmRuntime.LocateNode();
+        if (node is null)
+        {
+            Assert.Inconclusive(WasmRuntime.NodeUnavailableMessage);
+            return;
+        }
+
+        using TestAsset generator = await GenerateBrowserWasmWarningAssetAsync();
+
+        (int exitCode, _, _, string combined) = await PublishAndRunUnderNodeAsync(generator, node, NodeWebSocketGatewayRunnerSource, enableWebSocket: true);
+
+        Assert.AreEqual(
+            (int)ExitCode.Success,
+            exitCode,
+            $"Expected the browser-wasm WebSocket protocol run to succeed.{Environment.NewLine}{combined}");
+        Assert.Contains("BROWSER_WEBSOCKET_AUTHENTICATED=true", combined);
+        Assert.Contains("BROWSER_WEBSOCKET_TRANSPORT=WebSocket", combined);
+        Assert.IsTrue(
+            TryReadMarkerInt(combined, "BROWSER_WEBSOCKET_REQUESTS=", out int requestCount) && requestCount > 1,
+            $"Expected the gateway to receive the handshake plus protocol traffic.{Environment.NewLine}{combined}");
+        Assert.Contains("BROWSER_WEBSOCKET_DISCONNECTED=true", combined);
+    }
+
+    [TestMethod]
+    public async Task BrowserWasmExecution_DotnetTestWebSocketConnect_HonorsCancellationWhileUpgradeIsStalled()
+    {
+        string? node = WasmRuntime.LocateNode();
+        if (node is null)
+        {
+            Assert.Inconclusive(WasmRuntime.NodeUnavailableMessage);
+            return;
+        }
+
+        using TestAsset generator = await GenerateBrowserWasmWebSocketCancellationAssetAsync();
+
+        (int exitCode, _, _, string combined) = await PublishAndRunUnderNodeAsync(generator, node, NodeStalledWebSocketRunnerSource, enableWebSocket: true);
+
+        Assert.AreEqual(
+            (int)ExitCode.Success,
+            exitCode,
+            $"Expected a stalled browser WebSocket upgrade to be cancelled cleanly.{Environment.NewLine}{combined}");
+        Assert.Contains("BROWSER_WEBSOCKET_CONNECT_CANCELLED=true", combined);
+        Assert.Contains("BROWSER_WEBSOCKET_PENDING_OPEN_COUNT=0", combined);
+    }
+
+    [TestMethod]
+    public async Task BrowserWasmExecution_DotnetTestWebSocketReadAndWrite_HonorCancellationWithoutLosingNextMessage()
+    {
+        string? node = WasmRuntime.LocateNode();
+        if (node is null)
+        {
+            Assert.Inconclusive(WasmRuntime.NodeUnavailableMessage);
+            return;
+        }
+
+        using TestAsset generator = await GenerateBrowserWasmWebSocketCancellationAssetAsync();
+
+        (int exitCode, _, _, string combined) = await PublishAndRunUnderNodeAsync(generator, node, NodeWebSocketIoCancellationRunnerSource, enableWebSocket: true);
+
+        Assert.AreEqual(
+            (int)ExitCode.Success,
+            exitCode,
+            $"Expected browser WebSocket read/write cancellation to complete cleanly.{Environment.NewLine}{combined}");
+        Assert.Contains("BROWSER_WEBSOCKET_READ_CANCELLED=true", combined);
+        Assert.Contains("BROWSER_WEBSOCKET_PRE_CANCELLED_READ=true", combined);
+        Assert.Contains("BROWSER_WEBSOCKET_MESSAGE_AFTER_CANCEL=after-cancel", combined);
+        Assert.Contains("BROWSER_WEBSOCKET_WRITE_CANCELLED=true", combined);
+        Assert.Contains("BROWSER_WEBSOCKET_ZERO_COUNT_READ=0", combined);
+    }
+
+    [TestMethod]
     public async Task BrowserWasmExecution_RunSettingsEnvironmentVariables_FailsWithClearDiagnostic()
     {
         // Guards RunSettingsCommandLineOptionsProviderBase.ValidateCommandLineOptionsAsync: a runsettings
@@ -619,7 +1012,11 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
     // Publishes the generated browser-wasm asset, staging + booting it under Node. Only a missing
     // 'wasm-tools' workload is an acceptable skip (Inconclusive); any other publish failure is a real
     // regression and fails the test. Returns the process exit code plus captured stdout/stderr.
-    private async Task<(int ExitCode, string Output, string Error, string Combined)> PublishAndRunUnderNodeAsync(TestAsset generator, string node)
+    private async Task<(int ExitCode, string Output, string Error, string Combined)> PublishAndRunUnderNodeAsync(
+        TestAsset generator,
+        string node,
+        string runnerSource = NodeRunnerSource,
+        bool enableWebSocket = false)
     {
         DotnetMuxerResult publishResult = await WasmRuntime.PublishForBrowserAsync(
             generator.TargetAssetPath, TargetFramework, TestContext.CancellationToken);
@@ -637,7 +1034,22 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
             Directory.Exists(appBundle),
             $"Expected the browser-wasm AppBundle directory at '{appBundle}'.");
 
-        return await WasmRuntime.RunUnderNodeAsync(node, appBundle, NodeRunnerSource, TestContext.CancellationToken);
+        return await WasmRuntime.RunUnderNodeAsync(node, appBundle, runnerSource, TestContext.CancellationToken, enableWebSocket);
+    }
+
+    private static bool TryReadMarkerInt(string output, string marker, out int value)
+    {
+        int markerIndex = output.IndexOf(marker, StringComparison.Ordinal);
+        if (markerIndex < 0)
+        {
+            value = 0;
+            return false;
+        }
+
+        int valueStart = markerIndex + marker.Length;
+        int valueEnd = output.IndexOfAny(['\r', '\n'], valueStart);
+        string text = valueEnd < 0 ? output[valueStart..] : output[valueStart..valueEnd];
+        return int.TryParse(text, CultureInfo.InvariantCulture, out value);
     }
 
     private Task<TestAsset> GenerateBrowserWasmAssetAsync()
@@ -656,6 +1068,14 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
                 .PatchCodeWithReplace("$BrowserRid$", WasmRuntime.BrowserRid)
                 .PatchCodeWithReplace("$WarningText$", WarningText)
                 .PatchCodeWithReplace("$ErrorText$", ErrorText)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
+
+    private Task<TestAsset> GenerateBrowserWasmWebSocketCancellationAssetAsync()
+        => TestAsset.GenerateAssetAsync(
+            "BrowserWebSocketCancellationProject",
+            WebSocketCancellationSourceCode
+                .PatchCodeWithReplace("$TargetFramework$", TargetFramework)
+                .PatchCodeWithReplace("$BrowserRid$", WasmRuntime.BrowserRid)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
 
     private Task<TestAsset> GenerateBrowserWasmCustomHostAssetAsync()

@@ -18,6 +18,34 @@ public sealed class JsoniteTests
     }
 
     [TestMethod]
+    public void Deserialize_CommentsAreDisallowedByDefault()
+        => Assert.ThrowsExactly<Jsonite.JsonException>(() => Jsonite.Json.Deserialize("{// Comment\n\"value\": true}"));
+
+    [TestMethod]
+    public void Deserialize_CommentsCanBeAllowed()
+    {
+        Jsonite.JsonSettings settings = new()
+        {
+            AllowComments = true,
+        };
+
+        var result = (Jsonite.JsonObject)Jsonite.Json.Deserialize("{// Line comment\n\"value\": /* Block comment */ true}", settings);
+
+        Assert.IsTrue((bool)result["value"]!);
+    }
+
+    [TestMethod]
+    public void Deserialize_UnterminatedBlockCommentThrows()
+    {
+        Jsonite.JsonSettings settings = new()
+        {
+            AllowComments = true,
+        };
+
+        Assert.ThrowsExactly<Jsonite.JsonException>(() => Jsonite.Json.Deserialize("{/* Comment", settings));
+    }
+
+    [TestMethod]
     public void SerializeJsoniteInvalidStringHighSurrogateAtTheEnd()
     {
         const string Input = "Hello\uD800";

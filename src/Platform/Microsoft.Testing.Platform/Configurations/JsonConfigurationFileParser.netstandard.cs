@@ -18,6 +18,7 @@ internal sealed class JsonConfigurationFileParser
     private readonly Stack<string> _paths = new();
     private readonly JsonSettings _settings = new()
     {
+        AllowComments = true,
         AllowTrailingCommas = true,
     };
 
