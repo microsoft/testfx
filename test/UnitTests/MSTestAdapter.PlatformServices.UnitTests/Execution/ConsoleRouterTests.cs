@@ -383,7 +383,11 @@ public class ConsoleRouterTests : TestContainer
         public override long Position
         {
             get => throw new NotSupportedException();
-            set => throw new NotSupportedException();
+            set
+            {
+                _ = value;
+                throw new NotSupportedException();
+            }
         }
 
         public override void Flush()
