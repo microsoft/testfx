@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" original="../Resource.resx" target-language="de">
     <body>
@@ -123,7 +123,7 @@ aber empfing {4} Argument(e) mit den Typen „{5}“.</target>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToCopyWithOverwrite">
         <source>Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3} (HResult: 0x{4:X8})</source>
-        <target state="translated">Problem bei der Testlaufbereitstellung: Fehler beim Kopieren der Datei „{0}“ nach „{1}“: {2}: {3} (HResult: 0x{4:X8})</target>
+        <target state="new">Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3} (HResult: 0x{4:X8})</target>
         <note>{0} is the source file path. {1} is the destination file path. {2} is the exception type. {3} is the exception message. {4} is the exception HResult.</note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToDeployDependencies">
@@ -240,7 +240,7 @@ aber empfing {4} Argument(e) mit den Typen „{5}“.</target>
       </trans-unit>
       <trans-unit id="GlobalTestCleanupWasCancelled">
         <source>Global test cleanup method '{0}.{1}' was canceled</source>
-        <target state="translated">Die globae Testbereinigungsmethode „{0}.{1}“ wurde abgebrochen</target>
+        <target state="new">Global test cleanup method '{0}.{1}' was canceled</target>
         <note>{0} is the type name. {1} is the global test cleanup method name.</note>
       </trans-unit>
       <trans-unit id="GlobalTestInitializeTimedOut">
