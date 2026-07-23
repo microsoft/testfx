@@ -634,9 +634,10 @@ current POST, or by the next POST if the host was idle. A failed request fails t
 is no transparent retry because retrying after an ambiguous network failure could duplicate a message.
 Automatic redirects are disabled for the same reason: every `3xx` response fails the operation instead
 of replaying the authenticated frame at another location.
-Cancellation is passed to `HttpClient.SendAsync` and response-body reads, aborting the in-flight fetch
-without converting expected cancellation into a connection-loss failure. Disposal cancels no completed
-messages and prevents later use.
+The implicit `HttpClient` timeout is disabled; cancellation is controlled by the operation token passed
+to `HttpClient.SendAsync` and response-body reads, aborting the in-flight fetch without converting
+expected cancellation into a connection-loss failure. Disposal cancels no completed messages and
+prevents later use.
 
 **Server-control pipe (`exitProcessOnConnectionLoss: false`).** A dropped control pipe must **not** kill
 the test host. This listener runs *inside the test host* as the control-pipe **client**, so an

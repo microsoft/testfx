@@ -51,6 +51,7 @@ internal sealed class DotnetTestHttpClient : NamedPipeConnectionBase, IClient
         _endpoint = endpoint;
         _authToken = authToken;
         _httpClient = httpClient;
+        _httpClient.Timeout = Timeout.InfiniteTimeSpan;
         _disposeHttpClient = disposeHttpClient;
     }
 
@@ -124,7 +125,7 @@ internal sealed class DotnetTestHttpClient : NamedPipeConnectionBase, IClient
             if (!httpResponse.IsSuccessStatusCode)
             {
                 throw new IOException(
-                    $"The dotnet test HTTP gateway returned status code {(int)httpResponse.StatusCode} ({httpResponse.ReasonPhrase ?? "unknown"}).");
+                    $"The dotnet test HTTP gateway returned status code {(int)httpResponse.StatusCode}.");
             }
 
             if (!MediaType.Equals(httpResponse.Content.Headers.ContentType?.MediaType, StringComparison.OrdinalIgnoreCase))

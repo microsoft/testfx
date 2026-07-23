@@ -109,6 +109,23 @@ public sealed class DotnetTestHttpClientTests
     }
 
     [TestMethod]
+    public async Task RequestReplyAsync_UsesCallerCancellationInsteadOfHttpClientTimeout()
+    {
+        var handler = new DelegateHttpMessageHandler(async (_, cancellationToken) =>
+        {
+            await Task.Delay(100, cancellationToken);
+            return CreateResponse(TestResponseFrame());
+        });
+
+        using DotnetTestHttpClient client = CreateClient(handler, TimeSpan.FromMilliseconds(10));
+        await client.ConnectAsync(_testContext.CancellationToken);
+
+        _ = await client.RequestReplyAsync<TestRequest, TestResponse>(
+            TestRequest.Instance,
+            _testContext.CancellationToken);
+    }
+
+    [TestMethod]
     public async Task RequestReplyAsync_DisposeCancelsActiveRequestAndWaiter()
     {
         var requestEntered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -159,7 +176,10 @@ public sealed class DotnetTestHttpClientTests
     public async Task RequestReplyAsync_RejectsNonSuccessWithoutLeakingToken()
     {
         var handler = new DelegateHttpMessageHandler((_, _) =>
-            Task.FromResult(new HttpResponseMessage(HttpStatusCode.Unauthorized)));
+            Task.FromResult(new HttpResponseMessage(HttpStatusCode.Unauthorized)
+            {
+                ReasonPhrase = Token,
+            }));
 
         using DotnetTestHttpClient client = CreateClient(handler);
         await client.ConnectAsync(_testContext.CancellationToken);
@@ -248,9 +268,15 @@ public sealed class DotnetTestHttpClientTests
         await Assert.ThrowsExactlyAsync<ObjectDisposedException>(() => client.ConnectAsync(_testContext.CancellationToken));
     }
 
-    private static DotnetTestHttpClient CreateClient(HttpMessageHandler handler)
+    private static DotnetTestHttpClient CreateClient(HttpMessageHandler handler, TimeSpan? httpClientTimeout = null)
     {
-        var client = new DotnetTestHttpClient(Endpoint, Token, new HttpClient(handler), disposeHttpClient: true);
+        var httpClient = new HttpClient(handler);
+        if (httpClientTimeout is not null)
+        {
+            httpClient.Timeout = httpClientTimeout.Value;
+        }
+
+        var client = new DotnetTestHttpClient(Endpoint, Token, httpClient, disposeHttpClient: true);
         client.RegisterSerializer(new TestRequestSerializer(), typeof(TestRequest));
         client.RegisterSerializer(new TestResponseSerializer(), typeof(TestResponse));
         return client;
