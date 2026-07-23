@@ -189,8 +189,7 @@ public sealed class InheritedCategorizedTests : CategorizedBase
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
             .PatchCodeWithReplace("$TargetFramework$", tfm)
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-            .PatchCodeWithReplace("$MSTestSourceGenerationVersion$", MSTestSourceGenerationVersion),
-            addPublicFeeds: true);
+            .PatchCodeWithReplace("$MSTestSourceGenerationVersion$", MSTestSourceGenerationVersion));
 
         DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
             $"build {generator.TargetAssetPath} -c {BuildConfiguration.Release} -f {tfm}",

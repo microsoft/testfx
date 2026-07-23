@@ -1088,8 +1088,7 @@ return 0;
             CustomHostSourceCode
                 .PatchCodeWithReplace("$TargetFramework$", TargetFramework)
                 .PatchCodeWithReplace("$BrowserRid$", WasmRuntime.BrowserRid)
-                .PatchCodeWithReplace("$MSTestVersion$", publishedMSTestVersion),
-            addPublicFeeds: true);
+                .PatchCodeWithReplace("$MSTestVersion$", publishedMSTestVersion));
     }
 
     private Task<TestAsset> GenerateBrowserWasmRunSettingsAssetAsync()
