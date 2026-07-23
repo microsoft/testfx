@@ -69,7 +69,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Setup Scripts
-        uses: github/gh-aw-actions/setup@v0.82.10
+        uses: github/gh-aw-actions/setup@34802437a0cba2fd1352d1f1bb02c18a78b56b31 # v0.83.0
         with:
           destination: ${{ runner.temp }}/gh-aw/actions
 
