@@ -208,7 +208,6 @@ a workflow needs elevated access (then use the GitHub App above).
 | [`copilot-setup-steps.yml`](./copilot-setup-steps.yml) | PR + push + manual | Bootstraps a Copilot Coding Agent environment with the right .NET SDK and tooling. |
 | [`dedup-analysis.yml`](./dedup-analysis.yml) | Schedule + manual + issues | Code Duplication Analysis (jscpd-based). |
 | [`enable-auto-merge.yml`](./enable-auto-merge.yml) | `pull_request_target` | Enables auto-merge on eligible PRs. |
-| [`fv-docs-validation.yml`](./fv-docs-validation.yml) | PR + push + manual | Validates documentation referenced by the friend-validation (FV) program. |
 | [`markdownlint.yml`](./markdownlint.yml) | PR | Runs `markdownlint` on changed Markdown files. |
 
 ## Shared components
