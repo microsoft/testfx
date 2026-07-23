@@ -279,7 +279,7 @@ Score the non-equivalent mutation points:
 
 | Sub-grade | Pattern |
 |-----------|---------|
-| **A** | All meaningful mutation points for the claimed behavior are killed, or the exercised behavior contains no meaningful mutation point. |
+| **A** | All meaningful mutation points for the claimed behavior are killed, or the claimed behavior contains no meaningful mutation point. |
 | **B** | The primary contract is protected; only one low-risk mutation survives. |
 | **C** | The central outcome is protected, but one or more meaningful secondary mutations survive or lack coverage. |
 | **D** | A high-risk mutation in the claimed behavior survives or lacks coverage, such as a boundary flip, removed validation, or wrong calculation. |
