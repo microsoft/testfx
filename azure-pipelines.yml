@@ -161,11 +161,11 @@ stages:
           /t:Build `
           /v:minimal `
           /p:Configuration=$(_BuildConfig) `
-          /p:RepoRoot=$(Build.SourcesDirectory)\ `
+          "/p:RepoRoot=$(Build.SourcesDirectory)\" `
           /p:MSBuildCachePackageEnabled=true `
           /p:MSBuildCacheEnabled=true `
           /p:MSBuildCacheRemoteCacheIsReadOnly=false `
-          /p:MSBuildCacheLogDirectory=$(Agent.TempDirectory)\MSBuildCache
+          "/p:MSBuildCacheLogDirectory=$(Agent.TempDirectory)\MSBuildCache"
         exit $LASTEXITCODE
       displayName: Seed $(_BuildConfig) project cache
       env:
