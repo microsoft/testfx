@@ -317,18 +317,6 @@ Built-in command line providers:
         Arity: 1
         Hidden: True
         Description: dotnet test pipe.
-      --dotnet-test-transport
-        Arity: 1
-        Hidden: True
-        Description: Pre-launch transport used to carry the 'dotnet test' pipe protocol. The available values are 'pipe' and 'websocket'. Defaults to 'pipe' (implied whenever only '--dotnet-test-pipe' is specified).
-      --dotnet-test-websocket-endpoint
-        Arity: 1
-        Hidden: True
-        Description: The WebSocket endpoint URI the test host connects to when '--dotnet-test-transport websocket' is selected.
-      --dotnet-test-websocket-token
-        Arity: 1
-        Hidden: True
-        Description: The per-run authentication token the test host presents when connecting via '--dotnet-test-transport websocket'.
       --exit-on-process-exit
         Arity: 1
         Hidden: False
