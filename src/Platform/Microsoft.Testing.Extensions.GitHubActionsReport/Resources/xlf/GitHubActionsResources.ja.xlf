@@ -37,6 +37,11 @@
         <target state="translated">少なくとも 1 つのテストが失敗しました。</target>
         <note />
       </trans-unit>
+      <trans-unit id="ExitCodeReasonCoverageThresholdFailed">
+        <source>One or more code coverage thresholds were not met.</source>
+        <target state="new">One or more code coverage thresholds were not met.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ExitCodeReasonDependentProcessExited">
         <source>A dependent process exited unexpectedly.</source>
         <target state="translated">依存プロセスが予期せず終了しました。</target>

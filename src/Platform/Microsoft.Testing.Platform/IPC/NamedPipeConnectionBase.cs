@@ -121,7 +121,6 @@ internal abstract class NamedPipeConnectionBase : NamedPipeBase
         CancellationToken cancellationToken,
         int maximumFrameSize = int.MaxValue)
     {
-        _messageBuffer.Position = 0;
         _messageBuffer.SetLength(0);
 
         try

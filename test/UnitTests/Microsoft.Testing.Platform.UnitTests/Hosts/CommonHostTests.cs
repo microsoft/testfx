@@ -49,6 +49,7 @@ public sealed class CommonHostTests
 
         ServiceProvider serviceProvider = new();
         serviceProvider.AddService(testFrameworkInvokerMock.Object);
+        serviceProvider.AddService(new TestCoverageResult());
 
         Mock<BaseMessageBus> baseMessageBusMock = new();
         baseMessageBusMock.Setup(x => x.DrainDataAsync()).Returns(Task.CompletedTask);

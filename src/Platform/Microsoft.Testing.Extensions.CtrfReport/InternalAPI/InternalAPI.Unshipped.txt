@@ -5,6 +5,7 @@ static Microsoft.Testing.Extensions.CtrfReport.CtrfReportMerger.Merge(System.Col
 static Microsoft.Testing.Extensions.CtrfReport.CtrfReportMerger.MergeToFileAsync(System.Collections.Generic.IReadOnlyList<string!>! inputPaths, string! outputPath, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 static Microsoft.Testing.Platform.Resources.PlatformResources.NamedPipeDirectoryNotWritableErrorMessage.get -> string!
 static Microsoft.Testing.Platform.Resources.PlatformResources.NamedPipePathTooLongErrorMessage.get -> string!
+Microsoft.Testing.Platform.Helpers.ExitCode.CoverageThresholdFailed = 14 -> Microsoft.Testing.Platform.Helpers.ExitCode
 static Microsoft.Testing.Platform.Services.ArtifactNamingHelper.ResolveAndSanitize(string! template, string! processName, string! processId, System.DateTimeOffset timestamp, System.Func<string!, string!>! sanitizeLeafFileName) -> string!
 Microsoft.Testing.Extensions.MergeOutputFileHelper
 static Microsoft.Testing.Extensions.MergeOutputFileHelper.BuildCaseFoldedProbePath(string! directory, string! probeFileName) -> string!

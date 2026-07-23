@@ -19,48 +19,53 @@ that adding new code paths does not silently change the contract.
 ## What the generator emits today
 
 For every `[TestClass]` declared **directly** on a non-static, non-abstract, non-generic,
-non-`file`-local, accessible type, the generator produces:
+non-`file`-local, accessible type, both modes emit a `[ModuleInitializer]`, the concrete
+test types, and the test methods (including inherited methods, deduped by signature), then
+call `ReflectionMetadataHook.Register`.
 
-1. A `[ModuleInitializer]`-decorated static method (`MSTestSourceGeneratedReflectionMetadata.Initialize`).
-2. `[DynamicDependency(All, typeof(T))]` on that method for the test class **and every
-   accessible non-generic base type** in its inheritance chain (so members declared on an
-   abstract base — `[ClassInitialize]`, `[ClassCleanup]`, `[AssemblyInitialize]`,
-   `[AssemblyCleanup]`, `TestContext` setter — are preserved by the trimmer).
-3. A `types` array containing the concrete test classes.
-4. A `testMethods` dictionary mapping each test class to the `MethodInfo`s for its
-   `[TestMethod]`-annotated (or `TestMethod`-subclass-annotated) methods, including
-   methods inherited from base classes, deduped by signature.
-5. A `ResolveMethod` helper that resolves each method by name + parameter types at module
-   initialization, throwing `MissingMethodException` if the lookup fails.
-6. A call to `ReflectionMetadataHook.Register` that hands this data to the adapter and
-   replaces `ReflectionOperations` with `SourceGeneratedReflectionOperations` for the
-   lifetime of the process.
+The selected mode determines the rest:
+
+- **`ReflectionFree` (the default)** emits complete materializable type, inherited type,
+  assembly, and method attribute arrays; constructor and method invocation delegates; and
+  applicable property setter delegates. It also emits direct references that root the
+  modeled members.
+- **`Rooting` (compatibility mode)** emits `DynamicDependency(All, typeof(T))` for each
+  test class and accessible non-generic base type, plus the type/method registry. Its rich
+  attribute and delegate dictionaries are empty.
+
+Both modes still resolve the `MethodInfo` keys used by the adapter at module
+initialization. Reflection-free mode also resolves `PropertyInfo` keys for emitted setters.
+These are bounded startup lookups; test construction, test invocation, and registered
+attribute reads use generated data after registration.
 
 The `[ModuleInitializer]` runs once per test assembly when the CLR first touches that
 assembly. Multiple test assemblies in the same process register independently and are
 merged into a `CompositeSourceGeneratedReflectionDataProvider`.
 
-## What the generator does NOT emit
+## Provider field status
 
-These fields exist on `SourceGeneratedReflectionDataProvider` but are not populated by the
-current emitter. The adapter always falls back to runtime reflection for them. Closing
-each gap is tractable engineering work — none of the fields is fundamentally blocked:
+Provider fields are mode-specific. A dictionary hit is authoritative, including an empty
+attribute array; a missing entry falls back to reflection.
 
 | Field on the provider | Used by | Status |
 |---|---|---|
-| `TypeAttributes` | `IReflectionOperations.GetCustomAttributes(Type)` | Always falls back |
-| `TypeMethodAttributes` | `IReflectionOperations.GetCustomAttributes(MethodInfo)` | Always falls back |
-| `AssemblyAttributes` | `IReflectionOperations.GetCustomAttributes(Assembly, Type)` | Always falls back |
+| `Types`, `TypesByName`, `TypeMethods` | discovery and type lookup | Populated in both modes |
+| `TypeAttributes` | `IReflectionOperations.GetCustomAttributes(Type)` | Complete materializable entries in reflection-free mode; empty in rooting mode |
+| `TypeMethodAttributes` | `IReflectionOperations.GetCustomAttributes(MethodInfo)` | Complete materializable entries in reflection-free mode; empty in rooting mode |
+| `AssemblyAttributes` | `IReflectionOperations.GetCustomAttributes(Assembly, Type)` | Materializable attributes in reflection-free mode; empty in rooting mode |
 | `TypeConstructors` | `IReflectionOperations.GetDeclaredConstructors` | Always falls back |
-| `TypeConstructorsInvoker` | `IReflectionOperations.CreateInstance` | Always falls back |
+| `TypeConstructorsInvoker` | `IReflectionOperations.CreateInstance` | Populated in reflection-free mode; empty in rooting mode |
+| `TypeMethodInvokers` | test and fixture invocation | Populated in reflection-free mode; empty in rooting mode |
+| `TypePropertySetters` | generated property assignment | Applicable setters in reflection-free mode; empty in rooting mode |
 | `TypeProperties` | `IReflectionOperations.GetDeclaredProperties` | Always falls back |
 | `TypePropertiesByName` | `IReflectionOperations.GetRuntimeProperty` | Always falls back |
-| `TypeMethodLocations` | Source-location navigation | Returns empty (no navigation) |
+| `TypeMethodLocations` | Source-location navigation | Unpopulated; navigation returns no generated location |
 
-> **The source-gen path today is best understood as "type rooting + test-method
-> pre-resolution + trimmer hints" rather than a full reflection replacement.** Attribute
-> reads, constructor invocation and property reflection still hit the reflection path —
-> the trimmer hints from `[DynamicDependency]` keep that path runnable under AOT/trimming.
+`TypeConstructors` and `TypeConstructorsInvoker` deliberately describe different
+operations. Reflection-free mode generates constructor **invocation** delegates, but it
+does not claim to support general `ConstructorInfo` enumeration; `GetDeclaredConstructors`
+therefore still uses reflection. Likewise, a generated `TestContext` setter does not make
+general `PropertyInfo` enumeration or name lookup reflection-free.
 
 ## Discovery limitations
 
@@ -93,17 +98,18 @@ Every call site on `SourceGeneratedReflectionOperations` that can return reflect
 fits into one of three explicit categories. Each is marked with a `// Category X` comment
 in the source to keep the design choice visible.
 
-### Category A — Generator-gap fallback
+### Category A — Missing generated-entry fallback
 
-The corresponding source-gen field is not populated by today's emitter. The method
-always falls through. Closable by extending the emitter.
+Reflection-free mode serves registered type and method attribute entries from generated
+arrays and invokes registered constructors through generated delegates. Rooting mode,
+skipped/unresolved members, and incompletely materialized attributes still fall back.
 
-- `GetCustomAttributes(MemberInfo)` for `Type` and `MethodInfo`
-- `GetCustomAttributes(Assembly, Type)`
+- `GetCustomAttributes(MemberInfo)` for missing `Type` and `MethodInfo` entries
+- `GetCustomAttributes(Assembly, Type)` when no generated assembly attributes are available
 - `GetDeclaredConstructors`
 - `GetDeclaredProperties`
 - `GetRuntimeProperty`
-- `CreateInstance`
+- `CreateInstance` when no generated constructor delegate matches
 
 ### Category B — Contract-mismatch fallback
 
@@ -169,10 +175,12 @@ their members. The choices are:
 
 #### Option 1 — The current source generator
 
-Emits `[DynamicDependency(All, typeof(MyTests))]` per `[TestClass]` and per accessible
-base type. Preserves exactly the test-related types and their members; everything else
-in the assembly remains eligible for trimming. **Pros:** minimal binary size, no manual
-configuration. **Cons:** generator work for every emitter gap (see Category A above).
+Reflection-free mode emits direct attribute construction and invocation references, which
+root the modeled members, while rooting mode emits
+`[DynamicDependency(All, typeof(MyTests))]` per `[TestClass]` and accessible base type.
+Both preserve test-related types while leaving unrelated code eligible for trimming.
+Unsupported shapes and missing provider entries can still require reflection-compatible
+preservation (see Category A above).
 
 #### Option 2 — `<TrimmerRootAssembly>`
 
@@ -254,20 +262,18 @@ coarse rooting backstop. Pairing them is the most robust configuration today.
 In rough priority order:
 
 1. **Document every `// Category A/B/C` site in code** — done.
-2. **This document** — done.
-3. **Opt-in attribute for inherited `[TestClass]`** — a new attribute (name TBD) that
+2. **Populate complete materializable type and method attributes** — done in reflection-free mode.
+3. **Use generated constructor, method, and property-setter delegates** — done in reflection-free mode.
+4. **Opt-in attribute for inherited `[TestClass]`** — a new attribute (name TBD) that
    the user applies to a derived class to add it to the generator's discovery set
    without re-applying `[TestClass]`. Replaces / refines MSTEST0069.
-4. **Populate `TypeAttributes`** so type-attribute reads stop falling back. This is the
-   highest-value Category A gap because attribute reads happen for every test class at
-   discovery.
-5. **Populate `TypeMethodAttributes`** for the same reason at the method level.
-6. **Populate `TypeConstructors` + `TypeConstructorsInvoker`** so instance creation runs
-   through a generated invoker. This is the trim/AOT win that goes beyond just
-   "preserve the constructor": it also avoids `Activator.CreateInstance`.
-7. **Populate `TypeProperties` + `TypePropertiesByName`** for `TestContext` and similar
-   well-known properties.
-8. **Source-location data** for IDE navigation parity with the reflection path.
+5. **Design generated property descriptors** before changing `TypeProperties` or
+   `TypePropertiesByName`. The design must preserve declared-only and inherited lookup,
+   visibility, ambiguity, and exception semantics; emitting `typeof(T).GetProperty(name)`
+   would only move reflection to startup and is not a reflection-free fix.
+6. **Redesign source-location data and its consumer.** `TypeMethodLocations` remains
+   unpopulated because its current type/method-name representation is lossy for overloads
+   and the navigation path is not wired end to end.
 
 Each item is small enough to be its own PR with its own tests. None of them blocks any
 other.
@@ -283,24 +289,22 @@ user value.
   on CoreCLR; meaningful on Native AOT where the type system is JIT-less.)
 - Per-class `Type.GetMethods()` + `GetCustomAttribute<TestMethodAttribute>` filtering —
   skipped. The registry already lists test methods per class.
-- `Type.GetMethod(name, paramTypes)` per test method — still reflection, but executed
-  once at module-init rather than at discovery time.
+- `Type.GetMethod(name, paramTypes)` per test method remains a bounded module-init lookup
+  used to create adapter-compatible dictionary keys. Reflection-free mode similarly
+  resolves keys for applicable property setters.
 
 For a large test assembly this is a real cold-start improvement.
 
-### What the current generator does NOT save at execution time
+### What remains reflective
 
-Every test execution still goes through the same code paths as reflection-mode MSTest:
+In reflection-free mode, registered test construction and invocation use generated
+delegates, registered type/method attributes use generated arrays, and applicable property
+assignment uses generated setters. Rooting mode retains the reflection execution path.
 
-- `Activator.CreateInstance(typeof(MyTests))` to construct the test instance.
-- `MethodInfo.Invoke(instance, args)` to invoke the test body.
-- `GetCustomAttributes(...)` for `[ExpectedException]`, `[Timeout]`, `[TestProperty]`,
-  etc.
-- `PropertyInfo.SetValue(...)` for `TestContext` injection.
-
-The trimmer hints we emit keep those reflection calls working under AOT, but they do
-not make them faster. **The per-test hot path is essentially the same speed as
-reflection-mode MSTest.**
+Both modes still use reflection for general constructor enumeration, general property
+enumeration/name lookup, contract-wide method enumeration, cross-assembly data, and any
+missing or unsupported generated entry. Generated source locations are not currently
+provided.
 
 ### How a delegate-based source generator (TUnit-style) differs
 
@@ -310,18 +314,17 @@ reflection registry that the existing execution engine consumes, they emit per-t
 
 | Operation | TUnit-style | MSTest source-gen today |
 |---|---|---|
-| Construct test instance | `static () => new MyTests()` | `Activator.CreateInstance(typeof(MyTests))` |
-| Invoke test method | `static (instance, args) => ((MyTests)instance).MyTest((int)args[0])` | `MethodInfo.Invoke(instance, args)` |
-| Read `[Timeout(5000)]` | Generator reads attribute at compile time, bakes `Timeout = 5000` into a metadata record | `method.GetCustomAttribute<TimeoutAttribute>().Timeout` |
+| Construct test instance | `static () => new MyTests()` | Generated constructor delegate in reflection-free mode |
+| Invoke test method | `static (instance, args) => ((MyTests)instance).MyTest((int)args[0])` | Generated method delegate in reflection-free mode |
+| Read `[Timeout(5000)]` | Generator reads attribute at compile time, bakes `Timeout = 5000` into a metadata record | Pre-materialized attribute in reflection-free mode |
 | `DataRow` binding | Typed constants + typed casts inside the delegate | Reflection + `Convert.ChangeType` |
-| `TestContext` injection | Baked property setter delegate | `PropertyInfo.SetValue` |
+| `TestContext` injection | Baked property setter delegate | Generated setter when modeled; reflection fallback otherwise |
 
-`MethodInfo.Invoke` is roughly an order of magnitude slower than a direct delegate call
-for trivial method bodies. For tests whose own body is fast (microseconds),
-delegate-based generators measurably win on raw throughput. **We do not compete on
-per-test execution throughput today.**
+Reflection-free mode now takes the generated delegate path for modeled construction and
+invocation. Parameter binding and unsupported/missing metadata can still use reflection,
+so this is not a claim that the entire execution pipeline is reflection-free.
 
-### Why not just emit delegates here too?
+### Delegate-based reflection-free mode
 
 **The work has already started.** A reflection-free generator that emits exactly this
 shape now ships inside `src/Analyzers/MSTest.SourceGeneration/` and is selected via
@@ -336,34 +339,19 @@ shape now ships inside `src/Analyzers/MSTest.SourceGeneration/` and is selected 
   `PropertyInfo.SetValue` / `GetValue`.
 - Pre-materialized `Attribute[]` arrays — replaces `GetCustomAttributes(...)`.
 
-What is left is the *wiring* from that registry into the adapter, which can be staged:
-
-1. Merge / route the PoC's output through `MSTest.SourceGeneration` and feed it into
-   `SourceGeneratedReflectionDataProvider` (populate `TypeConstructorsInvoker`,
-   `TypeAttributes`, `TypeMethodAttributes`, etc.). The Category A fast paths in
-   `SourceGeneratedReflectionOperations` activate automatically — no engine change.
-2. Replace the `MethodInfo` returned by `ITestMethod.MethodInfo` with a
-   `GeneratedTestMethodInfo` (new class, mirroring `ReflectionTestMethodInfo` in
-   `src/TestFramework/TestFramework/Internal/`) whose `Invoke` override calls the
-   generated `Func<object?, object?[]?, object?>` instead of doing reflection. Because
-   `MethodInfoExtensions.InvokeAsSynchronousTask` calls `methodInfo.Invoke(...)`
-   polymorphically, **the execution engine itself needs no changes** — this is the
-   intentional seam behind the existing API contract:
-
-   > *`ITestMethod.MethodInfo`: "Do not directly invoke the method using MethodInfo. Use
-   > `ITestMethod.Invoke` instead."*
-3. Migrate `[DataRow]`, `[DynamicData]`, `[DataSource]` parameter binding to use the
-   compile-time parameter types instead of reflection-based `Convert.ChangeType`.
+That registry is now wired into `SourceGeneratedReflectionDataProvider`: its complete
+entries activate the generated attribute, constructor, method, and setter paths. Remaining
+work includes typed data-source parameter binding and the explicitly deferred
+property-descriptor and source-location designs.
 
 The only `Activator.CreateInstance` site that does **not** fit into this story is
 `TestSourceHost.CreateInstanceForType` — it instantiates arbitrary adapter host /
 runner types, not user test classes, so the generator can't pre-resolve it. It is not
 on the per-test hot path, so the impact is limited to host setup.
 
-The work is meaningful (a real refactor + thorough behaviour coverage so existing
-extensions that consume `ITestMethod.MethodInfo` keep working) but **it is not "v2 of
-the source generator from scratch"** — the architecture has been designed for it, the
-seams exist, and the PoC generator output is ready to be wired in.
+This is not a claim that every adapter reflection contract is replaced. Existing
+`MethodInfo`/`PropertyInfo` keys preserve compatibility, and the explicit fallback and
+deferral boundaries above remain.
 
 ### Recommended framing
 
@@ -371,40 +359,28 @@ The current generator's value proposition, stated honestly, is:
 
 - ✅ Trim/Native AOT *correctness*: tests run at all after trimming/AOT publish.
 - ✅ Cold-start *throughput*: skip the assembly + type scans.
-- ⚠️ Per-test *throughput*: unchanged from reflection MSTest. Closing this requires
-  wiring the delegate-emitting reflection-free generator (`MSTest.SourceGeneration`
-  with `MSTestSourceGenMode=ReflectionFree`, issue #1837) into the adapter via the seams
-  already in place (`ITestMethod.MethodInfo` returning a delegate-backed `MethodInfo`
-  subclass, populating `TypeConstructorsInvoker`, etc.).
+- ✅ Modeled per-test construction and invocation: generated delegates in reflection-free mode.
+- ⚠️ General reflection elimination: incomplete by design; property/constructor enumeration,
+  cross-assembly operations, and unsupported or missing entries retain fallback.
 
 Setting expectations this way avoids over-promising what the existing generator
-delivers today and makes the case for wiring the PoC concrete when prioritising it.
+delivers today while keeping the remaining reflection boundaries explicit.
 
-### What wiring the delegate generator unlocks beyond perf
+### What reflection-free mode provides beyond performance
 
-The case for wiring the reflection-free generator (`MSTest.SourceGeneration` with
-`MSTestSourceGenMode=ReflectionFree`) is **not just per-test
-throughput**. Several non-perf design issues with the current source-gen story dissolve
-once the registry holds delegates and pre-materialized attributes instead of
-`MethodInfo` + name lookups.
+The case for reflection-free mode is **not just per-test throughput**. Its delegates and
+pre-materialized attributes also improve correctness and trimming behavior for modeled
+entries.
 
-- **Source-gen mode and reflection mode become truly equivalent.** Today, attribute
-  reads on user test types fall back to `_fallback` because `TypeAttributes` /
-  `TypeMethodAttributes` are empty (Category A). That is a quiet behavior split: an
-  attribute the trimmer removed will simply not be returned under source-gen even though
-  the user expects parity. Baking the `Attribute[]` arrays into the registry makes the
-  paths converge.
-- **The framework-wide `[UnconditionalSuppressMessage("IL2026"/"IL3050")]` becomes
-  truly justified.** The standard rationale — *"Native AOT support relies on MSTest
-  source-generated reflection metadata, not on this code path"* — is only partially
-  true today, because the registry doesn't supply enough data to avoid the fallbacks
-  in source-gen mode. Wiring the delegates makes the suppressed code paths really
-  unreachable for user test code under source-gen.
-- **The `[DynamicDependency]` rooting becomes unnecessary.** A static delegate
-  `static (instance, args) => ((MyTests)instance).MyTest((int)args[0])` *is* the
-  rooting — the trimmer keeps every member statically reachable from the delegate body,
-  including inherited members. The whole abstract-base-type chain we currently walk to
-  emit `[DynamicDependency]` becomes obsolete in that mode.
+- **Source-gen mode and reflection mode converge for modeled attributes.** Reflection-free
+  mode now bakes complete materializable `Attribute[]` arrays into the registry. Missing or
+  unsupported entries still fall back.
+- **Trim/AOT suppressions match the modeled fast paths.** Registered attributes and
+  invocations do not reach the suppressed reflection operations. Suppressions remain
+  necessary and must stay truthful for the explicitly documented fallback paths.
+- **Direct references provide rooting in reflection-free mode.** A static delegate
+  `static (instance, args) => ((MyTests)instance).MyTest((int)args[0])` roots its target.
+  Rooting mode continues to emit the explicit `[DynamicDependency]` base chain.
 - **Compile-time validation of attribute shapes becomes possible.** Reading
   `[DataRow]` / `[DataSource]` / `[ExpectedException]` etc. at compile time to bake them
   also lets the generator surface analyzer diagnostics for:
@@ -417,10 +393,9 @@ once the registry holds delegates and pre-materialized attributes instead of
   the registry's signature comparison uses `typeof(T)`, which round-trips as `T&` for
   by-ref types. A generated delegate uses the call-site syntax directly and side-steps
   the type comparison entirely.
-- **IDE source navigation under source-gen mode.** The Roslyn generator knows each test
-  method's `SyntaxNode`, so `TypeMethodLocations` can be populated with file path + line
-  number constants. IDE "Go to test source" works in source-gen mode (today it returns
-  empty).
+- **IDE source navigation under source-gen mode remains deferred.** Although Roslyn knows
+  each method's syntax, `TypeMethodLocations` is intentionally unpopulated until its lossy
+  key shape and missing end-to-end consumer are redesigned.
 - **Cleaner extension surface.** Third-party `TestMethodAttribute` subclasses and
   custom data sources have a typed registry to plug into instead of having to layer on
   top of `MethodInfo.Invoke`.
@@ -439,11 +414,11 @@ What it does *not* fix (be honest with prioritisation):
 
 ## Sunset plan for the current generator + `MSTest.Engine`
 
-Once the delegate-emitting reflection-free generator (`MSTest.SourceGeneration` with
-`MSTestSourceGenMode=ReflectionFree`) is wired
-into `MSTest.TestAdapter` directly, the current architecture — open-source
-`MSTest.SourceGeneration` package + closed-source `MSTest.Engine` runtime — becomes
-redundant. The recommended sunset plan:
+The reflection-free registry is now wired to the adapter provider. A separate future
+decision could integrate its packaging more deeply into `MSTest.TestAdapter`; only then
+would the open-source `MSTest.SourceGeneration` package + closed-source `MSTest.Engine`
+split potentially become redundant. Any sunset plan must be evaluated independently of
+the runtime wiring described here:
 
 1. **Do not gate the existing source-gen path behind a feature flag.** A conditional
    "old vs new" code path doubles the maintenance surface (every refactor in

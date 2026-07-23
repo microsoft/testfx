@@ -52,6 +52,8 @@ For acceptance tests that drive generated assets, prefer running them through th
 
 You MUST follow all code-formatting and naming conventions defined in [`.editorconfig`](../.editorconfig).
 
+All C# and Visual Basic code files (`*.cs`, `*.csx`, `*.vb`, and `*.vbx`) MUST be encoded as UTF-8 with BOM, as required by `.editorconfig`. When creating or rewriting one of these files, preserve or add the BOM; do not emit BOM-less UTF-8.
+
 In addition to the rules enforced by `.editorconfig`, you SHOULD:
 
 - Favor style and conventions that are consistent with the existing codebase.

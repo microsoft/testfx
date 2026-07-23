@@ -11,14 +11,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Sou
 /// <remarks>
 /// <para>
 /// <b>Scope of the source-generated data.</b> The shipping MSTest source generator's
-/// <c>[ModuleInitializer]</c> calls <see cref="ReflectionMetadataHook.Register(Assembly, Type[], IReadOnlyDictionary{Type, MethodInfo[]})"/>
-/// with only: the assembly, the <c>[TestClass]</c> types, and their <c>[TestMethod]</c>-annotated
-/// <see cref="MethodInfo"/>s. The AOT generator additionally publishes pre-materialized type-level
-/// and assembly-level attributes via the richer
+/// rooting-mode <c>[ModuleInitializer]</c> calls
+/// <see cref="ReflectionMetadataHook.Register(Assembly, Type[], IReadOnlyDictionary{Type, MethodInfo[]})"/>
+/// with the assembly, <c>[TestClass]</c> types, and their <c>[TestMethod]</c>-annotated
+/// <see cref="MethodInfo"/>s. The reflection-free generator additionally publishes complete
+/// pre-materialized type/method attributes, assembly attributes, and direct invocation delegates
+/// via the richer
 /// <see cref="ReflectionMetadataHook.Register(Assembly, Type[], IReadOnlyDictionary{Type, MethodInfo[]}, IReadOnlyDictionary{Type, Attribute[]}, object[])"/>
-/// overload. Anything still not populated (method attributes, constructors, properties, navigation
-/// data) falls back to runtime reflection, so the payload remains "type / test-method rooting +
-/// trimmer hints + materialized type/assembly attributes" rather than a full reflection replacement.
+/// family of overloads. Missing entries—including unresolved members and incompletely materialized
+/// attribute sets—fall back to runtime reflection. Reflection-free mode emits constructor
+/// invocation and applicable property-setter delegates, but general constructor/property
+/// enumeration and lookup remain reflective; navigation data remains unpopulated.
+/// MethodInfo keys (and PropertyInfo keys for emitted setters) are resolved with bounded reflection
+/// once during module initialization so they remain compatible with existing adapter contracts.
 /// </para>
 /// <para>
 /// <b>Why a fallback exists at all.</b> Each fallback in this class falls into one of three
@@ -29,13 +34,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Sou
 ///   <item>
 ///     <description>
 ///     <b>Category A — Generator-gap fallback.</b> The corresponding field on
-///     <see cref="SourceGeneratedReflectionDataProvider"/> is not populated by today's
-///     emitter, so every call falls back to runtime reflection. These are closable: extend
-///     the emitter to populate the field and the fallback stops firing. Today this covers
-///     <see cref="GetCustomAttributes(MemberInfo)"/> (for <see cref="Type"/> and
-///     <see cref="MethodInfo"/>), <see cref="GetCustomAttributes(Assembly, Type)"/>,
+///     <see cref="SourceGeneratedReflectionDataProvider"/> may not be populated in rooting mode,
+///     for skipped/unresolved members, or when compile-time materialization is incomplete. A
+///     dictionary hit is authoritative even when its value is empty; only a miss falls back.
+///     Today this covers type/method <see cref="GetCustomAttributes(MemberInfo)"/> misses,
+///     assembly attributes in rooting mode, <see cref="GetCustomAttributes(Assembly, Type)"/>,
 ///     <see cref="GetDeclaredConstructors"/>, <see cref="GetDeclaredProperties"/>,
-///     <see cref="GetRuntimeProperty"/>, and <see cref="CreateInstance"/>.
+///     <see cref="GetRuntimeProperty"/>, and unmatched <see cref="CreateInstance"/> requests.
 ///     </description>
 ///   </item>
 ///   <item>
@@ -62,10 +67,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Sou
 ///   </item>
 /// </list>
 /// <para>
-/// <b>Trim/AOT safety.</b> Because most reads still fall through to reflection at runtime,
-/// trim safety relies on the <c>[DynamicDependency(All, typeof(T))]</c> attributes emitted
-/// by the source generator for each <c>[TestClass]</c> and each of its accessible base
-/// types. Those preserve the members reflection then enumerates.
+/// <b>Trim/AOT safety.</b> Reflection-free mode directly references modeled attributes and
+/// invocation targets; rooting mode uses <c>[DynamicDependency(All, typeof(T))]</c> for each
+/// <c>[TestClass]</c> and accessible base type. Reflection fallback remains for unsupported,
+/// unresolved, cross-assembly, and general enumeration operations.
 /// </para>
 /// <para>
 /// <b>Adding a new fallback?</b> Mark the method with a <c>// Category A/B/C</c> comment and
@@ -83,7 +88,8 @@ internal sealed class SourceGeneratedReflectionOperations : IReflectionOperation
 
     internal SourceGeneratedReflectionDataProvider DataProvider { get; }
 
-    // Category A for Type / MethodInfo (TypeAttributes / TypeMethodAttributes are not emitted).
+    // Category A for Type / MethodInfo misses. Reflection-free mode emits complete entries when
+    // possible; rooting mode and unresolved/incomplete entries intentionally fall back.
     // Category C for every other MemberInfo subtype — the source generator never models
     // FieldInfo, EventInfo, ParameterInfo, etc. and we have no plans to.
     [return: NotNullIfNotNull(nameof(memberInfo))]
@@ -96,8 +102,8 @@ internal sealed class SourceGeneratedReflectionOperations : IReflectionOperation
             _ => _fallback.GetCustomAttributes(memberInfo),
         };
 
-    // Category A: AssemblyAttributes is not populated by today's emitter, so this always
-    // falls through unless a future emitter snapshots assembly-level attributes.
+    // Category A: reflection-free mode emits materializable assembly attributes; rooting mode
+    // and an empty generated set fall through to preserve the existing filtered lookup behavior.
     public object[] GetCustomAttributes(Assembly assembly, Type type)
     {
         object[] sourceGenAttributes = DataProvider.GetAssemblyAttributes(assembly);
@@ -200,10 +206,10 @@ internal sealed class SourceGeneratedReflectionOperations : IReflectionOperation
             ? type
             : _fallback.GetType(assembly, typeName);
 
-    // Category A: TypeConstructorsInvoker is now populated by the AOT emitter (via the
-    // MSTestReflectionMetadata registry). When present, the invoker path avoids both
-    // Activator.CreateInstance and the trim-unfriendly constructor reflection. Falls back
-    // to reflection for types the generator did not register (open generics, cross-assembly).
+    // Category A: reflection-free mode populates constructor invocation delegates. This is
+    // distinct from TypeConstructors, which remains empty because general ConstructorInfo
+    // enumeration is deferred. Rooting mode, unsupported types, and non-matching argument
+    // shapes fall back to reflection.
     public object? CreateInstance(Type type, object?[] parameters)
     {
         SourceGeneratedReflectionDataProvider data = DataProvider.GetSnapshot();

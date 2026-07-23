@@ -21,58 +21,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// The virtual string properties of the TestContext are retrieved from the property dictionary
 /// like GetProperty&lt;string&gt;("TestName") or GetProperty&lt;string&gt;("FullyQualifiedTestClassName").
 /// </summary>
-internal sealed class TestContextImplementation : TestContext, ITestContext, IDisposable
+internal sealed partial class TestContextImplementation : TestContext, ITestContext, IDisposable
 {
-    private sealed class LiveOutputScope(TestContext? testContext)
-    {
-        private int _isActive = 1;
-
-        internal TestContext? TestContext { get; } = testContext;
-
-        internal bool IsActive => Volatile.Read(ref _isActive) == 1;
-
-        internal void Deactivate()
-            => Volatile.Write(ref _isActive, 0);
-    }
-
-    internal sealed class SynchronizedStringBuilder
-    {
-        private readonly StringBuilder _builder = new();
-
-        [MethodImpl(MethodImplOptions.Synchronized)]
-        internal void Append(char value)
-            => _builder.Append(value);
-
-        [MethodImpl(MethodImplOptions.Synchronized)]
-        internal void Append(string? value)
-            => _builder.Append(value);
-
-        [MethodImpl(MethodImplOptions.Synchronized)]
-        internal void Append(char[] buffer, int index, int count)
-            => _builder.Append(buffer, index, count);
-
-        [MethodImpl(MethodImplOptions.Synchronized)]
-        internal void AppendLine(string? value)
-            => _builder.AppendLine(value);
-
-        [MethodImpl(MethodImplOptions.Synchronized)]
-        internal void Clear()
-            => _builder.Clear();
-
-        [MethodImpl(MethodImplOptions.Synchronized)]
-        internal string GetAndClear()
-        {
-            string result = _builder.ToString();
-            _builder.Clear();
-
-            return result;
-        }
-
-        [MethodImpl(MethodImplOptions.Synchronized)]
-        public override string ToString()
-            => _builder.ToString();
-    }
-
     /// <summary>
     /// Properties.
     /// </summary>
@@ -86,9 +36,6 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     private readonly TestRunCancellationToken? _testRunCancellationToken;
     private readonly TextWriter? _liveOutputWriter;
     private readonly Func<TestOutputCaptureMode> _outputCaptureModeProvider;
-
-    private static readonly AsyncLocal<LiveOutputScope?> CurrentLiveOutputScope = new();
-    private static TextWriter? s_liveOutputWriter;
 
     private CancellationTokenRegistration? _cancellationTokenRegistration;
 
@@ -471,32 +418,6 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
         _cancellationTokenRegistration = null;
     }
 
-    internal readonly struct ScopedTestContextSetter : IDisposable
-    {
-        private readonly LiveOutputScope _liveOutputScope;
-
-        internal ScopedTestContextSetter(TestContext? testContext)
-        {
-            TestContext.Current = testContext;
-            _liveOutputScope = new(testContext);
-            CurrentLiveOutputScope.Value = _liveOutputScope;
-        }
-
-        public void Dispose()
-        {
-            _liveOutputScope.Deactivate();
-            TestContext.Current = null;
-            CurrentLiveOutputScope.Value = null;
-        }
-    }
-
-    internal static ScopedTestContextSetter SetCurrentTestContext(TestContext? testContext)
-        => new(testContext);
-
-    // This writer is captured together with the process-wide Console routers and shares their install-once lifetime.
-    internal static void ConfigureLiveOutputWriter(TextWriter liveOutputWriter)
-        => Volatile.Write(ref s_liveOutputWriter, liveOutputWriter);
-
     internal SynchronizedStringBuilder StandardOutputBuilder
         => GetOrCreate(ref _stdOutStringBuilder);
 
@@ -511,26 +432,6 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
 
     private static SynchronizedStringBuilder GetOrCreate(ref SynchronizedStringBuilder? builder)
         => LazyInitializer.EnsureInitialized(ref builder, static () => new())!;
-
-    private void WriteLive(string? message, bool appendLine)
-    {
-        if (_liveOutputWriter is null
-            || _outputCaptureModeProvider() != TestOutputCaptureMode.Live
-            || CurrentLiveOutputScope.Value is not { IsActive: true } liveOutputScope
-            || !ReferenceEquals(liveOutputScope.TestContext, this))
-        {
-            return;
-        }
-
-        if (appendLine)
-        {
-            _liveOutputWriter.WriteLine(message);
-        }
-        else
-        {
-            _liveOutputWriter.Write(message);
-        }
-    }
 
     internal string? GetAndClearOutput()
         => _stdOutStringBuilder?.GetAndClear();

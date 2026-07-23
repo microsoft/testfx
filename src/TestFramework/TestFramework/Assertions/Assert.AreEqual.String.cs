@@ -30,15 +30,29 @@ public sealed partial class Assert
 
         if (expected is not null && actual is not null)
         {
-            int diffIndex = FindFirstStringDifference(expected, actual, ignoreCase, culture);
-            if (diffIndex >= 0)
+            StringDifference difference = FindFirstStringDifference(expected, actual, ignoreCase, culture);
+            if (difference.Exists)
             {
-                AppendStringDiffSummary(structured, expected, actual, diffIndex);
+                AppendStringDiffSummary(structured, expected, actual, difference.SummaryIndex);
+                AddStringComparisonEvidence(
+                    structured,
+                    expected,
+                    actual,
+                    expectedRendered,
+                    actualRendered,
+                    difference,
+                    ignoreCase,
+                    culture,
+                    cultureExplicit);
             }
         }
 
         structured.WithUserMessage(message);
-        structured.WithEvidence(CreateStringComparisonEvidence("expected:", expectedRendered, actualRendered, ignoreCase, culture, cultureExplicit));
+        if (expected is null || actual is null)
+        {
+            structured.WithEvidence(CreateStringComparisonEvidence("expected:", expectedRendered, actualRendered, ignoreCase, culture, cultureExplicit));
+        }
+
         structured.WithExpectedAndActual(expectedRendered, actualRendered);
         structured.WithCallSiteExpression(FormatCallSiteExpression("Assert.AreEqual", expectedExpression, actualExpression, "<expected>", "<actual>"));
 
@@ -62,11 +76,27 @@ public sealed partial class Assert
         ReportAssertFailed(structured);
     }
 
-    private static EvidenceBlock CreateStringComparisonEvidence(string firstLabel, string firstValue, string actualValue, bool ignoreCase, CultureInfo culture, bool cultureExplicit)
+    private static EvidenceBlock CreateStringComparisonEvidence(
+        string firstLabel,
+        string firstValue,
+        string actualValue,
+        bool ignoreCase,
+        CultureInfo culture,
+        bool cultureExplicit,
+        StringDifferenceDiagnostic? diagnostic = null)
     {
         EvidenceBlock evidence = EvidenceBlock.Create()
             .AddLine(firstLabel, firstValue)
             .AddLine("actual:", actualValue);
+
+        if (diagnostic is not null)
+        {
+            evidence.AddLine("difference:", diagnostic.Difference);
+            if (diagnostic.CodePoints is not null)
+            {
+                evidence.AddLine("code points:", diagnostic.CodePoints);
+            }
+        }
 
         if (ignoreCase)
         {
@@ -85,7 +115,7 @@ public sealed partial class Assert
     private static bool AreNotEqualFailing(string? notExpected, string? actual, bool ignoreCase, CultureInfo culture)
         => CompareInternal(notExpected, actual, ignoreCase, culture) == 0;
 
-    private static int FindFirstStringDifference(string expected, string actual, bool ignoreCase, CultureInfo culture)
+    private static StringDifference FindFirstStringDifference(string expected, string actual, bool ignoreCase, CultureInfo culture)
     {
         if (!ignoreCase && culture.Equals(CultureInfo.InvariantCulture))
         {
@@ -109,12 +139,12 @@ public sealed partial class Assert
                 continue;
             }
 
-            return Math.Min(expectedIndex, actualIndex);
+            return new StringDifference(expectedIndex, actualIndex);
         }
 
         return expectedIndex != expected.Length || actualIndex != actual.Length
-            ? Math.Min(expectedIndex, actualIndex)
-            : -1;
+            ? new StringDifference(expectedIndex, actualIndex)
+            : StringDifference.None;
     }
 
     private static bool TryAdvanceMatchingWindow(string expected, string actual, ref int expectedIndex, ref int actualIndex, bool ignoreCase, CultureInfo culture)

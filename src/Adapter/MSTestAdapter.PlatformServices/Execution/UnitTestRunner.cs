@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK
@@ -112,13 +112,60 @@ internal sealed partial class UnitTestRunner
             Func<TestOutputCaptureMode> modeProvider = static () => MSTestSettings.CurrentSettings.OutputCaptureMode;
             TextWriter originalOut = Console.Out;
             TextWriter originalError = Console.Error;
-            TestContextImplementation.ConfigureLiveOutputWriter(originalOut);
+            TextWriter liveOutputWriter = CreateLiveOutputWriter(Console.OpenStandardOutput(), Console.OutputEncoding);
+            TestContextImplementation.ConfigureLiveOutputWriter(liveOutputWriter);
             Console.SetOut(new ConsoleOutRouter(originalOut, modeProvider));
             Console.SetError(new ConsoleErrorRouter(originalError, modeProvider));
-            Trace.Listeners.Add(new TextWriterTraceListener(new TraceTextWriter(originalOut, modeProvider)));
+            Trace.Listeners.Add(new TextWriterTraceListener(new TraceTextWriter(liveOutputWriter, modeProvider)));
 
             s_outputRoutingInstalled = true;
         }
+    }
+
+    internal static TextWriter CreateLiveOutputWriter(Stream standardOutput, Encoding encoding)
+    {
+        Encoding preamblelessEncoding = encoding.GetPreamble().Length == 0
+            ? encoding
+            : new PreamblelessEncoding(encoding);
+        var streamWriter = new StreamWriter(standardOutput, preamblelessEncoding, bufferSize: 1024, leaveOpen: true)
+        {
+            AutoFlush = true,
+        };
+
+        return TextWriter.Synchronized(streamWriter);
+    }
+
+    private sealed class PreamblelessEncoding(Encoding encoding) : Encoding
+    {
+        public override int CodePage => encoding.CodePage;
+
+        public override string EncodingName => encoding.EncodingName;
+
+        public override bool IsSingleByte => encoding.IsSingleByte;
+
+        public override string WebName => encoding.WebName;
+
+        public override Decoder GetDecoder() => encoding.GetDecoder();
+
+        public override Encoder GetEncoder() => encoding.GetEncoder();
+
+        public override int GetByteCount(char[] chars, int index, int count)
+            => encoding.GetByteCount(chars, index, count);
+
+        public override int GetBytes(char[] chars, int charIndex, int charCount, byte[] bytes, int byteIndex)
+            => encoding.GetBytes(chars, charIndex, charCount, bytes, byteIndex);
+
+        public override int GetCharCount(byte[] bytes, int index, int count)
+            => encoding.GetCharCount(bytes, index, count);
+
+        public override int GetChars(byte[] bytes, int byteIndex, int byteCount, char[] chars, int charIndex)
+            => encoding.GetChars(bytes, byteIndex, byteCount, chars, charIndex);
+
+        public override int GetMaxByteCount(int charCount) => encoding.GetMaxByteCount(charCount);
+
+        public override int GetMaxCharCount(int byteCount) => encoding.GetMaxCharCount(byteCount);
+
+        public override byte[] GetPreamble() => [];
     }
 
 #pragma warning disable CA1822 // Mark members as static
