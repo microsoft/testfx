@@ -106,21 +106,28 @@ internal static class CommandLineArgumentsRedactor
         delimiter = null;
         inlineValue = null;
 
+        int optionStart = 0;
+        while (optionStart < arg.Length && char.IsWhiteSpace(arg[optionStart]))
+        {
+            optionStart++;
+        }
+
         int prefixLength = 0;
-        while (prefixLength < arg.Length && arg[prefixLength] == '-')
+        while (optionStart + prefixLength < arg.Length && arg[optionStart + prefixLength] == '-')
         {
             prefixLength++;
         }
 
-        bool isValidPrefix = prefixLength is 1 or 2;
-        bool isMalformedPrefix = prefixLength >= 3;
-        if ((!isValidPrefix && !isMalformedPrefix) || prefixLength == arg.Length)
+        bool hasLeadingWhitespace = optionStart > 0;
+        bool isValidPrefix = !hasLeadingWhitespace && prefixLength is 1 or 2;
+        bool isMalformedPrefix = hasLeadingWhitespace || prefixLength >= 3;
+        if ((!isValidPrefix && !isMalformedPrefix) || optionStart + prefixLength == arg.Length)
         {
             return false;
         }
 
-        prefix = arg[..prefixLength];
-        string withoutPrefix = arg[prefixLength..];
+        prefix = arg[..(optionStart + prefixLength)];
+        string withoutPrefix = arg[(optionStart + prefixLength)..];
         int delimiterIndex = withoutPrefix.IndexOfAny(['=', ':']);
         if (delimiterIndex == -1)
         {
