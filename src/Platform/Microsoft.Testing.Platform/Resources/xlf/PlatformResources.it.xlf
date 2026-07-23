@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="it" original="../PlatformResources.resx">
     <body>
@@ -1072,7 +1072,7 @@ Altre informazioni sulla telemetria della piattaforma di test Microsoft: https:/
       </trans-unit>
       <trans-unit id="TimeoutFlushingLogsErrorMessage">
         <source>Failed to flush logs to log file '{0}' before the timeout of '{1}' seconds. The log file may be incomplete.</source>
-        <target state="translated">Non è possibile scaricare il file di log '{0}' prima del timeout di '{1}' secondi. Il file di log potrebbe essere incompleto.</target>
+        <target state="new">Failed to flush logs to log file '{0}' before the timeout of '{1}' seconds. The log file may be incomplete.</target>
         <note>{0} is the log file path. {1} is the timeout in seconds.</note>
       </trans-unit>
       <trans-unit id="Total">
