@@ -35,6 +35,7 @@ Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextIm
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodInfo.ParameterMetadataScanCount.get -> int
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodInfo.ResetParameterMetadataCacheForTesting() -> void
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodInfo.SetParameterMetadataScanCallbackForTesting(System.Action? callback) -> void
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.UnitTestRunner.CreateLiveOutputWriter(System.IO.Stream! standardOutput, System.Text.Encoding! encoding) -> System.IO.TextWriter!
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.RuntimeContext.IsMultiThreaded.get -> bool
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestDiscovererHelpers.GetSettingsExceptionMessage(Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.AdapterSettingsException! ex) -> string!
 static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.ConfigureLiveOutputWriter(System.IO.TextWriter! liveOutputWriter) -> void
