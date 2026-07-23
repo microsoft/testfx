@@ -41,6 +41,12 @@ internal static class CommandLineArgumentsRedactor
                     sanitizeNextEndpoint = inlineValue is null;
                     redactNextValue = false;
                 }
+                else if (redactNextValue)
+                {
+                    redacted[i] = RedactedPlaceholder;
+                    redactNextValue = false;
+                    sanitizeNextEndpoint = false;
+                }
                 else
                 {
                     redacted[i] = arg;

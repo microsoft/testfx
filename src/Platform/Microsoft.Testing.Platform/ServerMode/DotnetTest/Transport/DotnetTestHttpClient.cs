@@ -107,10 +107,10 @@ internal sealed class DotnetTestHttpClient : NamedPipeConnectionBase, IClient
                 request,
                 operationCancellationTokenSource.Token).ConfigureAwait(false);
 
-            using var content = new ByteArrayContent(framedRequest.ToArray());
+            var content = new ByteArrayContent(framedRequest.ToArray());
             content.Headers.ContentType = new MediaTypeHeaderValue(MediaType);
 
-            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, _endpoint)
+            var httpRequest = new HttpRequestMessage(HttpMethod.Post, _endpoint)
             {
                 Content = content,
             };
@@ -120,50 +120,71 @@ internal sealed class DotnetTestHttpClient : NamedPipeConnectionBase, IClient
                 httpRequest,
                 HttpCompletionOption.ResponseHeadersRead,
                 operationCancellationTokenSource.Token);
-            using HttpResponseMessage httpResponse = await sendTask.WaitAsync(operationCancellationTokenSource.Token).ConfigureAwait(false);
-
-            if (!httpResponse.IsSuccessStatusCode)
+            bool disposeRequest = true;
+            try
             {
-                throw new IOException(
-                    $"The dotnet test HTTP gateway returned status code {(int)httpResponse.StatusCode}.");
-            }
+                using HttpResponseMessage httpResponse = await sendTask.WaitAsync(operationCancellationTokenSource.Token).ConfigureAwait(false);
 
-            if (!MediaType.Equals(httpResponse.Content.Headers.ContentType?.MediaType, StringComparison.OrdinalIgnoreCase))
-            {
-                throw new IOException(
-                    $"The dotnet test HTTP gateway returned content type '{httpResponse.Content.Headers.ContentType?.MediaType ?? "missing"}' instead of '{MediaType}'.");
-            }
+                if (!httpResponse.IsSuccessStatusCode)
+                {
+                    throw new IOException(
+                        $"The dotnet test HTTP gateway returned status code {(int)httpResponse.StatusCode}.");
+                }
 
-            if (httpResponse.Content.Headers.ContentLength is long contentLength
-                && (contentLength < (sizeof(int) * 2) || contentLength > MaximumResponseFrameSize))
-            {
-                throw new IOException($"The dotnet test HTTP gateway returned an invalid response frame length of {contentLength} bytes.");
-            }
+                HttpContent? responseContent = httpResponse.Content;
+                string? responseMediaType = responseContent?.Headers.ContentType?.MediaType;
+                if (responseContent is null || !MediaType.Equals(responseMediaType, StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new IOException(
+                        $"The dotnet test HTTP gateway returned content type '{responseMediaType ?? "missing"}' instead of '{MediaType}'.");
+                }
+
+                if (responseContent.Headers.ContentLength is long contentLength
+                    && (contentLength < (sizeof(int) * 2) || contentLength > MaximumResponseFrameSize))
+                {
+                    throw new IOException($"The dotnet test HTTP gateway returned an invalid response frame length of {contentLength} bytes.");
+                }
 
 #if NET
-            using Stream responseStream = await httpResponse.Content.ReadAsStreamAsync(operationCancellationTokenSource.Token).ConfigureAwait(false);
+                using Stream responseStream = await responseContent.ReadAsStreamAsync(operationCancellationTokenSource.Token).ConfigureAwait(false);
 #else
-            using Stream responseStream = await httpResponse.Content.ReadAsStreamAsync().ConfigureAwait(false);
+                using Stream responseStream = await responseContent.ReadAsStreamAsync().ConfigureAwait(false);
 #endif
-            object response = await ReadNextMessageAsync(
-                responseStream,
-                operationCancellationTokenSource.Token,
-                MaximumResponseFrameSize).ConfigureAwait(false)
-                ?? throw new IOException("The dotnet test HTTP gateway returned an empty or truncated response frame.");
+                object response = await ReadNextMessageAsync(
+                    responseStream,
+                    operationCancellationTokenSource.Token,
+                    MaximumResponseFrameSize).ConfigureAwait(false)
+                    ?? throw new IOException("The dotnet test HTTP gateway returned an empty or truncated response frame.");
 
-            byte[] trailingByte = new byte[1];
-            int trailingByteCount = await responseStream.ReadAsync(
-                trailingByte,
-                0,
-                trailingByte.Length,
-                operationCancellationTokenSource.Token).ConfigureAwait(false);
-            return (trailingByteCount, response) switch
+                byte[] trailingByte = new byte[1];
+                int trailingByteCount = await responseStream.ReadAsync(
+                    trailingByte,
+                    0,
+                    trailingByte.Length,
+                    operationCancellationTokenSource.Token).ConfigureAwait(false);
+                return (trailingByteCount, response) switch
+                {
+                    (not 0, _) => throw new IOException("The dotnet test HTTP gateway returned more than one response frame."),
+                    (0, TResponse typedResponse) => typedResponse,
+                    _ => throw new IOException(
+                        $"The dotnet test HTTP gateway returned '{response.GetType().Name}' when '{typeof(TResponse).Name}' was expected."),
+                };
+            }
+            catch (OperationCanceledException) when (!sendTask.IsCompleted)
             {
-                (not 0, _) => throw new IOException("The dotnet test HTTP gateway returned more than one response frame."),
-                (0, TResponse typedResponse) => typedResponse,
-                _ => throw new IOException(
-                    $"The dotnet test HTTP gateway returned '{response.GetType().Name}' when '{typeof(TResponse).Name}' was expected."),
-            };
+                AbortTransportForIncompleteSend();
+                ObserveAndDisposeIncompleteSend(sendTask, httpRequest);
+                disposeRequest = false;
+                requestLockAcquired = false;
+                throw;
+            }
+            finally
+            {
+                if (disposeRequest)
+                {
+                    httpRequest.Dispose();
+                }
+            }
         }
         finally
         {
@@ -212,6 +233,41 @@ internal sealed class DotnetTestHttpClient : NamedPipeConnectionBase, IClient
             TryCleanup();
         }
     }
+
+    private void AbortTransportForIncompleteSend()
+    {
+        lock (_lifecycleLock)
+        {
+            _connected = false;
+        }
+
+        _disposeCancellationTokenSource.Cancel();
+        _httpClient.CancelPendingRequests();
+        if (_disposeHttpClient)
+        {
+            _httpClient.Dispose();
+        }
+    }
+
+    private static void ObserveAndDisposeIncompleteSend(Task<HttpResponseMessage> sendTask, HttpRequestMessage request)
+        => _ = sendTask.ContinueWith(
+            static (task, state) =>
+            {
+                if (task.Status == TaskStatus.RanToCompletion)
+                {
+                    task.Result.Dispose();
+                }
+                else if (task.IsFaulted)
+                {
+                    _ = task.Exception;
+                }
+
+                ((HttpRequestMessage)state!).Dispose();
+            },
+            request,
+            CancellationToken.None,
+            TaskContinuationOptions.ExecuteSynchronously,
+            TaskScheduler.Default);
 
     private void TryCleanup()
     {

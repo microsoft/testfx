@@ -44,6 +44,12 @@ public sealed class CommandLineArgumentsRedactorTests
                 ["--dotnet-test-http-token", "--dotnet-test-http-token", "secret"]));
 
     [TestMethod]
+    public void Redact_OptionShapedTokenValueDoesNotExposeValue()
+        => Assert.AreEqual(
+            "--dotnet-test-http-token ***REDACTED***",
+            CommandLineArgumentsRedactor.Redact(["--dotnet-test-http-token", "-secret"]));
+
+    [TestMethod]
     [DataRow("not-a-url")]
     [DataRow("https://user:password@gateway.example/private/run-id")]
     public void Redact_MasksInvalidOrCredentialedEndpoint(string endpoint)

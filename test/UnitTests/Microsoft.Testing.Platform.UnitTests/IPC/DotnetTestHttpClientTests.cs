@@ -109,6 +109,39 @@ public sealed class DotnetTestHttpClientTests
     }
 
     [TestMethod]
+    public async Task RequestReplyAsync_CancellationDoesNotAllowOverlappingSend()
+    {
+        int requestCount = 0;
+        var requestStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var pendingResponse = new TaskCompletionSource<HttpResponseMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var handler = new DelegateHttpMessageHandler((_, _) =>
+        {
+            Interlocked.Increment(ref requestCount);
+            requestStarted.SetResult();
+            return pendingResponse.Task;
+        });
+
+        using DotnetTestHttpClient client = CreateClient(handler);
+        await client.ConnectAsync(_testContext.CancellationToken);
+        using var cancellationTokenSource = new CancellationTokenSource();
+        Task<TestResponse> activeRequest = client.RequestReplyAsync<TestRequest, TestResponse>(
+            TestRequest.Instance,
+            cancellationTokenSource.Token);
+        await requestStarted.Task;
+        Task<TestResponse> waitingRequest = client.RequestReplyAsync<TestRequest, TestResponse>(
+            TestRequest.Instance,
+            _testContext.CancellationToken);
+
+        await cancellationTokenSource.CancelAsync();
+
+        await Assert.ThrowsAsync<OperationCanceledException>(() => activeRequest);
+        await Assert.ThrowsAsync<OperationCanceledException>(() => waitingRequest);
+        Assert.AreEqual(1, requestCount);
+        Assert.IsFalse(client.IsConnected);
+        pendingResponse.SetResult(CreateResponse(TestResponseFrame()));
+    }
+
+    [TestMethod]
     public async Task RequestReplyAsync_UsesCallerCancellationInsteadOfHttpClientTimeout()
     {
         var handler = new DelegateHttpMessageHandler(async (_, cancellationToken) =>
@@ -231,6 +264,22 @@ public sealed class DotnetTestHttpClientTests
                 _testContext.CancellationToken));
         Assert.Contains("content type", exception.Message);
         Assert.Contains(mediaType ?? "missing", exception.Message);
+    }
+
+    [TestMethod]
+    public async Task RequestReplyAsync_RejectsMissingResponseContent()
+    {
+        var handler = new DelegateHttpMessageHandler((_, _) =>
+            Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = null! }));
+
+        using DotnetTestHttpClient client = CreateClient(handler);
+        await client.ConnectAsync(_testContext.CancellationToken);
+
+        IOException exception = await Assert.ThrowsExactlyAsync<IOException>(() =>
+            client.RequestReplyAsync<TestRequest, TestResponse>(
+                TestRequest.Instance,
+                _testContext.CancellationToken));
+        Assert.Contains("content type 'missing'", exception.Message);
     }
 
     [TestMethod]

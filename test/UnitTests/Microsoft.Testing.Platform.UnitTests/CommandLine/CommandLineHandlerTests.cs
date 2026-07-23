@@ -45,6 +45,32 @@ public sealed class CommandLineHandlerTests
     }
 
     [TestMethod]
+    public async Task ParseAndValidateAsync_InvalidCommandLineRedactsHttpTransportSecrets()
+    {
+        string[] args =
+        [
+            "--server", "dotnettestcli",
+            "--dotnet-test-transport", "http",
+            "--dotnet-test-http-endpoint", "https://gateway.example/private/run-id",
+            "--dotnet-test-http-token", "secret-token",
+            "--unknown-option",
+        ];
+        CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            parseResult,
+            _systemCommandLineOptionsProviders,
+            _extensionCommandLineOptionsProviders,
+            new Mock<ICommandLineOptions>().Object);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains("***REDACTED***", result.ErrorMessage);
+        Assert.Contains("https://gateway.example", result.ErrorMessage);
+        Assert.DoesNotContain("secret-token", result.ErrorMessage);
+        Assert.DoesNotContain("/private/run-id", result.ErrorMessage);
+    }
+
+    [TestMethod]
     public async Task ParseAndValidateAsync_ValidArgumentWithColonFollowedByValidArgumentWithoutColon_ReturnsTrue()
     {
         string[] args = ["--results-directory", "TestResults", "--timeout:60m", "--ignore-exit-code", "8"];
