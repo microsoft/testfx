@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="fr" original="../Resources.resx">
     <body>
@@ -587,7 +587,7 @@ The type declaring these methods should also respect the following rules:
 – elle ne doit pas être générique
 – il doit prendre un paramètre de type « TestContext »
 – le type de retour doit être « void », « Task » ou « ValueTask ».
-{0}
+
 Le type déclarant ces méthodes doit également respecter les règles suivantes :
 - le type doit être une classe
 - la classe doit être « public » 
