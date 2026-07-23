@@ -83,9 +83,9 @@ public sealed class DotnetTestHttpClientTests
         Task<TestResponse> second = client.RequestReplyAsync<TestRequest, TestResponse>(
             TestRequest.Instance,
             _testContext.CancellationToken);
-        await Task.Delay(50, _testContext.CancellationToken);
 
         Assert.AreEqual(1, requestCount);
+        Assert.IsFalse(second.IsCompleted);
         releaseFirstRequest.SetResult();
         await Task.WhenAll(first, second);
         Assert.AreEqual(1, maximumActiveRequests);
@@ -153,9 +153,10 @@ public sealed class DotnetTestHttpClientTests
         using DotnetTestHttpClient client = CreateClient(handler, TimeSpan.FromMilliseconds(10));
         await client.ConnectAsync(_testContext.CancellationToken);
 
-        _ = await client.RequestReplyAsync<TestRequest, TestResponse>(
+        TestResponse response = await client.RequestReplyAsync<TestRequest, TestResponse>(
             TestRequest.Instance,
             _testContext.CancellationToken);
+        Assert.AreSame(TestResponse.Instance, response);
     }
 
     [TestMethod]
