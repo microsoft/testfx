@@ -210,6 +210,35 @@ public sealed class CommandLineHandlerTests
     }
 
     [TestMethod]
+    [DataRow("--dotnet-test-http-token")]
+    [DataRow("--dotnet-test-http-endpoint")]
+    public async Task ParseAndValidateAsync_ResponseFileAccessErrorsRedactSensitivePath(string option)
+    {
+        string directoryPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directoryPath);
+        try
+        {
+            CommandLineParseResult parseResult = CommandLineParser.Parse(
+                [option, $"@{directoryPath}"],
+                new SystemEnvironment());
+
+            ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+                parseResult,
+                _systemCommandLineOptionsProviders,
+                _extensionCommandLineOptionsProviders,
+                new Mock<ICommandLineOptions>().Object);
+
+            Assert.IsFalse(result.IsValid);
+            Assert.Contains("***REDACTED***", result.ErrorMessage);
+            Assert.DoesNotContain(directoryPath, result.ErrorMessage);
+        }
+        finally
+        {
+            Directory.Delete(directoryPath);
+        }
+    }
+
+    [TestMethod]
     public async Task ParseAndValidateAsync_ValidArgumentWithColonFollowedByValidArgumentWithoutColon_ReturnsTrue()
     {
         string[] args = ["--results-directory", "TestResults", "--timeout:60m", "--ignore-exit-code", "8"];

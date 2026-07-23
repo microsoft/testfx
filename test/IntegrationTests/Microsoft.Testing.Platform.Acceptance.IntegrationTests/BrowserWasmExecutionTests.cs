@@ -18,7 +18,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 /// <c>node</c> via the same loader, which is what this test uses instead of a real browser.
 /// </para>
 ///
-/// <para>Five complementary assertions, mirroring <see cref="WasmExecutionTests"/>:</para>
+/// <para>Six complementary assertions, mirroring <see cref="WasmExecutionTests"/>:</para>
 /// <list type="number">
 ///   <item>
 ///     <see cref="BrowserWasmBuild_GeneratesTestingPlatformEntryPoint"/> builds for
@@ -26,6 +26,12 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 ///     installs the required <c>wasm-tools</c> workload (see <c>eng/restore-toolset</c>), so this
 ///     runs in CI; it is skipped (inconclusive) only when that workload is genuinely absent (e.g.
 ///     a local machine that has not run the bootstrap), and otherwise a build failure fails the test.
+///   </item>
+///   <item>
+///     <see cref="BrowserWasmExecution_DotnetTestHttpTransportExercisesLiveGateway"/> publishes a
+///     browser-WASM test application and exercises the authenticated HTTP gateway under Node,
+///     covering handshake, help, discovery, execution, authorization, ordering, disconnect, and
+///     cancellation behavior.
 ///   </item>
 ///   <item>
 ///     <see cref="BrowserWasmExecution_RunsTestsUnderNode"/> publishes a real MSTest project for
@@ -981,6 +987,7 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
         int ValidFrames,
         int CancelledRequests,
         int CancellationSafetyTimerExpirations);
+
     private Task<TestAsset> GenerateBrowserWasmCustomHostAssetAsync()
     {
         var versions = XDocument.Load(Path.Combine(RootFinder.Find(), "eng", "Versions.props"));

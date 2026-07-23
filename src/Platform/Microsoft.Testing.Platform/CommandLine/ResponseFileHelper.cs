@@ -29,7 +29,7 @@ internal static class ResponseFileHelper
         {
             errors.Add(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserResponseFileNotFound, diagnosticPath));
         }
-        catch (IOException e)
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
             errors.Add(
                 string.Format(
