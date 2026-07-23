@@ -297,11 +297,10 @@ Convert sub-grades to numeric points: A=4, B=3, C=2, D=1, F=0.
   - ≥ 2.0 → **C** (band 70–79)
   - ≥ 1.2 → **D** (band 60–69)
   - < 1.2 → **F** (band 0–59)
-- The overall grade is **capped at the worst available sub-grade** — if any sub-grade
-  is **F**, the overall grade is **F**; if the worst sub-grade is **D**,
-  the overall grade is at most **D**; and so on. A test that fails on any
-  one verified dimension cannot earn a higher overall grade than that
-  dimension.
+- Apply an overall ceiling only when the Anti-pattern catalog classifies an
+  observed finding as **Critical**: a Critical finding labeled F forces the
+  overall grade to F, and one labeled D caps it at D. Do not otherwise cap the
+  weighted result at the worst sub-grade; the weights must remain meaningful.
 
 Report the **letter grade** and the **score band** (not a single 0–100
 number). False precision invites bikeshedding; bands keep the conversation
