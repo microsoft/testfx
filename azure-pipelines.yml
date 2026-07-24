@@ -151,7 +151,7 @@ stages:
     # Seed from every trusted main merge. PR merge refs are read-only consumers, so the cache must be updated as
     # soon as main changes to avoid forcing the entire 204-node graph to miss.
     - pwsh: |
-        & ./eng/common/msbuild.ps1 -ci -warnAsError:$false ./TestFx.slnx `
+        & ./eng/common/msbuild.ps1 -ci -prepareMachine -warnAsError:$false ./TestFx.slnx `
           /restore `
           /graph `
           /m `
@@ -160,7 +160,10 @@ stages:
           /t:Build `
           /v:minimal `
           /p:Configuration=$(_BuildConfig) `
+          /p:FastAcceptanceTest=true `
+          /p:Publish=false `
           "/p:RepoRoot=$(Build.SourcesDirectory)\" `
+          /p:Test=false `
           /p:MSBuildCachePackageEnabled=true `
           /p:MSBuildCacheEnabled=true `
           /p:MSBuildCacheRemoteCacheIsReadOnly=false `
@@ -291,6 +294,7 @@ stages:
               "-NoProfile",
               "-File", "./eng/common/msbuild.ps1",
               "-ci",
+              "-prepareMachine",
               "-warnAsError:`$false",
               "./TestFx.slnx",
               "/restore",
@@ -301,7 +305,10 @@ stages:
               "/t:Build",
               "/v:minimal",
               "/p:Configuration=$(_BuildConfig)",
+              "/p:FastAcceptanceTest=true",
+              "/p:Publish=false",
               "/p:RepoRoot=$(Build.SourcesDirectory)\",
+              "/p:Test=false",
               "/p:MSBuildCachePackageEnabled=true",
               "/p:MSBuildCacheEnabled=true",
               "/p:MSBuildCacheRemoteCacheIsReadOnly=true",
@@ -321,16 +328,22 @@ stages:
 
             if ($exitCode -ne 0) {
               Write-Host "##vso[task.logissue type=warning]MSBuildCache canary failed with exit code $exitCode; continuing with the regular Arcade build."
+              Write-Host "##vso[task.setvariable variable=MSBuildCacheBuildSucceeded]false"
+            }
+            else {
+              Write-Host "##vso[task.setvariable variable=MSBuildCacheBuildSucceeded]true"
             }
 
             exit 0
           displayName: Build solution graph with MSBuildCache
           condition: and(succeeded(), or(and(eq(variables['Build.Reason'], 'PullRequest'), ne(variables['System.PullRequest.IsFork'], 'True')), and(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))))
+          continueOnError: true
           env:
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
-        # Keep the cache canary independent from the authoritative Arcade build. Publish only the project-level
-        # diagnostics; CacheClient.log and the OAuth-bearing canary environment stay outside published artifacts.
+        # Publish only the project-level diagnostics; CacheClient.log and the OAuth-bearing cache environment stay
+        # outside published artifacts. A successful cache build supplies the outputs consumed by the test steps.
+        # On failure, remove its partial outputs before running the regular Arcade build as a fallback.
         - pwsh: |
             $cacheLogSource = "$(Agent.TempDirectory)\MSBuildCache"
             $cacheLogDestination = "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\MSBuildCache"
@@ -347,14 +360,32 @@ stages:
               Write-Host "##vso[task.logissue type=warning]Failed to preserve MSBuildCache diagnostics. $($_.Exception.Message)"
             }
             finally {
-              $cleanupErrors = @()
+              if ("$(MSBuildCacheBuildSucceeded)" -ne "true") {
+                $cleanupErrors = @()
 
-              $artifactsDirectory = "$(Build.SourcesDirectory)\artifacts"
-              if (Test-Path $artifactsDirectory) {
-                Get-ChildItem $artifactsDirectory -Force |
-                  Where-Object Name -NotIn @("log", "msbuild-cache", "toolset") |
+                $artifactsDirectory = "$(Build.SourcesDirectory)\artifacts"
+                if (Test-Path $artifactsDirectory) {
+                  Get-ChildItem $artifactsDirectory -Force |
+                    Where-Object Name -NotIn @("log", "msbuild-cache", "toolset") |
+                    ForEach-Object {
+                      $path = $_.FullName
+                      try {
+                        Remove-Item $path -Recurse -Force -ErrorAction Stop
+                      }
+                      catch {
+                        $cleanupErrors += "${path}: $($_.Exception.Message)"
+                      }
+                    }
+                }
+
+                @(
+                  $cacheLogSource,
+                  "$(Build.SourcesDirectory)\src\Package\MSTest.Sdk\Sdk\Sdk.props",
+                  "$(Build.SourcesDirectory)\src\Package\MSTest.Sdk\Sdk\Runner\Runner.targets"
+                ) |
+                  Where-Object { Test-Path $_ } |
                   ForEach-Object {
-                    $path = $_.FullName
+                    $path = $_
                     try {
                       Remove-Item $path -Recurse -Force -ErrorAction Stop
                     }
@@ -362,29 +393,13 @@ stages:
                       $cleanupErrors += "${path}: $($_.Exception.Message)"
                     }
                   }
-              }
 
-              @(
-                $cacheLogSource,
-                "$(Build.SourcesDirectory)\src\Package\MSTest.Sdk\Sdk\Sdk.props",
-                "$(Build.SourcesDirectory)\src\Package\MSTest.Sdk\Sdk\Runner\Runner.targets"
-              ) |
-                Where-Object { Test-Path $_ } |
-                ForEach-Object {
-                  $path = $_
-                  try {
-                    Remove-Item $path -Recurse -Force -ErrorAction Stop
-                  }
-                  catch {
-                    $cleanupErrors += "${path}: $($_.Exception.Message)"
-                  }
+                if ($cleanupErrors) {
+                  Write-Host "##vso[task.logissue type=warning]Failed to clean some MSBuildCache outputs before the fallback build:`n$($cleanupErrors -join "`n")"
                 }
-
-              if ($cleanupErrors) {
-                throw "Failed to clean MSBuildCache canary outputs:`n$($cleanupErrors -join "`n")"
               }
             }
-          displayName: Preserve cache diagnostics and clean canary outputs
+          displayName: Preserve cache diagnostics and clean failed outputs
           condition: and(always(), or(and(eq(variables['Build.Reason'], 'PullRequest'), ne(variables['System.PullRequest.IsFork'], 'True')), and(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))))
 
         - task: PowerShell@2
@@ -407,6 +422,7 @@ stages:
             /p:MSBuildCacheEnabled=false
           name: Build
           displayName: Build
+          condition: and(succeeded(), ne(variables['MSBuildCacheBuildSucceeded'], 'true'))
 
         - ${{ if eq(parameters.SkipTests, False) }}:
 
