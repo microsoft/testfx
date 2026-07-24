@@ -181,6 +181,12 @@ public sealed class SimplifiedConsoleOutputDeviceTests
             Mock.Of<IDataProducer>(),
             CreateTestNodeUpdate("uid", "CompletedTest", new InProgressTestNodeStateProperty()),
             CancellationToken.None);
+
+        clock.Advance(TimeSpan.FromSeconds(60));
+        await device.ReportDueSlowTestsAsync();
+        Assert.HasCount(1, device.Messages);
+        Assert.Contains("CompletedTest", device.Messages[0]!);
+
         await device.ConsumeAsync(
             Mock.Of<IDataProducer>(),
             CreateTestNodeUpdate("uid", "CompletedTest", new PassedTestNodeStateProperty()),
@@ -189,7 +195,7 @@ public sealed class SimplifiedConsoleOutputDeviceTests
         clock.Advance(TimeSpan.FromMinutes(10));
         await device.ReportDueSlowTestsAsync();
 
-        Assert.IsEmpty(device.Messages);
+        Assert.HasCount(1, device.Messages);
     }
 
     [TestMethod]
