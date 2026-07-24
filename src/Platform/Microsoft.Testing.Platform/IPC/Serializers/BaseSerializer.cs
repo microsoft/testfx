@@ -333,9 +333,8 @@ internal abstract class BaseSerializer
     /// Matches the two leading collection-envelope fields (<c>ExecutionId</c> id 1 / <c>InstanceId</c> id 2) shared by
     /// the four 'dotnet test' list-carrying messages payloads, assigning the value into <paramref name="executionId"/>
     /// or <paramref name="instanceId"/> and returning <see langword="true"/> when the field is one of them. The caller
-    /// invokes this from its own single <see cref="ReadFields"/> callback and handles its type-specific message-list
-    /// field ids when this returns <see langword="false"/>. Kept as a <see langword="ref"/>-based matcher (rather than a
-    /// wrapping callback) so it adds no closure/delegate allocation on the hot per-test IPC read path.
+    /// handles its type-specific message-list field ids when this returns <see langword="false"/>. Kept as a
+    /// <see langword="ref"/>-based matcher so it adds no allocation on the hot per-test IPC read path.
     /// </summary>
     protected static bool TryReadExecutionScopedField(Stream stream, ushort fieldId, int fieldSize, ref string? executionId, ref string? instanceId)
     {
