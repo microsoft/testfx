@@ -381,11 +381,11 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
             return null;
         }
 
-        var results = _testResultFiles.ToList();
-
-        // clear the result files to handle data driven tests
-        _testResultFiles.Clear();
-
+        // Swap-and-null: return the existing list directly and reset the field so the next
+        // call (e.g. for a subsequent data-driven iteration) starts with a fresh list.
+        // Avoids the O(n) copy that .ToList() + .Clear() would produce.
+        List<string> results = _testResultFiles;
+        _testResultFiles = null;
         return results;
     }
 
