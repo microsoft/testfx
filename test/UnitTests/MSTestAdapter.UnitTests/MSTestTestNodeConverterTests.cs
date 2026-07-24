@@ -375,6 +375,7 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
         await recorder.RecordEmptyResultAsync(CreateElement());
 
         var message = (TestNodeUpdateMessage)messageBus.Published.Single();
+        message.TestNode.Properties.Any<TestNodeExecutionCompletedProperty>().Should().BeTrue();
         message.TestNode.Properties.Any<TestNodeStateProperty>().Should().BeFalse();
     }
 
