@@ -256,22 +256,14 @@ internal abstract class SlowTestReporterBase : IDataConsumer, ITestSessionLifeti
         }
     }
 
-    private sealed class InProgressTest
+    private sealed class InProgressTest(string testName, string displayLabel, DateTimeOffset startTime, TimeSpan threshold)
     {
-        public InProgressTest(string testName, string displayLabel, DateTimeOffset startTime, TimeSpan threshold)
-        {
-            TestName = testName;
-            DisplayLabel = displayLabel;
-            StartTime = startTime;
-            SlowTestThreshold = new(threshold);
-        }
+        public string TestName { get; } = testName;
 
-        public string TestName { get; }
+        public string DisplayLabel { get; } = displayLabel;
 
-        public string DisplayLabel { get; }
+        public DateTimeOffset StartTime { get; } = startTime;
 
-        public DateTimeOffset StartTime { get; }
-
-        public SlowTestThresholdState SlowTestThreshold { get; }
+        public SlowTestThresholdState SlowTestThreshold { get; } = new(threshold);
     }
 }
