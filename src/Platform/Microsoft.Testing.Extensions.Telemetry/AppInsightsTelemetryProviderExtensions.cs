@@ -44,6 +44,10 @@ public static class AppInsightsTelemetryProviderExtensions
 
             // We want to flow down the processes the same session id for correlation purposes.
             environment.SetEnvironmentVariable(AppInsightsProvider.SessionIdEnvVar, sessionId);
+
+            // Opt-in local export: when set, telemetry is written to this file instead of AppInsights.
+            string? localExportPath = environment.GetEnvironmentVariable(AppInsightsProvider.LocalExportPathEnvVar);
+
             return new AppInsightsProvider(
                 services.GetRequiredService<IEnvironment>(),
                 services.GetTestApplicationCancellationTokenSource(),
@@ -52,7 +56,7 @@ public static class AppInsightsTelemetryProviderExtensions
                 services.GetClock(),
                 services.GetConfiguration(),
                 services.GetRequiredService<ITelemetryInformation>(),
-                new AppInsightTelemetryClientFactory(),
+                new AppInsightTelemetryClientFactory(localExportPath),
                 sessionId);
         });
 #pragma warning restore IDE0022 // Use expression body for method

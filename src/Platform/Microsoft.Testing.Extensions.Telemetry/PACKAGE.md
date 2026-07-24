@@ -16,6 +16,7 @@ This package extends Microsoft.Testing.Platform with:
 
 - **Usage telemetry**: collects usage data to help understand product usage and prioritize improvements
 - **Opt-out support**: telemetry can be disabled via the `TESTINGPLATFORM_TELEMETRY_OPTOUT` or `DOTNET_CLI_TELEMETRY_OPTOUT` environment variables
+- **Local export (verification)**: set `TESTINGPLATFORM_TELEMETRY_LOCALEXPORTPATH` to a file path to write the collected telemetry events locally (as JSON Lines) instead of sending them to Application Insights. This is useful to inspect exactly what would be collected, without any network traffic.
 - **Disclosure**: telemetry information is shown on first run, with opt-out guidance
 
 This package is an optional, opt-in extension. To enable telemetry when using Microsoft.Testing.Platform (including when running tests with [MSTest](https://www.nuget.org/packages/MSTest)), you must explicitly reference the `Microsoft.Testing.Extensions.Telemetry` package from your test project or from your own test framework or tooling package.

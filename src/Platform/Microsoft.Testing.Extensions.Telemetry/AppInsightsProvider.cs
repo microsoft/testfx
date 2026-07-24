@@ -32,6 +32,11 @@ internal sealed partial class AppInsightsProvider :
     // Note: We're currently using the same environment variable as dotnet CLI.
     public static readonly string SessionIdEnvVar = "TESTINGPLATFORM_APPINSIGHTS_SESSIONID";
 
+    // When set to a file path, telemetry is written locally to that file (as JSON Lines) via
+    // LocalFileTelemetryClient instead of being shipped to Application Insights. This is the
+    // "local exporter" hook used to verify what telemetry would be collected, without the network.
+    public static readonly string LocalExportPathEnvVar = "TESTINGPLATFORM_TELEMETRY_LOCALEXPORTPATH";
+
     // Allows us to correlate events produced from the same process.
     // Not calling this ProcessId, because it has a different meaning.
     private static readonly string CurrentReporterId = Guid.NewGuid().ToString();
