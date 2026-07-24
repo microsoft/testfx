@@ -15,7 +15,8 @@
     SCOPE
       The set is the reporter + its rendering/state types + the small platform abstractions it depends on
       (IConsole/IStopwatch/IColor/System* + ILogger/LogLevel/LoggingExtensions/NopLogger +
-      RoslynString/ApplicationStateGuard/StackTraceHelper/TargetFrameworkParser/TestRunSummaryHelper/ZeroTestsPolicy).
+      RoslynString/ApplicationStateGuard/StackTraceHelper/SlowTestThresholdState/TargetFrameworkParser/
+      TestRunSummaryHelper/ZeroTestsPolicy).
       It deliberately EXCLUDES TerminalTestReporterCommandLineOptionsProvider.cs (MTP
       command-line specific - the SDK has its own CLI) and TerminalResources.cs (the hand-written [Embedded]
       accessor used by in-repo IVT-linked consumers; standalone consumers compile the resx instead - see below).
@@ -23,9 +24,9 @@
       The reporter + rendering + state types are [Microsoft.CodeAnalysis.Embedded], so they are NOT exported by
       Microsoft.Testing.Platform; a consumer that also references the platform compiles its own (single-source)
       copy and never sees a conflict. The small internal platform abstractions in this set (IConsole/IStopwatch/
-      SystemConsole/SystemStopwatch + RoslynString/ApplicationStateGuard/StackTraceHelper/TargetFrameworkParser/
-      TestRunSummaryHelper/ZeroTestsPolicy) are 'internal' and not exported either (no InternalsVisibleTo to an
-      external consumer), so they also never conflict.
+      SystemConsole/SystemStopwatch + RoslynString/ApplicationStateGuard/StackTraceHelper/SlowTestThresholdState/
+      TargetFrameworkParser/TestRunSummaryHelper/ZeroTestsPolicy) are 'internal' and not exported either (no
+      InternalsVisibleTo to an external consumer), so they also never conflict.
 
       The exceptions are the public logging abstractions (ILogger, LogLevel, and LoggingExtensions) plus IColor and
       SystemConsoleColor, which are shipped *public* API of Microsoft.Testing.Platform. A consumer that ALSO references
@@ -80,6 +81,7 @@
       <!-- Public API of Microsoft.Testing.Platform; dropped (not compiled) when the consumer references the platform. -->
       <PlatformPublicAbstraction>true</PlatformPublicAbstraction>
     </TerminalReporterContractSource>
+    <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\OutputDevice\SlowTestThresholdState.cs" />
     <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\OutputDevice\TargetFrameworkParser.cs" />
     <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\OutputDevice\TestRunSummaryHelper.cs" />
     <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\CommandLine\ZeroTestsPolicy.cs" />
