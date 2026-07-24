@@ -118,6 +118,15 @@ internal static partial class SerializerUtilities
                         continue;
                     }
 
+                    if (property is TestNodeExecutionCompletedProperty)
+                    {
+                        // The server protocol has no outcome-less terminal state. Return the action to discovered
+                        // so clients clear in-progress state without recording a test outcome.
+                        properties["node-type"] = "action";
+                        properties["execution-state"] = "discovered";
+                        continue;
+                    }
+
                     if (property is TestNodeStateProperty testNodeStateProperty)
                     {
                         properties["node-type"] = "action";
