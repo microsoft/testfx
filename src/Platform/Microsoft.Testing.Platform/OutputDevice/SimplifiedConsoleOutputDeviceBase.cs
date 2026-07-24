@@ -513,7 +513,7 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
             cancellationToken.ThrowIfCancellationRequested();
             foreach (SlowTestDiagnostic diagnostic in diagnostics)
             {
-                if (!_activeTestTracker.IsActive(diagnostic.Uid))
+                if (!_activeTestTracker.IsActive(diagnostic))
                 {
                     continue;
                 }

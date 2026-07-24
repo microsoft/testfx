@@ -16,6 +16,7 @@ internal sealed class ActiveTestTracker
     private readonly TimeSpan _slowTestThreshold;
     private readonly Func<IStopwatch> _createStopwatch;
     private readonly Dictionary<TestNodeUid, ActiveTest> _activeTests = [];
+    private long _generation;
 
     internal ActiveTestTracker(TimeSpan slowTestThreshold, Func<IStopwatch> createStopwatch)
     {
@@ -36,7 +37,7 @@ internal sealed class ActiveTestTracker
         {
             if (!_activeTests.ContainsKey(uid))
             {
-                _activeTests.Add(uid, new(displayName, _createStopwatch(), new(_slowTestThreshold)));
+                _activeTests.Add(uid, new(displayName, _createStopwatch(), new(_slowTestThreshold), ++_generation));
             }
         }
     }
@@ -49,11 +50,12 @@ internal sealed class ActiveTestTracker
         }
     }
 
-    internal bool IsActive(TestNodeUid uid)
+    internal bool IsActive(SlowTestDiagnostic diagnostic)
     {
         lock (_lock)
         {
-            return _activeTests.ContainsKey(uid);
+            return _activeTests.TryGetValue(diagnostic.Uid, out ActiveTest? activeTest)
+                && activeTest.Generation == diagnostic.Generation;
         }
     }
 
@@ -75,7 +77,7 @@ internal sealed class ActiveTestTracker
                     continue;
                 }
 
-                (diagnostics ??= []).Add(new(uid, activeTest.DisplayName, elapsed));
+                (diagnostics ??= []).Add(new(uid, activeTest.DisplayName, elapsed, activeTest.Generation));
             }
 
             if (diagnostics is null)
@@ -96,21 +98,25 @@ internal sealed class ActiveTestTracker
         }
     }
 
-    private sealed class ActiveTest(string displayName, IStopwatch stopwatch, SlowTestThresholdState slowTestThreshold)
+    private sealed class ActiveTest(string displayName, IStopwatch stopwatch, SlowTestThresholdState slowTestThreshold, long generation)
     {
         public string DisplayName { get; } = displayName;
 
         public IStopwatch Stopwatch { get; } = stopwatch;
 
         public SlowTestThresholdState SlowTestThreshold { get; } = slowTestThreshold;
+
+        public long Generation { get; } = generation;
     }
 }
 
-internal sealed class SlowTestDiagnostic(TestNodeUid uid, string displayName, TimeSpan elapsed)
+internal sealed class SlowTestDiagnostic(TestNodeUid uid, string displayName, TimeSpan elapsed, long generation)
 {
     internal TestNodeUid Uid { get; } = uid;
 
     internal string DisplayName { get; } = displayName;
 
     internal TimeSpan Elapsed { get; } = elapsed;
+
+    internal long Generation { get; } = generation;
 }

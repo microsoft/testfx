@@ -262,6 +262,8 @@ public sealed class SimplifiedConsoleOutputDeviceTests
         await Task.WhenAll(
             device.OnTestSessionFinishingAsync(context),
             device.OnTestSessionFinishingAsync(context));
+
+        Assert.IsEmpty(device.Messages);
     }
 
     [TestMethod]
@@ -288,6 +290,41 @@ public sealed class SimplifiedConsoleOutputDeviceTests
         await device.ConsumeAsync(
             Mock.Of<IDataProducer>(),
             CreateTestNodeUpdate("uid", "CompletedWhileWaiting", new PassedTestNodeStateProperty()),
+            CancellationToken.None);
+        lockGranted.SetResult(Mock.Of<IDisposable>());
+        await reportTask;
+
+        Assert.IsEmpty(device.Messages);
+    }
+
+    [TestMethod]
+    public async Task ReportSlowTestsOnceAsync_TestRestartsWithSameUidWhileWaitingForOutputLock_DoesNotReportStaleDiagnostic()
+    {
+        var lockRequested = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var lockGranted = new TaskCompletionSource<IDisposable>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var asyncMonitor = new Mock<IAsyncMonitor>();
+        asyncMonitor
+            .Setup(monitor => monitor.LockAsync(It.IsAny<TimeSpan>()))
+            .Callback(() => lockRequested.TrySetResult(null))
+            .Returns(lockGranted.Task);
+        var clock = new FakeClock();
+        RecordingSimplifiedOutputDevice device = CreateOutputDevice(asyncMonitor.Object, clock);
+
+        await device.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateTestNodeUpdate("uid", "OriginalExecution", new InProgressTestNodeStateProperty()),
+            CancellationToken.None);
+        clock.Advance(TimeSpan.FromSeconds(60));
+
+        Task reportTask = device.ReportDueSlowTestsAsync();
+        await lockRequested.Task;
+        await device.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateTestNodeUpdate("uid", "OriginalExecution", new PassedTestNodeStateProperty()),
+            CancellationToken.None);
+        await device.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateTestNodeUpdate("uid", "ReplacementExecution", new InProgressTestNodeStateProperty()),
             CancellationToken.None);
         lockGranted.SetResult(Mock.Of<IDisposable>());
         await reportTask;

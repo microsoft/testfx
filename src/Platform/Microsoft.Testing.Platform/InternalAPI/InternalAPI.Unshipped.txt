@@ -279,7 +279,7 @@ Microsoft.Testing.Platform.OutputDevice.ActiveTestTracker.ActiveTestTracker(Syst
 Microsoft.Testing.Platform.OutputDevice.ActiveTestTracker.Clear() -> void
 Microsoft.Testing.Platform.OutputDevice.ActiveTestTracker.Complete(Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid! uid) -> void
 Microsoft.Testing.Platform.OutputDevice.ActiveTestTracker.GetDueDiagnostics() -> Microsoft.Testing.Platform.OutputDevice.SlowTestDiagnostic![]!
-Microsoft.Testing.Platform.OutputDevice.ActiveTestTracker.IsActive(Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid! uid) -> bool
+Microsoft.Testing.Platform.OutputDevice.ActiveTestTracker.IsActive(Microsoft.Testing.Platform.OutputDevice.SlowTestDiagnostic! diagnostic) -> bool
 Microsoft.Testing.Platform.OutputDevice.ActiveTestTracker.IsEnabled.get -> bool
 Microsoft.Testing.Platform.OutputDevice.ActiveTestTracker.Start(Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid! uid, string! displayName) -> void
 Microsoft.Testing.Platform.OutputDevice.ProgressReportingConfiguration
@@ -288,7 +288,8 @@ Microsoft.Testing.Platform.OutputDevice.SimplifiedConsoleOutputDeviceBase.Simpli
 Microsoft.Testing.Platform.OutputDevice.SlowTestDiagnostic
 Microsoft.Testing.Platform.OutputDevice.SlowTestDiagnostic.DisplayName.get -> string!
 Microsoft.Testing.Platform.OutputDevice.SlowTestDiagnostic.Elapsed.get -> System.TimeSpan
-Microsoft.Testing.Platform.OutputDevice.SlowTestDiagnostic.SlowTestDiagnostic(Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid! uid, string! displayName, System.TimeSpan elapsed) -> void
+Microsoft.Testing.Platform.OutputDevice.SlowTestDiagnostic.Generation.get -> long
+Microsoft.Testing.Platform.OutputDevice.SlowTestDiagnostic.SlowTestDiagnostic(Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid! uid, string! displayName, System.TimeSpan elapsed, long generation) -> void
 Microsoft.Testing.Platform.OutputDevice.SlowTestDiagnostic.Uid.get -> Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid!
 Microsoft.Testing.Platform.OutputDevice.SlowTestThresholdState
 Microsoft.Testing.Platform.OutputDevice.SlowTestThresholdState.IsDue(System.TimeSpan elapsed) -> bool
