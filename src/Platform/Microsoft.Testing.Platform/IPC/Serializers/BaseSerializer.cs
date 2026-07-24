@@ -75,110 +75,75 @@ internal abstract class BaseSerializer
         where T : struct
         => WriteInt(stream, GetSize<T>());
 
+#if NETCOREAPP
+    protected static void WriteInt(Stream stream, int value) => WritePrimitive(stream, value);
+
+    protected static int ReadInt(Stream stream) => ReadPrimitive<int>(stream);
+
+    protected static void WriteLong(Stream stream, long value) => WritePrimitive(stream, value);
+
+    protected static long ReadLong(Stream stream) => ReadPrimitive<long>(stream);
+
+    protected static void WriteUShort(Stream stream, ushort value) => WritePrimitive(stream, value);
+
+    protected static ushort ReadUShort(Stream stream) => ReadPrimitive<ushort>(stream);
+
+    private static void WritePrimitive<T>(Stream stream, T value)
+        where T : unmanaged
+    {
+        int size = GetSize<T>();
+        Span<byte> bytes = stackalloc byte[size];
+        System.Runtime.InteropServices.MemoryMarshal.Write(bytes, in value);
+        stream.Write(bytes);
+    }
+
+    private static T ReadPrimitive<T>(Stream stream)
+        where T : unmanaged
+    {
+        Span<byte> bytes = stackalloc byte[GetSize<T>()];
+        stream.ReadExactly(bytes);
+        return System.Runtime.InteropServices.MemoryMarshal.Read<T>(bytes);
+    }
+#else
     protected static void WriteInt(Stream stream, int value)
     {
-#if NETCOREAPP
-        Span<byte> bytes = stackalloc byte[sizeof(int)];
-        if (BitConverter.IsLittleEndian)
-        {
-            System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(bytes, value);
-        }
-        else
-        {
-            System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(bytes, value);
-        }
-
-        stream.Write(bytes);
-#else
         byte[] bytes = BitConverter.GetBytes(value);
         stream.Write(bytes, 0, bytes.Length);
-#endif
     }
 
     protected static int ReadInt(Stream stream)
     {
-#if NETCOREAPP
-        Span<byte> bytes = stackalloc byte[sizeof(int)];
-        stream.ReadExactly(bytes);
-        return BitConverter.IsLittleEndian
-            ? System.Buffers.Binary.BinaryPrimitives.ReadInt32LittleEndian(bytes)
-            : System.Buffers.Binary.BinaryPrimitives.ReadInt32BigEndian(bytes);
-#else
         byte[] bytes = new byte[sizeof(int)];
         ReadExactly(stream, bytes, 0, bytes.Length);
         return BitConverter.ToInt32(bytes, 0);
-#endif
     }
 
     protected static void WriteLong(Stream stream, long value)
     {
-#if NETCOREAPP
-        Span<byte> bytes = stackalloc byte[sizeof(long)];
-        if (BitConverter.IsLittleEndian)
-        {
-            System.Buffers.Binary.BinaryPrimitives.WriteInt64LittleEndian(bytes, value);
-        }
-        else
-        {
-            System.Buffers.Binary.BinaryPrimitives.WriteInt64BigEndian(bytes, value);
-        }
-
-        stream.Write(bytes);
-#else
         byte[] bytes = BitConverter.GetBytes(value);
         stream.Write(bytes, 0, bytes.Length);
-#endif
     }
 
     protected static long ReadLong(Stream stream)
     {
-#if NETCOREAPP
-        Span<byte> bytes = stackalloc byte[sizeof(long)];
-        stream.ReadExactly(bytes);
-        return BitConverter.IsLittleEndian
-            ? System.Buffers.Binary.BinaryPrimitives.ReadInt64LittleEndian(bytes)
-            : System.Buffers.Binary.BinaryPrimitives.ReadInt64BigEndian(bytes);
-#else
         byte[] bytes = new byte[sizeof(long)];
         ReadExactly(stream, bytes, 0, bytes.Length);
         return BitConverter.ToInt64(bytes, 0);
-#endif
     }
 
     protected static void WriteUShort(Stream stream, ushort value)
     {
-#if NETCOREAPP
-        Span<byte> bytes = stackalloc byte[sizeof(ushort)];
-        if (BitConverter.IsLittleEndian)
-        {
-            System.Buffers.Binary.BinaryPrimitives.WriteUInt16LittleEndian(bytes, value);
-        }
-        else
-        {
-            System.Buffers.Binary.BinaryPrimitives.WriteUInt16BigEndian(bytes, value);
-        }
-
-        stream.Write(bytes);
-#else
         byte[] bytes = BitConverter.GetBytes(value);
         stream.Write(bytes, 0, bytes.Length);
-#endif
     }
 
     protected static ushort ReadUShort(Stream stream)
     {
-#if NETCOREAPP
-        Span<byte> bytes = stackalloc byte[sizeof(ushort)];
-        stream.ReadExactly(bytes);
-        return BitConverter.IsLittleEndian
-            ? System.Buffers.Binary.BinaryPrimitives.ReadUInt16LittleEndian(bytes)
-            : System.Buffers.Binary.BinaryPrimitives.ReadUInt16BigEndian(bytes);
-#else
         byte[] bytes = new byte[sizeof(ushort)];
         ReadExactly(stream, bytes, 0, bytes.Length);
         return BitConverter.ToUInt16(bytes, 0);
-#endif
     }
+#endif
 
     protected static void WriteBool(Stream stream, bool value)
         => stream.WriteByte(value ? (byte)1 : (byte)0);
