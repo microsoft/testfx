@@ -67,6 +67,18 @@ public sealed class DotnetTestDataConsumerTests
     }
 
     [TestMethod]
+    public void GetTestNodeDetails_WhenExecutionCompleted_ReturnsDiscoveredWithoutOutcome()
+    {
+        DotnetTestDataConsumer.TestNodeDetails details = InvokeGetTestNodeDetails(TestNodeExecutionCompletedProperty.CachedInstance);
+
+        Assert.AreEqual(TestStates.Discovered, details.State);
+        Assert.IsNull(details.Duration);
+        Assert.IsNull(details.Exceptions);
+        Assert.IsNull(details.Expected);
+        Assert.IsNull(details.Actual);
+    }
+
+    [TestMethod]
     public void GetTestNodeDetails_WhenErroredWithAssertData_DoesNotPopulateExpectedOrActual()
     {
         // Only failed tests carry the assertion diff, mirroring TerminalOutputDevice's single-assembly behavior;

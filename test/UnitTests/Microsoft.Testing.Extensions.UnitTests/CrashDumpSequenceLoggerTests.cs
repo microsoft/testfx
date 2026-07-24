@@ -182,6 +182,54 @@ public sealed class CrashDumpSequenceLoggerTests
         }
     }
 
+    [TestMethod]
+    public async Task ConsumeAsync_ExecutionCompleted_WritesEndedRecord()
+    {
+        string path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        _mockEnvironment
+            .Setup(x => x.GetEnvironmentVariable(CrashDumpEnvironmentVariableProvider.SequenceFileEnvironmentVariableName))
+            .Returns(path);
+        CrashDumpSequenceLogger logger = CreateLogger();
+
+        try
+        {
+            Assert.IsTrue(await logger.IsEnabledAsync());
+            await logger.OnTestSessionStartingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+            await logger.ConsumeAsync(null!, CreateUpdate(InProgressTestNodeStateProperty.CachedInstance), CancellationToken.None);
+            await logger.ConsumeAsync(null!, CreateUpdate(TestNodeExecutionCompletedProperty.CachedInstance), CancellationToken.None);
+#if NETCOREAPP
+            await logger.DisposeAsync();
+#else
+            logger.Dispose();
+#endif
+
+            string[] lines = File.ReadAllLines(path);
+            Assert.Contains(
+                line => line.StartsWith($"{CrashDumpSequenceLogger.EndedEvent}\t", StringComparison.Ordinal)
+                    && line.EndsWith("\tuid\tCompleted", StringComparison.Ordinal),
+                lines);
+        }
+        finally
+        {
+#if NETCOREAPP
+            await logger.DisposeAsync();
+#else
+            logger.Dispose();
+#endif
+            File.Delete(path);
+        }
+    }
+
+    private static TestNodeUpdateMessage CreateUpdate(IProperty property)
+        => new(
+            new SessionUid("session"),
+            new TestNode
+            {
+                Uid = "uid",
+                DisplayName = "DroppedTest",
+                Properties = new PropertyBag(property),
+            });
+
     private static bool IsWarningAbout(IOutputDeviceData data, string path)
         => data is WarningMessageOutputDeviceData warning
         && warning.Message.Contains(path)

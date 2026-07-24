@@ -27,6 +27,8 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
     private readonly IEnvironment _environment;
     private readonly IPlatformInformation _platformInformation;
     private readonly IStopPoliciesService _policiesService;
+    private readonly ActiveTestTracker _activeTestTracker;
+    private readonly TimeSpan _slowTestPollInterval;
     private readonly string? _longArchitecture;
     private readonly Dictionary<ProgressMessageIdentity, string> _progressMessages = [];
 
@@ -37,9 +39,12 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
     private readonly string? _targetFramework;
     private readonly string _assemblyName;
 
+    // Browser and WASI hosts run one test session per application. The engine calls this handler twice for that
+    // session because the output device implements two extension roles, so only the first callback starts the reporter.
     private bool _firstCallTo_OnSessionStartingAsync = true;
     private bool _bannerDisplayed;
     private volatile bool _wasCancelled;
+    private SlowTestReporterState? _slowTestReporterState;
 
     private int _passedTests;
     private int _failedTests;
@@ -50,6 +55,27 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
         ITestApplicationModuleInfo testApplicationModuleInfo, IAsyncMonitor asyncMonitor,
         IRuntimeFeature runtimeFeature, IEnvironment environment, IPlatformInformation platformInformation,
         IStopPoliciesService policiesService)
+        : this(
+            console,
+            testApplicationModuleInfo,
+            asyncMonitor,
+            runtimeFeature,
+            environment,
+            platformInformation,
+            policiesService,
+            ProgressReportingConfiguration.GetThreshold(
+                environment, ProgressReportingConfiguration.MTP_PROGRESS_SLOW_TEST_SECONDS, defaultSeconds: 60),
+            SystemStopwatch.StartNew,
+            TimeSpan.FromSeconds(1))
+    {
+    }
+
+    internal SimplifiedConsoleOutputDeviceBase(
+        IConsole console,
+        ITestApplicationModuleInfo testApplicationModuleInfo, IAsyncMonitor asyncMonitor,
+        IRuntimeFeature runtimeFeature, IEnvironment environment, IPlatformInformation platformInformation,
+        IStopPoliciesService policiesService, TimeSpan slowTestThreshold,
+        Func<IStopwatch> createStopwatch, TimeSpan slowTestPollInterval)
     {
         _console = console;
         _asyncMonitor = asyncMonitor;
@@ -57,6 +83,8 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
         _environment = environment;
         _platformInformation = platformInformation;
         _policiesService = policiesService;
+        _activeTestTracker = new(slowTestThreshold, createStopwatch);
+        _slowTestPollInterval = slowTestPollInterval;
 
         if (_runtimeFeature.IsDynamicCodeSupported)
         {
@@ -209,9 +237,29 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
 
     public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
     {
+        SlowTestReporterState? reporterState = Interlocked.Exchange(ref _slowTestReporterState, null);
+
+#if NET
+        if (reporterState is not null)
+        {
+            await reporterState.CancellationTokenSource.CancelAsync().ConfigureAwait(false);
+        }
+#else
+#pragma warning disable VSTHRD103 // CancellationTokenSource.CancelAsync is not available on this target framework.
+        reporterState?.CancellationTokenSource.Cancel();
+#pragma warning restore VSTHRD103
+#endif
+
+        if (reporterState is not null)
+        {
+            await reporterState.Task.ConfigureAwait(false);
+            reporterState.CancellationTokenSource.Dispose();
+        }
+
         using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
         {
             _progressMessages.Clear();
+            _activeTestTracker.Clear();
         }
     }
 
@@ -226,6 +274,11 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
         if (_firstCallTo_OnSessionStartingAsync)
         {
             _firstCallTo_OnSessionStartingAsync = false;
+            if (_activeTestTracker.IsEnabled)
+            {
+                var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                _slowTestReporterState = new(cancellationTokenSource, ReportSlowTestsAsync(cancellationTokenSource.Token));
+            }
         }
 
         return Task.CompletedTask;
@@ -333,6 +386,7 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
                 // field access, so the win here is code-path simplification and consistency with the established single-pass pattern.
                 TimingProperty? timingProp = null;
                 TestNodeStateProperty? nodeStateProp = null;
+                bool executionCompleted = false;
                 PropertyBag.PropertyBagEnumerator enumerator = testNodeStateChanged.TestNode.Properties.GetStructEnumerator();
                 while (enumerator.MoveNext())
                 {
@@ -340,11 +394,25 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
                     {
                         case TimingProperty t: timingProp = t; break;
                         case TestNodeStateProperty s: nodeStateProp = s; break;
+                        case TestNodeExecutionCompletedProperty: executionCompleted = true; break;
                     }
                 }
 
                 TimeSpan? duration = timingProp?.GlobalTiming.Duration;
-                bool testCompleted = false;
+                bool testCompleted = executionCompleted;
+
+                if (nodeStateProp is InProgressTestNodeStateProperty)
+                {
+                    _activeTestTracker.Start(testNodeStateChanged.TestNode.Uid, testNodeStateChanged.TestNode.DisplayName);
+                }
+#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
+                else if (executionCompleted
+                    || nodeStateProp is PassedTestNodeStateProperty or ErrorTestNodeStateProperty or CancelledTestNodeStateProperty
+#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
+                    or FailedTestNodeStateProperty or TimeoutTestNodeStateProperty or SkippedTestNodeStateProperty)
+                {
+                    _activeTestTracker.Complete(testNodeStateChanged.TestNode.Uid);
+                }
 
                 switch (nodeStateProp)
                 {
@@ -423,6 +491,64 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
         }
 
         return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Reports tests that have crossed their next slow-test threshold.
+    /// </summary>
+    /// <remarks>
+    /// Browser WebAssembly runs this cooperatively. Delay continuations can run while a test is asynchronously
+    /// suspended, but no managed diagnostic can execute while a test synchronously blocks the sole WebAssembly thread.
+    /// </remarks>
+    internal async Task ReportSlowTestsOnceAsync(CancellationToken cancellationToken)
+    {
+        SlowTestDiagnostic[] diagnostics = _activeTestTracker.GetDueDiagnostics();
+        if (diagnostics.Length == 0)
+        {
+            return;
+        }
+
+        using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            foreach (SlowTestDiagnostic diagnostic in diagnostics)
+            {
+                if (!_activeTestTracker.IsActive(diagnostic))
+                {
+                    continue;
+                }
+
+                string duration = HumanReadableDurationFormatter.Render(diagnostic.Elapsed, wrapInParentheses: false);
+                ConsoleLog(string.Format(
+                    CultureInfo.CurrentCulture,
+                    TerminalResources.TerminalProgressSlowTest,
+                    duration,
+                    diagnostic.DisplayName));
+            }
+        }
+    }
+
+    private async Task ReportSlowTestsAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            while (true)
+            {
+                await Task.Delay(_slowTestPollInterval, cancellationToken).ConfigureAwait(false);
+                await ReportSlowTestsOnceAsync(cancellationToken).ConfigureAwait(false);
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            return;
+        }
+    }
+
+    private sealed class SlowTestReporterState(CancellationTokenSource cancellationTokenSource, Task task)
+    {
+        internal CancellationTokenSource CancellationTokenSource { get; } = cancellationTokenSource;
+
+        internal Task Task { get; } = task;
     }
 
     public async Task HandleProcessRoleAsync(TestProcessRole processRole, CancellationToken cancellationToken)

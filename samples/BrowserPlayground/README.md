@@ -308,6 +308,37 @@ countdown-event wait, and the adapter's per-test task factory.
 Console output is routed through `BrowserOutputDevice`, which forwards to the browser's
 `globalThis.console.*` APIs via `[JSImport]`.
 
+Long-running tests are surfaced as durable diagnostic lines after 60 seconds, with
+exponential backoff (60 seconds, 2 minutes, 4 minutes, and so on):
+
+```console
+[slow] still running after 1m 00s: MyLongRunningTest
+```
+
+Set `MTP_PROGRESS_SLOW_TEST_SECONDS` to a non-negative integer to change the first
+reporting threshold; `0` disables these diagnostics. The browser launcher reads it from
+the page query string:
+
+```text
+index.html?MTP_PROGRESS_SLOW_TEST_SECONDS=5
+```
+
+The Node launcher forwards the process environment variable into the managed WebAssembly
+runtime:
+
+```powershell
+$env:MTP_PROGRESS_SLOW_TEST_SECONDS = '5'
+node runtests.mjs
+```
+
+Test starts are tracked silently, so this does not duplicate normal per-test progress output.
+
+The reporter is cooperative: it uses asynchronous delays and does not create a thread,
+timer thread, or process. It can therefore identify an asynchronously suspended test,
+because control returns to the browser event loop. It cannot report while a test
+synchronously blocks the sole WebAssembly thread; no managed timer or continuation can
+run until that test yields or returns.
+
 ### Feature matrix (what is *not* available on browser-wasm)
 
 Several extensions/capabilities are intentionally unavailable in the browser sandbox and

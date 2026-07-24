@@ -165,8 +165,10 @@ internal sealed partial class TerminalOutputDevice
             ShowProgress = shouldShowProgress,
             ShowStdout = showStdout,
             ShowStderr = showStderr,
-            HeartbeatSilenceThreshold = GetProgressThreshold(_environment, MTP_PROGRESS_SILENCE_SECONDS, defaultSeconds: 30),
-            SlowTestThreshold = GetProgressThreshold(_environment, MTP_PROGRESS_SLOW_TEST_SECONDS, defaultSeconds: 60),
+            HeartbeatSilenceThreshold = ProgressReportingConfiguration.GetThreshold(
+                _environment, ProgressReportingConfiguration.MTP_PROGRESS_SILENCE_SECONDS, defaultSeconds: 30),
+            SlowTestThreshold = ProgressReportingConfiguration.GetThreshold(
+                _environment, ProgressReportingConfiguration.MTP_PROGRESS_SLOW_TEST_SECONDS, defaultSeconds: 60),
             SlowestTestsCount = slowestTestsCount,
         }, _loggerFactory.CreateLogger<TestProgressStateAwareTerminal>());
     }
@@ -182,19 +184,6 @@ internal sealed partial class TerminalOutputDevice
             && count >= 1
                 ? count
                 : 0;
-
-    // Reads an integer number of seconds from the given environment variable, falling back to
-    // <paramref name="defaultSeconds"/> when unset or invalid. A value of 0 disables the related
-    // heartbeat rule (returns TimeSpan.Zero). Negative or non-integer values are ignored.
-    private static TimeSpan GetProgressThreshold(IEnvironment environment, string variableName, int defaultSeconds)
-    {
-        string? raw = environment.GetEnvironmentVariable(variableName);
-        return !RoslynString.IsNullOrWhiteSpace(raw)
-            && int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out int seconds)
-            && seconds >= 0
-            ? TimeSpan.FromSeconds(seconds)
-            : TimeSpan.FromSeconds(defaultSeconds);
-    }
 
     // When the option is absent, default to OutputShowMode.Failed when running under a known
     // LLM/AI environment (less token noise for agents) and to OutputShowMode.All otherwise.

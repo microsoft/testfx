@@ -24,9 +24,9 @@ internal sealed class SilenceDrivenHeartbeatRenderer : IProgressRenderer
     private readonly TimeSpan _slowTestThreshold;
     private readonly Func<IStopwatch> _createStopwatch;
 
-    // Per running-test backoff state: test detail id -> next elapsed threshold (in ticks) at which to emit.
+    // Per running-test backoff state: test detail id -> next elapsed threshold at which to emit.
     // Only touched from the single rendering thread inside OnTick.
-    private readonly Dictionary<long, long> _slowTestNextThresholdTicks = [];
+    private readonly Dictionary<long, SlowTestThresholdState> _slowTestThresholdStates = [];
 
     private IStopwatch? _clock;
 
@@ -53,7 +53,7 @@ internal sealed class SilenceDrivenHeartbeatRenderer : IProgressRenderer
 
     public void OnStart()
     {
-        _slowTestNextThresholdTicks.Clear();
+        _slowTestThresholdStates.Clear();
         IStopwatch clock = _createStopwatch();
         Volatile.Write(ref _clock, clock);
         Interlocked.Exchange(ref _lastActivityTicks, clock.Elapsed.Ticks);
@@ -132,8 +132,6 @@ internal sealed class SilenceDrivenHeartbeatRenderer : IProgressRenderer
             return;
         }
 
-        long slowTicks = _slowTestThreshold.Ticks;
-
         foreach (TestProgressState? item in progressItems)
         {
             TestNodeResultsState? results = item?.TestNodeResultsState;
@@ -150,19 +148,27 @@ internal sealed class SilenceDrivenHeartbeatRenderer : IProgressRenderer
                     continue;
                 }
 
-                long elapsed = detail.Stopwatch.Elapsed.Ticks;
-                long next = _slowTestNextThresholdTicks.TryGetValue(detail.Id, out long stored) ? stored : slowTicks;
-                if (elapsed < next)
+                TimeSpan elapsed = detail.Stopwatch.Elapsed;
+                if (!_slowTestThresholdStates.TryGetValue(detail.Id, out SlowTestThresholdState? thresholdState))
+                {
+                    if (elapsed < _slowTestThreshold)
+                    {
+                        continue;
+                    }
+
+                    thresholdState = new(_slowTestThreshold);
+                }
+
+                if (!thresholdState.IsDue(elapsed))
                 {
                     continue;
                 }
 
-                // Exponential backoff: next emission at twice the crossed threshold (60s -> 2m -> 4m -> 8m ...).
-                _slowTestNextThresholdTicks[detail.Id] = next * 2;
+                _slowTestThresholdStates[detail.Id] = thresholdState;
 
                 // Report the test's actual elapsed time rather than the scheduled threshold so a delayed
                 // tick (GC pause, debugger break, CPU starvation) does not under-report the runtime.
-                string duration = HumanReadableDurationFormatter.Render(TimeSpan.FromTicks(elapsed), wrapInParentheses: false);
+                string duration = HumanReadableDurationFormatter.Render(elapsed, wrapInParentheses: false);
                 terminal.AppendLine(string.Format(CultureInfo.CurrentCulture, TerminalResources.TerminalProgressSlowTest, duration, BuildSlowTestDescription(item, detail)));
             }
         }

@@ -127,6 +127,23 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
     }
 
     [TestMethod]
+    public void NotifyExecutionCompleted_DisposesActivityWithoutRecordingOutcome()
+    {
+        Mock<IPlatformActivity> activity = SetupActivityForTestNode("dropped-test");
+        TestNode testNode = CreateTestNode("dropped-test");
+        _handler.NotifyInProgress(testNode, null);
+
+        _handler.NotifyExecutionCompleted(testNode);
+
+        Assert.AreEqual(1, _completedCounter.Value);
+        Assert.AreEqual(0, _passedCounter.Value);
+        Assert.AreEqual(0, _failedCounter.Value);
+        Assert.AreEqual(0, _skippedCounter.Value);
+        activity.Verify(a => a.SetTag("test.result", It.IsAny<object?>()), Times.Never);
+        activity.Verify(a => a.Dispose(), Times.Once);
+    }
+
+    [TestMethod]
     public void HandleTestResult_WithPassedState_SetsPassedResultTag()
     {
         Mock<IPlatformActivity> activity = SetupActivityForTestNode("test-1");
