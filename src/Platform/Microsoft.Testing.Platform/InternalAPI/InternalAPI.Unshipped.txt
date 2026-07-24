@@ -66,6 +66,7 @@ Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalProgressMessageState.Ve
 Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporter.UpdateProgressMessage(string! executionId, string! instanceId, string! producerUid, string! key, string? message) -> void
 Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporter.ClearProgressMessages() -> void
 Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporter.TestCompletedWithoutResult(string! executionId, string! testNodeUid) -> void
+Microsoft.Testing.Platform.Telemetry.OpenTelemetryResultHandler.NotifyExecutionCompleted(Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode) -> void
 virtual Microsoft.Testing.Platform.OutputDevice.SimplifiedConsoleOutputDeviceBase.DisplayActiveTestProgress.get -> bool
 static Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.IsProgressEnabled(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> bool
 const Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressStateAwareTerminal.MaximumVisibleProgressMessages = 5 -> int

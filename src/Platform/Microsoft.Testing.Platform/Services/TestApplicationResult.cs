@@ -84,6 +84,12 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         var message = (TestNodeUpdateMessage)value;
         TestNodeStateProperty? executionState = message.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
 
+        if (message.TestNode.Properties.Any<TestNodeExecutionCompletedProperty>())
+        {
+            _openTelemetryResultHandler?.NotifyExecutionCompleted(message.TestNode);
+            return Task.CompletedTask;
+        }
+
         if (executionState is null)
         {
             return Task.CompletedTask;
