@@ -149,7 +149,20 @@ public sealed class VSTestConsoleResult(int exitCode, string standardOutput, str
     }
 
     private void AssertCount(string labelPattern, int expected)
-        => Assert.IsTrue(
-            Regex.IsMatch(StandardOutput, $@"{labelPattern}:\s*{expected}(?:\D|$)"),
-            $"Expected '{labelPattern}' count {expected} in packaged VSTest output:{Environment.NewLine}{StandardOutput}");
+    {
+        // Newer VSTest console versions emit a per-assembly summary (one line per test file,
+        // e.g. "Failed: 0, Passed: 1, Skipped: 0, Total: 1 - MSTestSdk.dll (net10.0)") instead of
+        // a single aggregate summary ("Total tests: 2" / "Passed: 2"). Sum the counts across every
+        // matching line so the assertion holds for both output shapes.
+        int actual = 0;
+        foreach (Match match in Regex.Matches(StandardOutput, $@"{labelPattern}:\s*(\d+)"))
+        {
+            actual += int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
+        }
+
+        Assert.AreEqual(
+            expected,
+            actual,
+            $"Expected '{labelPattern}' total count {expected} in packaged VSTest output:{Environment.NewLine}{StandardOutput}");
+    }
 }
