@@ -113,7 +113,15 @@ public sealed class CommonHostTests
     {
         public CancellationToken CancellationToken => CancellationToken.None;
 
+        public CancellationToken DrainingToken => CancellationToken.None;
+
+        public CancellationToken AbortingToken => CancellationToken.None;
+
         public void Cancel()
+        {
+        }
+
+        public void Abort()
         {
         }
     }
