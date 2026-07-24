@@ -100,6 +100,20 @@ public sealed class ActiveTestTrackerTests
     }
 
     [TestMethod]
+    public void GetDueDiagnostics_SortsOnlyDueTestsByUid()
+    {
+        var clock = new FakeClock();
+        var tracker = new ActiveTestTracker(SlowThreshold, clock.CreateStopwatch);
+        tracker.Start("uid-b", "Second");
+        tracker.Start("uid-a", "First");
+
+        clock.Advance(SlowThreshold);
+
+        SlowTestDiagnostic[] diagnostics = tracker.GetDueDiagnostics();
+        Assert.AreSequenceEqual(new[] { "uid-a", "uid-b" }, diagnostics.Select(diagnostic => diagnostic.Uid.Value));
+    }
+
+    [TestMethod]
     public void Start_WhenThresholdIsZero_DoesNotTrackTests()
     {
         var clock = new FakeClock();

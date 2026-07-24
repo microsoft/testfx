@@ -149,9 +149,16 @@ internal sealed class SilenceDrivenHeartbeatRenderer : IProgressRenderer
                 }
 
                 TimeSpan elapsed = detail.Stopwatch.Elapsed;
-                SlowTestThresholdState thresholdState = _slowTestThresholdStates.TryGetValue(detail.Id, out SlowTestThresholdState? stored)
-                    ? stored
-                    : new(_slowTestThreshold);
+                if (!_slowTestThresholdStates.TryGetValue(detail.Id, out SlowTestThresholdState? thresholdState))
+                {
+                    if (elapsed < _slowTestThreshold)
+                    {
+                        continue;
+                    }
+
+                    thresholdState = new(_slowTestThreshold);
+                }
+
                 if (!thresholdState.IsDue(elapsed))
                 {
                     continue;

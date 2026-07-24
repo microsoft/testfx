@@ -118,6 +118,35 @@ public sealed class SimplifiedConsoleOutputDeviceTests
     }
 
     [TestMethod]
+    public async Task ConsumeAsync_EmptyResultFollowedBySlowTest_ReportsOnlySlowTest()
+    {
+        using var asyncMonitor = new SystemAsyncMonitor();
+        var clock = new FakeClock();
+        RecordingSimplifiedOutputDevice device = CreateOutputDevice(asyncMonitor, clock);
+
+        await device.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateTestNodeUpdate("dropped-uid", "DroppedTest", new InProgressTestNodeStateProperty()),
+            CancellationToken.None);
+        await device.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateTestNodeUpdate("dropped-uid", "DroppedTest", TestNodeExecutionCompletedProperty.CachedInstance),
+            CancellationToken.None);
+        await device.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateTestNodeUpdate("slow-uid", "SlowTest", new InProgressTestNodeStateProperty()),
+            CancellationToken.None);
+
+        clock.Advance(TimeSpan.FromSeconds(60));
+        await device.ReportDueSlowTestsAsync();
+
+        Assert.HasCount(1, device.Messages);
+        string message = device.Messages[0]!;
+        Assert.Contains("SlowTest", message);
+        Assert.DoesNotContain("DroppedTest", message);
+    }
+
+    [TestMethod]
     public async Task ConsumeAsync_SameNameTests_AreTrackedIndependentlyByUid()
     {
         using var asyncMonitor = new SystemAsyncMonitor();
@@ -155,8 +184,40 @@ public sealed class SimplifiedConsoleOutputDeviceTests
 
         await device.OnTestSessionStartingAsync(context);
         await device.OnTestSessionStartingAsync(context);
-        await device.OnTestSessionFinishingAsync(context);
-        await device.OnTestSessionFinishingAsync(context);
+        await Task.WhenAll(
+            device.OnTestSessionFinishingAsync(context),
+            device.OnTestSessionFinishingAsync(context));
+    }
+
+    [TestMethod]
+    public async Task ReportSlowTestsOnceAsync_TestCompletesWhileWaitingForOutputLock_DoesNotReportIt()
+    {
+        var lockRequested = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var lockGranted = new TaskCompletionSource<IDisposable>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var asyncMonitor = new Mock<IAsyncMonitor>();
+        asyncMonitor
+            .Setup(monitor => monitor.LockAsync(It.IsAny<TimeSpan>()))
+            .Callback(() => lockRequested.TrySetResult(null))
+            .Returns(lockGranted.Task);
+        var clock = new FakeClock();
+        RecordingSimplifiedOutputDevice device = CreateOutputDevice(asyncMonitor.Object, clock);
+
+        await device.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateTestNodeUpdate("uid", "CompletedWhileWaiting", new InProgressTestNodeStateProperty()),
+            CancellationToken.None);
+        clock.Advance(TimeSpan.FromSeconds(60));
+
+        Task reportTask = device.ReportDueSlowTestsAsync();
+        await lockRequested.Task;
+        await device.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateTestNodeUpdate("uid", "CompletedWhileWaiting", new PassedTestNodeStateProperty()),
+            CancellationToken.None);
+        lockGranted.SetResult(Mock.Of<IDisposable>());
+        await reportTask;
+
+        Assert.IsEmpty(device.Messages);
     }
 
     [TestMethod]
@@ -208,14 +269,14 @@ public sealed class SimplifiedConsoleOutputDeviceTests
     private static TestNodeUpdateMessage CreateTestNodeUpdate(
         string uid,
         string displayName,
-        TestNodeStateProperty state)
+        IProperty property)
         => new(
             default,
             new TestNode
             {
                 Uid = new TestNodeUid(uid),
                 DisplayName = displayName,
-                Properties = new PropertyBag(state),
+                Properties = new PropertyBag(property),
             });
 
     private sealed class RecordingSimplifiedOutputDevice : SimplifiedConsoleOutputDeviceBase

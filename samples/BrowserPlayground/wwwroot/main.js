@@ -7,12 +7,20 @@
 // Microsoft.Testing.Platform.
 import { dotnet } from './_framework/dotnet.js';
 
-const { runMain } = await dotnet
+const slowTestThresholdEnvironmentVariable = 'MTP_PROGRESS_SLOW_TEST_SECONDS';
+const runtimeBuilder = dotnet
     // A browser page has no argv, so Microsoft.Testing.Platform command-line options are
     // taken from the page's query string, e.g.:
     //   index.html?arg=--minimum-expected-tests&arg=1
-    .withApplicationArgumentsFromQuery()
-    .create();
+    .withApplicationArgumentsFromQuery();
+
+const slowTestThreshold = new URLSearchParams(globalThis.location.search)
+    .get(slowTestThresholdEnvironmentVariable);
+if (slowTestThreshold !== null) {
+    runtimeBuilder.withEnvironmentVariable(slowTestThresholdEnvironmentVariable, slowTestThreshold);
+}
+
+const { runMain } = await runtimeBuilder.create();
 
 // runMain() invokes Program.Main and resolves to its exit code (0 = all tests passed,
 // non-zero = failures / policy violation).

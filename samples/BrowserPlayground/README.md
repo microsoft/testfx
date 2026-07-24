@@ -132,8 +132,22 @@ exponential backoff (60 seconds, 2 minutes, 4 minutes, and so on):
 ```
 
 Set `MTP_PROGRESS_SLOW_TEST_SECONDS` to a non-negative integer to change the first
-reporting threshold; `0` disables these diagnostics. Test starts are tracked silently,
-so this does not duplicate normal per-test progress output.
+reporting threshold; `0` disables these diagnostics. The browser launcher reads it from
+the page query string:
+
+```text
+index.html?MTP_PROGRESS_SLOW_TEST_SECONDS=5
+```
+
+The Node launcher forwards the process environment variable into the managed WebAssembly
+runtime:
+
+```powershell
+$env:MTP_PROGRESS_SLOW_TEST_SECONDS = '5'
+node runtests.mjs
+```
+
+Test starts are tracked silently, so this does not duplicate normal per-test progress output.
 
 The reporter is cooperative: it uses asynchronous delays and does not create a thread,
 timer thread, or process. It can therefore identify an asynchronously suspended test,

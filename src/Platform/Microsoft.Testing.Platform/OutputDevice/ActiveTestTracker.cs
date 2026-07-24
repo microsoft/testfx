@@ -49,6 +49,14 @@ internal sealed class ActiveTestTracker
         }
     }
 
+    internal bool IsActive(TestNodeUid uid)
+    {
+        lock (_lock)
+        {
+            return _activeTests.ContainsKey(uid);
+        }
+    }
+
     internal SlowTestDiagnostic[] GetDueDiagnostics()
     {
         lock (_lock)
@@ -58,8 +66,8 @@ internal sealed class ActiveTestTracker
                 return [];
             }
 
-            var diagnostics = new List<SlowTestDiagnostic>();
-            foreach ((TestNodeUid uid, ActiveTest activeTest) in _activeTests.OrderBy(static pair => pair.Key.Value, StringComparer.Ordinal))
+            List<SlowTestDiagnostic>? diagnostics = null;
+            foreach ((TestNodeUid uid, ActiveTest activeTest) in _activeTests)
             {
                 TimeSpan elapsed = activeTest.Stopwatch.Elapsed;
                 if (!activeTest.SlowTestThreshold.IsDue(elapsed))
@@ -67,9 +75,15 @@ internal sealed class ActiveTestTracker
                     continue;
                 }
 
-                diagnostics.Add(new(uid, activeTest.DisplayName, elapsed));
+                (diagnostics ??= []).Add(new(uid, activeTest.DisplayName, elapsed));
             }
 
+            if (diagnostics is null)
+            {
+                return [];
+            }
+
+            diagnostics.Sort(static (left, right) => StringComparer.Ordinal.Compare(left.Uid.Value, right.Uid.Value));
             return [.. diagnostics];
         }
     }
