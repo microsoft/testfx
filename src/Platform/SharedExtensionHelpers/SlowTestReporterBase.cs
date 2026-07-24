@@ -123,9 +123,9 @@ internal abstract class SlowTestReporterBase : IDataConsumer, ITestSessionLifeti
                 // threshold out so a genuinely slow test would never surface.
                 _inProgress.TryAdd(uid, new InProgressTest(testName, displayLabel, _clock.UtcNow, threshold));
             }
-            else if (state is not null)
+            else if (state is not null || update.TestNode.Properties.Any<TestNodeExecutionCompletedProperty>())
             {
-                // Any non-in-progress state (passed/failed/skipped/error/timeout/cancelled) is terminal for surfacing.
+                // Any non-in-progress state, including outcome-less execution completion, is terminal for surfacing.
                 _inProgress.TryRemove(uid, out _);
             }
         }
@@ -232,7 +232,7 @@ internal abstract class SlowTestReporterBase : IDataConsumer, ITestSessionLifeti
         {
             InProgressTest test = entry.Value;
             TimeSpan elapsed = now - test.StartTime;
-            if (elapsed < test.NextEmitThreshold)
+            if (!test.SlowTestThreshold.IsDue(elapsed))
             {
                 continue;
             }
@@ -244,14 +244,6 @@ internal abstract class SlowTestReporterBase : IDataConsumer, ITestSessionLifeti
             {
                 continue;
             }
-
-            // Exponential backoff so a genuinely stuck test does not spam the log: T, 2T, 4T, ...
-            // Clamp at TimeSpan.MaxValue so a very long-running test cannot overflow Ticks * 2 into a
-            // negative value (which would make the backoff fire on every scan).
-            long currentTicks = test.NextEmitThreshold.Ticks;
-            test.NextEmitThreshold = currentTicks > TimeSpan.MaxValue.Ticks / 2
-                ? TimeSpan.MaxValue
-                : TimeSpan.FromTicks(currentTicks * 2);
 
             try
             {
@@ -271,7 +263,7 @@ internal abstract class SlowTestReporterBase : IDataConsumer, ITestSessionLifeti
             TestName = testName;
             DisplayLabel = displayLabel;
             StartTime = startTime;
-            NextEmitThreshold = threshold;
+            SlowTestThreshold = new(threshold);
         }
 
         public string TestName { get; }
@@ -280,6 +272,6 @@ internal abstract class SlowTestReporterBase : IDataConsumer, ITestSessionLifeti
 
         public DateTimeOffset StartTime { get; }
 
-        public TimeSpan NextEmitThreshold { get; set; }
+        public SlowTestThresholdState SlowTestThreshold { get; }
     }
 }

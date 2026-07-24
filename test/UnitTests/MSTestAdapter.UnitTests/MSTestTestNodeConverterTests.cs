@@ -367,14 +367,16 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
         message.TestNode.Properties.Any<InProgressTestNodeStateProperty>().Should().BeTrue();
     }
 
-    public async Task MtpTestResultRecorder_RecordEmptyResult_PublishesNothing()
+    public async Task MtpTestResultRecorder_RecordEmptyResult_PublishesExecutionCompletedNode()
     {
         var messageBus = new CapturingMessageBus();
         var recorder = new MtpTestResultRecorder(messageBus, new StubDataProducer(), new SessionUid("s"), isTrxEnabled: false, new MSTestSettings());
 
         await recorder.RecordEmptyResultAsync(CreateElement());
 
-        messageBus.Published.Should().BeEmpty();
+        var message = (TestNodeUpdateMessage)messageBus.Published.Single();
+        message.TestNode.Properties.Any<TestNodeExecutionCompletedProperty>().Should().BeTrue();
+        message.TestNode.Properties.Any<TestNodeStateProperty>().Should().BeFalse();
     }
 
     public async Task MtpTestResultRecorder_RecordResult_PublishesResultNodeAndReturnsFailedFlag()

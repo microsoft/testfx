@@ -15,9 +15,14 @@
 // e.g.  node runtests.mjs --minimum-expected-tests 1
 import { dotnet } from './_framework/dotnet.js';
 
-const { runMain } = await dotnet
-    .withApplicationArguments(...process.argv.slice(2))
-    .create();
+const slowTestThresholdEnvironmentVariable = 'MTP_PROGRESS_SLOW_TEST_SECONDS';
+const runtimeBuilder = dotnet.withApplicationArguments(...process.argv.slice(2));
+const slowTestThreshold = process.env[slowTestThresholdEnvironmentVariable];
+if (slowTestThreshold !== undefined) {
+    runtimeBuilder.withEnvironmentVariable(slowTestThresholdEnvironmentVariable, slowTestThreshold);
+}
+
+const { runMain } = await runtimeBuilder.create();
 
 // runMain() boots the same bundle under Node and resolves to the exit code of the sample's
 // Program.Main (defined by the top-level statements in Program.cs).

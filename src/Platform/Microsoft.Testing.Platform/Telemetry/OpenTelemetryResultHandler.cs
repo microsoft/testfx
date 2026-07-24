@@ -77,6 +77,23 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
         }
     }
 
+    internal void NotifyExecutionCompleted(TestNode testNode)
+    {
+        _totalCompletedTests.Add(1);
+        if (!_testActivities.TryGetValue(testNode.Uid, out Queue<IPlatformActivity>? activities) || activities.Count == 0)
+        {
+            return;
+        }
+
+        IPlatformActivity activity = activities.Dequeue();
+        if (activities.Count == 0)
+        {
+            _testActivities.Remove(testNode.Uid);
+        }
+
+        activity.Dispose();
+    }
+
     internal void NotifyUnknown()
         => _totalUnknownTests.Add(1);
 
