@@ -276,6 +276,11 @@ interface InitializeResponse {
             // The client will then wait on both to complete,
             // before it marks a test run as completed.
             attachmentsProvider?: boolean;
+
+            // If true, the server understands the first-class test-coverage message contract.
+            // This advertises protocol support only; it does not imply that an enabled extension
+            // will produce coverage during the run.
+            supportsTestCoverageMessages?: boolean;
         },
     }
 }

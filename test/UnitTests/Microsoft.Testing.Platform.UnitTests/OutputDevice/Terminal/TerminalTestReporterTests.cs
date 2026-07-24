@@ -1,11 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice.Terminal;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.TestHost;
 
 using Moq;
 
@@ -875,6 +877,357 @@ public sealed class TerminalTestReporterTests
         Assert.Contains("failed-stderr", output);
     }
 
+    [TestMethod]
+    public void AppendCoverageSummary_WhenNoEntries_WritesNothing()
+    {
+        var console = new StringBuilderConsole();
+        TerminalTestReporter reporter = CreateCoverageReporter(console);
+
+        reporter.AppendCoverageSummary([], []);
+
+        Assert.AreEqual(string.Empty, console.Output);
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WhenThresholdPasses_RendersPassedComparison()
+    {
+        var console = new StringBuilderConsole();
+        TerminalTestReporter reporter = CreateCoverageReporter(console);
+        TestCoverageThresholdMessage threshold = CreateThreshold(
+            CoverageScope.Overall, CoverageMetric.Line, CoverageAggregation.Minimum,
+            actual: 85.5, required: 80, aggregatedOver: CoverageScopeLevel.Module);
+
+        reporter.AppendCoverageSummary([], [threshold]);
+
+        Assert.Contains("Coverage Threshold Results:", console.Output);
+        Assert.Contains("Total - Line (Minimum over Module): 85.5% >= 80.0% threshold", console.Output);
+        Assert.DoesNotContain("Coverage Threshold Failures:", console.Output);
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WhenThresholdFails_RendersFailedComparison()
+    {
+        var console = new StringBuilderConsole();
+        TerminalTestReporter reporter = CreateCoverageReporter(console);
+        TestCoverageThresholdMessage threshold = CreateThreshold(
+            CoverageScope.Overall, CoverageMetric.Branch, CoverageAggregation.Total,
+            actual: 75, required: 80, aggregatedOver: CoverageScopeLevel.Module);
+
+        reporter.AppendCoverageSummary([], [threshold]);
+
+        Assert.Contains("Total - Branch (Total over Module): 75.0% < 80.0% threshold", console.Output);
+        Assert.DoesNotContain(">=", console.Output);
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WhenRoundedValuesWouldLookEqual_UsesEnoughPrecision()
+    {
+        var console = new StringBuilderConsole();
+        TerminalTestReporter reporter = CreateCoverageReporter(console);
+        TestCoverageThresholdMessage threshold = CreateThreshold(
+            CoverageScope.Overall, CoverageMetric.Line, CoverageAggregation.None,
+            actual: 79.96, required: 80);
+
+        reporter.AppendCoverageSummary([], [threshold]);
+
+        string actual = 79.96d.ToString("G17", CultureInfo.InvariantCulture);
+        string required = 80d.ToString("G17", CultureInfo.InvariantCulture);
+        Assert.Contains($"Total - Line: {actual}% < {required}% threshold", console.Output);
+        Assert.DoesNotContain("80.0% < 80.0%", console.Output);
+    }
+
+    [TestMethod]
+    [DataRow(true, false, "No coverable data (failed by policy)")]
+    [DataRow(false, true, "No coverable data (passed by policy)")]
+    public void AppendCoverageSummary_WhenThresholdHasNoData_RendersPolicyResult(
+        bool treatNoDataAsFailure,
+        bool expectedPassed,
+        string expectedText)
+    {
+        var console = new StringBuilderConsole();
+        TerminalTestReporter reporter = CreateCoverageReporter(console);
+        var threshold = new TestCoverageThresholdMessage(
+            new SessionUid("session"),
+            CoverageScope.Overall,
+            CoverageMetric.Line,
+            CoverageAggregation.None,
+            actualPercentage: double.NaN,
+            requiredPercentage: 80,
+            hasCoverableData: false,
+            producerId: "producer",
+            treatNoDataAsFailure: treatNoDataAsFailure);
+
+        reporter.AppendCoverageSummary([], [threshold]);
+
+        Assert.AreEqual(expectedPassed, threshold.Passed);
+        Assert.Contains($"Total - Line: {expectedText}", console.Output);
+        Assert.DoesNotContain("%", console.Output);
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WhenCoverageMetricHasNoData_RendersNAWithoutPercent()
+    {
+        var console = new StringBuilderConsole();
+        TerminalTestReporter reporter = CreateCoverageReporter(console);
+        var summary = new CoverageScopeSummary(
+            new SessionUid("session"),
+            CoverageScope.Overall,
+            [new CoverageMetricResult(CoverageMetric.Line, coveredCount: 0, coverableCount: 0, producerId: "producer")]);
+
+        reporter.AppendCoverageSummary([summary], []);
+
+        Assert.Contains("Total - Line: N/A", console.Output);
+        Assert.DoesNotContain("N/A%", console.Output);
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WhenThresholdOnly_DoesNotEmitDoubleBlankLineBeforeHeading()
+    {
+        var console = new StringBuilderConsole();
+        TerminalTestReporter reporter = CreateCoverageReporter(console);
+        TestCoverageThresholdMessage threshold = CreateThreshold(
+            CoverageScope.Overall, CoverageMetric.Branch, CoverageAggregation.Total,
+            actual: 75, required: 80, aggregatedOver: CoverageScopeLevel.Module);
+
+        reporter.AppendCoverageSummary([], [threshold]);
+
+        string output = console.Output.Replace("\r\n", "\n");
+        Assert.Contains("Coverage Threshold Results:", output);
+        Assert.DoesNotContain("\n\n", output);
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WhenMixedThresholds_RendersBothPassAndFail()
+    {
+        var console = new StringBuilderConsole();
+        TerminalTestReporter reporter = CreateCoverageReporter(console);
+        TestCoverageThresholdMessage passing = CreateThreshold(
+            CoverageScope.Overall, CoverageMetric.Line, CoverageAggregation.Minimum,
+            actual: 90, required: 80, aggregatedOver: CoverageScopeLevel.Module);
+        TestCoverageThresholdMessage failing = CreateThreshold(
+            CoverageScope.Overall, CoverageMetric.Method, CoverageAggregation.Average,
+            actual: 70, required: 80, aggregatedOver: CoverageScopeLevel.Type);
+
+        reporter.AppendCoverageSummary([], [passing, failing]);
+
+        Assert.Contains("Line (Minimum over Module): 90.0% >= 80.0% threshold", console.Output);
+        Assert.Contains("Method (Average over Type): 70.0% < 80.0% threshold", console.Output);
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WithForceAnsi_ColorsPassedGreenAndFailedRed()
+    {
+        var console = new StringBuilderConsole();
+        TerminalTestReporter reporter = CreateCoverageReporter(console, AnsiMode.ForceAnsi);
+        TestCoverageThresholdMessage passing = CreateThreshold(
+            CoverageScope.Overall, CoverageMetric.Line, CoverageAggregation.None, actual: 90, required: 80);
+        TestCoverageThresholdMessage failing = CreateThreshold(
+            CoverageScope.Overall, CoverageMetric.Branch, CoverageAggregation.None, actual: 70, required: 80);
+
+        reporter.AppendCoverageSummary([], [passing, failing]);
+
+        string escaped = ShowEscape(console.Output)!;
+        Assert.Contains("\x241b[32m    Total - Line:", escaped);
+        Assert.Contains("\x241b[31m    Total - Branch:", escaped);
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WhenScopesPresent_RendersPercentagesFromCounts()
+    {
+        var console = new StringBuilderConsole();
+        TerminalTestReporter reporter = CreateCoverageReporter(console);
+        var overall = new CoverageScopeSummary(
+            new SessionUid("session"),
+            CoverageScope.Overall,
+            [new CoverageMetricResult(CoverageMetric.Line, coveredCount: 855, coverableCount: 1000, producerId: "producer")]);
+        var module = new CoverageScopeSummary(
+            new SessionUid("session"),
+            new CoverageScope(CoverageScopeLevel.Module, "MyModule.dll"),
+            [new CoverageMetricResult(CoverageMetric.Branch, coveredCount: 3, coverableCount: 4, producerId: "producer")]);
+
+        reporter.AppendCoverageSummary([overall, module], []);
+
+        Assert.Contains("Code Coverage Summary:", console.Output);
+        Assert.Contains("Total - Line: 85.5%", console.Output);
+        Assert.Contains("MyModule.dll - Branch: 75.0%", console.Output);
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WhenOnlyDetailedScopes_WritesNothing()
+    {
+        var console = new StringBuilderConsole();
+        TerminalTestReporter reporter = CreateCoverageReporter(console);
+        var summary = new CoverageScopeSummary(
+            new SessionUid("session"),
+            new CoverageScope(CoverageScopeLevel.Type, "MyNamespace.MyType"),
+            [new CoverageMetricResult(CoverageMetric.Line, coveredCount: 8, coverableCount: 10, producerId: "producer")]);
+
+        reporter.AppendCoverageSummary([summary], []);
+
+        Assert.AreEqual(string.Empty, console.Output);
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WhenThresholdHasNamedScopeAndPopulation_RendersBothLabels()
+    {
+        var console = new StringBuilderConsole();
+        TerminalTestReporter reporter = CreateCoverageReporter(console);
+        TestCoverageThresholdMessage threshold = CreateThreshold(
+            new CoverageScope(CoverageScopeLevel.Module, "MyModule.dll"),
+            CoverageMetric.Line,
+            CoverageAggregation.Minimum,
+            actual: 81,
+            required: 80,
+            aggregatedOver: CoverageScopeLevel.File);
+
+        reporter.AppendCoverageSummary([], [threshold]);
+
+        Assert.Contains("MyModule.dll - Line (Minimum over File): 81.0% >= 80.0% threshold", console.Output);
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WhenScopeAndCustomMetricContainControls_NormalizesLabels()
+    {
+        var console = new StringBuilderConsole();
+        TerminalTestReporter reporter = CreateCoverageReporter(console);
+        var summary = new CoverageScopeSummary(
+            new SessionUid("session"),
+            new CoverageScope(CoverageScopeLevel.Module, "Module\nName"),
+            [new CoverageMetricResult(
+                CoverageMetric.Custom,
+                coveredCount: 1,
+                coverableCount: 2,
+                producerId: "producer",
+                customMetricName: "MC/DC\tMetric")]);
+
+        reporter.AppendCoverageSummary([summary], []);
+
+        Assert.Contains("Module␊Name - MC/DC␉Metric: 50.0%", console.Output);
+        Assert.DoesNotContain("Module\nName", console.Output);
+        Assert.DoesNotContain("MC/DC\tMetric", console.Output);
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WhenMetricLabelIsDuplicated_IncludesNormalizedProducerIds()
+    {
+        var console = new StringBuilderConsole();
+        TerminalTestReporter reporter = CreateCoverageReporter(console);
+        var summary = new CoverageScopeSummary(
+            new SessionUid("session"),
+            CoverageScope.Overall,
+            [
+                new CoverageMetricResult(CoverageMetric.Line, coveredCount: 8, coverableCount: 10, producerId: "producer-a"),
+                new CoverageMetricResult(CoverageMetric.Line, coveredCount: 7, coverableCount: 10, producerId: "producer\nb"),
+                new CoverageMetricResult(CoverageMetric.Branch, coveredCount: 6, coverableCount: 10, producerId: "producer-a"),
+            ]);
+
+        reporter.AppendCoverageSummary([summary], []);
+
+        Assert.Contains("Total - Line [producer-a]: 80.0%", console.Output);
+        Assert.Contains("Total - Line [producer␊b]: 70.0%", console.Output);
+        Assert.Contains("Total - Branch: 60.0%", console.Output);
+        Assert.DoesNotContain("Branch [producer-a]", console.Output);
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WhenThresholdLabelIsDuplicated_IncludesNormalizedProducerIds()
+    {
+        var console = new StringBuilderConsole();
+        TerminalTestReporter reporter = CreateCoverageReporter(console);
+        TestCoverageThresholdMessage first = new(
+            new SessionUid("session"),
+            CoverageScope.Overall,
+            CoverageMetric.Line,
+            CoverageAggregation.Total,
+            actualPercentage: 90,
+            requiredPercentage: 80,
+            hasCoverableData: true,
+            producerId: "producer-a",
+            aggregatedOver: CoverageScopeLevel.Module);
+        TestCoverageThresholdMessage second = new(
+            new SessionUid("session"),
+            CoverageScope.Overall,
+            CoverageMetric.Line,
+            CoverageAggregation.Total,
+            actualPercentage: 85,
+            requiredPercentage: 80,
+            hasCoverableData: true,
+            producerId: "producer\nb",
+            aggregatedOver: CoverageScopeLevel.Module);
+        TestCoverageThresholdMessage unique = CreateThreshold(
+            CoverageScope.Overall,
+            CoverageMetric.Branch,
+            CoverageAggregation.None,
+            actual: 90,
+            required: 80);
+
+        reporter.AppendCoverageSummary([], [first, second, unique]);
+
+        Assert.Contains("Total - Line (Total over Module) [producer-a]: 90.0% >= 80.0% threshold", console.Output);
+        Assert.Contains("Total - Line (Total over Module) [producer␊b]: 85.0% >= 80.0% threshold", console.Output);
+        Assert.Contains("Total - Branch: 90.0% >= 80.0% threshold", console.Output);
+        Assert.DoesNotContain("Branch [", console.Output);
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_NonInvariantCurrentCulture_UsesInvariantCoverageNumbers()
+    {
+        CultureInfo originalCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("fr-FR");
+            var console = new StringBuilderConsole();
+            TerminalTestReporter reporter = CreateCoverageReporter(console);
+            var summary = new CoverageScopeSummary(
+                new SessionUid("session"),
+                CoverageScope.Overall,
+                [new CoverageMetricResult(CoverageMetric.Line, coveredCount: 1, coverableCount: 2, producerId: "producer")]);
+            TestCoverageThresholdMessage threshold = CreateThreshold(
+                CoverageScope.Overall,
+                CoverageMetric.Line,
+                CoverageAggregation.None,
+                actual: 79.5,
+                required: 80);
+
+            reporter.AppendCoverageSummary([summary], [threshold]);
+
+            Assert.Contains("Total - Line: 50.0%", console.Output);
+            Assert.Contains("Total - Line: 79.5% < 80.0% threshold", console.Output);
+            Assert.DoesNotContain("50,0%", console.Output);
+            Assert.DoesNotContain("79,5%", console.Output);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+        }
+    }
+
+    private static TestCoverageThresholdMessage CreateThreshold(
+        CoverageScope scope,
+        CoverageMetric metric,
+        CoverageAggregation aggregation,
+        double actual,
+        double required,
+        CoverageScopeLevel? aggregatedOver = null)
+        => new(
+            new SessionUid("session"),
+            scope,
+            metric,
+            aggregation,
+            actual,
+            required,
+            hasCoverableData: true,
+            producerId: "producer",
+            aggregatedOver: aggregatedOver);
+
+    private static TerminalTestReporter CreateCoverageReporter(StringBuilderConsole console, AnsiMode ansiMode = AnsiMode.NoAnsi)
+        => new(console, static () => false, new TerminalTestReporterOptions
+        {
+            ShowPassedTests = () => true,
+            AnsiMode = ansiMode,
+            ShowProgress = () => false,
+        });
+
     private static string? ShowEscape(string? text)
     {
         string visibleEsc = "\x241b";
@@ -1311,6 +1664,38 @@ public sealed class TerminalTestReporterTests
 
         Assert.IsNotNull(active);
         Assert.AreEqual("MyTest", active.Text);
+    }
+
+    [TestMethod]
+    public void TestNodeResultsState_RemoveRunningTestNode_RemovesWithoutRecordingOutcome()
+    {
+        var stopwatchFactory = new StopwatchFactory();
+        var state = new TestNodeResultsState(1);
+        state.AddRunningTestNode(id: 10, uid: "uid-1", name: "DroppedTest", stopwatchFactory.CreateStopwatch());
+
+        state.RemoveRunningTestNode("uid-1");
+
+        Assert.AreEqual(0, state.Count);
+        Assert.IsNull(state.GetSingleActiveOrSummaryTask());
+    }
+
+    [TestMethod]
+    public void TerminalTestReporter_TestCompletedWithoutResult_DoesNotRecordOutcome()
+    {
+        using var terminalReporter = new TerminalTestReporter(
+            new StringBuilderConsole(),
+            new TerminalTestReporterOptions
+            {
+                ShowActiveTests = true,
+                ShowProgress = () => false,
+            });
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: false);
+        terminalReporter.AssemblyRunStarted("test.dll", "net8.0", "x64", executionId: "0", instanceId: "0");
+        terminalReporter.TestInProgress(executionId: "0", testNodeUid: "uid-1", displayName: "DroppedTest");
+
+        terminalReporter.TestCompletedWithoutResult(executionId: "0", testNodeUid: "uid-1");
+
+        Assert.AreEqual(0, terminalReporter.TotalTests);
     }
 
     [TestMethod]

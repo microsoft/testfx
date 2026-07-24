@@ -80,6 +80,38 @@ An abstract MSTest attribute base class in `Microsoft.VisualStudio.TestTools.Uni
 
 A public enum in `Microsoft.VisualStudio.TestTools.UnitTesting` used with [ConditionBaseAttribute](#conditionbaseattribute)-derived attributes to control whether the condition is reversed. `Include` (default): run the test only when the condition is met. `Exclude`: skip (ignore) the test when the condition is met, reversing the condition.
 
+### CoverageAggregation
+
+A public enum in `Microsoft.Testing.Platform.Extensions.Messages` (append-only, treat unrecognized values non-exhaustively) that specifies how per-scope coverage values are combined when evaluating a threshold. Values: `None` (0, not an aggregate — a single scope's own value), `Total` (aggregate covered / aggregate coverable across the population), `Minimum` (worst scope), `Average` (mean of per-scope percentages), `Maximum` (best scope). Used by [TestCoverageThresholdMessage](#testcoveragethresholdmessage) together with `AggregatedOver` (a [CoverageScopeLevel](#coveragescopelevel)) to express the threshold evaluation: for example, `Minimum` over `Module` is a distinct evaluation from `Minimum` over `File`. Introduced in [PR #9896](https://github.com/microsoft/testfx/pull/9896).
+
+### CoverageMetric
+
+A public enum in `Microsoft.Testing.Platform.Extensions.Messages` (closed but append-only; consumers must handle unknown values non-exhaustively) that identifies a code-coverage metric. Well-known values: `Line` (0), `Statement` (1), `Branch` (2), `Method` (3), `Function` (4), `Block` (5, the primary metric of Microsoft.CodeCoverage / dotnet-coverage), `Instruction` (6, JaCoCo), `Region` (7, llvm-cov), `Class` (8, JaCoCo / PHPUnit), `Condition` (9), `Complexity` (10, JaCoCo cyclomatic complexity), and `Custom` (255, escape hatch for proprietary metrics such as MC/DC — carries its identifier in `CustomMetricName`). Used by [TestCoverageMessage](#testcoveragemessage) and [TestCoverageThresholdMessage](#testcoveragethresholdmessage). Introduced in [PR #9896](https://github.com/microsoft/testfx/pull/9896).
+
+### CoverageMetricResult
+
+A public sealed class in `Microsoft.Testing.Platform.Services` that represents a single correlated coverage measurement (one [CoverageMetric](#coveragemetric) for one [CoverageScope](#coveragescope)) exposed through [ITestCoverageResult](#itestcoverageresult). Carries `CoveredCount` and `CoverableCount` as `long` values; `Percentage` is derived (`CoveredCount / CoverableCount * 100`, or 0 when nothing is coverable). Also carries `ProducerId` (the collector), `Metric`, and optionally `CustomMetricName` when `Metric == CoverageMetric.Custom`. Introduced in [PR #9896](https://github.com/microsoft/testfx/pull/9896).
+
+### CoverageReportFormat
+
+A public enum in `Microsoft.Testing.Platform.Extensions.Messages` that identifies the on-disk format of a coverage report artifact referenced by [TestCoverageReportMessage](#testcoveragereportmessage) and [CoverageReportReference](#coveragereportreference). Values: `Unknown` (0), `Cobertura` (1), `OpenCover` (2), `Lcov` (3), `CoverageXml` (4, Microsoft.CodeCoverage XML), `Custom` (255, proprietary format identified by `CustomFormatName`). Introduced in [PR #9896](https://github.com/microsoft/testfx/pull/9896).
+
+### CoverageReportReference
+
+A public sealed class in `Microsoft.Testing.Platform.Services` that is a pointer to a rich coverage report artifact, correlated through [ITestCoverageResult](#itestcoverageresult). Carries the report's `SessionUid`, `Path`, [CoverageReportFormat](#coveragereportformat), and collector `ProducerId`, plus an optional `CustomFormatName` when the format is `Custom`. Deep consumers (HTML / UI report generators) parse the referenced artifact for per-line data that the summary intentionally omits. Populated from [TestCoverageReportMessage](#testcoveragereportmessage) by the platform's coverage result aggregator. Introduced in [PR #9896](https://github.com/microsoft/testfx/pull/9896).
+
+### CoverageScope
+
+A public readonly struct in `Microsoft.Testing.Platform.Extensions.Messages` that identifies the entity a coverage measurement or threshold entry describes. Combines a [CoverageScopeLevel](#coveragescopelevel) and an optional string `Name` (module path, type name, file path, etc.; `null` only for `Overall`). An optional `ContainerHint` carries a non-authoritative UI grouping hint (e.g. the enclosing module for a namespace scope) used by report generators; it is not part of scope identity or exact containment. The static `CoverageScope.Overall` convenience member creates an `Overall`-level scope. Used by [TestCoverageMessage](#testcoveragemessage), [TestCoverageThresholdMessage](#testcoveragethresholdmessage), and [CoverageScopeSummary](#coveragescopesummary). Introduced in [PR #9896](https://github.com/microsoft/testfx/pull/9896).
+
+### CoverageScopeLevel
+
+A public enum in `Microsoft.Testing.Platform.Extensions.Messages` (append-only) that specifies the granularity of a [CoverageScope](#coveragescope). Values: `Overall` (0, the whole run), `Module` (1, an assembly file on disk), `Assembly` (2), `Namespace` (3), `Type` (4), `File` (5, a source file). Used with [CoverageScope](#coveragescope) and as the `AggregatedOver` parameter of [TestCoverageThresholdMessage](#testcoveragethresholdmessage). Introduced in [PR #9896](https://github.com/microsoft/testfx/pull/9896).
+
+### CoverageScopeSummary
+
+A public sealed class in `Microsoft.Testing.Platform.Services` that aggregates all coverage metrics for a single [CoverageScope](#coveragescope) in a single session. It is the primary summary-layer surface for report generators: one instance per scope, with every [CoverageMetricResult](#coveragemetricresult) that scope reported. Exposes an indexer `summary[CoverageMetric.Line]` for convenient well-known metric lookup (returns `null` if absent; throws for `CoverageMetric.Custom` — use `GetCustom(name)` instead). Populated and exposed through [ITestCoverageResult](#itestcoverageresult). Introduced in [PR #9896](https://github.com/microsoft/testfx/pull/9896).
+
 ### CrashDump
 
 An MTP extension (`Microsoft.Testing.Extensions.CrashDump`) that automatically captures a process memory dump when the test host crashes. Useful for diagnosing unexpected process termination during test runs.
@@ -148,6 +180,14 @@ An intermediate artifact in the [Formal Verification (FV)](#formal-verification-
 ### IsTestingPlatformApplication
 
 An MSBuild property (`<IsTestingPlatformApplication>true</IsTestingPlatformApplication>`) that marks a project as an MTP test application. When set, the project builds into a self-contained test runner executable rather than a class library consumed by a separate test host.
+
+### ITestCoverageCapabilities
+
+A public interface in `Microsoft.Testing.Platform.Services` that describes the test-coverage messaging capabilities available in the current test application. Exposes `SupportsTestCoverageMessages` (whether the platform supports the coverage message contract) and `EnabledProducerUids` (UIDs of registered data producers that declare at least one coverage message type, as a snapshot taken at query time). Extensions should query this from a test-session lifecycle callback rather than from their constructor. Introduced in [PR #9896](https://github.com/microsoft/testfx/pull/9896). See also [TestCoverageMessage](#testcoveragemessage) and [ITestCoverageResult](#itestcoverageresult).
+
+### ITestCoverageResult
+
+A public interface in `Microsoft.Testing.Platform.Services` that is the application-scoped read model for all coverage data published during a test run. It aggregates raw [TestCoverageMessage](#testcoveragemessage), [TestCoverageThresholdMessage](#testcoveragethresholdmessage), and [TestCoverageReportMessage](#testcoveragereportmessage) messages into three queryable collections: `Scopes` (list of [CoverageScopeSummary](#coveragescopesummary)), `Thresholds` (list of threshold evaluation results), and `Reports` (list of [CoverageReportReference](#coveragereportreference)). `GetOverall(SessionUid)` retrieves the whole-run summary for a specific session, and `HasThresholdFailure` is `true` when any threshold did not pass. The terminal output device and the exit-code policy both read from this interface rather than buffering their own copies. Retrieve via `IServiceProvider`. Introduced in [PR #9896](https://github.com/microsoft/testfx/pull/9896).
 
 ### ITestFilter
 
@@ -424,6 +464,18 @@ The per-project configuration file for Microsoft.Testing.Platform, placed at the
 ### TestContainer
 
 An abstract base class (`TestFramework.ForTestingMSTest.TestContainer`) in the internal [`TestFramework.ForTestingMSTest`](../test/Utilities/TestFramework.ForTestingMSTest) framework used to unit-test MSTest itself. Any class that inherits from `TestContainer` is treated as a test class; every `public` parameterless method on that class is treated as a test — no `[TestClass]` or `[TestMethod]` attributes are needed. The constructor runs before each test and `Dispose(bool)` runs after each test. This framework is used only in `test/UnitTests/TestFramework.UnitTests`; all other test projects in this repository use standard MSTest or MTP.
+
+### TestCoverageMessage
+
+A public sealed class in `Microsoft.Testing.Platform.Extensions.Messages` (extends `DataWithSessionUid`) published to the MTP message bus by a coverage collector to report a single coverage measurement. Carries: `Scope` ([CoverageScope](#coveragescope)), `Metric` ([CoverageMetric](#coveragemetric)), `CoveredCount`, `CoverableCount` (both `long`), `ProducerId` (a stable, non-empty collector identifier), and optionally `CustomMetricName` (when `Metric == CoverageMetric.Custom`). The platform's [ITestCoverageResult](#itestcoverageresult) aggregator consumes these messages using last-write-wins correlation on the full key `(SessionUid, ProducerId, Scope, Metric, CustomMetricName)`. `Percentage` is a convenience computed property. Introduced in [PR #9896](https://github.com/microsoft/testfx/pull/9896). See also [TestCoverageThresholdMessage](#testcoveragethresholdmessage), [TestCoverageReportMessage](#testcoveragereportmessage).
+
+### TestCoverageReportMessage
+
+A public sealed class in `Microsoft.Testing.Platform.Extensions.Messages` (extends `DataWithSessionUid`) published by a coverage collector to register a rich coverage report artifact. Carries `ReportPath` (path to the file on disk), `Format` ([CoverageReportFormat](#coveragereportformat)), `ProducerId`, and optionally `CustomFormatName` (when `Format == CoverageReportFormat.Custom`). The platform stores a [CoverageReportReference](#coveragereportreference) per unique `(SessionUid, ProducerId, ReportPath)` key and exposes it through [ITestCoverageResult](#itestcoverageresult). Deep consumers such as HTML/UI report generators use this reference to locate and parse the artifact. Introduced in [PR #9896](https://github.com/microsoft/testfx/pull/9896). See also [TestCoverageMessage](#testcoveragemessage), [TestCoverageThresholdMessage](#testcoveragethresholdmessage).
+
+### TestCoverageThresholdMessage
+
+A public sealed class in `Microsoft.Testing.Platform.Extensions.Messages` (extends `DataWithSessionUid`) published by a coverage collector to report the result of a coverage threshold evaluation. Carries the same metric identification as [TestCoverageMessage](#testcoveragemessage) plus: `Aggregation` ([CoverageAggregation](#coverageaggregation)), `AggregatedOver` (optional [CoverageScopeLevel](#coveragescopelevel)), `ActualPercentage`, `RequiredPercentage`, `HasCoverableData`, `TreatNoDataAsFailure`, and `Passed` (derived: a threshold with no coverable data passes unless `TreatNoDataAsFailure` is set). When any threshold message has `Passed == false`, `ITestCoverageResult.HasThresholdFailure` returns `true`; an otherwise-successful run then exits with `ExitCode.CoverageThresholdFailed` (14), while an existing non-success exit code retains precedence. Introduced in [PR #9896](https://github.com/microsoft/testfx/pull/9896). See also [TestCoverageMessage](#testcoveragemessage), [ITestCoverageResult](#itestcoverageresult).
 
 ### TestFilterContext
 

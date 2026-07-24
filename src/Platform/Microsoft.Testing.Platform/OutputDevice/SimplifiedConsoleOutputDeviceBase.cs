@@ -144,6 +144,8 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
 
     protected abstract void ConsoleLog(string? message);
 
+    protected virtual bool DisplayActiveTestProgress => false;
+
     public async Task DisplayBannerAsync(string? bannerMessage, CancellationToken cancellationToken)
     {
         using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
@@ -397,6 +399,7 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
                 }
 
                 TimeSpan? duration = timingProp?.GlobalTiming.Duration;
+                bool testCompleted = executionCompleted;
 
                 if (nodeStateProp is InProgressTestNodeStateProperty)
                 {
@@ -414,33 +417,57 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
                 switch (nodeStateProp)
                 {
                     case InProgressTestNodeStateProperty:
+                        if (DisplayActiveTestProgress)
+                        {
+                            return DisplayAsync(
+                                this,
+                                new ProgressMessageOutputDeviceData(
+                                    testNodeStateChanged.TestNode.Uid.Value,
+                                    $"running {testNodeStateChanged.TestNode.DisplayName}"),
+                                cancellationToken);
+                        }
+
                         break;
 
                     case ErrorTestNodeStateProperty errorState:
                         OnFailedTest(testNodeStateChanged, errorState, errorState.Exception, duration);
+                        testCompleted = true;
                         break;
 
                     case FailedTestNodeStateProperty failedState:
                         OnFailedTest(testNodeStateChanged, failedState, failedState.Exception, duration);
+                        testCompleted = true;
                         break;
 
                     case TimeoutTestNodeStateProperty timeoutState:
                         OnFailedTest(testNodeStateChanged, timeoutState, timeoutState.Exception, duration);
+                        testCompleted = true;
                         break;
 
 #pragma warning disable CS0618, MTP0001 // Type or member is obsolete
                     case CancelledTestNodeStateProperty cancelledState:
 #pragma warning restore CS0618, MTP0001 // Type or member is obsolete
                         OnFailedTest(testNodeStateChanged, cancelledState, cancelledState.Exception, duration);
+                        testCompleted = true;
                         break;
 
                     case PassedTestNodeStateProperty:
                         _passedTests++;
+                        testCompleted = true;
                         break;
 
                     case SkippedTestNodeStateProperty:
                         _skippedTests++;
+                        testCompleted = true;
                         break;
+                }
+
+                if (testCompleted && DisplayActiveTestProgress)
+                {
+                    return DisplayAsync(
+                        this,
+                        new ProgressMessageOutputDeviceData(testNodeStateChanged.TestNode.Uid.Value, message: null),
+                        cancellationToken);
                 }
 
                 // Tracked by https://github.com/microsoft/testfx/issues/8086:

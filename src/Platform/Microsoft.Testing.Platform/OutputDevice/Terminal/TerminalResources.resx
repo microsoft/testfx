@@ -335,4 +335,124 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an 
     <value>Discovered {0} tests in {1} assemblies.</value>
     <comment>dotnet test orchestrator discovery total across multiple assemblies. {0} is the discovered test count, {1} the assembly count.</comment>
   </data>
+  <data name="CodeCoverageSummary" xml:space="preserve">
+    <value>Code Coverage Summary:</value>
+    <comment>Heading printed before the per-scope code coverage percentages in the run summary.</comment>
+  </data>
+  <data name="CoverageThresholdResults" xml:space="preserve">
+    <value>Coverage Threshold Results:</value>
+    <comment>Heading printed before the coverage threshold pass/fail comparisons in the run summary.</comment>
+  </data>
+  <data name="CoverageThresholdPassed" xml:space="preserve">
+    <value>{0}% &gt;= {1}% threshold</value>
+    <comment>Coverage threshold comparison shown when the threshold is met. {0} is the actual coverage percentage, {1} is the threshold percentage.</comment>
+  </data>
+  <data name="CoverageThresholdFailed" xml:space="preserve">
+    <value>{0}% &lt; {1}% threshold</value>
+    <comment>Coverage threshold comparison shown when the threshold is not met. {0} is the actual coverage percentage, {1} is the threshold percentage.</comment>
+  </data>
+  <data name="CoverageThresholdNoDataFailed" xml:space="preserve">
+    <value>No coverable data (failed by policy)</value>
+    <comment>Coverage threshold result shown when a scope has no coverable data and the configured policy treats that as a failure.</comment>
+  </data>
+  <data name="CoverageThresholdNoDataPassed" xml:space="preserve">
+    <value>No coverable data (passed by policy)</value>
+    <comment>Coverage threshold result shown when a scope has no coverable data and the configured policy treats that as a pass.</comment>
+  </data>
+  <data name="CoverageScopeOverall" xml:space="preserve">
+    <value>Total</value>
+    <comment>Label for the whole-run (overall) scope in the coverage summary (e.g. 'Total - Line: 95.0%').</comment>
+  </data>
+  <data name="CoverageScopeModule" xml:space="preserve">
+    <value>Module</value>
+    <comment>Label for the module scope level in coverage threshold aggregation descriptions.</comment>
+  </data>
+  <data name="CoverageScopeAssembly" xml:space="preserve">
+    <value>Assembly</value>
+    <comment>Label for the assembly scope level in coverage threshold aggregation descriptions.</comment>
+  </data>
+  <data name="CoverageScopeNamespace" xml:space="preserve">
+    <value>Namespace</value>
+    <comment>Label for the namespace scope level in coverage threshold aggregation descriptions.</comment>
+  </data>
+  <data name="CoverageScopeType" xml:space="preserve">
+    <value>Type</value>
+    <comment>Label for the type scope level in coverage threshold aggregation descriptions.</comment>
+  </data>
+  <data name="CoverageScopeFile" xml:space="preserve">
+    <value>File</value>
+    <comment>Label for the file scope level in coverage threshold aggregation descriptions.</comment>
+  </data>
+  <data name="CoverageNoData" xml:space="preserve">
+    <value>N/A</value>
+    <comment>Placeholder shown instead of a percentage when a coverage metric has no coverable data.</comment>
+  </data>
+  <data name="CoverageMetricLine" xml:space="preserve">
+    <value>Line</value>
+    <comment>Label for line code coverage in the coverage summary (e.g. 'Total - Line: 95.0%').</comment>
+  </data>
+  <data name="CoverageMetricStatement" xml:space="preserve">
+    <value>Statement</value>
+    <comment>Label for statement code coverage in the coverage summary (e.g. 'Total - Statement: 95.0%').</comment>
+  </data>
+  <data name="CoverageMetricBranch" xml:space="preserve">
+    <value>Branch</value>
+    <comment>Label for branch code coverage in the coverage summary (e.g. 'Total - Branch: 95.0%').</comment>
+  </data>
+  <data name="CoverageMetricMethod" xml:space="preserve">
+    <value>Method</value>
+    <comment>Label for method code coverage in the coverage summary (e.g. 'Total - Method: 95.0%').</comment>
+  </data>
+  <data name="CoverageMetricWithProducer" xml:space="preserve">
+    <value>{0} [{1}]</value>
+    <comment>Disambiguates duplicate coverage metric rows. {0} is the metric label and {1} is the coverage producer id.</comment>
+  </data>
+  <data name="CoverageMetricFunction" xml:space="preserve">
+    <value>Function</value>
+    <comment>Label for function code coverage in the coverage summary (e.g. 'Total - Function: 95.0%').</comment>
+  </data>
+  <data name="CoverageMetricBlock" xml:space="preserve">
+    <value>Block</value>
+    <comment>Label for block code coverage in the coverage summary (e.g. 'Total - Block: 95.0%').</comment>
+  </data>
+  <data name="CoverageMetricInstruction" xml:space="preserve">
+    <value>Instruction</value>
+    <comment>Label for instruction code coverage in the coverage summary (e.g. 'Total - Instruction: 95.0%').</comment>
+  </data>
+  <data name="CoverageMetricRegion" xml:space="preserve">
+    <value>Region</value>
+    <comment>Label for region code coverage in the coverage summary (e.g. 'Total - Region: 95.0%').</comment>
+  </data>
+  <data name="CoverageMetricClass" xml:space="preserve">
+    <value>Class</value>
+    <comment>Label for class code coverage in the coverage summary (e.g. 'Total - Class: 95.0%').</comment>
+  </data>
+  <data name="CoverageMetricCondition" xml:space="preserve">
+    <value>Condition</value>
+    <comment>Label for condition code coverage in the coverage summary (e.g. 'Total - Condition: 95.0%').</comment>
+  </data>
+  <data name="CoverageMetricComplexity" xml:space="preserve">
+    <value>Complexity</value>
+    <comment>Label for cyclomatic complexity in the coverage summary (e.g. 'Total - Complexity: 95.0%').</comment>
+  </data>
+  <data name="CoverageAggregationTotal" xml:space="preserve">
+    <value>Total</value>
+    <comment>Label for the total (aggregate) statistic used in a coverage threshold comparison (e.g. 'Line (Total): ...').</comment>
+  </data>
+  <data name="CoverageAggregationMinimum" xml:space="preserve">
+    <value>Minimum</value>
+    <comment>Label for the minimum-across-scopes statistic used in a coverage threshold comparison (e.g. 'Line (Minimum): ...').</comment>
+  </data>
+  <data name="CoverageAggregationAverage" xml:space="preserve">
+    <value>Average</value>
+    <comment>Label for the average-across-scopes statistic used in a coverage threshold comparison (e.g. 'Line (Average): ...').</comment>
+  </data>
+  <data name="CoverageAggregationMaximum" xml:space="preserve">
+    <value>Maximum</value>
+    <comment>Label for the maximum-across-scopes statistic used in a coverage threshold comparison (e.g. 'Line (Maximum): ...').</comment>
+  </data>
+  <data name="CoverageAggregationOver" xml:space="preserve">
+    <value>{0} over {1}</value>
+    <comment>Coverage threshold aggregation description. {0} is the aggregation label and {1} is the population scope level.</comment>
+  </data>
 </root>

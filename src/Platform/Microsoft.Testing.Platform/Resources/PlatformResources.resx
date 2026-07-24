@@ -607,6 +607,54 @@ The default is TestResults in the directory that contains the test application.<
     <value>dotnet test pipe.</value>
     <comment>{Locked="dotnet test"}</comment>
   </data>
+  <data name="PlatformCommandLineDotnetTestTransportOptionDescription" xml:space="preserve">
+    <value>Selects the pre-launch transport for the dotnet test protocol.</value>
+    <comment>{Locked="dotnet test"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestHttpEndpointOptionDescription" xml:space="preserve">
+    <value>Specifies the authenticated HTTP endpoint for the dotnet test protocol.</value>
+    <comment>{Locked="HTTP"}{Locked="dotnet test"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestHttpTokenOptionDescription" xml:space="preserve">
+    <value>Specifies the per-run HTTP bearer token for the dotnet test protocol.</value>
+    <comment>{Locked="HTTP"}{Locked="dotnet test"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestTransportInvalid" xml:space="preserve">
+    <value>'--dotnet-test-transport' received unexpected value '{0}'. Supported values are: {1}.</value>
+    <comment>{0} is the unexpected transport value. {1} is the comma-separated list of supported transport values. {Locked="--dotnet-test-transport"}{Locked="pipe"}{Locked="http"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestHttpEndpointInvalid" xml:space="preserve">
+    <value>'--dotnet-test-http-endpoint' requires an absolute HTTPS URL, or an HTTP loopback URL, without user information, query, or fragment.</value>
+    <comment>{Locked="--dotnet-test-http-endpoint"}{Locked="HTTP"}{Locked="HTTPS"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestHttpTokenInvalid" xml:space="preserve">
+    <value>'--dotnet-test-http-token' requires a non-empty valid bearer token without whitespace or control characters.</value>
+    <comment>{Locked="--dotnet-test-http-token"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestTransportConflict" xml:space="preserve">
+    <value>The dotnet test named-pipe and HTTP transports cannot be selected together.</value>
+    <comment>{Locked="dotnet test"}{Locked="HTTP"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestHttpOptionsRequireTransport" xml:space="preserve">
+    <value>The dotnet test HTTP endpoint and token options require '--dotnet-test-transport http'.</value>
+    <comment>{Locked="dotnet test"}{Locked="HTTP"}{Locked="--dotnet-test-transport http"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestCliRequiresTransport" xml:space="preserve">
+    <value>'--server dotnettestcli' requires either '--dotnet-test-pipe' or '--dotnet-test-transport http'.</value>
+    <comment>{Locked="--server dotnettestcli"}{Locked="--dotnet-test-pipe"}{Locked="--dotnet-test-transport http"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestHttpRequiresEndpointAndToken" xml:space="preserve">
+    <value>'--dotnet-test-transport http' requires both '--dotnet-test-http-endpoint' and '--dotnet-test-http-token'.</value>
+    <comment>{Locked="--dotnet-test-transport http"}{Locked="--dotnet-test-http-endpoint"}{Locked="--dotnet-test-http-token"}</comment>
+  </data>
+  <data name="PlatformCommandLinePipeTransportNotSupportedOnBrowser" xml:space="preserve">
+    <value>The dotnet test named-pipe transport is not supported on browser-wasm. Use '--dotnet-test-transport http'.</value>
+    <comment>{Locked="dotnet test"}{Locked="browser-wasm"}{Locked="--dotnet-test-transport http"}</comment>
+  </data>
+  <data name="PlatformCommandLinePipeTransportNotSupportedOnWasi" xml:space="preserve">
+    <value>The dotnet test named-pipe transport is not supported on wasi-wasm. Use '--dotnet-test-transport http'.</value>
+    <comment>{Locked="dotnet test"}{Locked="wasi-wasm"}{Locked="--dotnet-test-transport http"}</comment>
+  </data>
   <data name="TreeNodeFilterDescription" xml:space="preserve">
     <value>Use a tree filter to filter down the tests to execute</value>
   </data>

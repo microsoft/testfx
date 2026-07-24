@@ -76,6 +76,7 @@ internal sealed class PlatformOutputDeviceManager
                 serviceProvider.GetRuntimeFeature(),
                 serviceProvider.GetEnvironment(),
                 serviceProvider.GetPlatformInformation(),
+                serviceProvider.GetCommandLineOptions(),
                 serviceProvider.GetRequiredService<IStopPoliciesService>());
 #else
             throw new PlatformNotSupportedException(PlatformResources.BrowserPlatformNotSupportedOnOlderFrameworks);
@@ -108,6 +109,7 @@ internal sealed class PlatformOutputDeviceManager
             serviceProvider.GetLoggerFactory(),
             serviceProvider.GetClock(),
             serviceProvider.GetRequiredService<IStopPoliciesService>(),
-            serviceProvider.GetTestApplicationCancellationTokenSource());
+            serviceProvider.GetTestApplicationCancellationTokenSource(),
+            serviceProvider.GetRequiredService<ITestCoverageResult>());
     }
 }

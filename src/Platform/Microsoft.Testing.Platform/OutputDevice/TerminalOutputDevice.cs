@@ -58,6 +58,11 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     private readonly List<TestNode> _discoveredTestsForJson = [];
     private readonly Dictionary<ProgressMessageIdentity, string> _jsonProgressMessages = [];
 
+    // The single accumulator for coverage data (shared with the exit-code checks in the hosts). The
+    // terminal device renders from this at session end instead of buffering its own copy, so the two
+    // consumers can't drift apart.
+    private readonly ITestCoverageResult _testCoverageResult;
+
     private TerminalTestReporter? _terminalTestReporter;
     private bool _bannerDisplayed;
     private bool _isListTests;
@@ -77,7 +82,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         ITestApplicationModuleInfo testApplicationModuleInfo, ITestHostControllerInfo testHostControllerInfo, IAsyncMonitor asyncMonitor,
         IRuntimeFeature runtimeFeature, IEnvironment environment, IPlatformInformation platformInformation,
         ICommandLineOptions commandLineOptions, IFileLoggerInformation? fileLoggerInformation, ILoggerFactory loggerFactory, IClock clock,
-        IStopPoliciesService policiesService, ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource)
+        IStopPoliciesService policiesService, ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource, ITestCoverageResult testCoverageResult)
     {
         _console = console;
         _testHostControllerInfo = testHostControllerInfo;
@@ -91,6 +96,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         _clock = clock;
         _policiesService = policiesService;
         _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
+        _testCoverageResult = testCoverageResult;
 
         if (_runtimeFeature.IsDynamicCodeSupported)
         {

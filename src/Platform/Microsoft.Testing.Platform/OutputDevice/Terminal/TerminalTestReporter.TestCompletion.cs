@@ -8,6 +8,18 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 [UnsupportedOSPlatform("browser")]
 internal sealed partial class TerminalTestReporter
 {
+    internal void TestCompletedWithoutResult(string executionId, string testNodeUid)
+    {
+        if (!_assemblies.TryGetValue(executionId, out TestProgressState? asm))
+        {
+            throw ApplicationStateGuard.Unreachable();
+        }
+
+        asm.TestNodeResultsState?.RemoveRunningTestNode(testNodeUid);
+        _terminalWithProgress.UpdateWorker(asm.SlotIndex);
+        _terminalWithProgress.NotifyTestCompleted();
+    }
+
     internal void TestCompleted(
         string executionId,
         string testNodeUid,

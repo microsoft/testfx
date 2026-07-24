@@ -72,6 +72,81 @@ public sealed class SimplifiedConsoleOutputDeviceTests
     }
 
     [TestMethod]
+    public async Task ConsumeAsync_InProgressTestNode_WhenActiveTestProgressEnabled_WritesActiveTestDisplayNameOnce()
+    {
+        using var asyncMonitor = new SystemAsyncMonitor();
+        RecordingSimplifiedOutputDevice device = CreateOutputDevice(asyncMonitor, displayActiveTestProgress: true);
+        TestNodeUpdateMessage update = CreateTestNodeUpdate(InProgressTestNodeStateProperty.CachedInstance);
+
+        await device.ConsumeAsync(null!, update, CancellationToken.None);
+        await device.ConsumeAsync(null!, update, CancellationToken.None);
+
+        Assert.AreSequenceEqual(new[] { "running BrowserTests.HangingTest" }, device.Messages);
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_InProgressTestNode_WhenActiveTestProgressDisabled_DoesNotWrite()
+    {
+        using var asyncMonitor = new SystemAsyncMonitor();
+        RecordingSimplifiedOutputDevice device = CreateOutputDevice(asyncMonitor);
+
+        await device.ConsumeAsync(
+            null!,
+            CreateTestNodeUpdate(InProgressTestNodeStateProperty.CachedInstance),
+            CancellationToken.None);
+
+        Assert.IsEmpty(device.Messages);
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_CompletedTestNode_AllowsSameTestToReportProgressAgain()
+    {
+        using var asyncMonitor = new SystemAsyncMonitor();
+        RecordingSimplifiedOutputDevice device = CreateOutputDevice(asyncMonitor, displayActiveTestProgress: true);
+
+        await device.ConsumeAsync(
+            null!,
+            CreateTestNodeUpdate(InProgressTestNodeStateProperty.CachedInstance),
+            CancellationToken.None);
+        await device.ConsumeAsync(
+            null!,
+            CreateTestNodeUpdate(PassedTestNodeStateProperty.CachedInstance),
+            CancellationToken.None);
+        await device.ConsumeAsync(
+            null!,
+            CreateTestNodeUpdate(InProgressTestNodeStateProperty.CachedInstance),
+            CancellationToken.None);
+
+        Assert.AreSequenceEqual(
+            new[] { "running BrowserTests.HangingTest", "running BrowserTests.HangingTest" },
+            device.Messages);
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_EmptyResult_AllowsSameTestToReportProgressAgain()
+    {
+        using var asyncMonitor = new SystemAsyncMonitor();
+        RecordingSimplifiedOutputDevice device = CreateOutputDevice(asyncMonitor, displayActiveTestProgress: true);
+
+        await device.ConsumeAsync(
+            null!,
+            CreateTestNodeUpdate(InProgressTestNodeStateProperty.CachedInstance),
+            CancellationToken.None);
+        await device.ConsumeAsync(
+            null!,
+            CreateTestNodeUpdate(TestNodeExecutionCompletedProperty.CachedInstance),
+            CancellationToken.None);
+        await device.ConsumeAsync(
+            null!,
+            CreateTestNodeUpdate(InProgressTestNodeStateProperty.CachedInstance),
+            CancellationToken.None);
+
+        Assert.AreSequenceEqual(
+            new[] { "running BrowserTests.HangingTest", "running BrowserTests.HangingTest" },
+            device.Messages);
+    }
+
+    [TestMethod]
     public async Task ConsumeAsync_InProgressTest_ReportsOnlyAfterSlowThreshold()
     {
         using var asyncMonitor = new SystemAsyncMonitor();
@@ -244,10 +319,27 @@ public sealed class SimplifiedConsoleOutputDeviceTests
         Assert.Contains("AsyncHang", await device.MessageReported);
     }
 
+    private static TestNodeUpdateMessage CreateTestNodeUpdate(IProperty property)
+        => CreateTestNodeUpdate("hanging-test", "BrowserTests.HangingTest", property);
+
+    private static TestNodeUpdateMessage CreateTestNodeUpdate(
+        string uid,
+        string displayName,
+        IProperty property)
+        => new(
+            default,
+            new TestNode
+            {
+                Uid = new TestNodeUid(uid),
+                DisplayName = displayName,
+                Properties = new PropertyBag(property),
+            });
+
     private static RecordingSimplifiedOutputDevice CreateOutputDevice(
         IAsyncMonitor asyncMonitor,
         FakeClock? clock = null,
-        TimeSpan? slowTestPollInterval = null)
+        TimeSpan? slowTestPollInterval = null,
+        bool displayActiveTestProgress = false)
     {
         var moduleInfo = new Mock<ITestApplicationModuleInfo>();
         moduleInfo.Setup(x => x.GetDisplayName()).Returns("testhost");
@@ -263,25 +355,14 @@ public sealed class SimplifiedConsoleOutputDeviceTests
             Mock.Of<IStopPoliciesService>(),
             TimeSpan.FromSeconds(60),
             clock.CreateStopwatch,
-            slowTestPollInterval ?? TimeSpan.FromSeconds(1));
+            slowTestPollInterval ?? TimeSpan.FromSeconds(1),
+            displayActiveTestProgress);
     }
-
-    private static TestNodeUpdateMessage CreateTestNodeUpdate(
-        string uid,
-        string displayName,
-        IProperty property)
-        => new(
-            default,
-            new TestNode
-            {
-                Uid = new TestNodeUid(uid),
-                DisplayName = displayName,
-                Properties = new PropertyBag(property),
-            });
 
     private sealed class RecordingSimplifiedOutputDevice : SimplifiedConsoleOutputDeviceBase
     {
         private readonly TaskCompletionSource<string> _messageReported = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly bool _displayActiveTestProgress;
 
         public RecordingSimplifiedOutputDevice(
             IConsole console,
@@ -293,7 +374,8 @@ public sealed class SimplifiedConsoleOutputDeviceTests
             IStopPoliciesService policiesService,
             TimeSpan slowTestThreshold,
             Func<IStopwatch> createStopwatch,
-            TimeSpan slowTestPollInterval)
+            TimeSpan slowTestPollInterval,
+            bool displayActiveTestProgress)
             : base(
                 console,
                 testApplicationModuleInfo,
@@ -306,6 +388,7 @@ public sealed class SimplifiedConsoleOutputDeviceTests
                 createStopwatch,
                 slowTestPollInterval)
         {
+            _displayActiveTestProgress = displayActiveTestProgress;
         }
 
         public List<string?> Messages { get; } = [];
@@ -315,6 +398,8 @@ public sealed class SimplifiedConsoleOutputDeviceTests
         public override string DisplayName => nameof(RecordingSimplifiedOutputDevice);
 
         public override string Description => nameof(RecordingSimplifiedOutputDevice);
+
+        protected override bool DisplayActiveTestProgress => _displayActiveTestProgress;
 
         protected override void ConsoleWarn(string? message) => RecordMessage(message);
 

@@ -170,6 +170,7 @@ internal sealed partial class TerminalOutputDevice
                 StandardOutputProperty? stdoutProp = null;
                 StandardErrorProperty? stderrProp = null;
                 TestNodeStateProperty? nodeState = null;
+                bool executionCompleted = false;
                 PropertyBag.PropertyBagEnumerator enumerator = testNodeStateChanged.TestNode.Properties.GetStructEnumerator();
                 while (enumerator.MoveNext())
                 {
@@ -179,6 +180,7 @@ internal sealed partial class TerminalOutputDevice
                         case StandardOutputProperty so: stdoutProp = so; break;
                         case StandardErrorProperty se: stderrProp = se; break;
                         case TestNodeStateProperty s: nodeState = s; break;
+                        case TestNodeExecutionCompletedProperty: executionCompleted = true; break;
                         case FileArtifactProperty fa:
                             _terminalTestReporter.ArtifactAdded(
                                 outOfProcess: _processRole != TestProcessRole.TestHost,
@@ -195,6 +197,14 @@ internal sealed partial class TerminalOutputDevice
                 TimeSpan? duration = timing?.GlobalTiming.Duration;
                 string? standardOutput = stdoutProp?.StandardOutput;
                 string? standardError = stderrProp?.StandardError;
+
+                if (executionCompleted)
+                {
+                    _terminalTestReporter.TestCompletedWithoutResult(
+                        InProcessExecutionId,
+                        testNodeStateChanged.TestNode.Uid.Value);
+                    break;
+                }
 
                 switch (nodeState)
                 {

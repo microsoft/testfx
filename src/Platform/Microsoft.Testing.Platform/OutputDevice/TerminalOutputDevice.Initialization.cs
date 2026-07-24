@@ -102,19 +102,18 @@ internal sealed partial class TerminalOutputDevice
         // --progress <auto|on|off> is the modern, positive form. When present it wins over the legacy
         // --no-progress flag. --no-progress keeps working as a deprecated alias for --progress off and
         // emits a single deprecation warning per process.
-        bool noProgress;
-        if (_commandLineOptions.TryGetOptionArgumentList(TerminalTestReporterCommandLineOptionsProvider.ProgressOption, out string[]? progressArguments)
-            && progressArguments is { Length: > 0 })
-        {
-            // 'on' and 'auto' currently behave the same: progress is shown unless the terminal is not capable
-            // of in-place updates (NoAnsi/SimpleAnsi) or we are a test-host controller, --list-tests, or server
-            // mode. A dedicated heartbeat renderer for the non-cursor modes is tracked by #9125.
-            noProgress = CommandLineOptionArgumentValidator.IsOffValue(progressArguments[0]);
-        }
-        else if (_commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoProgressOption))
-        {
-            noProgress = true;
+        bool progressOptionSet = _commandLineOptions.TryGetOptionArgumentList(
+            TerminalTestReporterCommandLineOptionsProvider.ProgressOption,
+            out string[]? progressArguments)
+            && progressArguments is { Length: > 0 };
 
+        // 'on' and 'auto' currently behave the same: progress is shown unless the terminal is not capable
+        // of in-place updates (NoAnsi/SimpleAnsi) or we are a test-host controller, --list-tests, or server
+        // mode. A dedicated heartbeat renderer for the non-cursor modes is tracked by #9125.
+        bool noProgress = !TerminalTestReporterCommandLineOptionsProvider.IsProgressEnabled(_commandLineOptions);
+        if (!progressOptionSet
+            && _commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoProgressOption))
+        {
             // The deprecation warning is a nudge for interactive users to move to --progress off. We deliberately
             // do not emit it in CI: it is invisible noise there, and build infrastructure (e.g. the Arcade SDK test
             // runner) passes --no-progress unconditionally, so emitting to stderr would surface as a build error in
@@ -123,10 +122,6 @@ internal sealed partial class TerminalOutputDevice
             {
                 await WriteToStandardErrorAsync(PlatformResources.TerminalNoProgressDeprecatedWarning).ConfigureAwait(false);
             }
-        }
-        else
-        {
-            noProgress = false;
         }
 
         // _runtimeFeature.IsHotReloadEnabled is not set to true here, even if the session will be HotReload,

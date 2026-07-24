@@ -123,9 +123,9 @@ internal abstract class SlowTestReporterBase : IDataConsumer, ITestSessionLifeti
                 // threshold out so a genuinely slow test would never surface.
                 _inProgress.TryAdd(uid, new InProgressTest(testName, displayLabel, _clock.UtcNow, threshold));
             }
-            else if (state is not null)
+            else if (state is not null || update.TestNode.Properties.Any<TestNodeExecutionCompletedProperty>())
             {
-                // Any non-in-progress state (passed/failed/skipped/error/timeout/cancelled) is terminal for surfacing.
+                // Any non-in-progress state, including outcome-less execution completion, is terminal for surfacing.
                 _inProgress.TryRemove(uid, out _);
             }
         }

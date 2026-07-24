@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## <a name="4.4.0" />[4.4.0] - UNRELEASED
 
-See full log [of v4.3.2...v4.4.0](https://github.com/microsoft/testfx/compare/v4.3.2...v4.4.0)
+See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4.3.3...v4.4.0)
 
 ### Added
 
@@ -19,6 +19,24 @@ See full log [of v4.3.2...v4.4.0](https://github.com/microsoft/testfx/compare/v4
 ### Fixed
 
 * Fix `CloneWithUpdatedSource` mutating `this` instead of the clone by @Evangelink in [#9581](https://github.com/microsoft/testfx/pull/9581)
+
+## <a name="4.3.3" />[4.3.3] - UNRELEASED
+
+See full log [of v4.3.2...v4.3.3](https://github.com/microsoft/testfx/compare/v4.3.2...v4.3.3)
+
+### Changed
+
+* Produce portable PDBs for official builds so symbols can be published to symbol servers by @Evangelink in [#10006](https://github.com/microsoft/testfx/pull/10006)
+
+### Fixed
+
+* Restore compatibility between Microsoft.Testing.Platform and the deprecated MSTest.Engine used by source-generated test projects by @Evangelink in [#9938](https://github.com/microsoft/testfx/pull/9938)
+* Fix MSTEST0037 incorrectly rewriting non-generic `IDictionary.Contains` calls by @Evangelink in [#9968](https://github.com/microsoft/testfx/pull/9968)
+* Fix MSTEST0065 incorrectly reporting on collection types that declare their own equality by @Evangelink in [#9978](https://github.com/microsoft/testfx/pull/9978)
+* Fix self-comparison analyzers incorrectly reporting `Assert.AreEqual` calls that use user-defined equality by @Evangelink in [#10008](https://github.com/microsoft/testfx/pull/10008)
+* Regenerate MSTest.Sdk source-generated entry points and extension registrations after the MSBuild task assembly is updated by @Evangelink in [#10082](https://github.com/microsoft/testfx/pull/10082)
+* Fix MSTEST0063 failing to validate constructors on classes using derived `[TestClass]` attributes, including `[STATestClass]` by @Evangelink in [#9851](https://github.com/microsoft/testfx/pull/9851)
+* Keep `[TestProperty]`, test categories and host-provided properties scoped to the individual test lifecycle by @Evangelink in [#10080](https://github.com/microsoft/testfx/pull/10080)
 
 ## <a name="4.3.2" />[4.3.2] - 2026-07-13
 

@@ -14,7 +14,6 @@ using Microsoft.Testing.Platform.Tools;
 
 namespace Microsoft.Testing.Platform;
 
-[UnsupportedOSPlatform("browser")]
 internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
 {
     private readonly CommandLineHandler _commandLineHandler;
@@ -23,7 +22,8 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
     private readonly ITestApplicationCancellationTokenSource _cancellationTokenSource;
     private readonly ILogger _logger;
 
-    private NamedPipeClient? _dotnetTestPipeClient;
+    private IClient? _transportClient;
+    private DotnetTestTransportKind _transportKind;
 
     private NamedPipeClient? _serverControlPipeClient;
     private Task? _serverControlListenerTask;
@@ -53,17 +53,15 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
         _logger = logger;
     }
 
-    public bool IsServerMode => _dotnetTestPipeClient?.IsConnected == true;
+    public bool IsServerMode => _transportClient?.IsConnected == true;
 
     public Task<IPushOnlyProtocolConsumer> GetDataConsumerAsync()
         => Task.FromResult((IPushOnlyProtocolConsumer)new DotnetTestDataConsumer(this, _environment));
 
     public async Task AfterCommonServiceSetupAsync()
     {
-        // If we are in server mode and the pipe name is provided
-        // then, we need to connect to the pipe server.
-        if (_commandLineHandler.HasDotnetTestServerOption() &&
-            _commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.DotNetTestPipeOptionKey, out string[]? arguments))
+        if (_commandLineHandler.HasDotnetTestServerOption()
+            && _commandLineHandler.TryGetDotnetTestTransport(out DotnetTestTransportKind transport))
         {
             // The execution id is used to identify the test execution
             // We are storing it as an env var so that it can be read by the test host, test host controller and the test host orchestrator
@@ -73,16 +71,39 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
                 _environment.SetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID, Guid.NewGuid().ToString("N"));
             }
 
-            _dotnetTestPipeClient = new(arguments[0], _environment);
-            _dotnetTestPipeClient.RegisterAllSerializers();
+            _transportKind = transport;
+            _transportClient = transport switch
+            {
+                DotnetTestTransportKind.Http => CreateHttpClient(),
+                DotnetTestTransportKind.NamedPipe when !OperatingSystem.IsBrowser() && !OperatingSystem.IsWasi() => CreateNamedPipeClient(),
+                DotnetTestTransportKind.NamedPipe => throw new PlatformNotSupportedException("The dotnet test named-pipe transport is not supported on WebAssembly."),
+                _ => throw ApplicationStateGuard.Unreachable(),
+            };
 
-            await _dotnetTestPipeClient.ConnectAsync(_cancellationTokenSource.CancellationToken).ConfigureAwait(false);
+            ((NamedPipeBase)_transportClient).RegisterAllSerializers();
+
+            await _transportClient.ConnectAsync(_cancellationTokenSource.CancellationToken).ConfigureAwait(false);
         }
+    }
+
+    [UnsupportedOSPlatform("browser")]
+    private NamedPipeClient CreateNamedPipeClient()
+    {
+        ApplicationStateGuard.Ensure(_commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.DotNetTestPipeOptionKey, out string[]? arguments));
+        return new NamedPipeClient(arguments[0], _environment);
+    }
+
+    private DotnetTestHttpClient CreateHttpClient()
+    {
+        ApplicationStateGuard.Ensure(_commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.DotNetTestHttpEndpointOptionKey, out string[]? endpointArguments));
+        ApplicationStateGuard.Ensure(_commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.DotNetTestHttpTokenOptionKey, out string[]? tokenArguments));
+        return new DotnetTestHttpClient(new Uri(endpointArguments[0], UriKind.Absolute), tokenArguments[0]);
     }
 
     public async Task HelpInvokedAsync()
     {
-        RoslynDebug.Assert(_dotnetTestPipeClient is not null);
+        IClient transportClient = _transportClient
+            ?? throw new InvalidOperationException("The dotnet test transport client is not connected.");
 
         List<CommandLineOptionMessage> commandLineHelpOptions = [];
         foreach (ICommandLineOptionsProvider commandLineOptionProvider in _commandLineHandler.CommandLineOptionsProviders)
@@ -102,7 +123,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             }
         }
 
-        await _dotnetTestPipeClient.RequestReplyAsync<CommandLineOptionMessages, VoidResponse>(new CommandLineOptionMessages(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath(), [.. commandLineHelpOptions.OrderBy(option => option.Name)]), _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
+        await transportClient.RequestReplyAsync<CommandLineOptionMessages, VoidResponse>(new CommandLineOptionMessages(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath(), [.. commandLineHelpOptions.OrderBy(option => option.Name)]), _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
     }
 
     public bool IsIDE { get; private set; }
@@ -125,7 +146,8 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
 
     public async Task<bool> IsCompatibleProtocolAsync(string hostType, IReadOnlyDictionary<byte, string>? additionalHandshakeProperties = null)
     {
-        RoslynDebug.Assert(_dotnetTestPipeClient is not null);
+        IClient transportClient = _transportClient
+            ?? throw new InvalidOperationException("The dotnet test transport client is not connected.");
 
         string supportedProtocolVersions = ProtocolConstants.SupportedVersions;
         Dictionary<byte, string> properties = new()
@@ -157,13 +179,14 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
 
         HandshakeMessage handshakeMessage = new(properties);
 
-        HandshakeMessage response = await _dotnetTestPipeClient.RequestReplyAsync<HandshakeMessage, HandshakeMessage>(handshakeMessage, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
+        HandshakeMessage response = await transportClient.RequestReplyAsync<HandshakeMessage, HandshakeMessage>(handshakeMessage, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
         IsIDE = response.Properties?.TryGetValue(HandshakeMessagePropertyNames.IsIDE, out string? isIDEValue) == true &&
             bool.TryParse(isIDEValue, out bool isIDE) &&
             isIDE;
 
-        if (response.Properties?.TryGetValue(HandshakeMessagePropertyNames.ServerControlPipeName, out string? serverControlPipeName) is true &&
+        if (_transportKind == DotnetTestTransportKind.NamedPipe
+            && response.Properties?.TryGetValue(HandshakeMessagePropertyNames.ServerControlPipeName, out string? serverControlPipeName) is true &&
             !RoslynString.IsNullOrEmpty(serverControlPipeName))
         {
             _serverControlPipeName = serverControlPipeName;
@@ -205,33 +228,33 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
 
     public async Task SendMessageAsync(IRequest message)
     {
-        NamedPipeClient dotnetTestPipeClient = _dotnetTestPipeClient
-            ?? throw new InvalidOperationException("The dotnet test pipe client is not connected.");
+        IClient transportClient = _transportClient
+            ?? throw new InvalidOperationException("The dotnet test transport client is not connected.");
 
         switch (message)
         {
             case DiscoveredTestMessages discoveredTestMessages:
-                await dotnetTestPipeClient.RequestReplyAsync<DiscoveredTestMessages, VoidResponse>(discoveredTestMessages, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
+                await transportClient.RequestReplyAsync<DiscoveredTestMessages, VoidResponse>(discoveredTestMessages, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
                 break;
 
             case TestResultMessages testResultMessages:
-                await dotnetTestPipeClient.RequestReplyAsync<TestResultMessages, VoidResponse>(testResultMessages, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
+                await transportClient.RequestReplyAsync<TestResultMessages, VoidResponse>(testResultMessages, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
                 break;
 
             case FileArtifactMessages fileArtifactMessages:
-                await dotnetTestPipeClient.RequestReplyAsync<FileArtifactMessages, VoidResponse>(fileArtifactMessages, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
+                await transportClient.RequestReplyAsync<FileArtifactMessages, VoidResponse>(fileArtifactMessages, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
                 break;
 
             case TestSessionEvent testSessionEvent:
-                await dotnetTestPipeClient.RequestReplyAsync<TestSessionEvent, VoidResponse>(testSessionEvent, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
+                await transportClient.RequestReplyAsync<TestSessionEvent, VoidResponse>(testSessionEvent, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
                 break;
 
             case AzureDevOpsLogMessage azureDevOpsLogMessage:
-                await dotnetTestPipeClient.RequestReplyAsync<AzureDevOpsLogMessage, VoidResponse>(azureDevOpsLogMessage, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
+                await transportClient.RequestReplyAsync<AzureDevOpsLogMessage, VoidResponse>(azureDevOpsLogMessage, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
                 break;
 
             case DisplayMessage displayMessage:
-                await dotnetTestPipeClient.RequestReplyAsync<DisplayMessage, VoidResponse>(displayMessage, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
+                await transportClient.RequestReplyAsync<DisplayMessage, VoidResponse>(displayMessage, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
                 break;
         }
     }
@@ -258,7 +281,12 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
     /// </remarks>
     public Task StartServerControlChannelAsync(Func<CancellationToken, Task> onCancelSessionRequestedAsync)
     {
-        if (!IsServerControlChannelSupported || RoslynString.IsNullOrEmpty(_serverControlPipeName) || _serverControlPipeClient is not null)
+        if (_transportKind != DotnetTestTransportKind.NamedPipe
+            || OperatingSystem.IsBrowser()
+            || OperatingSystem.IsWasi()
+            || !IsServerControlChannelSupported
+            || RoslynString.IsNullOrEmpty(_serverControlPipeName)
+            || _serverControlPipeClient is not null)
         {
             return Task.CompletedTask;
         }
@@ -273,11 +301,14 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
 
         // Connect AND listen on a background task: we deliberately do not await the connect on the run path so a
         // slow/absent control server can never delay (or fail) test execution start.
+#pragma warning disable CA1416 // The runtime guards above exclude browser before the named-pipe operation is scheduled.
         _serverControlListenerTask = Task.Run(
             () => ConnectAndListenForServerControlAsync(controlClient, onCancelSessionRequestedAsync, _serverControlListenerCts.Token));
+#pragma warning restore CA1416
         return Task.CompletedTask;
     }
 
+    [UnsupportedOSPlatform("browser")]
     private async Task ConnectAndListenForServerControlAsync(NamedPipeClient controlClient, Func<CancellationToken, Task> onCancelSessionRequestedAsync, CancellationToken cancellationToken)
     {
         try
@@ -301,6 +332,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
         await ListenForServerControlAsync(controlClient, onCancelSessionRequestedAsync, cancellationToken).ConfigureAwait(false);
     }
 
+    [UnsupportedOSPlatform("browser")]
     private async Task ListenForServerControlAsync(NamedPipeClient controlClient, Func<CancellationToken, Task> onCancelSessionRequestedAsync, CancellationToken cancellationToken)
     {
         try
@@ -369,7 +401,10 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
         // Framework cancellation of an already-parked overlapped read is not reliable - disposing the stream is
         // what forces it to unblock. We cancelled first (above) so the listener treats the resulting failure as
         // shutdown rather than "host gone => cancel".
-        _serverControlPipeClient?.Dispose();
+        if (!OperatingSystem.IsBrowser())
+        {
+            _serverControlPipeClient?.Dispose();
+        }
 
         if (_serverControlListenerTask is { } listenerTask)
         {
@@ -387,7 +422,10 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
         _serverControlListenerCts?.Cancel();
 
         // Disposing the pipe client forces a parked read to abort even where token cancellation alone would not.
-        _serverControlPipeClient?.Dispose();
+        if (!OperatingSystem.IsBrowser())
+        {
+            _serverControlPipeClient?.Dispose();
+        }
 
         if (_serverControlListenerTask is { } listenerTask)
         {
@@ -404,7 +442,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
         }
 
         _serverControlListenerCts?.Dispose();
-        _dotnetTestPipeClient?.Dispose();
+        _transportClient?.Dispose();
     }
 
     private async Task TryLogAsync(LogLevel logLevel, string message)
