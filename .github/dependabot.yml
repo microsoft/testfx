@@ -36,5 +36,14 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      # The github/gh-aw-actions/* actions are pinned by `gh aw compile` and
+      # MUST move in lockstep with the gh-aw CLI version that generated the
+      # `.lock.yml` files (and `.github/aw/actions-lock.json`). Letting
+      # Dependabot bump just the `uses:` SHAs drifts them away from the
+      # generator, which breaks the threat-detection job with
+      # `awf: command not found` -> parse_error (see #10203). These are
+      # updated via `gh aw upgrade` / the Agentic Maintenance workflow instead.
+      - dependency-name: "github/gh-aw-actions/*"
     commit-message:
       prefix: '[main] '
