@@ -84,6 +84,8 @@
     <NoWarn>$(NoWarn);TPINTERNAL</NoWarn>
     <!-- netfx and netstandard don't have nullability info so the IDE0370 warning should be suppressed -->
     <NoWarn Condition="'$(TargetFramework)' == 'netstandard2.0' OR $(TargetFramework.StartsWith('net4')) OR '$(TargetFramework)' == '$(UwpMinimum)'">$(NoWarn);IDE0370</NoWarn>
+    <!-- Only upgrade NuGetAudit warnings to errors for official builds. -->
+    <WarningsNotAsErrors Condition="'$(OfficialBuild)' != 'true'">$(WarningsNotAsErrors);NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
   </PropertyGroup>
 
   <!-- Versioning -->
