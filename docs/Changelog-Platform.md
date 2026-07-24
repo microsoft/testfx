@@ -30,6 +30,7 @@ See full log [of v4.3.2...v4.3.3](https://github.com/microsoft/testfx/compare/v4
 * Prevent diagnostic file-logger shutdown from crashing an otherwise successful test run under thread-pool starvation by @Evangelink in [#9802](https://github.com/microsoft/testfx/pull/9802)
 * Fix VSTestBridge interpreting a GUID-shaped fully-qualified test name as a test ID by @Evangelink in [#9794](https://github.com/microsoft/testfx/pull/9794)
 * Support comments in `testconfig.json` on .NET Framework by @Evangelink in [#10144](https://github.com/microsoft/testfx/pull/10144)
+* Fix `Microsoft.Testing.Extensions.AzureDevOpsReport` crashing during teardown from duplicate data-consumer disposal after a successful test run by @Evangelink in [#10195](https://github.com/microsoft/testfx/pull/10195)
 
 ## <a name="2.3.2" />[2.3.2] - 2026-07-13
 
