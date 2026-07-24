@@ -293,7 +293,6 @@ stages:
               "-NoLogo",
               "-NoProfile",
               "-File", "./eng/common/msbuild.ps1",
-              "-ci",
               "-prepareMachine",
               "-warnAsError:`$false",
               "./TestFx.slnx",
@@ -305,6 +304,7 @@ stages:
               "/t:Build",
               "/v:minimal",
               "/p:Configuration=$(_BuildConfig)",
+              "/p:ContinuousIntegrationBuild=true",
               "/p:FastAcceptanceTest=true",
               "/p:Publish=false",
               "/p:RepoRoot=$(Build.SourcesDirectory)\",
@@ -340,6 +340,52 @@ stages:
           continueOnError: true
           env:
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+        # CIBuild.cmd also restores the custom toolset/workloads, signs the build outputs, and produces the packages
+        # consumed by the acceptance tests. Run those phases without the Build phase when the cache supplied the
+        # compiled outputs. Keep this non-blocking so any failure switches the regular Arcade build back on.
+        - pwsh: |
+            Write-Host "##vso[task.setvariable variable=MSBuildCacheBuildSucceeded]false"
+
+            $pwsh = Join-Path $PSHOME "pwsh.exe"
+            $arguments = @(
+              "-NoLogo",
+              "-NoProfile",
+              "-File", "./eng/common/build.ps1",
+              "-ci",
+              "-disablePipelineSetResult",
+              "-configuration", "$(_BuildConfig)",
+              "-restore",
+              "-sign",
+              "-pack",
+              "-prepareMachine",
+              "/p:ContinuousIntegrationBuild=true",
+              "/p:FastAcceptanceTest=true",
+              "/p:MSBuildCachePackageEnabled=true",
+              "/p:MSBuildCacheEnabled=false"
+            )
+
+            $previousPSNativeCommandUseErrorActionPreference = $PSNativeCommandUseErrorActionPreference
+            try {
+              $PSNativeCommandUseErrorActionPreference = $false
+              & $pwsh @arguments
+              $exitCode = $LASTEXITCODE
+            }
+            finally {
+              $PSNativeCommandUseErrorActionPreference = $previousPSNativeCommandUseErrorActionPreference
+            }
+
+            if ($exitCode -ne 0) {
+              Write-Host "##vso[task.logissue type=warning]Preparing cached outputs failed with exit code $exitCode; continuing with the regular Arcade build."
+            }
+            else {
+              Write-Host "##vso[task.setvariable variable=MSBuildCacheBuildSucceeded]true"
+            }
+
+            exit 0
+          displayName: Prepare and pack cached build outputs
+          condition: and(succeeded(), eq(variables['MSBuildCacheBuildSucceeded'], 'true'))
+          continueOnError: true
 
         # Publish only the project-level diagnostics; CacheClient.log and the OAuth-bearing cache environment stay
         # outside published artifacts. A successful cache build supplies the outputs consumed by the test steps.
