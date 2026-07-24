@@ -11,7 +11,12 @@ namespace Microsoft.Testing.Platform.ServerMode;
 
 internal sealed class FormatterUtilities
 {
-#if NETSTANDARD2_0
+    // The formatter selection mirrors the IMessageFormatter guard (#if NETCOREAPP): System.Text.Json on
+    // .NET, Jsonite everywhere else. Using !NETCOREAPP (rather than NETSTANDARD2_0) keeps this correct when
+    // the file is shipped as source and compiled on .NET Framework (net462), where NETSTANDARD2_0 is not
+    // defined — there the STJ branch (ReadOnlyMemory<char>, Json.Json) does not exist. Behavior is identical
+    // for the platform build, which only ever compiles this file as netstandard2.0 or .NET.
+#if !NETCOREAPP
     internal static IMessageFormatter CreateFormatter()
         => new MessageFormatter();
 

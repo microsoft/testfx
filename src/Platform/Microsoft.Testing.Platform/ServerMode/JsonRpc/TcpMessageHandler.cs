@@ -144,7 +144,11 @@ internal sealed class TcpMessageHandler(
 #if NETCOREAPP
                 _ = int.TryParse(line.AsSpan()[ContentLengthHeaderName.Length..].Trim(), out contentSize);
 #else
-                _ = int.TryParse(line[ContentLengthHeaderName.Length..].Trim(), out contentSize);
+                // Substring rather than the range operator: string range indexing lowers to
+                // System.Range.GetOffsetAndLength, which pulls in System.Range/System.ValueTuple —
+                // neither is in-framework on net462, where this file is also compiled as source into
+                // the dependency-free MTP client package. Substring is behavior-identical.
+                _ = int.TryParse(line.Substring(ContentLengthHeaderName.Length).Trim(), out contentSize);
 #endif
             }
         }

@@ -45,6 +45,10 @@
     <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Adapter\MSTestAdapter.PlatformServices\MSTestAdapter.PlatformServices.csproj" />
     <ProjectReference Include="$(RepoRoot)test\Utilities\Microsoft.Testing.TestInfrastructure\Microsoft.Testing.TestInfrastructure.csproj" />
+    <!-- The MTP server-mode client under test (P4). Referenced through the `serverclient` extern alias so
+         its internal TestNode/TestNodeUpdateMessage (same namespaces as the platform's public types) stay
+         out of the global namespace and never clash in the non-aliased files of this assembly. -->
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.ServerClient\Microsoft.Testing.Platform.ServerClient.csproj" Aliases="serverclient" />
   </ItemGroup>
 
   <!--

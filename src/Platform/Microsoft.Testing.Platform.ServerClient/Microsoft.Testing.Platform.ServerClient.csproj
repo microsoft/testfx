@@ -1,0 +1,359 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Microsoft.Testing.Platform.ServerClient
+    =======================================
+    A client for the Microsoft.Testing.Platform (MTP) server-mode JSON-RPC protocol.
+
+    This project links the *same* protocol + serialization source files that the platform (server)
+    compiles from ..\Microsoft.Testing.Platform\, guaranteeing wire compatibility by construction
+    (single source of truth). On top of that it adds the client-only transport + API.
+
+    PACKAGING: this ships as a source-only NuGet package (Microsoft.Testing.Platform.ServerClient.Source).
+    Consumers compile the linked client + server-protocol source directly into their own assembly (as
+    internal types); no DLL and no runtime dependency ship. The pack target at the bottom projects the
+    final @(Compile) set into contentFiles/cs/<tfm>/**, so "packed == compiled" holds by construction and
+    the per-TFM System.Text.Json removal below automatically keeps the STJ engine out of the
+    netstandard2.0 contentFiles (net462 / netstandard consumers only ever get the Jsonite path).
+
+    In-repo this project is still compiled normally so we can validate the carved-out subset and run the
+    unit + acceptance tests against the produced assembly.
+  -->
+
+  <PropertyGroup>
+    <!--
+      Mirror the platform's TFMs: netstandard2.0 exercises the Jsonite (!NETCOREAPP) path that net462
+      consumers compile; net8.0 exercises the in-box System.Text.Json path. net462 consumer-compile
+      (ambient refs such as System.ValueTuple) is validated later during packaging / vstest adoption.
+    -->
+    <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <!-- Match the platform: several linked files (e.g. ObjectPool.cs namespace switch) key off this. -->
+    <DefineConstants>$(DefineConstants);IS_CORE_MTP</DefineConstants>
+    <!-- Guard analogous to vstest's Filter.Source IS_VSTEST_REPO: defined while testfx compiles the
+         client in-repo, absent when a consumer compiles the injected source. Lets shared source gate
+         repo-only bits if ever needed. -->
+    <DefineConstants>$(DefineConstants);IS_MTP_CLIENT_REPO</DefineConstants>
+
+    <!-- Source-only package (contentFiles), no shipped DLL, no runtime dependency. -->
+    <IsPackable>true</IsPackable>
+    <!-- Source build produces reference/runtime assemblies; a source-only contentFiles package has no
+         build output, so it is not produced there. -->
+    <IsPackable Condition="'$(DotNetBuildSourceOnly)' == 'true'">false</IsPackable>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <DevelopmentDependency>true</DevelopmentDependency>
+    <IncludeSymbols>false</IncludeSymbols>
+    <!-- contentFiles-only package: no lib/ref, no dependency group. -->
+    <NoWarn>$(NoWarn);NU5127;NU5128</NoWarn>
+
+    <!-- Source-only package: the linked types are compiled (as internal) into each consumer, so this
+         validation assembly does not track a public API surface. Suppress the public-API analyzer rules. -->
+    <NoWarn>$(NoWarn);RS0016;RS0017;RS0022;RS0024;RS0025;RS0026;RS0027;RS0036;RS0037;RS0041</NoWarn>
+  </PropertyGroup>
+
+  <!-- NuGet metadata. -->
+  <PropertyGroup>
+    <!-- The .Source suffix marks a source-only (contentFiles) package, matching vstest's
+         Microsoft.TestPlatform.Filter.Source convention. The assembly stays ...ServerClient. -->
+    <PackageId>Microsoft.Testing.Platform.ServerClient.Source</PackageId>
+    <PackageDescription>
+      <![CDATA[Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
+
+This is a source-only package: it injects (as internal source) a client for the Microsoft Testing Platform (MTP) server-mode JSON-RPC protocol, sharing the exact protocol and serialization source the platform server compiles. It has no runtime dependency and is native-AOT friendly (Jsonite on .NET Framework / netstandard2.0, in-box System.Text.Json on .NET).]]>
+    </PackageDescription>
+  </PropertyGroup>
+
+  <!-- Root of the platform (server) project whose source files we link. -->
+  <PropertyGroup>
+    <MTPDir>$(MSBuildThisFileDirectory)..\Microsoft.Testing.Platform\</MTPDir>
+  </PropertyGroup>
+
+  <!-- Polyfills (same set the platform uses) so the linked files compile on netstandard2.0/net462.
+       SHIPPED in the package (a consumer on net462 / netstandard2.0 with no down-level polyfills of its
+       own needs init/required, Index/Range, EmbeddedAttribute, ExperimentalAttribute, UnreachableException,
+       the OperatingSystem shim for OperatingSystem.IsBrowser, and helpers like Ensure).
+
+       These files go through the SAME pack-time transform as the linked/client source (preamble prepend +
+       public->internal flip). The flip is a no-op (they are already internal), but the preamble matters:
+       authored for in-repo compilation, the polyfills rely on this project's ImplicitUsings + <Using
+       Include> globals (for ExcludeFromCodeCoverage, DebuggerNonUserCode, IEnumerable<>, MethodImpl,
+       TypeForwardedTo, ...). A source-only consumer has none of that, so packing them verbatim left them
+       full of CS0246. Running them through the transform makes each shipped copy self-contained.
+       They stay source-package-safe: `// <auto-generated />` + `#pragma warning disable` + `#if !NETCOREAPP`
+       self-guards (they compile to nothing on .NET) + internal, with opt-out constants (e.g.
+       EXCLUDE_OS_POLYFILL) for a consumer that already ships its own. -->
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
+    <!-- Index.cs / Range.cs implement the C# range operator (x[a..b]) and from-end index (x[^1]) for
+         down-level TFMs. Range.GetOffsetAndLength returns a value tuple, and System.ValueTuple is not
+         in-framework on net462 (added in 4.7), so these polyfills cannot compile in a bare net462
+         consumer. The client's own code and every linked file it packs avoid the range operator on the
+         down-level path (TcpMessageHandler uses Substring; the only other range use is a Span slice in
+         the .NET-only Json.cs), so nothing here needs Index/Range. .NET consumers have them in-box.
+         Dropping both keeps the package dependency-free without a ValueTuple polyfill. -->
+    <Compile Remove="$(RepoRoot)src/Polyfills/Index.cs" />
+    <Compile Remove="$(RepoRoot)src/Polyfills/Range.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="Polyfills" />
+  </ItemGroup>
+
+  <!-- Consumer build customization packed at build/ (applies to the direct consumer that compiles the
+       injected source): defines IS_CORE_MTP and suppresses the benign down-level CS0436 polyfill
+       collision. See the file header for the full rationale. -->
+  <ItemGroup>
+    <None Include="build\Microsoft.Testing.Platform.ServerClient.Source.targets" Pack="true" PackagePath="build\" />
+  </ItemGroup>
+
+  <!-- Protocol + JSON-RPC serialization (all TFMs). Curated subset of ServerMode\JsonRpc\. -->
+  <ItemGroup>
+    <Compile Include="$(MTPDir)ServerMode\JsonRpc\RpcMessages.cs" Link="Linked\ServerMode\JsonRpc\RpcMessages.cs" />
+    <Compile Include="$(MTPDir)ServerMode\JsonRpc\JsonRpcMethods.cs" Link="Linked\ServerMode\JsonRpc\JsonRpcMethods.cs" />
+    <Compile Include="$(MTPDir)ServerMode\JsonRpc\ErrorCodes.cs" Link="Linked\ServerMode\JsonRpc\ErrorCodes.cs" />
+    <Compile Include="$(MTPDir)ServerMode\JsonRpc\SerializerUtilities.cs" Link="Linked\ServerMode\JsonRpc\SerializerUtilities.cs" />
+    <Compile Include="$(MTPDir)ServerMode\JsonRpc\SerializerUtilities.RpcMessageSerializers.cs" Link="Linked\ServerMode\JsonRpc\SerializerUtilities.RpcMessageSerializers.cs" />
+    <Compile Include="$(MTPDir)ServerMode\JsonRpc\SerializerUtilities.TestNodeSerializers.cs" Link="Linked\ServerMode\JsonRpc\SerializerUtilities.TestNodeSerializers.cs" />
+    <Compile Include="$(MTPDir)ServerMode\JsonRpc\SerializerUtilities.Deserializers.cs" Link="Linked\ServerMode\JsonRpc\SerializerUtilities.Deserializers.cs" />
+    <Compile Include="$(MTPDir)ServerMode\JsonRpc\FormatterUtilities.cs" Link="Linked\ServerMode\JsonRpc\FormatterUtilities.cs" />
+    <Compile Include="$(MTPDir)ServerMode\JsonRpc\IMessageFormatter.cs" Link="Linked\ServerMode\JsonRpc\IMessageFormatter.cs" />
+    <Compile Include="$(MTPDir)ServerMode\JsonRpc\IObjectSerializer.cs" Link="Linked\ServerMode\JsonRpc\IObjectSerializer.cs" />
+    <Compile Include="$(MTPDir)ServerMode\JsonRpc\IObjectDeserializer.cs" Link="Linked\ServerMode\JsonRpc\IObjectDeserializer.cs" />
+    <Compile Include="$(MTPDir)ServerMode\JsonRpc\MessageFormatException.cs" Link="Linked\ServerMode\JsonRpc\MessageFormatException.cs" />
+    <!-- Transport: the LSP-style framing engine, reused verbatim by the client. -->
+    <Compile Include="$(MTPDir)ServerMode\JsonRpc\IMessageHandler.cs" Link="Linked\ServerMode\JsonRpc\IMessageHandler.cs" />
+    <Compile Include="$(MTPDir)ServerMode\JsonRpc\TcpMessageHandler.cs" Link="Linked\ServerMode\JsonRpc\TcpMessageHandler.cs" />
+  </ItemGroup>
+
+  <!-- JSON engines. Jsonite (all TFMs) + the System.Text.Json engine (removed for non-.NETCoreApp). -->
+  <ItemGroup>
+    <Compile Include="$(MTPDir)ServerMode\JsonRpc\Json\**\*.cs" Link="Linked\ServerMode\JsonRpc\Json\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+  <!-- Exclude the .NET System.Text.Json engine on non-.NETCoreApp (matches the platform csproj). -->
+  <ItemGroup Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETCoreApp'">
+    <Compile Remove="$(MTPDir)ServerMode\JsonRpc\Json\Json.cs" />
+    <Compile Remove="$(MTPDir)ServerMode\JsonRpc\Json\Json.Deserializers.cs" />
+    <Compile Remove="$(MTPDir)ServerMode\JsonRpc\Json\Json.Serializers.cs" />
+    <Compile Remove="$(MTPDir)ServerMode\JsonRpc\Json\Json.TestNodeSerializer.cs" />
+    <Compile Remove="$(MTPDir)ServerMode\JsonRpc\Json\JsonCollectionDeserializer.cs" />
+    <Compile Remove="$(MTPDir)ServerMode\JsonRpc\Json\JsonDeserializer.cs" />
+    <Compile Remove="$(MTPDir)ServerMode\JsonRpc\Json\JsonElementDeserializer.cs" />
+    <Compile Remove="$(MTPDir)ServerMode\JsonRpc\Json\JsonExtensions.cs" />
+    <Compile Remove="$(MTPDir)ServerMode\JsonRpc\Json\JsonObjectSerializer.cs" />
+    <Compile Remove="$(MTPDir)ServerMode\JsonRpc\Json\JsonObjectSerializer1.cs" />
+    <Compile Remove="$(MTPDir)ServerMode\JsonRpc\Json\JsonPropertyBagDeserializer.cs" />
+    <Compile Remove="$(MTPDir)ServerMode\JsonRpc\Json\JsonSerializer.cs" />
+    <Compile Remove="$(MTPDir)ServerMode\JsonRpc\Json\JsonValueSerializer.cs" />
+    <Compile Remove="$(MTPDir)ServerMode\JsonRpc\Json\JsonValueSerializer1.cs" />
+  </ItemGroup>
+
+  <!-- Data model (TestNode + property model). Glob Messages\ then remove the server-only message bus. -->
+  <ItemGroup>
+    <Compile Include="$(MTPDir)Messages\*.cs" Link="Linked\Messages\%(Filename)%(Extension)" />
+    <!-- Server-only publish/subscribe message bus: not needed by the client. -->
+    <Compile Remove="$(MTPDir)Messages\AsyncConsumerDataProcessor.net.cs" />
+    <Compile Remove="$(MTPDir)Messages\AsyncConsumerDataProcessor.netstandard.cs" />
+    <Compile Remove="$(MTPDir)Messages\AsyncConsumerDataProcessorMessage.cs" />
+    <Compile Remove="$(MTPDir)Messages\AsynchronousMessageBus.cs" />
+    <Compile Remove="$(MTPDir)Messages\BaseMessageBus.cs" />
+    <Compile Remove="$(MTPDir)Messages\BlockingConsumerDataProcessor.cs" />
+    <Compile Remove="$(MTPDir)Messages\IAsyncConsumerDataProcessor.cs" />
+    <Compile Remove="$(MTPDir)Messages\IDataProducer.cs" />
+    <Compile Remove="$(MTPDir)Messages\IMessageBus.cs" />
+    <Compile Remove="$(MTPDir)Messages\MessageBusProxy.cs" />
+    <Compile Remove="$(MTPDir)Messages\SingleConsumerUnboundedChannel.cs" />
+  </ItemGroup>
+
+  <!-- Other external types referenced by the linked set. -->
+  <ItemGroup>
+    <Compile Include="$(MTPDir)TestHost\SessionUid.cs" Link="Linked\TestHost\SessionUid.cs" />
+    <Compile Include="$(MTPDir)Logging\ServerLogMessage.cs" Link="Linked\Logging\ServerLogMessage.cs" />
+    <Compile Include="$(MTPDir)Logging\LogLevel.cs" Link="Linked\Logging\LogLevel.cs" />
+    <!-- TcpMessageHandler takes an ILogger for low-noise transport diagnostics and defaults to NopLogger. -->
+    <Compile Include="$(MTPDir)Logging\ILogger.cs" Link="Linked\Logging\ILogger.cs" />
+    <Compile Include="$(MTPDir)Logging\NopLogger.cs" Link="Linked\Logging\NopLogger.cs" />
+    <Compile Include="$(MTPDir)Logging\LoggingExtensions.cs" Link="Linked\Logging\LoggingExtensions.cs" />
+  </ItemGroup>
+
+  <!-- Minimal Helpers referenced by the linked serialization/data-model files. -->
+  <ItemGroup>
+    <Compile Include="$(MTPDir)Helpers\ObjectPool.cs" Link="Linked\Helpers\ObjectPool.cs" />
+    <Compile Include="$(MTPDir)Helpers\ApplicationStateGuard.cs" Link="Linked\Helpers\ApplicationStateGuard.cs" />
+    <Compile Include="$(MTPDir)Helpers\RoslynString.cs" Link="Linked\Helpers\RoslynString.cs" />
+    <Compile Include="$(MTPDir)Helpers\RoslynHashCode.cs" Link="Linked\Helpers\RoslynHashCode.cs" />
+    <Compile Include="$(MTPDir)Helpers\RoslynDebug.cs" Link="Linked\Helpers\RoslynDebug.cs" />
+    <!-- Task cancellation helpers used by TcpMessageHandler on the non-.NET (Jsonite) path. -->
+    <Compile Include="$(MTPDir)Helpers\TaskExtensions.cs" Link="Linked\Helpers\TaskExtensions.cs" />
+  </ItemGroup>
+
+  <!-- The client types are internal (they compile into each consumer). Grant the unit tests access. -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="Microsoft.Testing.Platform.ServerClient.UnitTests" Key="$(VsPublicKey)" />
+    <!-- The MSTest acceptance project drives the client against a real packed MTP app (P4). It references
+         this project via a non-global `serverclient` extern alias to avoid TestNode name clashes. -->
+    <InternalsVisibleTo Include="MSTest.Acceptance.IntegrationTests" Key="$(VsPublicKey)" />
+  </ItemGroup>
+
+  <!--
+    Source-only packaging (pack-time source transform).
+    ===================================================
+    The package ships EXACTLY the source set this project compiles (anti-drift: packed == compiled),
+    projected into contentFiles/cs/<tfm>/**. Because it reads the resolved @(Compile) set, the per-TFM
+    System.Text.Json removal above also removes those files from the netstandard2.0 contentFiles, so
+    net462 / netstandard consumers only ever get the Jsonite path.
+
+    Why a transform: the linked server/platform files and the client's own files are authored for IN-REPO
+    compilation — top-level types are `public` and the files rely on this project's ImplicitUsings +
+    <Using Include> globals + Polyfills. A source-only consumer (e.g. vstest: net462, no ImplicitUsings,
+    PublicApiAnalyzers, TreatWarningsAsErrors) has none of that. So at PACK time only (the in-repo compile
+    keeps using the raw files unchanged) we write a transformed copy of every shipped linked/client file
+    that:
+      1. prepends `// <auto-generated/>` (so the consumer's analyzers + warnings skip it) + `#nullable
+         enable` + the fixed BCL using preamble this project injects implicitly, de-duped against the
+         file's own usings (no CS0105); and
+      2. flips every column-0 `public <type>` to `internal` (all linked files are file-scoped-namespace,
+         so top-level types sit at column 0) — the injected source must add NO public API to the consumer;
+         and
+      3. rewrites the vendored top-level `namespace Jsonite` (+ `using Jsonite;` + qualified `Jsonite.`)
+         to the package-qualified `Microsoft.Testing.Platform.ServerMode.JsonRpc.Json.Jsonite`, so the
+         packed copy cannot collide (CS0436) with a consumer that vendors its OWN top-level
+         `namespace Jsonite` (vstest's CrossPlatEngine does, on net462/netstandard2.0). The platform keeps
+         top-level `namespace Jsonite`, so this rename lives at pack time only and never fights main.
+    Anti-drift holds: the packed source is a pure function of the compiled source set (the transform
+    changes only visibility + usings, never the wire), and the contract test asserts packed ==
+    transform(compiled). System.Text.Json is deliberately NOT in the preamble, so the shipped
+    ...ServerMode.Json.JsonSerializer type never collides with System.Text.Json.JsonSerializer (files that
+    need STJ carry their own `using System.Text.Json;`).
+
+    Skipped / special-cased:
+      - Anything generated into the intermediate obj dir (GlobalUsings.g.cs, *.AssemblyInfo.cs,
+        *.AssemblyAttributes.cs, …): each consumer generates its own.
+      - Polyfills flow through the SAME transform as everything else (see the Polyfills ItemGroup near the
+        top): the flip is a no-op on already-internal types, but they need the preamble to be self-contained.
+  -->
+  <PropertyGroup>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_MtpClientAddSourceToContentFiles</TargetsForTfmSpecificContentInPackage>
+    <_MtpClientIntermediateFullPath>$([System.IO.Path]::GetFullPath('$(IntermediateOutputPath)'))</_MtpClientIntermediateFullPath>
+    <!-- Base dir under obj where the pack-time transformed copies of the shipped source are written. The
+         actual write dir appends the TFM (see _MtpClientTransformDirTfm in the target below): NuGet runs
+         the TargetsForTfmSpecificContentInPackage pass once per TFM and dispatches those passes in
+         PARALLEL, and the transform output is TFM-independent (same bytes for every TFM), so without a
+         per-TFM segment both passes race to write the same files (IOException "used by another process"
+         on parallel Windows CI builds). -->
+    <_MtpClientTransformDir>$(IntermediateOutputPath)mtpclientsrc\</_MtpClientTransformDir>
+  </PropertyGroup>
+
+  <UsingTask TaskName="_MtpClientTransformSource" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <Files ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System" />
+      <Using Namespace="System.Collections.Generic" />
+      <Using Namespace="System.IO" />
+      <Using Namespace="System.Text" />
+      <Using Namespace="System.Text.RegularExpressions" />
+      <Code Type="Fragment" Language="cs"><![CDATA[
+        // The BCL using set this project injects implicitly (SDK ImplicitUsings default set minus
+        // System.Net.Http, which a TCP client never uses and which is not auto-referenced on net462;
+        // plus the explicit <Using Include> items from the repo Directory.Build.props; plus Polyfills).
+        // System.Text.Json is intentionally omitted so the shipped JsonSerializer type does not clash.
+        string[] preamble = new[]
+        {
+            "System", "System.Collections", "System.Collections.Concurrent", "System.Collections.Generic",
+            "System.Diagnostics", "System.Diagnostics.CodeAnalysis", "System.Globalization", "System.IO",
+            "System.Linq", "System.Reflection", "System.Runtime.CompilerServices",
+            "System.Runtime.InteropServices", "System.Runtime.Versioning", "System.Text",
+            "System.Text.RegularExpressions", "System.Threading", "System.Threading.Tasks",
+            "System.Xml", "System.Xml.Linq", "System.Xml.XPath", "Polyfills",
+        };
+        Regex usingRx = new Regex(@"^\s*using\s+(?:static\s+)?([^;=]+);", RegexOptions.Multiline);
+        Regex typeRx = new Regex(@"^public(\s+(?:(?:sealed|abstract|static|partial|unsafe|readonly|ref|file|new)\s+)*(?:class|struct|interface|enum|record|delegate)\b)", RegexOptions.Multiline);
+        foreach (Microsoft.Build.Framework.ITaskItem item in Files)
+        {
+            string source = item.GetMetadata("SourceFullPath");
+            string dest = item.GetMetadata("FullPath");
+            string text = File.ReadAllText(source);
+
+            HashSet<string> existing = new HashSet<string>(StringComparer.Ordinal);
+            foreach (Match m in usingRx.Matches(text))
+            {
+                existing.Add(m.Groups[1].Value.Trim());
+            }
+
+            StringBuilder sb = new StringBuilder();
+            sb.Append("// <auto-generated/>\n#nullable enable\n");
+            foreach (string ns in preamble)
+            {
+                if (!existing.Contains(ns))
+                {
+                    sb.Append("using ").Append(ns).Append(";\n");
+                }
+            }
+
+            // Rewrite the vendored top-level `Jsonite` namespace (its `namespace Jsonite` declaration,
+            // every `using Jsonite;`, and qualified `Jsonite.` member access) to a package-qualified
+            // namespace. A consumer may vendor its OWN top-level `namespace Jsonite` (vstest's
+            // CrossPlatEngine does), and two `namespace Jsonite` type sets compiled into one assembly on
+            // net462/netstandard2.0 collide with CS0436. Namespaces have ZERO effect on the JSON wire, so
+            // this is behavior-preserving. The transform runs at PACK time only, so the platform keeps
+            // top-level `namespace Jsonite` and this never fights main. The three patterns below never
+            // match the quoted "Jsonite" formatter Id (wire identity) or the JsoniteProperties type name:
+            // `^namespace`/`^using` are anchored line-starts and `\bJsonite\.` requires a trailing dot.
+            const string jsoniteNs = "Microsoft.Testing.Platform.ServerMode.JsonRpc.Json.Jsonite";
+            text = Regex.Replace(text, @"^namespace Jsonite\b", "namespace " + jsoniteNs, RegexOptions.Multiline);
+            text = Regex.Replace(text, @"^using Jsonite;", "using " + jsoniteNs + ";", RegexOptions.Multiline);
+            text = Regex.Replace(text, @"\bJsonite\.", jsoniteNs + ".");
+
+            sb.Append(typeRx.Replace(text, delegate(Match m) { return "internal" + m.Groups[1].Value; }));
+
+            string dir = Path.GetDirectoryName(dest);
+            if (!Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+
+            File.WriteAllText(dest, sb.ToString(), new UTF8Encoding(false));
+        }
+      ]]></Code>
+    </Task>
+  </UsingTask>
+
+  <Target Name="_MtpClientAddSourceToContentFiles">
+    <!-- Compute the per-TFM transform output dir HERE (not in a global PropertyGroup) so $(TargetFramework)
+         is the current per-TFM value even when NuGet drives the TfmSpecific passes from the outer build.
+         Distinct dirs per TFM => the parallel passes never write the same file. -->
+    <PropertyGroup>
+      <_MtpClientTransformDirTfm>$(_MtpClientTransformDir)$(TargetFramework)\</_MtpClientTransformDirTfm>
+    </PropertyGroup>
+    <ItemGroup>
+      <!-- Every shipped .cs (linked server/platform files, the client's own files, and the polyfills)
+           goes through the transform. Exclude only files generated into obj (GlobalUsings.g.cs,
+           *.AssemblyInfo.cs, …): each consumer generates its own.
+           Logical = the package-relative path (forward slashes so it is valid on Linux packing too):
+           the Link-relative folder for linked files, or the project-relative Identity for client files. -->
+      <_MtpClientToTransform Include="@(Compile)"
+                             Condition="!$([System.String]::new('%(Compile.FullPath)').StartsWith('$(_MtpClientIntermediateFullPath)', System.StringComparison.OrdinalIgnoreCase))">
+        <Logical Condition="'%(Compile.Link)' != ''">$([System.String]::Copy('%(Compile.Link)').Replace('\','/'))</Logical>
+        <Logical Condition="'%(Compile.Link)' == ''">$([System.String]::Copy('%(Compile.Identity)').Replace('\','/'))</Logical>
+        <SourceFullPath>%(Compile.FullPath)</SourceFullPath>
+      </_MtpClientToTransform>
+
+      <!-- Transformed copies live under obj (per TFM), keyed by their logical (package-relative) path. The
+           item transform carries Logical + SourceFullPath metadata across to the new item identity. -->
+      <_MtpClientTransformed Include="@(_MtpClientToTransform->'$(_MtpClientTransformDirTfm)%(Logical)')" />
+    </ItemGroup>
+
+    <!-- Write the transformed copies to obj. -->
+    <_MtpClientTransformSource Files="@(_MtpClientTransformed)" />
+
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="@(_MtpClientTransformed)">
+        <PackagePath>contentFiles/cs/$(TargetFramework)/%(_MtpClientTransformed.Logical)</PackagePath>
+        <BuildAction>Compile</BuildAction>
+      </TfmSpecificPackageFile>
+    </ItemGroup>
+  </Target>
+
+</Project>
