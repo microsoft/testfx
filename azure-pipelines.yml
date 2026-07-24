@@ -441,7 +441,7 @@ stages:
                   }
 
                 if ($cleanupErrors) {
-                  Write-Host "##vso[task.logissue type=warning]Failed to clean some MSBuildCache outputs before the fallback build:`n$($cleanupErrors -join "`n")"
+                  throw "Failed to clean MSBuildCache outputs before the fallback build:`n$($cleanupErrors -join "`n")"
                 }
               }
             }
