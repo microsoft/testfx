@@ -111,6 +111,36 @@ public sealed class ProtocolEdgeCaseTests
     }
 
     [TestMethod]
+    public void TestResultMessages_WhenUnknownFieldsPrecedeKnownFields_DeserializesRemainingFields()
+    {
+        byte[] successfulResult = WriteFields(
+            (ushort.MaxValue, [0x99]),
+            (SuccessfulTestResultMessageFieldsId.DisplayName, WriteString("passed test")));
+        byte[] exception = WriteFields(
+            (ushort.MaxValue, [0xAA, 0xBB]),
+            (ExceptionMessageFieldsId.ErrorMessage, WriteString("boom")));
+        byte[] failedResult = WriteFields(
+            (ushort.MaxValue, [0xCC]),
+            (FailedTestResultMessageFieldsId.DisplayName, WriteString("failed test")),
+            (FailedTestResultMessageFieldsId.ExceptionMessageList, WriteList(exception)));
+        byte[] payload = WriteFields(
+            (ushort.MaxValue, [0xDD, 0xEE]),
+            (TestResultMessagesFieldsId.InstanceId, WriteString("instance")),
+            (TestResultMessagesFieldsId.SuccessfulTestMessageList, WriteList(successfulResult)),
+            (TestResultMessagesFieldsId.FailedTestMessageList, WriteList(failedResult)));
+
+        TestResultMessages actual = DeserializePayload<TestResultMessages>(new TestResultMessagesSerializer(), payload);
+
+        Assert.AreEqual("instance", actual.InstanceId);
+        Assert.HasCount(1, actual.SuccessfulTestMessages);
+        Assert.AreEqual("passed test", actual.SuccessfulTestMessages[0].DisplayName);
+        Assert.HasCount(1, actual.FailedTestMessages);
+        Assert.AreEqual("failed test", actual.FailedTestMessages[0].DisplayName);
+        Assert.HasCount(1, actual.FailedTestMessages[0].Exceptions!);
+        Assert.AreEqual("boom", actual.FailedTestMessages[0].Exceptions![0].ErrorMessage);
+    }
+
+    [TestMethod]
     public void DiscoveredTestMessages_WhenEmptyList_RoundTrips()
     {
         var message = new DiscoveredTestMessages("exec", "inst", []);
@@ -120,6 +150,32 @@ public sealed class ProtocolEdgeCaseTests
         Assert.AreEqual("exec", actual.ExecutionId);
         Assert.AreEqual("inst", actual.InstanceId);
         Assert.IsEmpty(actual.DiscoveredMessages);
+    }
+
+    [TestMethod]
+    public void DiscoveredTestMessages_WhenUnknownFieldsPrecedeKnownFields_DeserializesRemainingFields()
+    {
+        byte[] trait = WriteFields(
+            (ushort.MaxValue, [0xAA]),
+            (TraitMessageFieldsId.Key, WriteString("category")),
+            (TraitMessageFieldsId.Value, WriteString("unit")));
+        byte[] discoveredTest = WriteFields(
+            (ushort.MaxValue, [0xBB, 0xCC]),
+            (DiscoveredTestMessageFieldsId.DisplayName, WriteString("discovered test")),
+            (DiscoveredTestMessageFieldsId.Traits, WriteList(trait)));
+        byte[] payload = WriteFields(
+            (ushort.MaxValue, [0xDD]),
+            (DiscoveredTestMessagesFieldsId.InstanceId, WriteString("instance")),
+            (DiscoveredTestMessagesFieldsId.DiscoveredTestMessageList, WriteList(discoveredTest)));
+
+        DiscoveredTestMessages actual = DeserializePayload<DiscoveredTestMessages>(new DiscoveredTestMessagesSerializer(), payload);
+
+        Assert.AreEqual("instance", actual.InstanceId);
+        Assert.HasCount(1, actual.DiscoveredMessages);
+        Assert.AreEqual("discovered test", actual.DiscoveredMessages[0].DisplayName);
+        Assert.HasCount(1, actual.DiscoveredMessages[0].Traits);
+        Assert.AreEqual("category", actual.DiscoveredMessages[0].Traits[0].Key);
+        Assert.AreEqual("unit", actual.DiscoveredMessages[0].Traits[0].Value);
     }
 
     [TestMethod]
@@ -184,6 +240,24 @@ public sealed class ProtocolEdgeCaseTests
     }
 
     [TestMethod]
+    public void TestInProgressMessages_WhenUnknownFieldsPrecedeKnownFields_DeserializesRemainingFields()
+    {
+        byte[] inProgressTest = WriteFields(
+            (ushort.MaxValue, [0xAA, 0xBB]),
+            (TestInProgressMessageFieldsId.DisplayName, WriteString("running test")));
+        byte[] payload = WriteFields(
+            (ushort.MaxValue, [0xCC]),
+            (TestInProgressMessagesFieldsId.InstanceId, WriteString("instance")),
+            (TestInProgressMessagesFieldsId.TestInProgressMessageList, WriteList(inProgressTest)));
+
+        TestInProgressMessages actual = DeserializePayload<TestInProgressMessages>(new TestInProgressMessagesSerializer(), payload);
+
+        Assert.AreEqual("instance", actual.InstanceId);
+        Assert.HasCount(1, actual.InProgressMessages);
+        Assert.AreEqual("running test", actual.InProgressMessages[0].DisplayName);
+    }
+
+    [TestMethod]
     public void TestSessionEvent_End_RoundTrips()
     {
         var message = new TestSessionEvent(SessionEventTypes.TestSessionEnd, "session", "exec");
@@ -193,5 +267,52 @@ public sealed class ProtocolEdgeCaseTests
         Assert.AreEqual(SessionEventTypes.TestSessionEnd, actual.SessionType);
         Assert.AreEqual("session", actual.SessionUid);
         Assert.AreEqual("exec", actual.ExecutionId);
+    }
+
+    private static TMessage DeserializePayload<TMessage>(object serializer, byte[] payload)
+    {
+        using var stream = new MemoryStream(payload);
+        return (TMessage)Deserialize(serializer, stream);
+    }
+
+    private static byte[] WriteFields(params (ushort Id, byte[] Payload)[] fields)
+    {
+        using var stream = new MemoryStream();
+        WriteUShort(stream, (ushort)fields.Length);
+
+        foreach ((ushort id, byte[] payload) in fields)
+        {
+            WriteUShort(stream, id);
+            WriteInt(stream, payload.Length);
+            stream.Write(payload, 0, payload.Length);
+        }
+
+        return stream.ToArray();
+    }
+
+    private static byte[] WriteList(params byte[][] items)
+    {
+        using var stream = new MemoryStream();
+        WriteInt(stream, items.Length);
+        foreach (byte[] item in items)
+        {
+            stream.Write(item, 0, item.Length);
+        }
+
+        return stream.ToArray();
+    }
+
+    private static byte[] WriteString(string value) => Encoding.UTF8.GetBytes(value);
+
+    private static void WriteInt(Stream stream, int value)
+    {
+        byte[] bytes = BitConverter.GetBytes(value);
+        stream.Write(bytes, 0, bytes.Length);
+    }
+
+    private static void WriteUShort(Stream stream, ushort value)
+    {
+        byte[] bytes = BitConverter.GetBytes(value);
+        stream.Write(bytes, 0, bytes.Length);
     }
 }
