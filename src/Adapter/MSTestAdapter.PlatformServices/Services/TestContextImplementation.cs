@@ -381,10 +381,11 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
             return null;
         }
 
-        var results = _testResultFiles.ToList();
-
-        // clear the result files to handle data driven tests
-        _testResultFiles.Clear();
+        // Hand over the existing list to the caller (callers only enumerate it) and reset the field
+        // so data driven tests start with a fresh list on the next AddResultFile call.
+        // This avoids the copy that ToList() would do.
+        List<string> results = _testResultFiles;
+        _testResultFiles = null;
 
         return results;
     }
