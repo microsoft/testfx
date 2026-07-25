@@ -39,7 +39,7 @@
       </trans-unit>
       <trans-unit id="ExitCodeReasonCoverageThresholdFailed">
         <source>One or more code coverage thresholds were not met.</source>
-        <target state="new">One or more code coverage thresholds were not met.</target>
+        <target state="translated">Не достигнуто одно или несколько пороговых значений объема протестированного кода.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeReasonDependentProcessExited">
