@@ -211,6 +211,7 @@ internal partial class TestExecutionManager
                 }
 
                 var tasks = new List<Task>();
+                var resourceLockManager = new ResourceLockManager();
 
                 for (int i = 0; i < parallelWorkers; i++)
                 {
@@ -226,7 +227,18 @@ internal partial class TestExecutionManager
 
                                 if (queue.TryDequeue(out IEnumerable<UnitTestElement>? testSet))
                                 {
-                                    await ExecuteTestsWithTestRunnerAsync(testSet, adapterMessageLogger, source, sourceLevelParameters, testRunner, usesAppDomains).ConfigureAwait(false);
+                                    IReadOnlyList<ResourceLockInfo> chunkLocks = ResourceLockManager.GetChunkLocks(testSet);
+                                    if (chunkLocks.Count == 0)
+                                    {
+                                        await ExecuteTestsWithTestRunnerAsync(testSet, adapterMessageLogger, source, sourceLevelParameters, testRunner, usesAppDomains).ConfigureAwait(false);
+                                    }
+                                    else
+                                    {
+                                        await resourceLockManager.ExecuteWithLocksAsync(
+                                            chunkLocks,
+                                            () => ExecuteTestsWithTestRunnerAsync(testSet, adapterMessageLogger, source, sourceLevelParameters, testRunner, usesAppDomains),
+                                            _testRunCancellationToken?.CancellationToken ?? CancellationToken.None).ConfigureAwait(false);
+                                    }
                                 }
                             }
                         }
