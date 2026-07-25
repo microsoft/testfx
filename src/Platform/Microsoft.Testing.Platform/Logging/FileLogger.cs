@@ -20,6 +20,19 @@ internal sealed class FileLogger : IDisposable
 #pragma warning restore SA1001 // Commas should be spaced correctly
 #endif
 {
+    // Pre-computed upper-case names for all LogLevel values to avoid ToString().ToUpper() on every log entry.
+    // Index = (int)LogLevel value; must stay in sync with the LogLevel enum.
+    private static readonly string[] LogLevelUpperNames =
+    [
+        "TRACE",       // 0 = LogLevel.Trace
+        "DEBUG",       // 1 = LogLevel.Debug
+        "INFORMATION", // 2 = LogLevel.Information
+        "WARNING",     // 3 = LogLevel.Warning
+        "ERROR",       // 4 = LogLevel.Error
+        "CRITICAL",    // 5 = LogLevel.Critical
+        "NONE",        // 6 = LogLevel.None
+    ];
+
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private readonly FileLoggerOptions _options;
     private readonly LogLevel _logLevel;
@@ -259,7 +272,15 @@ internal sealed class FileLogger : IDisposable
     }
 
     private string BuildLogEntry<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter, string category)
-        => $"{_clock.UtcNow:O} {category} {logLevel.ToString().ToUpper(CultureInfo.InvariantCulture)} {formatter(state, exception)}";
+        => $"{_clock.UtcNow:O} {category} {GetLogLevelUpperName(logLevel)} {formatter(state, exception)}";
+
+    private static string GetLogLevelUpperName(LogLevel logLevel)
+    {
+        int index = (int)logLevel;
+        return (uint)index < (uint)LogLevelUpperNames.Length
+            ? LogLevelUpperNames[index]
+            : logLevel.ToString().ToUpper(CultureInfo.InvariantCulture);
+    }
 
 #if NETCOREAPP
     private async Task WriteLogToFileAsync()
