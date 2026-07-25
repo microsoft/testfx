@@ -50,7 +50,7 @@ internal static class UnitTestElementExtensions
         // string testFullName = this.TestMethod.HasManagedMethodAndTypeProperties
         //     ? $"{TestMethod.ManagedTypeName}.{TestMethod.ManagedMethodName}"
         //     : $"{TestMethod.FullClassName}.{TestMethod.Name}";
-        string testFullName = $"{testMethod.FullClassName}.{testMethod.Name}";
+        string testFullName = testMethod.FullyQualifiedName;
 
         TestCase testCase = new(testFullName, EngineConstants.ExecutorUri, testMethod.AssemblyName)
         {
@@ -158,7 +158,7 @@ internal static class UnitTestElementExtensions
         }
 
         TestMethod testMethod = element.TestMethod;
-        string testFullName = $"{testMethod.FullClassName}.{testMethod.Name}";
+        string testFullName = testMethod.FullyQualifiedName;
         Guid testId = GenerateSerializedDataStrategyTestId(element, testFullName);
         element.CachedTestNodeUid = testId;
         return testId;

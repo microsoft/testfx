@@ -123,7 +123,7 @@ internal sealed partial class UnitTestRunner
 
         return new TestFilterContext
         {
-            FullyQualifiedName = $"{testMethod.FullClassName}.{testMethod.Name}",
+            FullyQualifiedName = testMethod.FullyQualifiedName,
             DisplayName = testMethod.DisplayName,
             MethodName = testMethod.Name,
             Source = testMethod.AssemblyName,

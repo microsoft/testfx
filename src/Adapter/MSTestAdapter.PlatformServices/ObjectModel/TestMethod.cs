@@ -73,6 +73,20 @@ internal sealed class TestMethod : ITestMethod
     /// <inheritdoc />
     public string AssemblyName { get; private set; }
 
+    /// <summary>
+    /// Gets the fully qualified test name in the form <c>FullClassName.Name</c>.
+    /// The value is computed lazily and cached so repeated callers (discovery, hashing, filtering)
+    /// share the same string instance without repeated allocation.
+    /// </summary>
+    public string FullyQualifiedName => _fullyQualifiedName ??= $"{FullClassName}.{Name}";
+
+    // Backing field for FullyQualifiedName. Not serialized: it is a pure cache of two already-serialized
+    // fields and is trivially re-derived on the receiving side.
+#if NETFRAMEWORK
+    [NonSerialized]
+#endif
+    private string? _fullyQualifiedName;
+
     /// <inheritdoc />
     public string? ManagedTypeName => GetManagedTypeName(FullClassName);
 
