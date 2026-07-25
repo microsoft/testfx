@@ -15,7 +15,7 @@ public static class WellKnownResources
     /// A key representing the process-wide current working directory
     /// (<see cref="System.IO.Directory.GetCurrentDirectory"/> / <see cref="System.Environment.CurrentDirectory"/>).
     /// </summary>
-    public const string CurrentDirectory = "System.IO.Directory.CurrentDirectory";
+    public const string CurrentDirectory = "System.Environment.CurrentDirectory";
 
     /// <summary>
     /// A key representing process-wide environment variables

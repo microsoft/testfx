@@ -82,7 +82,7 @@ public enum ResourceAccessMode
 
 public static class WellKnownResources
 {
-    public const string CurrentDirectory = "System.IO.Directory.CurrentDirectory";
+    public const string CurrentDirectory = "System.Environment.CurrentDirectory";
     public const string EnvironmentVariables = "System.Environment.Variables";
     public const string Console = "System.Console";
 }
@@ -98,7 +98,15 @@ without silently breaking every user key that happens to match them. They are na
 collision-resistant constants in the spirit of JUnit's `"java.lang.System.properties"`. They are
 purely conventional: the engine gives them **no** special treatment and they use the exact same
 equality-based conflict mechanism as any user-invented key. They exist only so that tests contending
-on the same ambient state agree on a spelling.
+on the same ambient state agree on a spelling. Each is rooted at the BCL type that owns the state.
+
+The set is deliberately limited to these **three** keys in v1, all of which are unambiguously
+process-global. Culture and time zone are **not** included, despite JUnit having `LOCALE` and
+`TIME_ZONE`, because in .NET the distinction cannot be named precisely with a single key:
+`CultureInfo.CurrentCulture` is thread-scoped (`AsyncLocal`-backed) while
+`CultureInfo.DefaultThreadCurrentCulture` is process-wide, so a key called "culture" would be
+ambiguous about which of the two it protects and would mislead. Additive later, once the distinction
+can be expressed.
 
 There is deliberately **no `Global` key in v1.** A key named `Global` would imply it conflicts with
 every other lock, but conflict detection is pure string equality, so it would in fact conflict only
@@ -282,12 +290,20 @@ so the attribute is not visible until it ships.
 
 - **A resource-locks provider / dynamic hook** (JUnit added `ResourceLocksProvider` in 5.12).
   Attributes take only compile-time constants, so `[DynamicData]`-parameterized tests cannot
-  express "lock the asset for *this* TFM". This repo's acceptance suite is heavily
-  TFM-parameterized, so a provider that computes locks per test instance is the natural next
-  step. The extensibility point is designed for here even though implementation may land later.
-  **Runtime path normalization** (the rejected `ForPath` helper from decision 2) belongs here: a
-  provider runs at execution time, where `Path.GetFullPath` and platform-appropriate casing can be
-  applied, unlike a compile-time attribute argument.
+  express "lock the asset for *this* TFM". **Explicitly deferred out of v1** (proposed; see
+  [Unresolved questions](#unresolved-questions)). The concrete v1 consequence is that a
+  parameterized test uses a single constant key across all of its variants, so those variants
+  serialize against each other unnecessarily — **correct, just coarser**, which is the failure
+  direction this RFC argues for throughout ("over-locking fails slow and diagnosable; under-locking
+  fails flaky"). Deferring is also this RFC's own guidance applied to itself: start coarse, refine on
+  measurement, and there is as yet no measurement showing TFM-variant serialization is a real
+  bottleneck. Precedent: JUnit shipped `@ResourceLock` in 5.3 (2018) and `ResourceLocksProvider` only
+  in 5.12 (2025) — seven years of production use before the dynamic hook was needed. The hook is
+  purely additive (source- and binary-compatible) and its shape is designed for here, so nothing is
+  foreclosed; meanwhile the v1 public surface stays minimal, which matters disproportionately because
+  every symbol is permanent. **Runtime path normalization** (the rejected `ForPath` helper from
+  decision 2) belongs here too: a provider runs at execution time, where `Path.GetFullPath` and
+  platform-appropriate casing can be applied, unlike a compile-time attribute argument.
 - **`ResourceLockTarget.SELF` / `CHILDREN`** for class-level locks, if a concrete need emerges
   (see decision 5).
 - **An optional `Scope` property** (`TestHost` / `Machine`) if cross-process locking is ever
@@ -340,9 +356,21 @@ so the attribute is not visible until it ships.
 
 ## Unresolved questions
 
-- **Exact `WellKnownResources` values.** Proposed above and pinned in `PublicAPI.Unshipped.txt`.
-  Because they are permanent once shipped, they need explicit sign-off before release:
-  `CurrentDirectory = "System.IO.Directory.CurrentDirectory"`,
-  `EnvironmentVariables = "System.Environment.Variables"`, `Console = "System.Console"`.
-- **Whether the dynamic resource-locks provider lands in v1 or a later release.** The attribute API
-  ships in v1; the provider hook (and the runtime path normalization that depends on it) may follow.
+Both questions below now have a **proposed** answer with rationale. They are recorded as proposals
+rather than settled decisions because each is cheap to reverse before merge and impossible to reverse
+after ship, so both await ratification on review.
+
+- **Exact `WellKnownResources` values — proposed, pending sign-off.**
+  `CurrentDirectory = "System.Environment.CurrentDirectory"`,
+  `EnvironmentVariables = "System.Environment.Variables"`, `Console = "System.Console"`, pinned in
+  `PublicAPI.Unshipped.txt`. `CurrentDirectory` deliberately names `System.Environment.CurrentDirectory`
+  rather than `System.IO.Directory.CurrentDirectory`, because the former is a real BCL property while
+  the latter names no actual member (`Directory` exposes `GetCurrentDirectory()`/`SetCurrentDirectory()`,
+  not a property). This also makes the set internally consistent: every key is rooted at the BCL type
+  that owns the state, and it pairs naturally with `System.Environment.Variables`. The set is frozen at
+  these three keys for v1; culture and time zone are excluded for the reason given in the API section.
+- **Whether the dynamic resource-locks provider lands in v1 — proposed: no, follow-up.** The attribute
+  API ships in v1; the provider hook (and the runtime path normalization that depends on it) follows.
+  Full rationale in [Future work](#future-work): the v1 consequence is coarser-but-correct locking for
+  parameterized tests, it applies this RFC's own start-coarse guidance, JUnit needed seven years before
+  adding its equivalent, and the hook is purely additive so nothing is foreclosed.
