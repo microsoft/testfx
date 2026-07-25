@@ -52,6 +52,7 @@
 
 | Date | Tasks |
 |------|-------|
+| 2026-07-25 | Task 3 (DoNotStoreStaticTestContextAnalyzer: 2 edge-case tests), Task 7 |
 | 2026-07-18 | Task 3 (NonNullableReferenceNotInitializedSuppressor: 2 edge-case tests), Task 7 |
 | 2026-07-17 | Task 3 (MSTEST0038 AvoidAssertAreSameWithValueTypes: 3 edge-case tests), Task 7 |
 | 2026-07-16 | Task 3 (MSTEST0070 MemberConditionShouldBeValid: 3 tests), Task 7 |
@@ -65,10 +66,11 @@
 
 ## Last Run
 
-2026-07-18 UTC
+2026-07-25 UTC
 
 ## Completed Work (recent, summarized)
 
+- PR (2026-07-25) — DoNotStoreStaticTestContextAnalyzer (MSTEST0024): 2 edge-case tests (??= coalesce NoDiagnostic, field-to-field assign NoDiagnostic)
 - PR (2026-07-18) — NonNullableReferenceNotInitializedSuppressor (MSTEST0028): 2 edge-case tests (field vs getter-only property)
 - PR (2026-07-17) — MSTEST0038 AvoidAssertAreSameWithValueTypes: 3 edge-case tests (null-ref, struct-constrained T, unconstrained T)
 - PR (2026-07-16) — MSTEST0070 MemberConditionShouldBeValid: 3 tests (empty/whitespace)
