@@ -80,6 +80,7 @@ public class UnitTestElementTests : TestContainer
     public void FullyQualifiedNameShouldBeComputedOnceAndCached()
     {
         string first = _testMethod.FullyQualifiedName;
+        first.Should().Be("C.M");
 
         // The string is built by interpolation, so a recomputed value would be a distinct (non-interned)
         // instance. Reference identity is what proves the hot paths reuse a single allocation per test method.
