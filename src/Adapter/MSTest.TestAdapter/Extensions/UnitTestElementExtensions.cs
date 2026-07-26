@@ -116,6 +116,12 @@ internal static class UnitTestElementExtensions
             testCase.SetPropertyValue(AdapterTestProperties.DoNotParallelizeProperty, element.DoNotParallelize);
         }
 
+        // Set the declared resource locks if present, so they survive the discovery -> execution round-trip.
+        if (element.ResourceLocks is { Length: > 0 } resourceLocks)
+        {
+            testCase.SetPropertyValue(AdapterTestProperties.ResourceLocksProperty, Array.ConvertAll(resourceLocks, ResourceLockInfo.Encode));
+        }
+
         if (element.UnfoldingStrategy != TestDataSourceUnfoldingStrategy.Auto)
         {
             testCase.SetPropertyValue(AdapterTestProperties.UnfoldingStrategy, (int)element.UnfoldingStrategy);

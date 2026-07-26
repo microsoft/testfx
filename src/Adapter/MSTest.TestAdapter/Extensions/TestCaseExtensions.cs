@@ -136,6 +136,12 @@ internal static class TestCaseExtensions
 
         testElement.DoNotParallelize = testCase.GetPropertyValue(AdapterTestProperties.DoNotParallelizeProperty, false);
 
+        string[]? encodedResourceLocks = testCase.GetPropertyValue<string[]>(AdapterTestProperties.ResourceLocksProperty, null);
+        if (encodedResourceLocks is { Length: > 0 })
+        {
+            testElement.ResourceLocks = Array.ConvertAll(encodedResourceLocks, ResourceLockInfo.Decode);
+        }
+
         return testElement;
     }
 

@@ -30,6 +30,9 @@ internal static class AdapterTestProperties
 
     internal static readonly TestProperty DoNotParallelizeProperty = TestProperty.Register("MSTestDiscoverer.DoNotParallelize", DoNotParallelizeLabel, typeof(bool), TestPropertyAttributes.Hidden, typeof(TestCase));
 
+    // Each entry is a single-character mode prefix ('R' for Read, 'W' for ReadWrite) followed by the resource key.
+    internal static readonly TestProperty ResourceLocksProperty = TestProperty.Register("MSTestDiscoverer.ResourceLocks", ResourceLocksLabel, typeof(string[]), TestPropertyAttributes.Hidden, typeof(TestCase));
+
     internal static readonly TestProperty ExecutionIdProperty = TestProperty.Register("ExecutionId", ExecutionIdLabel, typeof(Guid), TestPropertyAttributes.Hidden, typeof(TestResult));
 
     internal static readonly TestProperty ParentExecIdProperty = TestProperty.Register("ParentExecId", ParentExecIdLabel, typeof(Guid), TestPropertyAttributes.Hidden, typeof(TestResult));
@@ -92,6 +95,7 @@ internal static class AdapterTestProperties
     private const string DeploymentItemsLabel = "DeploymentItems";
 #endif
     private const string DoNotParallelizeLabel = "DoNotParallelize";
+    private const string ResourceLocksLabel = "ResourceLocks";
     private const string ExecutionIdLabel = "ExecutionId";
     private const string ParentExecIdLabel = "ParentExecId";
     private const string WorkItemIdsLabel = "WorkItemIds";

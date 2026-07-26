@@ -77,4 +77,5 @@ internal static class DiagnosticIds
     public const string MemberConditionShouldBeValidRuleId = "MSTEST0070";
     public const string RedundantTestMethodDisplayNameRuleId = "MSTEST0071";
     public const string AssemblyFixtureProviderNotSupportedWithNativeAotRuleId = "MSTEST0072";
+    public const string PreferConstantForResourceLockRuleId = "MSTEST0073";
 }

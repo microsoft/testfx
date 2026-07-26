@@ -32,6 +32,54 @@ public class UnitTestElementTests : TestContainer
         action.Should().Throw<ArgumentNullException>();
     }
 
+    public void ResourceLocksShouldRoundTripThroughTestCaseProperty()
+    {
+        // The acceptance assets run on the native MSTest runner, so they never exercise this hidden VSTest
+        // TestProperty transport. Discovery and execution are separate phases (and may be separate AppDomains),
+        // so a regression here would silently drop or weaken locks without failing any other test.
+        var element = new UnitTestElement(new TestMethod("M", "C", "A", displayName: null))
+        {
+            ResourceLocks =
+            [
+                new ResourceLockInfo("exclusive-key", ResourceAccessMode.ReadWrite),
+                new ResourceLockInfo("shared-key", ResourceAccessMode.Read),
+            ],
+        };
+
+        UnitTestElement roundTripped = element.ToTestCase().ToUnitTestElementWithUpdatedSource("A");
+
+        roundTripped.ResourceLocks.Should().NotBeNull();
+        roundTripped.ResourceLocks!.Length.Should().Be(2);
+        roundTripped.ResourceLocks[0].Resource.Should().Be("exclusive-key");
+        roundTripped.ResourceLocks[0].Mode.Should().Be(ResourceAccessMode.ReadWrite);
+        roundTripped.ResourceLocks[1].Resource.Should().Be("shared-key");
+        roundTripped.ResourceLocks[1].Mode.Should().Be(ResourceAccessMode.Read);
+    }
+
+    public void ResourceLocksShouldRoundTripKeysContainingThePrefixCharacters()
+    {
+        // The encoding is a one-character prefix with no delimiter, so keys that themselves start with 'R' or
+        // 'W' are the case most likely to be mangled by an off-by-one in the decoder.
+        var element = new UnitTestElement(new TestMethod("M", "C", "A", displayName: null))
+        {
+            ResourceLocks = [new ResourceLockInfo("Registry", ResourceAccessMode.Read), new ResourceLockInfo("Windows", ResourceAccessMode.ReadWrite)],
+        };
+
+        UnitTestElement roundTripped = element.ToTestCase().ToUnitTestElementWithUpdatedSource("A");
+
+        roundTripped.ResourceLocks![0].Resource.Should().Be("Registry");
+        roundTripped.ResourceLocks[0].Mode.Should().Be(ResourceAccessMode.Read);
+        roundTripped.ResourceLocks[1].Resource.Should().Be("Windows");
+        roundTripped.ResourceLocks[1].Mode.Should().Be(ResourceAccessMode.ReadWrite);
+    }
+
+    public void ResourceLocksShouldRemainNullWhenNoneAreDeclared()
+    {
+        UnitTestElement roundTripped = _unitTestElement.ToTestCase().ToUnitTestElementWithUpdatedSource("A");
+
+        roundTripped.ResourceLocks.Should().BeNull();
+    }
+
     #endregion
 
     #region Source resolution / host test case tests
