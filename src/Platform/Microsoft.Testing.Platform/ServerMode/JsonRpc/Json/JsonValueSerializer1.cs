@@ -5,7 +5,5 @@ using System.Text.Json;
 
 namespace Microsoft.Testing.Platform.ServerMode.Json;
 
-internal sealed class JsonValueSerializer<T> : JsonValueSerializer
-{
-    public JsonValueSerializer(Action<Utf8JsonWriter, T> value) => Serialize = (w, o) => value(w, (T)o);
-}
+internal sealed class JsonValueSerializer<T>(Action<Utf8JsonWriter, T> value)
+    : JsonValueSerializer((w, o) => value(w, (T)o));

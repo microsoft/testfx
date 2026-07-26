@@ -1,7 +1,8 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using Microsoft.Testing.Platform.Helpers;
 
 using Moq;
@@ -69,9 +70,19 @@ public sealed class InvokeTestingPlatformTaskTests
 
     private sealed class TestableInvokeTestingPlatformTask : InvokeTestingPlatformTask
     {
+        // MSBuild is the one that normally supplies the [Required] inputs; stub them out here so the test can focus
+        // on the output-logging behavior.
+        [SetsRequiredMembers]
         public TestableInvokeTestingPlatformTask()
             : base(new StubFileSystem())
         {
+            TargetPath = new TaskItem("MyAssembly.dll");
+            TargetFramework = new TaskItem("net9.0");
+            TestArchitecture = new TaskItem("x64");
+            TargetFrameworkIdentifier = new TaskItem(".NETCoreApp");
+            TestingPlatformShowTestsFailure = new TaskItem("false");
+            TestingPlatformCaptureOutput = new TaskItem("true");
+            ProjectFullPath = new TaskItem("MyProject.csproj");
         }
 
         public void InvokeLogEventsFromTextOutput(string singleLine)
