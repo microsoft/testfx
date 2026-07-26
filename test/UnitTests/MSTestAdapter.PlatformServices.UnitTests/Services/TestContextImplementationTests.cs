@@ -746,6 +746,33 @@ public class TestContextImplementationTests : TestContainer
         _testContextImplementation.Dispose();
     }
 
+    public void TestTempDirectoryShouldSanitizeAndBoundLongNameWithInvalidCharacters()
+    {
+        using TempDirectoryScope resultsDirectory = new();
+        _properties["TestResultsDirectory"] = resultsDirectory.Path;
+
+        // A long, data-driven-style display name full of characters that are invalid in a path.
+        string hostileName = "My/Test\\With:Illegal*Chars?\"<>|And " + new string('x', 200);
+        _testMethod.Setup(tm => tm.Name).Returns(hostileName);
+        _testContextImplementation = CreateTestContextImplementation();
+
+        string? tempDirectory = _testContextImplementation.TestTempDirectory;
+
+        tempDirectory.Should().NotBeNullOrEmpty();
+        Directory.Exists(tempDirectory).Should().BeTrue();
+
+        string fileName = Path.GetFileName(tempDirectory!);
+        fileName.Should().NotContain("/").And.NotContain("\\").And.NotContain(":")
+            .And.NotContain("*").And.NotContain("?").And.NotContain("<").And.NotContain(">").And.NotContain("|");
+        fileName.Should().NotContainAny(Array.ConvertAll(Path.GetInvalidFileNameChars(), c => c.ToString()));
+
+        // 50-char sanitized budget + '_' + 12-char suffix = a bounded, MAX_PATH-friendly length.
+        fileName.Length.Should().BeLessThanOrEqualTo(50 + 1 + 12);
+
+        _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
+        _testContextImplementation.Dispose();
+    }
+
     public void TestTempDirectoryShouldReturnSamePathOnRepeatedAccess()
     {
         using TempDirectoryScope resultsDirectory = new();

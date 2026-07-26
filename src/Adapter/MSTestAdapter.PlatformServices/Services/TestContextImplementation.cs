@@ -569,7 +569,16 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
         string sanitized = builder.ToString().Trim('_');
         if (sanitized.Length > TestTempDirectoryNameMaxLength)
         {
-            sanitized = sanitized.Substring(0, TestTempDirectoryNameMaxLength).TrimEnd('_');
+            int cutLength = TestTempDirectoryNameMaxLength;
+
+            // Avoid slicing through the middle of a surrogate pair, which would leave a lone
+            // surrogate in the directory name and can produce an invalid path segment.
+            if (char.IsHighSurrogate(sanitized[cutLength - 1]))
+            {
+                cutLength--;
+            }
+
+            sanitized = sanitized.Substring(0, cutLength).TrimEnd('_');
         }
 
         return sanitized;
