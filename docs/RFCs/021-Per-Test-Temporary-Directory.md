@@ -308,6 +308,13 @@ row; the unfolded path allocates one per row). Because each executing test/case 
 object, each gets its own lazily-created directory with no shared mutable state and no cross-test
 locking. Uniqueness is structural, not coordinated.
 
+The same `TestContext` type is also handed to **fixture methods** (`[AssemblyInitialize]`,
+`[ClassInitialize]`, `[ClassCleanup]`, `[AssemblyCleanup]`). Those contexts are not per-test — their
+outcome/disposal semantics differ (e.g. `ClassCleanupManager.ForceCleanup` contexts are never
+disposed), so lazily creating a directory for them would leak it. The property therefore returns
+`null` for any non-test context; a directory is only ever created for an executing test (or a
+data-driven case of one).
+
 ### 9. Timeouts / aborted tests — cleanup must not extend the test or throw
 
 Cleanup runs when the per-test `TestContext` is disposed, which happens after the test's outcome

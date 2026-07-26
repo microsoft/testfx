@@ -153,6 +153,11 @@ public abstract class TestContext
     /// concurrently without any coordination — even when the assembly runs in parallel.
     /// </para>
     /// <para>
+    /// This is a *per-test* directory, so it returns <see langword="null"/> when accessed outside of
+    /// a test — for example from <c>[AssemblyInitialize]</c>, <c>[ClassInitialize]</c>,
+    /// <c>[ClassCleanup]</c>, or <c>[AssemblyCleanup]</c> — where there is no single owning test.
+    /// </para>
+    /// <para>
     /// The directory is deleted automatically when the test passes and retained when the test
     /// fails, so a failed test's artifacts remain available for inspection. Retention of all
     /// directories (including passing tests) can be forced for debugging via the

@@ -728,6 +728,19 @@ public class TestContextImplementationTests : TestContainer
         Directory.GetDirectories(resultsDirectory.Path).Should().BeEmpty();
     }
 
+    public void TestTempDirectoryShouldReturnNullForNonTestContexts()
+    {
+        using TempDirectoryScope resultsDirectory = new();
+        _properties["TestResultsDirectory"] = resultsDirectory.Path;
+
+        // A fixture (assembly/class initialize or cleanup) context is created with a null test
+        // method. It is not per-test and may never be disposed, so it must not create a directory.
+        using TestContextImplementation fixtureContext = new(null, "SomeClass", _properties, null, null);
+
+        fixtureContext.TestTempDirectory.Should().BeNull();
+        Directory.GetDirectories(resultsDirectory.Path).Should().BeEmpty();
+    }
+
     public void TestTempDirectoryShouldNotCreateDirectoryAfterDispose()
     {
         using TempDirectoryScope resultsDirectory = new();
@@ -781,7 +794,8 @@ public class TestContextImplementationTests : TestContainer
 
         string fileName = Path.GetFileName(tempDirectory!);
         fileName.Should().NotContain("/").And.NotContain("\\").And.NotContain(":")
-            .And.NotContain("*").And.NotContain("?").And.NotContain("<").And.NotContain(">").And.NotContain("|");
+            .And.NotContain("*").And.NotContain("?").And.NotContain("\"")
+            .And.NotContain("<").And.NotContain(">").And.NotContain("|");
         fileName.Should().NotContainAny(Array.ConvertAll(Path.GetInvalidFileNameChars(), c => c.ToString()));
 
         // 50-char sanitized cap + '_' + 32-char GUID suffix = a bounded, MAX_PATH-friendly length.

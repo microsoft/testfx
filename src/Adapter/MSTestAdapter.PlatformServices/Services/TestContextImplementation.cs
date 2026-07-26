@@ -125,6 +125,15 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
 
 #if !WINDOWS_UWP && !WIN_UI
     /// <summary>
+    /// Whether this context represents an executing test (as opposed to an assembly/class
+    /// initialize or cleanup fixture context). <see cref="TestTempDirectory"/> is a *per-test*
+    /// scratch directory; fixture contexts are not per-test and are not always disposed (e.g.
+    /// <c>ClassCleanupManager.ForceCleanup</c> contexts), so creating a directory for them would
+    /// leak it. The getter returns <see langword="null"/> when this is <see langword="false"/>.
+    /// </summary>
+    private bool _isTestExecutionContext;
+
+    /// <summary>
     /// The lazily-created per-test temporary directory, or <see langword="null"/> if it has not
     /// been accessed (and therefore not created) yet.
     /// </summary>
@@ -222,6 +231,12 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
         _liveOutputWriter = liveOutputWriter;
         _outputCaptureModeProvider = outputCaptureModeProvider;
         _cancellationTokenRegistration = testRunCancellationToken?.Register(CancelDelegate, this);
+#if !WINDOWS_UWP && !WIN_UI
+        // A non-null testMethod means this context is created for an executing test. Fixture
+        // (assembly/class initialize and cleanup) contexts pass testMethod: null; data-driven
+        // iteration clones re-enable this flag explicitly (see CloneForDataDrivenIteration).
+        _isTestExecutionContext = testMethod is not null;
+#endif
     }
 
     #region TestContext impl
@@ -246,6 +261,14 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
     {
         get
         {
+            // A per-test scratch directory only makes sense for an executing test. Fixture
+            // (assembly/class initialize and cleanup) contexts are not per-test and may never be
+            // disposed, so creating a directory for them would leak it — return null instead.
+            if (!_isTestExecutionContext)
+            {
+                return null;
+            }
+
             if (Volatile.Read(ref _testTempDirectoryCreated))
             {
                 return _testTempDirectory;
@@ -619,8 +642,9 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
     {
         string namePart = SanitizeTestTempDirectoryName(GetTestTempDirectoryNameSource(), nameBudget);
 
-        // Guid.ToString("N") is 32 hex chars; two contexts colliding on the same 12-char prefix is
-        // ~2^-48, so the retry loop below is a belt-and-braces guard rather than a real necessity.
+        // The suffix is a full 128-bit GUID, so two contexts choosing the same directory name is
+        // cryptographically negligible. Exists + CreateDirectory is not an atomic exclusive create,
+        // so the retry loop below is a belt-and-braces guard rather than a real necessity.
         const int maxAttempts = 10;
         for (int attempt = 0; attempt < maxAttempts; attempt++)
         {
@@ -855,6 +879,14 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
         // execution-attempt count of this test, not per-row state, so it must flow into
         // each iteration's context.
         clone.Context.TestRunCount = Context.TestRunCount;
+
+#if !WINDOWS_UWP && !WIN_UI
+        // A folded data-driven iteration IS an executing test (it is passed testMethod: null only
+        // because the identifying labels are already in the property bag), so it must support the
+        // per-test temporary directory just like the unfolded path where each row gets its own
+        // context constructed with a non-null testMethod.
+        clone._isTestExecutionContext = _isTestExecutionContext;
+#endif
 
 #if NETFRAMEWORK
         clone.SetDataConnection(_dbConnection);
