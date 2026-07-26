@@ -233,6 +233,11 @@ internal sealed partial class MSTestSettings
 
         ParseBooleanSetting(configuration, "execution:randomizeTestOrder", logger, value => settings.RandomizeTestOrder = value);
         ParseSignedIntegerSetting(configuration, "execution:randomTestOrderSeed", logger, value => settings.RandomTestOrderSeed = value);
+        if (configuration["mstest:execution:dependencyChainFile"] is { } dependencyChainFile && !StringEx.IsNullOrWhiteSpace(dependencyChainFile))
+        {
+            settings.TestDependencyChainFile = dependencyChainFile.Trim();
+        }
+
         ParseCaptureTraceOutputSetting(configuration, "output:captureTrace", logger, value => settings.OutputCaptureMode = value);
         ParseBooleanSetting(configuration, "parallelism:enabled", logger, value => settings.DisableParallelization = !value);
         ParseBooleanSetting(configuration, "execution:mapInconclusiveToFailed", logger, value => settings.MapInconclusiveToFailed = value);

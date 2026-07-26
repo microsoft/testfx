@@ -10,6 +10,7 @@ See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4
 
 ### Added
 
+* Add `[DependsOn]` and an equivalent XML dependency chain file (`<TestDependencyChainFile>` in RunSettings, `mstest:execution:dependencyChainFile` in `testconfig.json`) to declare that a test runs after one or more other tests. Declarations form a directed acyclic graph rather than a flat order, so tests that share a prerequisite still run in parallel with each other; a test whose prerequisite does not pass is skipped (transitively) unless it sets `ProceedOnFailure`, and dependency cycles are reported before the run starts. See [RFC 022](RFCs/022-Test-Dependencies.md)
 * Add dedicated timeout configuration for `[GlobalTestInitialize]` / `[GlobalTestCleanup]` fixtures via the `timeout:globalTestInitialize` / `timeout:globalTestCleanup` `testconfig.json` keys (RunSettings XML: `GlobalTestInitializeTimeout` / `GlobalTestCleanupTimeout`). These fall back to the per-test `testInitialize` / `testCleanup` timeouts when unset, and global fixture timeout/cancellation diagnostics now use dedicated messages ("Global test initialize/cleanup method ...") in [#9985](https://github.com/microsoft/testfx/issues/9985)
 
 ### Changed

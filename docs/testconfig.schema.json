@@ -99,6 +99,10 @@
               "type": "integer",
               "description": "Seed used when 'randomizeTestOrder' is true, to make the randomized order reproducible."
             },
+            "dependencyChainFile": {
+              "type": "string",
+              "description": "Path to an XML dependency chain file declaring which tests must run before which, as an alternative to the [DependsOn] attribute. A relative path is resolved against the test host's current directory."
+            },
             "mapInconclusiveToFailed": {
               "type": "boolean",
               "description": "When true, inconclusive test outcomes are reported as failures. Defaults to false."

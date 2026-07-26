@@ -387,6 +387,54 @@ but received {4} argument(s), with types '{5}'.</value>
     <value>Test method {0} was not found.</value>
     <comment>{0} is the test method name.</comment>
   </data>
+  <data name="DependencyChainFileNotFound" xml:space="preserve">
+    <value>The test dependency chain file '{0}' was not found. No dependency from the file is applied.</value>
+    <comment>{0} is the configured file path.</comment>
+  </data>
+  <data name="DependencyChainFileInvalidRoot" xml:space="preserve">
+    <value>The test dependency chain file '{0}' must have a &lt;TestDependencies&gt; root element, but its root element is '{1}'. No dependency from the file is applied.</value>
+    <comment>{0} is the file path. {1} is the root element name found. {Locked="&lt;TestDependencies&gt;"}</comment>
+  </data>
+  <data name="DependencyChainFileUnreadable" xml:space="preserve">
+    <value>The test dependency chain file '{0}' could not be read: {1}. No dependency from the file is applied.</value>
+    <comment>{0} is the file path. {1} is the underlying error message.</comment>
+  </data>
+  <data name="DependencyChainFileUnknownElement" xml:space="preserve">
+    <value>The test dependency chain file '{0}' contains an unrecognized element '{1}', which is ignored.</value>
+    <comment>{0} is the file path. {1} is the element name.</comment>
+  </data>
+  <data name="DependencyChainFileMissingName" xml:space="preserve">
+    <value>An element '{1}' in the test dependency chain file '{0}' has no 'name' attribute and is ignored.</value>
+    <comment>{0} is the file path. {1} is the element name. {Locked="name"}</comment>
+  </data>
+  <data name="DependencyChainFileInvalidReference" xml:space="preserve">
+    <value>The test reference '{1}' in the test dependency chain file '{0}' is not valid. Use 'Namespace.Class.Method', or 'Namespace.Class.*' for every test of a class.</value>
+    <comment>{0} is the file path. {1} is the invalid reference.</comment>
+  </data>
+  <data name="DependencyChainFileInvalidBoolean" xml:space="preserve">
+    <value>The value '{1}' of the 'proceedOnFailure' attribute in the test dependency chain file '{0}' is not a valid boolean and is treated as false.</value>
+    <comment>{0} is the file path. {1} is the invalid value. {Locked="proceedOnFailure"}{Locked="false"}</comment>
+  </data>
+  <data name="DependencyChainFileDependentNotFound" xml:space="preserve">
+    <value>The test dependency chain file declares dependencies for '{0}', which matches no test in this run. They are ignored.</value>
+    <comment>{0} is the declared test reference.</comment>
+  </data>
+  <data name="DependsOnCycle" xml:space="preserve">
+    <value>Dependency cycle detected between tests: {0}. The tests in the cycle cannot be ordered and are reported as failed. Remove one of the [DependsOn] declarations to break the cycle.</value>
+    <comment>{0} is the cycle rendered as a path, for example 'A &gt; B &gt; A'. {Locked="[DependsOn]"}</comment>
+  </data>
+  <data name="DependsOnClassLevelCycle" xml:space="preserve">
+    <value>Dependencies between the following test classes cannot be honored with class-level parallelization because they depend on each other: {0}. Ordering is still enforced per test, but the classes are no longer scheduled as a unit. Use &lt;Scope&gt;MethodLevel&lt;/Scope&gt; (or [Parallelize(Scope = ExecutionScope.MethodLevel)]) to schedule each test individually.</value>
+    <comment>{0} is a comma-separated list of test class names. {Locked="MethodLevel"}{Locked="[Parallelize(Scope = ExecutionScope.MethodLevel)]"}{Locked="Scope"}</comment>
+  </data>
+  <data name="DependsOnTargetNotFound" xml:space="preserve">
+    <value>Test '{0}' declares a dependency on '{1}', which matches no test in this run. The dependency is ignored.</value>
+    <comment>{0} is the fully qualified name of the test declaring the dependency. {1} is the declared target.</comment>
+  </data>
+  <data name="DependsOnPrerequisiteNotPassed" xml:space="preserve">
+    <value>Test skipped because it depends on '{0}', which did not pass.</value>
+    <comment>{0} is the fully qualified name of the test that did not pass.</comment>
+  </data>
   <data name="TestParallelizationBanner" xml:space="preserve">
     <value>Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</value>
     <comment>{0} is the test source path. {1} is the worker count. {2} is the parallelization scope. {Locked="Workers"}{Locked="Scope"}</comment>

@@ -102,6 +102,66 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">デバッグ トレース:</target>
         <note />
       </trans-unit>
+      <trans-unit id="DependencyChainFileDependentNotFound">
+        <source>The test dependency chain file declares dependencies for '{0}', which matches no test in this run. They are ignored.</source>
+        <target state="new">The test dependency chain file declares dependencies for '{0}', which matches no test in this run. They are ignored.</target>
+        <note>{0} is the declared test reference.</note>
+      </trans-unit>
+      <trans-unit id="DependencyChainFileInvalidBoolean">
+        <source>The value '{1}' of the 'proceedOnFailure' attribute in the test dependency chain file '{0}' is not a valid boolean and is treated as false.</source>
+        <target state="new">The value '{1}' of the 'proceedOnFailure' attribute in the test dependency chain file '{0}' is not a valid boolean and is treated as false.</target>
+        <note>{0} is the file path. {1} is the invalid value. {Locked="proceedOnFailure"}{Locked="false"}</note>
+      </trans-unit>
+      <trans-unit id="DependencyChainFileInvalidReference">
+        <source>The test reference '{1}' in the test dependency chain file '{0}' is not valid. Use 'Namespace.Class.Method', or 'Namespace.Class.*' for every test of a class.</source>
+        <target state="new">The test reference '{1}' in the test dependency chain file '{0}' is not valid. Use 'Namespace.Class.Method', or 'Namespace.Class.*' for every test of a class.</target>
+        <note>{0} is the file path. {1} is the invalid reference.</note>
+      </trans-unit>
+      <trans-unit id="DependencyChainFileInvalidRoot">
+        <source>The test dependency chain file '{0}' must have a &lt;TestDependencies&gt; root element, but its root element is '{1}'. No dependency from the file is applied.</source>
+        <target state="new">The test dependency chain file '{0}' must have a &lt;TestDependencies&gt; root element, but its root element is '{1}'. No dependency from the file is applied.</target>
+        <note>{0} is the file path. {1} is the root element name found. {Locked="&lt;TestDependencies&gt;"}</note>
+      </trans-unit>
+      <trans-unit id="DependencyChainFileMissingName">
+        <source>An element '{1}' in the test dependency chain file '{0}' has no 'name' attribute and is ignored.</source>
+        <target state="new">An element '{1}' in the test dependency chain file '{0}' has no 'name' attribute and is ignored.</target>
+        <note>{0} is the file path. {1} is the element name. {Locked="name"}</note>
+      </trans-unit>
+      <trans-unit id="DependencyChainFileNotFound">
+        <source>The test dependency chain file '{0}' was not found. No dependency from the file is applied.</source>
+        <target state="new">The test dependency chain file '{0}' was not found. No dependency from the file is applied.</target>
+        <note>{0} is the configured file path.</note>
+      </trans-unit>
+      <trans-unit id="DependencyChainFileUnknownElement">
+        <source>The test dependency chain file '{0}' contains an unrecognized element '{1}', which is ignored.</source>
+        <target state="new">The test dependency chain file '{0}' contains an unrecognized element '{1}', which is ignored.</target>
+        <note>{0} is the file path. {1} is the element name.</note>
+      </trans-unit>
+      <trans-unit id="DependencyChainFileUnreadable">
+        <source>The test dependency chain file '{0}' could not be read: {1}. No dependency from the file is applied.</source>
+        <target state="new">The test dependency chain file '{0}' could not be read: {1}. No dependency from the file is applied.</target>
+        <note>{0} is the file path. {1} is the underlying error message.</note>
+      </trans-unit>
+      <trans-unit id="DependsOnClassLevelCycle">
+        <source>Dependencies between the following test classes cannot be honored with class-level parallelization because they depend on each other: {0}. Ordering is still enforced per test, but the classes are no longer scheduled as a unit. Use &lt;Scope&gt;MethodLevel&lt;/Scope&gt; (or [Parallelize(Scope = ExecutionScope.MethodLevel)]) to schedule each test individually.</source>
+        <target state="new">Dependencies between the following test classes cannot be honored with class-level parallelization because they depend on each other: {0}. Ordering is still enforced per test, but the classes are no longer scheduled as a unit. Use &lt;Scope&gt;MethodLevel&lt;/Scope&gt; (or [Parallelize(Scope = ExecutionScope.MethodLevel)]) to schedule each test individually.</target>
+        <note>{0} is a comma-separated list of test class names. {Locked="MethodLevel"}{Locked="[Parallelize(Scope = ExecutionScope.MethodLevel)]"}{Locked="Scope"}</note>
+      </trans-unit>
+      <trans-unit id="DependsOnCycle">
+        <source>Dependency cycle detected between tests: {0}. The tests in the cycle cannot be ordered and are reported as failed. Remove one of the [DependsOn] declarations to break the cycle.</source>
+        <target state="new">Dependency cycle detected between tests: {0}. The tests in the cycle cannot be ordered and are reported as failed. Remove one of the [DependsOn] declarations to break the cycle.</target>
+        <note>{0} is the cycle rendered as a path, for example 'A &gt; B &gt; A'. {Locked="[DependsOn]"}</note>
+      </trans-unit>
+      <trans-unit id="DependsOnPrerequisiteNotPassed">
+        <source>Test skipped because it depends on '{0}', which did not pass.</source>
+        <target state="new">Test skipped because it depends on '{0}', which did not pass.</target>
+        <note>{0} is the fully qualified name of the test that did not pass.</note>
+      </trans-unit>
+      <trans-unit id="DependsOnTargetNotFound">
+        <source>Test '{0}' declares a dependency on '{1}', which matches no test in this run. The dependency is ignored.</source>
+        <target state="new">Test '{0}' declares a dependency on '{1}', which matches no test in this run. The dependency is ignored.</target>
+        <note>{0} is the fully qualified name of the test declaring the dependency. {1} is the declared target.</note>
+      </trans-unit>
       <trans-unit id="DeploymentDependencyLoadFailed">
         <source>Test Run deployment issue: Failed to load the assembly or module '{0}'. Reason: {1}</source>
         <target state="translated">テスト実行の展開に関する問題: アセンブリまたはモジュール '{0}' を読み込めませんでした。理由: {1}</target>

@@ -181,6 +181,13 @@ internal sealed partial class MSTestSettings
     internal bool OrderTestsByNameInClass { get; private set; }
 
     /// <summary>
+    /// Gets the path of the dependency chain file that declares test dependencies outside the test source,
+    /// or <see langword="null"/> when none is configured. A relative path is resolved against the current
+    /// directory of the test host.
+    /// </summary>
+    internal string? TestDependencyChainFile { get; private set; }
+
+    /// <summary>
     /// Gets a value indicating whether tests should be executed in a random order to help expose hidden dependencies between tests.
     /// </summary>
     /// <remarks>

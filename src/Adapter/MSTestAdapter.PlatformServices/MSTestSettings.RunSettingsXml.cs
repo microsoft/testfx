@@ -154,6 +154,10 @@ internal sealed partial class MSTestSettings
                     case "ORDERTESTSBYNAMEINCLASS":
                         ParseBoolSetting(reader.ReadInnerXml(), "OrderTestsByNameInClass", logger, v => settings.OrderTestsByNameInClass = v);
                         break;
+                    case "TESTDEPENDENCYCHAINFILE":
+                        string dependencyChainFile = reader.ReadInnerXml();
+                        settings.TestDependencyChainFile = StringEx.IsNullOrWhiteSpace(dependencyChainFile) ? null : dependencyChainFile.Trim();
+                        break;
                     case "RANDOMIZETESTORDER":
                         ParseBoolSetting(reader.ReadInnerXml(), "RandomizeTestOrder", logger, v => settings.RandomizeTestOrder = v);
                         break;

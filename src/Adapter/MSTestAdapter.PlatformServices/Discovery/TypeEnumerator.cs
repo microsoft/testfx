@@ -22,6 +22,8 @@ internal class TypeEnumerator
     private readonly ReflectHelper _reflectHelper;
     private List<ResourceLockInfo>? _classResourceLocks;
     private bool _classResourceLocksComputed;
+    private List<TestDependencyInfo>? _classDependencies;
+    private bool _classDependenciesComputed;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TypeEnumerator"/> class.
@@ -158,6 +160,7 @@ internal class TypeEnumerator
             TestCategory = reflectionOperations.GetTestCategories(method, _type),
             DoNotParallelize = classDisablesParallelization || _reflectHelper.IsAttributeDefined<DoNotParallelizeAttribute>(method),
             ResourceLocks = MergeResourceLocks(GetClassResourceLocks(), ReadResourceLocks(method)),
+            Dependencies = MergeDependencies(GetClassDependencies(), ReadDependencies(method)),
 #if !WINDOWS_UWP && !WIN_UI
             DeploymentItems = PlatformServiceProvider.Instance.TestDeployment.GetDeploymentItems(method, _type, warnings),
 #endif
@@ -237,6 +240,88 @@ internal class TypeEnumerator
         }
 
         return locks;
+    }
+
+    /// <summary>
+    /// Reads (and caches for this type) the <c>[DependsOn]</c> attributes declared on the test class.
+    /// </summary>
+    private List<TestDependencyInfo>? GetClassDependencies()
+    {
+        if (!_classDependenciesComputed)
+        {
+            _classDependencies = ReadDependencies(_type);
+            _classDependenciesComputed = true;
+        }
+
+        return _classDependencies;
+    }
+
+    /// <summary>
+    /// Reads the <c>[DependsOn]</c> attributes declared directly on <paramref name="attributeProvider"/>
+    /// (a class or a method), in declaration order. Returns <see langword="null"/> when none are present.
+    /// </summary>
+    private List<TestDependencyInfo>? ReadDependencies(ICustomAttributeProvider attributeProvider)
+    {
+        List<TestDependencyInfo>? dependencies = null;
+        foreach (DependsOnAttribute attribute in _reflectHelper.GetAttributes<DependsOnAttribute>(attributeProvider))
+        {
+            // A type reference is resolved to its CLR full name here, at discovery, because the graph is
+            // rebuilt at execution time - possibly in another app domain - where the Type is no longer
+            // available. FullName matches UnitTestElement.TestMethod.FullClassName, which TypeEnumerator
+            // also derives from Type.FullName.
+            (dependencies ??= []).Add(new TestDependencyInfo(
+                attribute.TestClass?.FullName,
+                attribute.TestMethodName,
+                attribute.ProceedOnFailure));
+        }
+
+        return dependencies;
+    }
+
+    /// <summary>
+    /// Merges the class-level and method-level dependencies into a single distinct set, preserving
+    /// declaration order (class first) and keeping the most permissive <c>ProceedOnFailure</c> per target,
+    /// so that declaring the same prerequisite twice cannot make the edge stricter than any single
+    /// declaration asked for. Returns <see langword="null"/> when neither declares any dependency.
+    /// </summary>
+    private static TestDependencyInfo[]? MergeDependencies(List<TestDependencyInfo>? classDependencies, List<TestDependencyInfo>? methodDependencies)
+    {
+        if (classDependencies is null && methodDependencies is null)
+        {
+            return null;
+        }
+
+        var result = new List<TestDependencyInfo>();
+        var indexByTarget = new Dictionary<string, int>(StringComparer.Ordinal);
+        AddAll(classDependencies, result, indexByTarget);
+        AddAll(methodDependencies, result, indexByTarget);
+
+        return [.. result];
+
+        static void AddAll(List<TestDependencyInfo>? source, List<TestDependencyInfo> target, Dictionary<string, int> indexByTarget)
+        {
+            if (source is null)
+            {
+                return;
+            }
+
+            foreach (TestDependencyInfo dependency in source)
+            {
+                string key = dependency.DescribeTarget();
+                if (indexByTarget.TryGetValue(key, out int existingIndex))
+                {
+                    if (dependency.ProceedOnFailure && !target[existingIndex].ProceedOnFailure)
+                    {
+                        target[existingIndex] = dependency;
+                    }
+                }
+                else
+                {
+                    indexByTarget[key] = target.Count;
+                    target.Add(dependency);
+                }
+            }
+        }
     }
 
     /// <summary>

@@ -122,6 +122,12 @@ internal static class UnitTestElementExtensions
             testCase.SetPropertyValue(AdapterTestProperties.ResourceLocksProperty, Array.ConvertAll(resourceLocks, ResourceLockInfo.Encode));
         }
 
+        // Set the declared dependencies if present, so they survive the discovery -> execution round-trip.
+        if (element.Dependencies is { Length: > 0 } dependencies)
+        {
+            testCase.SetPropertyValue(AdapterTestProperties.DependenciesProperty, Array.ConvertAll(dependencies, TestDependencyInfo.Encode));
+        }
+
         if (element.UnfoldingStrategy != TestDataSourceUnfoldingStrategy.Auto)
         {
             testCase.SetPropertyValue(AdapterTestProperties.UnfoldingStrategy, (int)element.UnfoldingStrategy);

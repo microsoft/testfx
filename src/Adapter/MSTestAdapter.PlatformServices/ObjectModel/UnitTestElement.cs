@@ -64,6 +64,13 @@ internal sealed class UnitTestElement
     /// </summary>
     public ResourceLockInfo[]? ResourceLocks { get; set; }
 
+    /// <summary>
+    /// Gets or sets the dependencies declared for this test (via <c>[DependsOn]</c> on the method and/or its
+    /// class, and/or a dependency chain file), used by the scheduler to run this test after its
+    /// prerequisites and to skip it when they do not pass. <see langword="null"/> when none are declared.
+    /// </summary>
+    public TestDependencyInfo[]? Dependencies { get; set; }
+
 #if !WINDOWS_UWP && !WIN_UI
     /// <summary>
     /// Gets or sets the deployment items for the test method.

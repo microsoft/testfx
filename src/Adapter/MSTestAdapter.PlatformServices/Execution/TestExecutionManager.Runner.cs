@@ -54,11 +54,15 @@ internal partial class TestExecutionManager
         string source,
         IDictionary<string, object> sourceLevelParameters,
         UnitTestRunner testRunner,
-        bool usesAppDomains)
+        bool usesAppDomains,
+        TestDependencyCoordinator? dependencyCoordinator = null)
     {
         // Ordering keys mirror the historical VSTest ManagedType/ManagedMethod test-case properties, which are
         // only populated when the test method carries managed method metadata (see UnitTestElement.ToTestCase).
-        IEnumerable<UnitTestElement> orderedTests = MSTestSettings.CurrentSettings.OrderTestsByNameInClass && !MSTestSettings.CurrentSettings.RandomizeTestOrder
+        // When a dependency graph is in effect the order is already fixed by the graph's topological sort, so
+        // re-sorting here would break it.
+        IEnumerable<UnitTestElement> orderedTests = dependencyCoordinator is null
+            && MSTestSettings.CurrentSettings.OrderTestsByNameInClass && !MSTestSettings.CurrentSettings.RandomizeTestOrder
             ? tests.OrderBy(t => t.TestMethod.HasManagedMethodAndTypeProperties ? t.TestMethod.ManagedTypeName : null)
                 .ThenBy(t => t.TestMethod.HasManagedMethodAndTypeProperties ? t.TestMethod.ManagedMethodName : null)
             : tests;
@@ -80,6 +84,15 @@ internal partial class TestExecutionManager
             }
 
             UnitTestElement unitTestElement = currentTest.WithUpdatedSource(source);
+
+            // A test whose prerequisite did not pass is reported as skipped instead of being run. This is
+            // decided here, right before the test starts, so that the outcome of a prerequisite that finished
+            // moments ago on another worker is always taken into account.
+            if (dependencyCoordinator is not null && dependencyCoordinator.ShouldSkip(currentTest, out string? skipReason))
+            {
+                await ReportSkippedDependentAsync(currentTest, skipReason, dependencyCoordinator).ConfigureAwait(false);
+                continue;
+            }
 
             // Report through the neutral recorder using the element itself; the adapter-side recorder resolves
             // the host test case (preserving host-injected TCM / data-collector properties) with full fidelity.
@@ -121,7 +134,51 @@ internal partial class TestExecutionManager
 
             DateTimeOffset endTime = DateTimeOffset.Now;
 
+            dependencyCoordinator?.RecordOutcome(currentTest, AllPassed(unitTestResult));
+
             await SendTestResultsAsync(currentTest, unitTestResult, startTime, endTime, _testResultRecorder).ConfigureAwait(false);
         }
+    }
+
+    /// <summary>
+    /// Determines whether a test counts as having passed for the purpose of gating its dependents. A test
+    /// that produced no result at all (which the recorder reports as an error) does not qualify, and a
+    /// data-driven test qualifies only when every one of its rows passed.
+    /// </summary>
+    private static bool AllPassed(TestTools.UnitTesting.TestResult[] results)
+    {
+        if (results.Length == 0)
+        {
+            return false;
+        }
+
+        foreach (TestTools.UnitTesting.TestResult result in results)
+        {
+            if (result.Outcome != TestTools.UnitTesting.UnitTestOutcome.Passed)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Reports a test that was not run because one of its prerequisites did not pass. It is recorded as
+    /// skipped - not failed - so that a single root cause stays visible as one failure surrounded by clearly
+    /// labelled skips, and it is recorded as "did not pass" so the skip propagates to its own dependents.
+    /// </summary>
+    private async Task ReportSkippedDependentAsync(UnitTestElement test, string reason, TestDependencyCoordinator dependencyCoordinator)
+    {
+        dependencyCoordinator.RecordNotRun(test);
+
+        DateTimeOffset now = DateTimeOffset.Now;
+        await _testResultRecorder.RecordStartAsync(test).ConfigureAwait(false);
+        await SendTestResultsAsync(
+            test,
+            [TestTools.UnitTesting.TestResult.CreateIgnoredResult(reason)],
+            now,
+            now,
+            _testResultRecorder).ConfigureAwait(false);
     }
 }
