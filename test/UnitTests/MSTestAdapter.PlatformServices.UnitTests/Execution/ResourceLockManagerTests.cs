@@ -3,6 +3,7 @@
 
 using AwesomeAssertions;
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -191,6 +192,47 @@ public sealed class ResourceLockManagerTests : TestContainer
 
         releaseReaders.SetResult(true);
         await WaitFor(Task.WhenAll(firstReader, secondReader, writer));
+    }
+
+    public async Task ExecuteWithLocksAsync_WhenTestRunIsCanceled_UnblocksParkedWaiters()
+    {
+        // Run cancellation is usually requested *because* something is stuck - and the stuck test is the one
+        // holding the lock, so every contending chunk is parked behind it. If TestRunCancellationToken hands
+        // out a token that its own Cancel() cannot signal, those waiters never wake and the scheduler workers
+        // stay wedged for the rest of the run.
+        var manager = new ResourceLockManager();
+
+        // Construct it the way MSTestEngine does, with a host-provided token. That is the configuration in
+        // which the bug bites: Cancel() signals only the internally-owned source, so handing out the original
+        // host token instead would produce a token that Cancel() can never signal.
+        using var hostCancellationSource = new CancellationTokenSource();
+        var testRunCancellationToken = new TestRunCancellationToken(hostCancellationSource.Token);
+        IReadOnlyList<ResourceLockInfo> locks = [new ResourceLockInfo("shared", ResourceAccessMode.ReadWrite)];
+
+        var holderEntered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseHolder = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        Task holder = manager.ExecuteWithLocksAsync(locks, async () =>
+        {
+            holderEntered.SetResult(true);
+            await releaseHolder.Task;
+        }, CancellationToken.None);
+
+        await WaitFor(holderEntered.Task);
+
+        Task blocked = manager.ExecuteWithLocksAsync(locks, () => Task.CompletedTask, testRunCancellationToken.CancellationToken);
+        blocked.IsCompleted.Should().BeFalse("the second chunk is blocked by the exclusive lock");
+
+        testRunCancellationToken.Cancel();
+
+        Task completed = await Task.WhenAny(blocked, Task.Delay(Timeout));
+        completed.Should().BeSameAs(blocked, "cancelling the test run must unblock waiters parked on a resource lock");
+
+        Func<Task> act = async () => await blocked;
+        await act.Should().ThrowAsync<OperationCanceledException>();
+
+        releaseHolder.SetResult(true);
+        await WaitFor(holder);
     }
 
     private static async Task<T> WaitFor<T>(Task<T> task)

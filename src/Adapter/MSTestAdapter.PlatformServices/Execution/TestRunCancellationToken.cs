@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
@@ -50,10 +50,13 @@ internal sealed class TestRunCancellationToken
 
     /// <summary>
     /// Gets the underlying CLR <see cref="System.Threading.CancellationToken"/> that reflects this test run's
-    /// cancellation. Prefers the original host-provided token when available (main AppDomain), otherwise the
-    /// token from the internally-owned source. Used by cancellation-aware waits such as the resource-lock scheduler.
+    /// cancellation. This is the token of the internally-owned source, which is a strict superset of the
+    /// original host-provided token: it is signaled both by <see cref="Cancel"/> and, via the registration
+    /// established in <c>MSTestEngine</c>, by the host token itself. The original token must not be used here,
+    /// because <see cref="Cancel"/> cannot signal it. Used by cancellation-aware waits such as the resource-lock
+    /// scheduler.
     /// </summary>
-    internal CancellationToken CancellationToken => _originalCancellationToken ?? _cancellationTokenSource.Token;
+    internal CancellationToken CancellationToken => _cancellationTokenSource.Token;
 
     internal void ThrowIfCancellationRequested()
         // If ThrowIfCancellationRequested is called from the main AppDomain where we have the original

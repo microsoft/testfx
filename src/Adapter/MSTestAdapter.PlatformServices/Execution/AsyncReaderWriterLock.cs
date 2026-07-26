@@ -47,6 +47,7 @@ internal sealed class AsyncReaderWriterLock
             return Task.FromCanceled<IDisposable>(cancellationToken);
         }
 
+        Waiter waiter;
         lock (_gate)
         {
             if (CanGrantImmediately(isWriter))
@@ -55,18 +56,40 @@ internal sealed class AsyncReaderWriterLock
                 return Task.FromResult<IDisposable>(new Releaser(this, isWriter));
             }
 
-            var waiter = new Waiter(this, isWriter);
+            waiter = new Waiter(this, isWriter);
             waiter.Node = _queue.AddLast(waiter);
+        }
 
-            // Register cancellation while holding the gate so a concurrent ProcessQueue cannot grant this waiter
-            // between the enqueue and the registration.
-            if (cancellationToken.CanBeCanceled)
-            {
-                waiter.CancellationRegistration = cancellationToken.Register(static state => ((Waiter)state!).Cancel(), waiter);
-            }
-
+        if (!cancellationToken.CanBeCanceled)
+        {
             return waiter.Task;
         }
+
+        // Register outside the gate: when the token is already cancelled, Register invokes the callback
+        // synchronously on this thread, and that callback needs the gate. Registering under the gate would
+        // therefore re-enter it and could end up disposing other waiters' registrations while holding it.
+        CancellationTokenRegistration registration = cancellationToken.Register(static state => ((Waiter)state!).Cancel(), waiter);
+
+        bool stillQueued;
+        lock (_gate)
+        {
+            stillQueued = waiter.Node is not null;
+            if (stillQueued)
+            {
+                waiter.CancellationRegistration = registration;
+            }
+        }
+
+        if (!stillQueued)
+        {
+            // The waiter was granted or cancelled while we were registering, so it will never consult the
+            // registration. Dispose it here - outside the gate, like every other disposal.
+#pragma warning disable VSTHRD103 // Dispose synchronously blocks - DisposeAsync is not available on all target frameworks of this project.
+            registration.Dispose();
+#pragma warning restore VSTHRD103
+        }
+
+        return waiter.Task;
     }
 
     private bool CanGrantImmediately(bool isWriter)
@@ -88,6 +111,7 @@ internal sealed class AsyncReaderWriterLock
 
     private void Release(bool isWriter)
     {
+        List<Waiter>? granted = null;
         lock (_gate)
         {
             if (isWriter)
@@ -99,13 +123,18 @@ internal sealed class AsyncReaderWriterLock
                 _activeReaders--;
             }
 
-            ProcessQueue();
+            ProcessQueue(ref granted);
         }
+
+        CompleteGranted(granted);
     }
 
     // Must be called while holding _gate. Grants as many queued waiters as the current state allows, honoring
     // FIFO order: a writer at the head blocks everyone behind it; a run of leading readers is granted together.
-    private void ProcessQueue()
+    // Granted waiters are only collected here: the caller must complete them after releasing the gate, because
+    // completing disposes the cancellation registration, and that disposal blocks until any concurrently running
+    // cancellation callback finishes - a callback which itself needs the gate.
+    private void ProcessQueue(ref List<Waiter>? granted)
     {
         while (_queue.First is { Value: Waiter head })
         {
@@ -119,7 +148,7 @@ internal sealed class AsyncReaderWriterLock
                 _queue.RemoveFirst();
                 head.Node = null;
                 Grant(isWriter: true);
-                head.TryGrant();
+                (granted ??= []).Add(head);
                 break;
             }
 
@@ -131,13 +160,29 @@ internal sealed class AsyncReaderWriterLock
             _queue.RemoveFirst();
             head.Node = null;
             Grant(isWriter: false);
-            head.TryGrant();
+            (granted ??= []).Add(head);
+        }
+    }
+
+    // Must be called WITHOUT holding _gate. Safe because each waiter's Node was cleared under the gate, so a
+    // cancellation callback can no longer complete it - the grant is already final.
+    private static void CompleteGranted(List<Waiter>? granted)
+    {
+        if (granted is null)
+        {
+            return;
+        }
+
+        foreach (Waiter waiter in granted)
+        {
+            waiter.CompleteGranted();
         }
     }
 
     private void CancelWaiter(Waiter waiter)
     {
         bool removed = false;
+        List<Waiter>? granted = null;
         lock (_gate)
         {
             if (waiter.Node is { } node)
@@ -147,9 +192,11 @@ internal sealed class AsyncReaderWriterLock
                 removed = true;
 
                 // Removing a queued writer that was at the head may unblock trailing readers.
-                ProcessQueue();
+                ProcessQueue(ref granted);
             }
         }
+
+        CompleteGranted(granted);
 
         if (removed)
         {
@@ -176,9 +223,10 @@ internal sealed class AsyncReaderWriterLock
 
         public Task<IDisposable> Task => _tcs.Task;
 
-        // Called under the owner's gate. The waiter has been granted; complete it (continuations run
-        // asynchronously so this is safe to call while holding the gate).
-        public void TryGrant()
+        // Called WITHOUT the owner's gate held. Disposing the registration blocks until any concurrently running
+        // cancellation callback completes, and that callback takes the gate - so doing this under the gate would
+        // deadlock. Safe here because Node was cleared under the gate, so this waiter can no longer be cancelled.
+        public void CompleteGranted()
         {
             CancellationRegistration.Dispose();
             _tcs.TrySetResult(new Releaser(_owner, IsWriter));
@@ -186,6 +234,7 @@ internal sealed class AsyncReaderWriterLock
 
         public void Cancel() => _owner.CancelWaiter(this);
 
+        // Called WITHOUT the owner's gate held, for the same reason as CompleteGranted.
         public void CompleteCanceled()
         {
             CancellationRegistration.Dispose();

@@ -120,6 +120,54 @@ public sealed class AsyncReaderWriterLockTests : TestContainer
         reader.Dispose();
     }
 
+    public async Task Cancellation_RacingWithGrant_DoesNotDeadlock()
+    {
+        // Cancel a queued waiter at the same instant it is being granted. If the grant path disposes that
+        // waiter's cancellation registration while holding the internal gate, the disposal blocks until the
+        // cancel callback finishes - and that callback is itself blocked acquiring the same gate. The lock
+        // then deadlocks permanently, wedging a scheduler worker so the entire test host hangs. Triggered by
+        // any run cancellation (Ctrl-C, "Cancel run") that lands while a lock is being handed off.
+        // Time-bounded so a regression fails this test instead of hanging the suite.
+        for (int i = 0; i < 200; i++)
+        {
+            var rwLock = new AsyncReaderWriterLock();
+            IDisposable held = await rwLock.AcquireWriterAsync(CancellationToken.None);
+
+            using var cts = new CancellationTokenSource();
+            Task<IDisposable> queued = rwLock.AcquireWriterAsync(cts.Token);
+            queued.IsCompleted.Should().BeFalse("the waiter must be queued behind the held writer");
+
+            using var barrier = new Barrier(2);
+            var canceller = Task.Run(() =>
+            {
+                barrier.SignalAndWait();
+#pragma warning disable VSTHRD103 // Cancel synchronously blocks - CancelAsync is not available on all target frameworks.
+                cts.Cancel();
+#pragma warning restore VSTHRD103
+            });
+            var releaser = Task.Run(() =>
+            {
+                barrier.SignalAndWait();
+                held.Dispose();
+            });
+
+            var both = Task.WhenAll(canceller, releaser);
+            Task completed = await Task.WhenAny(both, Task.Delay(Timeout));
+            completed.Should().BeSameAs(both, "cancelling a waiter while it is being granted must not deadlock");
+            await both;
+
+            // Either outcome is correct - the waiter won the grant, or it was cancelled first - but it must
+            // settle rather than hang.
+            try
+            {
+                (await WaitFor(queued)).Dispose();
+            }
+            catch (OperationCanceledException)
+            {
+            }
+        }
+    }
+
     private static async Task<T> WaitFor<T>(Task<T> task)
     {
         Task completed = await Task.WhenAny(task, Task.Delay(Timeout));
