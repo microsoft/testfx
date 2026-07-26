@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration;
@@ -17,9 +17,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Sou
 internal class SourceGeneratedReflectionDataProvider
 {
     /// <summary>
-    /// Gets the test assembly described by this metadata snapshot.
+    /// Gets the test assembly described by this metadata snapshot, or <see langword="null"/> for a snapshot that
+    /// is not tied to a single assembly (for example the merged snapshot built by
+    /// <see cref="CompositeSourceGeneratedReflectionDataProvider"/>).
     /// </summary>
-    public Assembly Assembly { get; init; } = null!;
+    public Assembly? Assembly { get; init; }
 
     /// <summary>
     /// Gets the file-name (without extension) of the test assembly.
@@ -212,6 +214,6 @@ internal class SourceGeneratedReflectionDataProvider
     {
         public Type[] Parameters { get; init; } = [];
 
-        public Func<object?[]?, object> Invoker { get; init; } = null!;
+        public required Func<object?[]?, object> Invoker { get; init; }
     }
 }

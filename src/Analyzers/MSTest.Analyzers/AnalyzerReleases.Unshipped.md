@@ -6,3 +6,4 @@
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
 MSTEST0072 | Usage | Warning | AssemblyFixtureProviderNotSupportedWithNativeAotAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0072)
+MSTEST0073 | Usage | Info | PreferConstantForResourceLockAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0073)

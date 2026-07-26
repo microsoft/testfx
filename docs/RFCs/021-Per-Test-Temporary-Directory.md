@@ -346,7 +346,7 @@ the reference `TempDirectory.cs`.
 
 ## Relationship to RFC 020 (`[ResourceLock]`)
 
-RFC 020 (`020-Resource-Lock-Attribute.md`, not yet merged to `main`) proposes a
+RFC 020 ([`020-Resource-Lock-Attribute.md`](020-Resource-Lock-Attribute.md)) proposes a
 `[ResourceLock]` attribute for declaring contended resources so that tests touching the same
 resource do not run concurrently. The two features are **complements**, and the guidance is
 *eliminate before you lock*:
@@ -359,8 +359,7 @@ resource do not run concurrently. The two features are **complements**, and the 
   fixed external path. There, isolation is impossible, so serialization is the answer.
 
 RFC 020 already contains an "eliminate before you lock" section; this RFC aligns with it and both
-documents should cross-reference each other. (Note: at the time of writing, RFC 020 lives on a
-separate in-flight branch and is not yet on `main`; the cross-reference will resolve once it lands.)
+documents cross-reference each other.
 
 ## Public API
 

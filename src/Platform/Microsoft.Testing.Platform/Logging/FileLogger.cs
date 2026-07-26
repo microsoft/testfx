@@ -259,7 +259,25 @@ internal sealed class FileLogger : IDisposable
     }
 
     private string BuildLogEntry<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter, string category)
-        => $"{_clock.UtcNow:O} {category} {logLevel.ToString().ToUpper(CultureInfo.InvariantCulture)} {formatter(state, exception)}";
+        => $"{_clock.UtcNow:O} {category} {GetUpperCaseName(logLevel)} {formatter(state, exception)}";
+
+    /// <summary>
+    /// Returns the upper-case name of <paramref name="logLevel"/>. Logging is on the hot path of a test run, so we
+    /// return interned literals instead of calling <c>logLevel.ToString().ToUpper(...)</c>, which boxes the enum and
+    /// allocates a new upper-cased copy of its (cached) name for every single log entry.
+    /// </summary>
+    private static string GetUpperCaseName(LogLevel logLevel)
+        => logLevel switch
+        {
+            LogLevel.Trace => "TRACE",
+            LogLevel.Debug => "DEBUG",
+            LogLevel.Information => "INFORMATION",
+            LogLevel.Warning => "WARNING",
+            LogLevel.Error => "ERROR",
+            LogLevel.Critical => "CRITICAL",
+            LogLevel.None => "NONE",
+            _ => logLevel.ToString().ToUpper(CultureInfo.InvariantCulture),
+        };
 
 #if NETCOREAPP
     private async Task WriteLogToFileAsync()
