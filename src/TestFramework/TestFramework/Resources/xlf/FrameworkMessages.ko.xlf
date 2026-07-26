@@ -542,6 +542,11 @@ Actual: {2}</source>
         <target state="translated">잘못된 GitHub 티켓 URL</target>
         <note />
       </trans-unit>
+      <trans-unit id="InvalidResourceLockResource">
+        <source>The resource key of a [ResourceLock] must be a non-empty, non-whitespace string. An empty key would silently serialize unrelated tests that also use an empty key.</source>
+        <target state="new">The resource key of a [ResourceLock] must be a non-empty, non-whitespace string. An empty key would silently serialize unrelated tests that also use an empty key.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="IsEmptyFailedSummary">
         <source>Expected collection to be empty.</source>
         <target state="translated">컬렉션이 비어 있을 것을 예상했습니다.</target>
