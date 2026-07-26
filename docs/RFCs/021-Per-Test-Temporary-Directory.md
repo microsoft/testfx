@@ -246,8 +246,12 @@ usable path. Note that in the normal .NET path `TestResultsDirectory` is rarely 
 results directory is configured, MSTest maps it to the **test assembly's output directory** (the
 `bin` folder), so by default the per-test directory is created there, next to the binaries. As a
 final safety net, if the chosen base directory **cannot be written to** (for example a read-only
-output directory), directory creation falls back to `Path.GetTempPath()` as well, so the property
-never throws a directory-creation error from its getter.
+output directory), directory creation falls back to `Path.GetTempPath()` as well. Only if the
+system temporary directory is *also* unusable does the underlying `Directory.CreateDirectory`
+exception surface from the getter — in that degenerate environment there is genuinely nowhere to
+create a scratch directory, so the error is allowed to propagate rather than returning an unusable
+path. In every normal environment (writable results directory *or* writable temp), the getter does
+not throw a creation error.
 
 **Long-path support:** the feature targets the classic 260-character `MAX_PATH` and **does not rely
 on long-path opt-in** (`LongPathsEnabled` / the `\\?\` prefix). Long paths are not guaranteed to be
