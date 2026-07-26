@@ -48,8 +48,13 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
 
     /// <summary>
     /// Number of hexadecimal characters of the uniqueness suffix appended to the directory name.
+    /// This is a full 128-bit GUID (32 hex chars, <c>Guid.ToString("N")</c>) so that two contexts
+    /// choosing the same suffix is cryptographically negligible even at very large scales — the
+    /// <see cref="Directory.Exists"/> pre-check plus <c>Directory.CreateDirectory</c> is not an
+    /// atomic exclusive create, so uniqueness must come from the entropy of the suffix rather than
+    /// from the check.
     /// </summary>
-    private const int TestTempDirectoryUniqueSuffixLength = 12;
+    private const int TestTempDirectoryUniqueSuffixLength = 32;
 
     /// <summary>
     /// Characters that are reserved in a Windows file name. Sanitization strips these on every OS
@@ -129,6 +134,14 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
     /// Whether <see cref="_testTempDirectory"/> has been created.
     /// </summary>
     private bool _testTempDirectoryCreated;
+
+    /// <summary>
+    /// Whether cleanup of the per-test temporary directory has started (i.e. the context is being
+    /// or has been disposed). Once set, the getter must not create a new directory, otherwise a
+    /// late access from a background thread the test spawned could create a directory *after*
+    /// cleanup already ran, leaking it. Guarded by <see cref="_testTempDirectoryLock"/>.
+    /// </summary>
+    private bool _testTempDirectoryCleanupStarted;
 #endif
 
 #if NETFRAMEWORK
@@ -242,6 +255,14 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
             {
                 if (!_testTempDirectoryCreated)
                 {
+                    if (_testTempDirectoryCleanupStarted)
+                    {
+                        // The context is being (or has been) disposed. Creating a directory now
+                        // would leak it, because cleanup has already inspected the state. Treat a
+                        // post-cleanup access as a no-op and return null (the test has finished).
+                        return null;
+                    }
+
                     _testTempDirectory = CreateTestTempDirectory();
                     Volatile.Write(ref _testTempDirectoryCreated, true);
                 }
@@ -718,6 +739,11 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
         string? directory;
         lock (_testTempDirectoryLock)
         {
+            // Mark cleanup as started while holding the lock so a concurrent first getter that has
+            // not yet created the directory will see this and skip creation, instead of creating a
+            // directory after cleanup has already run (which would leak it).
+            _testTempDirectoryCleanupStarted = true;
+
             if (!_testTempDirectoryCreated || _testTempDirectory is not { Length: > 0 } createdDirectory)
             {
                 return;

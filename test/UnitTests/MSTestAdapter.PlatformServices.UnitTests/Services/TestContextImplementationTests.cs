@@ -728,6 +728,24 @@ public class TestContextImplementationTests : TestContainer
         Directory.GetDirectories(resultsDirectory.Path).Should().BeEmpty();
     }
 
+    public void TestTempDirectoryShouldNotCreateDirectoryAfterDispose()
+    {
+        using TempDirectoryScope resultsDirectory = new();
+        _properties["TestResultsDirectory"] = resultsDirectory.Path;
+        _testContextImplementation = CreateTestContextImplementation();
+
+        _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
+        _testContextImplementation.Dispose();
+
+        // A late first access (e.g. from a background thread the test spawned that outlives the test
+        // body) must not create a directory after cleanup already ran, which would leak it. The
+        // getter returns null and creates nothing once cleanup has started.
+        string? afterDispose = _testContextImplementation.TestTempDirectory;
+
+        afterDispose.Should().BeNull();
+        Directory.GetDirectories(resultsDirectory.Path).Should().BeEmpty();
+    }
+
     public void TestTempDirectoryShouldCreateDirectoryUnderResultsDirectoryOnFirstAccess()
     {
         using TempDirectoryScope resultsDirectory = new();
@@ -766,8 +784,8 @@ public class TestContextImplementationTests : TestContainer
             .And.NotContain("*").And.NotContain("?").And.NotContain("<").And.NotContain(">").And.NotContain("|");
         fileName.Should().NotContainAny(Array.ConvertAll(Path.GetInvalidFileNameChars(), c => c.ToString()));
 
-        // 50-char sanitized budget + '_' + 12-char suffix = a bounded, MAX_PATH-friendly length.
-        fileName.Length.Should().BeLessThanOrEqualTo(50 + 1 + 12);
+        // 50-char sanitized cap + '_' + 32-char GUID suffix = a bounded, MAX_PATH-friendly length.
+        fileName.Length.Should().BeLessThanOrEqualTo(50 + 1 + 32);
 
         _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
         _testContextImplementation.Dispose();

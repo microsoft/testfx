@@ -255,7 +255,7 @@ on long-path opt-in** (`LongPathsEnabled` / the `\\?\` prefix). Long paths are n
 enabled and are frequently not honored by external tools that end-to-end tests shell out to, so
 relying on them would make the headroom guarantee unsafe.
 
-### 6. Directory naming — sanitized + adaptively-truncated name + short unique suffix
+### 6. Directory naming — sanitized + adaptively-truncated name + GUID uniqueness suffix
 
 A readable directory name aids debugging, but arbitrary test names (data-driven tests especially)
 contain characters illegal in paths and can be very long. Scheme:
@@ -267,14 +267,15 @@ contain characters illegal in paths and can be very long. Scheme:
 3. **Truncate** the sanitized name to the **adaptive budget** from design question 5 (capped at 50
    characters, floored at 8 before falling back to temp), never slicing through the middle of a
    surrogate pair (which would leave a lone surrogate and an invalid segment).
-4. **Append a short unique suffix** (`_` + the first 12 hex chars of a GUID) so that collisions
-   across cases and across the (truncated, hence potentially colliding) readable names are
-   negligible — 12 hex chars is 48 bits of entropy, so two contexts colliding is ~2⁻⁴⁸.
+4. **Append a unique suffix** (`_` + a full 32-hex-char GUID, i.e. `Guid.ToString("N")`) so that
+   collisions across cases and across the (truncated, hence potentially colliding) readable names
+   are cryptographically negligible — a full 128-bit GUID makes two contexts choosing the same
+   suffix effectively impossible even at very large scales (millions of contexts).
 5. **Create with collision retry**: attempt `Directory.CreateDirectory` for the candidate; if the
-   directory already exists, regenerate the suffix and retry a bounded number of times, then fall
-   back to a full 32-char GUID name. Note `CreateDirectory` is not an exclusive create, so this
-   retry makes an already-negligible collision negligibly smaller rather than providing a hard
-   atomic guarantee; the practical uniqueness comes from the 48-bit suffix, not from the check.
+   directory already exists, regenerate the suffix and retry a bounded number of times. `Directory.Exists`
+   + `CreateDirectory` is not an atomic exclusive create, so the retry is only a belt-and-braces
+   guard — the actual uniqueness guarantee comes from the 128-bit suffix, whose birthday-collision
+   probability is negligible, not from the pre-check.
 
 If the test name is empty, whitespace-only, made up entirely of invalid characters, or the adaptive
 budget has collapsed to zero, the sanitized prefix is empty and the directory name is **just the
@@ -408,9 +409,9 @@ code reflects these values, not placeholders):
   logged through the adapter diagnostic trace logger and is otherwise silent.
 - **Truncation budget and unique-suffix length** (design questions 5–6): the readable name is
   **adaptive** — sized from the base-path length, **capped at 50 chars**, **floored at 8** (below
-  which the implementation falls back to system temp), with a **12 hex-char** suffix and a reserved
-  **80-char headroom** under Windows `MAX_PATH`. These are the shipped constants; they can be tuned
-  if headroom testing on Windows shows a reason to.
+  which the implementation falls back to system temp), with a full **32 hex-char (128-bit) GUID**
+  suffix and a reserved **80-char headroom** under Windows `MAX_PATH`. These are the shipped
+  constants; they can be tuned if headroom testing on Windows shows a reason to.
 
 Genuinely still open (deferred, not part of v1):
 
