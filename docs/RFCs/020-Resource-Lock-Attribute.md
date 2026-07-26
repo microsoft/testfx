@@ -295,9 +295,15 @@ The declared locks are surfaced on `UnitTestElement` and plumbed through discove
   (`AdapterTestProperties` / `UnitTestElementExtensions` / `TestCaseExtensions`) so it survives
   the discovery → execution and AppDomain boundaries the parent scheduler runs across.
 
-There is no async reader-writer lock in the BCL, so a small internal one is added — a
-`SemaphoreSlim`-based writer-preference implementation — correct under cancellation, since the
-scheduler honors `_testRunCancellationToken`.
+There is no async reader-writer lock in the BCL, so a small internal one is added. It holds a FIFO
+queue of waiters in a `LinkedList` guarded by a monitor, and hands the lock off from that queue: a
+writer at the head blocks everyone behind it, and a leading run of readers is granted together. FIFO
+order is what prevents starvation in both directions — a queued writer is not overtaken by later
+readers, and a queued reader is not starved by a stream of writers. It is correct under cancellation,
+since the scheduler honors `_testRunCancellationToken`; a cancelled waiter is removed from the queue,
+and granted waiters are completed only after the monitor is released, because completing disposes the
+cancellation registration and that disposal blocks until any in-flight cancel callback finishes — a
+callback which itself needs the monitor.
 
 When parallelization is disabled (`Workers == 0`, `DisableParallelization`, or an assembly that
 cannot parallelize), tests already run serially and no locks are taken.

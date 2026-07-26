@@ -17,7 +17,13 @@ internal sealed class ResourceLockInfo
     public ResourceLockInfo(string resource, ResourceAccessMode mode)
     {
         Resource = resource;
-        Mode = mode;
+
+        // Mode is publicly settable on the attribute, so a cast like (ResourceAccessMode)42 is valid C# and
+        // reaches here. Normalize once, at the only entry point: 'Read' is the sole value that grants shared
+        // access, so anything else - including undefined values - becomes exclusive. Without this, an
+        // undefined value would be neither 'Read' nor 'ReadWrite' and would slip through the strongest-mode
+        // merge and the encoder as if it were shared, which fails open.
+        Mode = mode == ResourceAccessMode.Read ? ResourceAccessMode.Read : ResourceAccessMode.ReadWrite;
     }
 
     /// <summary>
@@ -32,25 +38,29 @@ internal sealed class ResourceLockInfo
 
     /// <summary>
     /// Encodes a lock as a single string for transport across the VSTest <c>TestProperty</c> boundary: a
-    /// one-character mode prefix (<c>W</c> for <see cref="ResourceAccessMode.ReadWrite"/>, <c>R</c> for
-    /// <see cref="ResourceAccessMode.Read"/>) followed by the resource key. Using a fixed-width prefix avoids any
-    /// delimiter ambiguity with arbitrary resource strings.
+    /// one-character mode prefix (<c>R</c> for <see cref="ResourceAccessMode.Read"/>, <c>W</c> for every other
+    /// value, including <see cref="ResourceAccessMode.ReadWrite"/>) followed by the resource key. Using a
+    /// fixed-width prefix avoids any delimiter ambiguity with arbitrary resource strings.
     /// </summary>
     public static string Encode(ResourceLockInfo info)
-        => (info.Mode == ResourceAccessMode.ReadWrite ? "W" : "R") + info.Resource;
+        => (info.Mode == ResourceAccessMode.Read ? "R" : "W") + info.Resource;
 
     /// <summary>
-    /// Decodes a lock previously produced by <see cref="Encode"/>. Any input that is not an explicit
-    /// <c>R</c> (<see cref="ResourceAccessMode.Read"/>) prefix decodes to the exclusive
-    /// <see cref="ResourceAccessMode.ReadWrite"/> mode, so truncated, corrupted or
-    /// future-version-prefixed data fails closed (running serialized) rather than open (racing).
+    /// Decodes a lock previously produced by <see cref="Encode"/>. Only a recognized <c>R</c> or <c>W</c>
+    /// prefix is consumed; any other input is treated as a bare resource key and decodes to the exclusive
+    /// <see cref="ResourceAccessMode.ReadWrite"/> mode. Truncated, corrupted or future-version data therefore
+    /// fails closed - it still names the same resource, and it runs serialized rather than racing.
     /// </summary>
     public static ResourceLockInfo Decode(string encoded)
     {
-        ResourceAccessMode mode = encoded.Length > 0 && encoded[0] == 'R'
-            ? ResourceAccessMode.Read
-            : ResourceAccessMode.ReadWrite;
-        string resource = encoded.Length > 0 ? encoded.Substring(1) : string.Empty;
-        return new ResourceLockInfo(resource, mode);
+        if (encoded.Length > 0 && encoded[0] == 'R')
+        {
+            return new ResourceLockInfo(encoded.Substring(1), ResourceAccessMode.Read);
+        }
+
+        // Strip the prefix only when it is one we actually wrote. Stripping unconditionally would rewrite an
+        // unrecognized payload into a *different* key, which would stop it conflicting with the intended one.
+        string resource = encoded.Length > 0 && encoded[0] == 'W' ? encoded.Substring(1) : encoded;
+        return new ResourceLockInfo(resource, ResourceAccessMode.ReadWrite);
     }
 }

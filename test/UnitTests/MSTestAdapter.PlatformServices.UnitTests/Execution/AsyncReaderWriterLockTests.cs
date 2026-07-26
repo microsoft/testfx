@@ -164,6 +164,7 @@ public sealed class AsyncReaderWriterLockTests : TestContainer
             }
             catch (OperationCanceledException)
             {
+                queued.IsCanceled.Should().BeTrue("the waiter settled as cancelled rather than faulted");
             }
         }
     }

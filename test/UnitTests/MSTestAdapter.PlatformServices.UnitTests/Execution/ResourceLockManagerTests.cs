@@ -53,6 +53,41 @@ public sealed class ResourceLockManagerTests : TestContainer
         ResourceLockInfo.Decode("key-without-prefix").Mode.Should().Be(ResourceAccessMode.ReadWrite);
     }
 
+    public void Decode_WhenPrefixIsUnrecognized_PreservesTheWholeKey()
+    {
+        // Only a prefix we actually wrote may be consumed. Stripping unconditionally would rewrite an
+        // unrecognized payload into a different key, so it would silently stop conflicting with the key it
+        // was meant to name - exclusive, but guarding the wrong resource.
+        ResourceLockInfo.Decode("key-without-prefix").Resource.Should().Be("key-without-prefix");
+        ResourceLockInfo.Decode("Xkey").Resource.Should().Be("Xkey");
+        ResourceLockInfo.Decode(string.Empty).Resource.Should().BeEmpty();
+    }
+
+    public void Constructor_NormalizesUndefinedModeToReadWrite()
+    {
+        // 'Mode' is publicly settable, so (ResourceAccessMode)42 is valid attribute syntax. It must not be
+        // carried through as a third state: strongest-mode merging and encoding both key off 'Read', so an
+        // undefined value left as-is would be treated as shared and fail open.
+        var info = new ResourceLockInfo("key", (ResourceAccessMode)42);
+
+        info.Mode.Should().Be(ResourceAccessMode.ReadWrite);
+        ResourceLockInfo.Encode(info).Should().StartWith("W");
+        ResourceLockInfo.Decode(ResourceLockInfo.Encode(info)).Mode.Should().Be(ResourceAccessMode.ReadWrite);
+    }
+
+    public void GetChunkLocks_WhenUndefinedModeMeetsRead_ResultIsExclusive()
+    {
+        // An undefined mode must not leave an existing 'Read' in place during the strongest-mode merge.
+        IReadOnlyList<ResourceLockInfo> result = ResourceLockManager.GetChunkLocks(
+        [
+            CreateElement("A", new ResourceLockInfo("shared", ResourceAccessMode.Read)),
+            CreateElement("B", new ResourceLockInfo("shared", (ResourceAccessMode)42)),
+        ]);
+
+        result.Should().ContainSingle();
+        result[0].Mode.Should().Be(ResourceAccessMode.ReadWrite);
+    }
+
     public void GetChunkLocks_MergesDistinctKeys_SortedOrdinally()
     {
         IReadOnlyList<ResourceLockInfo> result = ResourceLockManager.GetChunkLocks(
