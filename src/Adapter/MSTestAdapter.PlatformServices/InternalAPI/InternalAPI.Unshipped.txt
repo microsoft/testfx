@@ -23,6 +23,7 @@ Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.GlobalTest
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.GlobalTestInitializeTimeout.get -> int
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.OutputCaptureMode.get -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.AdapterSettingsException.AdapterSettingsException(string? message, System.Exception? innerException) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.TestMethod.FullyQualifiedName.get -> string!
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement.CachedTestNodeUid.get -> System.Guid?
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement.CachedTestNodeUid.set -> void
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode

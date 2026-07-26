@@ -122,7 +122,7 @@ internal sealed class MtpTestElementFilterProvider : ITestElementFilterProvider
 
             if (propertyName.Equals(FullyQualifiedNameLabel, StringComparison.OrdinalIgnoreCase))
             {
-                return $"{testMethod.FullClassName}.{testMethod.Name}";
+                return testMethod.FullyQualifiedName;
             }
 
             if (propertyName.Equals(DisplayNameLabel, StringComparison.OrdinalIgnoreCase))
