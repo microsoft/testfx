@@ -69,7 +69,7 @@
       </trans-unit>
       <trans-unit id="ArtifactPostProcessingManifestInputsMustBeArray">
         <source>The artifact post-processing manifest inputs property must be an array.</source>
-        <target state="new">The artifact post-processing manifest inputs property must be an array.</target>
+        <target state="translated">A propriedade de inputs de manifesto de pós-processamento de artefato deve ser uma matriz.</target>
         <note>Do not localize property name {Locked="inputs"}.</note>
       </trans-unit>
       <trans-unit id="ArtifactPostProcessingManifestInvalid">
