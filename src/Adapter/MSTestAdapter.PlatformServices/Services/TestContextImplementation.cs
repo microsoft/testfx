@@ -662,9 +662,10 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
                 createdPath = candidate;
                 return true;
             }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
             {
-                // The base directory is not writable (e.g. a read-only output directory). Signal
+                // The base directory is not writable — a read-only output directory, or (on .NET
+                // Framework) a denied filesystem permission surfaced as SecurityException. Signal
                 // failure so the caller can fall back to the system temporary directory. Retrying a
                 // different name under the same base would not help, so bail out immediately.
                 createdPath = string.Empty;
@@ -751,8 +752,11 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
 
     /// <summary>
     /// Deletes the per-test temporary directory unless the test failed or retention was requested.
-    /// Best-effort: never throws, so a passing test cannot be failed by a cleanup error, and an
-    /// aborted or timed-out test cannot hang here.
+    /// Best-effort: it swallows all exceptions, so a passing test cannot be failed by a cleanup
+    /// error. It runs after the test has completed, so it cannot extend the test's own execution or
+    /// trip its timeout; note that the delete is synchronous, so exception swallowing is guaranteed
+    /// but bounded cleanup time is not (a pathologically stalled filesystem could make disposal
+    /// itself slow).
     /// </summary>
     private void CleanupTestTempDirectory()
     {
@@ -818,7 +822,18 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
             return true;
         }
 
-        string? retain = Environment.GetEnvironmentVariable(RetainTestTempDirectoryEnvironmentVariable);
+        string? retain;
+        try
+        {
+            retain = Environment.GetEnvironmentVariable(RetainTestTempDirectoryEnvironmentVariable);
+        }
+        catch (System.Security.SecurityException)
+        {
+            // Environment access is restricted (possible on .NET Framework). Treat the retention
+            // override as unset so cleanup does not throw out of Dispose.
+            return false;
+        }
+
         return retain is "1" || string.Equals(retain, "true", StringComparison.OrdinalIgnoreCase);
     }
 #endif
