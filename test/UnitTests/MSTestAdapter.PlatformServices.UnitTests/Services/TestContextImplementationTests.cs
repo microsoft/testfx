@@ -712,4 +712,203 @@ public class TestContextImplementationTests : TestContainer
 
         messageLoggerMock.Verify(x => x.SendMessage(MessageLevel.Informational, "from-clone"), Times.Once);
     }
+
+#if !WINDOWS_UWP && !WIN_UI
+    public void TestTempDirectoryShouldNotCreateDirectoryWhenNeverAccessed()
+    {
+        using TempDirectoryScope resultsDirectory = new();
+        _properties["TestResultsDirectory"] = resultsDirectory.Path;
+        _testContextImplementation = CreateTestContextImplementation();
+
+        // Never touch TestTempDirectory, then dispose.
+        _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
+        _testContextImplementation.Dispose();
+
+        // Lazy creation: nothing should have been created under the results directory.
+        Directory.GetDirectories(resultsDirectory.Path).Should().BeEmpty();
+    }
+
+    public void TestTempDirectoryShouldCreateDirectoryUnderResultsDirectoryOnFirstAccess()
+    {
+        using TempDirectoryScope resultsDirectory = new();
+        _properties["TestResultsDirectory"] = resultsDirectory.Path;
+        _testMethod.Setup(tm => tm.Name).Returns("MyTest");
+        _testContextImplementation = CreateTestContextImplementation();
+
+        string? tempDirectory = _testContextImplementation.TestTempDirectory;
+
+        tempDirectory.Should().NotBeNullOrEmpty();
+        Directory.Exists(tempDirectory).Should().BeTrue();
+        Path.GetDirectoryName(tempDirectory).Should().Be(resultsDirectory.Path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+        Path.GetFileName(tempDirectory!).Should().StartWith("MyTest_");
+
+        _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
+        _testContextImplementation.Dispose();
+    }
+
+    public void TestTempDirectoryShouldReturnSamePathOnRepeatedAccess()
+    {
+        using TempDirectoryScope resultsDirectory = new();
+        _properties["TestResultsDirectory"] = resultsDirectory.Path;
+        _testContextImplementation = CreateTestContextImplementation();
+
+        string? first = _testContextImplementation.TestTempDirectory;
+        string? second = _testContextImplementation.TestTempDirectory;
+
+        second.Should().Be(first);
+
+        _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
+        _testContextImplementation.Dispose();
+    }
+
+    public void TestTempDirectoryShouldBeUniqueAcrossContexts()
+    {
+        using TempDirectoryScope resultsDirectory = new();
+        _properties["TestResultsDirectory"] = resultsDirectory.Path;
+        _testMethod.Setup(tm => tm.Name).Returns("MyTest");
+
+        using TestContextImplementation context1 = CreateTestContextImplementation();
+        using TestContextImplementation context2 = CreateTestContextImplementation();
+
+        string? path1 = context1.TestTempDirectory;
+        string? path2 = context2.TestTempDirectory;
+
+        path1.Should().NotBe(path2);
+        Directory.Exists(path1).Should().BeTrue();
+        Directory.Exists(path2).Should().BeTrue();
+
+        context1.SetOutcome(UnitTestOutcome.Passed);
+        context2.SetOutcome(UnitTestOutcome.Passed);
+    }
+
+    public void TestTempDirectoryShouldBeUniqueAcrossDataDrivenClones()
+    {
+        using TempDirectoryScope resultsDirectory = new();
+        _properties["TestResultsDirectory"] = resultsDirectory.Path;
+        _testMethod.Setup(tm => tm.Name).Returns("MyTest");
+        _testContextImplementation = CreateTestContextImplementation();
+
+        using TestContextImplementation clone1 = _testContextImplementation.CloneForDataDrivenIteration();
+        using TestContextImplementation clone2 = _testContextImplementation.CloneForDataDrivenIteration();
+
+        string? path1 = clone1.TestTempDirectory;
+        string? path2 = clone2.TestTempDirectory;
+
+        path1.Should().NotBe(path2);
+        Directory.Exists(path1).Should().BeTrue();
+        Directory.Exists(path2).Should().BeTrue();
+
+        clone1.SetOutcome(UnitTestOutcome.Passed);
+        clone2.SetOutcome(UnitTestOutcome.Passed);
+    }
+
+    public void TestTempDirectoryShouldBeDeletedOnPass()
+    {
+        using TempDirectoryScope resultsDirectory = new();
+        _properties["TestResultsDirectory"] = resultsDirectory.Path;
+        _testContextImplementation = CreateTestContextImplementation();
+
+        string? tempDirectory = _testContextImplementation.TestTempDirectory;
+        File.WriteAllText(Path.Combine(tempDirectory!, "artifact.txt"), "data");
+
+        _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
+        _testContextImplementation.Dispose();
+
+        Directory.Exists(tempDirectory).Should().BeFalse();
+    }
+
+    public void TestTempDirectoryShouldBeRetainedOnFailure()
+    {
+        using TempDirectoryScope resultsDirectory = new();
+        _properties["TestResultsDirectory"] = resultsDirectory.Path;
+        _testContextImplementation = CreateTestContextImplementation();
+
+        string? tempDirectory = _testContextImplementation.TestTempDirectory;
+        File.WriteAllText(Path.Combine(tempDirectory!, "artifact.txt"), "data");
+
+        _testContextImplementation.SetOutcome(UnitTestOutcome.Failed);
+        _testContextImplementation.Dispose();
+
+        Directory.Exists(tempDirectory).Should().BeTrue();
+    }
+
+    public void TestTempDirectoryShouldBeRetainedWhenEnvironmentVariableIsSet()
+    {
+        using TempDirectoryScope resultsDirectory = new();
+        string? original = Environment.GetEnvironmentVariable("MSTEST_TEST_TEMP_DIRECTORY_RETAIN");
+        try
+        {
+            Environment.SetEnvironmentVariable("MSTEST_TEST_TEMP_DIRECTORY_RETAIN", "1");
+            _properties["TestResultsDirectory"] = resultsDirectory.Path;
+            _testContextImplementation = CreateTestContextImplementation();
+
+            string? tempDirectory = _testContextImplementation.TestTempDirectory;
+
+            _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
+            _testContextImplementation.Dispose();
+
+            Directory.Exists(tempDirectory).Should().BeTrue();
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("MSTEST_TEST_TEMP_DIRECTORY_RETAIN", original);
+        }
+    }
+
+    public void TestTempDirectoryCleanupShouldSwallowErrors()
+    {
+        using TempDirectoryScope resultsDirectory = new();
+        _properties["TestResultsDirectory"] = resultsDirectory.Path;
+        _testContextImplementation = CreateTestContextImplementation();
+
+        string? tempDirectory = _testContextImplementation.TestTempDirectory;
+        string lockedFilePath = Path.Combine(tempDirectory!, "locked.txt");
+
+        // Hold an exclusive handle so recursive delete throws; Dispose must not propagate it.
+        using FileStream lockStream = new(lockedFilePath, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+        _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
+        Action dispose = () => _testContextImplementation.Dispose();
+        dispose.Should().NotThrow();
+    }
+
+    public void TestTempDirectoryShouldFallBackToTempPathWhenNoResultsDirectory()
+    {
+        _testContextImplementation = CreateTestContextImplementation();
+
+        string? tempDirectory = _testContextImplementation.TestTempDirectory;
+
+        tempDirectory.Should().NotBeNullOrEmpty();
+        Directory.Exists(tempDirectory).Should().BeTrue();
+
+        _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
+        _testContextImplementation.Dispose();
+        Directory.Exists(tempDirectory).Should().BeFalse();
+    }
+
+    private sealed class TempDirectoryScope : IDisposable
+    {
+        public TempDirectoryScope()
+        {
+            Path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "mstest_ut_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(Path);
+        }
+
+        public string Path { get; }
+
+        public void Dispose()
+        {
+            try
+            {
+                if (Directory.Exists(Path))
+                {
+                    Directory.Delete(Path, recursive: true);
+                }
+            }
+            catch
+            {
+                // Best-effort cleanup of the test's own scratch directory.
+            }
+        }
+    }
+#endif
 }
