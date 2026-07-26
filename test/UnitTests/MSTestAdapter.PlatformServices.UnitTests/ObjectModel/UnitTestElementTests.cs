@@ -68,7 +68,9 @@ public class UnitTestElementTests : TestContainer
         UnitTestElement roundTripped = element.ToTestCase().ToUnitTestElementWithUpdatedSource("A");
 
         roundTripped.ResourceLocks![0].Resource.Should().Be("Registry");
+        roundTripped.ResourceLocks[0].Mode.Should().Be(ResourceAccessMode.Read);
         roundTripped.ResourceLocks[1].Resource.Should().Be("Windows");
+        roundTripped.ResourceLocks[1].Mode.Should().Be(ResourceAccessMode.ReadWrite);
     }
 
     public void ResourceLocksShouldRemainNullWhenNoneAreDeclared()
