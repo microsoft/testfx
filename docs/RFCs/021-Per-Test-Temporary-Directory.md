@@ -198,6 +198,14 @@ failed test's artifacts are exactly what you want to inspect, and a passed test'
   `MSTEST_TEST_TEMP_DIRECTORY_RETAIN`, `1`/`true` to enable) forces retention regardless of
   outcome, mirroring `TempDirectory.cs`'s existing `..._Cleanup=0` switch. This is the debugging
   affordance.
+- **Result-attachment exception:** a passing test's directory is also retained when the test
+  registers a file inside it as a result attachment via `TestContext.AddResultFile`. The host
+  collects registered result files *after* the per-test `TestContext` is disposed (the VSTest
+  attachment URI and the MTP `FileArtifactProperty` both reference the original path), so deleting
+  the directory on pass would leave the attachment pointing at a missing file. The framework
+  consumes the result-file list once per execution attempt, so the retention decision is recomputed
+  per attempt — a file registered only by an earlier retry attempt does not keep an otherwise
+  passing final attempt's directory alive.
 - **Keep-last-N-runs (pytest):** evaluated and **rejected for v1**. pytest keeps directories under a
   stable per-user root (`/tmp/pytest-of-<user>/pytest-<N>/`) and prunes older *sessions*. MSTest's
   results directory is already per-run (a fresh GUID each run), so old runs are naturally distinct;

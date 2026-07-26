@@ -161,7 +161,10 @@ public abstract class TestContext
     /// The directory is deleted automatically when the test passes and retained when the test
     /// fails, so a failed test's artifacts remain available for inspection. Retention of all
     /// directories (including passing tests) can be forced for debugging via the
-    /// <c>MSTEST_TEST_TEMP_DIRECTORY_RETAIN</c> environment variable.
+    /// <c>MSTEST_TEST_TEMP_DIRECTORY_RETAIN</c> environment variable. A passing test's directory is
+    /// also retained when the test registers a file inside it as a result attachment via
+    /// <see cref="AddResultFile(string)"/>, since the host collects that attachment after the test
+    /// completes.
     /// </para>
     /// <para>
     /// Unlike <see cref="TestRunDirectory"/>, <see cref="DeploymentDirectory"/>,
