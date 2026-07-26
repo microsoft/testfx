@@ -296,6 +296,104 @@ public sealed class UnusedParameterSuppressorTests
     }
 
     [TestMethod]
+    public async Task AssemblyInitializeWithUserDefinedAttributeAndUnusedTestContext_DiagnosticIsNotSuppressed()
+    {
+        // The suppressor matches the MSTest AssemblyInitializeAttribute by exact symbol identity.
+        // A user-defined attribute that shares the same name but is from a different namespace
+        // is NOT matched and therefore must not suppress the diagnostic.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace MyNamespace
+            {
+                public class AssemblyInitializeAttribute : System.Attribute { }
+            }
+
+            [TestClass]
+            public class SomeClass
+            {
+                [MyNamespace.AssemblyInitialize]
+                public static void Initialize(TestContext {|#0:context|})
+                {
+                }
+            }
+            """;
+
+        // Verify issue is reported without suppressor
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { code } },
+            ExpectedDiagnostics =
+            {
+                VerifyCS.Diagnostic(WarnForUnusedParameters.Rule)
+                    .WithLocation(0)
+                    .WithArguments("context")
+                    .WithIsSuppressed(false),
+            },
+        }.RunAsync();
+
+        // Verify issue is still NOT suppressed with the suppressor (different namespace, different symbol)
+        await new TestWithSuppressor
+        {
+            TestState = { Sources = { code } },
+            ExpectedDiagnostics =
+            {
+                VerifyCS.Diagnostic(WarnForUnusedParameters.Rule)
+                    .WithLocation(0)
+                    .WithArguments("context")
+                    .WithIsSuppressed(false),
+            },
+        }.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task AssemblyInitializeWithUnusedCustomTestContextType_DiagnosticIsNotSuppressed()
+    {
+        // The suppressor checks the parameter type against the MSTest TestContext type.
+        // A user-defined type named "TestContext" is not the same type and must not be suppressed.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class TestContext { }
+
+            [TestClass]
+            public class SomeClass
+            {
+                [AssemblyInitialize]
+                public static void Initialize(TestContext {|#0:context|})
+                {
+                }
+            }
+            """;
+
+        // Verify issue is reported without suppressor
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { code } },
+            ExpectedDiagnostics =
+            {
+                VerifyCS.Diagnostic(WarnForUnusedParameters.Rule)
+                    .WithLocation(0)
+                    .WithArguments("context")
+                    .WithIsSuppressed(false),
+            },
+        }.RunAsync();
+
+        // Verify issue is still NOT suppressed with the suppressor (wrong TestContext type)
+        await new TestWithSuppressor
+        {
+            TestState = { Sources = { code } },
+            ExpectedDiagnostics =
+            {
+                VerifyCS.Diagnostic(WarnForUnusedParameters.Rule)
+                    .WithLocation(0)
+                    .WithArguments("context")
+                    .WithIsSuppressed(false),
+            },
+        }.RunAsync();
+    }
+
+    [TestMethod]
     public async Task AssemblyInitializeWithUnusedNonTestContextParameter_DiagnosticIsNotSuppressed()
     {
         // The suppressor only suppresses TestContext parameters; a non-TestContext parameter in a
