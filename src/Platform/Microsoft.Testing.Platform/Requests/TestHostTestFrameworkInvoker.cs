@@ -76,7 +76,7 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
         using (otelService?.StartActivity("CreateTestRequest", tags: [new("SessionUid", sessionId)]))
         {
             ITestExecutionRequestFactory testExecutionRequestFactory = ServiceProvider.GetTestExecutionRequestFactory();
-            request = await testExecutionRequestFactory.CreateRequestAsync(new(sessionId)).ConfigureAwait(false);
+            request = await testExecutionRequestFactory.CreateRequestAsync(new(sessionId), cancellationToken).ConfigureAwait(false);
         }
 
         IMessageBus messageBus = ServiceProvider.GetMessageBus();
