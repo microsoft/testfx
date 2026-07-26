@@ -992,6 +992,46 @@ public class TestContextImplementationTests : TestContainer
         Directory.Exists(tempDirectory).Should().BeFalse();
     }
 
+    public void TestTempDirectoryShouldBeRetainedOnPassWhenResultFileRegisteredUnderIt()
+    {
+        using TempDirectoryScope resultsDirectory = new();
+        _properties["TestResultsDirectory"] = resultsDirectory.Path;
+        _testContextImplementation = CreateTestContextImplementation();
+
+        string? tempDirectory = _testContextImplementation.TestTempDirectory;
+        string resultFile = Path.Combine(tempDirectory!, "attachment.txt");
+        File.WriteAllText(resultFile, "data");
+        _testContextImplementation.AddResultFile(resultFile);
+
+        _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
+        _testContextImplementation.Dispose();
+
+        // Even on pass, the directory is retained because it holds a registered result file that
+        // the test host collects as an attachment after this context is disposed.
+        Directory.Exists(tempDirectory).Should().BeTrue();
+        File.Exists(resultFile).Should().BeTrue();
+    }
+
+    public void TestTempDirectoryShouldBeDeletedOnPassWhenResultFileIsOutsideIt()
+    {
+        using TempDirectoryScope resultsDirectory = new();
+        using TempDirectoryScope elsewhere = new();
+        _properties["TestResultsDirectory"] = resultsDirectory.Path;
+        _testContextImplementation = CreateTestContextImplementation();
+
+        string? tempDirectory = _testContextImplementation.TestTempDirectory;
+        // A registered result file that does NOT live under the temp directory must not keep the
+        // temp directory alive on pass.
+        string outsideResultFile = Path.Combine(elsewhere.Path, "attachment.txt");
+        File.WriteAllText(outsideResultFile, "data");
+        _testContextImplementation.AddResultFile(outsideResultFile);
+
+        _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
+        _testContextImplementation.Dispose();
+
+        Directory.Exists(tempDirectory).Should().BeFalse();
+    }
+
     public void TestTempDirectoryShouldBeRetainedOnFailure()
     {
         using TempDirectoryScope resultsDirectory = new();

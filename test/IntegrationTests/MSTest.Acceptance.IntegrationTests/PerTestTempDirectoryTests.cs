@@ -140,6 +140,38 @@ public sealed class PerTestTempDirectoryTests : AcceptanceTestBase<PerTestTempDi
         }
     }
 
+    [TestMethod]
+    public async Task TestTempDirectory_IsRetained_OnPass_WhenResultFileRegisteredUnderIt()
+    {
+        // A passing test that writes a file into its temp directory and registers it via
+        // TestContext.AddResultFile must keep that file: the host collects the attachment after the
+        // context is disposed, so deleting the directory on pass would break the attachment.
+        string recordDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(recordDirectory);
+        try
+        {
+            var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
+            TestHostResult testHostResult = await testHost.ExecuteAsync(
+                "--filter \"ClassName~AddResultFileRetention\"",
+                environmentVariables: new()
+                {
+                    ["TESTTEMPDIR_RECORD_DIR"] = recordDirectory,
+                },
+                cancellationToken: TestContext.CancellationToken);
+
+            testHostResult.AssertExitCodeIs(0);
+            testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+
+            Dictionary<string, List<string>> records = ReadRecords(recordDirectory);
+            string attachment = Assert.ContainsSingle(records["addresultfile"]);
+            Assert.IsTrue(File.Exists(attachment), $"Registered result file should be retained on pass but is missing: '{attachment}'.");
+        }
+        finally
+        {
+            TryDeleteDirectory(recordDirectory);
+        }
+    }
+
     private static Dictionary<string, List<string>> ReadRecords(string recordDirectory)
     {
         Dictionary<string, List<string>> result = [];
@@ -283,6 +315,22 @@ public class FailRetain
         File.WriteAllText(Path.Combine(dir, "artifact.txt"), "hello");
         Recorder.Record("fail", dir);
         Assert.Fail("Intentional failure to verify retention on failure.");
+    }
+}
+
+[TestClass]
+public class AddResultFileRetention
+{
+    public TestContext TestContext { get; set; }
+
+    [TestMethod]
+    public void PassingWithAttachment()
+    {
+        string dir = TestContext.TestTempDirectory;
+        string attachment = Path.Combine(dir, "attachment.txt");
+        File.WriteAllText(attachment, "hello");
+        TestContext.AddResultFile(attachment);
+        Recorder.Record("addresultfile", attachment);
     }
 }
 

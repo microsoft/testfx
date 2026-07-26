@@ -145,6 +145,15 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
     private bool _testTempDirectoryCreated;
 
     /// <summary>
+    /// Whether the test registered (via <see cref="AddResultFile"/>) a result file that lives inside
+    /// the per-test temporary directory. Such a file is reported to the host as a result attachment
+    /// and is collected after this context is disposed, so the directory must be retained even on a
+    /// passing outcome. This flag is set eagerly in <see cref="AddResultFile"/> because the framework
+    /// consumes the result-file list during execution, before cleanup runs.
+    /// </summary>
+    private bool _hasResultFileUnderTestTempDirectory;
+
+    /// <summary>
     /// Whether cleanup of the per-test temporary directory has started (i.e. the context is being
     /// or has been disposed). Once set, the getter must not create a new directory, otherwise a
     /// late access from a background thread the test spawned could create a directory *after*
@@ -309,7 +318,20 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
             throw new ArgumentException(Resource.Common_CannotBeNullOrEmpty, nameof(fileName));
         }
 
-        (_testResultFiles ??= []).Add(Path.GetFullPath(fileName));
+        string fullPath = Path.GetFullPath(fileName);
+        (_testResultFiles ??= []).Add(fullPath);
+#if !WINDOWS_UWP && !WIN_UI
+        // Remember when a registered result file lives inside the per-test temp directory. The
+        // framework consumes the result-file list during execution (before this context is
+        // disposed), so this flag — not the list — is what cleanup consults to avoid deleting a
+        // directory whose file the host still reports as an attachment. See ShouldRetainTestTempDirectory.
+        if (Volatile.Read(ref _testTempDirectoryCreated)
+            && _testTempDirectory is { Length: > 0 } tempDir
+            && IsPathUnderDirectory(fullPath, tempDir))
+        {
+            _hasResultFileUnderTestTempDirectory = true;
+        }
+#endif
     }
 
     /// <summary>
@@ -812,12 +834,22 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
 
     /// <summary>
     /// Determines whether the per-test temporary directory should be kept: retained on any
-    /// non-passing outcome, or when retention is forced via the environment variable escape hatch.
+    /// non-passing outcome, when the test registered a result file living inside it, or when
+    /// retention is forced via the environment variable escape hatch.
     /// </summary>
     private bool ShouldRetainTestTempDirectory()
     {
         // Retain a failed (or otherwise non-passing) test's artifacts for inspection.
         if (_outcome != UnitTestOutcome.Passed)
+        {
+            return true;
+        }
+
+        // If the test registered a result file (via AddResultFile) that lives inside the temp
+        // directory, that file is referenced as a result attachment and is collected by the test
+        // host *after* this context is disposed. Deleting the directory now would leave the
+        // attachment pointing at a missing file, so retain it in that case.
+        if (_hasResultFileUnderTestTempDirectory)
         {
             return true;
         }
@@ -835,6 +867,19 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
         }
 
         return retain is "1" || string.Equals(retain, "true", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Returns whether <paramref name="filePath"/> is located inside <paramref name="directory"/>.
+    /// </summary>
+    private static bool IsPathUnderDirectory(string filePath, string directory)
+    {
+        string normalizedDirectory = Path.GetFullPath(directory)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        string normalizedFile = Path.GetFullPath(filePath);
+        return normalizedFile.StartsWith(
+            normalizedDirectory,
+            RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
     }
 #endif
 
