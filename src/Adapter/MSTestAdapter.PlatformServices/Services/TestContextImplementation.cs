@@ -582,9 +582,19 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
     /// </summary>
     private void CleanupTestTempDirectory()
     {
-        if (!_testTempDirectoryCreated || _testTempDirectory is not { Length: > 0 } directory)
+        // Read the lazy-init state under the same lock the getter writes it under. Without this
+        // acquire barrier, a directory created on a worker thread the test spawned (but did not
+        // join) could be observed as not-yet-created here, silently skipping cleanup and leaking
+        // the directory even on a passing test.
+        string? directory;
+        lock (_testTempDirectoryLock)
         {
-            return;
+            if (!_testTempDirectoryCreated || _testTempDirectory is not { Length: > 0 } createdDirectory)
+            {
+                return;
+            }
+
+            directory = createdDirectory;
         }
 
         if (ShouldRetainTestTempDirectory())
@@ -603,9 +613,17 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
         {
             // A leaked file handle, or a transient antivirus/indexer lock on Windows, can make the
             // delete fail. This must never fail an otherwise passing test, so we swallow it and only
-            // surface the failure through the diagnostic trace log.
-            PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(
-                "Failed to delete per-test temporary directory '{0}': {1}", directory, ex);
+            // surface the failure through the diagnostic trace log. The logging itself is guarded so
+            // that a misbehaving trace logger cannot let an exception escape Dispose either.
+            try
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(
+                    "Failed to delete per-test temporary directory '{0}': {1}", directory, ex);
+            }
+            catch
+            {
+                // Intentionally ignored: cleanup is best-effort and must never throw from Dispose.
+            }
         }
     }
 
