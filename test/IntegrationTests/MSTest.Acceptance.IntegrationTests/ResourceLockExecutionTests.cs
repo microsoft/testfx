@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Globalization;
@@ -492,14 +492,21 @@ internal static class LockProbe
 }
 
 #file Tests.cs
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-// IMPORTANT: Workers MUST stay greater than the number of classes contending on the "CL" key below
-// (currently 4). This is load-bearing, not arbitrary tuning. A blocked chunk occupies its worker, so if
-// Workers <= the contending-class count, those classes consume every worker and the MergePromoteTests /
-// MergeReaderTests pair below can never overlap - which makes the "key:MK" merge assertion pass
-// vacuously, holding even when chunk mode merging is completely broken. Verified: with Workers = 4 a
-// deliberately broken merge still passed; with Workers = 8 it is caught. Do not lower this.
+// IMPORTANT: this asset's concurrency is load-bearing, not arbitrary tuning. Two things must hold for the
+// "key:MK" merge assertion to be meaningful rather than vacuous:
+//
+//   1. Workers MUST stay greater than the number of classes contending on the "CL" key below (currently 4).
+//      A blocked chunk occupies its worker, so if Workers <= the contending-class count those classes consume
+//      every worker and MergePromoteTests / MergeReaderTests can never overlap. Verified: with Workers = 4 a
+//      deliberately broken merge still passed; with Workers = 8 it is caught.
+//   2. Enough runnable thread-pool threads must exist for those two classes to run at once - see
+//      AssemblyInitialize below, which raises the pool minimum. Worker count alone is not sufficient, because
+//      a chunk waiting on a lock awaits and releases its pool thread while a running body pins one.
+//
+// If either is weakened, mode merging can break completely while this test still passes. Do not lower them.
 [assembly: Parallelize(Workers = 8, Scope = ExecutionScope.ClassLevel)]
 
 namespace ResourceLockClassLevelTestProject;
@@ -579,6 +586,19 @@ public class MergeReaderTests
 [TestClass]
 public class IndependentClassTests
 {
+    [AssemblyInitialize]
+    public static void AssemblyInitialize(TestContext context)
+    {
+        // Keep this asset's observable concurrency independent of thread-pool injection heuristics.
+        // Concurrency here is bounded by runnable pool threads, not by Workers: a chunk blocked on a lock
+        // awaits and releases its pool thread, while a *running* test body pins one for its Thread.Sleep.
+        // Min threads defaults to Environment.ProcessorCount and injection beyond that is throttled, so on a
+        // low-core CI agent the assertions could in principle observe less overlap than intended. Raising the
+        // minimum removes that variable at no cost to run time.
+        _ = context;
+        ThreadPool.SetMinThreads(16, 16);
+    }
+
     [AssemblyCleanup]
     public static void AssemblyCleanup() => LockProbe.WriteResult();
 
