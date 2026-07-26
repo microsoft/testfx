@@ -1041,6 +1041,11 @@ public class TestContextImplementationTests : TestContainer
         tempDirectory.Should().NotBeNullOrEmpty();
         Directory.Exists(tempDirectory).Should().BeTrue();
 
+        // Pin the fallback location: with no results directory, it is created directly under the
+        // system temp root.
+        string tempRoot = Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        Path.GetDirectoryName(tempDirectory).Should().Be(tempRoot);
+
         _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
         _testContextImplementation.Dispose();
         Directory.Exists(tempDirectory).Should().BeFalse();
