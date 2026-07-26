@@ -7,6 +7,7 @@ using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 namespace MSTest.Acceptance.IntegrationTests;
 
 [TestClass]
+[DoNotParallelize]
 public sealed class PerTestTempDirectoryTests : AcceptanceTestBase<PerTestTempDirectoryTests.TestAssetFixture>
 {
     public TestContext TestContext { get; set; } = default!;
