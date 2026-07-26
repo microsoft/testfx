@@ -257,6 +257,17 @@ Examples:
 | tree `T` | UIDs `{A,B}` | `null` | `AND(T, UIDs {A,B})` |
 | runsettings filter | provider UID constraint | — | adapter evaluates `runsettings AND provider` |
 
+Response files and large UID selections do not require another filter representation. Command-line
+processing materializes built-in `--filter-uid` values before composition, including values supplied
+through response files. The composer sees the resulting `TestNodeUidListFilter` and intersects it
+with provider UID constraints in the same way as an inline value. Response-file parsing remains a
+launcher/command-line concern rather than becoming provider API surface.
+
+An in-process provider can return a large `TestNodeUidListFilter` directly, so its selection is not
+limited by operating-system command-line length. An orchestrator that must cross a process boundary
+can continue to use response files for the built-in option; this RFC does not remove or reinterpret
+that fallback.
+
 ## Adapter responsibilities
 
 MTP transports filter representations; the test framework or bridge still owns filtering because it
@@ -342,6 +353,72 @@ The API is additive and experimental.
   constraint. It no longer needs to recreate CLI parsing or replace the built-in filter.
 - Frameworks that pattern-match directly on `ITestExecutionFilter` must add recursive composite
   support before consuming applications register providers.
+
+### Concrete migration: affected-test selection
+
+A private affected-test extension provides a concrete migration example without making affected-test
+terminology part of MTP. Its current implementation has two ways to select tests:
+
+1. The compatibility path uses a `RunAffectedTestsOrchestrator`. It computes the selected UIDs,
+   removes its parent activation option to prevent recursive activation, and launches the test host
+   with the built-in `--filter-uid` option. Large selections are written to response files, recursive
+   response files are supported, and the child execution remains connected to `dotnet test`
+   reporting.
+2. A transitional direct path can conditionally register the single-winner
+   `ITestExecutionFilterFactory` when an `AffectedTestsFilterApiAvailable` build switch is enabled.
+   That avoids a child launch, but it replaces the platform factory and therefore cannot safely
+   coexist with the built-in request filter or another extension factory.
+
+When the provider API is available, only the second path changes. The extension registers an
+`ITestExecutionFilterProvider` and contributes the selected UIDs as an additional constraint:
+
+```csharp
+builder.AddTestExecutionFilterProvider(
+    serviceProvider => new AffectedTestsFilterProvider(serviceProvider));
+
+public Task<ITestExecutionFilter?> GetFilterAsync(
+    TestExecutionFilterContext context,
+    CancellationToken cancellationToken)
+{
+    if (context.Origin == TestExecutionRequestOrigin.Server
+        || context.RequestKind == TestExecutionRequestKind.Discovery)
+    {
+        return Task.FromResult<ITestExecutionFilter?>(null);
+    }
+
+    TestNodeUid[] affectedTestUids = GetAffectedTestUids(cancellationToken);
+    return Task.FromResult<ITestExecutionFilter?>(
+        new TestNodeUidListFilter(affectedTestUids));
+}
+```
+
+The example name and UID-selection algorithm belong to the consumer. The platform sees only a
+provider and a platform-known UID constraint. The provider's `IsEnabledAsync` remains gated by the
+consumer's run-affected activation option; `AffectedTestsFilterApiAvailable` chooses the available
+integration path rather than changing request semantics.
+
+This migration has the following behavior:
+
+- The provider no longer strips the activation option, relaunches the host, or recreates the
+  built-in filter. MTP ANDs its UID set with any user/request constraint.
+- An explicit user `--filter-uid` selection and the provider selection are intersected. Neither can
+  override the other, and an empty intersection runs no tests.
+- A large direct selection stays in memory and therefore has no command-line-length limit.
+- When the provider API is unavailable, the existing orchestrator fallback remains unchanged,
+  including recursive response-file handling and long UID lists.
+- `dotnet test` reporting is preserved in both modes: the provider runs in the original test host,
+  while the compatibility orchestrator keeps its existing child-reporting connection.
+- The transitional single-winner factory registration is removed once the provider path is used;
+  the factory must not remain as a second activation mechanism.
+
+The extension's refresh operation remains an orchestrator. It performs managed x64 profiler
+batching and owns a multi-run/instrumentation plan, so converting it to a filter provider would
+violate the constraint-versus-planning boundary in this RFC.
+
+Consumer migration tests should prove that the provider and orchestrator fallback select the same
+UIDs, that an explicit built-in UID filter intersects correctly, that direct large selections are
+not truncated, and that recursive response-file fallback and `dotnet test` reporting remain
+unchanged.
 
 ## Relationship to draft PR #8820
 
