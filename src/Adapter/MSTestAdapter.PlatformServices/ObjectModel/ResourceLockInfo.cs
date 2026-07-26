@@ -39,9 +39,19 @@ internal sealed class ResourceLockInfo
     /// <summary>
     /// Encodes a lock as a single string for transport across the VSTest <c>TestProperty</c> boundary: a
     /// one-character mode prefix (<c>R</c> for <see cref="ResourceAccessMode.Read"/>, <c>W</c> for every other
-    /// value, including <see cref="ResourceAccessMode.ReadWrite"/>) followed by the resource key. Using a
-    /// fixed-width prefix avoids any delimiter ambiguity with arbitrary resource strings.
+    /// value, including <see cref="ResourceAccessMode.ReadWrite"/>) followed by the resource key.
     /// </summary>
+    /// <remarks>
+    /// The prefix is fixed-width rather than delimited so that a well-formed payload always splits at exactly
+    /// one position, whatever the key contains - a delimited marker such as <c>R:</c> would still have to
+    /// decide what to do with a key that itself contains, or starts with, the delimiter. This encoding is not
+    /// self-describing: a string that was never produced by this method but happens to begin with <c>R</c> or
+    /// <c>W</c> is indistinguishable from a real payload. That is accepted because <see cref="Encode"/> and
+    /// <see cref="Decode"/> are a matched pair over a private adapter property, so <see cref="Decode"/> only
+    /// ever sees this method's output; keys beginning with the marker characters round-trip correctly, which
+    /// is covered by tests. Making arbitrary strings unambiguous would need length-prefixing, which is not
+    /// warranted for an internal, in-process property.
+    /// </remarks>
     public static string Encode(ResourceLockInfo info)
         => (info.Mode == ResourceAccessMode.Read ? "R" : "W") + info.Resource;
 
