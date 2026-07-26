@@ -72,6 +72,22 @@ public class UnitTestElementTests : TestContainer
 
     #endregion
 
+    #region TestMethod.FullyQualifiedName tests
+
+    public void FullyQualifiedNameShouldCombineFullClassNameAndMethodName()
+        => _testMethod.FullyQualifiedName.Should().Be("C.M");
+
+    public void FullyQualifiedNameShouldBeComputedOnceAndCached()
+    {
+        string first = _testMethod.FullyQualifiedName;
+
+        // The string is built by interpolation, so a recomputed value would be a distinct (non-interned)
+        // instance. Reference identity is what proves the hot paths reuse a single allocation per test method.
+        _testMethod.FullyQualifiedName.Should().BeSameAs(first);
+    }
+
+    #endregion
+
     #region ToTestCase tests
 
     public void ToTestCaseShouldSetFullyQualifiedName()
