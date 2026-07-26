@@ -173,7 +173,8 @@ public abstract class TestContext
     /// targets the 260-character limit and does not rely on long-path opt-in
     /// (<c>LongPathsEnabled</c> / the <c>\\?\</c> prefix), which is not guaranteed to be enabled and
     /// is often not honored by external tools. If the run's results directory is too deep to preserve
-    /// that headroom, the directory is created under the system temporary directory instead.
+    /// that headroom, or cannot be written to (for example a read-only output directory), the
+    /// directory is created under the system temporary directory instead.
     /// </para>
     /// </remarks>
     public virtual string? TestTempDirectory => null;

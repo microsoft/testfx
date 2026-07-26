@@ -775,10 +775,14 @@ public class TestContextImplementationTests : TestContainer
 
     public void TestTempDirectoryShouldFallBackToTempPathWhenResultsDirectoryTooDeep()
     {
+        using TempDirectoryScope scope = new();
+
         // A results directory long enough that, on Windows, even a minimal readable name plus the
         // reserved MAX_PATH headroom cannot fit — the implementation must fall back to system temp.
-        // The path is only used for its length; on Windows we never create under it.
-        string deepResults = Path.Combine(Path.GetTempPath(), "deep_" + Guid.NewGuid().ToString("N") + new string('d', 200));
+        // It is nested under a TempDirectoryScope so that on non-Windows (where no fallback occurs
+        // and this parent is actually created) it is reclaimed instead of leaking into the temp
+        // folder. On Windows the path is only used for its length; the directory is never created.
+        string deepResults = Path.Combine(scope.Path, new string('d', 200));
         _properties["TestResultsDirectory"] = deepResults;
         _testMethod.Setup(tm => tm.Name).Returns("MyTest");
         _testContextImplementation = CreateTestContextImplementation();
@@ -798,6 +802,33 @@ public class TestContextImplementationTests : TestContainer
             Path.GetDirectoryName(tempDirectory).Should().Be(tempRoot);
             tempDirectory!.Length.Should().BeLessThanOrEqualTo(260 - 80);
         }
+
+        _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
+        _testContextImplementation.Dispose();
+    }
+
+    public void TestTempDirectoryShouldFallBackToTempPathWhenResultsDirectoryIsNotWritable()
+    {
+        // TestResultsDirectory is rarely empty in the normal .NET path (it maps to the test
+        // assembly's output directory when no results directory is configured), so the "unavailable"
+        // fallback rarely fires. This covers the more realistic case: the base directory exists but
+        // cannot be written to. It is simulated by pointing at a *file*, so creating a subdirectory
+        // under it throws — the implementation must fall back to the system temp directory rather
+        // than surface a directory-creation error from the property getter.
+        using TempDirectoryScope scope = new();
+        string filePath = Path.Combine(scope.Path, "not_a_directory");
+        File.WriteAllText(filePath, "x");
+        _properties["TestResultsDirectory"] = filePath;
+        _testContextImplementation = CreateTestContextImplementation();
+
+        string? tempDirectory = _testContextImplementation.TestTempDirectory;
+
+        tempDirectory.Should().NotBeNullOrEmpty();
+        Directory.Exists(tempDirectory).Should().BeTrue();
+
+        // Fell back to the system temp root, not under the (unwritable) results path.
+        string tempRoot = Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        Path.GetDirectoryName(tempDirectory).Should().Be(tempRoot);
 
         _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
         _testContextImplementation.Dispose();

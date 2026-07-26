@@ -155,7 +155,9 @@ concurrently from parallel tests without coordination; `TestTempDirectory` is sa
 ## Design questions
 
 These were genuinely open; each is answered with a proposal and rationale. Items marked **(sign-off)**
-were confirmed during RFC review.
+are the decisions the author is asking reviewers to **ratify** before this RFC is approved — they are
+proposals, not yet-confirmed conclusions. The same three items (name, cleanup policy, location) are
+surfaced in the PR description for ratification.
 
 ### 1. Name — `TestTempDirectory` **(sign-off)**
 
@@ -177,7 +179,7 @@ story this RFC is trying to simplify. `string` also composes directly with `Path
 how the existing properties are used. Nullable to match the existing properties' signatures (they
 are `string?` because the underlying property bag can be empty in edge cases).
 
-### 3. Lazy vs eager creation — lazy **(sign-off)**
+### 3. Lazy vs eager creation — lazy
 
 **Chosen: lazy.** The directory is created on first access to the getter. Rationale: eager creation
 would add a directory create **and** a directory delete to *every test in every suite*, including
@@ -241,7 +243,12 @@ characters)** for the files the test itself writes inside the directory. Crucial
 
 When the results directory is entirely unavailable (a host that does not populate it), the
 implementation likewise **falls back to `Path.GetTempPath()`** so the property always returns a
-usable path.
+usable path. Note that in the normal .NET path `TestResultsDirectory` is rarely empty — when no
+results directory is configured, MSTest maps it to the **test assembly's output directory** (the
+`bin` folder), so by default the per-test directory is created there, next to the binaries. As a
+final safety net, if the chosen base directory **cannot be written to** (for example a read-only
+output directory), directory creation falls back to `Path.GetTempPath()` as well, so the property
+never throws a directory-creation error from its getter.
 
 **Long-path support:** the feature targets the classic 260-character `MAX_PATH` and **does not rely
 on long-path opt-in** (`LongPathsEnabled` / the `\\?\` prefix). Long paths are not guaranteed to be

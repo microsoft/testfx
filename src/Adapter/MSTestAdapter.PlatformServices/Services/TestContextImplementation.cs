@@ -527,16 +527,20 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
 #if !WINDOWS_UWP && !WIN_UI
     /// <summary>
     /// Creates the per-test temporary directory. The directory lives under the run's results
-    /// directory (so it is discoverable next to other run output). On Windows the readable-name
-    /// budget is sized adaptively from how much room the base path leaves under <c>MAX_PATH</c>,
-    /// and — when the results directory is so deep that even a minimal readable name cannot preserve
-    /// the reserved headroom for the test's own files — the implementation falls back to the short
-    /// system temporary directory instead.
+    /// directory (so it is discoverable next to other run output); when no results directory is
+    /// configured this is the test assembly's output directory. On Windows the readable-name budget
+    /// is sized adaptively from how much room the base path leaves under <c>MAX_PATH</c>, and — when
+    /// the results directory is so deep that even a minimal readable name cannot preserve the
+    /// reserved headroom for the test's own files — the implementation falls back to the short
+    /// system temporary directory instead. It also falls back to the system temporary directory when
+    /// the chosen base directory cannot be written to (for example a read-only output directory), so
+    /// the property returns a usable path rather than throwing from the getter.
     /// </summary>
     private string CreateTestTempDirectory()
     {
         string? resultsDirectory = TestResultsDirectory is { Length: > 0 } results ? results : null;
         string baseDirectory = resultsDirectory ?? Path.GetTempPath();
+        bool baseIsTemp = resultsDirectory is null;
 
         // Size the readable-name budget so that base + '\' + name + '_' + suffix, plus the reserved
         // headroom for the files the test writes inside, stays within MAX_PATH on Windows. On other
@@ -546,17 +550,52 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             int available = ComputeReadableNameBudget(baseDirectory);
-            if (available < TestTempDirectoryNameMinLength && resultsDirectory is not null)
+            if (available < TestTempDirectoryNameMinLength && !baseIsTemp)
             {
                 // The results directory is too deep to leave usable headroom; fall back to the
                 // short system temp directory so the test still gets room to write.
                 baseDirectory = Path.GetTempPath();
+                baseIsTemp = true;
                 available = ComputeReadableNameBudget(baseDirectory);
             }
 
             nameBudget = available < 0 ? 0 : Math.Min(available, TestTempDirectoryNameMaxLength);
         }
 
+        if (TryCreateTestTempDirectoryUnder(baseDirectory, nameBudget, out string created))
+        {
+            return created;
+        }
+
+        // The chosen base directory could not be written to (e.g. a read-only output directory).
+        // Fall back to the system temporary directory, which is writable, so the property still
+        // returns a usable path instead of throwing from the getter.
+        if (!baseIsTemp)
+        {
+            string tempBase = Path.GetTempPath();
+            int tempBudget = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                ? Math.Max(0, Math.Min(ComputeReadableNameBudget(tempBase), TestTempDirectoryNameMaxLength))
+                : TestTempDirectoryNameMaxLength;
+            if (TryCreateTestTempDirectoryUnder(tempBase, tempBudget, out created))
+            {
+                return created;
+            }
+        }
+
+        // Could not create anywhere with a readable name; make one last attempt under the system
+        // temp directory with a plain Guid name and let any exception surface as a genuine error.
+        string fallback = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(fallback);
+        return fallback;
+    }
+
+    /// <summary>
+    /// Attempts to create a uniquely-named per-test temporary directory under <paramref name="baseDirectory"/>.
+    /// Returns <see langword="false"/> (rather than throwing) when the base directory cannot be
+    /// written to, so the caller can fall back to another location.
+    /// </summary>
+    private bool TryCreateTestTempDirectoryUnder(string baseDirectory, int nameBudget, out string createdPath)
+    {
         string namePart = SanitizeTestTempDirectoryName(GetTestTempDirectoryNameSource(), nameBudget);
 
         // Guid.ToString("N") is 32 hex chars; two contexts colliding on the same 12-char prefix is
@@ -572,14 +611,24 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
                 continue;
             }
 
-            Directory.CreateDirectory(candidate);
-            return candidate;
+            try
+            {
+                Directory.CreateDirectory(candidate);
+                createdPath = candidate;
+                return true;
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // The base directory is not writable (e.g. a read-only output directory). Signal
+                // failure so the caller can fall back to the system temporary directory. Retrying a
+                // different name under the same base would not help, so bail out immediately.
+                createdPath = string.Empty;
+                return false;
+            }
         }
 
-        // Extremely unlikely fallback: use a full Guid to guarantee uniqueness.
-        string fallback = Path.Combine(baseDirectory, Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(fallback);
-        return fallback;
+        createdPath = string.Empty;
+        return false;
     }
 
     /// <summary>
