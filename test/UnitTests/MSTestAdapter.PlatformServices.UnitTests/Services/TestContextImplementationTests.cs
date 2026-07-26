@@ -1032,6 +1032,32 @@ public class TestContextImplementationTests : TestContainer
         Directory.Exists(tempDirectory).Should().BeFalse();
     }
 
+    public void TestTempDirectoryShouldBeDeletedOnPassWhenOnlyEarlierRetryAttemptRegisteredResultFile()
+    {
+        using TempDirectoryScope resultsDirectory = new();
+        _properties["TestResultsDirectory"] = resultsDirectory.Path;
+        _testContextImplementation = CreateTestContextImplementation();
+
+        string? tempDirectory = _testContextImplementation.TestTempDirectory;
+
+        // Attempt 1 (e.g. a failed retry attempt) registers a result file under the temp directory,
+        // then the framework consumes the list via GetResultFiles (as it does once per attempt).
+        string attempt1File = Path.Combine(tempDirectory!, "attempt1.txt");
+        File.WriteAllText(attempt1File, "data");
+        _testContextImplementation.AddResultFile(attempt1File);
+        _testContextImplementation.GetResultFiles();
+
+        // Attempt 2 (the passing, reported attempt) registers nothing; the framework consumes again.
+        _testContextImplementation.GetResultFiles();
+
+        _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
+        _testContextImplementation.Dispose();
+
+        // The reported (last) attempt registered no in-directory result file, so the sticky marker
+        // from the earlier attempt must not keep the passing test's directory alive.
+        Directory.Exists(tempDirectory).Should().BeFalse();
+    }
+
     public void TestTempDirectoryShouldBeRetainedOnFailure()
     {
         using TempDirectoryScope resultsDirectory = new();

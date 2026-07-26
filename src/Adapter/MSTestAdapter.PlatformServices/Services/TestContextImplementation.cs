@@ -544,6 +544,13 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
     /// <returns>Results files generated in run.</returns>
     public IList<string>? GetResultFiles()
     {
+#if !WINDOWS_UWP && !WIN_UI
+        // This is called once per execution attempt, and the last call before disposal reflects the
+        // reportable attempt's result files. Recompute (not accumulate) whether any of *this*
+        // attempt's result files live under the per-test temp directory, so a sticky value from an
+        // earlier retry attempt cannot force retention of an otherwise-passing final attempt.
+        _hasResultFileUnderTestTempDirectory = HasResultFileUnderTestTempDirectory();
+#endif
         if (_testResultFiles is null || _testResultFiles.Count == 0)
         {
             return null;
@@ -880,6 +887,30 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
         return normalizedFile.StartsWith(
             normalizedDirectory,
             RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Returns whether any currently-registered result file lives inside the per-test temporary
+    /// directory.
+    /// </summary>
+    private bool HasResultFileUnderTestTempDirectory()
+    {
+        if (_testResultFiles is not { Count: > 0 } files
+            || !Volatile.Read(ref _testTempDirectoryCreated)
+            || _testTempDirectory is not { Length: > 0 } tempDir)
+        {
+            return false;
+        }
+
+        foreach (string file in files)
+        {
+            if (IsPathUnderDirectory(file, tempDir))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 #endif
 
