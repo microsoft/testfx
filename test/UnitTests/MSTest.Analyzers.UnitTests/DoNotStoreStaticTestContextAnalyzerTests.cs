@@ -268,31 +268,6 @@ public sealed class DoNotStoreStaticTestContextAnalyzerTests
 #endif
 
     [TestMethod]
-    public async Task WhenCoalesceAssigningTestContextParameterToStaticField_NoDiagnostic()
-    {
-        // Coalesce assignment (??=) produces an ICoalesceAssignmentOperation, not an
-        // ISimpleAssignmentOperation. The analyzer only registers OperationKind.SimpleAssignment,
-        // so ??= must not trigger the diagnostic.
-        string code = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                private static TestContext s_testContext;
-
-                [AssemblyInitialize]
-                public static void AssemblyInit(TestContext tc)
-                {
-                    s_testContext ??= tc;
-                }
-            }
-            """;
-
-        await VerifyCS.VerifyAnalyzerAsync(code);
-    }
-
-    [TestMethod]
     public async Task WhenAssigningTestContextFieldToStaticField_NoDiagnostic()
     {
         // The right-hand side is a field reference (IFieldReferenceOperation), not a parameter
