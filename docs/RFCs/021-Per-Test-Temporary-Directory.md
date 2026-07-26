@@ -2,7 +2,7 @@
 
 - [ ] Approved in principle
 - [x] Under discussion
-- [ ] Implementation
+- [x] Implementation (included in this change set, behind the proposed API)
 - [ ] Shipped
 
 ## Summary
@@ -47,7 +47,7 @@ Per-test temporary directories are table stakes everywhere except .NET:
 | Go 1.15+      | `t.TempDir()`                               | yes                            |
 | pytest        | `tmp_path` fixture                          | yes (keeps last 3 runs)        |
 | JUnit 5       | `@TempDir` (+ `TempDirFactory` SPI, `CleanupMode`) | yes                     |
-| Rust          | `tempfile::TempDir`                         | yes (RAII)                     |
+| Rust          | `tempfile::TempDir` (community crate, not the built-in test harness) | yes (RAII)     |
 | Playwright    | `testInfo.outputDir` / `outputPath()`       | yes                            |
 | **MSTest / xUnit / NUnit / TUnit** | **none**               | —                              |
 
@@ -86,8 +86,10 @@ Compatibility section), we add a **new** property with the per-test guarantee.
 2. Created **lazily** — tests that never touch it pay nothing (no create/delete per test).
 3. Correct under all parallelization settings, including many `[DataRow]`/`[DynamicData]` cases of
    the same method executing concurrently.
-4. Automatic cleanup that is useful by default (retain a *failed* test's artifacts) and never hangs
-   or throws, even on timeout/cancellation.
+4. Automatic cleanup that is useful by default (retain a *failed* test's artifacts) and never throws.
+   Cleanup runs synchronously when the per-test `TestContext` is disposed — i.e. *after* the test
+   has finished — so it neither interrupts nor extends the test itself, and it is best-effort so an
+   aborted or timed-out test is never blocked or failed by it.
 
 ## Non-goals
 
@@ -192,8 +194,9 @@ failed test's artifacts are exactly what you want to inspect, and a passed test'
 
 - **Escape hatch (retain everything):** an environment variable (working name
   `MSTEST_TEST_TEMP_DIRECTORY_RETAIN`, `1`/`true` to enable) forces retention regardless of
-  outcome, mirroring `TempDirectory.cs`'s existing `..._Cleanup=0` switch and Go's
-  `-test.outputdir`. This is the debugging affordance.
+  outcome, mirroring `TempDirectory.cs`'s existing `..._Cleanup=0` switch. This is the debugging
+  affordance. (Go instead never auto-cleans when you point it at an explicit output directory; the
+  spirit — an opt-out that keeps everything for inspection — is the same.)
 - **Keep-last-N-runs (pytest):** evaluated and **rejected for v1**. pytest keeps directories under a
   stable per-user root (`/tmp/pytest-of-<user>/pytest-<N>/`) and prunes older *sessions*. MSTest's
   results directory is already per-run (a fresh GUID each run), so old runs are naturally distinct;
@@ -202,6 +205,14 @@ failed test's artifacts are exactly what you want to inspect, and a passed test'
 - **Configurability:** retention-on-failure is the fixed default plus the env-var escape hatch for
   v1. A runsettings knob (e.g. always-delete / always-retain / retain-on-failure) is a natural
   future extension but is intentionally deferred to keep the initial surface minimal.
+
+Retention keys off the outcome recorded on the per-test `TestContext` at disposal time. This relies
+on the framework contract that a test's **final** outcome is set before its `TestContext` is
+disposed — which holds on every path, including each folded/unfolded data-driven iteration (the
+iteration's outcome is set on its own context before that context is disposed). Any non-passing
+outcome (Failed, Timeout, Aborted, Inconclusive, …) retains; the `UnitTestOutcome` default is
+`Failed`, so the fail-safe direction is *retain*, never an accidental delete of a not-yet-finalized
+test.
 
 ### 5. Location — under the results directory **(sign-off)**
 
@@ -230,12 +241,18 @@ contain characters illegal in paths and can be very long. Scheme:
    `_`.
 3. **Truncate** the sanitized name to a small fixed budget (working value **50 characters**) to
    protect `MAX_PATH`.
-4. **Append a short unique suffix** (working scheme: `_` + a compact token, e.g. the first 12 hex
-   chars of a GUID) to guarantee uniqueness across cases and across the (truncated, hence
-   potentially colliding) names.
+4. **Append a short unique suffix** (`_` + the first 12 hex chars of a GUID) so that collisions
+   across cases and across the (truncated, hence potentially colliding) readable names are
+   negligible — 12 hex chars is 48 bits of entropy, so two contexts colliding is ~2⁻⁴⁸.
 5. **Create with collision retry**: attempt `Directory.CreateDirectory` for the candidate; if the
-   directory already exists (astronomically unlikely, but possible under extreme parallelism),
-   regenerate the suffix and retry a bounded number of times.
+   directory already exists, regenerate the suffix and retry a bounded number of times, then fall
+   back to a full 32-char GUID name. Note `CreateDirectory` is not an exclusive create, so this
+   retry makes an already-negligible collision negligibly smaller rather than providing a hard
+   atomic guarantee; the practical uniqueness comes from the 48-bit suffix, not from the check.
+
+If the test name is empty, whitespace-only, or made up entirely of invalid characters, the sanitized
+prefix is empty and the directory name is **just the suffix** (no leading `_`). This is the one case
+where the shape is `<uniq>` rather than `<sanitized-truncated-name>_<uniq>`.
 
 Result shape: `...\TestResults\<run-guid>\In\<sanitized-truncated-name>_<uniq>`. This is correct for
 `[DataRow]`/`[DynamicData]`, where many *cases* share one method name: each case runs on its own
@@ -247,9 +264,10 @@ unique suffix (and, where the display name includes the arguments, by a differin
 Deleting a directory can fail if the test left a file handle open, or on Windows if antivirus or
 the indexer holds a transient lock. **Chosen: best-effort recursive delete that swallows
 exceptions** (exactly like `TempDirectory.cs`). A failed cleanup must never fail an otherwise
-passing test. Whether to emit a diagnostic warning on cleanup failure is a minor open point:
-the proposal is to **not** warn by default (to avoid noise on flaky AV locks) but to make the
-failure observable via a debug/trace message. This is called out for sign-off.
+passing test. A cleanup failure is **not** surfaced as a test warning (which would be noise on flaky
+AV/indexer locks); instead it is recorded through the adapter's diagnostic trace logger, so it is
+observable when diagnostics are enabled but invisible otherwise. The trace call is itself guarded so
+that a misbehaving logger cannot let an exception escape disposal.
 
 ### 8. Concurrency — correct under all execution scopes
 
@@ -262,18 +280,23 @@ row; the unfolded path allocates one per row). Because each executing test/case 
 object, each gets its own lazily-created directory with no shared mutable state and no cross-test
 locking. Uniqueness is structural, not coordinated.
 
-### 9. Timeouts / aborted tests — cleanup must not hang or throw
+### 9. Timeouts / aborted tests — cleanup must not extend the test or throw
 
-Cleanup runs when the per-test `TestContext` is disposed, which happens in a `finally` block after
-the test's outcome has been recorded — including when the test timed out or the run was cancelled.
-Cleanup therefore:
+Cleanup runs when the per-test `TestContext` is disposed, which happens after the test's outcome
+has been recorded — including when the test timed out or the run was cancelled. Because it runs
+*after* the test rather than as part of it, it cannot extend the test's own execution or trip its
+timeout. Cleanup therefore:
 
-- performs a **synchronous, bounded, best-effort** delete (no waiting on handles, no retries beyond
+- performs a **synchronous, best-effort** recursive delete (no waiting on handles, no retries beyond
   the swallow),
-- never blocks on the cancellation token, and
+- never observes or blocks on the cancellation token, and
 - swallows all exceptions,
 
-so an aborted or timed-out test cannot hang or throw during cleanup.
+so an aborted or timed-out test is never blocked or failed by cleanup. The delete itself is an
+ordinary synchronous `Directory.Delete`, so a pathologically stalled filesystem (a hung network
+share, a wedged FUSE mount) could in principle make the *disposal* slow; bounding that with a
+watchdog thread is deliberately out of scope, matching every other cleanup path in the adapter and
+the reference `TempDirectory.cs`.
 
 ## Relationship to RFC 020 (`[ResourceLock]`)
 
@@ -348,9 +371,20 @@ public class FileWritingTests
 
 ## Unresolved questions
 
-- **Exact environment-variable name** for the retain-all escape hatch (`MSTEST_TEST_TEMP_DIRECTORY_RETAIN`
-  is the working name).
-- **Whether to warn on cleanup failure** (design question 7) — proposal is trace-only, no warning.
-- **Truncation budget and unique-suffix length** (design question 6) — working values 50 chars / 12
-  hex; final values to be confirmed against `MAX_PATH` headroom on Windows.
-- **Future runsettings knob** for cleanup policy (design question 4) — deferred, not part of v1.
+The items below were open during drafting and are now **settled in the initial implementation**;
+they are recorded here as the decisions taken (each is still open for reviewer sign-off, but the
+code reflects these values, not placeholders):
+
+- **Environment-variable name** for the retain-all escape hatch: **`MSTEST_TEST_TEMP_DIRECTORY_RETAIN`**
+  (`1`/`true`, case-insensitive, to enable).
+- **Warn on cleanup failure** (design question 7): **trace-only, no test warning** — the failure is
+  logged through the adapter diagnostic trace logger and is otherwise silent.
+- **Truncation budget and unique-suffix length** (design question 6): **50 chars** of sanitized name
+  + a **12 hex-char** suffix. These are the shipped constants; they can be tuned if `MAX_PATH`
+  headroom testing on Windows shows a reason to.
+
+Genuinely still open (deferred, not part of v1):
+
+- **Future runsettings knob** for cleanup policy (design question 4) — always-delete / always-retain
+  / retain-on-failure. Deferred to keep the initial surface minimal.
+- **Class-/assembly-level shared temp directory** and **keep-last-N-runs** — see Non-goals.
