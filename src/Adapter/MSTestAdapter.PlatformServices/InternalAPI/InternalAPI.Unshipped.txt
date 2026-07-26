@@ -49,6 +49,7 @@ Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGenerat
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.StandardErrorBuilder.get -> Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SynchronizedStringBuilder!
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.StandardOutputBuilder.get -> Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SynchronizedStringBuilder!
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TraceBuilder.get -> Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SynchronizedStringBuilder!
+override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TestTempDirectory.get -> string?
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.ResourceLockManager.GetChunkLocks(System.Collections.Generic.IEnumerable<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement!>! testSet) -> System.Collections.Generic.IReadOnlyList<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.ResourceLockInfo!>!
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodInfo.ParameterMetadataScanCount.get -> int
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodInfo.ResetParameterMetadataCacheForTesting() -> void

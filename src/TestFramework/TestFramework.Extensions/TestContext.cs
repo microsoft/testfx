@@ -142,6 +142,51 @@ public abstract class TestContext
     /// </summary>
     public virtual string? TestResultsDirectory => GetProperty<string>(TestResultsDirectoryLabel);
 
+    /// <summary>
+    /// Gets a temporary directory unique to the currently executing test.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The directory is created on first access (lazily) and is unique to the currently executing
+    /// test, including each data-driven case of a <c>[DataRow]</c>/<c>[DynamicData]</c> method.
+    /// Because every test (and every data case) gets its own directory, tests can write to it
+    /// concurrently without any coordination — even when the assembly runs in parallel.
+    /// </para>
+    /// <para>
+    /// This is a *per-test* directory, so it returns <see langword="null"/> when accessed outside of
+    /// a test — for example from <c>[AssemblyInitialize]</c>, <c>[ClassInitialize]</c>,
+    /// <c>[ClassCleanup]</c>, or <c>[AssemblyCleanup]</c> — where there is no single owning test.
+    /// </para>
+    /// <para>
+    /// The directory is deleted automatically when the test passes and retained when the test
+    /// fails, so a failed test's artifacts remain available for inspection. Retention of all
+    /// directories (including passing tests) can be forced for debugging via the
+    /// <c>MSTEST_TEST_TEMP_DIRECTORY_RETAIN</c> environment variable. A passing test's directory is
+    /// also retained when the test registers a file inside it as a result attachment via
+    /// <see cref="AddResultFile(string)"/>, since the host collects that attachment after the test
+    /// completes.
+    /// </para>
+    /// <para>
+    /// Unlike <see cref="TestRunDirectory"/>, <see cref="DeploymentDirectory"/>,
+    /// <see cref="ResultsDirectory"/>, <see cref="TestRunResultsDirectory"/>, and
+    /// <see cref="TestResultsDirectory"/> — which are shared across tests for the whole run — this
+    /// directory is private scratch space owned by a single test. Use it for files a test needs to
+    /// write during execution; use the result directories for files that should be collected as
+    /// run artifacts.
+    /// </para>
+    /// <para>
+    /// On Windows the returned path is kept short enough to reserve roughly 80 characters of
+    /// headroom under the classic <c>MAX_PATH</c> (260) limit for the files the test itself writes,
+    /// so ordinary relative paths created inside it will not overflow <c>MAX_PATH</c>. The feature
+    /// targets the 260-character limit and does not rely on long-path opt-in
+    /// (<c>LongPathsEnabled</c> / the <c>\\?\</c> prefix), which is not guaranteed to be enabled and
+    /// is often not honored by external tools. If the run's results directory is too deep to preserve
+    /// that headroom, or cannot be written to (for example a read-only output directory), the
+    /// directory is created under the system temporary directory instead.
+    /// </para>
+    /// </remarks>
+    public virtual string? TestTempDirectory => null;
+
     #endregion
 #endif
 
