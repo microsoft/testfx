@@ -63,6 +63,20 @@ public sealed class ResourceLockManagerTests : TestContainer
         ResourceLockInfo.Decode(string.Empty).Resource.Should().BeEmpty();
     }
 
+    public void Decode_WhenPayloadIsPrefixOnly_FailsClosedAndKeepsThePayload()
+    {
+        // Encode never emits a bare prefix, because [ResourceLock] rejects empty keys - so "R" is truncated
+        // transport data. Consuming the prefix would decode it into an empty *shared* lock, which fails open
+        // and invents a key the attribute forbids.
+        var readOnlyPrefix = ResourceLockInfo.Decode("R");
+        readOnlyPrefix.Mode.Should().Be(ResourceAccessMode.ReadWrite);
+        readOnlyPrefix.Resource.Should().Be("R");
+
+        var writeOnlyPrefix = ResourceLockInfo.Decode("W");
+        writeOnlyPrefix.Mode.Should().Be(ResourceAccessMode.ReadWrite);
+        writeOnlyPrefix.Resource.Should().Be("W");
+    }
+
     public void Constructor_NormalizesUndefinedModeToReadWrite()
     {
         // 'Mode' is publicly settable, so (ResourceAccessMode)42 is valid attribute syntax. It must not be

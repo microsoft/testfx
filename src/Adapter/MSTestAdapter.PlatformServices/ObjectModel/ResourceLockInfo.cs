@@ -46,21 +46,25 @@ internal sealed class ResourceLockInfo
         => (info.Mode == ResourceAccessMode.Read ? "R" : "W") + info.Resource;
 
     /// <summary>
-    /// Decodes a lock previously produced by <see cref="Encode"/>. Only a recognized <c>R</c> or <c>W</c>
-    /// prefix is consumed; any other input is treated as a bare resource key and decodes to the exclusive
-    /// <see cref="ResourceAccessMode.ReadWrite"/> mode. Truncated, corrupted or future-version data therefore
-    /// fails closed - it still names the same resource, and it runs serialized rather than racing.
+    /// Decodes a lock previously produced by <see cref="Encode"/>. A valid payload is a recognized <c>R</c> or
+    /// <c>W</c> prefix followed by at least one key character; anything else is treated as a bare resource key
+    /// and decodes to the exclusive <see cref="ResourceAccessMode.ReadWrite"/> mode. Truncated, corrupted or
+    /// future-version data therefore fails closed - it still names the same resource, and it runs serialized
+    /// rather than racing.
     /// </summary>
     public static ResourceLockInfo Decode(string encoded)
     {
-        if (encoded.Length > 0 && encoded[0] == 'R')
+        // Require a key character before consuming the prefix. [ResourceLock] rejects empty keys, so Encode can
+        // never emit a bare prefix; treating "R" as a prefix would decode truncated data into an *empty shared*
+        // lock, which both fails open and invents a key the attribute forbids.
+        if (encoded.Length > 1 && encoded[0] == 'R')
         {
             return new ResourceLockInfo(encoded.Substring(1), ResourceAccessMode.Read);
         }
 
         // Strip the prefix only when it is one we actually wrote. Stripping unconditionally would rewrite an
         // unrecognized payload into a *different* key, which would stop it conflicting with the intended one.
-        string resource = encoded.Length > 0 && encoded[0] == 'W' ? encoded.Substring(1) : encoded;
+        string resource = encoded.Length > 1 && encoded[0] == 'W' ? encoded.Substring(1) : encoded;
         return new ResourceLockInfo(resource, ResourceAccessMode.ReadWrite);
     }
 }

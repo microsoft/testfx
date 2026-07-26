@@ -153,8 +153,10 @@ public sealed class AzureFoundryChatClientProviderTests
 [ResourceLock(WellKnownResources.EnvironmentVariables, Mode = ResourceAccessMode.ReadWrite)]
 public void MutatesPath() { }
 
+private const string DatabaseFixture = "db-fixture";
+
 [TestMethod]
-[ResourceLock("db-fixture", Mode = ResourceAccessMode.Read)]  // readers run concurrently
+[ResourceLock(DatabaseFixture, Mode = ResourceAccessMode.Read)]  // readers run concurrently
 public void ReadsSharedAsset() { }
 ```
 
