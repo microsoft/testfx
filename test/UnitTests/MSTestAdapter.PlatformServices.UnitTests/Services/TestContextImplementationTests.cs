@@ -773,6 +773,72 @@ public class TestContextImplementationTests : TestContainer
         _testContextImplementation.Dispose();
     }
 
+    public void TestTempDirectoryShouldFallBackToTempPathWhenResultsDirectoryTooDeep()
+    {
+        // A results directory long enough that, on Windows, even a minimal readable name plus the
+        // reserved MAX_PATH headroom cannot fit — the implementation must fall back to system temp.
+        // The path is only used for its length; on Windows we never create under it.
+        string deepResults = Path.Combine(Path.GetTempPath(), "deep_" + Guid.NewGuid().ToString("N") + new string('d', 200));
+        _properties["TestResultsDirectory"] = deepResults;
+        _testMethod.Setup(tm => tm.Name).Returns("MyTest");
+        _testContextImplementation = CreateTestContextImplementation();
+
+        string? tempDirectory = _testContextImplementation.TestTempDirectory;
+
+        tempDirectory.Should().NotBeNullOrEmpty();
+        Directory.Exists(tempDirectory).Should().BeTrue();
+
+        // The adaptive budget / fallback is a Windows MAX_PATH concern only.
+        bool onWindows = Path.DirectorySeparatorChar == '\\';
+        if (onWindows)
+        {
+            // Fallback engaged: created directly under the short system temp directory, and the
+            // total path stays within MAX_PATH minus the reserved headroom for the test's files.
+            string tempRoot = Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            Path.GetDirectoryName(tempDirectory).Should().Be(tempRoot);
+            tempDirectory!.Length.Should().BeLessThanOrEqualTo(260 - 80);
+        }
+
+        _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
+        _testContextImplementation.Dispose();
+    }
+
+    public void TestTempDirectoryShouldNotSplitSurrogatePairsWhenTruncatingName()
+    {
+        using TempDirectoryScope resultsDirectory = new();
+        _properties["TestResultsDirectory"] = resultsDirectory.Path;
+
+        // A long display name of non-BMP characters (emoji are surrogate pairs). A leading ASCII
+        // char biases the truncation boundary onto a high surrogate, exercising the guard.
+        string emojiName = "a" + string.Concat(Enumerable.Repeat("\U0001F600", 60));
+        _testMethod.Setup(tm => tm.Name).Returns(emojiName);
+        _testContextImplementation = CreateTestContextImplementation();
+
+        string? tempDirectory = _testContextImplementation.TestTempDirectory;
+
+        tempDirectory.Should().NotBeNullOrEmpty();
+        Directory.Exists(tempDirectory).Should().BeTrue();
+
+        // The resulting segment must contain no unpaired surrogate (truncation split a pair).
+        string fileName = Path.GetFileName(tempDirectory!);
+        for (int i = 0; i < fileName.Length; i++)
+        {
+            if (char.IsHighSurrogate(fileName[i]))
+            {
+                (i + 1 < fileName.Length && char.IsLowSurrogate(fileName[i + 1]))
+                    .Should().BeTrue("a high surrogate must be followed by a low surrogate");
+                i++;
+            }
+            else
+            {
+                char.IsLowSurrogate(fileName[i]).Should().BeFalse("no unpaired low surrogate is allowed");
+            }
+        }
+
+        _testContextImplementation.SetOutcome(UnitTestOutcome.Passed);
+        _testContextImplementation.Dispose();
+    }
+
     public void TestTempDirectoryShouldReturnSamePathOnRepeatedAccess()
     {
         using TempDirectoryScope resultsDirectory = new();

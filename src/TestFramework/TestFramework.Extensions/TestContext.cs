@@ -166,6 +166,15 @@ public abstract class TestContext
     /// write during execution; use the result directories for files that should be collected as
     /// run artifacts.
     /// </para>
+    /// <para>
+    /// On Windows the returned path is kept short enough to reserve roughly 80 characters of
+    /// headroom under the classic <c>MAX_PATH</c> (260) limit for the files the test itself writes,
+    /// so ordinary relative paths created inside it will not overflow <c>MAX_PATH</c>. The feature
+    /// targets the 260-character limit and does not rely on long-path opt-in
+    /// (<c>LongPathsEnabled</c> / the <c>\\?\</c> prefix), which is not guaranteed to be enabled and
+    /// is often not honored by external tools. If the run's results directory is too deep to preserve
+    /// that headroom, the directory is created under the system temporary directory instead.
+    /// </para>
     /// </remarks>
     public virtual string? TestTempDirectory => null;
 

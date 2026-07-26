@@ -224,13 +224,31 @@ collection. The trade-off is **Windows `MAX_PATH` (260)**: results directories a
 (`...\TestResults\<run-guid>\In`) and test display names can be long, so a naive
 `<results>\<full-test-name>\<guid>` scheme could overflow `MAX_PATH` and break tests on Windows.
 
-This is treated as a first-class constraint and mitigated by the naming scheme in design question 6
-(aggressive truncation + a short unique suffix, kept directly under the results directory with no
-extra nesting). When the results directory is unavailable (e.g. a host that does not populate it),
-the implementation **falls back to `Path.GetTempPath()`** so the property always returns a usable
-path.
+This is treated as a first-class constraint and mitigated by an **adaptive** naming scheme (design
+question 6): the readable-name budget is not a fixed number but is computed from how much room the
+actual base path leaves under `MAX_PATH`, always reserving a fixed **headroom (working value 80
+characters)** for the files the test itself writes inside the directory. Crucially:
 
-### 6. Directory naming — sanitized + truncated name + short unique suffix
+- The headroom is a **guarantee to the caller**: on Windows the returned path is short enough that
+  ordinary relative writes inside it (`Path.Combine(TestTempDirectory, "sub", "result.json")`) will
+  not overflow `MAX_PATH`. This guarantee is stated in the property's XML doc so users know roughly
+  how much path they have.
+- If the results directory is so deep that even a minimal readable name (floor **8 characters**)
+  cannot preserve that headroom, the implementation **falls back to `Path.GetTempPath()`** — a short
+  root (`C:\Users\<u>\AppData\Local\Temp\`, ~30 chars) that restores plenty of room. This is a
+  **documented behavior**, not merely the availability fallback below.
+- The 50-character value is the **cap** on the readable portion, not a fixed size.
+
+When the results directory is entirely unavailable (a host that does not populate it), the
+implementation likewise **falls back to `Path.GetTempPath()`** so the property always returns a
+usable path.
+
+**Long-path support:** the feature targets the classic 260-character `MAX_PATH` and **does not rely
+on long-path opt-in** (`LongPathsEnabled` / the `\\?\` prefix). Long paths are not guaranteed to be
+enabled and are frequently not honored by external tools that end-to-end tests shell out to, so
+relying on them would make the headroom guarantee unsafe.
+
+### 6. Directory naming — sanitized + adaptively-truncated name + short unique suffix
 
 A readable directory name aids debugging, but arbitrary test names (data-driven tests especially)
 contain characters illegal in paths and can be very long. Scheme:
@@ -239,8 +257,9 @@ contain characters illegal in paths and can be very long. Scheme:
 2. **Sanitize**: replace every character that is invalid in a path segment (via
    `Path.GetInvalidFileNameChars()` plus platform reserved characters) with `_`; collapse runs of
    `_`.
-3. **Truncate** the sanitized name to a small fixed budget (working value **50 characters**) to
-   protect `MAX_PATH`.
+3. **Truncate** the sanitized name to the **adaptive budget** from design question 5 (capped at 50
+   characters, floored at 8 before falling back to temp), never slicing through the middle of a
+   surrogate pair (which would leave a lone surrogate and an invalid segment).
 4. **Append a short unique suffix** (`_` + the first 12 hex chars of a GUID) so that collisions
    across cases and across the (truncated, hence potentially colliding) readable names are
    negligible — 12 hex chars is 48 bits of entropy, so two contexts colliding is ~2⁻⁴⁸.
@@ -250,9 +269,10 @@ contain characters illegal in paths and can be very long. Scheme:
    retry makes an already-negligible collision negligibly smaller rather than providing a hard
    atomic guarantee; the practical uniqueness comes from the 48-bit suffix, not from the check.
 
-If the test name is empty, whitespace-only, or made up entirely of invalid characters, the sanitized
-prefix is empty and the directory name is **just the suffix** (no leading `_`). This is the one case
-where the shape is `<uniq>` rather than `<sanitized-truncated-name>_<uniq>`.
+If the test name is empty, whitespace-only, made up entirely of invalid characters, or the adaptive
+budget has collapsed to zero, the sanitized prefix is empty and the directory name is **just the
+suffix** (no leading `_`). This is the one case where the shape is `<uniq>` rather than
+`<sanitized-truncated-name>_<uniq>`.
 
 Result shape: `...\TestResults\<run-guid>\In\<sanitized-truncated-name>_<uniq>`. This is correct for
 `[DataRow]`/`[DynamicData]`, where many *cases* share one method name: each case runs on its own
@@ -379,9 +399,11 @@ code reflects these values, not placeholders):
   (`1`/`true`, case-insensitive, to enable).
 - **Warn on cleanup failure** (design question 7): **trace-only, no test warning** — the failure is
   logged through the adapter diagnostic trace logger and is otherwise silent.
-- **Truncation budget and unique-suffix length** (design question 6): **50 chars** of sanitized name
-  + a **12 hex-char** suffix. These are the shipped constants; they can be tuned if `MAX_PATH`
-  headroom testing on Windows shows a reason to.
+- **Truncation budget and unique-suffix length** (design questions 5–6): the readable name is
+  **adaptive** — sized from the base-path length, **capped at 50 chars**, **floored at 8** (below
+  which the implementation falls back to system temp), with a **12 hex-char** suffix and a reserved
+  **80-char headroom** under Windows `MAX_PATH`. These are the shipped constants; they can be tuned
+  if headroom testing on Windows shows a reason to.
 
 Genuinely still open (deferred, not part of v1):
 

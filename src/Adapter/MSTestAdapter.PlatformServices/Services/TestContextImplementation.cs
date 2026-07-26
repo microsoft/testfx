@@ -32,15 +32,40 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
 
     /// <summary>
     /// Maximum length (in characters) of the readable, sanitized test-name portion of the
-    /// per-test temporary directory name. Kept small to protect against Windows MAX_PATH, since
-    /// the results directory is already deep.
+    /// per-test temporary directory name. This is a <em>cap</em>: the actual budget is computed
+    /// adaptively from how much room the base path leaves (see <see cref="CreateTestTempDirectory"/>),
+    /// and is only allowed to grow up to this cap.
     /// </summary>
     private const int TestTempDirectoryNameMaxLength = 50;
+
+    /// <summary>
+    /// Minimum readable-name budget worth keeping. If the base path is so deep that the adaptive
+    /// budget for the readable portion would drop below this floor, the implementation falls back to
+    /// the system temporary directory (which is short) rather than emit a barely-readable name that
+    /// still risks overflowing <c>MAX_PATH</c>.
+    /// </summary>
+    private const int TestTempDirectoryNameMinLength = 8;
 
     /// <summary>
     /// Number of hexadecimal characters of the uniqueness suffix appended to the directory name.
     /// </summary>
     private const int TestTempDirectoryUniqueSuffixLength = 12;
+
+    /// <summary>
+    /// The Windows <c>MAX_PATH</c> limit. The feature targets this classic 260-character limit and
+    /// deliberately does not rely on long-path opt-in (<c>LongPathsEnabled</c> / <c>\\?\</c>), which
+    /// is not guaranteed to be enabled and is frequently not honored by external tools that E2E
+    /// tests shell out to.
+    /// </summary>
+    private const int WindowsMaxPath = 260;
+
+    /// <summary>
+    /// Characters reserved <em>inside</em> the per-test temporary directory for the files the test
+    /// itself writes (e.g. <c>subdir\result.json</c>). The adaptive budget guarantees at least this
+    /// much headroom under <c>MAX_PATH</c> on Windows, so a test's own writes do not fail with a
+    /// baffling <see cref="System.IO.PathTooLongException"/> originating in user code.
+    /// </summary>
+    private const int TestTempDirectoryReservedHeadroom = 80;
 #endif
 
     /// <summary>
@@ -494,16 +519,37 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
 #if !WINDOWS_UWP && !WIN_UI
     /// <summary>
     /// Creates the per-test temporary directory. The directory lives under the run's results
-    /// directory (so it is discoverable next to other run output), falling back to the system
-    /// temporary directory when no results directory is available.
+    /// directory (so it is discoverable next to other run output). On Windows the readable-name
+    /// budget is sized adaptively from how much room the base path leaves under <c>MAX_PATH</c>,
+    /// and — when the results directory is so deep that even a minimal readable name cannot preserve
+    /// the reserved headroom for the test's own files — the implementation falls back to the short
+    /// system temporary directory instead.
     /// </summary>
     private string CreateTestTempDirectory()
     {
-        string baseDirectory = TestResultsDirectory is { Length: > 0 } resultsDirectory
-            ? resultsDirectory
-            : Path.GetTempPath();
+        string? resultsDirectory = TestResultsDirectory is { Length: > 0 } results ? results : null;
+        string baseDirectory = resultsDirectory ?? Path.GetTempPath();
 
-        string namePart = SanitizeTestTempDirectoryName(GetTestTempDirectoryNameSource());
+        // Size the readable-name budget so that base + '\' + name + '_' + suffix, plus the reserved
+        // headroom for the files the test writes inside, stays within MAX_PATH on Windows. On other
+        // operating systems path length is effectively a non-issue (per-component limit is 255 and
+        // our whole segment is well under that), so the readable name simply gets the full cap.
+        int nameBudget = TestTempDirectoryNameMaxLength;
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            int available = ComputeReadableNameBudget(baseDirectory);
+            if (available < TestTempDirectoryNameMinLength && resultsDirectory is not null)
+            {
+                // The results directory is too deep to leave usable headroom; fall back to the
+                // short system temp directory so the test still gets room to write.
+                baseDirectory = Path.GetTempPath();
+                available = ComputeReadableNameBudget(baseDirectory);
+            }
+
+            nameBudget = available < 0 ? 0 : Math.Min(available, TestTempDirectoryNameMaxLength);
+        }
+
+        string namePart = SanitizeTestTempDirectoryName(GetTestTempDirectoryNameSource(), nameBudget);
 
         // Guid.ToString("N") is 32 hex chars; two contexts colliding on the same 12-char prefix is
         // ~2^-48, so the retry loop below is a belt-and-braces guard rather than a real necessity.
@@ -528,6 +574,20 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
         return fallback;
     }
 
+    /// <summary>
+    /// Computes how many characters the readable portion of the directory name may use so that the
+    /// full path plus the reserved headroom for the test's own files fits within <c>MAX_PATH</c>.
+    /// May be negative when the base path alone already exhausts the budget.
+    /// </summary>
+    private static int ComputeReadableNameBudget(string baseDirectory)
+        // full path = base + separator + <name> + '_' + <suffix>; reserve headroom for files inside.
+        => WindowsMaxPath
+            - TestTempDirectoryReservedHeadroom
+            - baseDirectory.Length
+            - 1 // directory separator between base and the temp directory name
+            - 1 // the '_' between the readable name and the unique suffix
+            - TestTempDirectoryUniqueSuffixLength;
+
     private string? GetTestTempDirectoryNameSource()
         => !StringEx.IsNullOrEmpty(TestDisplayName)
             ? TestDisplayName
@@ -537,11 +597,12 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
 
     /// <summary>
     /// Sanitizes a test name into a safe, bounded path segment: invalid path characters and
-    /// whitespace become underscores, runs of underscores collapse, and the result is truncated.
+    /// whitespace become underscores, runs of underscores collapse, and the result is truncated to
+    /// <paramref name="maxLength"/> characters.
     /// </summary>
-    private static string SanitizeTestTempDirectoryName(string? name)
+    private static string SanitizeTestTempDirectoryName(string? name, int maxLength)
     {
-        if (StringEx.IsNullOrEmpty(name))
+        if (maxLength <= 0 || StringEx.IsNullOrEmpty(name))
         {
             return string.Empty;
         }
@@ -567,9 +628,9 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
         }
 
         string sanitized = builder.ToString().Trim('_');
-        if (sanitized.Length > TestTempDirectoryNameMaxLength)
+        if (sanitized.Length > maxLength)
         {
-            int cutLength = TestTempDirectoryNameMaxLength;
+            int cutLength = maxLength;
 
             // Avoid slicing through the middle of a surrogate pair, which would leave a lone
             // surrogate in the directory name and can produce an invalid path segment.
