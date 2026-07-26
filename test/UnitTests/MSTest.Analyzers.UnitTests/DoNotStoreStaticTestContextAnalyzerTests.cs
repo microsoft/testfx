@@ -268,11 +268,12 @@ public sealed class DoNotStoreStaticTestContextAnalyzerTests
 #endif
 
     [TestMethod]
-    public async Task WhenAssigningTestContextFieldToStaticField_NoDiagnostic()
+    public async Task WhenAssigningTestContextToStaticField_DiagnosticOnlyForParameterReference()
     {
         // The right-hand side is a field reference (IFieldReferenceOperation), not a parameter
         // reference (IParameterReferenceOperation), so the analyzer must not fire even though the
-        // target is a static member and the value type is TestContext.
+        // target is a static member and the value type is TestContext. The paired assignment from a
+        // parameter is expected to fire, so the snippet demonstrates the boundary on its own.
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -285,6 +286,11 @@ public sealed class DoNotStoreStaticTestContextAnalyzerTests
                 public static void CopyContext()
                 {
                     s_target = s_source;
+                }
+
+                public static void StoreContext(TestContext tc)
+                {
+                    [|s_target = tc|];
                 }
             }
             """;
