@@ -52,8 +52,8 @@ Per-test temporary directories are table stakes everywhere except .NET:
 | **MSTest / xUnit / NUnit / TUnit** | **none**               | —                              |
 
 The consistent shape across ecosystems is: a directory *unique per test*, *created on demand*, and
-*cleaned up automatically*, with an escape hatch to keep artifacts for investigation (Go's
-`-test.outputdir`, pytest's retention of the last N runs, JUnit's `CleanupMode.NEVER`).
+*cleaned up automatically*, with an escape hatch to keep artifacts for investigation (pytest's
+retention of the last N runs, JUnit's `CleanupMode.NEVER`).
 
 ### Repository history: this feature already existed and was removed
 
@@ -197,8 +197,7 @@ failed test's artifacts are exactly what you want to inspect, and a passed test'
 - **Escape hatch (retain everything):** an environment variable (working name
   `MSTEST_TEST_TEMP_DIRECTORY_RETAIN`, `1`/`true` to enable) forces retention regardless of
   outcome, mirroring `TempDirectory.cs`'s existing `..._Cleanup=0` switch. This is the debugging
-  affordance. (Go instead never auto-cleans when you point it at an explicit output directory; the
-  spirit — an opt-out that keeps everything for inspection — is the same.)
+  affordance.
 - **Keep-last-N-runs (pytest):** evaluated and **rejected for v1**. pytest keeps directories under a
   stable per-user root (`/tmp/pytest-of-<user>/pytest-<N>/`) and prunes older *sessions*. MSTest's
   results directory is already per-run (a fresh GUID each run), so old runs are naturally distinct;
