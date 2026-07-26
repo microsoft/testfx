@@ -351,6 +351,20 @@ public class LifecycleLockTests
 [TestClass]
 public class IndependentTests
 {
+    [AssemblyInitialize]
+    public static void AssemblyInitialize(TestContext context)
+    {
+        // This asset's assertions are lower bounds - Read locks and unlocked tests must be observed running
+        // *concurrently* - so they need enough runnable pool threads, not just enough workers. A chunk blocked
+        // on a lock awaits and releases its thread, but a running body pins one for its Thread.Sleep. Min
+        // threads defaults to Environment.ProcessorCount and injection beyond that is throttled, so on a
+        // low-core agent the extra threads may not arrive before the sleeps end and these assertions would
+        // fail even though locking is correct. Raising the minimum removes that dependency, matching the
+        // class-level asset below.
+        _ = context;
+        ThreadPool.SetMinThreads(16, 16);
+    }
+
     [AssemblyCleanup]
     public static void AssemblyCleanup() => LockProbe.WriteResult();
 
