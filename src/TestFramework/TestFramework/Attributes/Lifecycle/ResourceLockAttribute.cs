@@ -24,11 +24,43 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// exclusive.
 /// </para>
 /// <para>
-/// A method-level lock is held across the whole test, spanning <c>[TestInitialize]</c> and
-/// <c>[TestCleanup]</c>. A class-level lock is held across the whole class chunk, spanning
-/// <c>[ClassInitialize]</c> and <c>[ClassCleanup]</c>, and applies to every test in the class. When a
-/// test declares more than one lock, the locks are acquired in ordinal-sorted key order, which makes
-/// deadlock impossible.
+/// A lock is acquired before its scheduling chunk starts and released after the chunk finishes, so the
+/// chunk - not the individual test method - determines how long a lock is held. What forms a chunk
+/// depends on <see cref="ParallelizeAttribute.Scope"/>:
+/// </para>
+/// <para>
+/// Under <see cref="ExecutionScope.ClassLevel"/> (the default) the chunk is the entire class, so a
+/// class-level lock is taken once and held across every test in the class, spanning
+/// <c>[ClassInitialize]</c> and <c>[ClassCleanup]</c>. The chunk's locks are the union of the class's
+/// and every method's declared keys, each upgraded to the strongest mode declared anywhere in the
+/// class - so under this scope declaring locks on individual methods does not make locking more
+/// granular.
+/// </para>
+/// <para>
+/// Under <see cref="ExecutionScope.MethodLevel"/> the chunk is a single test, so a class-level lock is
+/// applied to each test individually and acquired and released per test. Tests from other classes may
+/// therefore interleave between two tests of this class, and a resource established in
+/// <c>[ClassInitialize]</c> is not continuously owned through <c>[ClassCleanup]</c>.
+/// </para>
+/// <para>
+/// In both cases a lock covering a test is held across that test's <c>[TestInitialize]</c> and
+/// <c>[TestCleanup]</c>. When a chunk holds more than one lock, the locks are acquired in
+/// ordinal-sorted key order, which makes deadlock impossible.
+/// </para>
+/// <para>
+/// If a test is also marked <see cref="DoNotParallelizeAttribute"/>, that attribute takes precedence
+/// and the declared resource locks have no effect: such tests run in the sequential phase and never
+/// pass through the parallel scheduler that acquires locks.
+/// </para>
+/// <para>
+/// This attribute is inherited: a lock declared on a base test class applies to every class deriving
+/// from it, matching <see cref="DoNotParallelizeAttribute"/>. This is the conservative direction -
+/// a base fixture that touches a shared resource still touches it from derived classes, and
+/// over-locking merely runs slower while under-locking produces races. Note the consequence: a
+/// derived class cannot remove an inherited lock, nor weaken an inherited
+/// <see cref="ResourceAccessMode.ReadWrite"/> to <see cref="ResourceAccessMode.Read"/>, so under
+/// <see cref="ExecutionScope.ClassLevel"/> a lock on a widely-used base class serializes the whole
+/// hierarchy. Declare locks on the most derived type that actually needs them.
 /// </para>
 /// </remarks>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
@@ -39,8 +71,24 @@ public sealed class ResourceLockAttribute : Attribute
     /// resource, using <see cref="ResourceAccessMode.ReadWrite"/> access.
     /// </summary>
     /// <param name="resource">The opaque key identifying the shared resource.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="resource"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="resource"/> is empty or whitespace.</exception>
     public ResourceLockAttribute(string resource)
-        => Resource = resource;
+    {
+        if (resource is null)
+        {
+            throw new ArgumentNullException(nameof(resource));
+        }
+
+        // An empty or whitespace key is never intentional, and because conflict detection is plain string
+        // equality it would silently become a shared key that serializes unrelated tests against each other.
+        if (resource.Trim().Length == 0)
+        {
+            throw new ArgumentException(FrameworkMessages.InvalidResourceLockResource, nameof(resource));
+        }
+
+        Resource = resource;
+    }
 
     /// <summary>
     /// Gets the opaque key identifying the shared resource. Compared using an ordinal, case-sensitive

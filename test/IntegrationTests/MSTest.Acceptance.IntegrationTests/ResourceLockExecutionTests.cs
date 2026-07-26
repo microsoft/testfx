@@ -23,6 +23,7 @@ namespace MSTest.Acceptance.IntegrationTests;
 public sealed class ResourceLockExecutionTests : AcceptanceTestBase<ResourceLockExecutionTests.TestAssetFixture>
 {
     private const string ProjectName = "ResourceLockTestProject";
+    private const string ClassLevelProjectName = "ResourceLockClassLevelTestProject";
 
     public TestContext TestContext { get; set; } = default!;
 
@@ -57,6 +58,35 @@ public sealed class ResourceLockExecutionTests : AcceptanceTestBase<ResourceLock
         Assert.IsGreaterThanOrEqualTo(2, probe["global"], "unrelated tests are not blocked by locks");
     }
 
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task ResourceLock_UnderClassLevelScope_LocksWholeClassChunk_AndMergesModes(string tfm)
+    {
+        TestHost testHost = AssetFixture.GetTestHost(ClassLevelProjectName, tfm);
+
+        TestHostResult result = await testHost.ExecuteAsync("--output detailed", cancellationToken: TestContext.CancellationToken);
+
+        Assert.AreEqual(0, result.ExitCode, result.StandardOutput);
+        Assert.Contains("succeeded: 13", result.StandardOutput);
+
+        IReadOnlyDictionary<string, int> probe = AssetFixture.ReadProbe(ClassLevelProjectName, tfm);
+
+        Assert.AreEqual(0, probe["violations"], "no reader/writer overlap on any shared key");
+
+        // Four classes (one per worker) declare a class-level ReadWrite lock on the same key. They must be
+        // fully serialized against each other, and saturating every worker on one key must not deadlock or
+        // lose tests - the run still completes with all tests passing.
+        Assert.AreEqual(1, probe["key:CL"], "class-level ReadWrite locks on the same key are exclusive");
+
+        // Chunk-level mode merging: one class declares Read on "MK" on one method and ReadWrite on another.
+        // Under ClassLevel the chunk unions both and must take the strongest mode, so it excludes the
+        // separate reader class. If the chunk took only Read, the reader would overlap it and this would be 2.
+        Assert.AreEqual(1, probe["key:MK"], "a ReadWrite method promotes the whole class chunk's lock on that key");
+
+        // Unlocked classes still run alongside the locked ones.
+        Assert.IsGreaterThanOrEqualTo(2, probe["global"], "unrelated classes are not blocked by locks");
+    }
+
     public sealed class TestAssetFixture : ITestAssetFixture
     {
         private readonly TempDirectory _tempDirectory = new();
@@ -85,12 +115,19 @@ public sealed class ResourceLockExecutionTests : AcceptanceTestBase<ResourceLock
 
         public async Task InitializeAsync(CancellationToken cancellationToken)
         {
-            string patched = SourceCode
+            await GenerateAsync(ProjectName, SourceCode, cancellationToken).ConfigureAwait(false);
+            await GenerateAsync(ClassLevelProjectName, ClassLevelSourceCode, cancellationToken).ConfigureAwait(false);
+        }
+
+        private async Task GenerateAsync(string projectName, string sourceCode, CancellationToken cancellationToken)
+        {
+            string patched = sourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion);
-            TestAsset asset = await TestAsset.GenerateAssetAsync(ProjectName, patched, _tempDirectory);
-            await DotnetCli.RunAsync($"build \"{asset.TargetAssetPath}\" -c Release", callerMemberName: ProjectName, cancellationToken: cancellationToken);
-            _assets.Add(ProjectName, asset);
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                .PatchCodeWithReplace("$ProjectName$", projectName);
+            TestAsset asset = await TestAsset.GenerateAssetAsync(projectName, patched, _tempDirectory);
+            await DotnetCli.RunAsync($"build \"{asset.TargetAssetPath}\" -c Release", callerMemberName: projectName, cancellationToken: cancellationToken);
+            _assets.Add(projectName, asset);
         }
 
         public void Dispose()
@@ -104,7 +141,7 @@ public sealed class ResourceLockExecutionTests : AcceptanceTestBase<ResourceLock
         }
 
         private const string SourceCode = """
-#file ResourceLockTestProject.csproj
+#file $ProjectName$.csproj
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
@@ -325,6 +362,226 @@ public class IndependentTests
 
     [TestMethod]
     public void Free3() => LockProbe.Run("free", isWriter: false);
+}
+""";
+
+        /// <summary>
+        /// A second asset running under <c>ExecutionScope.ClassLevel</c> - the default scope, and the only one
+        /// where a scheduling chunk spans more than one test. It covers what the method-level asset cannot:
+        /// class-level <c>[ResourceLock]</c> declarations, and the merging of several methods' locks into one
+        /// chunk lock with the strongest mode winning.
+        /// </summary>
+        private const string ClassLevelSourceCode = """
+#file $ProjectName$.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+  </ItemGroup>
+
+</Project>
+
+#file LockProbe.cs
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Text;
+using System.Threading;
+
+internal static class LockProbe
+{
+    private static readonly object s_gate = new object();
+    private static readonly Dictionary<string, KeyState> s_keys = new Dictionary<string, KeyState>(StringComparer.Ordinal);
+    private static int s_globalActive;
+    private static int s_globalMax;
+    private static int s_violations;
+
+    private sealed class KeyState
+    {
+        public int Active;
+        public int Max;
+        public int Writers;
+    }
+
+    public static void Run(string key, bool isWriter)
+    {
+        Enter(key, isWriter);
+        try
+        {
+            Thread.Sleep(200);
+        }
+        finally
+        {
+            Exit(key, isWriter);
+        }
+    }
+
+    public static void Enter(string key, bool isWriter)
+    {
+        lock (s_gate)
+        {
+            if (!s_keys.TryGetValue(key, out KeyState state))
+            {
+                state = new KeyState();
+                s_keys[key] = state;
+            }
+
+            state.Active++;
+            if (state.Active > state.Max)
+            {
+                state.Max = state.Active;
+            }
+
+            if (isWriter)
+            {
+                state.Writers++;
+            }
+
+            if (state.Writers > 0 && state.Active > 1)
+            {
+                s_violations++;
+            }
+
+            s_globalActive++;
+            if (s_globalActive > s_globalMax)
+            {
+                s_globalMax = s_globalActive;
+            }
+        }
+    }
+
+    public static void Exit(string key, bool isWriter)
+    {
+        lock (s_gate)
+        {
+            KeyState state = s_keys[key];
+            state.Active--;
+            if (isWriter)
+            {
+                state.Writers--;
+            }
+
+            s_globalActive--;
+        }
+    }
+
+    public static void WriteResult()
+    {
+        lock (s_gate)
+        {
+            var builder = new StringBuilder();
+            builder.AppendLine("global=" + s_globalMax.ToString(CultureInfo.InvariantCulture));
+            builder.AppendLine("violations=" + s_violations.ToString(CultureInfo.InvariantCulture));
+            foreach (KeyValuePair<string, KeyState> entry in s_keys)
+            {
+                builder.AppendLine("key:" + entry.Key + "=" + entry.Value.Max.ToString(CultureInfo.InvariantCulture));
+            }
+
+            File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "LockProbe.txt"), builder.ToString());
+        }
+    }
+}
+
+#file Tests.cs
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[assembly: Parallelize(Workers = 8, Scope = ExecutionScope.ClassLevel)]
+
+namespace ResourceLockClassLevelTestProject;
+
+// Four classes contend on a single class-level ReadWrite key, so most workers end up waiting on the same
+// key. This proves class-chunk exclusivity and exercises the blocked-worker path: the run must still
+// complete with no lost or deadlocked tests. Workers is set well above the number of contending classes
+// so that the independent merge scenario below can genuinely run concurrently - otherwise the CL classes
+// would occupy every worker and the merge assertion would pass vacuously.
+[TestClass]
+[ResourceLock("CL")]
+public class ClassLockedA
+{
+    [TestMethod]
+    public void A1() => LockProbe.Run("CL", isWriter: true);
+
+    [TestMethod]
+    public void A2() => LockProbe.Run("CL", isWriter: true);
+}
+
+[TestClass]
+[ResourceLock("CL")]
+public class ClassLockedB
+{
+    [TestMethod]
+    public void B1() => LockProbe.Run("CL", isWriter: true);
+
+    [TestMethod]
+    public void B2() => LockProbe.Run("CL", isWriter: true);
+}
+
+[TestClass]
+[ResourceLock("CL")]
+public class ClassLockedC
+{
+    [TestMethod]
+    public void C1() => LockProbe.Run("CL", isWriter: true);
+
+    [TestMethod]
+    public void C2() => LockProbe.Run("CL", isWriter: true);
+}
+
+[TestClass]
+[ResourceLock("CL")]
+public class ClassLockedD
+{
+    [TestMethod]
+    public void D1() => LockProbe.Run("CL", isWriter: true);
+
+    [TestMethod]
+    public void D2() => LockProbe.Run("CL", isWriter: true);
+}
+
+// Mode merging within one chunk: this class declares Read on "MK" for one method and ReadWrite for
+// another. Under ClassLevel both are unioned into the chunk's lock set and the strongest mode wins, so
+// the whole class holds "MK" exclusively - excluding MergeReaderTests below. Both methods therefore probe
+// as writers. Were the merge to keep only Read, MergeReaderTests would overlap and key:MK would reach 2.
+[TestClass]
+public class MergePromoteTests
+{
+    [TestMethod]
+    [ResourceLock("MK", Mode = ResourceAccessMode.Read)]
+    public void MergeRead() => LockProbe.Run("MK", isWriter: true);
+
+    [TestMethod]
+    [ResourceLock("MK")]
+    public void MergeWrite() => LockProbe.Run("MK", isWriter: true);
+}
+
+[TestClass]
+[ResourceLock("MK", Mode = ResourceAccessMode.Read)]
+public class MergeReaderTests
+{
+    [TestMethod]
+    public void ReaderOnly() => LockProbe.Run("MK", isWriter: false);
+}
+
+[TestClass]
+public class IndependentClassTests
+{
+    [AssemblyCleanup]
+    public static void AssemblyCleanup() => LockProbe.WriteResult();
+
+    [TestMethod]
+    public void Free1() => LockProbe.Run("free", isWriter: false);
+
+    [TestMethod]
+    public void Free2() => LockProbe.Run("free", isWriter: false);
 }
 """;
     }

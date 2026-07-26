@@ -40,6 +40,37 @@ public class ResourceLockAttributeTests : TestContainer
         keys.Should().NotContain(k => string.IsNullOrEmpty(k));
     }
 
+    public void Constructor_WhenResourceIsNull_Throws()
+    {
+        Action act = static () => _ = new ResourceLockAttribute(null!);
+
+        act.Should().Throw<ArgumentNullException>().WithParameterName("resource");
+    }
+
+    public void Constructor_WhenResourceIsEmptyOrWhitespace_Throws()
+    {
+        // An empty key is not merely useless: because conflict detection is plain string equality it would
+        // become a shared key that silently serializes every other test that also got an empty key.
+        Action empty = static () => _ = new ResourceLockAttribute(string.Empty);
+        empty.Should().Throw<ArgumentException>().WithParameterName("resource");
+
+        Action whitespace = static () => _ = new ResourceLockAttribute("   ");
+        whitespace.Should().Throw<ArgumentException>().WithParameterName("resource");
+    }
+
+    public void Attribute_IsInherited_MatchingDoNotParallelize()
+    {
+        // Inheriting fails closed (a derived class keeps a lock it may need); not inheriting would fail open.
+        AttributeUsageAttribute usage = typeof(ResourceLockAttribute)
+            .GetCustomAttributes(typeof(AttributeUsageAttribute), inherit: false)
+            .Cast<AttributeUsageAttribute>()
+            .Single();
+
+        usage.Inherited.Should().BeTrue();
+        usage.AllowMultiple.Should().BeTrue();
+        usage.ValidOn.Should().Be(AttributeTargets.Class | AttributeTargets.Method);
+    }
+
     public void DefaultAccessMode_IsReadWrite_SoUnspecifiedValuesFailClosed()
         => default(ResourceAccessMode).Should().Be(ResourceAccessMode.ReadWrite);
 }

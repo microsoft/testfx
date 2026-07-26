@@ -29,24 +29,46 @@ integration / acceptance / E2E suites that touch the same paths end up serializi
 swaths of their tests, making runs slow.
 
 `[ResourceLock]` replaces "this test can't run in parallel with *anything*" with "this test
-can't run in parallel with *other tests that touch resource X*". Everything else keeps running
-concurrently.
+can't run in parallel with *other tests that touch resource X*". Tests that touch other resources,
+or none, are not excluded by it — subject to worker availability, see
+[Scheduling and throughput](#scheduling-and-throughput).
+
+### Where the value actually comes from
+
+The feature's benefit depends on `ExecutionScope`, and it is worth being precise because the naive
+framing ("replace `[DoNotParallelize]` with `[ResourceLock]` and the test gets faster") is not
+generally true:
+
+- **`ClassLevel` (the default):** selective coordination *between classes*. Methods of one class are
+  already sequential with respect to each other, so a lock adds nothing within a class; it earns its
+  keep when a *different* class declares the same key.
+- **`MethodLevel`:** selective coordination *between methods and test cases*, including within a
+  single class.
+- **Parallelization disabled:** no effect at all — everything is already sequential.
 
 ### Specimens in this repository
 
 Three existing tests motivate the design and drive the acceptance tests:
 
 1. **`test/UnitTests/Microsoft.Testing.Extensions.UnitTests/AzureFoundryChatClientProviderTests.cs`**
-   — the canonical case. It is `[DoNotParallelize]`; its own comment says the tests "must not
-   run concurrently **with each other**" because the provider reads exactly three process-wide
-   variables: `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_DEPLOYMENT_NAME`, `AZURE_OPENAI_API_KEY`.
-   The blast radius is three known variables, yet the class is serialized against the *entire*
-   suite and deferred to the end of the run. With `[ResourceLock]` it declares a narrow key and
-   runs concurrently with everything that does not touch those variables. Migrating it in-repo is
-   deferred to follow-up work (see [Migration and adoption](#migration-and-adoption)): this project
-   consumes the *shipped* `MSTest.TestFramework` NuGet package rather than the in-source framework,
-   so the migration lands once the attribute ships. The end-to-end acceptance test below exercises
-   the feature against the locally packed package instead.
+   — the clearest illustration of the *cost* of `[DoNotParallelize]`. It is `[DoNotParallelize]`; its
+   own comment says the tests "must not run concurrently **with each other**" because the provider
+   reads exactly three process-wide variables: `AZURE_OPENAI_ENDPOINT`,
+   `AZURE_OPENAI_DEPLOYMENT_NAME`, `AZURE_OPENAI_API_KEY`. The blast radius is three known variables,
+   yet the class is serialized against the *entire* suite and deferred to the end of the run.
+
+   Note precisely what `[ResourceLock]` would and would not buy here, since it is easy to overstate:
+   at the default `ClassLevel` scope this class's methods are *already* sequential with respect to
+   each other, so simply **removing** `[DoNotParallelize]` would preserve that mutual exclusion while
+   also un-deferring the class from the tail and letting it run alongside unrelated classes. The lock
+   adds value on top of that only if another class declares the same key, or under `MethodLevel`.
+   What the specimen really demonstrates is that `[DoNotParallelize]` is a blunt instrument for a
+   three-variable blast radius — which is the motivation for having a keyed alternative at all.
+   Migrating it in-repo is deferred to follow-up work (see
+   [Migration and adoption](#migration-and-adoption)): this project consumes the *shipped*
+   `MSTest.TestFramework` NuGet package rather than the in-source framework, so the migration lands
+   once the attribute ships. The end-to-end acceptance test below exercises the feature against the
+   locally packed package instead.
 
 2. **`test/UnitTests/TestFramework.UnitTests/Attributes/ExecutableConditionAttributeTests.cs`**
    — mutates `PATH`. Because child processes inherit `PATH`, the blast radius is effectively
@@ -185,8 +207,13 @@ public void ReadsSharedAsset() { }
    `CHILDREN` semantics are the default by construction and `SELF` has nothing to attach to.
    Class-level locks default to `SELF` semantics — held across the whole class chunk — which is
    the conservative choice and is required when `[ClassInitialize]` / `[ClassCleanup]` own the
-   resource. The v1 workaround for `CHILDREN` is simply annotating the methods instead of the
-   class.
+   resource. Note that there is **no v1 workaround** that recovers `CHILDREN` semantics under
+   `ExecutionScope.ClassLevel`: annotating individual methods instead of the class does *not* help,
+   because the scheduler groups the entire class into one chunk, unions every method's keys, and
+   upgrades each to its strongest declared mode for the whole chunk. So one locked method locks the
+   whole class, unrelated keys declared on different methods are all held for the class's full
+   duration, and a single `ReadWrite` method promotes every `Read` use of that key class-wide.
+   Method-level placement is only granular under `ExecutionScope.MethodLevel`.
 
 6. **Locks span lifecycle methods.** A method-level lock is acquired *before* `[TestInitialize]`
    and released *after* `[TestCleanup]`; a class-level lock spans `[ClassInitialize]` /
@@ -199,8 +226,12 @@ public void ReadsSharedAsset() { }
 8. **`[DoNotParallelize]` is not reimplemented on top of this.** They look equivalent but are
    not: non-parallelizable tests today run sequentially *at the end*, after the parallel set
    drains. A global exclusive lock would instead *interleave* them with the parallel set.
-   `[DoNotParallelize]` is kept exactly as-is and `[ResourceLock]` is added alongside; a test
-   may use either or both. Changing `[DoNotParallelize]` would be a silent behavioral break.
+   `[DoNotParallelize]` is kept exactly as-is and `[ResourceLock]` is added alongside. Changing
+   `[DoNotParallelize]` would be a silent behavioral break. **Precedence when both are applied:
+   `[DoNotParallelize]` wins and the resource locks are ignored.** Such a test is routed to the
+   sequential tail and never passes through the resource-lock scheduler at all, so its declared
+   locks have no effect. This is safe — the sequential tail runs nothing else concurrently — but it
+   also means the lock buys nothing there, so combining them is pointless rather than additive.
 
 9. **`Mode` uses `{ get; set; }`, never `init`** — per the repository rule that new public API
    must not use `init` accessors.
@@ -211,6 +242,39 @@ public void ReadsSharedAsset() { }
 | ---------------- | ----------- | ----------- |
 | `Read`           | concurrent  | blocks      |
 | `ReadWrite`      | blocks      | blocks      |
+
+### Scheduling and throughput
+
+Two consequences of the flat, chunk-based scheduler are easy to get wrong, so they are stated
+plainly rather than left implied.
+
+**A blocked chunk occupies a worker.** Workers dequeue a chunk and then wait for its locks, so a
+worker waiting on a contended key is not available for unrelated work sitting in the queue behind
+it. With `Workers = 4`, four dequeued chunks contending on one exclusive key leave three workers
+parked and the rest of the queue stalled — even though those queued chunks declare no locks and
+could otherwise run. So `[ResourceLock]` guarantees *correct mutual exclusion*, not that unrelated
+tests always keep running; heavy contention still reduces effective parallelism. Keep locked tests a
+small fraction of the suite (see the speedup math under [Granularity guidance](#granularity-guidance)).
+Lock-aware dispatch — skipping over a chunk whose locks are unavailable and taking the next one — is
+[Future work](#future-work); it is deliberately not attempted in v1 because a naive version can
+livelock without a bounded retry policy.
+
+**Lock granularity follows the scheduling chunk, and the chunk depends on `ExecutionScope`.** A lock
+is acquired before a chunk starts and released after it finishes, so the *chunk* — not the test
+method — is the unit of lock lifetime:
+
+| `ExecutionScope`         | Chunk           | Effect on a class-level `[ResourceLock]`                                                     |
+| ------------------------ | --------------- | ------------------------------------------------------------------------------------------- |
+| `ClassLevel` *(default)* | the whole class | Held once across every method, spanning `[ClassInitialize]` / `[ClassCleanup]`                |
+| `MethodLevel`            | a single test   | Copied to each test and acquired/released per method; other classes may interleave between them |
+
+Under `ClassLevel` the chunk's locks are the **union** of the class's and every method's keys, each
+upgraded to the strongest mode declared anywhere in the class. That is why method-level annotation
+does not buy granularity under `ClassLevel` (see decision 5).
+
+Data-driven tests follow the same rule: when rows are unfolded into separate test cases they are
+separate chunks under `MethodLevel`, so the lock is released between rows and other tests may
+interleave; when rows are not unfolded, all rows share one acquisition.
 
 ## Implementation
 
@@ -313,12 +377,22 @@ so the attribute is not visible until it ships.
   `Global`). JUnit's `GLOBAL` *is* genuinely privileged, but via a mechanism not ported here: every
   direct child of the root engine descriptor **implicitly acquires the global key in `READ` mode**,
   so anything taking it `READ_WRITE` blocks everything. The privilege is emergent from the implicit
-  read lock, not from special-casing in the lock manager. Porting it is roughly: when a chunk
-  declares at least one lock, also add an implicit `Read` lock on the global key; the existing
-  strongest-mode-wins merge then handles an explicit `ReadWrite` correctly, and `ResourceLockManager`
-  needs no change. That would yield a tool genuinely distinct from `[DoNotParallelize]` — exclusive
-  but *interleaved with the run* rather than deferred to the end. If added, it must be documented as
-  serializing against the *locked set*, not against tests that declare no locks.
+  read lock, not from special-casing in the lock manager. Porting it correctly means having **every
+  parallel chunk — including chunks that declare no explicit locks — implicitly take the global key
+  in `Read` mode**; restricting the implicit read to chunks that already declare a lock would not
+  work, because an explicit global *writer* would then still fail to exclude unlocked tests, which is
+  precisely the property that makes it global. The existing strongest-mode-wins merge then handles an
+  explicit `ReadWrite` on the key correctly, and `ResourceLockManager` needs no change. If added, it
+  must be documented as serializing against *every* parallel test, not merely the locked set. The
+  real gap this leaves in v1: `[DoNotParallelize]` provides exclusivity but forces execution into the
+  sequential tail, so v1 cannot express *interleaved* global exclusivity.
+- **Lock-aware dispatch.** Today a worker that dequeues a chunk then blocks on its locks holds that
+  worker until the locks are available (see [Scheduling and throughput](#scheduling-and-throughput)).
+  A scheduler that attempts a non-blocking acquire and, on failure, re-enqueues the chunk and takes
+  the next one would keep unrelated work flowing. This needs a **bounded** number of skip attempts
+  before falling back to a blocking wait, otherwise a chunk whose key is permanently busy can be
+  passed over indefinitely (livelock). Deferred from v1 because the bookkeeping is easy to get subtly
+  wrong and the simple design is correct, merely slower under contention.
 - **Instrumentation-derived locks.** `[ResourceLock]` is not only a scheduling hint; it is *the
   contract a future collector can enforce*. This reframes the free-form key's fail-open weakness
   (a typo silently races) into a fail-closed property. The design space, with prior art:
