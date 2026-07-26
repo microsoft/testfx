@@ -494,15 +494,20 @@ internal static class LockProbe
 #file Tests.cs
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+// IMPORTANT: Workers MUST stay greater than the number of classes contending on the "CL" key below
+// (currently 4). This is load-bearing, not arbitrary tuning. A blocked chunk occupies its worker, so if
+// Workers <= the contending-class count, those classes consume every worker and the MergePromoteTests /
+// MergeReaderTests pair below can never overlap - which makes the "key:MK" merge assertion pass
+// vacuously, holding even when chunk mode merging is completely broken. Verified: with Workers = 4 a
+// deliberately broken merge still passed; with Workers = 8 it is caught. Do not lower this.
 [assembly: Parallelize(Workers = 8, Scope = ExecutionScope.ClassLevel)]
 
 namespace ResourceLockClassLevelTestProject;
 
-// Four classes contend on a single class-level ReadWrite key, so most workers end up waiting on the same
-// key. This proves class-chunk exclusivity and exercises the blocked-worker path: the run must still
-// complete with no lost or deadlocked tests. Workers is set well above the number of contending classes
-// so that the independent merge scenario below can genuinely run concurrently - otherwise the CL classes
-// would occupy every worker and the merge assertion would pass vacuously.
+// Four classes contend on a single class-level ReadWrite key. This proves class-chunk exclusivity and
+// exercises the blocked-worker path: the run must still complete with no lost or deadlocked tests.
+// Deliberately no assertion about workers being starved - that would be timing-dependent, and it would
+// also fail if lock-aware dispatch is implemented later, penalizing a fix for removing a limitation.
 [TestClass]
 [ResourceLock("CL")]
 public class ClassLockedA
