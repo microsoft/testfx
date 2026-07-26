@@ -102,6 +102,43 @@ public sealed class PerTestTempDirectoryTests : AcceptanceTestBase<PerTestTempDi
         }
     }
 
+    [TestMethod]
+    public async Task TestTempDirectory_IsRetained_WhenDataRowCleanupFails()
+    {
+        // Regression: a folded [DataRow] whose body passes but whose [TestCleanup] fails must have
+        // each row's temp directory retained. The framework sets the per-row (cloned) context to
+        // Passed before cleanup runs, so without re-syncing the post-cleanup outcome the folded
+        // path would delete a failed row's directory.
+        string recordDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(recordDirectory);
+        try
+        {
+            var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
+            TestHostResult testHostResult = await testHost.ExecuteAsync(
+                "--filter \"ClassName~DataRowCleanupFailure\"",
+                environmentVariables: new()
+                {
+                    ["TESTTEMPDIR_RECORD_DIR"] = recordDirectory,
+                },
+                cancellationToken: TestContext.CancellationToken);
+
+            // Both rows fail (via cleanup), so the run reports failure.
+            testHostResult.AssertExitCodeIs(2);
+
+            Dictionary<string, List<string>> records = ReadRecords(recordDirectory);
+            List<string> paths = records["datarowcleanupfail"];
+            Assert.AreEqual(2, paths.Count);
+            foreach (string path in paths)
+            {
+                Assert.IsTrue(Directory.Exists(path), $"Row temp directory should be retained after cleanup failure but is missing: '{path}'.");
+            }
+        }
+        finally
+        {
+            TryDeleteDirectory(recordDirectory);
+        }
+    }
+
     private static Dictionary<string, List<string>> ReadRecords(string recordDirectory)
     {
         Dictionary<string, List<string>> result = [];
@@ -132,7 +169,7 @@ public sealed class PerTestTempDirectoryTests : AcceptanceTestBase<PerTestTempDi
                 Directory.Delete(directory, recursive: true);
             }
         }
-        catch
+        catch (Exception)
         {
             // Best effort cleanup of the test's own scratch directory.
         }
@@ -246,6 +283,20 @@ public class FailRetain
         Recorder.Record("fail", dir);
         Assert.Fail("Intentional failure to verify retention on failure.");
     }
+}
+
+[TestClass]
+public class DataRowCleanupFailure
+{
+    public TestContext TestContext { get; set; }
+
+    [TestMethod]
+    [DataRow(1)]
+    [DataRow(2)]
+    public void Row(int i) => Recorder.Record("datarowcleanupfail", TestContext.TestTempDirectory);
+
+    [TestCleanup]
+    public void Cleanup() => throw new InvalidOperationException("Intentional cleanup failure.");
 }
 
 [TestClass]

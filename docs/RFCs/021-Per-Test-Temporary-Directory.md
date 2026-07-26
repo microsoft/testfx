@@ -320,7 +320,7 @@ the reference `TempDirectory.cs`.
 
 ## Relationship to RFC 020 (`[ResourceLock]`)
 
-RFC 020 ([`020-Resource-Lock-Attribute.md`](020-Resource-Lock-Attribute.md)) proposes a
+RFC 020 (`020-Resource-Lock-Attribute.md`, not yet merged to `main`) proposes a
 `[ResourceLock]` attribute for declaring contended resources so that tests touching the same
 resource do not run concurrently. The two features are **complements**, and the guidance is
 *eliminate before you lock*:

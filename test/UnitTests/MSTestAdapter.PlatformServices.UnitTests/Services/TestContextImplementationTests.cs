@@ -854,6 +854,25 @@ public class TestContextImplementationTests : TestContainer
         _testContextImplementation.Dispose();
     }
 
+    public void TestTempDirectoryShouldBeRetainedWhenOutcomeChangesToFailedAfterCreation()
+    {
+        // Regression for the folded data-driven path: the framework sets the context outcome to
+        // Passed *before* running [TestCleanup]/Dispose, then re-syncs it to the post-cleanup
+        // outcome before the (cloned) context is disposed. The final outcome before disposal must
+        // win, otherwise a row whose body passes but whose cleanup fails would have its directory
+        // deleted.
+        using TempDirectoryScope resultsDirectory = new();
+        _properties["TestResultsDirectory"] = resultsDirectory.Path;
+        _testContextImplementation = CreateTestContextImplementation();
+
+        string? tempDirectory = _testContextImplementation.TestTempDirectory;
+        _testContextImplementation.SetOutcome(UnitTestOutcome.Passed); // pre-cleanup
+        _testContextImplementation.SetOutcome(UnitTestOutcome.Failed);  // post-cleanup re-sync
+        _testContextImplementation.Dispose();
+
+        Directory.Exists(tempDirectory).Should().BeTrue();
+    }
+
     public void TestTempDirectoryShouldBeUniqueAcrossContexts()
     {
         using TempDirectoryScope resultsDirectory = new();
@@ -997,7 +1016,7 @@ public class TestContextImplementationTests : TestContainer
                     Directory.Delete(Path, recursive: true);
                 }
             }
-            catch
+            catch (Exception)
             {
                 // Best-effort cleanup of the test's own scratch directory.
             }

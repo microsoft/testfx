@@ -52,6 +52,14 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
     private const int TestTempDirectoryUniqueSuffixLength = 12;
 
     /// <summary>
+    /// Characters that are reserved in a Windows file name. Sanitization strips these on every OS
+    /// (not just via <see cref="Path.GetInvalidFileNameChars"/>, which on Unix returns only
+    /// <c>/</c> and NUL) so the generated directory name is portable and never accidentally embeds
+    /// a path separator or wildcard when the run is later inspected on a different platform.
+    /// </summary>
+    private const string WindowsReservedFileNameChars = "<>:\"/\\|?*";
+
+    /// <summary>
     /// The Windows <c>MAX_PATH</c> limit. The feature targets this classic 260-character limit and
     /// deliberately does not rely on long-path opt-in (<c>LongPathsEnabled</c> / <c>\\?\</c>), which
     /// is not guaranteed to be enabled and is frequently not honored by external tools that E2E
@@ -612,7 +620,9 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
         bool lastWasUnderscore = false;
         foreach (char c in name)
         {
-            if (char.IsWhiteSpace(c) || Array.IndexOf(invalidChars, c) >= 0)
+            if (char.IsWhiteSpace(c) || char.IsControl(c)
+                || Array.IndexOf(invalidChars, c) >= 0
+                || WindowsReservedFileNameChars.IndexOf(c) >= 0)
             {
                 if (!lastWasUnderscore)
                 {
@@ -690,7 +700,7 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
                 PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(
                     "Failed to delete per-test temporary directory '{0}': {1}", directory, ex);
             }
-            catch
+            catch (Exception)
             {
                 // Intentionally ignored: cleanup is best-effort and must never throw from Dispose.
             }
