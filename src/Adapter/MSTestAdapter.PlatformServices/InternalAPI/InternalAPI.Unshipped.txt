@@ -32,6 +32,7 @@ Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode.Res
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.StandardErrorBuilder.get -> Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SynchronizedStringBuilder!
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.StandardOutputBuilder.get -> Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SynchronizedStringBuilder!
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TraceBuilder.get -> Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SynchronizedStringBuilder!
+override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TestTempDirectory.get -> string?
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodInfo.ParameterMetadataScanCount.get -> int
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodInfo.ResetParameterMetadataCacheForTesting() -> void
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodInfo.SetParameterMetadataScanCallbackForTesting(System.Action? callback) -> void

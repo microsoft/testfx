@@ -142,6 +142,33 @@ public abstract class TestContext
     /// </summary>
     public virtual string? TestResultsDirectory => GetProperty<string>(TestResultsDirectoryLabel);
 
+    /// <summary>
+    /// Gets a temporary directory unique to the currently executing test.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The directory is created on first access (lazily) and is unique to the currently executing
+    /// test, including each data-driven case of a <c>[DataRow]</c>/<c>[DynamicData]</c> method.
+    /// Because every test (and every data case) gets its own directory, tests can write to it
+    /// concurrently without any coordination — even when the assembly runs in parallel.
+    /// </para>
+    /// <para>
+    /// The directory is deleted automatically when the test passes and retained when the test
+    /// fails, so a failed test's artifacts remain available for inspection. Retention of all
+    /// directories (including passing tests) can be forced for debugging via the
+    /// <c>MSTEST_TEST_TEMP_DIRECTORY_RETAIN</c> environment variable.
+    /// </para>
+    /// <para>
+    /// Unlike <see cref="TestRunDirectory"/>, <see cref="DeploymentDirectory"/>,
+    /// <see cref="ResultsDirectory"/>, <see cref="TestRunResultsDirectory"/>, and
+    /// <see cref="TestResultsDirectory"/> — which are shared across tests for the whole run — this
+    /// directory is private scratch space owned by a single test. Use it for files a test needs to
+    /// write during execution; use the result directories for files that should be collected as
+    /// run artifacts.
+    /// </para>
+    /// </remarks>
+    public virtual string? TestTempDirectory => null;
+
     #endregion
 #endif
 

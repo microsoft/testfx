@@ -1,0 +1,356 @@
+# RFC 021 - Per-test temporary directory (`TestContext.TestTempDirectory`)
+
+- [ ] Approved in principle
+- [x] Under discussion
+- [ ] Implementation
+- [ ] Shipped
+
+## Summary
+
+Add a new, **additive** `TestContext` property, `TestTempDirectory`, that returns a filesystem
+directory **unique to the currently executing test**, created lazily on first access. Its contents
+are deleted automatically when the test passes and retained when the test fails, with an
+environment-variable escape hatch to retain everything for debugging.
+
+This closes a genuine gap: every other major test ecosystem provides a per-test temporary
+directory, and no .NET test framework does. MSTest itself used to — MSTest V1 gave every test a
+unique results directory, and V2 removed it. This RFC brings the capability back as a dedicated,
+clearly-scoped property rather than by repurposing any existing (and already confusing) directory
+property.
+
+## Motivation
+
+Tests that touch the filesystem need somewhere private to write. Today MSTest users have two bad
+options:
+
+1. **Hardcode a shared path** (`Path.Combine(Path.GetTempPath(), "my-test-data")`). Under parallel
+   execution multiple tests then race on the same files, producing intermittent
+   `IOException: file is being used by another process` failures. The usual "fix" is to disable
+   parallelism with `[DoNotParallelize]`, trading correctness for speed.
+2. **Hand-roll a helper** that combines `Path.GetTempPath()`, a `Guid`, creation, and best-effort
+   recursive cleanup behind `IDisposable`. This boilerplate is copy-pasted across the ecosystem —
+   including in this very repository, at
+   `test/Utilities/Microsoft.Testing.TestInfrastructure/TempDirectory.cs`. That helper already
+   embodies everything this feature needs: unique creation, best-effort recursive cleanup, and an
+   environment-variable switch (`Microsoft_Testing_TestInfrastructure_TempDirectory_Cleanup`) to
+   keep contents for debugging.
+
+A framework-provided per-test directory removes the sharing entirely: each test owns its own path,
+so there is nothing to coordinate and nothing to race on.
+
+### Cross-ecosystem survey (evidence)
+
+Per-test temporary directories are table stakes everywhere except .NET:
+
+| Ecosystem     | API                                         | Auto-cleanup                   |
+| ------------- | ------------------------------------------- | ------------------------------ |
+| Go 1.15+      | `t.TempDir()`                               | yes                            |
+| pytest        | `tmp_path` fixture                          | yes (keeps last 3 runs)        |
+| JUnit 5       | `@TempDir` (+ `TempDirFactory` SPI, `CleanupMode`) | yes                     |
+| Rust          | `tempfile::TempDir`                         | yes (RAII)                     |
+| Playwright    | `testInfo.outputDir` / `outputPath()`       | yes                            |
+| **MSTest / xUnit / NUnit / TUnit** | **none**               | —                              |
+
+The consistent shape across ecosystems is: a directory *unique per test*, *created on demand*, and
+*cleaned up automatically*, with an escape hatch to keep artifacts for investigation (Go's
+`-test.outputdir`, pytest's retention of the last N runs, JUnit's `CleanupMode.NEVER`).
+
+### Repository history: this feature already existed and was removed
+
+MSTest **V1 gave every test a unique `TestResultsDirectory`** of the form `In\<guid>\<machine>`.
+MSTest **V2 collapsed that to a single shared `In\` directory**, removing per-test uniqueness. The
+regression was reported as [testfx#502](https://github.com/microsoft/testfx/issues/502) and closed
+as won't-fix on low upvotes. The reporter's justification is exactly the use case this RFC serves:
+
+> A lot of our tests rely on `TestContext.TestResultsDirectory` being unique to provide test
+> isolation. And because most of our tests run in parallel, if `TestResultsDirectory` is not
+> unique, we have a lot of race conditions in terms of file access issues.
+
+In hindsight, that was a request for this feature, and its removal is the strongest available
+evidence of demand. Rather than silently changing `TestResultsDirectory` back to being per-test
+(which would be a breaking change for everyone who now depends on its shared semantics — see the
+Compatibility section), we add a **new** property with the per-test guarantee.
+
+### Why the BCL will not hand us this
+
+- `Directory.CreateTempSubdirectory(prefix)` shipped in **.NET 7**, so the low-level unique-creation
+  primitive exists on modern TFMs (but not on `net462`/`netstandard2.0`, which MSTest still ships).
+- A self-cleaning `TemporaryDirectory` type has been requested in
+  [`dotnet/runtime#2048`](https://github.com/dotnet/runtime/issues/2048) since 2020 and is still
+  open, so lifetime management is not coming from the BCL. The test framework is the right layer to
+  own it, because only the framework knows the test boundary and outcome.
+
+## Goals
+
+1. A `TestContext` property returning a directory unique to the currently executing test.
+2. Created **lazily** — tests that never touch it pay nothing (no create/delete per test).
+3. Correct under all parallelization settings, including many `[DataRow]`/`[DynamicData]` cases of
+   the same method executing concurrently.
+4. Automatic cleanup that is useful by default (retain a *failed* test's artifacts) and never hangs
+   or throws, even on timeout/cancellation.
+
+## Non-goals
+
+- **Do not** redirect `Environment.CurrentDirectory` (or call `Directory.SetCurrentDirectory`) to
+  the per-test directory. The current working directory is **process-global**; mutating it under
+  parallel execution corrupts every other concurrently running test. Go makes this explicit:
+  `t.Chdir()` **panics** if the test is marked parallel. `TestTempDirectory` is a *scratch path you
+  pass to your code*, not an ambient CWD. A follow-up analyzer that flags
+  `Environment.CurrentDirectory` / `Directory.SetCurrentDirectory` in an assembly with
+  parallelization enabled is worth considering as a **separate** proposal, not part of this work.
+- **No class-level or assembly-level shared temp directory** (the equivalent of JUnit's `@TempDir`
+  on a `static` field). That is a different lifetime and a different sharing story; noted as
+  possible future work.
+- **No configurable retention of the last N runs** (pytest keeps 3). Evaluated and rejected for the
+  first iteration; see design question 4.
+
+## Design
+
+`TestContext` gains:
+
+```csharp
+/// <summary>
+/// Gets a temporary directory unique to the currently executing test. The directory is
+/// created on first access and is deleted automatically when the test passes; when the test
+/// fails, it is retained so its contents can be inspected.
+/// </summary>
+public virtual string? TestTempDirectory { get; }
+```
+
+- **Type** `string?`, matching the existing directory properties (see design question 2).
+- **Lazy**: the directory is created the first time the getter is called for a given test and
+  cached for the remainder of that test.
+- **Unique per test execution**: each executing test — including each data-driven case — observes
+  its own directory (see design question 8).
+
+The property is exposed only for the non-UWP / non-WinUI target frameworks, exactly like the
+existing directory properties (`#if !WINDOWS_UWP && !WIN_UI`), so it surfaces on `net462`,
+`netstandard2.0`, `net8.0`, and `net9.0`.
+
+### How it differs from the existing directory properties
+
+Being crisp about "which directory do I use for what" is a required part of this RFC; the existing
+set is already confusing to users (see
+[testfx#7589](https://github.com/microsoft/testfx/discussions/7589),
+"TestRunResultsDirectory vs. TestResultsDirectory"). Recent work has clarified the XML docs for
+these ("Clarify XML docs for TestContext result/deployment directories") and added copying of
+per-test result files to the results directory ("Copy per-test result files to results directory"),
+but none of them is per-test scratch space.
+
+| Property                    | Scope                     | Shared across tests?          | Auto-created per test? | Auto-cleaned? | Intended use                                  |
+| --------------------------- | ------------------------- | ----------------------------- | ---------------------- | ------------- | --------------------------------------------- |
+| `TestRunDirectory`          | Whole test run            | Yes (one per run)             | No                     | No            | Root of the deployment/results layout          |
+| `DeploymentDirectory`       | Whole test run (`Out`)    | Yes                           | No                     | No            | Where `[DeploymentItem]` files are copied      |
+| `ResultsDirectory`          | Whole test run (`In`)     | Yes                           | No                     | No            | Base directory for run result files            |
+| `TestRunResultsDirectory`   | Per machine (`In\<machine>`) | Yes (per machine)          | No                     | No            | Per-machine result files                       |
+| `TestResultsDirectory`      | Whole test run (`In`)     | Yes (same path as `ResultsDirectory`) | No             | No            | Result files (add via `AddResultFile`)         |
+| **`TestTempDirectory`** *(new)* | **Per test execution** | **No — unique per test/case** | **Yes (lazy)**         | **Yes (delete on pass, retain on fail)** | **Private scratch space for the test** |
+
+The critical distinction: all five existing properties are **run-scoped or machine-scoped and
+shared**; `TestTempDirectory` is **test-scoped and private**. None of the five is safe to write to
+concurrently from parallel tests without coordination; `TestTempDirectory` is safe by construction.
+
+## Design questions
+
+These were genuinely open; each is answered with a proposal and rationale. Items marked **(sign-off)**
+were confirmed during RFC review.
+
+### 1. Name — `TestTempDirectory` **(sign-off)**
+
+Candidates considered: `TestTempDirectory`, `TempDirectory`, `TestDirectory`, `ScratchDirectory`.
+The name must not be confusable with the five existing directory properties.
+
+**Chosen: `TestTempDirectory`.** It reads as "the temp directory for this test", pairs naturally
+with the existing `Test*` naming (`TestName`, `TestResultsDirectory`, `TestRunDirectory`), and the
+"Temp" token clearly signals *disposable scratch space* rather than durable results. `TempDirectory`
+alone loses the per-test connotation; `TestDirectory` is ambiguous with the test *source* directory;
+`ScratchDirectory` has no precedent in the API surface.
+
+### 2. Type — `string?`
+
+`string` vs `DirectoryInfo`. **Chosen: `string?`**, for consistency with all five existing
+`TestContext` directory properties. A `DirectoryInfo` would be marginally more convenient but would
+make `TestTempDirectory` the odd one out and complicate the "which directory property do I use"
+story this RFC is trying to simplify. `string` also composes directly with `Path.Combine`, which is
+how the existing properties are used. Nullable to match the existing properties' signatures (they
+are `string?` because the underlying property bag can be empty in edge cases).
+
+### 3. Lazy vs eager creation — lazy **(sign-off)**
+
+**Chosen: lazy.** The directory is created on first access to the getter. Rationale: eager creation
+would add a directory create **and** a directory delete to *every test in every suite*, including
+the overwhelming majority that never touch the filesystem — a measurable, pure-overhead cost at
+scale (a suite of 50,000 tests would perform 100,000 extra filesystem operations for nothing).
+Lazy creation means the cost is paid only by tests that actually opt in by reading the property.
+Creation is guarded so concurrent reads on the same context (rare, but possible via async) create
+exactly one directory.
+
+### 4. Cleanup policy — delete on pass, retain on failure **(sign-off)**
+
+**Chosen default: delete on pass, retain on failure**, matching pytest's most useful behavior — a
+failed test's artifacts are exactly what you want to inspect, and a passed test's are noise.
+
+- **Escape hatch (retain everything):** an environment variable (working name
+  `MSTEST_TEST_TEMP_DIRECTORY_RETAIN`, `1`/`true` to enable) forces retention regardless of
+  outcome, mirroring `TempDirectory.cs`'s existing `..._Cleanup=0` switch and Go's
+  `-test.outputdir`. This is the debugging affordance.
+- **Keep-last-N-runs (pytest):** evaluated and **rejected for v1**. pytest keeps directories under a
+  stable per-user root (`/tmp/pytest-of-<user>/pytest-<N>/`) and prunes older *sessions*. MSTest's
+  results directory is already per-run (a fresh GUID each run), so old runs are naturally distinct;
+  layering an N-run pruner on top adds cross-run bookkeeping and a global root with its own cleanup
+  and concurrency concerns for little benefit. Can be revisited if demand appears.
+- **Configurability:** retention-on-failure is the fixed default plus the env-var escape hatch for
+  v1. A runsettings knob (e.g. always-delete / always-retain / retain-on-failure) is a natural
+  future extension but is intentionally deferred to keep the initial surface minimal.
+
+### 5. Location — under the results directory **(sign-off)**
+
+`Path.GetTempPath()` vs under the run's results directory.
+
+**Chosen: under the results directory** (`TestResultsDirectory` — i.e. the run's `In` directory),
+so the artifacts are discoverable next to other run output and can be picked up by artifact
+collection. The trade-off is **Windows `MAX_PATH` (260)**: results directories are already deep
+(`...\TestResults\<run-guid>\In`) and test display names can be long, so a naive
+`<results>\<full-test-name>\<guid>` scheme could overflow `MAX_PATH` and break tests on Windows.
+
+This is treated as a first-class constraint and mitigated by the naming scheme in design question 6
+(aggressive truncation + a short unique suffix, kept directly under the results directory with no
+extra nesting). When the results directory is unavailable (e.g. a host that does not populate it),
+the implementation **falls back to `Path.GetTempPath()`** so the property always returns a usable
+path.
+
+### 6. Directory naming — sanitized + truncated name + short unique suffix
+
+A readable directory name aids debugging, but arbitrary test names (data-driven tests especially)
+contain characters illegal in paths and can be very long. Scheme:
+
+1. Start from the test display name (falling back to the method name).
+2. **Sanitize**: replace every character that is invalid in a path segment (via
+   `Path.GetInvalidFileNameChars()` plus platform reserved characters) with `_`; collapse runs of
+   `_`.
+3. **Truncate** the sanitized name to a small fixed budget (working value **50 characters**) to
+   protect `MAX_PATH`.
+4. **Append a short unique suffix** (working scheme: `_` + a compact token, e.g. the first 12 hex
+   chars of a GUID) to guarantee uniqueness across cases and across the (truncated, hence
+   potentially colliding) names.
+5. **Create with collision retry**: attempt `Directory.CreateDirectory` for the candidate; if the
+   directory already exists (astronomically unlikely, but possible under extreme parallelism),
+   regenerate the suffix and retry a bounded number of times.
+
+Result shape: `...\TestResults\<run-guid>\In\<sanitized-truncated-name>_<uniq>`. This is correct for
+`[DataRow]`/`[DynamicData]`, where many *cases* share one method name: each case runs on its own
+`TestContext` (see design question 8) and therefore gets its own directory, distinguished by the
+unique suffix (and, where the display name includes the arguments, by a differing readable prefix).
+
+### 7. Cleanup failure handling — best-effort with swallow
+
+Deleting a directory can fail if the test left a file handle open, or on Windows if antivirus or
+the indexer holds a transient lock. **Chosen: best-effort recursive delete that swallows
+exceptions** (exactly like `TempDirectory.cs`). A failed cleanup must never fail an otherwise
+passing test. Whether to emit a diagnostic warning on cleanup failure is a minor open point:
+the proposal is to **not** warn by default (to avoid noise on flaky AV locks) but to make the
+failure observable via a debug/trace message. This is called out for sign-off.
+
+### 8. Concurrency — correct under all execution scopes
+
+`TestTempDirectory` must be correct under every `ExecutionScope` and under `[Parallelize]`,
+including several data-driven cases of the same method running concurrently. This falls out of the
+implementation model: the backing field is a **per-instance lazy field on the per-test
+`TestContext`**. MSTest already creates a distinct `TestContext` per executing test, and — crucially
+— a **fresh `TestContext` per data-driven iteration** (the folded path clones a sibling context per
+row; the unfolded path allocates one per row). Because each executing test/case has its own context
+object, each gets its own lazily-created directory with no shared mutable state and no cross-test
+locking. Uniqueness is structural, not coordinated.
+
+### 9. Timeouts / aborted tests — cleanup must not hang or throw
+
+Cleanup runs when the per-test `TestContext` is disposed, which happens in a `finally` block after
+the test's outcome has been recorded — including when the test timed out or the run was cancelled.
+Cleanup therefore:
+
+- performs a **synchronous, bounded, best-effort** delete (no waiting on handles, no retries beyond
+  the swallow),
+- never blocks on the cancellation token, and
+- swallows all exceptions,
+
+so an aborted or timed-out test cannot hang or throw during cleanup.
+
+## Relationship to RFC 020 (`[ResourceLock]`)
+
+RFC 020 ([`020-Resource-Lock-Attribute.md`](020-Resource-Lock-Attribute.md)) proposes a
+`[ResourceLock]` attribute for declaring contended resources so that tests touching the same
+resource do not run concurrently. The two features are **complements**, and the guidance is
+*eliminate before you lock*:
+
+- **`TestTempDirectory` (this RFC) — eliminate the sharing.** When the contended resource is "a
+  place to write files", give each test its own directory and there is nothing left to coordinate.
+  This is the **preferred** fix and should be recommended first.
+- **`[ResourceLock]` (RFC 020) — coordinate access** to state that genuinely *cannot* be made
+  per-test: environment variables, the current working directory, the console, a database, or a
+  fixed external path. There, isolation is impossible, so serialization is the answer.
+
+RFC 020 already contains an "eliminate before you lock" section; this RFC aligns with it and both
+documents should cross-reference each other. (Note: at the time of writing, RFC 020 lives on a
+separate in-flight branch and is not yet on `main`; the cross-reference will resolve once it lands.)
+
+## Public API
+
+```diff
+ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
+
+ public abstract class TestContext
+ {
++    public virtual string? TestTempDirectory { get; }
+ }
+```
+
+Added to `PublicAPI.Unshipped.txt` for `net462`, `netstandard2.0`, `net8.0`, and `net9.0`. The
+property does **not** use an `init` accessor, per repo policy.
+
+## Compatibility
+
+Purely additive. No existing property's value or semantics change, so no consumer of
+`TestRunDirectory`, `DeploymentDirectory`, `ResultsDirectory`, `TestRunResultsDirectory`, or
+`TestResultsDirectory` is affected. Subclasses of `TestContext` that do not override
+`TestTempDirectory` inherit the base behavior. Because creation is lazy, suites that never read the
+property see no behavioral or performance change whatsoever.
+
+## Example
+
+```csharp
+[TestClass]
+public class FileWritingTests
+{
+    public TestContext TestContext { get; set; } = null!;
+
+    [TestMethod]
+    public void WritesToItsOwnPrivateDirectory()
+    {
+        string dir = TestContext.TestTempDirectory!;   // created here, on first access
+        string file = Path.Combine(dir, "data.json");
+        File.WriteAllText(file, "{}");
+
+        Assert.IsTrue(File.Exists(file));
+        // On pass, `dir` is deleted automatically. On failure, it is kept for inspection.
+    }
+
+    [DataTestMethod]
+    [DataRow("alpha")]
+    [DataRow("beta")]
+    public void EachDataRowGetsItsOwnDirectory(string name)
+    {
+        // The two rows observe two different TestTempDirectory paths, so they never collide
+        // even when executed in parallel.
+        File.WriteAllText(Path.Combine(TestContext.TestTempDirectory!, name + ".txt"), name);
+    }
+}
+```
+
+## Unresolved questions
+
+- **Exact environment-variable name** for the retain-all escape hatch (`MSTEST_TEST_TEMP_DIRECTORY_RETAIN`
+  is the working name).
+- **Whether to warn on cleanup failure** (design question 7) — proposal is trace-only, no warning.
+- **Truncation budget and unique-suffix length** (design question 6) — working values 50 chars / 12
+  hex; final values to be confirmed against `MAX_PATH` headroom on Windows.
+- **Future runsettings knob** for cleanup policy (design question 4) — deferred, not part of v1.

@@ -23,6 +23,26 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// </summary>
 internal sealed partial class TestContextImplementation : TestContext, ITestContext, IDisposable
 {
+#if !WINDOWS_UWP && !WIN_UI
+    /// <summary>
+    /// Environment variable that, when set to a truthy value, retains every per-test temporary
+    /// directory (including those of passing tests) instead of deleting them. Used for debugging.
+    /// </summary>
+    private const string RetainTestTempDirectoryEnvironmentVariable = "MSTEST_TEST_TEMP_DIRECTORY_RETAIN";
+
+    /// <summary>
+    /// Maximum length (in characters) of the readable, sanitized test-name portion of the
+    /// per-test temporary directory name. Kept small to protect against Windows MAX_PATH, since
+    /// the results directory is already deep.
+    /// </summary>
+    private const int TestTempDirectoryNameMaxLength = 50;
+
+    /// <summary>
+    /// Number of hexadecimal characters of the uniqueness suffix appended to the directory name.
+    /// </summary>
+    private const int TestTempDirectoryUniqueSuffixLength = 12;
+#endif
+
     /// <summary>
     /// Properties.
     /// </summary>
@@ -36,6 +56,17 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
     private readonly TestRunCancellationToken? _testRunCancellationToken;
     private readonly TextWriter? _liveOutputWriter;
     private readonly Func<TestOutputCaptureMode> _outputCaptureModeProvider;
+
+#if !WINDOWS_UWP && !WIN_UI
+    /// <summary>
+    /// Guards lazy creation of <see cref="_testTempDirectory"/>.
+    /// </summary>
+#if NET9_0_OR_GREATER
+    private readonly Lock _testTempDirectoryLock = new();
+#else
+    private readonly object _testTempDirectoryLock = new();
+#endif
+#endif
 
     private CancellationTokenRegistration? _cancellationTokenRegistration;
 
@@ -53,6 +84,19 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
     /// Unit test outcome.
     /// </summary>
     private UnitTestOutcome _outcome;
+
+#if !WINDOWS_UWP && !WIN_UI
+    /// <summary>
+    /// The lazily-created per-test temporary directory, or <see langword="null"/> if it has not
+    /// been accessed (and therefore not created) yet.
+    /// </summary>
+    private string? _testTempDirectory;
+
+    /// <summary>
+    /// Whether <see cref="_testTempDirectory"/> has been created.
+    /// </summary>
+    private bool _testTempDirectoryCreated;
+#endif
 
 #if NETFRAMEWORK
     /// <summary>
@@ -149,6 +193,31 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
 
     /// <inheritdoc/>
     public override IDictionary<string, object?> Properties => _properties;
+
+#if !WINDOWS_UWP && !WIN_UI
+    /// <inheritdoc/>
+    public override string? TestTempDirectory
+    {
+        get
+        {
+            if (Volatile.Read(ref _testTempDirectoryCreated))
+            {
+                return _testTempDirectory;
+            }
+
+            lock (_testTempDirectoryLock)
+            {
+                if (!_testTempDirectoryCreated)
+                {
+                    _testTempDirectory = CreateTestTempDirectory();
+                    Volatile.Write(ref _testTempDirectoryCreated, true);
+                }
+            }
+
+            return _testTempDirectory;
+        }
+    }
+#endif
 
     /// <summary>
     /// Gets the inner test context object.
@@ -417,7 +486,145 @@ internal sealed partial class TestContextImplementation : TestContext, ITestCont
     {
         _cancellationTokenRegistration?.Dispose();
         _cancellationTokenRegistration = null;
+#if !WINDOWS_UWP && !WIN_UI
+        CleanupTestTempDirectory();
+#endif
     }
+
+#if !WINDOWS_UWP && !WIN_UI
+    /// <summary>
+    /// Creates the per-test temporary directory. The directory lives under the run's results
+    /// directory (so it is discoverable next to other run output), falling back to the system
+    /// temporary directory when no results directory is available.
+    /// </summary>
+    private string CreateTestTempDirectory()
+    {
+        string baseDirectory = TestResultsDirectory is { Length: > 0 } resultsDirectory
+            ? resultsDirectory
+            : Path.GetTempPath();
+
+        string namePart = SanitizeTestTempDirectoryName(GetTestTempDirectoryNameSource());
+
+        // Guid.ToString("N") is 32 hex chars; two contexts colliding on the same 12-char prefix is
+        // ~2^-48, so the retry loop below is a belt-and-braces guard rather than a real necessity.
+        const int maxAttempts = 10;
+        for (int attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            string suffix = Guid.NewGuid().ToString("N").Substring(0, TestTempDirectoryUniqueSuffixLength);
+            string candidateName = namePart.Length == 0 ? suffix : $"{namePart}_{suffix}";
+            string candidate = Path.Combine(baseDirectory, candidateName);
+            if (Directory.Exists(candidate))
+            {
+                continue;
+            }
+
+            Directory.CreateDirectory(candidate);
+            return candidate;
+        }
+
+        // Extremely unlikely fallback: use a full Guid to guarantee uniqueness.
+        string fallback = Path.Combine(baseDirectory, Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(fallback);
+        return fallback;
+    }
+
+    private string? GetTestTempDirectoryNameSource()
+        => !StringEx.IsNullOrEmpty(TestDisplayName)
+            ? TestDisplayName
+            : _properties.TryGetValue(TestNameLabel, out object? testName) && testName is string testNameString
+                ? testNameString
+                : null;
+
+    /// <summary>
+    /// Sanitizes a test name into a safe, bounded path segment: invalid path characters and
+    /// whitespace become underscores, runs of underscores collapse, and the result is truncated.
+    /// </summary>
+    private static string SanitizeTestTempDirectoryName(string? name)
+    {
+        if (StringEx.IsNullOrEmpty(name))
+        {
+            return string.Empty;
+        }
+
+        char[] invalidChars = Path.GetInvalidFileNameChars();
+        var builder = new StringBuilder(name.Length);
+        bool lastWasUnderscore = false;
+        foreach (char c in name)
+        {
+            if (char.IsWhiteSpace(c) || Array.IndexOf(invalidChars, c) >= 0)
+            {
+                if (!lastWasUnderscore)
+                {
+                    builder.Append('_');
+                    lastWasUnderscore = true;
+                }
+            }
+            else
+            {
+                builder.Append(c);
+                lastWasUnderscore = false;
+            }
+        }
+
+        string sanitized = builder.ToString().Trim('_');
+        if (sanitized.Length > TestTempDirectoryNameMaxLength)
+        {
+            sanitized = sanitized.Substring(0, TestTempDirectoryNameMaxLength).TrimEnd('_');
+        }
+
+        return sanitized;
+    }
+
+    /// <summary>
+    /// Deletes the per-test temporary directory unless the test failed or retention was requested.
+    /// Best-effort: never throws, so a passing test cannot be failed by a cleanup error, and an
+    /// aborted or timed-out test cannot hang here.
+    /// </summary>
+    private void CleanupTestTempDirectory()
+    {
+        if (!_testTempDirectoryCreated || _testTempDirectory is not { Length: > 0 } directory)
+        {
+            return;
+        }
+
+        if (ShouldRetainTestTempDirectory())
+        {
+            return;
+        }
+
+        try
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+        catch (Exception ex)
+        {
+            // A leaked file handle, or a transient antivirus/indexer lock on Windows, can make the
+            // delete fail. This must never fail an otherwise passing test, so we swallow it and only
+            // surface the failure through the diagnostic trace log.
+            PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(
+                "Failed to delete per-test temporary directory '{0}': {1}", directory, ex);
+        }
+    }
+
+    /// <summary>
+    /// Determines whether the per-test temporary directory should be kept: retained on any
+    /// non-passing outcome, or when retention is forced via the environment variable escape hatch.
+    /// </summary>
+    private bool ShouldRetainTestTempDirectory()
+    {
+        // Retain a failed (or otherwise non-passing) test's artifacts for inspection.
+        if (_outcome != UnitTestOutcome.Passed)
+        {
+            return true;
+        }
+
+        string? retain = Environment.GetEnvironmentVariable(RetainTestTempDirectoryEnvironmentVariable);
+        return retain is "1" || string.Equals(retain, "true", StringComparison.OrdinalIgnoreCase);
+    }
+#endif
 
     internal SynchronizedStringBuilder StandardOutputBuilder
         => GetOrCreate(ref _stdOutStringBuilder);
