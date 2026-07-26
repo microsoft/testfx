@@ -40,6 +40,17 @@ public class ResourceLockAttributeTests : TestContainer
         keys.Should().NotContain(k => string.IsNullOrEmpty(k));
     }
 
+    public void WellKnownResources_HaveTheirExactPublishedValues()
+    {
+        // These strings are permanent public API: conflict detection is plain string equality, so changing a
+        // value after shipping would silently stop matching every user key that spells the old one, and two
+        // tests intending to share a resource would quietly stop being serialized. Pin the exact values so a
+        // rename or a swap between constants fails here rather than in someone's flaky suite.
+        WellKnownResources.CurrentDirectory.Should().Be("System.Environment.CurrentDirectory");
+        WellKnownResources.EnvironmentVariables.Should().Be("System.Environment.Variables");
+        WellKnownResources.Console.Should().Be("System.Console");
+    }
+
     public void Constructor_WhenResourceIsNull_Throws()
     {
         Action act = static () => _ = new ResourceLockAttribute(null!);
