@@ -4,6 +4,9 @@
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.PreferConstantForResourceLockAnalyzer,
     Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
+using VerifyVB = MSTest.Analyzers.Test.VisualBasicCodeFixVerifier<
+    MSTest.Analyzers.PreferConstantForResourceLockAnalyzer,
+    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
 namespace MSTest.Analyzers.Test;
 
@@ -154,5 +157,71 @@ public sealed class PreferConstantForResourceLockAnalyzerTests
             """;
 
         await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    // The analyzer declares LanguageNames.VisualBasic and deliberately inspects syntax *token text* rather
+    // than C#-specific syntax nodes, so it is language-neutral by construction. These tests pin that: without
+    // them the VB path is advertised but never executed, and a future change to C#-specific nodes would
+    // silently drop VB support rather than failing here.
+    [TestMethod]
+    public async Task WhenResourceKeyIsBareLiteralInVisualBasic_Diagnostic()
+    {
+        string code = """
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <TestClass>
+            Public Class MyTestClass
+                <ResourceLock([|"my-resource"|])>
+                <TestMethod>
+                Public Sub MyTestMethod()
+                End Sub
+            End Class
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenResourceKeyIsConstantInVisualBasic_NoDiagnostic()
+    {
+        string code = """
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <TestClass>
+            Public Class MyTestClass
+                Private Const MyResource As String = "my-resource"
+
+                <ResourceLock(MyResource)>
+                <TestMethod>
+                Public Sub MyTestMethod()
+                End Sub
+
+                <ResourceLock(WellKnownResources.Console)>
+                <TestMethod>
+                Public Sub MyOtherTestMethod()
+                End Sub
+            End Class
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenVisualBasicAttributeListHasMultipleLocks_DiagnosticOnlyOnLiteral()
+    {
+        // VB allows several attributes inside one angle-bracket list, so both locks share a single attribute
+        // list here. The analyzer must still report per attribute application rather than per list.
+        string code = """
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <TestClass>
+            Public Class MyTestClass
+                <TestMethod, ResourceLock(WellKnownResources.Console), ResourceLock([|"my-resource"|])>
+                Public Sub MyTestMethod()
+                End Sub
+            End Class
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(code);
     }
 }

@@ -2,7 +2,7 @@
 
 - [ ] Approved in principle
 - [x] Under discussion
-- [ ] Implementation
+- [x] Implementation
 - [ ] Shipped
 
 ## Summary
