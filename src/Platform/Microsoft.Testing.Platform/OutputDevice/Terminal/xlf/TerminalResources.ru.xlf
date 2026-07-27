@@ -59,7 +59,7 @@
       </trans-unit>
       <trans-unit id="CoverageMetricBlock">
         <source>Block</source>
-        <target state="translated">Блокировка</target>
+        <target state="new">Block</target>
         <note>Label for block code coverage in the coverage summary (e.g. 'Total - Block: 95.0%').</note>
       </trans-unit>
       <trans-unit id="CoverageMetricBranch">
