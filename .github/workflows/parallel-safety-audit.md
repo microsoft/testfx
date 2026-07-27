@@ -2,15 +2,22 @@
 name: "Parallel-safety audit on PR (on open / sync)"
 description: >-
   Automatically audits the MSTest tests changed by a non-draft PR for
-  parallel-safety when the change touches `test/**` or `src/**`.
+  parallel-safety when the change touches `test/**`.
 
 # Triggers:
 # - pull_request `opened` / `reopened` / `ready_for_review` — initial audit
 #   on the PR's first appearance as a non-draft.
 # - pull_request `synchronize` — re-audit when new commits are pushed so the
-#   comment stays current. Combined with `paths` so we only fire when test or
-#   source files change, and with `concurrency.cancel-in-progress` so
+#   comment stays current. Combined with `paths` so we only fire when test
+#   files change, and with `concurrency.cancel-in-progress` so
 #   superseded runs are cancelled.
+#
+# NOTE: the trigger filters on `test/**` **only**, not `src/**`. gh-aw ORs the
+# `paths` entries, so listing `src/**` would fire a full audit on every
+# source-only PR that changes no tests — wasted runs with nothing to audit. A
+# PR that changes both a test and production code still matches `test/**` and
+# still gets the changed-`src/` list (the extraction step diffs `src/`
+# regardless of what triggered the run), so read-set analysis is unaffected.
 #
 # The companion `/parallel-audit` slash command lives in
 # `parallel-safety-audit-command.md`. They must remain separate workflows
@@ -22,7 +29,6 @@ on:
     types: [opened, reopened, synchronize, ready_for_review]
     paths:
       - "test/**"
-      - "src/**"
 
 # Skip draft PRs and OneLocBuild localization check-in PRs (authored by
 # dotnet-bot) — only run for human-authored PRs in a reviewable state.

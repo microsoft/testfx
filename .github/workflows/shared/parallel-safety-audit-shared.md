@@ -83,6 +83,7 @@ steps:
       EVENT_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
       EVENT_PR_NUMBER: ${{ github.event.pull_request.number }}
       EVENT_ISSUE_NUMBER: ${{ github.event.issue.number }}
+      EVENT_DISPATCH_PR_NUMBER: ${{ fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_number }}
       GH_TOKEN: ${{ github.token }}
     run: |
       set -euo pipefail
@@ -92,8 +93,20 @@ steps:
           HEAD_SHA="$EVENT_PR_HEAD_SHA"
           PR_NUMBER="$EVENT_PR_NUMBER"
           ;;
-        issue_comment)
-          PR_NUMBER="$EVENT_ISSUE_NUMBER"
+        issue_comment|workflow_dispatch)
+          # The centralized /parallel-audit slash command dispatches this workflow
+          # as `workflow_dispatch`, carrying the PR number in aw_context.item_number
+          # rather than github.event.issue.number. Resolve from whichever the event
+          # provides so the command actually reaches checkout instead of exiting here.
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            PR_NUMBER="$EVENT_DISPATCH_PR_NUMBER"
+          else
+            PR_NUMBER="$EVENT_ISSUE_NUMBER"
+          fi
+          if [[ -z "$PR_NUMBER" ]]; then
+            echo "No PR number resolved for event '$EVENT_NAME'" >&2
+            exit 1
+          fi
           PR_JSON=$(gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --json baseRefOid,headRefOid)
           BASE_SHA=$(printf '%s' "$PR_JSON" | jq -r '.baseRefOid')
           HEAD_SHA=$(printf '%s' "$PR_JSON" | jq -r '.headRefOid')
@@ -128,13 +141,43 @@ steps:
       set -euo pipefail
       TEST_OUT="$RUNNER_TEMP/changed-test-files.txt"
       SRC_OUT="$RUNNER_TEMP/changed-src-files.txt"
+      RANGES_OUT="$RUNNER_TEMP/changed-test-regions.tsv"
       : > "$TEST_OUT"
       : > "$SRC_OUT"
+      : > "$RANGES_OUT"
 
       git diff --name-only --diff-filter=AMR "$BASE_SHA" "$HEAD_SHA" -- 'test/' \
         | grep -E '\.cs$' > "$TEST_OUT" || true
       git diff --name-only --diff-filter=AMR "$BASE_SHA" "$HEAD_SHA" -- 'src/' \
         | grep -E '\.cs$' > "$SRC_OUT" || true
+
+      # For each changed test file, emit the HEAD-side (added/modified) line
+      # ranges of its diff hunks as "<file>\t<start>-<end>,<start>-<end>". The
+      # agent uses these to distinguish a *primary* finding (an unsafe call site
+      # this PR actually added or touched) from a *pre-existing* one that merely
+      # happens to live in the same file — a one-line edit must not light up every
+      # legacy method in the file.
+      while IFS= read -r f; do
+        [[ -n "$f" && -f "$f" ]] || continue
+        RANGES=$(
+          git diff --unified=0 "$BASE_SHA" "$HEAD_SHA" -- "$f" \
+            | awk '
+                /^@@/ {
+                  if (match($0, /\+[0-9]+(,[0-9]+)?/)) {
+                    hunk = substr($0, RSTART+1, RLENGTH-1)
+                    n = split(hunk, a, ",")
+                    start = a[1] + 0
+                    count = (n == 2 ? a[2] + 0 : 1)
+                    if (count == 0) next
+                    end = start + count - 1
+                    printf("%d-%d,", start, end)
+                  }
+                }
+              ' \
+            | sed 's/,$//'
+        )
+        [[ -n "$RANGES" ]] && printf '%s\t%s\n' "$f" "$RANGES" >> "$RANGES_OUT"
+      done < "$TEST_OUT"
 
       TEST_COUNT=$(wc -l < "$TEST_OUT" | tr -d ' ')
       SRC_COUNT=$(wc -l < "$SRC_OUT" | tr -d ' ')
@@ -149,6 +192,7 @@ steps:
       echo "src_count=$SRC_COUNT" >> "$GITHUB_OUTPUT"
       echo "test_files_path=$TEST_OUT" >> "$GITHUB_OUTPUT"
       echo "src_files_path=$SRC_OUT" >> "$GITHUB_OUTPUT"
+      echo "test_regions_path=$RANGES_OUT" >> "$GITHUB_OUTPUT"
 ---
 
 # Parallel-safety audit
@@ -187,9 +231,22 @@ A deterministic pre-step has produced two lists for pull request
 - **Changed test files** (${{ steps.extract.outputs.test_count }}) at
   `${{ steps.extract.outputs.test_files_path }}` — one repo-relative `.cs` path
   per line, under `test/`. These are your primary audit surface.
+- **Changed test line ranges** at
+  `${{ steps.extract.outputs.test_regions_path }}` — tab-separated
+  `path<TAB>start-end,start-end` giving the **HEAD-side** lines this PR added or
+  modified in each changed test file. A finding is a **primary** finding only when
+  the unsafe call site falls inside one of these ranges (or inside a test method
+  whose body the PR touched). An unsafe call site that lies **outside** every
+  changed range is *pre-existing*: report it at most as **context / Info** ("this
+  file already contains …"), never as though the PR introduced it. A one-line edit
+  must not light up every legacy method in the file.
 - **Changed source files** (${{ steps.extract.outputs.src_count }}) at
   `${{ steps.extract.outputs.src_files_path }}` — one path per line, under
-  `src/`. Use these for read-vs-write coverage-gap analysis (category C).
+  `src/`. Treat this as a *hint*, not a boundary, for the category-C read-vs-write
+  coverage-gap check: the production code a changed test exercises may live in a
+  file this PR never touched. Follow the call graph **from each changed test into
+  the production methods it invokes** and analyse their read set regardless of
+  whether the owning file appears in this list.
 
 If the changed-test-files list is empty
 (`${{ steps.extract.outputs.has_changed_tests }}` is `false`), post the
@@ -221,19 +278,28 @@ to:
 3. **Workers.** `[Parallelize(Workers = 0)]` means "one worker per logical
    processor"; a positive N pins the count. Record N (or "CPU count") — you
    need it for the speedup arithmetic in category D.
-4. **Analyzer coverage gate.** The parallel-safety analyzers
-   (**MSTEST0074 / 0075 / 0076 / 0077**) fire **only** when the opt-in is an
-   `[assembly: Parallelize]` attribute **or** `.editorconfig` sets
-   `mstest_parallel_safety_mode = always`. A suite that opts into parallelization
-   **purely via `.runsettings` or the `MSTestParallelizeScope` MSBuild property**
-   gets **no analyzer coverage at all** — the compile-time net is silently off.
-   Record whether the opt-in is attribute/editorconfig (analyzer-covered) or
-   runsettings/MSBuild-only (**not** covered).
+4. **Analyzer coverage gate.** Today **only MSTEST0073**
+   (`PreferConstantForResourceLockAnalyzer`) ships on `main`. The dedicated
+   parallel-safety analyzers (**MSTEST0074 / 0075 / 0076 / 0077**) are **in
+   flight** on the `dev/amauryleve/parallel-safety-analyzers` branch and are **not
+   yet merged** — do **not** describe them as active coverage. When they ship they
+   will fire **only** where the opt-in is visible to the *compiler*: an
+   `[assembly: Parallelize]` attribute — **including the attribute the
+   `MSTestParallelizeScope` MSBuild property generates for you**, because
+   `Parallelize.targets` emits a real `[assembly: Parallelize(...)]` via
+   `WriteCodeFragment`, so the MSBuild-property opt-in *is* analyzer-visible — or an
+   `.editorconfig` `mstest_parallel_safety_mode = always`. The **one** opt-in the
+   compile-time net can never see is a **`.runsettings`-only** opt-in: the scope
+   lives in XML no analyzer reads. Record whether the effective opt-in is attribute
+   / MSBuild-property / editorconfig (**analyzer-coverable once those analyzers
+   ship**) or **`.runsettings`-only** (**never analyzer-covered**).
 
 Encode these facts. They drive every severity below, and item 4 changes how you
-frame the whole report: **when the opt-in is runsettings/MSBuild-only, this audit
-is the *only* thing that will catch these findings.** Say that explicitly in the
-header — it is the single most valuable sentence in that configuration.
+frame the whole report: **when the opt-in is `.runsettings`-only, this audit is
+the *only* thing that will catch these findings** (the MSBuild-property and
+attribute opt-ins are analyzer-coverable once those analyzers ship). Say that
+explicitly in the header — it is the single most valuable sentence in that
+configuration.
 
 ### Why the scope matters (do not get this wrong)
 
@@ -280,36 +346,54 @@ dependency.
   setter; `Directory.SetCurrentDirectory(...)`. **CWD and env vars are
   process-global on every OS — there is no per-thread CWD.**
   `[DeploymentItem]` also mutates CWD process-wide for the whole assembly
-  (testfx#6884, closed by-design). **Cross-ref:** the analyzer **MSTEST0074**
-  (`UndeclaredProcessGlobalStateMutationAnalyzer`, Info) covers *undeclared*
+  (testfx#6884, closed by-design). **Cross-ref (in flight, not yet on `main` —
+  see the analyzer-gate note):** the forthcoming **MSTEST0074**
+  (`UndeclaredProcessGlobalStateMutationAnalyzer`, Info) will cover *undeclared*
   `Environment.SetEnvironmentVariable` / `Console.Set*`; **MSTEST0075**
-  (`CurrentDirectoryMutationUnderParallelizationAnalyzer`, Warning) covers the
+  (`CurrentDirectoryMutationUnderParallelizationAnalyzer`, Warning) will cover the
   `Environment.CurrentDirectory` setter / `Directory.SetCurrentDirectory`. Cite
-  the id when the mutation is in scope for the analyzer (see the gate note below).
-- **Culture — do not flatten into one rule; the scope matters. Two forms are
-  unsafe, one is explicitly safe — say so for all three:**
+  the id as a *coming* complement, and only when the opt-in will put the mutation
+  in the analyzer's scope (see the gate note below).
+- **Culture — do not flatten into one rule; both the *API* and the *target
+  framework* matter. Decide per the framework the suite actually runs on:**
   - `CultureInfo.DefaultThreadCurrentCulture` / `DefaultThreadCurrentUICulture`
-    are **app-domain / process-wide → dangerous.** Treat as category A. **Flag.**
-  - `Thread.CurrentThread.CurrentCulture` / `CurrentUICulture` are
-    thread-scoped, but the thread is a **pooled worker reused by later tests**,
-    so the mutation **leaks forward** to whatever test runs next on that thread.
-    Category A, but note the leak-forward mechanism (it corrupts *successors*,
-    not concurrent siblings). **Flag.**
-  - `CultureInfo.CurrentCulture` / `CurrentUICulture` (the plain instance
-    setters) are **`ExecutionContext`-flowed** on .NET Core: the value flows to
-    async continuations within the *same* logical call but does **not** corrupt
-    sibling or successor tests. **Do not flag — this is *not* a parallel-safety
-    problem.** State this explicitly in the report if a reader might expect it:
-    someone burned by the other two forms will assume *all* culture mutation is
-    dangerous, and the useful thing to say is *why this one is not* (context
-    flow, not shared thread/process state).
-  - **Cross-ref, do not re-derive:** the analyzer **MSTEST0076**
-    (`CultureMutationUnderParallelizationAnalyzer`, Warning) covers exactly the
-    two flagged forms and deliberately omits the third. When you flag a culture
-    mutation, cite MSTEST0076 rather than re-explaining the mechanism.
+    set the **process-wide default** for every thread that has not set its own
+    culture — dangerous on **every** target framework. Treat as category A.
+    **Flag.**
+  - `Thread.CurrentThread.CurrentCulture` / `CurrentUICulture` **and**
+    `CultureInfo.CurrentCulture` / `CurrentUICulture` read and write the **same
+    underlying per-thread culture**; their cross-test behaviour depends on the TFM:
+    - On **.NET (Core) 5+ and .NET Framework ≥ 4.6** — which is what every testfx
+      test project targets — the current culture is stored in the thread's
+      **`ExecutionContext` and flows across async operations**
+      ([docs](https://learn.microsoft.com/dotnet/api/system.globalization.cultureinfo.currentculture)).
+      The value flows to async continuations of the *same* logical test but does
+      **not** corrupt concurrently-running siblings, and the thread pool
+      captures/restores `ExecutionContext` per work item, so it does **not** leak
+      forward to unrelated successors either. On these targets **do not flag it as
+      a live race** — weak signal at most. (Microsoft's own guidance is to prefer
+      `CultureInfo.CurrentCulture`; on modern .NET the `Thread` property simply
+      delegates to it.)
+    - On **.NET Framework < 4.6 only** the current culture is a raw thread
+      property with no async flow, so a value set on a **pooled worker reused by a
+      later test can leak forward**. Flag the leak-forward **only** when the suite
+      genuinely targets net45/net451/net452 or earlier — verify the TFM before
+      raising it; do not assume it.
+  - When you decline to flag current-culture mutation on a modern target, **say
+    *why* it is safe there** (ExecutionContext flow, not shared process state) so a
+    reader burned by `DefaultThreadCurrentCulture` does not assume *all* culture
+    mutation is dangerous.
+  - **Cross-ref, do not re-derive:** the forthcoming analyzer **MSTEST0076**
+    (`CultureMutationUnderParallelizationAnalyzer`, Warning; in flight, see the
+    analyzer-gate note) will flag the `Thread` / `CultureInfo` current-culture
+    forms **conservatively and TFM-agnostically**. This audit is allowed to be
+    *more precise* than the analyzer by reasoning about the target framework — when
+    you flag (or decline to flag) a culture mutation, note whether you are refining
+    MSTEST0076's blanket call with a TFM judgement.
 - `Console.SetOut` / `SetError` / `SetIn`; `Console.OutputEncoding` /
-  `ForegroundColor` / other console state. (The `Console.Set*` writers are also
-  covered by **MSTEST0074** when undeclared.)
+  `ForegroundColor` / other console state. (The `Console.Set*` writers will also
+  be covered by **MSTEST0074** when undeclared, once that analyzer ships — see the
+  analyzer-gate note; it is not on `main` yet.)
 - **Mutable `static` fields written by tests** — including state populated in
   `[AssemblyInitialize]` / `[ClassInitialize]` and *mutated later* by a test.
   Static singletons, caches, and `static` collections are the classic silent
@@ -375,10 +459,11 @@ Compare what a test **touches** against what it **declares**
 - **Under-declaration.** A test mutates process-global state (category A) but
   declares no `[ResourceLock]` / `[DoNotParallelize]` → **latent race.** This is
   the fail-open weakness of free-form string keys: nothing forces the
-  declaration. Analyzers **MSTEST0074 / MSTEST0075 / MSTEST0076** now catch the
-  common single-call cases at compile time — **but only when they are in scope**
-  (see the analyzer-gate note in Step 0). Your unique value is (a) under-declared
-  mutations the analyzers miss because their gate is off — the runsettings-only
+  declaration. The forthcoming analyzers **MSTEST0074 / MSTEST0075 / MSTEST0076**
+  (in flight, **not yet on `main`** — see the analyzer-gate note in Step 0) will
+  catch the common single-call cases at compile time — **but only when they ship
+  and only when they are in scope**. Your unique value is (a) under-declared
+  mutations the analyzers miss because their gate is off — the `.runsettings`-only
   opt-in is the big one — and (b) mutations reached **through helpers / fixtures**
   that a single-call analyzer does not follow. Lead with those.
 - **Over-declaration.** A declared `[ResourceLock("key")]` whose resource the
@@ -394,9 +479,12 @@ Compare what a test **touches** against what it **declares**
 - **Coverage gap.** A test declares a key covering what it *writes*, but the
   **code under test** *reads* a **wider** slice of global state. The key must
   cover what the code under test **reads**, not just what the test **writes**.
-  Use the changed `src/` files to check the production read set. (This one is
-  usually **Low** confidence — you are inferring the read set from production
-  code; mark it as a judgement call.)
+  The changed `src/` list is only a **hint** — the production code a test
+  exercises often lives in files this PR never touched, so **follow the call graph
+  from the test into the production methods it invokes** and analyse their read
+  set regardless of whether the owning file changed. (This one is usually **Low**
+  confidence — you are inferring the read set from production code; mark it as a
+  judgement call.)
 
 `WellKnownResources` provides exactly three shared constants:
 `CurrentDirectory`, `EnvironmentVariables`, `Console`. The analyzer
@@ -410,7 +498,14 @@ string-literal keys — when you recommend a custom key, recommend a shared
   mutual exclusion **without** the serial-tail deferral. Report the deferral
   cost.
 - **Class-level** `[ResourceLock]` where only one or two methods actually touch
-  the resource → the whole class serializes needlessly.
+  the resource. **`MethodLevel` only:** this over-serializes only when the
+  scheduler chunks per method. Under the **`ClassLevel`** default (and with
+  parallelization **off**) the whole class is already one sequential chunk, so a
+  class-level lock costs nothing extra over a method-level one — the chunk's locks
+  are unioned and the class runs on a single worker regardless (see
+  `ResourceLockAttribute` remarks: under `ClassLevel`, declaring locks on
+  individual methods "does not make locking more granular"). Do **not** raise this
+  finding above Info unless the suite is actually `MethodLevel`.
 - `Mode = ReadWrite` on tests that only **read** the resource → could be
   `Mode = Read` and run concurrently with other readers.
 
@@ -469,11 +564,11 @@ Post **exactly one** `add-comment`. Structure:
 ```markdown
 ### 🧵 Parallel-safety audit — PR #<number>
 
-**Parallelization:** `<off | ClassLevel | MethodLevel>`, workers `<N | CPU count | n/a>`. **Analyzer coverage:** `<on (attribute/editorconfig) | OFF (runsettings/MSBuild-only) | n/a>`.
+**Parallelization:** `<off | ClassLevel | MethodLevel>`, workers `<N | CPU count | n/a>`. **Analyzer coverage:** `<coverable once the parallel-safety analyzers ship (attribute/MSBuild-property/editorconfig) | never covered (.runsettings-only) | n/a>`.
 <!-- If off, add this exact banner line: -->
 > ⚠️ Parallelization is **OFF** for these tests — this is a **readiness checklist**, not live bugs. Nothing here fails today; everything listed is what to fix *before* enabling `[Parallelize]`.
-<!-- If opt-in is runsettings/MSBuild-only (analyzer coverage OFF), add this banner: -->
-> 🛈 Parallelization is enabled via **runsettings/MSBuild only**, so the MSTEST0074–0077 analyzers **do not run** on this suite — this audit is the **only** check catching these findings.
+<!-- If opt-in is .runsettings-only, add this banner: -->
+> 🛈 Parallelization is enabled via **`.runsettings` only**, so even once the forthcoming MSTEST0074–0077 parallel-safety analyzers ship they **cannot see** this suite (no analyzer reads runsettings XML) — this audit is the **only** check catching these findings. (Today only MSTEST0073 is on `main`; 0074–0077 are still in flight.)
 
 **Findings:** A (global-state) `x` · B (paths) `x` · C (declaration) `x` · D (over-serialization) `x` — by severity: Critical `x` · High `x` · Warning `x` · Info `x`.
 

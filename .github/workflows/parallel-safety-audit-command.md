@@ -32,7 +32,12 @@ safe-outputs:
     report-as-issue: false
 
 concurrency:
-  group: parallel-safety-audit-${{ github.event.issue.number }}
+  # The slash command dispatches as workflow_dispatch, where
+  # github.event.issue.number is empty — falling back to an empty group would
+  # collapse every dispatched run into one bucket and cancel unrelated PRs'
+  # audits. Resolve the PR number from aw_context when the issue number is
+  # absent so each PR gets its own concurrency group.
+  group: parallel-safety-audit-${{ github.event.issue.number || fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_number }}
   cancel-in-progress: true
 
 timeout-minutes: 20
