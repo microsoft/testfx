@@ -769,8 +769,14 @@ Non-negotiable rules:
   outranks** a category-A/C safety finding.
 - **Rank category D by speedup arithmetic.** Estimate `s`, the fraction of total
   suite time the lock serializes, then compare what the suite can reach today,
-  `1 / (s + (1 - s)/N)`, against `N` if `s` were eliminated. Rank findings by that
-  **gain** and state it. There is **no fixed cutoff** below which a lock is safe
+  `1 / (s + (1 - s)/N)`, against `N` if `s` were eliminated. **`N` is an upper
+  bound, not the outcome** — it assumes this lock is the *only* serialized work.
+  Any residual serial fraction `s_r` that survives the fix (other locks, a
+  `[DoNotParallelize]` tail, assembly or class fixture setup) caps the result at
+  `1 / (s_r + (1 - s_r)/N)` instead. Where you can see that residual work, say so
+  and quote the gain as a range; where you cannot, label the figure explicitly as
+  an upper bound rather than a prediction. Rank findings by that gain and state
+  it. There is **no fixed cutoff** below which a lock is safe
   to ignore, because the gain grows with `N`: `s = 0.02` is worth ~14% at
   `N = 8` but ~60% at `N = 32`. In particular do **not** use `s > 1/N` as a
   break-even test — it is a statement about when the `1/s` ceiling binds, not
@@ -804,7 +810,7 @@ Post **exactly one** `add-comment`. Structure:
 ```markdown
 ### 🧵 Parallel-safety audit — PR #<number>
 
-**Parallelization** — one row per test assembly the findings touch (Step 0 resolves this per assembly, so never collapse several projects into one state):
+**Parallelization** — one row per test assembly you **audited**, whether or not it produced findings (Step 0 resolves this per assembly, so never collapse several projects into one state; a clean audit still has to report the scope it was judged against):
 
 | Test assembly | Scope | Workers | Analyzer coverage |
 | --- | --- | --- | --- |
@@ -879,6 +885,10 @@ comment instead:
 Nothing audited here touches process-global state, shared filesystem paths, or
 `[ResourceLock]` / `[DoNotParallelize]` declarations. Nothing to flag for
 parallel-safety.
+
+<!-- If you did audit at least one assembly, add this line so the clean result is
+     still scope-aware. Omit it only when no test assembly was in scope at all. -->
+Audited `<assembly>` at scope `<off | ClassLevel | MethodLevel>`, workers `<N | CPU count>`.
 
 <sub>Re-run with `/parallel-audit`.</sub>
 ```
