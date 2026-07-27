@@ -26,7 +26,6 @@ internal sealed class LLMEnvironmentDetector
         new EnvironmentDetectionRuleWithResult<string>("copilot-cli", new AnyPresentEnvironmentRule(
             "GITHUB_COPILOT_CLI_MODE", "GH_COPILOT_WORKING_DIRECTORY", "COPILOT_CLI", "COPILOT_MODEL", "COPILOT_ALLOW_ALL", "COPILOT_GITHUB_TOKEN")),
         // GitHub Copilot app (the desktop GitHub application running as an AI agent), which sets AI_AGENT=github_copilot_app_agent.
-        // Placed before copilot-vscode so the more specific value match takes precedence when both could apply.
         new EnvironmentDetectionRuleWithResult<string>("copilot-app", new EnvironmentVariableValueRule("AI_AGENT", "github_copilot_app_agent")),
         // GitHub Copilot agent mode in VS Code, which sets AI_AGENT=github_copilot_vscode_agent and COPILOT_AGENT=1 on the terminals it runs commands in.
         new EnvironmentDetectionRuleWithResult<string>("copilot-vscode", new AnyMatchEnvironmentRule(
