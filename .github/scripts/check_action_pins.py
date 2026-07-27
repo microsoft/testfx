@@ -23,7 +23,8 @@ statement about the emitted bytes. This script is the missing gate.
 Checks
 ------
   A. Every external `uses:` reference is pinned to a 40-character commit SHA.
-  B. Every pinned reference carries a `# <version>` trailing comment.
+  B. Every pinned reference carries a trailing comment that actually looks like a
+     version, so a placeholder such as `# TODO` cannot stand in for one.
   C. For actions tracked in .github/aw/actions-lock.json, the version comment
      matches the version recorded there (catches the v7.0.1 -> v7.0.0 downgrade).
   D. Each action repository resolves to exactly one SHA across all workflow
@@ -34,6 +35,8 @@ Checks
      commit it dereferences to via DEREFERENCED_TAG_SHAS. Any other SHA fails,
      so a tracked action cannot be repointed at an arbitrary commit by keeping
      the ledger's version comment and rewriting every call site consistently.
+  G. A given SHA is labelled with the same version everywhere. For actions the
+     ledger does not track, this is the only thing keeping their labels honest.
 
 `gh aw` records the annotated *tag object* SHA in the ledger for some actions but
 emits the dereferenced *commit* SHA in `uses:` lines. That single legitimate
@@ -61,6 +64,10 @@ WORKFLOWS_DIR = REPO_ROOT / ".github" / "workflows"
 ACTIONS_LOCK_PATH = REPO_ROOT / ".github" / "aw" / "actions-lock.json"
 
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+# A version comment must actually look like a version. Accepting any non-empty
+# token would let `# TODO` satisfy check B, which matters most for actions the
+# ledger does not track and therefore cannot cross-check.
+VERSION_RE = re.compile(r"^v?\d+(?:\.\d+)*(?:[-+][0-9A-Za-z.-]+)?$")
 MANIFEST_PREFIX = "# gh-aw-manifest: "
 
 # Annotated tag objects the ledger records, mapped to the commit each dereferences
@@ -74,9 +81,13 @@ DEREFERENCED_TAG_SHAS = {
     "c54b30b7df092240050e69945842bc67aee0f0f4": "e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81",
 }
 
-# `uses: owner/repo/path@ref  # v1.2.3`, optionally quoted and optionally a list item.
+# `uses: owner/repo/path@ref  # v1.2.3`. YAML accepts a quoted key and whitespace
+# before the colon (`"uses":`, `uses :`), and all of those still execute as `uses`
+# entries, so the key must be matched as loosely as YAML parses it. Otherwise an
+# unpinned action slips past this gate simply by being written differently.
 USES_RE = re.compile(
-    r"""^\s*(?:-\s*)?uses:\s*(?P<quote>["']?)(?P<ref>[^"'\s#]+)(?P=quote)\s*(?:\#\s*(?P<comment>.*?))?\s*$"""
+    r"""^\s*(?:-\s*)?(?P<kq>["']?)uses(?P=kq)\s*:\s*"""
+    r"""(?P<quote>["']?)(?P<ref>[^"'\s#]+)(?P=quote)\s*(?:\#\s*(?P<comment>.*?))?\s*$"""
 )
 
 # The `# Custom actions used:` inventory block that `gh aw compile` writes into
@@ -185,9 +196,10 @@ def check_references(references: list[Reference], ledger: dict[str, dict[str, st
 
         shas_by_repo[reference.repo][reference.ref].append(reference)
 
-        if reference.version is None:
+        if reference.version is None or not VERSION_RE.match(reference.version):
+            found = "no" if reference.version is None else f"'{reference.version}' as its"
             errors.append(
-                f"{reference.location}: '{reference.repo}' is pinned to a SHA but has no "
+                f"{reference.location}: '{reference.repo}' is pinned to a SHA but has {found} "
                 "'# <version>' comment, so pin drift cannot be reviewed."
             )
             continue
@@ -201,6 +213,20 @@ def check_references(references: list[Reference], ledger: dict[str, dict[str, st
             )
 
     for repo, occurrences in sorted(shas_by_repo.items()):
+        # One SHA must not be described by conflicting version comments. For actions the
+        # ledger does not track this is the only thing that keeps their labels honest.
+        for sha, refs in sorted(occurrences.items()):
+            labels = {ref.version for ref in refs if ref.version is not None}
+            if len(labels) > 1:
+                details = "; ".join(
+                    f"{version} ({next(r.location for r in refs if r.version == version)})"
+                    for version in sorted(labels)
+                )
+                errors.append(
+                    f"'{repo}' pins {sha} but labels it with conflicting versions: {details}. "
+                    "A single commit cannot be two versions; correct the stale comment(s)."
+                )
+
         if len(occurrences) > 1:
             details = "; ".join(
                 f"{sha} ({refs[0].location}"
