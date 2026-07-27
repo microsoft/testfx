@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
 
 using MSTest.Analyzers.Helpers;
+using MSTest.Analyzers.RoslynAnalyzerHelpers;
 
 namespace MSTest.Analyzers;
 
@@ -45,19 +46,47 @@ public sealed class DoNotStoreStaticTestContextAnalyzer : DiagnosticAnalyzer
         {
             if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestContext, out INamedTypeSymbol? testContextSymbol))
             {
-                context.RegisterOperationAction(context => AnalyzeOperation(context, testContextSymbol), OperationKind.SimpleAssignment);
+                // Note that compound assignments (for example '+=') are intentionally not handled: they store the
+                // result of the underlying operator, not the TestContext parameter itself.
+                context.RegisterOperationAction(
+                    context => AnalyzeOperation(context, testContextSymbol),
+                    OperationKind.SimpleAssignment,
+                    OperationKind.CoalesceAssignment,
+                    OperationKind.DeconstructionAssignment);
             }
         });
     }
 
     private static void AnalyzeOperation(OperationAnalysisContext context, INamedTypeSymbol testContextSymbol)
     {
-        var assignmentOperation = (ISimpleAssignmentOperation)context.Operation;
+        var assignmentOperation = (IAssignmentOperation)context.Operation;
 
-        if (assignmentOperation is { Target: IMemberReferenceOperation { Instance: null }, Value: IParameterReferenceOperation parameterReferenceOperation }
-            && SymbolEqualityComparer.Default.Equals(parameterReferenceOperation.Type, testContextSymbol))
+        if (IsStoringTestContextParameterInStaticMember(assignmentOperation.Target, assignmentOperation.Value, testContextSymbol))
         {
             context.ReportDiagnostic(assignmentOperation.CreateDiagnostic(Rule));
         }
+    }
+
+    private static bool IsStoringTestContextParameterInStaticMember(IOperation target, IOperation value, INamedTypeSymbol testContextSymbol)
+    {
+        // Deconstruction assignments, for example '(s_testContext, _) = (tc, 0);', pair the elements of both tuples.
+        if (target.WalkDownConversion() is ITupleOperation targetTuple
+            && value.WalkDownConversion() is ITupleOperation valueTuple
+            && targetTuple.Elements.Length == valueTuple.Elements.Length)
+        {
+            for (int i = 0; i < targetTuple.Elements.Length; i++)
+            {
+                if (IsStoringTestContextParameterInStaticMember(targetTuple.Elements[i], valueTuple.Elements[i], testContextSymbol))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        return target is IMemberReferenceOperation { Instance: null }
+            && value is IParameterReferenceOperation parameterReferenceOperation
+            && SymbolEqualityComparer.Default.Equals(parameterReferenceOperation.Type, testContextSymbol);
     }
 }
