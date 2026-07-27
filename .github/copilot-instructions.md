@@ -119,6 +119,7 @@ Agentic workflows live in `.github/workflows/*.md` and `*.agent.md` and are comp
   - NEVER add `strict: false` to a workflow's frontmatter.
   - When in doubt, pass `--strict` explicitly to `gh aw compile` to enforce strict-mode validation across all workflows (action pinning, network config, safe-outputs, no write permissions, no deprecated fields).
 - After editing any agentic workflow `.md` source (or its frontmatter), run `gh aw compile <workflow-id>` and commit the regenerated `.lock.yml` in the same change. NEVER hand-edit `.lock.yml` files.
+- After regenerating any `.lock.yml`, run `python .github/scripts/check_action_pins.py` before committing. A locally-built `gh aw` extension can silently downgrade `actions/checkout` or un-pin `github/gh-aw-actions/setup` to a mutable tag in the generated file, and the `compiler_version` header does not reveal it. The script (also enforced by `.github/workflows/check-action-pins.yml`) verifies every workflow `uses:` reference is SHA-pinned and aligned with `.github/aw/actions-lock.json`. NEVER "fix" a reported drift by editing the `.lock.yml` or by adding the drifted version to `.github/aw/actions-lock.json` — recompile on the aligned toolchain instead.
 
 ## TODO comment policy
 

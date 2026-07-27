@@ -36,6 +36,21 @@ gh aw audit <run-id>
 
 For deeper guidance — creating, updating, debugging, upgrading, or wrapping MCP servers — see the dispatcher [`.github/agents/agentic-workflows.agent.md`](../agents/agentic-workflows.agent.md), which routes to the canonical `gh-aw` prompts.
 
+## Action pinning
+
+Every `uses:` reference in this directory — hand-written or generated — must be pinned to an immutable 40-character commit SHA with a trailing `# <version>` comment. The repo-wide ledger of approved pins lives in [`.github/aw/actions-lock.json`](../aw/actions-lock.json), and [`check-action-pins.yml`](./check-action-pins.yml) enforces alignment on every PR that touches a workflow:
+
+```bash
+python .github/scripts/check_action_pins.py   # run the same gate locally
+```
+
+The gate rejects unpinned references, missing version comments, versions that disagree with the ledger, an action pinned to more than one SHA across the directory, and `gh-aw-manifest` header entries that drift from the ledger.
+
+> [!WARNING]
+> **Compiling locally can silently corrupt pins.** A locally-installed `gh aw` extension has been observed downgrading `actions/checkout` from the repo-aligned v7.0.1 to v7.0.0 and un-pinning `github/gh-aw-actions/setup` to the mutable `@v0.83.1` tag ([#10258](https://github.com/microsoft/testfx/issues/10258)). `.github/aw/actions-lock.json` keys its overrides *by version string*, so framework-injected steps (patch-context, threat-detection, create-PR) that request a version the ledger does not carry key-miss, no override applies, and the CLI's stale built-in default wins. Adding the missing version to the ledger does not help — the injected version label is baked into the `gh aw` binary.
+>
+> The `compiler_version` field in the `gh-aw-manifest` header does **not** catch this: it is an identity claim, not a statement about the emitted bytes, so two builds stamping the same version can embed different defaults. Always run the pin check above before committing a regenerated lock file. Recompiling on the aligned CI toolchain (the pinned `github/gh-aw-actions/setup` action used by [`agentics-maintenance.yml`](./agentics-maintenance.yml)) self-heals an affected lock file.
+
 ## Secrets & authentication
 
 Agentic workflows authenticate through repository secrets:
@@ -206,6 +221,7 @@ a workflow needs elevated access (then use the GitHub App above).
 | [`agentics-maintenance.yml`](./agentics-maintenance.yml) | Schedule + manual + reusable + issues | Maintains the agentic workflow ecosystem itself (re-compilation, dependency bumps, etc.). |
 | [`backport.yml`](./backport.yml) | `/backport` comment + issues + schedule | Backports merged PRs to release branches on demand. |
 | [`backport-base.yml`](./backport-base.yml) | Reusable | Shared logic invoked by `backport.yml` to perform the actual backport. |
+| [`check-action-pins.yml`](./check-action-pins.yml) | PR + push + manual | Verifies every workflow `uses:` reference is SHA-pinned and aligned with `.github/aw/actions-lock.json`. |
 | [`check-vendored-files.yml`](./check-vendored-files.yml) | Schedule + manual + PR + issues | Verifies that files vendored from external sources (such as `eng/common`) stay in sync. |
 | [`copilot-setup-steps.yml`](./copilot-setup-steps.yml) | PR + push + manual | Bootstraps a Copilot Coding Agent environment with the right .NET SDK and tooling. |
 | [`dedup-analysis.yml`](./dedup-analysis.yml) | Schedule + manual + issues | Code Duplication Analysis (jscpd-based). |
@@ -234,7 +250,7 @@ Reusable agentic-workflow snippets imported via `imports:` in workflow frontmatt
 - **Source of truth.** Edit the `.md` file (and any imported `shared/*.md`); never the `.lock.yml`.
 - **One change, one compile.** After editing an agentic workflow source, run `gh aw compile <workflow-id>` and commit the regenerated `.lock.yml` in the same change.
 - **Same applies to Dependabot updates** that touch generated manifests (e.g. `package.json` / `requirements.txt` / `go.mod`) if `gh aw compile` ever emits them under `.github/workflows/`: never merge those PRs directly; update the source `.md` files and rerun `gh aw compile --dependabot` to bundle the fixes.
-- **Pinned actions only.** Strict mode pins every `uses:` reference to a SHA; the compiler enforces this.
+- **Pinned actions only.** Every `uses:` reference is pinned to an immutable SHA with a `# <version>` comment matching [`.github/aw/actions-lock.json`](../aw/actions-lock.json). Strict mode pins generated references, and [`check-action-pins.yml`](./check-action-pins.yml) verifies the result — see [Action pinning](#action-pinning).
 - **Minimal permissions.** Workflows declare the least privilege they need; write capabilities flow through gh-aw `safe-outputs:` rather than direct `permissions: write-all`.
 
 [gh-aw]: https://github.com/github/gh-aw
