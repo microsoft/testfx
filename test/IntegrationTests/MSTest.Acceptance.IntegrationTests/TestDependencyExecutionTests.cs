@@ -54,8 +54,15 @@ public sealed class TestDependencyExecutionTests : AcceptanceTestBase<TestDepend
         // Fan-out: the two branches share a prerequisite but not each other, so they must be allowed to run at
         // the same time. This is what a dependency graph buys over a flat ordering attribute, which would have
         // serialized them.
-        bool branchesOverlap = spans["BranchA"].Enter < spans["BranchB"].Exit && spans["BranchB"].Enter < spans["BranchA"].Exit;
-        Assert.IsTrue(branchesOverlap, $"BranchA {spans["BranchA"]} and BranchB {spans["BranchB"]} did not overlap");
+        //
+        // Asserted by rendezvous rather than by comparing timestamps: each branch signals its own arrival and
+        // then waits for the other, so the run only completes if both were genuinely dispatched concurrently.
+        // Inferring overlap from elapsed times would be a race - under CI load the second branch might not
+        // start before the first one's sleep elapsed, failing a correct scheduler. If the branches are
+        // serialized the barrier is never satisfied, the waits hit their timeout, and the asset fails the
+        // tests rather than this assertion having to notice a suspicious ordering.
+        Assert.Contains("BranchA:rendezvous-ok", result.StandardOutput, "BranchA did not overlap BranchB");
+        Assert.Contains("BranchB:rendezvous-ok", result.StandardOutput, "BranchB did not overlap BranchA");
     }
 
     [TestMethod]
@@ -249,6 +256,24 @@ internal static class SpanProbe
         }
     }
 
+    private static readonly Dictionary<string, int> s_entered = new Dictionary<string, int>(StringComparer.Ordinal);
+
+    public static void Enter(string name)
+    {
+        lock (s_gate)
+        {
+            s_entered[name] = (int)s_clock.ElapsedMilliseconds;
+        }
+    }
+
+    public static void Exit(string name)
+    {
+        lock (s_gate)
+        {
+            s_spans.Add(string.Format(CultureInfo.InvariantCulture, "{0},{1},{2}", name, s_entered[name], (int)s_clock.ElapsedMilliseconds));
+        }
+    }
+
     public static void Flush()
     {
         lock (s_gate)
@@ -273,26 +298,45 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 [assembly: Parallelize(Workers = 4, Scope = ExecutionScope.MethodLevel)]
 
 #file GraphTests.cs
+using System;
+using System.Threading;
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [TestClass]
 public sealed class GraphTests
 {
+    // The two branches rendezvous instead of sleeping a fixed span: each signals its arrival and waits for
+    // the other, so concurrent dispatch is proven rather than inferred from timestamps. A generous timeout
+    // keeps a serialized scheduler from hanging the run - it fails the test instead.
+    private static readonly CountdownEvent Rendezvous = new(2);
+
     [TestMethod]
     public void Root() => SpanProbe.Run("Root", 300);
 
     [TestMethod]
     [DependsOn(nameof(Root))]
-    public void BranchA() => SpanProbe.Run("BranchA", 800);
+    public void BranchA() => RunBranch("BranchA");
 
     [TestMethod]
     [DependsOn(nameof(Root))]
-    public void BranchB() => SpanProbe.Run("BranchB", 800);
+    public void BranchB() => RunBranch("BranchB");
 
     [TestMethod]
     [DependsOn(nameof(BranchA))]
     [DependsOn(nameof(BranchB))]
     public void Join() => SpanProbe.Run("Join", 50);
+
+    private static void RunBranch(string name)
+    {
+        SpanProbe.Enter(name);
+        Rendezvous.Signal();
+        bool met = Rendezvous.Wait(TimeSpan.FromSeconds(60));
+        SpanProbe.Exit(name);
+
+        Assert.IsTrue(met, name + " timed out waiting for the other branch, so the two never ran concurrently.");
+        Console.WriteLine(name + ":rendezvous-ok");
+    }
 }
 """;
 

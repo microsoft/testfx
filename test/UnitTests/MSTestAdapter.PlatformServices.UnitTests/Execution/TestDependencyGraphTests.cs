@@ -191,6 +191,35 @@ public sealed class TestDependencyGraphTests : TestContainer
         NamesOf(graph.SequentialTests).Should().Equal("A1", "B1", "A2");
     }
 
+    public void Build_WhenCyclesOverlap_MarksEveryMemberOfBothCycles()
+    {
+        // A depends on B and C; B on A; C on B. There are two overlapping cycles - A>B>A and C>B>A>C - and
+        // every one of the three tests is in one. A plain depth-first search reports whichever back edge it
+        // closes first (A>B>A), finishes B, and then never notices C is cyclic too, leaving C scheduled. Only
+        // a component-based pass finds all three.
+        UnitTestElement[] tests =
+        [
+            CreateElement(ClassA, "A", DependsOnMethod("B"), DependsOnMethod("C")),
+            CreateElement(ClassA, "B", DependsOnMethod("A")),
+            CreateElement(ClassA, "C", DependsOnMethod("B")),
+        ];
+
+        TestDependencyGraph graph = TestDependencyGraph.Build(tests, ExecutionScope.MethodLevel, parallelizationEnabled: true)!;
+
+        NamesOfBroken(graph.BrokenTests).Should().BeEquivalentTo(["A", "B", "C"]);
+
+        // All three are in one strongly connected component, so they share a single description.
+        graph.Errors.Should().ContainSingle();
+        foreach (TestDependencyGraph.BrokenTest broken in graph.BrokenTests)
+        {
+            broken.CycleMessage.Should().Contain("A").And.Contain("B").And.Contain("C");
+        }
+
+        // Nothing cyclic may be scheduled.
+        graph.ParallelChunks.Should().BeEmpty();
+        graph.SequentialTests.Should().BeEmpty();
+    }
+
     public void Build_WhenTwoDisjointCyclesExist_ReportsEachFailureAgainstItsOwnCycle()
     {
         // Joining every cycle description onto every failure would tell whoever is reading One's failure

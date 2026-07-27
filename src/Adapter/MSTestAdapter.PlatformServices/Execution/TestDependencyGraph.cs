@@ -331,73 +331,113 @@ internal sealed class TestDependencyGraph
     }
 
     /// <summary>
-    /// Finds every dependency cycle with an iterative three-colour depth-first search and describes each one
-    /// as a path (<c>A &gt; B &gt; A</c>). Each cycle's description is recorded against the tests that take
-    /// part in it, so a failure reports the cycle that test is actually in rather than every cycle in the
-    /// assembly.
+    /// Finds every test that takes part in a dependency cycle, and describes each cycle as a path
+    /// (<c>A &gt; B &gt; A</c>). Cycle membership is computed with Tarjan's strongly-connected-components
+    /// algorithm rather than by collecting back-edge paths from a plain depth-first search: a DFS reports the
+    /// path it happened to close, so with overlapping cycles (A depends on B and C, B on A, C on B) it finds
+    /// <c>A &gt; B &gt; A</c>, marks B finished, and never notices that C is in a cycle too. Every member of a
+    /// component with a cycle has to be found, because each one is unschedulable.
     /// </summary>
     private static string?[] FindCycles(int[][] prerequisites, UnitTestElement[] tests, List<string> errors)
     {
-        const byte White = 0, Grey = 1, Black = 2;
-        byte[] colour = new byte[prerequisites.Length];
         string?[] cycleMessageByTest = new string?[prerequisites.Length];
-        var path = new List<int>();
+        int[] index = new int[prerequisites.Length];
+        int[] lowLink = new int[prerequisites.Length];
+        bool[] onStack = new bool[prerequisites.Length];
         int[] edgeCursor = new int[prerequisites.Length];
+        for (int i = 0; i < index.Length; i++)
+        {
+            index[i] = -1;
+        }
+
+        var stack = new List<int>();
+        var callStack = new List<int>();
+        int nextIndex = 0;
 
         for (int start = 0; start < prerequisites.Length; start++)
         {
-            if (colour[start] != White)
+            if (index[start] != -1)
             {
                 continue;
             }
 
-            path.Clear();
-            path.Add(start);
-            colour[start] = Grey;
+            // Iterative Tarjan: the recursive form would stack-overflow on a long dependency chain.
+            callStack.Add(start);
+            index[start] = lowLink[start] = nextIndex++;
             edgeCursor[start] = 0;
+            stack.Add(start);
+            onStack[start] = true;
 
-            while (path.Count > 0)
+            while (callStack.Count > 0)
             {
-                int current = path[path.Count - 1];
-                int[] currentPrerequisites = prerequisites[current];
-
-                if (edgeCursor[current] < currentPrerequisites.Length)
+                int current = callStack[callStack.Count - 1];
+                if (edgeCursor[current] < prerequisites[current].Length)
                 {
-                    int next = currentPrerequisites[edgeCursor[current]++];
-                    if (colour[next] == Grey)
+                    int next = prerequisites[current][edgeCursor[current]++];
+                    if (index[next] == -1)
                     {
-                        // 'next' is on the current path, so the path from it to 'current' is a cycle.
-                        int cycleStart = path.LastIndexOf(next);
-                        var cycle = new List<string>();
-                        for (int i = cycleStart; i < path.Count; i++)
-                        {
-                            cycle.Add(tests[path[i]].TestMethod.FullyQualifiedName);
-                        }
-
-                        cycle.Add(tests[next].TestMethod.FullyQualifiedName);
-                        string message = string.Format(CultureInfo.CurrentCulture, Resource.DependsOnCycle, string.Join(" > ", cycle));
-                        errors.Add(message);
-
-                        // Attribute the message to this cycle's own members. A test caught in two cycles keeps
-                        // the first description found - one accurate path is enough to act on, and listing
-                        // every cycle it touches is the conflation this avoids.
-                        for (int i = cycleStart; i < path.Count; i++)
-                        {
-                            cycleMessageByTest[path[i]] ??= message;
-                        }
-                    }
-                    else if (colour[next] == White)
-                    {
-                        colour[next] = Grey;
+                        index[next] = lowLink[next] = nextIndex++;
                         edgeCursor[next] = 0;
-                        path.Add(next);
+                        stack.Add(next);
+                        onStack[next] = true;
+                        callStack.Add(next);
+                    }
+                    else if (onStack[next])
+                    {
+                        lowLink[current] = Math.Min(lowLink[current], index[next]);
                     }
 
                     continue;
                 }
 
-                colour[current] = Black;
-                path.RemoveAt(path.Count - 1);
+                callStack.RemoveAt(callStack.Count - 1);
+                if (callStack.Count > 0)
+                {
+                    int parent = callStack[callStack.Count - 1];
+                    lowLink[parent] = Math.Min(lowLink[parent], lowLink[current]);
+                }
+
+                if (lowLink[current] != index[current])
+                {
+                    continue;
+                }
+
+                // 'current' roots a strongly connected component: pop it off the stack.
+                var component = new List<int>();
+                int member;
+                do
+                {
+                    member = stack[stack.Count - 1];
+                    stack.RemoveAt(stack.Count - 1);
+                    onStack[member] = false;
+                    component.Add(member);
+                }
+                while (member != current);
+
+                // A component of one is only a cycle when the test names itself; anything larger always is.
+                bool isCycle = component.Count > 1 || Array.IndexOf(prerequisites[current], current) >= 0;
+                if (!isCycle)
+                {
+                    continue;
+                }
+
+                // Report the component in discovery order so the path reads consistently, and close it by
+                // repeating the first member - the rendering a reader expects of a cycle.
+                component.Reverse();
+                var cycle = new List<string>(component.Count + 1);
+                foreach (int node in component)
+                {
+                    cycle.Add(tests[node].TestMethod.FullyQualifiedName);
+                }
+
+                cycle.Add(tests[component[0]].TestMethod.FullyQualifiedName);
+
+                string message = string.Format(CultureInfo.CurrentCulture, Resource.DependsOnCycle, string.Join(" > ", cycle));
+                errors.Add(message);
+                foreach (int node in component)
+                {
+                    cycleMessageByTest[node] = message;
+                }
             }
         }
 

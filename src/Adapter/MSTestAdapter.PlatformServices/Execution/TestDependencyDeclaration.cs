@@ -86,7 +86,12 @@ internal sealed class TestDependencyDeclaration
                 // this class waits for Setup", never "Setup waits for itself", so that generated self-edge is
                 // dropped - exactly as discovery drops it for a class-level [DependsOn]. Without this, Setup
                 // would be reported as a cycle and the whole class skipped.
-                if (dependent.MethodName is null && prerequisite.Matches(test))
+                //
+                // Only a *specific* prerequisite is suppressed this way. When the prerequisite is itself a
+                // whole class, dropping the edge here would silently discard the entire declaration; those
+                // edges go to the graph, which removes just each test's own self-edge and reports whatever
+                // genuine cycle remains.
+                if (dependent.MethodName is null && prerequisite.MethodName is not null && prerequisite.Matches(test))
                 {
                     continue;
                 }

@@ -227,12 +227,24 @@ internal sealed partial class MSTestSettings
         }
 
         // nodes: [ { "test": "...", "dependsOn": [ "..." ], "proceedOnFailure": true }, ... ]
+        //
+        // As for chains, a node missing its "test" key is indistinguishable from the end of the array through
+        // the indexer, so the same single-index lookahead keeps one malformed entry from silently discarding
+        // every node after it.
         for (int nodeIndex = 0; ; nodeIndex++)
         {
             string? test = configuration[$"{root}:nodes:{nodeIndex}:test"];
             if (test is null)
             {
-                break;
+                if (configuration[$"{root}:nodes:{nodeIndex + 1}:test"] is null)
+                {
+                    break;
+                }
+
+                logger?.SendMessage(
+                    MessageLevel.Warning,
+                    string.Format(CultureInfo.CurrentCulture, Resource.DependencyConfigurationNodeWithoutTest, nodeIndex));
+                continue;
             }
 
             bool proceedOnFailure = false;
