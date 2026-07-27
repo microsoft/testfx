@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="ru" original="../CrashDumpResources.resx">
     <body>
@@ -86,7 +86,7 @@ Supports the following placeholders: {pname} (process executable name, deferred 
       </trans-unit>
       <trans-unit id="CrashDumpSequenceFileOpenError">
         <source>Failed to initialize crash sequence file '{0}': {1}. Test sequence information will not be available if the test host crashes.</source>
-        <target state="new">Failed to initialize crash sequence file '{0}': {1}. Test sequence information will not be available if the test host crashes.</target>
+        <target state="translated">Не удалось инициализировать файл последовательности сбоя "{0}": {1}. Сведения о последовательности тестирования будет недоступна в случае сбоя тестового узла.</target>
         <note>{0} is the crash sequence file path. {1} is the full exception detail (ToString) from opening or writing the initial header.</note>
       </trans-unit>
       <trans-unit id="CrashDumpSequenceFileReadError">
