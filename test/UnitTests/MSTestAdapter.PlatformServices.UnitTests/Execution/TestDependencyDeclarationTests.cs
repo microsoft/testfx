@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -69,7 +69,11 @@ public sealed class TestDependencyDeclarationTests : TestContainer
             adapterMessageLogger: null);
 
         tests[0].Dependencies.Should().ContainSingle();
+        tests[0].Dependencies![0].TargetClassFullName.Should().Be("Ns.Other");
+        tests[0].Dependencies![0].TargetMethodName.Should().Be("Setup");
         tests[1].Dependencies.Should().ContainSingle();
+        tests[1].Dependencies![0].TargetClassFullName.Should().Be("Ns.Other");
+        tests[1].Dependencies![0].TargetMethodName.Should().Be("Setup");
     }
 
     public void ApplyAll_WhenTheDependentMatchesNothing_ReportsNothingApplied()
