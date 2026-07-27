@@ -254,9 +254,18 @@ If the changed-test-files list is empty
 
 Audit each changed test file. For declaration reconciliation (category C) and
 near-miss detection you **must** also read sibling tests: use `grep` across the
-owning test project (and, for shared keys, the whole `test/` tree) to find every
-`[ResourceLock]` key, `[DoNotParallelize]`, and assembly-level `[Parallelize]` /
-`[DoNotParallelize]`. A near-miss is invisible if you only look at the diff.
+**owning test project** to find every `[ResourceLock]` key, `[DoNotParallelize]`,
+and assembly-level `[Parallelize]` / `[DoNotParallelize]`. A near-miss is
+invisible if you only look at the diff.
+
+**Keep key comparison inside that one assembly.** A `ResourceLockManager` is
+created per test source (`TestExecutionManager.Parallelization.cs:214`) and
+sources are executed one group at a time (`:33-46`), so keys only coordinate
+*within* an assembly. Never report a near-miss between keys declared in two
+different test projects — they could not have coordinated even if spelled
+identically. Where two *assemblies* really do collide on a shared resource (a
+path, an env var), a matching key is **not** protection: recommend resource
+isolation or external coordination instead.
 
 ---
 
