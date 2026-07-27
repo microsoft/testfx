@@ -65,6 +65,8 @@ Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalProgressMessageState.Te
 Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalProgressMessageState.Version.get -> long
 Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporter.UpdateProgressMessage(string! executionId, string! instanceId, string! producerUid, string! key, string? message) -> void
 Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporter.ClearProgressMessages() -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporter.TestCompletedWithoutResult(string! executionId, string! testNodeUid) -> void
+Microsoft.Testing.Platform.Telemetry.OpenTelemetryResultHandler.NotifyExecutionCompleted(Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode) -> void
 virtual Microsoft.Testing.Platform.OutputDevice.SimplifiedConsoleOutputDeviceBase.DisplayActiveTestProgress.get -> bool
 static Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.IsProgressEnabled(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> bool
 const Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressStateAwareTerminal.MaximumVisibleProgressMessages = 5 -> int
@@ -271,3 +273,28 @@ Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporter.TerminalTe
 Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressStateAwareTerminal.TestProgressStateAwareTerminal(Microsoft.Testing.Platform.OutputDevice.Terminal.ITerminal! terminal, System.Func<bool?>! showProgress, Microsoft.Testing.Platform.OutputDevice.Terminal.IProgressRenderer! renderer, Microsoft.Testing.Platform.Logging.ILogger! logger) -> void
 Microsoft.Testing.Platform.ServerMode.ServerModeManager.MessageHandlerFactory.MessageHandlerFactory(string! host, int port, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDevice, Microsoft.Testing.Platform.Logging.ILogger! logger) -> void
 Microsoft.Testing.Platform.ServerMode.TcpMessageHandler.TcpMessageHandler(System.Net.Sockets.TcpClient! client, System.IO.Stream! clientToServerStream, System.IO.Stream! serverToClientStream, Microsoft.Testing.Platform.ServerMode.IMessageFormatter! formatter, Microsoft.Testing.Platform.Logging.ILogger! logger) -> void
+const Microsoft.Testing.Platform.OutputDevice.ProgressReportingConfiguration.MTP_PROGRESS_SILENCE_SECONDS = "MTP_PROGRESS_SILENCE_SECONDS" -> string!
+const Microsoft.Testing.Platform.OutputDevice.ProgressReportingConfiguration.MTP_PROGRESS_SLOW_TEST_SECONDS = "MTP_PROGRESS_SLOW_TEST_SECONDS" -> string!
+Microsoft.Testing.Platform.OutputDevice.ActiveTestTracker
+Microsoft.Testing.Platform.OutputDevice.ActiveTestTracker.ActiveTestTracker(System.TimeSpan slowTestThreshold, System.Func<Microsoft.Testing.Platform.Helpers.IStopwatch!>! createStopwatch) -> void
+Microsoft.Testing.Platform.OutputDevice.ActiveTestTracker.Clear() -> void
+Microsoft.Testing.Platform.OutputDevice.ActiveTestTracker.Complete(Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid! uid) -> void
+Microsoft.Testing.Platform.OutputDevice.ActiveTestTracker.GetDueDiagnostics() -> Microsoft.Testing.Platform.OutputDevice.SlowTestDiagnostic![]!
+Microsoft.Testing.Platform.OutputDevice.ActiveTestTracker.IsActive(Microsoft.Testing.Platform.OutputDevice.SlowTestDiagnostic! diagnostic) -> bool
+Microsoft.Testing.Platform.OutputDevice.ActiveTestTracker.IsEnabled.get -> bool
+Microsoft.Testing.Platform.OutputDevice.ActiveTestTracker.Start(Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid! uid, string! displayName) -> void
+Microsoft.Testing.Platform.OutputDevice.ProgressReportingConfiguration
+Microsoft.Testing.Platform.OutputDevice.SimplifiedConsoleOutputDeviceBase.ReportSlowTestsOnceAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.OutputDevice.SimplifiedConsoleOutputDeviceBase.SimplifiedConsoleOutputDeviceBase(Microsoft.Testing.Platform.Helpers.IConsole! console, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.Helpers.IAsyncMonitor! asyncMonitor, Microsoft.Testing.Platform.Helpers.IRuntimeFeature! runtimeFeature, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Services.IPlatformInformation! platformInformation, Microsoft.Testing.Platform.Services.IStopPoliciesService! policiesService, System.TimeSpan slowTestThreshold, System.Func<Microsoft.Testing.Platform.Helpers.IStopwatch!>! createStopwatch, System.TimeSpan slowTestPollInterval) -> void
+Microsoft.Testing.Platform.OutputDevice.SlowTestDiagnostic
+Microsoft.Testing.Platform.OutputDevice.SlowTestDiagnostic.DisplayName.get -> string!
+Microsoft.Testing.Platform.OutputDevice.SlowTestDiagnostic.Elapsed.get -> System.TimeSpan
+Microsoft.Testing.Platform.OutputDevice.SlowTestDiagnostic.Generation.get -> long
+Microsoft.Testing.Platform.OutputDevice.SlowTestDiagnostic.SlowTestDiagnostic(Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid! uid, string! displayName, System.TimeSpan elapsed, long generation) -> void
+Microsoft.Testing.Platform.OutputDevice.SlowTestDiagnostic.Uid.get -> Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid!
+Microsoft.Testing.Platform.OutputDevice.SlowTestThresholdState
+Microsoft.Testing.Platform.OutputDevice.SlowTestThresholdState.IsDue(System.TimeSpan elapsed) -> bool
+Microsoft.Testing.Platform.OutputDevice.SlowTestThresholdState.SlowTestThresholdState(System.TimeSpan initialThreshold) -> void
+static Microsoft.Testing.Platform.OutputDevice.ProgressReportingConfiguration.GetThreshold(Microsoft.Testing.Platform.Helpers.IEnvironment! environment, string! variableName, int defaultSeconds) -> System.TimeSpan
+Microsoft.Testing.Platform.Extensions.Messages.TestNodeExecutionCompletedProperty
+static Microsoft.Testing.Platform.Extensions.Messages.TestNodeExecutionCompletedProperty.CachedInstance.get -> Microsoft.Testing.Platform.Extensions.Messages.TestNodeExecutionCompletedProperty!

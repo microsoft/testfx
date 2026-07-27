@@ -82,6 +82,20 @@ public sealed class GitHubActionsSlowTestReporterTests
     }
 
     [TestMethod]
+    public async Task ConsumeAsync_ExecutionCompleted_StopsTrackingAsync()
+    {
+        CapturingOutputDevice outputDevice = new();
+        GitHubActionsSlowTestReporter reporter = CreateReporter(outputDevice, githubActions: true);
+        await reporter.OnTestSessionStartingAsync(new TestSessionContextStub()).ConfigureAwait(false);
+
+        await reporter.ConsumeAsync(null!, CreateMessage("u1", "Ns.T1", new InProgressTestNodeStateProperty()), CancellationToken.None).ConfigureAwait(false);
+        await reporter.ConsumeAsync(null!, CreateMessage("u1", "Ns.T1", TestNodeExecutionCompletedProperty.CachedInstance), CancellationToken.None).ConfigureAwait(false);
+
+        await reporter.ScanOnceAsync(Start + TimeSpan.FromSeconds(120), CancellationToken.None).ConfigureAwait(false);
+        Assert.IsEmpty(outputDevice.Lines);
+    }
+
+    [TestMethod]
     public async Task ScanOnce_WhenDisabled_DoesNotEmitAsync()
     {
         CapturingOutputDevice outputDevice = new();
@@ -153,10 +167,10 @@ public sealed class GitHubActionsSlowTestReporterTests
             new StubLoggerFactory());
     }
 
-    private static TestNodeUpdateMessage CreateMessage(string uid, string fullyQualifiedName, TestNodeStateProperty state, string? displayName = null)
+    private static TestNodeUpdateMessage CreateMessage(string uid, string fullyQualifiedName, IProperty property, string? displayName = null)
     {
         PropertyBag propertyBag = new();
-        propertyBag.Add(state);
+        propertyBag.Add(property);
         propertyBag.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.FullyQualifiedName", fullyQualifiedName));
 
         return new TestNodeUpdateMessage(new SessionUid("session"), new TestNode

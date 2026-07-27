@@ -90,11 +90,31 @@ public sealed class CommonHostTests
         Assert.AreEqual(1, testApplicationLifetime.CleanupCount);
     }
 
+    [TestMethod]
+    public async Task DisposeServiceProviderAsync_WhenDataConsumerIsAlsoRegisteredAsService_DisposesOnce()
+    {
+        Mock<IDataConsumer> dataConsumer = new();
+        Mock<IDisposable> disposableDataConsumer = dataConsumer.As<IDisposable>();
+        Mock<BaseMessageBus> messageBus = new();
+        messageBus.SetupGet(x => x.DataConsumerServices).Returns([dataConsumer.Object]);
+
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(messageBus.Object);
+        serviceProvider.AddService(dataConsumer.Object);
+
+        await TestableCommonHost.DisposeServiceProviderForTestingAsync(serviceProvider);
+
+        disposableDataConsumer.Verify(x => x.Dispose(), Times.Once);
+    }
+
     private sealed class TestableCommonHost(ServiceProvider serviceProvider, bool runTestApplicationLifeCycleCallbacks = false) : CommonHost(serviceProvider)
     {
         protected override string HostType => "TestHost";
 
         protected override bool RunTestApplicationLifeCycleCallbacks => runTestApplicationLifeCycleCallbacks;
+
+        public static Task DisposeServiceProviderForTestingAsync(ServiceProvider serviceProvider)
+            => DisposeServiceProviderAsync(serviceProvider);
 
         public static Task ExecuteRequestForTestingAsync(
             ProxyOutputDevice outputDevice,

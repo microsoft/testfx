@@ -6,6 +6,7 @@ using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.Telemetry;
 
 using Moq;
 
@@ -18,6 +19,66 @@ public sealed class TestApplicationResultTests : IDisposable
         = new(new Mock<IOutputDevice>().Object, new Mock<ICommandLineOptions>().Object, new Mock<IEnvironment>().Object, new Mock<IStopPoliciesService>().Object, null);
 
     public void Dispose() => _testApplicationResult.Dispose();
+
+    [TestMethod]
+    public async Task ConsumeAsync_ExecutionCompleted_ClosesOnlyOldestActivityWithoutOutcome()
+    {
+        var firstActivity = new Mock<IPlatformActivity>();
+        var secondActivity = new Mock<IPlatformActivity>();
+        var otelService = new Mock<IPlatformOpenTelemetryService>();
+        otelService
+            .Setup(service => service.CreateCounter<int>(It.IsAny<string>(), null, null, null))
+            .Returns(Mock.Of<ICounter<int>>());
+        otelService
+            .Setup(service => service.CreateHistogram<double>(It.IsAny<string>(), null, null, null))
+            .Returns(Mock.Of<IHistogram<double>>());
+        otelService
+            .SetupSequence(service => service.StartActivity(
+                It.IsAny<string>(),
+                It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+                It.IsAny<string?>(),
+                It.IsAny<DateTimeOffset>()))
+            .Returns(firstActivity.Object)
+            .Returns(secondActivity.Object);
+        using TestApplicationResult testApplicationResult = new(
+            Mock.Of<IOutputDevice>(),
+            Mock.Of<ICommandLineOptions>(),
+            Mock.Of<IEnvironment>(),
+            Mock.Of<IStopPoliciesService>(),
+            otelService.Object);
+        static TestNode CreateNode(IProperty property) => new()
+        {
+            Uid = "shared-uid",
+            DisplayName = "Test",
+            Properties = new PropertyBag(property),
+        };
+
+        await testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(InProgressTestNodeStateProperty.CachedInstance)),
+            CancellationToken.None);
+        await testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(InProgressTestNodeStateProperty.CachedInstance)),
+            CancellationToken.None);
+
+        await testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(TestNodeExecutionCompletedProperty.CachedInstance)),
+            CancellationToken.None);
+
+        firstActivity.Verify(activity => activity.Dispose(), Times.Once);
+        firstActivity.Verify(activity => activity.SetTag("test.result", It.IsAny<object?>()), Times.Never);
+        secondActivity.Verify(activity => activity.Dispose(), Times.Never);
+
+        await testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(PassedTestNodeStateProperty.CachedInstance)),
+            CancellationToken.None);
+
+        secondActivity.Verify(activity => activity.SetTag("test.result", "passed"), Times.Once);
+        secondActivity.Verify(activity => activity.Dispose(), Times.Once);
+    }
 
     [TestMethod]
     public async Task GetProcessExitCode_WithCoverageThresholdFailure_ReturnsCoverageThresholdFailed()

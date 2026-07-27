@@ -1667,6 +1667,38 @@ public sealed class TerminalTestReporterTests
     }
 
     [TestMethod]
+    public void TestNodeResultsState_RemoveRunningTestNode_RemovesWithoutRecordingOutcome()
+    {
+        var stopwatchFactory = new StopwatchFactory();
+        var state = new TestNodeResultsState(1);
+        state.AddRunningTestNode(id: 10, uid: "uid-1", name: "DroppedTest", stopwatchFactory.CreateStopwatch());
+
+        state.RemoveRunningTestNode("uid-1");
+
+        Assert.AreEqual(0, state.Count);
+        Assert.IsNull(state.GetSingleActiveOrSummaryTask());
+    }
+
+    [TestMethod]
+    public void TerminalTestReporter_TestCompletedWithoutResult_DoesNotRecordOutcome()
+    {
+        using var terminalReporter = new TerminalTestReporter(
+            new StringBuilderConsole(),
+            new TerminalTestReporterOptions
+            {
+                ShowActiveTests = true,
+                ShowProgress = () => false,
+            });
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: false);
+        terminalReporter.AssemblyRunStarted("test.dll", "net8.0", "x64", executionId: "0", instanceId: "0");
+        terminalReporter.TestInProgress(executionId: "0", testNodeUid: "uid-1", displayName: "DroppedTest");
+
+        terminalReporter.TestCompletedWithoutResult(executionId: "0", testNodeUid: "uid-1");
+
+        Assert.AreEqual(0, terminalReporter.TotalTests);
+    }
+
+    [TestMethod]
     public void TestNodeResultsState_GetSingleActiveOrSummaryTask_WhenMultipleTasks_ReturnsFormattedSummary()
     {
         var stopwatchFactory = new StopwatchFactory();

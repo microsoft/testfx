@@ -122,27 +122,33 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
         SuccessfulTestResultMessage[]? successfulTestResultMessages = [];
         FailedTestResultMessage[]? failedTestResultMessages = [];
 
-        ReadFields(stream, (fieldId, fieldSize) =>
+        // Inline ReadFields to avoid per-message closure allocation on the hot IPC deserialization path.
+        ushort fieldCount = ReadUShort(stream);
+        for (int f = 0; f < fieldCount; f++)
         {
+            ushort fieldId = ReadUShort(stream);
+            int fieldSize = ReadInt(stream);
+
             if (TryReadExecutionScopedField(stream, fieldId, fieldSize, ref executionId, ref instanceId))
             {
-                return true;
+                continue;
             }
 
             switch (fieldId)
             {
                 case TestResultMessagesFieldsId.SuccessfulTestMessageList:
                     successfulTestResultMessages = ReadSuccessfulTestMessagesPayload(stream);
-                    return true;
+                    break;
 
                 case TestResultMessagesFieldsId.FailedTestMessageList:
                     failedTestResultMessages = ReadFailedTestMessagesPayload(stream);
-                    return true;
+                    break;
 
                 default:
-                    return false;
+                    SetPosition(stream, stream.Position + fieldSize);
+                    break;
             }
-        });
+        }
 
         return new(
             executionId,
@@ -159,14 +165,24 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
         {
             CommonTestResultFields fields = default;
 
-            ReadFields(stream, (fieldId, fieldSize) => TryReadCommonTestResultField(
-                stream,
-                fieldId,
-                fieldSize,
-                ref fields,
-                SuccessfulTestResultMessageFieldsId.StandardOutput,
-                SuccessfulTestResultMessageFieldsId.ErrorOutput,
-                SuccessfulTestResultMessageFieldsId.SessionUid));
+            // Inline ReadFields to avoid per-test closure allocation on the hot IPC deserialization path.
+            ushort fieldCount = ReadUShort(stream);
+            for (int f = 0; f < fieldCount; f++)
+            {
+                ushort fieldId = ReadUShort(stream);
+                int fieldSize = ReadInt(stream);
+                if (!TryReadCommonTestResultField(
+                    stream,
+                    fieldId,
+                    fieldSize,
+                    ref fields,
+                    SuccessfulTestResultMessageFieldsId.StandardOutput,
+                    SuccessfulTestResultMessageFieldsId.ErrorOutput,
+                    SuccessfulTestResultMessageFieldsId.SessionUid))
+                {
+                    SetPosition(stream, stream.Position + fieldSize);
+                }
+            }
 
             successfulTestResultMessages[i] = new SuccessfulTestResultMessage(fields.Uid, fields.DisplayName, fields.State, fields.Duration, fields.Reason, fields.StandardOutput, fields.ErrorOutput, fields.SessionUid);
         }
@@ -187,32 +203,43 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
             // of the shared CommonTestResultFields, so they are read alongside the exception list.
             string? expected = null, actual = null;
 
-            ReadFields(stream, (fieldId, fieldSize) =>
+            // Inline ReadFields to avoid per-test closure allocation on the hot IPC deserialization path.
+            ushort fieldCount = ReadUShort(stream);
+            for (int f = 0; f < fieldCount; f++)
             {
+                ushort fieldId = ReadUShort(stream);
+                int fieldSize = ReadInt(stream);
+
                 switch (fieldId)
                 {
                     case FailedTestResultMessageFieldsId.ExceptionMessageList:
                         exceptionMessages = ReadExceptionMessagesPayload(stream);
-                        return true;
+                        break;
 
                     case FailedTestResultMessageFieldsId.Expected:
                         expected = ReadStringValue(stream, fieldSize);
-                        return true;
+                        break;
 
                     case FailedTestResultMessageFieldsId.Actual:
                         actual = ReadStringValue(stream, fieldSize);
-                        return true;
-                }
+                        break;
 
-                return TryReadCommonTestResultField(
-                    stream,
-                    fieldId,
-                    fieldSize,
-                    ref fields,
-                    FailedTestResultMessageFieldsId.StandardOutput,
-                    FailedTestResultMessageFieldsId.ErrorOutput,
-                    FailedTestResultMessageFieldsId.SessionUid);
-            });
+                    default:
+                        if (!TryReadCommonTestResultField(
+                            stream,
+                            fieldId,
+                            fieldSize,
+                            ref fields,
+                            FailedTestResultMessageFieldsId.StandardOutput,
+                            FailedTestResultMessageFieldsId.ErrorOutput,
+                            FailedTestResultMessageFieldsId.SessionUid))
+                        {
+                            SetPosition(stream, stream.Position + fieldSize);
+                        }
+
+                        break;
+                }
+            }
 
             failedTestResultMessages[i] = new FailedTestResultMessage(fields.Uid, fields.DisplayName, fields.State, fields.Duration, fields.Reason, exceptionMessages, fields.StandardOutput, fields.ErrorOutput, fields.SessionUid, expected, actual);
         }
@@ -281,26 +308,32 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
             string? errorType = null;
             string? stackTrace = null;
 
-            ReadFields(stream, (fieldId, fieldSize) =>
+            // Inline ReadFields to avoid per-exception closure allocation.
+            ushort fieldCount = ReadUShort(stream);
+            for (int f = 0; f < fieldCount; f++)
             {
+                ushort fieldId = ReadUShort(stream);
+                int fieldSize = ReadInt(stream);
+
                 switch (fieldId)
                 {
                     case ExceptionMessageFieldsId.ErrorMessage:
                         errorMessage = ReadStringValue(stream, fieldSize);
-                        return true;
+                        break;
 
                     case ExceptionMessageFieldsId.ErrorType:
                         errorType = ReadStringValue(stream, fieldSize);
-                        return true;
+                        break;
 
                     case ExceptionMessageFieldsId.StackTrace:
                         stackTrace = ReadStringValue(stream, fieldSize);
-                        return true;
+                        break;
 
                     default:
-                        return false;
+                        SetPosition(stream, stream.Position + fieldSize);
+                        break;
                 }
-            });
+            }
 
             exceptionMessages[i] = new ExceptionMessage(errorMessage, errorType, stackTrace);
         }

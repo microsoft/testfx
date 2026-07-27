@@ -53,6 +53,16 @@ internal static class MSTestTestNodeConverter
     }
 
     /// <summary>
+    /// Builds a state-neutral node update that signals execution completed without producing a result.
+    /// </summary>
+    public static TestNode ToEmptyResultTestNode(UnitTestElement element, bool isTrxEnabled)
+    {
+        TestNode testNode = CreateBaseTestNode(element, isTrxEnabled, displayNameOverride: null, out _);
+        testNode.Properties.Add(TestNodeExecutionCompletedProperty.CachedInstance);
+        return testNode;
+    }
+
+    /// <summary>
     /// Builds a completed <see cref="TestNode"/> carrying the outcome, timing, output and (optionally) TRX
     /// properties for a single executed test result.
     /// </summary>

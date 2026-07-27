@@ -67,6 +67,16 @@ internal sealed partial class Json
                 properties.Add(("standardError", standardErrorProperty.StandardError));
             }
 
+            if (property is TestNodeExecutionCompletedProperty)
+            {
+                // The server protocol has no outcome-less terminal state. Return the action to discovered
+                // so clients clear in-progress state without recording a test outcome.
+                properties.Add(("node-type", "action"));
+                properties.Add(("execution-state", "discovered"));
+                hasActionNodeType = true;
+                continue;
+            }
+
             if (property is TestNodeStateProperty testNodeStateProperty)
             {
                 properties.Add(("node-type", "action"));

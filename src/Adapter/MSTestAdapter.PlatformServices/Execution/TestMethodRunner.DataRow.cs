@@ -51,6 +51,15 @@ internal sealed partial class TestMethodRunner
                 {
                     TestResult[] testResults = await ExecuteTestWithDataSourceAsync(iterationContext, testDataSource, data, actualDataAlreadyHandledDuringDiscovery: false).ConfigureAwait(false);
 
+                    // Sync the iteration context's outcome with the final (post-cleanup) result
+                    // before it is disposed. RunTestMethod sets the context outcome *before* running
+                    // [TestCleanup]/Dispose, so a row whose body passes but whose cleanup fails would
+                    // otherwise dispose the clone while it still reports "Passed" — causing per-test
+                    // resources keyed off the outcome (e.g. TestTempDirectory retention) to treat a
+                    // failed row as passing. The fast path already does this via SetOutcome after
+                    // aggregation; the folded path must do the same for its per-row clone.
+                    iterationContext.SetOutcome(GetAggregateOutcome(testResults));
+
                     results.AddRange(testResults);
                 }
                 finally

@@ -62,6 +62,7 @@ This package provides the core platform and the .NET implementation of the proto
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.VSTestBridge" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.VSTestBridge.UnitTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.VideoRecorder" Key="$(VsPublicKey)" />
     <!--
       Microsoft.Testing.Framework / MSTest.Engine are the (now deprecated) source-generation engine assemblies.
       They were renamed to Microsoft.Testing.Internal.Framework in https://github.com/microsoft/testfx/pull/2615,
@@ -79,6 +80,7 @@ This package provides the core platform and the .NET implementation of the proto
     <InternalsVisibleTo Include="Microsoft.Testing.TestInfrastructure" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTest.Engine" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTest.TestAdapter" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="TestFramework.ForTestingMSTest" Key="$(VsPublicKey)" />
   </ItemGroup>
 

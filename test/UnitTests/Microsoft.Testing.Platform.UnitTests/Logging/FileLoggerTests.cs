@@ -22,6 +22,10 @@ public sealed class FileLoggerTests : IDisposable
     private const string Category = "Test";
     private const string Message = "Message";
 
+    // Moq returns default(DateTimeOffset) from IClock.UtcNow, which the "O" format renders with an explicit +00:00
+    // offset, so this is stable across machines, time zones and cultures.
+    private const string DefaultClockTimestamp = "0001-01-01T00:00:00.0000000+00:00";
+
     private static readonly Func<string, Exception?, string> Formatter =
         (state, exception) =>
             string.Format(CultureInfo.InvariantCulture, "{0}{1}", state, exception is not null ? $" -- {exception}" : string.Empty);
@@ -238,12 +242,81 @@ public sealed class FileLoggerTests : IDisposable
 
         if (LogTestHelpers.IsLogEnabled(defaultLogLevel, currentLogLevel))
         {
-            Assert.AreEqual($"0001-01-01T00:00:00.0000000+00:00 Test {currentLogLevel.ToString().ToUpperInvariant()} Message{Environment.NewLine}", Encoding.Default.GetString(_memoryStream.ToArray()));
+            Assert.AreEqual($"{DefaultClockTimestamp} Test {currentLogLevel.ToString().ToUpperInvariant()} Message{Environment.NewLine}", Encoding.Default.GetString(_memoryStream.ToArray()));
         }
         else
         {
             Assert.AreEqual(0, _memoryStream.Length);
         }
+    }
+
+    // Explicit expected names, deliberately not derived from logLevel.ToString().ToUpperInvariant(): a level missing
+    // from FileLogger's switch silently falls back to that very expression, so an oracle built from it could never
+    // fail. ExpectedUpperCaseNames_CoverEveryLogLevel keeps this table exhaustive.
+    private static readonly Dictionary<LogLevel, string> ExpectedUpperCaseNames = new()
+    {
+        [LogLevel.Trace] = "TRACE",
+        [LogLevel.Debug] = "DEBUG",
+        [LogLevel.Information] = "INFORMATION",
+        [LogLevel.Warning] = "WARNING",
+        [LogLevel.Error] = "ERROR",
+        [LogLevel.Critical] = "CRITICAL",
+        [LogLevel.None] = "NONE",
+    };
+
+    [TestMethod]
+    [DynamicData(nameof(GetExpectedUpperCaseNames))]
+    public void Log_WhenAsyncFlush_LogLevelIsWrittenInUpperCase(LogLevel currentLogLevel, string expectedLevelName)
+    {
+        LogSingleEntryWithAsyncFlush(currentLogLevel);
+
+        _mockConsole.Verify(x => x.WriteLine(It.IsAny<string>()), Times.Never);
+        Assert.AreEqual(
+            $"{DefaultClockTimestamp} {Category} {expectedLevelName} {Message}{Environment.NewLine}",
+            Encoding.Default.GetString(_memoryStream.ToArray()));
+    }
+
+    // Comparing the keys, rather than counting them, also catches a duplicated entry in the table above silently
+    // overwriting another level. Both sides are ordered because Dictionary key order is an implementation detail.
+    [TestMethod]
+    public void ExpectedUpperCaseNames_CoverEveryLogLevel()
+        => Assert.AreSequenceEqual(
+            LogTestHelpers.GetLogLevels().OrderBy(logLevel => logLevel),
+            ExpectedUpperCaseNames.Keys.OrderBy(logLevel => logLevel));
+
+    // LogLevel is a public enum and IsEnabled is a plain '>=' comparison, so a value outside the enum reaches
+    // BuildLogEntry from user code. It must not throw; it renders as the numeric value, like ToString() always did.
+    [TestMethod]
+    public void Log_WhenAsyncFlush_UndefinedLogLevelIsWrittenAsItsNumericValue()
+    {
+        LogSingleEntryWithAsyncFlush((LogLevel)999);
+
+        _mockConsole.Verify(x => x.WriteLine(It.IsAny<string>()), Times.Never);
+        Assert.AreEqual(
+            $"{DefaultClockTimestamp} {Category} 999 {Message}{Environment.NewLine}",
+            Encoding.Default.GetString(_memoryStream.ToArray()));
+    }
+
+    public static IEnumerable<object[]> GetExpectedUpperCaseNames()
+        => ExpectedUpperCaseNames.Select(pair => new object[] { pair.Key, pair.Value });
+
+    private void LogSingleEntryWithAsyncFlush(LogLevel logLevel)
+    {
+        _mockFileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
+        _mockFileStreamFactory
+            .Setup(x => x.Create(It.IsAny<string>(), FileMode.CreateNew, FileAccess.Write, FileShare.Read))
+            .Returns(_mockStream.Object);
+
+        // Disposing the logger drains the channel, so the stream is complete once this method returns.
+        using FileLogger fileLogger = new(
+            new(LogFolder, LogPrefix, fileName: FileName, syncFlush: false),
+            LogLevel.Trace,
+            _mockClock.Object,
+            new SystemTask(),
+            _mockConsole.Object,
+            _mockFileSystem.Object,
+            _mockFileStreamFactory.Object);
+        fileLogger.Log(logLevel, Message, null, Formatter, Category);
     }
 
     // Chaos test for https://github.com/dotnet/sdk/issues/55215.

@@ -17,6 +17,18 @@ internal sealed partial class VideoRecorderSessionHandler
             return Task.CompletedTask;
         }
 
+        string testUid = update.TestNode.Uid.Value;
+        if (update.TestNode.Properties.Any<TestNodeExecutionCompletedProperty>())
+        {
+            lock (_stateGate)
+            {
+                _inFlight.Remove(testUid);
+            }
+
+            TryPruneOldSegments();
+            return Task.CompletedTask;
+        }
+
         // A node carries a single state property in practice; use FirstOrDefault rather than
         // SingleOrDefault so a malformed producer can't throw out of the consumer pump.
         TestNodeStateProperty? state = update.TestNode.Properties.FirstOrDefault<TestNodeStateProperty>();
@@ -24,8 +36,6 @@ internal sealed partial class VideoRecorderSessionHandler
         {
             return Task.CompletedTask;
         }
-
-        string testUid = update.TestNode.Uid.Value;
 
         if (state is InProgressTestNodeStateProperty)
         {

@@ -37,6 +37,7 @@ See full log [of v4.3.2...v4.3.3](https://github.com/microsoft/testfx/compare/v4
 * Regenerate MSTest.Sdk source-generated entry points and extension registrations after the MSBuild task assembly is updated by @Evangelink in [#10082](https://github.com/microsoft/testfx/pull/10082)
 * Fix MSTEST0063 failing to validate constructors on classes using derived `[TestClass]` attributes, including `[STATestClass]` by @Evangelink in [#9851](https://github.com/microsoft/testfx/pull/9851)
 * Keep `[TestProperty]`, test categories and host-provided properties scoped to the individual test lifecycle by @Evangelink in [#10080](https://github.com/microsoft/testfx/pull/10080)
+* Restore bounded string difference indicators in `Assert.AreEqual` failure messages by @Evangelink in [#10145](https://github.com/microsoft/testfx/pull/10145)
 
 ## <a name="4.3.2" />[4.3.2] - 2026-07-13
 

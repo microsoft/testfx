@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#pragma warning disable CS8618 // Properties below are set by MSBuild.
-
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
@@ -32,31 +30,32 @@ public sealed class ConfigurationFileTask : Build.Utilities.Task
     /// Gets or sets the Microsoft Testing Platform configuration file source.
     /// </summary>
     [Required]
-    public ITaskItem TestingPlatformConfigurationFileSource { get; set; }
+    public required ITaskItem TestingPlatformConfigurationFileSource { get; set; }
 
     /// <summary>
     /// Gets or sets the MSBuild project directory.
     /// </summary>
     [Required]
-    public ITaskItem MSBuildProjectDirectory { get; set; }
+    public required ITaskItem MSBuildProjectDirectory { get; set; }
 
     /// <summary>
     /// Gets or sets the assembly name.
     /// </summary>
     [Required]
-    public ITaskItem AssemblyName { get; set; }
+    public required ITaskItem AssemblyName { get; set; }
 
     /// <summary>
     /// Gets or sets the output path.
     /// </summary>
     [Required]
-    public ITaskItem OutputPath { get; set; }
+    public required ITaskItem OutputPath { get; set; }
 
     /// <summary>
-    /// Gets or sets the final Microsoft Testing Platform configuration file.
+    /// Gets or sets the final Microsoft Testing Platform configuration file. It stays <see langword="null"/> when
+    /// no configuration file was found, in which case the task produces no output item.
     /// </summary>
     [Output]
-    public ITaskItem FinalTestingPlatformConfigurationFile { get; set; }
+    public ITaskItem? FinalTestingPlatformConfigurationFile { get; set; }
 
     /// <inheritdoc/>
     public override bool Execute()
