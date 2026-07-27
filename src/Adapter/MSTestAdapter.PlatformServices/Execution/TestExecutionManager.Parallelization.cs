@@ -146,11 +146,11 @@ internal partial class TestExecutionManager
 
         bool parallelizationEnabled = !MSTestSettings.CurrentSettings.DisableParallelization && sourceSettings.CanParallelizeAssembly && parallelWorkers > 0;
 
-        // Edges declared in a chain file are merged onto the elements first, so that from the graph's point of
-        // view a file-declared dependency is indistinguishable from an attribute-declared one.
-        if (MSTestSettings.CurrentSettings.TestDependencyChainFile is { } chainFilePath)
+        // Edges declared in testconfig.json are merged onto the elements first, so that from the graph's
+        // point of view a configured dependency is indistinguishable from an attribute-declared one.
+        if (MSTestSettings.CurrentSettings.DeclaredDependencies is { Length: > 0 } declaredDependencies)
         {
-            TestDependencyChainFile.TryLoad(chainFilePath, adapterMessageLogger)?.ApplyTo(testsToRun, adapterMessageLogger);
+            TestDependencyDeclaration.ApplyAll(declaredDependencies, testsToRun, adapterMessageLogger);
         }
 
         // Returns null - and so leaves every run that does not use [DependsOn] on exactly the path it uses

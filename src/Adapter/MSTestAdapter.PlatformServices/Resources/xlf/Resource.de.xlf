@@ -101,45 +101,20 @@ aber empfing {4} Argument(e) mit den Typen „{5}“.</target>
         <target state="translated">Debugablaufverfolgung:</target>
         <note />
       </trans-unit>
-      <trans-unit id="DependencyChainFileDependentNotFound">
-        <source>The test dependency chain file declares dependencies for '{0}', which matches no test in this run. They are ignored.</source>
-        <target state="new">The test dependency chain file declares dependencies for '{0}', which matches no test in this run. They are ignored.</target>
-        <note>{0} is the declared test reference.</note>
+      <trans-unit id="DependencyConfigurationDependentNotFound">
+        <source>The 'mstest:execution:dependencies' configuration section declares dependencies for '{0}', which matches no test in this run. They are ignored.</source>
+        <target state="new">The 'mstest:execution:dependencies' configuration section declares dependencies for '{0}', which matches no test in this run. They are ignored.</target>
+        <note>{0} is the declared test reference. {Locked="mstest:execution:dependencies"}</note>
       </trans-unit>
-      <trans-unit id="DependencyChainFileInvalidBoolean">
-        <source>The value '{1}' of the 'proceedOnFailure' attribute in the test dependency chain file '{0}' is not a valid boolean and is treated as false.</source>
-        <target state="new">The value '{1}' of the 'proceedOnFailure' attribute in the test dependency chain file '{0}' is not a valid boolean and is treated as false.</target>
-        <note>{0} is the file path. {1} is the invalid value. {Locked="proceedOnFailure"}{Locked="false"}</note>
+      <trans-unit id="DependencyConfigurationInvalidReference">
+        <source>The test reference '{0}' in the 'mstest:execution:dependencies' configuration section is not valid. Use 'Namespace.Class.Method', or 'Namespace.Class.*' for every test of a class.</source>
+        <target state="new">The test reference '{0}' in the 'mstest:execution:dependencies' configuration section is not valid. Use 'Namespace.Class.Method', or 'Namespace.Class.*' for every test of a class.</target>
+        <note>{0} is the invalid reference. {Locked="mstest:execution:dependencies"}</note>
       </trans-unit>
-      <trans-unit id="DependencyChainFileInvalidReference">
-        <source>The test reference '{1}' in the test dependency chain file '{0}' is not valid. Use 'Namespace.Class.Method', or 'Namespace.Class.*' for every test of a class.</source>
-        <target state="new">The test reference '{1}' in the test dependency chain file '{0}' is not valid. Use 'Namespace.Class.Method', or 'Namespace.Class.*' for every test of a class.</target>
-        <note>{0} is the file path. {1} is the invalid reference.</note>
-      </trans-unit>
-      <trans-unit id="DependencyChainFileInvalidRoot">
-        <source>The test dependency chain file '{0}' must have a &lt;TestDependencies&gt; root element, but its root element is '{1}'. No dependency from the file is applied.</source>
-        <target state="new">The test dependency chain file '{0}' must have a &lt;TestDependencies&gt; root element, but its root element is '{1}'. No dependency from the file is applied.</target>
-        <note>{0} is the file path. {1} is the root element name found. {Locked="&lt;TestDependencies&gt;"}</note>
-      </trans-unit>
-      <trans-unit id="DependencyChainFileMissingName">
-        <source>An element '{1}' in the test dependency chain file '{0}' has no 'name' attribute and is ignored.</source>
-        <target state="new">An element '{1}' in the test dependency chain file '{0}' has no 'name' attribute and is ignored.</target>
-        <note>{0} is the file path. {1} is the element name. {Locked="name"}</note>
-      </trans-unit>
-      <trans-unit id="DependencyChainFileNotFound">
-        <source>The test dependency chain file '{0}' was not found. No dependency from the file is applied.</source>
-        <target state="new">The test dependency chain file '{0}' was not found. No dependency from the file is applied.</target>
-        <note>{0} is the configured file path.</note>
-      </trans-unit>
-      <trans-unit id="DependencyChainFileUnknownElement">
-        <source>The test dependency chain file '{0}' contains an unrecognized element '{1}', which is ignored.</source>
-        <target state="new">The test dependency chain file '{0}' contains an unrecognized element '{1}', which is ignored.</target>
-        <note>{0} is the file path. {1} is the element name.</note>
-      </trans-unit>
-      <trans-unit id="DependencyChainFileUnreadable">
-        <source>The test dependency chain file '{0}' could not be read: {1}. No dependency from the file is applied.</source>
-        <target state="new">The test dependency chain file '{0}' could not be read: {1}. No dependency from the file is applied.</target>
-        <note>{0} is the file path. {1} is the underlying error message.</note>
+      <trans-unit id="DependencyConfigurationNodeWithoutPrerequisites">
+        <source>The 'mstest:execution:dependencies' configuration section declares a node for '{0}' with no 'dependsOn' entries, which has no effect.</source>
+        <target state="new">The 'mstest:execution:dependencies' configuration section declares a node for '{0}' with no 'dependsOn' entries, which has no effect.</target>
+        <note>{0} is the declared test reference. {Locked="mstest:execution:dependencies"}{Locked="dependsOn"}</note>
       </trans-unit>
       <trans-unit id="DependsOnClassLevelCycle">
         <source>Dependencies between the following test classes cannot be honored with class-level parallelization because they depend on each other: {0}. Ordering is still enforced per test, but the classes are no longer scheduled as a unit. Use &lt;Scope&gt;MethodLevel&lt;/Scope&gt; (or [Parallelize(Scope = ExecutionScope.MethodLevel)]) to schedule each test individually.</source>

@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WINDOWS_UWP
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
@@ -171,6 +172,94 @@ internal sealed partial class MSTestSettings
         }
     }
 
+    /// <summary>
+    /// Reads the <c>mstest:execution:dependencies</c> section, which declares test dependencies outside the
+    /// test source as an alternative to <c>[DependsOn]</c>. Two shapes are supported: <c>chains</c>, where
+    /// each entry is an ordered list and every element waits for the one before it (the flat case), and
+    /// <c>nodes</c>, where an entry names one test and the prerequisites it waits for (the tree case:
+    /// fan-in, fan-out and per-node options).
+    /// </summary>
+    /// <remarks>
+    /// The configuration model flattens arrays to indexed keys (<c>...:nodes:0:test</c>), so the indices are
+    /// probed until a key is absent. That is the same convention Microsoft.Extensions.Configuration uses.
+    /// </remarks>
+    private static void ParseDependencySettings(IConfiguration configuration, IAdapterMessageLogger? logger, MSTestSettings settings)
+    {
+        const string root = "mstest:execution:dependencies";
+        List<TestDependencyDeclaration>? declarations = null;
+
+        // chains: [ [ "A.B.First", "A.B.Second" ], ... ] - each element waits for the previous one.
+        for (int chainIndex = 0; ; chainIndex++)
+        {
+            string? firstOfChain = configuration[$"{root}:chains:{chainIndex}:0"];
+            if (firstOfChain is null)
+            {
+                break;
+            }
+
+            string previous = firstOfChain;
+            for (int testIndex = 1; ; testIndex++)
+            {
+                if (configuration[$"{root}:chains:{chainIndex}:{testIndex}"] is not { } current)
+                {
+                    break;
+                }
+
+                (declarations ??= []).Add(new TestDependencyDeclaration(current, previous, proceedOnFailure: false));
+                previous = current;
+            }
+        }
+
+        // nodes: [ { "test": "...", "dependsOn": [ "..." ], "proceedOnFailure": true }, ... ]
+        for (int nodeIndex = 0; ; nodeIndex++)
+        {
+            string? test = configuration[$"{root}:nodes:{nodeIndex}:test"];
+            if (test is null)
+            {
+                break;
+            }
+
+            bool proceedOnFailure = false;
+            if (configuration[$"{root}:nodes:{nodeIndex}:proceedOnFailure"] is { } rawProceedOnFailure)
+            {
+                if (bool.TryParse(rawProceedOnFailure, out bool parsed))
+                {
+                    proceedOnFailure = parsed;
+                }
+                else
+                {
+                    logger?.SendMessage(
+                        MessageLevel.Warning,
+                        string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, rawProceedOnFailure, $"{root}:nodes:{nodeIndex}:proceedOnFailure"));
+                }
+            }
+
+            bool anyPrerequisite = false;
+            for (int prerequisiteIndex = 0; ; prerequisiteIndex++)
+            {
+                if (configuration[$"{root}:nodes:{nodeIndex}:dependsOn:{prerequisiteIndex}"] is not { } prerequisite)
+                {
+                    break;
+                }
+
+                anyPrerequisite = true;
+                (declarations ??= []).Add(new TestDependencyDeclaration(test, prerequisite, proceedOnFailure));
+            }
+
+            if (!anyPrerequisite)
+            {
+                logger?.SendMessage(
+                    MessageLevel.Warning,
+                    string.Format(CultureInfo.CurrentCulture, Resource.DependencyConfigurationNodeWithoutPrerequisites, test));
+            }
+        }
+
+        if (declarations is not null)
+        {
+            settings.DeclaredDependencies = [.. declarations];
+        }
+    }
+
     private static void ParseTimeoutSetting(IConfiguration configuration, string key, IAdapterMessageLogger? logger, Action<int> setSetting)
     {
         if (configuration[$"mstest:{key}"] is not string value)
@@ -233,11 +322,7 @@ internal sealed partial class MSTestSettings
 
         ParseBooleanSetting(configuration, "execution:randomizeTestOrder", logger, value => settings.RandomizeTestOrder = value);
         ParseSignedIntegerSetting(configuration, "execution:randomTestOrderSeed", logger, value => settings.RandomTestOrderSeed = value);
-        if (configuration["mstest:execution:dependencyChainFile"] is { } dependencyChainFile && !StringEx.IsNullOrWhiteSpace(dependencyChainFile))
-        {
-            settings.TestDependencyChainFile = dependencyChainFile.Trim();
-        }
-
+        ParseDependencySettings(configuration, logger, settings);
         ParseCaptureTraceOutputSetting(configuration, "output:captureTrace", logger, value => settings.OutputCaptureMode = value);
         ParseBooleanSetting(configuration, "parallelism:enabled", logger, value => settings.DisableParallelization = !value);
         ParseBooleanSetting(configuration, "execution:mapInconclusiveToFailed", logger, value => settings.MapInconclusiveToFailed = value);

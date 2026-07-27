@@ -25,7 +25,7 @@ public sealed class TestDependencyExecutionTests : AcceptanceTestBase<TestDepend
     private const string GraphProjectName = "TestDependencyGraphTestProject";
     private const string FailureProjectName = "TestDependencyFailureTestProject";
     private const string CycleProjectName = "TestDependencyCycleTestProject";
-    private const string ChainFileProjectName = "TestDependencyChainFileTestProject";
+    private const string ChainFileProjectName = "TestDependencyConfigTestProject";
 
     public TestContext TestContext { get; set; } = default!;
 
@@ -94,46 +94,34 @@ public sealed class TestDependencyExecutionTests : AcceptanceTestBase<TestDepend
 
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    public async Task DependencyChainFile_OrdersTestsThatDeclareNoAttribute(string tfm)
+    public async Task DependencyConfiguration_OrdersTestsThatDeclareNoAttribute(string tfm)
     {
         TestHost testHost = AssetFixture.GetTestHost(ChainFileProjectName, tfm);
 
-        // The chain file and the runsettings that points at it are written here rather than shipped with the
-        // asset so that the path can be absolute, which keeps the test independent of the host's working
-        // directory.
-        string chainFilePath = Path.Combine(testHost.DirectoryName, "chain.xml");
-        string runSettingsPath = Path.Combine(testHost.DirectoryName, "chain.runsettings");
         string probePath = Path.Combine(testHost.DirectoryName, "OrderProbe.txt");
         File.Delete(probePath);
 
-        File.WriteAllText(chainFilePath, """
-<TestDependencies>
-  <Chain>
-    <Test name="Contoso.Tests.StepOne.First" />
-    <Test name="Contoso.Tests.StepTwo.Second" />
-    <Test name="Contoso.Tests.StepThree.Third" />
-  </Chain>
-</TestDependencies>
-""");
+        // The asset ships a testconfig.json declaring the order; no test carries an attribute, and the
+        // classes are declared in source in the reverse of the required order.
+        string testConfigPath = Path.Combine(testHost.DirectoryName, "pipeline.testconfig.json");
 
-        File.WriteAllText(runSettingsPath, $"""
-<?xml version="1.0" encoding="utf-8"?>
-<RunSettings>
-  <MSTest>
-    <TestDependencyChainFile>{chainFilePath}</TestDependencyChainFile>
-  </MSTest>
-</RunSettings>
-""");
+        TestHostResult result = await testHost.ExecuteAsync($"--config-file \"{testConfigPath}\"", cancellationToken: TestContext.CancellationToken);
 
-        TestHostResult result = await testHost.ExecuteAsync($"--settings \"{runSettingsPath}\"", cancellationToken: TestContext.CancellationToken);
+        Assert.AreNotEqual(0, result.ExitCode, result.StandardOutput);
 
-        Assert.AreEqual(0, result.ExitCode, result.StandardOutput);
+        // 'chains' ordered the first three steps; 'nodes' fanned Audit out of Second with
+        // proceedOnFailure, and held Verify back because Second failed.
+        Assert.Contains("failed: 1", result.StandardOutput);
+        Assert.Contains("skipped: 1", result.StandardOutput);
 
-        // The classes are declared in the reverse of the required order and carry no attribute at all, so only
-        // the chain file can be responsible for the observed order.
-        string[] order = File.ReadAllLines(probePath).Where(l => l.Length > 0).ToArray();
-        Assert.AreEqual(3, order.Length, string.Join(",", order));
-        CollectionAssert.AreEqual(new[] { "First", "Second", "Third" }, order);
+        string[] order = [.. File.ReadAllLines(probePath).Where(l => l.Length > 0)];
+        CollectionAssert.AreEqual(new[] { "First", "Second" }, order.Take(2).ToArray(), string.Join(",", order));
+
+        // Verify never ran: its prerequisite failed and it did not opt out.
+        CollectionAssert.DoesNotContain(order, "Verify");
+
+        // Audit ran anyway, because its node set proceedOnFailure.
+        CollectionAssert.Contains(order, "Audit");
     }
 
     public sealed class TestAssetFixture : ITestAssetFixture
@@ -346,7 +334,58 @@ public sealed class CycleTests
 }
 """;
 
-        private const string ChainFileSourceCode = ProjectFile + """
+        private const string ChainFileSourceCode = """
+#file $ProjectName$.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="pipeline.testconfig.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
+
+#file pipeline.testconfig.json
+{
+  "mstest": {
+    "execution": {
+      "dependencies": {
+        "chains": [
+          [
+            "Contoso.Tests.StepOne.First",
+            "Contoso.Tests.StepTwo.Second",
+            "Contoso.Tests.StepThree.Third"
+          ]
+        ],
+        "nodes": [
+          {
+            "test": "Contoso.Tests.VerifyStep.Verify",
+            "dependsOn": [ "Contoso.Tests.StepTwo.Second" ]
+          },
+          {
+            "test": "Contoso.Tests.AuditStep.Audit",
+            "dependsOn": [ "Contoso.Tests.StepTwo.Second" ],
+            "proceedOnFailure": true
+          }
+        ]
+      }
+    }
+  }
+}
+
 #file OrderProbe.cs
 using System.IO;
 
@@ -370,8 +409,24 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Contoso.Tests;
 
-// Declared in the reverse of the order the chain file asks for, and carrying no dependency attribute, so a
-// correct run can only be explained by the file.
+// Declared in the reverse of the order the configuration asks for, and carrying no dependency attribute,
+// so a correct run can only be explained by testconfig.json.
+[TestClass]
+public sealed class AuditStep
+{
+    // Runs even though its prerequisite fails, because its node sets proceedOnFailure.
+    [TestMethod]
+    public void Audit() => OrderProbe.Record("Audit");
+}
+
+[TestClass]
+public sealed class VerifyStep
+{
+    // Must be skipped: same prerequisite, but no proceedOnFailure.
+    [TestMethod]
+    public void Verify() => OrderProbe.Record("Verify");
+}
+
 [TestClass]
 public sealed class StepThree
 {
@@ -383,7 +438,11 @@ public sealed class StepThree
 public sealed class StepTwo
 {
     [TestMethod]
-    public void Second() => OrderProbe.Record("Second");
+    public void Second()
+    {
+        OrderProbe.Record("Second");
+        Assert.Fail("deliberate failure to exercise skip propagation through configuration");
+    }
 }
 
 [TestClass]

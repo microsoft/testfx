@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
+
 using DebuggerLaunchMode = Microsoft.VisualStudio.TestTools.UnitTesting.DebuggerLaunchMode;
 using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope;
 
@@ -181,11 +183,17 @@ internal sealed partial class MSTestSettings
     internal bool OrderTestsByNameInClass { get; private set; }
 
     /// <summary>
-    /// Gets the path of the dependency chain file that declares test dependencies outside the test source,
-    /// or <see langword="null"/> when none is configured. A relative path is resolved against the current
-    /// directory of the test host.
+    /// Gets the test dependencies declared in <c>testconfig.json</c> under
+    /// <c>mstest:execution:dependencies</c>, as an alternative to the <c>[DependsOn]</c> attribute, or
+    /// <see langword="null"/> when none are declared. Configured edges are merged with attribute-declared
+    /// ones.
     /// </summary>
-    internal string? TestDependencyChainFile { get; private set; }
+    /// <remarks>
+    /// This is only populated on the Microsoft.Testing.Platform path: <c>testconfig.json</c> is not supplied
+    /// to the VSTest entry points, which pass a null configuration. Tests running under VSTest declare
+    /// dependencies with the attribute.
+    /// </remarks>
+    internal TestDependencyDeclaration[]? DeclaredDependencies { get; private set; }
 
     /// <summary>
     /// Gets a value indicating whether tests should be executed in a random order to help expose hidden dependencies between tests.

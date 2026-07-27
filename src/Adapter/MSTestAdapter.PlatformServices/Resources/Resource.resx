@@ -387,39 +387,18 @@ but received {4} argument(s), with types '{5}'.</value>
     <value>Test method {0} was not found.</value>
     <comment>{0} is the test method name.</comment>
   </data>
-  <data name="DependencyChainFileNotFound" xml:space="preserve">
-    <value>The test dependency chain file '{0}' was not found. No dependency from the file is applied.</value>
-    <comment>{0} is the configured file path.</comment>
+  <data name="DependencyConfigurationInvalidReference" xml:space="preserve">
+    <value>The test reference '{0}' in the 'mstest:execution:dependencies' configuration section is not valid. Use 'Namespace.Class.Method', or 'Namespace.Class.*' for every test of a class.</value>
+    <comment>{0} is the invalid reference. {Locked="mstest:execution:dependencies"}</comment>
   </data>
-  <data name="DependencyChainFileInvalidRoot" xml:space="preserve">
-    <value>The test dependency chain file '{0}' must have a &lt;TestDependencies&gt; root element, but its root element is '{1}'. No dependency from the file is applied.</value>
-    <comment>{0} is the file path. {1} is the root element name found. {Locked="&lt;TestDependencies&gt;"}</comment>
+  <data name="DependencyConfigurationDependentNotFound" xml:space="preserve">
+    <value>The 'mstest:execution:dependencies' configuration section declares dependencies for '{0}', which matches no test in this run. They are ignored.</value>
+    <comment>{0} is the declared test reference. {Locked="mstest:execution:dependencies"}</comment>
   </data>
-  <data name="DependencyChainFileUnreadable" xml:space="preserve">
-    <value>The test dependency chain file '{0}' could not be read: {1}. No dependency from the file is applied.</value>
-    <comment>{0} is the file path. {1} is the underlying error message.</comment>
-  </data>
-  <data name="DependencyChainFileUnknownElement" xml:space="preserve">
-    <value>The test dependency chain file '{0}' contains an unrecognized element '{1}', which is ignored.</value>
-    <comment>{0} is the file path. {1} is the element name.</comment>
-  </data>
-  <data name="DependencyChainFileMissingName" xml:space="preserve">
-    <value>An element '{1}' in the test dependency chain file '{0}' has no 'name' attribute and is ignored.</value>
-    <comment>{0} is the file path. {1} is the element name. {Locked="name"}</comment>
-  </data>
-  <data name="DependencyChainFileInvalidReference" xml:space="preserve">
-    <value>The test reference '{1}' in the test dependency chain file '{0}' is not valid. Use 'Namespace.Class.Method', or 'Namespace.Class.*' for every test of a class.</value>
-    <comment>{0} is the file path. {1} is the invalid reference.</comment>
-  </data>
-  <data name="DependencyChainFileInvalidBoolean" xml:space="preserve">
-    <value>The value '{1}' of the 'proceedOnFailure' attribute in the test dependency chain file '{0}' is not a valid boolean and is treated as false.</value>
-    <comment>{0} is the file path. {1} is the invalid value. {Locked="proceedOnFailure"}{Locked="false"}</comment>
-  </data>
-  <data name="DependencyChainFileDependentNotFound" xml:space="preserve">
-    <value>The test dependency chain file declares dependencies for '{0}', which matches no test in this run. They are ignored.</value>
-    <comment>{0} is the declared test reference.</comment>
-  </data>
-  <data name="DependsOnCycle" xml:space="preserve">
+  <data name="DependencyConfigurationNodeWithoutPrerequisites" xml:space="preserve">
+    <value>The 'mstest:execution:dependencies' configuration section declares a node for '{0}' with no 'dependsOn' entries, which has no effect.</value>
+    <comment>{0} is the declared test reference. {Locked="mstest:execution:dependencies"}{Locked="dependsOn"}</comment>
+  </data>  <data name="DependsOnCycle" xml:space="preserve">
     <value>Dependency cycle detected between tests: {0}. The tests in the cycle cannot be ordered and are reported as failed. Remove one of the [DependsOn] declarations to break the cycle.</value>
     <comment>{0} is the cycle rendered as a path, for example 'A &gt; B &gt; A'. {Locked="[DependsOn]"}</comment>
   </data>

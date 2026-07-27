@@ -1,4 +1,4 @@
-# RFC 022 - Test Dependencies
+﻿# RFC 022 - Test Dependencies
 
 - [ ] Approved in principle
 - [x] Under discussion
@@ -7,7 +7,7 @@
 
 ## Summary
 
-Add a `[DependsOn]` attribute to MSTest, plus an equivalent **dependency chain file**, that let a test
+Add a `[DependsOn]` attribute to MSTest, plus equivalent **declarations in `testconfig.json`**, that let a test
 declare which other tests must run before it. The declarations form a **directed acyclic graph**, not a
 flat list: when several tests share a prerequisite they become runnable at the same moment and the
 in-assembly parallel scheduler is free to run them concurrently. If a prerequisite does not pass, its
@@ -182,50 +182,54 @@ a sequential prerequisite could therefore never observe it complete. The fix is 
 transitively, into the sequential phase — not to move the prerequisite, which would break
 `[DoNotParallelize]`'s own guarantee that such tests never run alongside anything else.
 
-### Dependency chain file
+### Dependency declarations in `testconfig.json`
 
 Some orchestration cannot, or should not, live in the test source: tests owned by another team, a chain
 that reviewers want to read in one place, or an order maintained by someone who does not edit code. This
-is what `testng.xml` and `playwright.config.ts` are for.
+is what `testng.xml` and `playwright.config.ts` are for. MSTest already has a configuration file, so the
+declarations go in it rather than in a format of their own:
 
-```xml
-<TestDependencies>
-  <!-- The flat case: each entry waits for the one before it. -->
-  <Chain>
-    <Test name="Contoso.Tests.SetupTests.CreateDatabase" />
-    <Test name="Contoso.Tests.ImportTests.ImportCatalog" />
-    <Test name="Contoso.Tests.CheckoutTests.PlaceOrder" />
-  </Chain>
-
-  <!-- The tree case: fan-in, fan-out, per-edge options. -->
-  <Test name="Contoso.Tests.ReportTests.WriteAudit" proceedOnFailure="true">
-    <DependsOn name="Contoso.Tests.CheckoutTests.PlaceOrder" />
-    <DependsOn name="Contoso.Tests.ImportTests.*" />
-  </Test>
-</TestDependencies>
+```json
+{
+  "mstest": {
+    "execution": {
+      "dependencies": {
+        "chains": [
+          [
+            "Contoso.Tests.SetupTests.CreateDatabase",
+            "Contoso.Tests.ImportTests.ImportCatalog",
+            "Contoso.Tests.CheckoutTests.PlaceOrder"
+          ]
+        ],
+        "nodes": [
+          {
+            "test": "Contoso.Tests.ReportTests.WriteAudit",
+            "dependsOn": [
+              "Contoso.Tests.CheckoutTests.PlaceOrder",
+              "Contoso.Tests.ImportTests.*"
+            ],
+            "proceedOnFailure": true
+          }
+        ]
+      }
+    }
+  }
+}
 ```
 
-Referenced from `.runsettings`:
+`chains` is the flat case — each entry waits for the one before it — and `nodes` is the tree case, where
+one test names several prerequisites (fan-in) and several nodes may name the same one (fan-out). A test is
+referenced by `Namespace.Class.Method`, or `Namespace.Class.*` for every test of a class.
 
-```xml
-<RunSettings>
-  <MSTest>
-    <TestDependencyChainFile>dependencies.xml</TestDependencyChainFile>
-  </MSTest>
-</RunSettings>
-```
+**This is Microsoft.Testing.Platform only, by design.** `testconfig.json` is supplied only on the MTP path
+— the VSTest entry points pass a null configuration (`MSTestDiscoverer.cs`: `configuration: null`) — so
+configured dependencies are an MTP capability. A separate file format reachable from RunSettings was
+considered and rejected: it would have meant a second syntax, a second parser and a second set of
+diagnostics for the same concept, to serve a host that is being superseded. Tests running under VSTest
+declare dependencies with the attribute, which works everywhere.
 
-or from `testconfig.json` as `mstest:execution:dependencyChainFile`.
-
-**Why XML and not JSON.** The adapter already parses `.runsettings` with `XmlReader` on every framework it
-targets, including those with no JSON reader available (net462, netstandard2.0, UWP). Adding a JSON
-dependency for one small document is not worth it, and MSTest's own legacy ordered-test format was XML.
-External entity resolution and DTD processing are disabled: a test-ordering document has no business
-reaching the file system or the network.
-
-File edges are **merged** with attribute edges; neither overrides the other, and after parsing the two are
-indistinguishable to the graph. A malformed file yields no edges at all and reports an error, because a
-half-applied orchestration file is worse than none.
+Configured edges are **merged** with attribute edges; neither overrides the other, and after parsing the
+two are indistinguishable to the graph.
 
 ## Implementation
 
@@ -237,7 +241,7 @@ half-applied orchestration file is worse than none.
 | VSTest transport | `AdapterTestProperties.DependenciesProperty`, `UnitTestElementExtensions` / `TestCaseExtensions` |
 | Graph, cycles, chunking | `Execution/TestDependencyGraph.cs` |
 | Run-time gate | `Execution/TestDependencyCoordinator.cs` |
-| Chain file | `Execution/TestDependencyChainFile.cs` |
+| Configured edges | `Execution/TestDependencyDeclaration.cs`, `MSTestSettings.Configuration.cs` |
 | Scheduler | `TestExecutionManager.Parallelization.cs` (`ExecuteTestsWithDependencyGraphAsync`, `ExecuteChunksInTopologicalOrderAsync`) |
 
 `TestDependencyGraph.Build` returns `null` when no test in the source declares a dependency, and the
@@ -258,7 +262,7 @@ always eventually become ready, so the loop cannot deadlock.
 - `test/IntegrationTests/MSTest.Acceptance.IntegrationTests/TestDependencyExecutionTests.cs` — end-to-end
   over net462/net8.0/net10.0. The assets record the millisecond each test body entered and left, so the
   ordering guarantee **and** the overlap of independent branches are both asserted against real timings,
-  not inferred. Also covers skip propagation with `ProceedOnFailure`, cycle reporting, and the chain file.
+  not inferred. Also covers skip propagation with `ProceedOnFailure`, cycle reporting, and the `testconfig.json` declarations (ordering via `chains`, plus fan-out from `nodes` where one dependent is skipped and a `proceedOnFailure` sibling still runs).
 
 ## Guidance
 
@@ -287,7 +291,7 @@ in every test is impractical, and prefer, in order:
   workarounds ([TUnit#1570](https://github.com/thomhurst/TUnit/issues/1570)) — so V1 documents the
   limitation rather than half-solving it.
 - **Category dependencies**, the analogue of TestNG's `dependsOnGroups`, mapping onto `[TestCategory]`.
-  The chain file's `Class.*` wildcard already covers the common case.
+  The configuration's `Class.*` wildcard already covers the common case.
 - **Cross-assembly dependencies.** The graph is per source, matching the scope of in-assembly
   parallelization.
 
