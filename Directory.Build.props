@@ -26,6 +26,22 @@
     <MSBuildCacheCacheUniverse Condition="'$(MSBuildCacheCacheUniverse)' == ''">testfx-v1-$(Configuration)</MSBuildCacheCacheUniverse>
     <MSBuildCacheLocalCacheRootPath Condition="'$(MSBuildCacheLocalCacheRootPath)' == ''">$(RepoRoot)artifacts\msbuild-cache</MSBuildCacheLocalCacheRootPath>
     <MSBuildCacheLocalCacheSizeInMegabytes Condition="'$(MSBuildCacheLocalCacheSizeInMegabytes)' == ''">20480</MSBuildCacheLocalCacheSizeInMegabytes>
+    <!--
+      By default MSBuildCache hardlinks every output into its content-addressable store and marks it read-only,
+      both when it materializes a cache hit and when it ingests the outputs of a cache miss. That leaves the whole
+      output tree read-only, so the Arcade restore/sign/pack pass that runs after the cached graph build cannot
+      rewrite files such as artifacts\bin\**\*.deps.json or the generated src\Package\MSTest.Sdk\Sdk\Sdk.props,
+      and fails with UnauthorizedAccessException. Clearing the read-only attribute is not a valid workaround: the
+      output file and the cache entry share an inode, so writing through it corrupts the cache and can silently
+      rewrite a same-content output belonging to another project.
+
+      Matching every output with '\**' switches MSBuildCache to CopyNoVerify, which copies instead of hardlinking
+      and leaves the outputs writable. It costs extra I/O, and it relaxes duplicate-output detection so that two
+      projects may write the same path when the content is identical - producing that path with different content
+      is still an error. The pattern participates in the fingerprint, so changing it invalidates every cache entry
+      until the next main-branch seed repopulates them.
+    -->
+    <MSBuildCacheIdenticalDuplicateOutputPatterns>$(MSBuildCacheIdenticalDuplicateOutputPatterns);\**</MSBuildCacheIdenticalDuplicateOutputPatterns>
     <!-- Visual Studio telemetry writes outside the repository after the project that launched it has finished. -->
     <MSBuildCacheAllowFileAccessAfterProjectFinishFilePatterns>$(MSBuildCacheAllowFileAccessAfterProjectFinishFilePatterns);$(WinDir)\**;\**\ApplicationInsights.config;\**\AppData\Local\Microsoft\VSApplicationInsights\**;\**\AppData\Local\Microsoft\Windows\INetCache\**</MSBuildCacheAllowFileAccessAfterProjectFinishFilePatterns>
   </PropertyGroup>
