@@ -19,6 +19,13 @@ description: >-
 # still gets the changed-`src/` list (the extraction step diffs `src/`
 # regardless of what triggered the run), so read-set analysis is unaffected.
 #
+# The repository-root `Directory.Build.props` / `.targets` and
+# `Directory.Packages.props` are listed as individual files because
+# `test/Directory.Build.props` imports them: an `MSTestParallelizeScope` added
+# there opts in **every** test assembly at once without touching anything under
+# `test/`. Being single files rather than a `src/**`-style wildcard, they do not
+# reintroduce source-only runs.
+#
 # The companion `/parallel-audit` slash command lives in
 # `parallel-safety-audit-command.md`. They must remain separate workflows
 # because mixing `slash_command` with other triggers makes gh-aw's activation
@@ -29,6 +36,9 @@ on:
     types: [opened, reopened, synchronize, ready_for_review]
     paths:
       - "test/**"
+      - "Directory.Build.props"
+      - "Directory.Build.targets"
+      - "Directory.Packages.props"
 
 # Skip draft PRs and OneLocBuild localization check-in PRs (authored by
 # dotnet-bot) — only run for human-authored PRs in a reviewable state.

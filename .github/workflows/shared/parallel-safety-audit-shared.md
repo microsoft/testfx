@@ -160,17 +160,13 @@ steps:
       git diff --name-only --diff-filter=AMR "$MERGE_BASE" "$HEAD_SHA" -- 'src/' \
         | grep -E '\.cs$' > "$SRC_OUT" || true
 
-      # Parallelization can also be turned on (or off) purely from configuration:
-      # a .runsettings <Parallelize>/<DisableParallelization>, a testconfig.json
-      # parallelism block, or the MSTestParallelize* MSBuild properties. Such a PR
-      # touches test/** and so triggers this workflow, but changes no .cs file —
-      # capture those files too, otherwise the single most safety-relevant change
-      # a PR can make (enabling parallelism) would silently bypass the audit.
-      # Deletions count here (filter D, unlike the .cs lists above): removing a
-      # .runsettings that set DisableParallelization, or a props file that emitted
-      # [assembly: DoNotParallelize], enables concurrency just as surely as adding
-      # a setting does. A deleted path is still reportable via `git diff`.
-      git diff --name-only --diff-filter=AMRD "$MERGE_BASE" "$HEAD_SHA" -- 'test/' \
+      # Parallelization config also lives OUTSIDE test/: test/Directory.Build.props
+      # imports the repository-root Directory.Build.props, so an MSTestParallelizeScope
+      # added there enables every test assembly at once — the highest-impact opt-in
+      # of all. Include repo-root props/targets alongside the test/ tree.
+      git diff --name-only --diff-filter=AMRD "$MERGE_BASE" "$HEAD_SHA" \
+        -- 'test/' 'Directory.Build.props' 'Directory.Build.targets' \
+           'Directory.Packages.props' \
         | grep -E '\.(runsettings|csproj|props|targets)$|testconfig\.json$' \
         > "$CONFIG_OUT" || true
 
@@ -182,6 +178,13 @@ steps:
       # in that assembly just became (or stopped being) concurrent. -G selects
       # files whose diff *adds or removes* a line matching the pattern, so this
       # catches opting in, opting out, and widening the scope alike.
+      #
+      # These are CANDIDATES ONLY. -G is a textual diff match and cannot tell
+      # compiled code from a string literal, so it also matches the synthetic
+      # [assembly: Parallelize] payloads embedded in acceptance-test source
+      # (ParallelExecutionTests.cs, ResourceLockExecutionTests.cs). The agent must
+      # confirm the attribute is really compiled into the owning project before
+      # treating the file as a parallelization-state change — see the prompt.
       git diff --name-only --diff-filter=AMRD \
         -G'assembly:[[:space:]]*(Parallelize|DoNotParallelize)' \
         "$MERGE_BASE" "$HEAD_SHA" -- 'test/' \
@@ -298,10 +301,25 @@ If **both** the changed-test-files and changed-config-files lists are empty
   `testconfig.json`, `.csproj` / `.props` / `.targets` under `test/`, **and** any
   `.cs` file whose diff adds or removes an `[assembly: Parallelize]` /
   `[assembly: DoNotParallelize]` attribute (typically a `Program.cs` or
-  `AssemblyInfo.cs` containing no test methods of its own). A PR can turn
+  `AssemblyInfo.cs` containing no test methods of its own), plus repository-root
+  `Directory.Build.props` / `.targets` and `Directory.Packages.props`, which
+  `test/Directory.Build.props` imports and which therefore configure **every**
+  test assembly at once. A PR can turn
   parallelization **on** without touching a single test method, and that is the
   highest-value thing this audit can catch. When this list is non-empty, diff
-  those files for the settings enumerated in Step 0. **This list includes deleted
+  those files for the settings enumerated in Step 0.
+
+  **Validate `.cs` entries before trusting them.** The `.cs` entries are matched
+  textually, so they also catch `[assembly: Parallelize]` written inside a
+  **string literal** — the acceptance tests embed synthetic test projects as raw
+  strings (`ParallelExecutionTests.cs`, `ResourceLockExecutionTests.cs`), and
+  those attributes configure the *generated* project, not the acceptance assembly
+  that contains them. Open the file and confirm the attribute is real compiled
+  code at file scope before treating it as a state change. If it sits in a string,
+  comment, or generated payload, **ignore it** — do not widen the audit, and do
+  not report the enclosing assembly as newly concurrent.
+
+  **This list includes deleted
   files** — a path here may no longer exist on HEAD, so inspect it with
   `git diff`, not by reading it. Removing an opt-out (a `.runsettings` setting
   `DisableParallelization`, a props file emitting `[assembly: DoNotParallelize]`,
@@ -583,7 +601,16 @@ Compare what a test **touches** against what it **declares**
 (`[ResourceLock]` / `[DoNotParallelize]`):
 
 - **Under-declaration.** A test mutates process-global state (category A) but
-  declares no `[ResourceLock]` / `[DoNotParallelize]` → **latent race.** This is
+  declares no `[ResourceLock]` / `[DoNotParallelize]` → **latent race.** A
+  mutation alone is *not* a race: name the **concurrent observer** before you
+  report one. Identify at least one other concurrently-runnable test (or a
+  production path it invokes) that **reads or mutates the same specific
+  resource** — the same environment-variable key, the same path, the same static
+  — and say which one in the finding. A test that sets and restores a variable
+  no other reachable code observes needs no lock; report it at most as Info, if
+  at all. This follows the "when you cannot prove a finding, say less" rule
+  below: an unprovable race costs a reader's trust *and* buys needless
+  serialization. Under-declaration is
   the fail-open weakness of free-form string keys: nothing forces the
   declaration. The forthcoming analyzers **MSTEST0074 / MSTEST0075 / MSTEST0076**
   (in flight, **not yet on `main`** — see the analyzer-gate note in Step 0) will
