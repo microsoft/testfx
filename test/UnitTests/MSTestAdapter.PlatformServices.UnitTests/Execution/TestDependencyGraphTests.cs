@@ -220,6 +220,40 @@ public sealed class TestDependencyGraphTests : TestContainer
         graph.SequentialTests.Should().BeEmpty();
     }
 
+    public void Build_WhenCyclesOverlap_ReportsOnlyDeclaredEdgesInThePath()
+    {
+        // The component is {A, B, C}, but B has no edge to C. Rendering the component as a path could claim
+        // "A > B > C > A" and tell the user to remove a B -> C edge that was never declared. Every arrow in
+        // the message has to correspond to a real prerequisite.
+        UnitTestElement[] tests =
+        [
+            CreateElement(ClassA, "A", DependsOnMethod("B"), DependsOnMethod("C")),
+            CreateElement(ClassA, "B", DependsOnMethod("A")),
+            CreateElement(ClassA, "C", DependsOnMethod("B")),
+        ];
+
+        TestDependencyGraph graph = TestDependencyGraph.Build(tests, ExecutionScope.MethodLevel, parallelizationEnabled: true)!;
+
+        graph.Errors.Should().ContainSingle();
+
+        // Declared edges, as "dependent -> prerequisite" pairs.
+        var declared = new HashSet<string> { "A>B", "A>C", "B>A", "C>B" };
+
+        string path = graph.Errors[0];
+        int start = path.IndexOf(ClassA + ".", StringComparison.Ordinal);
+        string[] hops = [.. path.Substring(start).Split([" > "], StringSplitOptions.None)
+            .Select(h => h.Trim().Replace(ClassA + ".", string.Empty))
+            .Select(h => new string([.. h.TakeWhile(char.IsLetterOrDigit)]))];
+
+        hops.Length.Should().BeGreaterThan(2, "a cycle path needs at least two hops plus the closing repeat");
+        hops[0].Should().Be(hops[^1], "the path must close on the test it started from");
+
+        for (int i = 0; i < hops.Length - 1; i++)
+        {
+            declared.Should().Contain($"{hops[i]}>{hops[i + 1]}", $"the path claims a {hops[i]} -> {hops[i + 1]} edge");
+        }
+    }
+
     public void Build_WhenTwoDisjointCyclesExist_ReportsEachFailureAgainstItsOwnCycle()
     {
         // Joining every cycle description onto every failure would tell whoever is reading One's failure
