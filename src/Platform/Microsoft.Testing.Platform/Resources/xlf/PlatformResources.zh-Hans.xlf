@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="zh-Hans" original="../PlatformResources.resx">
     <body>
@@ -34,7 +34,7 @@
       </trans-unit>
       <trans-unit id="ArtifactPostProcessingDispatcherInvalidProcessorOutput">
         <source>The processed artifact must be an existing file under the output directory and cannot overwrite an input artifact.</source>
-        <target state="translated">处理后的工件必须是输出目录下的现有文件，且不能覆盖输入项目。</target>
+        <target state="new">The processed artifact must be an existing file under the output directory and cannot overwrite an input artifact.</target>
         <note />
       </trans-unit>
       <trans-unit id="ArtifactPostProcessingDispatcherManifestNotFound">
@@ -624,43 +624,36 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
       <trans-unit id="PlatformCommandLineDotnetTestCliRequiresTransport">
         <source>'--server dotnettestcli' requires either '--dotnet-test-pipe' or '--dotnet-test-transport http'.</source>
         <target state="translated">"--server dotnettestcli" 需要 "--dotnet-test-pipe" 或 "--dotnet-test-transport http"。</target>
-        <target state="new">'--server dotnettestcli' requires either '--dotnet-test-pipe' or '--dotnet-test-transport http'.</target>
         <note>{Locked="--server dotnettestcli"}{Locked="--dotnet-test-pipe"}{Locked="--dotnet-test-transport http"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestHttpEndpointInvalid">
         <source>'--dotnet-test-http-endpoint' requires an absolute HTTPS URL, or an HTTP loopback URL, without user information, query, or fragment.</source>
         <target state="translated">"--dotnet-test-http-endpoint" 需要一个绝对 HTTPS URL，或一个 HTTP 回环 URL，且不能包含用户信息、查询或片段。</target>
-        <target state="new">'--dotnet-test-http-endpoint' requires an absolute HTTPS URL, or an HTTP loopback URL, without user information, query, or fragment.</target>
         <note>{Locked="--dotnet-test-http-endpoint"}{Locked="HTTP"}{Locked="HTTPS"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestHttpEndpointOptionDescription">
         <source>Specifies the authenticated HTTP endpoint for the dotnet test protocol.</source>
         <target state="translated">为 dotnet test 协议指定经过身份验证的 HTTP 终结点。</target>
-        <target state="new">Specifies the authenticated HTTP endpoint for the dotnet test protocol.</target>
         <note>{Locked="HTTP"}{Locked="dotnet test"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestHttpOptionsRequireTransport">
         <source>The dotnet test HTTP endpoint and token options require '--dotnet-test-transport http'.</source>
         <target state="translated">dotnet test HTTP 终结点和令牌选项需要使用 "--dotnet-test-transport http"。</target>
-        <target state="new">The dotnet test HTTP endpoint and token options require '--dotnet-test-transport http'.</target>
         <note>{Locked="dotnet test"}{Locked="HTTP"}{Locked="--dotnet-test-transport http"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestHttpRequiresEndpointAndToken">
         <source>'--dotnet-test-transport http' requires both '--dotnet-test-http-endpoint' and '--dotnet-test-http-token'.</source>
         <target state="translated">"--dotnet-test-transport http" 需要同时指定 "--dotnet-test-http-endpoint" 和 "--dotnet-test-http-token"。</target>
-        <target state="new">'--dotnet-test-transport http' requires both '--dotnet-test-http-endpoint' and '--dotnet-test-http-token'.</target>
         <note>{Locked="--dotnet-test-transport http"}{Locked="--dotnet-test-http-endpoint"}{Locked="--dotnet-test-http-token"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestHttpTokenInvalid">
         <source>'--dotnet-test-http-token' requires a non-empty valid bearer token without whitespace or control characters.</source>
         <target state="translated">"--dotnet-test-http-token" 需要一个非空的有效持有者令牌，且不能包含空白字符或控制字符。</target>
-        <target state="new">'--dotnet-test-http-token' requires a non-empty valid bearer token without whitespace or control characters.</target>
         <note>{Locked="--dotnet-test-http-token"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestHttpTokenOptionDescription">
         <source>Specifies the per-run HTTP bearer token for the dotnet test protocol.</source>
         <target state="translated">指定 dotnet test 协议每次运行的 HTTP 持有者令牌。</target>
-        <target state="new">Specifies the per-run HTTP bearer token for the dotnet test protocol.</target>
         <note>{Locked="HTTP"}{Locked="dotnet test"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
@@ -671,19 +664,16 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
       <trans-unit id="PlatformCommandLineDotnetTestTransportConflict">
         <source>The dotnet test named-pipe and HTTP transports cannot be selected together.</source>
         <target state="translated">不能同时选择 dotnet test 命名管道和 HTTP 传输。</target>
-        <target state="new">The dotnet test named-pipe and HTTP transports cannot be selected together.</target>
         <note>{Locked="dotnet test"}{Locked="HTTP"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestTransportInvalid">
         <source>'--dotnet-test-transport' received unexpected value '{0}'. Supported values are: {1}.</source>
         <target state="translated">"--dotnet-test-transport" 收到意外值“{0}”。支持的值为: {1}。</target>
-        <target state="new">'--dotnet-test-transport' received unexpected value '{0}'. Supported values are: {1}.</target>
         <note>{0} is the unexpected transport value. {1} is the comma-separated list of supported transport values. {Locked="--dotnet-test-transport"}{Locked="pipe"}{Locked="http"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestTransportOptionDescription">
         <source>Selects the pre-launch transport for the dotnet test protocol.</source>
         <target state="translated">为 dotnet test 协议选择预启动传输。</target>
-        <target state="new">Selects the pre-launch transport for the dotnet test protocol.</target>
         <note>{Locked="dotnet test"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
@@ -760,13 +750,11 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
       <trans-unit id="PlatformCommandLinePipeTransportNotSupportedOnBrowser">
         <source>The dotnet test named-pipe transport is not supported on browser-wasm. Use '--dotnet-test-transport http'.</source>
         <target state="translated">browser-wasm 上不支持 dotnet test 命名管道传输。请使用 "--dotnet-test-transport http"。</target>
-        <target state="new">The dotnet test named-pipe transport is not supported on browser-wasm. Use '--dotnet-test-transport http'.</target>
         <note>{Locked="dotnet test"}{Locked="browser-wasm"}{Locked="--dotnet-test-transport http"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLinePipeTransportNotSupportedOnWasi">
         <source>The dotnet test named-pipe transport is not supported on wasi-wasm. Use '--dotnet-test-transport http'.</source>
         <target state="translated">wasi-wasm 上不支持 dotnet test 命名管道传输。请使用 "--dotnet-test-transport http"。</target>
-        <target state="new">The dotnet test named-pipe transport is not supported on wasi-wasm. Use '--dotnet-test-transport http'.</target>
         <note>{Locked="dotnet test"}{Locked="wasi-wasm"}{Locked="--dotnet-test-transport http"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLinePortOptionDescription">

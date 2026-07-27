@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="it" original="../PlatformResources.resx">
     <body>
@@ -624,43 +624,36 @@ Facoltativamente accetta ''text'' (output leggibile predefinito) o ''json'' per 
       <trans-unit id="PlatformCommandLineDotnetTestCliRequiresTransport">
         <source>'--server dotnettestcli' requires either '--dotnet-test-pipe' or '--dotnet-test-transport http'.</source>
         <target state="translated">''--server dotnettestcli'' richiede ''--dotnet-test-pipe'' o ''--dotnet-test-transport http''.</target>
-        <target state="new">'--server dotnettestcli' requires either '--dotnet-test-pipe' or '--dotnet-test-transport http'.</target>
         <note>{Locked="--server dotnettestcli"}{Locked="--dotnet-test-pipe"}{Locked="--dotnet-test-transport http"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestHttpEndpointInvalid">
         <source>'--dotnet-test-http-endpoint' requires an absolute HTTPS URL, or an HTTP loopback URL, without user information, query, or fragment.</source>
         <target state="translated">''--dotnet-test-http-endpoint'' richiede un URL HTTPS assoluto, oppure un URL di loopback HTTP, senza informazioni utente, query o frammento.</target>
-        <target state="new">'--dotnet-test-http-endpoint' requires an absolute HTTPS URL, or an HTTP loopback URL, without user information, query, or fragment.</target>
         <note>{Locked="--dotnet-test-http-endpoint"}{Locked="HTTP"}{Locked="HTTPS"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestHttpEndpointOptionDescription">
         <source>Specifies the authenticated HTTP endpoint for the dotnet test protocol.</source>
         <target state="translated">Specifica l'endpoint HTTP autenticato per il protocollo dotnet test.</target>
-        <target state="new">Specifies the authenticated HTTP endpoint for the dotnet test protocol.</target>
         <note>{Locked="HTTP"}{Locked="dotnet test"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestHttpOptionsRequireTransport">
         <source>The dotnet test HTTP endpoint and token options require '--dotnet-test-transport http'.</source>
         <target state="translated">L'endpoint HTTP e le opzioni di token di dotnet test richiedono''--dotnet-test-transport http''.</target>
-        <target state="new">The dotnet test HTTP endpoint and token options require '--dotnet-test-transport http'.</target>
         <note>{Locked="dotnet test"}{Locked="HTTP"}{Locked="--dotnet-test-transport http"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestHttpRequiresEndpointAndToken">
         <source>'--dotnet-test-transport http' requires both '--dotnet-test-http-endpoint' and '--dotnet-test-http-token'.</source>
         <target state="translated">''--dotnet-test-transport http'' richiede sia ''--dotnet-test-http-endpoint'' sia ''--dotnet-test-http-token''.</target>
-        <target state="new">'--dotnet-test-transport http' requires both '--dotnet-test-http-endpoint' and '--dotnet-test-http-token'.</target>
         <note>{Locked="--dotnet-test-transport http"}{Locked="--dotnet-test-http-endpoint"}{Locked="--dotnet-test-http-token"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestHttpTokenInvalid">
         <source>'--dotnet-test-http-token' requires a non-empty valid bearer token without whitespace or control characters.</source>
         <target state="translated">''--dotnet-test-http-token'' richiede un token bearer valido non vuoto, senza spazi o caratteri di controllo.</target>
-        <target state="new">'--dotnet-test-http-token' requires a non-empty valid bearer token without whitespace or control characters.</target>
         <note>{Locked="--dotnet-test-http-token"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestHttpTokenOptionDescription">
         <source>Specifies the per-run HTTP bearer token for the dotnet test protocol.</source>
         <target state="translated">Specifica il token di autenticazione HTTP Bearer per ogni esecuzione per il protocollo dotnet test.</target>
-        <target state="new">Specifies the per-run HTTP bearer token for the dotnet test protocol.</target>
         <note>{Locked="HTTP"}{Locked="dotnet test"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
@@ -671,19 +664,16 @@ Facoltativamente accetta ''text'' (output leggibile predefinito) o ''json'' per 
       <trans-unit id="PlatformCommandLineDotnetTestTransportConflict">
         <source>The dotnet test named-pipe and HTTP transports cannot be selected together.</source>
         <target state="translated">Non è possibile selezionare contemporaneamente i trasporti named pipe e HTTP di dotnet test.</target>
-        <target state="new">The dotnet test named-pipe and HTTP transports cannot be selected together.</target>
         <note>{Locked="dotnet test"}{Locked="HTTP"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestTransportInvalid">
         <source>'--dotnet-test-transport' received unexpected value '{0}'. Supported values are: {1}.</source>
         <target state="translated">''--dotnet-test-transport'' ha ricevuto il valore imprevisto ''{0}''. I valori supportati sono: {1}.</target>
-        <target state="new">'--dotnet-test-transport' received unexpected value '{0}'. Supported values are: {1}.</target>
         <note>{0} is the unexpected transport value. {1} is the comma-separated list of supported transport values. {Locked="--dotnet-test-transport"}{Locked="pipe"}{Locked="http"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestTransportOptionDescription">
         <source>Selects the pre-launch transport for the dotnet test protocol.</source>
         <target state="translated">Seleziona il trasporto pre-avvio per il protocollo dotnet test.</target>
-        <target state="new">Selects the pre-launch transport for the dotnet test protocol.</target>
         <note>{Locked="dotnet test"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
@@ -760,13 +750,11 @@ Facoltativamente accetta ''text'' (output leggibile predefinito) o ''json'' per 
       <trans-unit id="PlatformCommandLinePipeTransportNotSupportedOnBrowser">
         <source>The dotnet test named-pipe transport is not supported on browser-wasm. Use '--dotnet-test-transport http'.</source>
         <target state="translated">Il trasporto named pipe di dotnet test non è supportato in browser-wasm. Usare ''--dotnet-test-transport http''.</target>
-        <target state="new">The dotnet test named-pipe transport is not supported on browser-wasm. Use '--dotnet-test-transport http'.</target>
         <note>{Locked="dotnet test"}{Locked="browser-wasm"}{Locked="--dotnet-test-transport http"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLinePipeTransportNotSupportedOnWasi">
         <source>The dotnet test named-pipe transport is not supported on wasi-wasm. Use '--dotnet-test-transport http'.</source>
         <target state="translated">Il trasporto named pipe di dotnet test non è supportato in wasi-wasm. Usare ''--dotnet-test-transport http''.</target>
-        <target state="new">The dotnet test named-pipe transport is not supported on wasi-wasm. Use '--dotnet-test-transport http'.</target>
         <note>{Locked="dotnet test"}{Locked="wasi-wasm"}{Locked="--dotnet-test-transport http"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLinePortOptionDescription">
@@ -1074,7 +1062,7 @@ Altre informazioni sulla telemetria della piattaforma di test Microsoft: https:/
       </trans-unit>
       <trans-unit id="TimeoutFlushingLogsErrorMessage">
         <source>Failed to flush logs to log file '{0}' before the timeout of '{1}' seconds. The log file may be incomplete.</source>
-        <target state="translated">Non è possibile scaricare il file di log '{0}' prima del timeout di '{1}' secondi. Il file di log potrebbe essere incompleto.</target>
+        <target state="new">Failed to flush logs to log file '{0}' before the timeout of '{1}' seconds. The log file may be incomplete.</target>
         <note>{0} is the log file path. {1} is the timeout in seconds.</note>
       </trans-unit>
       <trans-unit id="Total">
