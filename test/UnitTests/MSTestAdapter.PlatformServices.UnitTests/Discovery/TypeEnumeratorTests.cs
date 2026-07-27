@@ -257,6 +257,29 @@ public partial class TypeEnumeratorTests : TestContainer
         dependent.Dependencies![0].TargetMethodName.Should().Be(nameof(DummyTestClassWithClassLevelDependsOn.Setup));
     }
 
+    /// <summary>
+    /// When the same prerequisite is declared at both class and method scope with different
+    /// <c>ProceedOnFailure</c> values, the conservative value must win - matching the rule applied across
+    /// distinct prerequisites. Merging permissively would let a class-level opt-out silently override a
+    /// method-level default and run a test whose precondition did not hold.
+    /// </summary>
+    public void GetTestFromMethodShouldMergeDuplicateDependenciesConservatively()
+    {
+        SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
+        TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyTestClassWithConflictingDependsOn), "DummyAssemblyName");
+
+        MSTest.TestAdapter.ObjectModel.UnitTestElement element = typeEnumerator.GetTestFromMethod(
+            typeof(DummyTestClassWithConflictingDependsOn).GetMethod(nameof(DummyTestClassWithConflictingDependsOn.PlaceOrder))!,
+            classDisablesParallelization: false,
+            _warnings);
+
+        // One edge, because both declarations name the same prerequisite - and it must not proceed on
+        // failure, because the method-level declaration did not ask to.
+        element.Dependencies.Should().ContainSingle();
+        element.Dependencies![0].TargetMethodName.Should().Be(nameof(DummyTestClassWithConflictingDependsOn.Setup));
+        element.Dependencies[0].ProceedOnFailure.Should().BeFalse();
+    }
+
     public void GetTestFromMethodShouldUseClosedFullClassNameAndOpenManagedTypeNameForGenericTypes()
     {
         Type closedType = typeof(DummyGenericTestClass<int>);
@@ -592,6 +615,22 @@ internal class DummyTestClassWithClassLevelDependsOn
     }
 
     [TestMethod]
+    public void PlaceOrder()
+    {
+    }
+}
+
+[TestClass]
+[DependsOn(nameof(Setup), ProceedOnFailure = true)]
+internal class DummyTestClassWithConflictingDependsOn
+{
+    [TestMethod]
+    public void Setup()
+    {
+    }
+
+    [TestMethod]
+    [DependsOn(nameof(Setup))]
     public void PlaceOrder()
     {
     }

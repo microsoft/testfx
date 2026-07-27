@@ -42,8 +42,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// that class's run. Under <see cref="ExecutionScope.MethodLevel"/> every test is scheduled
 /// individually, which gives the most parallelism and the finest ordering. If class-level scheduling
 /// would require running two classes before each other (class A's test depends on class B's and vice
-/// versa), that is reported as a cycle and the run is failed; switching to
-/// <see cref="ExecutionScope.MethodLevel"/> resolves it.
+/// versa), the declared order is still honored - those classes' tests are run sequentially, in
+/// dependency order, and a warning names them - but they lose their parallelism; switching to
+/// <see cref="ExecutionScope.MethodLevel"/> gets it back.
 /// </para>
 /// <para>
 /// A test marked <see cref="DoNotParallelizeAttribute"/> runs in the sequential phase, which happens

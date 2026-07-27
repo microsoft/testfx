@@ -114,9 +114,12 @@ with no reason is indistinguishable from a test that was filtered out. This matc
 pytest-dependency and Playwright's serial mode.
 
 **`ProceedOnFailure` is per declaration, and merges conservatively.** A dependent proceeds only when
-*every* edge it declares says it may; one edge asking for the ordinary skip is enough to hold it back.
-Under-skipping runs a test whose precondition failed (a confusing spurious failure); over-skipping only
-costs coverage that was already compromised. The conservative direction is therefore to skip.
+*every* edge it declares says it may; one edge asking for the ordinary skip is enough to hold it back. The
+same rule applies when the *same* prerequisite is declared twice — for example at class scope with
+`ProceedOnFailure = true` and again on the method with the default — so a broad opt-out can never silently
+override a narrower declaration. Under-skipping runs a test whose precondition failed (a confusing spurious
+failure); over-skipping only costs coverage that was already compromised. The conservative direction is
+therefore to skip.
 
 **Not inherited.** `[ResourceLock]` and `[DoNotParallelize]` are inherited because over-applying them is
 merely slower. A dependency is different: re-pointing one concrete test's prerequisites at every derived

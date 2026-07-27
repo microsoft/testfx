@@ -280,9 +280,11 @@ internal class TypeEnumerator
 
     /// <summary>
     /// Merges the class-level and method-level dependencies into a single distinct set, preserving
-    /// declaration order (class first) and keeping the most permissive <c>ProceedOnFailure</c> per target,
-    /// so that declaring the same prerequisite twice cannot make the edge stricter than any single
-    /// declaration asked for. Returns <see langword="null"/> when neither declares any dependency.
+    /// declaration order (class first). When the same prerequisite is declared more than once, the
+    /// <c>ProceedOnFailure</c> flags are merged conservatively - the edge proceeds past a failed
+    /// prerequisite only when every declaration of it says so - matching the rule applied across distinct
+    /// prerequisites in <c>TestDependencyGraph.ResolveEdges</c>. Returns <see langword="null"/> when neither
+    /// declares any dependency.
     /// </summary>
     private static TestDependencyInfo[]? MergeDependencies(List<TestDependencyInfo>? classDependencies, List<TestDependencyInfo>? methodDependencies, string declaringClassFullName, string methodName)
     {
@@ -323,7 +325,12 @@ internal class TypeEnumerator
                 string key = dependency.DescribeTarget();
                 if (indexByTarget.TryGetValue(key, out int existingIndex))
                 {
-                    if (dependency.ProceedOnFailure && !target[existingIndex].ProceedOnFailure)
+                    // Conservative merge: one declaration asking for the ordinary skip is enough to hold the
+                    // dependent back, which is the same rule ResolveEdges applies across distinct
+                    // prerequisites. Merging the other way would let a class-level ProceedOnFailure silently
+                    // override a method-level default and run a test whose precondition demonstrably did not
+                    // hold; over-skipping only costs coverage that was already compromised.
+                    if (!dependency.ProceedOnFailure && target[existingIndex].ProceedOnFailure)
                     {
                         target[existingIndex] = dependency;
                     }

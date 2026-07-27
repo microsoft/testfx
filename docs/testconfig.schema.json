@@ -109,6 +109,8 @@
                   "description": "Ordered sequences: within each chain, every test waits for the one before it.",
                   "items": {
                     "type": "array",
+                    "description": "A chain needs at least two tests; a shorter one declares no dependency.",
+                    "minItems": 2,
                     "items": { "type": "string" }
                   }
                 },

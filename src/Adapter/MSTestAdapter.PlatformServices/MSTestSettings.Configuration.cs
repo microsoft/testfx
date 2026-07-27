@@ -189,12 +189,28 @@ internal sealed partial class MSTestSettings
         List<TestDependencyDeclaration>? declarations = null;
 
         // chains: [ [ "A.B.First", "A.B.Second" ], ... ] - each element waits for the previous one.
+        //
+        // The configuration model flattens an array to indexed keys and stores nothing under an *empty*
+        // element, and IConfiguration's indexer cannot tell an absent key from one present with a null value.
+        // A stray empty chain would therefore look exactly like the end of the outer array and silently
+        // discard every chain after it - dependencies vanishing without a diagnostic, which is the failure
+        // mode this feature must never have. The schema forbids chains shorter than two entries (a shorter
+        // one declares no edge anyway); the single-index lookahead below keeps one authoring slip from
+        // costing the declarations that follow it.
         for (int chainIndex = 0; ; chainIndex++)
         {
             string? firstOfChain = configuration[$"{root}:chains:{chainIndex}:0"];
             if (firstOfChain is null)
             {
-                break;
+                if (configuration[$"{root}:chains:{chainIndex + 1}:0"] is null)
+                {
+                    break;
+                }
+
+                logger?.SendMessage(
+                    MessageLevel.Warning,
+                    string.Format(CultureInfo.CurrentCulture, Resource.DependencyConfigurationEmptyChain, chainIndex));
+                continue;
             }
 
             string previous = firstOfChain;

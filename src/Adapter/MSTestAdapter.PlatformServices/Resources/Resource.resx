@@ -387,6 +387,10 @@ but received {4} argument(s), with types '{5}'.</value>
     <value>Test method {0} was not found.</value>
     <comment>{0} is the test method name.</comment>
   </data>
+  <data name="DependencyConfigurationEmptyChain" xml:space="preserve">
+    <value>The chain at index {0} of the 'mstest:execution:dependencies:chains' configuration section is empty and declares no dependency. Remove it: a chain needs at least two tests to express an order.</value>
+    <comment>{0} is the zero-based index of the empty chain. {Locked="mstest:execution:dependencies:chains"}</comment>
+  </data>
   <data name="DependencyConfigurationInvalidReference" xml:space="preserve">
     <value>The test reference '{0}' in the 'mstest:execution:dependencies' configuration section is not valid. Use 'Namespace.Class.Method', or 'Namespace.Class.*' for every test of a class.</value>
     <comment>{0} is the invalid reference. {Locked="mstest:execution:dependencies"}</comment>
