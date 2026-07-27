@@ -622,7 +622,8 @@ conflicting tests share a `FullClassName`; "cross-class" means they do not.
 | A / B / C conflict, **same class only** | Info (readiness) | **Info** — already serialized intra-class | **High** — now racing |
 | A / B / C conflict, **cross-class** | Warning (readiness) | **High** | **High** |
 | Under-declared process-global mutation | Warning (readiness) | High if cross-class reachable | **Critical** |
-| Key mismatch / case-only near-miss | Warning | **High** — protection is illusory | **Critical** |
+| Key mismatch / case-only near-miss, **same class only** | Warning (readiness) | **Info** — already serialized intra-class, so the illusory lock costs nothing today | **Critical** |
+| Key mismatch / case-only near-miss, **cross-class** | Warning (readiness) | **High** — protection is illusory | **Critical** |
 | D over-serialization | Info | Warning (throughput) | Warning (throughput) |
 
 Non-negotiable rules:
@@ -725,13 +726,15 @@ Rules for the comment:
 
 ### Fallback: nothing to audit
 
-If the changed-test-files list is empty, or after Step 1 no changed method
-touches anything in the taxonomy, post this short comment instead:
+If **both** the changed-test-files and changed-config-files lists are empty, or
+after Step 1 nothing you audited — neither a changed test method nor any assembly
+whose parallelization configuration this PR changed — touches anything in the
+taxonomy, post this short comment instead:
 
 ```markdown
 ### 🧵 Parallel-safety audit — PR #<number>
 
-No changed test methods touch process-global state, shared filesystem paths, or
+Nothing audited here touches process-global state, shared filesystem paths, or
 `[ResourceLock]` / `[DoNotParallelize]` declarations. Nothing to flag for
 parallel-safety.
 
