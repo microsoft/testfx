@@ -403,7 +403,7 @@ but received {4} argument(s), with types '{5}'.</value>
     <comment>{0} is the cycle rendered as a path, for example 'A &gt; B &gt; A'. {Locked="[DependsOn]"}</comment>
   </data>
   <data name="DependsOnClassLevelCycle" xml:space="preserve">
-    <value>Dependencies between the following test classes cannot be honored with class-level parallelization because they depend on each other: {0}. Ordering is still enforced per test, but the classes are no longer scheduled as a unit. Use &lt;Scope&gt;MethodLevel&lt;/Scope&gt; (or [Parallelize(Scope = ExecutionScope.MethodLevel)]) to schedule each test individually.</value>
+    <value>Dependencies between the following test classes cannot be scheduled with class-level parallelization because the classes depend on each other: {0}. Their tests are run sequentially, in dependency order, so the declared order is still honored. Use &lt;Scope&gt;MethodLevel&lt;/Scope&gt; (or [Parallelize(Scope = ExecutionScope.MethodLevel)]) to schedule each test individually and run them in parallel again.</value>
     <comment>{0} is a comma-separated list of test class names. {Locked="MethodLevel"}{Locked="[Parallelize(Scope = ExecutionScope.MethodLevel)]"}{Locked="Scope"}</comment>
   </data>
   <data name="DependsOnTargetNotFound" xml:space="preserve">

@@ -229,6 +229,34 @@ public partial class TypeEnumeratorTests : TestContainer
         testElement.TestMethod.AssemblyName.Should().Be("DummyAssemblyName");
     }
 
+    /// <summary>
+    /// A class-level <c>[DependsOn(nameof(Setup))]</c> is expanded onto every method of the class, including
+    /// <c>Setup</c> itself. That generated self-edge is dropped, because the declaration plainly means "every
+    /// *other* test waits for Setup"; keeping it would make the graph report a cycle the user never wrote,
+    /// fail <c>Setup</c>, and cascade a skip over the whole class.
+    /// </summary>
+    public void GetTestFromMethodShouldNotMakeAClassLevelDependencyTargetTargetItself()
+    {
+        SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
+        TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyTestClassWithClassLevelDependsOn), "DummyAssemblyName");
+
+        MSTest.TestAdapter.ObjectModel.UnitTestElement target = typeEnumerator.GetTestFromMethod(
+            typeof(DummyTestClassWithClassLevelDependsOn).GetMethod(nameof(DummyTestClassWithClassLevelDependsOn.Setup))!,
+            classDisablesParallelization: false,
+            _warnings);
+
+        target.Dependencies.Should().BeNull();
+
+        // Every other method of the class still gets the dependency.
+        MSTest.TestAdapter.ObjectModel.UnitTestElement dependent = typeEnumerator.GetTestFromMethod(
+            typeof(DummyTestClassWithClassLevelDependsOn).GetMethod(nameof(DummyTestClassWithClassLevelDependsOn.PlaceOrder))!,
+            classDisablesParallelization: false,
+            _warnings);
+
+        dependent.Dependencies.Should().ContainSingle();
+        dependent.Dependencies![0].TargetMethodName.Should().Be(nameof(DummyTestClassWithClassLevelDependsOn.Setup));
+    }
+
     public void GetTestFromMethodShouldUseClosedFullClassNameAndOpenManagedTypeNameForGenericTypes()
     {
         Type closedType = typeof(DummyGenericTestClass<int>);
@@ -550,6 +578,21 @@ internal class DummyGenericTestClass<T>
 {
     [TestMethod]
     public void GenericTestMethod()
+    {
+    }
+}
+
+[TestClass]
+[DependsOn(nameof(Setup))]
+internal class DummyTestClassWithClassLevelDependsOn
+{
+    [TestMethod]
+    public void Setup()
+    {
+    }
+
+    [TestMethod]
+    public void PlaceOrder()
     {
     }
 }

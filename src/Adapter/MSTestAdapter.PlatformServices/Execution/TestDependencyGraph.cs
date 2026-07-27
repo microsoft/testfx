@@ -143,17 +143,44 @@ internal sealed class TestDependencyGraph
 
         bool[] isSequential = ComputeSequentialSet(tests, testPrerequisites, isBroken, parallelizationEnabled);
 
-        UnitTestElement[] sequentialTests = OrderTopologically(
-            SelectIndices(tests.Length, i => isSequential[i] && !isBroken[i]),
-            testPrerequisites,
-            tests);
-
         (UnitTestElement[][] parallelChunks, int[][] parallelChunkPrerequisites) = BuildChunks(
             tests,
             testPrerequisites,
             SelectIndices(tests.Length, i => !isSequential[i] && !isBroken[i]),
             scope,
-            errors);
+            errors,
+            out List<int>? projectionCycleTests);
+
+        // A cycle that exists only in the class-level projection means the declared order is satisfiable
+        // between tests but not between whole classes. Rather than leave those tests unordered - which would
+        // make the run-time gate skip them nondeterministically, because a prerequisite that has not run yet
+        // is indistinguishable from one that failed - the affected tests are moved into the sequential phase,
+        // where the topological order can be honoured exactly. The cost is parallelism for those tests only,
+        // and the reported error tells the user how to get it back.
+        if (projectionCycleTests is not null)
+        {
+            foreach (int index in projectionCycleTests)
+            {
+                isSequential[index] = true;
+            }
+
+            // Anything that waited on a demoted test has to move too, for the same reason [DoNotParallelize]
+            // dependents do: the sequential phase runs after the parallel one.
+            PropagateSequential(tests.Length, testPrerequisites, isBroken, isSequential);
+
+            (parallelChunks, parallelChunkPrerequisites) = BuildChunks(
+                tests,
+                testPrerequisites,
+                SelectIndices(tests.Length, i => !isSequential[i] && !isBroken[i]),
+                scope,
+                errors,
+                out _);
+        }
+
+        UnitTestElement[] sequentialTests = OrderTopologically(
+            SelectIndices(tests.Length, i => isSequential[i] && !isBroken[i]),
+            testPrerequisites,
+            tests);
 
         return new TestDependencyGraph(
             tests,
@@ -356,9 +383,28 @@ internal sealed class TestDependencyGraph
             return isSequential;
         }
 
-        // dependents[p] lists the tests that wait for p, so the demotion can be pushed forward along edges.
-        var dependents = new List<int>[tests.Length];
         for (int i = 0; i < tests.Length; i++)
+        {
+            if (tests[i].DoNotParallelize && !isBroken[i])
+            {
+                isSequential[i] = true;
+            }
+        }
+
+        PropagateSequential(tests.Length, prerequisites, isBroken, isSequential);
+        return isSequential;
+    }
+
+    /// <summary>
+    /// Extends <paramref name="isSequential"/> to everything that (transitively) waits on a test already in
+    /// it, because the sequential phase runs after the parallel one: a parallel test waiting on a sequential
+    /// prerequisite would never observe it complete.
+    /// </summary>
+    private static void PropagateSequential(int testCount, int[][] prerequisites, bool[] isBroken, bool[] isSequential)
+    {
+        // dependents[p] lists the tests that wait for p, so the demotion can be pushed forward along edges.
+        var dependents = new List<int>[testCount];
+        for (int i = 0; i < testCount; i++)
         {
             foreach (int prerequisite in prerequisites[i])
             {
@@ -367,11 +413,10 @@ internal sealed class TestDependencyGraph
         }
 
         var queue = new Queue<int>();
-        for (int i = 0; i < tests.Length; i++)
+        for (int i = 0; i < testCount; i++)
         {
-            if (tests[i].DoNotParallelize && !isBroken[i])
+            if (isSequential[i])
             {
-                isSequential[i] = true;
                 queue.Enqueue(i);
             }
         }
@@ -393,25 +438,23 @@ internal sealed class TestDependencyGraph
                 }
             }
         }
-
-        return isSequential;
     }
 
     /// <summary>
     /// Groups the parallel-phase tests into scheduling chunks and projects the test-level edges onto them.
     /// A cycle that exists only in the projection (class A waits for class B and B waits for A, although no
-    /// single test waits for itself) is reported with the advice to switch to
-    /// <see cref="ExecutionScope.MethodLevel"/>, where each test is its own chunk and the projection cannot
-    /// introduce a cycle. The chunk order then falls back to the declaration order, and the test-level
-    /// prerequisites still hold every dependent back at run time, so nothing runs out of order.
+    /// single test waits for itself) is reported through <paramref name="projectionCycleTests"/> so the caller
+    /// can move those tests into the sequential phase, where the test-level order is honoured exactly.
     /// </summary>
     private static (UnitTestElement[][] Chunks, int[][] ChunkPrerequisites) BuildChunks(
         UnitTestElement[] tests,
         int[][] prerequisites,
         List<int> parallelIndices,
         ExecutionScope scope,
-        List<string> errors)
+        List<string> errors,
+        out List<int>? projectionCycleTests)
     {
+        projectionCycleTests = null;
         int[] chunkOfTest = new int[tests.Length];
         for (int i = 0; i < chunkOfTest.Length; i++)
         {
@@ -475,28 +518,32 @@ internal sealed class TestDependencyGraph
         if (HasChunkCycle(chunkPrerequisiteArrays, out int[]? cycleChunks))
         {
             var classNames = new List<string>();
+            projectionCycleTests = [];
             foreach (int chunk in cycleChunks!)
             {
                 classNames.Add(tests[chunkMembers[chunk][0]].TestMethod.FullClassName);
+                projectionCycleTests.AddRange(chunkMembers[chunk]);
             }
 
             errors.Add(string.Format(CultureInfo.CurrentCulture, Resource.DependsOnClassLevelCycle, string.Join(", ", classNames)));
 
-            // Drop the projected edges rather than the tests: the test-level graph is sound, so the run can
-            // still honour it through the run-time gate reported above.
-            for (int i = 0; i < chunkPrerequisiteArrays.Length; i++)
-            {
-                chunkPrerequisiteArrays[i] = [];
-            }
+            // The caller re-chunks without these tests, so the arrays built here are discarded. Returning them
+            // unchanged keeps this method free of a partially-valid state.
+            return (BuildChunkArrays(chunkMembers, prerequisites, tests), chunkPrerequisiteArrays);
         }
 
+        return (BuildChunkArrays(chunkMembers, prerequisites, tests), chunkPrerequisiteArrays);
+    }
+
+    private static UnitTestElement[][] BuildChunkArrays(List<List<int>> chunkMembers, int[][] prerequisites, UnitTestElement[] tests)
+    {
         var chunks = new UnitTestElement[chunkMembers.Count][];
         for (int i = 0; i < chunkMembers.Count; i++)
         {
             chunks[i] = OrderTopologically(chunkMembers[i], prerequisites, tests);
         }
 
-        return (chunks, chunkPrerequisiteArrays);
+        return chunks;
     }
 
     /// <summary>

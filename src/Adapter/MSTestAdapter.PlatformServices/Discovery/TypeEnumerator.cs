@@ -160,7 +160,7 @@ internal class TypeEnumerator
             TestCategory = reflectionOperations.GetTestCategories(method, _type),
             DoNotParallelize = classDisablesParallelization || _reflectHelper.IsAttributeDefined<DoNotParallelizeAttribute>(method),
             ResourceLocks = MergeResourceLocks(GetClassResourceLocks(), ReadResourceLocks(method)),
-            Dependencies = MergeDependencies(GetClassDependencies(), ReadDependencies(method)),
+            Dependencies = MergeDependencies(GetClassDependencies(), ReadDependencies(method), _type.FullName!, method.Name),
 #if !WINDOWS_UWP && !WIN_UI
             DeploymentItems = PlatformServiceProvider.Instance.TestDeployment.GetDeploymentItems(method, _type, warnings),
 #endif
@@ -284,7 +284,7 @@ internal class TypeEnumerator
     /// so that declaring the same prerequisite twice cannot make the edge stricter than any single
     /// declaration asked for. Returns <see langword="null"/> when neither declares any dependency.
     /// </summary>
-    private static TestDependencyInfo[]? MergeDependencies(List<TestDependencyInfo>? classDependencies, List<TestDependencyInfo>? methodDependencies)
+    private static TestDependencyInfo[]? MergeDependencies(List<TestDependencyInfo>? classDependencies, List<TestDependencyInfo>? methodDependencies, string declaringClassFullName, string methodName)
     {
         if (classDependencies is null && methodDependencies is null)
         {
@@ -293,12 +293,18 @@ internal class TypeEnumerator
 
         var result = new List<TestDependencyInfo>();
         var indexByTarget = new Dictionary<string, int>(StringComparer.Ordinal);
-        AddAll(classDependencies, result, indexByTarget);
-        AddAll(methodDependencies, result, indexByTarget);
 
-        return [.. result];
+        // A class-level [DependsOn(nameof(Setup))] is expanded onto every method of the class, including
+        // Setup itself. The user wrote "every *other* test waits for Setup", never "Setup waits for
+        // itself", so that generated self-edge is dropped here. A self reference written directly on the
+        // method is kept, because there the user really did name the test they were annotating, and it
+        // surfaces as a cycle.
+        AddAll(classDependencies, result, indexByTarget, declaringClassFullName, methodName);
+        AddAll(methodDependencies, result, indexByTarget, declaringClassFullName, methodName: null);
 
-        static void AddAll(List<TestDependencyInfo>? source, List<TestDependencyInfo> target, Dictionary<string, int> indexByTarget)
+        return result.Count == 0 ? null : [.. result];
+
+        static void AddAll(List<TestDependencyInfo>? source, List<TestDependencyInfo> target, Dictionary<string, int> indexByTarget, string declaringClassFullName, string? methodName)
         {
             if (source is null)
             {
@@ -307,6 +313,13 @@ internal class TypeEnumerator
 
             foreach (TestDependencyInfo dependency in source)
             {
+                if (methodName is not null
+                    && string.Equals(dependency.TargetMethodName, methodName, StringComparison.Ordinal)
+                    && (dependency.TargetClassFullName is null || string.Equals(dependency.TargetClassFullName, declaringClassFullName, StringComparison.Ordinal)))
+                {
+                    continue;
+                }
+
                 string key = dependency.DescribeTarget();
                 if (indexByTarget.TryGetValue(key, out int existingIndex))
                 {

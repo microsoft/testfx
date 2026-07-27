@@ -159,10 +159,12 @@ public sealed class TestDependencyGraphTests : TestContainer
         NamesOf(graph.BrokenTests).Should().Equal("Loop");
     }
 
-    public void Build_WhenACycleExistsOnlyInTheClassLevelProjection_ReportsItAndDropsTheChunkEdges()
+    public void Build_WhenACycleExistsOnlyInTheClassLevelProjection_RunsTheAffectedTestsSequentiallyInOrder()
     {
         // No test depends on itself, but class A must precede B *and* B must precede A, which cannot hold
-        // when the class is the scheduling unit. The run must not deadlock over it.
+        // when the class is the scheduling unit. Dropping the ordering would be worse than losing the
+        // parallelism: the run-time gate cannot tell "has not run yet" from "did not pass", so unordered
+        // dependents would be skipped nondeterministically while the run still reported success.
         UnitTestElement[] tests =
         [
             CreateElement(ClassA, "A1"),
@@ -175,12 +177,30 @@ public sealed class TestDependencyGraphTests : TestContainer
         graph.Errors.Should().ContainSingle();
         graph.Errors[0].Should().Contain("MethodLevel");
 
-        // The test-level graph is sound, so nothing is broken; only the projected chunk edges are dropped.
+        // The test-level graph is sound, so nothing is broken - the tests still run.
         graph.BrokenTests.Should().BeEmpty();
-        foreach (int[] prerequisites in graph.ParallelChunkPrerequisites)
-        {
-            prerequisites.Should().BeEmpty();
-        }
+
+        // They are moved to the sequential phase, where the topological order is honoured exactly.
+        graph.ParallelChunks.Should().BeEmpty();
+        NamesOf(graph.SequentialTests).Should().Equal("A1", "B1", "A2");
+    }
+
+    public void Build_WhenAProjectionCycleIsDemoted_LeavesUnrelatedTestsInTheParallelPhase()
+    {
+        // Only the classes caught in the projection cycle lose their parallelism; everything else keeps it.
+        UnitTestElement[] tests =
+        [
+            CreateElement(ClassA, "A1"),
+            CreateElement(ClassA, "A2", new TestDependencyInfo(ClassB, "B1", false)),
+            CreateElement(ClassB, "B1", new TestDependencyInfo(ClassA, "A1", false)),
+            CreateElement("Ns.ClassC", "C1"),
+        ];
+
+        TestDependencyGraph graph = TestDependencyGraph.Build(tests, ExecutionScope.ClassLevel, parallelizationEnabled: true)!;
+
+        graph.ParallelChunks.Should().ContainSingle();
+        NamesOf(graph.ParallelChunks[0]).Should().Equal("C1");
+        NamesOf(graph.SequentialTests).Should().Equal("A1", "B1", "A2");
     }
 
     public void Build_WhenTheSameGraphUsesMethodLevelScope_HasNoProjectionCycle()

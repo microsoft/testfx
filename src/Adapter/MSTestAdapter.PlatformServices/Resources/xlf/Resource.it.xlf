@@ -117,8 +117,8 @@ ma ha ricevuto {4} argomenti, con tipi '{5}'.</target>
         <note>{0} is the declared test reference. {Locked="mstest:execution:dependencies"}{Locked="dependsOn"}</note>
       </trans-unit>
       <trans-unit id="DependsOnClassLevelCycle">
-        <source>Dependencies between the following test classes cannot be honored with class-level parallelization because they depend on each other: {0}. Ordering is still enforced per test, but the classes are no longer scheduled as a unit. Use &lt;Scope&gt;MethodLevel&lt;/Scope&gt; (or [Parallelize(Scope = ExecutionScope.MethodLevel)]) to schedule each test individually.</source>
-        <target state="new">Dependencies between the following test classes cannot be honored with class-level parallelization because they depend on each other: {0}. Ordering is still enforced per test, but the classes are no longer scheduled as a unit. Use &lt;Scope&gt;MethodLevel&lt;/Scope&gt; (or [Parallelize(Scope = ExecutionScope.MethodLevel)]) to schedule each test individually.</target>
+        <source>Dependencies between the following test classes cannot be scheduled with class-level parallelization because the classes depend on each other: {0}. Their tests are run sequentially, in dependency order, so the declared order is still honored. Use &lt;Scope&gt;MethodLevel&lt;/Scope&gt; (or [Parallelize(Scope = ExecutionScope.MethodLevel)]) to schedule each test individually and run them in parallel again.</source>
+        <target state="new">Dependencies between the following test classes cannot be scheduled with class-level parallelization because the classes depend on each other: {0}. Their tests are run sequentially, in dependency order, so the declared order is still honored. Use &lt;Scope&gt;MethodLevel&lt;/Scope&gt; (or [Parallelize(Scope = ExecutionScope.MethodLevel)]) to schedule each test individually and run them in parallel again.</target>
         <note>{0} is a comma-separated list of test class names. {Locked="MethodLevel"}{Locked="[Parallelize(Scope = ExecutionScope.MethodLevel)]"}{Locked="Scope"}</note>
       </trans-unit>
       <trans-unit id="DependsOnCycle">

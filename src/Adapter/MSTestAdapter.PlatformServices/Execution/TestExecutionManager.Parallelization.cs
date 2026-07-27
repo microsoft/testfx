@@ -467,34 +467,47 @@ internal partial class TestExecutionManager
                         }
 
                         UnitTestElement[] chunk = graph.ParallelChunks[chunkIndex];
-                        IReadOnlyList<ResourceLockInfo> chunkLocks = ResourceLockManager.GetChunkLocks(chunk);
-                        if (chunkLocks.Count == 0)
+                        try
                         {
-                            await ExecuteTestsWithTestRunnerAsync(chunk, adapterMessageLogger, source, sourceLevelParameters, testRunner, usesAppDomains, coordinator).ConfigureAwait(false);
-                        }
-                        else
-                        {
-                            await resourceLockManager.ExecuteWithLocksAsync(
-                                chunkLocks,
-                                () => ExecuteTestsWithTestRunnerAsync(chunk, adapterMessageLogger, source, sourceLevelParameters, testRunner, usesAppDomains, coordinator),
-                                _testRunCancellationToken?.CancellationToken ?? CancellationToken.None).ConfigureAwait(false);
-                        }
-
-                        if (dependents[chunkIndex] is { } chunkDependents)
-                        {
-                            foreach (int dependent in chunkDependents)
+                            IReadOnlyList<ResourceLockInfo> chunkLocks = ResourceLockManager.GetChunkLocks(chunk);
+                            if (chunkLocks.Count == 0)
                             {
-                                if (Interlocked.Decrement(ref pendingPrerequisites[dependent]) == 0)
-                                {
-                                    ready.Enqueue(dependent);
-                                    available.Release();
-                                }
+                                await ExecuteTestsWithTestRunnerAsync(chunk, adapterMessageLogger, source, sourceLevelParameters, testRunner, usesAppDomains, coordinator).ConfigureAwait(false);
+                            }
+                            else
+                            {
+                                await resourceLockManager.ExecuteWithLocksAsync(
+                                    chunkLocks,
+                                    () => ExecuteTestsWithTestRunnerAsync(chunk, adapterMessageLogger, source, sourceLevelParameters, testRunner, usesAppDomains, coordinator),
+                                    _testRunCancellationToken?.CancellationToken ?? CancellationToken.None).ConfigureAwait(false);
                             }
                         }
-
-                        if (Interlocked.Increment(ref completedChunks) == chunkCount)
+                        finally
                         {
-                            available.Release(effectiveWorkers);
+                            // The bookkeeping below must happen even when the chunk failed, otherwise the
+                            // chunks waiting on it would never be released and the workers waiting for them
+                            // would block forever - turning one faulty chunk into a hung run. Releasing on
+                            // completion rather than success is also what the dependency semantics ask for:
+                            // whether the dependent tests actually run is decided per test by the
+                            // coordinator, which sees the (absent) outcomes and skips them.
+                            if (dependents[chunkIndex] is { } chunkDependents)
+                            {
+                                foreach (int dependent in chunkDependents)
+                                {
+                                    if (Interlocked.Decrement(ref pendingPrerequisites[dependent]) == 0)
+                                    {
+                                        ready.Enqueue(dependent);
+                                        available.Release();
+                                    }
+                                }
+                            }
+
+                            // Once every chunk has been accounted for, wake every worker so they observe the
+                            // empty queue and exit instead of waiting for a permit that will never come.
+                            if (Interlocked.Increment(ref completedChunks) == chunkCount)
+                            {
+                                available.Release(effectiveWorkers);
+                            }
                         }
                     }
                 }

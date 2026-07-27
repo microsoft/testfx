@@ -757,6 +757,68 @@ public class TestExecutionManagerTests : TestContainer
         }
     }
 
+    /// <summary>
+    /// A chunk that throws outside the test body (here: a host-side recording failure) must not strand the
+    /// workers waiting on it. Before the scheduler released its dependents in a <c>finally</c>, an exception
+    /// skipped both the dependent release and the completion count, so every other worker blocked forever on
+    /// a permit that would never be issued and the whole run hung instead of failing.
+    /// </summary>
+    public async Task RunTestsWhenADependencyChunkThrowsShouldNotHang()
+    {
+        TestCase root = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod1");
+        TestCase branchA = GetTestCase(typeof(DummyTestClassForParallelize2), "TestMethod1");
+        TestCase branchB = GetTestCase(typeof(DummyTestClassForParallelize2), "TestMethod2");
+
+        _frameworkHandle.ThrowOnRecordStartForTest = root.DisplayName;
+
+        TestCase[] tests = [root, branchA, branchB];
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+            """
+            <RunSettings>
+              <RunConfiguration>
+                <DisableAppDomain>True</DisableAppDomain>
+              </RunConfiguration>
+              <MSTest>
+                <Parallelize>
+                  <Workers>2</Workers>
+                  <Scope>MethodLevel</Scope>
+                </Parallelize>
+              </MSTest>
+            </RunSettings>
+            """);
+
+        UnitTestElement[] elements = ToUnitTestElements(tests);
+
+        // BranchA and BranchB both wait for the chunk that is about to throw, so with the bug present there
+        // is nothing left to release them and the second worker waits forever. The dependency is set on the
+        // element directly rather than through the transport property because these elements are already
+        // materialized (the property round-trip has its own tests); what is under test here is the scheduler.
+        TestDependencyInfo[] dependsOnRoot = [new TestDependencyInfo(typeof(DummyTestClassForParallelize).FullName, "TestMethod1", proceedOnFailure: false)];
+        elements[1].Dependencies = dependsOnRoot;
+        elements[2].Dependencies = dependsOnRoot;
+
+        try
+        {
+            MSTestSettings.PopulateSettings(_runContext.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
+
+            Task run = _testExecutionManager.RunTestsAsync(elements, CurrentDeploymentContext, _frameworkHandle.ToAdapterMessageLogger(), TestResultRecorder, new TestElementFilterProvider(_runContext), new TestRunCancellationToken());
+
+            // The run must finish - failing is fine, hanging is not. The timeout is what actually asserts the
+            // fix: without it the test would deadlock rather than fail.
+            Task completed = await Task.WhenAny(run, Task.Delay(TimeSpan.FromSeconds(60)));
+            completed.Should().BeSameAs(run, "the run must not hang when a chunk throws");
+
+            // Observe the faulted run so the exception is not left unhandled; it is expected to surface.
+            await run.ContinueWith(static _ => { }, TaskScheduler.Default);
+        }
+        finally
+        {
+            _frameworkHandle.ThrowOnRecordStartForTest = null;
+            DummyTestClassForParallelize.Cleanup();
+            DummyTestClassForParallelize2.Cleanup();
+        }
+    }
+
     public async Task RunTestsForTestShouldPreferParallelSettingsFromRunSettingsOverAssemblyLevelAttributes()
     {
         TestCase testCase1 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod1");
@@ -1303,6 +1365,13 @@ internal sealed class TestableFrameworkHandle : IFrameworkHandle
 
     public List<string> TestDisplayNameList { get; }
 
+    /// <summary>
+    /// When set, <see cref="RecordStart"/> throws for the test whose display name matches. Used to simulate a
+    /// chunk that fails outside the test body (a host-side recording failure), which the dependency scheduler
+    /// must survive without stranding the workers waiting on that chunk.
+    /// </summary>
+    public string? ThrowOnRecordStartForTest { get; set; }
+
     public void RecordResult(TestResult testResult)
     {
         ResultsList.Add(testResult.ToString());
@@ -1311,7 +1380,15 @@ internal sealed class TestableFrameworkHandle : IFrameworkHandle
 
     public void SendMessage(TestMessageLevel testMessageLevel, string message) => MessageList.Add($"{testMessageLevel}:{message}");
 
-    public void RecordStart(TestCase testCase) => TestCaseStartList.Add(testCase.DisplayName);
+    public void RecordStart(TestCase testCase)
+    {
+        if (ThrowOnRecordStartForTest is { } failing && string.Equals(testCase.DisplayName, failing, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"Simulated host failure while recording the start of '{failing}'.");
+        }
+
+        TestCaseStartList.Add(testCase.DisplayName);
+    }
 
     public void RecordEnd(TestCase testCase, TestOutcome outcome) => TestCaseEndList.Add($"{testCase.DisplayName}:{outcome}");
 
