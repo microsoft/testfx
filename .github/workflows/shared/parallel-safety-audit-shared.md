@@ -141,15 +141,27 @@ steps:
       set -euo pipefail
       TEST_OUT="$RUNNER_TEMP/changed-test-files.txt"
       SRC_OUT="$RUNNER_TEMP/changed-src-files.txt"
+      CONFIG_OUT="$RUNNER_TEMP/changed-config-files.txt"
       RANGES_OUT="$RUNNER_TEMP/changed-test-regions.tsv"
       : > "$TEST_OUT"
       : > "$SRC_OUT"
+      : > "$CONFIG_OUT"
       : > "$RANGES_OUT"
 
       git diff --name-only --diff-filter=AMR "$BASE_SHA" "$HEAD_SHA" -- 'test/' \
         | grep -E '\.cs$' > "$TEST_OUT" || true
       git diff --name-only --diff-filter=AMR "$BASE_SHA" "$HEAD_SHA" -- 'src/' \
         | grep -E '\.cs$' > "$SRC_OUT" || true
+
+      # Parallelization can also be turned on (or off) purely from configuration:
+      # a .runsettings <Parallelize>/<DisableParallelization>, a testconfig.json
+      # parallelism block, or the MSTestParallelize* MSBuild properties. Such a PR
+      # touches test/** and so triggers this workflow, but changes no .cs file —
+      # capture those files too, otherwise the single most safety-relevant change
+      # a PR can make (enabling parallelism) would silently bypass the audit.
+      git diff --name-only --diff-filter=AMR "$BASE_SHA" "$HEAD_SHA" -- 'test/' \
+        | grep -E '\.(runsettings|csproj|props|targets)$|testconfig\.json$' \
+        > "$CONFIG_OUT" || true
 
       # For each changed test file, emit the HEAD-side (added/modified) line
       # ranges of its diff hunks as "<file>\t<start>-<end>,<start>-<end>". The
@@ -181,17 +193,20 @@ steps:
 
       TEST_COUNT=$(wc -l < "$TEST_OUT" | tr -d ' ')
       SRC_COUNT=$(wc -l < "$SRC_OUT" | tr -d ' ')
-      echo "Changed test files: $TEST_COUNT; changed src files: $SRC_COUNT"
+      CONFIG_COUNT=$(wc -l < "$CONFIG_OUT" | tr -d ' ')
+      echo "Changed test files: $TEST_COUNT; changed src files: $SRC_COUNT; changed config files: $CONFIG_COUNT"
 
-      if [[ "$TEST_COUNT" -gt 0 ]]; then
+      if [[ "$TEST_COUNT" -gt 0 || "$CONFIG_COUNT" -gt 0 ]]; then
         echo "has_changed_tests=true" >> "$GITHUB_OUTPUT"
       else
         echo "has_changed_tests=false" >> "$GITHUB_OUTPUT"
       fi
       echo "test_count=$TEST_COUNT" >> "$GITHUB_OUTPUT"
       echo "src_count=$SRC_COUNT" >> "$GITHUB_OUTPUT"
+      echo "config_count=$CONFIG_COUNT" >> "$GITHUB_OUTPUT"
       echo "test_files_path=$TEST_OUT" >> "$GITHUB_OUTPUT"
       echo "src_files_path=$SRC_OUT" >> "$GITHUB_OUTPUT"
+      echo "config_files_path=$CONFIG_OUT" >> "$GITHUB_OUTPUT"
       echo "test_regions_path=$RANGES_OUT" >> "$GITHUB_OUTPUT"
 ---
 
@@ -248,9 +263,21 @@ A deterministic pre-step has produced two lists for pull request
   the production methods it invokes** and analyse their read set regardless of
   whether the owning file appears in this list.
 
-If the changed-test-files list is empty
+If **both** the changed-test-files and changed-config-files lists are empty
 (`${{ steps.extract.outputs.has_changed_tests }}` is `false`), post the
 "nothing to audit" fallback comment (see the wrapper output section) and stop.
+
+- **Changed configuration files** (${{ steps.extract.outputs.config_count }}) at
+  `${{ steps.extract.outputs.config_files_path }}` — `.runsettings`,
+  `testconfig.json`, `.csproj` / `.props` / `.targets` under `test/`. A PR can
+  turn parallelization **on** without touching a single `.cs` file, and that is
+  the highest-value thing this audit can catch. When this list is non-empty,
+  diff those files for the parallelization settings enumerated in Step 0. If the
+  change **enables** parallelism or **widens** the scope (`off` → `ClassLevel` →
+  `MethodLevel`) or raises workers above 1, audit the **whole affected
+  assembly**, not just the changed lines: every existing test in it becomes newly
+  concurrent, so its hazards are live as of this PR and are **primary** findings,
+  not pre-existing context.
 
 Audit each changed test file. For declaration reconciliation (category C) and
 near-miss detection you **must** also read sibling tests: use `grep` across the
@@ -285,10 +312,19 @@ Never report it as a live race. Then, for MSTest suites, resolve:
 
 1. **Opt-in?** Search the project for `[assembly: Parallelize` and
    `[assembly: DoNotParallelize]` (often in an `AssemblyInfo.cs`, a
-   `Parallelize.cs`, or `GlobalUsings`/any `.cs`). Also check for a
-   `.runsettings` (`<Parallel>` / `<MSTest><Parallelize>` nodes) and the
-   `MSTestParallelizeScope` / `MSTestParallelizeWorkers` MSBuild properties in
-   `.csproj`, `Directory.Build.props`, or props imported by the project.
+   `Parallelize.cs`, or `GlobalUsings`/any `.cs`), then check every other source
+   of the effective setting — any one of them can contradict the attribute:
+   - **`.runsettings`** — scope/workers live in a `<Parallelize>` node under the
+     `<MSTest>` (or legacy `<MSTestV2>`) section. There is **no** `<Parallel>`
+     node; do not look for one.
+   - **`.runsettings`** — `<RunSettings><RunConfiguration><DisableParallelization>`
+     forces parallelization **off**, even for an assembly carrying
+     `[Parallelize]`.
+   - **`testconfig.json`** — `parallelism:enabled` (`false` ⇒ off),
+     `mstest:parallelism:workers`, and `mstest:parallelism:scope`
+     (`class` / `method`).
+   - **MSBuild** — `MSTestParallelizeScope` / `MSTestParallelizeWorkers` in
+     `.csproj`, `Directory.Build.props`, or props imported by the project.
 2. **Which scope?** `[Parallelize]`'s default `Scope` is **`ClassLevel`**, not
    `MethodLevel`. Record the effective scope: `off`, `ClassLevel`, or
    `MethodLevel`. A `.runsettings` `<Parallelize>` scope/workers value **does**
@@ -316,14 +352,16 @@ Never report it as a live race. Then, for MSTest suites, resolve:
    `MSTestParallelizeScope` MSBuild property generates for you**, because
    `Parallelize.targets` emits a real `[assembly: Parallelize(...)]` via
    `WriteCodeFragment`, so the MSBuild-property opt-in *is* analyzer-visible — or an
-   `.editorconfig` `mstest_parallel_safety_mode = always`. The **one** opt-in the
-   compile-time net can never see is a **`.runsettings`-only** opt-in: the scope
-   lives in XML no analyzer reads. Record whether the effective opt-in is attribute
-   / MSBuild-property / editorconfig (**analyzer-coverable once those analyzers
-   ship**) or **`.runsettings`-only** (**never analyzer-covered**).
+   `.editorconfig` `mstest_parallel_safety_mode = always`. The opt-ins the
+   compile-time net can never see are the **`.runsettings`-only** and
+   **`testconfig.json`-only** ones: that scope lives in XML/JSON no analyzer
+   reads. Record whether the effective opt-in is attribute / MSBuild-property /
+   editorconfig (**analyzer-coverable once those analyzers ship**) or
+   **`.runsettings`- / `testconfig.json`-only** (**never analyzer-covered**).
 
 Encode these facts. They drive every severity below, and item 4 changes how you
-frame the whole report: **when the opt-in is `.runsettings`-only, this audit is
+frame the whole report: **when the opt-in is `.runsettings`- or
+`testconfig.json`-only, this audit is
 the *only* thing that will catch these findings** (the MSBuild-property and
 attribute opt-ins are analyzer-coverable once those analyzers ship). Say that
 explicitly in the header — it is the single most valuable sentence in that
