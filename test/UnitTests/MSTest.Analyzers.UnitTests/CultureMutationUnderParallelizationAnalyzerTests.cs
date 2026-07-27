@@ -1,0 +1,246 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
+    MSTest.Analyzers.CultureMutationUnderParallelizationAnalyzer,
+    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
+using VerifyVB = MSTest.Analyzers.Test.VisualBasicCodeFixVerifier<
+    MSTest.Analyzers.CultureMutationUnderParallelizationAnalyzer,
+    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
+
+namespace MSTest.Analyzers.Test;
+
+[TestClass]
+public sealed class CultureMutationUnderParallelizationAnalyzerTests
+{
+    [TestMethod]
+    public async Task WhenTestMethodSetsDefaultThreadCurrentCulture_Diagnostic()
+    {
+        string code = """
+            using System.Globalization;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    [|CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodSetsDefaultThreadCurrentUICulture_Diagnostic()
+    {
+        string code = """
+            using System.Globalization;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    [|CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodSetsThreadCurrentCulture_Diagnostic()
+    {
+        string code = """
+            using System.Globalization;
+            using System.Threading;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    [|Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodSetsCurrentCulture_NoDiagnostic()
+    {
+        // CultureInfo.CurrentCulture / CurrentUICulture setters are intentionally OMITTED: on modern .NET the
+        // value flows with the ExecutionContext and does not corrupt sibling test contexts.
+        string code = """
+            using System.Globalization;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+                    CultureInfo.CurrentUICulture = CultureInfo.InvariantCulture;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenResourceLockDeclared_NoDiagnostic()
+    {
+        // Any declared [ResourceLock] is treated as the author having coordinated culture access.
+        string code = """
+            using System.Globalization;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [ResourceLock("Culture")]
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenDoNotParallelizeDeclared_NoDiagnostic()
+    {
+        string code = """
+            using System.Globalization;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            [DoNotParallelize]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenParallelizeNotDeclared_NoDiagnostic()
+    {
+        string code = """
+            using System.Globalization;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenReadingDefaultThreadCurrentCulture_NoDiagnostic()
+    {
+        string code = """
+            using System.Globalization;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    CultureInfo culture = CultureInfo.DefaultThreadCurrentCulture;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenNonTestClass_NoDiagnostic()
+    {
+        string code = """
+            using System.Globalization;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            public class NotATest
+            {
+                public void SomeMethod()
+                {
+                    CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodSetsDefaultThreadCurrentCulture_VisualBasic_Diagnostic()
+    {
+        string code = """
+            Imports System.Globalization
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <Assembly: Parallelize(Workers:=0, Scope:=ExecutionScope.MethodLevel)>
+
+            <TestClass>
+            Public Class MyTestClass
+                <TestMethod>
+                Public Sub MyTestMethod()
+                    [|CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture|]
+                End Sub
+            End Class
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(code);
+    }
+}
