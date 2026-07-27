@@ -44,7 +44,7 @@ Every `uses:` reference in this directory — hand-written or generated — must
 python .github/scripts/check_action_pins.py   # run the same gate locally
 ```
 
-The gate rejects unpinned references, missing version comments, versions that disagree with the ledger, an action pinned to more than one SHA across the directory, and `gh-aw-manifest` header entries that drift from the ledger.
+The gate rejects unpinned references, missing version comments, versions that disagree with the ledger, SHAs that disagree with the ledger, an action pinned to more than one SHA across the directory, and `gh-aw-manifest` header entries that drift from the ledger. `gh aw` records an annotated *tag object* SHA in the ledger for a few actions while emitting the dereferenced *commit* SHA in `uses:` lines; each such pair is recorded explicitly in the script's `DEREFERENCED_TAG_SHAS` table (verify a new one with `gh api repos/<owner>/<repo>/git/tags/<tag-object-sha> --jq .object.sha`) so that every *other* SHA still fails.
 
 > [!WARNING]
 > **Compiling locally can silently corrupt pins.** A locally-installed `gh aw` extension has been observed downgrading `actions/checkout` from the repo-aligned v7.0.1 to v7.0.0 and un-pinning `github/gh-aw-actions/setup` to the mutable `@v0.83.1` tag ([#10258](https://github.com/microsoft/testfx/issues/10258)). `.github/aw/actions-lock.json` keys its overrides *by version string*, so framework-injected steps (patch-context, threat-detection, create-PR) that request a version the ledger does not carry key-miss, no override applies, and the CLI's stale built-in default wins. Adding the missing version to the ledger does not help — the injected version label is baked into the `gh aw` binary.

@@ -30,11 +30,15 @@ Checks
      files (catches a partial rewrite that touches only some call sites).
   E. Each `*.lock.yml` `gh-aw-manifest` header entry matches the ledger exactly
      (repo + version + SHA) for actions the ledger tracks.
+  F. For actions tracked in the ledger, the SHA equals the ledger SHA or the
+     commit it dereferences to via DEREFERENCED_TAG_SHAS. Any other SHA fails,
+     so a tracked action cannot be repointed at an arbitrary commit by keeping
+     the ledger's version comment and rewriting every call site consistently.
 
-Warnings (non-fatal unless --strict) are emitted when a repo-wide-consistent SHA
-differs from the ledger SHA: `gh aw` records the annotated *tag object* SHA in
-the ledger while emitting the dereferenced *commit* SHA in `uses:` lines, so this
-divergence is legitimate for tag-object-based pins (e.g. github/codeql-action).
+`gh aw` records the annotated *tag object* SHA in the ledger for some actions but
+emits the dereferenced *commit* SHA in `uses:` lines. That single legitimate
+divergence is recorded explicitly in DEREFERENCED_TAG_SHAS and reported as a
+warning (fatal under --strict) so it stays visible rather than silently accepted.
 
 Usage
 -----
@@ -58,6 +62,17 @@ ACTIONS_LOCK_PATH = REPO_ROOT / ".github" / "aw" / "actions-lock.json"
 
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 MANIFEST_PREFIX = "# gh-aw-manifest: "
+
+# Annotated tag objects the ledger records, mapped to the commit each dereferences
+# to. `gh aw` stores the tag-object SHA in .github/aw/actions-lock.json but emits
+# the commit SHA in `uses:` lines, so without this table the two can never agree.
+# Recording the pair explicitly keeps that divergence approved rather than merely
+# tolerated, which lets check F reject every other SHA. Verify a new entry with:
+#   gh api repos/<owner>/<repo>/git/tags/<tag-object-sha> --jq .object.sha
+DEREFERENCED_TAG_SHAS = {
+    # github/codeql-action v4.37.3
+    "c54b30b7df092240050e69945842bc67aee0f0f4": "e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81",
+}
 
 # `uses: owner/repo/path@ref  # v1.2.3`, optionally quoted and optionally a list item.
 USES_RE = re.compile(
@@ -201,12 +216,24 @@ def check_references(references: list[Reference], ledger: dict[str, dict[str, st
             continue
 
         sha = next(iter(occurrences))
-        if sha != tracked["sha"]:
+        if sha == tracked["sha"]:
+            continue
+
+        location = occurrences[sha][0].location
+        if sha == DEREFERENCED_TAG_SHAS.get(tracked["sha"]):
             warnings.append(
-                f"'{repo}' is consistently pinned to {sha} but .github/aw/actions-lock.json "
-                f"records {tracked['sha']}. This is expected when the ledger stores an annotated "
-                "tag object SHA and workflows use the dereferenced commit SHA."
+                f"'{repo}' is pinned to {sha}, the commit that the ledger's annotated tag "
+                f"object {tracked['sha']} dereferences to. This pairing is recorded in "
+                "DEREFERENCED_TAG_SHAS and is approved."
             )
+            continue
+
+        errors.append(
+            f"{location}: '{repo}' is pinned to {sha} but .github/aw/actions-lock.json "
+            f"records {tracked['sha']}, and {sha} is not a recorded dereference of it. "
+            "Recompile the workflow on the aligned toolchain; if the ledger genuinely "
+            "stores an annotated tag object, add the verified pair to DEREFERENCED_TAG_SHAS."
+        )
 
     return Findings(errors=errors, warnings=warnings)
 
