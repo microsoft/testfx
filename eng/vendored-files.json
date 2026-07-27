@@ -198,8 +198,8 @@
           "repo": "dotnet/sdk",
           "ref": "main",
           "path": "src/Cli/dotnet/Telemetry/LLMEnvironmentDetectorForTelemetry.cs",
-          "baseline_ref_sha": "bcafbe92a30b1866bd17789759c9941761bf6b49",
-          "baseline_blob_sha": "0682d3bf641c49fe17b4a0de4d48929b36ab87e1",
+          "baseline_ref_sha": "79e9664eb6918a0d6b78d1018e196a468901977f",
+          "baseline_blob_sha": "d8b750e1f8eb0b004a4566f455ce7997f07bfa61",
           "scope": "LLM/agent detection rules"
         }
       ]

@@ -51,11 +51,17 @@ internal static class WellKnownTypeNames
     public const string SystemCollectionsGenericEqualityComparer1 = "System.Collections.Generic.EqualityComparer`1";
     public const string SystemCollectionsGenericIEnumerable1 = "System.Collections.Generic.IEnumerable`1";
     public const string SystemCollectionsIDictionary = "System.Collections.IDictionary";
+    public const string SystemConsole = "System.Console";
     public const string SystemDescriptionAttribute = "System.ComponentModel.DescriptionAttribute";
+    public const string SystemEnvironment = "System.Environment";
     public const string SystemFunc1 = "System.Func`1";
+    public const string SystemGlobalizationCultureInfo = "System.Globalization.CultureInfo";
     public const string SystemIAsyncDisposable = "System.IAsyncDisposable";
     public const string SystemIDisposable = "System.IDisposable";
     public const string SystemIEquatable1 = "System.IEquatable`1";
+    public const string SystemIODirectory = "System.IO.Directory";
+    public const string SystemIOFile = "System.IO.File";
+    public const string SystemIOPath = "System.IO.Path";
     public const string SystemLinqEnumerable = "System.Linq.Enumerable";
     public const string SystemLinqExpressionsExpression1 = "System.Linq.Expressions.Expression`1";
     public const string SystemOperatingSystem = "System.OperatingSystem";
