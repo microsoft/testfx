@@ -278,6 +278,23 @@ public sealed class TestDependencyGraphTests : TestContainer
         TestDependencyGraph graph = TestDependencyGraph.Build(tests, ExecutionScope.MethodLevel, parallelizationEnabled: true)!;
 
         graph.Errors.Should().BeEmpty();
+        graph.Warnings.Should().BeEmpty();
+
+        // Asserting the absence of a diagnostic is not enough: it would still hold if the graph came back
+        // with the wrong chunks. Under MethodLevel each test is its own chunk, so the same declarations that
+        // deadlocked the class-level projection schedule cleanly, with every test still in the parallel phase
+        // and the real edges preserved.
+        graph.ParallelChunks.Length.Should().Be(3);
+        graph.SequentialTests.Should().BeEmpty();
+        graph.BrokenTests.Should().BeEmpty();
+
+        int a1 = Array.FindIndex(graph.ParallelChunks, c => c[0].TestMethod.Name == "A1");
+        int a2 = Array.FindIndex(graph.ParallelChunks, c => c[0].TestMethod.Name == "A2");
+        int b1 = Array.FindIndex(graph.ParallelChunks, c => c[0].TestMethod.Name == "B1");
+
+        graph.ParallelChunkPrerequisites[a1].Should().BeEmpty();
+        graph.ParallelChunkPrerequisites[b1].Should().Equal(a1);
+        graph.ParallelChunkPrerequisites[a2].Should().Equal(b1);
     }
 
     public void Build_WhenAPrerequisiteIsNotParallelizable_DemotesItsDependentsToTheSequentialPhase()
