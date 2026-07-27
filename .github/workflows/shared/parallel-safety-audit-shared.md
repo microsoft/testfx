@@ -166,9 +166,14 @@ steps:
       # imports the repository-root Directory.Build.props, so an MSTestParallelizeScope
       # added there enables every test assembly at once — the highest-impact opt-in
       # of all. Include repo-root props/targets alongside the test/ tree.
-      git diff --name-only --diff-filter=AMRD "$MERGE_BASE" "$HEAD_SHA" \
+      # --name-status (not --name-only): for a rename git reports only the
+      # destination path under --name-only, so a rename that also drops a setting
+      # would leave the base-side lookup pointing at a path that did not exist at
+      # the merge base. Emitting every path field keeps both sides of a rename.
+      git diff --name-status --diff-filter=AMRD "$MERGE_BASE" "$HEAD_SHA" \
         -- 'test/' 'Directory.Build.props' 'Directory.Build.targets' \
            'Directory.Packages.props' \
+        | awk -F'\t' '{ for (i = 2; i <= NF; i++) if ($i != "") print $i }' \
         | grep -E '\.(runsettings|csproj|props|targets)$|testconfig\.json$' \
         > "$CONFIG_OUT" || true
 
@@ -194,8 +199,13 @@ steps:
       # ResourceLockExecutionTests.cs). The agent must confirm the attribute is
       # really compiled into the owning project before treating the file as a
       # parallelization-state change — see the prompt.
+      # Both sides of a rename are listed (--name-status, see above): a PR that
+      # renames the file *and* removes the attribute would otherwise be invisible,
+      # since the destination path does not exist at the merge base and no longer
+      # carries the attribute at HEAD.
       ATTR_RE='assembly:[[:space:]]*(Parallelize|DoNotParallelize)'
-      git diff --name-only --diff-filter=AMRD "$MERGE_BASE" "$HEAD_SHA" -- 'test/' \
+      git diff --name-status --diff-filter=AMRD "$MERGE_BASE" "$HEAD_SHA" -- 'test/' \
+        | awk -F'\t' '{ for (i = 2; i <= NF; i++) if ($i != "") print $i }' \
         | grep -E '\.cs$' > "$CS_CANDIDATES" || true
       while IFS= read -r f; do
         [[ -n "$f" ]] || continue
