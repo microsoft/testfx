@@ -127,7 +127,11 @@ public sealed class TestDependencyDeclarationTests : TestContainer
             [CreateElement(ClassA, "PlaceOrder")],
             logger);
 
+        // Naming the offending reference is the whole value of the diagnostic - a bare count would still
+        // pass if the message pointed at the wrong one. Both parts of this declaration are malformed; the
+        // dependent is checked first, so it is the one that must be reported.
         logger.Warnings.Should().ContainSingle();
+        logger.Warnings[0].Should().Contain("PlaceOrder");
     }
 
     private sealed class RecordingLogger : IAdapterMessageLogger
