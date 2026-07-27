@@ -148,9 +148,16 @@ steps:
       : > "$CONFIG_OUT"
       : > "$RANGES_OUT"
 
-      git diff --name-only --diff-filter=AMR "$BASE_SHA" "$HEAD_SHA" -- 'test/' \
+      # BASE_SHA is the base branch *tip* when the event fired, not the point the
+      # PR forked from. Diffing two tips attributes commits landed on the base
+      # branch since the fork to this PR, and shifts the HEAD-side line ranges out
+      # of step with GitHub's own PR delta. Normalize to the merge-base first.
+      MERGE_BASE=$(git merge-base "$BASE_SHA" "$HEAD_SHA")
+      echo "Base tip $BASE_SHA; merge-base $MERGE_BASE; head $HEAD_SHA"
+
+      git diff --name-only --diff-filter=AMR "$MERGE_BASE" "$HEAD_SHA" -- 'test/' \
         | grep -E '\.cs$' > "$TEST_OUT" || true
-      git diff --name-only --diff-filter=AMR "$BASE_SHA" "$HEAD_SHA" -- 'src/' \
+      git diff --name-only --diff-filter=AMR "$MERGE_BASE" "$HEAD_SHA" -- 'src/' \
         | grep -E '\.cs$' > "$SRC_OUT" || true
 
       # Parallelization can also be turned on (or off) purely from configuration:
@@ -159,7 +166,7 @@ steps:
       # touches test/** and so triggers this workflow, but changes no .cs file —
       # capture those files too, otherwise the single most safety-relevant change
       # a PR can make (enabling parallelism) would silently bypass the audit.
-      git diff --name-only --diff-filter=AMR "$BASE_SHA" "$HEAD_SHA" -- 'test/' \
+      git diff --name-only --diff-filter=AMR "$MERGE_BASE" "$HEAD_SHA" -- 'test/' \
         | grep -E '\.(runsettings|csproj|props|targets)$|testconfig\.json$' \
         > "$CONFIG_OUT" || true
 
@@ -172,7 +179,7 @@ steps:
       while IFS= read -r f; do
         [[ -n "$f" && -f "$f" ]] || continue
         RANGES=$(
-          git diff --unified=0 "$BASE_SHA" "$HEAD_SHA" -- "$f" \
+          git diff --unified=0 "$MERGE_BASE" "$HEAD_SHA" -- "$f" \
             | awk '
                 /^@@/ {
                   if (match($0, /\+[0-9]+(,[0-9]+)?/)) {
@@ -658,11 +665,19 @@ Post **exactly one** `add-comment`. Structure:
 ```markdown
 ### 🧵 Parallel-safety audit — PR #<number>
 
-**Parallelization:** `<off | ClassLevel | MethodLevel>`, workers `<N | CPU count | n/a>`. **Analyzer coverage:** `<coverable once the parallel-safety analyzers ship (attribute/MSBuild-property/editorconfig) | never covered (.runsettings-only) | n/a>`.
-<!-- If off, add this exact banner line: -->
+**Parallelization** — one row per test assembly the findings touch (Step 0 resolves this per assembly, so never collapse several projects into one state):
+
+| Test assembly | Scope | Workers | Analyzer coverage |
+| --- | --- | --- | --- |
+| `<Project.UnitTests>` | `<off \| ClassLevel \| MethodLevel>` | `<N \| CPU count \| n/a>` | `<coverable once the parallel-safety analyzers ship (attribute/MSBuild-property/editorconfig) \| never covered (.runsettings- or testconfig.json-only) \| n/a>` |
+
+<!-- Tag every finding below with its assembly when more than one row appears, so each severity is read against the right state. -->
+<!-- If ALL rows are off, add this exact banner line: -->
 > ⚠️ Parallelization is **OFF** for these tests — this is a **readiness checklist**, not live bugs. Nothing here fails today; everything listed is what to fix *before* enabling `[Parallelize]`.
-<!-- If opt-in is .runsettings-only, add this banner: -->
-> 🛈 Parallelization is enabled via **`.runsettings` only**, so even once the forthcoming MSTEST0074–0077 parallel-safety analyzers ship they **cannot see** this suite (no analyzer reads runsettings XML) — this audit is the **only** check catching these findings. (Today only MSTEST0073 is on `main`; 0074–0077 are still in flight.)
+<!-- If SOME rows are off and others are not, say so instead: -->
+> ⚠️ Parallelization is **OFF** for `<assembly list>` (readiness-only) but **enabled** for `<assembly list>` — severities below are per assembly.
+<!-- If an opt-in is .runsettings- or testconfig.json-only, add this banner naming those assemblies: -->
+> 🛈 Parallelization is enabled for `<assembly list>` via **`.runsettings` / `testconfig.json` only**, so even once the forthcoming MSTEST0074–0077 parallel-safety analyzers ship they **cannot see** those suites (no analyzer reads runsettings XML or testconfig JSON) — this audit is the **only** check catching those findings. (Today only MSTEST0073 is on `main`; 0074–0077 are still in flight.)
 
 **Findings:** A (global-state) `x` · B (paths) `x` · C (declaration) `x` · D (over-serialization) `x` — by severity: Critical `x` · High `x` · Warning `x` · Info `x`.
 
