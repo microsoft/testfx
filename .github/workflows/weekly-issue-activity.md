@@ -52,12 +52,12 @@ Create a comprehensive weekly summary of issue activity for repository ${{ githu
 
 ## Step 1: Collect Issue Data
 
-Use GitHub API tools to gather data for the past 30 days:
+Use GitHub API tools to gather two different windows — the weekly activity chart spans 12 weeks, so a 30-day fetch cannot populate it:
 
-1. **Issue Activity Data**  -  Count of issues opened per day, closed per day, and running open count
-2. **Issue Resolution Data**  -  Average time to close issues, distribution of issue lifespans, breakdown by label
+1. **Issue Activity Data** (last **12 weeks**)  -  Count of issues opened and closed per week, and the running open count
+2. **Issue Resolution Data** (last **30 days**)  -  Average time to close issues, distribution of issue lifespans, breakdown by label
 
-Fetch enough issues to compute weekly and daily trends over the past 30 days. Use the GitHub toolset to query issues filtered by `created` and `closed` dates.
+Use the GitHub toolset to query issues filtered by `created` and `closed` dates, paginating until you have covered the full 12 weeks. If the 12-week history is only partially available, chart what you have and say so rather than presenting a truncated series as complete.
 
 ## Step 2: Compute Trends and Render Charts
 
