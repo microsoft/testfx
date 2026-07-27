@@ -217,8 +217,12 @@ steps:
         | grep -E '\.cs$' > "$CS_CANDIDATES" || true
       while IFS= read -r f; do
         [[ -n "$f" ]] || continue
-        if git show "$MERGE_BASE:$f" 2>/dev/null | grep -qE "$ATTR_RE" \
-           || git show "$HEAD_SHA:$f" 2>/dev/null | grep -qE "$ATTR_RE"; then
+        # No `grep -q` here: with `set -o pipefail`, -q exits on the first match
+        # and closes the pipe, so `git show` can die on SIGPIPE for a file larger
+        # than the pipe buffer and fail the whole pipeline — silently dropping a
+        # real candidate, and only for large files. Let grep consume the stream.
+        if git show "$MERGE_BASE:$f" 2>/dev/null | grep -E "$ATTR_RE" >/dev/null \
+           || git show "$HEAD_SHA:$f" 2>/dev/null | grep -E "$ATTR_RE" >/dev/null; then
           printf '%s\n' "$f" >> "$CONFIG_OUT"
         fi
       done < "$CS_CANDIDATES"
@@ -531,8 +535,12 @@ bodies:
   (that engine uses no attributes).
 - **Lifecycle members** — `[TestInitialize]` / `[TestCleanup]`,
   `[ClassInitialize]` / `[ClassCleanup]`, `[AssemblyInitialize]` /
-  `[AssemblyCleanup]`, and the constructor / `Dispose` of a `TestContainer`
-  class. These are where a mutation is easiest to miss and **widest in effect**:
+  `[AssemblyCleanup]`, and — **on any test class, not just `TestContainer`** —
+  the **constructor** and `Dispose` / `DisposeAsync`. MSTest constructs the test
+  class per test and invokes both disposal hooks
+  (`TestMethodInfo.Lifecycle.cs:78-87`), so they are per-test lifecycle code and
+  a global-state mutation in them races exactly like one in a test body. These
+  are where a mutation is easiest to miss and **widest in effect**:
   an `Environment.SetEnvironmentVariable` added to a `[TestInitialize]` runs
   before *every* test in the class, so attribute the finding to the whole class
   (or assembly, for the assembly-level hooks), not to one method.
@@ -632,6 +640,16 @@ lock. Where the state cannot be restored (a spawned process that already
 inherited the value, a disposed console writer), say so and recommend isolation
 or removing the dependency instead. This applies to culture too, where the leak
 crossing tests is the whole problem.
+
+**Class-lifetime state is a special case under `MethodLevel`.** A class-level
+lock is acquired and released **per test** there, so tests from other classes can
+interleave and "a resource established in `[ClassInitialize]` is not continuously
+owned through `[ClassCleanup]`" (`ResourceLockAttribute.cs:40-43`). State set in
+`[ClassInitialize]` and restored only in `[ClassCleanup]` is therefore exposed
+between chunks, and another test holding the same key can observe it — the lock
+looks sufficient and is not. For that pattern require per-test set/restore,
+elimination of the shared state, or `[DoNotParallelize]`; do **not** accept a
+class-level lock as the fix.
 
 **But first split process-local from OS-global.** `[ResourceLock]` coordinates
 **only inside the current test host process** — its own documentation states it
@@ -827,7 +845,12 @@ race.
 
 ## Workflow wrapper — output (drop/replace this section upstream)
 
-Post **exactly one** `add-comment`. Structure:
+Post **exactly one** `add-comment`, **targeting the resolved pull request
+`${{ steps.resolve.outputs.pr_number }}` explicitly**. This workflow uses
+`target: "*"`, so there is no implicit "triggering PR" — pass the number on the
+safe-output call. That matters most for the `/parallel-audit` command variant,
+whose runtime event is `workflow_dispatch` and has no PR context at all.
+Structure:
 
 ```markdown
 ### 🧵 Parallel-safety audit — PR #<number>
