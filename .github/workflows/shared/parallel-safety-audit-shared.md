@@ -483,6 +483,19 @@ CurrentDirectory | Console)]` or a narrow custom key (see granularity rule
 below). For culture, prefer restoring the previous value in a `finally` **and**
 locking, because the leak crosses tests.
 
+**But first split process-local from OS-global.** `[ResourceLock]` coordinates
+**only inside the current test host process** — its own documentation states it
+"does not coordinate across processes or machines, so it does not make parallel
+`dotnet test` invocations mutually exclusive" (`ResourceLockAttribute.cs:22-24`).
+That is sufficient for env vars, CWD, console, statics, `AppContext` switches and
+`AppDomain` data, which are all per-process. It is **not** sufficient for
+resources shared *between* processes — the registry, machine-wide files, named
+OS objects, a fixed port, a shared database. Serializing one assembly gives false
+confidence there, because a second test host on the same machine is unaffected.
+For those, recommend a per-test resource name (a unique key, temp hive, or
+scratch path), process isolation, or a real interprocess lock — and say plainly
+that a `[ResourceLock]` alone does not close it.
+
 ### B. Shared filesystem paths — usually *eliminable*, which is the better fix
 
 **Division of labour (important — this is where you earn your keep).** The
