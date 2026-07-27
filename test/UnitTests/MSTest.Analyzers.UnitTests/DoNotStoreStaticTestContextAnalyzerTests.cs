@@ -433,22 +433,29 @@ public sealed class DoNotStoreStaticTestContextAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenCompoundAssigningToStaticMember_NoDiagnostic()
+    public async Task WhenCompoundAssigningTestContextParameterToStaticMember_NoDiagnostic()
     {
         // Compound assignments store the result of the underlying operator rather than the TestContext
-        // parameter itself, so they are never reported.
+        // parameter itself, so they are never reported. A user-defined operator is used so that the
+        // right operand is the TestContext parameter *directly*: this way the test would start failing
+        // if OperationKind.CompoundAssignment were ever registered.
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Accumulator
+            {
+                public static Accumulator operator +(Accumulator left, TestContext right) => left;
+            }
 
             [TestClass]
             public class MyTestClass
             {
-                private static string s_names;
+                private static Accumulator s_accumulator = new Accumulator();
 
                 [AssemblyInitialize]
                 public static void AssemblyInit(TestContext tc)
                 {
-                    s_names += tc.TestName;
+                    s_accumulator += tc;
                 }
             }
             """;
