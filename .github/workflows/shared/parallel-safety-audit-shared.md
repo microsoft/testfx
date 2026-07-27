@@ -282,12 +282,21 @@ Never report it as a live race. Then, for MSTest suites, resolve:
    `.csproj`, `Directory.Build.props`, or props imported by the project.
 2. **Which scope?** `[Parallelize]`'s default `Scope` is **`ClassLevel`**, not
    `MethodLevel`. Record the effective scope: `off`, `ClassLevel`, or
-   `MethodLevel`. Runsettings / MSBuild overrides win over the attribute. An
-   `[assembly: DoNotParallelize]` forces scope **`off`** for the whole source,
-   overriding any `[Parallelize]` present.
+   `MethodLevel`. A `.runsettings` `<Parallelize>` scope/workers value **does**
+   override the assembly attribute at runtime; the `MSTestParallelizeScope` /
+   `MSTestParallelizeWorkers` MSBuild properties are **not** runtime overrides —
+   they *generate* the `[assembly: Parallelize]` attribute at build time, so
+   treat them as the attribute's source rather than something that beats it. An
+   `[assembly: DoNotParallelize]` forces scope **`off`** for the whole source
+   independently of all of the above, overriding any `[Parallelize]` present.
 3. **Workers.** `[Parallelize(Workers = 0)]` means "one worker per logical
    processor"; a positive N pins the count. Record N (or "CPU count") — you
-   need it for the speedup arithmetic in category D.
+   need it for the speedup arithmetic in category D. **`Workers = 1` means no
+   concurrency at all**: the adapter creates exactly `parallelWorkers` tasks, so
+   one worker can never run two chunks at once. Treat such a suite as
+   **readiness-only** (cap severity at Warning) and report **no** category-D
+   over-serialization — there is no throughput to recover — while still
+   recording the configured scope for context.
 4. **Analyzer coverage gate.** Today **only MSTEST0073**
    (`PreferConstantForResourceLockAnalyzer`) ships on `main`. The dedicated
    parallel-safety analyzers (**MSTEST0074 / 0075 / 0076 / 0077**) are **in
@@ -444,11 +453,13 @@ tell a colliding write from a string used as a hash key.
 everything except "literal passed straight into a mutating FS call" is yours:**
 
 - `Path.Combine(Path.GetTempPath(), <constant>)` and other **path construction**
-  — the classic collision, *but only if the constructed path is then read from
-  or written to by more than one test.* Trace the value: if it is only hashed,
-  compared, returned from a mock, or used as a sentinel that is never opened, it
-  is **not a finding.** Require evidence of **actual colliding I/O** before
-  flagging.
+  — the classic collision, *but only if two or more tests converge on the same
+  path **and at least one of them mutates it*** (write, delete, move, replace,
+  create). Concurrent **readers** of a stable shared fixture do **not** collide —
+  never recommend isolation or locking for a read-only fixture. Trace the value:
+  if it is only hashed, compared, returned from a mock, or used as a sentinel
+  that is never opened, it is **not a finding.** Require evidence of **actual
+  colliding I/O, including a mutation,** before flagging.
 - **Relative paths** — *doubly* unsafe: resolved against the process-global CWD
   **and** shared between tests. `"./out/result.txt"`, `"bin\\artifacts"`.
 - **Paths computed in helpers, `const`s, fixture fields, or config values —
