@@ -89,7 +89,16 @@ internal sealed class TestMethod : ITestMethod
     public string AssemblyName { get; private set; }
 
     /// <inheritdoc />
-    public string? ManagedTypeName => GetManagedTypeName(FullClassName);
+    /// <remarks>
+    /// Computed on first access and cached, as <see cref="FullClassName"/> is immutable for the lifetime of the
+    /// instance. Concurrent first accesses may each compute the string, but they all produce an equal value, so the
+    /// race is benign. The cache is a pure function of an already-serialized field, so it is excluded from
+    /// serialization on .NET Framework and simply re-derived after deserialization.
+    /// </remarks>
+#if NETFRAMEWORK
+    [field: NonSerialized]
+#endif
+    public string? ManagedTypeName => field ??= GetManagedTypeName(FullClassName);
 
     /// <inheritdoc />
     public string? ManagedMethodName { get; }
