@@ -293,7 +293,9 @@ in every test is impractical, and prefer, in order:
 
 - **A `MSTEST0xxx` analyzer** for references that resolve to no method, self-references, and cycles that
   are statically visible. This is the natural complement to the "ignore unmatched references" decision
-  and would make renames safe at build time.
+  and would make renames safe at build time. Tracked by
+  [#10259](https://github.com/microsoft/testfx/issues/10259), which also covers the missing
+  `WellKnownTypeNames` registration, usage telemetry, and NativeAOT source-generation support.
 - **Per-data-row dependencies.** Naming a data-driven test currently creates an edge to *all* of its
   cases: the dependent waits for every row and is skipped if any row fails. Matching row *i* of B to row
   *i* of A is the hardest open problem in this space — even TUnit's mature implementation requires manual
