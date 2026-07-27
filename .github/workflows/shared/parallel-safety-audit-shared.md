@@ -274,7 +274,9 @@ to:
    `.csproj`, `Directory.Build.props`, or props imported by the project.
 2. **Which scope?** `[Parallelize]`'s default `Scope` is **`ClassLevel`**, not
    `MethodLevel`. Record the effective scope: `off`, `ClassLevel`, or
-   `MethodLevel`. Runsettings / MSBuild overrides win over the attribute.
+   `MethodLevel`. Runsettings / MSBuild overrides win over the attribute. An
+   `[assembly: DoNotParallelize]` forces scope **`off`** for the whole source,
+   overriding any `[Parallelize]` present.
 3. **Workers.** `[Parallelize(Workers = 0)]` means "one worker per logical
    processor"; a positive N pins the count. Record N (or "CPU count") — you
    need it for the speedup arithmetic in category D.
@@ -319,11 +321,21 @@ configuration.
   become real. Same-class and cross-class conflicts are both live: **High /
   Critical**.
 
-`[DoNotParallelize]` (assembly or method) means **mutual exclusion *and*
-deferral**: those tests are pulled out of the parallel set and run *after* it
-drains, sequentially, per test source. So a `[DoNotParallelize]` test is never
-racing — but it is pure **serial tail latency**. That is a category-D
-throughput cost, not a safety win to celebrate.
+`[DoNotParallelize]` means **different things** depending on where it is applied.
+Conflating the two is a misclassification you must avoid:
+
+- **Class or method level, inside an otherwise-parallel assembly** — mutual
+  exclusion *and* **deferral**: those tests are pulled out of the parallel set and
+  run *after* it drains, sequentially, per test source. Such a test is never
+  racing — but it is pure **serial tail latency**, a category-D throughput cost
+  rather than a safety win to celebrate.
+- **Assembly level** — **not** a deferred subset. It sets
+  `CanParallelizeAssembly = false` (`TestAssemblySettingsProvider.cs`), which
+  sends the *entire* source down the sequential branch
+  (`TestExecutionManager.Parallelization.cs`) — no parallel/non-parallel
+  partition is built at all. Record it as effective scope **`off`**, exactly as
+  if there were no opt-in, and **never** report it as category-D serial-tail
+  work.
 
 ---
 
@@ -494,9 +506,10 @@ string-literal keys — when you recommend a custom key, recommend a shared
 
 ### D. Over-serialization — correctness is fine, *speed* is not
 
-- `[DoNotParallelize]` where a **narrow** `[ResourceLock]` would give the same
-  mutual exclusion **without** the serial-tail deferral. Report the deferral
-  cost.
+- **Class- or method-level** `[DoNotParallelize]` where a **narrow**
+  `[ResourceLock]` would give the same mutual exclusion **without** the
+  serial-tail deferral. Report the deferral cost. (Assembly-level
+  `[DoNotParallelize]` is scope `off`, not a deferral — never report it here.)
 - **Class-level** `[ResourceLock]` where only one or two methods actually touch
   the resource. **`MethodLevel` only:** this over-serializes only when the
   scheduler chunks per method. Under the **`ClassLevel`** default (and with
