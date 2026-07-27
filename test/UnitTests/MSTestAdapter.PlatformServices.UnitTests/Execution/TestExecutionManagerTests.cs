@@ -808,8 +808,12 @@ public class TestExecutionManagerTests : TestContainer
             Task completed = await Task.WhenAny(run, Task.Delay(TimeSpan.FromSeconds(60)));
             completed.Should().BeSameAs(run, "the run must not hang when a chunk throws");
 
-            // Observe the faulted run so the exception is not left unhandled; it is expected to surface.
-            await run.ContinueWith(static _ => { }, TaskScheduler.Default);
+            // Reading Exception is what actually observes the fault - awaiting a continuation that ignores
+            // its antecedent does not, leaving the run to resurface as an UnobservedTaskException later and
+            // destabilize unrelated tests. It doubles as the assertion that the injected failure propagates
+            // out of the run rather than being swallowed by the scheduler.
+            run.IsFaulted.Should().BeTrue("the injected RecordStart failure must surface, not be swallowed");
+            run.Exception.Should().NotBeNull();
         }
         finally
         {

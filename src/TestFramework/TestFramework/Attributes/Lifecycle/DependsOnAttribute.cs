@@ -186,10 +186,18 @@ public sealed class DependsOnAttribute : Attribute
     public string? TestMethodName { get; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether the dependent still runs when the prerequisite does not
+    /// Gets or sets a value indicating whether the dependent still runs when a prerequisite does not
     /// pass. Defaults to <see langword="false"/>, meaning the dependent is skipped. Set it to
-    /// <see langword="true"/> for a test that must run regardless of the prerequisite's outcome, such
+    /// <see langword="true"/> for a test that must run regardless of its prerequisites' outcome, such
     /// as an audit or cleanup test; ordering is still enforced.
     /// </summary>
+    /// <remarks>
+    /// The flag is evaluated per dependent test rather than per edge: a test that declares several
+    /// prerequisites runs past a failure only when <em>every</em> one of its declarations sets this to
+    /// <see langword="true"/>. One declaration left at the default is therefore enough to skip the test
+    /// when any of its prerequisites does not pass. That conservative direction is deliberate - opting
+    /// out of waiting on one prerequisite says nothing about the others, and running a test whose
+    /// remaining preconditions were never established just produces a second, misleading failure.
+    /// </remarks>
     public bool ProceedOnFailure { get; set; }
 }
