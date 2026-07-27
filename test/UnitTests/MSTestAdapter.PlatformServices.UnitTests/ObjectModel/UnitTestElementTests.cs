@@ -80,6 +80,57 @@ public class UnitTestElementTests : TestContainer
         roundTripped.ResourceLocks.Should().BeNull();
     }
 
+    public void DependenciesShouldRoundTripThroughTestCaseProperty()
+    {
+        // The acceptance assets run on the native MSTest runner, so nothing else exercises this hidden VSTest
+        // TestProperty transport; a registration or conversion regression would silently make [DependsOn]
+        // ineffective under VSTest while every other test still passed.
+        //
+        // LocalExtensionData is cleared deliberately. ToTestCase caches the element on the test case, and
+        // ToUnitTestElementWithUpdatedSource returns that cached instance when it is present - which is what
+        // happens in-process, and which would make this test pass without the encoded property being read at
+        // all. Clearing it reproduces the case the encoding exists for: a test case that crossed a process or
+        // AppDomain boundary, where only the serialized properties survive.
+        var element = new UnitTestElement(new TestMethod("M", "C", "A", displayName: null))
+        {
+            Dependencies =
+            [
+                new TestDependencyInfo("Ns.Other", "Prereq", proceedOnFailure: false),
+                new TestDependencyInfo("Ns.Whole", null, proceedOnFailure: true),
+                new TestDependencyInfo(null, "SameClassPrereq", proceedOnFailure: false),
+            ],
+        };
+
+        var testCase = element.ToTestCase();
+        testCase.LocalExtensionData = null;
+        UnitTestElement roundTripped = testCase.ToUnitTestElementWithUpdatedSource("A");
+
+        roundTripped.Dependencies.Should().NotBeNull();
+        roundTripped.Dependencies!.Length.Should().Be(3);
+
+        roundTripped.Dependencies[0].TargetClassFullName.Should().Be("Ns.Other");
+        roundTripped.Dependencies[0].TargetMethodName.Should().Be("Prereq");
+        roundTripped.Dependencies[0].ProceedOnFailure.Should().BeFalse();
+
+        // A whole-class target keeps its null method name, which is what distinguishes it from a named one.
+        roundTripped.Dependencies[1].TargetClassFullName.Should().Be("Ns.Whole");
+        roundTripped.Dependencies[1].TargetMethodName.Should().BeNull();
+        roundTripped.Dependencies[1].ProceedOnFailure.Should().BeTrue();
+
+        // A same-class target keeps its null class name, so it still resolves against the dependent's class.
+        roundTripped.Dependencies[2].TargetClassFullName.Should().BeNull();
+        roundTripped.Dependencies[2].TargetMethodName.Should().Be("SameClassPrereq");
+        roundTripped.Dependencies[2].ProceedOnFailure.Should().BeFalse();
+    }
+
+    public void DependenciesShouldRemainNullWhenNoneAreDeclared()
+    {
+        var testCase = _unitTestElement.ToTestCase();
+        testCase.LocalExtensionData = null;
+
+        testCase.ToUnitTestElementWithUpdatedSource("A").Dependencies.Should().BeNull();
+    }
+
     #endregion
 
     #region Source resolution / host test case tests

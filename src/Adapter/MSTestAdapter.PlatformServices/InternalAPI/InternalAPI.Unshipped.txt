@@ -33,7 +33,11 @@ Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyD
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyDeclaration.ProceedOnFailure.get -> bool
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyDeclaration.TestDependencyDeclaration(string! dependent, string! prerequisite, bool proceedOnFailure) -> void
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyGraph
-Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyGraph.BrokenTests.get -> System.Collections.Generic.IReadOnlyList<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement!>!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyGraph.BrokenTest
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyGraph.BrokenTest.BrokenTest(Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement! element, string! cycleMessage) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyGraph.BrokenTest.CycleMessage.get -> string!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyGraph.BrokenTest.Element.get -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyGraph.BrokenTests.get -> System.Collections.Generic.IReadOnlyList<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyGraph.BrokenTest!>!
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyGraph.Errors.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyGraph.ParallelChunkPrerequisites.get -> int[]![]!
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyGraph.ParallelChunks.get -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement![]![]!

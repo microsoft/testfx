@@ -81,6 +81,16 @@ internal sealed class TestDependencyDeclaration
 
                 matchedDependent = true;
 
+                // A wildcard dependent (Ns.Class.*) expands onto every test of the class, including the
+                // prerequisite itself when that is also named in the class. The user wrote "every test of
+                // this class waits for Setup", never "Setup waits for itself", so that generated self-edge is
+                // dropped - exactly as discovery drops it for a class-level [DependsOn]. Without this, Setup
+                // would be reported as a cycle and the whole class skipped.
+                if (dependent.MethodName is null && prerequisite.Matches(test))
+                {
+                    continue;
+                }
+
                 // The prerequisite is stored as declared rather than resolved to concrete tests here: the
                 // graph already knows how to expand a class-wide target and how to report one that matches
                 // nothing, and doing it in one place keeps both sources of edges behaving identically.
