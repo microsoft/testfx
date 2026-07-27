@@ -498,13 +498,28 @@ Conflating the two is a misclassification you must avoid:
 ## Step 1 — Find the unsafe call sites (the finding taxonomy)
 
 Organise findings by **what makes them unsafe**, not by which API was called.
-For each changed test method — either decorated with `[TestMethod]`,
-`[DataTestMethod]`, or any attribute deriving from them (testfx has
-`[STATestMethod]`, `[UITestMethod]`, `[IterativeTestMethod]`, project-local
-`MyTestMethodAttribute : TestMethodAttribute`, etc.), **or**, in a
-`TestContainer`-derived class, any public parameterless `void`/`Task` method
-(that engine uses no attributes) — and for the helpers / fixtures / `const`s it
-reaches, look for:
+Audit **every changed test-relevant member or declaration**, not just test
+bodies:
+
+- **Test methods** — decorated with `[TestMethod]`, `[DataTestMethod]`, or any
+  attribute deriving from them (testfx has `[STATestMethod]`, `[UITestMethod]`,
+  `[IterativeTestMethod]`, project-local
+  `MyTestMethodAttribute : TestMethodAttribute`, etc.), **or**, in a
+  `TestContainer`-derived class, any public parameterless `void`/`Task` method
+  (that engine uses no attributes).
+- **Lifecycle members** — `[TestInitialize]` / `[TestCleanup]`,
+  `[ClassInitialize]` / `[ClassCleanup]`, `[AssemblyInitialize]` /
+  `[AssemblyCleanup]`, and the constructor / `Dispose` of a `TestContainer`
+  class. These are where a mutation is easiest to miss and **widest in effect**:
+  an `Environment.SetEnvironmentVariable` added to a `[TestInitialize]` runs
+  before *every* test in the class, so attribute the finding to the whole class
+  (or assembly, for the assembly-level hooks), not to one method.
+- **Class- and assembly-level declarations** — a changed, added or removed
+  `[ResourceLock]`, `[DoNotParallelize]` or `[Parallelize]` is itself a finding
+  for category C even when no method body changed.
+- **Fixture state** — fields, `const`s and helper methods the above reach.
+
+For each of those, look for:
 
 ### A. Process-global state mutation — *cannot* be made per-test; must be coordinated
 
@@ -850,9 +865,13 @@ Rules for the comment:
 ### Fallback: nothing to audit
 
 If **both** the changed-test-files and changed-config-files lists are empty, or
-after Step 1 nothing you audited — neither a changed test method nor any assembly
-whose parallelization configuration this PR changed — touches anything in the
-taxonomy, post this short comment instead:
+after Step 1 nothing you audited touches anything in the taxonomy — no changed
+test method, **no changed lifecycle member (`[TestInitialize]`,
+`[ClassInitialize]`, `[AssemblyInitialize]`, constructor / `Dispose`, …), no
+changed class- or assembly-level `[ResourceLock]` / `[DoNotParallelize]` /
+`[Parallelize]` declaration, no changed fixture field or helper**, and no
+assembly whose parallelization configuration this PR changed — post this short
+comment instead:
 
 ```markdown
 ### 🧵 Parallel-safety audit — PR #<number>
