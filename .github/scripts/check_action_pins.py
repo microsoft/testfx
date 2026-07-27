@@ -29,8 +29,10 @@ Checks
      looks like a version, so a placeholder such as `# TODO` cannot stand in.
   C. For actions tracked in .github/aw/actions-lock.json, the version comment
      matches the version recorded there (catches the v7.0.1 -> v7.0.0 downgrade).
-  D. Each action repository resolves to exactly one SHA across all workflow
-     files (catches a partial rewrite that touches only some call sites).
+  D. Each action *repository* resolves to exactly one SHA across all workflow
+     files, grouping `owner/repo/action-a` with `owner/repo/action-b` since they
+     share a checkout (catches a partial rewrite that touches only some call
+     sites, and is the only cross-check available for untracked actions).
   E. Each `*.lock.yml` `gh-aw-manifest` header entry matches the ledger exactly
      (repo + version + SHA) for actions the ledger tracks.
   F. For actions tracked in the ledger, the SHA equals the ledger SHA or the
@@ -79,7 +81,9 @@ except ModuleNotFoundError:  # pragma: no cover - guarded so the gate never sile
     print(
         "error: PyYAML is required. The structural pass parses each workflow to find every "
         "`uses` value that GitHub Actions would really execute, so the gate must not run "
-        "without it. Install it with: python -m pip install pyyaml",
+        "without it. Install it the same way CI does, with the hash-pinned requirements "
+        "file: python -m pip install --require-hashes -r "
+        ".github/scripts/check-action-pins-requirements.txt",
         file=sys.stderr,
     )
     raise SystemExit(1)
@@ -139,6 +143,20 @@ class Reference:
     @property
     def is_docker(self) -> bool:
         return self.raw.startswith(DOCKER_PREFIX)
+
+    @property
+    def root(self) -> str:
+        """The canonical `owner/repo` this action lives in, ignoring any subpath.
+
+        `owner/repo/action-a` and `owner/repo/action-b` are two actions from a single
+        repository checkout, so they must agree on a SHA. Ledger lookups still use the
+        full locator, which is how the ledger keys subpath actions.
+        """
+        owner, slash, rest = self.repo.partition("/")
+        if not slash:
+            return self.repo
+
+        return f"{owner}/{rest.partition('/')[0]}"
 
     @property
     def location(self) -> str:
@@ -280,7 +298,11 @@ def read_manifest_actions(path: Path) -> list[dict[str, str]]:
 def check_references(references: list[Reference], ledger: dict[str, dict[str, str]]) -> Findings:
     errors: list[str] = []
     warnings: list[str] = []
-    shas_by_repo: dict[str, dict[str, list[Reference]]] = defaultdict(lambda: defaultdict(list))
+    # Consistency (checks D and G) is a property of the repository, since every action in
+    # it comes from one checkout. Ledger lookups (check F) need the full locator, which is
+    # how the ledger keys subpath actions such as `actions/cache/restore`.
+    shas_by_root: dict[str, dict[str, list[Reference]]] = defaultdict(lambda: defaultdict(list))
+    shas_by_locator: dict[str, dict[str, list[Reference]]] = defaultdict(lambda: defaultdict(list))
 
     for reference in references:
         if reference.is_docker:
@@ -303,7 +325,8 @@ def check_references(references: list[Reference], ledger: dict[str, dict[str, st
             )
             continue
 
-        shas_by_repo[reference.repo][reference.ref].append(reference)
+        shas_by_root[reference.root][reference.ref].append(reference)
+        shas_by_locator[reference.repo][reference.ref].append(reference)
 
         if reference.version is None or not VERSION_RE.match(reference.version):
             found = "no" if reference.version is None else f"'{reference.version}' as its"
@@ -321,7 +344,7 @@ def check_references(references: list[Reference], ledger: dict[str, dict[str, st
                 "workflow on the aligned toolchain instead of a local gh-aw build."
             )
 
-    for repo, occurrences in sorted(shas_by_repo.items()):
+    for root, occurrences in sorted(shas_by_root.items()):
         # One SHA must not be described by conflicting version comments. For actions the
         # ledger does not track this is the only thing that keeps their labels honest.
         for sha, refs in sorted(occurrences.items()):
@@ -332,7 +355,7 @@ def check_references(references: list[Reference], ledger: dict[str, dict[str, st
                     for version in sorted(labels)
                 )
                 errors.append(
-                    f"'{repo}' pins {sha} but labels it with conflicting versions: {details}. "
+                    f"'{root}' pins {sha} but labels it with conflicting versions: {details}. "
                     "A single commit cannot be two versions; correct the stale comment(s)."
                 )
 
@@ -343,32 +366,35 @@ def check_references(references: list[Reference], ledger: dict[str, dict[str, st
                 + ")"
                 for sha, refs in sorted(occurrences.items())
             )
-            errors.append(f"'{repo}' is pinned to multiple SHAs across workflows: {details}")
-            continue
+            errors.append(
+                f"'{root}' is pinned to multiple SHAs across workflows: {details}. Actions "
+                "from one repository share a checkout, so they must agree on a single SHA."
+            )
 
-        tracked = ledger.get(repo)
+    for locator, occurrences in sorted(shas_by_locator.items()):
+        tracked = ledger.get(locator)
         if not tracked:
             continue
 
-        sha = next(iter(occurrences))
-        if sha == tracked["sha"]:
-            continue
+        for sha, refs in sorted(occurrences.items()):
+            if sha == tracked["sha"]:
+                continue
 
-        location = occurrences[sha][0].location
-        if sha == DEREFERENCED_TAG_SHAS.get(tracked["sha"]):
-            warnings.append(
-                f"'{repo}' is pinned to {sha}, the commit that the ledger's annotated tag "
-                f"object {tracked['sha']} dereferences to. This pairing is recorded in "
-                "DEREFERENCED_TAG_SHAS and is approved."
+            if sha == DEREFERENCED_TAG_SHAS.get(tracked["sha"]):
+                warnings.append(
+                    f"'{locator}' is pinned to {sha}, the commit that the ledger's annotated "
+                    f"tag object {tracked['sha']} dereferences to. This pairing is recorded "
+                    "in DEREFERENCED_TAG_SHAS and is approved."
+                )
+                continue
+
+            errors.append(
+                f"{refs[0].location}: '{locator}' is pinned to {sha} but "
+                f".github/aw/actions-lock.json records {tracked['sha']}, and {sha} is not a "
+                "recorded dereference of it. Recompile the workflow on the aligned toolchain; "
+                "if the ledger genuinely stores an annotated tag object, add the verified pair "
+                "to DEREFERENCED_TAG_SHAS."
             )
-            continue
-
-        errors.append(
-            f"{location}: '{repo}' is pinned to {sha} but .github/aw/actions-lock.json "
-            f"records {tracked['sha']}, and {sha} is not a recorded dereference of it. "
-            "Recompile the workflow on the aligned toolchain; if the ledger genuinely "
-            "stores an annotated tag object, add the verified pair to DEREFERENCED_TAG_SHAS."
-        )
 
     return Findings(errors=errors, warnings=warnings)
 
