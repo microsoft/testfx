@@ -773,6 +773,62 @@ public sealed class UndeclaredProcessGlobalStateMutationAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenAlwaysModeConfiguredInEditorConfigSection_Diagnostic()
+    {
+        // Firing gate, per-tree branch: a value set in an ordinary [*.cs] .editorconfig section is exposed
+        // per-syntax-tree rather than through GlobalOptions, so IsAlwaysModeConfigured falls back to scanning the
+        // trees. The .globalconfig test above only covers the GlobalOptions path and would not catch a regression
+        // that dropped this fallback.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    {|#0:Environment.SetEnvironmentVariable("MY_VAR", "value")|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.EnvironmentVariables)]
+                public void MyTestMethod()
+                {
+                    Environment.SetEnvironmentVariable("MY_VAR", "value");
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test
+        {
+            TestCode = code,
+            FixedCode = fixedCode,
+        };
+        test.TestState.AnalyzerConfigFiles.Add(("/.editorconfig", """
+            root = true
+
+            [*.cs]
+            mstest_parallel_safety_mode = always
+            """));
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(UndeclaredProcessGlobalStateMutationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Environment.SetEnvironmentVariable", "EnvironmentVariables"));
+        await test.RunAsync();
+    }
+
+    [TestMethod]
     public async Task WhenAssemblyDoNotParallelizeWithParallelize_NoDiagnostic()
     {
         // Firing gate, kill switch: [assembly: DoNotParallelize] disables in-assembly parallelization entirely,

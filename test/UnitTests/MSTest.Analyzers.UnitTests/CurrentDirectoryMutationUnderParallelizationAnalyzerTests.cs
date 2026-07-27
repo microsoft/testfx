@@ -155,10 +155,13 @@ public sealed class CurrentDirectoryMutationUnderParallelizationAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenTestMethodCoalesceAssignsEnvironmentCurrentDirectory_Diagnostic()
+    public async Task WhenTestMethodCoalesceAssignsEnvironmentCurrentDirectory_NoDiagnostic()
     {
-        // A coalescing assignment ('??=') writes the process-global current directory when its current value is
-        // null, so it mutates just like a plain or compound assignment and must be flagged.
+        // 'Environment.CurrentDirectory ??= x' can never reach the setter: the getter is declared non-nullable
+        // ('public static string CurrentDirectory') and throws rather than returning null on failure, so the
+        // coalescing form is a guaranteed non-mutation and flagging it would be a guaranteed false positive.
+        // Contrast R3, which does handle '??=' because CultureInfo.DefaultThreadCurrentCulture is declared nullable
+        // and so genuinely can be written by the coalescing form.
         string code = """
             using System;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -171,35 +174,12 @@ public sealed class CurrentDirectoryMutationUnderParallelizationAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    {|#0:Environment.CurrentDirectory ??= "sub"|};
-                }
-            }
-            """;
-
-        string fixedCode = """
-            using System;
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [TestMethod]
-                [ResourceLock(WellKnownResources.CurrentDirectory)]
-                public void MyTestMethod()
-                {
                     Environment.CurrentDirectory ??= "sub";
                 }
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(
-            code,
-            VerifyCS.Diagnostic(CurrentDirectoryMutationUnderParallelizationAnalyzer.Rule)
-                .WithLocation(0)
-                .WithArguments("Environment.CurrentDirectory"),
-            fixedCode);
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     [TestMethod]

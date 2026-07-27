@@ -81,15 +81,18 @@ public sealed class CurrentDirectoryMutationUnderParallelizationAnalyzer : Diagn
 
             if (environmentSymbol is not null)
             {
-                // A plain assignment ('Environment.CurrentDirectory = x'), a compound assignment
-                // ('Environment.CurrentDirectory += x', which reads then writes), and a coalescing assignment
-                // ('Environment.CurrentDirectory ??= x', which writes when the current value is null) all mutate the
-                // process-global directory.
+                // A plain assignment ('Environment.CurrentDirectory = x') and a compound assignment
+                // ('Environment.CurrentDirectory += x', which reads then writes) both mutate the process-global
+                // directory. Coalescing assignment is deliberately NOT registered here: the getter is declared
+                // non-nullable ('public static string CurrentDirectory') and throws rather than returning null on
+                // failure, so 'Environment.CurrentDirectory ??= x' can never reach the setter and flagging it would
+                // be a guaranteed false positive. This is why R2 registers fewer operation kinds than R3, which does
+                // handle '??=' - CultureInfo.DefaultThreadCurrentCulture is declared nullable, so there the
+                // coalescing form genuinely can write.
                 context.RegisterOperationAction(
                     context => AnalyzeAssignment(context, environmentSymbol, testMethodAttributeSymbol, fixtureAttributeSymbols, classScopedFixtureAttributeSymbols, doNotParallelizeAttributeSymbol, resourceLockAttributeSymbol),
                     OperationKind.SimpleAssignment,
-                    OperationKind.CompoundAssignment,
-                    OperationKind.CoalesceAssignment);
+                    OperationKind.CompoundAssignment);
             }
         });
     }
