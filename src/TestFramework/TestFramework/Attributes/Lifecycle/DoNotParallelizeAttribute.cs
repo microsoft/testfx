@@ -27,11 +27,13 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// several sources has a separate deferred tail for each one.
 /// </para>
 /// <para>
-/// This makes the attribute's cost easy to underestimate. A deferred test cannot overlap with
-/// anything, so its duration is <em>added to</em> the run rather than absorbed by parallel work
-/// happening alongside it. A single slow test carrying this attribute is therefore disproportionately
-/// expensive: it lengthens the whole run by roughly its own duration, on top of never running in
-/// parallel with any other test.
+/// This makes the attribute's cost easy to underestimate. A deferred test cannot overlap with any
+/// other test in the same source, so its duration is <em>added to</em> that source's critical path
+/// rather than absorbed by parallel work happening alongside it. A single slow test carrying this
+/// attribute is therefore disproportionately expensive within its source: it lengthens that source's
+/// run by roughly its own duration, on top of never running in parallel with any other test in the
+/// source. (It can still overlap with tests from <em>other</em> sources, which may run in separate
+/// hosts, so this cost is to the source's critical path rather than necessarily to the whole run.)
 /// </para>
 /// <para>
 /// Because the deferred tests run only after the parallelizable set has finished, a run that is
