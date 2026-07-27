@@ -107,9 +107,16 @@ internal static class ParallelSafetyHelper
         => compilation.Assembly.GetAttributes().Any(attribute => attribute.AttributeClass.Inherits(attributeSymbol));
 
     /// <summary>
-    /// Collects the attribute symbols that mark a method as MSTest "test code" - test methods run through
-    /// the parallel scheduler as well as the per-test/per-class/per-assembly fixture methods that run in
-    /// the same scheduling chunk.
+    /// Collects the attribute symbols that mark a method as MSTest "test code" that can run <em>concurrently with
+    /// another test</em>: test methods themselves, the per-test and per-class fixtures that run inside a test's
+    /// scheduling chunk, and the global per-test fixtures.
+    /// <para>
+    /// <c>[AssemblyInitialize]</c> and <c>[AssemblyCleanup]</c> are deliberately excluded. Assembly initialize is
+    /// serialized behind <c>TestAssemblyInfo</c>'s <c>SemaphoreSlim(1, 1)</c> and every worker awaits it before
+    /// running its test, and assembly cleanup runs only after the last runnable test in the whole assembly. A
+    /// process-global mutation in either therefore cannot race a concurrent test, so reporting one would be a
+    /// false positive - and these rules spend their credibility budget on false positives, not on silence.
+    /// </para>
     /// </summary>
     internal static ImmutableHashSet<INamedTypeSymbol> GetFixtureAttributeSymbols(Compilation compilation)
     {
@@ -118,8 +125,6 @@ internal static class ParallelSafetyHelper
         AddIfPresent(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestCleanupAttribute);
         AddIfPresent(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingClassInitializeAttribute);
         AddIfPresent(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingClassCleanupAttribute);
-        AddIfPresent(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssemblyInitializeAttribute);
-        AddIfPresent(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssemblyCleanupAttribute);
         AddIfPresent(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingGlobalTestInitializeAttribute);
         AddIfPresent(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingGlobalTestCleanupAttribute);
         return builder.ToImmutable();
@@ -162,8 +167,8 @@ internal static class ParallelSafetyHelper
     /// Decides where the <c>AddResourceLockFixer</c> code fix should place the <c>[ResourceLock]</c> attribute for a
     /// mutation inside <paramref name="testMethod"/>: <see cref="FixScopeMethod"/> when it is a test method, or
     /// <see cref="FixScopeClass"/> when it is a class-scoped fixture (whose method-level lock would be ignored by
-    /// discovery). Returns <see langword="null"/> for assembly/global fixtures - there is no effective lock target
-    /// for those, so no fix should be offered rather than a fix that silently does nothing at runtime.
+    /// discovery). Returns <see langword="null"/> for the global per-test fixtures - there is no effective lock
+    /// target for those, so no fix should be offered rather than a fix that silently does nothing at runtime.
     /// </summary>
     internal static string? GetResourceLockFixScope(
         IMethodSymbol testMethod,

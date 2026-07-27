@@ -164,12 +164,11 @@ public sealed class UndeclaredProcessGlobalStateMutationAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenTestMethodSetsEnvironmentVariableInAssemblyInitialize_DiagnosticButNoFix()
+    public async Task WhenTestMethodSetsEnvironmentVariableInAssemblyInitialize_NoDiagnostic()
     {
-        // AssemblyInitialize is an assembly-scoped fixture: discovery reads resource locks only from the test class
-        // and the test method, so neither a method-level nor a class-level lock would take effect for it. The rule
-        // still reports the unprotected mutation, but the fixer offers NO fix (a fix that silently does nothing would
-        // be worse than none), so the fixed code is identical to the input.
+        // AssemblyInitialize cannot race a test: it is serialized behind TestAssemblyInfo's SemaphoreSlim(1, 1)
+        // and every worker awaits it before running its test, so no test body overlaps it. A process-global
+        // mutation here is ordinary global setup, not a race, and reporting it would be a false positive.
         string code = """
             using System;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -182,7 +181,7 @@ public sealed class UndeclaredProcessGlobalStateMutationAnalyzerTests
                 [AssemblyInitialize]
                 public static void AssemblyInit(TestContext context)
                 {
-                    [|Environment.SetEnvironmentVariable("MY_VAR", "value")|];
+                    Environment.SetEnvironmentVariable("MY_VAR", "value");
                 }
 
                 [TestMethod]
@@ -193,6 +192,95 @@ public sealed class UndeclaredProcessGlobalStateMutationAnalyzerTests
             """;
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodSetsEnvironmentVariableInAssemblyCleanup_NoDiagnostic()
+    {
+        // AssemblyCleanup runs only after the last runnable test in the whole assembly, so like AssemblyInitialize
+        // it cannot overlap a concurrent test.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [AssemblyCleanup]
+                public static void AssemblyClean()
+                {
+                    Environment.SetEnvironmentVariable("MY_VAR", "value");
+                }
+
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodSetsEnvironmentVariableInClassInitialize_Diagnostic()
+    {
+        // Contrast with the two tests above: ClassInitialize runs per class, so under MethodLevel parallelization
+        // another class's tests can be running concurrently and the mutation genuinely races. This is the boundary
+        // of the assembly-fixture exclusion, so it must keep firing.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [ClassInitialize]
+                public static void ClassInit(TestContext context)
+                {
+                    {|#0:Environment.SetEnvironmentVariable("MY_VAR", "value")|};
+                }
+
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            [ResourceLock(WellKnownResources.EnvironmentVariables)]
+            public class MyTestClass
+            {
+                [ClassInitialize]
+                public static void ClassInit(TestContext context)
+                {
+                    Environment.SetEnvironmentVariable("MY_VAR", "value");
+                }
+
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic(UndeclaredProcessGlobalStateMutationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Environment.SetEnvironmentVariable", "EnvironmentVariables"),
+            fixedCode);
     }
 
     [TestMethod]
