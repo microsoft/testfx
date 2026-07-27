@@ -150,9 +150,10 @@ a workflow needs elevated access (then use the GitHub App above).
 ### `detection` job fails at `Install GitHub Copilot CLI`
 
 **Symptom.** The `agent` job succeeds, the `detection` job fails on its `Install GitHub Copilot CLI`
-step, and `safe_outputs` is **skipped** — so the workflow produces no comment, no PR and no issue.
-The `[aw] Detection Runs` tracker issue picks it up as `warning | parse_error`, because the
-threat-detection result file was never written. The step log shows repeated
+step, and `safe_outputs` is **skipped** — so only the workflow's configured safe outputs (in the
+observed run of `grade-tests-on-pr`, the grading comment) are suppressed. The `[aw] Detection Runs`
+tracker issue still records the run as `warning | parse_error`, because the threat-detection result
+file was never written. The step log shows repeated
 `curl: (22) The requested URL returned error: 504` while fetching `SHA256SUMS.txt` from
 `github/copilot-cli` releases.
 
@@ -189,9 +190,11 @@ on gh-aw v0.83.1 and `1.0.75` on `main` — so bumping gh-aw *widens* the gap.
 
 **What to do.** Nothing structural — re-run the failed workflow. The occurrence rate is roughly one
 run per tracker issue, and the tracker auto-expires via its `gh-aw-expires` marker. A durable fix
-belongs upstream in [`github/gh-aw`][gh-aw]: either keep `DefaultCopilotVersion` inside the
-`compat.json` window (with a CI guard against drift), or pass the compat range to the toolcache
-lookup even when a version is pinned. Either change removes the network hop from the common path.
+belongs upstream in [`github/gh-aw`][gh-aw]: either pin `DefaultCopilotVersion` to the exact CLI
+version the hosted runner toolcache is expected to contain (in practice the `compat.json`
+`max-agent`, with a CI guard against drift), or pass the compat range to the toolcache lookup even
+when a version is pinned. Merely choosing a default somewhere inside the compat window still
+downloads unless that exact version is cached.
 
 ## Catalog
 
