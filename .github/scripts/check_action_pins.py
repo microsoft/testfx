@@ -61,6 +61,20 @@ untracked action and escape the ledger checks entirely; SHAs and digests are hex
 and are compared case-insensitively too. Action subpaths keep their original
 case, since those are repository paths and Linux runners are case-sensitive.
 
+Known limitation
+----------------
+Collection is position-independent: any mapping key named `uses` is treated as
+executable. An action input or environment variable literally named `uses` whose
+value looks like an action reference (a `uses:` key nested under `with:`) is
+data, but is still collected and reported as unpinned. No such key exists in this
+repository today. The behaviour is deliberate for now because it fails *closed*:
+restricting collection to `jobs.*.uses` and `jobs.*.steps[*].uses` would replace
+a conservative over-collection with an inclusion list that fails *open* if the
+workflow schema ever grows another executable `uses` position. Fixing it properly
+means driving validation from the parsed document with line marks (`yaml.compose`)
+and excluding known data mappings, so that unknown structures still fail closed.
+See https://github.com/microsoft/testfx/pull/10264#discussion_r3659972254.
+
 Usage
 -----
     python -m pip install -r .github/scripts/check-action-pins-requirements.txt
