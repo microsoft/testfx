@@ -8,6 +8,12 @@ namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
 internal sealed class TrxArtifactPostProcessor : IArtifactPostProcessor
 {
+    /// <summary>
+    /// Subdirectory of the orchestrator-provided output directory that receives the merged report and the
+    /// attachment deployment root written beside it.
+    /// </summary>
+    private const string MergedReportDirectoryName = "merged";
+
     private static readonly string[] SupportedArtifactKinds = [TrxReportEngine.TrxArtifactKind];
     private static readonly string[] SupportedExtensions = [".trx"];
 
@@ -43,7 +49,15 @@ internal sealed class TrxArtifactPostProcessor : IArtifactPostProcessor
         ];
         string[] inputPaths = [.. orderedInputs.Select(input => input.Path)];
         Guid runId = TrxReportEngine.CreateMergeRunId(inputPaths, [.. orderedInputs.Select(input => input.ExecutionId)]);
-        string outputPath = Path.Combine(outputDirectory, $"merged-{runId:N}.trx");
+        // Nest the merged report in its own subdirectory instead of writing it as a sibling of the inputs.
+        // Orchestrators point outputDirectory at the run's results directory, which already holds the
+        // per-module reports, and the usual way those get consumed is a non-recursive '*.trx' glob (Arcade's
+        // "Publish TRX Test Results" step, the PublishTestResults@2 defaults, ReportGenerator setups, ...).
+        // A sibling merged report would be picked up alongside its own inputs and double-count every test.
+        // Nesting keeps it out of those globs by construction, and because MergeToFileAsync derives the
+        // attachment deployment root from this path, the attachment tree follows the report into the
+        // subdirectory and the relative runDeploymentRoot recorded in the TRX keeps resolving.
+        string outputPath = Path.Combine(outputDirectory, MergedReportDirectoryName, $"merged-{runId:N}.trx");
         await TrxReportEngine.MergeToFileAsync(
             inputPaths,
             outputPath,
