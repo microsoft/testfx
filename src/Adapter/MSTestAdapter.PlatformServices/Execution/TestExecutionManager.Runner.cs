@@ -59,8 +59,9 @@ internal partial class TestExecutionManager
     {
         // Ordering keys mirror the historical VSTest ManagedType/ManagedMethod test-case properties, which are
         // only populated when the test method carries managed method metadata (see UnitTestElement.ToTestCase).
-        // When a dependency graph is in effect the order is already fixed by the graph's topological sort, so
-        // re-sorting here would break it.
+        // When a dependency graph is in effect the order is already fixed by the graph's topological sort -
+        // which took name order as its tie-breaker, so the setting is honored there rather than bypassed -
+        // and re-sorting here would undo it.
         IEnumerable<UnitTestElement> orderedTests = dependencyCoordinator is null
             && MSTestSettings.CurrentSettings.OrderTestsByNameInClass && !MSTestSettings.CurrentSettings.RandomizeTestOrder
             ? tests.OrderBy(t => t.TestMethod.HasManagedMethodAndTypeProperties ? t.TestMethod.ManagedTypeName : null)

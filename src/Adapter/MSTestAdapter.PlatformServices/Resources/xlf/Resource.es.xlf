@@ -142,8 +142,8 @@ pero recibió {4} argumentos, con los tipos '{5}'.</target>
         <note>{0} is the fully qualified name of the test that did not pass.</note>
       </trans-unit>
       <trans-unit id="DependsOnTargetNotFound">
-        <source>Test '{0}' declares a dependency on '{1}', which matches no test in this run. The dependency is ignored.</source>
-        <target state="new">Test '{0}' declares a dependency on '{1}', which matches no test in this run. The dependency is ignored.</target>
+        <source>Test '{0}' declares a dependency on '{1}', which matches no test in this test source. Dependencies are resolved within a single source, so a target in another test assembly is not supported. The dependency is ignored.</source>
+        <target state="new">Test '{0}' declares a dependency on '{1}', which matches no test in this test source. Dependencies are resolved within a single source, so a target in another test assembly is not supported. The dependency is ignored.</target>
         <note>{0} is the fully qualified name of the test declaring the dependency. {1} is the declared target.</note>
       </trans-unit>
       <trans-unit id="DeploymentDependencyLoadFailed">

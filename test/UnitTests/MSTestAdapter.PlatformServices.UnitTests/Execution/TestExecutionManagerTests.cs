@@ -819,6 +819,48 @@ public class TestExecutionManagerTests : TestContainer
         }
     }
 
+    /// <summary>
+    /// A dependency graph must not switch <c>OrderTestsByNameInClass</c> off for the whole source. Tests that
+    /// are simultaneously ready still run in name order; the graph only constrains the pairs that actually
+    /// declare an edge.
+    /// </summary>
+    public async Task RunTestsWithDependenciesShouldStillOrderUnconstrainedTestsByName()
+    {
+        // Passed in the order 2, 1, 4 so that declaration order and name order disagree. Only TestMethod4 is
+        // constrained (it waits for TestMethod2), leaving 1 and 2 simultaneously ready - and they must run in
+        // name order, not the order they were handed over in.
+        TestCase testCase2 = GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod2");
+        TestCase testCase1 = GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod1");
+        TestCase testCase4 = GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod4");
+
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+            """
+            <RunSettings>
+              <RunConfiguration>
+                <DisableAppDomain>True</DisableAppDomain>
+              </RunConfiguration>
+              <MSTest>
+                <OrderTestsByNameInClass>true</OrderTestsByNameInClass>
+              </MSTest>
+            </RunSettings>
+            """);
+
+        UnitTestElement[] elements = ToUnitTestElements(testCase2, testCase1, testCase4);
+        elements[2].Dependencies = [new TestDependencyInfo(typeof(DummyTestClassWithDoNotParallelizeMethods).FullName, "TestMethod2", proceedOnFailure: false)];
+
+        try
+        {
+            MSTestSettings.PopulateSettings(_runContext.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
+            await _testExecutionManager.RunTestsAsync(elements, CurrentDeploymentContext, _frameworkHandle.ToAdapterMessageLogger(), TestResultRecorder, new TestElementFilterProvider(_runContext), new TestRunCancellationToken());
+
+            _frameworkHandle.TestCaseStartList.Should().Equal("TestMethod1", "TestMethod2", "TestMethod4");
+        }
+        finally
+        {
+            DummyTestClassWithDoNotParallelizeMethods.Cleanup();
+        }
+    }
+
     public async Task RunTestsForTestShouldPreferParallelSettingsFromRunSettingsOverAssemblyLevelAttributes()
     {
         TestCase testCase1 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod1");

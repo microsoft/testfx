@@ -22,6 +22,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// so the dependent starts only once all of them have finished.
 /// </para>
 /// <para>
+/// <strong>Scope.</strong> Dependencies are resolved within a single test source. A target in another
+/// assembly cannot be waited on, even though <see cref="DependsOnAttribute(Type)"/> and
+/// <see cref="DependsOnAttribute(Type, string)"/> will happily accept a type from one: such an edge
+/// matches nothing and is reported as an ignored dependency rather than silently ordering anything.
+/// </para>
+/// <para>
 /// <strong>Failure semantics.</strong> If a prerequisite does not pass, the dependent is
 /// <em>skipped</em>, not failed, and the skip propagates transitively down the graph. Skipping is the
 /// established convention (TestNG's <c>dependsOnMethods</c>, TUnit's <c>[DependsOn]</c>,

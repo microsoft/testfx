@@ -155,6 +155,22 @@ internal partial class TestExecutionManager
 
         bool parallelizationEnabled = !MSTestSettings.CurrentSettings.DisableParallelization && sourceSettings.CanParallelizeAssembly && parallelWorkers > 0;
 
+        // Sorting the graph's input by name is what makes name order the *tie-breaker* within the dependency
+        // order, rather than something the graph overrides: OrderTopologically breaks ties by position in this
+        // array, so tests that are simultaneously ready still run in name order. Doing it here rather than in
+        // the runner is deliberate - re-sorting a chunk after the topological pass would undo the ordering the
+        // graph just established. Ordering keys mirror the historical VSTest ManagedType/ManagedMethod
+        // test-case properties, which are only populated when the test method carries managed method metadata.
+        if (MSTestSettings.CurrentSettings.OrderTestsByNameInClass && !MSTestSettings.CurrentSettings.RandomizeTestOrder)
+        {
+            testsToRun =
+            [
+                .. testsToRun
+                    .OrderBy(t => t.TestMethod.HasManagedMethodAndTypeProperties ? t.TestMethod.ManagedTypeName : null, StringComparer.Ordinal)
+                    .ThenBy(t => t.TestMethod.HasManagedMethodAndTypeProperties ? t.TestMethod.ManagedMethodName : null, StringComparer.Ordinal),
+            ];
+        }
+
         // Edges declared in testconfig.json are merged onto the elements first, so that from the graph's
         // point of view a configured dependency is indistinguishable from an attribute-declared one.
         if (MSTestSettings.CurrentSettings.DeclaredDependencies is { Length: > 0 } declaredDependencies)
