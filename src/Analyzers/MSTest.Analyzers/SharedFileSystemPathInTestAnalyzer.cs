@@ -23,7 +23,10 @@ public sealed class SharedFileSystemPathInTestAnalyzer : DiagnosticAnalyzer
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.SharedFileSystemPathInTestMessageFormat), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString Description = new(nameof(Resources.SharedFileSystemPathInTestDescription), Resources.ResourceManager, typeof(Resources));
 
-    internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
+    /// <summary>
+    /// Gets the diagnostic descriptor reported by this analyzer.
+    /// </summary>
+    public static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.SharedFileSystemPathInTestRuleId,
         Title,
         MessageFormat,
@@ -108,7 +111,7 @@ public sealed class SharedFileSystemPathInTestAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        if (!TryGetConstantPathArgument(invocation, out string? offendingPath) || offendingPath is null)
+        if (!TryGetConstantMutatedPathArgument(invocation, isFile, targetMethod.Name, out string? offendingPath) || offendingPath is null)
         {
             return;
         }
@@ -121,7 +124,7 @@ public sealed class SharedFileSystemPathInTestAnalyzer : DiagnosticAnalyzer
 
         // Opting out of parallelization (sequential phase) removes the collision risk entirely, so stay silent -
         // this matches R1/R2/R3 and keeps specimens like the [DoNotParallelize] environment-mutating tests quiet.
-        if (ParallelSafetyHelper.IsOptedOutOfParallelization(testMethod, doNotParallelizeAttributeSymbol))
+        if (ParallelSafetyHelper.IsOptedOutOfParallelization(testMethod, doNotParallelizeAttributeSymbol, testMethodAttributeSymbol))
         {
             return;
         }
@@ -156,11 +159,14 @@ public sealed class SharedFileSystemPathInTestAnalyzer : DiagnosticAnalyzer
                 or "SetLastWriteTime" or "SetLastWriteTimeUtc";
 
     /// <summary>
-    /// Returns the constant string bound to the path parameter of a <c>File.*</c>/<c>Directory.*</c> call, when
-    /// that argument is a compile-time constant (literal or <c>const</c>). Variable paths return <see langword="false"/>:
-    /// the analyzer cannot know whether two tests collide, so it must stay silent on them.
+    /// Returns the constant string bound to a path parameter that the specific <c>File.*</c>/<c>Directory.*</c>
+    /// method actually <em>mutates</em>, when that argument is a compile-time constant (literal or <c>const</c>).
+    /// Path roles are per-API: <c>File.Copy</c>/<c>File.Replace</c> <em>read</em> their source, so a constant source
+    /// there is not flagged (reading a shared fixture at a fixed path is safe), whereas <c>Move</c> removes its source
+    /// and <c>Replace</c> creates a backup, so those positions are mutations. Variable paths return
+    /// <see langword="false"/>: the analyzer cannot know whether two tests collide, so it stays silent on them.
     /// </summary>
-    private static bool TryGetConstantPathArgument(IInvocationOperation invocation, out string? path)
+    private static bool TryGetConstantMutatedPathArgument(IInvocationOperation invocation, bool isFile, string methodName, out string? path)
     {
         path = null;
         foreach (IArgumentOperation argument in invocation.Arguments)
@@ -171,7 +177,7 @@ public sealed class SharedFileSystemPathInTestAnalyzer : DiagnosticAnalyzer
                 continue;
             }
 
-            if (parameter.Name is not ("path" or "sourceFileName" or "destFileName" or "sourceDirName" or "destDirName"))
+            if (!IsMutatedPathParameter(isFile, methodName, parameter.Name))
             {
                 continue;
             }
@@ -186,4 +192,31 @@ public sealed class SharedFileSystemPathInTestAnalyzer : DiagnosticAnalyzer
 
         return false;
     }
+
+    /// <summary>
+    /// Decides whether a given path parameter of a mutating <c>File.*</c>/<c>Directory.*</c> method names a
+    /// filesystem entry the call creates, overwrites, moves, or deletes (as opposed to one it only reads).
+    /// </summary>
+    private static bool IsMutatedPathParameter(bool isFile, string methodName, string parameterName)
+        => isFile
+            ? methodName switch
+            {
+                // Copy writes only the destination; the source is read - a constant source must not be flagged.
+                "Copy" => parameterName is "destFileName",
+
+                // Move deletes the source and creates the destination, so both positions are mutations.
+                "Move" => parameterName is "sourceFileName" or "destFileName",
+
+                // Replace overwrites destinationFileName and creates destinationBackupFileName; sourceFileName is read.
+                "Replace" => parameterName is "destinationFileName" or "destinationBackupFileName",
+
+                // Every other mutating File.* member acts on its single `path` argument.
+                _ => parameterName is "path",
+            }
+            : methodName switch
+            {
+                // Directory.Move deletes the source directory and creates the destination.
+                "Move" => parameterName is "sourceDirName" or "destDirName",
+                _ => parameterName is "path",
+            };
 }

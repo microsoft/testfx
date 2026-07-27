@@ -23,7 +23,10 @@ public sealed class CultureMutationUnderParallelizationAnalyzer : DiagnosticAnal
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.CultureMutationUnderParallelizationMessageFormat), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString Description = new(nameof(Resources.CultureMutationUnderParallelizationDescription), Resources.ResourceManager, typeof(Resources));
 
-    internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
+    /// <summary>
+    /// Gets the diagnostic descriptor reported by this analyzer.
+    /// </summary>
+    public static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.CultureMutationUnderParallelizationRuleId,
         Title,
         MessageFormat,
@@ -113,7 +116,7 @@ public sealed class CultureMutationUnderParallelizationAnalyzer : DiagnosticAnal
             return;
         }
 
-        if (ParallelSafetyHelper.IsOptedOutOfParallelization(testMethod, doNotParallelizeAttributeSymbol))
+        if (ParallelSafetyHelper.IsOptedOutOfParallelization(testMethod, doNotParallelizeAttributeSymbol, testMethodAttributeSymbol))
         {
             return;
         }

@@ -101,7 +101,10 @@ internal static class ParallelSafetyHelper
     }
 
     private static bool AssemblyHasAttribute(Compilation compilation, INamedTypeSymbol attributeSymbol)
-        => compilation.Assembly.GetAttributes().Any(attribute => SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, attributeSymbol));
+        // Match derived attributes too: [assembly: Parallelize]/[DoNotParallelize] are non-sealed and the adapter
+        // reads them reflectively (GetCustomAttributes(...).OfType<T>() / IsAttributeDefined<T>), which honors
+        // subclasses. An exact-symbol comparison would miss a user-defined attribute that derives from them.
+        => compilation.Assembly.GetAttributes().Any(attribute => attribute.AttributeClass.Inherits(attributeSymbol));
 
     /// <summary>
     /// Collects the attribute symbols that mark a method as MSTest "test code" - test methods run through
@@ -242,15 +245,27 @@ internal static class ParallelSafetyHelper
     /// Returns <see langword="true"/> when the test <paramref name="method"/> or any of its (possibly base)
     /// containing types opts out of parallelization with <c>[DoNotParallelize]</c>. Such tests run in the
     /// sequential phase, so their process-global mutations cannot race a sibling and must not be flagged.
+    /// A method-level <c>[DoNotParallelize]</c> is honored by discovery only on an actual test method - on a
+    /// fixture method it has no runtime effect - so <paramref name="testMethodAttributeSymbol"/> is used to
+    /// restrict the method-level check to real test methods; fixtures rely on a class/assembly-level opt-out.
     /// </summary>
-    internal static bool IsOptedOutOfParallelization(IMethodSymbol method, INamedTypeSymbol? doNotParallelizeAttributeSymbol)
+    internal static bool IsOptedOutOfParallelization(
+        IMethodSymbol method,
+        INamedTypeSymbol? doNotParallelizeAttributeSymbol,
+        INamedTypeSymbol? testMethodAttributeSymbol)
     {
         if (doNotParallelizeAttributeSymbol is null)
         {
             return false;
         }
 
-        if (HasAttribute(method, doNotParallelizeAttributeSymbol))
+        // TypeEnumerator builds each test method's DoNotParallelize flag from the method's own attribute, but a
+        // fixture method ([TestInitialize]/[TestCleanup]/[ClassInitialize]/[ClassCleanup]/...) never goes through
+        // that path, so a [DoNotParallelize] sitting on a fixture is ignored at runtime and must not silence a live
+        // mutation there. Only class/assembly-level opt-out (the base-type walk below) protects a fixture.
+        bool isTestMethod = testMethodAttributeSymbol is not null
+            && method.GetAttributes().Any(attribute => attribute.AttributeClass.Inherits(testMethodAttributeSymbol));
+        if (isTestMethod && HasAttribute(method, doNotParallelizeAttributeSymbol))
         {
             return true;
         }
@@ -348,5 +363,8 @@ internal static class ParallelSafetyHelper
     }
 
     private static bool HasAttribute(ISymbol symbol, INamedTypeSymbol attributeSymbol)
-        => symbol.GetAttributes().Any(attribute => SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, attributeSymbol));
+        // Inheritance-aware to mirror the adapter's reflective attribute lookups, which honor subclasses of the
+        // MSTest attributes ([DoNotParallelize], [ResourceLock]). For a sealed attribute this is exactly an
+        // identity comparison, so it is never less precise than the previous exact-symbol check.
+        => symbol.GetAttributes().Any(attribute => attribute.AttributeClass.Inherits(attributeSymbol));
 }

@@ -23,7 +23,10 @@ public sealed class CurrentDirectoryMutationUnderParallelizationAnalyzer : Diagn
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.CurrentDirectoryMutationUnderParallelizationMessageFormat), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString Description = new(nameof(Resources.CurrentDirectoryMutationUnderParallelizationDescription), Resources.ResourceManager, typeof(Resources));
 
-    internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
+    /// <summary>
+    /// Gets the diagnostic descriptor reported by this analyzer.
+    /// </summary>
+    public static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.CurrentDirectoryMutationUnderParallelizationRuleId,
         Title,
         MessageFormat,
@@ -146,7 +149,7 @@ public sealed class CurrentDirectoryMutationUnderParallelizationAnalyzer : Diagn
         }
 
         // Opting out of parallelization (sequential phase) removes the race entirely, so stay silent.
-        if (ParallelSafetyHelper.IsOptedOutOfParallelization(testMethod, doNotParallelizeAttributeSymbol))
+        if (ParallelSafetyHelper.IsOptedOutOfParallelization(testMethod, doNotParallelizeAttributeSymbol, testMethodAttributeSymbol))
         {
             return;
         }

@@ -28,7 +28,10 @@ public sealed class UndeclaredProcessGlobalStateMutationAnalyzer : DiagnosticAna
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.UndeclaredProcessGlobalStateMutationMessageFormat), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString Description = new(nameof(Resources.UndeclaredProcessGlobalStateMutationDescription), Resources.ResourceManager, typeof(Resources));
 
-    internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
+    /// <summary>
+    /// Gets the diagnostic descriptor reported by this analyzer.
+    /// </summary>
+    public static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.UndeclaredProcessGlobalStateMutationRuleId,
         Title,
         MessageFormat,
@@ -129,7 +132,7 @@ public sealed class UndeclaredProcessGlobalStateMutationAnalyzer : DiagnosticAna
             return;
         }
 
-        if (ParallelSafetyHelper.IsOptedOutOfParallelization(testMethod, doNotParallelizeAttributeSymbol))
+        if (ParallelSafetyHelper.IsOptedOutOfParallelization(testMethod, doNotParallelizeAttributeSymbol, testMethodAttributeSymbol))
         {
             return;
         }

@@ -68,8 +68,10 @@ public sealed class AddResourceLockFixer : CodeFixProvider
             ? scope
             : ParallelSafetyHelper.FixScopeMethod;
 
+        // Use TypeDeclarationSyntax rather than ClassDeclarationSyntax so the class-scoped fix also lands on record
+        // test classes (RecordDeclarationSyntax is not a ClassDeclarationSyntax); both derive from TypeDeclarationSyntax.
         SyntaxNode? targetNode = fixScope == ParallelSafetyHelper.FixScopeClass
-            ? syntaxToken.Parent?.AncestorsAndSelf().OfType<ClassDeclarationSyntax>().FirstOrDefault()
+            ? syntaxToken.Parent?.AncestorsAndSelf().OfType<TypeDeclarationSyntax>().FirstOrDefault()
             : syntaxToken.Parent?.AncestorsAndSelf().OfType<MethodDeclarationSyntax>().FirstOrDefault();
         if (targetNode is null)
         {
