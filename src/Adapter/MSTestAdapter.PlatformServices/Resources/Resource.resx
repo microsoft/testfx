@@ -398,7 +398,8 @@ but received {4} argument(s), with types '{5}'.</value>
   <data name="DependencyConfigurationNodeWithoutPrerequisites" xml:space="preserve">
     <value>The 'mstest:execution:dependencies' configuration section declares a node for '{0}' with no 'dependsOn' entries, which has no effect.</value>
     <comment>{0} is the declared test reference. {Locked="mstest:execution:dependencies"}{Locked="dependsOn"}</comment>
-  </data>  <data name="DependsOnCycle" xml:space="preserve">
+  </data>
+  <data name="DependsOnCycle" xml:space="preserve">
     <value>Dependency cycle detected between tests: {0}. The tests in the cycle cannot be ordered and are reported as failed. Remove one of the [DependsOn] declarations to break the cycle.</value>
     <comment>{0} is the cycle rendered as a path, for example 'A &gt; B &gt; A'. {Locked="[DependsOn]"}</comment>
   </data>

@@ -440,7 +440,14 @@ internal partial class TestExecutionManager
             }
         }
 
-        available.Release(queued);
+        // Release(0) throws, and a zero count would mean every chunk had an unmet prerequisite - that is,
+        // a cycle in the chunk graph. Build guarantees that cannot happen (chunks caught in a projection
+        // cycle are demoted to the sequential phase), but the guard keeps a future regression in that
+        // invariant from surfacing here as an argument exception instead of where it belongs.
+        if (queued > 0)
+        {
+            available.Release(queued);
+        }
 
         int completedChunks = 0;
         int effectiveWorkers = Math.Max(1, Math.Min(parallelWorkers, chunkCount));

@@ -174,8 +174,11 @@ public sealed class TestDependencyGraphTests : TestContainer
 
         TestDependencyGraph graph = TestDependencyGraph.Build(tests, ExecutionScope.ClassLevel, parallelizationEnabled: true)!;
 
-        graph.Errors.Should().ContainSingle();
-        graph.Errors[0].Should().Contain("MethodLevel");
+        // A recovered downgrade, not a fatal error: the declared order is still honoured, so this must not
+        // land on Errors, which is what stamps a failure message onto tests caught in a real cycle.
+        graph.Errors.Should().BeEmpty();
+        graph.Warnings.Should().ContainSingle();
+        graph.Warnings[0].Should().Contain("MethodLevel");
 
         // The test-level graph is sound, so nothing is broken - the tests still run.
         graph.BrokenTests.Should().BeEmpty();

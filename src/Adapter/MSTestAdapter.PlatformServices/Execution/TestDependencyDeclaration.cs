@@ -55,7 +55,7 @@ internal sealed class TestDependencyDeclaration
         bool applied = false;
         foreach (TestDependencyDeclaration declaration in declarations)
         {
-            if (TestReference.TryParse(declaration.Dependent) is not { } dependent)
+            if (!TestReference.TryParse(declaration.Dependent, out TestReference? dependent))
             {
                 logger?.SendMessage(
                     MessageLevel.Warning,
@@ -63,7 +63,7 @@ internal sealed class TestDependencyDeclaration
                 continue;
             }
 
-            if (TestReference.TryParse(declaration.Prerequisite) is not { } prerequisite)
+            if (!TestReference.TryParse(declaration.Prerequisite, out TestReference? prerequisite))
             {
                 logger?.SendMessage(
                     MessageLevel.Warning,
@@ -119,7 +119,7 @@ internal sealed class TestDependencyDeclaration
         /// <summary>Gets the method name, or <see langword="null"/> when the reference covers a whole class.</summary>
         public string? MethodName { get; }
 
-        public static TestReference? TryParse(string value)
+        public static bool TryParse(string value, [NotNullWhen(true)] out TestReference? reference)
         {
             string trimmed = value.Trim();
             int lastDot = trimmed.LastIndexOf('.');
@@ -128,12 +128,14 @@ internal sealed class TestDependencyDeclaration
             // silently point the edge at the wrong thing.
             if (lastDot <= 0 || lastDot == trimmed.Length - 1)
             {
-                return null;
+                reference = null;
+                return false;
             }
 
             string className = trimmed.Substring(0, lastDot);
             string methodName = trimmed.Substring(lastDot + 1);
-            return methodName == "*" ? new TestReference(className, null) : new TestReference(className, methodName);
+            reference = methodName == "*" ? new TestReference(className, null) : new TestReference(className, methodName);
+            return true;
         }
 
         public bool Matches(UnitTestElement element)

@@ -14,9 +14,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// <remarks>
 /// <para>
 /// The graph is built once per source, before anything runs, from the dependencies carried on the
-/// <see cref="UnitTestElement"/>s (see <see cref="UnitTestElement.Dependencies"/>) plus any edges declared
-/// in a dependency chain file. It is a pure data structure: it neither runs tests nor observes outcomes -
-/// <see cref="TestDependencyCoordinator"/> does that at run time.
+/// <see cref="UnitTestElement"/>s (see <see cref="UnitTestElement.Dependencies"/>), which come from
+/// <c>[DependsOn]</c> attributes and/or <c>testconfig.json</c>. It is a pure data structure: it neither
+/// runs tests nor observes outcomes - <see cref="TestDependencyCoordinator"/> does that at run time.
 /// </para>
 /// <para>
 /// Edges are resolved between <em>tests</em>, but MSTest schedules <em>chunks</em> (a whole class under
@@ -88,10 +88,18 @@ internal sealed class TestDependencyGraph
     /// </summary>
     public IReadOnlyList<UnitTestElement> BrokenTests { get; }
 
-    /// <summary>Gets the configuration errors to report (currently: the dependency cycles that were found).</summary>
+    /// <summary>
+    /// Gets the fatal configuration errors: the dependency cycles that make tests unschedulable. These are
+    /// reported as failures against the tests in the cycle, so nothing that merely degrades - such as a cycle
+    /// in the class-level projection, which is recovered from by running those tests sequentially - belongs
+    /// here; that goes to <see cref="Warnings"/>.
+    /// </summary>
     public IReadOnlyList<string> Errors { get; }
 
-    /// <summary>Gets the non-fatal problems to report, such as dependencies that match no test in this run.</summary>
+    /// <summary>
+    /// Gets the non-fatal problems to report: dependencies that match no test in this run, and cycles in the
+    /// class-level projection that were recovered from by demoting the affected tests to the sequential phase.
+    /// </summary>
     public IReadOnlyList<string> Warnings { get; }
 
     /// <summary>
@@ -148,7 +156,7 @@ internal sealed class TestDependencyGraph
             testPrerequisites,
             SelectIndices(tests.Length, i => !isSequential[i] && !isBroken[i]),
             scope,
-            errors,
+            warnings,
             out List<int>? projectionCycleTests);
 
         // A cycle that exists only in the class-level projection means the declared order is satisfiable
@@ -173,7 +181,7 @@ internal sealed class TestDependencyGraph
                 testPrerequisites,
                 SelectIndices(tests.Length, i => !isSequential[i] && !isBroken[i]),
                 scope,
-                errors,
+                warnings,
                 out _);
         }
 
@@ -451,7 +459,7 @@ internal sealed class TestDependencyGraph
         int[][] prerequisites,
         List<int> parallelIndices,
         ExecutionScope scope,
-        List<string> errors,
+        List<string> warnings,
         out List<int>? projectionCycleTests)
     {
         projectionCycleTests = null;
@@ -525,7 +533,7 @@ internal sealed class TestDependencyGraph
                 projectionCycleTests.AddRange(chunkMembers[chunk]);
             }
 
-            errors.Add(string.Format(CultureInfo.CurrentCulture, Resource.DependsOnClassLevelCycle, string.Join(", ", classNames)));
+            warnings.Add(string.Format(CultureInfo.CurrentCulture, Resource.DependsOnClassLevelCycle, string.Join(", ", classNames)));
 
             // The caller re-chunks without these tests, so the arrays built here are discarded. Returning them
             // unchanged keeps this method free of a partially-valid state.

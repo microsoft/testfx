@@ -66,8 +66,9 @@ internal sealed class UnitTestElement
 
     /// <summary>
     /// Gets or sets the dependencies declared for this test (via <c>[DependsOn]</c> on the method and/or its
-    /// class, and/or a dependency chain file), used by the scheduler to run this test after its
-    /// prerequisites and to skip it when they do not pass. <see langword="null"/> when none are declared.
+    /// class, and/or the <c>mstest:execution:dependencies</c> section of <c>testconfig.json</c>), used by the
+    /// scheduler to run this test after its prerequisites and to skip it when they do not pass.
+    /// <see langword="null"/> when none are declared.
     /// </summary>
     public TestDependencyInfo[]? Dependencies { get; set; }
 

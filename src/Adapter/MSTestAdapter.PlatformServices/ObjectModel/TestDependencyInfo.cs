@@ -4,8 +4,8 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
 /// <summary>
-/// A single declared dependency edge (from a <c>[DependsOn]</c> attribute or from a dependency chain
-/// file) carried on a <see cref="UnitTestElement"/>: which test must run first, and whether the
+/// A single declared dependency edge (from a <c>[DependsOn]</c> attribute or from <c>testconfig.json</c>)
+/// carried on a <see cref="UnitTestElement"/>: which test must run first, and whether the
 /// dependent still runs when that test does not pass.
 /// </summary>
 #if NETFRAMEWORK
@@ -22,7 +22,7 @@ internal sealed class TestDependencyInfo
     public TestDependencyInfo(string? targetClassFullName, string? targetMethodName, bool proceedOnFailure)
     {
         // Normalize empty to null so that the encoder's "empty means absent" convention and the
-        // resolver's null checks agree, whatever produced the value (attribute, chain file, decoder).
+        // resolver's null checks agree, whatever produced the value (attribute, configuration, decoder).
         TargetClassFullName = string.IsNullOrEmpty(targetClassFullName) ? null : targetClassFullName;
         TargetMethodName = string.IsNullOrEmpty(targetMethodName) ? null : targetMethodName;
         ProceedOnFailure = proceedOnFailure;

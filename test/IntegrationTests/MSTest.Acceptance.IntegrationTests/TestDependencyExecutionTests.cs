@@ -9,14 +9,17 @@ using Microsoft.Testing.TestInfrastructure;
 namespace MSTest.Acceptance.IntegrationTests;
 
 /// <summary>
-/// Acceptance tests for <c>[DependsOn]</c> and the dependency chain file. The generated assets record, for
-/// every test body, the millisecond at which it entered and left, which makes both claims checkable end to
-/// end: that a dependent never starts before its prerequisite finishes, and - the point of a graph rather
-/// than a flat order - that two tests sharing a prerequisite really do overlap.
+/// Acceptance tests for <c>[DependsOn]</c> and its <c>testconfig.json</c> equivalent. The generated assets
+/// record, for every test body, the millisecond at which it entered and left, which makes both claims
+/// checkable end to end: that a dependent never starts before its prerequisite finishes, and - the point of
+/// a graph rather than a flat order - that two tests sharing a prerequisite really do overlap.
 /// </summary>
 /// <remarks>
-/// The assets are shared between the test methods of this class, so it is marked
-/// <see cref="DoNotParallelizeAttribute"/>: the chain-file test writes into the test host directory.
+/// Marked <see cref="DoNotParallelizeAttribute"/> because
+/// <see cref="DependsOn_RunsPrerequisitesFirst_AndLetsIndependentBranchesOverlap"/> asserts on wall-clock
+/// overlap between two test bodies of the asset it runs. Running this class in the sequential phase, after
+/// the rest of the suite has drained, keeps the machine quiet enough for those timings to mean what they
+/// say. (The assets themselves are not shared: each test method uses its own generated project.)
 /// </remarks>
 [TestClass]
 [DoNotParallelize]
@@ -25,7 +28,7 @@ public sealed class TestDependencyExecutionTests : AcceptanceTestBase<TestDepend
     private const string GraphProjectName = "TestDependencyGraphTestProject";
     private const string FailureProjectName = "TestDependencyFailureTestProject";
     private const string CycleProjectName = "TestDependencyCycleTestProject";
-    private const string ChainFileProjectName = "TestDependencyConfigTestProject";
+    private const string TestConfigProjectName = "TestDependencyConfigTestProject";
 
     public TestContext TestContext { get; set; } = default!;
 
@@ -96,7 +99,7 @@ public sealed class TestDependencyExecutionTests : AcceptanceTestBase<TestDepend
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task DependencyConfiguration_OrdersTestsThatDeclareNoAttribute(string tfm)
     {
-        TestHost testHost = AssetFixture.GetTestHost(ChainFileProjectName, tfm);
+        TestHost testHost = AssetFixture.GetTestHost(TestConfigProjectName, tfm);
 
         string probePath = Path.Combine(testHost.DirectoryName, "OrderProbe.txt");
         File.Delete(probePath);
@@ -171,7 +174,7 @@ public sealed class TestDependencyExecutionTests : AcceptanceTestBase<TestDepend
             await GenerateAsync(GraphProjectName, GraphSourceCode, cancellationToken).ConfigureAwait(false);
             await GenerateAsync(FailureProjectName, FailureSourceCode, cancellationToken).ConfigureAwait(false);
             await GenerateAsync(CycleProjectName, CycleSourceCode, cancellationToken).ConfigureAwait(false);
-            await GenerateAsync(ChainFileProjectName, ChainFileSourceCode, cancellationToken).ConfigureAwait(false);
+            await GenerateAsync(TestConfigProjectName, TestConfigSourceCode, cancellationToken).ConfigureAwait(false);
         }
 
         private async Task GenerateAsync(string projectName, string sourceCode, CancellationToken cancellationToken)
@@ -346,7 +349,7 @@ public sealed class CycleTests
 }
 """;
 
-        private const string ChainFileSourceCode = """
+        private const string TestConfigSourceCode = """
 #file $ProjectName$.csproj
 <Project Sdk="Microsoft.NET.Sdk">
 

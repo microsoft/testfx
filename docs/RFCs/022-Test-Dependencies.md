@@ -171,9 +171,16 @@ graph LR
 
 Under `ClassLevel`, class A's test can depend on class B's while another of B's depends on one of A's.
 No test depends on itself — the test graph is sound — but the *class* graph has a cycle and cannot be
-scheduled. Rather than deadlock, this is reported as an error naming the classes and advising
-`MethodLevel`, and the projected chunk edges are dropped. Nothing runs out of order: the per-test gate
-still holds every dependent back until its prerequisites have completed.
+scheduled at class granularity. Dropping the ordering would be worse than losing the parallelism: the
+run-time gate cannot distinguish "has not run yet" from "did not pass", so unordered dependents would be
+**skipped nondeterministically** — varying with worker count and thread timing — while the run still
+reported success. Instead, the tests of the classes caught in the cycle are moved into the **sequential
+phase**, where the topological order is honoured exactly. Only those tests lose their parallelism;
+unrelated classes keep theirs, and a warning names the classes and points at `MethodLevel` to get the
+parallelism back.
+
+This is reported as a *warning*, not an error: the declared order is still satisfied, so it is a
+recoverable downgrade rather than the unschedulable configuration a real cycle represents.
 
 #### `[DoNotParallelize]` and the demotion rule
 
@@ -251,12 +258,14 @@ scheduling code reachable and unchanged rather than rewritten.
 
 The ready-queue is a semaphore over a `ConcurrentQueue` of chunk indices: one permit per queued chunk,
 plus one per worker once the last chunk completes, so every worker wakes and exits instead of blocking on
-a queue that will never be fed again. Because projected cycles are removed before scheduling, a chunk can
-always eventually become ready, so the loop cannot deadlock.
+a queue that will never be fed again. Because the chunks caught in a projected cycle are demoted to the
+sequential phase before scheduling, the chunk graph handed to the loop is always a DAG, so some chunk
+always has no unmet prerequisite and the loop cannot deadlock. The bookkeeping that releases a chunk's
+dependents runs in a `finally`, so a chunk that *throws* also cannot strand the workers waiting on it.
 
 ### Testing
 
-- `test/UnitTests/MSTestAdapter.PlatformServices.UnitTests/Execution/TestDependencyGraphTests.cs` — 18
+- `test/UnitTests/MSTestAdapter.PlatformServices.UnitTests/Execution/TestDependencyGraphTests.cs` — 19
   tests over resolution, fan-out independence, cycles (real and projection-only), demotion, the
   unmatched-reference warning, `ProceedOnFailure` merging, ordering determinism, and encode/decode.
 - `test/IntegrationTests/MSTest.Acceptance.IntegrationTests/TestDependencyExecutionTests.cs` — end-to-end
@@ -297,7 +306,8 @@ in every test is impractical, and prefer, in order:
 
 ## Unresolved questions
 
-- Should a projection-only cycle under `ClassLevel` fall back to scheduling the affected classes at
-  method granularity automatically, instead of reporting an error and relying on the per-test gate?
+- Should a projection-only cycle under `ClassLevel` fall back to scheduling *only the affected classes* at
+  method granularity, instead of demoting them to the sequential phase? That would keep some parallelism,
+  at the cost of a scope that varies per class within one run.
 - Should `RandomizeTestOrder` warn when it is combined with declared dependencies, as it already does for
   `OrderTestsByNameInClass`? The graph wins today, silently.
