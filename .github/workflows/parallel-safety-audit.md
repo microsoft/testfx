@@ -47,6 +47,13 @@ permissions:
 imports:
   - shared/parallel-safety-audit-shared.md
 
+# This workflow fires on every PR open / reopen / ready-for-review and on every
+# push (`synchronize`) that touches `test/**` — the same high-frequency trigger
+# set as `grade-tests-on-pr.agent.md`, which crossed the enterprise default of 5K
+# on a busy weekend and failed every subsequent activation (see issues #9086 and
+# #9053). Raise the daily budget so a busy day of PR pushes does not skip audits.
+max-daily-ai-credits: 20K
+
 safe-outputs:
   report-failure-as-issue: false
   messages:

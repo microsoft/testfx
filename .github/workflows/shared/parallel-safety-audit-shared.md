@@ -3,7 +3,7 @@
 #
 # Two consumers import this file:
 #   - parallel-safety-audit.md          → runs automatically on PRs that touch
-#                                          test/** or src/**
+#                                          test/**
 #   - parallel-safety-audit-command.md  → runs on the /parallel-audit slash command
 #
 # Both consumers contribute their own trigger configuration (`on:`) and their
@@ -266,6 +266,14 @@ owning test project (and, for shared keys, the whole `test/` tree) to find every
 each changed test file, resolve the effective state of the *assembly* it belongs
 to:
 
+**First, which test engine?** Not every test project in this repo runs on MSTest.
+A class deriving from `TestContainer` (`TestFramework.ForTestingMSTest`) is run by
+a bespoke engine that has **no parallel scheduler at all** — its tests are
+unattributed public parameterless `void`/`Task` methods. For such a suite record
+the effective scope as **`off`** and treat every finding as **readiness-only**
+(what would break *if* this code were ported to MSTest and that project opted in).
+Never report it as a live race. Then, for MSTest suites, resolve:
+
 1. **Opt-in?** Search the project for `[assembly: Parallelize` and
    `[assembly: DoNotParallelize]` (often in an `AssemblyInfo.cs`, a
    `Parallelize.cs`, or `GlobalUsings`/any `.cs`). Also check for a
@@ -342,11 +350,13 @@ Conflating the two is a misclassification you must avoid:
 ## Step 1 — Find the unsafe call sites (the finding taxonomy)
 
 Organise findings by **what makes them unsafe**, not by which API was called.
-For each changed test method (decorated with `[TestMethod]`, `[DataTestMethod]`,
-or any attribute deriving from them — testfx has `[STATestMethod]`,
-`[UITestMethod]`, `[IterativeTestMethod]`, project-local
-`MyTestMethodAttribute : TestMethodAttribute`, etc.), and for the helpers /
-fixtures / `const`s it reaches, look for:
+For each changed test method — either decorated with `[TestMethod]`,
+`[DataTestMethod]`, or any attribute deriving from them (testfx has
+`[STATestMethod]`, `[UITestMethod]`, `[IterativeTestMethod]`, project-local
+`MyTestMethodAttribute : TestMethodAttribute`, etc.), **or**, in a
+`TestContainer`-derived class, any public parameterless `void`/`Task` method
+(that engine uses no attributes) — and for the helpers / fixtures / `const`s it
+reaches, look for:
 
 ### A. Process-global state mutation — *cannot* be made per-test; must be coordinated
 
