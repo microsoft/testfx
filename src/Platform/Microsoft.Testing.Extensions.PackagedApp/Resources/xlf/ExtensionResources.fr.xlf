@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="fr" original="../ExtensionResources.resx">
     <body>
@@ -9,12 +9,12 @@
       </trans-unit>
       <trans-unit id="InvalidAppxManifestMissingIdentity">
         <source>The packaged app manifest does not declare a valid &lt;Identity Name="..." Publisher="..." /&gt; element.</source>
-        <target state="new">The packaged app manifest does not declare a valid &lt;Identity Name="..." Publisher="..." /&gt; element.</target>
+        <target state="translated">Le manifeste de l’application packagée ne déclare pas d’élément valide &lt;Identity Name="..." Publisher="..." /&gt; élément.</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDescription">
         <source>Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there, and — in the Windows build — registers a packaged, full-trust MSIX desktop test host and activates it by Application User Model ID. True UWP/AppContainer hosts are not supported. See https://github.com/microsoft/testfx/issues/9933.</source>
-        <target state="new">Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there, and — in the Windows build — registers a packaged, full-trust MSIX desktop test host and activates it by Application User Model ID. True UWP/AppContainer hosts are not supported. See https://github.com/microsoft/testfx/issues/9933.</target>
+        <target state="translated">Déploie un hôte de test Windows non empaqueté (par exemple, WinUI décompressé) dans un répertoire isolé et le lance depuis celui-ci, et – dans la build Windows – inscrit un hôte de test de bureau MSIX empaqueté en confiance totale et l’active par ID de modèle utilisateur d’application. Les véritables hôtes UWP / AppContainer ne sont pas pris en charge. See https://github.com/microsoft/testfx/issues/9933.</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDisplayName">
@@ -24,7 +24,7 @@
       </trans-unit>
       <trans-unit id="PackagedAppLaunchNotSupported">
         <source>Cannot launch the packaged Windows app '{0}' (found '{1}'). Registering and activating a packaged (MSIX) app requires the Windows build of this extension, which ships for net8.0-windows10.0.19041.0 and later. Target 'net8.0-windows10.0.19041.0' (or a later net*-windows Target Framework Moniker at platform version 10.0.19041.0 or higher) so NuGet selects that asset. The current build only launches non-packaged (loose-layout) test hosts. See https://github.com/microsoft/testfx/issues/9933.</source>
-        <target state="new">Cannot launch the packaged Windows app '{0}' (found '{1}'). Registering and activating a packaged (MSIX) app requires the Windows build of this extension, which ships for net8.0-windows10.0.19041.0 and later. Target 'net8.0-windows10.0.19041.0' (or a later net*-windows Target Framework Moniker at platform version 10.0.19041.0 or higher) so NuGet selects that asset. The current build only launches non-packaged (loose-layout) test hosts. See https://github.com/microsoft/testfx/issues/9933.</target>
+        <target state="translated">Nous ne pouvons pas lancer l’application Windows packagée « {0} » (détectée « {1} »). L’inscription et l’activation d’une application empaquetée (MSIX) nécessitent la version Windows de cette extension, fournie pour net8.0-windows10.0.19041.0 et les versions ultérieures. Ciblez 'net8.0-windows10.0.19041.0' (ou un moniker de framework cible net*-windows ultérieur avec une version de plateforme 10.0.19041.0 ou supérieure) pour que NuGet sélectionne cet élément. La build actuelle lance uniquement des hôtes de test non empaquetés (disposition libre). See https://github.com/microsoft/testfx/issues/9933.</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppNoApplicationToActivate">
