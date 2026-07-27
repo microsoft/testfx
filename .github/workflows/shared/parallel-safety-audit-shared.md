@@ -494,8 +494,17 @@ dependency.
 - `Environment.SetEnvironmentVariable(...)`; `Environment.CurrentDirectory`
   setter; `Directory.SetCurrentDirectory(...)`. **CWD and env vars are
   process-global on every OS — there is no per-thread CWD.**
-  `[DeploymentItem]` also mutates CWD process-wide for the whole assembly
-  (testfx#6884, closed by-design). **Cross-ref (in flight, not yet on `main` —
+  **`[DeploymentItem]` is *not* a category-A finding**, despite also relocating
+  the process-wide CWD (testfx#6884, closed by-design): the source host performs
+  that `Directory.SetCurrentDirectory` while it is being constructed
+  (`TestSourceHost.cs:292`, from `TestExecutionManager.Parallelization.cs:70`),
+  which happens **before** the worker tasks are created (`:216`). It is
+  deterministic per-source setup, not a concurrent mutation, so no test races on
+  it and a per-test `[ResourceLock]` could neither protect nor undo it — never
+  recommend one for it. Its real consequence is that the CWD is not where the
+  reader assumes, which is what makes **relative paths** unsafe (category B);
+  report the concrete relative-path collision, not the attribute.
+  **Cross-ref (in flight, not yet on `main` —
   see the analyzer-gate note):** the forthcoming **MSTEST0074**
   (`UndeclaredProcessGlobalStateMutationAnalyzer`, Info) will cover *undeclared*
   `Environment.SetEnvironmentVariable` / `Console.Set*`; **MSTEST0075**
@@ -551,8 +560,20 @@ dependency.
 
 → **Fix:** `[ResourceLock(WellKnownResources.EnvironmentVariables |
 CurrentDirectory | Console)]` or a narrow custom key (see granularity rule
-below). For culture, prefer restoring the previous value in a `finally` **and**
-locking, because the leak crosses tests.
+below).
+
+**A lock alone is only half the fix — it must be paired with restoration.** A
+resource lock is released when the scheduling **chunk** ends, so it prevents
+*concurrent* interference but does nothing about *sequential* contamination: the
+env var, CWD, console writer or `AppContext` switch is still sitting at its
+mutated value when the next serialized test runs, and that test is exactly the
+"concurrent observer" the finding named. Always recommend restoring the previous
+value inside the locked region — capture it before, restore in a `finally` (or
+via a `try`/`finally` helper or `IDisposable` scope) — **in addition to** the
+lock. Where the state cannot be restored (a spawned process that already
+inherited the value, a disposed console writer), say so and recommend isolation
+or removing the dependency instead. This applies to culture too, where the leak
+crossing tests is the whole problem.
 
 **But first split process-local from OS-global.** `[ResourceLock]` coordinates
 **only inside the current test host process** — its own documentation states it
@@ -608,7 +629,10 @@ everything except "literal passed straight into a mutating FS call" is yours:**
 happens to it* — "this path is constructed **and then written to** by
 `WriteResult`, and two tests reach it with the same constant" is a materially
 stronger, more actionable claim than "this path is constructed." If you cannot
-show the write, do not raise it above Info, and say the I/O is unconfirmed.
+show the mutation **and** a second concurrently-runnable test converging on the
+same path, do **not** report it at all — not even at Info. An unproven collision
+is the false positive that narrowed MSTEST0077 in the first place; silence is the
+correct output.
 
 → **Fix:** prefer **elimination** — give each test its own directory via
 `TestContext.TestTempDirectory` (a per-test unique dir, lazily created, deleted
