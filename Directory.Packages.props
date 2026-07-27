@@ -35,9 +35,11 @@
          On a 5.10.0-1.* (roslyn main) preview from the dnceng dotnet-tools feed to pick up the
          RS0017/RS0026/RS0036 fixes AND the [Embedded]-API exclusion added in dotnet/roslyn#84437
          (merged 2026-07-10 23:11 UTC), which lets internal [Embedded] types opt out of API tracking.
-         NOTE: 5.10.0-1.26360.111 was built 2026-07-10 22:25 UTC, ~46 min BEFORE that merge, so it does
-         NOT yet contain #84437. Re-pin to the first post-merge main build (5.10.0-1.26361.* or later)
-         once it ships to the dotnet-tools feed.
+         NOTE: roslyn main builds encode their date as yy*1000 + mm*50 + dd, so 5.10.0-1.26361.* is
+         2026-07-11 and anything from that build number upwards is post-merge and DOES contain #84437.
+         The pin below satisfies that, and Dependabot is free to keep moving it to newer main builds;
+         just never go back to 5.10.0-1.26360.* or earlier (built before the merge).
+         Promote to a stable Microsoft.CodeAnalysis.*Analyzers release once one ships with #84437.
          Tracking context: https://github.com/microsoft/testfx/issues/9091 (Task 5). -->
     <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>5.10.0-1.26376.1</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
     <MicrosoftCodeAnalysisBannedApiAnalyzersVersion>$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)</MicrosoftCodeAnalysisBannedApiAnalyzersVersion>
