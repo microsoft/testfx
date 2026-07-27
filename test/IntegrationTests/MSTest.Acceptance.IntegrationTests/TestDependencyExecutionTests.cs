@@ -109,16 +109,28 @@ public sealed class TestDependencyExecutionTests : AcceptanceTestBase<TestDepend
 
         Assert.AreNotEqual(0, result.ExitCode, result.StandardOutput);
 
-        // 'chains' ordered the first three steps; 'nodes' fanned Audit out of Second with
-        // proceedOnFailure, and held Verify back because Second failed.
+        // 'chains' ordered First -> Second -> Third, and 'nodes' hung Verify and Audit off Second.
+        // Second fails, so the skip propagates to everything downstream that did not opt out: Third (next
+        // in the chain) and Verify (a node). Audit runs anyway because its node set proceedOnFailure, and
+        // First already ran. Hence 1 failed, 2 skipped, 2 succeeded.
         Assert.Contains("failed: 1", result.StandardOutput);
-        Assert.Contains("skipped: 1", result.StandardOutput);
+        Assert.Contains("skipped: 2", result.StandardOutput);
+        Assert.Contains("succeeded: 2", result.StandardOutput);
+
+        // Both skips name the prerequisite that did not pass.
+        Assert.Contains("skipped Verify", result.StandardOutput);
+        Assert.Contains("skipped Third", result.StandardOutput);
+        Assert.Contains("Test skipped because it depends on 'Contoso.Tests.StepTwo.Second', which did not pass.", result.StandardOutput);
 
         string[] order = [.. File.ReadAllLines(probePath).Where(l => l.Length > 0)];
+
+        // The classes are declared in source in the reverse of this order and carry no attribute, so only
+        // the configuration can be responsible for First running before Second.
         CollectionAssert.AreEqual(new[] { "First", "Second" }, order.Take(2).ToArray(), string.Join(",", order));
 
-        // Verify never ran: its prerequisite failed and it did not opt out.
+        // Neither skipped test executed its body.
         CollectionAssert.DoesNotContain(order, "Verify");
+        CollectionAssert.DoesNotContain(order, "Third");
 
         // Audit ran anyway, because its node set proceedOnFailure.
         CollectionAssert.Contains(order, "Audit");
