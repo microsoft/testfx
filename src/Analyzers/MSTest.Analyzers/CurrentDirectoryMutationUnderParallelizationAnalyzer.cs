@@ -29,7 +29,7 @@ public sealed class CurrentDirectoryMutationUnderParallelizationAnalyzer : Diagn
         MessageFormat,
         Description,
         Category.Usage,
-        DiagnosticSeverity.Warning,
+        DiagnosticSeverity.Info,
         isEnabledByDefault: true);
 
     /// <inheritdoc />
