@@ -77,17 +77,7 @@ internal sealed class TestDependencyDeclaration
                 continue;
             }
 
-            bool matched = false;
-            foreach (UnitTestElement test in tests)
-            {
-                if (dependent.Matches(test))
-                {
-                    matched = true;
-                    break;
-                }
-            }
-
-            if (!matched)
+            if (!tests.Any(dependent.Matches))
             {
                 logger.SendMessage(
                     MessageLevel.Warning,
