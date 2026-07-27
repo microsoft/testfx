@@ -166,7 +166,11 @@ steps:
       # touches test/** and so triggers this workflow, but changes no .cs file —
       # capture those files too, otherwise the single most safety-relevant change
       # a PR can make (enabling parallelism) would silently bypass the audit.
-      git diff --name-only --diff-filter=AMR "$MERGE_BASE" "$HEAD_SHA" -- 'test/' \
+      # Deletions count here (filter D, unlike the .cs lists above): removing a
+      # .runsettings that set DisableParallelization, or a props file that emitted
+      # [assembly: DoNotParallelize], enables concurrency just as surely as adding
+      # a setting does. A deleted path is still reportable via `git diff`.
+      git diff --name-only --diff-filter=AMRD "$MERGE_BASE" "$HEAD_SHA" -- 'test/' \
         | grep -E '\.(runsettings|csproj|props|targets)$|testconfig\.json$' \
         > "$CONFIG_OUT" || true
 
@@ -279,7 +283,12 @@ If **both** the changed-test-files and changed-config-files lists are empty
   `testconfig.json`, `.csproj` / `.props` / `.targets` under `test/`. A PR can
   turn parallelization **on** without touching a single `.cs` file, and that is
   the highest-value thing this audit can catch. When this list is non-empty,
-  diff those files for the parallelization settings enumerated in Step 0. If the
+  diff those files for the parallelization settings enumerated in Step 0. **This
+  list includes deleted files** — a path here may no longer exist on HEAD, so
+  inspect it with `git diff`, not by reading it. Removing an opt-out (a
+  `.runsettings` setting `DisableParallelization`, a props file emitting
+  `[assembly: DoNotParallelize]`, a `parallelism:enabled: false`) **enables**
+  parallelism exactly as adding an opt-in does; treat it identically. If the
   change **enables** parallelism or **widens** the scope (`off` → `ClassLevel` →
   `MethodLevel`) or raises workers above 1, audit the **whole affected
   assembly**, not just the changed lines: every existing test in it becomes newly
