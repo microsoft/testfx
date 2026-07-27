@@ -142,10 +142,12 @@ steps:
       TEST_OUT="$RUNNER_TEMP/changed-test-files.txt"
       SRC_OUT="$RUNNER_TEMP/changed-src-files.txt"
       CONFIG_OUT="$RUNNER_TEMP/changed-config-files.txt"
+      CS_CANDIDATES="$RUNNER_TEMP/changed-cs-candidates.txt"
       RANGES_OUT="$RUNNER_TEMP/changed-test-regions.tsv"
       : > "$TEST_OUT"
       : > "$SRC_OUT"
       : > "$CONFIG_OUT"
+      : > "$CS_CANDIDATES"
       : > "$RANGES_OUT"
 
       # BASE_SHA is the base branch *tip* when the event fired, not the point the
@@ -175,20 +177,33 @@ steps:
       # this repo lives in a Program.cs or AssemblyInfo.cs that declares no test
       # methods. Such a change lands only in TEST_OUT, where Step 1 finds nothing
       # to audit and falls through to "nothing to audit" — even though every test
-      # in that assembly just became (or stopped being) concurrent. -G selects
-      # files whose diff *adds or removes* a line matching the pattern, so this
-      # catches opting in, opting out, and widening the scope alike.
+      # in that assembly just became (or stopped being) concurrent.
       #
-      # These are CANDIDATES ONLY. -G is a textual diff match and cannot tell
-      # compiled code from a string literal, so it also matches the synthetic
-      # [assembly: Parallelize] payloads embedded in acceptance-test source
-      # (ParallelExecutionTests.cs, ResourceLockExecutionTests.cs). The agent must
-      # confirm the attribute is really compiled into the owning project before
-      # treating the file as a parallelization-state change — see the prompt.
-      git diff --name-only --diff-filter=AMRD \
-        -G'assembly:[[:space:]]*(Parallelize|DoNotParallelize)' \
-        "$MERGE_BASE" "$HEAD_SHA" -- 'test/' \
-        | grep -E '\.cs$' >> "$CONFIG_OUT" || true
+      # Select on file CONTENT, not diff content. Matching the diff (git diff -G)
+      # only fires when an added/removed line itself contains "assembly:", so a
+      # multiline attribute
+      #     [assembly: Parallelize(
+      #         Scope = ExecutionScope.MethodLevel,
+      #         Workers = 0)]
+      # is missed whenever a PR edits just an argument line. Checking both sides
+      # also keeps files where the attribute was added or wholly removed.
+      #
+      # These are CANDIDATES ONLY. grep cannot tell compiled code from a string
+      # literal, so this also matches the synthetic [assembly: Parallelize]
+      # payloads embedded in acceptance-test source (ParallelExecutionTests.cs,
+      # ResourceLockExecutionTests.cs). The agent must confirm the attribute is
+      # really compiled into the owning project before treating the file as a
+      # parallelization-state change — see the prompt.
+      ATTR_RE='assembly:[[:space:]]*(Parallelize|DoNotParallelize)'
+      git diff --name-only --diff-filter=AMRD "$MERGE_BASE" "$HEAD_SHA" -- 'test/' \
+        | grep -E '\.cs$' > "$CS_CANDIDATES" || true
+      while IFS= read -r f; do
+        [[ -n "$f" ]] || continue
+        if git show "$MERGE_BASE:$f" 2>/dev/null | grep -qE "$ATTR_RE" \
+           || git show "$HEAD_SHA:$f" 2>/dev/null | grep -qE "$ATTR_RE"; then
+          printf '%s\n' "$f" >> "$CONFIG_OUT"
+        fi
+      done < "$CS_CANDIDATES"
       sort -u -o "$CONFIG_OUT" "$CONFIG_OUT"
 
       # For each changed test file, emit the HEAD-side (added/modified) line
@@ -309,15 +324,20 @@ If **both** the changed-test-files and changed-config-files lists are empty
   highest-value thing this audit can catch. When this list is non-empty, diff
   those files for the settings enumerated in Step 0.
 
-  **Validate `.cs` entries before trusting them.** The `.cs` entries are matched
-  textually, so they also catch `[assembly: Parallelize]` written inside a
-  **string literal** — the acceptance tests embed synthetic test projects as raw
-  strings (`ParallelExecutionTests.cs`, `ResourceLockExecutionTests.cs`), and
-  those attributes configure the *generated* project, not the acceptance assembly
-  that contains them. Open the file and confirm the attribute is real compiled
-  code at file scope before treating it as a state change. If it sits in a string,
+  **Validate `.cs` entries before trusting them.** A `.cs` file is listed simply
+  because it changed *and* contains an assembly-level parallelization attribute
+  on one side or the other — a `grep`, so it also catches
+  `[assembly: Parallelize]` written inside a **string literal**. The acceptance
+  tests embed synthetic test projects as raw strings
+  (`ParallelExecutionTests.cs`, `ResourceLockExecutionTests.cs`), and those
+  attributes configure the *generated* project, not the acceptance assembly that
+  contains them. Open the file and confirm the attribute is real compiled code at
+  file scope before treating it as a state change. If it sits in a string,
   comment, or generated payload, **ignore it** — do not widen the audit, and do
-  not report the enclosing assembly as newly concurrent.
+  not report the enclosing assembly as newly concurrent. Equally, a file may be
+  listed because it changed for an unrelated reason while merely *containing* the
+  attribute: compare the attribute across the two sides and only widen when it
+  actually changed.
 
   **This list includes deleted
   files** — a path here may no longer exist on HEAD, so inspect it with
