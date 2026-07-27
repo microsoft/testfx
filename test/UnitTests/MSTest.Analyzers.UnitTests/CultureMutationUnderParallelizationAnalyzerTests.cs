@@ -28,12 +28,18 @@ public sealed class CultureMutationUnderParallelizationAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    [|CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture|];
+                    {|#0:CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture|};
                 }
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        // Assert the rendered API argument in the message, not just the diagnostic's presence, so a change to the
+        // message format or to the reported API name is caught.
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(CultureMutationUnderParallelizationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("CultureInfo.DefaultThreadCurrentCulture"));
     }
 
     [TestMethod]
@@ -51,12 +57,16 @@ public sealed class CultureMutationUnderParallelizationAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    [|CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture|];
+                    {|#0:CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture|};
                 }
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(CultureMutationUnderParallelizationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("CultureInfo.DefaultThreadCurrentUICulture"));
     }
 
     [TestMethod]
@@ -105,12 +115,16 @@ public sealed class CultureMutationUnderParallelizationAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    [|CultureInfo.DefaultThreadCurrentCulture ??= CultureInfo.InvariantCulture|];
+                    {|#0:CultureInfo.DefaultThreadCurrentCulture ??= CultureInfo.InvariantCulture|};
                 }
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(CultureMutationUnderParallelizationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("CultureInfo.DefaultThreadCurrentCulture"));
     }
 
     [TestMethod]
@@ -266,11 +280,15 @@ public sealed class CultureMutationUnderParallelizationAnalyzerTests
             Public Class MyTestClass
                 <TestMethod>
                 Public Sub MyTestMethod()
-                    [|CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture|]
+                    {|#0:CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture|}
                 End Sub
             End Class
             """;
 
-        await VerifyVB.VerifyAnalyzerAsync(code);
+        await VerifyVB.VerifyAnalyzerAsync(
+            code,
+            VerifyVB.Diagnostic(CultureMutationUnderParallelizationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("CultureInfo.DefaultThreadCurrentCulture"));
     }
 }

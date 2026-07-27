@@ -28,7 +28,7 @@ public sealed class UndeclaredProcessGlobalStateMutationAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    [|Environment.SetEnvironmentVariable("MY_VAR", "value")|];
+                    {|#0:Environment.SetEnvironmentVariable("MY_VAR", "value")|};
                 }
             }
             """;
@@ -51,7 +51,14 @@ public sealed class UndeclaredProcessGlobalStateMutationAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+        // Assert the rendered message arguments (API name + WellKnownResources member), not just the diagnostic's
+        // presence, so a change to the message format or to the mapped resource member is caught.
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic(UndeclaredProcessGlobalStateMutationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Environment.SetEnvironmentVariable", "EnvironmentVariables"),
+            fixedCode);
     }
 
     [TestMethod]
@@ -70,7 +77,7 @@ public sealed class UndeclaredProcessGlobalStateMutationAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    [|Console.SetOut(TextWriter.Null)|];
+                    {|#0:Console.SetOut(TextWriter.Null)|};
                 }
             }
             """;
@@ -94,7 +101,12 @@ public sealed class UndeclaredProcessGlobalStateMutationAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic(UndeclaredProcessGlobalStateMutationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Console.SetOut", "Console"),
+            fixedCode);
     }
 
     [TestMethod]
@@ -339,11 +351,188 @@ public sealed class UndeclaredProcessGlobalStateMutationAnalyzerTests
             Public Class MyTestClass
                 <TestMethod>
                 Public Sub MyTestMethod()
-                    [|Environment.SetEnvironmentVariable("MY_VAR", "value")|]
+                    {|#0:Environment.SetEnvironmentVariable("MY_VAR", "value")|}
                 End Sub
             End Class
             """;
 
-        await VerifyVB.VerifyAnalyzerAsync(code);
+        await VerifyVB.VerifyAnalyzerAsync(
+            code,
+            VerifyVB.Diagnostic(UndeclaredProcessGlobalStateMutationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Environment.SetEnvironmentVariable", "EnvironmentVariables"));
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodHasMethodLevelDoNotParallelize_NoDiagnostic()
+    {
+        // A [DoNotParallelize] on the test method itself opts that method out of parallelization,
+        // so the mutation is safe and must stay silent.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [DoNotParallelize]
+                public void MyTestMethod()
+                {
+                    Environment.SetEnvironmentVariable("MY_VAR", "value");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenFixtureMethodHasMethodLevelDoNotParallelize_Diagnostic()
+    {
+        // [DoNotParallelize] on a fixture method (here [TestInitialize]) has no effect - the adapter only
+        // honors it on real test methods - so the mutation still races and the diagnostic must fire.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestInitialize]
+                [DoNotParallelize]
+                public void MyInit()
+                {
+                    {|#0:Environment.SetEnvironmentVariable("MY_VAR", "value")|};
+                }
+
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            [ResourceLock(WellKnownResources.EnvironmentVariables)]
+            public class MyTestClass
+            {
+                [TestInitialize]
+                [DoNotParallelize]
+                public void MyInit()
+                {
+                    Environment.SetEnvironmentVariable("MY_VAR", "value");
+                }
+
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic(UndeclaredProcessGlobalStateMutationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Environment.SetEnvironmentVariable", "EnvironmentVariables"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenDerivedDoNotParallelizeOnClass_NoDiagnostic()
+    {
+        // A user attribute deriving from DoNotParallelizeAttribute must be honored the same way the adapter
+        // honors it (it matches derived attributes), so the mutation stays silent.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            public class MyDoNotParallelizeAttribute : DoNotParallelizeAttribute
+            {
+            }
+
+            [TestClass]
+            [MyDoNotParallelize]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    Environment.SetEnvironmentVariable("MY_VAR", "value");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenRecordTestClassFixture_FixAddedToRecord()
+    {
+        // The class-level code fix must land on a record test class too, not only class declarations.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public record MyTestClass
+            {
+                [TestInitialize]
+                public void MyInit()
+                {
+                    {|#0:Environment.SetEnvironmentVariable("MY_VAR", "value")|};
+                }
+
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            [ResourceLock(WellKnownResources.EnvironmentVariables)]
+            public record MyTestClass
+            {
+                [TestInitialize]
+                public void MyInit()
+                {
+                    Environment.SetEnvironmentVariable("MY_VAR", "value");
+                }
+
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic(UndeclaredProcessGlobalStateMutationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Environment.SetEnvironmentVariable", "EnvironmentVariables"),
+            fixedCode);
     }
 }

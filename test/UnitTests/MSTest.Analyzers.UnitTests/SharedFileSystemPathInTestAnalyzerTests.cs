@@ -28,12 +28,17 @@ public sealed class SharedFileSystemPathInTestAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    [|File.WriteAllText("C:\\temp\\shared.txt", "data")|];
+                    {|#0:File.WriteAllText("C:\\temp\\shared.txt", "data")|};
                 }
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        // Assert the offending path rendered in the message, not just the diagnostic's presence.
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(SharedFileSystemPathInTestAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("C:\\temp\\shared.txt"));
     }
 
     [TestMethod]
@@ -51,12 +56,16 @@ public sealed class SharedFileSystemPathInTestAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    [|File.WriteAllText("/tmp/shared.txt", "data")|];
+                    {|#0:File.WriteAllText("/tmp/shared.txt", "data")|};
                 }
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(SharedFileSystemPathInTestAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("/tmp/shared.txt"));
     }
 
     [TestMethod]
@@ -74,12 +83,16 @@ public sealed class SharedFileSystemPathInTestAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    [|File.WriteAllText("output.txt", "data")|];
+                    {|#0:File.WriteAllText("output.txt", "data")|};
                 }
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(SharedFileSystemPathInTestAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("output.txt"));
     }
 
     [TestMethod]
@@ -97,12 +110,16 @@ public sealed class SharedFileSystemPathInTestAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    [|Directory.CreateDirectory("shared-dir")|];
+                    {|#0:Directory.CreateDirectory("shared-dir")|};
                 }
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(SharedFileSystemPathInTestAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("shared-dir"));
     }
 
     [TestMethod]
@@ -264,11 +281,129 @@ public sealed class SharedFileSystemPathInTestAnalyzerTests
             Public Class MyTestClass
                 <TestMethod>
                 Public Sub MyTestMethod()
-                    [|File.WriteAllText("/tmp/shared.txt", "data")|]
+                    {|#0:File.WriteAllText("/tmp/shared.txt", "data")|}
                 End Sub
             End Class
             """;
 
-        await VerifyVB.VerifyAnalyzerAsync(code);
+        await VerifyVB.VerifyAnalyzerAsync(
+            code,
+            VerifyVB.Diagnostic(SharedFileSystemPathInTestAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("/tmp/shared.txt"));
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodCopiesFromConstantSource_NoDiagnostic()
+    {
+        // File.Copy only reads its source, so a constant source path is safe (reading a shared fixture at a fixed
+        // location does not race). The destination here is a variable, so nothing is flagged.
+        string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string destination = Path.GetTempFileName();
+                    File.Copy("C:\\temp\\source.txt", destination);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodCopiesToConstantDestination_Diagnostic()
+    {
+        // File.Copy writes its destination, so a constant destination path is a mutation and must be flagged.
+        string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string source = Path.GetTempFileName();
+                    {|#0:File.Copy(source, "C:\\temp\\dest.txt")|};
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(SharedFileSystemPathInTestAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("C:\\temp\\dest.txt"));
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodReplacesWithConstantBackup_Diagnostic()
+    {
+        // File.Replace creates its backup file, so a constant backup path is a mutation even though the source is read.
+        string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string source = Path.GetTempFileName();
+                    string destination = Path.GetTempFileName();
+                    {|#0:File.Replace(source, destination, "C:\\temp\\shared.bak")|};
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(SharedFileSystemPathInTestAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("C:\\temp\\shared.bak"));
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodMovesFromConstantSource_Diagnostic()
+    {
+        // File.Move deletes its source, so a constant source path is a mutation and must be flagged.
+        string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string destination = Path.GetTempFileName();
+                    {|#0:File.Move("C:\\temp\\source.txt", destination)|};
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(SharedFileSystemPathInTestAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("C:\\temp\\source.txt"));
     }
 }

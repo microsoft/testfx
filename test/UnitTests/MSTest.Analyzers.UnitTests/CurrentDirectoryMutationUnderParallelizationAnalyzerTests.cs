@@ -28,7 +28,7 @@ public sealed class CurrentDirectoryMutationUnderParallelizationAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    [|Directory.SetCurrentDirectory("/tmp")|];
+                    {|#0:Directory.SetCurrentDirectory("/tmp")|};
                 }
             }
             """;
@@ -51,7 +51,13 @@ public sealed class CurrentDirectoryMutationUnderParallelizationAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+        // Assert the rendered API argument in the message, not just the diagnostic's presence.
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic(CurrentDirectoryMutationUnderParallelizationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Directory.SetCurrentDirectory"),
+            fixedCode);
     }
 
     [TestMethod]
@@ -69,7 +75,7 @@ public sealed class CurrentDirectoryMutationUnderParallelizationAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    [|Environment.CurrentDirectory = "/tmp"|];
+                    {|#0:Environment.CurrentDirectory = "/tmp"|};
                 }
             }
             """;
@@ -92,7 +98,12 @@ public sealed class CurrentDirectoryMutationUnderParallelizationAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic(CurrentDirectoryMutationUnderParallelizationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Environment.CurrentDirectory"),
+            fixedCode);
     }
 
     [TestMethod]
@@ -112,7 +123,7 @@ public sealed class CurrentDirectoryMutationUnderParallelizationAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    [|Environment.CurrentDirectory += "sub"|];
+                    {|#0:Environment.CurrentDirectory += "sub"|};
                 }
             }
             """;
@@ -135,7 +146,12 @@ public sealed class CurrentDirectoryMutationUnderParallelizationAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic(CurrentDirectoryMutationUnderParallelizationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Environment.CurrentDirectory"),
+            fixedCode);
     }
 
     [TestMethod]
@@ -266,11 +282,15 @@ public sealed class CurrentDirectoryMutationUnderParallelizationAnalyzerTests
             Public Class MyTestClass
                 <TestMethod>
                 Public Sub MyTestMethod()
-                    [|Directory.SetCurrentDirectory("/tmp")|]
+                    {|#0:Directory.SetCurrentDirectory("/tmp")|}
                 End Sub
             End Class
             """;
 
-        await VerifyVB.VerifyAnalyzerAsync(code);
+        await VerifyVB.VerifyAnalyzerAsync(
+            code,
+            VerifyVB.Diagnostic(CurrentDirectoryMutationUnderParallelizationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Directory.SetCurrentDirectory"));
     }
 }
