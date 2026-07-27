@@ -19,77 +19,77 @@
       </trans-unit>
       <trans-unit id="ArtifactPostProcessingDispatcherCommandLineDescription">
         <source>Internal command line for artifact post-processing.</source>
-        <target state="new">Internal command line for artifact post-processing.</target>
+        <target state="translated">成品後置處理的內部命令列。</target>
         <note />
       </trans-unit>
       <trans-unit id="ArtifactPostProcessingDispatcherDescription">
         <source>Dispatches artifact post-processing jobs selected by dotnet test.</source>
-        <target state="new">Dispatches artifact post-processing jobs selected by dotnet test.</target>
+        <target state="translated">發送 dotnet test 所選取的成品後置處理作業。</target>
         <note>Do not localize command name {Locked="dotnet test"}.</note>
       </trans-unit>
       <trans-unit id="ArtifactPostProcessingDispatcherDisplayName">
         <source>Artifact post-processing dispatcher</source>
-        <target state="new">Artifact post-processing dispatcher</target>
+        <target state="translated">成品後處理發送器</target>
         <note />
       </trans-unit>
       <trans-unit id="ArtifactPostProcessingDispatcherInvalidProcessorOutput">
         <source>The processed artifact must be an existing file under the output directory and cannot overwrite an input artifact.</source>
-        <target state="new">The processed artifact must be an existing file under the output directory and cannot overwrite an input artifact.</target>
+        <target state="translated">已處理的成品必須是輸出目錄下的現有檔案，且不得覆寫輸入成品。</target>
         <note />
       </trans-unit>
       <trans-unit id="ArtifactPostProcessingDispatcherManifestNotFound">
         <source>The artifact post-processing manifest does not exist.</source>
-        <target state="new">The artifact post-processing manifest does not exist.</target>
+        <target state="translated">成品後置處理資訊清單不存在。</target>
         <note />
       </trans-unit>
       <trans-unit id="ArtifactPostProcessingDispatcherManifestOptionDescription">
         <source>Path to the artifact post-processing manifest.</source>
-        <target state="new">Path to the artifact post-processing manifest.</target>
+        <target state="translated">讀取成品後置處理資訊清單的路徑。</target>
         <note />
       </trans-unit>
       <trans-unit id="ArtifactPostProcessingDispatcherProcessorConflict">
         <source>Multiple artifact post-processors match '{0}'. The first registered processor, '{1}', will be used.</source>
-        <target state="new">Multiple artifact post-processors match '{0}'. The first registered processor, '{1}', will be used.</target>
+        <target state="translated">有多個成品後置處理器符合 '{0}'。將使用第一個已註冊的處理器 '{1}'。</target>
         <note>{0} is an artifact kind or file extension. {1} is an extension UID.</note>
       </trans-unit>
       <trans-unit id="ArtifactPostProcessingDispatcherProcessorFailed">
         <source>Artifact post-processor '{0}' failed: {1}</source>
-        <target state="new">Artifact post-processor '{0}' failed: {1}</target>
+        <target state="translated">成品後處理器 '{0}' 失敗: {1}</target>
         <note>{0} is the processor UID. {1} is the exception message.</note>
       </trans-unit>
       <trans-unit id="ArtifactPostProcessingDispatcherRequiresPipe">
         <source>The artifact post-processing dispatcher requires a dotnet test pipe.</source>
-        <target state="new">The artifact post-processing dispatcher requires a dotnet test pipe.</target>
+        <target state="translated">成品後置處理發送器需要 dotnet test 管道。</target>
         <note>Do not localize command name {Locked="dotnet test"}.</note>
       </trans-unit>
       <trans-unit id="ArtifactPostProcessingManifestInputMissingPath">
         <source>Artifact post-processing manifest input {0} does not have a path.</source>
-        <target state="new">Artifact post-processing manifest input {0} does not have a path.</target>
+        <target state="translated">成品後置處理資訊清單輸入 {0} 沒有路徑。</target>
         <note>{0} is the zero-based input index.</note>
       </trans-unit>
       <trans-unit id="ArtifactPostProcessingManifestInputsMustBeArray">
         <source>The artifact post-processing manifest inputs property must be an array.</source>
-        <target state="new">The artifact post-processing manifest inputs property must be an array.</target>
+        <target state="translated">成品後置處理資訊清單的 inputs 屬性必須是陣列。</target>
         <note>Do not localize property name {Locked="inputs"}.</note>
       </trans-unit>
       <trans-unit id="ArtifactPostProcessingManifestInvalid">
         <source>The artifact post-processing manifest must have schemaVersion 1 and an outputDirectory.</source>
-        <target state="new">The artifact post-processing manifest must have schemaVersion 1 and an outputDirectory.</target>
+        <target state="translated">成品後置處理資訊清單必須具有 schemaVersion 1 和 outputDirectory。</target>
         <note>Do not localize property names {Locked="schemaVersion"}{Locked="outputDirectory"}.</note>
       </trans-unit>
       <trans-unit id="ArtifactPostProcessingManifestReadError">
         <source>Cannot read the artifact post-processing manifest: {0}</source>
-        <target state="new">Cannot read the artifact post-processing manifest: {0}</target>
+        <target state="translated">無法讀取成品後置處理資訊清單: {0}</target>
         <note>{0} is the exception message.</note>
       </trans-unit>
       <trans-unit id="ArtifactPostProcessorCapabilityContainsSeparator">
         <source>Artifact post-processor '{0}' declares capability '{1}', which cannot contain the semicolon separator.</source>
-        <target state="new">Artifact post-processor '{0}' declares capability '{1}', which cannot contain the semicolon separator.</target>
+        <target state="translated">成品後置處理器 '{0}' 宣告了功能 '{1}'，其中不能包含分號分隔符號。</target>
         <note>{0} is the processor UID. {1} is an artifact kind or file extension.</note>
       </trans-unit>
       <trans-unit id="ArtifactPostProcessorCapabilityInvalid">
         <source>Artifact post-processor '{0}' declares invalid capability '{1}'. Kinds cannot be blank, and fallback extensions must be lowercase and start with a dot.</source>
-        <target state="new">Artifact post-processor '{0}' declares invalid capability '{1}'. Kinds cannot be blank, and fallback extensions must be lowercase and start with a dot.</target>
+        <target state="translated">成品後置處理器 '{0}' 宣告無效的功能 '{1}'。種類不可為空白，而備援副檔名必須是小寫，且以點開頭。</target>
         <note>{0} is the processor UID. {1} is an artifact kind or file extension.</note>
       </trans-unit>
       <trans-unit id="CancellingTestSession">
@@ -623,37 +623,37 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestCliRequiresTransport">
         <source>'--server dotnettestcli' requires either '--dotnet-test-pipe' or '--dotnet-test-transport http'.</source>
-        <target state="new">'--server dotnettestcli' requires either '--dotnet-test-pipe' or '--dotnet-test-transport http'.</target>
+        <target state="translated">'--server dotnettestcli' 需要 '--dotnet-test-pipe' 或 '--dotnet-test-transport http'。</target>
         <note>{Locked="--server dotnettestcli"}{Locked="--dotnet-test-pipe"}{Locked="--dotnet-test-transport http"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestHttpEndpointInvalid">
         <source>'--dotnet-test-http-endpoint' requires an absolute HTTPS URL, or an HTTP loopback URL, without user information, query, or fragment.</source>
-        <target state="new">'--dotnet-test-http-endpoint' requires an absolute HTTPS URL, or an HTTP loopback URL, without user information, query, or fragment.</target>
+        <target state="translated">'--dotnet-test-http-endpoint' 需要絕對 HTTPS URL 或 HTTP 回送 URL，但不含使用者資訊、查詢或片段。</target>
         <note>{Locked="--dotnet-test-http-endpoint"}{Locked="HTTP"}{Locked="HTTPS"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestHttpEndpointOptionDescription">
         <source>Specifies the authenticated HTTP endpoint for the dotnet test protocol.</source>
-        <target state="new">Specifies the authenticated HTTP endpoint for the dotnet test protocol.</target>
+        <target state="translated">指定 dotnet test 通訊協定的已驗證 HTTP 端點。</target>
         <note>{Locked="HTTP"}{Locked="dotnet test"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestHttpOptionsRequireTransport">
         <source>The dotnet test HTTP endpoint and token options require '--dotnet-test-transport http'.</source>
-        <target state="new">The dotnet test HTTP endpoint and token options require '--dotnet-test-transport http'.</target>
+        <target state="translated">dotnet test HTTP 端點和權杖選項需要 '--dotnet-test-transport http'。</target>
         <note>{Locked="dotnet test"}{Locked="HTTP"}{Locked="--dotnet-test-transport http"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestHttpRequiresEndpointAndToken">
         <source>'--dotnet-test-transport http' requires both '--dotnet-test-http-endpoint' and '--dotnet-test-http-token'.</source>
-        <target state="new">'--dotnet-test-transport http' requires both '--dotnet-test-http-endpoint' and '--dotnet-test-http-token'.</target>
+        <target state="translated">'--dotnet-test-transport http' 需要 '--dotnet-test-http-endpoint' 和 '--dotnet-test-http-token'。</target>
         <note>{Locked="--dotnet-test-transport http"}{Locked="--dotnet-test-http-endpoint"}{Locked="--dotnet-test-http-token"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestHttpTokenInvalid">
         <source>'--dotnet-test-http-token' requires a non-empty valid bearer token without whitespace or control characters.</source>
-        <target state="new">'--dotnet-test-http-token' requires a non-empty valid bearer token without whitespace or control characters.</target>
+        <target state="translated">'--dotnet-test-http-token' 需要非空白的有效持有人權杖，但不含空白或控制字元。</target>
         <note>{Locked="--dotnet-test-http-token"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestHttpTokenOptionDescription">
         <source>Specifies the per-run HTTP bearer token for the dotnet test protocol.</source>
-        <target state="new">Specifies the per-run HTTP bearer token for the dotnet test protocol.</target>
+        <target state="translated">指定 dotnet test 通訊協定的每個執行 HTTP 持有人權杖。</target>
         <note>{Locked="HTTP"}{Locked="dotnet test"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
@@ -663,17 +663,17 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestTransportConflict">
         <source>The dotnet test named-pipe and HTTP transports cannot be selected together.</source>
-        <target state="new">The dotnet test named-pipe and HTTP transports cannot be selected together.</target>
+        <target state="translated">無法同時選取 dotnet test 具名管道和 HTTP 傳輸。</target>
         <note>{Locked="dotnet test"}{Locked="HTTP"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestTransportInvalid">
         <source>'--dotnet-test-transport' received unexpected value '{0}'. Supported values are: {1}.</source>
-        <target state="new">'--dotnet-test-transport' received unexpected value '{0}'. Supported values are: {1}.</target>
+        <target state="translated">'--dotnet-test-transport' 收到未預期的值 '{0}'。支援的值: {1}。</target>
         <note>{0} is the unexpected transport value. {1} is the comma-separated list of supported transport values. {Locked="--dotnet-test-transport"}{Locked="pipe"}{Locked="http"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestTransportOptionDescription">
         <source>Selects the pre-launch transport for the dotnet test protocol.</source>
-        <target state="new">Selects the pre-launch transport for the dotnet test protocol.</target>
+        <target state="translated">選取 dotnet test 通訊協定的啟動前傳輸。</target>
         <note>{Locked="dotnet test"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
@@ -749,12 +749,12 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
       </trans-unit>
       <trans-unit id="PlatformCommandLinePipeTransportNotSupportedOnBrowser">
         <source>The dotnet test named-pipe transport is not supported on browser-wasm. Use '--dotnet-test-transport http'.</source>
-        <target state="new">The dotnet test named-pipe transport is not supported on browser-wasm. Use '--dotnet-test-transport http'.</target>
+        <target state="translated">browser-wasm 不支援 dotnet test 具名管道傳輸。使用 '--dotnet-test-transport http'。</target>
         <note>{Locked="dotnet test"}{Locked="browser-wasm"}{Locked="--dotnet-test-transport http"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLinePipeTransportNotSupportedOnWasi">
         <source>The dotnet test named-pipe transport is not supported on wasi-wasm. Use '--dotnet-test-transport http'.</source>
-        <target state="new">The dotnet test named-pipe transport is not supported on wasi-wasm. Use '--dotnet-test-transport http'.</target>
+        <target state="translated">wasi-wasm 不支援 dotnet test 具名管道傳輸。使用 '--dotnet-test-transport http'。</target>
         <note>{Locked="dotnet test"}{Locked="wasi-wasm"}{Locked="--dotnet-test-transport http"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLinePortOptionDescription">
