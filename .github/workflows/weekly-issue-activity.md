@@ -24,6 +24,11 @@ tools:
   github:
     toolsets:
       - issues
+      # Required by the MCP gateway's github guard: it resolves repository visibility
+      # through `search_repositories`. Without the `search` toolset that call fails and
+      # the guard fails closed, labelling every issue `secrecy: private` and filtering
+      # the whole response out of the agent's view.
+      - search
     min-integrity: none # This workflow is allowed to examine and comment on any issues or PRs
 
 safe-outputs:
@@ -38,11 +43,14 @@ safe-outputs:
     close-older-discussions: true
 
 steps:
+  # Pin CPython explicitly: inside the agent sandbox `python3` resolves to PyPy from the
+  # runner tool cache, which has a different user site-packages directory and no
+  # prebuilt wheels for these packages.
   - name: Setup Python environment
     run: |
       mkdir -p /tmp/gh-aw/agent/charts /tmp/gh-aw/agent/data
-      pip install --user --quiet numpy pandas matplotlib seaborn scipy
-      python3 -c "import pandas, matplotlib, seaborn; print('Python environment ready')"
+      /usr/bin/python3 -m pip install --user --quiet numpy pandas matplotlib seaborn scipy
+      /usr/bin/python3 -c "import pandas, matplotlib, seaborn; print('Python environment ready')"
 ---
 
 # Weekly Issue Summary
@@ -91,6 +99,8 @@ Run your Python scripts via bash and verify the charts exist before proceeding.
 
 ### Python Notes
 
+- Always invoke Python as `/usr/bin/python3` — the sandbox's default `python3` is PyPy from the runner tool cache and does **not** have the charting packages
+- Do **not** run `pip install` yourself; `numpy`, `pandas`, `matplotlib`, `seaborn` and `scipy` are already installed for `/usr/bin/python3`
 - Use pandas for data manipulation and datetime handling
 - Use `matplotlib.pyplot` and `seaborn` for visualization
 - Apply `plt.tight_layout()` before saving
