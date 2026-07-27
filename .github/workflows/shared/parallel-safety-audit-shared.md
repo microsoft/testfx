@@ -203,7 +203,15 @@ steps:
       # renames the file *and* removes the attribute would otherwise be invisible,
       # since the destination path does not exist at the merge base and no longer
       # carries the attribute at HEAD.
-      ATTR_RE='assembly:[[:space:]]*(Parallelize|DoNotParallelize)'
+      # Match the assembly-attribute TARGET, not the attribute name. A name-based
+      # grep misses legal spellings that still opt in — a fully qualified
+      # [assembly: Microsoft.VisualStudio.TestTools.UnitTesting.Parallelize(...)],
+      # a using-alias, or a line break after "assembly:" — any of which would
+      # enable parallelism while leaving CONFIG_OUT empty. Casting wide is safe
+      # here because every candidate is validated semantically by the agent; the
+      # extra hits are files carrying unrelated assembly attributes, which it
+      # discards.
+      ATTR_RE='\[[[:space:]]*assembly[[:space:]]*:'
       git diff --name-status --diff-filter=AMRD "$MERGE_BASE" "$HEAD_SHA" -- 'test/' \
         | awk -F'\t' '{ for (i = 2; i <= NF; i++) if ($i != "") print $i }' \
         | grep -E '\.cs$' > "$CS_CANDIDATES" || true
@@ -335,19 +343,22 @@ If **both** the changed-test-files and changed-config-files lists are empty
   those files for the settings enumerated in Step 0.
 
   **Validate `.cs` entries before trusting them.** A `.cs` file is listed simply
-  because it changed *and* contains an assembly-level parallelization attribute
-  on one side or the other — a `grep`, so it also catches
-  `[assembly: Parallelize]` written inside a **string literal**. The acceptance
-  tests embed synthetic test projects as raw strings
+  because it changed *and* carries **any** assembly-targeted attribute
+  (`[assembly: …]`) on one side or the other. The filter deliberately matches the
+  attribute *target* rather than the attribute name, so that fully qualified,
+  aliased or line-wrapped spellings of `Parallelize` are not missed — which means
+  most entries will be irrelevant. **First confirm the attribute is actually a
+  parallelization attribute** (`Parallelize` / `DoNotParallelize`, however
+  spelled); a file carrying only `InternalsVisibleTo`, `CLSCompliant` and the
+  like is **not** a state change. Then confirm it is real compiled code at file
+  scope: the acceptance tests embed synthetic test projects as raw strings
   (`ParallelExecutionTests.cs`, `ResourceLockExecutionTests.cs`), and those
   attributes configure the *generated* project, not the acceptance assembly that
-  contains them. Open the file and confirm the attribute is real compiled code at
-  file scope before treating it as a state change. If it sits in a string,
-  comment, or generated payload, **ignore it** — do not widen the audit, and do
-  not report the enclosing assembly as newly concurrent. Equally, a file may be
-  listed because it changed for an unrelated reason while merely *containing* the
-  attribute: compare the attribute across the two sides and only widen when it
-  actually changed.
+  contains them. If it sits in a string, comment, or generated payload,
+  **ignore it** — do not widen the audit, and do not report the enclosing
+  assembly as newly concurrent. Equally, a file may be listed because it changed
+  for an unrelated reason while merely *containing* the attribute: compare the
+  attribute across the two sides and only widen when it actually changed.
 
   **This list includes deleted
   files** — a path here may no longer exist on HEAD, so inspect it with
@@ -741,10 +752,15 @@ Non-negotiable rules:
   under-locking fails **flaky** (intermittent, expensive, erodes trust). Default
   recommendations toward safety: a category-D throughput finding **never
   outranks** a category-A/C safety finding.
-- **Rank category D by speedup arithmetic.** With N workers, a lock covering
-  fraction `s` of total suite time caps speedup at `min(N, 1/s)`. Splitting a
-  key only pays when `s > 1/N`. **Do not recommend splitting a lock that covers
-  ~2% of runtime** — say so explicitly and leave it. When you cannot estimate
+- **Rank category D by speedup arithmetic.** Estimate `s`, the fraction of total
+  suite time the lock serializes, then compare what the suite can reach today,
+  `1 / (s + (1 - s)/N)`, against `N` if `s` were eliminated. Rank findings by that
+  **gain** and state it. There is **no fixed cutoff** below which a lock is safe
+  to ignore, because the gain grows with `N`: `s = 0.02` is worth ~14% at
+  `N = 8` but ~60% at `N = 32`. In particular do **not** use `s > 1/N` as a
+  break-even test — it is a statement about when the `1/s` ceiling binds, not
+  about whether fixing `s` pays. At `N = 8`, `s = 0.10` sits below `1/N` yet
+  still caps the suite at ~4.7x against a possible 8x. When you cannot estimate
   `s`, say the recommendation is unquantified rather than inventing a number.
 
 ---
