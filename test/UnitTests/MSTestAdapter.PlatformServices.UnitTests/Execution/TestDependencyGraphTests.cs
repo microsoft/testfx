@@ -219,11 +219,14 @@ public sealed class TestDependencyGraphTests : TestContainer
 
         NamesOfBroken(graph.BrokenTests).Should().BeEquivalentTo(["A", "B", "C"]);
 
-        // All three are in one strongly connected component, so they share a single description.
+        // All three are in one strongly connected component, so they share a single description. The message
+        // renders one real cycle path (A > B > A here), which need not name every member - membership is
+        // asserted above. Comparing against the single error is what catches a member being handed a
+        // different, or an unrelated cycle's, description.
         graph.Errors.Should().ContainSingle();
         foreach (TestDependencyGraph.BrokenTest broken in graph.BrokenTests)
         {
-            broken.CycleMessage.Should().Contain("A").And.Contain("B").And.Contain("C");
+            broken.CycleMessage.Should().Be(graph.Errors[0]);
         }
 
         // Nothing cyclic may be scheduled.

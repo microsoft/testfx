@@ -271,13 +271,17 @@ dependents runs in a `finally`, so a chunk that *throws* also cannot strand the 
 
 ### Testing
 
-- `test/UnitTests/MSTestAdapter.PlatformServices.UnitTests/Execution/TestDependencyGraphTests.cs` — 19
+- `test/UnitTests/MSTestAdapter.PlatformServices.UnitTests/Execution/TestDependencyGraphTests.cs` — 24
   tests over resolution, fan-out independence, cycles (real and projection-only), demotion, the
   unmatched-reference warning, `ProceedOnFailure` merging, ordering determinism, and encode/decode.
 - `test/IntegrationTests/MSTest.Acceptance.IntegrationTests/TestDependencyExecutionTests.cs` — end-to-end
-  over net462/net8.0/net10.0. The assets record the millisecond each test body entered and left, so the
-  ordering guarantee **and** the overlap of independent branches are both asserted against real timings,
-  not inferred. Also covers skip propagation with `ProceedOnFailure`, cycle reporting, and the `testconfig.json` declarations (ordering via `chains`, plus fan-out from `nodes` where one dependent is skipped and a `proceedOnFailure` sibling still runs).
+  over net462/net8.0/net10.0. The assets record the millisecond each test body entered and left, and those
+  timestamps assert the *ordering* guarantee only. Overlap of independent branches is proved structurally
+  instead, by a bounded `CountdownEvent` that both branches must reach before either is released - a run
+  that serialized them never satisfies it and fails on the timeout. Inferring overlap from wall-clock
+  timings would be flaky on a loaded machine, so it is deliberately not done. Also covers skip propagation
+  with `ProceedOnFailure`, cycle reporting, and the `testconfig.json` declarations (ordering via `chains`,
+  plus fan-out from `nodes` where one dependent is skipped and a `proceedOnFailure` sibling still runs).
 
 ## Guidance
 

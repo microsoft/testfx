@@ -188,7 +188,7 @@ internal sealed class TestDependencyGraph
         // make the run-time gate skip them nondeterministically, because a prerequisite that has not run yet
         // is indistinguishable from one that failed - the affected tests are moved into the sequential phase,
         // where the topological order can be honoured exactly. The cost is parallelism for those tests only,
-        // and the reported error tells the user how to get it back.
+        // and the reported warning tells the user how to get it back.
         if (projectionCycleTests is not null)
         {
             foreach (int index in projectionCycleTests)
