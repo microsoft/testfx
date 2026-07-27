@@ -3,7 +3,7 @@
 
 namespace Microsoft.Testing.Platform.Helpers;
 
-// Adapted from https://github.com/dotnet/sdk/tree/79e9664eb6918a0d6b78d1018e196a468901977f/src/Cli/dotnet/Telemetry/LLMEnvironmentDetectorForTelemetry.cs
+// Adapted from https://github.com/dotnet/sdk/blob/79e9664eb6918a0d6b78d1018e196a468901977f/src/Cli/dotnet/Telemetry/LLMEnvironmentDetectorForTelemetry.cs
 // Diverged from the upstream telemetry-only version so detection results can drive
 // user-facing platform defaults (ANSI mode, banner, --show-stdout/--show-stderr).
 // IMPORTANT: keep the environment-variable list below in sync with
