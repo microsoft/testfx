@@ -167,11 +167,11 @@ explicitly in frontmatter is a no-op; the compiled condition is byte-identical.
 (`install_copilot_cli.sh <version>`), taken from gh-aw's own `DefaultCopilotVersion` constant.
 Passing an explicit version makes `install_copilot_cli.sh` skip compat-matrix resolution, so the
 toolcache lookup runs with `range: none..none` and can never match the CLI the hosted runner image
-already ships. Every agentic job therefore downloads the CLI twice (once in `agent`, once in
-`detection`), and each download is a chance to hit a transient GitHub CDN 5xx. The gap is
-structural, not a stale-image problem: `github/gh-aw-actions`'s `compat.json` caps `max-agent` at
-`1.0.56` (exactly what the runner image caches), while `DefaultCopilotVersion` is already `1.0.73`
-on gh-aw v0.83.1 and `1.0.75` on `main` — so bumping gh-aw *widens* the gap.
+already ships. Every agentic workflow run therefore downloads the CLI twice — once in the `agent`
+job, once in the `detection` job — and each download is a chance to hit a transient GitHub CDN 5xx.
+The gap is structural, not a stale-image problem: `github/gh-aw-actions`'s `compat.json` caps
+`max-agent` at `1.0.56` (exactly what the runner image caches), while `DefaultCopilotVersion` is
+already `1.0.73` on gh-aw v0.83.1 and `1.0.75` on `main` — so bumping gh-aw *widens* the gap.
 
 **There is no repo-side fix.** All of the following were evaluated and rejected:
 
