@@ -221,8 +221,19 @@ to:
 3. **Workers.** `[Parallelize(Workers = 0)]` means "one worker per logical
    processor"; a positive N pins the count. Record N (or "CPU count") — you
    need it for the speedup arithmetic in category D.
+4. **Analyzer coverage gate.** The parallel-safety analyzers
+   (**MSTEST0074 / 0075 / 0076 / 0077**) fire **only** when the opt-in is an
+   `[assembly: Parallelize]` attribute **or** `.editorconfig` sets
+   `mstest_parallel_safety_mode = always`. A suite that opts into parallelization
+   **purely via `.runsettings` or the `MSTestParallelizeScope` MSBuild property**
+   gets **no analyzer coverage at all** — the compile-time net is silently off.
+   Record whether the opt-in is attribute/editorconfig (analyzer-covered) or
+   runsettings/MSBuild-only (**not** covered).
 
-Encode these three facts. They drive every severity below.
+Encode these facts. They drive every severity below, and item 4 changes how you
+frame the whole report: **when the opt-in is runsettings/MSBuild-only, this audit
+is the *only* thing that will catch these findings.** Say that explicitly in the
+header — it is the single most valuable sentence in that configuration.
 
 ### Why the scope matters (do not get this wrong)
 
@@ -269,21 +280,36 @@ dependency.
   setter; `Directory.SetCurrentDirectory(...)`. **CWD and env vars are
   process-global on every OS — there is no per-thread CWD.**
   `[DeploymentItem]` also mutates CWD process-wide for the whole assembly
-  (testfx#6884, closed by-design).
-- **Culture — do not flatten into one rule; the scope matters:**
+  (testfx#6884, closed by-design). **Cross-ref:** the analyzer **MSTEST0074**
+  (`UndeclaredProcessGlobalStateMutationAnalyzer`, Info) covers *undeclared*
+  `Environment.SetEnvironmentVariable` / `Console.Set*`; **MSTEST0075**
+  (`CurrentDirectoryMutationUnderParallelizationAnalyzer`, Warning) covers the
+  `Environment.CurrentDirectory` setter / `Directory.SetCurrentDirectory`. Cite
+  the id when the mutation is in scope for the analyzer (see the gate note below).
+- **Culture — do not flatten into one rule; the scope matters. Two forms are
+  unsafe, one is explicitly safe — say so for all three:**
   - `CultureInfo.DefaultThreadCurrentCulture` / `DefaultThreadCurrentUICulture`
-    are **process-wide → dangerous.** Treat as category A.
+    are **app-domain / process-wide → dangerous.** Treat as category A. **Flag.**
   - `Thread.CurrentThread.CurrentCulture` / `CurrentUICulture` are
     thread-scoped, but the thread is a **pooled worker reused by later tests**,
     so the mutation **leaks forward** to whatever test runs next on that thread.
     Category A, but note the leak-forward mechanism (it corrupts *successors*,
-    not concurrent siblings).
+    not concurrent siblings). **Flag.**
   - `CultureInfo.CurrentCulture` / `CurrentUICulture` (the plain instance
-    setters) are `AsyncLocal`-backed on .NET Core and do **not** corrupt sibling
-    tests — a **weak signal at most.** Do not raise these above Info unless you
-    can show a concrete leak.
+    setters) are **`ExecutionContext`-flowed** on .NET Core: the value flows to
+    async continuations within the *same* logical call but does **not** corrupt
+    sibling or successor tests. **Do not flag — this is *not* a parallel-safety
+    problem.** State this explicitly in the report if a reader might expect it:
+    someone burned by the other two forms will assume *all* culture mutation is
+    dangerous, and the useful thing to say is *why this one is not* (context
+    flow, not shared thread/process state).
+  - **Cross-ref, do not re-derive:** the analyzer **MSTEST0076**
+    (`CultureMutationUnderParallelizationAnalyzer`, Warning) covers exactly the
+    two flagged forms and deliberately omits the third. When you flag a culture
+    mutation, cite MSTEST0076 rather than re-explaining the mechanism.
 - `Console.SetOut` / `SetError` / `SetIn`; `Console.OutputEncoding` /
-  `ForegroundColor` / other console state.
+  `ForegroundColor` / other console state. (The `Console.Set*` writers are also
+  covered by **MSTEST0074** when undeclared.)
 - **Mutable `static` fields written by tests** — including state populated in
   `[AssemblyInitialize]` / `[ClassInitialize]` and *mutated later* by a test.
   Static singletons, caches, and `static` collections are the classic silent
@@ -297,10 +323,26 @@ locking, because the leak crosses tests.
 
 ### B. Shared filesystem paths — usually *eliminable*, which is the better fix
 
-- Hardcoded absolute literals: `"C:\\temp\\x.txt"`, `"/tmp/foo"`,
-  `@"C:\build\out"`.
-- `Path.Combine(Path.GetTempPath(), <constant>)` — the classic collision: two
-  tests compute the same shared path under the temp root.
+**Division of labour (important — this is where you earn your keep).** The
+analyzer **MSTEST0077** (`SharedFileSystemPathInTestAnalyzer`, Info) fires **only**
+when a constant or relative literal is passed **directly to a mutating**
+`File.*` / `Directory.*` API. It was deliberately narrowed to that after
+dogfooding showed that flagging path *construction* produced **8 false positives
+out of 8 hits** — every "hit" built a path *string* used as a **pure value** (a
+hash input, a deliberately-nonexistent `"missing-ffmpeg"` sentinel, an XML
+attribute value, a mock return, a string compared by equality); **none performed
+colliding I/O.** The analyzer sees the *call*, not the *resource*, so it cannot
+tell a colliding write from a string used as a hash key.
+
+**You can — because you can read what happens to the value afterwards. So
+everything except "literal passed straight into a mutating FS call" is yours:**
+
+- `Path.Combine(Path.GetTempPath(), <constant>)` and other **path construction**
+  — the classic collision, *but only if the constructed path is then read from
+  or written to by more than one test.* Trace the value: if it is only hashed,
+  compared, returned from a mock, or used as a sentinel that is never opened, it
+  is **not a finding.** Require evidence of **actual colliding I/O** before
+  flagging.
 - **Relative paths** — *doubly* unsafe: resolved against the process-global CWD
   **and** shared between tests. `"./out/result.txt"`, `"bin\\artifacts"`.
 - **Paths computed in helpers, `const`s, fixture fields, or config values —
@@ -308,6 +350,17 @@ locking, because the leak crosses tests.
   analyzer: follow the path through a helper method, a `const`, a base-class
   fixture field, or a `.runsettings`/config value, and decide whether two tests
   can actually collide on it. **Do this work — it is the value proposition.**
+- Hardcoded absolute literals (`"C:\\temp\\x.txt"`, `"/tmp/foo"`,
+  `@"C:\build\out"`) written by more than one test. When the literal is passed
+  *straight* into a mutating `File.*`/`Directory.*` call, note that MSTEST0077
+  already covers it; your added value is the **cross-test collision** judgement
+  the analyzer cannot make.
+
+**Make the I/O claim visible.** When you flag a constructed path, say *what
+happens to it* — "this path is constructed **and then written to** by
+`WriteResult`, and two tests reach it with the same constant" is a materially
+stronger, more actionable claim than "this path is constructed." If you cannot
+show the write, do not raise it above Info, and say the I/O is unconfirmed.
 
 → **Fix:** prefer **elimination** — give each test its own directory via
 `TestContext.TestTempDirectory` (a per-test unique dir, lazily created, deleted
@@ -322,7 +375,12 @@ Compare what a test **touches** against what it **declares**
 - **Under-declaration.** A test mutates process-global state (category A) but
   declares no `[ResourceLock]` / `[DoNotParallelize]` → **latent race.** This is
   the fail-open weakness of free-form string keys: nothing forces the
-  declaration, so the audit is the thing that closes it.
+  declaration. Analyzers **MSTEST0074 / MSTEST0075 / MSTEST0076** now catch the
+  common single-call cases at compile time — **but only when they are in scope**
+  (see the analyzer-gate note in Step 0). Your unique value is (a) under-declared
+  mutations the analyzers miss because their gate is off — the runsettings-only
+  opt-in is the big one — and (b) mutations reached **through helpers / fixtures**
+  that a single-call analyzer does not follow. Lead with those.
 - **Over-declaration.** A declared `[ResourceLock("key")]` whose resource the
   test never appears to touch → **needless serialization**, recoverable
   throughput. (Category-D flavoured.)
@@ -411,9 +469,11 @@ Post **exactly one** `add-comment`. Structure:
 ```markdown
 ### 🧵 Parallel-safety audit — PR #<number>
 
-**Parallelization:** `<off | ClassLevel | MethodLevel>`, workers `<N | CPU count | n/a>`.
+**Parallelization:** `<off | ClassLevel | MethodLevel>`, workers `<N | CPU count | n/a>`. **Analyzer coverage:** `<on (attribute/editorconfig) | OFF (runsettings/MSBuild-only) | n/a>`.
 <!-- If off, add this exact banner line: -->
 > ⚠️ Parallelization is **OFF** for these tests — this is a **readiness checklist**, not live bugs. Nothing here fails today; everything listed is what to fix *before* enabling `[Parallelize]`.
+<!-- If opt-in is runsettings/MSBuild-only (analyzer coverage OFF), add this banner: -->
+> 🛈 Parallelization is enabled via **runsettings/MSBuild only**, so the MSTEST0074–0077 analyzers **do not run** on this suite — this audit is the **only** check catching these findings.
 
 **Findings:** A (global-state) `x` · B (paths) `x` · C (declaration) `x` · D (over-serialization) `x` — by severity: Critical `x` · High `x` · Warning `x` · Info `x`.
 
