@@ -241,7 +241,18 @@ steps:
                     n = split(hunk, a, ",")
                     start = a[1] + 0
                     count = (n == 2 ? a[2] + 0 : 1)
-                    if (count == 0) next
+                    if (count == 0) {
+                      # Deletion-only hunk: the new side has no lines, but a
+                      # removal is a first-class change here — deleting a
+                      # [ResourceLock], a [DoNotParallelize], or a finally-block
+                      # restore introduces exactly the hazards this audit looks
+                      # for. Emit a single-line anchor at the preceding new-side
+                      # line so the region survives; the agent is told to inspect
+                      # the removed side with git diff.
+                      anchor = (start < 1 ? 1 : start)
+                      printf("%d-%d,", anchor, anchor)
+                      next
+                    }
                     end = start + count - 1
                     printf("%d-%d,", start, end)
                   }
@@ -312,7 +323,18 @@ A deterministic pre-step has produced two lists for pull request
   `path<TAB>start-end,start-end` giving the **HEAD-side** lines this PR added or
   modified in each changed test file. A finding is a **primary** finding only when
   the unsafe call site falls inside one of these ranges (or inside a test method
-  whose body the PR touched). An unsafe call site that lies **outside** every
+  whose body the PR touched).
+
+  **Deletions appear as single-line anchors.** A hunk that only removes lines has
+  no HEAD-side content, so it is recorded as a one-line range at the preceding
+  line. Treat those as first-class PR changes, not noise: **run `git diff` on the
+  file and read the removed side**. Deleting a `[ResourceLock]`, a
+  `[DoNotParallelize]`, a `finally` block that restored an environment variable
+  or culture, or a cleanup that deleted a shared file *introduces* the hazard just
+  as surely as adding a mutation does, and must be reported as a **primary**
+  finding attributable to this PR.
+
+  An unsafe call site that lies **outside** every
   changed range is *pre-existing*: report it at most as **context / Info** ("this
   file already contains …"), never as though the PR introduced it. A one-line edit
   must not light up every legacy method in the file.
