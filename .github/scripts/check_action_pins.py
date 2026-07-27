@@ -22,9 +22,11 @@ statement about the emitted bytes. This script is the missing gate.
 
 Checks
 ------
-  A. Every external `uses:` reference is pinned to a 40-character commit SHA.
-  B. Every pinned reference carries a trailing comment that actually looks like a
-     version, so a placeholder such as `# TODO` cannot stand in for one.
+  A. Every repository-style `uses:` reference is pinned to a 40-character commit
+     SHA, and every `docker://` container action is pinned to an image digest.
+     Both execute arbitrary code, so both must be immutable.
+  B. Every pinned repository reference carries a trailing comment that actually
+     looks like a version, so a placeholder such as `# TODO` cannot stand in.
   C. For actions tracked in .github/aw/actions-lock.json, the version comment
      matches the version recorded there (catches the v7.0.1 -> v7.0.0 downgrade).
   D. Each action repository resolves to exactly one SHA across all workflow
@@ -81,6 +83,9 @@ WORKFLOWS_DIR = REPO_ROOT / ".github" / "workflows"
 ACTIONS_LOCK_PATH = REPO_ROOT / ".github" / "aw" / "actions-lock.json"
 
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+DOCKER_PREFIX = "docker://"
+# `docker://` container actions are pinned by image digest rather than commit SHA.
+IMAGE_DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 # A version comment must actually look like a version. Accepting any non-empty
 # token would let `# TODO` satisfy check B, which matters most for actions the
 # ledger does not track and therefore cannot cross-check.
@@ -116,13 +121,18 @@ LISTED_RE = re.compile(
 
 @dataclass(frozen=True)
 class Reference:
-    """A single `owner/repo[/path]@ref` occurrence found in a workflow file."""
+    """A single `uses` occurrence found in a workflow file."""
 
     path: Path
     line_number: int
+    raw: str
     repo: str
     ref: str
     version: str | None
+
+    @property
+    def is_docker(self) -> bool:
+        return self.raw.startswith(DOCKER_PREFIX)
 
     @property
     def location(self) -> str:
@@ -149,8 +159,8 @@ def load_ledger() -> dict[str, dict[str, str]]:
 
 
 def is_external_action(ref: str) -> bool:
-    """Filter out local actions, reusable workflows, containers and expressions."""
-    if not ref or ref.startswith(("./", "../", ".github/", "docker://")):
+    """True for a repository-style `owner/repo[/path]@ref` action reference."""
+    if not ref or ref.startswith(("./", "../", ".github/", DOCKER_PREFIX)):
         return False
     if "${{" in ref:
         return False
@@ -164,12 +174,24 @@ def is_external_action(ref: str) -> bool:
     return bool(slash) and "." not in owner and ":" not in repo
 
 
+def is_docker_action(ref: str) -> bool:
+    """True for a `docker://` container action, which Actions executes like any other."""
+    return ref.startswith(DOCKER_PREFIX) and "${{" not in ref
+
+
+def is_checkable_uses(ref: str) -> bool:
+    """True for any `uses` form this gate is responsible for holding immutable."""
+    return is_external_action(ref) or is_docker_action(ref)
+
+
 def parse_reference(path: Path, line_number: int, ref: str, comment: str | None) -> Reference:
     repo, _, pinned = ref.partition("@")
     # Version comments may carry a suffix, e.g. `# v9.0.0 (source v9)`.
     version = comment.split()[0] if comment and comment.split() else None
 
-    return Reference(path=path, line_number=line_number, repo=repo, ref=pinned, version=version)
+    return Reference(
+        path=path, line_number=line_number, raw=ref, repo=repo, ref=pinned, version=version
+    )
 
 
 def collect_references(path: Path) -> list[Reference]:
@@ -180,7 +202,7 @@ def collect_references(path: Path) -> list[Reference]:
             if not match:
                 continue
             ref = match.group("ref")
-            if not is_external_action(ref):
+            if not is_checkable_uses(ref):
                 continue
             references.append(parse_reference(path, line_number, ref, match.group("comment")))
             break
@@ -209,7 +231,7 @@ def collect_structural_uses(path: Path) -> set[str]:
     """External action references reachable in `path` once parsed as YAML."""
     document = yaml.safe_load(path.read_text(encoding="utf-8"))
 
-    return {value for value in iter_uses_values(document) if is_external_action(value)}
+    return {value for value in iter_uses_values(document) if is_checkable_uses(value)}
 
 
 def read_manifest_actions(path: Path) -> list[dict[str, str]]:
@@ -228,6 +250,19 @@ def check_references(references: list[Reference], ledger: dict[str, dict[str, st
     shas_by_repo: dict[str, dict[str, list[Reference]]] = defaultdict(lambda: defaultdict(list))
 
     for reference in references:
+        if reference.is_docker:
+            # A container action runs arbitrary code just like a repository action, so a
+            # mutable tag such as `docker://alpine:latest` is the same risk as a mutable
+            # action tag. Digests are the only immutable identifier for an image.
+            if not IMAGE_DIGEST_RE.match(reference.ref):
+                errors.append(
+                    f"{reference.location}: '{reference.raw}' is a container action that is "
+                    "not pinned to an image digest. Use "
+                    "'docker://<image>@sha256:<64-hex-digest>'; tags can be repointed "
+                    "upstream at any time."
+                )
+            continue
+
         if not SHA_RE.match(reference.ref):
             errors.append(
                 f"{reference.location}: '{reference.repo}@{reference.ref}' is not pinned to a "
@@ -364,7 +399,7 @@ def main() -> int:
             )
             continue
 
-        scanned = {f"{reference.repo}@{reference.ref}" for reference in file_references}
+        scanned = {reference.raw for reference in file_references}
         for value in sorted(structural - scanned):
             structural_errors.append(
                 f"{location}: `uses: {value}` is reachable in the parsed workflow but is not "
