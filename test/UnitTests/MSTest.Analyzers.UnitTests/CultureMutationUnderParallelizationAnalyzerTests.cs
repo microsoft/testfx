@@ -60,8 +60,12 @@ public sealed class CultureMutationUnderParallelizationAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenTestMethodSetsThreadCurrentCulture_Diagnostic()
+    public async Task WhenTestMethodSetsThreadCurrentCulture_NoDiagnostic()
     {
+        // Thread.CurrentThread.CurrentCulture / CurrentUICulture setters are intentionally OMITTED. On modern .NET
+        // they delegate to an AsyncLocal-backed value that flows with the ExecutionContext, so the mutation does not
+        // corrupt sibling tests or leak onto a later-pooled thread. Only the process-wide DefaultThreadCurrent* forms
+        // are flagged.
         string code = """
             using System.Globalization;
             using System.Threading;
@@ -75,7 +79,33 @@ public sealed class CultureMutationUnderParallelizationAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    [|Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture|];
+                    Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+                    Thread.CurrentThread.CurrentUICulture = CultureInfo.InvariantCulture;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodNullCoalesceAssignsDefaultThreadCurrentCulture_Diagnostic()
+    {
+        // A null-coalescing assignment ('??=') still writes the static field when it is null, so it must be flagged
+        // just like a plain assignment.
+        string code = """
+            using System.Globalization;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    [|CultureInfo.DefaultThreadCurrentCulture ??= CultureInfo.InvariantCulture|];
                 }
             }
             """;

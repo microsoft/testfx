@@ -96,6 +96,49 @@ public sealed class CurrentDirectoryMutationUnderParallelizationAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenTestMethodCompoundAssignsEnvironmentCurrentDirectory_Diagnostic()
+    {
+        // A compound assignment ('+=') reads then writes the process-global current directory, so it must be flagged
+        // like a plain assignment. No code fix is asserted here beyond the lock the fixer adds.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    [|Environment.CurrentDirectory += "sub"|];
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.CurrentDirectory)]
+                public void MyTestMethod()
+                {
+                    Environment.CurrentDirectory += "sub";
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
     public async Task WhenResourceLockDeclared_NoDiagnostic()
     {
         // A declared current-directory lock means the author coordinated the mutation, so R2 stays silent. The

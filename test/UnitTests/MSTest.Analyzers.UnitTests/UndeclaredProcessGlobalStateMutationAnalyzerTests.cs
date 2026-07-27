@@ -122,8 +122,9 @@ public sealed class UndeclaredProcessGlobalStateMutationAnalyzerTests
             }
             """;
 
-        // TestInitialize is a fixture method, so the code fix targets the method (a class-level lock is
-        // effectively what the author wants, but adding to the method is what the fixer does today).
+        // TestInitialize is a class-scoped fixture: discovery reads resource locks only from the test class and the
+        // test method, so a lock on the fixture method itself would be ignored. The fixer therefore places the lock on
+        // the enclosing test class, which is where it actually takes effect.
         string fixedCode = """
             using System;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -131,10 +132,10 @@ public sealed class UndeclaredProcessGlobalStateMutationAnalyzerTests
             [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
 
             [TestClass]
+            [ResourceLock(WellKnownResources.EnvironmentVariables)]
             public class MyTestClass
             {
                 [TestInitialize]
-                [ResourceLock(WellKnownResources.EnvironmentVariables)]
                 public void Setup()
                 {
                     Environment.SetEnvironmentVariable("MY_VAR", "value");
@@ -148,6 +149,38 @@ public sealed class UndeclaredProcessGlobalStateMutationAnalyzerTests
             """;
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodSetsEnvironmentVariableInAssemblyInitialize_DiagnosticButNoFix()
+    {
+        // AssemblyInitialize is an assembly-scoped fixture: discovery reads resource locks only from the test class
+        // and the test method, so neither a method-level nor a class-level lock would take effect for it. The rule
+        // still reports the unprotected mutation, but the fixer offers NO fix (a fix that silently does nothing would
+        // be worse than none), so the fixed code is identical to the input.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [AssemblyInitialize]
+                public static void AssemblyInit(TestContext context)
+                {
+                    [|Environment.SetEnvironmentVariable("MY_VAR", "value")|];
+                }
+
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     [TestMethod]
