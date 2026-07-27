@@ -41,11 +41,14 @@ Checks
      the ledger's version comment and rewriting every call site consistently.
   G. A given SHA is labelled with the same version everywhere. For actions the
      ledger does not track, this is the only thing keeping their labels honest.
-  H. Every `uses` value reachable in the *parsed* YAML is also written as a plain
-     scannable line. The structural pass sees exactly what GitHub Actions would
-     execute, so block scalars, flow mappings, quoted keys and aliases cannot hide
-     an unpinned action from the text pass that validates pins and version
-     comments; anything the text pass cannot see fails instead of passing silently.
+  H. Every `uses` occurrence reachable in the *parsed* YAML is also written as a
+     plain scannable line. The structural pass sees exactly what GitHub Actions
+     would execute, so block scalars, flow mappings, quoted keys and aliases
+     cannot hide an unpinned action from the text pass that validates pins and
+     version comments; anything the text pass cannot see fails instead of passing
+     silently. Reconciliation counts occurrences and ignores the generated
+     `# Custom actions used:` inventory, so a hidden occurrence is never excused
+     by a comment or by another occurrence of the same value on a plain line.
 
 `gh aw` records the annotated *tag object* SHA in the ledger for some actions but
 emits the dereferenced *commit* SHA in `uses:` lines. That single legitimate
@@ -71,7 +74,7 @@ import argparse
 import json
 import re
 import sys
-from collections import defaultdict
+from collections import Counter, defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -139,6 +142,7 @@ class Reference:
     repo: str
     ref: str
     version: str | None
+    from_inventory: bool = False
 
     @property
     def is_docker(self) -> bool:
@@ -229,7 +233,9 @@ def canonical_repo(repo: str) -> str:
     return f"{canonical}/{subpath}" if subpath_slash else canonical
 
 
-def parse_reference(path: Path, line_number: int, ref: str, comment: str | None) -> Reference:
+def parse_reference(
+    path: Path, line_number: int, ref: str, comment: str | None, from_inventory: bool
+) -> Reference:
     repo, _, pinned = ref.partition("@")
     # Version comments may carry a suffix, e.g. `# v9.0.0 (source v9)`.
     version = comment.split()[0] if comment and comment.split() else None
@@ -242,6 +248,7 @@ def parse_reference(path: Path, line_number: int, ref: str, comment: str | None)
         # Commit SHAs and image digests are hex identifiers, so case is not meaningful.
         ref=pinned.lower(),
         version=version,
+        from_inventory=from_inventory,
     )
 
 
@@ -255,7 +262,15 @@ def collect_references(path: Path) -> list[Reference]:
             ref = match.group("ref")
             if not is_checkable_uses(ref):
                 continue
-            references.append(parse_reference(path, line_number, ref, match.group("comment")))
+            references.append(
+                parse_reference(
+                    path,
+                    line_number,
+                    ref,
+                    match.group("comment"),
+                    from_inventory=pattern is LISTED_RE,
+                )
+            )
             break
 
     return references
@@ -278,11 +293,16 @@ def iter_uses_values(node: object):
             yield from iter_uses_values(item)
 
 
-def collect_structural_uses(path: Path) -> set[str]:
-    """External action references reachable in `path` once parsed as YAML."""
+def collect_structural_uses(path: Path) -> Counter[str]:
+    """Count each external action reference reachable in `path` once parsed as YAML.
+
+    Counts rather than distinct values: reconciliation has to be one-to-one, or an
+    occurrence written in an unscannable form would be excused by a *different*
+    occurrence of the same value that happens to sit on a plain line.
+    """
     document = yaml.safe_load(path.read_text(encoding="utf-8"))
 
-    return {value for value in iter_uses_values(document) if is_checkable_uses(value)}
+    return Counter(value for value in iter_uses_values(document) if is_checkable_uses(value))
 
 
 def read_manifest_actions(path: Path) -> list[dict[str, str]]:
@@ -458,13 +478,23 @@ def main() -> int:
             )
             continue
 
-        scanned = {reference.raw for reference in file_references}
-        for value in sorted(structural - scanned):
+        scanned = Counter(
+            reference.raw for reference in file_references if not reference.from_inventory
+        )
+        for value, structural_count in sorted(structural.items()):
+            # The generated `# Custom actions used:` inventory is excluded above: it is a
+            # comment, not an executable step, so it must not vouch for a hidden `uses`.
+            hidden = structural_count - scanned.get(value, 0)
+            if hidden <= 0:
+                continue
+
+            occurrences = "occurrence" if hidden == 1 else "occurrences"
             structural_errors.append(
-                f"{location}: `uses: {value}` is reachable in the parsed workflow but is not "
-                "written as a plain `uses: <owner>/<repo>@<sha> # <version>` line. Block "
-                "scalars, flow mappings and aliases hide the pin and its version comment from "
-                "review, so rewrite it as a plain line."
+                f"{location}: {hidden} {occurrences} of `uses: {value}` are reachable in the "
+                "parsed workflow but are not written as a plain "
+                "`uses: <owner>/<repo>@<sha> # <version>` line. Block scalars, flow mappings "
+                "and aliases hide the pin and its version comment from review, so rewrite "
+                "them as plain lines."
             )
 
     reference_findings = check_references(references, ledger)
