@@ -39,6 +39,15 @@ internal partial class TestExecutionManager
             Shuffle(random, testsBySource);
         }
 
+        // Configured declarations are applied per source below, but their diagnostics have to be judged
+        // against the whole run: a declaration naming a test in assembly A is legitimately absent from
+        // assembly B, so warning per source would report every valid declaration as unmatched once for each
+        // other assembly. Reported once here, against every test in the run.
+        if (MSTestSettings.CurrentSettings.DeclaredDependencies is { Length: > 0 } declaredDependencies)
+        {
+            TestDependencyDeclaration.ReportUnmatchedDeclarations(declaredDependencies, tests, messageLogger);
+        }
+
         foreach (var group in testsBySource)
         {
             _testRunCancellationToken?.ThrowIfCancellationRequested();
@@ -150,7 +159,7 @@ internal partial class TestExecutionManager
         // point of view a configured dependency is indistinguishable from an attribute-declared one.
         if (MSTestSettings.CurrentSettings.DeclaredDependencies is { Length: > 0 } declaredDependencies)
         {
-            TestDependencyDeclaration.ApplyAll(declaredDependencies, testsToRun, adapterMessageLogger);
+            TestDependencyDeclaration.ApplyAll(declaredDependencies, testsToRun, adapterMessageLogger: null);
         }
 
         // Returns null - and so leaves every run that does not use [DependsOn] on exactly the path it uses

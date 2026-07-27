@@ -46,40 +46,82 @@ internal sealed class TestDependencyDeclaration
     public bool ProceedOnFailure { get; }
 
     /// <summary>
+    /// Reports the declarations whose diagnostics can only be judged against the whole run: a malformed
+    /// reference, and a dependent that matches no test anywhere. Kept separate from <see cref="ApplyAll"/>,
+    /// which runs once per source and therefore cannot tell "this names a test in another assembly" from
+    /// "this names nothing at all".
+    /// </summary>
+    public static void ReportUnmatchedDeclarations(IEnumerable<TestDependencyDeclaration> declarations, IEnumerable<UnitTestElement> allTests, IAdapterMessageLogger? logger)
+    {
+        if (logger is null)
+        {
+            return;
+        }
+
+        UnitTestElement[] tests = [.. allTests];
+        foreach (TestDependencyDeclaration declaration in declarations)
+        {
+            if (!TestReference.TryParse(declaration.Dependent, out TestReference? dependent))
+            {
+                logger.SendMessage(
+                    MessageLevel.Warning,
+                    string.Format(CultureInfo.CurrentCulture, Resource.DependencyConfigurationInvalidReference, declaration.Dependent));
+                continue;
+            }
+
+            if (!TestReference.TryParse(declaration.Prerequisite, out TestReference? _))
+            {
+                logger.SendMessage(
+                    MessageLevel.Warning,
+                    string.Format(CultureInfo.CurrentCulture, Resource.DependencyConfigurationInvalidReference, declaration.Prerequisite));
+                continue;
+            }
+
+            bool matched = false;
+            foreach (UnitTestElement test in tests)
+            {
+                if (dependent.Matches(test))
+                {
+                    matched = true;
+                    break;
+                }
+            }
+
+            if (!matched)
+            {
+                logger.SendMessage(
+                    MessageLevel.Warning,
+                    string.Format(CultureInfo.CurrentCulture, Resource.DependencyConfigurationDependentNotFound, declaration.Dependent));
+            }
+        }
+    }
+
+    /// <summary>
     /// Applies <paramref name="declarations"/> to the tests they name, so that from here on a configured
     /// edge is indistinguishable from one declared by an attribute.
     /// </summary>
     /// <returns><see langword="true"/> when at least one edge was applied.</returns>
-    public static bool ApplyAll(IEnumerable<TestDependencyDeclaration> declarations, UnitTestElement[] tests, IAdapterMessageLogger? logger)
+    public static bool ApplyAll(IEnumerable<TestDependencyDeclaration> declarations, UnitTestElement[] tests, IAdapterMessageLogger? adapterMessageLogger)
     {
         bool applied = false;
         foreach (TestDependencyDeclaration declaration in declarations)
         {
             if (!TestReference.TryParse(declaration.Dependent, out TestReference? dependent))
             {
-                logger?.SendMessage(
-                    MessageLevel.Warning,
-                    string.Format(CultureInfo.CurrentCulture, Resource.DependencyConfigurationInvalidReference, declaration.Dependent));
                 continue;
             }
 
             if (!TestReference.TryParse(declaration.Prerequisite, out TestReference? prerequisite))
             {
-                logger?.SendMessage(
-                    MessageLevel.Warning,
-                    string.Format(CultureInfo.CurrentCulture, Resource.DependencyConfigurationInvalidReference, declaration.Prerequisite));
                 continue;
             }
 
-            bool matchedDependent = false;
             foreach (UnitTestElement test in tests)
             {
                 if (!dependent.Matches(test))
                 {
                     continue;
                 }
-
-                matchedDependent = true;
 
                 // A wildcard dependent (Ns.Class.*) expands onto every test of the class, including the
                 // prerequisite itself when that is also named in the class. The user wrote "every test of
@@ -104,13 +146,6 @@ internal sealed class TestDependencyDeclaration
                     ? [.. existing, dependency]
                     : [dependency];
                 applied = true;
-            }
-
-            if (!matchedDependent)
-            {
-                logger?.SendMessage(
-                    MessageLevel.Warning,
-                    string.Format(CultureInfo.CurrentCulture, Resource.DependencyConfigurationDependentNotFound, declaration.Dependent));
             }
         }
 

@@ -15,14 +15,11 @@ namespace MSTest.Acceptance.IntegrationTests;
 /// a graph rather than a flat order - that two tests sharing a prerequisite really do overlap.
 /// </summary>
 /// <remarks>
-/// Marked <see cref="DoNotParallelizeAttribute"/> because
-/// <see cref="DependsOn_RunsPrerequisitesFirst_AndLetsIndependentBranchesOverlap"/> asserts on wall-clock
-/// overlap between two test bodies of the asset it runs. Running this class in the sequential phase, after
-/// the rest of the suite has drained, keeps the machine quiet enough for those timings to mean what they
-/// say. (The assets themselves are not shared: each test method uses its own generated project.)
+/// The overlap claim is asserted by a bounded rendezvous inside the asset rather than by comparing elapsed
+/// times, so it does not depend on how busy the machine is and this class needs no isolation from the rest
+/// of the suite. Each test method also generates and runs its own project, so nothing is shared between them.
 /// </remarks>
 [TestClass]
-[DoNotParallelize]
 public sealed class TestDependencyExecutionTests : AcceptanceTestBase<TestDependencyExecutionTests.TestAssetFixture>
 {
     private const string GraphProjectName = "TestDependencyGraphTestProject";

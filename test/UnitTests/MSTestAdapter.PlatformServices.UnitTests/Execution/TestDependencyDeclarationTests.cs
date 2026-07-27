@@ -5,8 +5,11 @@ using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
 using TestFramework.ForTestingMSTest;
+
+using MessageLevel = Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel;
 
 namespace MSTestAdapter.PlatformServices.UnitTests.Execution;
 
@@ -28,7 +31,7 @@ public sealed class TestDependencyDeclarationTests : TestContainer
         bool applied = TestDependencyDeclaration.ApplyAll(
             [new TestDependencyDeclaration($"{ClassA}.PlaceOrder", $"{ClassA}.Setup", proceedOnFailure: false)],
             tests,
-            logger: null);
+            adapterMessageLogger: null);
 
         applied.Should().BeTrue();
         tests[0].Dependencies.Should().BeNull();
@@ -47,7 +50,7 @@ public sealed class TestDependencyDeclarationTests : TestContainer
         TestDependencyDeclaration.ApplyAll(
             [new TestDependencyDeclaration($"{ClassA}.*", $"{ClassA}.Setup", proceedOnFailure: false)],
             tests,
-            logger: null);
+            adapterMessageLogger: null);
 
         tests[0].Dependencies.Should().BeNull();
         tests[1].Dependencies.Should().ContainSingle();
@@ -63,7 +66,7 @@ public sealed class TestDependencyDeclarationTests : TestContainer
         TestDependencyDeclaration.ApplyAll(
             [new TestDependencyDeclaration($"{ClassA}.*", "Ns.Other.Setup", proceedOnFailure: false)],
             tests,
-            logger: null);
+            adapterMessageLogger: null);
 
         tests[0].Dependencies.Should().ContainSingle();
         tests[1].Dependencies.Should().ContainSingle();
@@ -76,10 +79,68 @@ public sealed class TestDependencyDeclarationTests : TestContainer
         bool applied = TestDependencyDeclaration.ApplyAll(
             [new TestDependencyDeclaration("Ns.Missing.Test", $"{ClassA}.Setup", proceedOnFailure: false)],
             tests,
-            logger: null);
+            adapterMessageLogger: null);
 
         applied.Should().BeFalse();
         tests[0].Dependencies.Should().BeNull();
+    }
+
+    public void ReportUnmatchedDeclarations_JudgesTheDependentAgainstTheWholeRun()
+    {
+        // ApplyAll runs once per source, so it cannot tell "names a test in another assembly" from "names
+        // nothing at all". Diagnosing per source would report every valid declaration as unmatched once for
+        // each *other* assembly in the run; this pass sees them all at once.
+        var logger = new RecordingLogger();
+        UnitTestElement[] assemblyA = [CreateElement(ClassA, "Setup")];
+        UnitTestElement[] assemblyB = [CreateElement("Ns.ClassB", "Other")];
+
+        TestDependencyDeclaration[] declarations =
+        [
+            new TestDependencyDeclaration($"{ClassA}.Setup", "Ns.ClassB.Other", proceedOnFailure: false),
+        ];
+
+        TestDependencyDeclaration.ReportUnmatchedDeclarations(declarations, [.. assemblyA, .. assemblyB], logger);
+
+        logger.Warnings.Should().BeEmpty("the dependent exists in the run, just not in every source");
+    }
+
+    public void ReportUnmatchedDeclarations_StillWarnsWhenNothingInTheRunMatches()
+    {
+        var logger = new RecordingLogger();
+        UnitTestElement[] tests = [CreateElement(ClassA, "Setup")];
+
+        TestDependencyDeclaration.ReportUnmatchedDeclarations(
+            [new TestDependencyDeclaration("Ns.Nowhere.Test", $"{ClassA}.Setup", proceedOnFailure: false)],
+            tests,
+            logger);
+
+        logger.Warnings.Should().ContainSingle();
+        logger.Warnings[0].Should().Contain("Ns.Nowhere.Test");
+    }
+
+    public void ReportUnmatchedDeclarations_WarnsOnAMalformedReference()
+    {
+        var logger = new RecordingLogger();
+
+        TestDependencyDeclaration.ReportUnmatchedDeclarations(
+            [new TestDependencyDeclaration("PlaceOrder", "Setup", proceedOnFailure: false)],
+            [CreateElement(ClassA, "PlaceOrder")],
+            logger);
+
+        logger.Warnings.Should().ContainSingle();
+    }
+
+    private sealed class RecordingLogger : IAdapterMessageLogger
+    {
+        public List<string> Warnings { get; } = [];
+
+        public void SendMessage(MessageLevel level, string message)
+        {
+            if (level == MessageLevel.Warning)
+            {
+                Warnings.Add(message);
+            }
+        }
     }
 
     public void ApplyAll_WhenAReferenceIsMalformed_SkipsThatDeclaration()
@@ -90,7 +151,7 @@ public sealed class TestDependencyDeclarationTests : TestContainer
         bool applied = TestDependencyDeclaration.ApplyAll(
             [new TestDependencyDeclaration("PlaceOrder", "Setup", proceedOnFailure: false)],
             tests,
-            logger: null);
+            adapterMessageLogger: null);
 
         applied.Should().BeFalse();
         tests[1].Dependencies.Should().BeNull();
@@ -103,7 +164,7 @@ public sealed class TestDependencyDeclarationTests : TestContainer
         TestDependencyDeclaration.ApplyAll(
             [new TestDependencyDeclaration($"{ClassA}.Audit", $"{ClassA}.Setup", proceedOnFailure: true)],
             tests,
-            logger: null);
+            adapterMessageLogger: null);
 
         tests[1].Dependencies![0].ProceedOnFailure.Should().BeTrue();
     }
