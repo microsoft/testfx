@@ -33,6 +33,9 @@ public sealed class TestDependencyGraphTests : TestContainer
     private static string[] NamesOf(IEnumerable<UnitTestElement> elements)
         => [.. elements.Select(e => e.TestMethod.Name)];
 
+    private static string[] NamesOfBroken(IEnumerable<TestDependencyGraph.BrokenTest> broken)
+        => [.. broken.Select(b => b.Element.TestMethod.Name)];
+
     public void Build_WhenNoTestDeclaresDependencies_ReturnsNull()
     {
         // The null fast path is what keeps every run that does not use the feature on the code it uses today.
@@ -142,7 +145,7 @@ public sealed class TestDependencyGraphTests : TestContainer
 
         graph.Errors.Should().ContainSingle();
         graph.Errors[0].Should().Contain("One").And.Contain("Two");
-        NamesOf(graph.BrokenTests).Should().BeEquivalentTo(["One", "Two"]);
+        NamesOfBroken(graph.BrokenTests).Should().BeEquivalentTo(["One", "Two"]);
 
         // Broken tests are reported as failed instead of being scheduled, so they must not appear anywhere.
         graph.ParallelChunks.Should().BeEmpty();
@@ -156,7 +159,7 @@ public sealed class TestDependencyGraphTests : TestContainer
         TestDependencyGraph graph = TestDependencyGraph.Build(tests, ExecutionScope.MethodLevel, parallelizationEnabled: true)!;
 
         graph.Errors.Should().ContainSingle();
-        NamesOf(graph.BrokenTests).Should().Equal("Loop");
+        NamesOfBroken(graph.BrokenTests).Should().Equal("Loop");
     }
 
     public void Build_WhenACycleExistsOnlyInTheClassLevelProjection_RunsTheAffectedTestsSequentiallyInOrder()
@@ -186,6 +189,63 @@ public sealed class TestDependencyGraphTests : TestContainer
         // They are moved to the sequential phase, where the topological order is honoured exactly.
         graph.ParallelChunks.Should().BeEmpty();
         NamesOf(graph.SequentialTests).Should().Equal("A1", "B1", "A2");
+    }
+
+    public void Build_WhenTwoDisjointCyclesExist_ReportsEachFailureAgainstItsOwnCycle()
+    {
+        // Joining every cycle description onto every failure would tell whoever is reading One's failure
+        // about a cycle it has nothing to do with - the same conflation the class-level notice was moved out
+        // of Errors to avoid.
+        UnitTestElement[] tests =
+        [
+            CreateElement(ClassA, "One", DependsOnMethod("Two")),
+            CreateElement(ClassA, "Two", DependsOnMethod("One")),
+            CreateElement(ClassB, "Three", new TestDependencyInfo(ClassB, "Four", false)),
+            CreateElement(ClassB, "Four", new TestDependencyInfo(ClassB, "Three", false)),
+        ];
+
+        TestDependencyGraph graph = TestDependencyGraph.Build(tests, ExecutionScope.MethodLevel, parallelizationEnabled: true)!;
+
+        graph.Errors.Count.Should().Be(2);
+        NamesOfBroken(graph.BrokenTests).Should().BeEquivalentTo(["One", "Two", "Three", "Four"]);
+
+        foreach (TestDependencyGraph.BrokenTest broken in graph.BrokenTests)
+        {
+            string name = broken.Element.TestMethod.Name;
+            if (name is "One" or "Two")
+            {
+                broken.CycleMessage.Should().Contain("One").And.Contain("Two");
+                broken.CycleMessage.Should().NotContain("Three").And.NotContain("Four");
+            }
+            else
+            {
+                broken.CycleMessage.Should().Contain("Three").And.Contain("Four");
+                broken.CycleMessage.Should().NotContain("One").And.NotContain("Two");
+            }
+        }
+    }
+
+    public void Build_WhenAClassIsMerelyDownstreamOfAProjectionCycle_IsDemotedButNotNamedAsCyclic()
+    {
+        // Kahn cannot settle a chunk that is downstream of a cycle either, but saying it "depends on each
+        // other" with the cycle members would be false. ClassC only depends on the cycle; it must still be
+        // demoted, and must not appear in the warning.
+        UnitTestElement[] tests =
+        [
+            CreateElement(ClassA, "A1"),
+            CreateElement(ClassA, "A2", new TestDependencyInfo(ClassB, "B1", false)),
+            CreateElement(ClassB, "B1", new TestDependencyInfo(ClassA, "A1", false)),
+            CreateElement("Ns.ClassC", "C1", new TestDependencyInfo(ClassB, "B1", false)),
+        ];
+
+        TestDependencyGraph graph = TestDependencyGraph.Build(tests, ExecutionScope.ClassLevel, parallelizationEnabled: true)!;
+
+        graph.Warnings.Should().ContainSingle();
+        graph.Warnings[0].Should().Contain(ClassA).And.Contain(ClassB);
+        graph.Warnings[0].Should().NotContain("ClassC");
+
+        // Demoted all the same - it cannot run in the parallel phase once its prerequisite left it.
+        NamesOf(graph.SequentialTests).Should().Contain("C1");
     }
 
     public void Build_WhenAProjectionCycleIsDemoted_LeavesUnrelatedTestsInTheParallelPhase()

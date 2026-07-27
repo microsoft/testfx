@@ -360,30 +360,28 @@ internal partial class TestExecutionManager
         }
 
         // A test in a cycle is reported as failed - the declaration, not the test, is what is broken, and a
-        // silent skip would hide it. Recording it as "did not pass" also makes everything downstream skip.
-        if (graph.BrokenTests.Count > 0)
+        // silent skip would hide it. Each failure carries the description of the cycle *that test* is in, so
+        // an assembly with two unrelated cycles does not stamp both paths onto every failure. Recording it as
+        // "did not pass" also makes everything downstream skip.
+        foreach (TestDependencyGraph.BrokenTest brokenTest in graph.BrokenTests)
         {
-            string cycleMessage = string.Join(Environment.NewLine, graph.Errors);
-            foreach (UnitTestElement brokenTest in graph.BrokenTests)
+            _testRunCancellationToken?.ThrowIfCancellationRequested();
+            coordinator.RecordNotRun(brokenTest.Element);
+
+            DateTimeOffset now = DateTimeOffset.Now;
+            var cycleResult = new TestTools.UnitTesting.TestResult
             {
-                _testRunCancellationToken?.ThrowIfCancellationRequested();
-                coordinator.RecordNotRun(brokenTest);
+                Outcome = TestTools.UnitTesting.UnitTestOutcome.Failed,
+                TestFailureException = new InvalidOperationException(brokenTest.CycleMessage),
+            };
 
-                DateTimeOffset now = DateTimeOffset.Now;
-                var cycleResult = new TestTools.UnitTesting.TestResult
-                {
-                    Outcome = TestTools.UnitTesting.UnitTestOutcome.Failed,
-                    TestFailureException = new InvalidOperationException(cycleMessage),
-                };
-
-                await _testResultRecorder.RecordStartAsync(brokenTest).ConfigureAwait(false);
-                await SendTestResultsAsync(
-                    brokenTest,
-                    [cycleResult],
-                    now,
-                    now,
-                    _testResultRecorder).ConfigureAwait(false);
-            }
+            await _testResultRecorder.RecordStartAsync(brokenTest.Element).ConfigureAwait(false);
+            await SendTestResultsAsync(
+                brokenTest.Element,
+                [cycleResult],
+                now,
+                now,
+                _testResultRecorder).ConfigureAwait(false);
         }
 
         if (graph.ParallelChunks.Length > 0)

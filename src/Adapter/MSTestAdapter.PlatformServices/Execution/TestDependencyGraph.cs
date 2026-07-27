@@ -34,7 +34,7 @@ internal sealed class TestDependencyGraph
         UnitTestElement[][] parallelChunks,
         int[][] parallelChunkPrerequisites,
         UnitTestElement[] sequentialTests,
-        IReadOnlyList<UnitTestElement> brokenTests,
+        IReadOnlyList<BrokenTest> brokenTests,
         IReadOnlyList<string> errors,
         IReadOnlyList<string> warnings)
     {
@@ -82,11 +82,29 @@ internal sealed class TestDependencyGraph
     public UnitTestElement[] SequentialTests { get; }
 
     /// <summary>
-    /// Gets the tests that take part in a dependency cycle. They cannot be ordered, so they are reported as
-    /// failed instead of being run; their dependents are then skipped by the ordinary "a prerequisite did
-    /// not pass" rule.
+    /// Gets the tests that take part in a dependency cycle, each paired with the description of the cycle
+    /// <em>it</em> is in. They cannot be ordered, so they are reported as failed instead of being run; their
+    /// dependents are then skipped by the ordinary "a prerequisite did not pass" rule.
     /// </summary>
-    public IReadOnlyList<UnitTestElement> BrokenTests { get; }
+    public IReadOnlyList<BrokenTest> BrokenTests { get; }
+
+    /// <summary>
+    /// A test that cannot be scheduled because it takes part in a dependency cycle, together with the
+    /// description of that cycle. The message is per test rather than per run so that a suite containing two
+    /// unrelated cycles reports each failure against its own cycle instead of every cycle in the assembly.
+    /// </summary>
+    internal sealed class BrokenTest
+    {
+        public BrokenTest(UnitTestElement element, string cycleMessage)
+        {
+            Element = element;
+            CycleMessage = cycleMessage;
+        }
+
+        public UnitTestElement Element { get; }
+
+        public string CycleMessage { get; }
+    }
 
     /// <summary>
     /// Gets the fatal configuration errors: the dependency cycles that make tests unschedulable. These are
@@ -135,17 +153,23 @@ internal sealed class TestDependencyGraph
 
         (int[][] testPrerequisites, bool[] proceedOnFailure) = ResolveEdges(tests, warnings);
 
-        bool[] isBroken = FindCycles(testPrerequisites, tests, errors);
-
-        // A test in a cycle cannot be ordered, so it is dropped from scheduling and reported as failed. Its
-        // dependents keep the edge: at run time the prerequisite is recorded as "did not pass", so they are
-        // skipped with the ordinary message rather than silently running out of order.
-        var brokenTests = new List<UnitTestElement>();
+        string?[] cycleMessageByTest = FindCycles(testPrerequisites, tests, errors);
+        bool[] isBroken = new bool[tests.Length];
         for (int i = 0; i < tests.Length; i++)
         {
-            if (isBroken[i])
+            isBroken[i] = cycleMessageByTest[i] is not null;
+        }
+
+        // A test in a cycle cannot be ordered, so it is dropped from scheduling and reported as failed, with
+        // the description of the cycle *it* is in. Its dependents keep the edge: at run time the prerequisite
+        // is recorded as "did not pass", so they are skipped with the ordinary message rather than silently
+        // running out of order.
+        var brokenTests = new List<BrokenTest>();
+        for (int i = 0; i < tests.Length; i++)
+        {
+            if (cycleMessageByTest[i] is { } cycleMessage)
             {
-                brokenTests.Add(tests[i]);
+                brokenTests.Add(new BrokenTest(tests[i], cycleMessage));
             }
         }
 
@@ -308,14 +332,15 @@ internal sealed class TestDependencyGraph
 
     /// <summary>
     /// Finds every dependency cycle with an iterative three-colour depth-first search and describes each one
-    /// as a path (<c>A &gt; B &gt; A</c>). Nodes already known to be on a cycle are treated as finished so a
-    /// second cycle through them cannot restart the search indefinitely.
+    /// as a path (<c>A &gt; B &gt; A</c>). Each cycle's description is recorded against the tests that take
+    /// part in it, so a failure reports the cycle that test is actually in rather than every cycle in the
+    /// assembly.
     /// </summary>
-    private static bool[] FindCycles(int[][] prerequisites, UnitTestElement[] tests, List<string> errors)
+    private static string?[] FindCycles(int[][] prerequisites, UnitTestElement[] tests, List<string> errors)
     {
         const byte White = 0, Grey = 1, Black = 2;
         byte[] colour = new byte[prerequisites.Length];
-        bool[] isBroken = new bool[prerequisites.Length];
+        string?[] cycleMessageByTest = new string?[prerequisites.Length];
         var path = new List<int>();
         int[] edgeCursor = new int[prerequisites.Length];
 
@@ -346,12 +371,20 @@ internal sealed class TestDependencyGraph
                         var cycle = new List<string>();
                         for (int i = cycleStart; i < path.Count; i++)
                         {
-                            isBroken[path[i]] = true;
                             cycle.Add(tests[path[i]].TestMethod.FullyQualifiedName);
                         }
 
                         cycle.Add(tests[next].TestMethod.FullyQualifiedName);
-                        errors.Add(string.Format(CultureInfo.CurrentCulture, Resource.DependsOnCycle, string.Join(" > ", cycle)));
+                        string message = string.Format(CultureInfo.CurrentCulture, Resource.DependsOnCycle, string.Join(" > ", cycle));
+                        errors.Add(message);
+
+                        // Attribute the message to this cycle's own members. A test caught in two cycles keeps
+                        // the first description found - one accurate path is enough to act on, and listing
+                        // every cycle it touches is the conflation this avoids.
+                        for (int i = cycleStart; i < path.Count; i++)
+                        {
+                            cycleMessageByTest[path[i]] ??= message;
+                        }
                     }
                     else if (colour[next] == White)
                     {
@@ -368,7 +401,7 @@ internal sealed class TestDependencyGraph
             }
         }
 
-        return isBroken;
+        return cycleMessageByTest;
     }
 
     /// <summary>
@@ -523,14 +556,21 @@ internal sealed class TestDependencyGraph
             chunkPrerequisiteArrays[i] = [.. chunkPrerequisites[i]];
         }
 
-        if (HasChunkCycle(chunkPrerequisiteArrays, out int[]? cycleChunks))
+        if (HasChunkCycle(chunkPrerequisiteArrays, out int[]? blockedChunks, out int[]? cycleChunks))
         {
-            var classNames = new List<string>();
+            // Everything blocked has to leave the parallel phase - a chunk merely downstream of the cycle
+            // cannot be scheduled there either - but only the chunks genuinely in the cycle may be named as
+            // depending on each other, which is all the message claims.
             projectionCycleTests = [];
+            foreach (int chunk in blockedChunks!)
+            {
+                projectionCycleTests.AddRange(chunkMembers[chunk]);
+            }
+
+            var classNames = new List<string>();
             foreach (int chunk in cycleChunks!)
             {
                 classNames.Add(tests[chunkMembers[chunk][0]].TestMethod.FullClassName);
-                projectionCycleTests.AddRange(chunkMembers[chunk]);
             }
 
             warnings.Add(string.Format(CultureInfo.CurrentCulture, Resource.DependsOnClassLevelCycle, string.Join(", ", classNames)));
@@ -557,7 +597,14 @@ internal sealed class TestDependencyGraph
     /// <summary>
     /// Reports whether the chunk graph contains a cycle, and if so which chunks take part in it.
     /// </summary>
-    private static bool HasChunkCycle(int[][] chunkPrerequisites, out int[]? cycleChunks)
+    /// <summary>
+    /// Reports whether the chunk graph contains a cycle. Kahn's algorithm cannot settle a node that is on a
+    /// cycle <em>or</em> merely downstream of one, so the two are separated: <paramref name="blockedChunks"/>
+    /// is everything that cannot be scheduled (all of it has to leave the parallel phase), while
+    /// <paramref name="cycleChunks"/> is the subset genuinely in a cycle, which is what the diagnostic may
+    /// claim depends on each other.
+    /// </summary>
+    private static bool HasChunkCycle(int[][] chunkPrerequisites, out int[]? blockedChunks, out int[]? cycleChunks)
     {
         int[] remaining = new int[chunkPrerequisites.Length];
         var dependents = new List<int>[chunkPrerequisites.Length];
@@ -600,22 +647,85 @@ internal sealed class TestDependencyGraph
 
         if (settled == chunkPrerequisites.Length)
         {
+            blockedChunks = null;
             cycleChunks = null;
             return false;
         }
 
-        // Whatever Kahn's algorithm could not settle is exactly the part of the graph held up by a cycle.
-        var unsettled = new List<int>();
+        bool[] isBlocked = new bool[chunkPrerequisites.Length];
+        var blocked = new List<int>();
         for (int i = 0; i < remaining.Length; i++)
         {
             if (remaining[i] > 0)
             {
-                unsettled.Add(i);
+                isBlocked[i] = true;
+                blocked.Add(i);
             }
         }
 
-        cycleChunks = [.. unsettled];
+        blockedChunks = [.. blocked];
+        cycleChunks = FindChunksOnCycle(chunkPrerequisites, isBlocked, blocked);
         return true;
+    }
+
+    /// <summary>
+    /// Narrows the blocked chunks down to those actually on a cycle, by repeatedly discarding any chunk that
+    /// no other blocked chunk depends on. Such a chunk can reach the cycle but nothing returns to it, so it is
+    /// downstream of the cycle rather than part of it; what survives is exactly the chunks that can reach
+    /// themselves.
+    /// </summary>
+    private static int[] FindChunksOnCycle(int[][] chunkPrerequisites, bool[] isBlocked, List<int> blocked)
+    {
+        int[] blockedDependentCount = new int[chunkPrerequisites.Length];
+        foreach (int chunk in blocked)
+        {
+            foreach (int prerequisite in chunkPrerequisites[chunk])
+            {
+                if (isBlocked[prerequisite])
+                {
+                    blockedDependentCount[prerequisite]++;
+                }
+            }
+        }
+
+        bool[] isOnCycle = new bool[chunkPrerequisites.Length];
+        foreach (int chunk in blocked)
+        {
+            isOnCycle[chunk] = true;
+        }
+
+        var queue = new Queue<int>();
+        foreach (int chunk in blocked)
+        {
+            if (blockedDependentCount[chunk] == 0)
+            {
+                queue.Enqueue(chunk);
+            }
+        }
+
+        while (queue.Count > 0)
+        {
+            int current = queue.Dequeue();
+            isOnCycle[current] = false;
+            foreach (int prerequisite in chunkPrerequisites[current])
+            {
+                if (isOnCycle[prerequisite] && --blockedDependentCount[prerequisite] == 0)
+                {
+                    queue.Enqueue(prerequisite);
+                }
+            }
+        }
+
+        var onCycle = new List<int>();
+        foreach (int chunk in blocked)
+        {
+            if (isOnCycle[chunk])
+            {
+                onCycle.Add(chunk);
+            }
+        }
+
+        return [.. onCycle];
     }
 
     /// <summary>
