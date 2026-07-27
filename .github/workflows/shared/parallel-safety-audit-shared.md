@@ -174,6 +174,20 @@ steps:
         | grep -E '\.(runsettings|csproj|props|targets)$|testconfig\.json$' \
         > "$CONFIG_OUT" || true
 
+      # The primary opt-in is not a config file at all: it is an
+      # [assembly: Parallelize] / [assembly: DoNotParallelize] attribute, which in
+      # this repo lives in a Program.cs or AssemblyInfo.cs that declares no test
+      # methods. Such a change lands only in TEST_OUT, where Step 1 finds nothing
+      # to audit and falls through to "nothing to audit" — even though every test
+      # in that assembly just became (or stopped being) concurrent. -G selects
+      # files whose diff *adds or removes* a line matching the pattern, so this
+      # catches opting in, opting out, and widening the scope alike.
+      git diff --name-only --diff-filter=AMRD \
+        -G'assembly:[[:space:]]*(Parallelize|DoNotParallelize)' \
+        "$MERGE_BASE" "$HEAD_SHA" -- 'test/' \
+        | grep -E '\.cs$' >> "$CONFIG_OUT" || true
+      sort -u -o "$CONFIG_OUT" "$CONFIG_OUT"
+
       # For each changed test file, emit the HEAD-side (added/modified) line
       # ranges of its diff hunks as "<file>\t<start>-<end>,<start>-<end>". The
       # agent uses these to distinguish a *primary* finding (an unsafe call site
@@ -278,22 +292,25 @@ If **both** the changed-test-files and changed-config-files lists are empty
 (`${{ steps.extract.outputs.has_changed_tests }}` is `false`), post the
 "nothing to audit" fallback comment (see the wrapper output section) and stop.
 
-- **Changed configuration files** (${{ steps.extract.outputs.config_count }}) at
-  `${{ steps.extract.outputs.config_files_path }}` — `.runsettings`,
-  `testconfig.json`, `.csproj` / `.props` / `.targets` under `test/`. A PR can
-  turn parallelization **on** without touching a single `.cs` file, and that is
-  the highest-value thing this audit can catch. When this list is non-empty,
-  diff those files for the parallelization settings enumerated in Step 0. **This
-  list includes deleted files** — a path here may no longer exist on HEAD, so
-  inspect it with `git diff`, not by reading it. Removing an opt-out (a
-  `.runsettings` setting `DisableParallelization`, a props file emitting
-  `[assembly: DoNotParallelize]`, a `parallelism:enabled: false`) **enables**
-  parallelism exactly as adding an opt-in does; treat it identically. If the
-  change **enables** parallelism or **widens** the scope (`off` → `ClassLevel` →
-  `MethodLevel`) or raises workers above 1, audit the **whole affected
-  assembly**, not just the changed lines: every existing test in it becomes newly
-  concurrent, so its hazards are live as of this PR and are **primary** findings,
-  not pre-existing context.
+- **Parallelization-state changes** (${{ steps.extract.outputs.config_count }}) at
+  `${{ steps.extract.outputs.config_files_path }}` — every file this PR touched
+  that can change an assembly's parallelization state: `.runsettings`,
+  `testconfig.json`, `.csproj` / `.props` / `.targets` under `test/`, **and** any
+  `.cs` file whose diff adds or removes an `[assembly: Parallelize]` /
+  `[assembly: DoNotParallelize]` attribute (typically a `Program.cs` or
+  `AssemblyInfo.cs` containing no test methods of its own). A PR can turn
+  parallelization **on** without touching a single test method, and that is the
+  highest-value thing this audit can catch. When this list is non-empty, diff
+  those files for the settings enumerated in Step 0. **This list includes deleted
+  files** — a path here may no longer exist on HEAD, so inspect it with
+  `git diff`, not by reading it. Removing an opt-out (a `.runsettings` setting
+  `DisableParallelization`, a props file emitting `[assembly: DoNotParallelize]`,
+  a `parallelism:enabled: false`) **enables** parallelism exactly as adding an
+  opt-in does; treat it identically. If the change **enables** parallelism or
+  **widens** the scope (`off` → `ClassLevel` → `MethodLevel`) or raises workers
+  above 1, audit the **whole affected assembly**, not just the changed lines:
+  every existing test in it becomes newly concurrent, so its hazards are live as
+  of this PR and are **primary** findings, not pre-existing context.
 
 Audit each changed test file. For declaration reconciliation (category C) and
 near-miss detection you **must** also read sibling tests: use `grep` across the
