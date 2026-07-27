@@ -263,9 +263,7 @@ internal static class ParallelSafetyHelper
         // fixture method ([TestInitialize]/[TestCleanup]/[ClassInitialize]/[ClassCleanup]/...) never goes through
         // that path, so a [DoNotParallelize] sitting on a fixture is ignored at runtime and must not silence a live
         // mutation there. Only class/assembly-level opt-out (the base-type walk below) protects a fixture.
-        bool isTestMethod = testMethodAttributeSymbol is not null
-            && method.GetAttributes().Any(attribute => attribute.AttributeClass.Inherits(testMethodAttributeSymbol));
-        if (isTestMethod && HasAttribute(method, doNotParallelizeAttributeSymbol))
+        if (IsTestMethod(method, testMethodAttributeSymbol) && HasAttribute(method, doNotParallelizeAttributeSymbol))
         {
             return true;
         }
@@ -286,10 +284,14 @@ internal static class ParallelSafetyHelper
     /// containing types already declares a <c>[ResourceLock]</c> whose resource key equals
     /// <paramref name="resourceKey"/> (ordinal, case-sensitive - matching the runtime's conflict rule). Such
     /// a mutation is coordinated and must not be flagged by the "undeclared mutation" rules.
+    /// A method-level <c>[ResourceLock]</c> is read by discovery only from an actual test method - on a fixture
+    /// method it has no runtime effect - so <paramref name="testMethodAttributeSymbol"/> restricts the
+    /// method-level check to real test methods; a fixture is covered only by a class-level lock.
     /// </summary>
     internal static bool HasResourceLockFor(
         IMethodSymbol method,
         INamedTypeSymbol? resourceLockAttributeSymbol,
+        INamedTypeSymbol? testMethodAttributeSymbol,
         string resourceKey)
     {
         if (resourceLockAttributeSymbol is null)
@@ -297,7 +299,12 @@ internal static class ParallelSafetyHelper
             return false;
         }
 
-        if (DeclaresResourceLock(method, resourceLockAttributeSymbol, resourceKey))
+        // TypeEnumerator merges the class locks with the locks read from the test method itself
+        // (MergeResourceLocks(GetClassResourceLocks(), ReadResourceLocks(method))), and only ever does so while
+        // building a UnitTestElement for a discovered test method. A [ResourceLock] on a fixture method is
+        // therefore never read at runtime and must not suppress a live mutation there.
+        if (IsTestMethod(method, testMethodAttributeSymbol)
+            && DeclaresResourceLock(method, resourceLockAttributeSymbol, resourceKey))
         {
             return true;
         }
@@ -318,15 +325,20 @@ internal static class ParallelSafetyHelper
     /// containing types declares any <c>[ResourceLock]</c>. Used by rules whose resource has no well-known key
     /// (for example culture): the presence of any explicit lock is treated as the author having coordinated
     /// access, so the rule stays silent rather than guessing which custom key maps to the resource.
+    /// As with <see cref="HasResourceLockFor"/>, a method-level lock counts only on an actual test method.
     /// </summary>
-    internal static bool HasAnyResourceLock(IMethodSymbol method, INamedTypeSymbol? resourceLockAttributeSymbol)
+    internal static bool HasAnyResourceLock(
+        IMethodSymbol method,
+        INamedTypeSymbol? resourceLockAttributeSymbol,
+        INamedTypeSymbol? testMethodAttributeSymbol)
     {
         if (resourceLockAttributeSymbol is null)
         {
             return false;
         }
 
-        if (HasAttribute(method, resourceLockAttributeSymbol))
+        if (IsTestMethod(method, testMethodAttributeSymbol)
+            && HasAttribute(method, resourceLockAttributeSymbol))
         {
             return true;
         }
@@ -341,6 +353,13 @@ internal static class ParallelSafetyHelper
 
         return false;
     }
+
+    /// <summary>
+    /// Returns <see langword="true"/> when <paramref name="method"/> carries <c>[TestMethod]</c> (or a derived
+    /// attribute), i.e. it is a method discovery treats as a real test rather than a fixture.
+    /// </summary>
+    private static bool IsTestMethod(IMethodSymbol method, INamedTypeSymbol? testMethodAttributeSymbol)
+        => testMethodAttributeSymbol is not null && HasAttribute(method, testMethodAttributeSymbol);
 
     private static bool DeclaresResourceLock(ISymbol symbol, INamedTypeSymbol resourceLockAttributeSymbol, string resourceKey)
     {

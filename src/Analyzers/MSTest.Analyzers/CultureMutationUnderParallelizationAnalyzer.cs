@@ -123,7 +123,7 @@ public sealed class CultureMutationUnderParallelizationAnalyzer : DiagnosticAnal
 
         // No well-known culture resource key exists, so treat any declared [ResourceLock] as the author having
         // coordinated culture access and stay silent rather than guessing which custom key maps to culture.
-        if (ParallelSafetyHelper.HasAnyResourceLock(testMethod, resourceLockAttributeSymbol))
+        if (ParallelSafetyHelper.HasAnyResourceLock(testMethod, resourceLockAttributeSymbol, testMethodAttributeSymbol))
         {
             return;
         }

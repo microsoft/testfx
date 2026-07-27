@@ -161,7 +161,7 @@ public sealed class CurrentDirectoryMutationUnderParallelizationAnalyzer : Diagn
         // stay silent - continuing to warn on coordinated code would erode the ruleset's credibility budget. The
         // "coordinated, but consider not mutating the current directory at all" judgement is intentionally left to
         // the sibling parallel-safety-audit skill.
-        if (ParallelSafetyHelper.HasResourceLockFor(testMethod, resourceLockAttributeSymbol, WellKnownResourceKeys.CurrentDirectory))
+        if (ParallelSafetyHelper.HasResourceLockFor(testMethod, resourceLockAttributeSymbol, testMethodAttributeSymbol, WellKnownResourceKeys.CurrentDirectory))
         {
             return;
         }

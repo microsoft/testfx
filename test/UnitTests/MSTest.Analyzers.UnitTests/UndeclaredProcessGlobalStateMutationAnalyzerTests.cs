@@ -535,4 +535,213 @@ public sealed class UndeclaredProcessGlobalStateMutationAnalyzerTests
                 .WithArguments("Environment.SetEnvironmentVariable", "EnvironmentVariables"),
             fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenFixtureMethodHasMethodLevelResourceLock_Diagnostic()
+    {
+        // TypeEnumerator merges the class locks with the locks read from the *test method* itself, and only ever
+        // while building a UnitTestElement for a discovered test method. A [ResourceLock] on a fixture method is
+        // therefore never read at runtime, so it must not suppress the diagnostic - the mutation still races.
+        // The offered fix lifts the lock to the test class, which is the scope discovery does honor.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestInitialize]
+                [ResourceLock(WellKnownResources.EnvironmentVariables)]
+                public void MyInit()
+                {
+                    {|#0:Environment.SetEnvironmentVariable("MY_VAR", "value")|};
+                }
+
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            [ResourceLock(WellKnownResources.EnvironmentVariables)]
+            public class MyTestClass
+            {
+                [TestInitialize]
+                [ResourceLock(WellKnownResources.EnvironmentVariables)]
+                public void MyInit()
+                {
+                    Environment.SetEnvironmentVariable("MY_VAR", "value");
+                }
+
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic(UndeclaredProcessGlobalStateMutationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Environment.SetEnvironmentVariable", "EnvironmentVariables"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenClassLevelResourceLockCoversFixture_NoDiagnostic()
+    {
+        // The precision counterpart of the test above: a *class-level* [ResourceLock] is read by discovery and
+        // applies to every test in the class, so a fixture mutation it covers must stay silent. This guards the
+        // fixture-scope narrowing from over-firing on correctly coordinated code.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            [ResourceLock(WellKnownResources.EnvironmentVariables)]
+            public class MyTestClass
+            {
+                [TestInitialize]
+                public void MyInit()
+                {
+                    Environment.SetEnvironmentVariable("MY_VAR", "value");
+                }
+
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAlwaysModeConfiguredWithoutParallelize_Diagnostic()
+    {
+        // Firing gate, second branch: the mstest_parallel_safety_mode = always opt-in turns the rules on even
+        // when [assembly: Parallelize] is absent, which is how a suite that opts in via runsettings or the
+        // MSTestParallelizeScope MSBuild property (neither visible to an analyzer) gets coverage.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    {|#0:Environment.SetEnvironmentVariable("MY_VAR", "value")|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.EnvironmentVariables)]
+                public void MyTestMethod()
+                {
+                    Environment.SetEnvironmentVariable("MY_VAR", "value");
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test
+        {
+            TestCode = code,
+            FixedCode = fixedCode,
+        };
+        test.TestState.AnalyzerConfigFiles.Add(("/.globalconfig", """
+            is_global = true
+
+            mstest_parallel_safety_mode = always
+            """));
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(UndeclaredProcessGlobalStateMutationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Environment.SetEnvironmentVariable", "EnvironmentVariables"));
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenAssemblyDoNotParallelizeWithParallelize_NoDiagnostic()
+    {
+        // Firing gate, kill switch: [assembly: DoNotParallelize] disables in-assembly parallelization entirely,
+        // so no parallel-safety rule can describe a live defect even though [assembly: Parallelize] is present.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+            [assembly: DoNotParallelize]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    Environment.SetEnvironmentVariable("MY_VAR", "value");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssemblyDoNotParallelizeWithAlwaysMode_NoDiagnostic()
+    {
+        // Firing gate, precedence: the assembly opt-out wins over the mstest_parallel_safety_mode = always
+        // opt-in when both are present, so the rules stay silent.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: DoNotParallelize]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    Environment.SetEnvironmentVariable("MY_VAR", "value");
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test
+        {
+            TestCode = code,
+            FixedCode = code,
+        };
+        test.TestState.AnalyzerConfigFiles.Add(("/.globalconfig", """
+            is_global = true
+
+            mstest_parallel_safety_mode = always
+            """));
+        await test.RunAsync();
+    }
 }

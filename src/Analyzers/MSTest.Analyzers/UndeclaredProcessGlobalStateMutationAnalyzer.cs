@@ -137,7 +137,7 @@ public sealed class UndeclaredProcessGlobalStateMutationAnalyzer : DiagnosticAna
             return;
         }
 
-        if (ParallelSafetyHelper.HasResourceLockFor(testMethod, resourceLockAttributeSymbol, resourceKey!))
+        if (ParallelSafetyHelper.HasResourceLockFor(testMethod, resourceLockAttributeSymbol, testMethodAttributeSymbol, resourceKey!))
         {
             return;
         }
