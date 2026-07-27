@@ -9,6 +9,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  contents: read # required by the `repos` toolset (see the github tools block below)
   issues: read
   copilot-requests: write
 
@@ -25,10 +26,10 @@ tools:
     toolsets:
       - issues
       # Required by the MCP gateway's github guard: it resolves repository visibility
-      # through `search_repositories`. Without the `search` toolset that call fails and
-      # the guard fails closed, labelling every issue `secrecy: private` and filtering
-      # the whole response out of the agent's view.
-      - search
+      # through `search_repositories`, which lives in the `repos` toolset. Without it the
+      # call fails and the guard fails closed, labelling every issue `secrecy: private`
+      # and filtering the whole response out of the agent's view.
+      - repos
     min-integrity: none # This workflow is allowed to examine and comment on any issues or PRs
 
 safe-outputs:
