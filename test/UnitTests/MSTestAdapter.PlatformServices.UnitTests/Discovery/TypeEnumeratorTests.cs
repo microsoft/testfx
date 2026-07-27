@@ -280,6 +280,50 @@ public partial class TypeEnumeratorTests : TestContainer
         element.Dependencies[0].ProceedOnFailure.Should().BeFalse();
     }
 
+    /// <summary>
+    /// A test method declared on a base class runs as a test of every derived test class, so the dependency
+    /// it declares has to travel with it: the edge resolves against the <em>derived</em> class, where both
+    /// the dependent and its prerequisite exist. Dropping it there would silently discard the declared
+    /// ordering in every concrete test class - the same silent-loss failure mode as an unmatched edge.
+    /// This is unrelated to <c>Inherited = false</c>, which governs override chains (see the test below).
+    /// </summary>
+    public void GetTestFromMethodShouldResolveAnInheritedDependencyAgainstTheDerivedClass()
+    {
+        SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
+        TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyTestClassInheritingADependency), "DummyAssemblyName");
+
+        MSTest.TestAdapter.ObjectModel.UnitTestElement element = typeEnumerator.GetTestFromMethod(
+            typeof(DummyTestClassInheritingADependency).GetMethod(nameof(DummyTestClassInheritingADependency.PlaceOrder))!,
+            classDisablesParallelization: false,
+            _warnings);
+
+        element.Dependencies.Should().ContainSingle();
+
+        // A null target class is what keeps the edge inside the derived class: it is resolved against the
+        // dependent's own class, so DerivedA.PlaceOrder waits for DerivedA.Setup rather than the base's.
+        element.Dependencies![0].TargetClassFullName.Should().BeNull();
+        element.Dependencies[0].TargetMethodName.Should().Be(nameof(DummyTestClassBaseDeclaringADependency.Setup));
+        element.TestMethod.FullClassName.Should().Be(typeof(DummyTestClassInheritingADependency).FullName);
+    }
+
+    /// <summary>
+    /// This is what <c>Inherited = false</c> buys: an override that does not re-declare the attribute does
+    /// not pick up the base method's dependency. Re-pointing a prerequisite onto a method the author
+    /// rewrote is exactly the unintended edge the attribute opts out of.
+    /// </summary>
+    public void GetTestFromMethodShouldNotCarryADependencyOntoAnOverrideThatDoesNotRedeclareIt()
+    {
+        SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
+        TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyTestClassOverridingADependentTest), "DummyAssemblyName");
+
+        MSTest.TestAdapter.ObjectModel.UnitTestElement element = typeEnumerator.GetTestFromMethod(
+            typeof(DummyTestClassOverridingADependentTest).GetMethod(nameof(DummyTestClassOverridingADependentTest.PlaceOrder))!,
+            classDisablesParallelization: false,
+            _warnings);
+
+        element.Dependencies.Should().BeNull();
+    }
+
     public void GetTestFromMethodShouldUseClosedFullClassNameAndOpenManagedTypeNameForGenericTypes()
     {
         Type closedType = typeof(DummyGenericTestClass<int>);
@@ -632,6 +676,34 @@ internal class DummyTestClassWithConflictingDependsOn
     [TestMethod]
     [DependsOn(nameof(Setup))]
     public void PlaceOrder()
+    {
+    }
+}
+
+internal class DummyTestClassBaseDeclaringADependency
+{
+    [TestMethod]
+    public void Setup()
+    {
+    }
+
+    [TestMethod]
+    [DependsOn(nameof(Setup))]
+    public virtual void PlaceOrder()
+    {
+    }
+}
+
+[TestClass]
+internal class DummyTestClassInheritingADependency : DummyTestClassBaseDeclaringADependency
+{
+}
+
+[TestClass]
+internal class DummyTestClassOverridingADependentTest : DummyTestClassBaseDeclaringADependency
+{
+    [TestMethod]
+    public override void PlaceOrder()
     {
     }
 }

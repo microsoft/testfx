@@ -121,10 +121,13 @@ override a narrower declaration. Under-skipping runs a test whose precondition f
 failure); over-skipping only costs coverage that was already compromised. The conservative direction is
 therefore to skip.
 
-**Not inherited.** `[ResourceLock]` and `[DoNotParallelize]` are inherited because over-applying them is
-merely slower. A dependency is different: re-pointing one concrete test's prerequisites at every derived
-class creates edges nobody wrote, and a base class that names a test in its own hierarchy would turn
-into a cycle. Inheritance here fails *dangerous*, not *slow*, so it is off.
+**Not inherited across overrides.** `[ResourceLock]` and `[DoNotParallelize]` are inherited because
+over-applying them is merely slower. A dependency is different: carrying one concrete test's prerequisites
+onto a method that *overrides* it creates an edge nobody wrote, on a method the author rewrote. That
+direction fails *dangerous*, not *slow*, so `Inherited = false`. Note this is only about override chains -
+a base-declared test method still runs as a test of each derived class, and its dependency travels with
+it, resolved against the derived class so that each derived class orders its own copies of the two tests.
+Dropping it there would silently discard the ordering the author declared.
 
 **Cycles fail the tests in the cycle, and only those.** A cycle is a configuration error, so it is
 reported before anything runs, as an error message naming the cycle path (`A > B > A`). The tests in the

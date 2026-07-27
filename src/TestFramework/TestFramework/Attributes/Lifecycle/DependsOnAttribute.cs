@@ -63,9 +63,13 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// row and is skipped if any row does not pass. Per-row matching is not supported.
 /// </para>
 /// <para>
-/// This attribute is deliberately <em>not</em> inherited: a dependency is a statement about one
-/// concrete test's prerequisites, and silently re-pointing it at every derived class tends to create
-/// unintended graph edges (and, for a self-referencing hierarchy, cycles).
+/// <strong>Inheritance.</strong> A test method declared on a base class runs as a test of every derived
+/// test class, and the dependency it declares travels with it: the edge is resolved against the
+/// <em>derived</em> class, so each derived class gets its own edge between its own copies of the two
+/// tests. Dropping the edge there would silently discard the declared ordering in every concrete test
+/// class. What <c>Inherited = false</c> opts out of is <em>override</em> chains: a method that overrides a
+/// dependent test without re-declaring the attribute has no dependency, because re-pointing a prerequisite
+/// onto a method the author rewrote tends to create edges nobody asked for.
 /// </para>
 /// <para>
 /// Test dependencies couple tests together and make it impossible to run a dependent in isolation, so
