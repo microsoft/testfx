@@ -81,12 +81,15 @@ public sealed class CurrentDirectoryMutationUnderParallelizationAnalyzer : Diagn
 
             if (environmentSymbol is not null)
             {
-                // Both a plain assignment ('Environment.CurrentDirectory = x') and a compound assignment
-                // ('Environment.CurrentDirectory += x', which reads then writes) mutate the process-global directory.
+                // A plain assignment ('Environment.CurrentDirectory = x'), a compound assignment
+                // ('Environment.CurrentDirectory += x', which reads then writes), and a coalescing assignment
+                // ('Environment.CurrentDirectory ??= x', which writes when the current value is null) all mutate the
+                // process-global directory.
                 context.RegisterOperationAction(
                     context => AnalyzeAssignment(context, environmentSymbol, testMethodAttributeSymbol, fixtureAttributeSymbols, classScopedFixtureAttributeSymbols, doNotParallelizeAttributeSymbol, resourceLockAttributeSymbol),
                     OperationKind.SimpleAssignment,
-                    OperationKind.CompoundAssignment);
+                    OperationKind.CompoundAssignment,
+                    OperationKind.CoalesceAssignment);
             }
         });
     }
@@ -164,11 +167,13 @@ public sealed class CurrentDirectoryMutationUnderParallelizationAnalyzer : Diagn
         }
 
         // Only offer the code fix where a lock actually takes effect: the test method, or the test class for a
-        // class-scoped fixture. Assembly/global fixtures have no effective target, so report without a fix there.
+        // class-scoped fixture. Assembly/global fixtures have no effective target, so report without a fix there. We
+        // also require ResourceLockAttribute to be present in the compilation - an MSTest v3 consumer has neither it
+        // nor WellKnownResources, so emitting the '[ResourceLock(WellKnownResources.X)]' fix there would not compile.
         string? fixScope = ParallelSafetyHelper.GetResourceLockFixScope(testMethod, testMethodAttributeSymbol, classScopedFixtureAttributeSymbols);
 
         ImmutableDictionary<string, string?> properties = ImmutableDictionary<string, string?>.Empty;
-        if (fixScope is not null)
+        if (fixScope is not null && resourceLockAttributeSymbol is not null)
         {
             properties = properties
                 .Add(ParallelSafetyHelper.ResourceMemberPropertyKey, "CurrentDirectory")

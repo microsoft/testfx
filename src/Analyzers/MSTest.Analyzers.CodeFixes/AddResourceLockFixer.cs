@@ -19,9 +19,13 @@ namespace MSTest.Analyzers;
 /// <summary>
 /// Code fixer for <see cref="UndeclaredProcessGlobalStateMutationAnalyzer"/> (MSTEST0074) and
 /// <see cref="CurrentDirectoryMutationUnderParallelizationAnalyzer"/> (MSTEST0075). Adds a
-/// <c>[ResourceLock(WellKnownResources.X)]</c> attribute to the enclosing test method. The concrete
-/// <c>WellKnownResources</c> member is read from the diagnostic's <c>ResourceMember</c> property; when that
-/// property is absent (for example when a lock is already declared) no fix is offered.
+/// <c>[ResourceLock(WellKnownResources.X)]</c> attribute at the scope where discovery honors it: the enclosing
+/// test method for a <c>[TestMethod]</c>, or the enclosing test class for a class-scoped fixture
+/// (<c>[TestInitialize]</c>/<c>[TestCleanup]</c>/<c>[ClassInitialize]</c>/<c>[ClassCleanup]</c>). The concrete
+/// <c>WellKnownResources</c> member and the target scope are read from the diagnostic's <c>ResourceMember</c> and
+/// <c>FixScope</c> properties; when <c>ResourceMember</c> is absent (for example when a lock is already declared,
+/// the mutation sits in an assembly/global fixture with no effective lock target, or the compilation predates
+/// <c>ResourceLockAttribute</c>) no fix is offered.
 /// </summary>
 [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(AddResourceLockFixer))]
 [Shared]

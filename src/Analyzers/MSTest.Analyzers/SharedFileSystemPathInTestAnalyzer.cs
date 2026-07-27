@@ -147,7 +147,12 @@ public sealed class SharedFileSystemPathInTestAnalyzer : DiagnosticAnalyzer
                 or "AppendText"
                 or "Create" or "CreateText" or "CreateSymbolicLink"
                 or "Copy" or "Move" or "Replace" or "Delete"
-                or "OpenWrite" or "Open"
+                or "OpenWrite"
+                // 'File.Open' is intentionally excluded: its mode/access arguments can request a read-only handle
+                // ('File.Open(path, FileMode.Open, FileAccess.Read)'), so treating every 'Open' as a mutation would be
+                // a false positive. Only the unambiguously-writing 'OpenWrite' is flagged, keeping R4 within the
+                // statically certain, precision-first subset.
+                or "Encrypt" or "Decrypt"
                 or "SetAttributes" or "SetUnixFileMode"
                 or "SetCreationTime" or "SetCreationTimeUtc"
                 or "SetLastAccessTime" or "SetLastAccessTimeUtc"

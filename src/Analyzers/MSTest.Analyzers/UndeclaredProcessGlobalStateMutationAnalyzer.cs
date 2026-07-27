@@ -145,11 +145,13 @@ public sealed class UndeclaredProcessGlobalStateMutationAnalyzer : DiagnosticAna
         // Only offer the code fix when there is a lock target that actually takes effect at runtime: the test method
         // itself, or - for a class-scoped fixture - the test class. A lock on an assembly/global fixture method is
         // ignored by discovery, so in that case we still report the mutation but attach no ResourceMember (the fixer
-        // offers nothing) rather than a fix that silently does nothing.
+        // offers nothing) rather than a fix that silently does nothing. We also require ResourceLockAttribute to be
+        // present in the compilation - an MSTest v3 consumer has neither it nor WellKnownResources, so emitting the
+        // '[ResourceLock(WellKnownResources.X)]' fix there would produce uncompilable code.
         string? fixScope = ParallelSafetyHelper.GetResourceLockFixScope(testMethod, testMethodAttributeSymbol, classScopedFixtureAttributeSymbols);
 
         ImmutableDictionary<string, string?> properties = ImmutableDictionary<string, string?>.Empty;
-        if (fixScope is not null)
+        if (fixScope is not null && resourceLockAttributeSymbol is not null)
         {
             properties = properties
                 .Add(ResourceMemberPropertyKey, resourceMember)

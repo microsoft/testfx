@@ -155,6 +155,54 @@ public sealed class CurrentDirectoryMutationUnderParallelizationAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenTestMethodCoalesceAssignsEnvironmentCurrentDirectory_Diagnostic()
+    {
+        // A coalescing assignment ('??=') writes the process-global current directory when its current value is
+        // null, so it mutates just like a plain or compound assignment and must be flagged.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    {|#0:Environment.CurrentDirectory ??= "sub"|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.CurrentDirectory)]
+                public void MyTestMethod()
+                {
+                    Environment.CurrentDirectory ??= "sub";
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic(CurrentDirectoryMutationUnderParallelizationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Environment.CurrentDirectory"),
+            fixedCode);
+    }
+
+    [TestMethod]
     public async Task WhenResourceLockDeclared_NoDiagnostic()
     {
         // A declared current-directory lock means the author coordinated the mutation, so R2 stays silent. The

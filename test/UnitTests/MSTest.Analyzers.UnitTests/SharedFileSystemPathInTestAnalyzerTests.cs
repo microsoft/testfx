@@ -175,6 +175,32 @@ public sealed class SharedFileSystemPathInTestAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenTestMethodOpensFileForReading_NoDiagnostic()
+    {
+        // 'File.Open' can request a read-only handle via its FileMode/FileAccess arguments, so it is intentionally
+        // excluded from the mutating allowlist - flagging every 'Open' would be a false positive. Only the
+        // unambiguously-writing 'OpenWrite' is flagged.
+        string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    using FileStream stream = File.Open("fixture.txt", FileMode.Open, FileAccess.Read);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
     public async Task WhenTestMethodUsesVariablePath_NoDiagnostic()
     {
         // The analyzer sees the call, not the resource; a variable path may be unique per test, so it must
