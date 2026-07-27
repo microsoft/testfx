@@ -829,6 +829,76 @@ public sealed class UndeclaredProcessGlobalStateMutationAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenOverrideInheritsDoNotParallelizeFromBaseMethod_NoDiagnostic()
+    {
+        // DoNotParallelizeAttribute is Inherited = true and the adapter reads member attributes with
+        // GetCustomAttributes(..., inherit: true), so an override inherits the base method's opt-out and runs
+        // sequentially. Inspecting only the override's own attributes would miss that and report a false positive.
+        // [TestMethod] is reapplied because TestMethodAttribute is Inherited = false.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            public class MyBaseClass
+            {
+                [TestMethod]
+                [DoNotParallelize]
+                public virtual void MyTestMethod()
+                {
+                }
+            }
+
+            [TestClass]
+            public class MyTestClass : MyBaseClass
+            {
+                [TestMethod]
+                public override void MyTestMethod()
+                {
+                    Environment.SetEnvironmentVariable("MY_VAR", "value");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenOverrideInheritsResourceLockFromBaseMethod_NoDiagnostic()
+    {
+        // ResourceLockAttribute is declared Inherited = true, so a lock on the overridden method still applies to
+        // the override at runtime and the mutation is coordinated.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            public class MyBaseClass
+            {
+                [TestMethod]
+                [ResourceLock(WellKnownResources.EnvironmentVariables)]
+                public virtual void MyTestMethod()
+                {
+                }
+            }
+
+            [TestClass]
+            public class MyTestClass : MyBaseClass
+            {
+                [TestMethod]
+                public override void MyTestMethod()
+                {
+                    Environment.SetEnvironmentVariable("MY_VAR", "value");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
     public async Task WhenAssemblyDoNotParallelizeWithParallelize_NoDiagnostic()
     {
         // Firing gate, kill switch: [assembly: DoNotParallelize] disables in-assembly parallelization entirely,

@@ -268,7 +268,7 @@ internal static class ParallelSafetyHelper
         // fixture method ([TestInitialize]/[TestCleanup]/[ClassInitialize]/[ClassCleanup]/...) never goes through
         // that path, so a [DoNotParallelize] sitting on a fixture is ignored at runtime and must not silence a live
         // mutation there. Only class/assembly-level opt-out (the base-type walk below) protects a fixture.
-        if (IsTestMethod(method, testMethodAttributeSymbol) && HasAttribute(method, doNotParallelizeAttributeSymbol))
+        if (IsTestMethod(method, testMethodAttributeSymbol) && MethodHasInheritedAttribute(method, doNotParallelizeAttributeSymbol))
         {
             return true;
         }
@@ -309,7 +309,7 @@ internal static class ParallelSafetyHelper
         // building a UnitTestElement for a discovered test method. A [ResourceLock] on a fixture method is
         // therefore never read at runtime and must not suppress a live mutation there.
         if (IsTestMethod(method, testMethodAttributeSymbol)
-            && DeclaresResourceLock(method, resourceLockAttributeSymbol, resourceKey))
+            && MethodDeclaresInheritedResourceLock(method, resourceLockAttributeSymbol, resourceKey))
         {
             return true;
         }
@@ -343,7 +343,7 @@ internal static class ParallelSafetyHelper
         }
 
         if (IsTestMethod(method, testMethodAttributeSymbol)
-            && HasAttribute(method, resourceLockAttributeSymbol))
+            && MethodHasInheritedAttribute(method, resourceLockAttributeSymbol))
         {
             return true;
         }
@@ -362,9 +362,55 @@ internal static class ParallelSafetyHelper
     /// <summary>
     /// Returns <see langword="true"/> when <paramref name="method"/> carries <c>[TestMethod]</c> (or a derived
     /// attribute), i.e. it is a method discovery treats as a real test rather than a fixture.
+    /// <para>
+    /// This deliberately does <em>not</em> walk the <c>OverriddenMethod</c> chain, unlike
+    /// <see cref="MethodHasInheritedAttribute"/>. <c>TestMethodAttribute</c> is declared
+    /// <c>[AttributeUsage(..., Inherited = false)]</c>, so the runtime's
+    /// <c>GetCustomAttributes(..., inherit: true)</c> does not surface a base method's <c>[TestMethod]</c> on an
+    /// override. Walking here would classify a plain override of a base test method as a test method when the
+    /// runtime does not - a false positive, which is the direction these rules must never take.
+    /// </para>
     /// </summary>
     private static bool IsTestMethod(IMethodSymbol method, INamedTypeSymbol? testMethodAttributeSymbol)
         => testMethodAttributeSymbol is not null && HasAttribute(method, testMethodAttributeSymbol);
+
+    /// <summary>
+    /// Method-level counterpart of <see cref="HasAttribute"/> for attributes declared <c>Inherited = true</c>
+    /// (<c>[DoNotParallelize]</c> and <c>[ResourceLock]</c>). Runtime discovery reads member attributes through
+    /// <c>ReflectionOperations.GetCustomAttributes(memberInfo)</c>, which passes <c>inherit: true</c>, so an
+    /// override inherits such an attribute from the method it overrides. Inspecting only the Roslyn symbol's own
+    /// attributes would miss that and report a mutation the runtime has already opted out of or locked.
+    /// </summary>
+    private static bool MethodHasInheritedAttribute(IMethodSymbol method, INamedTypeSymbol attributeSymbol)
+    {
+        for (IMethodSymbol? current = method; current is not null; current = current.OverriddenMethod)
+        {
+            if (HasAttribute(current, attributeSymbol))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// <see cref="DeclaresResourceLock"/> over a method and the chain of methods it overrides.
+    /// <c>ResourceLockAttribute</c> is declared <c>Inherited = true</c>, so a lock on an overridden method still
+    /// applies to the override at runtime.
+    /// </summary>
+    private static bool MethodDeclaresInheritedResourceLock(IMethodSymbol method, INamedTypeSymbol resourceLockAttributeSymbol, string resourceKey)
+    {
+        for (IMethodSymbol? current = method; current is not null; current = current.OverriddenMethod)
+        {
+            if (DeclaresResourceLock(current, resourceLockAttributeSymbol, resourceKey))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     private static bool DeclaresResourceLock(ISymbol symbol, INamedTypeSymbol resourceLockAttributeSymbol, string resourceKey)
     {
