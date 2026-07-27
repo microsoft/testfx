@@ -432,4 +432,65 @@ public sealed class SharedFileSystemPathInTestAnalyzerTests
                 .WithLocation(0)
                 .WithArguments("C:\\temp\\source.txt"));
     }
+
+    [TestMethod]
+    public async Task WhenTestMethodOpensFileForWriting_Diagnostic()
+    {
+        // File.OpenWrite is the only File.Open* overload that is unambiguously a mutation (it always opens for
+        // writing), so it must be flagged - unlike the general File.Open which can request a read-only handle.
+        string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    using FileStream stream = {|#0:File.OpenWrite("shared.log")|};
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(SharedFileSystemPathInTestAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("shared.log"));
+    }
+
+    [TestMethod]
+    public async Task WhenTestInitializeWritesConstantPath_Diagnostic()
+    {
+        // [TestInitialize] is a class-scoped fixture that runs before each test method.  Under method-level
+        // parallelization it can race with other tests, so a constant-path write inside it must be flagged.
+        string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestInitialize]
+                public void Setup()
+                {
+                    {|#0:File.WriteAllText("setup.txt", "data")|};
+                }
+
+                [TestMethod]
+                public void MyTestMethod() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(SharedFileSystemPathInTestAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("setup.txt"));
+    }
 }
