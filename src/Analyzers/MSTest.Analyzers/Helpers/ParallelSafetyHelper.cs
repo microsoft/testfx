@@ -31,30 +31,67 @@ internal static class ParallelSafetyHelper
     /// </summary>
     internal const string ResourceMemberPropertyKey = "ResourceMember";
 
+    /// <summary>
+    /// Diagnostic property key carrying where the <c>AddResourceLockFixer</c> code fix should place the
+    /// <c>[ResourceLock]</c> attribute: <see cref="FixScopeMethod"/> for a test method, or
+    /// <see cref="FixScopeClass"/> for a per-test/per-class fixture (whose lock only takes effect at class scope).
+    /// Absent when no code fix should be offered.
+    /// </summary>
+    internal const string FixScopePropertyKey = "FixScope";
+
+    /// <summary>The <see cref="FixScopePropertyKey"/> value meaning "add the lock to the enclosing test method".</summary>
+    internal const string FixScopeMethod = "method";
+
+    /// <summary>The <see cref="FixScopePropertyKey"/> value meaning "add the lock to the enclosing test class".</summary>
+    internal const string FixScopeClass = "class";
+
     private const string AlwaysValue = "always";
 
     /// <summary>
     /// Determines whether the parallel-safety rules should produce diagnostics for this compilation. An
     /// analyzer cannot read runsettings and does not currently observe the <c>MSTestParallelizeScope</c>
     /// MSBuild property, so we fire when either the <c>mstest_parallel_safety_mode = always</c> opt-in is
-    /// set, or <c>[assembly: Parallelize]</c> is present in source.
+    /// set, or <c>[assembly: Parallelize]</c> is present in source - but never when the assembly opts out of
+    /// parallelization entirely with <c>[assembly: DoNotParallelize]</c>.
     /// </summary>
-    internal static bool IsParallelizationInEffect(Compilation compilation, AnalyzerOptions options, INamedTypeSymbol? parallelizeAttributeSymbol)
+    internal static bool IsParallelizationInEffect(
+        Compilation compilation,
+        AnalyzerOptions options,
+        INamedTypeSymbol? parallelizeAttributeSymbol,
+        INamedTypeSymbol? doNotParallelizeAttributeSymbol)
     {
-        if (options.AnalyzerConfigOptionsProvider.GlobalOptions.TryGetValue(ConfigOptionKey, out string? mode)
-            && string.Equals(mode, AlwaysValue, StringComparison.OrdinalIgnoreCase))
+        // An assembly-level [assembly: DoNotParallelize] disables in-assembly parallelization entirely (the adapter
+        // sets CanParallelizeAssembly = false), so no parallel-safety rule can describe a live defect - not even when
+        // the mstest_parallel_safety_mode = always opt-in is set. Assembly opt-out therefore wins over every signal.
+        bool assemblyOptsOut = doNotParallelizeAttributeSymbol is not null
+            && AssemblyHasAttribute(compilation, doNotParallelizeAttributeSymbol);
+
+        bool parallelizationRequested = IsAlwaysModeConfigured(options, compilation)
+            || (parallelizeAttributeSymbol is not null && AssemblyHasAttribute(compilation, parallelizeAttributeSymbol));
+
+        return !assemblyOptsOut && parallelizationRequested;
+    }
+
+    /// <summary>
+    /// Returns <see langword="true"/> when the <c>mstest_parallel_safety_mode</c> opt-in is set to <c>always</c>.
+    /// The value is read from the global analyzer config first (a <c>.globalconfig</c> file or an MSBuild
+    /// <c>build_property</c>), then from any syntax tree's <c>.editorconfig</c> options: a value set in an ordinary
+    /// <c>[*.cs]</c> section is exposed per-tree rather than globally, and the opt-in is compilation-wide, so any
+    /// single tree carrying it forces the rules on for the whole assembly.
+    /// </summary>
+    private static bool IsAlwaysModeConfigured(AnalyzerOptions options, Compilation compilation)
+    {
+        AnalyzerConfigOptionsProvider provider = options.AnalyzerConfigOptionsProvider;
+        if (provider.GlobalOptions.TryGetValue(ConfigOptionKey, out string? globalMode)
+            && string.Equals(globalMode, AlwaysValue, StringComparison.OrdinalIgnoreCase))
         {
             return true;
         }
 
-        if (parallelizeAttributeSymbol is null)
+        foreach (SyntaxTree tree in compilation.SyntaxTrees)
         {
-            return false;
-        }
-
-        foreach (AttributeData attribute in compilation.Assembly.GetAttributes())
-        {
-            if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, parallelizeAttributeSymbol))
+            if (provider.GetOptions(tree).TryGetValue(ConfigOptionKey, out string? treeMode)
+                && string.Equals(treeMode, AlwaysValue, StringComparison.OrdinalIgnoreCase))
             {
                 return true;
             }
@@ -62,6 +99,9 @@ internal static class ParallelSafetyHelper
 
         return false;
     }
+
+    private static bool AssemblyHasAttribute(Compilation compilation, INamedTypeSymbol attributeSymbol)
+        => compilation.Assembly.GetAttributes().Any(attribute => SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, attributeSymbol));
 
     /// <summary>
     /// Collects the attribute symbols that mark a method as MSTest "test code" - test methods run through
@@ -88,6 +128,65 @@ internal static class ParallelSafetyHelper
                 builder.Add(symbol);
             }
         }
+    }
+
+    /// <summary>
+    /// Collects the attribute symbols for the <em>class-scoped</em> fixtures - <c>[TestInitialize]</c>,
+    /// <c>[TestCleanup]</c>, <c>[ClassInitialize]</c>, <c>[ClassCleanup]</c>. A <c>[ResourceLock]</c> declared on the
+    /// test class covers all of these (every test method in the class inherits the class lock and its fixtures run
+    /// within those tests), whereas a lock declared on the fixture method itself is ignored by discovery, which reads
+    /// resource locks only from the test class and the test method.
+    /// </summary>
+    internal static ImmutableHashSet<INamedTypeSymbol> GetClassScopedFixtureAttributeSymbols(Compilation compilation)
+    {
+        ImmutableHashSet<INamedTypeSymbol>.Builder builder = ImmutableHashSet.CreateBuilder<INamedTypeSymbol>(SymbolEqualityComparer.Default);
+        AddIfPresent(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestInitializeAttribute);
+        AddIfPresent(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestCleanupAttribute);
+        AddIfPresent(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingClassInitializeAttribute);
+        AddIfPresent(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingClassCleanupAttribute);
+        return builder.ToImmutable();
+
+        void AddIfPresent(string metadataName)
+        {
+            if (compilation.GetOrCreateTypeByMetadataName(metadataName) is { } symbol)
+            {
+                builder.Add(symbol);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Decides where the <c>AddResourceLockFixer</c> code fix should place the <c>[ResourceLock]</c> attribute for a
+    /// mutation inside <paramref name="testMethod"/>: <see cref="FixScopeMethod"/> when it is a test method, or
+    /// <see cref="FixScopeClass"/> when it is a class-scoped fixture (whose method-level lock would be ignored by
+    /// discovery). Returns <see langword="null"/> for assembly/global fixtures - there is no effective lock target
+    /// for those, so no fix should be offered rather than a fix that silently does nothing at runtime.
+    /// </summary>
+    internal static string? GetResourceLockFixScope(
+        IMethodSymbol testMethod,
+        INamedTypeSymbol? testMethodAttributeSymbol,
+        ImmutableHashSet<INamedTypeSymbol> classScopedFixtureAttributeSymbols)
+    {
+        foreach (AttributeData attribute in testMethod.GetAttributes())
+        {
+            INamedTypeSymbol? attributeClass = attribute.AttributeClass;
+            if (attributeClass is null)
+            {
+                continue;
+            }
+
+            if (testMethodAttributeSymbol is not null && attributeClass.Inherits(testMethodAttributeSymbol))
+            {
+                return FixScopeMethod;
+            }
+
+            if (classScopedFixtureAttributeSymbols.Contains(attributeClass))
+            {
+                return FixScopeClass;
+            }
+        }
+
+        return null;
     }
 
     /// <summary>
@@ -249,15 +348,5 @@ internal static class ParallelSafetyHelper
     }
 
     private static bool HasAttribute(ISymbol symbol, INamedTypeSymbol attributeSymbol)
-    {
-        foreach (AttributeData attribute in symbol.GetAttributes())
-        {
-            if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, attributeSymbol))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
+        => symbol.GetAttributes().Any(attribute => SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, attributeSymbol));
 }

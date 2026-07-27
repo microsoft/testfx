@@ -46,14 +46,14 @@ public sealed class CultureMutationUnderParallelizationAnalyzer : DiagnosticAnal
         {
             Compilation compilation = context.Compilation;
             INamedTypeSymbol? cultureInfoSymbol = compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemGlobalizationCultureInfo);
-            INamedTypeSymbol? threadSymbol = compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingThread);
-            if (cultureInfoSymbol is null && threadSymbol is null)
+            if (cultureInfoSymbol is null)
             {
                 return;
             }
 
             INamedTypeSymbol? parallelizeAttributeSymbol = compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingParallelizeAttribute);
-            if (!ParallelSafetyHelper.IsParallelizationInEffect(compilation, context.Options, parallelizeAttributeSymbol))
+            INamedTypeSymbol? doNotParallelizeAttributeSymbol = compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDoNotParallelizeAttribute);
+            if (!ParallelSafetyHelper.IsParallelizationInEffect(compilation, context.Options, parallelizeAttributeSymbol, doNotParallelizeAttributeSymbol))
             {
                 return;
             }
@@ -65,56 +65,47 @@ public sealed class CultureMutationUnderParallelizationAnalyzer : DiagnosticAnal
                 return;
             }
 
-            INamedTypeSymbol? doNotParallelizeAttributeSymbol = compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDoNotParallelizeAttribute);
             INamedTypeSymbol? resourceLockAttributeSymbol = compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingResourceLockAttribute);
 
+            // A plain assignment, a compound assignment, and a null-coalescing assignment ('??=') all write the
+            // static culture field, so observe all three assignment shapes.
             context.RegisterOperationAction(
-                context => AnalyzeAssignment(context, cultureInfoSymbol, threadSymbol, testMethodAttributeSymbol, fixtureAttributeSymbols, doNotParallelizeAttributeSymbol, resourceLockAttributeSymbol),
-                OperationKind.SimpleAssignment);
+                context => AnalyzeAssignment(context, cultureInfoSymbol, testMethodAttributeSymbol, fixtureAttributeSymbols, doNotParallelizeAttributeSymbol, resourceLockAttributeSymbol),
+                OperationKind.SimpleAssignment,
+                OperationKind.CompoundAssignment,
+                OperationKind.CoalesceAssignment);
         });
     }
 
     private static void AnalyzeAssignment(
         OperationAnalysisContext context,
-        INamedTypeSymbol? cultureInfoSymbol,
-        INamedTypeSymbol? threadSymbol,
+        INamedTypeSymbol cultureInfoSymbol,
         INamedTypeSymbol? testMethodAttributeSymbol,
         ImmutableHashSet<INamedTypeSymbol> fixtureAttributeSymbols,
         INamedTypeSymbol? doNotParallelizeAttributeSymbol,
         INamedTypeSymbol? resourceLockAttributeSymbol)
     {
-        var assignment = (ISimpleAssignmentOperation)context.Operation;
+        var assignment = (IAssignmentOperation)context.Operation;
         if (assignment.Target is not IPropertyReferenceOperation propertyReference)
         {
             return;
         }
 
         IPropertySymbol property = propertyReference.Property;
-        INamedTypeSymbol containingType = property.ContainingType;
 
-        string? api = null;
-
-        // Process-wide: CultureInfo.DefaultThreadCurrentCulture / DefaultThreadCurrentUICulture setters.
-        if (cultureInfoSymbol is not null
-            && property.Name is "DefaultThreadCurrentCulture" or "DefaultThreadCurrentUICulture"
-            && SymbolEqualityComparer.Default.Equals(containingType, cultureInfoSymbol))
-        {
-            api = $"CultureInfo.{property.Name}";
-        }
-
-        // Pooled-thread leak: Thread.CurrentThread.CurrentCulture / CurrentUICulture setters. The thread is
-        // returned to the pool and reused by a later test, which then observes the mutated culture.
-        else if (threadSymbol is not null
-            && property.Name is "CurrentCulture" or "CurrentUICulture"
-            && SymbolEqualityComparer.Default.Equals(containingType, threadSymbol))
-        {
-            api = $"Thread.CurrentThread.{property.Name}";
-        }
-
-        if (api is null)
+        // Only CultureInfo.DefaultThreadCurrentCulture / DefaultThreadCurrentUICulture set a process-wide (static)
+        // field and are therefore unambiguously unsafe under parallelization. The per-thread and ambient forms
+        // (Thread.CurrentThread.Current[UI]Culture, CultureInfo.Current[UI]Culture) delegate to an AsyncLocal that
+        // flows with ExecutionContext on modern .NET, so they do not corrupt sibling or later-pooled tests and are
+        // intentionally NOT flagged - the judgement call about restoring them in a finally belongs to the sibling
+        // parallel-safety-audit skill. See the culture determination recorded in the PR description.
+        if (property.Name is not ("DefaultThreadCurrentCulture" or "DefaultThreadCurrentUICulture")
+            || !SymbolEqualityComparer.Default.Equals(property.ContainingType, cultureInfoSymbol))
         {
             return;
         }
+
+        string api = $"CultureInfo.{property.Name}";
 
         IMethodSymbol? testMethod = ParallelSafetyHelper.GetEnclosingTestMethod(context.ContainingSymbol, fixtureAttributeSymbols, testMethodAttributeSymbol);
         if (testMethod is null)

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
@@ -60,8 +60,18 @@ public sealed class AddResourceLockFixer : CodeFixProvider
         TextSpan diagnosticSpan = diagnostic.Location.SourceSpan;
 
         SyntaxToken syntaxToken = root.FindToken(diagnosticSpan.Start);
-        MethodDeclarationSyntax? methodDeclaration = syntaxToken.Parent?.AncestorsAndSelf().OfType<MethodDeclarationSyntax>().FirstOrDefault();
-        if (methodDeclaration is null)
+
+        // The lock must be placed where discovery actually reads it. For a test method that is the method itself;
+        // for a class-scoped fixture ([TestInitialize]/[TestCleanup]/[ClassInitialize]/[ClassCleanup]) the lock is
+        // only honored at class scope, so the analyzer asks us (via the FixScope property) to annotate the class.
+        string fixScope = diagnostic.Properties.TryGetValue(ParallelSafetyHelper.FixScopePropertyKey, out string? scope) && scope is not null
+            ? scope
+            : ParallelSafetyHelper.FixScopeMethod;
+
+        SyntaxNode? targetNode = fixScope == ParallelSafetyHelper.FixScopeClass
+            ? syntaxToken.Parent?.AncestorsAndSelf().OfType<ClassDeclarationSyntax>().FirstOrDefault()
+            : syntaxToken.Parent?.AncestorsAndSelf().OfType<MethodDeclarationSyntax>().FirstOrDefault();
+        if (targetNode is null)
         {
             return;
         }
@@ -69,12 +79,12 @@ public sealed class AddResourceLockFixer : CodeFixProvider
         context.RegisterCodeFix(
             CodeAction.Create(
                 title: string.Format(CultureInfo.CurrentCulture, CodeFixResources.AddResourceLockFix, resourceMember),
-                createChangedDocument: c => AddResourceLockAttributeAsync(context.Document, methodDeclaration, resourceMember, c),
+                createChangedDocument: c => AddResourceLockAttributeAsync(context.Document, targetNode, resourceMember, c),
                 equivalenceKey: $"{nameof(AddResourceLockFixer)}_{resourceMember}"),
             diagnostic);
     }
 
-    private static async Task<Document> AddResourceLockAttributeAsync(Document document, MethodDeclarationSyntax methodDeclaration, string resourceMember, CancellationToken cancellationToken)
+    private static async Task<Document> AddResourceLockAttributeAsync(Document document, SyntaxNode targetNode, string resourceMember, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
@@ -88,7 +98,7 @@ public sealed class AddResourceLockFixer : CodeFixProvider
         SyntaxNode attribute = generator.Attribute(ResourceLockAttributeFullName, [argument])
             .WithAdditionalAnnotations(Simplifier.Annotation);
 
-        editor.AddAttribute(methodDeclaration, attribute);
+        editor.AddAttribute(targetNode, attribute);
         return editor.GetChangedDocument();
     }
 }

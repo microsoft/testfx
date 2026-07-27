@@ -58,7 +58,8 @@ public sealed class UndeclaredProcessGlobalStateMutationAnalyzer : DiagnosticAna
             }
 
             INamedTypeSymbol? parallelizeAttributeSymbol = compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingParallelizeAttribute);
-            if (!ParallelSafetyHelper.IsParallelizationInEffect(compilation, context.Options, parallelizeAttributeSymbol))
+            INamedTypeSymbol? doNotParallelizeAttributeSymbol = compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDoNotParallelizeAttribute);
+            if (!ParallelSafetyHelper.IsParallelizationInEffect(compilation, context.Options, parallelizeAttributeSymbol, doNotParallelizeAttributeSymbol))
             {
                 return;
             }
@@ -70,11 +71,11 @@ public sealed class UndeclaredProcessGlobalStateMutationAnalyzer : DiagnosticAna
                 return;
             }
 
-            INamedTypeSymbol? doNotParallelizeAttributeSymbol = compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDoNotParallelizeAttribute);
+            ImmutableHashSet<INamedTypeSymbol> classScopedFixtureAttributeSymbols = ParallelSafetyHelper.GetClassScopedFixtureAttributeSymbols(compilation);
             INamedTypeSymbol? resourceLockAttributeSymbol = compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingResourceLockAttribute);
 
             context.RegisterOperationAction(
-                context => AnalyzeInvocation(context, environmentSymbol, consoleSymbol, testMethodAttributeSymbol, fixtureAttributeSymbols, doNotParallelizeAttributeSymbol, resourceLockAttributeSymbol),
+                context => AnalyzeInvocation(context, environmentSymbol, consoleSymbol, testMethodAttributeSymbol, fixtureAttributeSymbols, classScopedFixtureAttributeSymbols, doNotParallelizeAttributeSymbol, resourceLockAttributeSymbol),
                 OperationKind.Invocation);
         });
     }
@@ -85,6 +86,7 @@ public sealed class UndeclaredProcessGlobalStateMutationAnalyzer : DiagnosticAna
         INamedTypeSymbol? consoleSymbol,
         INamedTypeSymbol? testMethodAttributeSymbol,
         ImmutableHashSet<INamedTypeSymbol> fixtureAttributeSymbols,
+        ImmutableHashSet<INamedTypeSymbol> classScopedFixtureAttributeSymbols,
         INamedTypeSymbol? doNotParallelizeAttributeSymbol,
         INamedTypeSymbol? resourceLockAttributeSymbol)
     {
@@ -137,8 +139,19 @@ public sealed class UndeclaredProcessGlobalStateMutationAnalyzer : DiagnosticAna
             return;
         }
 
-        ImmutableDictionary<string, string?> properties = ImmutableDictionary<string, string?>.Empty
-            .Add(ResourceMemberPropertyKey, resourceMember);
+        // Only offer the code fix when there is a lock target that actually takes effect at runtime: the test method
+        // itself, or - for a class-scoped fixture - the test class. A lock on an assembly/global fixture method is
+        // ignored by discovery, so in that case we still report the mutation but attach no ResourceMember (the fixer
+        // offers nothing) rather than a fix that silently does nothing.
+        string? fixScope = ParallelSafetyHelper.GetResourceLockFixScope(testMethod, testMethodAttributeSymbol, classScopedFixtureAttributeSymbols);
+
+        ImmutableDictionary<string, string?> properties = ImmutableDictionary<string, string?>.Empty;
+        if (fixScope is not null)
+        {
+            properties = properties
+                .Add(ResourceMemberPropertyKey, resourceMember)
+                .Add(ParallelSafetyHelper.FixScopePropertyKey, fixScope);
+        }
 
         context.ReportDiagnostic(invocation.CreateDiagnostic(Rule, properties, api, resourceMember!));
     }

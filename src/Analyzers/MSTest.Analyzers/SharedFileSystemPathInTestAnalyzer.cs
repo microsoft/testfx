@@ -53,7 +53,8 @@ public sealed class SharedFileSystemPathInTestAnalyzer : DiagnosticAnalyzer
             }
 
             INamedTypeSymbol? parallelizeAttributeSymbol = compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingParallelizeAttribute);
-            if (!ParallelSafetyHelper.IsParallelizationInEffect(compilation, context.Options, parallelizeAttributeSymbol))
+            INamedTypeSymbol? doNotParallelizeAttributeSymbol = compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDoNotParallelizeAttribute);
+            if (!ParallelSafetyHelper.IsParallelizationInEffect(compilation, context.Options, parallelizeAttributeSymbol, doNotParallelizeAttributeSymbol))
             {
                 return;
             }
@@ -66,7 +67,7 @@ public sealed class SharedFileSystemPathInTestAnalyzer : DiagnosticAnalyzer
             }
 
             context.RegisterOperationAction(
-                context => AnalyzeInvocation(context, fileSymbol, directorySymbol, testMethodAttributeSymbol, fixtureAttributeSymbols),
+                context => AnalyzeInvocation(context, fileSymbol, directorySymbol, testMethodAttributeSymbol, fixtureAttributeSymbols, doNotParallelizeAttributeSymbol),
                 OperationKind.Invocation);
         });
     }
@@ -76,7 +77,8 @@ public sealed class SharedFileSystemPathInTestAnalyzer : DiagnosticAnalyzer
         INamedTypeSymbol? fileSymbol,
         INamedTypeSymbol? directorySymbol,
         INamedTypeSymbol? testMethodAttributeSymbol,
-        ImmutableHashSet<INamedTypeSymbol> fixtureAttributeSymbols)
+        ImmutableHashSet<INamedTypeSymbol> fixtureAttributeSymbols,
+        INamedTypeSymbol? doNotParallelizeAttributeSymbol)
     {
         var invocation = (IInvocationOperation)context.Operation;
         IMethodSymbol targetMethod = invocation.TargetMethod;
@@ -117,13 +119,20 @@ public sealed class SharedFileSystemPathInTestAnalyzer : DiagnosticAnalyzer
             return;
         }
 
+        // Opting out of parallelization (sequential phase) removes the collision risk entirely, so stay silent -
+        // this matches R1/R2/R3 and keeps specimens like the [DoNotParallelize] environment-mutating tests quiet.
+        if (ParallelSafetyHelper.IsOptedOutOfParallelization(testMethod, doNotParallelizeAttributeSymbol))
+        {
+            return;
+        }
+
         context.ReportDiagnostic(invocation.CreateDiagnostic(Rule, offendingPath));
     }
 
     /// <summary>
-    /// Recognizes the <c>File.*</c>/<c>Directory.*</c> methods that create, write to, move, replace, or delete a
-    /// filesystem entry. Read-only members (and pure path helpers) are excluded so that reading a shared fixture at
-    /// a fixed path never triggers a diagnostic.
+    /// Recognizes the <c>File.*</c>/<c>Directory.*</c> methods that create, write to, move, replace, delete, or
+    /// change the metadata of a filesystem entry. Read-only members (and pure path helpers) are excluded so that
+    /// reading a shared fixture at a fixed path never triggers a diagnostic.
     /// </summary>
     private static bool IsMutatingFileSystemMethod(bool isFile, string methodName)
         => isFile
@@ -133,11 +142,18 @@ public sealed class SharedFileSystemPathInTestAnalyzer : DiagnosticAnalyzer
                 or "AppendAllText" or "AppendAllTextAsync"
                 or "AppendAllLines" or "AppendAllLinesAsync"
                 or "AppendText"
-                or "Create" or "CreateText"
+                or "Create" or "CreateText" or "CreateSymbolicLink"
                 or "Copy" or "Move" or "Replace" or "Delete"
                 or "OpenWrite" or "Open"
+                or "SetAttributes" or "SetUnixFileMode"
+                or "SetCreationTime" or "SetCreationTimeUtc"
+                or "SetLastAccessTime" or "SetLastAccessTimeUtc"
+                or "SetLastWriteTime" or "SetLastWriteTimeUtc"
             : methodName is "CreateDirectory" or "CreateSymbolicLink"
-                or "Delete" or "Move";
+                or "Delete" or "Move"
+                or "SetCreationTime" or "SetCreationTimeUtc"
+                or "SetLastAccessTime" or "SetLastAccessTimeUtc"
+                or "SetLastWriteTime" or "SetLastWriteTimeUtc";
 
     /// <summary>
     /// Returns the constant string bound to the path parameter of a <c>File.*</c>/<c>Directory.*</c> call, when
