@@ -25,6 +25,8 @@ batching, sharding, retry scheduling, or any other multi-run plan.
 The open filtering issues describe several related but distinct needs:
 
 - [#3590](https://github.com/microsoft/testfx/issues/3590) asks for public filter extensibility.
+  This RFC delivers the composable extension point but not custom filter implementations, so the
+  issue stays open.
 - [#3530](https://github.com/microsoft/testfx/issues/3530) asks for an aggregate filter.
 - [#3528](https://github.com/microsoft/testfx/issues/3528) proposes index-based batching.
 - [#4068](https://github.com/microsoft/testfx/issues/4068) asks for test sharding.
@@ -63,6 +65,8 @@ This RFC covers:
 This RFC does not define:
 
 - a new command-line option or filter grammar;
+- public custom `ITestExecutionFilter` implementations or the capability negotiation they need
+  ([#3590](https://github.com/microsoft/testfx/issues/3590) stays open);
 - affected-test terminology or source-to-test mapping;
 - OR/NOT composition across provider contributions;
 - a framework-neutral predicate language;
@@ -109,18 +113,21 @@ public sealed class TestExecutionFilterContext
     public TestExecutionRequestOrigin Origin { get; }
 }
 
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public enum TestExecutionRequestKind
 {
     Discovery,
     Run,
 }
 
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public enum TestExecutionRequestOrigin
 {
     Console,
     Server,
 }
 
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public enum TestExecutionFilterOperator
 {
     And,
@@ -228,6 +235,17 @@ It is never dropped. Supporting custom filter kinds later requires:
 3. a non-silent fallback/rejection policy for mixed frameworks; and
 4. adapter translation or a platform-owned evaluation contract.
 
+Because this RFC keeps custom filter kinds out of the composable surface, it does not resolve the
+"open up filters for custom implementations" request tracked in
+[#3590](https://github.com/microsoft/testfx/issues/3590). It is a prerequisite: composition and
+recursive validation exist, so a later capability-negotiation RFC only has to decide which custom
+kinds a framework can declare and accept.
+
+A custom filter is only rejected when it takes part in composition. If no provider contributes a
+constraint, the built-in request filter is returned untouched (see the composition algorithm below),
+so an application whose internal factory produces a framework-specific representation is not broken
+by this RFC.
+
 ## Composition algorithm
 
 For a console request:
@@ -235,14 +253,22 @@ For a console request:
 1. MTP creates the existing built-in request filter from `--filter-uid`,
    `--treenode-filter`, or no filter.
 2. MTP asks every enabled provider for a contribution.
-3. MTP recursively flattens nested AND composites.
-4. MTP removes no-op constraints.
-5. MTP intersects all `TestNodeUidListFilter` constraints using ordinal UID equality.
-6. MTP sorts the resulting UID set for a deterministic representation.
-7. MTP returns:
+3. If no provider contributed a constraint, MTP returns the built-in request filter unchanged and
+   the remaining steps are skipped.
+4. MTP recursively flattens nested AND composites.
+5. MTP removes no-op constraints.
+6. MTP intersects all `TestNodeUidListFilter` constraints using ordinal UID equality.
+7. MTP sorts the resulting UID set for a deterministic representation.
+8. MTP returns:
    - `NopFilter` for zero constraints;
    - the only filter for one constraint; or
    - `CompositeTestExecutionFilter(And, ...)` for multiple constraints.
+
+Step 3 is what makes composition strictly additive. Normalization and validation of the built-in
+request filter only happen when at least one provider actually contributes, so an application with
+no provider — or one whose providers all return `null`/`NopFilter` — observes the same filter
+instance and the same behavior as before this RFC, even if its framework uses a filter
+representation the composer does not know.
 
 The intersection is computed in the platform rather than by every adapter. If any UID intersection
 is empty, the resulting empty `TestNodeUidListFilter` means match none.
@@ -251,7 +277,8 @@ Examples:
 
 | Built-in filter | Provider A | Provider B | Result |
 | --- | --- | --- | --- |
-| `Nop` | `null` | `null` | `Nop` |
+| `Nop` | `null` | `null` | the same `Nop` instance |
+| UIDs `{B,A}` | — | — | the same UIDs `{B,A}` instance (unsorted, no providers) |
 | UIDs `{A,B}` | UIDs `{B,C}` | `null` | UIDs `{B}` |
 | UIDs `{A}` | UIDs `{B}` | `null` | empty UID list (match none) |
 | tree `T` | UIDs `{A,B}` | `null` | `AND(T, UIDs {A,B})` |
@@ -344,7 +371,11 @@ empty UID filter, which means match none.
 
 The API is additive and experimental.
 
-- Existing applications with no providers receive the same built-in filter object as before.
+- Existing applications with no providers receive the same built-in filter object as before: the
+  composer short-circuits before any normalization or validation, so `NopFilter` and
+  `TestNodeUidListFilter` instances are not rebuilt and UID order is not changed.
+- The same short-circuit applies when providers are registered but all of them return `null` or
+  `NopFilter` for a request, which is the expected server-origin path in this version.
 - Existing CLI option names and validation do not change.
 - Existing JSON-RPC payloads do not change.
 - The internal `ITestExecutionFilterFactory` remains the source of the console built-in filter; it

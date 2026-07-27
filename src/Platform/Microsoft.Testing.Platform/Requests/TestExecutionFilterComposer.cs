@@ -15,10 +15,7 @@ internal static class TestExecutionFilterComposer
         bool allowProviderContributions,
         CancellationToken cancellationToken)
     {
-        List<TestNodeUidListFilter> uidFilters = [];
-        List<ITestExecutionFilter> otherFilters = [];
-        AddConstraints(requestFilter, providerUid: null, uidFilters, otherFilters);
-
+        List<(string ProviderUid, ITestExecutionFilter Filter)>? providerFilters = null;
         foreach (ITestExecutionFilterProvider provider in providers)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -39,7 +36,23 @@ internal static class TestExecutionFilterComposer
                         providerFilter.GetType().FullName));
             }
 
-            AddConstraints(providerFilter, provider.Uid, uidFilters, otherFilters);
+            (providerFilters ??= []).Add((provider.Uid, providerFilter));
+        }
+
+        // No provider contributed a constraint, so there is nothing to compose. Return the built-in request
+        // filter as-is: applications without providers keep the exact object and semantics they had before
+        // composition existed, including filter representations only their own framework understands.
+        if (providerFilters is null)
+        {
+            return requestFilter;
+        }
+
+        List<TestNodeUidListFilter> uidFilters = [];
+        List<ITestExecutionFilter> otherFilters = [];
+        AddConstraints(requestFilter, providerUid: null, uidFilters, otherFilters);
+        foreach ((string providerUid, ITestExecutionFilter providerFilter) in providerFilters)
+        {
+            AddConstraints(providerFilter, providerUid, uidFilters, otherFilters);
         }
 
         if (uidFilters.Count > 0)

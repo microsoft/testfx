@@ -31,6 +31,84 @@ public sealed class TestExecutionFilterComposerTests
     }
 
     [TestMethod]
+    public async Task ComposeAsync_WithoutProviders_ReturnsSameNopFilterInstance()
+    {
+        NopFilter builtInFilter = new();
+
+        ITestExecutionFilter result = await TestExecutionFilterComposer.ComposeAsync(
+            builtInFilter,
+            [],
+            RunConsoleContext,
+            allowProviderContributions: true,
+            CancellationToken.None);
+
+        Assert.AreSame(builtInFilter, result);
+    }
+
+    [TestMethod]
+    public async Task ComposeAsync_WithoutProviders_DoesNotNormalizeUidFilter()
+    {
+        TestNodeUidListFilter builtInFilter = new([new("B"), new("A"), new("B")]);
+
+        ITestExecutionFilter result = await TestExecutionFilterComposer.ComposeAsync(
+            builtInFilter,
+            [],
+            RunConsoleContext,
+            allowProviderContributions: true,
+            CancellationToken.None);
+
+        Assert.AreSame(builtInFilter, result);
+    }
+
+    [TestMethod]
+    public async Task ComposeAsync_WithoutProviders_DoesNotRejectCustomRequestFilter()
+    {
+        CustomFilter builtInFilter = new();
+
+        ITestExecutionFilter result = await TestExecutionFilterComposer.ComposeAsync(
+            builtInFilter,
+            [],
+            RunConsoleContext,
+            allowProviderContributions: true,
+            CancellationToken.None);
+
+        Assert.AreSame(builtInFilter, result);
+    }
+
+    [TestMethod]
+    public async Task ComposeAsync_WhenAllProvidersOptOut_ReturnsSameRequestFilterInstance()
+    {
+        StubFilterProvider nullProvider = new("provider-a", getFilter: (_, _) => Task.FromResult<ITestExecutionFilter?>(null));
+        StubFilterProvider nopProvider = new("provider-b", new NopFilter());
+        TestNodeUidListFilter builtInFilter = new([new("B"), new("A")]);
+
+        ITestExecutionFilter result = await TestExecutionFilterComposer.ComposeAsync(
+            builtInFilter,
+            [nullProvider, nopProvider],
+            RunConsoleContext,
+            allowProviderContributions: true,
+            CancellationToken.None);
+
+        Assert.AreSame(builtInFilter, result);
+    }
+
+    [TestMethod]
+    public async Task ComposeAsync_WithProviderContribution_RejectsCustomRequestFilter()
+    {
+        StubFilterProvider provider = new("provider-a", new TestNodeUidListFilter([new("A")]));
+
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => TestExecutionFilterComposer.ComposeAsync(
+                new CustomFilter(),
+                [provider],
+                RunConsoleContext,
+                allowProviderContributions: true,
+                CancellationToken.None));
+
+        Assert.Contains(typeof(CustomFilter).FullName!, exception.Message);
+    }
+
+    [TestMethod]
     public async Task ComposeAsync_WithOneProvider_UsesProviderConstraint()
     {
         StubFilterProvider provider = new("provider-a", new TestNodeUidListFilter([new("B"), new("A")]));
@@ -181,6 +259,7 @@ public sealed class TestExecutionFilterComposerTests
             CancellationToken.None);
 
         AssertUidFilter(result, "A");
+        Assert.AreSame(requestFilter, result);
         Assert.IsNotNull(observedContext);
         Assert.AreEqual(TestExecutionRequestKind.Discovery, observedContext.RequestKind);
         Assert.AreEqual(TestExecutionRequestOrigin.Server, observedContext.Origin);
