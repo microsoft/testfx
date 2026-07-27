@@ -50,6 +50,12 @@ emits the dereferenced *commit* SHA in `uses:` lines. That single legitimate
 divergence is recorded explicitly in DEREFERENCED_TAG_SHAS and reported as a
 warning (fatal under --strict) so it stays visible rather than silently accepted.
 
+Every comparison is made on a canonical form. GitHub resolves owner/repository
+names case-insensitively, so `Actions/Checkout` would otherwise look like an
+untracked action and escape the ledger checks entirely; SHAs and digests are hex
+and are compared case-insensitively too. Action subpaths keep their original
+case, since those are repository paths and Linux runners are case-sensitive.
+
 Usage
 -----
     python -m pip install -r .github/scripts/check-action-pins-requirements.txt
@@ -153,7 +159,10 @@ def load_ledger() -> dict[str, dict[str, str]]:
         repo = entry.get("repo")
         if not repo:
             continue
-        ledger[repo] = {"version": entry.get("version", ""), "sha": entry.get("sha", "")}
+        ledger[canonical_repo(repo)] = {
+            "version": entry.get("version", ""),
+            "sha": entry.get("sha", "").lower(),
+        }
 
     return ledger
 
@@ -184,13 +193,37 @@ def is_checkable_uses(ref: str) -> bool:
     return is_external_action(ref) or is_docker_action(ref)
 
 
+def canonical_repo(repo: str) -> str:
+    """Canonicalize an action reference for comparison.
+
+    GitHub resolves the owner and repository segments case-insensitively, so
+    `Actions/Checkout` executes the same code as `actions/checkout` and must not be
+    treated as a separate, untracked action. Any action subpath is left verbatim: it
+    is a path inside the repository, which is case-sensitive on Linux runners.
+    """
+    owner, slash, rest = repo.partition("/")
+    if not slash:
+        return owner.lower()
+
+    name, subpath_slash, subpath = rest.partition("/")
+    canonical = f"{owner.lower()}/{name.lower()}"
+
+    return f"{canonical}/{subpath}" if subpath_slash else canonical
+
+
 def parse_reference(path: Path, line_number: int, ref: str, comment: str | None) -> Reference:
     repo, _, pinned = ref.partition("@")
     # Version comments may carry a suffix, e.g. `# v9.0.0 (source v9)`.
     version = comment.split()[0] if comment and comment.split() else None
 
     return Reference(
-        path=path, line_number=line_number, raw=ref, repo=repo, ref=pinned, version=version
+        path=path,
+        line_number=line_number,
+        raw=ref,
+        repo=canonical_repo(repo),
+        # Commit SHAs and image digests are hex identifiers, so case is not meaningful.
+        ref=pinned.lower(),
+        version=version,
     )
 
 
@@ -347,12 +380,12 @@ def check_manifests(lock_files: list[Path], ledger: dict[str, dict[str, str]]) -
         location = path.relative_to(REPO_ROOT).as_posix()
         for entry in read_manifest_actions(path):
             repo = entry.get("repo", "")
-            tracked = ledger.get(repo)
+            tracked = ledger.get(canonical_repo(repo))
             if not tracked:
                 continue
 
             version = entry.get("version", "")
-            sha = entry.get("sha", "")
+            sha = entry.get("sha", "").lower()
             if version != tracked["version"] or sha != tracked["sha"]:
                 errors.append(
                     f"{location}: gh-aw-manifest pins '{repo}' to {version}@{sha} but "
