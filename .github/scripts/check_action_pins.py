@@ -37,6 +37,11 @@ Checks
      the ledger's version comment and rewriting every call site consistently.
   G. A given SHA is labelled with the same version everywhere. For actions the
      ledger does not track, this is the only thing keeping their labels honest.
+  H. Every `uses` value reachable in the *parsed* YAML is also written as a plain
+     scannable line. The structural pass sees exactly what GitHub Actions would
+     execute, so block scalars, flow mappings, quoted keys and aliases cannot hide
+     an unpinned action from the text pass that validates pins and version
+     comments; anything the text pass cannot see fails instead of passing silently.
 
 `gh aw` records the annotated *tag object* SHA in the ledger for some actions but
 emits the dereferenced *commit* SHA in `uses:` lines. That single legitimate
@@ -45,6 +50,7 @@ warning (fatal under --strict) so it stays visible rather than silently accepted
 
 Usage
 -----
+    python -m pip install -r .github/scripts/check-action-pins-requirements.txt
     python .github/scripts/check_action_pins.py
     python .github/scripts/check_action_pins.py --strict
 """
@@ -58,6 +64,17 @@ import sys
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
+
+try:
+    import yaml
+except ModuleNotFoundError:  # pragma: no cover - guarded so the gate never silently degrades
+    print(
+        "error: PyYAML is required. The structural pass parses each workflow to find every "
+        "`uses` value that GitHub Actions would really execute, so the gate must not run "
+        "without it. Install it with: python -m pip install pyyaml",
+        file=sys.stderr,
+    )
+    raise SystemExit(1)
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 WORKFLOWS_DIR = REPO_ROOT / ".github" / "workflows"
@@ -169,6 +186,30 @@ def collect_references(path: Path) -> list[Reference]:
             break
 
     return references
+
+
+def iter_uses_values(node: object):
+    """Yield every `uses` value reachable in a parsed workflow document.
+
+    Walking the parsed structure is what makes the gate closed by construction: it sees
+    exactly what GitHub Actions would execute, regardless of whether the author wrote a
+    plain line, a quoted key, a block scalar, a flow mapping, or an alias.
+    """
+    if isinstance(node, dict):
+        for key, value in node.items():
+            if key == "uses" and isinstance(value, str):
+                yield value
+            yield from iter_uses_values(value)
+    elif isinstance(node, list):
+        for item in node:
+            yield from iter_uses_values(item)
+
+
+def collect_structural_uses(path: Path) -> set[str]:
+    """External action references reachable in `path` once parsed as YAML."""
+    document = yaml.safe_load(path.read_text(encoding="utf-8"))
+
+    return {value for value in iter_uses_values(document) if is_external_action(value)}
 
 
 def read_manifest_actions(path: Path) -> list[dict[str, str]]:
@@ -305,13 +346,37 @@ def main() -> int:
         return 1
 
     references: list[Reference] = []
+    structural_errors: list[str] = []
     for path in workflow_files:
-        references.extend(collect_references(path))
+        location = path.relative_to(REPO_ROOT).as_posix()
+        file_references = collect_references(path)
+        references.extend(file_references)
+
+        # Reconcile the structural pass against the text pass. The text pass is what
+        # validates the pin and its `# <version>` comment, so any `uses` the parser can
+        # reach but the text pass cannot see is a hard failure rather than a silent pass.
+        try:
+            structural = collect_structural_uses(path)
+        except yaml.YAMLError as error:
+            structural_errors.append(
+                f"{location}: could not be parsed as YAML, so its `uses` references cannot "
+                f"be validated: {str(error).splitlines()[0]}"
+            )
+            continue
+
+        scanned = {f"{reference.repo}@{reference.ref}" for reference in file_references}
+        for value in sorted(structural - scanned):
+            structural_errors.append(
+                f"{location}: `uses: {value}` is reachable in the parsed workflow but is not "
+                "written as a plain `uses: <owner>/<repo>@<sha> # <version>` line. Block "
+                "scalars, flow mappings and aliases hide the pin and its version comment from "
+                "review, so rewrite it as a plain line."
+            )
 
     reference_findings = check_references(references, ledger)
     manifest_findings = check_manifests([p for p in workflow_files if p.name.endswith(".lock.yml")], ledger)
 
-    errors = reference_findings.errors + manifest_findings.errors
+    errors = structural_errors + reference_findings.errors + manifest_findings.errors
     warnings = reference_findings.warnings + manifest_findings.warnings
 
     for warning in warnings:
