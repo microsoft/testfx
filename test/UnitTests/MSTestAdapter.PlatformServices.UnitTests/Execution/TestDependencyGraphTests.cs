@@ -129,8 +129,19 @@ public sealed class TestDependencyGraphTests : TestContainer
 
         TestDependencyGraph graph = TestDependencyGraph.Build(tests, ExecutionScope.MethodLevel, parallelizationEnabled: true)!;
 
+        // Neither test waits for itself...
         graph.TestPrerequisites[0].Should().NotContain(0);
         graph.TestPrerequisites[1].Should().NotContain(1);
+
+        // ...but the edges to the *other* tests of the class survive. Asserting only the absence above would
+        // still hold if the suppression had deleted every edge, which is the more likely way to get this
+        // wrong: over-deleting silently discards the declaration.
+        graph.TestPrerequisites[0].Should().Equal(1);
+        graph.TestPrerequisites[1].Should().Equal(0);
+
+        // And because each now waits for the other, this particular declaration is a genuine mutual cycle -
+        // which is the correct outcome, not something the self-edge suppression should have hidden.
+        NamesOfBroken(graph.BrokenTests).Should().BeEquivalentTo(["One", "Two"]);
     }
 
     public void Build_WhenDependenciesFormACycle_ReportsItAndMarksTheTestsBroken()
