@@ -1,13 +1,13 @@
 # Efficiency Improver — Persistent Memory for microsoft/testfx
 
 ## Last Updated
-2026-07-22 UTC
+2026-07-27 UTC
 
 ## Round-Robin Schedule
 
-Tasks run this session: **1 (verify), 2 (scan), 5 (issue scan), 6 (infra scan), 7**
-Last run before this: Tasks 2, 3, 7 (2026-07-16)
-Next run should prioritise: Tasks 3 (implement), 4 (PR maintenance), 5 (issue comments), 7 (always)
+Tasks run this session: **2 (scan), 7 (monthly summary)**
+Last run before this: Tasks 2/3 (2026-07-26)
+Next run should prioritise: Tasks 3 (implement if new opportunity found), 5 (issue comments), 6 (infra), 7 (always)
 
 ## Build / Test / Benchmark Commands
 
@@ -37,14 +37,21 @@ Notes:
 - **bool.Parse in InvokeTestingPlatformTask**: Already cached as fields in RFC 018 commit (c66515a). No pending PR needed.
 - **StackTraceHelper.TryFindLocationFromStackFrame (MSBuild)**: Already fixed in main — uses string.Split + for loop (no Regex.Split or LINQ).
 - **Server mode TestNode serializer**: Uses LINQ Select().ToList() per test update — minor, dominated by network I/O, not worth changing.
-- **TestCaseExtensions.GetTestName / GetClassNameWhenFullyQualifiedNameStartsWith**: Was allocating `$"{testClassName}."` on every call per test case. Now in main (FullyQualifiedNameStartsWithTestClassName uses direct length+char+StartsWith). Branch closed.
-- **Maintainer commit #10141**: "Pool IPC serializer string buffers" — maintainers independently pooling buffers in IPC serializer (2026-07-22). Confirms IPC is an active optimization area.
-- **TestMethodFilter._supportedProperties**: Created per TestElementFilterProvider instance (once per test source) — not a hot path, not worth fixing.
-- **Assert.Matches.ToRegex**: Creates new Regex per call by design; user can pass pre-built Regex overload.
+- **TestCaseExtensions.GetTestName / GetClassNameWhenFullyQualifiedNameStartsWith**: Was allocating `$"{testClassName}."` on every call per test case. Now in main.
+- **Maintainer commit #10141**: "Pool IPC serializer string buffers" — maintainers independently pooling buffers in IPC serializer (2026-07-22).
+- **TestNodeResultsState**: Already well-optimized — reusable `_runningTasksBuffer`, allocation-free single-task fast path, in-place sort, summary detail reuse.
+- **FileLogger**: Channel-based async logging, `GetUpperCaseName` uses interned literal switch (no boxing/ToString().ToUpper). Already optimal.
+- **PropertyBag**: Linked-list based, zero array allocation for small bags. Already optimal.
+- **HumanReadableDurationFormatter**: NET8+ fast path uses `string.Create`. Already optimal for common case.
+- **AsynchronousMessageBus.PublishAsync**: `_isTraceLoggingEnabled` guards StringBuilder allocation. `Array.IndexOf` on `DataTypesProduced` is O(n) but array is tiny (1-3 elements) — not measurable.
+- **ShutdownProgressReporter.Snapshot()**: LINQ OrderByDescending + ToArray — shutdown only, not hot path.
+- **DotnetTestHttpClient.RequestReplyAsync**: `framedRequest.ToArray()` copies MemoryStream — HTTP transport only, low volume (batched requests), not hot.
+- **TypeEnumerator**: `string.Join(",", Array.ConvertAll(parameters, ...))` — test-discovery-time, not execution hot path.
+- **MSTestTestNodeConverter**: `string.Join(Environment.NewLine, ...)` guarded by `Count > 0` — only on failure.
 
 ## Open PRs / Issues Created by Efficiency Improver
 
-- No open PRs from Efficiency Improver at this time (previous branch landed in main).
+- No open PRs from Efficiency Improver at this time.
 - Previous work:
   - #9713 (Scenario2 proposal) — closed as completed by Evangelink, resolved by #9728
   - #9714 (JsonSerializerOptions caching) — closed as completed by Evangelink
@@ -64,12 +71,16 @@ Notes:
 |----------|------------|-------------|-------|
 | LOW | Code-Level | OpenTelemetry: `Properties.OfType()` in `yield` — needs non-iterator helper | Not worth changing without profiling |
 | LOW | Code-Level | `TerminalTestReporter.TotalTests`: `_assemblies.Values.Sum()` on every access | Negligible — called only for display |
-| LOW | Infrastructure | Output-byte-count CI health metric (suggested in #8824 comment) | Needs maintainer discussion |
+| LOW | Code-Level | `DynamicDataShouldBeValidAnalyzer`: `candidateMethods.Where().ToImmutableArray()` per `[DynamicData]` attribute | Marginal — triggered once per attribute per compilation |
+| LOW | Code-Level | `TestExecutionManager` MethodLevel parallel: `Select(t => new[] { t })` — 1 array per test in setup path | One-time setup cost, ~80KB for 10K tests |
+| LOW | Code-Level | `TestContextImplementation.SanitizeName`: `Array.IndexOf` over invalid chars per character | Only called when TestTempDirectory is first accessed |
+| LOW | Infrastructure | CI output-byte-count health metric | Needs maintainer discussion |
 
 ## Completed Work
 
 | Date | PR/Issue | Summary |
 |------|----------|---------|
+| 2026-07-27 | scan only | Scanned TestNodeResultsState, FileLogger, PropertyBag, HumanReadableDurationFormatter, AsynchronousMessageBus, DotnetTestHttpClient, TypeEnumerator — all already optimized; no new HIGH/MEDIUM opportunities |
 | 2026-07-22 | scan only | Verified TestCaseExtensions fix in main; maintainer commit #10141 pools IPC string buffers independently; no new HIGH opportunities found |
 | 2026-07-16 | branch pushed (landed in main) | Avoid string interpolation allocations in GetTestName/GetClassNameWhenFullyQualifiedNameStartsWith |
 | 2026-07-10 | PR# TBD (branch efficiency/stacktrace-string-split — no longer needed, already in main) | StackTraceHelper already fixed in main |
@@ -87,6 +98,6 @@ Notes:
 
 ## Backlog Cursor
 
-- Code scan cursor: CtrfReport ✅, HtmlReport ✅, Adapter/ ✅, TestFramework/ ✅, Platform/ hot paths ✅, VSTestBridge ✅, AzureDevOps extensions ✅, MSBuild tasks ✅, TrxReport ✅, ServerMode ✅, Platform/Capabilities ✅, Platform/Terminal ✅, Retry ✅, IPC/Serializers ✅
-- Issue comments cursor: #8824 ✅, #9712 ✅ — next: scan for new efficiency issues in next run
-- Next code scan area: MSTest.Analyzers, Platform/Services
+- Code scan cursor: CtrfReport ✅, HtmlReport ✅, Adapter/ ✅, TestFramework/ ✅, Platform/ hot paths ✅, VSTestBridge ✅, AzureDevOpsReport ✅, MSBuild tasks ✅, TrxReport ✅, ServerMode ✅, Platform/Capabilities ✅, Platform/Terminal (full) ✅, Retry ✅, IPC/Serializers ✅, Platform/Messages ✅, Platform/Logging ✅, Platform/DotnetTest transport ✅, MSTest.Analyzers (new parallel-safety) ✅
+- Issue comments cursor: #8824 ✅, #9712 ✅ — next: scan for new efficiency issues
+- Next code scan area: Platform/Requests (filter evaluation), Platform/TestNode serialization path
