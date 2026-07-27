@@ -110,7 +110,9 @@ Run your Python scripts via bash and verify the charts exist before proceeding.
 
 ## Step 3: Upload Charts
 
-Upload both chart images using the `upload-asset` safe output tool. Collect the returned URLs to embed in the discussion.
+Before emitting **any** safe output, finish all of the work above: data collection, statistics, chart generation, and drafting the complete discussion body. Once the first safe output is emitted the agent process is terminated after a short idle window, so long-running shell commands after that point will be cut off.
+
+Upload both chart images using the `upload-asset` safe output tool, collect the returned URLs, and then go straight to Step 4. Do not run further shell commands between the uploads and `create_discussion`.
 
 ## Step 4: Create Weekly Discussion
 
