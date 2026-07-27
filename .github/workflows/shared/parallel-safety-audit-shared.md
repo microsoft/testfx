@@ -534,16 +534,27 @@ bodies:
   `TestContainer`-derived class, any public parameterless `void`/`Task` method
   (that engine uses no attributes).
 - **Lifecycle members** — `[TestInitialize]` / `[TestCleanup]`,
-  `[ClassInitialize]` / `[ClassCleanup]`, `[AssemblyInitialize]` /
-  `[AssemblyCleanup]`, and — **on any test class, not just `TestContainer`** —
-  the **constructor** and `Dispose` / `DisposeAsync`. MSTest constructs the test
-  class per test and invokes both disposal hooks
+  `[GlobalTestInitialize]` / `[GlobalTestCleanup]` (the adapter runs these for
+  **every** test, so a mutation there is as broad as it gets),
+  `[ClassInitialize]` / `[ClassCleanup]`, and — **on any test class, not just
+  `TestContainer`** — the **constructor** and `Dispose` / `DisposeAsync`. MSTest
+  constructs the test class per test and invokes both disposal hooks
   (`TestMethodInfo.Lifecycle.cs:78-87`), so they are per-test lifecycle code and
   a global-state mutation in them races exactly like one in a test body. These
   are where a mutation is easiest to miss and **widest in effect**:
   an `Environment.SetEnvironmentVariable` added to a `[TestInitialize]` runs
   before *every* test in the class, so attribute the finding to the whole class
-  (or assembly, for the assembly-level hooks), not to one method.
+  (or, for the global hooks, the whole assembly), not to one method.
+- **Assembly fixtures are different — do not treat them as racing.**
+  `[AssemblyInitialize]` and `[AssemblyCleanup]` are serialized by a
+  `SemaphoreSlim(1, 1)`: initialize runs once, under the semaphore, before any
+  worker proceeds, and cleanup is likewise gated
+  (`TestAssemblyInfo.cs:185/232` and `:275/293`). A mutation there is
+  deterministic one-time setup, not a concurrent race, and a method- or
+  class-level `[ResourceLock]` does **not** protect assembly lifetime anyway.
+  Report one only when you can name a **concrete conflicting observer or
+  mutator** — a test that writes the same state while it is meant to hold — and
+  say why the semaphore does not cover it. Otherwise treat it as context.
 - **Class- and assembly-level declarations** — a changed, added or removed
   `[ResourceLock]`, `[DoNotParallelize]` or `[Parallelize]` is itself a finding
   for category C even when no method body changed.
@@ -710,10 +721,22 @@ same path, do **not** report it at all — not even at Info. An unproven collisi
 is the false positive that narrowed MSTEST0077 in the first place; silence is the
 correct output.
 
-→ **Fix:** prefer **elimination** — give each test its own directory via
-`TestContext.TestTempDirectory` (a per-test unique dir, lazily created, deleted
-on pass and retained on failure). A resource each test *owns* needs no
-coordination at all. Only lock paths that are genuinely, intentionally shared.
+→ **Fix:** prefer **elimination** — for code running *inside a test*, give each
+test its own directory via `TestContext.TestTempDirectory` (a per-test unique
+dir, created lazily on first access). A resource each test *owns* needs no
+coordination at all. Two caveats, both of which make an unconditional
+recommendation wrong:
+
+- **It is per-test only.** In an assembly or class fixture context the getter
+  returns `null` (`TestContextImplementation.cs:126-134`) — fixture contexts are
+  not per-test and are not always disposed, so no directory is created. Never
+  recommend it for `[AssemblyInitialize]` / `[ClassInitialize]` / cleanup code.
+  There, either move the I/O into the tests themselves, or have the fixture
+  create an explicitly unique directory it owns and deletes.
+- **Do not promise cleanup.** Deletion is best effort, and a directory holding
+  retained result files can survive, so do not sell it as "always cleaned up".
+
+Only lock paths that are genuinely, intentionally shared.
 
 ### C. Declaration reconciliation — the highest-value output; nothing else in the ecosystem does this
 
@@ -918,7 +941,8 @@ Rules for the comment:
 If **both** the changed-test-files and changed-config-files lists are empty, or
 after Step 1 nothing you audited touches anything in the taxonomy — no changed
 test method, **no changed lifecycle member (`[TestInitialize]`,
-`[ClassInitialize]`, `[AssemblyInitialize]`, constructor / `Dispose`, …), no
+`[GlobalTestInitialize]`, `[ClassInitialize]`, `[AssemblyInitialize]`,
+constructor / `Dispose`, …), no
 changed class- or assembly-level `[ResourceLock]` / `[DoNotParallelize]` /
 `[Parallelize]` declaration, no changed fixture field or helper**, and no
 assembly whose parallelization configuration this PR changed — post this short
