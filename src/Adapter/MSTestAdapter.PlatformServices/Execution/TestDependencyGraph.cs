@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -751,70 +751,116 @@ internal sealed class TestDependencyGraph
             return false;
         }
 
-        bool[] isBlocked = new bool[chunkPrerequisites.Length];
         var blocked = new List<int>();
         for (int i = 0; i < remaining.Length; i++)
         {
             if (remaining[i] > 0)
             {
-                isBlocked[i] = true;
                 blocked.Add(i);
             }
         }
 
         blockedChunks = [.. blocked];
-        cycleChunks = FindChunksOnCycle(chunkPrerequisites, isBlocked, blocked);
+        cycleChunks = FindChunksOnCycle(chunkPrerequisites, blocked);
         return true;
     }
 
     /// <summary>
-    /// Narrows the blocked chunks down to those actually on a cycle, by repeatedly discarding any chunk that
-    /// no other blocked chunk depends on. Such a chunk can reach the cycle but nothing returns to it, so it is
-    /// downstream of the cycle rather than part of it; what survives is exactly the chunks that can reach
-    /// themselves.
+    /// Narrows the blocked chunks down to those actually on a cycle, using the same iterative Tarjan pass as
+    /// <see cref="FindCycles"/>: a chunk is on a cycle exactly when its strongly connected component has more
+    /// than one member, or when it names itself. Peeling chunks that no other blocked chunk depends on is not
+    /// sufficient - a chunk sitting on a one-way path from one cycle to another has a blocked dependent, so it
+    /// would survive the peel and be named as mutually dependent when it is only downstream of one cycle and
+    /// upstream of the other.
     /// </summary>
-    private static int[] FindChunksOnCycle(int[][] chunkPrerequisites, bool[] isBlocked, List<int> blocked)
+    private static int[] FindChunksOnCycle(int[][] chunkPrerequisites, List<int> blocked)
     {
-        int[] blockedDependentCount = new int[chunkPrerequisites.Length];
-        foreach (int chunk in blocked)
-        {
-            foreach (int prerequisite in chunkPrerequisites[chunk])
-            {
-                if (isBlocked[prerequisite])
-                {
-                    blockedDependentCount[prerequisite]++;
-                }
-            }
-        }
-
         bool[] isOnCycle = new bool[chunkPrerequisites.Length];
-        foreach (int chunk in blocked)
+        int[] index = new int[chunkPrerequisites.Length];
+        int[] lowLink = new int[chunkPrerequisites.Length];
+        bool[] onStack = new bool[chunkPrerequisites.Length];
+        int[] edgeCursor = new int[chunkPrerequisites.Length];
+        for (int i = 0; i < index.Length; i++)
         {
-            isOnCycle[chunk] = true;
+            index[i] = -1;
         }
 
-        var queue = new Queue<int>();
-        foreach (int chunk in blocked)
+        var stack = new List<int>();
+        var callStack = new List<int>();
+        int nextIndex = 0;
+
+        for (int start = 0; start < chunkPrerequisites.Length; start++)
         {
-            if (blockedDependentCount[chunk] == 0)
+            if (index[start] != -1)
             {
-                queue.Enqueue(chunk);
+                continue;
             }
-        }
 
-        while (queue.Count > 0)
-        {
-            int current = queue.Dequeue();
-            isOnCycle[current] = false;
-            foreach (int prerequisite in chunkPrerequisites[current])
+            // Iterative Tarjan: the recursive form would stack-overflow on a long chain of chunks.
+            callStack.Add(start);
+            index[start] = lowLink[start] = nextIndex++;
+            edgeCursor[start] = 0;
+            stack.Add(start);
+            onStack[start] = true;
+
+            while (callStack.Count > 0)
             {
-                if (isOnCycle[prerequisite] && --blockedDependentCount[prerequisite] == 0)
+                int current = callStack[callStack.Count - 1];
+                if (edgeCursor[current] < chunkPrerequisites[current].Length)
                 {
-                    queue.Enqueue(prerequisite);
+                    int next = chunkPrerequisites[current][edgeCursor[current]++];
+                    if (index[next] == -1)
+                    {
+                        index[next] = lowLink[next] = nextIndex++;
+                        edgeCursor[next] = 0;
+                        stack.Add(next);
+                        onStack[next] = true;
+                        callStack.Add(next);
+                    }
+                    else if (onStack[next])
+                    {
+                        lowLink[current] = Math.Min(lowLink[current], index[next]);
+                    }
+
+                    continue;
+                }
+
+                callStack.RemoveAt(callStack.Count - 1);
+                if (callStack.Count > 0)
+                {
+                    int parent = callStack[callStack.Count - 1];
+                    lowLink[parent] = Math.Min(lowLink[parent], lowLink[current]);
+                }
+
+                if (lowLink[current] != index[current])
+                {
+                    continue;
+                }
+
+                var component = new List<int>();
+                int member;
+                do
+                {
+                    member = stack[stack.Count - 1];
+                    stack.RemoveAt(stack.Count - 1);
+                    onStack[member] = false;
+                    component.Add(member);
+                }
+                while (member != current);
+
+                // A component of one is only a cycle when the chunk names itself; anything larger always is.
+                if (component.Count > 1 || Array.IndexOf(chunkPrerequisites[current], current) >= 0)
+                {
+                    foreach (int node in component)
+                    {
+                        isOnCycle[node] = true;
+                    }
                 }
             }
         }
 
+        // Walking 'blocked' rather than the components keeps the reported order stable and guarantees the
+        // result is a subset of the blocked set, which is what the caller's warning claims.
         var onCycle = new List<int>();
         foreach (int chunk in blocked)
         {

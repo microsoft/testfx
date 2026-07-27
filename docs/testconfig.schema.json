@@ -128,7 +128,8 @@
                       },
                       "dependsOn": {
                         "type": "array",
-                        "description": "The tests that must run first.",
+                        "description": "The tests that must run first. At least one is required; an empty list declares no dependency.",
+                        "minItems": 1,
                         "items": { "type": "string" }
                       },
                       "proceedOnFailure": {

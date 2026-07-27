@@ -322,6 +322,39 @@ public sealed class TestDependencyGraphTests : TestContainer
         NamesOf(graph.SequentialTests).Should().Contain("C1");
     }
 
+    public void Build_WhenAClassLinksTwoProjectionCycles_IsDemotedButNotNamedAsCyclic()
+    {
+        // ClassX sits on a one-way path from one mutual pair to another: ClassA depends on it, and it
+        // depends on ClassC. Nothing returns to ClassX, so it is in neither cycle - but it does have a
+        // blocked dependent (ClassA), which is why narrowing the blocked set by peeling chunks that nothing
+        // blocked depends on cannot isolate cycle membership. Both cycles keep every one of their chunks
+        // from ever being peeled, so ClassX would survive and be named as mutually dependent.
+        UnitTestElement[] tests =
+        [
+            CreateElement(ClassA, "A1"),
+            CreateElement(ClassA, "A2", new TestDependencyInfo(ClassB, "B1", false)),
+            CreateElement(ClassA, "A3", new TestDependencyInfo("Ns.ClassX", "X1", false)),
+            CreateElement(ClassB, "B1", new TestDependencyInfo(ClassA, "A1", false)),
+            CreateElement("Ns.ClassX", "X1", new TestDependencyInfo("Ns.ClassC", "C1", false)),
+            CreateElement("Ns.ClassC", "C1"),
+            CreateElement("Ns.ClassC", "C2", new TestDependencyInfo("Ns.ClassD", "D1", false)),
+            CreateElement("Ns.ClassD", "D1", new TestDependencyInfo("Ns.ClassC", "C1", false)),
+        ];
+
+        TestDependencyGraph graph = TestDependencyGraph.Build(tests, ExecutionScope.ClassLevel, parallelizationEnabled: true)!;
+
+        // No test-level cycle exists here - every cycle is created by the class-level projection.
+        graph.Errors.Should().BeEmpty();
+
+        graph.Warnings.Should().ContainSingle();
+        graph.Warnings[0].Should().Contain(ClassA).And.Contain(ClassB).And.Contain("ClassC").And.Contain("ClassD");
+        graph.Warnings[0].Should().NotContain("ClassX");
+
+        // Demoted all the same: it cannot run in the parallel phase while its prerequisite chunk is
+        // unschedulable there.
+        NamesOf(graph.SequentialTests).Should().Contain("X1");
+    }
+
     public void Build_WhenAProjectionCycleIsDemoted_LeavesUnrelatedTestsInTheParallelPhase()
     {
         // Only the classes caught in the projection cycle lose their parallelism; everything else keeps it.
