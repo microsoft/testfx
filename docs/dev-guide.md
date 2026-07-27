@@ -204,6 +204,8 @@ Instead, split version specification based on CPM:
 
 This supports both values of `CentralPackageVersionOverrideEnabled` without producing `NU1009`.
 
+Teams migrating to MSTest.Sdk commonly keep declaring MSTest and `Microsoft.Testing.*` packages in their own `Directory.Packages.props` because only part of their repository is on the SDK. To avoid defining a version twice (which NuGet reports as `NU1506`, frequently escalated to an error), `Sdk.targets` snapshots the user's `PackageVersion` items before importing the engine targets and, once all implicit `PackageVersion` items have been added, drops the ones the SDK injected for packages that are already centrally managed. In other words, a version declared by the user always wins and the SDK only supplies versions for packages the user does not manage centrally.
+
 ### Layering MSTest.Sdk on another base SDK
 
 `MSTest.Sdk` implicitly imports `Microsoft.NET.Sdk`. To combine it with another base SDK, such as `Microsoft.NET.Sdk.Web`, import both SDKs manually and list the other SDK first:

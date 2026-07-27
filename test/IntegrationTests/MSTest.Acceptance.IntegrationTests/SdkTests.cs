@@ -167,6 +167,46 @@ namespace MSTestSdkTest
         }
     }
 
+    [TestMethod]
+    [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
+    public async Task RunTests_With_CentralPackageManagement_AndPackagesAlreadyDeclaredCentrally_Standalone(string multiTfm, BuildConfiguration buildConfiguration)
+    {
+        // Teams migrating to MSTest.Sdk keep declaring MSTest and Microsoft.Testing.* packages in
+        // their central package management file. MSTest.Sdk must not redefine a version for those
+        // packages, otherwise NuGet reports NU1506 (duplicate 'PackageVersion' items), which many
+        // repositories escalate to an error.
+        const string CpmSourceCode = SingleTestSourceCode + """
+
+#file Directory.Packages.props
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+    <PackageVersion Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
+  </ItemGroup>
+</Project>
+""";
+
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+               AssetName,
+               CpmSourceCode
+               .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+               .PatchCodeWithReplace("$TargetFramework$", multiTfm)
+               .PatchCodeWithReplace("$ExtraProperties$", string.Empty));
+
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", cancellationToken: TestContext.CancellationToken);
+        compilationResult.AssertExitCodeIs(0);
+        compilationResult.AssertOutputDoesNotContain("NU1506");
+        foreach (string tfm in multiTfm.Split(";"))
+        {
+            var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
+            TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+            testHostResult.AssertOutputContainsSummary(0, 1, 0);
+        }
+    }
+
     public static IEnumerable<TestDataRow<(string MultiTfm, BuildConfiguration BuildConfiguration, string MSBuildExtensionEnableFragment, string EnableCommandLineArg, string InvalidCommandLineArg)>> RunTests_With_MSTestRunner_Standalone_Plus_Extensions_Data()
     {
         foreach ((string MultiTfm, BuildConfiguration BuildConfiguration) buildConfig in GetBuildMatrixMultiTfmFoldedBuildConfiguration())

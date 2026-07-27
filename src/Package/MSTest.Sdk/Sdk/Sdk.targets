@@ -7,11 +7,40 @@
     <IsTestApplication Condition=" '$(IsTestApplication)' == '' ">true</IsTestApplication>
   </PropertyGroup>
 
+  <!--
+    Snapshot the 'PackageVersion' items the user manages centrally (typically from
+    'Directory.Packages.props') before the engine/feature targets inject their own ones.
+    See the de-duplication item group below for the rationale.
+  -->
+  <ItemGroup Condition=" '$(ManagePackageVersionsCentrally)' == 'true' ">
+    <_MSTestSdkUserPackageVersion Include="@(PackageVersion)" />
+  </ItemGroup>
+
   <!-- Import Runner.targets -->
   <Import Project="$(MSBuildThisFileDirectory)Runner/Runner.targets" Condition=" '$(UseVSTest)' == 'false' " />
 
   <!-- Import VSTest.targets -->
   <Import Project="$(MSBuildThisFileDirectory)VSTest/VSTest.targets" Condition=" '$(UseVSTest)' == 'true' " />
+
+  <!--
+    When Central Package Management is enabled, the engine and feature targets add a
+    'PackageVersion' item for each package they implicitly reference so that NuGet can resolve a
+    version without relying on 'VersionOverride' (see docs/dev-guide.md for why we cannot use
+    'VersionOverride' nor 'IsImplicitlyDefined').
+
+    Teams migrating to MSTest.Sdk usually keep declaring MSTest and Microsoft.Testing.* packages in
+    their central package management file (some projects are on the SDK, some are not yet). In that
+    case both the user and MSTest.Sdk define a 'PackageVersion' for the same package id, which
+    NuGet reports as NU1506 (and which many repositories escalate to an error).
+
+    So we drop the versions we injected for packages that are already centrally managed: the
+    version declared by the user always wins.
+  -->
+  <ItemGroup Condition=" '$(ManagePackageVersionsCentrally)' == 'true' ">
+    <PackageVersion Remove="@(_MSTestSdkUserPackageVersion)" />
+    <PackageVersion Include="@(_MSTestSdkUserPackageVersion)" />
+    <_MSTestSdkUserPackageVersion Remove="@(_MSTestSdkUserPackageVersion)" />
+  </ItemGroup>
 
   <!--
     Implicit bottom import.
