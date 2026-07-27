@@ -64,15 +64,24 @@ case, since those are repository paths and Linux runners are case-sensitive.
 Known limitation
 ----------------
 Collection is position-independent: any mapping key named `uses` is treated as
-executable. An action input or environment variable literally named `uses` whose
-value looks like an action reference (a `uses:` key nested under `with:`) is
-data, but is still collected and reported as unpinned. No such key exists in this
-repository today. The behaviour is deliberate for now because it fails *closed*:
-restricting collection to `jobs.*.uses` and `jobs.*.steps[*].uses` would replace
-a conservative over-collection with an inclusion list that fails *open* if the
-workflow schema ever grows another executable `uses` position. Fixing it properly
-means driving validation from the parsed document with line marks (`yaml.compose`)
-and excluding known data mappings, so that unknown structures still fail closed.
+executable, and the text pass matches any `uses:`-shaped line. An action input or
+environment variable literally named `uses` (a `uses:` key nested under `with:`),
+or a literal `uses:` line inside a `run:` block, is data rather than an
+executable step, but is still collected. Two consequences follow: such a line is
+reported as unpinned, and because reconciliation compares counts per value, a
+non-executable line can offset an executable occurrence of the same value that is
+hidden in a flow mapping or block scalar. Neither breaches pin integrity, since
+any value involved has itself been validated as an immutable pin, and no such key
+or line exists in this repository today.
+
+The behaviour is deliberate for now because it fails *closed*: restricting
+collection to `jobs.*.uses` and `jobs.*.steps[*].uses` would replace a
+conservative over-collection with an inclusion list that fails *open* if the
+workflow schema ever grows another executable `uses` position, and simply
+rejecting scanner-only occurrences would reject legitimate `run:` blocks instead.
+Fixing it properly means driving validation from the parsed document with line
+marks (`yaml.compose`) and excluding known data mappings, so that unknown
+structures still fail closed.
 See https://github.com/microsoft/testfx/pull/10264#discussion_r3659972254.
 
 Usage

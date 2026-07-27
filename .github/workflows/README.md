@@ -251,7 +251,7 @@ Reusable agentic-workflow snippets imported via `imports:` in workflow frontmatt
 - **Source of truth.** Edit the `.md` file (and any imported `shared/*.md`); never the `.lock.yml`.
 - **One change, one compile.** After editing an agentic workflow source, run `gh aw compile <workflow-id>` and commit the regenerated `.lock.yml` in the same change.
 - **Same applies to Dependabot updates** that touch generated manifests (e.g. `package.json` / `requirements.txt` / `go.mod`) if `gh aw compile` ever emits them under `.github/workflows/`: never merge those PRs directly; update the source `.md` files and rerun `gh aw compile --dependabot` to bundle the fixes.
-- **Pinned actions only.** Every `uses:` reference in the executable workflow YAML is pinned to an immutable SHA with a `# <version>` comment matching [`.github/aw/actions-lock.json`](../aw/actions-lock.json). Strict mode pins generated references, and [`check-action-pins.yml`](./check-action-pins.yml) verifies the result — see [Action pinning](#action-pinning).
+- **Pinned actions only.** Every `uses:` reference in the executable workflow YAML is immutable: repository actions pinned to a SHA with a `# <version>` comment matching [`.github/aw/actions-lock.json`](../aw/actions-lock.json), and `docker://` container actions pinned to an image digest. Strict mode pins generated references, and [`check-action-pins.yml`](./check-action-pins.yml) verifies the result — see [Action pinning](#action-pinning).
 - **Minimal permissions.** Workflows declare the least privilege they need; write capabilities flow through gh-aw `safe-outputs:` rather than direct `permissions: write-all`.
 
 [gh-aw]: https://github.com/github/gh-aw
