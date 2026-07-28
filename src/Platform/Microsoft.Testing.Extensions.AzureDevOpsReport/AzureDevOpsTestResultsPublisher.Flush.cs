@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
-using Microsoft.Testing.Platform.Logging;
 
 namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 
@@ -30,7 +29,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
             catch (Exception ex)
             {
                 Interlocked.Increment(ref _failedAttachmentCount);
-                _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingRunAttachmentFailed} {ex.Message}");
+                TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingRunAttachmentFailed} {ex.Message}");
             }
         }
     }
@@ -55,7 +54,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
             catch (Exception ex)
             {
                 Interlocked.Increment(ref _failedAttachmentCount);
-                _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingResultAttachmentFailed} {ex.Message}");
+                TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingResultAttachmentFailed} {ex.Message}");
             }
         }
     }
@@ -83,7 +82,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
+                TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
             }
         }
     }
@@ -151,7 +150,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
 
                     // Reset the interval countdown so a transient failure does not cause a tight retry loop.
                     _lastFlushTime = _clock.UtcNow;
-                    _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
+                    TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
                     return;
                 }
 
@@ -163,7 +162,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
                     if (BatchHasAttachments(batch))
                     {
                         Interlocked.Add(ref _failedAttachmentCount, CountAttachments(batch));
-                        _logger.LogWarning(AzureDevOpsResources.AzureDevOpsLivePublishingResultIdParseFailedWarning);
+                        TryLogWarning(AzureDevOpsResources.AzureDevOpsLivePublishingResultIdParseFailedWarning);
                     }
 
                     continue;
@@ -191,12 +190,12 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
                     }
                     catch (Exception ex)
                     {
-                        // Individual upload failures are already counted inside UploadResultAttachmentsAsync,
-                        // so reaching here means RenewLeaseAsync threw and no upload was attempted at all.
-                        // Count the whole set, otherwise these attachments are dropped uncounted and the
-                        // end-of-session summary under-reports.
+                        // Individual upload failures are already counted inside UploadResultAttachmentsAsync
+                        // (whose logging is non-throwing), so reaching here means RenewLeaseAsync threw and no
+                        // upload was attempted at all. Count the whole set, otherwise these attachments are
+                        // dropped uncounted and the end-of-session summary under-reports.
                         Interlocked.Add(ref _failedAttachmentCount, batch[i].Attachments.Count);
-                        _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingResultAttachmentFailed} {ex.Message}");
+                        TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingResultAttachmentFailed} {ex.Message}");
                     }
                 }
             }
