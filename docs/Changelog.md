@@ -11,6 +11,7 @@ See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4
 ### Added
 
 * Add dedicated timeout configuration for `[GlobalTestInitialize]` / `[GlobalTestCleanup]` fixtures via the `timeout:globalTestInitialize` / `timeout:globalTestCleanup` `testconfig.json` keys (RunSettings XML: `GlobalTestInitializeTimeout` / `GlobalTestCleanupTimeout`). These fall back to the per-test `testInitialize` / `testCleanup` timeouts when unset, and global fixture timeout/cancellation diagnostics now use dedicated messages ("Global test initialize/cleanup method ...") in [#9985](https://github.com/microsoft/testfx/issues/9985)
+* Add a code fix for MSTEST0041 that adds `[TestClass]` to a type decorated with a `ConditionBaseAttribute`-derived attribute in [#10283](https://github.com/microsoft/testfx/pull/10283)
 
 ### Changed
 
