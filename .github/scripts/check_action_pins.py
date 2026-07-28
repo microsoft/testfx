@@ -23,19 +23,22 @@ It enforces five rules:
        the locked SHA and carry a trailing `# vX.Y.Z` comment naming the locked
        version. A missing label fails too, so the check cannot be evaded by
        deleting it.
-    R3 (all files)       An action repository must resolve to a single SHA across
-       every scanned file. This catches drift for actions the compiler injects
-       but that are absent from `actions-lock.json`.
+    R3 (all files)       An action *repository* must resolve to a single SHA across
+       every scanned file, grouping `owner/repo/action-a` with `owner/repo/action-b`
+       since they share a checkout. This catches drift for actions the compiler
+       injects but that are absent from `actions-lock.json`.
     R4 (all files)       A `docker://` container action must be pinned to an image
        digest. Container actions run arbitrary code exactly like repository
        actions, so a mutable tag such as `docker://alpine:latest` carries the same
        risk, and a digest is the only immutable identifier for an image.
     R5 (all files)       Every `uses` occurrence reachable in the *parsed* YAML must
-       also be written as a plain, scannable line. R1-R4 read lines, so a `uses`
-       expressed as a block scalar, a flow mapping or an alias would otherwise be
-       executed by GitHub while remaining invisible to the audit. Reconciliation
-       counts occurrences and ignores the generated header, so a hidden occurrence
-       is never excused by a comment or by another occurrence on a plain line.
+       also be written as a plain, scannable line in a form the audit can parse.
+       R1-R4 read lines, so a `uses` expressed as a block scalar, a flow mapping or
+       an alias would otherwise be executed by GitHub while remaining invisible to
+       the audit; likewise a reference the recognizers cannot parse would fall out
+       of every rule. Both fail here instead. Reconciliation counts occurrences and
+       ignores the generated header, so a hidden occurrence is never excused by a
+       comment or by another occurrence on a plain line.
 
 Comparisons are made on a canonical form. GitHub resolves owner/repository names
 case-insensitively, so `Actions/Checkout` would otherwise look like an untracked
@@ -155,6 +158,21 @@ class Reference:
     @property
     def is_sha_pinned(self) -> bool:
         return SHA_RE.match(self.ref) is not None
+
+    @property
+    def repo_root(self) -> str:
+        """The canonical `owner/repo` this action lives in, ignoring any subpath.
+
+        `owner/repo/action-a` and `owner/repo/action-b` are two actions from a single
+        repository checkout, so R3 must hold them to one SHA. R2 keeps using the full
+        locator, which is how `actions-lock.json` keys subpath actions such as
+        `actions/cache/restore`.
+        """
+        owner, slash, rest = self.repo.partition("/")
+        if not slash:
+            return self.repo
+
+        return f"{owner}/{rest.partition('/')[0]}"
 
 
 def canonical_repo(repo: str) -> str:
@@ -349,6 +367,20 @@ def iter_uses_values(node: object):
             yield from iter_uses_values(item)
 
 
+def is_auditable_uses(raw: str) -> bool:
+    """True for a `uses` value this audit is responsible for holding immutable.
+
+    Deliberately broader than `split_ref`: it excludes only the forms that are not
+    remote actions at all (local paths and expressions). Anything else is in scope,
+    so a reference the narrower recognizers cannot parse is reported by R5 as
+    unsupported rather than silently dropped from every rule.
+    """
+    if not raw or raw.startswith(("./", "../", ".\\")) or "${{" in raw:
+        return False
+
+    return True
+
+
 def collect_structural_uses(path: Path) -> Counter[str]:
     """Count each auditable `uses` value reachable in `path` once parsed as YAML.
 
@@ -357,13 +389,8 @@ def collect_structural_uses(path: Path) -> Counter[str]:
     to sit on a plain line.
     """
     document = yaml.safe_load(path.read_text(encoding="utf-8"))
-    values = (
-        value
-        for value in iter_uses_values(document)
-        if split_ref(value) is not None or split_docker_ref(value) is not None
-    )
 
-    return Counter(values)
+    return Counter(value for value in iter_uses_values(document) if is_auditable_uses(value))
 
 
 def iter_workflow_files() -> list[Path]:
@@ -424,11 +451,14 @@ def audit(references: list[Reference], locked: dict[str, tuple[str, str]]) -> li
                 f"{actual} instead of {expected_version}."
             )
 
-    # R3: every action must resolve to a single SHA repo-wide.
+    # R3: every action must resolve to a single SHA repo-wide. Grouping is by the
+    # `owner/repo` root rather than the full locator: actions sharing a repository
+    # share a checkout, so `owner/repo/action-a` and `owner/repo/action-b` must agree.
+    # This is also the only cross-check available for actions absent from the lock.
     by_repo: dict[str, dict[str, list[Reference]]] = defaultdict(lambda: defaultdict(list))
     for reference in references:
         if reference.is_sha_pinned and not reference.is_docker:
-            by_repo[reference.repo][reference.ref].append(reference)
+            by_repo[reference.repo_root][reference.ref].append(reference)
 
     for repo, shas in sorted(by_repo.items()):
         if len(shas) < 2:
@@ -497,6 +527,18 @@ def main(argv: list[str] | None = None) -> int:
                 continue
 
             occurrences = "occurrence" if hidden == 1 else "occurrences"
+            if split_ref(value) is None and split_docker_ref(value) is None:
+                # On a plain line, but in a form no rule can parse. Failing here keeps
+                # the audit closed: silently dropping it would exempt the reference
+                # from R1-R4 entirely, even in a generated workflow.
+                structural_errors.append(
+                    f"{path.relative_to(REPO_ROOT).as_posix()}: {hidden} {occurrences} of "
+                    f"`uses: {value}` use a reference form this audit cannot parse, so no pin "
+                    "rule can be applied to them. Use `<owner>/<repo>[/<path>]@<sha> # <version>` "
+                    "or `docker://<image>@sha256:<digest>`, or extend the audit to cover this form."
+                )
+                continue
+
             structural_errors.append(
                 f"{path.relative_to(REPO_ROOT).as_posix()}: {hidden} {occurrences} of "
                 f"`uses: {value}` are reachable in the parsed workflow but are not written as a "
