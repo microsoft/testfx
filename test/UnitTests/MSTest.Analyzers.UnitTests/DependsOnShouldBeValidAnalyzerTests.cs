@@ -940,6 +940,64 @@ public sealed class DependsOnShouldBeValidAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenTestContextPropertyIsInvalid_NoCycle()
+    {
+        // Discovery rejects the whole class when a declared 'TestContext' property has a static getter, so no
+        // test runs under it and there is no cycle. MSTEST0005 already reports the property itself.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public static TestContext TestContext { get; set; }
+
+                [TestMethod]
+                [DependsOn(nameof(AddItem))]
+                public void CreateCart() { }
+
+                [TestMethod]
+                [DependsOn(nameof(CreateCart))]
+                public void AddItem() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenTestContextPropertyIsValid_Cycle()
+    {
+        // The ordinary instance 'TestContext' property must not disturb anything.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public TestContext TestContext { get; set; }
+
+                [TestMethod]
+                [{|#0:DependsOn(nameof(AddItem))|}]
+                public void CreateCart() { }
+
+                [TestMethod]
+                [{|#1:DependsOn(nameof(CreateCart))|}]
+                public void AddItem() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(DependsOnShouldBeValidAnalyzer.CycleRule)
+                .WithLocation(0)
+                .WithArguments("MyTestClass.CreateCart > MyTestClass.AddItem > MyTestClass.CreateCart"),
+            VerifyCS.Diagnostic(DependsOnShouldBeValidAnalyzer.CycleRule)
+                .WithLocation(1)
+                .WithArguments("MyTestClass.AddItem > MyTestClass.CreateCart > MyTestClass.AddItem"));
+    }
+
+    [TestMethod]
     public async Task WhenTestReferencesItself_SelfReference()
     {
         string code = """
