@@ -554,7 +554,8 @@ public sealed class AzureDevOpsLivePublishingTests
         using TestDirectory directory = CreateTestDirectory();
         string dumpPath = Path.Combine(directory.Path, "dump.txt");
         File.WriteAllText(dumpPath, "dump content");
-        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(1, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out FakeClock clock, out CollectingLogger logger);
+        CollectingOutputDevice outputDevice = new();
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(1, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out FakeClock clock, out CollectingLogger logger, outputDevice: outputDevice);
         client.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(202);
 
         int publishCalls = 0;
@@ -575,6 +576,11 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.AreEqual(1, publishCalls);
         Assert.HasCount(1, client.UploadTestResultAttachmentCalls);
         Assert.Contains(AzureDevOpsResources.AzureDevOpsLivePublishingResultAttachmentFailed, string.Join(Environment.NewLine, logger.Logs));
+
+        // The per-attachment failure is swallowed so the flush can continue; the user still has to be
+        // told at the end of the session that the attachment is missing from the run.
+        string expectedSummary = string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingAttachmentsDropped, 1);
+        Assert.Contains(expectedSummary, string.Join(Environment.NewLine, outputDevice.Lines));
     }
 
     [TestMethod]
