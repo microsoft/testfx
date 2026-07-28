@@ -167,7 +167,7 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
         // fallback then collapses *every* same-named test to the declaration closest to the class, including
         // genuine overloads, and modelling that here would mean baking a run-time quirk into the analyzer.
         // Going quiet is the safe answer, and MSTEST0036 already reports the shadowing that triggers it.
-        if (HasDuplicateSignature(typeSymbol))
+        if (HasDuplicateSignature(typeSymbol, symbols))
         {
             return;
         }
@@ -179,10 +179,12 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
     }
 
     /// <summary>
-    /// Whether the type's hierarchy declares the same method signature twice, which is what makes
-    /// <c>TypeEnumerator.GetTests</c> fall back to collapsing tests by name.
+    /// Whether the type's hierarchy declares the same method signature twice <em>among the methods discovery
+    /// turns into tests</em>, which is what makes <c>TypeEnumerator.GetTests</c> fall back to collapsing tests
+    /// by name. Methods discovery never looks at - private helpers and the like - cannot trigger it, so they
+    /// must not disable cycle analysis here either.
     /// </summary>
-    private static bool HasDuplicateSignature(INamedTypeSymbol type)
+    private static bool HasDuplicateSignature(INamedTypeSymbol type, AnalysisSymbols symbols)
     {
         var signatures = new HashSet<string>(StringComparer.Ordinal);
         for (INamedTypeSymbol? current = type; current is not null; current = current.BaseType)
@@ -191,6 +193,7 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
             {
                 // An override is not a duplicate: reflection surfaces only the most-derived declaration.
                 if (member is IMethodSymbol { MethodKind: MethodKind.Ordinary, OverriddenMethod: null } method
+                    && IsRunnableTestMethod(method, symbols)
                     && !signatures.Add(BuildSignatureKey(method)))
                 {
                     return true;
@@ -459,7 +462,7 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
             }
         }
 
-        foreach (IMethodSymbol method in EnumerateMethods(node.TestClass, node.MethodName))
+        foreach (IMethodSymbol method in EnumerateMethods(node.TestClass, node.MethodName, symbols))
         {
             // Graph nodes use the stricter "does discovery run this" predicate: reading the attributes of a
             // method discovery never turns into a test would invent edges, and an invented edge can close a
@@ -675,7 +678,7 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
     private static MethodLookup LookupMethods(INamedTypeSymbol targetClass, string methodName, AnalysisSymbols symbols)
     {
         bool exists = false;
-        foreach (IMethodSymbol method in EnumerateMethods(targetClass, methodName))
+        foreach (IMethodSymbol method in EnumerateMethods(targetClass, methodName, symbols))
         {
             exists = true;
 
@@ -695,12 +698,12 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
     /// has: its own declarations plus the inherited ones, excluding base declarations that an override
     /// replaces.
     /// </summary>
-    private static IEnumerable<IMethodSymbol> EnumerateMethods(INamedTypeSymbol type, string methodName)
-        => EnumerateEffectiveMethods(type, methodName);
+    private static IEnumerable<IMethodSymbol> EnumerateMethods(INamedTypeSymbol type, string methodName, AnalysisSymbols symbols)
+        => EnumerateEffectiveMethods(type, methodName, symbols);
 
     private static bool HasRunnableTestMethod(INamedTypeSymbol targetClass, string methodName, AnalysisSymbols symbols)
     {
-        foreach (IMethodSymbol method in EnumerateMethods(targetClass, methodName))
+        foreach (IMethodSymbol method in EnumerateMethods(targetClass, methodName, symbols))
         {
             if (IsRunnableTestMethod(method, symbols))
             {
@@ -714,7 +717,7 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
     private static IEnumerable<string> EnumerateTestMethodNames(INamedTypeSymbol type, AnalysisSymbols symbols)
     {
         var seen = new HashSet<string>(StringComparer.Ordinal);
-        foreach (IMethodSymbol method in EnumerateEffectiveMethods(type, methodName: null))
+        foreach (IMethodSymbol method in EnumerateEffectiveMethods(type, methodName: null, symbols))
         {
             if (IsRunnableTestMethod(method, symbols) && seen.Add(method.Name))
             {
@@ -741,9 +744,11 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
     /// A base declaration that a <c>new</c> member hides with the <em>same signature</em> is dropped for the
     /// same reason: <c>TypeEnumerator.GetTests</c> detects the duplicate and keeps the declaration closest to
     /// the test class. Genuine overloads (a different signature) are kept, since those are distinct tests.
+    /// That duplicate detection only looks at the methods discovery turns into tests, so a hiding declaration
+    /// discovery ignores - a private helper, say - must not displace the base test it happens to shadow.
     /// </para>
     /// </remarks>
-    private static IEnumerable<IMethodSymbol> EnumerateEffectiveMethods(INamedTypeSymbol type, string? methodName)
+    private static IEnumerable<IMethodSymbol> EnumerateEffectiveMethods(INamedTypeSymbol type, string? methodName, AnalysisSymbols symbols)
     {
         var overridden = new HashSet<ISymbol>(SymbolEqualityComparer.Default);
         var signatures = new HashSet<string>(StringComparer.Ordinal);
@@ -752,8 +757,12 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
             foreach (ISymbol member in methodName is null ? current.GetMembers() : current.GetMembers(methodName))
             {
                 if (member is not IMethodSymbol { MethodKind: MethodKind.Ordinary } method
-                    || overridden.Contains(method)
-                    || !signatures.Add(BuildSignatureKey(method)))
+                    || overridden.Contains(method))
+                {
+                    continue;
+                }
+
+                if (IsRunnableTestMethod(method, symbols) && !signatures.Add(BuildSignatureKey(method)))
                 {
                     continue;
                 }

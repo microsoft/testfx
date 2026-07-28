@@ -874,6 +874,72 @@ public sealed class DependsOnShouldBeValidAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenOnlyPrivateHelpersShareASignature_Cycle()
+    {
+        // A private helper hidden in the derived class is not a test, so discovery's duplicate fallback never
+        // triggers and the real cycle must still be reported.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseTests
+            {
+                private void Log() { }
+            }
+
+            [TestClass]
+            public class MyTestClass : BaseTests
+            {
+                private void Log() { }
+
+                [TestMethod]
+                [{|#0:DependsOn(nameof(AddItem))|}]
+                public void CreateCart() { }
+
+                [TestMethod]
+                [{|#1:DependsOn(nameof(CreateCart))|}]
+                public void AddItem() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(DependsOnShouldBeValidAnalyzer.CycleRule)
+                .WithLocation(0)
+                .WithArguments("MyTestClass.CreateCart > MyTestClass.AddItem > MyTestClass.CreateCart"),
+            VerifyCS.Diagnostic(DependsOnShouldBeValidAnalyzer.CycleRule)
+                .WithLocation(1)
+                .WithArguments("MyTestClass.AddItem > MyTestClass.CreateCart > MyTestClass.AddItem"));
+    }
+
+    [TestMethod]
+    public async Task WhenNonTestMemberHidesABaseTest_NoDiagnostic()
+    {
+        // The hiding declaration is not a test, so discovery still finds the base test and its dependency is
+        // real. 'CreateCart' exists, so nothing is reported.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseTests
+            {
+                [TestMethod]
+                [DependsOn("CreateCart")]
+                public void Run() { }
+            }
+
+            [TestClass]
+            public class MyTestClass : BaseTests
+            {
+                private new void Run() { }
+
+                [TestMethod]
+                public void CreateCart() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
     public async Task WhenTestReferencesItself_SelfReference()
     {
         string code = """
