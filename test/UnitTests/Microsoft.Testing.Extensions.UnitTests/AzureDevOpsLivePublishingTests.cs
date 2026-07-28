@@ -1008,6 +1008,44 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.Contains(expected, string.Join(Environment.NewLine, outputDevice.Lines));
     }
 
+    // Regression tests for the two teardown escape hatches: WarnAsync must survive a failing log
+    // provider, and finalization must not let its own cleanup-timeout cancellation fail the run.
+    [TestMethod]
+    public async Task OnTestSessionStartingAsync_LogProviderThrows_DoesNotFailTheRun()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMock(processId: GetAliveProcessId());
+        environment.Setup(x => x.GetEnvironmentVariable("SYSTEM_ACCESSTOKEN")).Returns((string?)null);
+        CollectingOutputDevice outputDevice = new();
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: AzureDevOpsTestResultsPublisherOptions.Default, out _, out _, out CollectingLogger logger, environment: environment, outputDevice: outputDevice);
+        logger.ThrowOnLog = true;
+
+        Assert.IsTrue(await publisher.IsEnabledAsync());
+        await publisher.OnTestSessionStartingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        // The console copy still gets through even though the diagnostic logger is broken.
+        Assert.HasCount(1, outputDevice.Lines);
+    }
+
+    [TestMethod]
+    public async Task OnTestSessionFinishingAsync_FinalizeCanceled_DoesNotFailTheRun()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        CollectingOutputDevice outputDevice = new();
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(2, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out _, out _, outputDevice: outputDevice);
+        client.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(94);
+
+        // HttpClient surfaces a timeout as TaskCanceledException, which derives from OperationCanceledException.
+        client.UpdateTestRunStateAsyncFunc = (_, _, _, _) => throw new TaskCanceledException("finalization timed out");
+
+        await StartPublisherAsync(publisher);
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        string output = string.Join(Environment.NewLine, outputDevice.Lines);
+        Assert.Contains(AzureDevOpsResources.AzureDevOpsLivePublishingCompleteRunFailed, output);
+        Assert.Contains(AzureDevOpsResources.AzureDevOpsLivePublishingRunLeftInProgress, output);
+    }
+
     private static async Task StartPublisherAsync(AzureDevOpsTestResultsPublisher publisher)
     {
         Assert.IsTrue(await publisher.IsEnabledAsync());
@@ -1236,13 +1274,28 @@ public sealed class AzureDevOpsLivePublishingTests
     {
         public List<string> Logs { get; } = [];
 
+        /// <summary>Gets or sets a value indicating whether logging throws, emulating a failing log provider.</summary>
+        public bool ThrowOnLog { get; set; }
+
         public bool IsEnabled(LogLevel logLevel) => true;
 
         public void Log<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
-            => Logs.Add($"{logLevel}: {formatter(state, exception)}");
+        {
+            if (ThrowOnLog)
+            {
+                throw new IOException("simulated log provider failure");
+            }
+
+            Logs.Add($"{logLevel}: {formatter(state, exception)}");
+        }
 
         public Task LogAsync<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
         {
+            if (ThrowOnLog)
+            {
+                throw new IOException("simulated log provider failure");
+            }
+
             Logs.Add($"{logLevel}: {formatter(state, exception)}");
             return Task.CompletedTask;
         }
