@@ -1,7 +1,14 @@
 #nullable enable
+*REMOVED*Microsoft.Testing.Extensions.Telemetry.AppInsightTelemetryClientFactory.AppInsightTelemetryClientFactory() -> void
+Microsoft.Testing.Extensions.Telemetry.AppInsightTelemetryClientFactory.AppInsightTelemetryClientFactory(string? localExportFilePath = null) -> void
+Microsoft.Testing.Extensions.Telemetry.LocalFileTelemetryClient
+Microsoft.Testing.Extensions.Telemetry.LocalFileTelemetryClient.Flush() -> void
+Microsoft.Testing.Extensions.Telemetry.LocalFileTelemetryClient.LocalFileTelemetryClient(string! filePath, string? currentSessionId, string! osVersion) -> void
+Microsoft.Testing.Extensions.Telemetry.LocalFileTelemetryClient.TrackEvent(string! eventName, System.Collections.Generic.Dictionary<string!, string!>! properties, System.Collections.Generic.Dictionary<string!, double>! metrics) -> void
 Microsoft.Testing.Platform.Helpers.RuntimeFeatureHelper
 Microsoft.Testing.Platform.Messages.SingleConsumerUnboundedChannel<T>.WaitToRead() -> bool
 Microsoft.Testing.Platform.RoslynDebug
 static Microsoft.Testing.Platform.Helpers.RuntimeFeatureHelper.IsMultiThreaded.get -> bool
 static Microsoft.Testing.Platform.RoslynDebug.Assert(bool b) -> void
 static Microsoft.Testing.Platform.RoslynDebug.Assert(bool b, string! message) -> void
+static readonly Microsoft.Testing.Extensions.Telemetry.AppInsightsProvider.LocalExportPathEnvVar -> string!
