@@ -44,7 +44,7 @@
       </trans-unit>
       <trans-unit id="ExitCodeReasonDependentProcessExited">
         <source>A dependent process exited unexpectedly.</source>
-        <target state="translated">튜닝 프로세스가 예기치 않게 종료되었습니다.</target>
+        <target state="translated">종속 프로세스가 예기치 않게 종료되었습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCodeReasonGenericFailure">
