@@ -164,7 +164,7 @@
       </trans-unit>
       <trans-unit id="CoverageThresholdNoDataPassed">
         <source>No coverable data (passed by policy)</source>
-        <target state="new">No coverable data (passed by policy)</target>
+        <target state="translated">Brak danych do ukrycia (przekazanych przez zasady)</target>
         <note>Coverage threshold result shown when a scope has no coverable data and the configured policy treats that as a pass.</note>
       </trans-unit>
       <trans-unit id="CoverageThresholdPassed">
