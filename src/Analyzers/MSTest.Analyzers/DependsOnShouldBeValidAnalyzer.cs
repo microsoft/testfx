@@ -683,6 +683,16 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
         }
     }
 
+    /// <summary>
+    /// Builds a key identifying a method's CLR signature. Method type parameters are normalized to their
+    /// ordinal, and the walk is structural, because two declarations that hide each other can spell their
+    /// type parameters differently (<c>Run&lt;T&gt;(T)</c> and <c>Run&lt;U&gt;(U)</c> are the same signature).
+    /// Rendering the parameter types as source text would miss that and keep the hidden declaration.
+    /// </summary>
+    /// <remarks>
+    /// Erring toward collision is safe here: the walk yields most-derived first, so a key collision only ever
+    /// drops a <em>base</em> declaration, which removes edges rather than inventing them.
+    /// </remarks>
     private static string BuildSignatureKey(IMethodSymbol method)
     {
         var builder = new StringBuilder(method.Name);
@@ -695,10 +705,58 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
             }
 
             IParameterSymbol parameter = method.Parameters[i];
-            builder.Append(parameter.RefKind).Append(':').Append(parameter.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+            builder.Append(parameter.RefKind).Append(':');
+            AppendTypeKey(builder, parameter.Type);
         }
 
         return builder.Append(')').ToString();
+    }
+
+    private static void AppendTypeKey(StringBuilder builder, ITypeSymbol type)
+    {
+        switch (type)
+        {
+            // The name a method type parameter is given is not part of the signature; its position is.
+            case ITypeParameterSymbol { TypeParameterKind: TypeParameterKind.Method } methodTypeParameter:
+                builder.Append("!!").Append(methodTypeParameter.Ordinal);
+                return;
+
+            // 'dynamic' and 'object' are the same type to the CLR.
+            case IDynamicTypeSymbol:
+                builder.Append("object");
+                return;
+
+            case IArrayTypeSymbol array:
+                AppendTypeKey(builder, array.ElementType);
+                builder.Append('[').Append(array.Rank).Append(']');
+                return;
+
+            case IPointerTypeSymbol pointer:
+                AppendTypeKey(builder, pointer.PointedAtType);
+                builder.Append('*');
+                return;
+
+            // A constructed generic has to be compared argument by argument, so that 'List<T>' and 'List<U>'
+            // are recognized as the same signature.
+            case INamedTypeSymbol { IsGenericType: true } named:
+                builder.Append(named.OriginalDefinition.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)).Append('<');
+                for (int i = 0; i < named.TypeArguments.Length; i++)
+                {
+                    if (i > 0)
+                    {
+                        builder.Append(',');
+                    }
+
+                    AppendTypeKey(builder, named.TypeArguments[i]);
+                }
+
+                builder.Append('>');
+                return;
+
+            default:
+                builder.Append(type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+                return;
+        }
     }
 
     private static List<AttributeData> GetDependsOnAttributes(ISymbol symbol, AnalysisSymbols symbols)

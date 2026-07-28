@@ -659,6 +659,66 @@ public sealed class DependsOnShouldBeValidAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenNewHidesTheBaseDependencyWithRenamedTypeParameter_NoDiagnostic()
+    {
+        // 'Run<U>(U)' hides 'Run<T>(T)': the type parameter's name is not part of the signature, so discovery
+        // dedupes them and keeps the derived declaration. Comparing the parameter types as source text would
+        // see 'U' and 'T', keep the hidden base declaration, and invent its dependency back.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseTests
+            {
+                [TestMethod]
+                [DependsOn("Other")]
+                public void Run<T>(T value) { }
+            }
+
+            [TestClass]
+            public class MyTestClass : BaseTests
+            {
+                [TestMethod]
+                public new void Run<U>(U value) { }
+
+                [TestMethod]
+                [DependsOn(nameof(Run))]
+                public void Other() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenBaseDeclaresGenuineOverload_NoDiagnostic()
+    {
+        // A different signature is a distinct test rather than a hidden one, so the base declaration stays in
+        // the effective set and its dependency is real. 'CreateCart' exists, so nothing is reported.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseTests
+            {
+                [TestMethod]
+                [DependsOn("CreateCart")]
+                public void Run(int value) { }
+            }
+
+            [TestClass]
+            public class MyTestClass : BaseTests
+            {
+                [TestMethod]
+                public void Run() { }
+
+                [TestMethod]
+                public void CreateCart() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
     public async Task WhenTestReferencesItself_SelfReference()
     {
         string code = """
