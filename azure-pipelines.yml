@@ -301,6 +301,17 @@ stages:
         #                            run that ultimately builds fine (same reason as _MacOSNonBlockingTrailer).
         #   failed                 - the sources genuinely do not build, see the classification below.
         - pwsh: |
+            # This step no longer sets continueOnError, so its result is meaningful and an *unexpected*
+            # terminating error (Tee-Object, log reading, the classification below) must not fail the job:
+            # that is an infrastructure failure, which belongs on the fallback path exactly like a crash of
+            # the build itself. `exit` is flow control rather than an error, so the deliberate `exit 1` for a
+            # classified source break further down still fails the step as intended.
+            trap {
+              Write-Host "##vso[task.setvariable variable=MSBuildCacheBuildSucceeded]false"
+              Write-Host "##vso[task.logissue type=warning]The MSBuildCache step itself failed unexpectedly ($($_.Exception.Message)); continuing with the regular Arcade build."
+              exit 0
+            }
+
             $pwsh = Join-Path $PSHOME "pwsh.exe"
             # Azure Pipeline cache entries are immutable. The batched main-merge stage is the only remote publisher;
             # keeping this canary read-only prevents manual or scheduled runs from racing with it.
@@ -368,6 +379,9 @@ stages:
             $log = if (Test-Path $logPath) { @(Get-Content -LiteralPath $logPath) } else { @() }
 
             $reportedErrorCount = -1
+            # Matches MSBuild's English summary. A localized agent leaves the count at -1, which falls through
+            # to the fallback below - the safe direction, and the same outcome as a build that never reached a
+            # summary at all.
             $errorSummary = @($log | Select-String -Pattern '(\d+)\s+Error\(s\)') | Select-Object -Last 1
             if ($errorSummary) {
               $reportedErrorCount = [int]$errorSummary.Matches[0].Groups[1].Value
@@ -408,6 +422,15 @@ stages:
         # consumed by the acceptance tests. Run those phases without the Build phase when the cache supplied the
         # compiled outputs. Keep this non-blocking so any failure switches the regular Arcade build back on.
         - pwsh: |
+            # As above: with continueOnError gone, an unexpected terminating error here would fail the job
+            # instead of handing over to the Arcade build. This step has no deliberate failure path - every
+            # outcome either uses the cached outputs or falls back - so any error routes to the fallback.
+            trap {
+              Write-Host "##vso[task.setvariable variable=MSBuildCacheBuildSucceeded]false"
+              Write-Host "##vso[task.logissue type=warning]Preparing cached outputs failed unexpectedly ($($_.Exception.Message)); continuing with the regular Arcade build."
+              exit 0
+            }
+
             Write-Host "##vso[task.setvariable variable=MSBuildCacheBuildSucceeded]false"
 
             $pwsh = Join-Path $PSHOME "pwsh.exe"
