@@ -8,6 +8,29 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </summary>
 /// <remarks>
 /// This attribute isn't inherited. Applying it to a base class will not affect derived classes.
+/// <para>
+/// Whether the same condition attribute type can be applied more than once to a single test class or test method is
+/// decided by each derived attribute through its own <see cref="AttributeUsageAttribute.AllowMultiple"/> value:
+/// <list type="bullet">
+/// <item><description>
+/// <see cref="MemberConditionAttribute"/> and <see cref="ExecutableConditionAttribute"/> set
+/// <see cref="AttributeUsageAttribute.AllowMultiple"/> to <see langword="true"/>. Each usage that names a different
+/// member or command produces a distinct <see cref="GroupName"/>, so stacked usages are combined with a logical AND.
+/// </description></item>
+/// <item><description>
+/// <see cref="OSConditionAttribute"/>, <see cref="CIConditionAttribute"/> and <c>ArchitectureConditionAttribute</c>
+/// set <see cref="AttributeUsageAttribute.AllowMultiple"/> to <see langword="false"/>: stacking them is a compile-time
+/// error. <see cref="OSConditionAttribute"/> and <c>ArchitectureConditionAttribute</c> take a flags enum, so combine
+/// the values with the bitwise OR operator instead, for example
+/// <c>[OSCondition(OperatingSystems.Windows | OperatingSystems.Linux)]</c>. There is nothing to combine for
+/// <see cref="CIConditionAttribute"/>, which only carries a <see cref="ConditionMode"/>.
+/// </description></item>
+/// </list>
+/// </para>
+/// <para>
+/// Attributes exposing a different <see cref="GroupName"/> are combined with a logical AND, so different condition
+/// attribute types can always be applied together to require several conditions at once.
+/// </para>
 /// </remarks>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, Inherited = false)]
 public abstract class ConditionBaseAttribute : Attribute

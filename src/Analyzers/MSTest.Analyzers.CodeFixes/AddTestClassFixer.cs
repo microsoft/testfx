@@ -19,7 +19,8 @@ using MSTest.Analyzers.Helpers;
 namespace MSTest.Analyzers;
 
 /// <summary>
-/// Code fixer for <see cref="PublicTypeShouldBeTestClassAnalyzer"/> and <see cref="TypeContainingTestMethodShouldBeATestClassAnalyzer"/>.
+/// Code fixer for <see cref="PublicTypeShouldBeTestClassAnalyzer"/>, <see cref="TypeContainingTestMethodShouldBeATestClassAnalyzer"/>
+/// and <see cref="UseConditionBaseWithTestClassAnalyzer"/>.
 /// </summary>
 [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(AddTestClassFixer))]
 [Shared]
@@ -29,7 +30,8 @@ public sealed class AddTestClassFixer : CodeFixProvider
     public sealed override ImmutableArray<string> FixableDiagnosticIds { get; }
         = ImmutableArray.Create(
             DiagnosticIds.PublicTypeShouldBeTestClassRuleId,
-            DiagnosticIds.TypeContainingTestMethodShouldBeATestClassRuleId);
+            DiagnosticIds.TypeContainingTestMethodShouldBeATestClassRuleId,
+            DiagnosticIds.UseConditionBaseWithTestClassRuleId);
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()
@@ -49,8 +51,14 @@ public sealed class AddTestClassFixer : CodeFixProvider
             return;
         }
 
-        // Find the type declaration identified by the diagnostic.
-        TypeDeclarationSyntax declaration = syntaxToken.Parent.AncestorsAndSelf().OfType<TypeDeclarationSyntax>().First();
+        // Find the type declaration identified by the diagnostic. A condition attribute (MSTEST0041) can be
+        // declared with a custom AttributeUsage targeting a type kind that has no TypeDeclarationSyntax (an enum,
+        // for example), and [TestClass] is meaningless on an interface, so bail out in those cases.
+        TypeDeclarationSyntax? declaration = syntaxToken.Parent.AncestorsAndSelf().OfType<TypeDeclarationSyntax>().FirstOrDefault();
+        if (declaration is null or InterfaceDeclarationSyntax)
+        {
+            return;
+        }
 
         // For structs and record structs, we need to change them to classes/record classes since [TestClass] cannot be applied to structs
         if (declaration is StructDeclarationSyntax)
