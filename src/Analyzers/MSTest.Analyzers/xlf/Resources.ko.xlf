@@ -692,7 +692,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="PreferConstantForResourceLockDescription">
         <source>'[ResourceLock]' matches tests by exact string equality of the resource key. A bare string literal fails open: a typo produces a different key, so conflicting tests are no longer serialized and race silently instead of failing with an error. Referencing a shared constant makes typos a compile error and lets the compiler enforce that every test contending on the same resource uses the same key.</source>
-        <target state="new">'[ResourceLock]' matches tests by exact string equality of the resource key. A bare string literal fails open: a typo produces a different key, so conflicting tests are no longer serialized and race silently instead of failing with an error. Referencing a shared constant makes typos a compile error and lets the compiler enforce that every test contending on the same resource uses the same key.</target>
+        <target state="translated">'[ResourceLock]'은 리소스 키와 정확히 같은 문자열인 경우에만 테스트와 일치합니다. 문자열 리터럴을 그대로 쓰면 오타가 있으면 다른 키가 만들어지므로 문제가 생길 수 있습니다. 그러면 충돌하는 테스트가 더 이상 직렬화되지 않고, 오류로 실패하는 대신 자동으로 경합하게 됩니다. 공유 상수를 참조하면 오타가 컴파일 오류로 감지됩니다. 또한 컴파일러가 같은 리소스를 두고 경합하는 모든 테스트가 같은 키를 사용하도록 보장합니다.</target>
         <note>{Locked="[ResourceLock]"}</note>
       </trans-unit>
       <trans-unit id="PreferConstantForResourceLockMessageFormat">
@@ -702,7 +702,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="PreferConstantForResourceLockTitle">
         <source>Prefer a named constant for the '[ResourceLock]' resource key</source>
-        <target state="new">Prefer a named constant for the '[ResourceLock]' resource key</target>
+        <target state="translated">'[ResourceLock]' 리소스 키에는 이름이 있는 상수를 사용하는 것이 좋습니다.</target>
         <note>{Locked="[ResourceLock]"}</note>
       </trans-unit>
       <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerDescription">

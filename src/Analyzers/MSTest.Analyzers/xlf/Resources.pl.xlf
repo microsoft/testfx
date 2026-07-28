@@ -692,7 +692,7 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       </trans-unit>
       <trans-unit id="PreferConstantForResourceLockDescription">
         <source>'[ResourceLock]' matches tests by exact string equality of the resource key. A bare string literal fails open: a typo produces a different key, so conflicting tests are no longer serialized and race silently instead of failing with an error. Referencing a shared constant makes typos a compile error and lets the compiler enforce that every test contending on the same resource uses the same key.</source>
-        <target state="new">'[ResourceLock]' matches tests by exact string equality of the resource key. A bare string literal fails open: a typo produces a different key, so conflicting tests are no longer serialized and race silently instead of failing with an error. Referencing a shared constant makes typos a compile error and lets the compiler enforce that every test contending on the same resource uses the same key.</target>
+        <target state="translated">'[ResourceLock]' dopasowuje testy na podstawie dokładnej zgodności ciągu znaków klucza zasobu. Literał ciągu bez znaków otwierających powoduje błąd typu „open”: literówka powoduje powstanie innego klucza, przez co kolidujące testy nie są już wykonywane sekwencyjnie i dochodzi do sytuacji wyścigu, która przebiega bez widocznych komunikatów, zamiast zakończyć się błędem. Odwołanie się do współdzielonej stałej sprawia, że literówki powodują błąd kompilacji, a także pozwala kompilatorowi wymusić, by każdy test ubiegający się o ten sam zasób używał tego samego klucza.</target>
         <note>{Locked="[ResourceLock]"}</note>
       </trans-unit>
       <trans-unit id="PreferConstantForResourceLockMessageFormat">
@@ -702,7 +702,7 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       </trans-unit>
       <trans-unit id="PreferConstantForResourceLockTitle">
         <source>Prefer a named constant for the '[ResourceLock]' resource key</source>
-        <target state="new">Prefer a named constant for the '[ResourceLock]' resource key</target>
+        <target state="translated">Zaleca się użycie stałej nazwanej dla klucza zasobu „[ResourceLock]”</target>
         <note>{Locked="[ResourceLock]"}</note>
       </trans-unit>
       <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerDescription">
