@@ -157,6 +157,10 @@
     <value>Runsettings loggers are not supported by Microsoft.Testing.Platform and will be ignored</value>
     <comment>Do not localize {Locked="Runsettings"} or {Locked="Microsoft.Testing.Platform"}.</comment>
   </data>
+  <data name="UnsupportedTestExecutionFilter" xml:space="preserve">
+    <value>Test execution filter type '{0}' is not supported by '{1}'. Supported filter types are NopFilter, TestNodeUidListFilter, and an And CompositeTestExecutionFilter.</value>
+    <comment>{0} is the unsupported filter type. {1} is the adapter name. {Locked="NopFilter"}{Locked="TestNodeUidListFilter"}{Locked="And"}{Locked="CompositeTestExecutionFilter"}</comment>
+  </data>
   <data name="UnsupportedRunsettingsDatacollectors" xml:space="preserve">
     <value>Runsettings datacollectors are not supported by Microsoft.Testing.Platform and will be ignored</value>
     <comment>Do not localize {Locked="Runsettings"} or {Locked="Microsoft.Testing.Platform"}.</comment>

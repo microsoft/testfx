@@ -1,4 +1,23 @@
 #nullable enable
+[TPEXP]Microsoft.Testing.Platform.Requests.CompositeTestExecutionFilter
+[TPEXP]Microsoft.Testing.Platform.Requests.CompositeTestExecutionFilter.CompositeTestExecutionFilter(Microsoft.Testing.Platform.Requests.TestExecutionFilterOperator operator, params Microsoft.Testing.Platform.Requests.ITestExecutionFilter![]! filters) -> void
+[TPEXP]Microsoft.Testing.Platform.Requests.CompositeTestExecutionFilter.Filters.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Requests.ITestExecutionFilter!>!
+[TPEXP]Microsoft.Testing.Platform.Requests.CompositeTestExecutionFilter.Operator.get -> Microsoft.Testing.Platform.Requests.TestExecutionFilterOperator
+[TPEXP]Microsoft.Testing.Platform.Requests.ITestExecutionFilterProvider
+[TPEXP]Microsoft.Testing.Platform.Requests.ITestExecutionFilterProvider.GetFilterAsync(Microsoft.Testing.Platform.Requests.TestExecutionFilterContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Requests.ITestExecutionFilter?>!
+[TPEXP]Microsoft.Testing.Platform.Requests.TestExecutionFilterContext
+[TPEXP]Microsoft.Testing.Platform.Requests.TestExecutionFilterContext.TestExecutionFilterContext(Microsoft.Testing.Platform.Requests.TestExecutionRequestKind requestKind, Microsoft.Testing.Platform.Requests.TestExecutionRequestOrigin origin) -> void
+[TPEXP]Microsoft.Testing.Platform.Requests.TestExecutionFilterContext.Origin.get -> Microsoft.Testing.Platform.Requests.TestExecutionRequestOrigin
+[TPEXP]Microsoft.Testing.Platform.Requests.TestExecutionFilterContext.RequestKind.get -> Microsoft.Testing.Platform.Requests.TestExecutionRequestKind
+[TPEXP]Microsoft.Testing.Platform.Requests.TestExecutionFilterOperator
+[TPEXP]Microsoft.Testing.Platform.Requests.TestExecutionFilterOperator.And = 0 -> Microsoft.Testing.Platform.Requests.TestExecutionFilterOperator
+[TPEXP]Microsoft.Testing.Platform.Requests.TestExecutionRequestKind
+[TPEXP]Microsoft.Testing.Platform.Requests.TestExecutionRequestKind.Discovery = 0 -> Microsoft.Testing.Platform.Requests.TestExecutionRequestKind
+[TPEXP]Microsoft.Testing.Platform.Requests.TestExecutionRequestKind.Run = 1 -> Microsoft.Testing.Platform.Requests.TestExecutionRequestKind
+[TPEXP]Microsoft.Testing.Platform.Requests.TestExecutionRequestOrigin
+[TPEXP]Microsoft.Testing.Platform.Requests.TestExecutionRequestOrigin.Console = 0 -> Microsoft.Testing.Platform.Requests.TestExecutionRequestOrigin
+[TPEXP]Microsoft.Testing.Platform.Requests.TestExecutionRequestOrigin.Server = 1 -> Microsoft.Testing.Platform.Requests.TestExecutionRequestOrigin
+[TPEXP]static Microsoft.Testing.Platform.Helpers.TestApplicationBuilderExtensions.AddTestExecutionFilterProvider(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder, System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Requests.ITestExecutionFilterProvider!>! providerFactory) -> void
 [TPEXP]Microsoft.Testing.Platform.Services.IClientCapabilities
 [TPEXP]Microsoft.Testing.Platform.Services.IClientCapabilities.IsStateful.get -> bool
 [TPEXP]Microsoft.Testing.Platform.Services.IClientInfo.Capabilities.get -> Microsoft.Testing.Platform.Services.IClientCapabilities!

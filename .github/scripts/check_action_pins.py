@@ -11,7 +11,7 @@ a mutable tag -- and because the damage lands in generated files it easily rides
 along unnoticed in an unrelated pull request (see microsoft/testfx#10258).
 
 This script is a deterministic, offline guard for exactly that failure mode.
-It enforces three rules:
+It enforces five rules:
 
     R1 (generated files) Every `uses:` reference must be pinned to a 40-character
        commit SHA. A mutable tag or branch is rejected. Generated files are
@@ -23,13 +23,31 @@ It enforces three rules:
        the locked SHA and carry a trailing `# vX.Y.Z` comment naming the locked
        version. A missing label fails too, so the check cannot be evaded by
        deleting it.
-    R3 (all files)       An action repository must resolve to a single SHA across
-       every scanned file. This catches drift for actions the compiler injects
-       but that are absent from `actions-lock.json`.
+    R3 (all files)       An action *repository* must resolve to a single SHA across
+       every scanned file, grouping `owner/repo/action-a` with `owner/repo/action-b`
+       since they share a checkout. This catches drift for actions the compiler
+       injects but that are absent from `actions-lock.json`.
+    R4 (all files)       A `docker://` container action must be pinned to an image
+       digest. Container actions run arbitrary code exactly like repository
+       actions, so a mutable tag such as `docker://alpine:latest` carries the same
+       risk, and a digest is the only immutable identifier for an image.
+    R5 (all files)       Every executable `uses` occurrence reachable in the
+       *parsed* YAML must be written as a plain, single-line `uses: <ref>`
+       mapping in a form the audit can parse. Block scalars, flow mappings and
+       aliases hide the pin and any `# vX.Y.Z` label from review; a reference the
+       recognizers cannot parse would fall out of every rule. Both fail here
+       instead.
+
+Comparisons are made on a canonical form. GitHub resolves owner/repository names
+case-insensitively, so `Actions/Checkout` would otherwise look like an untracked
+action and escape R2 entirely; SHAs and digests are hex and are compared
+case-insensitively too. Action subpaths keep their original case, since those are
+repository paths and Linux runners are case-sensitive.
 
 The audit fails closed: a missing, malformed, or empty `actions-lock.json` is an
 error rather than a licence to skip R2, since R1 and R3 alone both pass when
-every occurrence of an action is rewritten to the same stale SHA.
+every occurrence of an action is rewritten to the same stale SHA. A missing
+PyYAML is likewise an error rather than a licence to skip R5.
 
 References inside a workflow's generated header (the `# Custom actions used:`
 block) are audited alongside the live `uses:` steps, because the corruption shows
@@ -37,7 +55,19 @@ up there too. The machine-readable `# gh-aw-manifest:` JSON header is *not*
 audited: it is compiler bookkeeping copied from `actions-lock.json` at compile
 time rather than an executable reference, so it self-heals on the next recompile.
 
+Executable collection
+---------------------
+The audit is driven from the parsed YAML node tree (`yaml.compose`) so strings
+that merely contain `uses:` -- for example inside `run: |` scripts -- are never
+mistaken for actions. It still fails closed: instead of allow-listing only the
+currently documented executable schema positions, it treats every `uses` mapping
+key as executable unless that key is nested below a known data mapping such as
+`with`, `env`, `secrets`, `inputs`, `outputs`, or `defaults`. If GitHub Actions
+adds another executable `uses` position later, the new structure is audited by
+default rather than skipped silently.
+
 Usage:
+    python -m pip install -r .github/scripts/check-action-pins-requirements.txt
     python .github/scripts/check_action_pins.py          # audit, exit 1 on failure
     python .github/scripts/check_action_pins.py --list   # print the resolved pin table
 """
@@ -52,15 +82,35 @@ from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 
+try:
+    import yaml
+except ModuleNotFoundError:  # pragma: no cover - guarded so the audit never silently degrades
+    print(
+        "error: PyYAML is required. R5 parses each workflow to find every `uses` value that "
+        "GitHub Actions would really execute, so the audit must not run without it. Install it "
+        "the same way CI does, with the hash-pinned requirements file: python -m pip install "
+        "--require-hashes -r .github/scripts/check-action-pins-requirements.txt",
+        file=sys.stderr,
+    )
+    raise SystemExit(1)
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 WORKFLOW_DIR = REPO_ROOT / ".github" / "workflows"
 ACTIONS_DIR = REPO_ROOT / ".github" / "actions"
 ACTIONS_LOCK_PATH = REPO_ROOT / ".github" / "aw" / "actions-lock.json"
 
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+DOCKER_PREFIX = "docker://"
+# Container actions are pinned by image digest rather than by commit SHA.
+IMAGE_DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 ACTION_REF_RE = re.compile(r"^[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)+@\S+$")
+# YAML accepts a quoted key and whitespace before the colon (`"uses":`, `uses :`),
+# and all of those still execute as `uses` entries, so the key has to be matched as
+# loosely as YAML parses it. Otherwise an unpinned action slips past simply by being
+# written differently.
 USES_RE = re.compile(
-    r"""^\s*(?:-\s*)?uses:\s*['"]?(?P<ref>[^'"\s]+)['"]?\s*(?:\#\s*(?P<comment>.*?))?\s*$"""
+    r"""^\s*(?:-\s*)?(?P<kq>['"]?)uses(?P=kq)\s*:\s*"""
+    r"""['"]?(?P<ref>[^'"\s]+)['"]?\s*(?:\#\s*(?P<comment>.*?))?\s*$"""
 )
 # `#   - actions/checkout@<sha> # v7.0.1` inside the generated header block.
 HEADER_ACTION_RE = re.compile(
@@ -76,6 +126,11 @@ GENERATED_SUFFIX = ".lock.yml"
 GENERATED_FILENAMES = frozenset({"agentic_commands.yml", "agentics-maintenance.yml"})
 GENERATED_MARKERS = ("# gh-aw-manifest:", "automatically generated by")
 HEADER_ACTIONS_SECTION = "# Custom actions used:"
+# Keep this list narrow and data-oriented. We intentionally do not enumerate the
+# executable GitHub Actions schema (`jobs.*.uses`, `steps[*].uses`, ...): that
+# would fail open when the schema grows. Unknown mappings remain audited unless
+# they sit below one of these known data containers.
+DATA_MAPPING_KEYS = frozenset({"with", "env", "secrets", "inputs", "outputs", "defaults"})
 
 
 @dataclass(frozen=True)
@@ -88,6 +143,8 @@ class Reference:
     path: Path
     line: int
     generated: bool
+    raw: str = ""
+    is_docker: bool = False
 
     @property
     def location(self) -> str:
@@ -96,6 +153,40 @@ class Reference:
     @property
     def is_sha_pinned(self) -> bool:
         return SHA_RE.match(self.ref) is not None
+
+    @property
+    def repo_root(self) -> str:
+        """The canonical `owner/repo` this action lives in, ignoring any subpath.
+
+        `owner/repo/action-a` and `owner/repo/action-b` are two actions from a single
+        repository checkout, so R3 must hold them to one SHA. R2 keeps using the full
+        locator, which is how `actions-lock.json` keys subpath actions such as
+        `actions/cache/restore`.
+        """
+        owner, slash, rest = self.repo.partition("/")
+        if not slash:
+            return self.repo
+
+        return f"{owner}/{rest.partition('/')[0]}"
+
+
+def canonical_repo(repo: str) -> str:
+    """Canonicalize an action reference for comparison.
+
+    GitHub resolves the owner and repository segments case-insensitively, so
+    `Actions/Checkout` executes the same code as `actions/checkout` and must not be
+    treated as a separate, untracked action that escapes R2. Any action subpath is
+    left verbatim: it is a path inside the repository, and Linux runners are
+    case-sensitive.
+    """
+    owner, slash, rest = repo.partition("/")
+    if not slash:
+        return owner.lower()
+
+    name, subpath_slash, subpath = rest.partition("/")
+    canonical = f"{owner.lower()}/{name.lower()}"
+
+    return f"{canonical}/{subpath}" if subpath_slash else canonical
 
 
 class LockFileError(RuntimeError):
@@ -127,7 +218,7 @@ def load_actions_lock() -> dict[str, tuple[str, str]]:
         sha = entry.get("sha")
         version = entry.get("version", "")
         if repo and sha:
-            locked[repo] = (version, sha)
+            locked[canonical_repo(repo)] = (version, sha.lower())
 
     if not locked:
         raise LockFileError(
@@ -139,7 +230,7 @@ def load_actions_lock() -> dict[str, tuple[str, str]]:
 
 def split_ref(raw: str) -> tuple[str, str] | None:
     """Split `owner/repo@ref` into its parts, or return None when not an action ref."""
-    if raw.startswith(("./", "../", ".\\", "docker://")) or raw.startswith("${{"):
+    if raw.startswith(("./", "../", ".\\", DOCKER_PREFIX)) or raw.startswith("${{"):
         return None
     if not ACTION_REF_RE.match(raw):
         return None
@@ -148,7 +239,25 @@ def split_ref(raw: str) -> tuple[str, str] | None:
     if not repo or not ref or ref.startswith("sha256:"):
         return None
 
-    return repo, ref
+    return canonical_repo(repo), ref.lower()
+
+
+def split_docker_ref(raw: str) -> tuple[str, str] | None:
+    """Split `docker://image@digest` (or `docker://image:tag`) into image and pin.
+
+    Container actions run arbitrary code exactly like repository actions, so they are
+    audited rather than skipped; R4 requires the pin to be an immutable image digest.
+    """
+    if not raw.startswith(DOCKER_PREFIX) or "${{" in raw:
+        return None
+
+    image = raw[len(DOCKER_PREFIX) :]
+    if not image:
+        return None
+
+    name, separator, digest = image.partition("@")
+
+    return (name, digest.lower()) if separator else (image, "")
 
 
 def normalize_comment_version(comment: str | None) -> str | None:
@@ -175,9 +284,36 @@ def is_generated(path: Path, text: str) -> bool:
     return any(marker in text for marker in GENERATED_MARKERS)
 
 
-def collect_references(path: Path) -> list[Reference]:
-    text = path.read_text(encoding="utf-8")
-    generated = is_generated(path, text)
+def create_reference(
+    *,
+    raw: str,
+    comment: str | None,
+    path: Path,
+    line: int,
+    generated: bool,
+) -> Reference | None:
+    parts = split_ref(raw)
+    is_docker = False
+    if parts is None:
+        parts = split_docker_ref(raw)
+        is_docker = parts is not None
+    if parts is None:
+        return None
+
+    return Reference(
+        repo=parts[0],
+        ref=parts[1],
+        comment_version=normalize_comment_version(comment),
+        path=path,
+        line=line,
+        generated=generated,
+        raw=raw,
+        is_docker=is_docker,
+    )
+
+
+def collect_header_references(path: Path, text: str, generated: bool) -> list[Reference]:
+    """Collect generated-header references that YAML parsing cannot see."""
     references: list[Reference] = []
     in_header_actions = False
 
@@ -195,41 +331,144 @@ def collect_references(path: Path) -> list[Reference]:
                 if header_match is None:
                     in_header_actions = False
                     continue
-                parts = split_ref(header_match.group("ref"))
-                if parts is not None:
-                    references.append(
-                        Reference(
-                            repo=parts[0],
-                            ref=parts[1],
-                            comment_version=normalize_comment_version(header_match.group("comment")),
-                            path=path,
-                            line=lineno,
-                            generated=generated,
-                        )
-                    )
+                reference = create_reference(
+                    raw=header_match.group("ref"),
+                    comment=header_match.group("comment"),
+                    path=path,
+                    line=lineno,
+                    generated=generated,
+                )
+                if reference is not None:
+                    references.append(reference)
             continue
 
         in_header_actions = False
-        uses_match = USES_RE.match(line)
-        if uses_match is None:
-            continue
-
-        parts = split_ref(uses_match.group("ref"))
-        if parts is None:
-            continue
-
-        references.append(
-            Reference(
-                repo=parts[0],
-                ref=parts[1],
-                comment_version=normalize_comment_version(uses_match.group("comment")),
-                path=path,
-                line=lineno,
-                generated=generated,
-            )
-        )
 
     return references
+
+
+def is_scalar_named(node: yaml.nodes.Node, name: str) -> bool:
+    return isinstance(node, yaml.nodes.ScalarNode) and node.value == name
+
+
+def iter_executable_uses_nodes(
+    node: yaml.nodes.Node | None,
+) -> list[tuple[yaml.nodes.Node, yaml.nodes.Node]]:
+    """Return `uses` mapping entries outside known YAML data containers.
+
+    This is intentionally an exclusion list, not an inclusion list of executable
+    GitHub Actions schema positions. Unknown structures stay in scope so the audit
+    fails closed if Actions adds another executable `uses` position.
+    """
+    if node is None:
+        return []
+
+    found: list[tuple[yaml.nodes.Node, yaml.nodes.Node]] = []
+    if isinstance(node, yaml.nodes.MappingNode):
+        for key_node, value_node in node.value:
+            if any(is_scalar_named(key_node, key) for key in DATA_MAPPING_KEYS):
+                continue
+
+            if is_scalar_named(key_node, "uses"):
+                found.append((key_node, value_node))
+
+            found.extend(iter_executable_uses_nodes(value_node))
+    elif isinstance(node, yaml.nodes.SequenceNode):
+        for item in node.value:
+            found.extend(iter_executable_uses_nodes(item))
+
+    return found
+
+
+def is_auditable_uses(raw: str) -> bool:
+    """True for a `uses` value this audit is responsible for holding immutable.
+
+    Deliberately broader than `split_ref`: it excludes only the forms that are not
+    remote actions at all (local paths and expressions). Anything else is in scope,
+    so a reference the narrower recognizers cannot parse is reported by R5 as
+    unsupported rather than silently dropped from every rule.
+    """
+    if not raw or raw.startswith(("./", "../", ".\\")) or "${{" in raw:
+        return False
+
+    return True
+
+
+def collect_references(path: Path) -> tuple[list[Reference], list[str]]:
+    text = path.read_text(encoding="utf-8")
+    generated = is_generated(path, text)
+    references = collect_header_references(path, text, generated)
+    structural_errors: list[str] = []
+    lines = text.splitlines()
+
+    try:
+        document = yaml.compose(text)
+    except yaml.YAMLError as error:
+        structural_errors.append(
+            f"{path.relative_to(REPO_ROOT).as_posix()}: could not be parsed as YAML, so its "
+            f"`uses` references cannot be audited: {str(error).splitlines()[0]}"
+        )
+        return references, structural_errors
+
+    for key_node, value_node in iter_executable_uses_nodes(document):
+        location = f"{path.relative_to(REPO_ROOT).as_posix()}:{key_node.start_mark.line + 1}"
+        if not isinstance(value_node, yaml.nodes.ScalarNode) or not isinstance(value_node.value, str):
+            structural_errors.append(
+                f"{location}: `uses` must be a plain scalar action reference so the audit can "
+                "validate its pin and version label."
+            )
+            continue
+
+        raw = value_node.value
+        if not is_auditable_uses(raw):
+            continue
+
+        line_index = value_node.start_mark.line
+        raw_line = lines[line_index] if 0 <= line_index < len(lines) else ""
+        uses_match = USES_RE.match(raw_line)
+        if (
+            uses_match is None
+            or key_node.start_mark.line != value_node.start_mark.line
+            or value_node.start_mark.line != value_node.end_mark.line
+            or uses_match.group("ref") != raw
+        ):
+            if split_ref(raw) is None and split_docker_ref(raw) is None:
+                # The parsed workflow can reach the value, but no pin rule knows how
+                # to reason about it. Failing here keeps unsupported forms from
+                # becoming silent exemptions from R1-R4.
+                structural_errors.append(
+                    f"{location}: `uses: {raw}` uses a reference form this audit cannot parse, so no "
+                    "pin rule can be applied to it. Use `<owner>/<repo>[/<path>]@<sha> # <version>` "
+                    "or `docker://<image>@sha256:<digest>`, or extend the audit to cover this form."
+                )
+                continue
+
+            structural_errors.append(
+                f"{location}: `uses: {raw}` is reachable in the parsed workflow but is not written as a "
+                "plain `uses: <owner>/<repo>@<sha> # <version>` line. Block scalars, flow mappings "
+                "and aliases hide the pin and its version comment from review, so rewrite it as a "
+                "plain line."
+            )
+            continue
+
+        reference = create_reference(
+            raw=raw,
+            comment=uses_match.group("comment"),
+            path=path,
+            line=line_index + 1,
+            generated=generated,
+        )
+        if reference is None:
+            structural_errors.append(
+                f"{location}: `uses: {raw}` uses a reference form this audit cannot parse, so no "
+                "pin rule can be applied to it. Use `<owner>/<repo>[/<path>]@<sha> # <version>` "
+                "or `docker://<image>@sha256:<digest>`, or extend the audit to cover this form."
+            )
+            continue
+
+        references.append(reference)
+
+    return references, structural_errors
 
 
 def iter_workflow_files() -> list[Path]:
@@ -248,16 +487,27 @@ def audit(references: list[Reference], locked: dict[str, tuple[str, str]]) -> li
 
     # R1: generated files must never carry a mutable reference.
     for reference in references:
-        if reference.generated and not reference.is_sha_pinned:
+        if reference.generated and not reference.is_docker and not reference.is_sha_pinned:
             errors.append(
                 f"{reference.location}: `{reference.repo}@{reference.ref}` is not pinned to a commit SHA. "
                 "Generated workflows must pin every action to an immutable SHA; recompile with the "
                 "toolchain pinned in .github/aw/actions-lock.json."
             )
 
+    # R4: container actions run arbitrary code just like repository actions, so a
+    # mutable tag such as `docker://alpine:latest` carries the same risk as a mutable
+    # action tag. A digest is the only immutable identifier for an image.
+    for reference in references:
+        if reference.is_docker and not IMAGE_DIGEST_RE.match(reference.ref):
+            errors.append(
+                f"{reference.location}: `{reference.raw}` is a container action that is not pinned "
+                "to an image digest. Use `docker://<image>@sha256:<64-hex-digest>`; tags can be "
+                "repointed upstream at any time."
+            )
+
     # R2: SHA-pinned references must agree with .github/aw/actions-lock.json.
     for reference in references:
-        if not reference.is_sha_pinned:
+        if reference.is_docker or not reference.is_sha_pinned:
             continue
         expected = locked.get(reference.repo)
         if expected is None:
@@ -279,11 +529,14 @@ def audit(references: list[Reference], locked: dict[str, tuple[str, str]]) -> li
                 f"{actual} instead of {expected_version}."
             )
 
-    # R3: every action must resolve to a single SHA repo-wide.
+    # R3: every action must resolve to a single SHA repo-wide. Grouping is by the
+    # `owner/repo` root rather than the full locator: actions sharing a repository
+    # share a checkout, so `owner/repo/action-a` and `owner/repo/action-b` must agree.
+    # This is also the only cross-check available for actions absent from the lock.
     by_repo: dict[str, dict[str, list[Reference]]] = defaultdict(lambda: defaultdict(list))
     for reference in references:
-        if reference.is_sha_pinned:
-            by_repo[reference.repo][reference.ref].append(reference)
+        if reference.is_sha_pinned and not reference.is_docker:
+            by_repo[reference.repo_root][reference.ref].append(reference)
 
     for repo, shas in sorted(by_repo.items()):
         if len(shas) < 2:
@@ -324,8 +577,11 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     references: list[Reference] = []
+    structural_errors: list[str] = []
     for path in files:
-        references.extend(collect_references(path))
+        file_references, file_errors = collect_references(path)
+        references.extend(file_references)
+        structural_errors.extend(file_errors)
 
     if args.list:
         print_pin_table(references)
@@ -343,7 +599,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 1
 
-    errors = audit(references, locked)
+    errors = structural_errors + audit(references, locked)
     if errors:
         print(f"Action pin audit failed with {len(errors)} problem(s):\n", file=sys.stderr)
         for error in errors:
