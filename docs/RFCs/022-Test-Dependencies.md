@@ -269,6 +269,19 @@ sequential phase before scheduling, the chunk graph handed to the loop is always
 always has no unmet prerequisite and the loop cannot deadlock. The bookkeeping that releases a chunk's
 dependents runs in a `finally`, so a chunk that *throws* also cannot strand the workers waiting on it.
 
+### Class and assembly cleanup
+
+`ClassCleanupManager` counts down the tests of each class, and end-of-assembly cleanup is gated on
+*every* class having reached zero (`ShouldRunEndOfAssemblyCleanup => _remainingTestCountsByClass.IsEmpty`).
+The countdown is built from the tests that were **selected**, so a test whose outcome this feature decides
+without running it — skipped because a prerequisite did not pass, or failed because it is in a cycle —
+still owes its decrement. Left unaccounted, the class never completes: its `[ClassCleanup]` is silently
+lost, and with it the whole assembly's `[AssemblyCleanup]`.
+
+Both paths therefore call `UnitTestRunner.NotifyTestNotRunAsync`, which performs exactly the bookkeeping
+a test dropped by an `ITestFilter` already does — the same situation of selected, counted, never run — so
+the two features share one implementation rather than each growing their own.
+
 ### Testing
 
 - `test/UnitTests/MSTestAdapter.PlatformServices.UnitTests/Execution/TestDependencyGraphTests.cs` — 24

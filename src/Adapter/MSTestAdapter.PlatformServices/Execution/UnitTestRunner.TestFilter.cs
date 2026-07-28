@@ -140,13 +140,20 @@ internal sealed partial class UnitTestRunner
     }
 
     /// <summary>
-    /// Handles the bookkeeping (class-cleanup countdown, class cleanup, end-of-assembly cleanup) for a
-    /// test that was filtered out by a <see cref="ITestFilter"/>. Mirrors the tail of
-    /// normal test execution path. The filtered-out test never loaded its own type, but if a
+    /// Handles the bookkeeping (class-cleanup countdown, class cleanup, end-of-assembly cleanup) for a test
+    /// that was selected for the run - and so counted in the class-cleanup countdown - but never executed.
+    /// Mirrors the tail of normal test execution path. The test never loaded its own type, but if a
     /// sibling test of the same class already ran in this worker the class was initialized and still
     /// owes its <c>[ClassCleanup]</c>, so it is executed here when this is the last test of the class.
     /// </summary>
-    private async Task<TestResult[]> FinishFilteredOutTestAsync(
+    /// <remarks>
+    /// Shared by every "selected but not run" path: a test dropped by an <see cref="ITestFilter"/>, and a
+    /// test whose outcome the scheduler decided without running it (a prerequisite did not pass, or it is
+    /// part of a dependency cycle). Skipping this bookkeeping leaves the countdown permanently above zero,
+    /// which silently loses the class's <c>[ClassCleanup]</c> and - because end-of-assembly cleanup is gated
+    /// on <em>every</em> class having completed - the whole assembly's <c>[AssemblyCleanup]</c>.
+    /// </remarks>
+    private async Task<TestResult[]> FinishTestThatDidNotRunAsync(
         TestMethod testMethod,
         IDictionary<string, object?> lifecycleContextProperties,
         IAdapterMessageLogger messageLogger,

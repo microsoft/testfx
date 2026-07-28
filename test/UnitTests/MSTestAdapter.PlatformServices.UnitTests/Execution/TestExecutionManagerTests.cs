@@ -865,6 +865,89 @@ public class TestExecutionManagerTests : TestContainer
         }
     }
 
+    /// <summary>
+    /// A dependency-skipped test is still one of the tests the class-cleanup countdown was built from, so it
+    /// has to be accounted for even though it never runs. Otherwise the class never completes: its
+    /// <c>[ClassCleanup]</c> is silently lost, and because end-of-assembly cleanup waits on every class
+    /// completing, the assembly's <c>[AssemblyCleanup]</c> is lost with it.
+    /// </summary>
+    public async Task RunTestsWhenADependentIsSkippedShouldStillRunClassCleanup()
+    {
+        TestCase prereq = GetTestCase(typeof(DummyTestClassWithCleanupAndDependency), "Prereq");
+        TestCase dependent = GetTestCase(typeof(DummyTestClassWithCleanupAndDependency), "Dependent");
+
+        UnitTestElement[] elements = ToUnitTestElements(prereq, dependent);
+        elements[1].Dependencies = [new TestDependencyInfo(typeof(DummyTestClassWithCleanupAndDependency).FullName, "Prereq", proceedOnFailure: false)];
+
+        // The assertion reads a static of the test class, which lives in whichever app domain ran it, so the
+        // run has to stay in this one - the same reason every other static-observing test here disables them.
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+            """
+            <RunSettings>
+              <RunConfiguration>
+                <DisableAppDomain>True</DisableAppDomain>
+              </RunConfiguration>
+            </RunSettings>
+            """);
+
+        try
+        {
+            MSTestSettings.PopulateSettings(_runContext.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
+            await _testExecutionManager.RunTestsAsync(elements, CurrentDeploymentContext, _frameworkHandle.ToAdapterMessageLogger(), TestResultRecorder, new TestElementFilterProvider(_runContext), new TestRunCancellationToken());
+
+            // Prereq ran (and failed), so [ClassInitialize] executed and [ClassCleanup] is genuinely owed.
+            DummyTestClassWithCleanupAndDependency.ClassCleanupCount.Should().Be(1);
+
+            // The skip itself must still be reported - the cleanup accounting must not swallow it.
+            _frameworkHandle.TestCaseEndList.Should().Contain("Dependent:Skipped");
+        }
+        finally
+        {
+            DummyTestClassWithCleanupAndDependency.Cleanup();
+        }
+    }
+
+    /// <summary>
+    /// Same accounting requirement for tests failed by a dependency cycle: they are reported without ever
+    /// reaching the runner, so the countdown still owes their decrement.
+    /// </summary>
+    public async Task RunTestsWhenTestsAreBrokenByACycleShouldStillRunClassCleanup()
+    {
+        TestCase ok = GetTestCase(typeof(DummyTestClassWithCleanupAndCycle), "Ok");
+        TestCase inCycleA = GetTestCase(typeof(DummyTestClassWithCleanupAndCycle), "InCycleA");
+        TestCase inCycleB = GetTestCase(typeof(DummyTestClassWithCleanupAndCycle), "InCycleB");
+
+        UnitTestElement[] elements = ToUnitTestElements(ok, inCycleA, inCycleB);
+        string className = typeof(DummyTestClassWithCleanupAndCycle).FullName!;
+        elements[1].Dependencies = [new TestDependencyInfo(className, "InCycleB", proceedOnFailure: false)];
+        elements[2].Dependencies = [new TestDependencyInfo(className, "InCycleA", proceedOnFailure: false)];
+
+        // See the sibling test: the static counter is only observable when the run stays in this app domain.
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+            """
+            <RunSettings>
+              <RunConfiguration>
+                <DisableAppDomain>True</DisableAppDomain>
+              </RunConfiguration>
+            </RunSettings>
+            """);
+
+        try
+        {
+            MSTestSettings.PopulateSettings(_runContext.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
+            await _testExecutionManager.RunTestsAsync(elements, CurrentDeploymentContext, _frameworkHandle.ToAdapterMessageLogger(), TestResultRecorder, new TestElementFilterProvider(_runContext), new TestRunCancellationToken());
+
+            // Ok is not in the cycle, so it runs and initializes the class; the two cycle members never reach
+            // the runner, yet the class must still complete.
+            DummyTestClassWithCleanupAndCycle.ClassCleanupCount.Should().Be(1);
+            _frameworkHandle.TestCaseEndList.Should().Contain("InCycleA:Failed").And.Contain("InCycleB:Failed");
+        }
+        finally
+        {
+            DummyTestClassWithCleanupAndCycle.Cleanup();
+        }
+    }
+
     public async Task RunTestsForTestShouldPreferParallelSettingsFromRunSettingsOverAssemblyLevelAttributes()
     {
         TestCase testCase1 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod1");
@@ -1220,6 +1303,51 @@ public class TestExecutionManagerTests : TestContainer
 
         [TestMethod]
         public void TestMethod()
+        {
+        }
+    }
+
+    [DummyTestClass]
+    private class DummyTestClassWithCleanupAndDependency
+    {
+        public static int ClassCleanupCount { get; private set; }
+
+        public static void Cleanup() => ClassCleanupCount = 0;
+
+        [ClassCleanup]
+        public static void ClassCleanup() => ClassCleanupCount++;
+
+        [TestMethod]
+        public void Prereq() => throw new Exception("Prereq failed on purpose");
+
+        [TestMethod]
+        public void Dependent()
+        {
+        }
+    }
+
+    [DummyTestClass]
+    private class DummyTestClassWithCleanupAndCycle
+    {
+        public static int ClassCleanupCount { get; private set; }
+
+        public static void Cleanup() => ClassCleanupCount = 0;
+
+        [ClassCleanup]
+        public static void ClassCleanup() => ClassCleanupCount++;
+
+        [TestMethod]
+        public void Ok()
+        {
+        }
+
+        [TestMethod]
+        public void InCycleA()
+        {
+        }
+
+        [TestMethod]
+        public void InCycleB()
         {
         }
     }

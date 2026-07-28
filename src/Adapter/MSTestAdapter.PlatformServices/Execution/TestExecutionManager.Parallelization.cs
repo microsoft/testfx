@@ -374,6 +374,13 @@ internal partial class TestExecutionManager
     {
         var coordinator = new TestDependencyCoordinator(graph);
 
+        // If testRunner is in a different AppDomain, we cannot pass the message logger directly.
+        IAdapterMessageLogger remotingMessageLogger = usesAppDomains
+            ? new RemotingMessageLogger(adapterMessageLogger)
+            : adapterMessageLogger;
+
+        Dictionary<string, object?> lifecycleContextProperties = [with(sourceLevelParameters!)];
+
         foreach (string warning in graph.Warnings)
         {
             adapterMessageLogger.SendMessage(MessageLevel.Warning, warning);
@@ -401,9 +408,20 @@ internal partial class TestExecutionManager
             };
 
             await _testResultRecorder.RecordStartAsync(brokenTest.Element).ConfigureAwait(false);
+
+            // Selected but never run, so the class-cleanup countdown still owes this test its decrement.
+            // See UnitTestRunner.NotifyTestNotRunAsync.
+            UnitTestElement brokenElement = brokenTest.Element.WithUpdatedSource(source);
+            Dictionary<string, object?> testContextProperties = GetTestContextProperties(brokenTest.Element.ExecutionContextProperties, sourceLevelParameters, brokenElement);
+            TestTools.UnitTesting.TestResult[] cleanupResults = usesAppDomains || Thread.CurrentThread.GetApartmentState() == ApartmentState.STA
+#pragma warning disable VSTHRD103 // Call async methods when in an async method - mirrors RunSingleTest: Task cannot cross app domains, and an await would leave the STA thread.
+                ? testRunner.NotifyTestNotRun(brokenElement, testContextProperties, lifecycleContextProperties, remotingMessageLogger)
+#pragma warning restore VSTHRD103
+                : await testRunner.NotifyTestNotRunAsync(brokenElement, testContextProperties, lifecycleContextProperties, remotingMessageLogger).ConfigureAwait(false);
+
             await SendTestResultsAsync(
                 brokenTest.Element,
-                [cycleResult],
+                [cycleResult, .. cleanupResults],
                 now,
                 now,
                 _testResultRecorder).ConfigureAwait(false);

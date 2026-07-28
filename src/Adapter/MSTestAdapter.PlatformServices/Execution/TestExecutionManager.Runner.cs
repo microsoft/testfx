@@ -91,7 +91,16 @@ internal partial class TestExecutionManager
             // moments ago on another worker is always taken into account.
             if (dependencyCoordinator is not null && dependencyCoordinator.ShouldSkip(currentTest, out string? skipReason))
             {
-                await ReportSkippedDependentAsync(currentTest, skipReason, dependencyCoordinator).ConfigureAwait(false);
+                await ReportSkippedDependentAsync(
+                    currentTest,
+                    unitTestElement,
+                    skipReason,
+                    dependencyCoordinator,
+                    sourceLevelParameters,
+                    lifecycleContextProperties,
+                    testRunner,
+                    usesAppDomains,
+                    remotingMessageLogger).ConfigureAwait(false);
                 continue;
             }
 
@@ -169,15 +178,35 @@ internal partial class TestExecutionManager
     /// skipped - not failed - so that a single root cause stays visible as one failure surrounded by clearly
     /// labelled skips, and it is recorded as "did not pass" so the skip propagates to its own dependents.
     /// </summary>
-    private async Task ReportSkippedDependentAsync(UnitTestElement test, string reason, TestDependencyCoordinator dependencyCoordinator)
+    private async Task ReportSkippedDependentAsync(
+        UnitTestElement test,
+        UnitTestElement unitTestElement,
+        string reason,
+        TestDependencyCoordinator dependencyCoordinator,
+        IDictionary<string, object> sourceLevelParameters,
+        Dictionary<string, object?> lifecycleContextProperties,
+        UnitTestRunner testRunner,
+        bool usesAppDomains,
+        IAdapterMessageLogger remotingMessageLogger)
     {
         dependencyCoordinator.RecordNotRun(test);
 
         DateTimeOffset now = DateTimeOffset.Now;
         await _testResultRecorder.RecordStartAsync(test).ConfigureAwait(false);
+
+        // The test was selected, so it is counted in the class-cleanup countdown even though it is not going
+        // to run. Tell the runner, or the class never completes - which loses its [ClassCleanup] and, because
+        // end-of-assembly cleanup waits on every class, the assembly's [AssemblyCleanup] too.
+        Dictionary<string, object?> testContextProperties = GetTestContextProperties(test.ExecutionContextProperties, sourceLevelParameters, unitTestElement);
+        TestTools.UnitTesting.TestResult[] cleanupResults = usesAppDomains || Thread.CurrentThread.GetApartmentState() == ApartmentState.STA
+#pragma warning disable VSTHRD103 // Call async methods when in an async method - mirrors RunSingleTest: Task cannot cross app domains, and an await would leave the STA thread.
+            ? testRunner.NotifyTestNotRun(unitTestElement, testContextProperties, lifecycleContextProperties, remotingMessageLogger)
+#pragma warning restore VSTHRD103
+            : await testRunner.NotifyTestNotRunAsync(unitTestElement, testContextProperties, lifecycleContextProperties, remotingMessageLogger).ConfigureAwait(false);
+
         await SendTestResultsAsync(
             test,
-            [TestTools.UnitTesting.TestResult.CreateIgnoredResult(reason)],
+            [TestTools.UnitTesting.TestResult.CreateIgnoredResult(reason), .. cleanupResults],
             now,
             now,
             _testResultRecorder).ConfigureAwait(false);
