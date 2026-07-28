@@ -1,6 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Testing;
+
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.DependsOnShouldBeValidAnalyzer,
     Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
@@ -448,6 +451,115 @@ public sealed class DependsOnShouldBeValidAnalyzerTests
             VerifyCS.Diagnostic(DependsOnShouldBeValidAnalyzer.CycleRule)
                 .WithLocation(1)
                 .WithArguments("SecondTests.B > FirstTests.A > SecondTests.B"));
+    }
+
+    [TestMethod]
+    public async Task WhenReferencedTestClassIsInAnotherAssembly_OtherAssembly()
+    {
+        // Discovery resolves dependencies against the tests of one test source and stores a 'typeof' target
+        // as its CLR full name, so a reference to a type from a referenced assembly matches nothing at run
+        // time even though the type and the method both exist.
+        string libraryCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class SetupTests
+            {
+                [TestMethod]
+                public void CreateCart() { }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [{|#0:DependsOn(typeof(SetupTests))|}]
+                public void AddItem() { }
+
+                [TestMethod]
+                [{|#1:DependsOn(typeof(SetupTests), nameof(SetupTests.CreateCart))|}]
+                public void ApplyCoupon() { }
+            }
+            """;
+
+        var test = new VerifyCS.Test
+        {
+            TestCode = consumerCode,
+        };
+
+        AddTestLibraryProject(test, libraryCode);
+
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(DependsOnShouldBeValidAnalyzer.OtherAssemblyRule)
+                .WithLocation(0)
+                .WithArguments("SetupTests"));
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(DependsOnShouldBeValidAnalyzer.OtherAssemblyRule)
+                .WithLocation(1)
+                .WithArguments("SetupTests"));
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenClassLevelReferenceIsInAnotherAssembly_OtherAssemblyAndNoCycle()
+    {
+        // The same rule applies to the dependency walk: an edge that crosses the assembly boundary does not
+        // exist at run time, so it must not be traversed and must not contribute to a cycle.
+        string libraryCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            [DependsOn(nameof(SetupTests.CreateCart))]
+            public class SetupTests
+            {
+                [TestMethod]
+                public void CreateCart() { }
+
+                [TestMethod]
+                public void AddItem() { }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            [{|#0:DependsOn(typeof(SetupTests))|}]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void PlaceOrder() { }
+            }
+            """;
+
+        var test = new VerifyCS.Test
+        {
+            TestCode = consumerCode,
+        };
+
+        AddTestLibraryProject(test, libraryCode);
+
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(DependsOnShouldBeValidAnalyzer.OtherAssemblyRule)
+                .WithLocation(0)
+                .WithArguments("SetupTests"));
+
+        await test.RunAsync();
+    }
+
+    private static void AddTestLibraryProject(VerifyCS.Test test, string libraryCode)
+    {
+        var libraryProject = new ProjectState("TestLib", LanguageNames.CSharp, "/TestLib/", "cs");
+        libraryProject.Sources.Add(("Library.cs", libraryCode));
+        libraryProject.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(ParallelizeAttribute).Assembly.Location));
+        libraryProject.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(TestContext).Assembly.Location));
+        test.TestState.AdditionalProjects.Add("TestLib", libraryProject);
+        test.TestState.AdditionalProjectReferences.Add("TestLib");
     }
 
     [TestMethod]

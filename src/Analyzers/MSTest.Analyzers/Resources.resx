@@ -958,7 +958,7 @@ The type declaring these methods should also respect the following rules:
     <comment>{Locked="[DependsOn]"}</comment>
   </data>
   <data name="DependsOnShouldBeValidDescription" xml:space="preserve">
-    <value>A '[DependsOn]' attribute references a test by name. A reference that matches no test is deliberately non-fatal at run time, so that running a subset of the suite stays possible, which means a typo or a rename silently drops the declared ordering. This analyzer reports the problems that can be decided at build time: a method that does not exist on the referenced type, a target that is not a test, a test that depends on itself, a dependency cycle visible in the compilation, and an attribute applied where it has no effect.</value>
+    <value>A '[DependsOn]' attribute references a test by name. A reference that matches no test is deliberately non-fatal at run time, so that running a subset of the suite stays possible, which means a typo or a rename silently drops the declared ordering. This analyzer reports the problems that can be decided at build time: a method that does not exist on the referenced type, a target that is not a test, a test that depends on itself, a dependency cycle visible in the compilation, a reference to a type from another assembly (dependencies are resolved within a single test source), and an attribute applied where it has no effect.</value>
     <comment>{Locked="[DependsOn]"}</comment>
   </data>
   <data name="DependsOnShouldBeValidMessageFormat_MethodNotFound" xml:space="preserve">
@@ -971,6 +971,10 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="DependsOnShouldBeValidMessageFormat_NotATestClass" xml:space="preserve">
     <value>'[DependsOn]' references type '{0}', which is not a test class, so the dependency is ignored at run time</value>
+    <comment>{0} is the referenced type name. {Locked="[DependsOn]"}</comment>
+  </data>
+  <data name="DependsOnShouldBeValidMessageFormat_OtherAssembly" xml:space="preserve">
+    <value>'[DependsOn]' references type '{0}' from another assembly; dependencies are resolved within a single test source, so the dependency is ignored at run time</value>
     <comment>{0} is the referenced type name. {Locked="[DependsOn]"}</comment>
   </data>
   <data name="DependsOnShouldBeValidMessageFormat_SelfReference" xml:space="preserve">

@@ -60,6 +60,10 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
     public static readonly DiagnosticDescriptor NotATestClassRule = MethodNotFoundRule
         .WithMessage(new(nameof(Resources.DependsOnShouldBeValidMessageFormat_NotATestClass), Resources.ResourceManager, typeof(Resources)));
 
+    /// <inheritdoc cref="Resources.DependsOnShouldBeValidMessageFormat_OtherAssembly"/>
+    public static readonly DiagnosticDescriptor OtherAssemblyRule = MethodNotFoundRule
+        .WithMessage(new(nameof(Resources.DependsOnShouldBeValidMessageFormat_OtherAssembly), Resources.ResourceManager, typeof(Resources)));
+
     /// <inheritdoc cref="Resources.DependsOnShouldBeValidMessageFormat_SelfReference"/>
     public static readonly DiagnosticDescriptor SelfReferenceRule = MethodNotFoundRule
         .WithMessage(new(nameof(Resources.DependsOnShouldBeValidMessageFormat_SelfReference), Resources.ResourceManager, typeof(Resources)));
@@ -77,6 +81,7 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
         MethodNotFoundRule,
         NotATestMethodRule,
         NotATestClassRule,
+        OtherAssemblyRule,
         SelfReferenceRule,
         CycleRule,
         NoEffectRule);
@@ -200,6 +205,15 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
 
         if (targetClass.TypeKind == TypeKind.Error)
         {
+            return false;
+        }
+
+        // Discovery resolves a dependency against the tests of one test source, and stores a 'typeof' target
+        // as its CLR full name. A type from another assembly therefore matches nothing, however well-formed
+        // the reference is - so this is reported before the "is it a test class" question, which is moot.
+        if (!IsFromCurrentAssembly(context, targetClass))
+        {
+            context.ReportDiagnostic(attributeSyntax.CreateDiagnostic(OtherAssemblyRule, targetClass.Name));
             return false;
         }
 
@@ -360,8 +374,12 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
         }
 
         INamedTypeSymbol targetClass = explicitTargetClass ?? node.TestClass;
-        if (targetClass.TypeKind == TypeKind.Error || !targetClass.IsTestClass(symbols.TestClassAttribute))
+        if (targetClass.TypeKind == TypeKind.Error
+            || !IsFromCurrentAssembly(context, targetClass)
+            || !targetClass.IsTestClass(symbols.TestClassAttribute))
         {
+            // A target in another assembly produces no edge at run time, so the walk must not follow it -
+            // otherwise a "cycle" could be reported through a link that does not exist.
             yield break;
         }
 
@@ -430,6 +448,9 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
 
         return (targetClass, targetMethodName, targetClass is null && targetMethodName is null);
     }
+
+    private static bool IsFromCurrentAssembly(SymbolAnalysisContext context, INamedTypeSymbol type)
+        => SymbolEqualityComparer.Default.Equals(type.ContainingAssembly, context.Compilation.Assembly);
 
     private static MethodLookup LookupMethods(INamedTypeSymbol targetClass, string methodName, AnalysisSymbols symbols)
     {

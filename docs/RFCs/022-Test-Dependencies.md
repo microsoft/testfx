@@ -318,9 +318,10 @@ in every test is impractical, and prefer, in order:
 dependency that matches no test as a warning rather than a failure, so that `--filter` and single-test runs
 keep working; that decision is only safe because build time catches the genuinely broken references. The
 analyzer reports a named method that does not exist on the target type, a target that is not a test method
-or not a test class, a test that depends on itself, a cycle visible within one compilation, and an
-attribute applied where it has no effect (a non-test method, or a class without `[TestClass]` — the
-attribute is not inherited, so an application on a shared base class produces no edge).
+or not a test class, a target type from another assembly (dependencies are resolved within a single test
+source, so such a reference matches nothing), a test that depends on itself, a cycle visible within one
+compilation, and an attribute applied where it has no effect (a non-test method, or a class without
+`[TestClass]` — the attribute is not inherited, so an application on a shared base class produces no edge).
 
 It stays quiet whenever the answer depends on something the compilation does not know. The important case
 is a test method declared on a *non-test* base class: its implicit references (`[DependsOn(nameof(X))]`
