@@ -142,6 +142,59 @@ a workflow needs elevated access (then use the GitHub App above).
 > cause — *AI credits budget exceeded*, an engine/inference error, or transient
 > container-image / AWF-binary download failures are all unrelated to authentication.
 > Only the *"Lockdown Check Failed … custom GitHub token"* banner indicates a PAT issue.
+> For the recurring `Install GitHub Copilot CLI` download failure, see
+> [Known transient failures](#known-transient-failures) below.
+
+## Known transient failures
+
+### `detection` job fails at `Install GitHub Copilot CLI`
+
+**Symptom.** The `agent` job succeeds, the `detection` job fails on its `Install GitHub Copilot CLI`
+step, and `safe_outputs` is **skipped** — so only the workflow's configured safe outputs (in the
+observed run of `grade-tests-on-pr`, the grading comment) are suppressed. The `[aw] Detection Runs`
+tracker issue still records the run as `warning | parse_error`, because the threat-detection result
+file was never written. The step log shows repeated
+`curl: (22) The requested URL returned error: 504` while fetching `SHA256SUMS.txt` from
+`github/copilot-cli` releases.
+
+**Why `safe_outputs` disappears.** Every generated lock file gates that job on
+`needs.detection.result == 'success'`. `safe-outputs.threat-detection.continue-on-error` (default
+`true`) only tolerates a *parse* failure of a detection run that actually happened — it does not
+change the gate, so a job-level infrastructure failure still swallows the outputs. Setting it
+explicitly in frontmatter is a no-op; the compiled condition is byte-identical.
+
+**Root cause.** `gh aw compile` bakes an *exact* Copilot CLI version into every `.lock.yml`
+(`install_copilot_cli.sh <version>`), taken from gh-aw's own `DefaultCopilotVersion` constant.
+Passing an explicit version makes `install_copilot_cli.sh` skip compat-matrix resolution, so the
+toolcache lookup runs with `range: none..none` and can never match the CLI the hosted runner image
+already ships. Every agentic workflow run therefore downloads the CLI twice — once in the `agent`
+job, once in the `detection` job — and each download is a chance to hit a transient GitHub CDN 5xx.
+The gap is structural, not a stale-image problem: `github/gh-aw-actions`'s `compat.json` caps
+`max-agent` at `1.0.56` (exactly what the runner image caches), while `DefaultCopilotVersion` is
+already `1.0.73` on gh-aw v0.83.1 and `1.0.75` on `main` — so bumping gh-aw *widens* the gap.
+
+**There is no repo-side fix.** All of the following were evaluated and rejected:
+
+- `engine.version` is silently ignored for the Copilot engine — gh-aw overwrites it with
+  `DefaultCopilotVersion` (`pkg/workflow/copilot_engine_installation.go`, still the case on `main`).
+  `gh aw compile --strict` reports no error, and the regenerated lock keeps the pinned version.
+- Hand-editing a `.lock.yml` (older pin, extra retries) is overwritten on the next `gh aw compile`.
+- `engine.command:` pointed at `/opt/hostedtoolcache/copilot-cli/<version>/x64/bin/copilot` bypasses
+  the install step, but hardcodes a path that rotates with runner images and skips the `.copilot`
+  ownership fix and stale `awf-*-chroot-home` cleanup that `install_copilot_cli.sh` performs.
+- `safe-outputs.threat-detection.steps:` *does* inject steps ahead of `Install GitHub Copilot CLI`,
+  so a retry/pre-warm shim is technically possible — but it would have to be repeated in every
+  workflow, re-download from the same CDN, and hardcode both the drifting version pin and the
+  toolcache layout. That trades a rare transient failure for permanent maintenance debt.
+- Disabling `threat-detection` removes the failure by removing a security control.
+
+**What to do.** Nothing structural — re-run the failed workflow. The occurrence rate is roughly one
+run per tracker issue, and the tracker auto-expires via its `gh-aw-expires` marker. A durable fix
+belongs upstream in [`github/gh-aw`][gh-aw]: either pin `DefaultCopilotVersion` to the exact CLI
+version the hosted runner toolcache is expected to contain (in practice the `compat.json`
+`max-agent`, with a CI guard against drift), or pass the compat range to the toolcache lookup even
+when a version is pinned. Merely choosing a default somewhere inside the compat window still
+downloads unless that exact version is cached.
 
 ## Catalog
 
