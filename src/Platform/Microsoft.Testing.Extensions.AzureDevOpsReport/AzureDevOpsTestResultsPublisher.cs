@@ -176,7 +176,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
     /// </remarks>
     private async Task WarnAsync(string message, CancellationToken cancellationToken)
     {
-        _logger.LogWarning(message);
+        TryLogWarning(message);
 
         try
         {
@@ -186,7 +186,27 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
         {
             // The message is already in the diagnostic log; losing the console copy is preferable to
             // failing the test run from inside a diagnostic helper.
-            _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingWarningDisplayFailed} {ex.Message}");
+            TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingWarningDisplayFailed} {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Logs a warning, swallowing any failure from the logging providers.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="Logger"/> invokes each registered provider directly, so a failing provider would
+    /// otherwise propagate out of <see cref="WarnAsync"/> — including out of its own recovery path,
+    /// where it would replace the exception being handled — and break its never-throws contract.
+    /// </remarks>
+    private void TryLogWarning(string message)
+    {
+        try
+        {
+            _logger.LogWarning(message);
+        }
+        catch (Exception)
+        {
+            // There is nowhere left to report this: the diagnostic logger is the fallback sink.
         }
     }
 
@@ -334,10 +354,13 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
                 cancellationToken => _client.UpdateTestRunStateAsync(_publishConfiguration, CurrentRunId.Value, finalState, cancellationToken),
                 cleanupCts.Token).ConfigureAwait(false);
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (Exception ex)
         {
             // A run left in "InProgress" is not surfaced in the build's Tests tab, so the user would
             // otherwise see an empty tab with no explanation even though every result was uploaded.
+            // Cancellation is handled here too: this step runs on its own cleanupCts, so an expiry (or
+            // an HTTP client TaskCanceledException) is a finalization failure rather than a session
+            // cancellation, and must not escape and fail an otherwise successful run.
             await WarnAsync(
                 $"{AzureDevOpsResources.AzureDevOpsLivePublishingCompleteRunFailed} {ex.Message} {AzureDevOpsResources.AzureDevOpsLivePublishingRunLeftInProgress}",
                 CancellationToken.None).ConfigureAwait(false);
