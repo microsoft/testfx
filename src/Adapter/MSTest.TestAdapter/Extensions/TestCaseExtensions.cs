@@ -142,6 +142,12 @@ internal static class TestCaseExtensions
             testElement.ResourceLocks = Array.ConvertAll(encodedResourceLocks, ResourceLockInfo.Decode);
         }
 
+        string[]? encodedDependencies = testCase.GetPropertyValue<string[]>(AdapterTestProperties.DependenciesProperty, null);
+        if (encodedDependencies is { Length: > 0 })
+        {
+            testElement.Dependencies = Array.ConvertAll(encodedDependencies, TestDependencyInfo.Decode);
+        }
+
         return testElement;
     }
 
