@@ -36,21 +36,27 @@ gh aw audit <run-id>
 
 For deeper guidance — creating, updating, debugging, upgrading, or wrapping MCP servers — see the dispatcher [`.github/agents/agentic-workflows.agent.md`](../agents/agentic-workflows.agent.md), which routes to the canonical `gh-aw` prompts.
 
-## Action pinning
-
-Every `uses:` reference in the executable workflow YAML here — hand-written `*.yml` and generated `*.lock.yml` alike — must be immutable: repository actions pinned to a 40-character commit SHA with a trailing `# <version>` comment, and `docker://` container actions pinned to an image digest (`docker://<image>@sha256:<64-hex>`). This does **not** apply to the agentic `*.md` sources: those are compiled inputs, not workflows GitHub runs, and their `uses:` snippets legitimately reference versions (`gh aw compile` resolves them to SHAs in the lock file). The gate scans `*.yml`/`*.yaml` only. The repo-wide ledger of approved pins lives in [`.github/aw/actions-lock.json`](../aw/actions-lock.json), and [`check-action-pins.yml`](./check-action-pins.yml) enforces alignment on every PR that touches a workflow:
-
-```bash
-python -m pip install -r .github/scripts/check-action-pins-requirements.txt
-python .github/scripts/check_action_pins.py   # run the same gate locally
-```
-
-The gate rejects unpinned references, container actions without an image digest, missing or non-version-shaped version comments, versions that disagree with the ledger, SHAs that disagree with the ledger, one SHA labelled with conflicting versions across files, an action pinned to more than one SHA across the directory, and `gh-aw-manifest` header entries that drift from the ledger. It also parses each workflow structurally, so a `uses` hidden in a block scalar, flow mapping or alias fails rather than slipping past the line-based scan. `gh aw` records an annotated *tag object* SHA in the ledger for a few actions while emitting the dereferenced *commit* SHA in `uses:` lines; each such pair is recorded explicitly in the script's `DEREFERENCED_TAG_SHAS` table (verify a new one with `gh api repos/<owner>/<repo>/git/tags/<tag-object-sha> --jq .object.sha`) so that every *other* SHA still fails.
+### Compile on the pinned toolchain, and check the pins afterwards
 
 > [!WARNING]
-> **Compiling locally can silently corrupt pins.** A locally-installed `gh aw` extension has been observed downgrading `actions/checkout` from the repo-aligned v7.0.1 to v7.0.0 and un-pinning `github/gh-aw-actions/setup` to the mutable `@v0.83.1` tag ([#10258](https://github.com/microsoft/testfx/issues/10258)). `.github/aw/actions-lock.json` keys its overrides *by version string*, so framework-injected steps (patch-context, threat-detection, create-PR) that request a version the ledger does not carry key-miss, no override applies, and the CLI's stale built-in default wins. Adding the missing version to the ledger does not help — the injected version label is baked into the `gh aw` binary.
->
-> The `compiler_version` field in the `gh-aw-manifest` header does **not** catch this: it is an identity claim, not a statement about the emitted bytes, so two builds stamping the same version can embed different defaults. Always run the pin check above before committing a regenerated lock file. Recompiling on the aligned CI toolchain (the pinned `github/gh-aw-actions/setup` action used by [`agentics-maintenance.yml`](./agentics-maintenance.yml)) self-heals an affected lock file.
+> A locally installed `gh aw` extension can silently rewrite action pins in **every** `.lock.yml` it touches, even when its `compiler_version` header matches CI. Observed corruptions include `actions/checkout` being downgraded (v7.0.1 → v7.0.0) and `github/gh-aw-actions/setup` losing its immutable SHA in favour of a mutable `@v0.83.1` tag. See [#10258](https://github.com/microsoft/testfx/issues/10258).
+
+The authoritative toolchain is the pinned `github/gh-aw-actions/setup-cli` action used by [`agentics-maintenance.yml`](./agentics-maintenance.yml); recompiling there self-heals an affected lock file. `.github/aw/actions-lock.json` records the SHA every action must resolve to.
+
+Because the `compiler_version` header asserts an identity claim rather than the emitted bytes, always re-read the diff of a local compile — a change to a `uses:` pin that you did not intend is the tell. The repository also enforces this automatically:
+
+```bash
+# Install the audit's only dependency (hash-pinned, same as CI)
+python -m pip install --require-hashes -r .github/scripts/check-action-pins-requirements.txt
+
+# Offline, deterministic audit of every `uses:` pin in .github/workflows/
+python .github/scripts/check_action_pins.py
+
+# Print the resolved pin table (useful when reconciling a drift report)
+python .github/scripts/check_action_pins.py --list
+```
+
+[`check-action-pins.yml`](./check-action-pins.yml) runs the same script on every pull request that touches `.github/workflows/**`, `.github/actions/**`, `.github/aw/actions-lock.json`, or the script itself. It fails when a generated workflow carries an unpinned `uses:`, when a pin disagrees with `.github/aw/actions-lock.json`, when one action resolves to more than one SHA across the repository, when a `docker://` container action is not pinned to an image digest, or when a `uses` reachable in the parsed YAML is hidden from the line scan (a block scalar, flow mapping or alias). Comparisons are case-insensitive on owner/repository names, since GitHub resolves them that way and `Actions/Checkout` would otherwise escape the lock-file check.
 
 ## Secrets & authentication
 
@@ -158,6 +164,59 @@ a workflow needs elevated access (then use the GitHub App above).
 > cause — *AI credits budget exceeded*, an engine/inference error, or transient
 > container-image / AWF-binary download failures are all unrelated to authentication.
 > Only the *"Lockdown Check Failed … custom GitHub token"* banner indicates a PAT issue.
+> For the recurring `Install GitHub Copilot CLI` download failure, see
+> [Known transient failures](#known-transient-failures) below.
+
+## Known transient failures
+
+### `detection` job fails at `Install GitHub Copilot CLI`
+
+**Symptom.** The `agent` job succeeds, the `detection` job fails on its `Install GitHub Copilot CLI`
+step, and `safe_outputs` is **skipped** — so only the workflow's configured safe outputs (in the
+observed run of `grade-tests-on-pr`, the grading comment) are suppressed. The `[aw] Detection Runs`
+tracker issue still records the run as `warning | parse_error`, because the threat-detection result
+file was never written. The step log shows repeated
+`curl: (22) The requested URL returned error: 504` while fetching `SHA256SUMS.txt` from
+`github/copilot-cli` releases.
+
+**Why `safe_outputs` disappears.** Every generated lock file gates that job on
+`needs.detection.result == 'success'`. `safe-outputs.threat-detection.continue-on-error` (default
+`true`) only tolerates a *parse* failure of a detection run that actually happened — it does not
+change the gate, so a job-level infrastructure failure still swallows the outputs. Setting it
+explicitly in frontmatter is a no-op; the compiled condition is byte-identical.
+
+**Root cause.** `gh aw compile` bakes an *exact* Copilot CLI version into every `.lock.yml`
+(`install_copilot_cli.sh <version>`), taken from gh-aw's own `DefaultCopilotVersion` constant.
+Passing an explicit version makes `install_copilot_cli.sh` skip compat-matrix resolution, so the
+toolcache lookup runs with `range: none..none` and can never match the CLI the hosted runner image
+already ships. Every agentic workflow run therefore downloads the CLI twice — once in the `agent`
+job, once in the `detection` job — and each download is a chance to hit a transient GitHub CDN 5xx.
+The gap is structural, not a stale-image problem: `github/gh-aw-actions`'s `compat.json` caps
+`max-agent` at `1.0.56` (exactly what the runner image caches), while `DefaultCopilotVersion` is
+already `1.0.73` on gh-aw v0.83.1 and `1.0.75` on `main` — so bumping gh-aw *widens* the gap.
+
+**There is no repo-side fix.** All of the following were evaluated and rejected:
+
+- `engine.version` is silently ignored for the Copilot engine — gh-aw overwrites it with
+  `DefaultCopilotVersion` (`pkg/workflow/copilot_engine_installation.go`, still the case on `main`).
+  `gh aw compile --strict` reports no error, and the regenerated lock keeps the pinned version.
+- Hand-editing a `.lock.yml` (older pin, extra retries) is overwritten on the next `gh aw compile`.
+- `engine.command:` pointed at `/opt/hostedtoolcache/copilot-cli/<version>/x64/bin/copilot` bypasses
+  the install step, but hardcodes a path that rotates with runner images and skips the `.copilot`
+  ownership fix and stale `awf-*-chroot-home` cleanup that `install_copilot_cli.sh` performs.
+- `safe-outputs.threat-detection.steps:` *does* inject steps ahead of `Install GitHub Copilot CLI`,
+  so a retry/pre-warm shim is technically possible — but it would have to be repeated in every
+  workflow, re-download from the same CDN, and hardcode both the drifting version pin and the
+  toolcache layout. That trades a rare transient failure for permanent maintenance debt.
+- Disabling `threat-detection` removes the failure by removing a security control.
+
+**What to do.** Nothing structural — re-run the failed workflow. The occurrence rate is roughly one
+run per tracker issue, and the tracker auto-expires via its `gh-aw-expires` marker. A durable fix
+belongs upstream in [`github/gh-aw`][gh-aw]: either pin `DefaultCopilotVersion` to the exact CLI
+version the hosted runner toolcache is expected to contain (in practice the `compat.json`
+`max-agent`, with a CI guard against drift), or pass the compat range to the toolcache lookup even
+when a version is pinned. Merely choosing a default somewhere inside the compat window still
+downloads unless that exact version is cached.
 
 ## Catalog
 
@@ -222,7 +281,7 @@ a workflow needs elevated access (then use the GitHub App above).
 | [`agentics-maintenance.yml`](./agentics-maintenance.yml) | Schedule + manual + reusable + issues | Maintains the agentic workflow ecosystem itself (re-compilation, dependency bumps, etc.). |
 | [`backport.yml`](./backport.yml) | `/backport` comment + issues + schedule | Backports merged PRs to release branches on demand. |
 | [`backport-base.yml`](./backport-base.yml) | Reusable | Shared logic invoked by `backport.yml` to perform the actual backport. |
-| [`check-action-pins.yml`](./check-action-pins.yml) | PR + push + manual | Verifies every workflow `uses:` reference is SHA-pinned and aligned with `.github/aw/actions-lock.json`. |
+| [`check-action-pins.yml`](./check-action-pins.yml) | PR + push + manual | Audits every `uses:` pin in `.github/workflows/` against `.github/aw/actions-lock.json` and flags unpinned or drifting actions in generated `.lock.yml` files. |
 | [`check-vendored-files.yml`](./check-vendored-files.yml) | Schedule + manual + PR + issues | Verifies that files vendored from external sources (such as `eng/common`) stay in sync. |
 | [`copilot-setup-steps.yml`](./copilot-setup-steps.yml) | PR + push + manual | Bootstraps a Copilot Coding Agent environment with the right .NET SDK and tooling. |
 | [`dedup-analysis.yml`](./dedup-analysis.yml) | Schedule + manual + issues | Code Duplication Analysis (jscpd-based). |
@@ -251,7 +310,8 @@ Reusable agentic-workflow snippets imported via `imports:` in workflow frontmatt
 - **Source of truth.** Edit the `.md` file (and any imported `shared/*.md`); never the `.lock.yml`.
 - **One change, one compile.** After editing an agentic workflow source, run `gh aw compile <workflow-id>` and commit the regenerated `.lock.yml` in the same change.
 - **Same applies to Dependabot updates** that touch generated manifests (e.g. `package.json` / `requirements.txt` / `go.mod`) if `gh aw compile` ever emits them under `.github/workflows/`: never merge those PRs directly; update the source `.md` files and rerun `gh aw compile --dependabot` to bundle the fixes.
-- **Pinned actions only.** Every `uses:` reference in the executable workflow YAML is immutable: repository actions pinned to a SHA with a `# <version>` comment matching [`.github/aw/actions-lock.json`](../aw/actions-lock.json), and `docker://` container actions pinned to an image digest. Strict mode pins generated references, and [`check-action-pins.yml`](./check-action-pins.yml) verifies the result — see [Action pinning](#action-pinning).
+- **Pinned actions only.** Strict mode pins every `uses:` reference to a SHA; the compiler enforces this, and [`check-action-pins.yml`](./check-action-pins.yml) verifies it independently of the compiler.
+- **Compile on the pinned toolchain.** A locally installed `gh aw` build can emit corrupted pins ([#10258](https://github.com/microsoft/testfx/issues/10258)); always review the diff of a local compile and run `python .github/scripts/check_action_pins.py` before pushing.
 - **Minimal permissions.** Workflows declare the least privilege they need; write capabilities flow through gh-aw `safe-outputs:` rather than direct `permissions: write-all`.
 
 [gh-aw]: https://github.com/github/gh-aw

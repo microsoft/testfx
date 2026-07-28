@@ -26,6 +26,9 @@ public sealed class FileLoggerTests : IDisposable
     // offset, so this is stable across machines, time zones and cultures.
     private const string DefaultClockTimestamp = "0001-01-01T00:00:00.0000000+00:00";
 
+    // The sync-flush path renders only the time part, with the "HH:mm:ss.fff" format.
+    private const string SyncFlushDefaultClockTimestamp = "00:00:00.000";
+
     private static readonly Func<string, Exception?, string> Formatter =
         (state, exception) =>
             string.Format(CultureInfo.InvariantCulture, "{0}{1}", state, exception is not null ? $" -- {exception}" : string.Empty);
@@ -78,9 +81,9 @@ public sealed class FileLoggerTests : IDisposable
         memoryStream.Seek(0, SeekOrigin.Begin);
         string logWritten = new StreamReader(memoryStream).ReadToEnd();
 
-        // logWritten looks like this: "[15:01:57.130 Category - Trace] �\r\n"
+        // logWritten looks like this: "[15:01:57.130 Category - TRACE] �\r\n"
         Assert.StartsWith("[", logWritten);
-        Assert.EndsWith($" Category - Trace] \uFFFD{Environment.NewLine}", logWritten);
+        Assert.EndsWith($" Category - TRACE] \uFFFD{Environment.NewLine}", logWritten);
     }
 
     [TestMethod]
@@ -210,7 +213,7 @@ public sealed class FileLoggerTests : IDisposable
             await _memoryStream.FlushAsync(TestContext.CancellationToken);
 
             _mockConsole.Verify(x => x.WriteLine(It.IsAny<string>()), Times.Never);
-            Assert.AreEqual($"[00:00:00.000 Test - {currentLogLevel}] Message{Environment.NewLine}", Encoding.Default.GetString(_memoryStream.ToArray()));
+            Assert.AreEqual($"[00:00:00.000 Test - {currentLogLevel.ToString().ToUpperInvariant()}] Message{Environment.NewLine}", Encoding.Default.GetString(_memoryStream.ToArray()));
         }
         else
         {
@@ -299,6 +302,50 @@ public sealed class FileLoggerTests : IDisposable
 
     public static IEnumerable<object[]> GetExpectedUpperCaseNames()
         => ExpectedUpperCaseNames.Select(pair => new object[] { pair.Key, pair.Value });
+
+    // The sync-flush path formats its own log entry instead of going through BuildLogEntry, so it needs its own
+    // coverage: it must render the same upper-case level names as the async path.
+    [TestMethod]
+    [DynamicData(nameof(GetExpectedUpperCaseNames))]
+    public void Log_WhenSyncFlush_LogLevelIsWrittenInUpperCase(LogLevel currentLogLevel, string expectedLevelName)
+    {
+        LogSingleEntryWithSyncFlush(currentLogLevel);
+
+        _mockConsole.Verify(x => x.WriteLine(It.IsAny<string>()), Times.Never);
+        Assert.AreEqual(
+            $"[{SyncFlushDefaultClockTimestamp} {Category} - {expectedLevelName}] {Message}{Environment.NewLine}",
+            Encoding.Default.GetString(_memoryStream.ToArray()));
+    }
+
+    [TestMethod]
+    public void Log_WhenSyncFlush_UndefinedLogLevelIsWrittenAsItsNumericValue()
+    {
+        LogSingleEntryWithSyncFlush((LogLevel)999);
+
+        _mockConsole.Verify(x => x.WriteLine(It.IsAny<string>()), Times.Never);
+        Assert.AreEqual(
+            $"[{SyncFlushDefaultClockTimestamp} {Category} - 999] {Message}{Environment.NewLine}",
+            Encoding.Default.GetString(_memoryStream.ToArray()));
+    }
+
+    private void LogSingleEntryWithSyncFlush(LogLevel logLevel)
+    {
+        _mockFileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
+        _mockFileStreamFactory
+            .Setup(x => x.Create(It.IsAny<string>(), FileMode.CreateNew, FileAccess.Write, FileShare.Read))
+            .Returns(_mockStream.Object);
+
+        // The sync-flush path writes through an auto-flushing StreamWriter, so the stream is complete once Log returns.
+        using FileLogger fileLogger = new(
+            new(LogFolder, LogPrefix, fileName: FileName, syncFlush: true),
+            LogLevel.Trace,
+            _mockClock.Object,
+            new SystemTask(),
+            _mockConsole.Object,
+            _mockFileSystem.Object,
+            _mockFileStreamFactory.Object);
+        fileLogger.Log(logLevel, Message, null, Formatter, Category);
+    }
 
     private void LogSingleEntryWithAsyncFlush(LogLevel logLevel)
     {
