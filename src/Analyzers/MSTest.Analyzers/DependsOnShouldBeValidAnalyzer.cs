@@ -64,6 +64,10 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
     public static readonly DiagnosticDescriptor OtherAssemblyRule = MethodNotFoundRule
         .WithMessage(new(nameof(Resources.DependsOnShouldBeValidMessageFormat_OtherAssembly), Resources.ResourceManager, typeof(Resources)));
 
+    /// <inheritdoc cref="Resources.DependsOnShouldBeValidMessageFormat_AbstractTarget"/>
+    public static readonly DiagnosticDescriptor AbstractTargetRule = MethodNotFoundRule
+        .WithMessage(new(nameof(Resources.DependsOnShouldBeValidMessageFormat_AbstractTarget), Resources.ResourceManager, typeof(Resources)));
+
     /// <inheritdoc cref="Resources.DependsOnShouldBeValidMessageFormat_SelfReference"/>
     public static readonly DiagnosticDescriptor SelfReferenceRule = MethodNotFoundRule
         .WithMessage(new(nameof(Resources.DependsOnShouldBeValidMessageFormat_SelfReference), Resources.ResourceManager, typeof(Resources)));
@@ -82,6 +86,7 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
         NotATestMethodRule,
         NotATestClassRule,
         OtherAssemblyRule,
+        AbstractTargetRule,
         SelfReferenceRule,
         CycleRule,
         NoEffectRule);
@@ -112,10 +117,11 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
         var typeSymbol = (INamedTypeSymbol)context.Symbol;
         List<AttributeData> attributes = GetDependsOnAttributes(typeSymbol, symbols);
 
-        // '[DependsOn]' is not inherited (AttributeUsage(Inherited = false)) and is only read off the test
-        // class itself, so an application on a type that is not a test class - including a shared base class
-        // whose derived types are the test classes - never produces an edge.
-        if (!typeSymbol.IsTestClass(symbols.TestClassAttribute))
+        // '[DependsOn]' is not inherited (AttributeUsage(Inherited = false)) and is only read off a class
+        // discovery actually runs tests for, so an application on a type that is not a runnable test class -
+        // a shared base class whose derived types are the test classes, or an abstract '[TestClass]' whose
+        // tests are enumerated under each concrete derived class - never produces an edge.
+        if (!IsRunnableTestClass(typeSymbol, symbols))
         {
             ReportNoEffect(context, attributes, typeSymbol.Name);
             return;
@@ -178,9 +184,9 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
         }
 
         // A self reference is the one-node cycle; reporting it again as a cycle would be noise. Cycles are
-        // only modelled for tests of a test class, because for any other declaring type the class the edge
-        // resolves against is not known at compile time.
-        if (selfReferenceReported || !declaringClass.IsTestClass(symbols.TestClassAttribute))
+        // only modelled for tests of a runnable test class, because for any other declaring type the class
+        // the edge resolves against is not known at compile time.
+        if (selfReferenceReported || !IsRunnableTestClass(declaringClass, symbols))
         {
             return;
         }
@@ -211,12 +217,13 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
         }
 
         // An implicit target ("a method of my own class") is resolved against the class the test runs under.
-        // For a test method declared on a non-test base class that class is each derived test class, which is
-        // not knowable from this declaration, so only explicit 'typeof' targets are validated there.
+        // For a test method declared on a class discovery does not run directly - an unannotated base, or an
+        // abstract '[TestClass]' - that class is each concrete derived test class, which is not knowable from
+        // this declaration, so only explicit 'typeof' targets are validated there.
         INamedTypeSymbol targetClass;
         if (explicitTarget is null)
         {
-            if (!declaringClass.IsTestClass(symbols.TestClassAttribute))
+            if (!IsRunnableTestClass(declaringClass, symbols))
             {
                 return false;
             }
@@ -250,9 +257,15 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
             return false;
         }
 
-        if (!targetClass.IsTestClass(symbols.TestClassAttribute))
+        if (!IsRunnableTestClass(targetClass, symbols))
         {
-            context.ReportDiagnostic(attributeSyntax.CreateDiagnostic(NotATestClassRule, targetClass.Name));
+            // An abstract '[TestClass]' is skipped by discovery - its tests are enumerated under each
+            // concrete derived class - so the reference matches nothing even though the attribute is there.
+            // That needs its own message: "add [TestClass]" is not the fix.
+            DiagnosticDescriptor rule = targetClass.IsAbstract && targetClass.IsTestClass(symbols.TestClassAttribute)
+                ? AbstractTargetRule
+                : NotATestClassRule;
+            context.ReportDiagnostic(attributeSyntax.CreateDiagnostic(rule, targetClass.Name));
             return false;
         }
 
@@ -424,7 +437,7 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
         INamedTypeSymbol targetClass = explicitTarget as INamedTypeSymbol ?? node.TestClass;
         if (targetClass.TypeKind == TypeKind.Error
             || !IsFromCurrentAssembly(context, targetClass)
-            || !targetClass.IsTestClass(symbols.TestClassAttribute))
+            || !IsRunnableTestClass(targetClass, symbols))
         {
             // A target in another assembly produces no edge at run time, so the walk must not follow it -
             // otherwise a "cycle" could be reported through a link that does not exist.
@@ -500,6 +513,16 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
         => string.IsNullOrEmpty(type.Name)
             ? type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)
             : type.Name;
+
+    /// <summary>
+    /// Whether discovery runs tests under <paramref name="type"/>'s own name. Mirrors
+    /// <c>TypeValidator.IsValidTestClass</c> on the two points that decide whether a
+    /// <c>[DependsOn]</c> reference can ever match: the <c>[TestClass]</c> attribute, and the fact that an
+    /// abstract test class is skipped so that its tests are enumerated under each concrete derived class
+    /// instead.
+    /// </summary>
+    private static bool IsRunnableTestClass(INamedTypeSymbol type, AnalysisSymbols symbols)
+        => !type.IsAbstract && type.IsTestClass(symbols.TestClassAttribute);
 
     private static bool IsFromCurrentAssembly(SymbolAnalysisContext context, INamedTypeSymbol type)
         => SymbolEqualityComparer.Default.Equals(type.ContainingAssembly, context.Compilation.Assembly);

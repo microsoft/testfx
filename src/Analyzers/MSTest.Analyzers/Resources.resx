@@ -977,6 +977,10 @@ The type declaring these methods should also respect the following rules:
     <value>'[DependsOn]' references type '{0}' from another assembly; dependencies are resolved within a single test source, so the dependency is ignored at run time</value>
     <comment>{0} is the referenced type name. {Locked="[DependsOn]"}</comment>
   </data>
+  <data name="DependsOnShouldBeValidMessageFormat_AbstractTarget" xml:space="preserve">
+    <value>'[DependsOn]' references abstract type '{0}'; its tests run under each derived test class rather than under '{0}', so the dependency is ignored at run time</value>
+    <comment>{0} is the referenced type name. {Locked="[DependsOn]"}</comment>
+  </data>
   <data name="DependsOnShouldBeValidMessageFormat_SelfReference" xml:space="preserve">
     <value>'[DependsOn]' makes '{0}' depend on itself, which is a dependency cycle and fails the test at run time</value>
     <comment>{0} is the test method name. {Locked="[DependsOn]"}</comment>

@@ -345,6 +345,11 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
         <target state="new">A '[DependsOn]' attribute references a test by name. A reference that matches no test is deliberately non-fatal at run time, so that running a subset of the suite stays possible, which means a typo or a rename silently drops the declared ordering. This analyzer reports the problems that can be decided at build time: a method that does not exist on the referenced type, a target that is not a test, a test that depends on itself, a dependency cycle visible in the compilation, a reference to a type from another assembly (dependencies are resolved within a single test source), and an attribute applied where it has no effect.</target>
         <note>{Locked="[DependsOn]"}</note>
       </trans-unit>
+      <trans-unit id="DependsOnShouldBeValidMessageFormat_AbstractTarget">
+        <source>'[DependsOn]' references abstract type '{0}'; its tests run under each derived test class rather than under '{0}', so the dependency is ignored at run time</source>
+        <target state="new">'[DependsOn]' references abstract type '{0}'; its tests run under each derived test class rather than under '{0}', so the dependency is ignored at run time</target>
+        <note>{0} is the referenced type name. {Locked="[DependsOn]"}</note>
+      </trans-unit>
       <trans-unit id="DependsOnShouldBeValidMessageFormat_Cycle">
         <source>'[DependsOn]' declares the dependency cycle '{0}', which fails every test in the cycle at run time</source>
         <target state="new">'[DependsOn]' declares the dependency cycle '{0}', which fails every test in the cycle at run time</target>

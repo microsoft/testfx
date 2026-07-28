@@ -436,6 +436,99 @@ public sealed class DependsOnShouldBeValidAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenDeclaredOnMethodOfAbstractTestClass_NoDiagnostic()
+    {
+        // Discovery skips an abstract '[TestClass]' and enumerates its tests under each concrete derived
+        // class, so an implicit target is resolved against the derived class exactly as for an unannotated
+        // base. Validating it against the abstract class would report a method that does exist at run time.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public abstract class BaseTests
+            {
+                [TestMethod]
+                [DependsOn("DeclaredOnlyOnDerived")]
+                public void AddItem() { }
+            }
+
+            [TestClass]
+            public class MyTestClass : BaseTests
+            {
+                [TestMethod]
+                public void DeclaredOnlyOnDerived() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenReferencedTypeIsAbstractTestClass_AbstractTarget()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public abstract class BaseTests
+            {
+                [TestMethod]
+                public void CreateCart() { }
+            }
+
+            [TestClass]
+            public class MyTestClass : BaseTests
+            {
+                [TestMethod]
+                [{|#0:DependsOn(typeof(BaseTests))|}]
+                public void AddItem() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(DependsOnShouldBeValidAnalyzer.AbstractTargetRule)
+                .WithLocation(0)
+                .WithArguments("BaseTests"));
+    }
+
+    [TestMethod]
+    public async Task WhenAppliedToAbstractTestClass_NoEffect()
+    {
+        // The abstract class contributes no test of its own and '[DependsOn]' is not inherited, so the
+        // class-level declaration produces no edge anywhere.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class SetupTests
+            {
+                [TestMethod]
+                public void CreateCart() { }
+            }
+
+            [TestClass]
+            [{|#0:DependsOn(typeof(SetupTests))|}]
+            public abstract class BaseTests
+            {
+                [TestMethod]
+                public void AddItem() { }
+            }
+
+            [TestClass]
+            public class MyTestClass : BaseTests
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(DependsOnShouldBeValidAnalyzer.NoEffectRule)
+                .WithLocation(0)
+                .WithArguments("BaseTests"));
+    }
+
+    [TestMethod]
     public async Task WhenTestReferencesItself_SelfReference()
     {
         string code = """

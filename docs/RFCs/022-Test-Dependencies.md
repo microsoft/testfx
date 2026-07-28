@@ -319,14 +319,18 @@ dependency that matches no test as a warning rather than a failure, so that `--f
 keep working; that decision is only safe because build time catches the genuinely broken references. The
 analyzer reports a named method that does not exist on the target type, a target that is not a test method
 or not a test class, a target type from another assembly (dependencies are resolved within a single test
-source, so such a reference matches nothing), a test that depends on itself, a cycle visible within one
-compilation, and an attribute applied where it has no effect (a non-test method, or a class without
-`[TestClass]` — the attribute is not inherited, so an application on a shared base class produces no edge).
+source, so such a reference matches nothing), a target that is an abstract test class (discovery enumerates
+its tests under each concrete derived class, never under the abstract class's own name), a test that depends
+on itself, a cycle visible within one compilation, and an attribute applied where it has no effect (a
+non-test method, or a class discovery runs no test for — the attribute is not inherited, so an application
+on a shared base class produces no edge).
 
 It stays quiet whenever the answer depends on something the compilation does not know. The important case
-is a test method declared on a *non-test* base class: its implicit references (`[DependsOn(nameof(X))]`
-with no `typeof`) are resolved against each derived test class at run time, so the analyzer cannot decide
-them and leaves them alone.
+is a test method declared on a class that discovery does not run directly — an unannotated base, or an
+abstract `[TestClass]`: its implicit references (`[DependsOn(nameof(X))]` with no `typeof`) are resolved
+against each concrete derived test class at run time, so the analyzer cannot decide them and leaves them
+alone. It also models the *effective* method set, dropping base declarations that an override replaces,
+because neither `[TestMethod]` nor `[DependsOn]` is inherited across an override chain.
 
 ## Future work
 
