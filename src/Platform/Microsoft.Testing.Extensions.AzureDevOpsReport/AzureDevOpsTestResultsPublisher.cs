@@ -43,6 +43,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
     private CancellationTokenSource? _backgroundFlushCts;
     private Task? _backgroundFlushTask;
     private int _isDisposed;
+    private int _failedAttachmentCount;
 
     private int? CurrentRunId { get; set; }
 
@@ -134,7 +135,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
     {
         if (!TryCreatePublishConfiguration(out AzureDevOpsPublishConfiguration? publishConfiguration, out string? warning))
         {
-            await WarnAsync(warning ?? AzureDevOpsResources.AzureDevOpsLivePublishingMissingConfiguration, testSessionContext.CancellationToken).ConfigureAwait(false);
+            await WarnAsync(warning, testSessionContext.CancellationToken).ConfigureAwait(false);
             return;
         }
 
@@ -185,7 +186,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
         {
             // The message is already in the diagnostic log; losing the console copy is preferable to
             // failing the test run from inside a diagnostic helper.
-            _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
+            _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingWarningDisplayFailed} {ex.Message}");
         }
     }
 
@@ -209,8 +210,12 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
                         return;
                     }
 
-                    await _runIdCoordinator.RenewLeaseAsync(_coordinatedRun, cancellationToken).ConfigureAwait(false);
+                    // Enqueue before renewing the lease: RenewLeaseAsync does file I/O that can throw
+                    // (e.g. a sharing violation while another process reads the lease). If it threw
+                    // first, the result would be dropped without ever reaching a queue, so the
+                    // end-of-session "results dropped" count could not see it.
                     _pendingResults.Enqueue(testCaseResult);
+                    await _runIdCoordinator.RenewLeaseAsync(_coordinatedRun, cancellationToken).ConfigureAwait(false);
                     await FlushPendingResultsAsync(force: false, cancellationToken).ConfigureAwait(false);
                     break;
 
@@ -290,7 +295,20 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
+            // Defensive: individual upload failures are already handled (and counted) per attachment,
+            // so nothing is expected here. Swallow anyway because the platform does not guard lifetime
+            // handlers, so throwing would fail an otherwise successful run.
             await WarnAsync($"{AzureDevOpsResources.AzureDevOpsLivePublishingRunAttachmentFailed} {ex.Message}", CancellationToken.None).ConfigureAwait(false);
+        }
+
+        // Attachment failures are swallowed per attachment so that one bad file cannot abort the drain.
+        // Report them once here, otherwise coverage files and dumps go missing with no explanation.
+        int failedAttachmentCount = Volatile.Read(ref _failedAttachmentCount);
+        if (failedAttachmentCount > 0)
+        {
+            await WarnAsync(
+                string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingAttachmentsDropped, failedAttachmentCount),
+                CancellationToken.None).ConfigureAwait(false);
         }
 
         // Azure DevOps test runs use "Aborted" specifically for cancellation or session-level

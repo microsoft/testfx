@@ -978,6 +978,30 @@ public sealed class AzureDevOpsLivePublishingTests
         return client.UploadTestResultAttachmentCalls[0].Attachment;
     }
 
+    // Attachment failures are swallowed per attachment so one bad file cannot abort the drain; without
+    // a summary the user loses coverage files/dumps with no explanation.
+    [TestMethod]
+    public async Task OnTestSessionFinishingAsync_AttachmentUploadFailure_WarnsWithCountOnOutputDevice()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        CollectingOutputDevice outputDevice = new();
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(2, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out _, out _, outputDevice: outputDevice);
+        client.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(93);
+        client.UploadTestRunAttachmentAsyncFunc = (_, _, _, _) => throw new HttpRequestException("attachment rejected");
+
+        await StartPublisherAsync(publisher);
+        string coveragePath = Path.Combine(directory.Path, "results.cobertura.xml");
+        File.WriteAllText(coveragePath, "<coverage/>");
+        await publisher.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            new SessionFileArtifact(new SessionUid(Guid.NewGuid().ToString()), new FileInfo(coveragePath), "cobertura"),
+            CancellationToken.None);
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        string expected = string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingAttachmentsDropped, 1);
+        Assert.Contains(expected, string.Join(Environment.NewLine, outputDevice.Lines));
+    }
+
     private static async Task StartPublisherAsync(AzureDevOpsTestResultsPublisher publisher)
     {
         Assert.IsTrue(await publisher.IsEnabledAsync());

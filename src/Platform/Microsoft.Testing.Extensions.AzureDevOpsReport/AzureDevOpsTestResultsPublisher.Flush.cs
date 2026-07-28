@@ -29,6 +29,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
             }
             catch (Exception ex)
             {
+                Interlocked.Increment(ref _failedAttachmentCount);
                 _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingRunAttachmentFailed} {ex.Message}");
             }
         }
@@ -53,6 +54,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
             }
             catch (Exception ex)
             {
+                Interlocked.Increment(ref _failedAttachmentCount);
                 _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingResultAttachmentFailed} {ex.Message}");
             }
         }
@@ -160,6 +162,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
                 {
                     if (BatchHasAttachments(batch))
                     {
+                        Interlocked.Add(ref _failedAttachmentCount, CountAttachments(batch));
                         _logger.LogWarning(AzureDevOpsResources.AzureDevOpsLivePublishingResultIdParseFailedWarning);
                     }
 
@@ -210,6 +213,17 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         }
 
         return false;
+    }
+
+    private static int CountAttachments(IReadOnlyList<AzureDevOpsTestCaseResultWithAttachments> batch)
+    {
+        int count = 0;
+        for (int i = 0; i < batch.Count; i++)
+        {
+            count += batch[i].Attachments.Count;
+        }
+
+        return count;
     }
 
     private bool ShouldFlushUnsafe(bool force)
