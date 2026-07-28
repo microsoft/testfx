@@ -493,4 +493,91 @@ public sealed class SharedFileSystemPathInTestAnalyzerTests
                 .WithLocation(0)
                 .WithArguments("setup.txt"));
     }
+
+    [TestMethod]
+    public async Task WhenTestMethodDeletesFileWithConstantPath_Diagnostic()
+    {
+        // File.Delete is a mutating operation: removing a shared file by constant path
+        // is a race condition under method-level parallelization.
+        string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    {|#0:File.Delete("shared.txt")|};
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(SharedFileSystemPathInTestAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("shared.txt"));
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodDeletesDirectoryWithConstantPath_Diagnostic()
+    {
+        // Directory.Delete is a mutating operation: removing a shared directory by constant path
+        // is a race condition under method-level parallelization.
+        string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    {|#0:Directory.Delete("shared-dir")|};
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(SharedFileSystemPathInTestAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("shared-dir"));
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodMovesDirectory_BothSourceAndDestAreDiagnostic()
+    {
+        // Directory.Move mutates both the source (it gets deleted) and the destination (it gets created).
+        // The analyzer fires once per invocation with the first constant mutated path found.
+        string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    {|#0:Directory.Move("source-dir", "dest-dir")|};
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(SharedFileSystemPathInTestAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("source-dir"));
+    }
 }
