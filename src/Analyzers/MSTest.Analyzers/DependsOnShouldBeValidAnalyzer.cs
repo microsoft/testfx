@@ -306,6 +306,14 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
 
         foreach ((TestNode target, AttributeData source) in GetPrerequisites(context, symbols, current))
         {
+            // Re-checked per target, not just on entry: a single high fan-out node would otherwise push
+            // 'visited' past the budget wholesale, since the entry check only stops the *next* call.
+            // Bailing before 'path.Add' keeps the path balanced for the caller's own RemoveAt.
+            if (visited.Count >= MaxVisitedNodes)
+            {
+                return false;
+            }
+
             path.Add(target);
             if (target.Equals(start))
             {
