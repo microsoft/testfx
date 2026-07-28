@@ -131,15 +131,36 @@ The root `<testsuites>` `name` attribute is the module file name without extensi
 | ---------------------------------------------- | ---------------------------------------------- |
 | `PassedTestNodeStateProperty`                  | *(no child element)*                            |
 | `SkippedTestNodeStateProperty`                 | `<skipped message="..."/>` + reason as text     |
-| `FailedTestNodeStateProperty`                  | `<failure message="..." type="..."/>` + stack   |
-| `TimeoutTestNodeStateProperty`                 | `<error message="..." type="..."/>` + stack     |
-| `ErrorTestNodeStateProperty`                   | `<error message="..." type="..."/>` + stack     |
-| `CancelledTestNodeStateProperty` *(obsolete)*  | `<error message="..." type="..."/>` + stack     |
+| `FailedTestNodeStateProperty`                  | `<failure message="..." type="..."/>` + body    |
+| `TimeoutTestNodeStateProperty`                 | `<error message="..." type="..."/>` + body      |
+| `ErrorTestNodeStateProperty`                   | `<error message="..." type="..."/>` + body      |
+| `CancelledTestNodeStateProperty` *(obsolete)*  | `<error message="..." type="..."/>` + body      |
 | Other `WellKnownTestNodeTestRunOutcomeFailedProperties` | `<failure message="..." type="..."/>`  |
 | `DiscoveredTestNodeStateProperty`              | *(filtered out — not emitted)*                  |
 | `InProgressTestNodeStateProperty`              | *(filtered out — not emitted)*                  |
 
 `Cancelled` becomes `<error>` rather than `<failure>` because cancellation indicates an interruption, not an assertion failure — `<error>` is the schema-correct bucket for "the test could not be evaluated".
+
+### Failure and error body format
+
+The body of `<failure>`/`<error>` mirrors the shape Java's `Throwable.printStackTrace()` produces, which is what genuine Surefire reports contain:
+
+```text
+System.InvalidOperationException: The expected condition was not met.
+   at MyProject.MyTests.MyTest()
+```
+
+That is, the exception type and message form a header line, followed by the stack trace. Neither the Ant/windyroad `JUnit.xsd` nor Surefire's `surefire-test-report.xsd` constrains this body — both declare it as free-form text — so the header line is schema-valid in every flavor.
+
+Writing the stack trace alone would **not** be equivalent to Java's output: .NET's `Exception.StackTrace` omits the leading `type: message` header that `Throwable.printStackTrace()` (and `Exception.ToString()`) include. Consumers that render the body rather than the `message` attribute — GitLab CI and CircleCI most notably — would then show a stack trace with no indication of *why* the test failed. This is especially damaging for fluent assertion libraries, whose stack traces are largely framework frames while the assertion message carries the actual diagnosis.
+
+The `message` and `type` attributes are still written, so consumers that read them directly are unaffected. The resulting duplication between the `message` attribute and the body is exactly what every Maven/Surefire report already exhibits, so consumers that render both have long handled it.
+
+Each part degrades gracefully: a missing exception type drops the header prefix, a missing message drops the `: ` separator, and a missing stack trace yields a header-only body.
+
+### The `type` attribute
+
+`type` is **always** emitted on `<failure>`/`<error>`. The Ant/windyroad `JUnit.xsd` marks it `use="required"` (Surefire relaxes it to optional), but MTP only supplies an exception type when the state property carried an actual `Exception` — frameworks that report a failure through `Explanation` alone leave it null. In that case the element name (`failure` or `error`) is used as the value, keeping the document valid under the stricter schema without inventing a bogus exception type name.
 
 ## Per-testcase metadata
 
@@ -278,3 +299,4 @@ A fresh GUID is generated for the `<TestingPlatformBuilderHook Include>` attribu
   - Parent-chain resolution with missing intermediate parents.
   - Counters at the suite and root level.
   - Outcome mapping (skipped/failed/error/timeout/cancelled).
+  - Failure/error body composition across every combination of present/absent exception type, message and stack trace, plus the `type` attribute fallback to the element name.
