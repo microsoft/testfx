@@ -26,6 +26,9 @@ namespace MSTest.Analyzers;
 [Shared]
 public sealed class AddTestClassFixer : CodeFixProvider
 {
+    private const string TestClassAttributeName = "TestClass";
+    private const string FullyQualifiedTestClassAttributeName = "Microsoft.VisualStudio.TestTools.UnitTesting.TestClass";
+
     /// <inheritdoc />
     public sealed override ImmutableArray<string> FixableDiagnosticIds { get; }
         = ImmutableArray.Create(
@@ -97,14 +100,12 @@ public sealed class AddTestClassFixer : CodeFixProvider
         cancellationToken.ThrowIfCancellationRequested();
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
 
-        AttributeSyntax testClassAttribute = SyntaxFactory.Attribute(SyntaxFactory.ParseName("TestClass"));
-        AttributeListSyntax attributeList = SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(testClassAttribute));
+        AttributeListSyntax attributeList = await CreateTestClassAttributeListAsync(document, typeDeclaration.Identifier.SpanStart, cancellationToken).ConfigureAwait(false);
 
         TypeDeclarationSyntax newTypeDeclaration = typeDeclaration.AddAttributeLists(attributeList);
         editor.ReplaceNode(typeDeclaration, newTypeDeclaration);
 
-        SyntaxNode newRoot = editor.GetChangedRoot();
-        return document.WithSyntaxRoot(newRoot);
+        return editor.GetChangedDocument();
     }
 
     private static async Task<Document> ChangeStructToClassAndAddTestClassAttributeAsync(Document document, TypeDeclarationSyntax structDeclaration, CancellationToken cancellationToken)
@@ -112,9 +113,7 @@ public sealed class AddTestClassFixer : CodeFixProvider
         cancellationToken.ThrowIfCancellationRequested();
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
 
-        // Create the [TestClass] attribute
-        AttributeSyntax testClassAttribute = SyntaxFactory.Attribute(SyntaxFactory.ParseName("TestClass"));
-        AttributeListSyntax attributeList = SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(testClassAttribute));
+        AttributeListSyntax attributeList = await CreateTestClassAttributeListAsync(document, structDeclaration.Identifier.SpanStart, cancellationToken).ConfigureAwait(false);
 
         // Convert struct to class
         ClassDeclarationSyntax classDeclaration = SyntaxFactory.ClassDeclaration(structDeclaration.Identifier)
@@ -129,8 +128,7 @@ public sealed class AddTestClassFixer : CodeFixProvider
 
         editor.ReplaceNode(structDeclaration, classDeclaration);
 
-        SyntaxNode newRoot = editor.GetChangedRoot();
-        return document.WithSyntaxRoot(newRoot);
+        return editor.GetChangedDocument();
     }
 
     private static async Task<Document> ChangeRecordStructToRecordClassAndAddTestClassAttributeAsync(Document document, RecordDeclarationSyntax recordStructDeclaration, CancellationToken cancellationToken)
@@ -138,9 +136,7 @@ public sealed class AddTestClassFixer : CodeFixProvider
         cancellationToken.ThrowIfCancellationRequested();
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
 
-        // Create the [TestClass] attribute
-        AttributeSyntax testClassAttribute = SyntaxFactory.Attribute(SyntaxFactory.ParseName("TestClass"));
-        AttributeListSyntax attributeList = SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(testClassAttribute));
+        AttributeListSyntax attributeList = await CreateTestClassAttributeListAsync(document, recordStructDeclaration.Identifier.SpanStart, cancellationToken).ConfigureAwait(false);
 
         // Filter out readonly modifier since it's not valid for record classes
         SyntaxTokenList filteredModifiers = SyntaxFactory.TokenList(
@@ -166,7 +162,26 @@ public sealed class AddTestClassFixer : CodeFixProvider
 
         editor.ReplaceNode(recordStructDeclaration, recordClassDeclaration);
 
-        SyntaxNode newRoot = editor.GetChangedRoot();
-        return document.WithSyntaxRoot(newRoot);
+        return editor.GetChangedDocument();
+    }
+
+    private static async Task<AttributeListSyntax> CreateTestClassAttributeListAsync(Document document, int position, CancellationToken cancellationToken)
+    {
+        SemanticModel? semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
+        string attributeName = semanticModel is not null && IsTestClassAttributeInScope(semanticModel, position)
+            ? TestClassAttributeName
+            : FullyQualifiedTestClassAttributeName;
+
+        NameSyntax testClassAttributeName = SyntaxFactory.ParseName(attributeName);
+        AttributeSyntax testClassAttribute = SyntaxFactory.Attribute(testClassAttributeName);
+        return SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(testClassAttribute));
+    }
+
+    private static bool IsTestClassAttributeInScope(SemanticModel semanticModel, int position)
+    {
+        INamedTypeSymbol? testClassAttributeSymbol = semanticModel.Compilation.GetTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute);
+        return testClassAttributeSymbol is not null
+            && semanticModel.LookupNamespacesAndTypes(position, name: $"{TestClassAttributeName}Attribute")
+                .Any(symbol => SymbolEqualityComparer.Default.Equals(symbol, testClassAttributeSymbol));
     }
 }

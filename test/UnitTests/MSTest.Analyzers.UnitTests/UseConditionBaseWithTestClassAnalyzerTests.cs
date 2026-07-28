@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
@@ -88,6 +88,32 @@ public sealed class UseConditionBaseWithTestClassAnalyzerTests
 
             [OSCondition(OperatingSystems.Windows)]
             [TestClass]
+            public class MyClass
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic()
+                .WithLocation(0)
+                .WithArguments("OSConditionAttribute"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenNonTestClassHasFullyQualifiedOSConditionAttributeWithoutUsing_FixAddsFullyQualifiedTestClass()
+    {
+        string code = """
+            [Microsoft.VisualStudio.TestTools.UnitTesting.OSCondition(Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems.Windows)]
+            public class {|#0:MyClass|}
+            {
+            }
+            """;
+
+        string fixedCode = """
+            [Microsoft.VisualStudio.TestTools.UnitTesting.OSCondition(Microsoft.VisualStudio.TestTools.UnitTesting.OperatingSystems.Windows)]
+            [Microsoft.VisualStudio.TestTools.UnitTesting.TestClass]
             public class MyClass
             {
             }
@@ -214,6 +240,65 @@ public sealed class UseConditionBaseWithTestClassAnalyzerTests
             """;
 
         await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenEnumHasCustomConditionAttribute_DiagnosticHasNoCodeFix()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [AttributeUsage(AttributeTargets.Enum)]
+            public sealed class EnumConditionAttribute : ConditionBaseAttribute
+            {
+                public EnumConditionAttribute() : base(ConditionMode.Include) { }
+                public override string GroupName => nameof(EnumConditionAttribute);
+                public override bool IsConditionMet => true;
+            }
+
+            [EnumCondition]
+            public enum {|#0:MyEnum|}
+            {
+                Value,
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic()
+                .WithLocation(0)
+                .WithArguments("EnumConditionAttribute"),
+            code);
+    }
+
+    [TestMethod]
+    public async Task WhenInterfaceHasCustomConditionAttribute_DiagnosticHasNoCodeFix()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [AttributeUsage(AttributeTargets.Interface)]
+            public sealed class InterfaceConditionAttribute : ConditionBaseAttribute
+            {
+                public InterfaceConditionAttribute() : base(ConditionMode.Include) { }
+                public override string GroupName => nameof(InterfaceConditionAttribute);
+                public override bool IsConditionMet => true;
+            }
+
+            [InterfaceCondition]
+            public interface {|#0:IMyInterface|}
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic()
+                .WithLocation(0)
+                .WithArguments("InterfaceConditionAttribute"),
+            code);
     }
 
     [TestMethod]

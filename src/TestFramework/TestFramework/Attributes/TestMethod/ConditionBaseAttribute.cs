@@ -14,8 +14,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <list type="bullet">
 /// <item><description>
 /// <see cref="MemberConditionAttribute"/> and <see cref="ExecutableConditionAttribute"/> set
-/// <see cref="AttributeUsageAttribute.AllowMultiple"/> to <see langword="true"/>. Each usage that names a different
-/// member or command produces a distinct <see cref="GroupName"/>, so stacked usages are combined with a logical AND.
+/// <see cref="AttributeUsageAttribute.AllowMultiple"/> to <see langword="true"/>. Stacked usages with distinct
+/// <see cref="GroupName"/> values are combined with a logical AND, while repeated usages that produce the same
+/// <see cref="GroupName"/> are combined with a logical OR.
 /// </description></item>
 /// <item><description>
 /// <see cref="OSConditionAttribute"/>, <see cref="CIConditionAttribute"/> and <c>ArchitectureConditionAttribute</c>
@@ -28,8 +29,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </list>
 /// </para>
 /// <para>
-/// Attributes exposing a different <see cref="GroupName"/> are combined with a logical AND, so different condition
-/// attribute types can always be applied together to require several conditions at once.
+/// Condition attributes are grouped by their <see cref="GroupName"/> value, regardless of attribute type. Values
+/// within the same group are combined with a logical OR, and different groups are combined with a logical AND. The
+/// built-in condition attribute types use distinct group names for different condition kinds, so combining those
+/// different built-in kinds requires all of them to be satisfied.
 /// </para>
 /// </remarks>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, Inherited = false)]
