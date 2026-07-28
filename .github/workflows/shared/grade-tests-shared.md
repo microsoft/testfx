@@ -21,7 +21,8 @@ description: >-
   Grades the new and modified test methods in a pull request and posts a
   single PR comment with a compact per-test scorecard (letter grade A–F,
   score band, pseudo-mutation resilience, one-line notes, and concrete
-  improvements for tests graded below A).
+  improvements for tests graded below A), plus inline review comments
+  carrying an applicable `suggestion` block for each below-A test.
 
 permissions:
   contents: read
@@ -58,6 +59,17 @@ safe-outputs:
     max: 5
     target: "*"
     hide-older-comments: true
+  # Inline improvement suggestions, one per below-A test, anchored on a line
+  # that the PR actually changed. The cap is deliberately well above the
+  # ~10 comments the prompt asks for: Copilot CLI retries can amplify a
+  # single logical call, and exceeding the cap makes the handler drop the
+  # whole batch. `side: RIGHT` because every anchor comes from the HEAD-side
+  # line ranges computed by the `extract` step below. The `messages.footer`
+  # above deliberately applies here too — the repository requires every
+  # automated comment to disclose that it was machine-generated.
+  create-pull-request-review-comment:
+    max: 25
+    side: RIGHT
 
 # Deterministic extraction: figure out which test methods were added or
 # modified in this PR. We do this in bash (not in the agent) so the agent
@@ -182,13 +194,20 @@ steps:
 
 # Grade Tests on PR
 
-You are a polyglot test-quality grader. Your single output is a PR comment
-that gives a per-test letter grade for the new and modified tests in pull
-request #${{ github.event.pull_request.number || github.event.issue.number }}
-of ${{ github.repository }}.
+You are a polyglot test-quality grader. You produce two kinds of output for
+the new and modified tests in pull request
+#${{ github.event.pull_request.number || github.event.issue.number }}
+of ${{ github.repository }}:
+
+1. **One** PR comment holding a per-test letter-grade scorecard.
+2. **Inline review comments** — one per test graded below A, anchored on a
+   line the PR changed and carrying an applicable GitHub `suggestion` block
+   whenever the improvement can be expressed as a concrete code edit.
 
 You are **read-only and advisory**. Do not edit any files. Do not push.
-Do not request changes — your role is to inform, not to block.
+Do not request changes — your role is to inform, not to block. Inline
+`suggestion` blocks are proposals the author may apply with one click; they
+are not commits you make yourself.
 
 ## Inputs you have
 
@@ -215,7 +234,7 @@ test attributes (e.g. `[STATestMethod]`, `[UITestMethod]`,
 `[IterativeTestMethod]`, and locally-defined `MyTestMethodAttribute`
 subclasses) that a regex extractor would silently miss.
 
-If the TSV is empty (file count is 0), use the Step 4 fallback comment
+If the TSV is empty (file count is 0), use the Step 5 fallback comment
 and stop — do not invent grades.
 
 ## Instructions
@@ -248,7 +267,7 @@ For each row in the TSV:
    keep the source body (including attributes) for grading.
 
 If after filtering no test methods remain, emit a short comment saying
-so (see Step 4 fallback) and stop — do not invent grades.
+so (see Step 5 fallback) and stop — do not invent grades.
 
 ### Step 2 — Grade each test method
 
@@ -333,7 +352,85 @@ separate:
 Do not merge the improvement into Notes, give vague advice such as `Add more
 assertions`, or invent weaknesses for an A-grade test.
 
-### Step 4 — Post the comment
+For every test graded **below A**, also capture the two extra fields the
+inline suggestion in Step 4 needs:
+
+- **Anchor** — `<filepath>` plus the HEAD-side line number the suggestion
+  replaces, and (for a multi-line replacement) the first line of the span.
+  The anchor **must** fall inside one of the changed line ranges the TSV
+  lists for that file; GitHub rejects a review comment on a line that is
+  not part of the diff, and a rejected comment makes the safe-output
+  handler drop the whole batch. Prefer the weakest assertion line, the
+  `[DataRow]`/attribute line, or the test's signature line — whichever the
+  fix actually touches.
+- **Replacement** — the exact source lines that replace the anchored span,
+  copied from the file at HEAD and edited, with the original indentation
+  preserved. It must compile as written: real assertion APIs, real symbol
+  names, no `...` elisions and no pseudo-code. If the improvement cannot be
+  expressed as a mechanical replacement of contiguous changed lines (for
+  example "split this into two tests" or "resolve the production entry
+  point"), record `Replacement: none` — Step 4 then posts a plain inline
+  comment for it instead of a broken suggestion.
+
+### Step 4 — Post inline improvement suggestions
+
+For every test graded **below A** whose Step 3 record has a concrete
+**Replacement**, post one inline review comment with the
+`create_pull_request_review_comment` safe-output tool. Use `path` +
+`line` (and `start_line` when the replacement spans several lines) from
+the recorded **Anchor**; `side` is always `RIGHT`.
+
+Body format — the marker comment must be the first line so re-runs can
+recognize the workflow's own comments (the outer fence below is four
+backticks so the inner `suggestion` fence survives verbatim):
+
+````markdown
+<!-- grade-tests-suggestion -->
+🧪 **Grade C (70–79)** — <the Notes sentence from Step 3>
+
+<the How to improve sentence from Step 3>
+
+```suggestion
+<exact replacement line(s), original indentation preserved>
+```
+````
+
+Rules:
+
+- **Only below-A tests.** Never post an inline comment praising an A-grade
+  test, restating a grade with no actionable change, or repeating the
+  scorecard.
+- **One comment per test**, at most. Do not fan out several comments over
+  the same test method.
+- **Cap at 10 inline comments per run.** When more than 10 tests grade below
+  A, post suggestions for the worst ones first (F → D → C → B; ties broken
+  by fully-qualified name) and leave the rest to the Step 5 table. The
+  safe-output cap is higher only to absorb Copilot CLI retry amplification —
+  do not treat it as the target.
+- **The suggestion must apply cleanly.** Its content replaces exactly the
+  anchored span, so it has to include any anchored line you intend to keep.
+  Do not prefix it with the line number, the file path, a diff marker, or
+  `+`/`-`. An empty suggestion body deletes the anchored line.
+- **The suggestion must be valid, compiling C#** using the assertion style
+  that project already uses (MSTest `Assert`/`StringAssert`/`CollectionAssert`,
+  AwesomeAssertions `Should()`, or `TestFramework.ForTestingMSTest`'s
+  `Verify(...)` — check the file, and see the deviations listed in Step 2).
+  Never propose switching a project to the other style.
+- **When `Replacement: none`**, post the same comment body without the
+  `suggestion` block: marker, grade line, and the improvement sentence,
+  optionally followed by a fenced `csharp` sketch clearly labelled as a
+  sketch. Never emit a `suggestion` block you are not confident applies.
+- **Do not duplicate on re-run.** This workflow re-runs on every push. Before
+  posting, list the PR's existing review comments with the github
+  `pull_requests` toolset and skip any suggestion whose marker, path, and
+  anchored line already match a live comment that is still applicable to the
+  current HEAD. If the anchored code has changed since that comment was
+  posted, the old comment is outdated — post the refreshed one.
+- **Anchor validity is on you.** If you cannot map an improvement to a line
+  inside the TSV's changed ranges for that file, skip the inline comment and
+  rely on the Step 5 table row. Do not guess a line number.
+
+### Step 5 — Post the scorecard comment
 
 Use **exactly one** `add-comment` call. The comment body must follow this
 structure. The table is emitted as **raw HTML** (not a markdown
@@ -362,7 +459,9 @@ and top recommendation. Include the most important survived/uncovered mutation
 only when one exists. Otherwise state that all meaningful mutations were
 killed, no meaningful mutation points were found (0/0), or production code
 could not be resolved (N/A), whichever applies. For 0/0 or N/A, lead with the
-dominant non-mutation signal instead. -->
+dominant non-mutation signal instead. When Step 4 posted inline suggestions,
+close the summary with one sentence stating how many were posted and that they
+can be applied directly from the Files changed tab. -->
 
 <table>
   <thead>
@@ -387,7 +486,8 @@ dominant non-mutation signal instead. -->
 </table>
 
 <sub>This advisory comment was generated automatically. Grades are heuristic
-and informational — they do not block merging. Re-run with
+and informational — they do not block merging. Suggestions on the Files
+changed tab can be applied with one click. Re-run with
 `/grade-tests`.</sub>
 ```
 
@@ -440,17 +540,22 @@ Rules for the table:
   from the total.
 - **Column 4 (Notes)**: the one-line diagnosis from Step 3.
 - **Column 5 (How to improve)**: the concrete improvement from Step 3 for
-  every grade below A, or `—` for A.
+  every grade below A, or `—` for A. Keep this column even for tests that
+  already got an inline suggestion in Step 4 — the table is the at-a-glance
+  view and must stand on its own.
 
 **Important**: Emit **only one** `add-comment` call. The workflow is
 configured with `hide-older-comments: true`, so re-runs will replace any
 earlier grade comment automatically — do not append additional comments.
+The inline `create_pull_request_review_comment` calls from Step 4 are
+separate and are **not** covered by `hide-older-comments`, which is why
+Step 4 requires you to check for an existing equivalent comment first.
 
 #### Fallback: no test methods found
 
 If the TSV is empty, or if after Step 1 the kept-method list is empty
 (every changed method was a helper, fixture, data row, or non-test),
-post this short comment instead of the table:
+post this short comment instead of the table and skip Step 4 entirely:
 
 ```markdown
 ### 🧪 Test quality grade — PR #${{ github.event.pull_request.number || github.event.issue.number }}
@@ -461,8 +566,11 @@ of this PR. Nothing to grade.
 <sub>Re-run with `/grade-tests`.</sub>
 ```
 
-### Step 5 — Stop
+### Step 6 — Stop
 
-After the single `add-comment` call, call `noop` with a brief status
-message such as `"Posted test-quality grade for PR #N (M test methods graded across K files)."`
-and stop. Do not call any other tools.
+After the Step 4 inline comments and the single `add-comment` call, call
+`noop` with a brief status message such as
+`"Posted test-quality grade for PR #N (M test methods graded across K files, S inline suggestions)."`
+and stop. Do not call any other tools — in particular, do **not** call
+`submit_pull_request_review`: the inline comments stand alone and this
+workflow never issues a review verdict.
