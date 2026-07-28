@@ -1071,6 +1071,35 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.Contains(AzureDevOpsResources.AzureDevOpsLivePublishingRunLeftInProgress, output);
     }
 
+    // A throwing log provider used to abort the attachment drain after the first failure, leaving the
+    // rest of the queue unattempted and absent from the end-of-session count.
+    [TestMethod]
+    public async Task OnTestSessionFinishingAsync_AttachmentFailsAndLogProviderThrows_CountsEveryAttachment()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        CollectingOutputDevice outputDevice = new();
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(2, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out _, out CollectingLogger logger, outputDevice: outputDevice);
+        client.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(96);
+        client.UploadTestRunAttachmentAsyncFunc = (_, _, _, _) => throw new HttpRequestException("attachment rejected");
+
+        await StartPublisherAsync(publisher);
+        SessionUid sessionUid = new(Guid.NewGuid().ToString());
+        foreach (string name in new[] { "first.cobertura.xml", "second.cobertura.xml" })
+        {
+            string path = Path.Combine(directory.Path, name);
+            File.WriteAllText(path, "<coverage/>");
+            await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), new SessionFileArtifact(sessionUid, new FileInfo(path), "cobertura"), CancellationToken.None);
+        }
+
+        logger.ThrowOnLog = true;
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        // Both attachments must be attempted and counted, not just the one before the logger blew up.
+        Assert.HasCount(2, client.UploadTestRunAttachmentCalls);
+        string expected = string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingAttachmentsDropped, 2);
+        Assert.Contains(expected, string.Join(Environment.NewLine, outputDevice.Lines));
+    }
+
     private static async Task StartPublisherAsync(AzureDevOpsTestResultsPublisher publisher)
     {
         Assert.IsTrue(await publisher.IsEnabledAsync());
