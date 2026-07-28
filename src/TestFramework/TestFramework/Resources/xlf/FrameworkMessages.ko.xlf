@@ -537,11 +537,6 @@ Actual: {2}</source>
         <target state="translated">현재 테스트와 관련된 'TestContext.{0}' 속성은 어셈블리나 클래스 픽스처 실행 중에는 사용할 수 없습니다.</target>
         <note>{0} is the {Locked="TestContext"} property name. Do not localize the API prefix {Locked="TestContext."}.</note>
       </trans-unit>
-      <trans-unit id="InvalidDependsOnTestMethodName">
-        <source>The test method name of a [DependsOn] must be a non-empty, non-whitespace string.</source>
-        <target state="new">The test method name of a [DependsOn] must be a non-empty, non-whitespace string.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="InvalidGitHubUrl">
         <source>Invalid GitHub ticket URL</source>
         <target state="translated">잘못된 GitHub 티켓 URL</target>
