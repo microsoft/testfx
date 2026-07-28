@@ -783,6 +783,68 @@ public sealed class DependsOnShouldBeValidAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenReferencedTypeIsConstructedGeneric_NotATestClass()
+    {
+        // Discovery enumerates the assembly's type definitions and rejects the non-abstract generic one, so
+        // no test exists under either the open or the constructed name.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class GenericTests<T>
+            {
+                [TestMethod]
+                public void CreateCart() { }
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [{|#0:DependsOn(typeof(GenericTests<int>))|}]
+                public void AddItem() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(DependsOnShouldBeValidAnalyzer.NotATestClassRule)
+                .WithLocation(0)
+                .WithArguments("GenericTests"));
+    }
+
+    [TestMethod]
+    public async Task WhenReferencedTypeIsStaticTestClass_NotATestClass()
+    {
+        // Roslyn reports a static class as abstract, but nothing derives from it, so the abstract-base
+        // message would be misleading here.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public static class StaticTests
+            {
+                [TestMethod]
+                public static void CreateCart() { }
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [{|#0:DependsOn(typeof(StaticTests))|}]
+                public void AddItem() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(DependsOnShouldBeValidAnalyzer.NotATestClassRule)
+                .WithLocation(0)
+                .WithArguments("StaticTests"));
+    }
+
+    [TestMethod]
     public async Task WhenTestReferencesItself_SelfReference()
     {
         string code = """

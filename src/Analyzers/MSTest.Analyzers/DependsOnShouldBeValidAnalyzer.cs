@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
@@ -250,8 +250,10 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
         {
             // An abstract '[TestClass]' is skipped by discovery - its tests are enumerated under each
             // concrete derived class - so the reference matches nothing even though the attribute is there.
-            // That needs its own message: "add [TestClass]" is not the fix.
-            DiagnosticDescriptor rule = targetClass.IsAbstract && targetClass.IsTestClass(symbols.TestClassAttribute)
+            // That needs its own message: "add [TestClass]" is not the fix. A static class is rejected by
+            // discovery too (reflection sees it as abstract), but nothing derives from it, so it gets the
+            // plain message instead.
+            DiagnosticDescriptor rule = targetClass is { IsAbstract: true, IsStatic: false } && targetClass.IsTestClass(symbols.TestClassAttribute)
                 ? AbstractTargetRule
                 : NotATestClassRule;
             context.ReportDiagnostic(attributeSyntax.CreateDiagnostic(rule, targetClass.Name));
@@ -525,11 +527,37 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
     /// is skipped so its tests are enumerated under each concrete derived class, and the fact that a
     /// non-abstract generic test class is rejected outright.
     /// </summary>
+    /// <remarks>
+    /// A static class is checked separately from an abstract one. Reflection sees a static class as
+    /// <c>abstract sealed</c>, so <c>IsValidTestClass</c> rejects it through its <c>IsAbstract</c> test, but
+    /// Roslyn models the two independently and reports <c>IsAbstract == false</c> for it.
+    /// </remarks>
     private static bool IsRunnableTestClass(INamedTypeSymbol type, AnalysisSymbols symbols)
         => !type.IsAbstract
-            && !IsGenericTypeDefinition(type)
+            && !type.IsStatic
+            && !IsGenericOrNestedInGeneric(type)
             && HasValidAccessibility(type, symbols)
             && type.IsTestClass(symbols.TestClassAttribute);
+
+    /// <summary>
+    /// Whether any generic type is involved. Discovery enumerates the assembly's type <em>definitions</em>,
+    /// and <c>TypeValidator.IsValidTestClass</c> rejects a non-abstract generic definition - so no test ever
+    /// exists under a generic class's name, whether it is written open (<c>typeof(Tests&lt;&gt;)</c>) or
+    /// constructed (<c>typeof(Tests&lt;int&gt;)</c>). A type nested in a generic container is itself a generic
+    /// definition at run time, so it is covered too.
+    /// </summary>
+    private static bool IsGenericOrNestedInGeneric(INamedTypeSymbol type)
+    {
+        for (INamedTypeSymbol? current = type; current is not null; current = current.ContainingType)
+        {
+            if (current.IsGenericType)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     /// <summary>
     /// Mirrors <c>TypeValidator.TypeHasValidAccessibility</c>: the type and every type it is nested in must be
@@ -553,9 +581,6 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
 
         return true;
     }
-
-    private static bool IsGenericTypeDefinition(INamedTypeSymbol type)
-        => type.IsGenericType && SymbolEqualityComparer.Default.Equals(type, type.OriginalDefinition);
 
     /// <summary>
     /// Whether discovery turns <paramref name="method"/> into a test. Mirrors the parts of
