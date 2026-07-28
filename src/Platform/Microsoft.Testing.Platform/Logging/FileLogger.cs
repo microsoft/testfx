@@ -196,7 +196,7 @@ internal sealed class FileLogger : IDisposable
 
         try
         {
-            _writer.WriteLine($"[{_clock.UtcNow.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture)} {category} - {logLevel}] {formatter(state, exception)}");
+            _writer.WriteLine($"[{_clock.UtcNow.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture)} {category} - {GetUpperCaseName(logLevel)}] {formatter(state, exception)}");
         }
         finally
         {
