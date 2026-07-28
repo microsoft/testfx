@@ -191,6 +191,11 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
                     }
                     catch (Exception ex)
                     {
+                        // Individual upload failures are already counted inside UploadResultAttachmentsAsync,
+                        // so reaching here means RenewLeaseAsync threw and no upload was attempted at all.
+                        // Count the whole set, otherwise these attachments are dropped uncounted and the
+                        // end-of-session summary under-reports.
+                        Interlocked.Add(ref _failedAttachmentCount, batch[i].Attachments.Count);
                         _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingResultAttachmentFailed} {ex.Message}");
                     }
                 }
