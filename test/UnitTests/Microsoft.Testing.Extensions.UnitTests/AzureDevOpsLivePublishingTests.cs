@@ -1027,6 +1027,29 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.HasCount(1, outputDevice.Lines);
     }
 
+    // OnTestSessionFinishingAsync is a lifetime handler and the platform does not guard those, so a
+    // throwing log provider anywhere on the teardown path would fail an otherwise successful run.
+    [TestMethod]
+    public async Task OnTestSessionFinishingAsync_PublishFailsAndLogProviderThrows_DoesNotFailTheRun()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        CollectingOutputDevice outputDevice = new();
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(2, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out FakeClock clock, out CollectingLogger logger, outputDevice: outputDevice);
+        client.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(95);
+        client.PublishTestResultsAsyncFunc = (_, _, _, _) => throw new HttpRequestException("publish rejected");
+
+        await StartPublisherAsync(publisher);
+        await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), CreateMessage(CreateNode("test-1", new PassedTestNodeStateProperty(), clock.UtcNow)), CancellationToken.None);
+
+        // The diagnostic logger starts failing right before teardown drives its recovery-path logging.
+        logger.ThrowOnLog = true;
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        // The console summary still reports the lost result even though the log provider is broken.
+        string expected = string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingResultsDropped, 1);
+        Assert.Contains(expected, string.Join(Environment.NewLine, outputDevice.Lines));
+    }
+
     [TestMethod]
     public async Task OnTestSessionFinishingAsync_FinalizeCanceled_DoesNotFailTheRun()
     {

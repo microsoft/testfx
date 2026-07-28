@@ -246,7 +246,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
+            TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
         }
     }
 
@@ -271,7 +271,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 // Unexpected failure in the background flush loop; the loop already logs per-flush warnings.
-                _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
+                TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
             }
             catch
             {
@@ -290,7 +290,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
+            TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
         }
 
         // The session-end flush is the last chance to publish: nothing drains the retry queue after
