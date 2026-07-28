@@ -46,6 +46,9 @@ The authoritative toolchain is the pinned `github/gh-aw-actions/setup-cli` actio
 Because the `compiler_version` header asserts an identity claim rather than the emitted bytes, always re-read the diff of a local compile — a change to a `uses:` pin that you did not intend is the tell. The repository also enforces this automatically:
 
 ```bash
+# Install the audit's only dependency (hash-pinned, same as CI)
+python -m pip install --require-hashes -r .github/scripts/check-action-pins-requirements.txt
+
 # Offline, deterministic audit of every `uses:` pin in .github/workflows/
 python .github/scripts/check_action_pins.py
 
@@ -53,7 +56,7 @@ python .github/scripts/check_action_pins.py
 python .github/scripts/check_action_pins.py --list
 ```
 
-[`check-action-pins.yml`](./check-action-pins.yml) runs the same script on every pull request that touches `.github/workflows/**`, `.github/actions/**`, `.github/aw/actions-lock.json`, or the script itself. It fails when a generated workflow carries an unpinned `uses:`, when a pin disagrees with `.github/aw/actions-lock.json`, or when one action resolves to more than one SHA across the repository.
+[`check-action-pins.yml`](./check-action-pins.yml) runs the same script on every pull request that touches `.github/workflows/**`, `.github/actions/**`, `.github/aw/actions-lock.json`, or the script itself. It fails when a generated workflow carries an unpinned `uses:`, when a pin disagrees with `.github/aw/actions-lock.json`, when one action resolves to more than one SHA across the repository, when a `docker://` container action is not pinned to an image digest, or when a `uses` reachable in the parsed YAML is hidden from the line scan (a block scalar, flow mapping or alias). Comparisons are case-insensitive on owner/repository names, since GitHub resolves them that way and `Actions/Checkout` would otherwise escape the lock-file check.
 
 ## Secrets & authentication
 
