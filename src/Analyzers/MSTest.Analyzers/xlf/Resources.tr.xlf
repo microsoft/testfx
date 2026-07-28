@@ -361,9 +361,14 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
         <note>{0} is the referenced type name. {1} is the referenced method name. {Locked="[DependsOn]"}</note>
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidMessageFormat_NoEffect">
-        <source>'[DependsOn]' has no effect because '{0}' is neither a test method nor a test class</source>
-        <target state="new">'[DependsOn]' has no effect because '{0}' is neither a test method nor a test class</target>
-        <note>{0} is the name of the member the attribute is applied to. {Locked="[DependsOn]"}</note>
+        <source>'[DependsOn]' has no effect because '{0}' is not a test method</source>
+        <target state="new">'[DependsOn]' has no effect because '{0}' is not a test method</target>
+        <note>{0} is the name of the method the attribute is applied to. {Locked="[DependsOn]"}</note>
+      </trans-unit>
+      <trans-unit id="DependsOnShouldBeValidMessageFormat_NoEffectOnClass">
+        <source>'[DependsOn]' has no effect because discovery runs no test under '{0}'</source>
+        <target state="new">'[DependsOn]' has no effect because discovery runs no test under '{0}'</target>
+        <note>{0} is the name of the class the attribute is applied to. {Locked="[DependsOn]"}</note>
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidMessageFormat_NotATestClass">
         <source>'[DependsOn]' references type '{0}', which is not a test class, so the dependency is ignored at run time</source>

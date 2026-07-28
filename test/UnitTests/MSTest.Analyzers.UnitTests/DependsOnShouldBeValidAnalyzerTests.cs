@@ -523,9 +523,47 @@ public sealed class DependsOnShouldBeValidAnalyzerTests
 
         await VerifyCS.VerifyAnalyzerAsync(
             code,
-            VerifyCS.Diagnostic(DependsOnShouldBeValidAnalyzer.NoEffectRule)
+            VerifyCS.Diagnostic(DependsOnShouldBeValidAnalyzer.NoEffectOnClassRule)
                 .WithLocation(0)
                 .WithArguments("BaseTests"));
+    }
+
+    [TestMethod]
+    public async Task WhenWalkEntersAClassWithDuplicateSignatures_NoCycle()
+    {
+        // 'DuplicatedTests' has a duplicated 'Run(int)', so discovery's fallback keeps only the 'Run' closest
+        // to the class and the 'Run(string)' dependency is gone. The walk starts in another class and enters
+        // this node, so the bail-out has to apply per node rather than only where a walk begins.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseTests
+            {
+                [TestMethod]
+                public void Run(int value) { }
+
+                [TestMethod]
+                [DependsOn(typeof(OtherTests), nameof(OtherTests.Start))]
+                public void Run(string value) { }
+            }
+
+            [TestClass]
+            public class DuplicatedTests : BaseTests
+            {
+                [TestMethod]
+                public new void Run(int value) { }
+            }
+
+            [TestClass]
+            public class OtherTests
+            {
+                [TestMethod]
+                [DependsOn(typeof(DuplicatedTests), "Run")]
+                public void Start() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
     [TestMethod]
@@ -1301,7 +1339,7 @@ public sealed class DependsOnShouldBeValidAnalyzerTests
 
         await VerifyCS.VerifyAnalyzerAsync(
             code,
-            VerifyCS.Diagnostic(DependsOnShouldBeValidAnalyzer.NoEffectRule)
+            VerifyCS.Diagnostic(DependsOnShouldBeValidAnalyzer.NoEffectOnClassRule)
                 .WithLocation(0)
                 .WithArguments("BaseTests"));
     }

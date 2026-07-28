@@ -80,6 +80,10 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
     public static readonly DiagnosticDescriptor NoEffectRule = MethodNotFoundRule
         .WithMessage(new(nameof(Resources.DependsOnShouldBeValidMessageFormat_NoEffect), Resources.ResourceManager, typeof(Resources)));
 
+    /// <inheritdoc cref="Resources.DependsOnShouldBeValidMessageFormat_NoEffectOnClass"/>
+    public static readonly DiagnosticDescriptor NoEffectOnClassRule = MethodNotFoundRule
+        .WithMessage(new(nameof(Resources.DependsOnShouldBeValidMessageFormat_NoEffectOnClass), Resources.ResourceManager, typeof(Resources)));
+
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = ImmutableArray.Create(
         MethodNotFoundRule,
@@ -89,7 +93,8 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
         AbstractTargetRule,
         SelfReferenceRule,
         CycleRule,
-        NoEffectRule);
+        NoEffectRule,
+        NoEffectOnClassRule);
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
@@ -154,7 +159,7 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
         // tests are enumerated under each concrete derived class - never produces an edge.
         if (!IsRunnableTestClass(typeSymbol, symbols))
         {
-            ReportNoEffect(context, attributes, typeSymbol.Name);
+            ReportNoEffect(context, attributes, typeSymbol.Name, NoEffectOnClassRule);
             return;
         }
 
@@ -215,7 +220,7 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
         List<AttributeData> attributes = GetDependsOnAttributes(methodSymbol, symbols);
         if (!methodSymbol.IsTestMethod(symbols.TestMethodAttribute))
         {
-            ReportNoEffect(context, attributes, methodSymbol.Name);
+            ReportNoEffect(context, attributes, methodSymbol.Name, NoEffectRule);
             return;
         }
 
@@ -459,6 +464,14 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
     /// </summary>
     private static IEnumerable<(TestNode Target, AttributeData Source)> GetPrerequisites(SymbolAnalysisContext context, AnalysisSymbols symbols, TestNode node)
     {
+        // The duplicate-signature bail-out has to be per node, not just per walk start: a walk beginning in
+        // another class can still traverse *into* a class whose tests discovery collapsed by name, and
+        // expanding this node's declarations would then invent edges discovery removed.
+        if (HasDuplicateSignature(node.TestClass, symbols))
+        {
+            yield break;
+        }
+
         foreach (AttributeData attribute in GetDependsOnAttributes(node.TestClass, symbols))
         {
             foreach ((TestNode target, AttributeData source) in ExpandTarget(context, symbols, node, attribute, isClassLevel: true))
@@ -907,13 +920,13 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
         return attributes;
     }
 
-    private static void ReportNoEffect(SymbolAnalysisContext context, List<AttributeData> attributes, string memberName)
+    private static void ReportNoEffect(SymbolAnalysisContext context, List<AttributeData> attributes, string memberName, DiagnosticDescriptor rule)
     {
         foreach (AttributeData attribute in attributes)
         {
             if (attribute.ApplicationSyntaxReference?.GetSyntax(context.CancellationToken) is { } attributeSyntax)
             {
-                context.ReportDiagnostic(attributeSyntax.CreateDiagnostic(NoEffectRule, memberName));
+                context.ReportDiagnostic(attributeSyntax.CreateDiagnostic(rule, memberName));
             }
         }
     }

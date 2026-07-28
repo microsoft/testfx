@@ -990,8 +990,12 @@ The type declaring these methods should also respect the following rules:
     <comment>{0} is the cycle path, for example 'MyTests.A &gt; MyTests.B &gt; MyTests.A'. {Locked="[DependsOn]"}</comment>
   </data>
   <data name="DependsOnShouldBeValidMessageFormat_NoEffect" xml:space="preserve">
-    <value>'[DependsOn]' has no effect because '{0}' is neither a test method nor a test class</value>
-    <comment>{0} is the name of the member the attribute is applied to. {Locked="[DependsOn]"}</comment>
+    <value>'[DependsOn]' has no effect because '{0}' is not a test method</value>
+    <comment>{0} is the name of the method the attribute is applied to. {Locked="[DependsOn]"}</comment>
+  </data>
+  <data name="DependsOnShouldBeValidMessageFormat_NoEffectOnClass" xml:space="preserve">
+    <value>'[DependsOn]' has no effect because discovery runs no test under '{0}'</value>
+    <comment>{0} is the name of the class the attribute is applied to. {Locked="[DependsOn]"}</comment>
   </data>
   <data name="MemberConditionShouldBeValidDescription" xml:space="preserve">
     <value>The members referenced by a '[MemberCondition]' attribute must exist on the referenced type, be 'public static', return 'bool', and (for methods) be parameterless. The attribute throws at runtime when these rules are violated; this analyzer surfaces the same problems at build time so typos and refactors do not silently break test gating.</value>
