@@ -454,6 +454,14 @@ The orchestrator emits one telemetry event per `dotnet test` run summarizing: co
 - **`.coverage` is a binary format.** Merging across architectures (x64 host merging arm64 coverage) is not obviously safe. For binary kinds, election **constrains candidates to architecture-compatible apps** (the `arch_ok` predicate in §7.5). Whether coverage should also merge per-TFM or cross-TFM is a policy the coverage processor decides from the input metadata (`TargetFramework`, `Architecture`), which is why those fields are on `InputArtifact`.
 - If no arch-compatible app can merge a binary group, that group is left un-merged (originals listed) rather than merged unsafely.
 
+### 7.13 Merged artifacts are written to a `merged/` subdirectory
+
+Orchestrators hand the processor an output directory, and `dotnet test` sets that to the run's `--results-directory` — the same directory that already holds the per-module reports the merge consumed. A processor that wrote its output directly there would make the merged artifact a **sibling of its own inputs**, which breaks the common convention of collecting a results directory with a non-recursive glob (Arcade's "Publish TRX Test Results" step configures exactly that, with `testResultsFiles: '*.trx'`). Such a consumer would ingest the merged report *and* the reports it summarizes, double-counting every test.
+
+Processors therefore write into a `merged/` subdirectory of the supplied output directory (`<outputDirectory>/merged/merged-<runId>.trx`). This keeps the merged artifact out of such globs by construction rather than requiring every consumer to special-case the merged file name. Because that subdirectory has a fixed, predictable name, a processor must materialize it and reject a pre-existing symlink/junction before writing: the merge confines its writes to the report's own directory, so a link there would become the confinement base and redirect output outside the supplied directory.
+
+This also keeps the merged report co-located with any attachment tree written beside it. `TrxReportEngine.MergeToFileAsync` derives the attachment deployment root from the output path and records it in the TRX as a **relative** `runDeploymentRoot`, so the report and its attachments must stay in the same directory for those references to resolve. Nesting the report moves both together; relocating the report afterwards (for example from CI) would not.
+
 ## 8. Implementation phasing
 
 | Phase | Repo | Deliverable | Blocked by |
@@ -582,7 +590,7 @@ internal sealed class TrxArtifactPostProcessor : IArtifactPostProcessor
             return null;
         }
 
-        string output = Path.Combine(outputDirectory, "merged.trx");
+        string output = Path.Combine(outputDirectory, "merged", "merged.trx");
         await TrxReportEngine.MergeAsync(
             inputs.Select(i => i.Path).ToArray(),
             output,

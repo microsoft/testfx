@@ -537,6 +537,11 @@ Actual: {2}</source>
         <target state="translated">屬性 'TestContext.{0}' 與目前測試相關，無法在組件或類別測試夾具期間使用。</target>
         <note>{0} is the {Locked="TestContext"} property name. Do not localize the API prefix {Locked="TestContext."}.</note>
       </trans-unit>
+      <trans-unit id="InvalidDependsOnTestMethodName">
+        <source>The test method name of a [DependsOn] must be a non-empty, non-whitespace string.</source>
+        <target state="new">The test method name of a [DependsOn] must be a non-empty, non-whitespace string.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InvalidGitHubUrl">
         <source>Invalid GitHub ticket URL</source>
         <target state="translated">無效的 GitHub 票證 URL</target>

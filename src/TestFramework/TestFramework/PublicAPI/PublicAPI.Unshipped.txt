@@ -1,4 +1,12 @@
 #nullable enable
+Microsoft.VisualStudio.TestTools.UnitTesting.DependsOnAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.DependsOnAttribute.DependsOnAttribute(System.Type! testClass) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.DependsOnAttribute.DependsOnAttribute(System.Type! testClass, string! testMethodName) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.DependsOnAttribute.DependsOnAttribute(string! testMethodName) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.DependsOnAttribute.ProceedOnFailure.get -> bool
+Microsoft.VisualStudio.TestTools.UnitTesting.DependsOnAttribute.ProceedOnFailure.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.DependsOnAttribute.TestClass.get -> System.Type?
+Microsoft.VisualStudio.TestTools.UnitTesting.DependsOnAttribute.TestMethodName.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.ResourceAccessMode
 Microsoft.VisualStudio.TestTools.UnitTesting.ResourceAccessMode.Read = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.ResourceAccessMode
 Microsoft.VisualStudio.TestTools.UnitTesting.ResourceAccessMode.ReadWrite = 0 -> Microsoft.VisualStudio.TestTools.UnitTesting.ResourceAccessMode

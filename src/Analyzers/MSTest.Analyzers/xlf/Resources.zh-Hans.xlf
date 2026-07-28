@@ -692,7 +692,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="PreferConstantForResourceLockDescription">
         <source>'[ResourceLock]' matches tests by exact string equality of the resource key. A bare string literal fails open: a typo produces a different key, so conflicting tests are no longer serialized and race silently instead of failing with an error. Referencing a shared constant makes typos a compile error and lets the compiler enforce that every test contending on the same resource uses the same key.</source>
-        <target state="new">'[ResourceLock]' matches tests by exact string equality of the resource key. A bare string literal fails open: a typo produces a different key, so conflicting tests are no longer serialized and race silently instead of failing with an error. Referencing a shared constant makes typos a compile error and lets the compiler enforce that every test contending on the same resource uses the same key.</target>
+        <target state="translated">“[ResourceLock]”通过资源键的精确字符串相等来匹配测试。裸字符串字面量属于开放式失败: 拼写错误会产生不同的键，因此冲突的测试不再被序列化，产生静默竞态问题，而不是出错时失败。引用共享常量会将拼写错误变为编译错误，并让编译程序强制每个在相同资源上竞争的测试使用相同的键。</target>
         <note>{Locked="[ResourceLock]"}</note>
       </trans-unit>
       <trans-unit id="PreferConstantForResourceLockMessageFormat">
@@ -702,7 +702,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="PreferConstantForResourceLockTitle">
         <source>Prefer a named constant for the '[ResourceLock]' resource key</source>
-        <target state="new">Prefer a named constant for the '[ResourceLock]' resource key</target>
+        <target state="translated">建议为“[ResourceLock]”资源键使用命名常量</target>
         <note>{Locked="[ResourceLock]"}</note>
       </trans-unit>
       <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerDescription">
