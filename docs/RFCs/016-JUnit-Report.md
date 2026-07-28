@@ -63,11 +63,11 @@ We target the **Jenkins/Surefire** JUnit XML flavor (the schema published at `je
         <property name="uid" value="..."/>
         <property name="trait.Category" value="..."/>
       </properties>
-      <skipped message="..."/>             <!-- 0..1 -->
-      <error message="..." type="..."/>    <!-- 0..n -->
-      <failure message="..." type="..."/>  <!-- 0..n -->
-      <system-out>...</system-out>         <!-- 0..n -->
-      <system-err>...</system-err>         <!-- 0..n -->
+      <skipped message="..."/>                  <!-- 0..1 -->
+      <error message="..." type="...">...</error>      <!-- 0..n -->
+      <failure message="..." type="...">...</failure>  <!-- 0..n -->
+      <system-out>...</system-out>              <!-- 0..n -->
+      <system-err>...</system-err>              <!-- 0..n -->
     </testcase>
     <system-out>...</system-out>
     <system-err>...</system-err>
@@ -130,14 +130,16 @@ The root `<testsuites>` `name` attribute is the module file name without extensi
 | MTP `TestNodeStateProperty`                    | JUnit element                                  |
 | ---------------------------------------------- | ---------------------------------------------- |
 | `PassedTestNodeStateProperty`                  | *(no child element)*                            |
-| `SkippedTestNodeStateProperty`                 | `<skipped message="..."/>` + reason as text     |
-| `FailedTestNodeStateProperty`                  | `<failure message="..." type="..."/>` + body    |
-| `TimeoutTestNodeStateProperty`                 | `<error message="..." type="..."/>` + body      |
-| `ErrorTestNodeStateProperty`                   | `<error message="..." type="..."/>` + body      |
-| `CancelledTestNodeStateProperty` *(obsolete)*  | `<error message="..." type="..."/>` + body      |
-| Other `WellKnownTestNodeTestRunOutcomeFailedProperties` | `<failure message="..." type="..."/>`  |
+| `SkippedTestNodeStateProperty`                 | `<skipped message="..."/>` *(no body)*          |
+| `FailedTestNodeStateProperty`                  | `<failure message="..." type="...">body</failure>` |
+| `TimeoutTestNodeStateProperty`                 | `<error message="..." type="...">body</error>`  |
+| `ErrorTestNodeStateProperty`                   | `<error message="..." type="...">body</error>`  |
+| `CancelledTestNodeStateProperty` *(obsolete)*  | `<error message="..." type="...">body</error>`  |
+| Other `WellKnownTestNodeTestRunOutcomeFailedProperties` | `<failure message="..." type="...">body</failure>` |
 | `DiscoveredTestNodeStateProperty`              | *(filtered out — not emitted)*                  |
 | `InProgressTestNodeStateProperty`              | *(filtered out — not emitted)*                  |
+
+`body` is the composed failure text described in [Failure and error body format](#failure-and-error-body-format); the element is written with explicit start/end tags whenever that text is non-empty.
 
 `Cancelled` becomes `<error>` rather than `<failure>` because cancellation indicates an interruption, not an assertion failure — `<error>` is the schema-correct bucket for "the test could not be evaluated".
 
