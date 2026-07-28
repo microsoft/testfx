@@ -1023,8 +1023,10 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.IsTrue(await publisher.IsEnabledAsync());
         await publisher.OnTestSessionStartingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
 
-        // The console copy still gets through even though the diagnostic logger is broken.
+        // The console copy still gets through, with the right message, even though the diagnostic
+        // logger is broken.
         Assert.HasCount(1, outputDevice.Lines);
+        Assert.Contains("SYSTEM_ACCESSTOKEN", outputDevice.Lines[0]);
     }
 
     // OnTestSessionFinishingAsync is a lifetime handler and the platform does not guard those, so a
