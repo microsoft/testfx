@@ -1329,6 +1329,60 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
+    public void Generator_MaterializesSchedulingAttributes_OnMethodAndClass()
+    {
+        // '[DependsOn]' and '[ResourceLock]' are not part of the generator's small set of specially
+        // understood attributes; they ride the generic attribute-materialization path, which is what
+        // makes them work under Native AOT. This pins that so the generic path is not narrowed to an
+        // allow-list by accident.
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                [System.AttributeUsage(System.AttributeTargets.Class | System.AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
+                public sealed class DependsOnAttribute : System.Attribute
+                {
+                    public DependsOnAttribute(string testMethodName) { }
+                    public DependsOnAttribute(System.Type testClass) { }
+                    public bool ProceedOnFailure { get; set; }
+                }
+
+                [System.AttributeUsage(System.AttributeTargets.Class | System.AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
+                public sealed class ResourceLockAttribute : System.Attribute
+                {
+                    public ResourceLockAttribute(string resource) { }
+                }
+            }
+
+            namespace Sample
+            {
+                [TestClass]
+                [DependsOn(typeof(Tests))]
+                public class Tests
+                {
+                    [TestMethod]
+                    public void CreateCart() { }
+
+                    [TestMethod]
+                    [DependsOn(nameof(CreateCart), ProceedOnFailure = true)]
+                    [ResourceLock("database")]
+                    public void AddItem() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("new global::Microsoft.VisualStudio.TestTools.UnitTesting.DependsOnAttribute(\"CreateCart\")");
+        registry.Should().Contain("ProceedOnFailure = true");
+        registry.Should().Contain("new global::Microsoft.VisualStudio.TestTools.UnitTesting.DependsOnAttribute(typeof(global::Sample.Tests))");
+        registry.Should().Contain("new global::Microsoft.VisualStudio.TestTools.UnitTesting.ResourceLockAttribute(\"database\")");
+    }
+
+    [TestMethod]
     public void Generator_CapturesAssemblyLevelAttribute()
     {
         const string userCode = """

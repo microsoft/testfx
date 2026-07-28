@@ -140,8 +140,8 @@ special case.
 consequential trade-off in the design. Skipping the dependent instead would be "safer" in the abstract,
 but it would make `--filter`, and running one test from an IDE, useless the moment that test has a
 prerequisite — a well-known complaint about `pytest-dependency`. Debuggability wins; the warning keeps a
-typo from being silent. A build-time analyzer (see [Future work](#future-work)) is the right place to
-catch genuinely misspelled references.
+typo from being silent. `MSTEST0078` (see [Build-time validation](#build-time-validation)) catches the
+genuinely misspelled references before the run.
 
 **References are resolved at discovery.** `[DependsOn(typeof(X))]` is stored as `X.FullName`, because the
 graph is rebuilt at execution time — possibly in another app domain — where the `Type` is gone. The
@@ -312,13 +312,23 @@ in every test is impractical, and prefer, in order:
 
 `RandomizeTestOrder` remains the tool for finding dependencies you did not declare.
 
+## Build-time validation
+
+**`MSTEST0078` reports the references that are statically decidable.** The runtime deliberately treats a
+dependency that matches no test as a warning rather than a failure, so that `--filter` and single-test runs
+keep working; that decision is only safe because build time catches the genuinely broken references. The
+analyzer reports a named method that does not exist on the target type, a target that is not a test method
+or not a test class, a test that depends on itself, a cycle visible within one compilation, and an
+attribute applied where it has no effect (a non-test method, or a class without `[TestClass]` — the
+attribute is not inherited, so an application on a shared base class produces no edge).
+
+It stays quiet whenever the answer depends on something the compilation does not know. The important case
+is a test method declared on a *non-test* base class: its implicit references (`[DependsOn(nameof(X))]`
+with no `typeof`) are resolved against each derived test class at run time, so the analyzer cannot decide
+them and leaves them alone.
+
 ## Future work
 
-- **A `MSTEST0xxx` analyzer** for references that resolve to no method, self-references, and cycles that
-  are statically visible. This is the natural complement to the "ignore unmatched references" decision
-  and would make renames safe at build time. Tracked by
-  [#10259](https://github.com/microsoft/testfx/issues/10259), which also covers the missing
-  `WellKnownTypeNames` registration, usage telemetry, and NativeAOT source-generation support.
 - **Per-data-row dependencies.** Naming a data-driven test currently creates an edge to *all* of its
   cases: the dependent waits for every row and is skipped if any row fails. Matching row *i* of B to row
   *i* of A is the hardest open problem in this space — even TUnit's mature implementation requires manual
