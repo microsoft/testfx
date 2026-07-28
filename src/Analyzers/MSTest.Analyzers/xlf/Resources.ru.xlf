@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="ru" original="../Resources.resx">
     <body>
@@ -698,7 +698,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="PreferConstantForResourceLockDescription">
         <source>'[ResourceLock]' matches tests by exact string equality of the resource key. A bare string literal fails open: a typo produces a different key, so conflicting tests are no longer serialized and race silently instead of failing with an error. Referencing a shared constant makes typos a compile error and lets the compiler enforce that every test contending on the same resource uses the same key.</source>
-        <target state="translated">"[ResourceLock]" сопоставляет тесты по точному совпадению строки ключа ресурса. Открываются сбои необработанного строкового литерала: опечатка создаст другой ключ, поэтому конфликтующие тесты больше не будут сериализованными и начнут автоматически выполняться в состоянии гонки вместо того, чтобы завершаться с ошибкой. Ссылка на общую константу делает опечатки ошибкой компиляции и позволяет компилятору гарантировать, что каждый тест, конкурирующий за один и тот же ресурс, использует один и тот же ключ.</target>
+        <target state="new">'[ResourceLock]' matches tests by exact string equality of the resource key. A bare string literal fails open: a typo produces a different key, so conflicting tests are no longer serialized and race silently instead of failing with an error. Referencing a shared constant makes typos a compile error and lets the compiler enforce that every test contending on the same resource uses the same key.</target>
         <note>{Locked="[ResourceLock]"}</note>
       </trans-unit>
       <trans-unit id="PreferConstantForResourceLockMessageFormat">
