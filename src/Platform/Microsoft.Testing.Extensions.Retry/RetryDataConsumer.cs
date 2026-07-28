@@ -19,7 +19,9 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
     private readonly IServiceProvider _serviceProvider;
     private readonly ICommandLineOptions _commandLineOptions;
     private RetryLifecycleCallbacks? _retryFailedTestsLifecycleCallbacks;
-    private int _totalTests;
+    private int _passedTests;
+    private int _failedTests;
+    private int _skippedTests;
 
     public RetryDataConsumer(IServiceProvider serviceProvider)
     {
@@ -55,15 +57,18 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
             ApplicationStateGuard.Ensure(_retryFailedTestsLifecycleCallbacks is not null);
             ApplicationStateGuard.Ensure(_retryFailedTestsLifecycleCallbacks.Client is not null);
             await _retryFailedTestsLifecycleCallbacks.Client.RequestReplyAsync<FailedTestRequest, VoidResponse>(new FailedTestRequest(testNodeUpdateMessage.TestNode.Uid, testNodeUpdateMessage.TestNode.DisplayName), cancellationToken).ConfigureAwait(false);
+            _failedTests++;
         }
-
-        if (nodeState is PassedTestNodeStateProperty or FailedTestNodeStateProperty or ErrorTestNodeStateProperty
-            or TimeoutTestNodeStateProperty
-#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
-            or CancelledTestNodeStateProperty)
-#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
+        else if (nodeState is PassedTestNodeStateProperty)
         {
-            _totalTests++;
+            _passedTests++;
+        }
+        else if (nodeState is SkippedTestNodeStateProperty)
+        {
+            // Skipped tests are counted so the orchestrator's "total" matches the platform run summary's "total",
+            // which includes them. They are never retried (a skipped test cannot be in the failed set), so the
+            // first attempt's skipped count is the whole suite's.
+            _skippedTests++;
         }
     }
 
@@ -71,7 +76,7 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
     {
         ApplicationStateGuard.Ensure(_retryFailedTestsLifecycleCallbacks is not null);
         ApplicationStateGuard.Ensure(_retryFailedTestsLifecycleCallbacks.Client is not null);
-        await _retryFailedTestsLifecycleCallbacks.Client.RequestReplyAsync<TotalTestsRunRequest, VoidResponse>(new TotalTestsRunRequest(_totalTests), testSessionContext.CancellationToken).ConfigureAwait(false);
+        await _retryFailedTestsLifecycleCallbacks.Client.RequestReplyAsync<TestRunCountsRequest, VoidResponse>(new TestRunCountsRequest(_passedTests, _failedTests, _skippedTests), testSessionContext.CancellationToken).ConfigureAwait(false);
     }
 
     public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)

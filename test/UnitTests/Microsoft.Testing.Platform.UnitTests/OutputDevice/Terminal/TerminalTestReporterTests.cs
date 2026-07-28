@@ -2419,6 +2419,110 @@ public sealed class TerminalTestReporterTests
         Assert.DoesNotContain($"{TerminalResources.Retried}: ", output);
     }
 
+    // ShowRunSummary off is what a retry attempt (the second or a later one) of --retry-failed-tests runs with:
+    // those re-run only the previously-failed tests, so their verdict and counts would describe a filtered subset
+    // rather than the run. The orchestrator reconciles the attempts into one retry summary instead. The sections
+    // the orchestrator does NOT restate — produced artifacts and the slowest-tests ranking — must survive.
+    [TestMethod]
+    public void TestExecutionCompleted_WhenRunSummaryIsSuppressed_KeepsArtifactsAndSlowestTests()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+            ShowPassedTests = () => true,
+            SlowestTestsCount = 5,
+            ShowRunSummary = false,
+        });
+
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: false);
+
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\Attempt.Tests.dll" : "/repo/Attempt.Tests.dll";
+        string artifact = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\attempt.trx" : "/repo/attempt.trx";
+        const string executionId = "exec-attempt";
+
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-1");
+        terminalReporter.ArtifactAdded(outOfProcess: false, assembly: assembly, targetFramework: "net9.0", architecture: "x64", executionId: executionId, testName: null, artifact);
+        terminalReporter.TestCompleted(
+            assembly,
+            targetFramework: "net9.0",
+            architecture: "x64",
+            executionId,
+            instanceId: "inst-1",
+            testNodeUid: "slow-1",
+            displayName: "SlowTest",
+            informativeMessage: null,
+            TestOutcome.Passed,
+            duration: TimeSpan.FromSeconds(3),
+            exceptions: null,
+            expected: null,
+            actual: null,
+            standardOutput: null,
+            errorOutput: null);
+        terminalReporter.AssemblyRunCompleted(executionId);
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: 0);
+
+        string output = stringBuilderConsole.Output;
+
+        // The verdict and its counts belong to the orchestrator's retry summary now.
+        Assert.DoesNotContain(TerminalResources.TestRunSummary, output);
+        Assert.DoesNotContain($"{TerminalResources.TotalLowercase}: ", output);
+        Assert.DoesNotContain($"{TerminalResources.FailedLowercase}: ", output);
+        Assert.DoesNotContain($"{TerminalResources.SucceededLowercase}: ", output);
+
+        // ...but nothing else is lost: the orchestrator never restates these.
+        Assert.Contains(TerminalResources.InProcessArtifactsProduced, output);
+        Assert.Contains("attempt.trx", output);
+        Assert.Contains(TerminalResources.SlowestTests, output);
+        Assert.Contains("SlowTest", output);
+    }
+
+    // The default (ShowRunSummary on) must be completely unaffected: a normal run — and the first attempt of a
+    // retried one, which executes the whole suite — still prints its verdict and counts.
+    [TestMethod]
+    public void TestExecutionCompleted_ByDefault_StillPrintsRunSummary()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+            ShowPassedTests = () => true,
+        });
+
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: false);
+
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\Normal.Tests.dll" : "/repo/Normal.Tests.dll";
+        const string executionId = "exec-normal";
+
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-1");
+        terminalReporter.TestCompleted(
+            assembly,
+            targetFramework: "net9.0",
+            architecture: "x64",
+            executionId,
+            instanceId: "inst-1",
+            testNodeUid: "t-1",
+            displayName: "SomeTest",
+            informativeMessage: null,
+            TestOutcome.Passed,
+            duration: TimeSpan.FromMilliseconds(5),
+            exceptions: null,
+            expected: null,
+            actual: null,
+            standardOutput: null,
+            errorOutput: null);
+        terminalReporter.AssemblyRunCompleted(executionId);
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: 0);
+
+        string output = stringBuilderConsole.Output;
+
+        Assert.Contains(TerminalResources.TestRunSummary, output);
+        Assert.Contains($"{TerminalResources.TotalLowercase}: 1", output);
+        Assert.Contains($"{TerminalResources.SucceededLowercase}: 1", output);
+    }
+
     // Orchestrator discovery (dotnet test --list-tests across N assemblies): each assembly gets a
     // "Discovered N tests in assembly - <link>" header with its test names listed, and the run ends with a
     // "Discovered M tests in K assemblies." total. The in-process host (ShowAssembly off) keeps its own

@@ -41,3 +41,22 @@ Microsoft.Testing.Extensions.Policy.RetryRunSummary.StoppedEarly.get -> bool
 Microsoft.Testing.Extensions.Policy.RetryRunSummary.StoppedEarly.init -> void
 *REMOVED*Microsoft.Testing.Extensions.Policy.RetryRunSummary.FirstAttemptFailedTests.get -> int
 *REMOVED*Microsoft.Testing.Extensions.Policy.RetryRunSummary.FirstAttemptFailedTests.init -> void
+Microsoft.Testing.Extensions.Policy.RetryFailedTestsPipeServer.SkippedTests.get -> int
+Microsoft.Testing.Extensions.Policy.RetryRunSummary.SuiteSkippedTests.get -> int
+Microsoft.Testing.Extensions.Policy.RetryRunSummary.SuiteSkippedTests.init -> void
+Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TestRunCountsRequest
+Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TestRunCountsRequest.TestRunCountsRequest(int passedTests, int failedTests, int skippedTests) -> void
+Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TestRunCountsRequest.PassedTests.get -> int
+Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TestRunCountsRequest.FailedTests.get -> int
+Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TestRunCountsRequest.SkippedTests.get -> int
+Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TestRunCountsRequest.ExecutedTests.get -> int
+Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TestRunCountsRequest.TotalTests.get -> int
+Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TestRunCountsRequestSerializer
+Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TestRunCountsRequestSerializer.TestRunCountsRequestSerializer() -> void
+override Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TestRunCountsRequestSerializer.Id.get -> int
+*REMOVED*Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TotalTestsRunRequest
+*REMOVED*Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TotalTestsRunRequest.TotalTests.get -> int
+*REMOVED*Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TotalTestsRunRequest.TotalTestsRunRequest(int totalTests) -> void
+*REMOVED*Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TotalTestsRunRequestSerializer
+*REMOVED*Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TotalTestsRunRequestSerializer.TotalTestsRunRequestSerializer() -> void
+*REMOVED*override Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TotalTestsRunRequestSerializer.Id.get -> int

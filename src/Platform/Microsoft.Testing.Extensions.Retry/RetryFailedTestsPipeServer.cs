@@ -32,7 +32,7 @@ internal sealed class RetryFailedTestsPipeServer : IDisposable
         _singleConnectionNamedPipeServer.RegisterSerializer(new FailedTestRequestSerializer(), typeof(FailedTestRequest));
         _singleConnectionNamedPipeServer.RegisterSerializer(new GetListOfFailedTestsRequestSerializer(), typeof(GetListOfFailedTestsRequest));
         _singleConnectionNamedPipeServer.RegisterSerializer(new GetListOfFailedTestsResponseSerializer(), typeof(GetListOfFailedTestsResponse));
-        _singleConnectionNamedPipeServer.RegisterSerializer(new TotalTestsRunRequestSerializer(), typeof(TotalTestsRunRequest));
+        _singleConnectionNamedPipeServer.RegisterSerializer(new TestRunCountsRequestSerializer(), typeof(TestRunCountsRequest));
         _failedTests = failedTests;
     }
 
@@ -49,6 +49,13 @@ internal sealed class RetryFailedTestsPipeServer : IDisposable
     public Dictionary<string, string> FailedTests { get; } = [];
 
     public int TotalTestRan { get; private set; }
+
+    /// <summary>
+    /// Gets the number of tests skipped in this attempt. Reported separately from <see cref="TotalTestRan"/> (which
+    /// counts only executed tests, as the failure-threshold policy requires) so the summary's "total" can include
+    /// them and match the platform run summary.
+    /// </summary>
+    public int SkippedTests { get; private set; }
 
     public Task WaitForConnectionAsync(CancellationToken cancellationToken)
         => _singleConnectionNamedPipeServer.WaitConnectionAsync(cancellationToken);
@@ -70,9 +77,10 @@ internal sealed class RetryFailedTestsPipeServer : IDisposable
             return Task.FromResult((IResponse)new GetListOfFailedTestsResponse(_failedTests));
         }
 
-        if (request is TotalTestsRunRequest totalTestsRunRequest)
+        if (request is TestRunCountsRequest testRunCounts)
         {
-            TotalTestRan = totalTestsRunRequest.TotalTests;
+            TotalTestRan = testRunCounts.ExecutedTests;
+            SkippedTests = testRunCounts.SkippedTests;
             return Task.FromResult((IResponse)VoidResponse.CachedInstance);
         }
 

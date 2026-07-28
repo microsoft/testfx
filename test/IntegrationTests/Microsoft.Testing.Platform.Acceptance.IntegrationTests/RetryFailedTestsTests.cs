@@ -10,6 +10,26 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
 {
     private const string AssetName = "RetryFailedTests";
 
+    /// <summary>
+    /// Asserts that <paramref name="value"/> occurs exactly once in the test host output. Used for the run-summary
+    /// header under retry: only the first attempt (which executes the whole suite) prints one, while the retry
+    /// attempts — which re-run just the previously-failed tests — have theirs suppressed in favour of the single
+    /// reconciled retry summary. A plain "contains" assertion would not catch a regression that re-introduced the
+    /// per-attempt summaries.
+    /// </summary>
+    private static void AssertOutputContainsExactlyOnce(TestHostResult testHostResult, string value)
+    {
+        int count = 0;
+        int index = testHostResult.StandardOutput.IndexOf(value, StringComparison.Ordinal);
+        while (index >= 0)
+        {
+            count++;
+            index = testHostResult.StandardOutput.IndexOf(value, index + value.Length, StringComparison.Ordinal);
+        }
+
+        Assert.AreEqual(1, count, $"Expected '{value}' exactly once in the output, found {count}.{Environment.NewLine}{testHostResult.StandardOutput}");
+    }
+
     internal static IEnumerable<(string Arguments, bool FailOnly)> GetMatrix()
     {
         foreach (string tfm in TargetFrameworks.All)
@@ -44,14 +64,20 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             testHostResult.AssertOutputContains("Retry summary: Passed! after 2/4 attempts");
             testHostResult.AssertOutputContains("  total: 3");
             testHostResult.AssertOutputContains("  failed: 0");
+            testHostResult.AssertOutputContains("  succeeded: 3");
+            testHostResult.AssertOutputContains("  skipped: 0");
             testHostResult.AssertOutputContains("  flaky: 1");
             // The single retried test cost exactly one extra run; the old "(+N retried)" suffix conflated the two.
             testHostResult.AssertOutputContains("  retried: 1 test(s), 1 extra run(s)");
             // ...and it is named, which is the whole point of the flaky report.
             testHostResult.AssertOutputContains("Flaky tests:");
-            testHostResult.AssertOutputContains("(failed -> passed)");
-            testHostResult.AssertOutputContains("Failed! -");
-            testHostResult.AssertOutputContains("Passed! -");
+            testHostResult.AssertOutputContains("TestMethod1 (failed -> passed)");
+
+            // The first attempt runs the whole suite, so its summary is accurate and is kept.
+            testHostResult.AssertOutputContains("Test run summary: Failed!");
+            // The retry attempt re-ran only TestMethod1, so its summary would have claimed "total: 1" for a
+            // three-test suite. It is suppressed; the retry summary reconciles the attempts instead.
+            testHostResult.AssertOutputDoesNotContain("Test run summary: Passed!");
 
             string[] trxFiles = Directory.GetFiles(resultDirectory, "*.trx", SearchOption.AllDirectories);
             Assert.HasCount(2, trxFiles);
@@ -71,12 +97,16 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             testHostResult.AssertOutputContains("Retry: attempt 3/4 failed - 1 failing test(s), retrying");
             // The final (4th) attempt is reported by the summary verdict, not by an amber "retrying" line.
             testHostResult.AssertOutputDoesNotContain("Retry: attempt 4/4 failed");
+            testHostResult.AssertOutputContains("  total: 3");
             testHostResult.AssertOutputContains("  failed: 1");
+            testHostResult.AssertOutputContains("  succeeded: 2");
             // The test was retried but never recovered, so it is retried-but-not-flaky: no flaky count, no listing.
             testHostResult.AssertOutputContains("  retried: 1 test(s), 3 extra run(s)");
             testHostResult.AssertOutputDoesNotContain("  flaky:");
             testHostResult.AssertOutputDoesNotContain("Flaky tests:");
-            testHostResult.AssertOutputContains("Failed! -");
+            // Only the first attempt's summary survives; the three retry attempts each re-ran a single test and
+            // would otherwise have printed three more "total: 1" blocks.
+            AssertOutputContainsExactlyOnce(testHostResult, "Test run summary:");
         }
     }
 
@@ -137,14 +167,24 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
             testHostResult.AssertOutputContains("Failure threshold policy is enabled, failed tests will not be restarted.");
             testHostResult.AssertOutputContains("Percentage failed threshold is 50% and 66.67% tests failed (2/3)");
-            testHostResult.AssertOutputContains("Failed! -");
+            // The threshold stopped retrying after the first attempt. That attempt no longer prints its own
+            // summary, so the retry summary is what accounts for the run — using the "stopped early" wording
+            // rather than "1/4 attempts", which would imply the other three ran and failed.
+            testHostResult.AssertOutputContains("Retry summary: Failed! after 1 attempt(s) (retrying stopped early)");
+            testHostResult.AssertOutputContains("  total: 3");
+            testHostResult.AssertOutputContains("  failed: 2");
+            testHostResult.AssertOutputContains("  succeeded: 1");
+            testHostResult.AssertOutputDoesNotContain("  retried:");
+            // Retrying never started, so only the first attempt's summary is present.
+            AssertOutputContainsExactlyOnce(testHostResult, "Test run summary:");
         }
         else
         {
             testHostResult.AssertExitCodeIs(ExitCode.Success);
             testHostResult.AssertOutputContains("Retry summary: Passed! after 2/4 attempts");
-            testHostResult.AssertOutputContains("Failed! -");
-            testHostResult.AssertOutputContains("Passed! -");
+            testHostResult.AssertOutputContains("  total: 3");
+            testHostResult.AssertOutputContains("  succeeded: 3");
+            AssertOutputContainsExactlyOnce(testHostResult, "Test run summary:");
         }
     }
 
@@ -169,14 +209,19 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
             testHostResult.AssertOutputContains("Failure threshold policy is enabled, failed tests will not be restarted.");
             testHostResult.AssertOutputContains("Maximum failed tests threshold is 1 and 2 tests failed");
-            testHostResult.AssertOutputContains("Failed! -");
+            testHostResult.AssertOutputContains("Retry summary: Failed! after 1 attempt(s) (retrying stopped early)");
+            testHostResult.AssertOutputContains("  total: 3");
+            testHostResult.AssertOutputContains("  failed: 2");
+            testHostResult.AssertOutputContains("  succeeded: 1");
+            AssertOutputContainsExactlyOnce(testHostResult, "Test run summary:");
         }
         else
         {
             testHostResult.AssertExitCodeIs(ExitCode.Success);
             testHostResult.AssertOutputContains("Retry summary: Passed! after 2/4 attempts");
-            testHostResult.AssertOutputContains("Failed! -");
-            testHostResult.AssertOutputContains("Passed! -");
+            testHostResult.AssertOutputContains("  total: 3");
+            testHostResult.AssertOutputContains("  succeeded: 3");
+            AssertOutputContainsExactlyOnce(testHostResult, "Test run summary:");
         }
     }
 
@@ -235,13 +280,14 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         foreach (string logFile in logFilesFromInvokeTestingPlatformTask)
         {
             string logFileContents = File.ReadAllText(logFile);
+            // Nothing was retried, so the single attempt keeps its own summary and the retry summary reports the
+            // same run without any retry accounting.
             Assert.Contains("Test run summary: Passed!", logFileContents);
+            Assert.Contains("Retry summary: Passed! on the first attempt (no retries needed)", logFileContents);
             Assert.Contains("total: 3", logFileContents);
-            // A run where nothing was retried must not gain any retry accounting lines.
+            Assert.Contains("succeeded: 3", logFileContents);
             Assert.DoesNotContain("retried:", logFileContents);
             Assert.DoesNotContain("flaky:", logFileContents);
-            Assert.Contains("succeeded: 3", logFileContents);
-            Assert.Contains("Retry summary: Passed! on the first attempt (no retries needed)", logFileContents);
         }
     }
 

@@ -42,7 +42,7 @@ public class RetryWithMaxFailedTestsTests : AcceptanceTestBase<RetryWithMaxFaile
         // It must still print a summary. Reporting nothing (the previous behaviour) left the user with no
         // orchestrator-level account of a run that did execute tests. The verdict uses the "stopped early" wording
         // rather than "1/4 attempts", which would wrongly imply the remaining attempts ran and failed.
-        testHostResult.AssertOutputContains("Retry summary: Failed! after 1 attempts (retrying stopped early)");
+        testHostResult.AssertOutputContains("Retry summary: Failed! after 1 attempt(s) (retrying stopped early)");
 
         // Nothing was ever retried here, so the retry accounting lines must be absent.
         testHostResult.AssertOutputDoesNotContain("  retried:");

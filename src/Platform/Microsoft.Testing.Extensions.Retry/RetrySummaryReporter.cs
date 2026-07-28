@@ -22,6 +22,12 @@ internal readonly struct RetryRunSummary
 
     public required int SuiteTotalTests { get; init; }
 
+    /// <summary>
+    /// Gets the number of skipped tests in the suite. Retries only re-run failed tests, so a skipped test keeps that
+    /// outcome for the whole run and the first attempt's count is authoritative.
+    /// </summary>
+    public required int SuiteSkippedTests { get; init; }
+
     public required int FinalFailedTests { get; init; }
 
     /// <summary>
@@ -83,7 +89,15 @@ internal static class RetrySummaryReporter
             await outputDevice.DisplayAsync(producer, new FormattedTextOutputDeviceData(header) { ForegroundColor = new SystemConsoleColor { ConsoleColor = ConsoleColor.DarkRed } }, cancellationToken).ConfigureAwait(false);
         }
 
-        // Counts, ordered and labelled to mirror the platform run summary so the two blocks read the same way.
+        // Counts, ordered and labelled to mirror the platform run summary. This is now the run's ONLY summary — the
+        // per-attempt ones are suppressed because each retry attempt re-runs a filtered subset, so their shrinking
+        // totals described neither the suite nor the outcome. It therefore has to carry the full breakdown.
+        //
+        // "succeeded" is derived rather than reported: no single attempt knows it. The first attempt runs the whole
+        // suite and later attempts only re-run failures, so total and skipped are fixed for the run, and whatever is
+        // neither still-failing nor skipped ended up passing.
+        int succeeded = Math.Max(0, summary.SuiteTotalTests - summary.FinalFailedTests - summary.SuiteSkippedTests);
+
         await outputDevice.DisplayAsync(producer, new TextOutputDeviceData(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetrySummaryTotalLine, summary.SuiteTotalTests)), cancellationToken).ConfigureAwait(false);
 
         await outputDevice.DisplayAsync(
@@ -93,6 +107,16 @@ internal static class RetrySummaryReporter
                 ForegroundColor = summary.FinalFailedTests > 0 ? new SystemConsoleColor { ConsoleColor = ConsoleColor.DarkRed } : null,
             },
             cancellationToken).ConfigureAwait(false);
+
+        await outputDevice.DisplayAsync(
+            producer,
+            new FormattedTextOutputDeviceData(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetrySummarySucceededLine, succeeded))
+            {
+                ForegroundColor = summary.FinalFailedTests == 0 && succeeded > 0 ? new SystemConsoleColor { ConsoleColor = ConsoleColor.DarkGreen } : null,
+            },
+            cancellationToken).ConfigureAwait(false);
+
+        await outputDevice.DisplayAsync(producer, new TextOutputDeviceData(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetrySummarySkippedLine, summary.SuiteSkippedTests)), cancellationToken).ConfigureAwait(false);
 
         // "flaky" = failed at least once but eventually passed — the headline value of the retry feature.
         if (summary.FlakyTests.Count > 0 && summary.ShowFlakyTests)

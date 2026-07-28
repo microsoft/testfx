@@ -124,6 +124,7 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
         // The richer passed/skipped split stays in the per-attempt child summaries.
         var orchestrationStopwatch = Stopwatch.StartNew();
         int suiteTotalTests = 0;
+        int suiteSkippedTests = 0;
         Dictionary<string, string> retriedTests = [];
         Dictionary<string, string> finalFailedTests = [];
         int retriedExecutions = 0;
@@ -190,9 +191,11 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
             int failedThisAttempt = retryFailedTestsPipeServer.FailedTests.Count;
             if (attemptCount == 1)
             {
-                // The first attempt runs the full suite, so its total is the suite size that the final summary
-                // reconciles against.
-                suiteTotalTests = retryFailedTestsPipeServer.TotalTestRan;
+                // The first attempt runs the full suite, so its counts are the suite's. Skipped tests are tracked
+                // separately because a retry attempt re-runs only the failed set, so no later attempt can observe
+                // them — and because "total" must include them to line up with the platform run summary.
+                suiteTotalTests = retryFailedTestsPipeServer.TotalTestRan + retryFailedTestsPipeServer.SkippedTests;
+                suiteSkippedTests = retryFailedTestsPipeServer.SkippedTests;
             }
 
             if (attemptResult.ExitCode != (int)ExitCode.Success)
@@ -277,6 +280,7 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                 AttemptCount = attemptCount,
                 UserMaxRetryCount = userMaxRetryCount,
                 SuiteTotalTests = suiteTotalTests,
+                SuiteSkippedTests = suiteSkippedTests,
                 FinalFailedTests = finalFailedTests.Count,
                 RetriedTests = retriedTests.Count,
                 RetriedExecutions = retriedExecutions,

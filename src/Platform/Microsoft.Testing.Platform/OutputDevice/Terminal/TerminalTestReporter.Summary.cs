@@ -44,6 +44,17 @@ internal sealed partial class TerminalTestReporter
 
         List<TestProgressState> assemblies = [.. _assemblies.Values.OrderBy(static a => a.Id)];
 
+        // Retry attempt (second or later): skip straight to the sections the orchestrator does not restate. The
+        // verdict and counts below would describe the filtered subset this attempt re-ran rather than the run, so
+        // the reconciled retry summary owns them instead.
+        if (!_options.ShowRunSummary)
+        {
+            AppendSlowestTests(terminal, assemblies);
+            AppendHandshakeFailureRecap(terminal);
+            AppendErroredAssemblyRecap(terminal);
+            return;
+        }
+
         // Single-pass aggregation: compute all summary counters in one foreach instead of
         // 7 separate LINQ calls (Sum×5, Any×1, Count×1), saving 6 extra O(N) passes and
         // 7 LINQ enumerator allocations per test run.

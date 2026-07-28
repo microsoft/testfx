@@ -157,8 +157,8 @@
     <comment>{0} is the number of attempts used. {1} is the maximum number of attempts. Keep 'Retry summary:' and 'Failed!' parallel to the platform 'Test run summary: Failed!' wording.</comment>
   </data>
   <data name="RetrySummaryFailedStoppedEarly" xml:space="preserve">
-    <value>Retry summary: Failed! after {0} attempts (retrying stopped early)</value>
-    <comment>{0} is the number of attempts that actually ran. Used when retrying was cut short by the failure threshold policy or by an attempt exiting unexpectedly, so the maximum attempt count would be misleading. Keep 'Retry summary:' and 'Failed!' parallel to the platform 'Test run summary: Failed!' wording.</comment>
+    <value>Retry summary: Failed! after {0} attempt(s) (retrying stopped early)</value>
+    <comment>{0} is the number of attempts that actually ran. Used when retrying was cut short by the failure threshold policy or by an attempt exiting unexpectedly, so the maximum attempt count would be misleading. Keep 'Retry summary:' and 'Failed!' parallel to the platform 'Test run summary: Failed!' wording. The '(s)' suffix follows the existing convention used elsewhere in this extension for counts that may be one.</comment>
   </data>
   <data name="RetrySummaryFailedLine" xml:space="preserve">
     <value>  failed: {0}</value>
@@ -179,6 +179,14 @@
   <data name="RetrySummaryTotalLine" xml:space="preserve">
     <value>  total: {0}</value>
     <comment>{0} is the total number of tests in the suite. Two leading spaces and the lowercase 'total:' label mirror the platform run summary.</comment>
+  </data>
+  <data name="RetrySummarySucceededLine" xml:space="preserve">
+    <value>  succeeded: {0}</value>
+    <comment>{0} is the number of tests that ended up passing, counting those rescued by a retry. Two leading spaces and the lowercase 'succeeded:' label mirror the platform run summary.</comment>
+  </data>
+  <data name="RetrySummarySkippedLine" xml:space="preserve">
+    <value>  skipped: {0}</value>
+    <comment>{0} is the number of skipped tests. Two leading spaces and the lowercase 'skipped:' label mirror the platform run summary.</comment>
   </data>
   <data name="RetrySummaryRetriedLine" xml:space="preserve">
     <value>  retried: {0} test(s), {1} extra run(s)</value>
