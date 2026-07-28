@@ -261,9 +261,12 @@ cannot do.
 3. Verify a run logs `Exact version match found:` instead of `No compatible toolcache entry found`
    followed by `-> Downloading ...`.
 
-Re-check *both* the `compat.json` `max-agent` value and the version the runner image actually caches
-before choosing the pin — if they diverge, follow the toolcache, not the matrix, since only an exact
-match avoids the download.
+Re-check *both* the `compat.json` window and the version the runner image actually caches before
+choosing the pin, and only pin a version that satisfies both: it must sit inside
+`min-agent`..`max-agent` *and* exist in the toolcache (`1.0.56` is both today). If they diverge —
+the image caches something outside the compat window — stay on a compat-sanctioned version and keep
+paying for the download. `max-agent` is the supported ceiling; pinning past it to chase a cache hit
+would run every agentic workflow on an unsupported CLI.
 
 ## Catalog
 
