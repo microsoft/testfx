@@ -21,6 +21,7 @@ internal sealed class TestHostManager : ITestHostManager
     private readonly List<Func<IServiceProvider, ITestHostApplicationLifetime>> _testApplicationLifecycleCallbacksFactories = [];
     private readonly List<Func<IServiceProvider, IDataConsumer>> _dataConsumerFactories = [];
     private readonly List<Func<IServiceProvider, ITestSessionLifetimeHandler>> _testSessionLifetimeHandlerFactories = [];
+    private readonly List<Func<IServiceProvider, ITestExecutionFilterProvider>> _testExecutionFilterProviderFactories = [];
     private readonly List<ICompositeExtensionFactory> _dataConsumersCompositeServiceFactories = [];
     private readonly List<ICompositeExtensionFactory> _testSessionLifetimeHandlerCompositeFactories = [];
 
@@ -53,6 +54,20 @@ internal sealed class TestHostManager : ITestHostManager
 
     internal Task<ActionResult<ITestExecutionFilterFactory>> TryBuildTestExecutionFilterFactoryAsync(ServiceProvider serviceProvider)
         => TryBuildSingletonExtensionAsync(_testExecutionFilterFactory, serviceProvider);
+
+    internal void AddTestExecutionFilterProvider(Func<IServiceProvider, ITestExecutionFilterProvider> providerFactory)
+        => _testExecutionFilterProviderFactories.Add(providerFactory ?? throw new ArgumentNullException(nameof(providerFactory)));
+
+    internal async Task<ITestExecutionFilterProvider[]> BuildTestExecutionFilterProvidersAsync(ServiceProvider serviceProvider)
+    {
+        List<ITestExecutionFilterProvider> providers = [];
+        await ExtensionBuilderHelper.BuildAndRegisterExtensionsAsync(
+            _testExecutionFilterProviderFactories,
+            serviceProvider,
+            providers).ConfigureAwait(false);
+
+        return [.. providers];
+    }
 
     private static async Task<ActionResult<T>> TryBuildSingletonExtensionAsync<T>(Func<IServiceProvider, T>? factory, ServiceProvider serviceProvider)
         where T : class, IExtension

@@ -19,77 +19,77 @@
       </trans-unit>
       <trans-unit id="ArtifactPostProcessingDispatcherCommandLineDescription">
         <source>Internal command line for artifact post-processing.</source>
-        <target state="new">Internal command line for artifact post-processing.</target>
+        <target state="translated">아티팩트 후처리를 위한 내부 명령줄입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ArtifactPostProcessingDispatcherDescription">
         <source>Dispatches artifact post-processing jobs selected by dotnet test.</source>
-        <target state="new">Dispatches artifact post-processing jobs selected by dotnet test.</target>
+        <target state="translated">dotnet test에서 선택한 아티팩트 후처리 작업을 전달합니다.</target>
         <note>Do not localize command name {Locked="dotnet test"}.</note>
       </trans-unit>
       <trans-unit id="ArtifactPostProcessingDispatcherDisplayName">
         <source>Artifact post-processing dispatcher</source>
-        <target state="new">Artifact post-processing dispatcher</target>
+        <target state="translated">아티팩트 후처리 디스패처</target>
         <note />
       </trans-unit>
       <trans-unit id="ArtifactPostProcessingDispatcherInvalidProcessorOutput">
         <source>The processed artifact must be an existing file under the output directory and cannot overwrite an input artifact.</source>
-        <target state="new">The processed artifact must be an existing file under the output directory and cannot overwrite an input artifact.</target>
+        <target state="translated">처리된 아티팩트는 출력 디렉터리 아래에 있는 기존 파일이어야 하며 입력 아티팩트를 덮어쓸 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ArtifactPostProcessingDispatcherManifestNotFound">
         <source>The artifact post-processing manifest does not exist.</source>
-        <target state="new">The artifact post-processing manifest does not exist.</target>
+        <target state="translated">아티팩트 후처리 매니페스트가 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ArtifactPostProcessingDispatcherManifestOptionDescription">
         <source>Path to the artifact post-processing manifest.</source>
-        <target state="new">Path to the artifact post-processing manifest.</target>
+        <target state="translated">아티팩트 후처리 매니페스트 경로입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ArtifactPostProcessingDispatcherProcessorConflict">
         <source>Multiple artifact post-processors match '{0}'. The first registered processor, '{1}', will be used.</source>
-        <target state="new">Multiple artifact post-processors match '{0}'. The first registered processor, '{1}', will be used.</target>
+        <target state="translated">'{0}'과(와) 일치하는 아티팩트 후처리기가 여러 개 있습니다. 먼저 등록된 처리기 '{1}'을(를) 사용합니다.</target>
         <note>{0} is an artifact kind or file extension. {1} is an extension UID.</note>
       </trans-unit>
       <trans-unit id="ArtifactPostProcessingDispatcherProcessorFailed">
         <source>Artifact post-processor '{0}' failed: {1}</source>
-        <target state="new">Artifact post-processor '{0}' failed: {1}</target>
+        <target state="translated">아티팩트 후처리기 '{0}'이(가) 실패함: {1}</target>
         <note>{0} is the processor UID. {1} is the exception message.</note>
       </trans-unit>
       <trans-unit id="ArtifactPostProcessingDispatcherRequiresPipe">
         <source>The artifact post-processing dispatcher requires a dotnet test pipe.</source>
-        <target state="new">The artifact post-processing dispatcher requires a dotnet test pipe.</target>
+        <target state="translated">아티팩트 후처리 디스패처에는 dotnet test 파이프가 필요합니다.</target>
         <note>Do not localize command name {Locked="dotnet test"}.</note>
       </trans-unit>
       <trans-unit id="ArtifactPostProcessingManifestInputMissingPath">
         <source>Artifact post-processing manifest input {0} does not have a path.</source>
-        <target state="new">Artifact post-processing manifest input {0} does not have a path.</target>
+        <target state="translated">아티팩트 후처리 매니페스트 입력 {0}에 경로가 없습니다.</target>
         <note>{0} is the zero-based input index.</note>
       </trans-unit>
       <trans-unit id="ArtifactPostProcessingManifestInputsMustBeArray">
         <source>The artifact post-processing manifest inputs property must be an array.</source>
-        <target state="new">The artifact post-processing manifest inputs property must be an array.</target>
+        <target state="translated">아티팩트 후처리 매니페스트의 inputs 속성은 배열이어야 합니다.</target>
         <note>Do not localize property name {Locked="inputs"}.</note>
       </trans-unit>
       <trans-unit id="ArtifactPostProcessingManifestInvalid">
         <source>The artifact post-processing manifest must have schemaVersion 1 and an outputDirectory.</source>
-        <target state="new">The artifact post-processing manifest must have schemaVersion 1 and an outputDirectory.</target>
+        <target state="translated">아티팩트 후처리 매니페스트에는 schemaVersion 1과 outputDirectory가 있어야 합니다.</target>
         <note>Do not localize property names {Locked="schemaVersion"}{Locked="outputDirectory"}.</note>
       </trans-unit>
       <trans-unit id="ArtifactPostProcessingManifestReadError">
         <source>Cannot read the artifact post-processing manifest: {0}</source>
-        <target state="new">Cannot read the artifact post-processing manifest: {0}</target>
+        <target state="translated">아티팩트 후처리 매니페스트를 읽을 수 없음: {0}</target>
         <note>{0} is the exception message.</note>
       </trans-unit>
       <trans-unit id="ArtifactPostProcessorCapabilityContainsSeparator">
         <source>Artifact post-processor '{0}' declares capability '{1}', which cannot contain the semicolon separator.</source>
-        <target state="new">Artifact post-processor '{0}' declares capability '{1}', which cannot contain the semicolon separator.</target>
+        <target state="translated">아티팩트 후처리기 '{0}'은(는) 기능 '{1}'을(를) 선언합니다. 이 기능에는 세미콜론 구분 기호를 포함할 수 없습니다.</target>
         <note>{0} is the processor UID. {1} is an artifact kind or file extension.</note>
       </trans-unit>
       <trans-unit id="ArtifactPostProcessorCapabilityInvalid">
         <source>Artifact post-processor '{0}' declares invalid capability '{1}'. Kinds cannot be blank, and fallback extensions must be lowercase and start with a dot.</source>
-        <target state="new">Artifact post-processor '{0}' declares invalid capability '{1}'. Kinds cannot be blank, and fallback extensions must be lowercase and start with a dot.</target>
+        <target state="translated">아티팩트 후처리기 '{0}'이(가) 잘못된 기능 '{1}'을(를) 선언합니다. 종류는 비어 있을 수 없고, 대체 확장명은 소문자여야 하며 점으로 시작해야 합니다.</target>
         <note>{0} is the processor UID. {1} is an artifact kind or file extension.</note>
       </trans-unit>
       <trans-unit id="CancellingTestSession">
@@ -256,6 +256,16 @@
         <source>The same instance of 'CompositeExtensionFactory' is already registered</source>
         <target state="translated">동일한 'CompositeExtensionFactory' 인스턴스가 이미 등록됨</target>
         <note>{Locked="CompositeExtensionFactory"}</note>
+      </trans-unit>
+      <trans-unit id="CompositeTestExecutionFilterCannotContainNull">
+        <source>A composite test execution filter cannot contain a null child filter.</source>
+        <target state="new">A composite test execution filter cannot contain a null child filter.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CompositeTestExecutionFilterRequiresTwoFilters">
+        <source>A composite test execution filter requires at least two child filters.</source>
+        <target state="new">A composite test execution filter requires at least two child filters.</target>
+        <note />
       </trans-unit>
       <trans-unit id="ConfigurationFileNotFound">
         <source>The configuration file '{0}' specified with '--config-file' could not be found.</source>
@@ -623,37 +633,37 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestCliRequiresTransport">
         <source>'--server dotnettestcli' requires either '--dotnet-test-pipe' or '--dotnet-test-transport http'.</source>
-        <target state="new">'--server dotnettestcli' requires either '--dotnet-test-pipe' or '--dotnet-test-transport http'.</target>
+        <target state="translated">'--server dotnettestcli'에는 '--dotnet-test-pipe' 또는 '--dotnet-test-transport http'가 필요합니다.</target>
         <note>{Locked="--server dotnettestcli"}{Locked="--dotnet-test-pipe"}{Locked="--dotnet-test-transport http"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestHttpEndpointInvalid">
         <source>'--dotnet-test-http-endpoint' requires an absolute HTTPS URL, or an HTTP loopback URL, without user information, query, or fragment.</source>
-        <target state="new">'--dotnet-test-http-endpoint' requires an absolute HTTPS URL, or an HTTP loopback URL, without user information, query, or fragment.</target>
+        <target state="translated">'--dotnet-test-http-endpoint'에는 사용자 정보, 쿼리, 조각이 없는 절대 HTTPS URL 또는 HTTP 루프백 URL이 필요합니다.</target>
         <note>{Locked="--dotnet-test-http-endpoint"}{Locked="HTTP"}{Locked="HTTPS"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestHttpEndpointOptionDescription">
         <source>Specifies the authenticated HTTP endpoint for the dotnet test protocol.</source>
-        <target state="new">Specifies the authenticated HTTP endpoint for the dotnet test protocol.</target>
+        <target state="translated">dotnet test 프로토콜의 인증된 HTTP 엔드포인트를 지정합니다.</target>
         <note>{Locked="HTTP"}{Locked="dotnet test"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestHttpOptionsRequireTransport">
         <source>The dotnet test HTTP endpoint and token options require '--dotnet-test-transport http'.</source>
-        <target state="new">The dotnet test HTTP endpoint and token options require '--dotnet-test-transport http'.</target>
+        <target state="translated">dotnet test HTTP 엔드포인트와 토큰 옵션에는 '--dotnet-test-transport http'가 필요합니다.</target>
         <note>{Locked="dotnet test"}{Locked="HTTP"}{Locked="--dotnet-test-transport http"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestHttpRequiresEndpointAndToken">
         <source>'--dotnet-test-transport http' requires both '--dotnet-test-http-endpoint' and '--dotnet-test-http-token'.</source>
-        <target state="new">'--dotnet-test-transport http' requires both '--dotnet-test-http-endpoint' and '--dotnet-test-http-token'.</target>
+        <target state="translated">'--dotnet-test-transport http'에는 '--dotnet-test-http-endpoint'와 '--dotnet-test-http-token'이 모두 필요합니다.</target>
         <note>{Locked="--dotnet-test-transport http"}{Locked="--dotnet-test-http-endpoint"}{Locked="--dotnet-test-http-token"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestHttpTokenInvalid">
         <source>'--dotnet-test-http-token' requires a non-empty valid bearer token without whitespace or control characters.</source>
-        <target state="new">'--dotnet-test-http-token' requires a non-empty valid bearer token without whitespace or control characters.</target>
+        <target state="translated">'--dotnet-test-http-token'에는 공백이나 제어 문자가 없으며 비어 있지 않은 유효한 전달자 토큰이 필요합니다.</target>
         <note>{Locked="--dotnet-test-http-token"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestHttpTokenOptionDescription">
         <source>Specifies the per-run HTTP bearer token for the dotnet test protocol.</source>
-        <target state="new">Specifies the per-run HTTP bearer token for the dotnet test protocol.</target>
+        <target state="translated">dotnet test 프로토콜의 실행별 HTTP 전달자 토큰을 지정합니다.</target>
         <note>{Locked="HTTP"}{Locked="dotnet test"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
@@ -663,17 +673,17 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestTransportConflict">
         <source>The dotnet test named-pipe and HTTP transports cannot be selected together.</source>
-        <target state="new">The dotnet test named-pipe and HTTP transports cannot be selected together.</target>
+        <target state="translated">dotnet test 명명된 파이프 전송과 HTTP 전송은 함께 선택할 수 없습니다.</target>
         <note>{Locked="dotnet test"}{Locked="HTTP"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestTransportInvalid">
         <source>'--dotnet-test-transport' received unexpected value '{0}'. Supported values are: {1}.</source>
-        <target state="new">'--dotnet-test-transport' received unexpected value '{0}'. Supported values are: {1}.</target>
+        <target state="translated">`'--dotnet-test-transport'에서 예기치 않은 값 '{0}'이(가) 수신되었습니다. 지원되는 값은 {1}입니다.</target>
         <note>{0} is the unexpected transport value. {1} is the comma-separated list of supported transport values. {Locked="--dotnet-test-transport"}{Locked="pipe"}{Locked="http"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestTransportOptionDescription">
         <source>Selects the pre-launch transport for the dotnet test protocol.</source>
-        <target state="new">Selects the pre-launch transport for the dotnet test protocol.</target>
+        <target state="translated">dotnet test 프로토콜의 사전 실행 전송 방식을 선택합니다.</target>
         <note>{Locked="dotnet test"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
@@ -749,12 +759,12 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
       </trans-unit>
       <trans-unit id="PlatformCommandLinePipeTransportNotSupportedOnBrowser">
         <source>The dotnet test named-pipe transport is not supported on browser-wasm. Use '--dotnet-test-transport http'.</source>
-        <target state="new">The dotnet test named-pipe transport is not supported on browser-wasm. Use '--dotnet-test-transport http'.</target>
+        <target state="translated">dotnet test 명명된 파이프 전송은 browser-wasm에서 지원되지 않습니다. '--dotnet-test-transport http'를 사용하세요.</target>
         <note>{Locked="dotnet test"}{Locked="browser-wasm"}{Locked="--dotnet-test-transport http"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLinePipeTransportNotSupportedOnWasi">
         <source>The dotnet test named-pipe transport is not supported on wasi-wasm. Use '--dotnet-test-transport http'.</source>
-        <target state="new">The dotnet test named-pipe transport is not supported on wasi-wasm. Use '--dotnet-test-transport http'.</target>
+        <target state="translated">dotnet test 명명된 파이프 전송은 wasi-wasm에서 지원되지 않습니다. '--dotnet-test-transport http'를 사용하세요.</target>
         <note>{Locked="dotnet test"}{Locked="wasi-wasm"}{Locked="--dotnet-test-transport http"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLinePortOptionDescription">
@@ -1035,6 +1045,11 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
         <target state="translated">테스트 검색 요약: {1}개의 어셈블리에서 {0}개의 테스트를 찾았습니다.</target>
         <note>{0} is the number of discovered tests. {1} is the count of assemblies.</note>
       </trans-unit>
+      <trans-unit id="TestExecutionFilterProviderNotSupportedForServer">
+        <source>Test execution filter provider '{0}' returned filter type '{1}' for a JSON-RPC server request. Provider constraints are not applied to server requests; return null when TestExecutionFilterContext.Origin is Server.</source>
+        <target state="new">Test execution filter provider '{0}' returned filter type '{1}' for a JSON-RPC server request. Provider constraints are not applied to server requests; return null when TestExecutionFilterContext.Origin is Server.</target>
+        <note>{0} is the provider UID. {1} is the filter type. {Locked="JSON-RPC"}{Locked="null"}{Locked="TestExecutionFilterContext.Origin"}{Locked="Server"}</note>
+      </trans-unit>
       <trans-unit id="TestFrameworkProxyApiShouldNotBeCalled">
         <source>Method '{0}' should not have been called on this proxy object</source>
         <target state="translated">이 프록시 개체에서 '{0}' 메서드를 호출하지 않아야 합니다.</target>
@@ -1131,6 +1146,26 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
         <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
         <target state="translated">처리되지 않은 예외 [ServerTestHost.OnTaskSchedulerUnobservedTaskException]: {0}</target>
         <note>{0} is the exception that was unhandled/unobserved. {Locked="ServerTestHost.OnTaskSchedulerUnobservedTaskException"}</note>
+      </trans-unit>
+      <trans-unit id="UnsupportedProviderTestExecutionFilter">
+        <source>Test execution filter provider '{0}' returned unsupported filter type '{1}'. Providers can return only NopFilter, TestNodeUidListFilter, TreeNodeFilter, or an And CompositeTestExecutionFilter.</source>
+        <target state="new">Test execution filter provider '{0}' returned unsupported filter type '{1}'. Providers can return only NopFilter, TestNodeUidListFilter, TreeNodeFilter, or an And CompositeTestExecutionFilter.</target>
+        <note>{0} is the provider UID. {1} is the unsupported filter type. {Locked="NopFilter"}{Locked="TestNodeUidListFilter"}{Locked="TreeNodeFilter"}{Locked="And"}{Locked="CompositeTestExecutionFilter"}</note>
+      </trans-unit>
+      <trans-unit id="UnsupportedRequestTestExecutionFilter">
+        <source>The request contains unsupported test execution filter type '{0}'.</source>
+        <target state="new">The request contains unsupported test execution filter type '{0}'.</target>
+        <note>{0} is the unsupported filter type.</note>
+      </trans-unit>
+      <trans-unit id="UnsupportedTestExecutionFilterOperator">
+        <source>Only the And test execution filter operator is supported.</source>
+        <target state="new">Only the And test execution filter operator is supported.</target>
+        <note>{Locked="And"}</note>
+      </trans-unit>
+      <trans-unit id="UnsupportedTestExecutionFilterOperatorValue">
+        <source>Test execution filter operator '{0}' is not supported. Only And is supported.</source>
+        <target state="new">Test execution filter operator '{0}' is not supported. Only And is supported.</target>
+        <note>{0} is the unsupported operator value. {Locked="And"}</note>
       </trans-unit>
       <trans-unit id="WaitDebuggerAttachNotSupportedInBrowserErrorMessage">
         <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported in browser environments.</source>

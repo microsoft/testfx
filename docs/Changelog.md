@@ -20,8 +20,9 @@ See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4
 ### Fixed
 
 * Fix `CloneWithUpdatedSource` mutating `this` instead of the clone by @Evangelink in [#9581](https://github.com/microsoft/testfx/pull/9581)
+* Fix MSTEST0024 not reporting coalesce (`s_testContext ??= tc`) and deconstruction (`(s_testContext, _) = (tc, 0)`) assignments of a `TestContext` parameter to a static member. Projects treating warnings as errors may see new MSTEST0024 diagnostics on code that previously went unreported by @Evangelink in [#10244](https://github.com/microsoft/testfx/pull/10244)
 
-## <a name="4.3.3" />[4.3.3] - UNRELEASED
+## <a name="4.3.3" />[4.3.3] - 2026-07-28
 
 See full log [of v4.3.2...v4.3.3](https://github.com/microsoft/testfx/compare/v4.3.2...v4.3.3)
 

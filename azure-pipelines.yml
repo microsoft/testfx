@@ -172,6 +172,12 @@ stages:
       displayName: Seed $(_BuildConfig) project cache
       env:
         SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+        # MSBuildCache reads NUGET_PACKAGES to build its path normalizer, and every restored package file is a
+        # fingerprinted input. The seeding and the consuming builds must therefore agree on this folder or every
+        # node misses. Arcade's -ci switch already redirects restore here (eng/common/tools.ps1 sets
+        # NUGET_PACKAGES to $(RepoRoot).packages when -ci is passed), but the consuming build in the `build`
+        # stage cannot use -ci, so pin the value explicitly on both sides instead of relying on that default.
+        NUGET_PACKAGES: $(Build.SourcesDirectory)\.packages\
 
 - stage: build
   displayName: Build
@@ -340,6 +346,17 @@ stages:
           continueOnError: true
           env:
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+            # Must match the seeding stage exactly. MSBuildCache normalizes observed input paths against
+            # NUGET_PACKAGES, and every restored package file is a fingerprinted input, so a different package
+            # folder changes every node's weak fingerprint and the whole 204-node graph misses. This step cannot
+            # pass Arcade's -ci switch (which would otherwise pick the same folder) because eng/common/tools.ps1
+            # then reports failures through Write-PipelineSetResult and exits with code 0, which would make the
+            # wrapper below treat a failed cache build as a success. Pin the folder directly instead.
+            NUGET_PACKAGES: $(Build.SourcesDirectory)\.packages\
+            # Also part of the -ci behaviour the seeding stage gets: opting out keeps the dotnet CLI from
+            # spawning detached telemetry that writes files after the owning project has finished, which
+            # MSBuildCache reports as a file-access violation.
+            DOTNET_CLI_TELEMETRY_OPTOUT: 1
 
         # CIBuild.cmd also restores the custom toolset/workloads, signs the build outputs, and produces the packages
         # consumed by the acceptance tests. Run those phases without the Build phase when the cache supplied the

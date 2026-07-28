@@ -4,17 +4,17 @@
     <body>
       <trans-unit id="InvalidTestApplicationBuilderType">
         <source>TRX report generation and merge tools require a test application builder that supports artifact post-processing</source>
-        <target state="new">TRX report generation and merge tools require a test application builder that supports artifact post-processing</target>
+        <target state="translated">Nástroje pro generování a slučování sestav TRX vyžadují tvůrce testovací aplikace, který podporuje následné zpracování artefaktů</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxArtifactPostProcessorDescription">
         <source>Merges TRX reports produced by Microsoft.Testing.Extensions.TrxReport</source>
-        <target state="new">Merges TRX reports produced by Microsoft.Testing.Extensions.TrxReport</target>
+        <target state="translated">Sloučí sestavy TRX vytvořené rozšířením Microsoft.Testing.Extensions.TrxReport</target>
         <note>Do not localize format name {Locked="TRX"} or assembly name {Locked="Microsoft.Testing.Extensions.TrxReport"}.</note>
       </trans-unit>
       <trans-unit id="TrxArtifactPostProcessorDisplayName">
         <source>TRX report merger</source>
-        <target state="new">TRX report merger</target>
+        <target state="translated">Slučovač sestav TRX</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxComparerToolBaselineFileOptionDescription">
@@ -54,47 +54,47 @@
       </trans-unit>
       <trans-unit id="TrxMergeToolDescription">
         <source>Merges multiple TRX files into one from the command line</source>
-        <target state="new">Merges multiple TRX files into one from the command line</target>
+        <target state="translated">Sloučí z příkazového řádku několik souborů TRX do jednoho</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolDisplayName">
         <source>TRX report merge tool</source>
-        <target state="new">TRX report merge tool</target>
+        <target state="translated">Nástroj pro slučování sestav TRX</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolInputOptionDescription">
         <source>Two or more input TRX file paths</source>
-        <target state="new">Two or more input TRX file paths</target>
+        <target state="translated">Dvě nebo více cest ke vstupním souborům TRX</target>
         <note>Do not localize option name {Locked="--input"} or format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolInvalidInputs">
         <source>'--input' expects two or more existing TRX file paths</source>
-        <target state="new">'--input' expects two or more existing TRX file paths</target>
+        <target state="translated">Možnost --input očekává dvě nebo více cest k existujícím souborům TRX</target>
         <note>Do not localize option name {Locked="--input"} or format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolInvalidOutput">
         <source>'--output-trx' expects one TRX file path</source>
-        <target state="new">'--output-trx' expects one TRX file path</target>
+        <target state="translated">Možnost --output-trx očekává jednu cestu k souboru TRX</target>
         <note>Do not localize option name {Locked="--output-trx"} or format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolOutputOptionDescription">
         <source>The output TRX file path</source>
-        <target state="new">The output TRX file path</target>
+        <target state="translated">Cesta k výstupnímu souboru TRX</target>
         <note>Do not localize option name {Locked="--output-trx"} or format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergedArtifactDescription">
         <source>{0} TRX files merged</source>
-        <target state="new">{0} TRX files merged</target>
+        <target state="translated">Počet sloučených souborů TRX: {0}</target>
         <note>{0} is the number of merged files. Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergedArtifactDisplayName">
         <source>TRX report (merged)</source>
-        <target state="new">TRX report (merged)</target>
+        <target state="translated">Sestava TRX (sloučená)</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergedRunName">
         <source>Merged TRX report</source>
-        <target state="new">Merged TRX report</target>
+        <target state="translated">Sloučená sestava TRX</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportArtifactDescription">
