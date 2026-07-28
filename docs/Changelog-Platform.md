@@ -4,7 +4,62 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+<<<<<<< HEAD
 ## <a name="2.3.0" />[2.3.0] - UNRELEASED
+=======
+## <a name="2.4.0" />[2.4.0] - UNRELEASED
+
+See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4.3.3...v4.4.0)
+
+### Added
+
+* Add `--report-azdo-groups <on|off>` and `--report-azdo-annotations <on|off>` toggles to Azure DevOps report extension by @Evangelink in [#9542](https://github.com/microsoft/testfx/pull/9542)
+* Re-print errored assemblies in dotnet test end-of-run recap by @Evangelink in [#9545](https://github.com/microsoft/testfx/pull/9545)
+* Add server-initiated session cancellation to the dotnet test IPC protocol by @Evangelink in [#9549](https://github.com/microsoft/testfx/pull/9549)
+
+### Fixed
+
+* Fix `Microsoft.Testing.Extensions.AzureDevOpsReport` crashing with `ObjectDisposedException` during teardown, after results were already published, when the platform disposes the live test-results publisher more than once in [#10191](https://github.com/microsoft/testfx/issues/10191)
+* Report on the console why `--publish-azdo-test-results` published nothing, instead of silently disabling live publishing when the Azure DevOps environment is incomplete, in [#10191](https://github.com/microsoft/testfx/issues/10191)
+
+## <a name="2.3.3" />[2.3.3] - UNRELEASED
+
+See full log [of v4.3.2...v4.3.3](https://github.com/microsoft/testfx/compare/v4.3.2...v4.3.3)
+
+### Changed
+
+* Produce portable PDBs for official builds so symbols can be published to symbol servers by @Evangelink in [#10006](https://github.com/microsoft/testfx/pull/10006)
+
+### Fixed
+
+* Restore compatibility with the deprecated MSTest.Engine used by source-generated test projects by @Evangelink in [#9938](https://github.com/microsoft/testfx/pull/9938)
+* Regenerate source-generated entry points and extension registrations after the Microsoft.Testing.Platform.MSBuild task assembly is updated by @Evangelink in [#10082](https://github.com/microsoft/testfx/pull/10082)
+* Fix VSTestBridge throwing `IndexOutOfRangeException` when a UID after the first starts with a filter operator by @azat-msft in [#9771](https://github.com/microsoft/testfx/pull/9771)
+* Prevent diagnostic file-logger shutdown from crashing an otherwise successful test run under thread-pool starvation by @Evangelink in [#9802](https://github.com/microsoft/testfx/pull/9802)
+* Fix VSTestBridge interpreting a GUID-shaped fully-qualified test name as a test ID by @Evangelink in [#9794](https://github.com/microsoft/testfx/pull/9794)
+* Support comments in `testconfig.json` on .NET Framework by @Evangelink in [#10144](https://github.com/microsoft/testfx/pull/10144)
+* Fix `Microsoft.Testing.Extensions.AzureDevOpsReport` crashing during teardown from duplicate data-consumer disposal after a successful test run by @Evangelink in [#10195](https://github.com/microsoft/testfx/pull/10195)
+
+## <a name="2.3.2" />[2.3.2] - 2026-07-13
+
+Servicing release to keep Microsoft.Testing.Platform aligned with the MSTest 4.3.2 release. No functional platform changes beyond the localization updates below.
+
+### Changed
+
+* Update localized resources for the Azure DevOps, GitHub Actions and Retry extensions and terminal output by @Evangelink in [#9847](https://github.com/microsoft/testfx/pull/9847)
+
+### Fixed
+
+* Fix localization placeholder in the GitHub Actions report resources by @Evangelink in [#9891](https://github.com/microsoft/testfx/pull/9891)
+
+## <a name="2.3.1" />[2.3.1] - 2026-07-08
+
+### Fixed
+
+* Fix forward-compat crash (`MissingMethodException`) loading old 2.x extensions (Telemetry, TrxReport, VSTestBridge) on .NET Framework by @Evangelink in [#9739](https://github.com/microsoft/testfx/pull/9739)
+
+## <a name="2.3.0" />[2.3.0] - 2026-07-07
+>>>>>>> Fix AzureDevOpsReport teardown crash and silent live-publishing disable
 
 See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4.2.3...v4.3.0)
 
