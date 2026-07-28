@@ -54,7 +54,7 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
         {
             ApplicationStateGuard.Ensure(_retryFailedTestsLifecycleCallbacks is not null);
             ApplicationStateGuard.Ensure(_retryFailedTestsLifecycleCallbacks.Client is not null);
-            await _retryFailedTestsLifecycleCallbacks.Client.RequestReplyAsync<FailedTestRequest, VoidResponse>(new FailedTestRequest(testNodeUpdateMessage.TestNode.Uid), cancellationToken).ConfigureAwait(false);
+            await _retryFailedTestsLifecycleCallbacks.Client.RequestReplyAsync<FailedTestRequest, VoidResponse>(new FailedTestRequest(testNodeUpdateMessage.TestNode.Uid, testNodeUpdateMessage.TestNode.DisplayName), cancellationToken).ConfigureAwait(false);
         }
 
         if (nodeState is PassedTestNodeStateProperty or FailedTestNodeStateProperty or ErrorTestNodeStateProperty

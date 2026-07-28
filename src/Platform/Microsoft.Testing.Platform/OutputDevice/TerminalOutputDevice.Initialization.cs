@@ -170,6 +170,7 @@ internal sealed partial class TerminalOutputDevice
             SlowTestThreshold = ProgressReportingConfiguration.GetThreshold(
                 _environment, ProgressReportingConfiguration.MTP_PROGRESS_SLOW_TEST_SECONDS, defaultSeconds: 60),
             SlowestTestsCount = slowestTestsCount,
+            ShowFlakyTests = TerminalTestReporterCommandLineOptionsProvider.IsFlakyTestsReportingEnabled(_commandLineOptions),
         }, _loggerFactory.CreateLogger<TestProgressStateAwareTerminal>());
     }
 

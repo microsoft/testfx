@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under dual-license. See LICENSE.PLATFORMTOOLS.txt file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.Policy.Resources;
@@ -116,13 +116,16 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
         string retryRootFolder = CreateRetriesDirectory(resultDirectory);
         bool retryInterrupted = false;
 
-        // Retry summary accounting (single-assembly). The orchestrator only learns each attempt's failed UID set and
-        // the total number of tests that ran, so the richer passed/skipped split stays in the per-attempt child
-        // summaries; here we reconcile the attempts into one headline (mirroring the platform run summary idiom).
+        // Retry summary accounting (single-assembly). The orchestrator learns each attempt's failed test set (uid ->
+        // display name) and the total number of tests that ran, so it can reconcile the attempts into one headline
+        // with exact, nameable sets rather than count arithmetic:
+        //   retried = union of every attempt-that-was-followed-by-another attempt's failed set
+        //   flaky   = retried minus the final attempt's failed set
+        // The richer passed/skipped split stays in the per-attempt child summaries.
         var orchestrationStopwatch = Stopwatch.StartNew();
         int suiteTotalTests = 0;
-        int firstAttemptFailedTests = 0;
-        int finalFailedTests = 0;
+        Dictionary<string, string> retriedTests = [];
+        Dictionary<string, string> finalFailedTests = [];
         int retriedExecutions = 0;
 
         // Parse the delay once before the loop since command-line options don't change.
@@ -184,13 +187,12 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
 
             exitCodes.Add(attemptResult.ExitCode);
 
-            int failedThisAttempt = retryFailedTestsPipeServer.FailedUID?.Count ?? 0;
+            int failedThisAttempt = retryFailedTestsPipeServer.FailedTests.Count;
             if (attemptCount == 1)
             {
                 // The first attempt runs the full suite, so its total is the suite size that the final summary
-                // reconciles against; its failed set is the upper bound for the "flaky" (failed-then-passed) count.
+                // reconciles against.
                 suiteTotalTests = retryFailedTestsPipeServer.TotalTestRan;
-                firstAttemptFailedTests = failedThisAttempt;
             }
 
             if (attemptResult.ExitCode != (int)ExitCode.Success)
@@ -199,10 +201,15 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                 {
                     await outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteFailedWithWrongExitCode, attemptResult.ExitCode)), cancellationToken).ConfigureAwait(false);
                     retryInterrupted = true;
+
+                    // Still record what this attempt managed to report, so the summary below describes the run that
+                    // actually happened instead of silently falling back to the previous attempt's numbers. A fresh
+                    // pipe server (and dictionary) is created per attempt, so holding the reference is safe.
+                    finalFailedTests = retryFailedTestsPipeServer.FailedTests;
                     break;
                 }
 
-                finalFailedTests = failedThisAttempt;
+                finalFailedTests = retryFailedTestsPipeServer.FailedTests;
 
                 // Check thresholds only on the first attempt (computed against the full suite).
                 if (attemptCount == 1 && await RetryThresholdPolicy.EvaluateAsync(_commandLineOptions, this, outputDevice, retryFailedTestsPipeServer, cancellationToken).ConfigureAwait(false))
@@ -225,40 +232,60 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                         },
                         cancellationToken).ConfigureAwait(false);
 
-                    // Each retried attempt re-runs exactly this attempt's failed set, so its failed count is the
-                    // number of extra executions added by the retry — the platform "(+N retried)" semantics.
+                    // Each retried attempt re-runs exactly this attempt's failed set, so those tests are the ones
+                    // that get retried, and their count is the number of extra executions the retry adds.
+                    foreach (KeyValuePair<string, string> failedTest in retryFailedTestsPipeServer.FailedTests)
+                    {
+                        retriedTests[failedTest.Key] = failedTest.Value;
+                    }
+
                     retriedExecutions += failedThisAttempt;
                 }
 
-                lastListOfFailedId = retryFailedTestsPipeServer.FailedUID?.ToArray();
+                lastListOfFailedId = [.. retryFailedTestsPipeServer.FailedTests.Keys];
             }
             else
             {
-                finalFailedTests = 0;
+                finalFailedTests = [];
                 break;
             }
         }
 
         orchestrationStopwatch.Stop();
 
-        if (!thresholdPolicyKickedIn && !retryInterrupted)
+        // The summary is reported on every path, including the ones that stopped retrying early: knowing what the
+        // run ended up with (and which tests were flaky) is exactly as useful when the threshold policy disabled
+        // retrying or an attempt exited unexpectedly as when the retry loop ran to completion.
+        // "flaky" = retried at some point, but not failing at the end — the headline value of the retry feature.
+        List<string> flakyTests = [];
+        foreach (KeyValuePair<string, string> retriedTest in retriedTests)
         {
-            await RetrySummaryReporter.ReportSummaryAsync(
-                this,
-                outputDevice,
-                new RetryRunSummary
-                {
-                    ExitCodes = exitCodes,
-                    AttemptCount = attemptCount,
-                    UserMaxRetryCount = userMaxRetryCount,
-                    SuiteTotalTests = suiteTotalTests,
-                    FirstAttemptFailedTests = firstAttemptFailedTests,
-                    FinalFailedTests = finalFailedTests,
-                    RetriedExecutions = retriedExecutions,
-                    Elapsed = orchestrationStopwatch.Elapsed,
-                },
-                cancellationToken).ConfigureAwait(false);
+            if (!finalFailedTests.ContainsKey(retriedTest.Key))
+            {
+                flakyTests.Add(retriedTest.Value);
+            }
         }
+
+        flakyTests.Sort(StringComparer.Ordinal);
+
+        await RetrySummaryReporter.ReportSummaryAsync(
+            this,
+            outputDevice,
+            new RetryRunSummary
+            {
+                ExitCodes = exitCodes,
+                AttemptCount = attemptCount,
+                UserMaxRetryCount = userMaxRetryCount,
+                SuiteTotalTests = suiteTotalTests,
+                FinalFailedTests = finalFailedTests.Count,
+                RetriedTests = retriedTests.Count,
+                RetriedExecutions = retriedExecutions,
+                FlakyTests = flakyTests,
+                ShowFlakyTests = FlakyTestsReportingOptions.IsEnabled(_commandLineOptions),
+                StoppedEarly = thresholdPolicyKickedIn || retryInterrupted,
+                Elapsed = orchestrationStopwatch.Elapsed,
+            },
+            cancellationToken).ConfigureAwait(false);
 
         ApplicationStateGuard.Ensure(currentTryResultFolder is not null);
 

@@ -122,10 +122,25 @@
         <target state="translated">  başarısız: {0}</target>
         <note>{0} is the number of tests still failing after the final attempt. Two leading spaces and the lowercase 'failed:' label mirror the platform run summary.</note>
       </trans-unit>
+      <trans-unit id="RetrySummaryFailedStoppedEarly">
+        <source>Retry summary: Failed! after {0} attempts (retrying stopped early)</source>
+        <target state="new">Retry summary: Failed! after {0} attempts (retrying stopped early)</target>
+        <note>{0} is the number of attempts that actually ran. Used when retrying was cut short by the failure threshold policy or by an attempt exiting unexpectedly, so the maximum attempt count would be misleading. Keep 'Retry summary:' and 'Failed!' parallel to the platform 'Test run summary: Failed!' wording.</note>
+      </trans-unit>
       <trans-unit id="RetrySummaryFlakyLine">
         <source>  flaky: {0}</source>
         <target state="translated">  Güvenilir değil: {0}</target>
         <note>{0} is the number of tests that failed at least once but eventually passed. Two leading spaces and the lowercase 'flaky:' label mirror the platform run summary.</note>
+      </trans-unit>
+      <trans-unit id="RetrySummaryFlakyTestLine">
+        <source>  {0} (failed -&gt; passed)</source>
+        <target state="new">  {0} (failed -&gt; passed)</target>
+        <note>{0} is the display name of a flaky test. The arrow reads left (first outcome) to right (final outcome). Two leading spaces indent the entry under the 'Flaky tests:' header.</note>
+      </trans-unit>
+      <trans-unit id="RetrySummaryFlakyTestsHeader">
+        <source>Flaky tests:</source>
+        <target state="new">Flaky tests:</target>
+        <note>Header of the section that lists, by name, the tests which failed at least once but eventually passed.</note>
       </trans-unit>
       <trans-unit id="RetrySummaryPassed">
         <source>Retry summary: Passed! after {0}/{1} attempts</source>
@@ -137,10 +152,10 @@
         <target state="translated">Yeniden deneme özeti: Geçti! ilk denemede (yeniden deneme gerekmedi)</target>
         <note>Keep 'Retry summary:' and 'Passed!' parallel to the platform 'Test run summary: Passed!' wording.</note>
       </trans-unit>
-      <trans-unit id="RetrySummaryRetriedSuffix">
-        <source> (+{0} retried)</source>
-        <target state="translated"> (+{0} yeniden denendi)</target>
-        <note>{0} is the number of test executions that were retried. Appended to the total line, mirroring the platform '(+N retried)' suffix.</note>
+      <trans-unit id="RetrySummaryRetriedLine">
+        <source>  retried: {0} test(s), {1} extra run(s)</source>
+        <target state="new">  retried: {0} test(s), {1} extra run(s)</target>
+        <note>{0} is the number of distinct tests that were re-run. {1} is the number of extra executions those retries cost. Two leading spaces and the lowercase 'retried:' label mirror the platform run summary. The '(s)' suffix follows the existing convention used elsewhere in this extension for counts that may be one.</note>
       </trans-unit>
       <trans-unit id="RetrySummaryTotalLine">
         <source>  total: {0}</source>

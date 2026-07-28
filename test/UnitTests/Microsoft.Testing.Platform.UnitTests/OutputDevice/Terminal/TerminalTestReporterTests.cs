@@ -2267,7 +2267,7 @@ public sealed class TerminalTestReporterTests
     // Companion to the test above driving the FULL lifecycle to validate the two retry-specific renderings the
     // dotnet/sdk orchestrator acceptance test RunTestProjectWithWithRetryFeature_ShouldSucceed asserts:
     //   1) each per-test result line is annotated with "(try N)" so retried attempts are distinguishable, and
-    //   2) the run summary's total line is suffixed with "(+N retried)".
+    //   2) the run summary carries the dedicated "retried:" (and, for a recovered test, "flaky:") lines.
     // The in-process host never retries (isRetry stays false, TryCount stays 1), so neither rendering appears there.
     [TestMethod]
     public void TestExecutionCompleted_WhenTestsWereRetried_AnnotatesTryNumberAndSummaryRetriedCount()
@@ -2307,11 +2307,116 @@ public sealed class TerminalTestReporterTests
         Assert.Contains($"({tryTwo})", output);
         Assert.DoesNotContain($"({string.Format(CultureInfo.CurrentCulture, TerminalResources.Try, 3)})", output);
 
-        // 2) Summary total line carries the "(+1 retried)" suffix.
-        Assert.Contains($"{TerminalResources.TotalLowercase}: 1 (+1 {TerminalResources.Retried})", output);
+        // 2) The total line is a plain count again; the retry accounting moved to its own line, which distinguishes
+        // the single retried test from the single extra run it cost.
+        Assert.Contains($"{TerminalResources.TotalLowercase}: 1", output);
+        Assert.DoesNotContain($"(+1 {TerminalResources.Retried})", output);
+        Assert.Contains($"{TerminalResources.Retried}: {string.Format(CultureInfo.CurrentCulture, TerminalResources.RetriedTestsAndRuns, 1, 1)}", output);
+
+        // The test failed once and then passed, so it is flaky and is both counted and named.
+        Assert.Contains($"{TerminalResources.FlakyLowercase}: 1", output);
+        Assert.Contains(TerminalResources.FlakyTests, output);
 
         // The retry also surfaces in the per-assembly "(try N) Running tests from" banner.
         Assert.Contains($"({tryTwo}) {TerminalResources.RunningTestsFrom}", output);
+    }
+
+    // A test that is retried but keeps failing is retried-but-not-flaky: it must be counted under "retried:" and
+    // must NOT appear in the flaky count or the "Flaky tests" section, whose whole point is "this one silently
+    // recovered". Its failure is already reported in full by the normal failed-test rendering.
+    [TestMethod]
+    public void TestExecutionCompleted_WhenRetriedTestKeepsFailing_CountsRetriedButNotFlaky()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+            ShowPassedTests = () => true,
+            ShowAssembly = true,
+            ShowAssemblyStartAndComplete = true,
+        });
+
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: true);
+
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\Broken.Tests.dll" : "/repo/Broken.Tests.dll";
+        const string executionId = "exec-broken";
+
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-1", attemptNumber: 1);
+        ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-1", testUid: "broken-1", TestOutcome.Fail);
+
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-2", attemptNumber: 2);
+        ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-2", testUid: "broken-1", TestOutcome.Fail);
+
+        terminalReporter.AssemblyRunCompleted(executionId, exitCode: 2, outputData: null, errorData: null);
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: 2);
+
+        string output = stringBuilderConsole.Output;
+
+        Assert.Contains($"{TerminalResources.Retried}: {string.Format(CultureInfo.CurrentCulture, TerminalResources.RetriedTestsAndRuns, 1, 1)}", output);
+        Assert.DoesNotContain($"{TerminalResources.FlakyLowercase}: ", output);
+        Assert.DoesNotContain(TerminalResources.FlakyTests, output);
+    }
+
+    // --show-flaky-tests off suppresses both the "flaky:" count line and the "Flaky tests" section, while leaving
+    // the "retried:" accounting (which is not part of the flaky feature) in place.
+    [TestMethod]
+    public void TestExecutionCompleted_WhenShowFlakyTestsIsOff_OmitsFlakyCountAndSection()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+            ShowPassedTests = () => true,
+            ShowAssembly = true,
+            ShowAssemblyStartAndComplete = true,
+            ShowFlakyTests = false,
+        });
+
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: true);
+
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\Flaky.Tests.dll" : "/repo/Flaky.Tests.dll";
+        const string executionId = "exec-flaky-off";
+
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-1", attemptNumber: 1);
+        ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-1", testUid: "flaky-1", TestOutcome.Fail);
+
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-2", attemptNumber: 2);
+        ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-2", testUid: "flaky-1", TestOutcome.Passed);
+
+        terminalReporter.AssemblyRunCompleted(executionId, exitCode: 0, outputData: null, errorData: null);
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: 0);
+
+        string output = stringBuilderConsole.Output;
+
+        Assert.DoesNotContain($"{TerminalResources.FlakyLowercase}: ", output);
+        Assert.DoesNotContain(TerminalResources.FlakyTests, output);
+        Assert.Contains($"{TerminalResources.Retried}: {string.Format(CultureInfo.CurrentCulture, TerminalResources.RetriedTestsAndRuns, 1, 1)}", output);
+    }
+
+    // A run where nothing was retried must keep its historical summary exactly: no "flaky:" line and no "retried:"
+    // line, so the common case is not made noisier by the feature.
+    [TestMethod]
+    public void TestExecutionCompleted_WhenNothingWasRetried_OmitsRetryLinesEntirely()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        TerminalTestReporter terminalReporter = CreateOrchestratorReporter(stringBuilderConsole);
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: false);
+
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\Stable.Tests.dll" : "/repo/Stable.Tests.dll";
+        const string executionId = "exec-stable";
+
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-1", attemptNumber: 1);
+        ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-1", testUid: "stable-1", TestOutcome.Passed);
+
+        terminalReporter.AssemblyRunCompleted(executionId, exitCode: 0, outputData: null, errorData: null);
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: 0);
+
+        string output = stringBuilderConsole.Output;
+
+        Assert.DoesNotContain($"{TerminalResources.FlakyLowercase}: ", output);
+        Assert.DoesNotContain($"{TerminalResources.Retried}: ", output);
     }
 
     // Orchestrator discovery (dotnet test --list-tests across N assemblies): each assembly gets a

@@ -38,7 +38,15 @@ internal sealed class RetryFailedTestsPipeServer : IDisposable
 
     public string PipeName => _pipeNameDescription.Name;
 
-    public List<string>? FailedUID { get; private set; }
+    /// <summary>
+    /// Gets the distinct uids of the tests that failed in this attempt, mapped to their display name.
+    /// </summary>
+    /// <remarks>
+    /// Deliberately a dictionary keyed by uid rather than a flat list of every failed result: a folded data-driven
+    /// test reports several results under a single uid, and the retry filter, the threshold policy and the summary
+    /// all reason in terms of tests, not results. Counting results here inflated all three.
+    /// </remarks>
+    public Dictionary<string, string> FailedTests { get; } = [];
 
     public int TotalTestRan { get; private set; }
 
@@ -52,8 +60,8 @@ internal sealed class RetryFailedTestsPipeServer : IDisposable
     {
         if (request is FailedTestRequest failed)
         {
-            FailedUID ??= [];
-            FailedUID.Add(failed.Uid);
+            // Last writer wins on the display name; every result sharing a uid describes the same test node.
+            FailedTests[failed.Uid] = failed.DisplayName;
             return Task.FromResult((IResponse)VoidResponse.CachedInstance);
         }
 

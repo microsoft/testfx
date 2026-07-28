@@ -83,6 +83,13 @@ internal sealed class TerminalTestReporterOptions
     /// Zero (the default) disables the section.
     /// </summary>
     public int SlowestTestsCount { get; init; }
+
+    /// <summary>
+    /// Gets a value indicating whether tests that failed at least once but eventually passed after a retry are
+    /// reported (the "flaky: N" summary line and the "Flaky tests" section). On by default; turned off by
+    /// <c>--show-flaky-tests off</c>. Has no effect on a run where nothing was retried.
+    /// </summary>
+    public bool ShowFlakyTests { get; init; } = true;
 }
 
 [Embedded]

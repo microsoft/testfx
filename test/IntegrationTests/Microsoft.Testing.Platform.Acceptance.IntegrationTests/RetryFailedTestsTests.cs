@@ -42,8 +42,14 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         {
             testHostResult.AssertExitCodeIs(ExitCode.Success);
             testHostResult.AssertOutputContains("Retry summary: Passed! after 2/4 attempts");
+            testHostResult.AssertOutputContains("  total: 3");
+            testHostResult.AssertOutputContains("  failed: 0");
             testHostResult.AssertOutputContains("  flaky: 1");
-            testHostResult.AssertOutputContains("  total: 3 (+1 retried)");
+            // The single retried test cost exactly one extra run; the old "(+N retried)" suffix conflated the two.
+            testHostResult.AssertOutputContains("  retried: 1 test(s), 1 extra run(s)");
+            // ...and it is named, which is the whole point of the flaky report.
+            testHostResult.AssertOutputContains("Flaky tests:");
+            testHostResult.AssertOutputContains("(failed -> passed)");
             testHostResult.AssertOutputContains("Failed! -");
             testHostResult.AssertOutputContains("Passed! -");
 
@@ -66,6 +72,10 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             // The final (4th) attempt is reported by the summary verdict, not by an amber "retrying" line.
             testHostResult.AssertOutputDoesNotContain("Retry: attempt 4/4 failed");
             testHostResult.AssertOutputContains("  failed: 1");
+            // The test was retried but never recovered, so it is retried-but-not-flaky: no flaky count, no listing.
+            testHostResult.AssertOutputContains("  retried: 1 test(s), 3 extra run(s)");
+            testHostResult.AssertOutputDoesNotContain("  flaky:");
+            testHostResult.AssertOutputDoesNotContain("Flaky tests:");
             testHostResult.AssertOutputContains("Failed! -");
         }
     }
@@ -227,8 +237,9 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             string logFileContents = File.ReadAllText(logFile);
             Assert.Contains("Test run summary: Passed!", logFileContents);
             Assert.Contains("total: 3", logFileContents);
-            // Zero-retry runs must not advertise a retried suffix on the total line.
-            Assert.DoesNotContain("retried)", logFileContents);
+            // A run where nothing was retried must not gain any retry accounting lines.
+            Assert.DoesNotContain("retried:", logFileContents);
+            Assert.DoesNotContain("flaky:", logFileContents);
             Assert.Contains("succeeded: 3", logFileContents);
             Assert.Contains("Retry summary: Passed! on the first attempt (no retries needed)", logFileContents);
         }

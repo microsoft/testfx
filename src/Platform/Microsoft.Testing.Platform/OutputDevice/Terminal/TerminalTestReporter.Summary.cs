@@ -51,7 +51,9 @@ internal sealed partial class TerminalTestReporter
         int totalFailedTests = 0;
         int totalSkippedTests = 0;
         int totalPassedTests = 0;
-        int totalRetried = 0;
+        int totalRetriedTests = 0;
+        int totalRetriedExecutions = 0;
+        int totalFlakyTests = 0;
         bool anyAssemblyFailed = false;
         int failedAssembliesWithoutFailedTests = 0;
 
@@ -61,7 +63,9 @@ internal sealed partial class TerminalTestReporter
             totalFailedTests += assembly.FailedTests;
             totalSkippedTests += assembly.SkippedTests;
             totalPassedTests += assembly.PassedTests;
-            totalRetried += assembly.RetriedFailedTests;
+            totalRetriedTests += assembly.RetriedTests;
+            totalRetriedExecutions += assembly.RetriedExecutions;
+            totalFlakyTests += assembly.FlakyTests;
             if (!assembly.Success)
             {
                 anyAssemblyFailed = true;
@@ -121,7 +125,6 @@ internal sealed partial class TerminalTestReporter
         int failed = totalFailedTests;
         int passed = totalPassedTests;
         int skipped = totalSkippedTests;
-        int retried = totalRetried;
 
         // Orchestrator-only: count assemblies that ended unsuccessfully without a failed test (crash / non-zero exit)
         // plus handshake failures. These are surfaced as an "error: N" line so they aren't hidden behind a zero
@@ -149,19 +152,8 @@ internal sealed partial class TerminalTestReporter
         }
 
         terminal.ResetColor();
-        terminal.Append(totalText);
+        terminal.AppendLine(totalText);
 
-        // Orchestrator-only: when failed tests were retried, append "(+N retried)" after the total so the headline
-        // count (which reflects the final attempt) is reconciled with the extra retried executions. retried is 0 for
-        // the in-process host, so the total line stays byte-identical there.
-        if (retried > 0)
-        {
-            terminal.SetColor(TerminalColor.DarkGray);
-            terminal.Append($" (+{retried} {TerminalResources.Retried})");
-            terminal.ResetColor();
-        }
-
-        terminal.AppendLine();
         if (colorizeFailed)
         {
             terminal.SetColor(TerminalColor.DarkRed);
@@ -198,9 +190,15 @@ internal sealed partial class TerminalTestReporter
             terminal.ResetColor();
         }
 
+        AppendRetrySummaryLines(terminal, totalFlakyTests, totalRetriedTests, totalRetriedExecutions);
+
         terminal.Append(durationText);
         AppendLongDuration(terminal, runDuration, wrapInParentheses: false, colorize: false);
         terminal.AppendLine();
+
+        // Optional "Flaky tests" section (on by default, suppressed by --show-flaky-tests off). No-op when nothing
+        // was retried, so the summary stays byte-identical for a run without retries.
+        AppendFlakyTests(terminal, assemblies);
 
         // Optional "Slowest tests" section (opt-in via --show-slowest-tests). Additive: no-op when the feature is
         // off, so the summary stays byte-identical for the default run.
@@ -400,6 +398,107 @@ internal sealed partial class TerminalTestReporter
             terminal.Append(SingleIndentation);
             AppendSlowestTestLine(terminal, displayName, duration);
         }
+    }
+
+    /// <summary>
+    /// Appends the retry accounting lines that sit between the skipped count and the duration:
+    /// <c>flaky: N</c> (tests that failed at least once but eventually passed) and
+    /// <c>retried: N tests, M extra runs</c>. Both are omitted entirely when nothing was retried, so a run without
+    /// retries keeps its historical summary byte-for-byte.
+    /// </summary>
+    private void AppendRetrySummaryLines(ITerminal terminal, int flakyTests, int retriedTests, int retriedExecutions)
+    {
+        // "flaky" is the headline value of retrying, so it is reported whenever it is non-zero unless the user
+        // explicitly turned the feature off.
+        if (flakyTests > 0 && _options.ShowFlakyTests)
+        {
+            terminal.SetColor(TerminalColor.DarkYellow);
+            terminal.AppendLine($"{SingleIndentation}{TerminalResources.FlakyLowercase}: {flakyTests}");
+            terminal.ResetColor();
+        }
+
+        if (retriedTests > 0)
+        {
+            terminal.SetColor(TerminalColor.DarkGray);
+            terminal.Append($"{SingleIndentation}{TerminalResources.Retried}: ");
+            terminal.AppendLine(string.Format(CultureInfo.CurrentCulture, TerminalResources.RetriedTestsAndRuns, retriedTests, retriedExecutions));
+            terminal.ResetColor();
+        }
+    }
+
+    /// <summary>
+    /// Appends the "Flaky tests" section listing, by name, the tests that failed at least once but whose final
+    /// attempt passed. Retried tests that never recovered are deliberately not listed: they are already reported as
+    /// failures with their full error output, so a second listing would only duplicate. For a single assembly a flat
+    /// list is rendered; the multi-assembly orchestrator groups per assembly. No-op when the feature is off or when
+    /// no test was flaky.
+    /// </summary>
+    private void AppendFlakyTests(ITerminal terminal, List<TestProgressState> assemblies)
+    {
+        if (!_options.ShowFlakyTests)
+        {
+            return;
+        }
+
+        if (_options.ShowAssembly && assemblies.Count > 1)
+        {
+            bool headerWritten = false;
+            foreach (TestProgressState assembly in assemblies)
+            {
+                IReadOnlyList<(string DisplayName, int Attempts)> flaky = assembly.GetFlakyTests();
+                if (flaky.Count == 0)
+                {
+                    continue;
+                }
+
+                if (!headerWritten)
+                {
+                    terminal.AppendLine();
+                    terminal.AppendLine(TerminalResources.FlakyTests);
+                    headerWritten = true;
+                }
+
+                terminal.Append(SingleIndentation);
+                AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assembly);
+                terminal.AppendLine();
+                foreach ((string displayName, int attempts) in flaky)
+                {
+                    terminal.Append(DoubleIndentation);
+                    AppendFlakyTestLine(terminal, displayName, attempts);
+                }
+            }
+
+            return;
+        }
+
+        IReadOnlyList<(string DisplayName, int Attempts)> tests = assemblies.Count == 1
+            ? assemblies[0].GetFlakyTests()
+            : [];
+        if (tests.Count == 0)
+        {
+            return;
+        }
+
+        terminal.AppendLine();
+        terminal.AppendLine(TerminalResources.FlakyTests);
+        foreach ((string displayName, int attempts) in tests)
+        {
+            terminal.Append(SingleIndentation);
+            AppendFlakyTestLine(terminal, displayName, attempts);
+        }
+    }
+
+    private static void AppendFlakyTestLine(ITerminal terminal, string displayName, int attempts)
+    {
+        terminal.Append(MakeControlCharactersVisible(displayName, true));
+        terminal.SetColor(TerminalColor.DarkGray);
+        terminal.Append(' ');
+        terminal.Append(TerminalResources.FlakyTransition);
+        terminal.Append(" (");
+        terminal.Append(string.Format(CultureInfo.CurrentCulture, TerminalResources.FlakyAttempts, attempts));
+        terminal.Append(')');
+        terminal.ResetColor();
+        terminal.AppendLine();
     }
 
     private static void AppendSlowestTestLine(ITerminal terminal, string displayName, TimeSpan duration)

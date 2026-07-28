@@ -43,7 +43,7 @@ internal static class RetryThresholdPolicy
         }
 
         // If threshold policy is not enabled, or the failed set is within the threshold, keep retrying.
-        if (maxFailedTests is null || (retryFailedTestsPipeServer.FailedUID?.Count ?? 0) <= maxFailedTests)
+        if (maxFailedTests is null || retryFailedTestsPipeServer.FailedTests.Count <= maxFailedTests)
         {
             return false;
         }
@@ -52,13 +52,13 @@ internal static class RetryThresholdPolicy
         explanation.AppendLine(ExtensionResources.FailureThresholdPolicy);
         if (maxPercentage is not null)
         {
-            double failedPercentage = Math.Round(retryFailedTestsPipeServer.FailedUID!.Count / (double)retryFailedTestsPipeServer.TotalTestRan * 100, 2);
-            explanation.AppendLine(string.Format(CultureInfo.InvariantCulture, ExtensionResources.FailureThresholdPolicyMaxPercentage, maxPercentage, failedPercentage, retryFailedTestsPipeServer.FailedUID.Count, retryFailedTestsPipeServer.TotalTestRan));
+            double failedPercentage = Math.Round(retryFailedTestsPipeServer.FailedTests.Count / (double)retryFailedTestsPipeServer.TotalTestRan * 100, 2);
+            explanation.AppendLine(string.Format(CultureInfo.InvariantCulture, ExtensionResources.FailureThresholdPolicyMaxPercentage, maxPercentage, failedPercentage, retryFailedTestsPipeServer.FailedTests.Count, retryFailedTestsPipeServer.TotalTestRan));
         }
 
         if (maxCount is not null)
         {
-            explanation.AppendLine(string.Format(CultureInfo.InvariantCulture, ExtensionResources.FailureThresholdPolicyMaxCount, maxCount, retryFailedTestsPipeServer.FailedUID!.Count));
+            explanation.AppendLine(string.Format(CultureInfo.InvariantCulture, ExtensionResources.FailureThresholdPolicyMaxCount, maxCount, retryFailedTestsPipeServer.FailedTests.Count));
         }
 
         await outputDevice.DisplayAsync(producer, new ErrorMessageOutputDeviceData(explanation.ToString()), cancellationToken).ConfigureAwait(false);
