@@ -845,6 +845,35 @@ public sealed class DependsOnShouldBeValidAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenInheritedTestReferencesItsOwnDerivedClass_Cycle()
+    {
+        // The test runs as 'MyTestClass.Run' and depends on 'MyTestClass.Run', so the run-time graph has a
+        // self-cycle. AnalyzeTarget cannot see it - it compares the target against the *declaring* class -
+        // so the cycle rule has to report it rather than assume a self reference was already flagged.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseTests
+            {
+                [TestMethod]
+                [{|#0:DependsOn(typeof(MyTestClass), nameof(Run))|}]
+                public void Run() { }
+            }
+
+            [TestClass]
+            public class MyTestClass : BaseTests
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(DependsOnShouldBeValidAnalyzer.CycleRule)
+                .WithLocation(0)
+                .WithArguments("MyTestClass.Run > MyTestClass.Run"));
+    }
+
+    [TestMethod]
     public async Task WhenTestReferencesItself_SelfReference()
     {
         string code = """

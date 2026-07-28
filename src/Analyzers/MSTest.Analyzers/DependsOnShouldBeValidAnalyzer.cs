@@ -162,10 +162,43 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
         // inherits. Starting them from AnalyzeMethod instead would key the node off the class that *declares*
         // the method, which is not the class the edge resolves against, and would need a de-duplication rule
         // that no name-based check can get right in the presence of overloads.
+        //
+        // A class with a duplicated method signature in its hierarchy is skipped: discovery's duplicate
+        // fallback then collapses *every* same-named test to the declaration closest to the class, including
+        // genuine overloads, and modelling that here would mean baking a run-time quirk into the analyzer.
+        // Going quiet is the safe answer, and MSTEST0036 already reports the shadowing that triggers it.
+        if (HasDuplicateSignature(typeSymbol))
+        {
+            return;
+        }
+
         foreach (string testMethodName in EnumerateTestMethodNames(typeSymbol, symbols))
         {
             AnalyzeCycle(context, symbols, new TestNode(typeSymbol, testMethodName));
         }
+    }
+
+    /// <summary>
+    /// Whether the type's hierarchy declares the same method signature twice, which is what makes
+    /// <c>TypeEnumerator.GetTests</c> fall back to collapsing tests by name.
+    /// </summary>
+    private static bool HasDuplicateSignature(INamedTypeSymbol type)
+    {
+        var signatures = new HashSet<string>(StringComparer.Ordinal);
+        for (INamedTypeSymbol? current = type; current is not null; current = current.BaseType)
+        {
+            foreach (ISymbol member in current.GetMembers())
+            {
+                // An override is not a duplicate: reflection surfaces only the most-derived declaration.
+                if (member is IMethodSymbol { MethodKind: MethodKind.Ordinary, OverriddenMethod: null } method
+                    && !signatures.Add(BuildSignatureKey(method)))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private static void AnalyzeMethod(SymbolAnalysisContext context, AnalysisSymbols symbols)
@@ -297,6 +330,40 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
         }
     }
 
+    /// <summary>
+    /// Whether <see cref="AnalyzeTarget"/> already reported <paramref name="node"/> as a self reference.
+    /// That happens only for a declaration on the node's own class, because that is the one case where the
+    /// class a reference resolves against is the same as the class declaring it.
+    /// </summary>
+    private static bool IsSelfReferenceReported(TestNode node, AnalysisSymbols symbols)
+    {
+        foreach (ISymbol member in node.TestClass.GetMembers(node.MethodName))
+        {
+            if (member is not IMethodSymbol method || !method.IsTestMethod(symbols.TestMethodAttribute))
+            {
+                continue;
+            }
+
+            foreach (AttributeData attribute in GetDependsOnAttributes(method, symbols))
+            {
+                (ITypeSymbol? explicitTarget, string? targetMethodName, bool isMalformed) = ReadTarget(attribute);
+                if (isMalformed || !string.Equals(targetMethodName, node.MethodName, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                // An implicit target resolves to the declaring class, which is this node's class here.
+                if (explicitTarget is null
+                    || SymbolEqualityComparer.Default.Equals(explicitTarget, node.TestClass))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     private static void AnalyzeCycle(SymbolAnalysisContext context, AnalysisSymbols symbols, TestNode start)
     {
         var visited = new HashSet<string>(StringComparer.Ordinal);
@@ -307,9 +374,11 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        // A one-node cycle is a test naming itself, which AnalyzeTarget already reports as a self reference
-        // against the very same declaration; reporting it again as a cycle would just be noise.
-        if (path.Count == 1)
+        // A one-node cycle is a test naming itself. AnalyzeTarget reports that as a self reference, but only
+        // when it can see it: it compares the target against the class that *declares* the method, so an
+        // inherited test pointing at its own derived class (`[DependsOn(typeof(Derived), nameof(Run))]` on a
+        // base method) is not reported there. Suppress only the cycles that really were.
+        if (path.Count == 1 && IsSelfReferenceReported(start, symbols))
         {
             return;
         }
