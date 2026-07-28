@@ -121,6 +121,53 @@ public sealed class TestApplicationResultTests : IDisposable
     }
 
     [TestMethod]
+    public async Task ConsumeAsync_SupersededRetryAttempt_IsNotCountedAsFailure()
+    {
+        static TestNode CreateNode(IProperty state, IProperty retryAttempt) => new()
+        {
+            Uid = new TestNodeUid("flaky-test"),
+            DisplayName = "FlakyTest",
+            Properties = new PropertyBag(state, retryAttempt),
+        };
+
+        // Attempt 1 failed but was retried, attempt 2 passed: the test's outcome is "passed".
+        await _testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(new FailedTestNodeStateProperty("boom"), new RetryAttemptProperty(1, isSuperseded: true))),
+            CancellationToken.None);
+        await _testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(PassedTestNodeStateProperty.CachedInstance, new RetryAttemptProperty(2, isSuperseded: false))),
+            CancellationToken.None);
+
+        Assert.AreEqual((int)ExitCode.Success, _testApplicationResult.GetProcessExitCode());
+        Assert.AreEqual(0, _testApplicationResult.GetStatistics().TotalFailedTests);
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_FinalRetryAttemptFailed_IsCountedAsFailure()
+    {
+        static TestNode CreateNode(IProperty state, IProperty retryAttempt) => new()
+        {
+            Uid = new TestNodeUid("always-failing-test"),
+            DisplayName = "AlwaysFailingTest",
+            Properties = new PropertyBag(state, retryAttempt),
+        };
+
+        await _testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(new FailedTestNodeStateProperty("boom"), new RetryAttemptProperty(1, isSuperseded: true))),
+            CancellationToken.None);
+        await _testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(new FailedTestNodeStateProperty("boom"), new RetryAttemptProperty(2, isSuperseded: false))),
+            CancellationToken.None);
+
+        Assert.AreEqual((int)ExitCode.AtLeastOneTestFailed, _testApplicationResult.GetProcessExitCode());
+        Assert.AreEqual(1, _testApplicationResult.GetStatistics().TotalFailedTests);
+    }
+
+    [TestMethod]
     public async Task GetProcessExitCodeAsync_If_All_Skipped_ByDefault_Returns_Success()
     {
         await _testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(

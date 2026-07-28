@@ -25,9 +25,9 @@ public sealed class JUnitReportRetryAttributeTests : AcceptanceTestBase<JUnitRep
         // The always-failing test still fails, so the overall exit code is non-success.
         testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
 
-        // MSTest's [Retry] attribute only surfaces the FINAL outcome to MTP (see UnitTestRunner — only
-        // the last attempt is returned). Each test should therefore appear once in the JUnit report
-        // with its eventual outcome — no per-attempt disambiguation.
+        // MSTest's [Retry] attribute reports every attempt to MTP (tagged with RetryAttemptProperty), but the
+        // JUnit report deliberately keeps only the final one: JUnit has no notion of attempts, so extra rows
+        // would inflate the suite totals. Each test therefore appears once with its eventual outcome.
         string junitFile = Directory.GetFiles(testHost.DirectoryName, fileName, SearchOption.AllDirectories).Single();
         var document = XDocument.Load(junitFile);
         Assert.IsNotNull(document.Root);
@@ -51,7 +51,7 @@ public sealed class JUnitReportRetryAttributeTests : AcceptanceTestBase<JUnitRep
         Assert.DoesNotContain(
             tc => tc.Element("properties")?.Elements("property").Any(p => p.Attribute("name")?.Value is "attempt-index" or "attempt-of" or "original-name") == true,
             testcases,
-            "No <testcase> should carry retry-disambiguation properties when MSTest's [Retry] is used (only the final outcome is surfaced).");
+            "No <testcase> should carry retry-disambiguation properties when MSTest's [Retry] is used (superseded attempts are filtered out of the JUnit report).");
     }
 
     private static void AssertSingleOutcome(IReadOnlyCollection<XElement> testcases, string name, bool expectFailure)

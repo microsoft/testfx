@@ -243,7 +243,7 @@ internal sealed partial class UnitTestRunner
                                     async () => await testMethodRunner.ExecuteAsync(classInitializeResult.LogOutput, classInitializeResult.LogError, classInitializeResult.DebugTrace, classInitializeResult.TestContextMessages).ConfigureAwait(false),
                                     result)).ConfigureAwait(false);
 
-                            result = retryResult.TryGetLast() ?? throw ApplicationStateGuard.Unreachable();
+                            result = CombineRetryAttempts(result, retryResult);
                         }
                     }
                 }
@@ -328,6 +328,58 @@ internal sealed partial class UnitTestRunner
             (testContextForClassInit as IDisposable)?.Dispose();
             (testContextForClassCleanup as IDisposable)?.Dispose();
             (testContextForAssemblyCleanup as IDisposable)?.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// Flattens an in-process retry sequence into the single result array the rest of the pipeline works with:
+    /// <c>[...attempt 1, ...attempt 2, ..., ...attempt N]</c>, where every attempt but the last is marked as
+    /// superseded.
+    /// </summary>
+    /// <remarks>
+    /// Historically only the last attempt survived, which made an in-process retry invisible to every consumer -
+    /// the terminal, the reports, and notably CTRF's <c>flaky</c> flag (see
+    /// https://github.com/microsoft/testfx/issues/10292). The earlier attempts are kept here and tagged so each
+    /// recorder can decide what to do with them: the Microsoft.Testing.Platform recorder reports them all (tagged
+    /// with <c>RetryAttemptProperty</c>), while VSTest - which has no notion of attempts - drops the superseded
+    /// ones and keeps its historical single-result-per-test behavior.
+    /// <para>
+    /// The final attempt stays last so callers that look at <c>results[^1]</c> (class and assembly cleanup) and
+    /// consumers that collapse per test node uid keep observing the test's real outcome.
+    /// </para>
+    /// </remarks>
+    private static TestResult[] CombineRetryAttempts(TestResult[] firstAttempt, RetryResult retryResult)
+    {
+        IReadOnlyList<TestResult[]> retryAttempts = retryResult.AllResults;
+        if (retryAttempts.Count == 0)
+        {
+            // A RetryBaseAttribute implementation is expected to add at least one attempt.
+            throw ApplicationStateGuard.Unreachable();
+        }
+
+        int totalCount = firstAttempt.Length;
+        foreach (TestResult[] attempt in retryAttempts)
+        {
+            totalCount += attempt.Length;
+        }
+
+        var combined = new List<TestResult>(totalCount);
+        AddAttempt(combined, firstAttempt, attemptNumber: 1, isSuperseded: true);
+        for (int i = 0; i < retryAttempts.Count; i++)
+        {
+            AddAttempt(combined, retryAttempts[i], attemptNumber: i + 2, isSuperseded: i != retryAttempts.Count - 1);
+        }
+
+        return [.. combined];
+
+        static void AddAttempt(List<TestResult> combined, TestResult[] attempt, int attemptNumber, bool isSuperseded)
+        {
+            foreach (TestResult result in attempt)
+            {
+                result.RetryAttemptNumber = attemptNumber;
+                result.IsSupersededRetryAttempt = isSuperseded;
+                combined.Add(result);
+            }
         }
     }
 

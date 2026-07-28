@@ -136,7 +136,7 @@ internal static class AcceptanceAssert
     public static void AssertStandardErrorContains(this TestHostResult testHostResult, string value, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
        => Assert.Contains(value, testHostResult.StandardError, StringComparison.Ordinal, GenerateFailedAssertionMessage(testHostResult, callerMemberName: callerMemberName, callerFilePath: callerFilePath, callerLineNumber: callerLineNumber));
 
-    public static void AssertOutputContainsSummary(this TestHostResult testHostResult, int failed, int passed, int skipped, bool? aborted = false, int? minimumNumberOfTests = null, bool allSkippedIsZeroTests = false, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
+    public static void AssertOutputContainsSummary(this TestHostResult testHostResult, int failed, int passed, int skipped, bool? aborted = false, int? minimumNumberOfTests = null, bool allSkippedIsZeroTests = false, int retried = 0, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
     {
         int totalTests = failed + passed + skipped;
         string result = minimumNumberOfTests != null && totalTests < minimumNumberOfTests
@@ -150,8 +150,13 @@ internal static class AcceptanceAssert
                         : "Passed!";
 
         string summaryResult = $"Test run summary: {result}";
+
+        // Retried executions (the dotnet test orchestrator's per-host retries, or a test framework's in-process
+        // retries such as MSTest's [Retry]) are reconciled with the headline count as a "(+N retried)" suffix on
+        // the total line. It is only rendered when at least one retry happened.
+        string totalSuffix = retried > 0 ? $" (+{retried} retried)" : string.Empty;
         string summaryCounts = $"""
-          total: {totalTests}
+          total: {totalTests}{totalSuffix}
           failed: {failed}
           succeeded: {passed}
           skipped: {skipped}

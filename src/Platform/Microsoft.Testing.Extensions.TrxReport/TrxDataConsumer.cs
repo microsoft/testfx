@@ -122,6 +122,15 @@ internal sealed class TrxReportGenerator :
                     return;
                 }
 
+                // A test framework that retries a test in-process reports every attempt under the same test node
+                // uid. TRX has one <TestDefinition> per test id, so keeping the superseded attempts would emit
+                // several <UnitTestResult> rows pointing at the same definition and inflate the run summary. Only
+                // the final attempt - the test's actual outcome - is recorded.
+                if (nodeChangedMessage.TestNode.Properties.SingleOrDefault<RetryAttemptProperty>() is { IsSuperseded: true })
+                {
+                    return;
+                }
+
                 await EnsureStreamingStoreCreatedAsync(cancellationToken).ConfigureAwait(false);
                 (TrxTestResult extracted, bool wasTruncated) = TrxTestResultExtractor.Extract(nodeChangedMessage);
                 if (wasTruncated)

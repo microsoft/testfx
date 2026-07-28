@@ -188,3 +188,11 @@ Microsoft.Testing.Platform.OutputDevice.SessionMessageOutputDeviceData.Message.g
 [TPEXP]Microsoft.Testing.Platform.Tools.IToolCommandLineOptionsProvider.ToolName.get -> string!
 [TPEXP]Microsoft.Testing.Platform.Tools.IToolsManager
 [TPEXP]Microsoft.Testing.Platform.Tools.IToolsManager.AddTool(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Tools.ITool!>! toolFactory) -> void
+Microsoft.Testing.Platform.Extensions.Messages.RetryAttemptProperty
+Microsoft.Testing.Platform.Extensions.Messages.RetryAttemptProperty.RetryAttemptProperty(int attemptNumber, bool isSuperseded) -> void
+Microsoft.Testing.Platform.Extensions.Messages.RetryAttemptProperty.AttemptNumber.get -> int
+Microsoft.Testing.Platform.Extensions.Messages.RetryAttemptProperty.IsSuperseded.get -> bool
+Microsoft.Testing.Platform.Extensions.Messages.RetryAttemptProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.RetryAttemptProperty? other) -> bool
+override Microsoft.Testing.Platform.Extensions.Messages.RetryAttemptProperty.ToString() -> string!
+override Microsoft.Testing.Platform.Extensions.Messages.RetryAttemptProperty.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.Extensions.Messages.RetryAttemptProperty.GetHashCode() -> int

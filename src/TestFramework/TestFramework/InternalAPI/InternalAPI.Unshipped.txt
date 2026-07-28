@@ -4,3 +4,7 @@ const Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataOperations.Require
 static Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataOperations.GetTestMethodDeclaringType(System.Reflection.MethodInfo! methodInfo) -> System.Type?
 static Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceResolver.TryGetData(System.Type! declaringType, string! sourceName, Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType sourceType, object?[]! arguments, out object? data) -> bool
 static Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceResolver.TryGetDisplayName(System.Type! declaringType, string! methodName, System.Reflection.MethodInfo! testMethodInfo, object?[]? data, out string? displayName) -> bool
+Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.RetryAttemptNumber.get -> int
+Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.RetryAttemptNumber.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.IsSupersededRetryAttempt.get -> bool
+Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.IsSupersededRetryAttempt.set -> void

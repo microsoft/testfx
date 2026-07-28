@@ -201,6 +201,55 @@ public sealed class TerminalTestReporterTests
     }
 
     [TestMethod]
+    public void InProcessRetry_AnnotatesAttemptsAndCountsTestOnce()
+    {
+        string targetFramework = "net8.0";
+        string architecture = "x64";
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
+
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
+        {
+            ShowPassedTests = () => true,
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+        });
+
+        DateTimeOffset startTime = DateTimeOffset.MinValue;
+        DateTimeOffset endTime = DateTimeOffset.MaxValue;
+
+        // isRetry is false: this is a plain in-process run, the retry comes from the test framework ([Retry]).
+        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false, isHelp: false, isRetry: false);
+        terminalReporter.AssemblyRunStarted(assembly, targetFramework, architecture, "0", "0");
+
+        terminalReporter.TestCompleted("0", testNodeUid: "FlakyTest", "FlakyTest", TestOutcome.Fail, TimeSpan.FromSeconds(10),
+            informativeMessage: null, errorMessage: "Tests failed", exception: null, expected: null, actual: null,
+            standardOutput: null, errorOutput: null, retryAttemptNumber: 1, isRetryAttempt: true);
+        terminalReporter.TestCompleted("0", testNodeUid: "FlakyTest", "FlakyTest", TestOutcome.Passed, TimeSpan.FromSeconds(10),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null,
+            standardOutput: null, errorOutput: null, retryAttemptNumber: 2, isRetryAttempt: true);
+
+        terminalReporter.AssemblyRunCompleted("0");
+        terminalReporter.TestExecutionCompleted(endTime, exitCode: null);
+
+        string expected = $"""
+            failed (try 1) FlakyTest (10s 000ms)
+              Tests failed
+            passed (try 2) FlakyTest (10s 000ms)
+
+            Test run summary: Passed! - {assembly} (net8.0|x64)
+              total: 1 (+1 retried)
+              failed: 0
+              succeeded: 1
+              skipped: 0
+              duration: 3652058d 23h 59m 59s 999ms
+
+            """;
+
+        Assert.AreEqual(expected, ShowEscape(stringBuilderConsole.Output));
+    }
+
+    [TestMethod]
     public void SimpleAnsiTerminal_OutputFormattingIsCorrect()
     {
         string targetFramework = "net8.0";

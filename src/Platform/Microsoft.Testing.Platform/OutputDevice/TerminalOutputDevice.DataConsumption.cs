@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.Messages;
@@ -171,6 +171,7 @@ internal sealed partial class TerminalOutputDevice
                 StandardOutputProperty? stdoutProp = null;
                 StandardErrorProperty? stderrProp = null;
                 TestNodeStateProperty? nodeState = null;
+                RetryAttemptProperty? retryAttempt = null;
                 bool executionCompleted = false;
                 PropertyBag.PropertyBagEnumerator enumerator = testNodeStateChanged.TestNode.Properties.GetStructEnumerator();
                 while (enumerator.MoveNext())
@@ -181,6 +182,7 @@ internal sealed partial class TerminalOutputDevice
                         case StandardOutputProperty so: stdoutProp = so; break;
                         case StandardErrorProperty se: stderrProp = se; break;
                         case TestNodeStateProperty s: nodeState = s; break;
+                        case RetryAttemptProperty ra: retryAttempt = ra; break;
                         case TestNodeExecutionCompletedProperty: executionCompleted = true; break;
                         case FileArtifactProperty fa:
                             terminalTestReporter.ArtifactAdded(
@@ -198,6 +200,12 @@ internal sealed partial class TerminalOutputDevice
                 TimeSpan? duration = timing?.GlobalTiming.Duration;
                 string? standardOutput = stdoutProp?.StandardOutput;
                 string? standardError = stderrProp?.StandardError;
+
+                // A test framework that retries in-process reports every attempt under the same uid; the attempt
+                // number lets the reporter replace (rather than double-count) the earlier attempt and annotate the
+                // per-test line with "(try N)".
+                int retryAttemptNumber = retryAttempt?.AttemptNumber ?? 1;
+                bool isRetryAttempt = retryAttempt is not null;
 
                 if (executionCompleted)
                 {
@@ -229,7 +237,9 @@ internal sealed partial class TerminalOutputDevice
                             expected: null,
                             actual: null,
                             standardOutput,
-                            standardError);
+                            standardError,
+                            retryAttemptNumber,
+                            isRetryAttempt);
                         break;
 
                     case FailedTestNodeStateProperty failedState:
@@ -245,7 +255,9 @@ internal sealed partial class TerminalOutputDevice
                             expected: failedState.Exception?.Data["assert.expected"] as string,
                             actual: failedState.Exception?.Data["assert.actual"] as string,
                             standardOutput,
-                            standardError);
+                            standardError,
+                            retryAttemptNumber,
+                            isRetryAttempt);
                         break;
 
                     case TimeoutTestNodeStateProperty timeoutState:
@@ -261,7 +273,9 @@ internal sealed partial class TerminalOutputDevice
                             expected: null,
                             actual: null,
                             standardOutput,
-                            standardError);
+                            standardError,
+                            retryAttemptNumber,
+                            isRetryAttempt);
                         break;
 
 #pragma warning disable CS0618, MTP0001 // Type or member is obsolete
@@ -279,7 +293,9 @@ internal sealed partial class TerminalOutputDevice
                             expected: null,
                             actual: null,
                             standardOutput,
-                            standardError);
+                            standardError,
+                            retryAttemptNumber,
+                            isRetryAttempt);
                         break;
 
                     case PassedTestNodeStateProperty:
@@ -295,7 +311,9 @@ internal sealed partial class TerminalOutputDevice
                             expected: null,
                             actual: null,
                             standardOutput,
-                            standardError);
+                            standardError,
+                            retryAttemptNumber,
+                            isRetryAttempt);
                         break;
 
                     case SkippedTestNodeStateProperty skippedState:
@@ -311,7 +329,9 @@ internal sealed partial class TerminalOutputDevice
                             expected: null,
                             actual: null,
                             standardOutput,
-                            standardError);
+                            standardError,
+                            retryAttemptNumber,
+                            isRetryAttempt);
                         break;
 
                     case DiscoveredTestNodeStateProperty:

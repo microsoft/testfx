@@ -26,7 +26,11 @@ internal partial class TestExecutionManager
             _testRunCancellationToken?.ThrowIfCancellationRequested();
 
 #if !WINDOWS_UWP && !WIN_UI
-            if (await testResultRecorder.RecordResultAsync(test, unitTestResult, startTime, endTime).ConfigureAwait(false))
+            // A superseded in-process retry attempt is not the test's outcome, so it must not turn the run red:
+            // the recorder still reports it (so tooling can show the retry), but the "any test failed" verdict
+            // only follows the final attempt.
+            if (await testResultRecorder.RecordResultAsync(test, unitTestResult, startTime, endTime).ConfigureAwait(false)
+                && !unitTestResult.IsSupersededRetryAttempt)
             {
                 _hasAnyTestFailed = true;
             }
@@ -153,7 +157,8 @@ internal partial class TestExecutionManager
     /// <summary>
     /// Determines whether a test counts as having passed for the purpose of gating its dependents. A test
     /// that produced no result at all (which the recorder reports as an error) does not qualify, and a
-    /// data-driven test qualifies only when every one of its rows passed.
+    /// data-driven test qualifies only when every one of its rows passed. Superseded in-process retry attempts
+    /// are ignored: only the final attempt decides the test's outcome.
     /// </summary>
     private static bool AllPassed(TestTools.UnitTesting.TestResult[] results)
     {
@@ -164,6 +169,11 @@ internal partial class TestExecutionManager
 
         foreach (TestTools.UnitTesting.TestResult result in results)
         {
+            if (result.IsSupersededRetryAttempt)
+            {
+                continue;
+            }
+
             if (result.Outcome != TestTools.UnitTesting.UnitTestOutcome.Passed)
             {
                 return false;

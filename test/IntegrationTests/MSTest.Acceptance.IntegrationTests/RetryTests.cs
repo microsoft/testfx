@@ -28,10 +28,21 @@ public sealed class RetryTests : AcceptanceTestBase<RetryTests.TestAssetFixture>
         testHostResult.AssertOutputContains("TestMethod4 executed 4 times.");
         testHostResult.AssertOutputContains("TestMethod5 executed 4 times.");
 
-        testHostResult.AssertOutputContains("failed TestMethod5");
         testHostResult.AssertOutputMatchesRegex(
             """Assertion failed\.[\r\n]+\s+Failing TestMethod4\. Attempts: 4 \(from TestContext: 4\)""");
-        testHostResult.AssertOutputContainsSummary(failed: 1, passed: 4, skipped: 0);
+
+        // Every [Retry] attempt is now reported, annotated with the attempt it belongs to, so a test that
+        // failed and then passed is no longer indistinguishable from one that passed on the first try.
+        testHostResult.AssertOutputContains("failed (try 1) TestMethod2");
+        testHostResult.AssertOutputContains("failed (try 2) TestMethod3");
+        testHostResult.AssertOutputContains("failed (try 4) TestMethod5");
+
+        // A test that passed on its first attempt carries no attempt annotation at all.
+        testHostResult.AssertOutputDoesNotContain("(try 1) TestMethod1");
+
+        // 9 superseded failed attempts: 1 for TestMethod2, 2 for TestMethod3, 3 for TestMethod4 and 3 for
+        // TestMethod5 (whose 4th and final attempt is the one counted as failed).
+        testHostResult.AssertOutputContainsSummary(failed: 1, passed: 4, skipped: 0, retried: 9);
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
@@ -172,7 +183,9 @@ public sealed class ClassLevelRetryTests : AcceptanceTestBase<ClassLevelRetryTes
                 cancellationToken: TestContext.CancellationToken);
 
             testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
-            testHostResult.AssertOutputContainsSummary(failed: 2, passed: 1, skipped: 0);
+
+            // 4 superseded attempts: 3 for ClassLevelOnly (4 runs) and 1 for MethodLevelOverride (2 runs).
+            testHostResult.AssertOutputContainsSummary(failed: 2, passed: 1, skipped: 0, retried: 4);
 
             string markerFile = Path.Combine(markerDirectory, TestAssetFixture.MarkerFileName);
             Assert.IsTrue(

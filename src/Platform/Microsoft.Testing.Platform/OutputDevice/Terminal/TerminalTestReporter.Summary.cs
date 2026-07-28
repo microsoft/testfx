@@ -151,9 +151,10 @@ internal sealed partial class TerminalTestReporter
         terminal.ResetColor();
         terminal.Append(totalText);
 
-        // Orchestrator-only: when failed tests were retried, append "(+N retried)" after the total so the headline
-        // count (which reflects the final attempt) is reconciled with the extra retried executions. retried is 0 for
-        // the in-process host, so the total line stays byte-identical there.
+        // When failed tests were retried, append "(+N retried)" after the total so the headline count (which
+        // reflects the final attempt) is reconciled with the extra retried executions. retried is 0 unless the
+        // dotnet test orchestrator retried a host, or a test framework retried a test in-process (MSTest's
+        // [Retry]), so the total line stays byte-identical for a plain run.
         if (retried > 0)
         {
             terminal.SetColor(TerminalColor.DarkGray);

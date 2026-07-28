@@ -33,11 +33,49 @@ internal sealed partial class TerminalTestReporter
         string? actual,
         string? standardOutput,
         string? errorOutput)
+        => TestCompleted(
+            executionId,
+            testNodeUid,
+            displayName,
+            outcome,
+            duration,
+            informativeMessage,
+            errorMessage,
+            exception,
+            expected,
+            actual,
+            standardOutput,
+            errorOutput,
+            retryAttemptNumber: 1,
+            isRetryAttempt: false);
+
+    /// <summary>
+    /// In-process host overload carrying the in-process retry attribution of the result (see
+    /// <see cref="Extensions.Messages.RetryAttemptProperty"/>). <paramref name="isRetryAttempt"/> tells apart a
+    /// framework that does not retry (which reports attempt 1 and <see langword="false"/>) from the first attempt
+    /// of a retry sequence (attempt 1 and <see langword="true"/>), so the first attempt is annotated too.
+    /// </summary>
+    internal void TestCompleted(
+        string executionId,
+        string testNodeUid,
+        string displayName,
+        TestOutcome outcome,
+        TimeSpan? duration,
+        string? informativeMessage,
+        string? errorMessage,
+        Exception? exception,
+        string? expected,
+        string? actual,
+        string? standardOutput,
+        string? errorOutput,
+        int retryAttemptNumber,
+        bool isRetryAttempt)
     {
         FlatException[] flatExceptions = ExceptionFlattener.Flatten(errorMessage, exception);
         TestCompleted(
             executionId,
-            // In-process host: a single attempt, so the instance id is the (fixed) execution id.
+            // In-process host: a single host attempt, so the instance id is the (fixed) execution id. In-process
+            // retries are attributed by retryAttemptNumber instead.
             instanceId: executionId,
             testNodeUid,
             displayName,
@@ -48,7 +86,9 @@ internal sealed partial class TerminalTestReporter
             expected,
             actual,
             standardOutput,
-            errorOutput);
+            errorOutput,
+            retryAttemptNumber,
+            isRetryAttempt);
     }
 
     /// <summary>
@@ -87,7 +127,12 @@ internal sealed partial class TerminalTestReporter
             expected,
             actual,
             standardOutput,
-            errorOutput);
+            errorOutput,
+            // The orchestrator attributes retries per host instance; it does not surface a test framework's
+            // in-process retry attempt, so results arriving through this path are always attempt 1 of their host
+            // attempt.
+            retryAttemptNumber: 1,
+            isRetryAttempt: false);
 
     private void TestCompleted(
         string executionId,
@@ -101,7 +146,9 @@ internal sealed partial class TerminalTestReporter
         string? expected,
         string? actual,
         string? standardOutput,
-        string? errorOutput)
+        string? errorOutput,
+        int retryAttemptNumber,
+        bool isRetryAttempt)
     {
         if (!_assemblies.TryGetValue(executionId, out TestProgressState? asm))
         {
@@ -128,13 +175,13 @@ internal sealed partial class TerminalTestReporter
             case TestOutcome.Timeout:
             case TestOutcome.Canceled:
             case TestOutcome.Fail:
-                asm.ReportFailedTest(testNodeUid, instanceId);
+                asm.ReportFailedTest(testNodeUid, instanceId, retryAttemptNumber);
                 break;
             case TestOutcome.Passed:
-                asm.ReportPassingTest(testNodeUid, instanceId);
+                asm.ReportPassingTest(testNodeUid, instanceId, retryAttemptNumber);
                 break;
             case TestOutcome.Skipped:
-                asm.ReportSkippedTest(testNodeUid, instanceId);
+                asm.ReportSkippedTest(testNodeUid, instanceId, retryAttemptNumber);
                 break;
         }
 
@@ -143,9 +190,17 @@ internal sealed partial class TerminalTestReporter
         if (outcome != TestOutcome.Passed || GetShowPassedTests())
         {
             // Resolve the attempt from the result's instance so multiple instances can participate in one attempt.
-            int attempt = asm.GetAttemptNumber(instanceId);
+            int hostAttempt = asm.GetAttemptNumber(instanceId);
+
+            // An in-process retry attempt is annotated even when the run is not an orchestrator retry, otherwise a
+            // [Retry]-decorated test's attempts would look like duplicate results. When both mechanisms are active
+            // the in-process attempt wins the annotation, since that is the one that distinguishes the repeated
+            // lines within this host.
+            bool showAttempt = _isRetry || isRetryAttempt;
+            int attempt = isRetryAttempt ? retryAttemptNumber : hostAttempt;
             _terminalWithProgress.WriteToTerminal(terminal => RenderTestCompleted(
                 terminal,
+                showAttempt,
                 attempt,
                 displayName,
                 outcome,
@@ -167,6 +222,7 @@ internal sealed partial class TerminalTestReporter
 
     private void RenderTestCompleted(
         ITerminal terminal,
+        bool showAttempt,
         int attempt,
         string displayName,
         TestOutcome outcome,
@@ -202,10 +258,10 @@ internal sealed partial class TerminalTestReporter
         terminal.SetColor(color);
         terminal.Append(outcomeText);
 
-        // Orchestrator-only: annotate which retry attempt this result belongs to (e.g. "failed (try 2)") so retried
-        // results are not mistaken for duplicates. _isRetry is only ever set for the dotnet test orchestrator; the
-        // in-process host leaves it false, so its per-test lines are unchanged.
-        if (_isRetry)
+        // Annotate which attempt this result belongs to (e.g. "failed (try 2)") so retried results are not mistaken
+        // for duplicates. This is set for the dotnet test orchestrator's per-host retries and for a test framework's
+        // in-process retries; a run with neither leaves showAttempt false, so its per-test lines are unchanged.
+        if (showAttempt)
         {
             terminal.SetColor(TerminalColor.DarkGray);
             terminal.Append($" ({string.Format(CultureInfo.CurrentCulture, TerminalResources.Try, attempt)})");

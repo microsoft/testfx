@@ -4,7 +4,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Platform.Helpers;
 
-using TestNodeInfoEntry = (int Passed, int Skipped, int Failed, int LastAttemptNumber);
+using TestNodeInfoEntry = (int Passed, int Skipped, int Failed, int LastAttemptNumber, int LastRetryAttemptNumber);
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
@@ -20,7 +20,9 @@ internal sealed class TestProgressState
 #endif
 
     // Tracks the per-test-node tally and the attempt it belongs to, so retries (which re-report the same test node
-    // uid under a new instance id) replace rather than double-count the earlier attempt's result.
+    // uid, either under a new instance id for the out-of-process orchestrator or under a new in-process retry
+    // attempt number) replace rather than double-count the earlier attempt's result. An attempt is the pair
+    // (host attempt, in-process retry attempt), ordered lexicographically, so the two retry mechanisms compose.
     private readonly Dictionary<string, TestNodeInfoEntry> _testUidToResults = [];
 
     // Maps each instance id seen for this assembly to its 1-based attempt number. New protocol peers report the
@@ -224,13 +226,22 @@ internal sealed class TestProgressState
     }
 
     public void ReportPassingTest(string testNodeUid, string instanceId)
-        => ReportGenericTestResult(testNodeUid, instanceId, static entry => entry with { Passed = entry.Passed + 1 }, static @this => @this._passedTests++);
+        => ReportPassingTest(testNodeUid, instanceId, retryAttemptNumber: 1);
 
     public void ReportSkippedTest(string testNodeUid, string instanceId)
-        => ReportGenericTestResult(testNodeUid, instanceId, static entry => entry with { Skipped = entry.Skipped + 1 }, static @this => @this._skippedTests++);
+        => ReportSkippedTest(testNodeUid, instanceId, retryAttemptNumber: 1);
 
     public void ReportFailedTest(string testNodeUid, string instanceId)
-        => ReportGenericTestResult(testNodeUid, instanceId, static entry => entry with { Failed = entry.Failed + 1 }, static @this => @this._failedTests++);
+        => ReportFailedTest(testNodeUid, instanceId, retryAttemptNumber: 1);
+
+    public void ReportPassingTest(string testNodeUid, string instanceId, int retryAttemptNumber)
+        => ReportGenericTestResult(testNodeUid, instanceId, retryAttemptNumber, static entry => entry with { Passed = entry.Passed + 1 }, static @this => @this._passedTests++);
+
+    public void ReportSkippedTest(string testNodeUid, string instanceId, int retryAttemptNumber)
+        => ReportGenericTestResult(testNodeUid, instanceId, retryAttemptNumber, static entry => entry with { Skipped = entry.Skipped + 1 }, static @this => @this._skippedTests++);
+
+    public void ReportFailedTest(string testNodeUid, string instanceId, int retryAttemptNumber)
+        => ReportGenericTestResult(testNodeUid, instanceId, retryAttemptNumber, static entry => entry with { Failed = entry.Failed + 1 }, static @this => @this._failedTests++);
 
     internal void ReportDiscoveredTest(string? displayName)
     {
@@ -340,28 +351,35 @@ internal sealed class TestProgressState
     private void ReportGenericTestResult(
         string testNodeUid,
         string instanceId,
+        int retryAttemptNumber,
         Func<TestNodeInfoEntry, TestNodeInfoEntry> incrementTestNodeInfoEntry,
         Action<TestProgressState> incrementCountAction)
     {
+        if (retryAttemptNumber < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(retryAttemptNumber));
+        }
+
         lock (_lock)
         {
             int currentAttemptNumber = GetAttemptNumberCore(instanceId);
 
             if (_testUidToResults.TryGetValue(testNodeUid, out TestNodeInfoEntry value))
             {
-                if (value.LastAttemptNumber == currentAttemptNumber)
+                int comparison = CompareAttempts(currentAttemptNumber, retryAttemptNumber, value.LastAttemptNumber, value.LastRetryAttemptNumber);
+                if (comparison == 0)
                 {
                     // Another result for the same test node in the same attempt — just increment.
                     _testUidToResults[testNodeUid] = incrementTestNodeInfoEntry(value);
                 }
-                else if (currentAttemptNumber > value.LastAttemptNumber)
+                else if (comparison > 0)
                 {
                     // Retry: discard the previous attempt's contribution to the live tally and re-count this attempt.
                     _retriedFailedTests += value.Failed;
                     _passedTests -= value.Passed;
                     _skippedTests -= value.Skipped;
                     _failedTests -= value.Failed;
-                    _testUidToResults[testNodeUid] = incrementTestNodeInfoEntry((Passed: 0, Skipped: 0, Failed: 0, LastAttemptNumber: currentAttemptNumber));
+                    _testUidToResults[testNodeUid] = incrementTestNodeInfoEntry((Passed: 0, Skipped: 0, Failed: 0, LastAttemptNumber: currentAttemptNumber, LastRetryAttemptNumber: retryAttemptNumber));
                 }
                 else
                 {
@@ -371,11 +389,22 @@ internal sealed class TestProgressState
             }
             else
             {
-                _testUidToResults.Add(testNodeUid, incrementTestNodeInfoEntry((Passed: 0, Skipped: 0, Failed: 0, LastAttemptNumber: currentAttemptNumber)));
+                _testUidToResults.Add(testNodeUid, incrementTestNodeInfoEntry((Passed: 0, Skipped: 0, Failed: 0, LastAttemptNumber: currentAttemptNumber, LastRetryAttemptNumber: retryAttemptNumber)));
             }
 
             incrementCountAction(this);
         }
+    }
+
+    /// <summary>
+    /// Orders two attempts of the same test node. The out-of-process host attempt is the major component and the
+    /// in-process retry attempt the minor one, so the two retry mechanisms compose instead of colliding: host
+    /// attempt 2 / retry 1 is later than host attempt 1 / retry 5.
+    /// </summary>
+    private static int CompareAttempts(int attemptNumber, int retryAttemptNumber, int otherAttemptNumber, int otherRetryAttemptNumber)
+    {
+        int comparison = attemptNumber.CompareTo(otherAttemptNumber);
+        return comparison != 0 ? comparison : retryAttemptNumber.CompareTo(otherRetryAttemptNumber);
     }
 
     internal int GetAttemptNumber(string instanceId)
