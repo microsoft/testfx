@@ -397,6 +397,7 @@ stages:
               }
 
               Write-Host "The solution does not build. The Arcade 'Build' step would report the same $reportedErrorCount error(s), so the build is failed here instead of repeating it."
+              Write-Host "If you believe an error above is an artifact of a cached dependency rather than a source break, the cache diagnostics for this run are published under artifacts/log/$(_BuildConfig)/MSBuildCache."
               exit 1
             }
 
