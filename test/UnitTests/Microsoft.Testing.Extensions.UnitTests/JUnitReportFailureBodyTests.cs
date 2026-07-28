@@ -106,6 +106,8 @@ public sealed class JUnitReportFailureBodyTests
 
         Assert.AreEqual("error", error.Name.LocalName);
         Assert.AreEqual("error", error.Attribute("type")!.Value);
+        Assert.AreEqual("kaboom", error.Attribute("message")!.Value);
+        Assert.AreEqual("kaboom", NormalizeLineEndings(error.Value));
     }
 
     private static async Task<XElement> WriteSingleTestCaseAndGetOutcomeElementAsync(CapturedTestResult result)
