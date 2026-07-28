@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
@@ -158,73 +158,36 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
             AnalyzeTarget(context, attribute, symbols, declaringClass: typeSymbol, declaringMethod: null);
         }
 
-        // A test method inherited from another class runs as a test of *this* class, but AnalyzeMethod only
-        // ever starts a walk for the class that declares the method. Without a start node here, a cycle
-        // between two test classes whose tests are all inherited would be invisible. Names this type declares
-        // itself are skipped: AnalyzeMethod starts exactly the same node for those.
+        // Every cycle walk starts here, once per test the class effectively runs - including the ones it only
+        // inherits. Starting them from AnalyzeMethod instead would key the node off the class that *declares*
+        // the method, which is not the class the edge resolves against, and would need a de-duplication rule
+        // that no name-based check can get right in the presence of overloads.
         foreach (string testMethodName in EnumerateTestMethodNames(typeSymbol, symbols))
         {
-            if (!DeclaresMethod(typeSymbol, testMethodName))
-            {
-                AnalyzeCycle(context, symbols, new TestNode(typeSymbol, testMethodName));
-            }
+            AnalyzeCycle(context, symbols, new TestNode(typeSymbol, testMethodName));
         }
-    }
-
-    private static bool DeclaresMethod(INamedTypeSymbol type, string methodName)
-    {
-        foreach (ISymbol member in type.GetMembers(methodName))
-        {
-            if (member is IMethodSymbol { MethodKind: MethodKind.Ordinary })
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private static void AnalyzeMethod(SymbolAnalysisContext context, AnalysisSymbols symbols)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
         List<AttributeData> attributes = GetDependsOnAttributes(methodSymbol, symbols);
-
-        bool isTestMethod = methodSymbol.IsTestMethod(symbols.TestMethodAttribute);
-        if (!isTestMethod)
+        if (!methodSymbol.IsTestMethod(symbols.TestMethodAttribute))
         {
             ReportNoEffect(context, attributes, methodSymbol.Name);
             return;
         }
 
-        INamedTypeSymbol declaringClass = methodSymbol.ContainingType;
-        List<AttributeData> classAttributes = GetDependsOnAttributes(declaringClass, symbols);
-        if (attributes.Count == 0 && classAttributes.Count == 0)
-        {
-            return;
-        }
-
-        bool selfReferenceReported = false;
         foreach (AttributeData attribute in attributes)
         {
-            selfReferenceReported |= AnalyzeTarget(context, attribute, symbols, declaringClass, methodSymbol);
+            AnalyzeTarget(context, attribute, symbols, methodSymbol.ContainingType, methodSymbol);
         }
-
-        // A self reference is the one-node cycle; reporting it again as a cycle would be noise. Cycles are
-        // only modelled for tests of a runnable test class, because for any other declaring type the class
-        // the edge resolves against is not known at compile time.
-        if (selfReferenceReported || !IsRunnableTestClass(declaringClass, symbols))
-        {
-            return;
-        }
-
-        AnalyzeCycle(context, symbols, new TestNode(declaringClass, methodSymbol.Name));
     }
 
     /// <summary>
     /// Validates one <c>[DependsOn]</c> application against the members it names.
     /// </summary>
-    /// <returns><see langword="true"/> when the application was reported as a self reference.</returns>
-    private static bool AnalyzeTarget(
+    private static void AnalyzeTarget(
         SymbolAnalysisContext context,
         AttributeData attribute,
         AnalysisSymbols symbols,
@@ -233,13 +196,13 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
     {
         if (attribute.ApplicationSyntaxReference?.GetSyntax(context.CancellationToken) is not { } attributeSyntax)
         {
-            return false;
+            return;
         }
 
         (ITypeSymbol? explicitTarget, string? targetMethodName, bool isMalformed) = ReadTarget(attribute);
         if (isMalformed)
         {
-            return false;
+            return;
         }
 
         // An implicit target ("a method of my own class") is resolved against the class the test runs under.
@@ -251,7 +214,7 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
         {
             if (!IsRunnableTestClass(declaringClass, symbols))
             {
-                return false;
+                return;
             }
 
             targetClass = declaringClass;
@@ -266,12 +229,12 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
             // never carry a '[TestClass]', so the reference is decidably dead. Reported before the
             // assembly check below, which has no answer for a type with no containing assembly.
             context.ReportDiagnostic(attributeSyntax.CreateDiagnostic(NotATestClassRule, DescribeType(explicitTarget)));
-            return false;
+            return;
         }
 
         if (targetClass.TypeKind == TypeKind.Error)
         {
-            return false;
+            return;
         }
 
         // Discovery resolves a dependency against the tests of one test source, and stores a 'typeof' target
@@ -280,7 +243,7 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
         if (!IsFromCurrentAssembly(context, targetClass))
         {
             context.ReportDiagnostic(attributeSyntax.CreateDiagnostic(OtherAssemblyRule, targetClass.Name));
-            return false;
+            return;
         }
 
         if (!IsRunnableTestClass(targetClass, symbols))
@@ -292,33 +255,33 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
                 ? AbstractTargetRule
                 : NotATestClassRule;
             context.ReportDiagnostic(attributeSyntax.CreateDiagnostic(rule, targetClass.Name));
-            return false;
+            return;
         }
 
         if (targetMethodName is null)
         {
             // A whole-class target on a test class always matches something (or the class has no test at
             // all, which MSTEST0016 already reports).
-            return false;
+            return;
         }
 
         if (string.IsNullOrWhiteSpace(targetMethodName))
         {
             // The attribute constructor throws for these, so there is nothing useful to add.
-            return false;
+            return;
         }
 
         MethodLookup lookup = LookupMethods(targetClass, targetMethodName, symbols);
         if (!lookup.Exists)
         {
             context.ReportDiagnostic(attributeSyntax.CreateDiagnostic(MethodNotFoundRule, targetClass.Name, targetMethodName));
-            return false;
+            return;
         }
 
         if (!lookup.IsTestMethod)
         {
             context.ReportDiagnostic(attributeSyntax.CreateDiagnostic(NotATestMethodRule, targetClass.Name, targetMethodName));
-            return false;
+            return;
         }
 
         // Only a reference written directly on the method is a self reference. The same reference written on
@@ -329,10 +292,7 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
             && SymbolEqualityComparer.Default.Equals(targetClass, declaringClass))
         {
             context.ReportDiagnostic(attributeSyntax.CreateDiagnostic(SelfReferenceRule, declaringMethod.Name));
-            return true;
         }
-
-        return false;
     }
 
     private static void AnalyzeCycle(SymbolAnalysisContext context, AnalysisSymbols symbols, TestNode start)
@@ -341,6 +301,13 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
         var path = new List<TestNode>();
         if (!TryFindCycle(context, symbols, start, start, visited, path, out AttributeData? firstEdge)
             || firstEdge?.ApplicationSyntaxReference?.GetSyntax(context.CancellationToken) is not { } attributeSyntax)
+        {
+            return;
+        }
+
+        // A one-node cycle is a test naming itself, which AnalyzeTarget already reports as a self reference
+        // against the very same declaration; reporting it again as a cycle would just be noise.
+        if (path.Count == 1)
         {
             return;
         }
@@ -554,14 +521,38 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
     /// <summary>
     /// Whether discovery runs tests under <paramref name="type"/>'s own name. Mirrors
     /// <c>TypeValidator.IsValidTestClass</c> on the points that decide whether a <c>[DependsOn]</c> reference
-    /// can ever match: the <c>[TestClass]</c> attribute, the fact that an abstract test class is skipped so
-    /// its tests are enumerated under each concrete derived class, and the fact that a non-abstract generic
-    /// test class is rejected outright.
+    /// can ever match: the <c>[TestClass]</c> attribute, accessibility, the fact that an abstract test class
+    /// is skipped so its tests are enumerated under each concrete derived class, and the fact that a
+    /// non-abstract generic test class is rejected outright.
     /// </summary>
     private static bool IsRunnableTestClass(INamedTypeSymbol type, AnalysisSymbols symbols)
         => !type.IsAbstract
             && !IsGenericTypeDefinition(type)
+            && HasValidAccessibility(type, symbols)
             && type.IsTestClass(symbols.TestClassAttribute);
+
+    /// <summary>
+    /// Mirrors <c>TypeValidator.TypeHasValidAccessibility</c>: the type and every type it is nested in must be
+    /// public, or internal when the assembly opts in with <c>[DiscoverInternals]</c>. Anything else - a
+    /// private, protected or protected-internal nested class - is skipped by discovery.
+    /// </summary>
+    private static bool HasValidAccessibility(INamedTypeSymbol type, AnalysisSymbols symbols)
+    {
+        for (INamedTypeSymbol? current = type; current is not null; current = current.ContainingType)
+        {
+            if (current.DeclaredAccessibility == Accessibility.Public)
+            {
+                continue;
+            }
+
+            if (!symbols.DiscoverInternals || current.DeclaredAccessibility != Accessibility.Internal)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
 
     private static bool IsGenericTypeDefinition(INamedTypeSymbol type)
         => type.IsGenericType && SymbolEqualityComparer.Default.Equals(type, type.OriginalDefinition);

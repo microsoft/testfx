@@ -719,6 +719,70 @@ public sealed class DependsOnShouldBeValidAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenInheritedTestIsShadowedByNonTestOverload_Cycle()
+    {
+        // 'MyTestClass' declares an 'A' overload that is not a test, so nothing starts a walk for the
+        // inherited 'A' unless cycle analysis is driven from the test class rather than from the declaring
+        // method. The inherited test still runs under 'MyTestClass', so the cycle is real.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseTests
+            {
+                [TestMethod]
+                [{|#0:DependsOn("Other")|}]
+                public void A() { }
+            }
+
+            [TestClass]
+            public class MyTestClass : BaseTests
+            {
+                public void A(int value) { }
+
+                [TestMethod]
+                [{|#1:DependsOn(nameof(A))|}]
+                public void Other() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(DependsOnShouldBeValidAnalyzer.CycleRule)
+                .WithLocation(0)
+                .WithArguments("MyTestClass.A > MyTestClass.Other > MyTestClass.A"),
+            VerifyCS.Diagnostic(DependsOnShouldBeValidAnalyzer.CycleRule)
+                .WithLocation(1)
+                .WithArguments("MyTestClass.Other > MyTestClass.A > MyTestClass.Other"));
+    }
+
+    [TestMethod]
+    public async Task WhenTestClassIsInaccessible_NoCycle()
+    {
+        // A private nested '[TestClass]' is skipped by discovery, so no test runs under it and there is no
+        // cycle. MSTEST0002 already reports the class itself.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Outer
+            {
+                [TestClass]
+                private class MyTestClass
+                {
+                    [TestMethod]
+                    [DependsOn(nameof(AddItem))]
+                    public void CreateCart() { }
+
+                    [TestMethod]
+                    [DependsOn(nameof(CreateCart))]
+                    public void AddItem() { }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
     public async Task WhenTestReferencesItself_SelfReference()
     {
         string code = """
