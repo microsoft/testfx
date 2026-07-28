@@ -257,6 +257,16 @@
         <target state="translated">La même instance de 'CompositeExtensionFactory' est déjà enregistrée</target>
         <note>{Locked="CompositeExtensionFactory"}</note>
       </trans-unit>
+      <trans-unit id="CompositeTestExecutionFilterCannotContainNull">
+        <source>A composite test execution filter cannot contain a null child filter.</source>
+        <target state="new">A composite test execution filter cannot contain a null child filter.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CompositeTestExecutionFilterRequiresTwoFilters">
+        <source>A composite test execution filter requires at least two child filters.</source>
+        <target state="new">A composite test execution filter requires at least two child filters.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ConfigurationFileNotFound">
         <source>The configuration file '{0}' specified with '--config-file' could not be found.</source>
         <target state="translated">Nous n’avons pas pu trouver le fichier de configuration « {0} » spécifié avec « --config-file ».</target>
@@ -623,37 +633,37 @@ Accepte éventuellement « text » (sortie lisible par l’humain par défaut)
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestCliRequiresTransport">
         <source>'--server dotnettestcli' requires either '--dotnet-test-pipe' or '--dotnet-test-transport http'.</source>
-        <target state="new">'--server dotnettestcli' requires either '--dotnet-test-pipe' or '--dotnet-test-transport http'.</target>
+        <target state="translated">'--server dotnettestcli' nécessite soit '--dotnet-test-pipe', soit '--dotnet-test-transport http'.</target>
         <note>{Locked="--server dotnettestcli"}{Locked="--dotnet-test-pipe"}{Locked="--dotnet-test-transport http"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestHttpEndpointInvalid">
         <source>'--dotnet-test-http-endpoint' requires an absolute HTTPS URL, or an HTTP loopback URL, without user information, query, or fragment.</source>
-        <target state="new">'--dotnet-test-http-endpoint' requires an absolute HTTPS URL, or an HTTP loopback URL, without user information, query, or fragment.</target>
+        <target state="translated">L'option '--dotnet-test-http-endpoint' requiert une URL HTTPS absolue ou une URL de bouclage HTTP, sans information utilisateur, requête ni fragment.</target>
         <note>{Locked="--dotnet-test-http-endpoint"}{Locked="HTTP"}{Locked="HTTPS"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestHttpEndpointOptionDescription">
         <source>Specifies the authenticated HTTP endpoint for the dotnet test protocol.</source>
-        <target state="new">Specifies the authenticated HTTP endpoint for the dotnet test protocol.</target>
+        <target state="translated">Spécifie le point de terminaison HTTP authentifié pour le protocole de dotnet test.</target>
         <note>{Locked="HTTP"}{Locked="dotnet test"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestHttpOptionsRequireTransport">
         <source>The dotnet test HTTP endpoint and token options require '--dotnet-test-transport http'.</source>
-        <target state="new">The dotnet test HTTP endpoint and token options require '--dotnet-test-transport http'.</target>
+        <target state="translated">Les options de point de terminaison HTTP et de jeton de dotnet test nécessitent '--dotnet-test-transport http'.</target>
         <note>{Locked="dotnet test"}{Locked="HTTP"}{Locked="--dotnet-test-transport http"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestHttpRequiresEndpointAndToken">
         <source>'--dotnet-test-transport http' requires both '--dotnet-test-http-endpoint' and '--dotnet-test-http-token'.</source>
-        <target state="new">'--dotnet-test-transport http' requires both '--dotnet-test-http-endpoint' and '--dotnet-test-http-token'.</target>
+        <target state="translated">'--dotnet-test-transport http' requiert à la fois '--dotnet-test-http-endpoint' et '--dotnet-test-http-token'.</target>
         <note>{Locked="--dotnet-test-transport http"}{Locked="--dotnet-test-http-endpoint"}{Locked="--dotnet-test-http-token"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestHttpTokenInvalid">
         <source>'--dotnet-test-http-token' requires a non-empty valid bearer token without whitespace or control characters.</source>
-        <target state="new">'--dotnet-test-http-token' requires a non-empty valid bearer token without whitespace or control characters.</target>
+        <target state="translated">'--dotnet-test-http-token' requiert un jeton porteur valide non vide, sans espaces ni caractères de contrôle.</target>
         <note>{Locked="--dotnet-test-http-token"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestHttpTokenOptionDescription">
         <source>Specifies the per-run HTTP bearer token for the dotnet test protocol.</source>
-        <target state="new">Specifies the per-run HTTP bearer token for the dotnet test protocol.</target>
+        <target state="translated">Spécifie le jeton porteur HTTP par exécution pour le protocole de dotnet test.</target>
         <note>{Locked="HTTP"}{Locked="dotnet test"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
@@ -663,17 +673,17 @@ Accepte éventuellement « text » (sortie lisible par l’humain par défaut)
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestTransportConflict">
         <source>The dotnet test named-pipe and HTTP transports cannot be selected together.</source>
-        <target state="new">The dotnet test named-pipe and HTTP transports cannot be selected together.</target>
+        <target state="translated">Les transports dotnet test named-pipe et HTTP ne peuvent pas être sélectionnés simultanément.</target>
         <note>{Locked="dotnet test"}{Locked="HTTP"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestTransportInvalid">
         <source>'--dotnet-test-transport' received unexpected value '{0}'. Supported values are: {1}.</source>
-        <target state="new">'--dotnet-test-transport' received unexpected value '{0}'. Supported values are: {1}.</target>
+        <target state="translated">'--dotnet-test-transport' a reçu une valeur inattendue '{0}'. Valeurs prises en charge : {1}.</target>
         <note>{0} is the unexpected transport value. {1} is the comma-separated list of supported transport values. {Locked="--dotnet-test-transport"}{Locked="pipe"}{Locked="http"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestTransportOptionDescription">
         <source>Selects the pre-launch transport for the dotnet test protocol.</source>
-        <target state="new">Selects the pre-launch transport for the dotnet test protocol.</target>
+        <target state="translated">Sélectionne le transport de pré-lancement pour le protocole de dotnet test.</target>
         <note>{Locked="dotnet test"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
@@ -749,12 +759,12 @@ Accepte éventuellement « text » (sortie lisible par l’humain par défaut)
       </trans-unit>
       <trans-unit id="PlatformCommandLinePipeTransportNotSupportedOnBrowser">
         <source>The dotnet test named-pipe transport is not supported on browser-wasm. Use '--dotnet-test-transport http'.</source>
-        <target state="new">The dotnet test named-pipe transport is not supported on browser-wasm. Use '--dotnet-test-transport http'.</target>
+        <target state="translated">Le transport par tube nommé de dotnet test n'est pas pris en charge sur browser-wasm. Utilisez '--dotnet-test-transport http'.</target>
         <note>{Locked="dotnet test"}{Locked="browser-wasm"}{Locked="--dotnet-test-transport http"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLinePipeTransportNotSupportedOnWasi">
         <source>The dotnet test named-pipe transport is not supported on wasi-wasm. Use '--dotnet-test-transport http'.</source>
-        <target state="new">The dotnet test named-pipe transport is not supported on wasi-wasm. Use '--dotnet-test-transport http'.</target>
+        <target state="translated">Le transport par tube nommé de dotnet test n'est pas pris en charge sur wasi-wasm. Utilisez '--dotnet-test-transport http'.</target>
         <note>{Locked="dotnet test"}{Locked="wasi-wasm"}{Locked="--dotnet-test-transport http"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLinePortOptionDescription">
@@ -1035,6 +1045,11 @@ En savoir plus sur la télémétrie de la plateforme de tests Microsoft : https:
         <target state="translated">Résumé de la découverte de tests : {0} test(s) trouvé(s) dans {1} assemblys.</target>
         <note>{0} is the number of discovered tests. {1} is the count of assemblies.</note>
       </trans-unit>
+      <trans-unit id="TestExecutionFilterProviderNotSupportedForServer">
+        <source>Test execution filter provider '{0}' returned filter type '{1}' for a JSON-RPC server request. Provider constraints are not applied to server requests; return null when TestExecutionFilterContext.Origin is Server.</source>
+        <target state="new">Test execution filter provider '{0}' returned filter type '{1}' for a JSON-RPC server request. Provider constraints are not applied to server requests; return null when TestExecutionFilterContext.Origin is Server.</target>
+        <note>{0} is the provider UID. {1} is the filter type. {Locked="JSON-RPC"}{Locked="null"}{Locked="TestExecutionFilterContext.Origin"}{Locked="Server"}</note>
+      </trans-unit>
       <trans-unit id="TestFrameworkProxyApiShouldNotBeCalled">
         <source>Method '{0}' should not have been called on this proxy object</source>
         <target state="translated">La méthode « {0} » n’aurait pas dû être appelée sur cet objet proxy</target>
@@ -1131,6 +1146,26 @@ En savoir plus sur la télémétrie de la plateforme de tests Microsoft : https:
         <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
         <target state="translated">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] exception non prise en charge : {0}</target>
         <note>{0} is the exception that was unhandled/unobserved. {Locked="ServerTestHost.OnTaskSchedulerUnobservedTaskException"}</note>
+      </trans-unit>
+      <trans-unit id="UnsupportedProviderTestExecutionFilter">
+        <source>Test execution filter provider '{0}' returned unsupported filter type '{1}'. Providers can return only NopFilter, TestNodeUidListFilter, TreeNodeFilter, or an And CompositeTestExecutionFilter.</source>
+        <target state="new">Test execution filter provider '{0}' returned unsupported filter type '{1}'. Providers can return only NopFilter, TestNodeUidListFilter, TreeNodeFilter, or an And CompositeTestExecutionFilter.</target>
+        <note>{0} is the provider UID. {1} is the unsupported filter type. {Locked="NopFilter"}{Locked="TestNodeUidListFilter"}{Locked="TreeNodeFilter"}{Locked="And"}{Locked="CompositeTestExecutionFilter"}</note>
+      </trans-unit>
+      <trans-unit id="UnsupportedRequestTestExecutionFilter">
+        <source>The request contains unsupported test execution filter type '{0}'.</source>
+        <target state="new">The request contains unsupported test execution filter type '{0}'.</target>
+        <note>{0} is the unsupported filter type.</note>
+      </trans-unit>
+      <trans-unit id="UnsupportedTestExecutionFilterOperator">
+        <source>Only the And test execution filter operator is supported.</source>
+        <target state="new">Only the And test execution filter operator is supported.</target>
+        <note>{Locked="And"}</note>
+      </trans-unit>
+      <trans-unit id="UnsupportedTestExecutionFilterOperatorValue">
+        <source>Test execution filter operator '{0}' is not supported. Only And is supported.</source>
+        <target state="new">Test execution filter operator '{0}' is not supported. Only And is supported.</target>
+        <note>{0} is the unsupported operator value. {Locked="And"}</note>
       </trans-unit>
       <trans-unit id="WaitDebuggerAttachNotSupportedInBrowserErrorMessage">
         <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported in browser environments.</source>

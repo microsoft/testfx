@@ -74,7 +74,7 @@
       </trans-unit>
       <trans-unit id="TrxMergeToolInvalidOutput">
         <source>'--output-trx' expects one TRX file path</source>
-        <target state="new">'--output-trx' expects one TRX file path</target>
+        <target state="translated">"‌--output-trx"‌ 需要一个 TRX 文件路径</target>
         <note>Do not localize option name {Locked="--output-trx"} or format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolOutputOptionDescription">
