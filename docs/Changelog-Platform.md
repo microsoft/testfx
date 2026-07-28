@@ -14,6 +14,11 @@ See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4
 * Re-print errored assemblies in dotnet test end-of-run recap by @Evangelink in [#9545](https://github.com/microsoft/testfx/pull/9545)
 * Add server-initiated session cancellation to the dotnet test IPC protocol by @Evangelink in [#9549](https://github.com/microsoft/testfx/pull/9549)
 
+### Fixed
+
+* Fix `Microsoft.Testing.Extensions.AzureDevOpsReport` crashing with `ObjectDisposedException` during teardown, after results were already published, when the platform disposes the live test-results publisher more than once in [#10191](https://github.com/microsoft/testfx/issues/10191)
+* Report on the console why `--publish-azdo-test-results` published nothing, instead of silently disabling live publishing when the Azure DevOps environment is incomplete, in [#10191](https://github.com/microsoft/testfx/issues/10191)
+
 ## <a name="2.3.3" />[2.3.3] - UNRELEASED
 
 See full log [of v4.3.2...v4.3.3](https://github.com/microsoft/testfx/compare/v4.3.2...v4.3.3)

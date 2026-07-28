@@ -14,8 +14,10 @@ using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
 
@@ -55,7 +57,8 @@ public sealed class AzureDevOpsLivePublishingTests
     public async Task OnTestSessionStartingAsync_JsonExceptionLogsWarningAndDoesNotThrow()
     {
         using TestDirectory directory = CreateTestDirectory();
-        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(2, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out _, out CollectingLogger logger);
+        CollectingOutputDevice outputDevice = new();
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(2, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out _, out CollectingLogger logger, outputDevice: outputDevice);
         client.CreateTestRunAsyncFunc = (_, _) => Task.FromException<int>(new JsonException("broken payload"));
 
         Assert.IsTrue(await publisher.IsEnabledAsync());
@@ -63,6 +66,56 @@ public sealed class AzureDevOpsLivePublishingTests
 
         Assert.IsNull(publisher.RunId);
         Assert.Contains(AzureDevOpsResources.AzureDevOpsLivePublishingCreateRunFailed, string.Join(Environment.NewLine, logger.Logs));
+        Assert.Contains(AzureDevOpsResources.AzureDevOpsLivePublishingCreateRunFailed, string.Join(Environment.NewLine, outputDevice.Lines));
+    }
+
+    // Regression test for https://github.com/microsoft/testfx/issues/10191: the platform disposes an
+    // extension more than once during teardown, and a non-idempotent Dispose crashed the test host
+    // with ObjectDisposedException after all tests had passed.
+    [TestMethod]
+    public async Task Dispose_CalledTwiceAfterSession_DoesNotThrow()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(2, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out _, out _);
+        client.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(77);
+
+        await StartPublisherAsync(publisher);
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        publisher.Dispose();
+        publisher.Dispose();
+    }
+
+    [TestMethod]
+    public void Dispose_CalledTwiceWithoutSession_DoesNotThrow()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: AzureDevOpsTestResultsPublisherOptions.Default, out _, out _, out _);
+
+        publisher.Dispose();
+        publisher.Dispose();
+    }
+
+    // The publisher used to silently disable itself when the Azure DevOps environment was incomplete,
+    // leaving users with neither a test run nor any explanation. See the follow-up on
+    // https://github.com/microsoft/testfx/issues/10191.
+    [TestMethod]
+    public async Task OnTestSessionStartingAsync_MissingConfiguration_StaysEnabledAndWarnsOnOutputDevice()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMock(processId: GetAliveProcessId());
+        environment.Setup(x => x.GetEnvironmentVariable("SYSTEM_ACCESSTOKEN")).Returns((string?)null);
+        CollectingOutputDevice outputDevice = new();
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: AzureDevOpsTestResultsPublisherOptions.Default, out FakeAzureDevOpsTestResultsClient client, out _, out CollectingLogger logger, environment: environment, outputDevice: outputDevice);
+
+        Assert.IsTrue(await publisher.IsEnabledAsync());
+        await publisher.OnTestSessionStartingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.IsNull(publisher.RunId);
+        Assert.IsEmpty(client.CreateTestRunCalls);
+        Assert.HasCount(1, outputDevice.Lines);
+        Assert.Contains("SYSTEM_ACCESSTOKEN", outputDevice.Lines[0]);
+        Assert.Contains("SYSTEM_ACCESSTOKEN", string.Join(Environment.NewLine, logger.Logs));
     }
 
     [TestMethod]
@@ -930,7 +983,8 @@ public sealed class AzureDevOpsLivePublishingTests
         Mock<IEnvironment>? environment = null,
         Mock<ITestApplicationModuleInfo>? testApplicationModuleInfo = null,
         ITask? task = null,
-        Mock<ITestApplicationProcessExitCode>? processExitCode = null)
+        Mock<ITestApplicationProcessExitCode>? processExitCode = null,
+        CollectingOutputDevice? outputDevice = null)
     {
         Mock<ICommandLineOptions> commandLineOptions = new();
         commandLineOptions.Setup(x => x.IsOptionSet(AzureDevOpsCommandLineOptions.PublishAzureDevOpsTestResultsOptionName)).Returns(true);
@@ -962,6 +1016,7 @@ public sealed class AzureDevOpsLivePublishingTests
             configuration.Object,
             environment.Object,
             new SystemFileSystem(),
+            outputDevice ?? new CollectingOutputDevice(),
             testApplicationModuleInfo.Object,
             processExitCode.Object,
             client,
@@ -990,6 +1045,17 @@ public sealed class AzureDevOpsLivePublishingTests
         public DateTimeOffset UtcNow { get; set; }
     }
 
+    private sealed class CollectingOutputDevice : IOutputDevice
+    {
+        public List<string> Lines { get; } = [];
+
+        public Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken)
+        {
+            Lines.Add(((WarningMessageOutputDeviceData)data).Message);
+            return Task.CompletedTask;
+        }
+    }
+
     private sealed class FakeAzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClient
     {
         public Func<AzureDevOpsPublishConfiguration, CancellationToken, Task<int>> CreateTestRunAsyncFunc { get; set; } = (_, _) => Task.FromResult(0);
@@ -1016,8 +1082,13 @@ public sealed class AzureDevOpsLivePublishingTests
 
         public List<(int RunId, AzureDevOpsTestResultAttachment Attachment)> UploadTestRunAttachmentCalls { get; } = [];
 
+        public List<AzureDevOpsPublishConfiguration> CreateTestRunCalls { get; } = [];
+
         public Task<int> CreateTestRunAsync(AzureDevOpsPublishConfiguration configuration, CancellationToken cancellationToken)
-            => CreateTestRunAsyncFunc(configuration, cancellationToken);
+        {
+            CreateTestRunCalls.Add(configuration);
+            return CreateTestRunAsyncFunc(configuration, cancellationToken);
+        }
 
         public Task<IReadOnlyList<int>?> PublishTestResultsAsync(AzureDevOpsPublishConfiguration configuration, int runId, IReadOnlyList<AzureDevOpsTestCaseResult> results, CancellationToken cancellationToken)
             => PublishTestResultsAsyncFunc(configuration, runId, results, cancellationToken);

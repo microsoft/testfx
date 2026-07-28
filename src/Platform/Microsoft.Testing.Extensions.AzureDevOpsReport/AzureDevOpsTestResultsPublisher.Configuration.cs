@@ -10,7 +10,7 @@ namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 
 internal sealed partial class AzureDevOpsTestResultsPublisher
 {
-    private bool TryCreatePublishConfiguration(out AzureDevOpsPublishConfiguration? publishConfiguration, out string? warning)
+    private bool TryCreatePublishConfiguration([NotNullWhen(true)] out AzureDevOpsPublishConfiguration? publishConfiguration, out string? warning)
     {
         publishConfiguration = null;
         warning = null;

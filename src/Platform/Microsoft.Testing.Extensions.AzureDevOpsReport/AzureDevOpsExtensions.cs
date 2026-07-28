@@ -71,6 +71,7 @@ public static class AzureDevOpsExtensions
                    serviceProvider.GetConfiguration(),
                    serviceProvider.GetEnvironment(),
                    serviceProvider.GetFileSystem(),
+                   serviceProvider.GetOutputDevice(),
                    serviceProvider.GetTestApplicationModuleInfo(),
                    serviceProvider.GetTestApplicationProcessExitCode(),
                    new AzureDevOpsTestResultsClient(serviceProvider.GetTask(), serviceProvider.GetClock()),
