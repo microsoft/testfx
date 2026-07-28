@@ -41,6 +41,10 @@ public class DependsOnAttributeTests : TestContainer
 
     public void ProceedOnFailure_CanBeSet()
     {
+        // The default is asserted here too, not only in the constructor tests: without it, a property that
+        // ignored its setter and always returned true would still satisfy this test.
+        new DependsOnAttribute("Setup").ProceedOnFailure.Should().BeFalse();
+
         var attribute = new DependsOnAttribute("Setup") { ProceedOnFailure = true };
 
         attribute.ProceedOnFailure.Should().BeTrue();
