@@ -392,16 +392,23 @@ stages:
             $mayHelpLines = @($errorLines | Where-Object { $_ -match $fallbackMayHelp })
 
             # Some failures do reach the error summary but still are not source breaks the fallback would
-            # reproduce, so they must not fail fast:
+            # reproduce, so they must not fail fast. These are matched against the whole log rather than against
+            # $errorLines, because their diagnostic detail usually continues on following lines that are not
+            # themselves formatted as errors:
             #   - engine crashes and OOM (MSB4166 "exited prematurely", MSB0001/MSB1025 internal errors,
             #     MSB4017 logger failure). The node died before the projects it owned could report their real
             #     result, so the Arcade invocation can legitimately succeed where this one did not.
             #   - MSB4260, a project reference that cannot be resolved with a static graph. That is a
             #     limitation of the /graph switch this step passes; the Arcade fallback does not build the
             #     graph statically, so it can resolve the same reference and succeed.
-            # Match these against the whole log rather than $errorLines, because the diagnostic detail usually
-            # continues on following lines that are not themselves formatted as errors.
-            $fallbackCanDiffer = '(?i)\bMSB4166\b|\bMSB0001\b|\bMSB1025\b|\bMSB4017\b|\bMSB4260\b|exited prematurely|OutOfMemoryException'
+            #   - MSBuildCache's own duplicate-output diagnostic, worded "Node ... produced output ... which was
+            #     already produced by another node ...". It carries no plugin or cache token of its own, so
+            #     without this marker it reads as an ordinary build error and would defeat the intent that
+            #     everything the plugin reports goes to the fallback.
+            #   - transient file locks (MSB3021/MSB3027, "used by another process"). Copy contention is timing
+            #     dependent, and copying is heavier here because the cache uses copy rather than hardlink
+            #     semantics, so a differently scheduled build can legitimately succeed.
+            $fallbackCanDiffer = '(?i)\bMSB4166\b|\bMSB0001\b|\bMSB1025\b|\bMSB4017\b|\bMSB4260\b|\bMSB3021\b|\bMSB3027\b|exited prematurely|OutOfMemoryException|already produced by another node|being used by another process'
             $fallbackCanDifferLines = @($log | Where-Object { $_ -match $fallbackCanDiffer })
 
             if ($reportedErrorCount -gt 0 -and $errorLines.Count -gt 0 -and $mayHelpLines.Count -eq 0 -and $fallbackCanDifferLines.Count -eq 0) {
