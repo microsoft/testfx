@@ -134,6 +134,56 @@ public sealed class TrxArtifactPostProcessorTests
         }
     }
 
+#if NETCOREAPP
+    [TestMethod]
+    public async Task ProcessAsync_WhenMergedDirectoryIsAReparsePoint_DoesNotMerge()
+    {
+        // 'merged' is a fixed, predictable child name, and the merge confines its writes to the report's
+        // own directory. A symlink/junction planted at that name would therefore become the confinement
+        // base and redirect the report plus its attachment tree outside the supplied output directory,
+        // so the processor must refuse rather than write through it.
+        string root = Path.Combine(Path.GetTempPath(), $"trx-post-processor-{Guid.NewGuid():N}");
+        string resultsDirectory = Path.Combine(root, "results");
+        string outsideDirectory = Path.Combine(root, "outside");
+        Directory.CreateDirectory(resultsDirectory);
+        Directory.CreateDirectory(outsideDirectory);
+        try
+        {
+            try
+            {
+                Directory.CreateSymbolicLink(Path.Combine(resultsDirectory, "merged"), outsideDirectory);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PlatformNotSupportedException)
+            {
+                // Creating a directory symlink needs elevation or Developer Mode on Windows.
+                Assert.Inconclusive("Host cannot create directory symbolic links.");
+                return;
+            }
+
+            string firstPath = Path.Combine(resultsDirectory, "first.trx");
+            string secondPath = Path.Combine(resultsDirectory, "second.trx");
+            WriteMinimalReport(firstPath, "first");
+            WriteMinimalReport(secondPath, "second");
+            TrxArtifactPostProcessor processor = new();
+
+            ProcessedArtifact? output = await processor.ProcessAsync(
+                [
+                    new InputArtifact(firstPath, TrxReportEngine.TrxArtifactKind, null, null, null, "execution-1"),
+                    new InputArtifact(secondPath, TrxReportEngine.TrxArtifactKind, null, null, null, "execution-2"),
+                ],
+                resultsDirectory,
+                CancellationToken.None);
+
+            Assert.IsNull(output);
+            Assert.IsEmpty(Directory.GetFileSystemEntries(outsideDirectory));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+#endif
+
     [TestMethod]
     public void CreateMergeRunId_IsIndependentOfInputOrder()
     {
