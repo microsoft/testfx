@@ -19,17 +19,22 @@ using MSTest.Analyzers.Helpers;
 namespace MSTest.Analyzers;
 
 /// <summary>
-/// Code fixer for <see cref="PublicTypeShouldBeTestClassAnalyzer"/> and <see cref="TypeContainingTestMethodShouldBeATestClassAnalyzer"/>.
+/// Code fixer for <see cref="PublicTypeShouldBeTestClassAnalyzer"/>, <see cref="TypeContainingTestMethodShouldBeATestClassAnalyzer"/>
+/// and <see cref="UseConditionBaseWithTestClassAnalyzer"/>.
 /// </summary>
 [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(AddTestClassFixer))]
 [Shared]
 public sealed class AddTestClassFixer : CodeFixProvider
 {
+    private const string TestClassAttributeName = "TestClass";
+    private const string FullyQualifiedTestClassAttributeName = "Microsoft.VisualStudio.TestTools.UnitTesting.TestClass";
+
     /// <inheritdoc />
     public sealed override ImmutableArray<string> FixableDiagnosticIds { get; }
         = ImmutableArray.Create(
             DiagnosticIds.PublicTypeShouldBeTestClassRuleId,
-            DiagnosticIds.TypeContainingTestMethodShouldBeATestClassRuleId);
+            DiagnosticIds.TypeContainingTestMethodShouldBeATestClassRuleId,
+            DiagnosticIds.UseConditionBaseWithTestClassRuleId);
 
     /// <inheritdoc />
     public override FixAllProvider GetFixAllProvider()
@@ -49,8 +54,26 @@ public sealed class AddTestClassFixer : CodeFixProvider
             return;
         }
 
-        // Find the type declaration identified by the diagnostic.
-        TypeDeclarationSyntax declaration = syntaxToken.Parent.AncestorsAndSelf().OfType<TypeDeclarationSyntax>().First();
+        // Find the type declaration identified by the diagnostic. A condition attribute (MSTEST0041) can be
+        // declared with a custom AttributeUsage targeting a type kind that has no TypeDeclarationSyntax (an enum,
+        // for example), and [TestClass] is meaningless on an interface, so bail out in those cases.
+        TypeDeclarationSyntax? declaration = syntaxToken.Parent.AncestorsAndSelf().OfType<TypeDeclarationSyntax>().FirstOrDefault();
+        if (declaration is null or InterfaceDeclarationSyntax)
+        {
+            return;
+        }
+
+        bool isStruct = declaration is StructDeclarationSyntax
+            || (declaration is RecordDeclarationSyntax { ClassOrStructKeyword: var keyword } && keyword.IsKind(SyntaxKind.StructKeyword));
+
+        // MSTEST0041 fires on whatever target the condition attribute allows. When that target is a struct, the
+        // attribute only got there because its own AttributeUsage permits structs, so turning the struct into a
+        // class would strand the attribute on a target it doesn't allow (CS0592). The other rules only ever ask for
+        // a test class, where the conversion is the intended fix.
+        if (isStruct && diagnostic.Id == DiagnosticIds.UseConditionBaseWithTestClassRuleId)
+        {
+            return;
+        }
 
         // For structs and record structs, we need to change them to classes/record classes since [TestClass] cannot be applied to structs
         if (declaration is StructDeclarationSyntax)
@@ -89,14 +112,12 @@ public sealed class AddTestClassFixer : CodeFixProvider
         cancellationToken.ThrowIfCancellationRequested();
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
 
-        AttributeSyntax testClassAttribute = SyntaxFactory.Attribute(SyntaxFactory.ParseName("TestClass"));
-        AttributeListSyntax attributeList = SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(testClassAttribute));
+        AttributeListSyntax attributeList = await CreateTestClassAttributeListAsync(document, typeDeclaration.Identifier.SpanStart, cancellationToken).ConfigureAwait(false);
 
         TypeDeclarationSyntax newTypeDeclaration = typeDeclaration.AddAttributeLists(attributeList);
         editor.ReplaceNode(typeDeclaration, newTypeDeclaration);
 
-        SyntaxNode newRoot = editor.GetChangedRoot();
-        return document.WithSyntaxRoot(newRoot);
+        return editor.GetChangedDocument();
     }
 
     private static async Task<Document> ChangeStructToClassAndAddTestClassAttributeAsync(Document document, TypeDeclarationSyntax structDeclaration, CancellationToken cancellationToken)
@@ -104,9 +125,7 @@ public sealed class AddTestClassFixer : CodeFixProvider
         cancellationToken.ThrowIfCancellationRequested();
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
 
-        // Create the [TestClass] attribute
-        AttributeSyntax testClassAttribute = SyntaxFactory.Attribute(SyntaxFactory.ParseName("TestClass"));
-        AttributeListSyntax attributeList = SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(testClassAttribute));
+        AttributeListSyntax attributeList = await CreateTestClassAttributeListAsync(document, structDeclaration.Identifier.SpanStart, cancellationToken).ConfigureAwait(false);
 
         // Convert struct to class
         ClassDeclarationSyntax classDeclaration = SyntaxFactory.ClassDeclaration(structDeclaration.Identifier)
@@ -121,8 +140,7 @@ public sealed class AddTestClassFixer : CodeFixProvider
 
         editor.ReplaceNode(structDeclaration, classDeclaration);
 
-        SyntaxNode newRoot = editor.GetChangedRoot();
-        return document.WithSyntaxRoot(newRoot);
+        return editor.GetChangedDocument();
     }
 
     private static async Task<Document> ChangeRecordStructToRecordClassAndAddTestClassAttributeAsync(Document document, RecordDeclarationSyntax recordStructDeclaration, CancellationToken cancellationToken)
@@ -130,9 +148,7 @@ public sealed class AddTestClassFixer : CodeFixProvider
         cancellationToken.ThrowIfCancellationRequested();
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
 
-        // Create the [TestClass] attribute
-        AttributeSyntax testClassAttribute = SyntaxFactory.Attribute(SyntaxFactory.ParseName("TestClass"));
-        AttributeListSyntax attributeList = SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(testClassAttribute));
+        AttributeListSyntax attributeList = await CreateTestClassAttributeListAsync(document, recordStructDeclaration.Identifier.SpanStart, cancellationToken).ConfigureAwait(false);
 
         // Filter out readonly modifier since it's not valid for record classes
         SyntaxTokenList filteredModifiers = SyntaxFactory.TokenList(
@@ -158,7 +174,26 @@ public sealed class AddTestClassFixer : CodeFixProvider
 
         editor.ReplaceNode(recordStructDeclaration, recordClassDeclaration);
 
-        SyntaxNode newRoot = editor.GetChangedRoot();
-        return document.WithSyntaxRoot(newRoot);
+        return editor.GetChangedDocument();
+    }
+
+    private static async Task<AttributeListSyntax> CreateTestClassAttributeListAsync(Document document, int position, CancellationToken cancellationToken)
+    {
+        SemanticModel? semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
+        string attributeName = semanticModel is not null && IsTestClassAttributeInScope(semanticModel, position)
+            ? TestClassAttributeName
+            : FullyQualifiedTestClassAttributeName;
+
+        NameSyntax testClassAttributeName = SyntaxFactory.ParseName(attributeName);
+        AttributeSyntax testClassAttribute = SyntaxFactory.Attribute(testClassAttributeName);
+        return SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(testClassAttribute));
+    }
+
+    private static bool IsTestClassAttributeInScope(SemanticModel semanticModel, int position)
+    {
+        INamedTypeSymbol? testClassAttributeSymbol = semanticModel.Compilation.GetTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute);
+        return testClassAttributeSymbol is not null
+            && semanticModel.LookupNamespacesAndTypes(position, name: $"{TestClassAttributeName}Attribute")
+                .Any(symbol => SymbolEqualityComparer.Default.Equals(symbol, testClassAttributeSymbol));
     }
 }

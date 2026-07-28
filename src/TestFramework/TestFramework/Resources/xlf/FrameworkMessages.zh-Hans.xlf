@@ -544,7 +544,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="InvalidResourceLockResource">
         <source>The resource key of a [ResourceLock] must be a non-empty, non-whitespace string. An empty key would silently serialize unrelated tests that also use an empty key.</source>
-        <target state="new">The resource key of a [ResourceLock] must be a non-empty, non-whitespace string. An empty key would silently serialize unrelated tests that also use an empty key.</target>
+        <target state="translated">[ResourceLock] 的资源键必须是非空、非空白字符串。空键会静默序列化同样使用空键的不相关测试。</target>
         <note />
       </trans-unit>
       <trans-unit id="IsEmptyFailedSummary">

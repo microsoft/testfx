@@ -47,6 +47,8 @@ internal sealed class ConsoleTestHost(
         // Use user provided filter factory or create console default one.
         ITestExecutionFilterFactory testExecutionFilterFactory = ServiceProvider.GetService<ITestExecutionFilterFactory>()
             ?? new ConsoleTestExecutionFilterFactory(ServiceProvider.GetCommandLineOptions());
+        ITestExecutionFilterProvider[] testExecutionFilterProviders =
+            [.. ServiceProvider.Services.OfType<ITestExecutionFilterProvider>()];
 
         // Use user provided filter factory or create console default one.
         ITestFrameworkInvoker testFrameworkInvoker = ServiceProvider.GetService<ITestFrameworkInvoker>()
@@ -58,7 +60,10 @@ internal sealed class ConsoleTestHost(
         {
             testFramework = await _buildTestFrameworkAsync(new TestFrameworkBuilderData(
                 ServiceProvider,
-                new ConsoleTestExecutionRequestFactory(ServiceProvider.GetCommandLineOptions(), testExecutionFilterFactory),
+                new ConsoleTestExecutionRequestFactory(
+                    ServiceProvider.GetCommandLineOptions(),
+                    testExecutionFilterFactory,
+                    testExecutionFilterProviders),
                 testFrameworkInvoker,
                 testExecutionFilterFactory,
                 ServiceProvider.GetPlatformOutputDevice(),

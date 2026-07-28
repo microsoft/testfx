@@ -9,6 +9,7 @@ using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Requests;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 
@@ -125,6 +126,82 @@ public sealed class ServerTests
 
         int result = await serverTask;
         Assert.AreEqual(0, result);
+    }
+
+    [TestMethod]
+    public async Task RunRequestWithEmptyTests_PreservesEmptyUidSelection()
+    {
+        using var server = TcpServer.Create();
+        TaskCompletionSource<TestExecutionRequest> requestCaptured = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        string[] args = ["--no-banner", "--server", "--client-port", $"{server.Port}", "--internal-testingplatform-skipbuildercheck"];
+        ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+        builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, __) => new MockTestAdapter
+        {
+            DiscoveryAction = context =>
+            {
+                context.Complete();
+                requestCaptured.TrySetResult((TestExecutionRequest)context.Request);
+                return Task.CompletedTask;
+            },
+        });
+        var testApplication = (TestApplication)await builder.BuildAsync();
+        testApplication.ServiceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
+        Task<int> serverTask = Task.Run(testApplication.RunAsync);
+
+        using CancellationTokenSource timeout = new(TimeoutHelper.DefaultHangTimeSpanTimeout);
+        using TcpClient client = await server.WaitForConnectionAsync(timeout.Token);
+        using NetworkStream stream = client.GetStream();
+        using StreamWriter writer = new(stream, Encoding.UTF8);
+        TcpMessageHandler messageHandler = new(
+            client,
+            clientToServerStream: client.GetStream(),
+            serverToClientStream: client.GetStream(),
+            FormatterUtilities.CreateFormatter());
+
+        const string InitializeMessage = """
+            {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "initialize",
+                "params": {
+                    "processId": 32,
+                    "clientInfo": { "name": "testingplatform-unittests", "version": "1.0.0" },
+                    "capabilities": {
+                        "testing": {
+                            "debuggerProvider": true
+                        }
+                    }
+                }
+            }
+            """;
+        await WriteMessageAsync(writer, InitializeMessage);
+        _ = await WaitForMessage(
+            messageHandler,
+            rpcMessage => rpcMessage is ResponseMessage response && response.Id == 1,
+            "Wait initialize",
+            timeout.Token);
+
+        const string RunTestsMessage = """
+            {
+                "jsonrpc": "2.0",
+                "id": 2,
+                "method": "testing/runTests",
+                "params": {
+                    "runId": "00000000-0000-0000-0000-000000000001",
+                    "tests": []
+                }
+            }
+            """;
+        await WriteMessageAsync(writer, RunTestsMessage);
+        await requestCaptured.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+        RunTestExecutionRequest runRequest = Assert.IsInstanceOfType<RunTestExecutionRequest>(await requestCaptured.Task);
+        TestNodeUidListFilter uidFilter = Assert.IsInstanceOfType<TestNodeUidListFilter>(runRequest.Filter);
+        Assert.IsEmpty(uidFilter.TestNodeUids);
+
+        await WriteMessageAsync(writer, """{ "jsonrpc": "2.0", "method": "exit", "params": { } }""");
+
+        Assert.AreEqual(0, await serverTask);
     }
 
     [TestMethod]

@@ -74,9 +74,9 @@ internal sealed partial class ServerTestHost
         // catch and propagated as correct json rpc error
         cancellationToken.ThrowIfCancellationRequested();
 
-        // Note: Currently the request generation and filtering isn't extensible
-        // in server mode, we create NoOp services, so that they're always available.
-        ServerTestExecutionRequestFactory requestFactory = new(session =>
+        // The JSON-RPC payload owns server request selection. Providers receive a server-origin
+        // context so they can explicitly opt out; non-empty contributions are rejected below.
+        ServerTestExecutionRequestFactory requestFactory = new(async (session, requestCancellationToken) =>
         {
             ICollection<TestNode>? testNodes = args.TestNodes;
             string? filter = args.GraphFilter;
@@ -86,11 +86,23 @@ internal sealed partial class ServerTestHost
                     ? new TreeNodeFilter(filter)
                     : new NopFilter();
 
-            return method == JsonRpcMethods.TestingRunTests
+            TestExecutionRequestKind requestKind = method switch
+            {
+                JsonRpcMethods.TestingRunTests => TestExecutionRequestKind.Run,
+                JsonRpcMethods.TestingDiscoverTests => TestExecutionRequestKind.Discovery,
+                _ => throw new NotImplementedException($"Request not implemented '{method}'"),
+            };
+
+            executionFilter = await TestExecutionFilterComposer.ComposeAsync(
+                executionFilter,
+                [.. perRequestServiceProvider.Services.OfType<ITestExecutionFilterProvider>()],
+                new TestExecutionFilterContext(requestKind, TestExecutionRequestOrigin.Server),
+                allowProviderContributions: false,
+                requestCancellationToken).ConfigureAwait(false);
+
+            return requestKind == TestExecutionRequestKind.Run
                 ? new RunTestExecutionRequest(session, executionFilter)
-                : method == JsonRpcMethods.TestingDiscoverTests
-                    ? new DiscoverTestExecutionRequest(session, executionFilter)
-                    : throw new NotImplementedException($"Request not implemented '{method}'");
+                : new DiscoverTestExecutionRequest(session, executionFilter);
         });
 
         // Build the per request objects
