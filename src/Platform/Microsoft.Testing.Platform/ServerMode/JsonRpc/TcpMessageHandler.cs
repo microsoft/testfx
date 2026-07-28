@@ -19,8 +19,22 @@ internal sealed class TcpMessageHandler(
     Stream serverToClientStream,
     IMessageFormatter formatter) : IMessageHandler, IDisposable
 {
+    private const int ReadBufferSize = 4096;
+    private const int HeaderLineInitialCapacity = 256;
+
     private readonly TcpClient _client = client;
-    private readonly StreamReader _reader = new(clientToServerStream);
+
+    // The read side deliberately does NOT use a StreamReader. Content-Length is declared in UTF-8 *bytes*
+    // (see WriteRequestAsync), so the body must be consumed as bytes and decoded afterwards. A StreamReader
+    // hands out decoded characters, which for multi-byte UTF-8 content are fewer units than the declared
+    // length: the reader under-reads the frame, leaves its tail in the stream, and the framing permanently
+    // desynchronizes from the next frame onwards. Reading the headers through a StreamReader and the body
+    // from BaseStream would be worse still, because the reader's internal buffer would have already
+    // swallowed part of the body. Headers and body are therefore both read through this one byte-level
+    // buffer, so nothing can be buffered on the other side of the boundary.
+    private readonly Stream _readStream = clientToServerStream;
+    private readonly byte[] _readBuffer = new byte[ReadBufferSize];
+
     private readonly StreamWriter _writer = new(serverToClientStream)
     {
         // We need to force the NewLine because in Windows and nix different char sequence are used
@@ -30,6 +44,10 @@ internal sealed class TcpMessageHandler(
 
     private readonly IMessageFormatter _formatter = formatter;
     private readonly ILogger _logger = new NopLogger();
+
+    private int _readBufferOffset;
+    private int _readBufferCount;
+    private bool _preambleHandled;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TcpMessageHandler"/> class with a logger for low-noise
@@ -66,22 +84,45 @@ internal sealed class TcpMessageHandler(
                     return null;
                 }
 
+                // Content-Length counts UTF-8 bytes, so consume exactly that many bytes and decode
+                // afterwards. Reading characters here would under-read every multi-byte frame.
 #if NETCOREAPP
-                char[] commandCharsBuffer = ArrayPool<char>.Shared.Rent(commandSize);
+                byte[] bodyBuffer = ArrayPool<byte>.Shared.Rent(commandSize);
                 try
                 {
-                    Memory<char> memoryBuffer = new(commandCharsBuffer, 0, commandSize);
-                    await _reader.ReadBlockAsync(memoryBuffer, cancellationToken).ConfigureAwait(false);
-                    return _formatter.Deserialize<RpcMessage>(memoryBuffer);
+                    if (!await ReadExactlyAsync(bodyBuffer, commandSize, cancellationToken).ConfigureAwait(false))
+                    {
+                        // The peer went away mid-frame; treat it like any other disconnect.
+                        return null;
+                    }
+
+                    int charCount = Encoding.UTF8.GetCharCount(bodyBuffer, 0, commandSize);
+                    char[] charsBuffer = ArrayPool<char>.Shared.Rent(charCount);
+                    try
+                    {
+                        Encoding.UTF8.GetChars(bodyBuffer, 0, commandSize, charsBuffer, 0);
+                        return _formatter.Deserialize<RpcMessage>(new ReadOnlyMemory<char>(charsBuffer, 0, charCount));
+                    }
+                    finally
+                    {
+                        ArrayPool<char>.Shared.Return(charsBuffer);
+                    }
                 }
                 finally
                 {
-                    ArrayPool<char>.Shared.Return(commandCharsBuffer);
+                    ArrayPool<byte>.Shared.Return(bodyBuffer);
                 }
 #else
-                char[] commandChars = new char[commandSize];
-                await _reader.ReadBlockAsync(commandChars, 0, commandSize).WithCancellationAsync(cancellationToken).ConfigureAwait(false);
-                return _formatter.Deserialize<RpcMessage>(new string(commandChars, 0, commandSize));
+                // System.Buffers is out of framework on netstandard2.0/net462 and this file also ships as
+                // source in the dependency-free MTP client package, so allocate rather than pool here.
+                byte[] bodyBuffer = new byte[commandSize];
+                if (!await ReadExactlyAsync(bodyBuffer, commandSize, cancellationToken).ConfigureAwait(false))
+                {
+                    // The peer went away mid-frame; treat it like any other disconnect.
+                    return null;
+                }
+
+                return _formatter.Deserialize<RpcMessage>(Encoding.UTF8.GetString(bodyBuffer, 0, commandSize));
 #endif
             }
         }
@@ -125,13 +166,7 @@ internal sealed class TcpMessageHandler(
 
         while (true)
         {
-#if NET7_0_OR_GREATER
-            string? line = await _reader.ReadLineAsync(cancellationToken).ConfigureAwait(false);
-#elif NET6_0_OR_GREATER
-            string? line = await _reader.ReadLineAsync().WaitAsync(cancellationToken).ConfigureAwait(false);
-#else
-            string? line = await _reader.ReadLineAsync().WithCancellationAsync(cancellationToken).ConfigureAwait(false);
-#endif
+            string? line = await ReadHeaderLineAsync(cancellationToken).ConfigureAwait(false);
             if (line is null || (line.Length == 0 && contentSize != -1))
             {
                 break;
@@ -154,6 +189,106 @@ internal sealed class TcpMessageHandler(
         }
 
         return contentSize;
+    }
+
+    /// <summary>
+    /// Reads a single CRLF-terminated header line from the shared byte buffer. Headers are ASCII by protocol,
+    /// but they are decoded as UTF-8 (a superset) so a non-conformant peer cannot corrupt the framing.
+    /// Returns <see langword="null"/> at end of stream.
+    /// </summary>
+    private async Task<string?> ReadHeaderLineAsync(CancellationToken cancellationToken)
+    {
+        // Headers are short; a small growable buffer avoids allocating per byte. Plain arrays rather than
+        // ArrayPool so this compiles on netstandard2.0/net462 (System.Buffers is out of framework there).
+        byte[] lineBuffer = new byte[HeaderLineInitialCapacity];
+        int lineLength = 0;
+        while (true)
+        {
+            if (_readBufferOffset == _readBufferCount && !await FillReadBufferAsync(cancellationToken).ConfigureAwait(false))
+            {
+                // End of stream. A partial line is returned as-is; the caller fails the frame either way.
+                return lineLength == 0 ? null : TrimPreamble(Encoding.UTF8.GetString(lineBuffer, 0, lineLength));
+            }
+
+            byte current = _readBuffer[_readBufferOffset++];
+            if (current == (byte)'\n')
+            {
+                // Tolerate both CRLF and a bare LF.
+                if (lineLength > 0 && lineBuffer[lineLength - 1] == (byte)'\r')
+                {
+                    lineLength--;
+                }
+
+                return TrimPreamble(Encoding.UTF8.GetString(lineBuffer, 0, lineLength));
+            }
+
+            if (lineLength == lineBuffer.Length)
+            {
+                byte[] grown = new byte[lineBuffer.Length * 2];
+                Array.Copy(lineBuffer, grown, lineLength);
+                lineBuffer = grown;
+            }
+
+            lineBuffer[lineLength++] = current;
+        }
+    }
+
+    /// <summary>
+    /// Drops a UTF-8 byte-order mark from the very first line of the stream. The previous
+    /// <see cref="StreamReader"/>-based reader had byte-order-mark detection enabled by default and silently
+    /// swallowed the preamble, so peers that write their headers through a preamble-emitting encoder (for
+    /// example <c>new StreamWriter(stream, Encoding.UTF8)</c>) kept working. Preserve that tolerance.
+    /// </summary>
+    private string TrimPreamble(string line)
+    {
+        if (_preambleHandled)
+        {
+            return line;
+        }
+
+        _preambleHandled = true;
+        return line.Length > 0 && line[0] == '\uFEFF'
+            ? line.Substring(1)
+            : line;
+    }
+
+    /// <summary>
+    /// Fills <paramref name="destination"/> with exactly <paramref name="count"/> bytes, draining the shared
+    /// read buffer first. Returns <see langword="false"/> if the stream ended before the frame was complete.
+    /// </summary>
+    private async Task<bool> ReadExactlyAsync(byte[] destination, int count, CancellationToken cancellationToken)
+    {
+        int written = 0;
+        while (written < count)
+        {
+            if (_readBufferOffset == _readBufferCount && !await FillReadBufferAsync(cancellationToken).ConfigureAwait(false))
+            {
+                return false;
+            }
+
+            int available = Math.Min(_readBufferCount - _readBufferOffset, count - written);
+            Array.Copy(_readBuffer, _readBufferOffset, destination, written, available);
+            _readBufferOffset += available;
+            written += available;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Refills the shared read buffer. Returns <see langword="false"/> at end of stream.
+    /// </summary>
+    private async Task<bool> FillReadBufferAsync(CancellationToken cancellationToken)
+    {
+#if NETCOREAPP
+        int read = await _readStream.ReadAsync(_readBuffer.AsMemory(0, _readBuffer.Length), cancellationToken).ConfigureAwait(false);
+#else
+        int read = await _readStream.ReadAsync(_readBuffer, 0, _readBuffer.Length, cancellationToken)
+            .WithCancellationAsync(cancellationToken).ConfigureAwait(false);
+#endif
+        _readBufferOffset = 0;
+        _readBufferCount = read;
+        return read > 0;
     }
 
     public async Task WriteRequestAsync(RpcMessage message, CancellationToken cancellationToken)
@@ -198,7 +333,7 @@ internal sealed class TcpMessageHandler(
 
     public void Dispose()
     {
-        _reader.Dispose();
+        _readStream.Dispose();
 
         try
         {
