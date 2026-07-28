@@ -18,6 +18,7 @@ on:
       - '.github/actions/**'
       - '.github/aw/actions-lock.json'
       - '.github/scripts/check_action_pins.py'
+      - '.github/scripts/check-action-pins-requirements.txt'
   push:
     branches:
       - main
@@ -27,6 +28,7 @@ on:
       - '.github/actions/**'
       - '.github/aw/actions-lock.json'
       - '.github/scripts/check_action_pins.py'
+      - '.github/scripts/check-action-pins-requirements.txt'
   workflow_dispatch:
 
 permissions:
@@ -46,5 +48,7 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.12'
+      - name: Install PyYAML
+        run: python -m pip install --disable-pip-version-check --require-hashes -r .github/scripts/check-action-pins-requirements.txt
       - name: Audit action pins
         run: python .github/scripts/check_action_pins.py
