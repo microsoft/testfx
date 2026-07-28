@@ -8,12 +8,16 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Requests;
 
-internal sealed class ConsoleTestExecutionRequestFactory(ICommandLineOptions commandLineService, ITestExecutionFilterFactory testExecutionFilterFactory) : ITestExecutionRequestFactory
+internal sealed class ConsoleTestExecutionRequestFactory(
+    ICommandLineOptions commandLineService,
+    ITestExecutionFilterFactory testExecutionFilterFactory,
+    IReadOnlyList<ITestExecutionFilterProvider> testExecutionFilterProviders) : ITestExecutionRequestFactory
 {
     private readonly ICommandLineOptions _commandLineService = commandLineService;
     private readonly ITestExecutionFilterFactory _testExecutionFilterFactory = testExecutionFilterFactory;
+    private readonly IReadOnlyList<ITestExecutionFilterProvider> _testExecutionFilterProviders = testExecutionFilterProviders;
 
-    public async Task<TestExecutionRequest> CreateRequestAsync(TestSessionContext session)
+    public async Task<TestExecutionRequest> CreateRequestAsync(TestSessionContext session, CancellationToken cancellationToken)
     {
         (bool created, ITestExecutionFilter? testExecutionFilter) = await _testExecutionFilterFactory.TryCreateAsync().ConfigureAwait(false);
         if (!created)
@@ -23,7 +27,18 @@ internal sealed class ConsoleTestExecutionRequestFactory(ICommandLineOptions com
 
         ApplicationStateGuard.Ensure(testExecutionFilter is not null);
 
-        TestExecutionRequest testExecutionRequest = _commandLineService.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey)
+        bool isDiscovery = _commandLineService.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey);
+        var context = new TestExecutionFilterContext(
+            isDiscovery ? TestExecutionRequestKind.Discovery : TestExecutionRequestKind.Run,
+            TestExecutionRequestOrigin.Console);
+        testExecutionFilter = await TestExecutionFilterComposer.ComposeAsync(
+            testExecutionFilter,
+            _testExecutionFilterProviders,
+            context,
+            allowProviderContributions: true,
+            cancellationToken).ConfigureAwait(false);
+
+        TestExecutionRequest testExecutionRequest = isDiscovery
             ? new DiscoverTestExecutionRequest(session, testExecutionFilter)
             : new RunTestExecutionRequest(session, testExecutionFilter);
 

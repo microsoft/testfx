@@ -6,6 +6,7 @@ using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Requests;
 using Microsoft.VisualStudio.TestPlatform.Common.Filtering;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Resources;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
@@ -26,6 +27,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatform
 [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "We can use MTP from this folder")]
 internal abstract class MSTestFilterContextBase
 {
+    private const string EmptyUidFilterExpression = "FullyQualifiedName=__MTP_EMPTY_UID_FILTER__&FullyQualifiedName!=__MTP_EMPTY_UID_FILTER__";
+
     // References the native --filter option provider's name.
     private const string TestCaseFilterOptionName = MSTestTestCaseFilterCommandLineOptionsProvider.TestCaseFilterOptionName;
 
@@ -101,11 +104,38 @@ internal abstract class MSTestFilterContextBase
         AppendFilter(filterFromRunsettings, filterBuilder);
         AppendFilter(filterFromCommandLineOption, filterBuilder);
 
-        if (filter is TestNodeUidListFilter testNodeUidListFilter)
+        if (filter is not null)
         {
-            StartFilter(filterBuilder);
-            BuildFilter(testNodeUidListFilter.TestNodeUids, filterBuilder);
-            EndFilter(filterBuilder);
+            foreach (ITestExecutionFilter leafFilter in TestExecutionFilterComposer.GetLeafFilters(filter))
+            {
+                switch (leafFilter)
+                {
+                    case NopFilter:
+                        break;
+
+                    case TestNodeUidListFilter testNodeUidListFilter:
+                        StartFilter(filterBuilder);
+                        if (testNodeUidListFilter.TestNodeUids.Length == 0)
+                        {
+                            filterBuilder.Append(EmptyUidFilterExpression);
+                        }
+                        else
+                        {
+                            BuildFilter(testNodeUidListFilter.TestNodeUids, filterBuilder);
+                        }
+
+                        EndFilter(filterBuilder);
+                        break;
+
+                    default:
+                        throw new NotSupportedException(
+                            string.Format(
+                                CultureInfo.InvariantCulture,
+                                PlatformAdapterResources.UnsupportedTestExecutionFilter,
+                                leafFilter.GetType().FullName,
+                                "MSTest"));
+                }
+            }
         }
 
         if (filterBuilder.Length > 0)

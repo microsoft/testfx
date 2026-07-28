@@ -46,6 +46,9 @@ The authoritative toolchain is the pinned `github/gh-aw-actions/setup-cli` actio
 Because the `compiler_version` header asserts an identity claim rather than the emitted bytes, always re-read the diff of a local compile — a change to a `uses:` pin that you did not intend is the tell. The repository also enforces this automatically:
 
 ```bash
+# Install the audit's only dependency (hash-pinned, same as CI)
+python -m pip install --require-hashes -r .github/scripts/check-action-pins-requirements.txt
+
 # Offline, deterministic audit of every `uses:` pin in .github/workflows/
 python .github/scripts/check_action_pins.py
 
@@ -53,7 +56,7 @@ python .github/scripts/check_action_pins.py
 python .github/scripts/check_action_pins.py --list
 ```
 
-[`check-action-pins.yml`](./check-action-pins.yml) runs the same script on every pull request that touches `.github/workflows/**`, `.github/actions/**`, `.github/aw/actions-lock.json`, or the script itself. It fails when a generated workflow carries an unpinned `uses:`, when a pin disagrees with `.github/aw/actions-lock.json`, or when one action resolves to more than one SHA across the repository.
+[`check-action-pins.yml`](./check-action-pins.yml) runs the same script on every pull request that touches `.github/workflows/**`, `.github/actions/**`, `.github/aw/actions-lock.json`, or the script itself. It fails when a generated workflow carries an unpinned `uses:`, when a pin disagrees with `.github/aw/actions-lock.json`, when one action resolves to more than one SHA across the repository, when a `docker://` container action is not pinned to an image digest, or when a `uses` reachable in the parsed YAML is hidden from the line scan (a block scalar, flow mapping or alias). Comparisons are case-insensitive on owner/repository names, since GitHub resolves them that way and `Actions/Checkout` would otherwise escape the lock-file check.
 
 ## Secrets & authentication
 
@@ -190,13 +193,16 @@ already ships. Every agentic workflow run therefore downloads the CLI twice — 
 job, once in the `detection` job — and each download is a chance to hit a transient GitHub CDN 5xx.
 The gap is structural, not a stale-image problem: `github/gh-aw-actions`'s `compat.json` caps
 `max-agent` at `1.0.56` (exactly what the runner image caches), while `DefaultCopilotVersion` is
-already `1.0.73` on gh-aw v0.83.1 and `1.0.75` on `main` — so bumping gh-aw *widens* the gap.
+`1.0.73` on the gh-aw v0.83.1 compiler this repo's lock files are pinned to, and `1.0.75` as of
+gh-aw v0.83.4 — so bumping gh-aw *widens* the gap.
 
-**There is no repo-side fix.** All of the following were evaluated and rejected:
+**There is no repo-side fix *today*.** All of the following were evaluated and rejected:
 
 - `engine.version` is silently ignored for the Copilot engine — gh-aw overwrites it with
-  `DefaultCopilotVersion` (`pkg/workflow/copilot_engine_installation.go`, still the case on `main`).
-  `gh aw compile --strict` reports no error, and the regenerated lock keeps the pinned version.
+  `DefaultCopilotVersion` (`pkg/workflow/copilot_engine_installation.go`, still the case in
+  v0.83.4). `gh aw compile --strict` reports no error, and the regenerated lock keeps the pinned
+  version. This is the one rejected option upstream is actively changing — see
+  [Tracking the upstream fix](#tracking-the-upstream-fix).
 - Hand-editing a `.lock.yml` (older pin, extra retries) is overwritten on the next `gh aw compile`.
 - `engine.command:` pointed at `/opt/hostedtoolcache/copilot-cli/<version>/x64/bin/copilot` bypasses
   the install step, but hardcodes a path that rotates with runner images and skips the `.copilot`
@@ -214,6 +220,56 @@ version the hosted runner toolcache is expected to contain (in practice the `com
 `max-agent`, with a CI guard against drift), or pass the compat range to the toolcache lookup even
 when a version is pinned. Merely choosing a default somewhere inside the compat window still
 downloads unless that exact version is cached.
+
+#### Tracking the upstream fix
+
+The drift is filed upstream as [github/gh-aw#48358][gh-aw-48358] — *"DefaultCopilotVersion drifts
+past compat.json max-agent, forcing a network install on every job and disabling the toolcache
+path"*. It is still open, and nothing in gh-aw v0.83.2 – v0.83.4 touches the install path:
+v0.83.4 only bumps `DefaultCopilotVersion` to `1.0.75`, and `install_copilot_cli.sh` is byte-for-byte
+unchanged since v0.83.1 (both curls already carry `--retry 3 --retry-delay 5`, which is the retry
+budget the failing run exhausted).
+
+The unblocking change is [github/gh-aw#48519][gh-aw-48519] — *"honor `engine.version` for
+copilot"*, open against `main`. It makes the compiler emit `install_copilot_cli.sh <engine.version>`
+instead of always substituting `DefaultCopilotVersion`. That alone does **not** restore compat-matrix
+resolution — an explicit version still skips it — but it hands us the lever we currently lack,
+because `find_cached_copilot_bin` already short-circuits on an exact match:
+
+```text
+Found candidate: /opt/hostedtoolcache/copilot-cli/1.0.56/x64/bin/copilot (version: 1.0.56, arch: x64)
+Exact version match found: /opt/hostedtoolcache/copilot-cli/1.0.56/x64/bin/copilot
+```
+
+That branch returns *before* the cache-TTL check, so pinning the version the runner image already
+caches skips both downloads outright — which is precisely what today's `range: none..none` lookup
+cannot do.
+
+**Once #48519 ships in a gh-aw release**, the repo-side follow-up is:
+
+1. Bump the pinned gh-aw toolchain, recompile with `gh aw compile --strict`, review the `.lock.yml`
+   diff, and run `python .github/scripts/check_action_pins.py` (see
+   [Compile on the pinned toolchain](#compile-on-the-pinned-toolchain-and-check-the-pins-afterwards)).
+2. Pin the engine to the version the hosted runner caches:
+
+   ```yaml
+   engine:
+     id: copilot
+     version: "1.0.56"   # == compat.json max-agent == hosted-runner toolcache entry
+   ```
+
+   No workflow here declares `engine:` today, so this is new frontmatter. Check whether gh-aw's
+   frontmatter merging lets a `shared/` import carry it before adding the block to all ~30
+   workflows individually.
+3. Verify a run logs `Exact version match found:` instead of `No compatible toolcache entry found`
+   followed by `-> Downloading ...`.
+
+Re-check *both* the `compat.json` window and the version the runner image actually caches before
+choosing the pin, and only pin a version that satisfies both: it must sit inside
+`min-agent`..`max-agent` *and* exist in the toolcache (`1.0.56` is both today). If they diverge —
+the image caches something outside the compat window — stay on a compat-sanctioned version and keep
+paying for the download. `max-agent` is the supported ceiling; pinning past it to chase a cache hit
+would run every agentic workflow on an unsupported CLI.
 
 ## Catalog
 
@@ -312,3 +368,5 @@ Reusable agentic-workflow snippets imported via `imports:` in workflow frontmatt
 - **Minimal permissions.** Workflows declare the least privilege they need; write capabilities flow through gh-aw `safe-outputs:` rather than direct `permissions: write-all`.
 
 [gh-aw]: https://github.com/github/gh-aw
+[gh-aw-48358]: https://github.com/github/gh-aw/issues/48358
+[gh-aw-48519]: https://github.com/github/gh-aw/pull/48519

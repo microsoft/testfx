@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="es" original="../Resources.resx">
     <body>
@@ -692,7 +692,7 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
       </trans-unit>
       <trans-unit id="PreferConstantForResourceLockDescription">
         <source>'[ResourceLock]' matches tests by exact string equality of the resource key. A bare string literal fails open: a typo produces a different key, so conflicting tests are no longer serialized and race silently instead of failing with an error. Referencing a shared constant makes typos a compile error and lets the compiler enforce that every test contending on the same resource uses the same key.</source>
-        <target state="new">'[ResourceLock]' matches tests by exact string equality of the resource key. A bare string literal fails open: a typo produces a different key, so conflicting tests are no longer serialized and race silently instead of failing with an error. Referencing a shared constant makes typos a compile error and lets the compiler enforce that every test contending on the same resource uses the same key.</target>
+        <target state="translated">"[ResourceLock]" coincide con las pruebas según la igualdad exacta de cadena de la clave de recurso. Un literal de cadena suelto no falla con error: un error tipográfico genera una clave distinta, por lo que las pruebas en conflicto ya no se serializan y compiten entre sí sin dar un error. Al hacer referencia a una constante compartida, los errores tipográficos se convierten en un error de compilación y el compilador puede exigir que todas las pruebas que contienden por el mismo recurso usen la misma clave.</target>
         <note>{Locked="[ResourceLock]"}</note>
       </trans-unit>
       <trans-unit id="PreferConstantForResourceLockMessageFormat">
@@ -702,7 +702,7 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
       </trans-unit>
       <trans-unit id="PreferConstantForResourceLockTitle">
         <source>Prefer a named constant for the '[ResourceLock]' resource key</source>
-        <target state="new">Prefer a named constant for the '[ResourceLock]' resource key</target>
+        <target state="translated">Preferir una constante con nombre para la clave de recurso "[ResourceLock]"</target>
         <note>{Locked="[ResourceLock]"}</note>
       </trans-unit>
       <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerDescription">
