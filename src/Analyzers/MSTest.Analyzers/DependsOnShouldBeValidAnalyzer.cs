@@ -111,10 +111,6 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
     {
         var typeSymbol = (INamedTypeSymbol)context.Symbol;
         List<AttributeData> attributes = GetDependsOnAttributes(typeSymbol, symbols);
-        if (attributes.Count == 0)
-        {
-            return;
-        }
 
         // '[DependsOn]' is not inherited (AttributeUsage(Inherited = false)) and is only read off the test
         // class itself, so an application on a type that is not a test class - including a shared base class
@@ -129,6 +125,31 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
         {
             AnalyzeTarget(context, attribute, symbols, declaringClass: typeSymbol, declaringMethod: null);
         }
+
+        // A test method inherited from another class runs as a test of *this* class, but AnalyzeMethod only
+        // ever starts a walk for the class that declares the method. Without a start node here, a cycle
+        // between two test classes whose tests are all inherited would be invisible. Names this type declares
+        // itself are skipped: AnalyzeMethod starts exactly the same node for those.
+        foreach (string testMethodName in EnumerateTestMethodNames(typeSymbol, symbols))
+        {
+            if (!DeclaresMethod(typeSymbol, testMethodName))
+            {
+                AnalyzeCycle(context, symbols, new TestNode(typeSymbol, testMethodName));
+            }
+        }
+    }
+
+    private static bool DeclaresMethod(INamedTypeSymbol type, string methodName)
+    {
+        foreach (ISymbol member in type.GetMembers(methodName))
+        {
+            if (member is IMethodSymbol { MethodKind: MethodKind.Ordinary })
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static void AnalyzeMethod(SymbolAnalysisContext context, AnalysisSymbols symbols)
@@ -490,8 +511,8 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
         {
             exists = true;
 
-            // The name is what the run-time graph matches on, so any overload (or any declaration of that
-            // name in the hierarchy) being a test is enough for the reference to resolve.
+            // The name is what the run-time graph matches on, so any overload in the type's effective method
+            // set being a test is enough for the reference to resolve.
             if (method.IsTestMethod(symbols.TestMethodAttribute))
             {
                 return new MethodLookup(Exists: true, IsTestMethod: true);
@@ -502,37 +523,63 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
     }
 
     /// <summary>
-    /// Enumerates the methods named <paramref name="methodName"/> declared by <paramref name="type"/> or any
-    /// of its base types: a test method declared on a base class runs as a test of the derived test class, so
-    /// the hierarchy is part of the lookup.
+    /// Enumerates the methods named <paramref name="methodName"/> that <paramref name="type"/> effectively
+    /// has: its own declarations plus the inherited ones, excluding base declarations that an override
+    /// replaces.
     /// </summary>
     private static IEnumerable<IMethodSymbol> EnumerateMethods(INamedTypeSymbol type, string methodName)
-    {
-        for (INamedTypeSymbol? current = type; current is not null; current = current.BaseType)
-        {
-            foreach (ISymbol member in current.GetMembers(methodName))
-            {
-                if (member is IMethodSymbol { MethodKind: MethodKind.Ordinary } method)
-                {
-                    yield return method;
-                }
-            }
-        }
-    }
+        => EnumerateEffectiveMethods(type, methodName);
 
     private static IEnumerable<string> EnumerateTestMethodNames(INamedTypeSymbol type, AnalysisSymbols symbols)
     {
         var seen = new HashSet<string>(StringComparer.Ordinal);
+        foreach (IMethodSymbol method in EnumerateEffectiveMethods(type, methodName: null))
+        {
+            if (method.IsTestMethod(symbols.TestMethodAttribute) && seen.Add(method.Name))
+            {
+                yield return method.Name;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Walks <paramref name="type"/> and its base types most-derived first, yielding the ordinary methods
+    /// that make up the type's effective method set - optionally only those named
+    /// <paramref name="methodName"/>.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A base declaration that an override replaces is dropped, because reflection surfaces only the
+    /// most-derived declaration and both <c>[TestMethod]</c> and <c>[DependsOn]</c> are declared
+    /// <c>Inherited = false</c>. Keeping the base declaration would let its attributes travel to the
+    /// override: an overridden test whose override does not re-declare <c>[TestMethod]</c> would still count
+    /// as a test, and - worse - a <c>[DependsOn]</c> the author deliberately dropped by overriding would
+    /// still contribute an edge, which can close a cycle that does not exist at run time.
+    /// </para>
+    /// <para>
+    /// <c>new</c>-shadowing is deliberately not modelled. Reflection surfaces both declarations there, so the
+    /// effective set genuinely contains both, and MSTEST0036 already tells authors not to shadow.
+    /// </para>
+    /// </remarks>
+    private static IEnumerable<IMethodSymbol> EnumerateEffectiveMethods(INamedTypeSymbol type, string? methodName)
+    {
+        var overridden = new HashSet<ISymbol>(SymbolEqualityComparer.Default);
         for (INamedTypeSymbol? current = type; current is not null; current = current.BaseType)
         {
-            foreach (ISymbol member in current.GetMembers())
+            foreach (ISymbol member in methodName is null ? current.GetMembers() : current.GetMembers(methodName))
             {
-                if (member is IMethodSymbol { MethodKind: MethodKind.Ordinary } method
-                    && method.IsTestMethod(symbols.TestMethodAttribute)
-                    && seen.Add(method.Name))
+                if (member is not IMethodSymbol { MethodKind: MethodKind.Ordinary } method
+                    || overridden.Contains(method))
                 {
-                    yield return method.Name;
+                    continue;
                 }
+
+                for (IMethodSymbol? baseMethod = method.OverriddenMethod; baseMethod is not null; baseMethod = baseMethod.OverriddenMethod)
+                {
+                    overridden.Add(baseMethod);
+                }
+
+                yield return method;
             }
         }
     }

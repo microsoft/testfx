@@ -336,6 +336,106 @@ public sealed class DependsOnShouldBeValidAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenOverrideDropsTheBaseDependency_NoDiagnostic()
+    {
+        // '[DependsOn]' is not inherited across an override chain, so at run time 'Run' carries no
+        // dependency and 'Run > Other > Run' is not a cycle. Reading the overridden base declaration's
+        // attribute here would invent one and report a cycle against correct code.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseTests
+            {
+                [TestMethod]
+                [DependsOn("Other")]
+                public virtual void Run() { }
+            }
+
+            [TestClass]
+            public class MyTestClass : BaseTests
+            {
+                [TestMethod]
+                public override void Run() { }
+
+                [TestMethod]
+                [DependsOn(nameof(Run))]
+                public void Other() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenOverrideDropsTestMethodAttribute_NotATestMethod()
+    {
+        // The override is the declaration reflection surfaces, and '[TestMethod]' is not inherited across
+        // overrides, so the base declaration no longer makes this name a test.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseTests
+            {
+                [TestMethod]
+                public virtual void Run() { }
+            }
+
+            [TestClass]
+            public class MyTestClass : BaseTests
+            {
+                public override void Run() { }
+
+                [TestMethod]
+                [{|#0:DependsOn(nameof(Run))|}]
+                public void PlaceOrder() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(DependsOnShouldBeValidAnalyzer.NotATestMethodRule)
+                .WithLocation(0)
+                .WithArguments("MyTestClass", "Run"));
+    }
+
+    [TestMethod]
+    public async Task WhenTwoClassesWithOnlyInheritedTestsDependOnEachOther_Cycle()
+    {
+        // Both classes run the inherited test as their own, so this is a real run-time cycle even though
+        // neither class declares a test method of its own.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseTests
+            {
+                [TestMethod]
+                public void Run() { }
+            }
+
+            [TestClass]
+            [{|#0:DependsOn(typeof(SecondTests))|}]
+            public class FirstTests : BaseTests
+            {
+            }
+
+            [TestClass]
+            [{|#1:DependsOn(typeof(FirstTests))|}]
+            public class SecondTests : BaseTests
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(DependsOnShouldBeValidAnalyzer.CycleRule)
+                .WithLocation(0)
+                .WithArguments("FirstTests.Run > SecondTests.Run > FirstTests.Run"),
+            VerifyCS.Diagnostic(DependsOnShouldBeValidAnalyzer.CycleRule)
+                .WithLocation(1)
+                .WithArguments("SecondTests.Run > FirstTests.Run > SecondTests.Run"));
+    }
+
+    [TestMethod]
     public async Task WhenTestReferencesItself_SelfReference()
     {
         string code = """
