@@ -102,6 +102,11 @@
         <target state="translated">Publikowanie na żywo w Azure DevOps zaakceptowało partię wyników testów, ale nie mogło przeanalizować przypisanych identyfikatorów wyników; załączniki na poziomie wyniku dla tej partii zostaną pominięte.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingResultsDropped">
+        <source>Azure DevOps live publishing could not publish {0} test result(s); they will be missing from the Azure DevOps test run.</source>
+        <target state="new">Azure DevOps live publishing could not publish {0} test result(s); they will be missing from the Azure DevOps test run.</target>
+        <note>{0} is the number of test results that could not be published.</note>
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingRunAttachmentFailed">
         <source>Azure DevOps live publishing failed to upload a test run attachment.</source>
         <target state="translated">Publikowanie na żywo w usłudze Azure DevOps nie może przekazać załącznika przebiegu testu.</target>
@@ -111,6 +116,11 @@
         <source>Azure DevOps live publishing found an azdo-runid.&lt;buildId&gt;.json file for a different Azure DevOps project.</source>
         <target state="translated">Publikowanie na żywo w usłudze Azure DevOps znalazło plik azdo-runid.&lt;buildId&gt;.json dla innego projektu usługi Azure DevOps.</target>
         <note>{Locked="azdo-runid.&lt;buildId&gt;.json"}</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingRunLeftInProgress">
+        <source>The Azure DevOps test run was not marked as completed and may not appear in the build's Tests tab.</source>
+        <target state="new">The Azure DevOps test run was not marked as completed and may not appear in the build's Tests tab.</target>
+        <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingTimeoutErrorMessage">
         <source>Timeout</source>

@@ -102,6 +102,11 @@
         <target state="translated">Azure DevOps 即時發佈已接受一批測試結果，但無法剖析指派的結果 ID；將略過此批次的結果層級附件。</target>
         <note />
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingResultsDropped">
+        <source>Azure DevOps live publishing could not publish {0} test result(s); they will be missing from the Azure DevOps test run.</source>
+        <target state="new">Azure DevOps live publishing could not publish {0} test result(s); they will be missing from the Azure DevOps test run.</target>
+        <note>{0} is the number of test results that could not be published.</note>
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingRunAttachmentFailed">
         <source>Azure DevOps live publishing failed to upload a test run attachment.</source>
         <target state="translated">Azure DevOps 即時發佈無法上傳測試執行附件。</target>
@@ -111,6 +116,11 @@
         <source>Azure DevOps live publishing found an azdo-runid.&lt;buildId&gt;.json file for a different Azure DevOps project.</source>
         <target state="translated">Azure DevOps 即時發佈找到不同 Azure DevOps 專案的 azdo-runid.&lt;buildId&gt;.json 檔案。</target>
         <note>{Locked="azdo-runid.&lt;buildId&gt;.json"}</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingRunLeftInProgress">
+        <source>The Azure DevOps test run was not marked as completed and may not appear in the build's Tests tab.</source>
+        <target state="new">The Azure DevOps test run was not marked as completed and may not appear in the build's Tests tab.</target>
+        <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingTimeoutErrorMessage">
         <source>Timeout</source>

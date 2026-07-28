@@ -156,13 +156,23 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            await WarnAsync($"{AzureDevOpsResources.AzureDevOpsLivePublishingCreateRunFailed} {ex.Message}", testSessionContext.CancellationToken).ConfigureAwait(false);
+            // Reset state before reporting so a failure to display the warning can never leave the
+            // publisher half-initialized.
             _publishConfiguration = null;
             _coordinatedRun = null;
             CurrentRunId = null;
+            await WarnAsync($"{AzureDevOpsResources.AzureDevOpsLivePublishingCreateRunFailed} {ex.Message}", testSessionContext.CancellationToken).ConfigureAwait(false);
         }
     }
 
+    /// <summary>
+    /// Reports a live-publishing problem both to the diagnostic log and to the output device, so that
+    /// it is visible in CI logs (as an Azure DevOps warning) instead of only in an opt-in log file.
+    /// </summary>
+    /// <remarks>
+    /// Never throws: this is a best-effort diagnostic invoked from error-recovery paths and from
+    /// session teardown, where propagating would turn a warning into a failed run.
+    /// </remarks>
     private async Task WarnAsync(string message, CancellationToken cancellationToken)
     {
         _logger.LogWarning(message);
@@ -171,9 +181,11 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
         {
             await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(message), cancellationToken).ConfigureAwait(false);
         }
-        catch (OperationCanceledException)
+        catch (Exception ex)
         {
-            // The session is tearing down; the warning is already in the log file.
+            // The message is already in the diagnostic log; losing the console copy is preferable to
+            // failing the test run from inside a diagnostic helper.
+            _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
         }
     }
 
@@ -256,6 +268,18 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
             _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
         }
 
+        // The session-end flush is the last chance to publish: nothing drains the retry queue after
+        // this point, so anything still pending is permanently lost. Report it once here rather than
+        // per failed batch (which the background loop would repeat every flush interval).
+        // Use CancellationToken.None so the warning still surfaces when the session was canceled.
+        int unpublishedResultCount = _retryResults.Count + _pendingResults.Count;
+        if (unpublishedResultCount > 0)
+        {
+            await WarnAsync(
+                string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingResultsDropped, unpublishedResultCount),
+                CancellationToken.None).ConfigureAwait(false);
+        }
+
         try
         {
             await UploadPendingRunAttachmentsAsync(testSessionContext.CancellationToken).ConfigureAwait(false);
@@ -266,7 +290,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingRunAttachmentFailed} {ex.Message}");
+            await WarnAsync($"{AzureDevOpsResources.AzureDevOpsLivePublishingRunAttachmentFailed} {ex.Message}", CancellationToken.None).ConfigureAwait(false);
         }
 
         // Azure DevOps test runs use "Aborted" specifically for cancellation or session-level
@@ -294,7 +318,11 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingCompleteRunFailed} {ex.Message}");
+            // A run left in "InProgress" is not surfaced in the build's Tests tab, so the user would
+            // otherwise see an empty tab with no explanation even though every result was uploaded.
+            await WarnAsync(
+                $"{AzureDevOpsResources.AzureDevOpsLivePublishingCompleteRunFailed} {ex.Message} {AzureDevOpsResources.AzureDevOpsLivePublishingRunLeftInProgress}",
+                CancellationToken.None).ConfigureAwait(false);
         }
     }
 }
