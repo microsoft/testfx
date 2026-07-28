@@ -529,6 +529,136 @@ public sealed class DependsOnShouldBeValidAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenTestMethodIsNotRunnable_NoCycle()
+    {
+        // Discovery rejects a private '[TestMethod]', so it never becomes a node and the "cycle" between the
+        // two does not exist at run time. MSTEST0003 already reports the invalid method itself.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [DependsOn(nameof(AddItem))]
+                private void CreateCart() { }
+
+                [TestMethod]
+                [DependsOn(nameof(CreateCart))]
+                public void AddItem() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenInternalTestMethodAndDiscoverInternals_Cycle()
+    {
+        // With '[assembly: DiscoverInternals]' an internal test method *is* discovered, so the cycle is real.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: DiscoverInternals]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [{|#0:DependsOn(nameof(AddItem))|}]
+                internal void CreateCart() { }
+
+                [TestMethod]
+                [{|#1:DependsOn(nameof(CreateCart))|}]
+                public void AddItem() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(DependsOnShouldBeValidAnalyzer.CycleRule)
+                .WithLocation(0)
+                .WithArguments("MyTestClass.CreateCart > MyTestClass.AddItem > MyTestClass.CreateCart"),
+            VerifyCS.Diagnostic(DependsOnShouldBeValidAnalyzer.CycleRule)
+                .WithLocation(1)
+                .WithArguments("MyTestClass.AddItem > MyTestClass.CreateCart > MyTestClass.AddItem"));
+    }
+
+    [TestMethod]
+    public async Task WhenTestClassIsGeneric_NoCycle()
+    {
+        // 'TypeValidator.IsValidTestClass' rejects a non-abstract generic type definition outright, so no
+        // test runs under this class and there is no cycle to report.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass<T>
+            {
+                [TestMethod]
+                [DependsOn(nameof(AddItem))]
+                public void CreateCart() { }
+
+                [TestMethod]
+                [DependsOn(nameof(CreateCart))]
+                public void AddItem() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenNewHidesTheBaseDependency_NoDiagnostic()
+    {
+        // Discovery dedupes same-signature declarations and keeps the one closest to the test class, so the
+        // hidden base declaration's dependency is gone at run time and 'Run > Other > Run' is not a cycle.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseTests
+            {
+                [TestMethod]
+                [DependsOn("Other")]
+                public void Run() { }
+            }
+
+            [TestClass]
+            public class MyTestClass : BaseTests
+            {
+                [TestMethod]
+                public new void Run() { }
+
+                [TestMethod]
+                [DependsOn(nameof(Run))]
+                public void Other() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenTypeArgumentIsNull_NoDiagnostic()
+    {
+        // The constructor throws for a null type, so no dependency is ever recorded; reading past it would
+        // misread this as an implicit same-class self reference.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [DependsOn((System.Type)null!, nameof(AddItem))]
+                public void AddItem() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
     public async Task WhenTestReferencesItself_SelfReference()
     {
         string code = """

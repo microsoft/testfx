@@ -106,10 +106,36 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
                 return;
             }
 
-            var symbols = new AnalysisSymbols(dependsOnAttributeSymbol, testMethodAttributeSymbol, testClassAttributeSymbol);
+            var symbols = new AnalysisSymbols(
+                dependsOnAttributeSymbol,
+                testMethodAttributeSymbol,
+                testClassAttributeSymbol,
+                DiscoversInternals(context.Compilation));
             context.RegisterSymbolAction(context => AnalyzeMethod(context, symbols), SymbolKind.Method);
             context.RegisterSymbolAction(context => AnalyzeNamedType(context, symbols), SymbolKind.NamedType);
         });
+    }
+
+    /// <summary>
+    /// Whether the assembly opts internal members into discovery, which decides whether an internal
+    /// <c>[TestMethod]</c> is a runnable test (<c>TestMethodValidator.IsValidTestMethod</c>).
+    /// </summary>
+    private static bool DiscoversInternals(Compilation compilation)
+    {
+        if (!compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDiscoverInternalsAttribute, out INamedTypeSymbol? discoverInternalsAttributeSymbol))
+        {
+            return false;
+        }
+
+        foreach (AttributeData attribute in compilation.Assembly.GetAttributes())
+        {
+            if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, discoverInternalsAttributeSymbol))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static void AnalyzeNamedType(SymbolAnalysisContext context, AnalysisSymbols symbols)
@@ -397,7 +423,10 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
 
         foreach (IMethodSymbol method in EnumerateMethods(node.TestClass, node.MethodName))
         {
-            if (!method.IsTestMethod(symbols.TestMethodAttribute))
+            // Graph nodes use the stricter "does discovery run this" predicate: reading the attributes of a
+            // method discovery never turns into a test would invent edges, and an invented edge can close a
+            // cycle that does not exist at run time.
+            if (!IsRunnableTestMethod(method, symbols))
             {
                 continue;
             }
@@ -461,7 +490,7 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
             yield break;
         }
 
-        if (string.IsNullOrWhiteSpace(targetMethodName) || !LookupMethods(targetClass, targetMethodName, symbols).IsTestMethod)
+        if (string.IsNullOrWhiteSpace(targetMethodName) || !HasRunnableTestMethod(targetClass, targetMethodName, symbols))
         {
             yield break;
         }
@@ -490,6 +519,14 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
         string? targetMethodName = null;
         foreach (TypedConstant argument in attribute.ConstructorArguments)
         {
+            // A null argument means the constructor throws and no dependency is ever recorded. Reading the
+            // remaining arguments would misread '[DependsOn((Type)null!, nameof(A))]' as an implicit
+            // same-class target and could report a self reference against code that never builds a graph.
+            if (argument.IsNull)
+            {
+                return (null, null, true);
+            }
+
             switch (argument)
             {
                 case { Kind: TypedConstantKind.Type, Value: ITypeSymbol type }:
@@ -516,13 +553,36 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
 
     /// <summary>
     /// Whether discovery runs tests under <paramref name="type"/>'s own name. Mirrors
-    /// <c>TypeValidator.IsValidTestClass</c> on the two points that decide whether a
-    /// <c>[DependsOn]</c> reference can ever match: the <c>[TestClass]</c> attribute, and the fact that an
-    /// abstract test class is skipped so that its tests are enumerated under each concrete derived class
-    /// instead.
+    /// <c>TypeValidator.IsValidTestClass</c> on the points that decide whether a <c>[DependsOn]</c> reference
+    /// can ever match: the <c>[TestClass]</c> attribute, the fact that an abstract test class is skipped so
+    /// its tests are enumerated under each concrete derived class, and the fact that a non-abstract generic
+    /// test class is rejected outright.
     /// </summary>
     private static bool IsRunnableTestClass(INamedTypeSymbol type, AnalysisSymbols symbols)
-        => !type.IsAbstract && type.IsTestClass(symbols.TestClassAttribute);
+        => !type.IsAbstract
+            && !IsGenericTypeDefinition(type)
+            && type.IsTestClass(symbols.TestClassAttribute);
+
+    private static bool IsGenericTypeDefinition(INamedTypeSymbol type)
+        => type.IsGenericType && SymbolEqualityComparer.Default.Equals(type, type.OriginalDefinition);
+
+    /// <summary>
+    /// Whether discovery turns <paramref name="method"/> into a test. Mirrors the parts of
+    /// <c>TestMethodValidator.IsValidTestMethod</c> that are decidable here: the <c>[TestMethod]</c>
+    /// attribute, accessibility (public, or internal when the assembly opts in with
+    /// <c>[DiscoverInternals]</c>), and the rejection of static and abstract methods.
+    /// </summary>
+    /// <remarks>
+    /// The return-type rule is deliberately not mirrored. MSTEST0003 already reports a test method with an
+    /// invalid signature, so the only thing this omission costs is a graph node for a method that is
+    /// reported as broken anyway - whereas getting <c>async void</c> and <c>ValueTask&lt;T&gt;</c> subtly
+    /// wrong would drop nodes for methods that really do run.
+    /// </remarks>
+    private static bool IsRunnableTestMethod(IMethodSymbol method, AnalysisSymbols symbols)
+        => method is { IsStatic: false, IsAbstract: false }
+            && (method.DeclaredAccessibility == Accessibility.Public
+                || (symbols.DiscoverInternals && method.DeclaredAccessibility == Accessibility.Internal))
+            && method.IsTestMethod(symbols.TestMethodAttribute);
 
     private static bool IsFromCurrentAssembly(SymbolAnalysisContext context, INamedTypeSymbol type)
         => SymbolEqualityComparer.Default.Equals(type.ContainingAssembly, context.Compilation.Assembly);
@@ -553,12 +613,25 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
     private static IEnumerable<IMethodSymbol> EnumerateMethods(INamedTypeSymbol type, string methodName)
         => EnumerateEffectiveMethods(type, methodName);
 
+    private static bool HasRunnableTestMethod(INamedTypeSymbol targetClass, string methodName, AnalysisSymbols symbols)
+    {
+        foreach (IMethodSymbol method in EnumerateMethods(targetClass, methodName))
+        {
+            if (IsRunnableTestMethod(method, symbols))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private static IEnumerable<string> EnumerateTestMethodNames(INamedTypeSymbol type, AnalysisSymbols symbols)
     {
         var seen = new HashSet<string>(StringComparer.Ordinal);
         foreach (IMethodSymbol method in EnumerateEffectiveMethods(type, methodName: null))
         {
-            if (method.IsTestMethod(symbols.TestMethodAttribute) && seen.Add(method.Name))
+            if (IsRunnableTestMethod(method, symbols) && seen.Add(method.Name))
             {
                 yield return method.Name;
             }
@@ -580,19 +653,22 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
     /// still contribute an edge, which can close a cycle that does not exist at run time.
     /// </para>
     /// <para>
-    /// <c>new</c>-shadowing is deliberately not modelled. Reflection surfaces both declarations there, so the
-    /// effective set genuinely contains both, and MSTEST0036 already tells authors not to shadow.
+    /// A base declaration that a <c>new</c> member hides with the <em>same signature</em> is dropped for the
+    /// same reason: <c>TypeEnumerator.GetTests</c> detects the duplicate and keeps the declaration closest to
+    /// the test class. Genuine overloads (a different signature) are kept, since those are distinct tests.
     /// </para>
     /// </remarks>
     private static IEnumerable<IMethodSymbol> EnumerateEffectiveMethods(INamedTypeSymbol type, string? methodName)
     {
         var overridden = new HashSet<ISymbol>(SymbolEqualityComparer.Default);
+        var signatures = new HashSet<string>(StringComparer.Ordinal);
         for (INamedTypeSymbol? current = type; current is not null; current = current.BaseType)
         {
             foreach (ISymbol member in methodName is null ? current.GetMembers() : current.GetMembers(methodName))
             {
                 if (member is not IMethodSymbol { MethodKind: MethodKind.Ordinary } method
-                    || overridden.Contains(method))
+                    || overridden.Contains(method)
+                    || !signatures.Add(BuildSignatureKey(method)))
                 {
                     continue;
                 }
@@ -605,6 +681,24 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
                 yield return method;
             }
         }
+    }
+
+    private static string BuildSignatureKey(IMethodSymbol method)
+    {
+        var builder = new StringBuilder(method.Name);
+        builder.Append('`').Append(method.Arity).Append('(');
+        for (int i = 0; i < method.Parameters.Length; i++)
+        {
+            if (i > 0)
+            {
+                builder.Append(',');
+            }
+
+            IParameterSymbol parameter = method.Parameters[i];
+            builder.Append(parameter.RefKind).Append(':').Append(parameter.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+        }
+
+        return builder.Append(')').ToString();
     }
 
     private static List<AttributeData> GetDependsOnAttributes(ISymbol symbol, AnalysisSymbols symbols)
@@ -637,7 +731,8 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
     private sealed record AnalysisSymbols(
         INamedTypeSymbol DependsOnAttribute,
         INamedTypeSymbol TestMethodAttribute,
-        INamedTypeSymbol TestClassAttribute);
+        INamedTypeSymbol TestClassAttribute,
+        bool DiscoverInternals);
 
     /// <summary>
     /// One node of the dependency graph. The run-time graph keys tests by class name and method name - an
