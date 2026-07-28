@@ -374,8 +374,8 @@ stages:
             #
             # Three classes of failure stay on the fallback path because the non-cached build can legitimately
             # behave differently: anything MSBuildCache itself reports (plugin, cache or file-access problems),
-            # restore failures (NU*, which are often transient), and infrastructure failures such as an engine
-            # crash or an OOM - whether or not they reached MSBuild's error summary.
+            # restore failures (NU*, which are often transient), and the engine/graph failures classified below -
+            # whether or not they reached MSBuild's error summary.
             $log = if (Test-Path $logPath) { @(Get-Content -LiteralPath $logPath) } else { @() }
 
             $reportedErrorCount = -1
@@ -391,15 +391,20 @@ stages:
             $fallbackMayHelp = '(?i)MSBuildCache|ProjectCache|project cache|cache plugin|CacheClient|file access|\bNU\d{4}\b'
             $mayHelpLines = @($errorLines | Where-Object { $_ -match $fallbackMayHelp })
 
-            # An engine crash or an OOM does reach the error summary, but it is transient infrastructure rather
-            # than a source break: the node died before the projects it owned could report their real result, so
-            # the Arcade invocation can legitimately succeed where this one did not. Match these against the whole
-            # log rather than $errorLines, because the diagnostic detail usually continues on following lines that
-            # are not themselves formatted as errors.
-            $infrastructureFailure = '(?i)\bMSB4166\b|\bMSB0001\b|\bMSB1025\b|\bMSB4017\b|exited prematurely|OutOfMemoryException'
-            $infrastructureLines = @($log | Where-Object { $_ -match $infrastructureFailure })
+            # Some failures do reach the error summary but still are not source breaks the fallback would
+            # reproduce, so they must not fail fast:
+            #   - engine crashes and OOM (MSB4166 "exited prematurely", MSB0001/MSB1025 internal errors,
+            #     MSB4017 logger failure). The node died before the projects it owned could report their real
+            #     result, so the Arcade invocation can legitimately succeed where this one did not.
+            #   - MSB4260, a project reference that cannot be resolved with a static graph. That is a
+            #     limitation of the /graph switch this step passes; the Arcade fallback does not build the
+            #     graph statically, so it can resolve the same reference and succeed.
+            # Match these against the whole log rather than $errorLines, because the diagnostic detail usually
+            # continues on following lines that are not themselves formatted as errors.
+            $fallbackCanDiffer = '(?i)\bMSB4166\b|\bMSB0001\b|\bMSB1025\b|\bMSB4017\b|\bMSB4260\b|exited prematurely|OutOfMemoryException'
+            $fallbackCanDifferLines = @($log | Where-Object { $_ -match $fallbackCanDiffer })
 
-            if ($reportedErrorCount -gt 0 -and $errorLines.Count -gt 0 -and $mayHelpLines.Count -eq 0 -and $infrastructureLines.Count -eq 0) {
+            if ($reportedErrorCount -gt 0 -and $errorLines.Count -gt 0 -and $mayHelpLines.Count -eq 0 -and $fallbackCanDifferLines.Count -eq 0) {
               foreach ($line in @($errorLines | Select-Object -First 20)) {
                 Write-Host "##vso[task.logissue type=error]$line"
               }
