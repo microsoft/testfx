@@ -149,6 +149,10 @@
     <value>'--report-azdo-groups' requires '--report-azdo' to be enabled</value>
     <comment>{Locked="--report-azdo-groups"}{Locked="--report-azdo"}</comment>
   </data>
+  <data name="AzureDevOpsLivePublishingAttachmentsDropped" xml:space="preserve">
+    <value>Azure DevOps live publishing could not upload {0} attachment(s); they will be missing from the Azure DevOps test run.</value>
+    <comment>{0} is the number of attachments that could not be uploaded.</comment>
+  </data>
   <data name="AzureDevOpsLivePublishingCompleteRunFailed" xml:space="preserve">
     <value>Azure DevOps live publishing failed to complete the test run.</value>
   </data>
@@ -211,6 +215,9 @@
   <data name="AzureDevOpsLivePublishingTimeoutErrorMessageWithReason" xml:space="preserve">
     <value>Timeout: {0}</value>
     <comment>{0} is the timeout reason.</comment>
+  </data>
+  <data name="AzureDevOpsLivePublishingWarningDisplayFailed" xml:space="preserve">
+    <value>Azure DevOps live publishing could not display a warning on the output device.</value>
   </data>
   <data name="AzureDevOpsQuarantineFileRequiresAzureDevOps" xml:space="preserve">
     <value>'--report-azdo-quarantine-file' requires '--report-azdo' to be enabled</value>

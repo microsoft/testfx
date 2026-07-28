@@ -42,6 +42,11 @@
         <target state="translated">Parametr --report-azdo-groups vyžaduje povolený parametr --report-azdo.</target>
         <note>{Locked="--report-azdo-groups"}{Locked="--report-azdo"}</note>
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingAttachmentsDropped">
+        <source>Azure DevOps live publishing could not upload {0} attachment(s); they will be missing from the Azure DevOps test run.</source>
+        <target state="new">Azure DevOps live publishing could not upload {0} attachment(s); they will be missing from the Azure DevOps test run.</target>
+        <note>{0} is the number of attachments that could not be uploaded.</note>
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCompleteRunFailed">
         <source>Azure DevOps live publishing failed to complete the test run.</source>
         <target state="translated">Živému publikování Azure DevOps se nepodařilo dokončit testovací běh.</target>
@@ -131,6 +136,11 @@
         <source>Timeout: {0}</source>
         <target state="translated">Časový limit: {0}</target>
         <note>{0} is the timeout reason.</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingWarningDisplayFailed">
+        <source>Azure DevOps live publishing could not display a warning on the output device.</source>
+        <target state="new">Azure DevOps live publishing could not display a warning on the output device.</target>
+        <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsQuarantineFileRequiresAzureDevOps">
         <source>'--report-azdo-quarantine-file' requires '--report-azdo' to be enabled</source>

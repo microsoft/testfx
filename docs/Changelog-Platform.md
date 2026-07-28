@@ -17,7 +17,7 @@ See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4
 ### Fixed
 
 * Fix `Microsoft.Testing.Extensions.AzureDevOpsReport` crashing with `ObjectDisposedException` during teardown, after results were already published, when the platform disposes the live test-results publisher more than once in [#10191](https://github.com/microsoft/testfx/issues/10191)
-* Report Azure DevOps live-publishing failures (missing configuration, test run creation, unpublished results, attachment upload and run finalization) on the output device instead of only in the opt-in diagnostic log, so `--publish-azdo-test-results` no longer fails silently in [#10191](https://github.com/microsoft/testfx/issues/10191)
+* Report Azure DevOps live-publishing failures (missing configuration, test run creation, unpublished results, attachment uploads and run finalization) on the output device instead of only in the opt-in diagnostic log, so `--publish-azdo-test-results` no longer fails silently in [#10191](https://github.com/microsoft/testfx/issues/10191)
 
 ## <a name="2.3.3" />[2.3.3] - UNRELEASED
 
