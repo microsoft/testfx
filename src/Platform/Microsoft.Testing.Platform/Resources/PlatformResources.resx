@@ -179,6 +179,32 @@
   <data name="CannotCreateTestExecutionFilterErrorMessage" xml:space="preserve">
     <value>Failed to create a test execution filter</value>
   </data>
+  <data name="CompositeTestExecutionFilterCannotContainNull" xml:space="preserve">
+    <value>A composite test execution filter cannot contain a null child filter.</value>
+  </data>
+  <data name="CompositeTestExecutionFilterRequiresTwoFilters" xml:space="preserve">
+    <value>A composite test execution filter requires at least two child filters.</value>
+  </data>
+  <data name="TestExecutionFilterProviderNotSupportedForServer" xml:space="preserve">
+    <value>Test execution filter provider '{0}' returned filter type '{1}' for a JSON-RPC server request. Provider constraints are not applied to server requests; return null when TestExecutionFilterContext.Origin is Server.</value>
+    <comment>{0} is the provider UID. {1} is the filter type. {Locked="JSON-RPC"}{Locked="null"}{Locked="TestExecutionFilterContext.Origin"}{Locked="Server"}</comment>
+  </data>
+  <data name="UnsupportedProviderTestExecutionFilter" xml:space="preserve">
+    <value>Test execution filter provider '{0}' returned unsupported filter type '{1}'. Providers can return only NopFilter, TestNodeUidListFilter, TreeNodeFilter, or an And CompositeTestExecutionFilter.</value>
+    <comment>{0} is the provider UID. {1} is the unsupported filter type. {Locked="NopFilter"}{Locked="TestNodeUidListFilter"}{Locked="TreeNodeFilter"}{Locked="And"}{Locked="CompositeTestExecutionFilter"}</comment>
+  </data>
+  <data name="UnsupportedRequestTestExecutionFilter" xml:space="preserve">
+    <value>The request contains unsupported test execution filter type '{0}'.</value>
+    <comment>{0} is the unsupported filter type.</comment>
+  </data>
+  <data name="UnsupportedTestExecutionFilterOperator" xml:space="preserve">
+    <value>Only the And test execution filter operator is supported.</value>
+    <comment>{Locked="And"}</comment>
+  </data>
+  <data name="UnsupportedTestExecutionFilterOperatorValue" xml:space="preserve">
+    <value>Test execution filter operator '{0}' is not supported. Only And is supported.</value>
+    <comment>{0} is the unsupported operator value. {Locked="And"}</comment>
+  </data>
   <data name="CompositeServiceFactoryInstanceAlreadyRegistered" xml:space="preserve">
     <value>The same instance of 'CompositeExtensionFactory' is already registered</value>
     <comment>{Locked="CompositeExtensionFactory"}</comment>

@@ -226,6 +226,10 @@ internal sealed partial class TestHostBuilder
 #pragma warning restore CS0618 // Type or member is obsolete
         context.ServiceProvider.AddServices(testApplicationLifecycleCallback);
 
+        ITestExecutionFilterProvider[] testExecutionFilterProviders =
+            await ((TestHostManager)TestHost).BuildTestExecutionFilterProvidersAsync(context.ServiceProvider).ConfigureAwait(false);
+        context.ServiceProvider.AddServices(testExecutionFilterProviders);
+
         return context.IsJsonRpcProtocol
             ? await BuildServerTestHostAsync(context, testControllerConnection).ConfigureAwait(false)
             : await BuildConsoleTestHostAsync(context, testControllerConnection).ConfigureAwait(false);
