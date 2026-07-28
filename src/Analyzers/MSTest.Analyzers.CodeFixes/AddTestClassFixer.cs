@@ -63,6 +63,18 @@ public sealed class AddTestClassFixer : CodeFixProvider
             return;
         }
 
+        bool isStruct = declaration is StructDeclarationSyntax
+            || (declaration is RecordDeclarationSyntax { ClassOrStructKeyword: var keyword } && keyword.IsKind(SyntaxKind.StructKeyword));
+
+        // MSTEST0041 fires on whatever target the condition attribute allows. When that target is a struct, the
+        // attribute only got there because its own AttributeUsage permits structs, so turning the struct into a
+        // class would strand the attribute on a target it doesn't allow (CS0592). The other rules only ever ask for
+        // a test class, where the conversion is the intended fix.
+        if (isStruct && diagnostic.Id == DiagnosticIds.UseConditionBaseWithTestClassRuleId)
+        {
+            return;
+        }
+
         // For structs and record structs, we need to change them to classes/record classes since [TestClass] cannot be applied to structs
         if (declaration is StructDeclarationSyntax)
         {

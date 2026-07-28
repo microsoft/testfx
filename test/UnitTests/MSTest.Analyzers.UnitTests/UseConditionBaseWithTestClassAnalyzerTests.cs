@@ -302,6 +302,66 @@ public sealed class UseConditionBaseWithTestClassAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenStructHasStructOnlyCustomConditionAttribute_DiagnosticHasNoCodeFix()
+    {
+        // Converting the struct to a class would move the condition attribute onto a target its own
+        // AttributeUsage does not allow, producing CS0592, so no fix should be offered here.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [AttributeUsage(AttributeTargets.Struct)]
+            public sealed class StructConditionAttribute : ConditionBaseAttribute
+            {
+                public StructConditionAttribute() : base(ConditionMode.Include) { }
+                public override string GroupName => nameof(StructConditionAttribute);
+                public override bool IsConditionMet => true;
+            }
+
+            [StructCondition]
+            public struct {|#0:MyStruct|}
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic()
+                .WithLocation(0)
+                .WithArguments("StructConditionAttribute"),
+            code);
+    }
+
+    [TestMethod]
+    public async Task WhenRecordStructHasStructOnlyCustomConditionAttribute_DiagnosticHasNoCodeFix()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [AttributeUsage(AttributeTargets.Struct)]
+            public sealed class StructConditionAttribute : ConditionBaseAttribute
+            {
+                public StructConditionAttribute() : base(ConditionMode.Include) { }
+                public override string GroupName => nameof(StructConditionAttribute);
+                public override bool IsConditionMet => true;
+            }
+
+            [StructCondition]
+            public record struct {|#0:MyRecordStruct|}
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic()
+                .WithLocation(0)
+                .WithArguments("StructConditionAttribute"),
+            code);
+    }
+
+    [TestMethod]
     public async Task WhenNonTestClassHasMultipleConditionAttributes_SingleDiagnostic()
     {
         // The analyzer uses FirstOrDefault, so only one diagnostic fires (for the first found
