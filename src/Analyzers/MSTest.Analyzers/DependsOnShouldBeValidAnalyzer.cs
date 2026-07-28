@@ -183,7 +183,7 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
             return false;
         }
 
-        (INamedTypeSymbol? explicitTargetClass, string? targetMethodName, bool isMalformed) = ReadTarget(attribute);
+        (ITypeSymbol? explicitTarget, string? targetMethodName, bool isMalformed) = ReadTarget(attribute);
         if (isMalformed)
         {
             return false;
@@ -192,8 +192,8 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
         // An implicit target ("a method of my own class") is resolved against the class the test runs under.
         // For a test method declared on a non-test base class that class is each derived test class, which is
         // not knowable from this declaration, so only explicit 'typeof' targets are validated there.
-        INamedTypeSymbol? targetClass = explicitTargetClass;
-        if (targetClass is null)
+        INamedTypeSymbol targetClass;
+        if (explicitTarget is null)
         {
             if (!declaringClass.IsTestClass(symbols.TestClassAttribute))
             {
@@ -201,6 +201,18 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
             }
 
             targetClass = declaringClass;
+        }
+        else if (explicitTarget is INamedTypeSymbol namedTarget)
+        {
+            targetClass = namedTarget;
+        }
+        else
+        {
+            // typeof(int[]), typeof(int*), ... - the attribute accepts them, but an array or pointer can
+            // never carry a '[TestClass]', so the reference is decidably dead. Reported before the
+            // assembly check below, which has no answer for a type with no containing assembly.
+            context.ReportDiagnostic(attributeSyntax.CreateDiagnostic(NotATestClassRule, DescribeType(explicitTarget)));
+            return false;
         }
 
         if (targetClass.TypeKind == TypeKind.Error)
@@ -375,13 +387,20 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
     {
         context.CancellationToken.ThrowIfCancellationRequested();
 
-        (INamedTypeSymbol? explicitTargetClass, string? targetMethodName, bool isMalformed) = ReadTarget(attribute);
+        (ITypeSymbol? explicitTarget, string? targetMethodName, bool isMalformed) = ReadTarget(attribute);
         if (isMalformed)
         {
             yield break;
         }
 
-        INamedTypeSymbol targetClass = explicitTargetClass ?? node.TestClass;
+        // Only a named type can contribute graph nodes; an array or pointer target is reported by
+        // AnalyzeTarget and contributes no edge.
+        if (explicitTarget is not null and not INamedTypeSymbol)
+        {
+            yield break;
+        }
+
+        INamedTypeSymbol targetClass = explicitTarget as INamedTypeSymbol ?? node.TestClass;
         if (targetClass.TypeKind == TypeKind.Error
             || !IsFromCurrentAssembly(context, targetClass)
             || !targetClass.IsTestClass(symbols.TestClassAttribute))
@@ -431,22 +450,17 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
     /// <c>(string)</c>, <c>(Type)</c> and <c>(Type, string)</c>, so the target class and method name can be
     /// told apart by argument kind.
     /// </summary>
-    private static (INamedTypeSymbol? TargetClass, string? TargetMethodName, bool IsMalformed) ReadTarget(AttributeData attribute)
+    private static (ITypeSymbol? TargetClass, string? TargetMethodName, bool IsMalformed) ReadTarget(AttributeData attribute)
     {
-        INamedTypeSymbol? targetClass = null;
+        ITypeSymbol? targetClass = null;
         string? targetMethodName = null;
         foreach (TypedConstant argument in attribute.ConstructorArguments)
         {
             switch (argument)
             {
-                case { Kind: TypedConstantKind.Type, Value: INamedTypeSymbol type }:
+                case { Kind: TypedConstantKind.Type, Value: ITypeSymbol type }:
                     targetClass = type;
                     break;
-
-                case { Kind: TypedConstantKind.Type }:
-                    // typeof(int[]), typeof(T), ... - not something that can carry tests, and not something
-                    // this analyzer models.
-                    return (null, null, true);
 
                 case { Kind: TypedConstantKind.Primitive, Value: string name }:
                     targetMethodName = name;
@@ -456,6 +470,15 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
 
         return (targetClass, targetMethodName, targetClass is null && targetMethodName is null);
     }
+
+    /// <summary>
+    /// Names a type for a diagnostic message. <see cref="ISymbol.Name"/> is empty for an array or pointer,
+    /// so those fall back to the display form (<c>int[]</c>).
+    /// </summary>
+    private static string DescribeType(ITypeSymbol type)
+        => string.IsNullOrEmpty(type.Name)
+            ? type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)
+            : type.Name;
 
     private static bool IsFromCurrentAssembly(SymbolAnalysisContext context, INamedTypeSymbol type)
         => SymbolEqualityComparer.Default.Equals(type.ContainingAssembly, context.Compilation.Assembly);

@@ -312,6 +312,30 @@ public sealed class DependsOnShouldBeValidAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenReferencedTypeIsNotANamedType_NotATestClass()
+    {
+        // The attribute constructor takes a 'Type', so 'typeof(int[])' compiles - but an array can never
+        // carry a '[TestClass]', so the reference is decidably dead.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [{|#0:DependsOn(typeof(int[]))|}]
+                public void AddItem() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(DependsOnShouldBeValidAnalyzer.NotATestClassRule)
+                .WithLocation(0)
+                .WithArguments("int[]"));
+    }
+
+    [TestMethod]
     public async Task WhenTestReferencesItself_SelfReference()
     {
         string code = """
