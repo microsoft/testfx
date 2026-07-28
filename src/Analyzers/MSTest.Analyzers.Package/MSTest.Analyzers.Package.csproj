@@ -9,7 +9,7 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <PackageId>MSTest.Analyzers</PackageId>
-    <PackageTags>MSTest Analyzers TestFramework Unittest MSTestV2 Microsoft Test Testing TDD Framework</PackageTags>
+    <PackageTags>$(CommonPackageTags) MSTest Analyzers Roslyn TestFramework MSTestV2 Framework</PackageTags>
     <PackageDescription>
       MSTest is Microsoft supported Test Framework.
 

@@ -17,6 +17,8 @@ using Moq;
 using TestFramework.ForTestingMSTest;
 
 using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope;
+using FixtureKind = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.FixtureKind;
+using TimeoutInfo = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TimeoutInfo;
 #pragma warning disable CS0618 // Type or member is obsolete
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
@@ -198,6 +200,91 @@ public class MSTestSettingsTests : TestContainer
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
 
         adapterSettings.CaptureDebugTraces.Should().BeFalse();
+    }
+
+    public void OutputCaptureModeShouldDefaultToResult()
+    {
+        string runSettingsXml =
+            """
+            <RunSettings>
+              <MSTestV2>
+              </MSTestV2>
+            </RunSettings>
+            """;
+
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
+
+        adapterSettings.OutputCaptureMode.Should().Be(TestOutputCaptureMode.Result);
+        adapterSettings.CaptureDebugTraces.Should().BeTrue();
+    }
+
+    public void OutputCaptureModeShouldMapLegacyBooleanTrueToResult()
+    {
+        string runSettingsXml =
+            """
+            <RunSettings>
+              <MSTestV2>
+                  <CaptureTraceOutput>True</CaptureTraceOutput>
+              </MSTestV2>
+            </RunSettings>
+            """;
+
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
+
+        adapterSettings.OutputCaptureMode.Should().Be(TestOutputCaptureMode.Result);
+        adapterSettings.CaptureDebugTraces.Should().BeTrue();
+    }
+
+    public void OutputCaptureModeShouldMapLegacyBooleanFalseToNone()
+    {
+        string runSettingsXml =
+            """
+            <RunSettings>
+              <MSTestV2>
+                  <CaptureTraceOutput>False</CaptureTraceOutput>
+              </MSTestV2>
+            </RunSettings>
+            """;
+
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
+
+        adapterSettings.OutputCaptureMode.Should().Be(TestOutputCaptureMode.None);
+        adapterSettings.CaptureDebugTraces.Should().BeFalse();
+    }
+
+    public void OutputCaptureModeShouldBeConsumedFromRunSettingsWhenSpecifiedAsEnum()
+    {
+        string runSettingsXml =
+            """
+            <RunSettings>
+              <MSTestV2>
+                  <CaptureTraceOutput>Live</CaptureTraceOutput>
+              </MSTestV2>
+            </RunSettings>
+            """;
+
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
+
+        adapterSettings.OutputCaptureMode.Should().Be(TestOutputCaptureMode.Live);
+        adapterSettings.CaptureDebugTraces.Should().BeTrue();
+    }
+
+    public void OutputCaptureModeShouldRejectNumericValueAndKeepDefault()
+    {
+        string runSettingsXml =
+            """
+            <RunSettings>
+              <MSTestV2>
+                  <CaptureTraceOutput>2</CaptureTraceOutput>
+              </MSTestV2>
+            </RunSettings>
+            """;
+
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
+
+        // Numeric input must not be treated as an enum ordinal (2 -> Live); it is rejected and the default is kept.
+        adapterSettings.OutputCaptureMode.Should().Be(TestOutputCaptureMode.Result);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '2' for runsettings entry 'CaptureTraceOutput', setting will be ignored."), Times.Once);
     }
 
     public void TestTimeoutShouldBeConsumedFromRunSettingsWhenSpecified()
@@ -1234,6 +1321,8 @@ public class MSTestSettingsTests : TestContainer
             { "mstest:timeout:classCleanup", "200" },
             { "mstest:timeout:testInitialize", "100" },
             { "mstest:timeout:testCleanup", "100" },
+            { "mstest:timeout:globalTestInitialize", "150" },
+            { "mstest:timeout:globalTestCleanup", "150" },
             { "mstest:timeout:test", "60" },
             { "mstest:timeout:useCooperativeCancellation", "true" },
             { "mstest:parallelism:enabled", "true" },
@@ -1276,10 +1365,142 @@ public class MSTestSettingsTests : TestContainer
         settings.ClassCleanupTimeout.Should().Be(200);
         settings.TestInitializeTimeout.Should().Be(100);
         settings.TestCleanupTimeout.Should().Be(100);
+        settings.GlobalTestInitializeTimeout.Should().Be(150);
+        settings.GlobalTestCleanupTimeout.Should().Be(150);
 
         settings.DisableParallelization.Should().BeFalse();
         settings.ParallelizationWorkers.Should().Be(4);
         settings.ParallelizationScope.Should().Be(ExecutionScope.ClassLevel);
+    }
+
+    public void ConfigJson_OutputCaptureMode_AcceptsEnumValue()
+    {
+        // Arrange
+        var configDictionary = new Dictionary<string, string>
+        {
+            { "mstest:output:captureTrace", "Live" },
+        };
+
+        var mockConfig = new Mock<IConfiguration>();
+        mockConfig.Setup(config => config[It.IsAny<string>()])
+                  .Returns((string key) => configDictionary.TryGetValue(key, out string? value) ? value : null);
+
+        var settings = new MSTestSettings();
+
+        // Act
+        MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), settings);
+
+        // Assert
+        settings.OutputCaptureMode.Should().Be(TestOutputCaptureMode.Live);
+        settings.CaptureDebugTraces.Should().BeTrue();
+    }
+
+    public void ConfigJson_OutputCaptureMode_MapsLegacyBooleanFalseToNone()
+    {
+        // Arrange
+        var configDictionary = new Dictionary<string, string>
+        {
+            { "mstest:output:captureTrace", "false" },
+        };
+
+        var mockConfig = new Mock<IConfiguration>();
+        mockConfig.Setup(config => config[It.IsAny<string>()])
+                  .Returns((string key) => configDictionary.TryGetValue(key, out string? value) ? value : null);
+
+        var settings = new MSTestSettings();
+
+        // Act
+        MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), settings);
+
+        // Assert
+        settings.OutputCaptureMode.Should().Be(TestOutputCaptureMode.None);
+        settings.CaptureDebugTraces.Should().BeFalse();
+    }
+
+    public void ConfigJson_OutputCaptureMode_RejectsNumericValue()
+    {
+        // Arrange
+        var configDictionary = new Dictionary<string, string>
+        {
+            { "mstest:output:captureTrace", "2" },
+        };
+
+        var mockConfig = new Mock<IConfiguration>();
+        mockConfig.Setup(config => config[It.IsAny<string>()])
+                  .Returns((string key) => configDictionary.TryGetValue(key, out string? value) ? value : null);
+
+        var settings = new MSTestSettings();
+
+        // Act
+        MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), settings);
+
+        // Assert - numeric input must not be treated as an enum ordinal (2 -> Live); it is rejected and the default is kept.
+        settings.OutputCaptureMode.Should().Be(TestOutputCaptureMode.Result);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '2' for runsettings entry 'output:captureTrace', setting will be ignored."), Times.Once);
+    }
+
+    public void RunSettings_WithGlobalFixtureTimeouts_ValuesAreSetCorrectly()
+    {
+        string runSettingsXml =
+            """
+            <RunSettings>
+                <MSTestV2>
+                    <GlobalTestInitializeTimeout>150</GlobalTestInitializeTimeout>
+                    <GlobalTestCleanupTimeout>250</GlobalTestCleanupTimeout>
+                </MSTestV2>
+            </RunSettings>
+            """;
+
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
+
+        adapterSettings.GlobalTestInitializeTimeout.Should().Be(150);
+        adapterSettings.GlobalTestCleanupTimeout.Should().Be(250);
+    }
+
+    public void GlobalFixtureTimeout_WhenDedicatedKeySet_IsUsedInsteadOfSharedTestKey()
+    {
+        var settings = new MSTestSettings();
+        MSTestSettings.SetSettingsFromConfig(
+            BuildConfig(new()
+            {
+                { "mstest:timeout:testInitialize", "100" },
+                { "mstest:timeout:testCleanup", "200" },
+                { "mstest:timeout:globalTestInitialize", "1100" },
+                { "mstest:timeout:globalTestCleanup", "2200" },
+            }),
+            _mockMessageLogger.Object.ToAdapterMessageLogger(),
+            settings);
+        MSTestSettings.PopulateSettings(settings);
+
+        // The dedicated global keys take precedence over the per-test initialize/cleanup keys.
+        TimeoutInfo.FromFixtureSettings(FixtureKind.GlobalTestInitialize).Timeout.Should().Be(1100);
+        TimeoutInfo.FromFixtureSettings(FixtureKind.GlobalTestCleanup).Timeout.Should().Be(2200);
+    }
+
+    public void GlobalFixtureTimeout_WhenDedicatedKeyNotSet_FallsBackToSharedTestKey()
+    {
+        var settings = new MSTestSettings();
+        MSTestSettings.SetSettingsFromConfig(
+            BuildConfig(new()
+            {
+                { "mstest:timeout:testInitialize", "100" },
+                { "mstest:timeout:testCleanup", "200" },
+            }),
+            _mockMessageLogger.Object.ToAdapterMessageLogger(),
+            settings);
+        MSTestSettings.PopulateSettings(settings);
+
+        // With no dedicated global key, global fixtures keep honoring the per-test initialize/cleanup keys.
+        TimeoutInfo.FromFixtureSettings(FixtureKind.GlobalTestInitialize).Timeout.Should().Be(100);
+        TimeoutInfo.FromFixtureSettings(FixtureKind.GlobalTestCleanup).Timeout.Should().Be(200);
+    }
+
+    private static IConfiguration BuildConfig(Dictionary<string, string> values)
+    {
+        var mockConfig = new Mock<IConfiguration>();
+        mockConfig.Setup(config => config[It.IsAny<string>()])
+                  .Returns((string key) => values.TryGetValue(key, out string? value) ? value : null);
+        return mockConfig.Object;
     }
 
     public void ConfigJson_WithDeprecatedFlatOrderTestsByNameInClassKey_ValueIsSetAndWarningIsEmitted()

@@ -380,7 +380,7 @@ internal static class MethodInfoExtensions
 
         for (int i = 0; i < map.Length; i++)
         {
-            // TODO: Better to throw? or tolerate and transform to typeof(object)?
+            // It is unclear whether it is better to throw here or tolerate and transform to typeof(object).
             // This is reachable in the following case for example:
             // [DataRow(null)]
             // public void TestMethod<T>(T t) { }

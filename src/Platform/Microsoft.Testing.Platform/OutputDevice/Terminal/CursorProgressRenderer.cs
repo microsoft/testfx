@@ -23,14 +23,18 @@ internal sealed class CursorProgressRenderer : IProgressRenderer
         // Nothing to do, the busy indicator and refresher are managed by TestProgressStateAwareTerminal.
     }
 
-    public void OnTick(ITerminal terminal, TestProgressState?[] progressItems)
-        => terminal.RenderProgress(progressItems);
+    public void OnTick(ITerminal terminal, TestProgressState?[] progressItems, TerminalProgressMessageState[]? messages = null)
+        => terminal.RenderProgress(progressItems, messages ?? []);
 
-    public void OnWrite(ITerminal terminal, TestProgressState?[] progressItems, Action<ITerminal> write)
+    public void OnWrite(
+        ITerminal terminal,
+        TestProgressState?[] progressItems,
+        Action<ITerminal> write,
+        TerminalProgressMessageState[]? messages = null)
     {
         terminal.EraseProgress();
         write(terminal);
-        terminal.RenderProgress(progressItems);
+        terminal.RenderProgress(progressItems, messages ?? []);
     }
 
     public void OnTestCompleted()

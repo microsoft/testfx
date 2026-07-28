@@ -8,7 +8,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
 internal partial class TestExecutionManager
 {
-    internal void SendTestResults(
+    internal async Task SendTestResultsAsync(
         UnitTestElement test,
         TestTools.UnitTesting.TestResult[] unitTestResults,
         DateTimeOffset startTime,
@@ -17,7 +17,7 @@ internal partial class TestExecutionManager
     {
         if (unitTestResults.Length == 0)
         {
-            testResultRecorder.RecordEmptyResult(test);
+            await testResultRecorder.RecordEmptyResultAsync(test).ConfigureAwait(false);
             return;
         }
 
@@ -26,12 +26,12 @@ internal partial class TestExecutionManager
             _testRunCancellationToken?.ThrowIfCancellationRequested();
 
 #if !WINDOWS_UWP && !WIN_UI
-            if (testResultRecorder.RecordResult(test, unitTestResult, startTime, endTime))
+            if (await testResultRecorder.RecordResultAsync(test, unitTestResult, startTime, endTime).ConfigureAwait(false))
             {
                 _hasAnyTestFailed = true;
             }
 #else
-            testResultRecorder.RecordResult(test, unitTestResult, startTime, endTime);
+            await testResultRecorder.RecordResultAsync(test, unitTestResult, startTime, endTime).ConfigureAwait(false);
 #endif
         }
     }
@@ -69,6 +69,8 @@ internal partial class TestExecutionManager
             ? new RemotingMessageLogger(adapterMessageLogger)
             : adapterMessageLogger;
 
+        Dictionary<string, object?> lifecycleContextProperties = [with(sourceLevelParameters!)];
+
         foreach (UnitTestElement currentTest in orderedTests)
         {
             _testRunCancellationToken?.ThrowIfCancellationRequested();
@@ -81,7 +83,7 @@ internal partial class TestExecutionManager
 
             // Report through the neutral recorder using the element itself; the adapter-side recorder resolves
             // the host test case (preserving host-injected TCM / data-collector properties) with full fidelity.
-            _testResultRecorder.RecordStart(currentTest);
+            await _testResultRecorder.RecordStartAsync(currentTest).ConfigureAwait(false);
 
             DateTimeOffset startTime = DateTimeOffset.Now;
 
@@ -104,12 +106,12 @@ internal partial class TestExecutionManager
                 // Alternatively, if we want to use RunSingleTestAsync for the case of STA, we should have:
                 // 1. A custom single threaded synchronization context that keeps us in STA.
                 // 2. Use ConfigureAwait(true).
-                unitTestResult = testRunner.RunSingleTest(unitTestElement, testContextProperties, remotingMessageLogger);
+                unitTestResult = testRunner.RunSingleTest(unitTestElement, testContextProperties, lifecycleContextProperties, remotingMessageLogger);
 #pragma warning restore VSTHRD103 // Call async methods when in an async method
             }
             else
             {
-                unitTestResult = await testRunner.RunSingleTestAsync(unitTestElement, testContextProperties, remotingMessageLogger).ConfigureAwait(false);
+                unitTestResult = await testRunner.RunSingleTestAsync(unitTestElement, testContextProperties, lifecycleContextProperties, remotingMessageLogger).ConfigureAwait(false);
             }
 
             if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
@@ -119,7 +121,7 @@ internal partial class TestExecutionManager
 
             DateTimeOffset endTime = DateTimeOffset.Now;
 
-            SendTestResults(currentTest, unitTestResult, startTime, endTime, _testResultRecorder);
+            await SendTestResultsAsync(currentTest, unitTestResult, startTime, endTime, _testResultRecorder).ConfigureAwait(false);
         }
     }
 }

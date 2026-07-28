@@ -154,7 +154,7 @@ internal static class ObjectModelConverters
             TestMethodIdentifierProperty? testMethodIdentifierProperty = testNode.Properties.SingleOrDefault<TestMethodIdentifierProperty>();
             if (testMethodIdentifierProperty is not null)
             {
-                // TODO: Should TRX className have arity for generic classes?
+                // It is unclear whether the TRX className should have arity for generic classes.
                 if (RoslynString.IsNullOrEmpty(testMethodIdentifierProperty.Namespace))
                 {
                     testNode.Properties.Add(new TrxFullyQualifiedTypeNameProperty(testMethodIdentifierProperty.TypeName));

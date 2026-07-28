@@ -173,8 +173,8 @@ internal sealed partial class TrxReportEngine
                 unitTestResult.Add(output);
             }
 
-            // TODO: VSTest used to store the relative paths in a sorted list (ignoring case).
-            // TODO: VSTest is able to classify per-test attachments into two categories:
+            // VSTest used to store the relative paths in a sorted list (ignoring case).
+            // VSTest is able to classify per-test attachments into two categories:
             // 1. ResultFiles
             // 2. CollectorDataEntries
             // So far, we only have "ResultFiles".
@@ -287,7 +287,7 @@ internal sealed partial class TrxReportEngine
             ? methodIdentifier.TypeName
             : $"{methodIdentifier.Namespace}.{methodIdentifier.TypeName}";
 
-        // TODO: Are we expected to append backtick and arity here for generic methods?
+        // It is unclear whether we are expected to append backtick and arity here for generic methods.
         return (classNameFromIdentifierProperty, methodIdentifier.MethodName);
     }
 }

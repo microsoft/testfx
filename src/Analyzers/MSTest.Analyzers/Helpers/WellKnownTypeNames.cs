@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace MSTest.Analyzers.Helpers;
@@ -7,6 +7,7 @@ namespace MSTest.Analyzers.Helpers;
 internal static class WellKnownTypeNames
 {
     public const string MicrosoftVisualStudioTestToolsUnitTestingAssemblyCleanupAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyCleanupAttribute";
+    public const string MicrosoftVisualStudioTestToolsUnitTestingAssemblyFixtureProviderAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyFixtureProviderAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingAssemblyInitializeAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyInitializeAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingAssert = "Microsoft.VisualStudio.TestTools.UnitTesting.Assert";
     public const string MicrosoftVisualStudioTestToolsUnitTestingAssertFailedException = "Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException";
@@ -34,6 +35,7 @@ internal static class WellKnownTypeNames
     public const string MicrosoftVisualStudioTestToolsUnitTestingOwnerAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.OwnerAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingParallelizeAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.ParallelizeAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingPriorityAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.PriorityAttribute";
+    public const string MicrosoftVisualStudioTestToolsUnitTestingResourceLockAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.ResourceLockAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingRetryBaseAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.RetryBaseAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingStringAssert = "Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert";
     public const string MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute";
@@ -46,18 +48,27 @@ internal static class WellKnownTypeNames
     public const string MicrosoftVisualStudioTestToolsUnitTestingWorkItemAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.WorkItemAttribute";
 
     public const string System = "System";
-    public const string SystemRuntimeInteropServicesRuntimeInformation = "System.Runtime.InteropServices.RuntimeInformation";
+    public const string SystemCollectionsGenericEqualityComparer1 = "System.Collections.Generic.EqualityComparer`1";
     public const string SystemCollectionsGenericIEnumerable1 = "System.Collections.Generic.IEnumerable`1";
+    public const string SystemCollectionsIDictionary = "System.Collections.IDictionary";
+    public const string SystemConsole = "System.Console";
     public const string SystemDescriptionAttribute = "System.ComponentModel.DescriptionAttribute";
+    public const string SystemEnvironment = "System.Environment";
     public const string SystemFunc1 = "System.Func`1";
+    public const string SystemGlobalizationCultureInfo = "System.Globalization.CultureInfo";
     public const string SystemIAsyncDisposable = "System.IAsyncDisposable";
     public const string SystemIDisposable = "System.IDisposable";
+    public const string SystemIEquatable1 = "System.IEquatable`1";
+    public const string SystemIODirectory = "System.IO.Directory";
+    public const string SystemIOFile = "System.IO.File";
+    public const string SystemIOPath = "System.IO.Path";
     public const string SystemLinqEnumerable = "System.Linq.Enumerable";
     public const string SystemLinqExpressionsExpression1 = "System.Linq.Expressions.Expression`1";
     public const string SystemOperatingSystem = "System.OperatingSystem";
     public const string SystemReflectionMethodInfo = "System.Reflection.MethodInfo";
     public const string SystemRuntimeCompilerServicesCallerFilePathAttribute = "System.Runtime.CompilerServices.CallerFilePathAttribute";
     public const string SystemRuntimeCompilerServicesCallerLineNumberAttribute = "System.Runtime.CompilerServices.CallerLineNumberAttribute";
+    public const string SystemRuntimeInteropServicesRuntimeInformation = "System.Runtime.InteropServices.RuntimeInformation";
     public const string SystemThreadingCancellationToken = "System.Threading.CancellationToken";
     public const string SystemThreadingCancellationTokenSource = "System.Threading.CancellationTokenSource";
     public const string SystemThreadingTasksTask = "System.Threading.Tasks.Task";

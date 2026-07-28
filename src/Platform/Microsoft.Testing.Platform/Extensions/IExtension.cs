@@ -12,6 +12,17 @@ public interface IExtension
     /// <summary>
     /// Gets the unique identifier for the extension.
     /// </summary>
+    /// <remarks>
+    /// The value must be a <b>stable</b> string constant that survives class renames. It is SHA-256-hashed
+    /// for telemetry, displayed verbatim in <c>--info</c> output and error messages, embedded in artifact
+    /// metadata, and used for feature detection, so changing it silently breaks telemetry continuity and any
+    /// consumer relying on the previous value.
+    /// <para>
+    /// Do <b>not</b> derive the value from <c>nameof(ImplementingClass)</c>: an IDE "Rename Symbol" refactor
+    /// would then change the UID without any visible diff at the call site. Use an explicit string literal or
+    /// <c>const</c> instead, even if its initial value happens to match the class name.
+    /// </para>
+    /// </remarks>
     string Uid { get; }
 
     /// <summary>

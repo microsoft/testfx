@@ -20,6 +20,22 @@ internal sealed partial class TerminalTestReporter
     public void WriteMessage(string text, SystemConsoleColor? color = null, int? padding = null)
         => WriteMessage(text, color is not null ? ToTerminalColor(color.ConsoleColor) : null, padding);
 
+    public void UpdateProgressMessage(
+        string executionId,
+        string instanceId,
+        string producerUid,
+        string key,
+        string? message)
+        => _terminalWithProgress.UpdateProgressMessage(
+            executionId,
+            instanceId,
+            producerUid,
+            key,
+            MakeControlCharactersVisible(message, normalizeWhitespaceCharacters: true));
+
+    internal void ClearProgressMessages()
+        => _terminalWithProgress.ClearProgressMessages();
+
     private void WriteMessage(string text, TerminalColor? color = null, int? padding = null)
         => _terminalWithProgress.WriteToTerminal(terminal =>
         {
@@ -70,8 +86,9 @@ internal sealed partial class TerminalTestReporter
 
         if (_options.ShowActiveTests)
         {
-            asm.TestNodeResultsState ??= new(Interlocked.Increment(ref _counter));
-            asm.TestNodeResultsState.AddRunningTestNode(
+            TestNodeResultsState testNodeResultsState = asm.GetOrCreateTestNodeResultsState(
+                () => new(Interlocked.Increment(ref _counter)));
+            testNodeResultsState.AddRunningTestNode(
                 Interlocked.Increment(ref _counter), testNodeUid, MakeControlCharactersVisible(displayName, true), CreateStopwatch());
         }
 

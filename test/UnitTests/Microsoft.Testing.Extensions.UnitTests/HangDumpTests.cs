@@ -5,7 +5,11 @@ using Microsoft.Testing.Extensions.Diagnostics;
 using Microsoft.Testing.Extensions.Diagnostics.Resources;
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
+using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.TestHost;
 
 using Moq;
 
@@ -201,6 +205,31 @@ public sealed class HangDumpTests
     }
 
     [TestMethod]
+    public async Task ActivityIndicator_ExecutionCompleted_RemovesInProgressTest()
+    {
+        var loggerFactory = new Mock<ILoggerFactory>();
+        loggerFactory.Setup(factory => factory.CreateLogger(It.IsAny<string>())).Returns(Mock.Of<ILogger>());
+        var clock = new Mock<IClock>();
+        clock.SetupGet(x => x.UtcNow).Returns(DateTimeOffset.UtcNow);
+        using var indicator = new HangDumpActivityIndicator(
+            new TestCommandLineOptions([]),
+            Mock.Of<IEnvironment>(),
+            Mock.Of<ITask>(),
+            loggerFactory.Object,
+            clock.Object);
+        typeof(HangDumpActivityIndicator)
+            .GetField("_exitSignalActivityIndicatorAsync", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .SetValue(indicator, true);
+
+        await indicator.ConsumeAsync(null!, CreateUpdate(InProgressTestNodeStateProperty.CachedInstance), CancellationToken.None);
+        Assert.AreEqual(1, GetInProgressCount(indicator));
+
+        await indicator.ConsumeAsync(null!, CreateUpdate(TestNodeExecutionCompletedProperty.CachedInstance), CancellationToken.None);
+
+        Assert.AreEqual(0, GetInProgressCount(indicator));
+    }
+
+    [TestMethod]
     public async Task HangDumpType_And_HangDumpTypeIfSupported_AreMutuallyExclusive()
     {
         HangDumpCommandLineProvider hangDumpCommandLineProvider = GetProvider();
@@ -233,6 +262,24 @@ public sealed class HangDumpTests
         Assert.IsTrue(HangDumpCommandLineProvider.IsHangDumpTypeSupportedOnCurrentRuntime("Heap"));
         Assert.IsTrue(HangDumpCommandLineProvider.IsHangDumpTypeSupportedOnCurrentRuntime("Full"));
         Assert.IsTrue(HangDumpCommandLineProvider.IsHangDumpTypeSupportedOnCurrentRuntime("None"));
+    }
+
+    private static TestNodeUpdateMessage CreateUpdate(IProperty property)
+        => new(
+            new SessionUid("session"),
+            new TestNode
+            {
+                Uid = "uid",
+                DisplayName = "DroppedTest",
+                Properties = new PropertyBag(property),
+            });
+
+    private static int GetInProgressCount(HangDumpActivityIndicator indicator)
+    {
+        object state = typeof(HangDumpActivityIndicator)
+            .GetField("_testsCurrentExecutionState", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .GetValue(indicator)!;
+        return (int)state.GetType().GetProperty("Count")!.GetValue(state)!;
     }
 
     [TestMethod]

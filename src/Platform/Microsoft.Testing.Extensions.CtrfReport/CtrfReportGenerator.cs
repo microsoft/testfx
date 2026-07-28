@@ -24,6 +24,8 @@ internal sealed class CtrfReportGenerator : ReportGeneratorBase<CtrfReportGenera
 
     protected override string ArtifactDisplayName => ExtensionResources.CtrfReportArtifactDisplayName;
 
+    protected override string? ArtifactKind => "microsoft.testing.ctrf";
+
     protected override string ArtifactDescription => ExtensionResources.CtrfReportArtifactDescription;
 
     protected override string GetGenerationLogMessage(int testResultCount)

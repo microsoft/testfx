@@ -73,6 +73,23 @@ public sealed class FormatterUtilitiesTests
         static bool HasCustomDeserializeAssert(Type type) => type == typeof(TestNode);
     }
 
+    [TestMethod]
+    public async Task Serialize_ExecutionCompletedTestNode_RemainsActionWithoutOutcome()
+    {
+        var testNode = new TestNode
+        {
+            Uid = "dropped-test",
+            DisplayName = "DroppedTest",
+            Properties = new PropertyBag(TestNodeExecutionCompletedProperty.CachedInstance),
+        };
+
+        string serialized = (await _formatter.SerializeAsync(testNode)).Replace(" ", string.Empty);
+
+        Assert.AreEqual(
+            """{"uid":"dropped-test","display-name":"DroppedTest","node-type":"action","execution-state":"discovered"}""",
+            serialized);
+    }
+
     [DataRow(typeof(DiscoverRequestArgs))]
     [DataRow(typeof(RunRequestArgs))]
     [TestMethod]
@@ -293,13 +310,13 @@ public sealed class FormatterUtilitiesTests
 
         if (type == typeof(ServerTestingCapabilities))
         {
-            Assert.AreEqual("""{"supportsDiscovery":true,"experimental_multiRequestSupport":true,"vstestProvider":true,"attachmentsSupport":true,"multipleConnectionProvider":true}""".Replace(" ", string.Empty), instanceSerialized, because);
+            Assert.AreEqual("""{"supportsDiscovery":true,"experimental_multiRequestSupport":true,"vstestProvider":true,"attachmentsSupport":true,"multipleConnectionProvider":true,"supportsTestCoverageMessages":true}""".Replace(" ", string.Empty), instanceSerialized, because);
             return;
         }
 
         if (type == typeof(ServerCapabilities))
         {
-            Assert.AreEqual("""{"testing":{"supportsDiscovery":true,"experimental_multiRequestSupport":true,"vstestProvider":true,"attachmentsSupport":true,"multipleConnectionProvider":true}}""".Replace(" ", string.Empty), instanceSerialized, because);
+            Assert.AreEqual("""{"testing":{"supportsDiscovery":true,"experimental_multiRequestSupport":true,"vstestProvider":true,"attachmentsSupport":true,"multipleConnectionProvider":true,"supportsTestCoverageMessages":true}}""".Replace(" ", string.Empty), instanceSerialized, because);
             return;
         }
 
@@ -311,7 +328,7 @@ public sealed class FormatterUtilitiesTests
 
         if (type == typeof(InitializeResponseArgs))
         {
-            Assert.AreEqual("""{"processId":1,"serverInfo":{"name":"ServerInfoName","version":"Version"},"capabilities":{"testing":{"supportsDiscovery":true,"experimental_multiRequestSupport":true,"vstestProvider":true,"attachmentsSupport":true,"multipleConnectionProvider":true}}}""".Replace(" ", string.Empty), instanceSerialized, because);
+            Assert.AreEqual("""{"processId":1,"serverInfo":{"name":"ServerInfoName","version":"Version"},"capabilities":{"testing":{"supportsDiscovery":true,"experimental_multiRequestSupport":true,"vstestProvider":true,"attachmentsSupport":true,"multipleConnectionProvider":true,"supportsTestCoverageMessages":true}}}""".Replace(" ", string.Empty), instanceSerialized, because);
             return;
         }
 

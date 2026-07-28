@@ -20,6 +20,8 @@ internal class TypeEnumerator
     private readonly TypeValidator _typeValidator;
     private readonly TestMethodValidator _testMethodValidator;
     private readonly ReflectHelper _reflectHelper;
+    private List<ResourceLockInfo>? _classResourceLocks;
+    private bool _classResourceLocksComputed;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TypeEnumerator"/> class.
@@ -148,13 +150,14 @@ internal class TypeEnumerator
             MethodInfo = method,
         };
 
-        // TODO: For every test method in a class, we are asking reflect helper multiple times for the same
+        // For every test method in a class, we are asking reflect helper multiple times for the same
         // information (like test categories, traits, deployment items) which is not optimal.
         IReflectionOperations reflectionOperations = PlatformServiceProvider.Instance.ReflectionOperations;
         var testElement = new UnitTestElement(testMethod)
         {
             TestCategory = reflectionOperations.GetTestCategories(method, _type),
             DoNotParallelize = classDisablesParallelization || _reflectHelper.IsAttributeDefined<DoNotParallelizeAttribute>(method),
+            ResourceLocks = MergeResourceLocks(GetClassResourceLocks(), ReadResourceLocks(method)),
 #if !WINDOWS_UWP && !WIN_UI
             DeploymentItems = PlatformServiceProvider.Instance.TestDeployment.GetDeploymentItems(method, _type, warnings),
 #endif
@@ -195,7 +198,7 @@ internal class TypeEnumerator
 
         // In production, we always have a TestMethod attribute because GetTestFromMethod is called under IsValidTestMethod
         // In unit tests, we may not have the test to have TestMethodAttribute.
-        // TODO: Adjust all unit tests to properly have the attribute and uncomment the assert.
+        // Unit tests could be adjusted to properly have the attribute so the assert can be uncommented.
         // DebugEx.Assert(testMethodAttribute is not null, "Expected to find a 'TestMethod' attribute.");
 
         // get DisplayName from TestMethodAttribute (or any inherited attribute)
@@ -205,5 +208,84 @@ internal class TypeEnumerator
         testElement.UnfoldingStrategy = testMethodAttribute?.UnfoldingStrategy ?? TestDataSourceUnfoldingStrategy.Auto;
 
         return testElement;
+    }
+
+    /// <summary>
+    /// Reads (and caches for this type) the <c>[ResourceLock]</c> attributes declared on the test class.
+    /// </summary>
+    private List<ResourceLockInfo>? GetClassResourceLocks()
+    {
+        if (!_classResourceLocksComputed)
+        {
+            _classResourceLocks = ReadResourceLocks(_type);
+            _classResourceLocksComputed = true;
+        }
+
+        return _classResourceLocks;
+    }
+
+    /// <summary>
+    /// Reads the <c>[ResourceLock]</c> attributes declared directly on <paramref name="attributeProvider"/>
+    /// (a class or a method), in declaration order. Returns <see langword="null"/> when none are present.
+    /// </summary>
+    private List<ResourceLockInfo>? ReadResourceLocks(ICustomAttributeProvider attributeProvider)
+    {
+        List<ResourceLockInfo>? locks = null;
+        foreach (ResourceLockAttribute attribute in _reflectHelper.GetAttributes<ResourceLockAttribute>(attributeProvider))
+        {
+            (locks ??= []).Add(new ResourceLockInfo(attribute.Resource, attribute.Mode));
+        }
+
+        return locks;
+    }
+
+    /// <summary>
+    /// Merges the class-level and method-level resource locks into a single distinct set (ordinal, case-sensitive),
+    /// keeping the strongest mode per key (<see cref="ResourceAccessMode.ReadWrite"/> wins over
+    /// <see cref="ResourceAccessMode.Read"/>) and sorting ordinally by resource so acquisition order is stable.
+    /// Returns <see langword="null"/> when neither declares any lock.
+    /// </summary>
+    private static ResourceLockInfo[]? MergeResourceLocks(List<ResourceLockInfo>? classLocks, List<ResourceLockInfo>? methodLocks)
+    {
+        if (classLocks is null && methodLocks is null)
+        {
+            return null;
+        }
+
+        var map = new Dictionary<string, ResourceAccessMode>(StringComparer.Ordinal);
+        AddAll(classLocks, map);
+        AddAll(methodLocks, map);
+
+        var result = new List<ResourceLockInfo>(map.Count);
+        foreach (KeyValuePair<string, ResourceAccessMode> entry in map)
+        {
+            result.Add(new ResourceLockInfo(entry.Key, entry.Value));
+        }
+
+        result.Sort(static (left, right) => string.CompareOrdinal(left.Resource, right.Resource));
+        return [.. result];
+
+        static void AddAll(List<ResourceLockInfo>? source, Dictionary<string, ResourceAccessMode> target)
+        {
+            if (source is null)
+            {
+                return;
+            }
+
+            foreach (ResourceLockInfo resourceLock in source)
+            {
+                if (target.TryGetValue(resourceLock.Resource, out ResourceAccessMode existingMode))
+                {
+                    if (resourceLock.Mode == ResourceAccessMode.ReadWrite)
+                    {
+                        target[resourceLock.Resource] = ResourceAccessMode.ReadWrite;
+                    }
+                }
+                else
+                {
+                    target[resourceLock.Resource] = resourceLock.Mode;
+                }
+            }
+        }
     }
 }

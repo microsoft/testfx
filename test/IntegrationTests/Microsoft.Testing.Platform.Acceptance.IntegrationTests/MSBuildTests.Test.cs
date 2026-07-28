@@ -213,7 +213,19 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
 
             if (OperatingSystem.IsWindows())
             {
-                result.AssertOutputContains("The specified executable is not a valid application for this OS platform.");
+                // Launching an incompatible-architecture apphost can surface with different native
+                // error text depending on the exact Windows build/runtime path:
+                //   1) CreateProcess fails with ERROR_BAD_EXE_FORMAT / ERROR_EXE_MACHINE_TYPE_MISMATCH
+                //      and .NET wraps it with the friendly "not a valid application for this OS platform".
+                //   2) CreateProcess fails but GetLastError() reports 0, so the raw Win32Exception message
+                //      is "The operation completed successfully." (HResult 0x80004005).
+                // Both prove we attempted to launch the incompatible-arch apphost and failed. The MSB6003 +
+                // "An error occurred trying to start process" assertions above already establish that.
+                bool hasInvalidApplication = result.StandardOutput.Contains("The specified executable is not a valid application for this OS platform.", StringComparison.Ordinal);
+                bool hasOperationCompleted = result.StandardOutput.Contains("The operation completed successfully.", StringComparison.Ordinal);
+                Assert.IsTrue(
+                    hasInvalidApplication || hasOperationCompleted,
+                    $"Expected output to contain either \"The specified executable is not a valid application for this OS platform.\" or \"The operation completed successfully.\". Actual output: {result.StandardOutput}");
             }
             else if (OperatingSystem.IsMacOS())
             {

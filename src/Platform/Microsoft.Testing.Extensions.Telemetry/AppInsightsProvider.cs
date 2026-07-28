@@ -79,6 +79,7 @@ internal sealed partial class AppInsightsProvider :
         "mstest.custom_test_method_types",
         "mstest.custom_test_class_types",
         "mstest.assertion_usage",
+        "mstest.setting.output_capture_mode",
         "mstest.setting.parallelization_scope",
     ];
 #endif
@@ -123,7 +124,14 @@ internal sealed partial class AppInsightsProvider :
         _payloads = new SingleConsumerUnboundedChannel<(string EventName, IDictionary<string, object> ParamsMap)>();
 #endif
 
-        _telemetryTask = task.Run(IngestLoopAsync, _testApplicationCancellationTokenSource.CancellationToken);
+        // On single-threaded wasm runtimes (browser-wasm / wasi-wasm) there is no thread pool, so the
+        // background ingest loop (started via Task.Run) would never run and Dispose's blocking
+        // _telemetryTask.Wait(...) would throw PlatformNotSupportedException. Telemetry requires a
+        // background sender, so skip the loop entirely there and keep Dispose non-blocking by leaving
+        // the task completed. LogEventAsync short-circuits in this mode, so no events are queued.
+        _telemetryTask = RuntimeFeatureHelper.IsMultiThreaded
+            ? task.Run(IngestLoopAsync, _testApplicationCancellationTokenSource.CancellationToken)
+            : Task.CompletedTask;
         _logger = loggerFactory.CreateLogger<AppInsightsProvider>();
     }
 
@@ -315,6 +323,18 @@ internal sealed partial class AppInsightsProvider :
 #endif
         Task LogEventAsync(string eventName, IDictionary<string, object> paramsMap, CancellationToken cancellationToken)
     {
+        // On single-threaded wasm runtimes there is no background ingest loop draining the channel
+        // (see the constructor). Short-circuit here so events aren't queued into the unbounded channel
+        // and telemetry is a true no-op instead of growing memory for the lifetime of the process.
+        if (!RuntimeFeatureHelper.IsMultiThreaded)
+        {
+#if NETCOREAPP
+            return;
+#else
+            return Task.CompletedTask;
+#endif
+        }
+
 #if NETCOREAPP
         await _payloads.Writer.WriteAsync((eventName, paramsMap), cancellationToken).ConfigureAwait(false);
 #else

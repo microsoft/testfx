@@ -25,13 +25,15 @@ internal interface ITestResultRecorder
     /// Signals that execution of the given test has started.
     /// </summary>
     /// <param name="testElement">The test whose execution is starting.</param>
-    void RecordStart(UnitTestElement testElement);
+    /// <returns>A task that completes once the start has been reported.</returns>
+    Task RecordStartAsync(UnitTestElement testElement);
 
     /// <summary>
     /// Signals that execution of the given test ended without producing any result.
     /// </summary>
     /// <param name="testElement">The test whose execution ended.</param>
-    void RecordEmptyResult(UnitTestElement testElement);
+    /// <returns>A task that completes once the empty result has been reported.</returns>
+    Task RecordEmptyResultAsync(UnitTestElement testElement);
 
     /// <summary>
     /// Reports a single framework <see cref="FrameworkTestResult"/> for the given test to the test host.
@@ -41,5 +43,5 @@ internal interface ITestResultRecorder
     /// <param name="startTime">The time at which the test started executing.</param>
     /// <param name="endTime">The time at which the test finished executing.</param>
     /// <returns><see langword="true"/> if the result was reported as a failure; otherwise, <see langword="false"/>.</returns>
-    bool RecordResult(UnitTestElement testElement, FrameworkTestResult unitTestResult, DateTimeOffset startTime, DateTimeOffset endTime);
+    Task<bool> RecordResultAsync(UnitTestElement testElement, FrameworkTestResult unitTestResult, DateTimeOffset startTime, DateTimeOffset endTime);
 }

@@ -1,10 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETCOREAPP
-using System.Buffers;
-#endif
-
 using Microsoft.CodeAnalysis;
 
 namespace Microsoft.Testing.Platform.IPC.Serializers;
@@ -22,188 +18,93 @@ internal abstract class BaseSerializer
     protected static void DebugAssert(bool condition, string message)
         => Debug.Assert(condition, message);
 
-    // Internal invariant-violation diagnostic for "impossible" states (e.g. BitConverter.TryWriteBytes into a
-    // correctly-sized buffer). Kept self-contained (no ApplicationStateGuard) so this file shares as source.
+    // Internal invariant-violation diagnostic for "impossible" states (e.g. GetSize<T> called with an
+    // unsupported type). Kept self-contained (no ApplicationStateGuard) so this file shares as source.
     private static InvalidOperationException Unreachable([CallerFilePath] string? path = null, [CallerLineNumber] int line = 0)
         => new(string.Format(CultureInfo.InvariantCulture, "This program location is thought to be unreachable. File='{0}' Line={1}", path, line));
 
+    protected static string ReadString(Stream stream)
+    {
+        int length = ReadInt(stream);
+        return ReadStringValue(stream, length);
+    }
+
+    protected static string ReadStringValue(Stream stream, int size)
+    {
 #if NETCOREAPP
-    protected static string ReadString(Stream stream)
-    {
-        Span<byte> len = stackalloc byte[sizeof(int)];
-        stream.ReadExactly(len);
-        int stringLen = BitConverter.ToInt32(len);
-        byte[] bytes = ArrayPool<byte>.Shared.Rent(stringLen);
+        byte[] rentedBytes = System.Buffers.ArrayPool<byte>.Shared.Rent(size);
         try
         {
-            stream.ReadExactly(bytes, 0, stringLen);
-            return Encoding.UTF8.GetString(bytes, 0, stringLen);
+            ReadExactly(stream, rentedBytes, 0, size);
+            return Encoding.UTF8.GetString(rentedBytes, 0, size);
         }
         finally
         {
-            ArrayPool<byte>.Shared.Return(bytes);
+            System.Buffers.ArrayPool<byte>.Shared.Return(rentedBytes);
         }
-    }
-
-    protected static string ReadStringValue(Stream stream, int size)
-    {
-        byte[] bytes = ArrayPool<byte>.Shared.Rent(size);
-        try
-        {
-            stream.ReadExactly(bytes, 0, size);
-            return Encoding.UTF8.GetString(bytes, 0, size);
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(bytes);
-        }
-    }
-
-    protected static void WriteString(Stream stream, string str)
-    {
-        int stringutf8TotalBytes = Encoding.UTF8.GetByteCount(str);
-        byte[] bytes = ArrayPool<byte>.Shared.Rent(stringutf8TotalBytes);
-        try
-        {
-            Span<byte> len = stackalloc byte[sizeof(int)];
-            if (!BitConverter.TryWriteBytes(len, stringutf8TotalBytes))
-            {
-                throw Unreachable();
-            }
-
-            stream.Write(len);
-
-            Encoding.UTF8.GetBytes(str, bytes);
-            stream.Write(bytes, 0, stringutf8TotalBytes);
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(bytes);
-        }
-    }
-
-    protected static void WriteSize<T>(Stream stream)
-        where T : struct
-    {
-        int sizeInBytes = GetSize<T>();
-        Span<byte> len = stackalloc byte[sizeof(int)];
-
-        if (!BitConverter.TryWriteBytes(len, sizeInBytes))
-        {
-            throw Unreachable();
-        }
-
-        stream.Write(len);
-    }
-
-    protected static void WriteInt(Stream stream, int value)
-    {
-        Span<byte> bytes = stackalloc byte[sizeof(int)];
-        if (!BitConverter.TryWriteBytes(bytes, value))
-        {
-            throw Unreachable();
-        }
-
-        stream.Write(bytes);
-    }
-
-    protected static void WriteLong(Stream stream, long value)
-    {
-        Span<byte> bytes = stackalloc byte[sizeof(long)];
-        if (!BitConverter.TryWriteBytes(bytes, value))
-        {
-            throw Unreachable();
-        }
-
-        stream.Write(bytes);
-    }
-
-    protected static void WriteUShort(Stream stream, ushort value)
-    {
-        Span<byte> bytes = stackalloc byte[sizeof(ushort)];
-        if (!BitConverter.TryWriteBytes(bytes, value))
-        {
-            throw Unreachable();
-        }
-
-        stream.Write(bytes);
-    }
-
-    protected static void WriteBool(Stream stream, bool value)
-    {
-        Span<byte> bytes = stackalloc byte[sizeof(bool)];
-        if (!BitConverter.TryWriteBytes(bytes, value))
-        {
-            throw Unreachable();
-        }
-
-        stream.Write(bytes);
-    }
-
-    protected static int ReadInt(Stream stream)
-    {
-        Span<byte> bytes = stackalloc byte[sizeof(int)];
-        stream.ReadExactly(bytes);
-        return BitConverter.ToInt32(bytes);
-    }
-
-    protected static long ReadLong(Stream stream)
-    {
-        Span<byte> bytes = stackalloc byte[sizeof(long)];
-        stream.ReadExactly(bytes);
-        return BitConverter.ToInt64(bytes);
-    }
-
-    protected static ushort ReadUShort(Stream stream)
-    {
-        Span<byte> bytes = stackalloc byte[sizeof(ushort)];
-        stream.ReadExactly(bytes);
-        return BitConverter.ToUInt16(bytes);
-    }
-
-    protected static bool ReadBool(Stream stream)
-    {
-        Span<byte> bytes = stackalloc byte[sizeof(bool)];
-        stream.ReadExactly(bytes);
-        return BitConverter.ToBoolean(bytes);
-    }
-
 #else
-    protected static string ReadString(Stream stream)
-    {
-        byte[] len = new byte[sizeof(int)];
-        _ = stream.Read(len, 0, len.Length);
-        int length = BitConverter.ToInt32(len, 0);
-        byte[] bytes = new byte[length];
-        _ = stream.Read(bytes, 0, bytes.Length);
-
-        return Encoding.UTF8.GetString(bytes);
-    }
-
-    protected static string ReadStringValue(Stream stream, int size)
-    {
         byte[] bytes = new byte[size];
-        _ = stream.Read(bytes, 0, bytes.Length);
-
-        return Encoding.UTF8.GetString(bytes);
+        ReadExactly(stream, bytes, 0, size);
+        return Encoding.UTF8.GetString(bytes, 0, size);
+#endif
     }
 
     protected static void WriteString(Stream stream, string str)
     {
+#if NETCOREAPP
+        int byteCount = Encoding.UTF8.GetByteCount(str);
+        byte[] rentedBytes = System.Buffers.ArrayPool<byte>.Shared.Rent(byteCount);
+        try
+        {
+            Encoding.UTF8.GetBytes(str, rentedBytes);
+            WriteInt(stream, byteCount);
+            stream.Write(rentedBytes, 0, byteCount);
+        }
+        finally
+        {
+            System.Buffers.ArrayPool<byte>.Shared.Return(rentedBytes);
+        }
+#else
         byte[] bytes = Encoding.UTF8.GetBytes(str);
-        byte[] len = BitConverter.GetBytes(bytes.Length);
-        stream.Write(len, 0, len.Length);
+        WriteInt(stream, bytes.Length);
         stream.Write(bytes, 0, bytes.Length);
+#endif
     }
 
     protected static void WriteSize<T>(Stream stream)
         where T : struct
+        => WriteInt(stream, GetSize<T>());
+
+#if NETCOREAPP
+    protected static void WriteInt(Stream stream, int value) => WritePrimitive(stream, value);
+
+    protected static int ReadInt(Stream stream) => ReadPrimitive<int>(stream);
+
+    protected static void WriteLong(Stream stream, long value) => WritePrimitive(stream, value);
+
+    protected static long ReadLong(Stream stream) => ReadPrimitive<long>(stream);
+
+    protected static void WriteUShort(Stream stream, ushort value) => WritePrimitive(stream, value);
+
+    protected static ushort ReadUShort(Stream stream) => ReadPrimitive<ushort>(stream);
+
+    private static void WritePrimitive<T>(Stream stream, T value)
+        where T : unmanaged
     {
-        int sizeInBytes = GetSize<T>();
-        byte[] len = BitConverter.GetBytes(sizeInBytes);
-        stream.Write(len, 0, len.Length);
+        int size = GetSize<T>();
+        Span<byte> bytes = stackalloc byte[size];
+        System.Runtime.InteropServices.MemoryMarshal.Write(bytes, in value);
+        stream.Write(bytes);
     }
 
+    private static T ReadPrimitive<T>(Stream stream)
+        where T : unmanaged
+    {
+        Span<byte> bytes = stackalloc byte[GetSize<T>()];
+        stream.ReadExactly(bytes);
+        return System.Runtime.InteropServices.MemoryMarshal.Read<T>(bytes);
+    }
+#else
     protected static void WriteInt(Stream stream, int value)
     {
         byte[] bytes = BitConverter.GetBytes(value);
@@ -213,7 +114,7 @@ internal abstract class BaseSerializer
     protected static int ReadInt(Stream stream)
     {
         byte[] bytes = new byte[sizeof(int)];
-        _ = stream.Read(bytes, 0, bytes.Length);
+        ReadExactly(stream, bytes, 0, bytes.Length);
         return BitConverter.ToInt32(bytes, 0);
     }
 
@@ -223,39 +124,60 @@ internal abstract class BaseSerializer
         stream.Write(bytes, 0, bytes.Length);
     }
 
+    protected static long ReadLong(Stream stream)
+    {
+        byte[] bytes = new byte[sizeof(long)];
+        ReadExactly(stream, bytes, 0, bytes.Length);
+        return BitConverter.ToInt64(bytes, 0);
+    }
+
     protected static void WriteUShort(Stream stream, ushort value)
     {
         byte[] bytes = BitConverter.GetBytes(value);
         stream.Write(bytes, 0, bytes.Length);
     }
 
-    protected static long ReadLong(Stream stream)
-    {
-        byte[] bytes = new byte[sizeof(long)];
-        _ = stream.Read(bytes, 0, bytes.Length);
-        return BitConverter.ToInt64(bytes, 0);
-    }
-
     protected static ushort ReadUShort(Stream stream)
     {
         byte[] bytes = new byte[sizeof(ushort)];
-        _ = stream.Read(bytes, 0, bytes.Length);
+        ReadExactly(stream, bytes, 0, bytes.Length);
         return BitConverter.ToUInt16(bytes, 0);
     }
+#endif
 
     protected static void WriteBool(Stream stream, bool value)
-    {
-        byte[] bytes = BitConverter.GetBytes(value);
-        stream.Write(bytes, 0, bytes.Length);
-    }
+        => stream.WriteByte(value ? (byte)1 : (byte)0);
 
     protected static bool ReadBool(Stream stream)
+        => stream.ReadByte() switch
+        {
+            -1 => throw new EndOfStreamException(),
+            0 => false,
+            _ => true,
+        };
+
+    // Reads exactly 'count' bytes into 'buffer' starting at 'offset', looping until the request is
+    // satisfied or the end of the stream is reached. This centralizes the previously duplicated
+    // per-primitive read logic and fixes the historical short-read bug on the non-NETCOREAPP path,
+    // where a single Stream.Read could return fewer bytes than requested and silently corrupt data.
+    private static void ReadExactly(Stream stream, byte[] buffer, int offset, int count)
     {
-        byte[] bytes = new byte[sizeof(bool)];
-        _ = stream.Read(bytes, 0, bytes.Length);
-        return BitConverter.ToBoolean(bytes, 0);
-    }
+#if NETCOREAPP
+        stream.ReadExactly(buffer, offset, count);
+#else
+        int totalRead = 0;
+        while (totalRead < count)
+        {
+            int read = stream.Read(buffer, offset + totalRead, count - totalRead);
+            if (read == 0)
+            {
+                throw new EndOfStreamException();
+            }
+
+            totalRead += read;
+        }
 #endif
+    }
 
     protected static byte ReadByte(Stream stream) => (byte)stream.ReadByte();
 
@@ -348,6 +270,104 @@ internal abstract class BaseSerializer
         SetPosition(stream, position);
         WriteInt(stream, value);
         SetPosition(stream, currentPosition);
+    }
+
+    /// <summary>
+    /// Reads the standard field envelope (a <c>ushort</c> field count followed by that many
+    /// <c>[ushort id][int size][payload]</c> triples) and dispatches each field to <paramref name="tryReadField"/>.
+    /// When the callback returns <see langword="false"/> (an unrecognized field id), the field payload is skipped so
+    /// that the reader stays aligned and remains forward-compatible with newer producers.
+    /// </summary>
+    protected static void ReadFields(Stream stream, Func<ushort, int, bool> tryReadField)
+    {
+        ushort fieldCount = ReadUShort(stream);
+        for (int i = 0; i < fieldCount; i++)
+        {
+            ushort fieldId = ReadUShort(stream);
+            int fieldSize = ReadInt(stream);
+            if (!tryReadField(fieldId, fieldSize))
+            {
+                // If we don't recognize the field id, skip the payload corresponding to that field.
+                SetPosition(stream, stream.Position + fieldSize);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Writes a length-prefixed list payload using the deferred-size-backfill protocol: the field id, a reserved
+    /// 4-byte size slot, the element count, then each element via <paramref name="writeItem"/>. The reserved slot is
+    /// finally patched with the payload size. A <see langword="null"/> or empty list writes nothing.
+    /// </summary>
+    /// <typeparam name="T">The element type of the list being serialized.</typeparam>
+    protected static void WriteListPayload<T>(Stream stream, ushort fieldId, T[]? list, Action<Stream, T> writeItem)
+    {
+        if (list is null || list.Length == 0)
+        {
+            return;
+        }
+
+        WriteUShort(stream, fieldId);
+        // We will reserve an int (4 bytes) so that we fill the size later, once we write the payload.
+        WriteInt(stream, 0);
+        long before = stream.Position;
+        WriteInt(stream, list.Length);
+        foreach (T item in list)
+        {
+            writeItem(stream, item);
+        }
+
+        // NOTE: We are able to seek only if we are using a MemoryStream
+        // thus, the seek operation is fast as we are only changing the value of a property.
+        WriteAtPosition(stream, (int)(stream.Position - before), before - sizeof(int));
+    }
+
+    // ExecutionId and InstanceId are the two leading fields shared verbatim by the four 'dotnet test' collection
+    // message envelopes that carry a list payload (DiscoveredTestMessages, TestResultMessages, TestInProgressMessages,
+    // FileArtifactMessages). Their wire ids are pinned to 1 and 2 for those serializers and MUST NOT change. Note that
+    // AzureDevOpsLogMessage/DisplayMessage also place ExecutionId/InstanceId at ids 1/2, but they carry scalar payloads
+    // rather than a message list, so they do not use these helpers.
+    private const ushort ExecutionScopedExecutionIdFieldId = 1;
+    private const ushort ExecutionScopedInstanceIdFieldId = 2;
+
+    /// <summary>
+    /// Matches the two leading collection-envelope fields (<c>ExecutionId</c> id 1 / <c>InstanceId</c> id 2) shared by
+    /// the four 'dotnet test' list-carrying messages payloads, assigning the value into <paramref name="executionId"/>
+    /// or <paramref name="instanceId"/> and returning <see langword="true"/> when the field is one of them. The caller
+    /// handles its type-specific message-list field ids when this returns <see langword="false"/>. Kept as a
+    /// <see langword="ref"/>-based matcher so it adds no allocation on the hot per-test IPC read path.
+    /// </summary>
+    protected static bool TryReadExecutionScopedField(Stream stream, ushort fieldId, int fieldSize, ref string? executionId, ref string? instanceId)
+    {
+        switch (fieldId)
+        {
+            case ExecutionScopedExecutionIdFieldId:
+                executionId = ReadStringValue(stream, fieldSize);
+                return true;
+
+            case ExecutionScopedInstanceIdFieldId:
+                instanceId = ReadStringValue(stream, fieldSize);
+                return true;
+
+            default:
+                return false;
+        }
+    }
+
+    /// <summary>
+    /// Writes the shared collection-envelope header: a field-count prefix (the <c>ExecutionId</c> and <c>InstanceId</c>
+    /// fields when non-<see langword="null"/> plus <paramref name="payloadFieldCount"/>), followed by the
+    /// <c>ExecutionId</c> (id 1) and <c>InstanceId</c> (id 2) fields. The caller writes its type-specific message
+    /// list(s) directly afterwards. Kept callback-free so it adds no closure/delegate allocation on the hot per-test
+    /// IPC write path.
+    /// </summary>
+    protected static void WriteExecutionScopedHeader(Stream stream, string? executionId, string? instanceId, ushort payloadFieldCount)
+    {
+        DebugAssert(stream.CanSeek, "We expect a seekable stream.");
+
+        WriteUShort(stream, (ushort)((executionId is null ? 0 : 1) + (instanceId is null ? 0 : 1) + payloadFieldCount));
+
+        WriteField(stream, ExecutionScopedExecutionIdFieldId, executionId);
+        WriteField(stream, ExecutionScopedInstanceIdFieldId, instanceId);
     }
 
     private static int GetSize<T>() => typeof(T) switch

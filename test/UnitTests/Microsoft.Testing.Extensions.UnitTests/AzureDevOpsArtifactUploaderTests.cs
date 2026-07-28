@@ -82,12 +82,11 @@ public sealed class AzureDevOpsArtifactUploaderTests
         await uploader.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
         Assert.AreSequenceEqual(
-            new[]
-            {
+            [
                 "##vso[build.addbuildtag]has-crashdump",
                 "##vso[build.addbuildtag]has-hangdump",
                 "##vso[build.addbuildtag]has-test-failures",
-            },
+            ],
             GetCommandLines(),
             SequenceOrder.InAnyOrder);
         Assert.DoesNotContain(line => line.Contains("artifact.upload", StringComparison.Ordinal), GetCommandLines());
@@ -136,7 +135,7 @@ public sealed class AzureDevOpsArtifactUploaderTests
         await uploader.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
         Assert.AreSequenceEqual(
-            new[] { $"##vso[artifact.upload containerfolder=Artifacts;artifactname=Artifacts]{InResults("inside.trx")}" },
+            [$"##vso[artifact.upload containerfolder=Artifacts;artifactname=Artifacts]{InResults("inside.trx")}"],
             GetCommandLines());
     }
 
@@ -160,12 +159,11 @@ public sealed class AzureDevOpsArtifactUploaderTests
         await uploader.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
         Assert.AreSequenceEqual(
-            new[]
-            {
+            [
                 "##vso[build.addbuildtag]has-crashdump",
                 "##vso[build.addbuildtag]has-test-failures",
                 $"##vso[artifact.upload containerfolder=Artifacts;artifactname=Artifacts]{InResults("test.trx")}",
-            },
+            ],
             GetCommandLines());
     }
 
@@ -189,7 +187,7 @@ public sealed class AzureDevOpsArtifactUploaderTests
         await uploader.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
         Assert.AreSequenceEqual(
-            new[] { $"##vso[artifact.upload containerfolder=Artifacts;artifactname=Artifacts]{InResults("keep.trx")}" },
+            [$"##vso[artifact.upload containerfolder=Artifacts;artifactname=Artifacts]{InResults("keep.trx")}"],
             GetCommandLines());
     }
 
@@ -209,11 +207,10 @@ public sealed class AzureDevOpsArtifactUploaderTests
         await uploader.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
         Assert.AreSequenceEqual(
-            new[]
-            {
+            [
                 "##vso[build.addbuildtag]has-crashdump",
                 "##vso[build.addbuildtag]has-hangdump",
-            },
+            ],
             GetCommandLines(),
             SequenceOrder.InAnyOrder);
     }
@@ -271,7 +268,7 @@ public sealed class AzureDevOpsArtifactUploaderTests
         await uploader.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
         Assert.AreSequenceEqual(
-            new[] { "Azure DevOps artifact upload was requested, but TF_BUILD is not set to 'true'; skipping Azure DevOps artifact upload and build tags." },
+            ["Azure DevOps artifact upload was requested, but TF_BUILD is not set to 'true'; skipping Azure DevOps artifact upload and build tags."],
             GetWarnings());
         Assert.IsEmpty(GetCommandLines());
     }
@@ -332,7 +329,7 @@ public sealed class AzureDevOpsArtifactUploaderTests
         await uploader.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
         Assert.AreSequenceEqual(
-            new[] { $"##vso[artifact.upload containerfolder=Artifacts;artifactname=Artifacts]{escapedSpecialPath}" },
+            [$"##vso[artifact.upload containerfolder=Artifacts;artifactname=Artifacts]{escapedSpecialPath}"],
             GetCommandLines());
     }
 

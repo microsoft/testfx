@@ -493,7 +493,7 @@ public class TestMethodRunnerTests : TestContainer
 
             // Write a fairly large chunk of console output. If contexts were shared, the next
             // iteration would observe a non-zero existing length.
-            current.WriteConsoleOut(new string('x', 1024));
+            current.StandardOutputBuilder.Append(new string('x', 1024));
             return new TestResult { Outcome = UnitTestOutcome.Passed };
         });
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);

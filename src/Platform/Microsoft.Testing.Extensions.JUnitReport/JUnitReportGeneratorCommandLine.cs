@@ -12,7 +12,8 @@ internal sealed class JUnitReportGeneratorCommandLine : ReportGeneratorCommandLi
 
     public JUnitReportGeneratorCommandLine()
         : base(
-            nameof(JUnitReportGeneratorCommandLine),
+            // Stable extension UID. Do not change: it feeds telemetry, --info output, and artifact metadata.
+            "JUnitReportGeneratorCommandLine",
             ExtensionResources.JUnitReportGeneratorDisplayName,
             ExtensionResources.JUnitReportGeneratorDescription,
             JUnitReportOptionName,

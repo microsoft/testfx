@@ -18,7 +18,7 @@ internal static class XmlReaderUtilities
     /// Advances the reader to the root element and verifies it is the <c>&lt;RunSettings&gt;</c> node.
     /// </summary>
     /// <param name="reader">The reader positioned before the root element.</param>
-    /// <exception cref="InvalidRunSettingsException">Thrown when the root element is not <c>&lt;RunSettings&gt;</c>.</exception>
+    /// <exception cref="AdapterSettingsException">Thrown when the root element is not <c>&lt;RunSettings&gt;</c>.</exception>
     internal static void ReadToRootNode(XmlReader reader)
     {
         reader.ReadToNextElement();
@@ -26,7 +26,7 @@ internal static class XmlReaderUtilities
         // Verify that it is a "RunSettings" node.
         if (reader.Name != RunSettingsRootNodeName)
         {
-            throw new InvalidRunSettingsException($"Could not find '{RunSettingsRootNodeName}' node in the runsettings XML. Found '<{reader.Name}>' instead.");
+            throw new AdapterSettingsException($"Could not find '{RunSettingsRootNodeName}' node in the runsettings XML. Found '<{reader.Name}>' instead.");
         }
     }
 

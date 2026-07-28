@@ -7,6 +7,11 @@
         <target state="translated">File .runsettings non valido. Attributo '&lt;RunSettings&gt;' mancante</target>
         <note>Do not localize file extension {Locked=".runsettings"} or element {Locked="&lt;RunSettings&gt;"}.</note>
       </trans-unit>
+      <trans-unit id="RunSettingsEnvironmentVariablesNotSupportedOnBrowser">
+        <source>The runsettings 'EnvironmentVariables' section is not supported on browser/WebAssembly platforms, because applying it requires restarting the test host process. Remove the section to run on browser-wasm.</source>
+        <target state="translated">La sezione 'EnvironmentVariables' di runsettings non è supportata sulle piattaforme browser/WebAssembly, perché per applicarla è necessario riavviare il processo host di test. Rimuovi la sezione per eseguire i test su browser-wasm.</target>
+        <note>{Locked="runsettings"}{Locked="EnvironmentVariables"}{Locked="browser-wasm"}</note>
+      </trans-unit>
       <trans-unit id="RunSettingsOptionDescription">
         <source>The path, relative or absolute, to the .runsettings file. For more information and examples on how to configure test run, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file</source>
         <target state="translated">Percorso, relativo o assoluto, del file .runsettings. Per altre informazioni ed esempi su come configurare l'esecuzione dei test, vedere https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file</target>

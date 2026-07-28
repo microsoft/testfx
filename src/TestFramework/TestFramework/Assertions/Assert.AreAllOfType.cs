@@ -174,4 +174,148 @@ public sealed partial class Assert
     }
 
     #endregion // AreAllOfType
+
+#if NETCOREAPP3_1_OR_GREATER
+
+    #region AreAllOfType span/memory
+
+    /// <summary>
+    /// Tests whether all elements in the specified span are instances of (or derived from) the expected type.
+    /// </summary>
+    /// <typeparam name="TItem">The element type of the span.</typeparam>
+    /// <param name="expectedType">The expected type of each element of <paramref name="collection"/>.</param>
+    /// <param name="collection">The span containing elements the test expects to be of the specified type.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="expectedTypeExpression">
+    /// The syntactic expression of expectedType as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreAllOfType<TItem>([NotNull] Type? expectedType, ReadOnlySpan<TItem> collection, string? message = "", [CallerArgumentExpression(nameof(expectedType))] string expectedTypeExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.AreAllOfType");
+        CheckParameterNotNull(expectedType, "Assert.AreAllOfType", "expectedType");
+        AreAllOfTypeImpl(collection.ToArray(), expectedType, genericTypeArgumentName: null, message, collectionExpression, expectedTypeExpression);
+    }
+
+    /// <summary>
+    /// Tests whether all elements in the specified span are instances of (or derived from) the expected type.
+    /// </summary>
+    /// <typeparam name="TItem">The element type of the span.</typeparam>
+    /// <param name="expectedType">The expected type of each element of <paramref name="collection"/>.</param>
+    /// <param name="collection">The span containing elements the test expects to be of the specified type.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="expectedTypeExpression">
+    /// The syntactic expression of expectedType as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreAllOfType<TItem>([NotNull] Type? expectedType, Span<TItem> collection, string? message = "", [CallerArgumentExpression(nameof(expectedType))] string expectedTypeExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => AreAllOfType(expectedType, (ReadOnlySpan<TItem>)collection, message, expectedTypeExpression, collectionExpression);
+
+    /// <summary>
+    /// Tests whether all elements in the specified memory are instances of (or derived from) the expected type.
+    /// </summary>
+    /// <typeparam name="TItem">The element type of the memory.</typeparam>
+    /// <param name="expectedType">The expected type of each element of <paramref name="collection"/>.</param>
+    /// <param name="collection">The memory containing elements the test expects to be of the specified type.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="expectedTypeExpression">
+    /// The syntactic expression of expectedType as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreAllOfType<TItem>([NotNull] Type? expectedType, ReadOnlyMemory<TItem> collection, string? message = "", [CallerArgumentExpression(nameof(expectedType))] string expectedTypeExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => AreAllOfType(expectedType, collection.Span, message, expectedTypeExpression, collectionExpression);
+
+    /// <summary>
+    /// Tests whether all elements in the specified memory are instances of (or derived from) the expected type.
+    /// </summary>
+    /// <typeparam name="TItem">The element type of the memory.</typeparam>
+    /// <param name="expectedType">The expected type of each element of <paramref name="collection"/>.</param>
+    /// <param name="collection">The memory containing elements the test expects to be of the specified type.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="expectedTypeExpression">
+    /// The syntactic expression of expectedType as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreAllOfType<TItem>([NotNull] Type? expectedType, Memory<TItem> collection, string? message = "", [CallerArgumentExpression(nameof(expectedType))] string expectedTypeExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => AreAllOfType(expectedType, collection.Span, message, expectedTypeExpression, collectionExpression);
+
+    /// <summary>
+    /// Tests whether all elements in the specified span are instances of (or derived from) <typeparamref name="TExpected"/>.
+    /// </summary>
+    /// <typeparam name="TExpected">The type each element of <paramref name="collection"/> is expected to be.</typeparam>
+    /// <typeparam name="TItem">The element type of the span.</typeparam>
+    /// <param name="collection">The span containing elements the test expects to be of the specified type.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreAllOfType<TExpected, TItem>(ReadOnlySpan<TItem> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.AreAllOfType");
+        AreAllOfTypeImpl(collection.ToArray(), typeof(TExpected), genericTypeArgumentName: "TExpected", message, collectionExpression, expectedTypeExpression: null);
+    }
+
+    /// <summary>
+    /// Tests whether all elements in the specified span are instances of (or derived from) <typeparamref name="TExpected"/>.
+    /// </summary>
+    /// <typeparam name="TExpected">The type each element of <paramref name="collection"/> is expected to be.</typeparam>
+    /// <typeparam name="TItem">The element type of the span.</typeparam>
+    /// <param name="collection">The span containing elements the test expects to be of the specified type.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreAllOfType<TExpected, TItem>(Span<TItem> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => AreAllOfType<TExpected, TItem>((ReadOnlySpan<TItem>)collection, message, collectionExpression);
+
+    /// <summary>
+    /// Tests whether all elements in the specified memory are instances of (or derived from) <typeparamref name="TExpected"/>.
+    /// </summary>
+    /// <typeparam name="TExpected">The type each element of <paramref name="collection"/> is expected to be.</typeparam>
+    /// <typeparam name="TItem">The element type of the memory.</typeparam>
+    /// <param name="collection">The memory containing elements the test expects to be of the specified type.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreAllOfType<TExpected, TItem>(ReadOnlyMemory<TItem> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => AreAllOfType<TExpected, TItem>(collection.Span, message, collectionExpression);
+
+    /// <summary>
+    /// Tests whether all elements in the specified memory are instances of (or derived from) <typeparamref name="TExpected"/>.
+    /// </summary>
+    /// <typeparam name="TExpected">The type each element of <paramref name="collection"/> is expected to be.</typeparam>
+    /// <typeparam name="TItem">The element type of the memory.</typeparam>
+    /// <param name="collection">The memory containing elements the test expects to be of the specified type.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreAllOfType<TExpected, TItem>(Memory<TItem> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => AreAllOfType<TExpected, TItem>(collection.Span, message, collectionExpression);
+
+    #endregion // AreAllOfType span/memory
+
+#endif
+
 }

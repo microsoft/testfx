@@ -18,4 +18,9 @@ public interface IClientInfo
     /// Gets the client version.
     /// </summary>
     string Version { get; }
+
+    /// <summary>
+    /// Gets the capabilities declared by the client.
+    /// </summary>
+    IClientCapabilities Capabilities { get; }
 }

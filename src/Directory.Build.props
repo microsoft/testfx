@@ -12,5 +12,9 @@
   <!-- Pack config -->
   <PropertyGroup>
     <CommonPackageTags>Microsoft test testing unittest unittesting unit-testing tdd</CommonPackageTags>
+
+    <!-- Populates the "Release Notes" tab on nuget.org. Defaults to the MSTest changelog entry for this
+         version; Microsoft.Testing.Platform packages override this in src/Platform/Directory.Build.props. -->
+    <PackageReleaseNotes>See the release notes at https://github.com/microsoft/testfx/blob/main/docs/Changelog.md#$(VersionPrefix).</PackageReleaseNotes>
   </PropertyGroup>
 </Project>

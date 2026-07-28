@@ -3,11 +3,13 @@
 
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
+using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
 [TestClass]
+[UnsupportedOSPlatform("browser")]
 public sealed class TerminalTestReporterCommandLineOptionsProviderTests
 {
     private readonly TerminalTestReporterCommandLineOptionsProvider _provider = new();
@@ -126,6 +128,126 @@ public sealed class TerminalTestReporterCommandLineOptionsProviderTests
         Assert.AreEqual(ArgumentArity.Zero, option.Arity);
         Assert.IsFalse(option.IsHidden);
         Assert.IsTrue(option.IsBuiltIn);
+    }
+
+    [TestMethod]
+    [DataRow("auto", true)]
+    [DataRow("on", true)]
+    [DataRow("off", false)]
+    public void IsProgressEnabled_ProgressOption_ReturnsRequestedState(string argument, bool expected)
+    {
+        var options = new Helpers.TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [TerminalTestReporterCommandLineOptionsProvider.ProgressOption] = [argument],
+        });
+
+        Assert.AreEqual(expected, TerminalTestReporterCommandLineOptionsProvider.IsProgressEnabled(options));
+    }
+
+    [TestMethod]
+    public void IsProgressEnabled_NoProgressOption_ReturnsFalse()
+    {
+        var options = new Helpers.TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [TerminalTestReporterCommandLineOptionsProvider.NoProgressOption] = [],
+        });
+
+        Assert.IsFalse(TerminalTestReporterCommandLineOptionsProvider.IsProgressEnabled(options));
+    }
+
+    [TestMethod]
+    public void IsProgressEnabled_NoProgressOptions_ReturnsTrue()
+    {
+        var options = new Helpers.TestCommandLineOptions([]);
+
+        Assert.IsTrue(TerminalTestReporterCommandLineOptionsProvider.IsProgressEnabled(options));
+    }
+
+    [TestMethod]
+    public void IsProgressEnabled_ProgressOption_TakesPrecedenceOverNoProgressOption()
+    {
+        var options = new Helpers.TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [TerminalTestReporterCommandLineOptionsProvider.ProgressOption] = ["on"],
+            [TerminalTestReporterCommandLineOptionsProvider.NoProgressOption] = [],
+        });
+
+        Assert.IsTrue(TerminalTestReporterCommandLineOptionsProvider.IsProgressEnabled(options));
+    }
+
+    [TestMethod]
+    [DataRow("1")]
+    [DataRow("5")]
+    [DataRow("100")]
+    public async Task ValidateOptionArguments_ShowSlowestTestsOption_AcceptsPositiveIntegers(string value)
+    {
+        CommandLineOption option = GetOption(TerminalTestReporterCommandLineOptionsProvider.ShowSlowestTestsOption);
+
+        ValidationResult result = await _provider.ValidateOptionArgumentsAsync(option, [value]);
+
+        Assert.IsTrue(result.IsValid, $"Expected '{value}' to be a valid --show-slowest-tests value, but got: {result.ErrorMessage}");
+    }
+
+    [TestMethod]
+    [DataRow("0")]
+    [DataRow("-1")]
+    [DataRow("abc")]
+    [DataRow("1.5")]
+    [DataRow("")]
+    public async Task ValidateOptionArguments_ShowSlowestTestsOption_RejectsInvalidValues(string value)
+    {
+        CommandLineOption option = GetOption(TerminalTestReporterCommandLineOptionsProvider.ShowSlowestTestsOption);
+
+        ValidationResult result = await _provider.ValidateOptionArgumentsAsync(option, [value]);
+
+        Assert.IsFalse(result.IsValid, $"Expected '{value}' to be rejected as a --show-slowest-tests value but it was accepted.");
+        Assert.IsNotNull(result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ValidateOptionArguments_ShowSlowestTestsOption_RejectsMultipleArguments()
+    {
+        CommandLineOption option = GetOption(TerminalTestReporterCommandLineOptionsProvider.ShowSlowestTestsOption);
+
+        ValidationResult result = await _provider.ValidateOptionArgumentsAsync(option, ["1", "2"]);
+
+        Assert.IsFalse(result.IsValid, "Expected --show-slowest-tests to reject more than one argument.");
+        Assert.IsNotNull(result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public void GetCommandLineOptions_IncludesShowSlowestTestsOption()
+    {
+        CommandLineOption option = GetOption(TerminalTestReporterCommandLineOptionsProvider.ShowSlowestTestsOption);
+
+        Assert.AreEqual(ArgumentArity.ExactlyOne, option.Arity);
+        Assert.IsFalse(option.IsHidden);
+        Assert.IsTrue(option.IsBuiltIn);
+    }
+
+    // Wiring test: the parsed --show-slowest-tests value must reach the reporter via
+    // TerminalOutputDevice.GetSlowestTestsCount (which feeds TerminalTestReporterOptions.SlowestTestsCount), so a
+    // validation/parse regression can't leave a help-only option.
+    [TestMethod]
+    [DataRow("1", 1)]
+    [DataRow("5", 5)]
+    [DataRow("100", 100)]
+    public void GetSlowestTestsCount_WhenOptionSetToPositiveInteger_ReturnsThatCount(string argument, int expected)
+    {
+        var options = new Helpers.TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [TerminalTestReporterCommandLineOptionsProvider.ShowSlowestTestsOption] = [argument],
+        });
+
+        Assert.AreEqual(expected, TerminalOutputDevice.GetSlowestTestsCount(options));
+    }
+
+    [TestMethod]
+    public void GetSlowestTestsCount_WhenOptionAbsent_ReturnsZero()
+    {
+        var options = new Helpers.TestCommandLineOptions([]);
+
+        Assert.AreEqual(0, TerminalOutputDevice.GetSlowestTestsCount(options));
     }
 
     private CommandLineOption GetOption(string name)

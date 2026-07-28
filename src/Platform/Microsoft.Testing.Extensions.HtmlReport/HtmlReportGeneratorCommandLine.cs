@@ -12,7 +12,8 @@ internal sealed class HtmlReportGeneratorCommandLine : ReportGeneratorCommandLin
 
     public HtmlReportGeneratorCommandLine()
         : base(
-            nameof(HtmlReportGeneratorCommandLine),
+            // Stable extension UID. Do not change: it feeds telemetry, --info output, and artifact metadata.
+            "HtmlReportGeneratorCommandLine",
             ExtensionResources.HtmlReportGeneratorDisplayName,
             ExtensionResources.HtmlReportGeneratorDescription,
             HtmlReportOptionName,

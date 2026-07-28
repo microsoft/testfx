@@ -174,7 +174,8 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
                 testSessionContext.SessionUid,
                 new FileInfo(reportFileName),
                 ArtifactDisplayName,
-                ArtifactDescription)).ConfigureAwait(false);
+                ArtifactDescription,
+                ArtifactKind)).ConfigureAwait(false);
     }
 
     // Capture every update unconditionally — no UID-based deduplication.
@@ -194,6 +195,14 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
     protected abstract string ArtifactDisplayName { get; }
 
     protected abstract string ArtifactDescription { get; }
+
+    /// <summary>
+    /// Gets the producer-asserted, reverse-DNS identifier of the artifact format this report
+    /// generator produces (e.g. <c>microsoft.testing.junit</c>). Used by post-processing to
+    /// group same-kind artifacts for consolidation. Returns <see langword="null"/> by default
+    /// (no declared kind); report generators override to tag their output.
+    /// </summary>
+    protected virtual string? ArtifactKind => null;
 
     protected abstract string GetGenerationLogMessage(int testResultCount);
 

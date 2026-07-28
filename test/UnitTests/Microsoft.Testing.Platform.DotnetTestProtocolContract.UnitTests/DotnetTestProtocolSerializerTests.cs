@@ -117,7 +117,7 @@ public sealed class DotnetTestProtocolSerializerTests
     public void TestResultMessages_RoundTrips()
     {
         var success = new SuccessfulTestResultMessage("uid", "displayName", TestStates.Passed, 100, "reason", "standardOutput", "errorOutput", "sessionUid");
-        var fail = new FailedTestResultMessage("uid2", "displayName2", TestStates.Failed, 200, "reason", [new ExceptionMessage("errorMessage", "errorType", "stackTrace")], "standardOutput", "errorOutput", "sessionUid");
+        var fail = new FailedTestResultMessage("uid2", "displayName2", TestStates.Failed, 200, "reason", [new ExceptionMessage("errorMessage", "errorType", "stackTrace")], "standardOutput", "errorOutput", "sessionUid", "expectedValue", "actualValue");
         var message = new TestResultMessages("executionId", "instanceId", [success], [fail]);
 
         TestResultMessages actual = RoundTrip(new TestResultMessagesSerializer(), message);
@@ -126,6 +126,38 @@ public sealed class DotnetTestProtocolSerializerTests
         Assert.AreEqual(message.InstanceId, actual.InstanceId);
         Assert.AreEqual("uid", actual.SuccessfulTestMessages[0].Uid);
         Assert.AreEqual("errorMessage", actual.FailedTestMessages[0].Exceptions?[0].ErrorMessage);
+        Assert.AreEqual("expectedValue", actual.FailedTestMessages[0].Expected);
+        Assert.AreEqual("actualValue", actual.FailedTestMessages[0].Actual);
+    }
+
+    [TestMethod]
+    public void FailedTestResultMessageFieldIds_Expected_And_Actual_AreStable()
+    {
+        // These are externally shared wire ids: the SDK decodes them with its own vendored copy of the same
+        // numbers, so renumbering either one would silently break cross-process decoding without failing the
+        // round-trip tests (which use the same constant on both writer and reader). Pin the literals here.
+        // The declared values are read via reflection (a runtime read, not a compile-time constant) so that
+        // renumbering the constant is actually caught rather than folded away by the compiler.
+        Assert.AreEqual((ushort)10, GetConstantValue(nameof(FailedTestResultMessageFieldsId.Expected)));
+        Assert.AreEqual((ushort)11, GetConstantValue(nameof(FailedTestResultMessageFieldsId.Actual)));
+
+        static ushort GetConstantValue(string fieldName)
+            => (ushort)typeof(FailedTestResultMessageFieldsId).GetField(fieldName)!.GetRawConstantValue()!;
+    }
+
+    [TestMethod]
+    public void FileArtifactMessageFieldIds_Kind_IsStable()
+    {
+        // Kind is an externally shared wire id (the SDK decodes it with its own vendored copy of the same
+        // number), so renumbering it would silently break cross-process decoding without failing the
+        // round-trip tests (which use the same constant on both writer and reader). Pin the literal here.
+        // The declared value is read via reflection (a runtime read, not a compile-time constant) so that
+        // renumbering the constant is actually caught rather than folded away by the compiler.
+        Assert.AreEqual((ushort)6, GetConstantValue(nameof(FileArtifactMessageFieldsId.SessionUid)));
+        Assert.AreEqual((ushort)7, GetConstantValue(nameof(FileArtifactMessageFieldsId.Kind)));
+
+        static ushort GetConstantValue(string fieldName)
+            => (ushort)typeof(FileArtifactMessageFieldsId).GetField(fieldName)!.GetRawConstantValue()!;
     }
 
     [TestMethod]
@@ -155,7 +187,7 @@ public sealed class DotnetTestProtocolSerializerTests
 
         DiscoveredTestMessage second = actual.DiscoveredMessages[1];
         Assert.AreEqual("Uid2", second.Uid);
-        Assert.HasCount(0, second.Traits);
+        Assert.IsEmpty(second.Traits);
     }
 
     [TestMethod]
@@ -211,8 +243,8 @@ public sealed class DotnetTestProtocolSerializerTests
             "executionId",
             "instanceId",
             [
-                new FileArtifactMessage("full/path.txt", "artifact", "desc", "testUid", "testDisplay", "sessionUid"),
-                new FileArtifactMessage("other.txt", "other", null, null, null, null),
+                new FileArtifactMessage("full/path.txt", "artifact", "desc", "testUid", "testDisplay", "sessionUid", "microsoft.testing.trx"),
+                new FileArtifactMessage("other.txt", "other", null, null, null, null, null),
             ]);
 
         FileArtifactMessages actual = RoundTrip(new FileArtifactMessagesSerializer(), message);
@@ -221,8 +253,10 @@ public sealed class DotnetTestProtocolSerializerTests
         Assert.HasCount(2, actual.FileArtifacts);
         Assert.AreEqual("full/path.txt", actual.FileArtifacts[0].FullPath);
         Assert.AreEqual("sessionUid", actual.FileArtifacts[0].SessionUid);
+        Assert.AreEqual("microsoft.testing.trx", actual.FileArtifacts[0].Kind);
         Assert.AreEqual("other.txt", actual.FileArtifacts[1].FullPath);
         Assert.IsNull(actual.FileArtifacts[1].Description);
+        Assert.IsNull(actual.FileArtifacts[1].Kind);
     }
 
     [TestMethod]

@@ -15,9 +15,10 @@ internal sealed class MSBuildCommandLineProvider : CommandLineOptionsProviderBas
 
     public MSBuildCommandLineProvider()
         : base(
-            nameof(MSBuildCommandLineProvider),
+            // Stable extension UID. Do not change: it feeds telemetry, --info output, and artifact metadata.
+            "MSBuildCommandLineProvider",
             ExtensionVersion.DefaultSemVer,
-            nameof(MSBuildCommandLineProvider),
+            Resources.ExtensionResources.MSBuildCommandLineProviderDisplayName,
             Resources.ExtensionResources.MSBuildExtensionsDescription,
             CachedCommandLineOptions)
     {

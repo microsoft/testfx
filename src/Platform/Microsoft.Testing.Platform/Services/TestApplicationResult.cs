@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.CommandLine;
@@ -17,6 +17,7 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IEnvironment _environment;
     private readonly IStopPoliciesService _policiesService;
+    private readonly ITestCoverageResult? _testCoverageResult;
     private readonly OpenTelemetryResultHandler? _openTelemetryResultHandler;
     private readonly bool _isDiscovery;
     private int _failedTestsCount;
@@ -30,11 +31,23 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         IEnvironment environment,
         IStopPoliciesService policiesService,
         IPlatformOpenTelemetryService? otelService)
+        : this(outputService, commandLineOptions, environment, policiesService, otelService, testCoverageResult: null)
+    {
+    }
+
+    public TestApplicationResult(
+        IOutputDevice outputService,
+        ICommandLineOptions commandLineOptions,
+        IEnvironment environment,
+        IStopPoliciesService policiesService,
+        IPlatformOpenTelemetryService? otelService,
+        ITestCoverageResult? testCoverageResult)
     {
         _outputService = outputService;
         _commandLineOptions = commandLineOptions;
         _environment = environment;
         _policiesService = policiesService;
+        _testCoverageResult = testCoverageResult;
         if (otelService is not null)
         {
             _openTelemetryResultHandler = new OpenTelemetryResultHandler(otelService);
@@ -70,6 +83,12 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
     {
         var message = (TestNodeUpdateMessage)value;
         TestNodeStateProperty? executionState = message.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
+
+        if (message.TestNode.Properties.Any<TestNodeExecutionCompletedProperty>())
+        {
+            _openTelemetryResultHandler?.NotifyExecutionCompleted(message.TestNode);
+            return Task.CompletedTask;
+        }
 
         if (executionState is null)
         {
@@ -137,6 +156,9 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
     }
 
     public int GetProcessExitCode()
+        => ExitCodeIgnorePolicy.Apply(GetProcessExitCodeWithoutIgnore(), _commandLineOptions, _environment);
+
+    internal int GetProcessExitCodeWithoutIgnore()
     {
         ExitCode exitCode = ExitCode.Success;
         exitCode = exitCode == ExitCode.Success && _policiesService.IsMaxFailedTestsTriggered ? ExitCode.TestExecutionStoppedForMaxFailedTests : exitCode;
@@ -144,38 +166,36 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         exitCode = exitCode == ExitCode.Success && _failedTestsCount > 0 ? ExitCode.AtLeastOneTestFailed : exitCode;
         exitCode = exitCode == ExitCode.Success && _policiesService.IsAbortTriggered ? ExitCode.TestSessionAborted : exitCode;
 
-        // Determine whether the run should be treated as having executed zero tests. Skipped tests are excluded
-        // from `_totalRanTests`. Under the default `allow-skipped` policy (#9385) skipped tests count as run, so only
-        // a run that discovered nothing at all counts as zero tests; under `strict` an all-skipped run also counts
-        // as zero tests.
-        ZeroTestsPolicy zeroTestsPolicy = PlatformCommandLineProvider.GetZeroTestsPolicy(_commandLineOptions);
-        bool ranZeroTests = zeroTestsPolicy == ZeroTestsPolicy.AllowSkipped
-            ? _totalRanTests == 0 && _skippedTestsCount == 0
-            : _totalRanTests == 0;
-        exitCode = exitCode == ExitCode.Success && ranZeroTests ? ExitCode.ZeroTests : exitCode;
-
-        if (_commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.MinimumExpectedTestsOptionKey, out string[]? argumentList))
+        // An explicitly-provided `--minimum-expected-tests` governs the count-based verdict and
+        // supersedes the ZeroTests (8) verdict below: a run of fewer than N tests yields
+        // ExitCode.MinimumExpectedTestsPolicyViolation (9), even when zero tests ran. This lets callers
+        // tell an explicit-minimum violation apart from a plain "ran nothing" run (e.g. so a
+        // `dotnet test --test-modules` orchestrator can distinguish a stricter local minimum from an
+        // empty module). See issue #7457.
+        // A malformed value (e.g. present with no argument) is rejected earlier by option validation, but
+        // we still guard the parse defensively and fall back to the zero-tests verdict if it ever slips through.
+        if (_commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.MinimumExpectedTestsOptionKey, out string[]? argumentList)
+            && argumentList is [string minimumExpectedTestsArgument]
+            && int.TryParse(minimumExpectedTestsArgument, out int minimumExpectedTests))
         {
-            exitCode = exitCode == ExitCode.Success && _totalRanTests < int.Parse(argumentList[0], CultureInfo.InvariantCulture) ? ExitCode.MinimumExpectedTestsPolicyViolation : exitCode;
+            exitCode = exitCode == ExitCode.Success && _totalRanTests < minimumExpectedTests ? ExitCode.MinimumExpectedTestsPolicyViolation : exitCode;
+        }
+        else
+        {
+            // Determine whether the run should be treated as having executed zero tests. Skipped tests are excluded
+            // from `_totalRanTests`. Under the default `allow-skipped` policy (#9385) skipped tests count as run, so only
+            // a run that discovered nothing at all counts as zero tests; under `strict` an all-skipped run also counts
+            // as zero tests.
+            ZeroTestsPolicy zeroTestsPolicy = PlatformCommandLineProvider.GetZeroTestsPolicy(_commandLineOptions);
+            bool ranZeroTests = zeroTestsPolicy == ZeroTestsPolicy.AllowSkipped
+                ? _totalRanTests == 0 && _skippedTestsCount == 0
+                : _totalRanTests == 0;
+            exitCode = exitCode == ExitCode.Success && ranZeroTests ? ExitCode.ZeroTests : exitCode;
         }
 
-        // If the user has specified the IgnoreExitCode, then we don't want to return a non-zero exit code if the exit code matches the one specified.
-        string? exitCodeToIgnore = _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_EXITCODE_IGNORE);
-        if (RoslynString.IsNullOrEmpty(exitCodeToIgnore))
-        {
-            if (_commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.IgnoreExitCodeOptionKey, out string[]? commandLineExitCodes) && commandLineExitCodes.Length > 0)
-            {
-                exitCodeToIgnore = commandLineExitCodes[0];
-            }
-        }
-
-        if (exitCodeToIgnore is not null)
-        {
-            if (exitCodeToIgnore.Split(';').Any(code => int.TryParse(code, out int parsedExitCode) && parsedExitCode == (int)exitCode))
-            {
-                exitCode = ExitCode.Success;
-            }
-        }
+        // Coverage thresholds override only an otherwise-successful run. Count-based policies above retain
+        // precedence when no tests ran or the explicit minimum was not met.
+        exitCode = exitCode == ExitCode.Success && _testCoverageResult?.HasThresholdFailure == true ? ExitCode.CoverageThresholdFailed : exitCode;
 
         return (int)exitCode;
     }

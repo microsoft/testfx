@@ -26,7 +26,7 @@ public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAsset
     public async Task MTP_RunTests_SendsTelemetryWithSettingsAndAttributes(string tfm)
     {
         string diagPath = Path.Combine(AssetFixture.MTPProjectPath, "bin", "Release", tfm, TestResultsFolderName);
-        string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, tfm);
+        string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, MTPAssetName, tfm);
 
         var testHost = TestHost.LocateFrom(AssetFixture.MTPProjectPath, MTPAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
@@ -66,7 +66,7 @@ public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAsset
     public async Task MTP_DiscoverTests_SendsTelemetryEvent(string tfm)
     {
         string diagPath = Path.Combine(AssetFixture.MTPProjectPath, "bin", "Release", tfm, TestResultsFolderName);
-        string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, tfm);
+        string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, MTPAssetName, tfm);
 
         var testHost = TestHost.LocateFrom(AssetFixture.MTPProjectPath, MTPAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
@@ -92,7 +92,7 @@ public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAsset
     public async Task MTP_WhenTelemetryDisabled_DoesNotSendMSTestEvent(string tfm)
     {
         string diagPath = Path.Combine(AssetFixture.MTPProjectPath, "bin", "Release", tfm, TestResultsFolderName);
-        string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, tfm);
+        string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, MTPAssetName, tfm);
 
         var testHost = TestHost.LocateFrom(AssetFixture.MTPProjectPath, MTPAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
@@ -193,17 +193,6 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
         string content = await reader.ReadToEndAsync();
 
         return (Regex.IsMatch(content, pattern), content);
-    }
-
-    // Build a regex matching the deterministic default diagnostic file name shape:
-    // "<asset-name>_<tfm>_<arch>_<yyMMddHHmmssfff>.diag". The arch token is taken from the
-    // current process (the testhost runs on the same machine, so its ProcessArchitecture matches).
-    private static string BuildDefaultDiagnosticFilePathPattern(string diagPath, string tfm)
-    {
-        string arch = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
-        const string FileNamePlaceholder = "__DIAG_FILENAME__";
-        string combinedPath = Path.Combine(diagPath, FileNamePlaceholder).Replace(@"\", @"\\");
-        return combinedPath.Replace(FileNamePlaceholder, $@"{MTPAssetName}_{Regex.Escape(tfm)}_{arch}_\d{{15}}\.diag");
     }
 
     #endregion

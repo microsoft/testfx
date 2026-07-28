@@ -42,6 +42,7 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestData
     private readonly string _dynamicDataSourceName;
     private readonly DynamicDataSourceType _dynamicDataSourceType;
     private readonly object?[] _dynamicDataSourceArguments = [];
+    [DynamicallyAccessedMembers(DynamicDataOperations.RequiredMemberTypes)]
     private readonly Type? _dynamicDataDeclaringType;
 
     /// <summary>
@@ -103,7 +104,7 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestData
     /// Specifies whether the data is stored as property, in method, or in field.
     /// </param>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public DynamicDataAttribute(string dynamicDataSourceName, Type dynamicDataDeclaringType, DynamicDataSourceType dynamicDataSourceType)
+    public DynamicDataAttribute(string dynamicDataSourceName, [DynamicallyAccessedMembers(DynamicDataOperations.RequiredMemberTypes)] Type dynamicDataDeclaringType, DynamicDataSourceType dynamicDataSourceType)
         : this(dynamicDataSourceName, dynamicDataSourceType) => _dynamicDataDeclaringType = dynamicDataDeclaringType;
 
     /// <summary>
@@ -117,7 +118,7 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestData
     /// The declaring type of property, method, or field having data. Useful in cases when declaring type is present in a class different from
     /// test method's class. If null, declaring type defaults to test method's class type.
     /// </param>
-    public DynamicDataAttribute(string dynamicDataSourceName, Type dynamicDataDeclaringType)
+    public DynamicDataAttribute(string dynamicDataSourceName, [DynamicallyAccessedMembers(DynamicDataOperations.RequiredMemberTypes)] Type dynamicDataDeclaringType)
         : this(dynamicDataSourceName) => _dynamicDataDeclaringType = dynamicDataDeclaringType;
 
     /// <summary>
@@ -134,7 +135,7 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestData
     /// <param name="dynamicDataSourceArguments">
     /// Arguments to be passed to method referred to by <paramref name="dynamicDataSourceName"/>.
     /// </param>
-    public DynamicDataAttribute(string dynamicDataSourceName, Type dynamicDataDeclaringType, params object?[] dynamicDataSourceArguments)
+    public DynamicDataAttribute(string dynamicDataSourceName, [DynamicallyAccessedMembers(DynamicDataOperations.RequiredMemberTypes)] Type dynamicDataDeclaringType, params object?[] dynamicDataSourceArguments)
         : this(dynamicDataSourceName)
     {
         _dynamicDataDeclaringType = dynamicDataDeclaringType;
@@ -149,6 +150,7 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestData
     /// <summary>
     /// Gets or sets the declaring type used to customize the display name in test results.
     /// </summary>
+    [DynamicallyAccessedMembers(DynamicDataOperations.RequiredMemberTypes)]
     public Type? DynamicDataDisplayNameDeclaringType { get; set; }
 
     /// <summary>
@@ -168,11 +170,20 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestData
             return TestDataSourceUtilities.ComputeDefaultDisplayName(methodInfo, data);
         }
 
-        Type? dynamicDisplayNameDeclaringType = DynamicDataDisplayNameDeclaringType ?? methodInfo.DeclaringType;
+        Type? dynamicDisplayNameDeclaringType = DynamicDataDisplayNameDeclaringType ?? DynamicDataOperations.GetTestMethodDeclaringType(methodInfo);
         DebugEx.Assert(dynamicDisplayNameDeclaringType is not null, "Declaring type of test data cannot be null.");
 
-        MethodInfo method = dynamicDisplayNameDeclaringType.GetTypeInfo().GetDeclaredMethod(DynamicDataDisplayName)
-            ?? throw new ArgumentNullException($"{DynamicDataSourceType.Method} {DynamicDataDisplayName}");
+        // Prefer the source-generated accessor when available, so the display-name method is invoked without
+        // reflecting over the declaring type (trim / Native AOT safe). Falls back to reflection otherwise.
+        return DynamicDataSourceResolver.TryGetDisplayName(dynamicDisplayNameDeclaringType, DynamicDataDisplayName, methodInfo, data, out string? displayName)
+            ? displayName
+            : GetDisplayNameByReflection(dynamicDisplayNameDeclaringType, DynamicDataDisplayName, methodInfo, data);
+    }
+
+    private static string? GetDisplayNameByReflection([DynamicallyAccessedMembers(DynamicDataOperations.RequiredMemberTypes)] Type dynamicDisplayNameDeclaringType, string displayNameMethodName, MethodInfo methodInfo, object?[]? data)
+    {
+        MethodInfo method = dynamicDisplayNameDeclaringType.GetTypeInfo().GetDeclaredMethod(displayNameMethodName)
+            ?? throw new ArgumentNullException($"{DynamicDataSourceType.Method} {displayNameMethodName}");
         ParameterInfo[] parameters = method.GetParameters();
         if (parameters.Length != 2
             || parameters[0].ParameterType != typeof(MethodInfo)
@@ -185,7 +196,7 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestData
                 string.Format(
                     CultureInfo.InvariantCulture,
                     FrameworkMessages.DynamicDataDisplayName,
-                    DynamicDataDisplayName,
+                    displayNameMethodName,
                     nameof(String),
                     string.Join(", ", nameof(MethodInfo), typeof(object[]).Name)));
         }

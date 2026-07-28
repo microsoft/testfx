@@ -174,6 +174,18 @@ Test discovery summary: found 1 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
+    public async Task Exec_WhenMinimumExpectedTestsIsSpecifiedAndNoTestsRun_ResultIsMinimumExpectedTestsPolicyViolation(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        // The uid filter matches no test, so zero tests run. With an explicit minimum, the count-based
+        // verdict is a minimum-expected violation (exit code 9), not "zero tests ran" (exit code 8). See issue #7457.
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter-uid 2 --minimum-expected-tests 3", cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.MinimumExpectedTestsPolicyViolation);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task Exec_WhenListTestsAndMinimumExpectedTestsAreSpecified_DiscoveryFails(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);

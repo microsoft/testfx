@@ -62,12 +62,13 @@ public class UnitTest1
         // reachable code paths exercised at runtime.
         //
         // MSTest.TestAdapter transitively depends on the vstest Microsoft.TestPlatform.ObjectModel
-        // submodule and on System.Private.DataContractSerialization, both of which emit trim warnings
-        // outside this repo's control. We therefore do NOT promote warnings to errors here. Instead,
-        // we assert that MSTest-owned source file names do not appear in publish output. (Note: the
-        // test name and orientation changed in https://github.com/microsoft/testfx/pull/8586; the
-        // earlier "ShouldNotProduceTrimWarnings" name became inaccurate once MSTest.SourceGeneration
-        // started relying on MSTest.TestAdapter's reflection-mode adapter assemblies.)
+        // submodule, on System.Private.DataContractSerialization and on the Application Insights
+        // telemetry package, all of which emit trim warnings outside this repo's control. We therefore
+        // do NOT promote warnings to errors here. Instead, we assert that MSTest-owned source file
+        // names do not appear in publish output. (Note: the test name and orientation changed in
+        // https://github.com/microsoft/testfx/pull/8586; the earlier "ShouldNotProduceTrimWarnings"
+        // name became inaccurate once MSTest.SourceGeneration started relying on MSTest.TestAdapter's
+        // reflection-mode adapter assemblies.)
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
             $"MSTestTrimAnalysisTest_{tfm}",
             TrimAnalysisSourceCode
@@ -93,10 +94,11 @@ public class UnitTest1
     // we own. Used by Publish_WithTestAdapter_DoesNotSurfaceWarningsFromSuppressedSources.
     //
     // Note: We do not enable TreatWarningsAsErrors here because the reflection-mode adapter still
-    // depends on the vstest Microsoft.TestPlatform.ObjectModel submodule and on
-    // System.Private.DataContractSerialization internals, both of which emit trim warnings that
-    // are outside this repo's control. The test instead asserts that specific source files we
-    // suppressed in this repo no longer appear in publish output.
+    // depends on the vstest Microsoft.TestPlatform.ObjectModel submodule, on
+    // System.Private.DataContractSerialization internals and on the Application Insights telemetry
+    // package, all of which emit trim warnings that are outside this repo's control. The test
+    // instead asserts that specific source files we suppressed in this repo no longer appear in
+    // publish output.
     private const string TrimAnalysisWithTestAdapterSourceCode = """
 #file MSTestTrimAnalysisWithTestAdapter.csproj
 <Project Sdk="Microsoft.NET.Sdk">
@@ -113,11 +115,12 @@ public class UnitTest1
         <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
         <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
     </ItemGroup>
-    <!-- Force the trimmer to analyze the full surface of the assemblies modified in this PR
-         so we catch trim warnings that would not be caught by only testing reachable code paths. -->
+    <!-- Force the trimmer to analyze the full surface of the assemblies we own in the
+         reflection-mode adapter path so we catch trim warnings that would not be caught by only
+         testing reachable code paths. -->
     <ItemGroup>
+        <TrimmerRootAssembly Include="MSTest.TestAdapter" />
         <TrimmerRootAssembly Include="MSTestAdapter.PlatformServices" />
-        <TrimmerRootAssembly Include="Microsoft.Testing.Extensions.VSTestBridge" />
         <TrimmerRootAssembly Include="MSTest.TestFramework" />
     </ItemGroup>
 </Project>
@@ -161,9 +164,10 @@ public class UnitTest1
             addPublicFeeds: true);
 
         // Do NOT pass warnAsError: true here. The reflection-mode adapter still depends on the
-        // vstest Microsoft.TestPlatform.ObjectModel submodule and on System.Private.DataContractSerialization
-        // internals, both of which emit trim warnings that are outside this repo's control. Promoting them
-        // to errors would fail the publish with NETSDK1144 before we get a chance to inspect the warning list.
+        // vstest Microsoft.TestPlatform.ObjectModel submodule, on System.Private.DataContractSerialization
+        // internals and on the Application Insights telemetry package, all of which emit trim warnings
+        // that are outside this repo's control. Promoting them to errors would fail the publish with
+        // NETSDK1144 before we get a chance to inspect the warning list.
         DotnetMuxerResult result = await DotnetCli.RunAsync(
             $"publish {generator.TargetAssetPath} -r {RID} -f {tfm}",
             warnAsError: false,

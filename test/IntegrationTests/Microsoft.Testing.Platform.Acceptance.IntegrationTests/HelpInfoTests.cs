@@ -76,6 +76,8 @@ Options:
         The directory where the test results are going to be placed.
         If the specified directory doesn't exist, it's created.
         The default is TestResults in the directory that contains the test application.
+    --show-slowest-tests
+        Show the specified number of slowest tests (by reported execution duration) in the run summary. Expects a positive integer.
     --show-stderr
         Determines when to show captured error output of a test.
         Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).
@@ -205,10 +207,22 @@ Built-in command line providers:
         Hidden: False
         Description: Define the level of the verbosity for the --diagnostic\.
         The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'
+      --dotnet-test-http-endpoint
+        Arity: 1
+        Hidden: True
+        Description: Specifies the authenticated HTTP endpoint for the dotnet test protocol\.
+      --dotnet-test-http-token
+        Arity: 1
+        Hidden: True
+        Description: Specifies the per-run HTTP bearer token for the dotnet test protocol\.
       --dotnet-test-pipe
         Arity: 1
         Hidden: True
         Description: dotnet test pipe\.
+      --dotnet-test-transport
+        Arity: 1
+        Hidden: True
+        Description: Selects the pre-launch transport for the dotnet test protocol\.
       --exit-on-process-exit
         Arity: 1
         Hidden: False
@@ -303,6 +317,10 @@ Built-in command line providers:
         Valid values are 'auto' \(default\), 'on' \(also accepts 'true', 'enable', '1'\) or 'off' \(also accepts 'false', 'disable', '0'\).
         'auto' shows progress unless the terminal cannot update in place \(for example with --no-ansi or in CI\).
         This option takes precedence over the deprecated --no-progress flag.
+      --show-slowest-tests
+        Arity: 1
+        Hidden: False
+        Description: Show the specified number of slowest tests \(by reported execution duration\) in the run summary. Expects a positive integer.
       --show-stderr
         Arity: 1
         Hidden: False

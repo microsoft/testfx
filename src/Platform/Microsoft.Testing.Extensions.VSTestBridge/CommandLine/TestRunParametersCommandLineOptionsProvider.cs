@@ -2,36 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.VSTestBridge.Resources;
-using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
-using Microsoft.Testing.Platform.Extensions.CommandLine;
 
 namespace Microsoft.Testing.Extensions.VSTestBridge.CommandLine;
 
-internal sealed class TestRunParametersCommandLineOptionsProvider : CommandLineOptionsProviderBase
+internal sealed class TestRunParametersCommandLineOptionsProvider : TestRunParametersCommandLineOptionsProviderBase
 {
-    public const string TestRunParameterOptionName = "test-parameter";
-
     public TestRunParametersCommandLineOptionsProvider(IExtension extension)
-        : base(
-            extension,
-            [
-                new CommandLineOption(TestRunParameterOptionName, ExtensionResources.TestRunParameterOptionDescription, ArgumentArity.OneOrMore, false)
-            ])
+        : base(extension, ExtensionResources.TestRunParameterOptionDescription, ExtensionResources.TestRunParameterOptionArgumentIsNotParameter)
     {
-    }
-
-    /// <inheritdoc />
-    public override Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
-    {
-        foreach (string argument in arguments)
-        {
-            if (!argument.Contains('='))
-            {
-                return ValidationResult.InvalidTask(string.Format(CultureInfo.CurrentCulture, ExtensionResources.TestRunParameterOptionArgumentIsNotParameter, argument));
-            }
-        }
-
-        return ValidationResult.ValidTask;
     }
 }

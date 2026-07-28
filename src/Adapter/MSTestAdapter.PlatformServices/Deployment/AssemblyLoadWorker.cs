@@ -3,6 +3,7 @@
 
 #if NETFRAMEWORK
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -50,7 +51,9 @@ internal sealed class AssemblyLoadWorker : MarshalByRefObject
         }
         catch (Exception ex)
         {
-            warnings.Add(ex.Message);
+            // Retain the assembly path together with the exception type and full inner-exception
+            // chain, so the underlying reason the dependency graph could not be walked is not lost.
+            warnings.Add(string.Format(CultureInfo.CurrentCulture, Resource.DeploymentDependencyLoadFailed, assemblyPath, ex.GetFormattedExceptionMessage()));
             return Array.Empty<string>(); // Otherwise just return no dependencies.
         }
 
@@ -240,7 +243,9 @@ internal sealed class AssemblyLoadWorker : MarshalByRefObject
         }
         catch (Exception ex)
         {
-            string warning = string.Format(CultureInfo.CurrentCulture, Resource.MissingDeploymentDependency, assemblyString, ex.Message);
+            // Retain the assembly identity together with the exception type and full inner-exception
+            // chain, so the reason the dependency could not be resolved/loaded is not lost.
+            string warning = string.Format(CultureInfo.CurrentCulture, Resource.DeploymentDependencyLoadFailed, assemblyString, ex.GetFormattedExceptionMessage());
             warnings.Add(warning);
             return;
         }

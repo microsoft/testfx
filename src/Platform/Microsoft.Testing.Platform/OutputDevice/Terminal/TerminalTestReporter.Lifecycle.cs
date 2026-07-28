@@ -21,16 +21,27 @@ internal sealed partial class TerminalTestReporter
     }
 
     public void AssemblyRunStarted(string assembly, string? targetFramework, string? architecture, string executionId, string instanceId)
-    {
-        // Each (re-)start registers its instance id as a retry attempt; the first attempt is the normal run. The
-        // in-process host starts a single assembly with a single fixed instance id (one attempt).
-        TestProgressState assemblyRun = GetOrAddAssemblyRun(assembly, targetFramework, architecture, executionId);
-        assemblyRun.NotifyHandshake(instanceId);
+        => AssemblyRunStarted(assembly, targetFramework, architecture, executionId, instanceId, attemptNumber: null);
 
-        // Defensive: even if the orchestrator did not flag the run as a retry up front (e.g. the retry parameter
-        // could not be parsed), a second handshake for the same assembly means a retry is happening. Flip _isRetry
-        // so the per-test "(try N)" annotation and the summary's "(+N retried)" suffix are shown. The in-process
-        // host only ever handshakes once (TryCount stays 1), so this never trips for it.
+    public void AssemblyRunStarted(string assembly, string? targetFramework, string? architecture, string executionId, string instanceId, int attemptNumber)
+        => AssemblyRunStarted(assembly, targetFramework, architecture, executionId, instanceId, (int?)attemptNumber);
+
+    private void AssemblyRunStarted(string assembly, string? targetFramework, string? architecture, string executionId, string instanceId, int? attemptNumber)
+    {
+        TestProgressState assemblyRun = GetOrAddAssemblyRun(assembly, targetFramework, architecture, executionId);
+        if (attemptNumber.HasValue)
+        {
+            assemblyRun.NotifyHandshake(instanceId, attemptNumber.Value);
+        }
+        else
+        {
+            assemblyRun.NotifyHandshake(instanceId);
+        }
+
+        int currentAttemptNumber = assemblyRun.GetAttemptNumber(instanceId);
+
+        // Legacy peers may not identify the retry orchestrator up front. Detect an explicit or inferred attempt
+        // greater than one so their retry annotations and summary remain correct.
         _isRetry |= assemblyRun.TryCount > 1;
 
         // Orchestrator-only: print the per-assembly "Running tests from <assembly>" banner (or "Discovering tests
@@ -43,7 +54,7 @@ internal sealed partial class TerminalTestReporter
                 if (_isRetry)
                 {
                     terminal.SetColor(TerminalColor.DarkGray);
-                    terminal.Append($"({string.Format(CultureInfo.CurrentCulture, TerminalResources.Try, assemblyRun.TryCount)}) ");
+                    terminal.Append($"({string.Format(CultureInfo.CurrentCulture, TerminalResources.Try, currentAttemptNumber)}) ");
                     terminal.ResetColor();
                 }
 

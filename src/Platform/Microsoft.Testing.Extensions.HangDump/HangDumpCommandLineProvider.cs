@@ -51,7 +51,8 @@ internal sealed class HangDumpCommandLineProvider : CommandLineOptionsProviderBa
 
     public HangDumpCommandLineProvider()
         : base(
-            nameof(HangDumpCommandLineProvider),
+            // Stable extension UID. Do not change: it feeds telemetry, --info output, and artifact metadata.
+            "HangDumpCommandLineProvider",
             ExtensionVersion.DefaultSemVer,
             ExtensionResources.HangDumpExtensionDisplayName,
             ExtensionResources.HangDumpExtensionDescription,

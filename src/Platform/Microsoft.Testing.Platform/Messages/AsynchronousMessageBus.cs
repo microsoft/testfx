@@ -86,7 +86,11 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
                     // A consumer that implements the IBlockingDataConsumer marker interface must consume the data
                     // inline (the publisher blocks until consumption completes) instead of going through the
                     // asynchronous background processing loop.
-                    asyncMultiProducerMultiConsumerDataProcessor = consumer is IBlockingDataConsumer
+                    //
+                    // On single-threaded wasm runtimes (browser-wasm / wasi-wasm) there is no thread pool, so the
+                    // AsyncConsumerDataProcessor background loop (started via Task.Run) would never run and the
+                    // drain would hang. Force inline consumption for every consumer in that case.
+                    asyncMultiProducerMultiConsumerDataProcessor = consumer is IBlockingDataConsumer || !RuntimeFeatureHelper.IsMultiThreaded
                         ? new BlockingConsumerDataProcessor(consumer, _testApplicationCancellationTokenSource.CancellationToken)
                         : new AsyncConsumerDataProcessor(consumer, _task, _testApplicationCancellationTokenSource.CancellationToken);
                     _consumerProcessor.Add(consumer, asyncMultiProducerMultiConsumerDataProcessor);

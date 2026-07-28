@@ -1,0 +1,78 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Resources;
+
+namespace Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
+
+internal sealed class ArtifactPostProcessingManager : IArtifactPostProcessingManager
+{
+    private readonly List<Func<IServiceProvider, IArtifactPostProcessor>> _factories = [];
+
+    public void AddArtifactPostProcessor(Func<IServiceProvider, IArtifactPostProcessor> factory)
+        => _factories.Add(factory ?? throw new ArgumentNullException(nameof(factory)));
+
+    public async Task<IReadOnlyList<IArtifactPostProcessor>> BuildAsync(IServiceProvider serviceProvider)
+    {
+        List<IArtifactPostProcessor> processors = [];
+        for (int i = 0; i < _factories.Count; i++)
+        {
+            IArtifactPostProcessor processor = _factories[i](serviceProvider);
+            if (!await processor.IsEnabledAsync().ConfigureAwait(false))
+            {
+                continue;
+            }
+
+            ValidateCapabilities(processor);
+            processors.ValidateUniqueExtension(processor);
+            await processor.TryInitializeAsync().ConfigureAwait(false);
+            processors.Add(processor);
+        }
+
+        return processors;
+    }
+
+    private static void ValidateCapabilities(IArtifactPostProcessor processor)
+    {
+        foreach (string kind in processor.SupportedKinds)
+        {
+            ValidateCapability(processor, kind);
+            if (RoslynString.IsNullOrWhiteSpace(kind))
+            {
+                throw new InvalidOperationException(string.Format(
+                    CultureInfo.CurrentCulture,
+                    PlatformResources.ArtifactPostProcessorCapabilityInvalid,
+                    processor.Uid,
+                    kind));
+            }
+        }
+
+        foreach (string extension in processor.SupportedFileExtensionsFallback)
+        {
+            ValidateCapability(processor, extension);
+            if (RoslynString.IsNullOrWhiteSpace(extension)
+                || !extension.StartsWith(".", StringComparison.Ordinal)
+                || extension != extension.ToLowerInvariant())
+            {
+                throw new InvalidOperationException(string.Format(
+                    CultureInfo.CurrentCulture,
+                    PlatformResources.ArtifactPostProcessorCapabilityInvalid,
+                    processor.Uid,
+                    extension));
+            }
+        }
+    }
+
+    private static void ValidateCapability(IArtifactPostProcessor processor, string capability)
+    {
+        if (capability.Contains(';'))
+        {
+            throw new InvalidOperationException(string.Format(
+                CultureInfo.CurrentCulture,
+                PlatformResources.ArtifactPostProcessorCapabilityContainsSeparator,
+                processor.Uid,
+                capability));
+        }
+    }
+}

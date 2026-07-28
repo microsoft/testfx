@@ -42,31 +42,25 @@ internal sealed class TestInProgressMessagesSerializer : NamedPipeSerializer<Tes
         string? instanceId = null;
         TestInProgressMessage[]? inProgressMessages = [];
 
+        // Inline ReadFields to avoid per-message closure allocation on the hot IPC deserialization path.
         ushort fieldCount = ReadUShort(stream);
-
-        for (int i = 0; i < fieldCount; i++)
+        for (int f = 0; f < fieldCount; f++)
         {
-            int fieldId = ReadUShort(stream);
+            ushort fieldId = ReadUShort(stream);
             int fieldSize = ReadInt(stream);
 
-            switch (fieldId)
+            if (TryReadExecutionScopedField(stream, fieldId, fieldSize, ref executionId, ref instanceId))
             {
-                case TestInProgressMessagesFieldsId.ExecutionId:
-                    executionId = ReadStringValue(stream, fieldSize);
-                    break;
+                continue;
+            }
 
-                case TestInProgressMessagesFieldsId.InstanceId:
-                    instanceId = ReadStringValue(stream, fieldSize);
-                    break;
-
-                case TestInProgressMessagesFieldsId.TestInProgressMessageList:
-                    inProgressMessages = ReadInProgressMessagesPayload(stream);
-                    break;
-
-                default:
-                    // If we don't recognize the field id, skip the payload corresponding to that field
-                    SetPosition(stream, stream.Position + fieldSize);
-                    break;
+            if (fieldId == TestInProgressMessagesFieldsId.TestInProgressMessageList)
+            {
+                inProgressMessages = ReadInProgressMessagesPayload(stream);
+            }
+            else
+            {
+                SetPosition(stream, stream.Position + fieldSize);
             }
         }
 
@@ -82,11 +76,11 @@ internal sealed class TestInProgressMessagesSerializer : NamedPipeSerializer<Tes
             string? uid = null;
             string? displayName = null;
 
-            int fieldCount = ReadUShort(stream);
-
-            for (int j = 0; j < fieldCount; j++)
+            // Inline ReadFields to avoid per-message closure allocation on the hot IPC deserialization path.
+            ushort fieldCount = ReadUShort(stream);
+            for (int f = 0; f < fieldCount; f++)
             {
-                int fieldId = ReadUShort(stream);
+                ushort fieldId = ReadUShort(stream);
                 int fieldSize = ReadInt(stream);
 
                 switch (fieldId)
@@ -113,47 +107,23 @@ internal sealed class TestInProgressMessagesSerializer : NamedPipeSerializer<Tes
 
     protected override void SerializeCore(TestInProgressMessages objectToSerialize, Stream stream)
     {
-        DebugAssert(stream.CanSeek, "We expect a seekable stream.");
+        WriteExecutionScopedHeader(
+            stream,
+            objectToSerialize.ExecutionId,
+            objectToSerialize.InstanceId,
+            (ushort)(IsNullOrEmpty(objectToSerialize.InProgressMessages) ? 0 : 1));
 
-        WriteUShort(stream, GetFieldCount(objectToSerialize));
-
-        WriteField(stream, TestInProgressMessagesFieldsId.ExecutionId, objectToSerialize.ExecutionId);
-        WriteField(stream, TestInProgressMessagesFieldsId.InstanceId, objectToSerialize.InstanceId);
         WriteInProgressMessagesPayload(stream, objectToSerialize.InProgressMessages);
     }
 
     private static void WriteInProgressMessagesPayload(Stream stream, TestInProgressMessage[]? inProgressMessageList)
-    {
-        if (inProgressMessageList is null || inProgressMessageList.Length == 0)
+        => WriteListPayload(stream, TestInProgressMessagesFieldsId.TestInProgressMessageList, inProgressMessageList, static (s, inProgressMessage) =>
         {
-            return;
-        }
+            WriteUShort(s, GetFieldCount(inProgressMessage));
 
-        WriteUShort(stream, TestInProgressMessagesFieldsId.TestInProgressMessageList);
-
-        // We will reserve an int (4 bytes)
-        // so that we fill the size later, once we write the payload
-        WriteInt(stream, 0);
-
-        long before = stream.Position;
-        WriteInt(stream, inProgressMessageList.Length);
-        foreach (TestInProgressMessage inProgressMessage in inProgressMessageList)
-        {
-            WriteUShort(stream, GetFieldCount(inProgressMessage));
-
-            WriteField(stream, TestInProgressMessageFieldsId.Uid, inProgressMessage.Uid);
-            WriteField(stream, TestInProgressMessageFieldsId.DisplayName, inProgressMessage.DisplayName);
-        }
-
-        // NOTE: We are able to seek only if we are using a MemoryStream
-        // thus, the seek operation is fast as we are only changing the value of a property
-        WriteAtPosition(stream, (int)(stream.Position - before), before - sizeof(int));
-    }
-
-    private static ushort GetFieldCount(TestInProgressMessages inProgressMessages) =>
-        (ushort)((inProgressMessages.ExecutionId is null ? 0 : 1) +
-        (inProgressMessages.InstanceId is null ? 0 : 1) +
-        (IsNullOrEmpty(inProgressMessages.InProgressMessages) ? 0 : 1));
+            WriteField(s, TestInProgressMessageFieldsId.Uid, inProgressMessage.Uid);
+            WriteField(s, TestInProgressMessageFieldsId.DisplayName, inProgressMessage.DisplayName);
+        });
 
     private static ushort GetFieldCount(TestInProgressMessage inProgressMessage) =>
         (ushort)((inProgressMessage.Uid is null ? 0 : 1) +

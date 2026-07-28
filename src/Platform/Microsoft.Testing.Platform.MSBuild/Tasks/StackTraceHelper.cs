@@ -7,6 +7,8 @@ namespace Microsoft.Testing.Platform.MSBuild;
 
 internal static class StackTraceHelper
 {
+    private static readonly string[] NewLineSeparator = [Environment.NewLine];
+
     private static Regex? s_regex;
 
     internal static bool TryFindLocationFromStackFrame(string? errorStackTrace, [NotNullWhen(true)] out string? file, out int lineNumber, out string? place)
@@ -20,16 +22,17 @@ internal static class StackTraceHelper
             return false;
         }
 
-        string[] stackFrames = Regex.Split(errorStackTrace, Environment.NewLine);
+        string[] stackFrames = errorStackTrace.Split(NewLineSeparator, StringSplitOptions.None);
         if (stackFrames.Length == 0)
         {
             return false;
         }
 
         // Take 20 frames at max, so we don't search 1000 items in a long stack trace.
-        foreach (string? stackFrame in stackFrames.Take(20))
+        int limit = Math.Min(stackFrames.Length, 20);
+        for (int i = 0; i < limit; i++)
         {
-            if (TryGetStackFrameLocation(stackFrame, out lineNumber, out file, out place))
+            if (TryGetStackFrameLocation(stackFrames[i], out lineNumber, out file, out place))
             {
                 return true;
             }

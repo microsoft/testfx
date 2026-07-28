@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.ObjectModel;
+
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
@@ -10,6 +12,14 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 public sealed class RetryResult
 {
     private readonly List<TestResult[]> _testResults = [];
+    private ReadOnlyCollection<TestResult[]>? _testResultsView;
+
+    /// <summary>
+    /// Gets the test results of all retry attempts, in the order they were added.
+    /// Each element corresponds to a single attempt and holds the test results produced by that attempt.
+    /// </summary>
+    public IReadOnlyList<TestResult[]> AllResults
+        => _testResultsView ??= new ReadOnlyCollection<TestResult[]>(_testResults);
 
     /// <summary>
     /// Adds a set of test results to the retry result.

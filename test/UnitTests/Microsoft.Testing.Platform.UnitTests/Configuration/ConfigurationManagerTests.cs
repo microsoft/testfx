@@ -45,6 +45,12 @@ public sealed class ConfigurationManagerTests
         yield return ("{\"platformOptions\": [1,2] }", "platformOptions:0", "1");
         yield return ("{\"platformOptions\": [1,2] }", "platformOptions:1", "2");
         yield return ("{\"platformOptions\": [1,2] }", "platformOptions", "[1,2]");
+        yield return ("{// Configure crash dumps\n\"platformOptions\": {\"Troubleshooting\": {\"CrashDump\": {\"Enable\": true}}}}", "platformOptions:Troubleshooting:CrashDump:Enable", "True");
+        yield return ("{// Comment containing \0 a null character\n\"platformOptions\": {\"Troubleshooting\": {\"CrashDump\": {\"Enable\": true}}}}", "platformOptions:Troubleshooting:CrashDump:Enable", "True");
+        yield return ("{\"platformOptions\": {/* Configure crash dumps */\"Troubleshooting\": {\"CrashDump\": {\"Enable\": true}}}}", "platformOptions:Troubleshooting:CrashDump:Enable", "True");
+        yield return ("{\"platformOptions\": {/* Comment containing \0 a null character */\"Troubleshooting\": {\"CrashDump\": {\"Enable\": true}}}}", "platformOptions:Troubleshooting:CrashDump:Enable", "True");
+        yield return ("{\"platformOptions\": {\"Count\": 1 /* Number of retries */}}", "platformOptions:Count", "1");
+        yield return ("{\"platformOptions\": {\"Url\": \"https://example.com\"}}", "platformOptions:Url", "https://example.com");
         yield return ("{\"platformOptions\": { \"Array\" : [ {\"Key\" : \"Value\"} , {\"Key\" : 3} ] } }", "platformOptions:Array:0", null);
         yield return ("{\"platformOptions\": { \"Array\" : [ {\"Key\" : \"Value\"} , {\"Key\" : 3} ] } }", "platformOptions:Array:0:Key", "Value");
         yield return ("{\"platformOptions\": { \"Array\" : [ {\"Key\" : \"Value\"} , {\"Key\" : 3} ] } }", "platformOptions:Array:1:Key", "3");

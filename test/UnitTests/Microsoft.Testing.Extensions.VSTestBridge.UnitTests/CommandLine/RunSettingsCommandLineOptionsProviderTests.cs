@@ -54,6 +54,26 @@ public sealed class RunSettingsCommandLineOptionsProviderTests
     }
 
     [TestMethod]
+    public async Task RunSettingsOption_WhenFileCannotBeReadDueToPermissions_IsNotValid()
+    {
+        // Arrange
+        const string filePath = "file";
+        var fileSystem = new Mock<IFileSystem>(MockBehavior.Strict);
+        fileSystem.Setup(fs => fs.ExistFile(filePath)).Returns(true);
+        fileSystem.Setup(fs => fs.NewFileStream(filePath, FileMode.Open, FileAccess.Read)).Throws(new UnauthorizedAccessException());
+
+        var provider = new RunSettingsCommandLineOptionsProvider(new TestExtension(), fileSystem.Object);
+        CommandLineOption option = provider.GetCommandLineOptions().Single();
+
+        // Act
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [filePath]);
+
+        // Assert
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RunsettingsFileCannotBeRead, filePath), result.ErrorMessage);
+    }
+
+    [TestMethod]
     public async Task RunSettingsOption_WhenFileExistsAndCanBeOpen_IsValid()
     {
         // Arrange

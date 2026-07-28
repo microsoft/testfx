@@ -7,7 +7,7 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <PackageId>MSTest.Sdk</PackageId>
-    <PackageTags>MSTest TestFramework TestAdapter VisualStudio Unittest MSTestV2 Microsoft</PackageTags>
+    <PackageTags>$(CommonPackageTags) MSTest TestFramework TestAdapter VisualStudio MSTestV2 SDK MSBuild</PackageTags>
     <PackageDescription>
       MSTest is Microsoft supported Test Framework.
 

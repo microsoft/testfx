@@ -97,6 +97,7 @@ internal static class RuntimeRegistrationEmitter
         sb.AppendLine("var types = new Type[testClasses.Count];");
         sb.AppendLine("var testMethods = new Dictionary<Type, MethodInfo[]>(testClasses.Count);");
         sb.AppendLine("var typeAttributes = new Dictionary<Type, Attribute[]>(testClasses.Count);");
+        sb.AppendLine("var methodAttributes = new Dictionary<MethodInfo, Attribute[]>();");
         sb.AppendLine("var methodInvokers = new Dictionary<MethodInfo, Func<object?, object?[]?, object?>>();");
         sb.AppendLine($"var constructorInvokers = new Dictionary<Type, {ConstructorInvokerInfoFullName}[]>(testClasses.Count);");
         sb.AppendLine("var propertySetters = new Dictionary<PropertyInfo, Action<object?, object?>>();");
@@ -107,7 +108,11 @@ internal static class RuntimeRegistrationEmitter
             sb.AppendLine($"{RegistryNamespace}.TestClassReflectionInfo testClass = testClasses[classIndex];");
             sb.AppendLine("Type type = testClass.Type;");
             sb.AppendLine("types[classIndex] = type;");
-            sb.AppendLine("typeAttributes[type] = testClass.Attributes;");
+            using (sb.Block("if (testClass.AreAttributesComplete)"))
+            {
+                sb.AppendLine("typeAttributes[type] = testClass.Attributes;");
+            }
+
             sb.AppendLine();
 
             sb.AppendLine($"var constructors = new {ConstructorInvokerInfoFullName}[testClass.Constructors.Count];");
@@ -132,9 +137,26 @@ internal static class RuntimeRegistrationEmitter
                 using (sb.Block("if (methodInfo is not null)"))
                 {
                     sb.AppendLine("methodInvokers[methodInfo] = method.Invoke;");
+                    using (sb.Block("if (method.AreAttributesComplete)"))
+                    {
+                        sb.AppendLine("methodAttributes[methodInfo] = method.Attributes;");
+                    }
+
                     using (sb.Block("if (method.IsTestMethod)"))
                     {
                         sb.AppendLine("testMethodRoots.Add(methodInfo);");
+                    }
+                }
+
+                // Register the source-generated DynamicData accessors so the runtime reads dynamic data
+                // without reflecting over the declaring type (trim / Native AOT safe).
+                using (sb.Block("for (int sourceIndex = 0; sourceIndex < method.DynamicDataSources.Count; sourceIndex++)"))
+                {
+                    sb.AppendLine($"{RegistryNamespace}.DynamicDataSourceReflectionInfo dynamicDataSource = method.DynamicDataSources[sourceIndex];");
+                    sb.AppendLine($"{Constants.DynamicDataSourceResolverFullName}.RegisterDataProvider(dynamicDataSource.DeclaringType, dynamicDataSource.SourceName, dynamicDataSource.SourceType, dynamicDataSource.GetData);");
+                    using (sb.Block("if (dynamicDataSource.DisplayNameDeclaringType is not null && dynamicDataSource.DisplayNameMethodName is not null && dynamicDataSource.GetDisplayName is not null)"))
+                    {
+                        sb.AppendLine($"{Constants.DynamicDataSourceResolverFullName}.RegisterDisplayNameProvider(dynamicDataSource.DisplayNameDeclaringType, dynamicDataSource.DisplayNameMethodName, dynamicDataSource.GetDisplayName);");
                     }
                 }
             }
@@ -169,7 +191,7 @@ internal static class RuntimeRegistrationEmitter
         }
 
         sb.AppendLine();
-        sb.AppendLine($"{Constants.ReflectionMetadataHookFullName}.Register(assembly, types, testMethods, typeAttributes, assemblyAttributes, methodInvokers, constructorInvokers, propertySetters);");
+        sb.AppendLine($"{Constants.ReflectionMetadataHookFullName}.Register(assembly, types, testMethods, typeAttributes, assemblyAttributes, methodAttributes, methodInvokers, constructorInvokers, propertySetters);");
     }
 
     private static void EmitResolveMethodHelper(IndentedStringBuilder sb)

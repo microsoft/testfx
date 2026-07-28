@@ -219,8 +219,8 @@ public sealed partial class Assert
 #if NETCOREAPP3_1_OR_GREATER
     private static void HasCount<T>(string assertionName, int expected, ReadOnlySpan<T> collection, string? message, string collectionExpression)
     {
-        // assertionName is always "HasCount" here (there are no span/memory IsEmpty overloads that call this);
-        // use a cached prefixed string instead of allocating "Assert." + assertionName on every call.
+        // assertionName is one of a small fixed set ("HasCount", "IsEmpty"); use a cached prefixed
+        // string instead of allocating "Assert." + assertionName on every call.
         TelemetryCollector.TrackAssertionCall(GetTrackedAssertionName(assertionName));
 
         int actualCount = collection.Length;

@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
@@ -59,7 +60,11 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
             {
                 RoslynDebug.Assert(PushOnlyProtocol is not null);
 
-                bool isValidProtocol = await PushOnlyProtocol.IsCompatibleProtocolAsync(hostType).ConfigureAwait(false);
+                IReadOnlyDictionary<byte, string>? additionalHandshakeProperties =
+                    SupportsArtifactPostProcessing(hostType)
+                        ? ArtifactPostProcessingHandshakeProperties.Create(ServiceProvider.GetServicesInternal<IArtifactPostProcessor>())
+                        : null;
+                bool isValidProtocol = await PushOnlyProtocol.IsCompatibleProtocolAsync(hostType, additionalHandshakeProperties).ConfigureAwait(false);
 
                 if (isValidProtocol && PushOnlyProtocol.IsServerControlChannelSupported)
                 {
@@ -116,6 +121,11 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
 
         return exitCode;
     }
+
+    internal static bool SupportsArtifactPostProcessing(string hostType)
+        => hostType is HandshakeMessageHostTypes.TestHost
+            or HandshakeMessageHostTypes.ServerTestHost
+            or HandshakeMessageHostTypes.TestHostController;
 
     protected virtual string HostType
         => this switch
@@ -197,6 +207,12 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
     protected static async Task ExecuteRequestAsync(ProxyOutputDevice outputDevice, ITestSessionContext testSessionInfo,
         ServiceProvider serviceProvider, BaseMessageBus baseMessageBus, ITestFramework testFramework, TestHost.ClientInfo client)
     {
+        // Reset the shared, application-scoped coverage accumulator at the start of every request here, in the
+        // common host/request lifecycle, so it happens for all output modes (terminal, pipe, server, custom)
+        // rather than only when the terminal device renders. Without this a prior session's coverage rows and
+        // thresholds would be reprinted and its threshold-failure verdict could poison a later session.
+        serviceProvider.GetRequiredService<TestCoverageResult>().Reset();
+
         await DisplayBeforeSessionStartAsync(outputDevice, testSessionInfo).ConfigureAwait(false);
         CancellationToken cancellationToken = testSessionInfo.CancellationToken;
         try
@@ -408,7 +424,7 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
                     if (!alreadyDisposed.Contains(dataConsumer))
                     {
                         await DisposeHelper.DisposeAsync(dataConsumer).ConfigureAwait(false);
-                        alreadyDisposed.Add(service);
+                        alreadyDisposed.Add(dataConsumer);
                     }
                 }
             }

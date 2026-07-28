@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="AnnotationTitle">
         <source>Test failed: {0}</source>
-        <target state="new">Test failed: {0}</target>
+        <target state="translated">Test selhal: {0}</target>
         <note>{0} is the fully qualified test name.</note>
       </trans-unit>
       <trans-unit id="AnnotationsOptionDescription">
@@ -14,17 +14,102 @@
       </trans-unit>
       <trans-unit id="Description">
         <source>GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</source>
-        <target state="new">GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</target>
+        <target state="translated">Generátor sestav GitHub Actions pro odesílání příkazů pracovního postupu, aby testovací běhy v GitHub Actions poskytovaly plnohodnotné prostředí.</target>
         <note />
       </trans-unit>
       <trans-unit id="DisplayName">
         <source>GitHub Actions report generator</source>
-        <target state="new">GitHub Actions report generator</target>
+        <target state="translated">Generátor sestav GitHub Actions</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeAnnotationTitle">
+        <source>Test run failed (exit code {0}: {1})</source>
+        <target state="translated">Spuštění testů se nepovedlo (ukončovací kód {0}: {1})</target>
+        <note>{0} is the numeric exit code, {1} is the exit code name (not localized).</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeCallout">
+        <source>Exit code {0} — {1}: {2}</source>
+        <target state="translated">Ukončovací kód {0} – {1}: {2}</target>
+        <note>{0} is the numeric exit code, {1} is the exit code name (not localized), {2} is the reason. Rendered as a callout in the job summary.</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonAtLeastOneTestFailed">
+        <source>At least one test failed.</source>
+        <target state="translated">Nejméně jeden test se nepovedl.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonCoverageThresholdFailed">
+        <source>One or more code coverage thresholds were not met.</source>
+        <target state="translated">Nebylo dosaženo minimálně jedné prahové hodnoty pokrytí kódu.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonDependentProcessExited">
+        <source>A dependent process exited unexpectedly.</source>
+        <target state="translated">Závislý proces se neočekávaně ukončil.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonGenericFailure">
+        <source>The test run failed.</source>
+        <target state="translated">Spuštění testů se nepovedlo.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonIncompatibleProtocolVersion">
+        <source>An incompatible protocol version was negotiated.</source>
+        <target state="translated">Vyjednala se nekompatibilní verze protokolu.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonInvalidCommandLine">
+        <source>The command line arguments are invalid.</source>
+        <target state="translated">Argumenty příkazového řádku nejsou platné.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonInvalidPlatformSetup">
+        <source>The test platform setup is invalid.</source>
+        <target state="translated">Nastavení testovací platformy není platné.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonMinimumExpectedTestsPolicyViolation">
+        <source>Fewer tests ran than required by --minimum-expected-tests.</source>
+        <target state="translated">Spustilo se méně testů, než vyžaduje parametr --minimum-expected-tests.</target>
+        <note>{Locked="--minimum-expected-tests"}</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonSuccess">
+        <source>The test run succeeded.</source>
+        <target state="translated">Spuštění testů proběhlo úspěšně.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestAdapterTestSessionFailure">
+        <source>The test adapter reported a test session failure.</source>
+        <target state="translated">Testovací adaptér oznámil selhání testovací relace.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestExecutionStoppedForMaxFailedTests">
+        <source>Test execution stopped after reaching the limit set by --maximum-failed-tests.</source>
+        <target state="translated">Spouštění testů se zastavilo po dosažení limitu nastaveného parametrem --maximum-failed-tests.</target>
+        <note>{Locked="--maximum-failed-tests"}</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestHostProcessExitedNonGracefully">
+        <source>The test host process exited non-gracefully.</source>
+        <target state="translated">Proces hostitele testů se ukončil nestandardně.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestSessionAborted">
+        <source>The test session was aborted.</source>
+        <target state="translated">Testovací relace byla přerušená.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonUnknown">
+        <source>The test run reported a non-success exit code.</source>
+        <target state="translated">Spuštění testů vrátilo neúspěšný ukončovací kód.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonZeroTests">
+        <source>No tests were found to run. This often means a test filter matched nothing.</source>
+        <target state="translated">Nenašly se žádné testy ke spuštění. Často to znamená, že filtru testů nic nevyhovovalo.</target>
         <note />
       </trans-unit>
       <trans-unit id="GroupTitle">
         <source>Tests: {0} ({1})</source>
-        <target state="new">Tests: {0} ({1})</target>
+        <target state="translated">Testy: {0} ({1})</target>
         <note>{0} is the assembly name, {1} is the target framework moniker.</note>
       </trans-unit>
       <trans-unit id="GroupsOptionDescription">
@@ -34,7 +119,7 @@
       </trans-unit>
       <trans-unit id="InvalidOnOffValue">
         <source>Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
-        <target state="new">Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</target>
+        <target state="translated">Neplatná hodnota {0}. Platné hodnoty jsou on (nebo true, enable, 1) nebo off (nebo false, disable, 0).</target>
         <note>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
       </trans-unit>
       <trans-unit id="InvalidSlowTestThreshold">
@@ -44,27 +129,27 @@
       </trans-unit>
       <trans-unit id="NoFailureMessageFallback">
         <source>The test failed without providing a failure message.</source>
-        <target state="new">The test failed without providing a failure message.</target>
+        <target state="translated">Test neproběhl úspěšně bez poskytnutí zprávy o chybě.</target>
         <note />
       </trans-unit>
       <trans-unit id="NoSkipReasonFallback">
         <source>The test was skipped without providing a reason.</source>
-        <target state="new">The test was skipped without providing a reason.</target>
+        <target state="translated">Test byl přeskočen bez poskytnutí důvodu.</target>
         <note />
       </trans-unit>
       <trans-unit id="OptionDescription">
         <source>Enable GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</source>
-        <target state="new">Enable GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</target>
+        <target state="translated">Povolte generátor sestav GitHub Actions pro odesílání příkazů pracovního postupu, aby testovací běhy v GitHub Actions poskytovaly plnohodnotné prostředí.</target>
         <note />
       </trans-unit>
       <trans-unit id="SkippedAnnotationTitle">
         <source>Test skipped: {0}</source>
-        <target state="new">Test skipped: {0}</target>
+        <target state="translated">Test byl přeskočen: {0}</target>
         <note>{0} is the fully qualified test name.</note>
       </trans-unit>
       <trans-unit id="SlowTestNoticeTitle">
         <source>Slow test: {0}</source>
-        <target state="new">Slow test: {0}</target>
+        <target state="translated">Pomalý test: {0}</target>
         <note>{0} is the fully qualified test name.</note>
       </trans-unit>
       <trans-unit id="SlowTestNoticesOptionDescription">
@@ -74,7 +159,7 @@
       </trans-unit>
       <trans-unit id="SlowTestStillRunning">
         <source>{0} still running after {1}s</source>
-        <target state="new">{0} still running after {1}s</target>
+        <target state="translated">{0} po uplynutí {1} s stále běží</target>
         <note>{0} is the fully qualified test name, {1} is the elapsed seconds.</note>
       </trans-unit>
       <trans-unit id="SlowTestThresholdOptionDescription">
@@ -89,7 +174,7 @@
       </trans-unit>
       <trans-unit id="StepSummaryWriteFailedWarning">
         <source>Failed to write the GitHub Actions job summary to '{0}': {1}</source>
-        <target state="new">Failed to write the GitHub Actions job summary to '{0}': {1}</target>
+        <target state="translated">Zápis souhrnu úlohy GitHub Actions do {0} se nezdařil: {1}</target>
         <note>{0} is the file path, {1} is the error message.</note>
       </trans-unit>
     </body>

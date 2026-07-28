@@ -1,1 +1,2 @@
 #nullable enable
+[TPEXP]static Microsoft.Testing.Extensions.AzureFoundry.TestApplicationBuilderExtensions.AddAzureOpenAIChatClientProvider(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! testApplicationBuilder, Azure.Core.TokenCredential! credential) -> void

@@ -20,7 +20,11 @@ namespace Microsoft.Testing.Platform.Hosts;
 [StackTraceHidden]
 internal sealed partial class ServerTestHost : CommonHost, IServerTestHost, IDisposable, IOutputDeviceDataProducer
 {
+    // The value is the build-time version stamp (e.g. "2.4.0-dev" locally vs "2.4.0-ci" on CI), so it is an
+    // implementation detail rather than a stable API surface and must not be tracked by the internal API analyzers.
+#pragma warning disable RS0051 // Add internal types and members to the declared API
     public const string ProtocolVersion = PlatformVersion.Version;
+#pragma warning restore RS0051 // Add internal types and members to the declared API
     private readonly Func<TestFrameworkBuilderData, Task<ITestFramework>> _buildTestFrameworkAsync;
 
     private readonly IMessageHandlerFactory _messageHandlerFactory;

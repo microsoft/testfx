@@ -112,7 +112,8 @@ internal sealed partial class TypeCache
             : null;
     }
 
-    internal static ITestFilter InstantiateTestFilter(Type filterType)
+    internal static ITestFilter InstantiateTestFilter(
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] Type filterType)
     {
         if (filterType.IsGenericType)
         {

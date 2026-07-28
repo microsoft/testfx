@@ -47,6 +47,21 @@ O tipo declarando esses métodos também deve respeitar as seguintes regras:
         <target state="translated">Os métodos AssemblyCleanup devem ter um layout válido</target>
         <note>{Locked="AssemblyCleanup"}</note>
       </trans-unit>
+      <trans-unit id="AssemblyFixtureProviderNotSupportedWithNativeAotDescription">
+        <source>'[AssemblyFixtureProvider]' discovery relies on walking the runtime assembly reference graph, which is not supported when the runtime cannot generate dynamic code (for example under Native AOT or Blazor WebAssembly AOT). The attribute is ignored in such builds, so the provided assembly initialize and cleanup methods will not run. Declare the '[AssemblyInitialize]' and '[AssemblyCleanup]' methods directly in the test assembly instead.</source>
+        <target state="translated">A descoberta de ''[AssemblyFixtureProvider]'' depende de percorrer o grafo de referências de assembly do runtime, o que não tem suporte quando o runtime não consegue gerar código dinâmico (por exemplo, no Native AOT ou no Blazor WebAssembly AOT). O atributo é ignorado nessas compilações, então os métodos de inicialização e limpeza do assembly fornecidos não serão executados. Declare os métodos ''[AssemblyInitialize]'' e ''[AssemblyCleanup]'' diretamente no assembly de teste.</target>
+        <note>{Locked="[AssemblyFixtureProvider]"}{Locked="[AssemblyInitialize]"}{Locked="[AssemblyCleanup]"}{Locked="Native AOT"}{Locked="Blazor WebAssembly AOT"}</note>
+      </trans-unit>
+      <trans-unit id="AssemblyFixtureProviderNotSupportedWithNativeAotMessageFormat">
+        <source>'[AssemblyFixtureProvider]' is not supported with ahead-of-time compilation (such as Native AOT or Blazor WebAssembly AOT) and will be ignored at run time</source>
+        <target state="translated">''[AssemblyFixtureProvider]'' não tem suporte com compilação antecipada (como Native AOT ou Blazor WebAssembly AOT) e será ignorado no runtime</target>
+        <note>{Locked="[AssemblyFixtureProvider]"}{Locked="Native AOT"}{Locked="Blazor WebAssembly AOT"}</note>
+      </trans-unit>
+      <trans-unit id="AssemblyFixtureProviderNotSupportedWithNativeAotTitle">
+        <source>'[AssemblyFixtureProvider]' is not supported with ahead-of-time compilation</source>
+        <target state="translated">''[AssemblyFixtureProvider]'' não tem suporte com compilação antecipada</target>
+        <note>{Locked="[AssemblyFixtureProvider]"}</note>
+      </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidDescription">
         <source>Methods marked with '[AssemblyInitialize]' should follow the following layout to be valid:
 -it can't be declared on a generic class
@@ -294,6 +309,36 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
         <source>Use 'Assert' instead of 'CollectionAssert'</source>
         <target state="translated">Usar 'Assert' em vez de 'CollectionAssert'</target>
         <note>{Locked="CollectionAssert"}{Locked="Assert"}</note>
+      </trans-unit>
+      <trans-unit id="CultureMutationUnderParallelizationDescription">
+        <source>'CultureInfo.DefaultThreadCurrentCulture' and 'DefaultThreadCurrentUICulture' set the default culture for the whole process, so every concurrently running test observes the change and formatting or parsing can be corrupted under in-assembly parallelization. The per-thread and ambient forms are intentionally not flagged: on modern .NET the 'Thread.CurrentThread.CurrentCulture' / 'CurrentUICulture' and 'CultureInfo.CurrentCulture' / 'CurrentUICulture' setters all assign an 'AsyncLocal'-backed value that flows with the execution context, so they do not corrupt sibling tests or leak onto later-pooled threads. Because the flagged setters are process-wide, restoring the previous value in a 'finally' does not help - concurrently running tests still observe the changed culture for the duration of the mutation; declare '[DoNotParallelize]' on the test, or avoid mutating process-wide culture, instead.</source>
+        <target state="new">'CultureInfo.DefaultThreadCurrentCulture' and 'DefaultThreadCurrentUICulture' set the default culture for the whole process, so every concurrently running test observes the change and formatting or parsing can be corrupted under in-assembly parallelization. The per-thread and ambient forms are intentionally not flagged: on modern .NET the 'Thread.CurrentThread.CurrentCulture' / 'CurrentUICulture' and 'CultureInfo.CurrentCulture' / 'CurrentUICulture' setters all assign an 'AsyncLocal'-backed value that flows with the execution context, so they do not corrupt sibling tests or leak onto later-pooled threads. Because the flagged setters are process-wide, restoring the previous value in a 'finally' does not help - concurrently running tests still observe the changed culture for the duration of the mutation; declare '[DoNotParallelize]' on the test, or avoid mutating process-wide culture, instead.</target>
+        <note>{Locked="CultureInfo.DefaultThreadCurrentCulture"}{Locked="DefaultThreadCurrentUICulture"}{Locked="Thread.CurrentThread.CurrentCulture"}{Locked="CurrentUICulture"}{Locked="CultureInfo.CurrentCulture"}{Locked="AsyncLocal"}{Locked="[DoNotParallelize]"}</note>
+      </trans-unit>
+      <trans-unit id="CultureMutationUnderParallelizationMessageFormat">
+        <source>'{0}' sets the default culture for the whole process, so every concurrently running test observes the change, which can corrupt formatting and parsing in tests running in parallel; avoid mutating it in a parallelized test suite, or declare '[DoNotParallelize]'</source>
+        <target state="new">'{0}' sets the default culture for the whole process, so every concurrently running test observes the change, which can corrupt formatting and parsing in tests running in parallel; avoid mutating it in a parallelized test suite, or declare '[DoNotParallelize]'</target>
+        <note>{0} is the mutated API (for example 'CultureInfo.DefaultThreadCurrentCulture'). {Locked="[DoNotParallelize]"}</note>
+      </trans-unit>
+      <trans-unit id="CultureMutationUnderParallelizationTitle">
+        <source>Avoid mutating process-wide culture in a parallelized test</source>
+        <target state="new">Avoid mutating process-wide culture in a parallelized test</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CurrentDirectoryMutationUnderParallelizationDescription">
+        <source>The current directory is process-global on every operating system and, unlike culture, has no thread-scoped or async-scoped equivalent. A test that changes it corrupts the working directory of every test running concurrently, and relative paths resolved elsewhere in the suite silently point at the wrong location. A '[ResourceLock]' serializes the contending tests and makes the mutation safe, but it remains a design smell in a parallel suite: prefer passing absolute paths so the current directory never needs to change.</source>
+        <target state="new">The current directory is process-global on every operating system and, unlike culture, has no thread-scoped or async-scoped equivalent. A test that changes it corrupts the working directory of every test running concurrently, and relative paths resolved elsewhere in the suite silently point at the wrong location. A '[ResourceLock]' serializes the contending tests and makes the mutation safe, but it remains a design smell in a parallel suite: prefer passing absolute paths so the current directory never needs to change.</target>
+        <note>{Locked="[ResourceLock]"}</note>
+      </trans-unit>
+      <trans-unit id="CurrentDirectoryMutationUnderParallelizationMessageFormat">
+        <source>'{0}' changes the process-global current directory, which has no per-thread equivalent and is observed by every concurrently running test; avoid mutating it in a parallelized test suite (declare '[ResourceLock(WellKnownResources.CurrentDirectory)]' to at least coordinate, or '[DoNotParallelize]')</source>
+        <target state="new">'{0}' changes the process-global current directory, which has no per-thread equivalent and is observed by every concurrently running test; avoid mutating it in a parallelized test suite (declare '[ResourceLock(WellKnownResources.CurrentDirectory)]' to at least coordinate, or '[DoNotParallelize]')</target>
+        <note>{0} is the mutated API (for example 'Directory.SetCurrentDirectory'). {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
+      </trans-unit>
+      <trans-unit id="CurrentDirectoryMutationUnderParallelizationTitle">
+        <source>Avoid changing the current directory in a parallelized test</source>
+        <target state="new">Avoid changing the current directory in a parallelized test</target>
+        <note />
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidDescription">
         <source>The members referenced by a '[MemberCondition]' attribute must exist on the referenced type, be 'public static', return 'bool', and (for methods) be parameterless. The attribute throws at runtime when these rules are violated; this analyzer surfaces the same problems at build time so typos and refactors do not silently break test gating.</source>
@@ -563,21 +608,21 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[GlobalTestInitialize]' or '[GlobalTestCleanup]' should follow the following layout to be valid:
--it can't be declared on a generic class
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should take one parameter of type 'TestContext'
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">Os métodos marcados com ‘[GlobalTestInitialize]’ ou ‘[GlobalTestCleanup]’ devem seguir o seguinte layout para serem válidos:
+-não podem ser declarados em uma classe genérica
+-devem ser ‘public’
+-devem ser ‘static’
+-não devem ser ‘async void’
+-não devem ser um método especial (finalizador, operador...).
+-não devem ser genéricos
+-devem usar um parâmetro do tipo ‘TestContext’
+-o tipo de retorno deve ser ‘void’, ‘Task’ ou ‘ValueTask’
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public'
--The class should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+O tipo que declara esses métodos também deve respeitar as seguintes regras:
+-O tipo deve ser uma classe
+-A classe deve ser ‘public’
+-A classe deve ser marcada com ‘[TestClass]’ (ou um atributo derivado)
+-a classe não deve ser genérica.</target>
         <note>{Locked="[GlobalTestInitialize]"}{Locked="[GlobalTestCleanup]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="GlobalTestFixtureShouldBeValidMessageFormat">
@@ -644,6 +689,21 @@ The type declaring these methods should also respect the following rules:
         <source>Prefer async assertion methods</source>
         <target state="translated">Preferir métodos de asserção async</target>
         <note>{Locked="async"}</note>
+      </trans-unit>
+      <trans-unit id="PreferConstantForResourceLockDescription">
+        <source>'[ResourceLock]' matches tests by exact string equality of the resource key. A bare string literal fails open: a typo produces a different key, so conflicting tests are no longer serialized and race silently instead of failing with an error. Referencing a shared constant makes typos a compile error and lets the compiler enforce that every test contending on the same resource uses the same key.</source>
+        <target state="new">'[ResourceLock]' matches tests by exact string equality of the resource key. A bare string literal fails open: a typo produces a different key, so conflicting tests are no longer serialized and race silently instead of failing with an error. Referencing a shared constant makes typos a compile error and lets the compiler enforce that every test contending on the same resource uses the same key.</target>
+        <note>{Locked="[ResourceLock]"}</note>
+      </trans-unit>
+      <trans-unit id="PreferConstantForResourceLockMessageFormat">
+        <source>The '[ResourceLock]' resource key '{0}' is a bare string literal; reference a shared constant (such as a 'WellKnownResources' member or your own 'const') so that typos do not silently produce a different, unshared key</source>
+        <target state="new">The '[ResourceLock]' resource key '{0}' is a bare string literal; reference a shared constant (such as a 'WellKnownResources' member or your own 'const') so that typos do not silently produce a different, unshared key</target>
+        <note>{0} is the resource key value. {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="const"}</note>
+      </trans-unit>
+      <trans-unit id="PreferConstantForResourceLockTitle">
+        <source>Prefer a named constant for the '[ResourceLock]' resource key</source>
+        <target state="new">Prefer a named constant for the '[ResourceLock]' resource key</target>
+        <note>{Locked="[ResourceLock]"}</note>
       </trans-unit>
       <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerDescription">
         <source>'DataTestMethodAttribute' is obsolete and provides no additional functionality over 'TestMethodAttribute'. Use 'TestMethodAttribute' for all test methods, including parameterized tests.</source>
@@ -755,6 +815,21 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">Os tipos públicos devem ser classes de teste</target>
         <note />
       </trans-unit>
+      <trans-unit id="SharedFileSystemPathInTestDescription">
+        <source>Passing a hardcoded absolute path, or a relative path literal, directly to a filesystem-mutating 'File.*'/'Directory.*' method (for example 'File.WriteAllText' or 'Directory.CreateDirectory') targets a location shared by every other test in the assembly; relative paths additionally resolve against the process-global current directory. Under in-assembly parallelization two tests can then write to the same location concurrently. Only statically constant paths passed to a mutating API are flagged; reads, path construction, and paths built from variables are left to the parallel-safety audit skill. Prefer a unique per-test directory such as 'TestContext.TestTempDirectory'.</source>
+        <target state="new">Passing a hardcoded absolute path, or a relative path literal, directly to a filesystem-mutating 'File.*'/'Directory.*' method (for example 'File.WriteAllText' or 'Directory.CreateDirectory') targets a location shared by every other test in the assembly; relative paths additionally resolve against the process-global current directory. Under in-assembly parallelization two tests can then write to the same location concurrently. Only statically constant paths passed to a mutating API are flagged; reads, path construction, and paths built from variables are left to the parallel-safety audit skill. Prefer a unique per-test directory such as 'TestContext.TestTempDirectory'.</target>
+        <note>{Locked="File.*"}{Locked="Directory.*"}{Locked="TestContext.TestTempDirectory"}</note>
+      </trans-unit>
+      <trans-unit id="SharedFileSystemPathInTestMessageFormat">
+        <source>The path '{0}' is a fixed location shared by every test in the assembly (and, when relative, resolves against the process-global current directory), so parallel tests that write to it can collide; use a unique per-test location such as 'TestContext.TestTempDirectory'</source>
+        <target state="new">The path '{0}' is a fixed location shared by every test in the assembly (and, when relative, resolves against the process-global current directory), so parallel tests that write to it can collide; use a unique per-test location such as 'TestContext.TestTempDirectory'</target>
+        <note>{0} is the offending path literal. {Locked="TestContext.TestTempDirectory"}</note>
+      </trans-unit>
+      <trans-unit id="SharedFileSystemPathInTestTitle">
+        <source>Avoid hardcoded or shared filesystem paths in a parallelized test</source>
+        <target state="new">Avoid hardcoded or shared filesystem paths in a parallelized test</target>
+        <note />
+      </trans-unit>
       <trans-unit id="StringAssertToAssertMessageFormat">
         <source>Use 'Assert.{0}' instead of 'StringAssert.{1}'</source>
         <target state="translated">Use "Assert.{0}" em vez de "StringAssert.{1}"</target>
@@ -799,6 +874,21 @@ The type declaring these methods should also respect the following rules:
         <source>Test method '{0}' signature is invalid</source>
         <target state="translated">A assinatura "{0}" do método de teste é inválida</target>
         <note>{0} is the method name.</note>
+      </trans-unit>
+      <trans-unit id="UndeclaredProcessGlobalStateMutationDescription">
+        <source>Mutating process-global state (such as environment variables or the console redirection) from a test is unsafe once in-assembly parallelization is enabled, because a sibling test running concurrently observes the mutation. Unlike '[ResourceLock]', which fails open when a key is forgotten, this rule flags the mutation at compile time. Declare '[ResourceLock]' with the matching 'WellKnownResources' key to serialize contending tests, or '[DoNotParallelize]' to opt the test out of parallelization.</source>
+        <target state="new">Mutating process-global state (such as environment variables or the console redirection) from a test is unsafe once in-assembly parallelization is enabled, because a sibling test running concurrently observes the mutation. Unlike '[ResourceLock]', which fails open when a key is forgotten, this rule flags the mutation at compile time. Declare '[ResourceLock]' with the matching 'WellKnownResources' key to serialize contending tests, or '[DoNotParallelize]' to opt the test out of parallelization.</target>
+        <note>{Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
+      </trans-unit>
+      <trans-unit id="UndeclaredProcessGlobalStateMutationMessageFormat">
+        <source>'{0}' mutates process-global state and is unsafe when tests run in parallel; declare '[ResourceLock(WellKnownResources.{1})]' on the test (or '[DoNotParallelize]')</source>
+        <target state="new">'{0}' mutates process-global state and is unsafe when tests run in parallel; declare '[ResourceLock(WellKnownResources.{1})]' on the test (or '[DoNotParallelize]')</target>
+        <note>{0} is the mutated API (for example 'Environment.SetEnvironmentVariable'). {1} is a 'WellKnownResources' member name. {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
+      </trans-unit>
+      <trans-unit id="UndeclaredProcessGlobalStateMutationTitle">
+        <source>Test mutating process-global state should declare a resource lock</source>
+        <target state="new">Test mutating process-global state should declare a resource lock</target>
+        <note />
       </trans-unit>
       <trans-unit id="UseCancellationTokenPropertyDescription">
         <source>TestContext.CancellationToken provides a more direct way to access the cancellation token compared to TestContext.CancellationTokenSource.Token.</source>

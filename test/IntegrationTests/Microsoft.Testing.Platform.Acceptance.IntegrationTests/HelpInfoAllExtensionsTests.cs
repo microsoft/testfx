@@ -76,6 +76,8 @@ Options:
         The directory where the test results are going to be placed.
         If the specified directory doesn't exist, it's created.
         The default is TestResults in the directory that contains the test application.
+    --show-slowest-tests
+        Show the specified number of slowest tests (by reported execution duration) in the run summary. Expects a positive integer.
     --show-stderr
         Determines when to show captured error output of a test.
         Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).
@@ -311,10 +313,22 @@ Built-in command line providers:
         Hidden: False
         Description: Define the level of the verbosity for the --diagnostic.
         The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.
+      --dotnet-test-http-endpoint
+        Arity: 1
+        Hidden: True
+        Description: Specifies the authenticated HTTP endpoint for the dotnet test protocol.
+      --dotnet-test-http-token
+        Arity: 1
+        Hidden: True
+        Description: Specifies the per-run HTTP bearer token for the dotnet test protocol.
       --dotnet-test-pipe
         Arity: 1
         Hidden: True
         Description: dotnet test pipe.
+      --dotnet-test-transport
+        Arity: 1
+        Hidden: True
+        Description: Selects the pre-launch transport for the dotnet test protocol.
       --exit-on-process-exit
         Arity: 1
         Hidden: False
@@ -409,6 +423,10 @@ Built-in command line providers:
         Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
         'auto' shows progress unless the terminal cannot update in place (for example with --no-ansi or in CI).
         This option takes precedence over the deprecated --no-progress flag.
+      --show-slowest-tests
+        Arity: 1
+        Hidden: False
+        Description: Show the specified number of slowest tests (by reported execution duration) in the run summary. Expects a positive integer.
       --show-stderr
         Arity: 1
         Hidden: False
@@ -642,7 +660,7 @@ Registered command line providers:
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
         Example: MyReport_{tfm}.xml
   MSBuildCommandLineProvider
-    Name: MSBuildCommandLineProvider
+    Name: MSBuild integration
     Version: *
     Description: Extension used to pass parameters from MSBuild node and the hosts
     Options:
@@ -720,6 +738,25 @@ Registered command line providers:
         Hidden: False
         Description: What to capture: 'screen' (default, the full screen) or 'window' (only the current process window; Windows only, falls back to full screen elsewhere). Requires --capture-video.
 Registered tools:
+  Microsoft.Testing.Extensions.TrxReport.MergeTool
+    Command: merge-trx
+    Name: TRX report merge tool
+    Version: *
+    Description: Merges multiple TRX files into one from the command line
+    Tool command line providers:
+      Microsoft.Testing.Extensions.TrxReport.MergeTool
+        Name: TRX report merge tool
+        Version: *
+        Description: Merges multiple TRX files into one from the command line
+        Options:
+          --input
+            Arity: 2..N
+            Hidden: False
+            Description: Two or more input TRX file paths
+          --output-trx
+            Arity: 1
+            Hidden: False
+            Description: The output TRX file path
   TrxCompareTool
     Command: ms-trxcompare
     Name: TRX comparer tool

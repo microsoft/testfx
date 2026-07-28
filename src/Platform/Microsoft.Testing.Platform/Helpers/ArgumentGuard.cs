@@ -1,8 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
+
 namespace Microsoft.Testing.Platform.Helpers;
 
+[Embedded]
 internal static class ArgumentGuard
 {
     public static void Ensure([DoesNotReturnIf(false)] bool condition, string paramName, string errorMessage)

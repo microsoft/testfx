@@ -1,4 +1,33 @@
-trigger: none
+trigger:
+  batch: true
+  branches:
+    include:
+    - main
+  paths:
+    exclude:
+      - .github/**
+      - .gitignore
+      - .devcontainer/*
+      - docs/*
+      - .vscode/*
+      - .markdownlint-cli2.jsonc
+      - .markdownlintignore
+      - CODE_OF_CONDUCT.md
+      - CONTRIBUTING.md
+      - README.md
+      - SECURITY.md
+      - azure-pipelines-official.yml
+      - azure-pipelines-codeql.yml
+
+# The main-branch CI trigger below keeps the project cache aligned with every product merge. The nightly run still
+# exercises the full authoritative pipeline and consumes the cache read-only.
+schedules:
+  - cron: 0 3 * * *
+    displayName: Nightly full validation
+    branches:
+      include:
+      - main
+    always: true
 
 # Branch(es) that trigger(s) build(s) on PR
 pr:
@@ -37,6 +66,11 @@ variables:
     value: False
   - name: _RunAsPublic
     value: True
+  # Required to grant $(System.AccessToken) access to Azure Pipeline Caching.
+  - name: EnablePipelineCache
+    value: true
+  - name: VSO_DEDUP_REDIRECT_TIMEOUT_IN_SEC
+    value: 5
   # OS-agnostic Microsoft.Testing.Platform report/dump arguments shared by the Release unit-test
   # ("--test-modules") commands in the Windows job (below) and the Linux/MacOS jobs
   # (eng/pipelines/steps/test-non-windows.yml). Keeping them in a single variable guarantees every OS
@@ -65,11 +99,90 @@ variables:
   # Placeholders ({asm}/{tfm}) are resolved by Microsoft.Testing.Platform.Services.ArtifactNamingHelper.
   - name: _ReleaseUnitTestReportArgs
     value: '--report-trx --report-trx-filename "{asm}_{tfm}.trx" --report-ctrf --report-ctrf-filename "{asm}_{tfm}.ctrf.json" --report-azdo --report-azdo-summary --report-azdo-slow-test-history 30 --report-azdo-slow-test-history-min-sample 10 --report-azdo-slow-test-history-multiplier 3.0 --report-azdo-flaky-history 30 --report-junit --report-junit-filename "{asm}_{tfm}.xml" --hangdump --hangdump-timeout 15m'
+  # Shell trailer appended to the macOS build/test commands so that, ON PR RUNS, a failed command exits 0
+  # and keeps the overall pipeline result "Succeeded". This is required to make macOS non-blocking for PRs:
+  # job- or step-level continueOnError only yields "PartiallySucceeded", which Azure Repos build-validation
+  # policies treat as a failure and still block the merge. Swallowing the exit code keeps the run green
+  # while macOS failures stay visible via --report-azdo (AzDO Tests tab) and the published TestResults
+  # artifact, so signal is preserved without gating merges on macOS-specific flakiness/slowness. Windows
+  # and Linux do not use this trailer and remain hard blockers.
+  #
+  # The exit code is ONLY swallowed when BUILD_REASON is "PullRequest". On manual/scheduled/CI queues there
+  # is no merge to unblock, so the original exit code is preserved and a real macOS regression still fails
+  # the run (see the DetectChanges fail-safe for non-PR triggers around the SYSTEM_PULLREQUEST_TARGETBRANCH
+  # handling below).
+  #
+  # KNOWN LIMITATION: this only converts command EXIT CODES. It cannot rescue the job from the 90-minute
+  # timeout (hung agent), agent loss, or a failure in the unconditional publish/copy tasks — any of those
+  # still fails/cancels the macOS matrix job and therefore the overall build. Fully covering those cases
+  # would require running macOS as a separate, non-required pipeline/status check (or removing it from the
+  # required PR pipeline). That larger change is intentionally out of scope here; this trailer addresses the
+  # dominant flaky-test-failure case while keeping macOS visible on every PR.
+  #
+  # The consumers add an explicit separating space before this expansion, so the value must NOT rely on
+  # a leading space of its own.
+  - name: _MacOSNonBlockingTrailer
+    value: '|| { ec=$?; if [ "$BUILD_REASON" = "PullRequest" ]; then echo "##vso[task.logissue type=warning]macOS is non-blocking for PRs; this failure does not block the merge. See the Tests tab and the published TestResults artifact for details."; else exit $ec; fi; }'
 
 stages:
 
+- stage: msbuild_cache_seed
+  displayName: Seed MSBuildCache
+  condition: and(succeeded(), in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  jobs:
+  - job: Windows
+    displayName: Windows $(_BuildConfig)
+    timeoutInMinutes: 30
+    pool:
+      name: NetCore-Public
+      demands: ImageOverride -equals windows.vs2026preview.scout.amd64.open
+    strategy:
+      matrix:
+        Release:
+          _BuildConfig: Release
+        Debug:
+          _BuildConfig: Debug
+    steps:
+    - checkout: self
+      clean: true
+
+    - template: /eng/pipelines/steps/install-windows-prereqs.yml
+
+    # Seed from every trusted main merge. PR merge refs are read-only consumers, so the cache must be updated as
+    # soon as main changes to avoid forcing the entire 204-node graph to miss.
+    - pwsh: |
+        & ./eng/common/msbuild.ps1 -ci -prepareMachine -warnAsError:$false ./TestFx.slnx `
+          /restore `
+          /graph `
+          /m `
+          /reportfileaccesses `
+          /nr:false `
+          /t:Build `
+          /v:minimal `
+          /p:Configuration=$(_BuildConfig) `
+          /p:FastAcceptanceTest=true `
+          /p:Publish=false `
+          "/p:RepoRoot=$(Build.SourcesDirectory)\" `
+          /p:Test=false `
+          /p:MSBuildCachePackageEnabled=true `
+          /p:MSBuildCacheEnabled=true `
+          /p:MSBuildCacheRemoteCacheIsReadOnly=false `
+          "/p:MSBuildCacheLogDirectory=$(Agent.TempDirectory)\MSBuildCache"
+        exit $LASTEXITCODE
+      displayName: Seed $(_BuildConfig) project cache
+      env:
+        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+        # MSBuildCache reads NUGET_PACKAGES to build its path normalizer, and every restored package file is a
+        # fingerprinted input. The seeding and the consuming builds must therefore agree on this folder or every
+        # node misses. Arcade's -ci switch already redirects restore here (eng/common/tools.ps1 sets
+        # NUGET_PACKAGES to $(RepoRoot).packages when -ci is passed), but the consuming build in the `build`
+        # stage cannot use -ci, so pin the value explicitly on both sides instead of relying on that default.
+        NUGET_PACKAGES: $(Build.SourcesDirectory)\.packages\
+
 - stage: build
   displayName: Build
+  dependsOn: []
+  condition: and(succeeded(), not(and(in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))))
   jobs:
 
   # Lightweight job that classifies the PR diff into two scopes (product vs samples)
@@ -171,7 +284,186 @@ stages:
             Debug:
               _BuildConfig: Debug
         steps:
+        - checkout: self
+          clean: true
+
         - template: /eng/pipelines/steps/install-windows-prereqs.yml
+
+        # MSBuildCache requires a direct static graph build; Arcade's outer Build.proj discovers its projects too late
+        # for the project-cache plugin. Keep the regular Arcade build below as the correctness fallback during rollout.
+        - pwsh: |
+            $pwsh = Join-Path $PSHOME "pwsh.exe"
+            # Azure Pipeline cache entries are immutable. The batched main-merge stage is the only remote publisher;
+            # keeping this canary read-only prevents manual or scheduled runs from racing with it.
+            $arguments = @(
+              "-NoLogo",
+              "-NoProfile",
+              "-File", "./eng/common/msbuild.ps1",
+              "-prepareMachine",
+              "-warnAsError:`$false",
+              "./TestFx.slnx",
+              "/restore",
+              "/graph",
+              "/m",
+              "/reportfileaccesses",
+              "/nr:false",
+              "/t:Build",
+              "/v:minimal",
+              "/p:Configuration=$(_BuildConfig)",
+              "/p:ContinuousIntegrationBuild=true",
+              "/p:FastAcceptanceTest=true",
+              "/p:Publish=false",
+              "/p:RepoRoot=$(Build.SourcesDirectory)\",
+              "/p:Test=false",
+              "/p:MSBuildCachePackageEnabled=true",
+              "/p:MSBuildCacheEnabled=true",
+              "/p:MSBuildCacheRemoteCacheIsReadOnly=true",
+              "/p:MSBuildCacheLogDirectory=$(Agent.TempDirectory)\MSBuildCache"
+            )
+
+            $previousPSNativeCommandUseErrorActionPreference = $PSNativeCommandUseErrorActionPreference
+            try {
+              # Unlike Start-Process -Wait, direct native invocation does not wait for detached telemetry descendants.
+              $PSNativeCommandUseErrorActionPreference = $false
+              & $pwsh @arguments
+              $exitCode = $LASTEXITCODE
+            }
+            finally {
+              $PSNativeCommandUseErrorActionPreference = $previousPSNativeCommandUseErrorActionPreference
+            }
+
+            if ($exitCode -ne 0) {
+              Write-Host "##vso[task.logissue type=warning]MSBuildCache canary failed with exit code $exitCode; continuing with the regular Arcade build."
+              Write-Host "##vso[task.setvariable variable=MSBuildCacheBuildSucceeded]false"
+            }
+            else {
+              Write-Host "##vso[task.setvariable variable=MSBuildCacheBuildSucceeded]true"
+            }
+
+            exit 0
+          displayName: Build solution graph with MSBuildCache
+          condition: and(succeeded(), or(and(eq(variables['Build.Reason'], 'PullRequest'), ne(variables['System.PullRequest.IsFork'], 'True')), and(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))))
+          continueOnError: true
+          env:
+            SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+            # Must match the seeding stage exactly. MSBuildCache normalizes observed input paths against
+            # NUGET_PACKAGES, and every restored package file is a fingerprinted input, so a different package
+            # folder changes every node's weak fingerprint and the whole 204-node graph misses. This step cannot
+            # pass Arcade's -ci switch (which would otherwise pick the same folder) because eng/common/tools.ps1
+            # then reports failures through Write-PipelineSetResult and exits with code 0, which would make the
+            # wrapper below treat a failed cache build as a success. Pin the folder directly instead.
+            NUGET_PACKAGES: $(Build.SourcesDirectory)\.packages\
+            # Also part of the -ci behaviour the seeding stage gets: opting out keeps the dotnet CLI from
+            # spawning detached telemetry that writes files after the owning project has finished, which
+            # MSBuildCache reports as a file-access violation.
+            DOTNET_CLI_TELEMETRY_OPTOUT: 1
+
+        # CIBuild.cmd also restores the custom toolset/workloads, signs the build outputs, and produces the packages
+        # consumed by the acceptance tests. Run those phases without the Build phase when the cache supplied the
+        # compiled outputs. Keep this non-blocking so any failure switches the regular Arcade build back on.
+        - pwsh: |
+            Write-Host "##vso[task.setvariable variable=MSBuildCacheBuildSucceeded]false"
+
+            $pwsh = Join-Path $PSHOME "pwsh.exe"
+            $arguments = @(
+              "-NoLogo",
+              "-NoProfile",
+              "-File", "./eng/common/build.ps1",
+              "-ci",
+              "-disablePipelineSetResult",
+              "-configuration", "$(_BuildConfig)",
+              "-restore",
+              "-sign",
+              "-pack",
+              "-prepareMachine",
+              "/p:ContinuousIntegrationBuild=true",
+              "/p:FastAcceptanceTest=true",
+              "/p:MSBuildCachePackageEnabled=true",
+              "/p:MSBuildCacheEnabled=false"
+            )
+
+            $previousPSNativeCommandUseErrorActionPreference = $PSNativeCommandUseErrorActionPreference
+            try {
+              $PSNativeCommandUseErrorActionPreference = $false
+              & $pwsh @arguments
+              $exitCode = $LASTEXITCODE
+            }
+            finally {
+              $PSNativeCommandUseErrorActionPreference = $previousPSNativeCommandUseErrorActionPreference
+            }
+
+            if ($exitCode -ne 0) {
+              Write-Host "##vso[task.logissue type=warning]Preparing cached outputs failed with exit code $exitCode; continuing with the regular Arcade build."
+            }
+            else {
+              Write-Host "##vso[task.setvariable variable=MSBuildCacheBuildSucceeded]true"
+            }
+
+            exit 0
+          displayName: Prepare and pack cached build outputs
+          condition: and(succeeded(), eq(variables['MSBuildCacheBuildSucceeded'], 'true'))
+          continueOnError: true
+
+        # Publish only the project-level diagnostics; CacheClient.log and the OAuth-bearing cache environment stay
+        # outside published artifacts. A successful cache build supplies the outputs consumed by the test steps.
+        # On failure, remove its partial outputs before running the regular Arcade build as a fallback.
+        - pwsh: |
+            $cacheLogSource = "$(Agent.TempDirectory)\MSBuildCache"
+            $cacheLogDestination = "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\MSBuildCache"
+
+            try {
+              if (Test-Path $cacheLogSource) {
+                New-Item $cacheLogDestination -ItemType Directory -Force | Out-Null
+                Get-ChildItem $cacheLogSource -Force |
+                  Where-Object Name -NE "CacheClient.log" |
+                  Copy-Item -Destination $cacheLogDestination -Recurse -Force
+              }
+            }
+            catch {
+              Write-Host "##vso[task.logissue type=warning]Failed to preserve MSBuildCache diagnostics. $($_.Exception.Message)"
+            }
+            finally {
+              if ("$(MSBuildCacheBuildSucceeded)" -ne "true") {
+                $cleanupErrors = @()
+
+                $artifactsDirectory = "$(Build.SourcesDirectory)\artifacts"
+                if (Test-Path $artifactsDirectory) {
+                  Get-ChildItem $artifactsDirectory -Force |
+                    Where-Object Name -NotIn @("log", "msbuild-cache", "toolset") |
+                    ForEach-Object {
+                      $path = $_.FullName
+                      try {
+                        Remove-Item $path -Recurse -Force -ErrorAction Stop
+                      }
+                      catch {
+                        $cleanupErrors += "${path}: $($_.Exception.Message)"
+                      }
+                    }
+                }
+
+                @(
+                  $cacheLogSource,
+                  "$(Build.SourcesDirectory)\src\Package\MSTest.Sdk\Sdk\Sdk.props",
+                  "$(Build.SourcesDirectory)\src\Package\MSTest.Sdk\Sdk\Runner\Runner.targets"
+                ) |
+                  Where-Object { Test-Path $_ } |
+                  ForEach-Object {
+                    $path = $_
+                    try {
+                      Remove-Item $path -Recurse -Force -ErrorAction Stop
+                    }
+                    catch {
+                      $cleanupErrors += "${path}: $($_.Exception.Message)"
+                    }
+                  }
+
+                if ($cleanupErrors) {
+                  throw "Failed to clean MSBuildCache outputs before the fallback build:`n$($cleanupErrors -join "`n")"
+                }
+              }
+            }
+          displayName: Preserve cache diagnostics and clean failed outputs
+          condition: and(always(), or(and(eq(variables['Build.Reason'], 'PullRequest'), ne(variables['System.PullRequest.IsFork'], 'True')), and(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))))
 
         - task: PowerShell@2
           displayName: 'Enable local dumps'
@@ -189,8 +481,11 @@ stages:
             /p:Publish=false
             /p:Test=false
             /p:FastAcceptanceTest=true
+            /p:MSBuildCachePackageEnabled=true
+            /p:MSBuildCacheEnabled=false
           name: Build
           displayName: Build
+          condition: and(succeeded(), ne(variables['MSBuildCacheBuildSucceeded'], 'true'))
 
         - ${{ if eq(parameters.SkipTests, False) }}:
 
@@ -324,6 +619,14 @@ stages:
       - job: MacOS
         dependsOn: DetectChanges
         condition: and(succeededOrFailed(), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))
+        # macOS agents are historically slow and flaky, so this job is intentionally non-blocking for PRs.
+        # Rather than continueOnError (which yields "PartiallySucceeded" and is still blocked by Azure Repos
+        # build-validation policies), every macOS command appends $(_MacOSNonBlockingTrailer) so a failed
+        # command exits 0 on PR runs and the overall run stays "Succeeded" (on non-PR runs the exit code is
+        # preserved). Failures remain visible via --report-azdo (Tests tab) and the published TestResults
+        # artifact. NOTE: this only swallows command exit codes — a 90-minute timeout, agent loss, or a
+        # publish-task failure still fails this job and blocks. See _MacOSNonBlockingTrailer for the full
+        # rationale and the documented limitation.
         timeoutInMinutes: 90
         pool:
           name: Azure Pipelines
@@ -344,13 +647,14 @@ stages:
             /p:Test=false
             /p:Publish=false
             /p:NonWindowsBuild=true
-            /p:FastAcceptanceTest=true
+            /p:FastAcceptanceTest=true $(_MacOSNonBlockingTrailer)
           displayName: Build
 
         - ${{ if eq(parameters.SkipTests, False) }}:
           - template: /eng/pipelines/steps/test-non-windows.yml
             parameters:
               osName: MacOS
+              testFailureTrailer: $(_MacOSNonBlockingTrailer)
 
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:

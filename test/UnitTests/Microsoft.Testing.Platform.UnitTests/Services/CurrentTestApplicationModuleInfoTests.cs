@@ -13,6 +13,25 @@ namespace Microsoft.Testing.Platform.UnitTests;
 public sealed class CurrentTestApplicationModuleInfoTests
 {
     [TestMethod]
+    public void ExecutableInfo_ToStringRedactsHttpTransportSecrets()
+    {
+        var executable = new ExecutableInfo(
+            "testhost.exe",
+            [
+                "--dotnet-test-http-endpoint", "https://gateway.example/private/run-id",
+                "--dotnet-test-http-token", "secret-token",
+            ],
+            "workspace");
+
+        string diagnostic = executable.ToString();
+
+        Assert.Contains("https://gateway.example", diagnostic);
+        Assert.Contains("***REDACTED***", diagnostic);
+        Assert.DoesNotContain("/private/run-id", diagnostic);
+        Assert.DoesNotContain("secret-token", diagnostic);
+    }
+
+    [TestMethod]
     public void GetCurrentExecutableInfo_AppHost_NoPassedArgs_UsesEnvironmentArgsSkippingProcessPath()
     {
         Mock<IEnvironment> environment = CreateAppHostEnvironment(["myapp.exe", "--filter", "MyTest"]);
@@ -21,7 +40,7 @@ public sealed class CurrentTestApplicationModuleInfoTests
 
         ExecutableInfo executable = info.GetCurrentExecutableInfo();
 
-        Assert.AreSequenceEqual(new[] { "--filter", "MyTest" }, executable.Arguments.ToArray());
+        Assert.AreSequenceEqual(["--filter", "MyTest"], executable.Arguments.ToArray());
     }
 
     [TestMethod]
@@ -35,7 +54,7 @@ public sealed class CurrentTestApplicationModuleInfoTests
 
         ExecutableInfo executable = info.GetCurrentExecutableInfo();
 
-        Assert.AreSequenceEqual(new[] { "--retry-failed-tests", "1" }, executable.Arguments.ToArray());
+        Assert.AreSequenceEqual(["--retry-failed-tests", "1"], executable.Arguments.ToArray());
     }
 
     [TestMethod]
@@ -60,7 +79,7 @@ public sealed class CurrentTestApplicationModuleInfoTests
 
         ExecutableInfo executable = info.GetCurrentExecutableInfo();
 
-        Assert.AreSequenceEqual(new[] { "exec", "myapp.dll", "--filter", "MyTest" }, executable.Arguments.ToArray());
+        Assert.AreSequenceEqual(["exec", "myapp.dll", "--filter", "MyTest"], executable.Arguments.ToArray());
     }
 
     [TestMethod]
@@ -74,7 +93,7 @@ public sealed class CurrentTestApplicationModuleInfoTests
 
         ExecutableInfo executable = info.GetCurrentExecutableInfo();
 
-        Assert.AreSequenceEqual(new[] { "exec", "myapp.dll", "--retry-failed-tests", "1" }, executable.Arguments.ToArray());
+        Assert.AreSequenceEqual(["exec", "myapp.dll", "--retry-failed-tests", "1"], executable.Arguments.ToArray());
     }
 
     [TestMethod]
@@ -86,7 +105,7 @@ public sealed class CurrentTestApplicationModuleInfoTests
 
         ExecutableInfo executable = info.GetCurrentExecutableInfo();
 
-        Assert.AreSequenceEqual(new[] { "exec", "--retry-failed-tests", "1" }, executable.Arguments.ToArray());
+        Assert.AreSequenceEqual(["exec", "--retry-failed-tests", "1"], executable.Arguments.ToArray());
     }
 
     [TestMethod]
@@ -98,7 +117,7 @@ public sealed class CurrentTestApplicationModuleInfoTests
 
         ExecutableInfo executable = info.GetCurrentExecutableInfo();
 
-        Assert.AreSequenceEqual(new[] { "myapp.dll", "--filter", "MyTest" }, executable.Arguments.ToArray());
+        Assert.AreSequenceEqual(["myapp.dll", "--filter", "MyTest"], executable.Arguments.ToArray());
     }
 
     [TestMethod]
@@ -112,7 +131,7 @@ public sealed class CurrentTestApplicationModuleInfoTests
 
         ExecutableInfo executable = info.GetCurrentExecutableInfo();
 
-        Assert.AreSequenceEqual(new[] { "myapp.dll", "--retry-failed-tests", "1" }, executable.Arguments.ToArray());
+        Assert.AreSequenceEqual(["myapp.dll", "--retry-failed-tests", "1"], executable.Arguments.ToArray());
     }
 
     [TestMethod]
@@ -124,7 +143,7 @@ public sealed class CurrentTestApplicationModuleInfoTests
 
         ExecutableInfo executable = info.GetCurrentExecutableInfo();
 
-        Assert.AreSequenceEqual(new[] { "--retry-failed-tests", "1" }, executable.Arguments.ToArray());
+        Assert.AreSequenceEqual(["--retry-failed-tests", "1"], executable.Arguments.ToArray());
     }
 
     [TestMethod]
@@ -142,7 +161,7 @@ public sealed class CurrentTestApplicationModuleInfoTests
 
         ExecutableInfo executable = info.GetCurrentExecutableInfo();
 
-        Assert.AreSequenceEqual(new[] { "--retry-failed-tests", "1" }, executable.Arguments.ToArray());
+        Assert.AreSequenceEqual(["--retry-failed-tests", "1"], executable.Arguments.ToArray());
     }
 
     private static Mock<IEnvironment> CreateDotnetMuxerEnvironment(string[] commandLineArgs)

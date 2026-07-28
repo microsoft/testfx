@@ -1,8 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net462</TargetFramework>
-    <IsPackable>false</IsPackable>
+    <TargetFramework>$(NetFrameworkMinimum)</TargetFramework>
     <DefineConstants>$(DefineConstants);FULLY_QUALIFIED_ID</DefineConstants>
   </PropertyGroup>
 

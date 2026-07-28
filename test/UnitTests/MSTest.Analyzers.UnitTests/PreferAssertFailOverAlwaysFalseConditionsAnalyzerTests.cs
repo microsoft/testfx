@@ -1951,4 +1951,210 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
+
+    [TestMethod]
+    public async Task WhenAssertAreNotEqualIsPassedSameLocalWithOverriddenEquals_NoDiagnostic()
+    {
+        // The type overrides object.Equals, so Assert.AreNotEqual routes through user code and the
+        // self-comparison is a legitimate way to exercise the equality contract (see issue #9972).
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var x = new MyType();
+                    Assert.AreNotEqual(x, x);
+                }
+
+                private sealed class MyType
+                {
+                    public override bool Equals(object obj) => false;
+                    public override int GetHashCode() => 0;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreNotEqualIsPassedSameLocalWithoutCustomEquality_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var x = new MyType();
+                    [|Assert.AreNotEqual(x, x)|];
+                }
+
+                private sealed class MyType
+                {
+                }
+            }
+            """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var x = new MyType();
+                    Assert.Fail();
+                }
+
+                private sealed class MyType
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedNonEqualConstantsWithCustomComparer_NoDiagnostic()
+    {
+        // A caller-supplied comparer can return any result, so the comparison is not provably always false.
+        string code = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.AreEqual(1, 2, new AlwaysEqualComparer());
+                }
+
+                private sealed class AlwaysEqualComparer : IEqualityComparer<int>
+                {
+                    public bool Equals(int x, int y) => true;
+                    public int GetHashCode(int obj) => 0;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreNotEqualIsPassedSameLocalWithCustomComparer_NoDiagnostic()
+    {
+        string code = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int x = 1;
+                    Assert.AreNotEqual(x, x, new AlwaysEqualComparer());
+                }
+
+                private sealed class AlwaysEqualComparer : IEqualityComparer<int>
+                {
+                    public bool Equals(int x, int y) => true;
+                    public int GetHashCode(int obj) => 0;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreNotEqualIsPassedSameLocalWithNullComparer_Diagnostic()
+    {
+        // MSTest treats a null comparer as EqualityComparer<T>.Default, so the self-comparison is still
+        // provably always false and must be flagged.
+        string code = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int x = 1;
+                    [|Assert.AreNotEqual(x, x, (IEqualityComparer<int>)null)|];
+                }
+            }
+            """;
+        string fixedCode = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int x = 1;
+                    Assert.Fail();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreNotEqualIsPassedSameLocalWithDefaultEqualityComparer_Diagnostic()
+    {
+        // EqualityComparer<T>.Default passed explicitly is the default comparer, so the self-comparison is
+        // still provably always false and must be flagged.
+        string code = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int x = 1;
+                    [|Assert.AreNotEqual(x, x, EqualityComparer<int>.Default)|];
+                }
+            }
+            """;
+        string fixedCode = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int x = 1;
+                    Assert.Fail();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
 }

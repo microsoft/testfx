@@ -11,6 +11,22 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// A <see cref="RetryAttribute"/> placed directly on a test method takes precedence over a class-level one
 /// (the method-level value fully replaces the class-level value, regardless of whether it is larger or smaller).
 /// The attribute is not inherited: applying it to a base test class does not apply it to derived test classes.
+/// <para>
+/// A retry is performed while at least one <see cref="TestResult"/> of the attempt has a
+/// <see cref="UnitTestOutcome.Failed"/> or <see cref="UnitTestOutcome.Timeout"/> outcome. Retrying stops as
+/// soon as an attempt produces no failed and no timed-out result. For a data-driven test (multiple results per
+/// attempt) this is an aggregate rule: an <see cref="UnitTestOutcome.Inconclusive"/> result (for example when
+/// the test calls <c>Assert.Inconclusive()</c>) only ends retrying when none of its sibling results in the same
+/// attempt failed or timed out; otherwise the attempt is still retried. The last attempt's results become the
+/// final outcome of the test.
+/// </para>
+/// <para>
+/// This attribute retries within a single test-host run. It is independent from the
+/// <c>Microsoft.Testing.Extensions.Retry</c> <c>--retry-failed-tests</c> orchestrator, which re-invokes the whole
+/// test host. When both are enabled at the same time the attempt counts multiply (a test can run up to
+/// <c>(MaxRetryAttempts + 1) x (--retry-failed-tests + 1)</c> times), so avoid combining them unless that is
+/// intended.
+/// </para>
 /// </remarks>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
 public sealed class RetryAttribute : RetryBaseAttribute
@@ -26,7 +42,7 @@ public sealed class RetryAttribute : RetryBaseAttribute
         {
             throw new ArgumentOutOfRangeException(nameof(maxRetryAttempts));
         }
-#pragma warning disable CA1512 // Use ArgumentOutOfRangeException throw helper
+#pragma warning restore CA1512 // Use ArgumentOutOfRangeException throw helper
 
         MaxRetryAttempts = maxRetryAttempts;
     }

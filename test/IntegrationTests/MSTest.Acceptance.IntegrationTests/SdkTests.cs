@@ -351,14 +351,10 @@ namespace MSTestSdkTest
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
             $"publish -r {RID} -f {TargetFrameworks.NetCurrent} {testAsset.TargetAssetPath}",
-            warnAsError: false,
+            warnAsError: true,
             cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertOutputContains("Generating native code");
 
-        // MSTest.TestAdapter (referenced via MSTest.Sdk's NativeAOT runner) transitively pulls in
-        // vstest Microsoft.TestPlatform.ObjectModel and System.Private.DataContractSerialization which
-        // produce trim/AOT warnings outside this repo's control. Instead of failing on those warnings,
-        // we assert MSTest-owned source files do not appear in publish output. See TrimAndAotAssertions.
         foreach (string fileName in TrimAndAotAssertions.MSTestOwnedSourceFiles)
         {
             compilationResult.AssertOutputDoesNotContain(fileName);
@@ -399,6 +395,91 @@ namespace MSTestSdkTest
 
         // It's not an executable
         Assert.DoesNotContain(p => p.Value == "Exe", binLog.FindChildrenRecursive<SL.Property>(p => p.Name == "OutputType"));
+    }
+
+    [TestMethod]
+    public async Task TestApplicationRunsTestsFromReferencedMSTestSdkTestLibrary()
+    {
+        const string TestApplicationWithReferencedTestLibrary = """
+            #file MSTestSdkTestApplication.csproj
+            <Project Sdk="MSTest.Sdk/$MSTestVersion$">
+
+              <PropertyGroup>
+                <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
+                <TargetFramework>$TargetFramework$</TargetFramework>
+                <PlatformTarget>x64</PlatformTarget>
+              </PropertyGroup>
+
+              <ItemGroup>
+                <ProjectReference Include="TestLibrary/TestLibrary.csproj" />
+                <Compile Remove="TestLibrary/**" />
+              </ItemGroup>
+
+            </Project>
+
+            #file ReferencedLibraryTests.cs
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            using TestLibrary;
+
+            namespace MSTestSdkTestApplication;
+
+            [TestClass]
+            public sealed class ReferencedLibraryTests : LibraryTests;
+
+            #file TestLibrary/TestLibrary.csproj
+            <Project Sdk="MSTest.Sdk/$MSTestVersion$">
+
+              <PropertyGroup>
+                <IsTestApplication>false</IsTestApplication>
+                <TargetFramework>$TargetFramework$</TargetFramework>
+              </PropertyGroup>
+
+            </Project>
+
+            #file TestLibrary/LibraryTests.cs
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace TestLibrary;
+
+            [TestClass]
+            public abstract class LibraryTests
+            {
+                [TestMethod]
+                public void TestFromReferencedLibrary()
+                {
+                    Assert.AreEqual("TestLibrary", typeof(LibraryTests).Assembly.GetName().Name);
+                }
+            }
+            """;
+
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            "MSTestSdkTestApplicationWithReferencedTestLibrary",
+            TestApplicationWithReferencedTestLibrary
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent));
+
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
+            $"build -c {BuildConfiguration.Release} {testAsset.TargetAssetPath}",
+            cancellationToken: TestContext.CancellationToken);
+        buildResult.AssertExitCodeIs(0);
+
+        var testHost = TestHost.LocateFrom(
+            testAsset.TargetAssetPath,
+            "MSTestSdkTestApplication",
+            TargetFrameworks.NetCurrent,
+            buildConfiguration: BuildConfiguration.Release);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertOutputContainsSummary(0, 1, 0);
+
+        string libraryAssets = await File.ReadAllTextAsync(
+            Path.Combine(testAsset.TargetAssetPath, "TestLibrary", "obj", "project.assets.json"),
+            TestContext.CancellationToken);
+        Assert.DoesNotContain("\"MSTest.TestAdapter/", libraryAssets);
+        Assert.DoesNotContain("\"Microsoft.NET.Test.Sdk/", libraryAssets);
+        Assert.DoesNotContain("\"Microsoft.Testing.Platform/", libraryAssets);
+        Assert.DoesNotContain("\"Microsoft.Testing.Platform.MSBuild/", libraryAssets);
+        Assert.DoesNotContain("\"Microsoft.Testing.Extensions.", libraryAssets);
     }
 
     [TestMethod]

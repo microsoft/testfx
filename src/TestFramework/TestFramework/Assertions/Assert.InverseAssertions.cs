@@ -79,6 +79,74 @@ public sealed partial class Assert
         ReportContainsFailure(message, predicateExpression, collectionExpression, shouldContain);
     }
 
+#if NETCOREAPP3_1_OR_GREATER
+    private static void ContainsCore<T>(T expected, ReadOnlySpan<T> collection, string assertMethodName, string? message, string expectedExpression, string collectionExpression, bool shouldContain)
+    {
+        TelemetryCollector.TrackAssertionCall(assertMethodName);
+
+        bool contains = false;
+        foreach (T item in collection)
+        {
+            if (EqualityComparer<T>.Default.Equals(item, expected))
+            {
+                contains = true;
+                break;
+            }
+        }
+
+        if (contains == shouldContain)
+        {
+            return;
+        }
+
+        ReportContainsFailure(expected, message, expectedExpression, collectionExpression, shouldContain);
+    }
+
+    private static void ContainsCore<T>(T expected, ReadOnlySpan<T> collection, IEqualityComparer<T> comparer, string assertMethodName, string? message, string expectedExpression, string collectionExpression, bool shouldContain)
+    {
+        TelemetryCollector.TrackAssertionCall(assertMethodName);
+
+        bool contains = false;
+        foreach (T item in collection)
+        {
+            if (comparer.Equals(item, expected))
+            {
+                contains = true;
+                break;
+            }
+        }
+
+        if (contains == shouldContain)
+        {
+            return;
+        }
+
+        ReportContainsFailure(expected, message, expectedExpression, collectionExpression, shouldContain, comparer);
+    }
+
+    private static void ContainsCore<T>(Func<T, bool> predicate, ReadOnlySpan<T> collection, string assertMethodName, string? message, string predicateExpression, string collectionExpression, bool shouldContain)
+    {
+        TelemetryCollector.TrackAssertionCall(assertMethodName);
+
+        bool contains = false;
+        foreach (T item in collection)
+        {
+            if (predicate(item))
+            {
+                contains = true;
+                break;
+            }
+        }
+
+        if (contains == shouldContain)
+        {
+            return;
+        }
+
+        ReportContainsFailure(message, predicateExpression, collectionExpression, shouldContain);
+    }
+#endif
+
     private static void ContainsCore(string substring, string value, StringComparison comparisonType, string assertMethodName, string? message, string substringExpression, string valueExpression, bool shouldContain)
     {
         TelemetryCollector.TrackAssertionCall(assertMethodName);

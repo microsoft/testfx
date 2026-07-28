@@ -20,7 +20,7 @@ public sealed class TimeoutCooperativeGlobalTestCancellationTests : AcceptanceTe
             cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertOutputContains("GlobalTestInit started");
-        testHostResult.AssertOutputContains("Test initialize method 'TestClass.GlobalTestInit' timed out after 1000ms");
+        testHostResult.AssertOutputContains("Global test initialize method 'TestClass.GlobalTestInit' timed out after 1000ms");
         testHostResult.AssertOutputDoesNotContain("GlobalTestInit Thread.Sleep completed");
         testHostResult.AssertOutputDoesNotContain("GlobalTestInit completed");
     }
@@ -37,7 +37,7 @@ public sealed class TimeoutCooperativeGlobalTestCancellationTests : AcceptanceTe
 
         testHostResult.AssertOutputContains("GlobalTestInit started");
         testHostResult.AssertOutputContains("GlobalTestInit Thread.Sleep completed");
-        testHostResult.AssertOutputContains("Test initialize method 'TestClass.GlobalTestInit' timed out after 1000ms");
+        testHostResult.AssertOutputContains("Global test initialize method 'TestClass.GlobalTestInit' timed out after 1000ms");
         testHostResult.AssertOutputDoesNotContain("GlobalTestInit completed");
     }
 
@@ -52,7 +52,7 @@ public sealed class TimeoutCooperativeGlobalTestCancellationTests : AcceptanceTe
             cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertOutputContains("GlobalTestCleanup started");
-        testHostResult.AssertOutputContains("Test cleanup method 'TestClass.GlobalTestCleanup' timed out after 1000ms");
+        testHostResult.AssertOutputContains("Global test cleanup method 'TestClass.GlobalTestCleanup' timed out after 1000ms");
         testHostResult.AssertOutputDoesNotContain("GlobalTestCleanup Thread.Sleep completed");
         testHostResult.AssertOutputDoesNotContain("GlobalTestCleanup completed");
     }
@@ -69,7 +69,7 @@ public sealed class TimeoutCooperativeGlobalTestCancellationTests : AcceptanceTe
 
         testHostResult.AssertOutputContains("GlobalTestCleanup started");
         testHostResult.AssertOutputContains("GlobalTestCleanup Thread.Sleep completed");
-        testHostResult.AssertOutputContains("Test cleanup method 'TestClass.GlobalTestCleanup' timed out after 1000ms");
+        testHostResult.AssertOutputContains("Global test cleanup method 'TestClass.GlobalTestCleanup' timed out after 1000ms");
         testHostResult.AssertOutputDoesNotContain("GlobalTestCleanup completed");
     }
 

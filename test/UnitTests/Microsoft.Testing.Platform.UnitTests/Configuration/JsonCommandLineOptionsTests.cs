@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.CommandLine;
@@ -51,7 +51,7 @@ public sealed class JsonCommandLineOptionsTests
         JsonCommandLineOptionEntry entry = Assert.ContainsSingle(entries);
         Assert.AreEqual("timeout", entry.OptionName);
         Assert.IsFalse(entry.IsDisabled);
-        Assert.AreSequenceEqual(new[] { "30s" }, entry.Arguments.ToArray());
+        Assert.AreSequenceEqual(["30s"], entry.Arguments.ToArray());
     }
 
     [TestMethod]
@@ -87,7 +87,7 @@ public sealed class JsonCommandLineOptionsTests
         JsonCommandLineOptionEntry entry = Assert.ContainsSingle(entries);
         Assert.AreEqual("filter-uid", entry.OptionName);
         Assert.IsFalse(entry.IsDisabled);
-        Assert.AreSequenceEqual(new[] { "a", "b", "c" }, entry.Arguments.ToArray());
+        Assert.AreSequenceEqual(["a", "b", "c"], entry.Arguments.ToArray());
     }
 
     [TestMethod]
@@ -163,7 +163,7 @@ public sealed class JsonCommandLineOptionsTests
         Assert.HasCount(4, entries);
 
         JsonCommandLineOptionEntry timeout = entries.Single(e => e.OptionName == "timeout");
-        Assert.AreSequenceEqual(new[] { "30s" }, timeout.Arguments.ToArray());
+        Assert.AreSequenceEqual(["30s"], timeout.Arguments.ToArray());
         Assert.IsFalse(timeout.IsDisabled);
 
         JsonCommandLineOptionEntry noBanner = entries.Single(e => e.OptionName == "no-banner");
@@ -174,7 +174,7 @@ public sealed class JsonCommandLineOptionsTests
         Assert.IsTrue(hangdump.IsDisabled);
 
         JsonCommandLineOptionEntry filterUid = entries.Single(e => e.OptionName == "filter-uid");
-        Assert.AreSequenceEqual(new[] { "a", "b" }, filterUid.Arguments.ToArray());
+        Assert.AreSequenceEqual(["a", "b"], filterUid.Arguments.ToArray());
     }
 
     // ---------------------------------------------------------------------
@@ -636,11 +636,11 @@ public sealed class JsonCommandLineOptionsTests
         JsonCommandLineOptionEntry entry = Assert.ContainsSingle(aggregated.EnumerateJsonCommandLineOptions());
         Assert.AreEqual("timeout", entry.OptionName);
         Assert.IsFalse(entry.IsDisabled);
-        Assert.AreSequenceEqual(new[] { "true" }, entry.Arguments.ToArray());
+        Assert.AreSequenceEqual(["true"], entry.Arguments.ToArray());
 
         Assert.IsTrue(aggregated.TryGetCommandLineOptionFromProviders("timeout", out bool isSet, out string[] arguments));
         Assert.IsTrue(isSet);
-        Assert.AreSequenceEqual(new[] { "true" }, arguments);
+        Assert.AreSequenceEqual(["true"], arguments);
     }
 
     [TestMethod]
@@ -658,11 +658,11 @@ public sealed class JsonCommandLineOptionsTests
         JsonCommandLineOptionEntry entry = Assert.ContainsSingle(aggregated.EnumerateJsonCommandLineOptions());
         Assert.AreEqual("timeout", entry.OptionName);
         Assert.IsFalse(entry.IsDisabled);
-        Assert.AreSequenceEqual(new[] { "false" }, entry.Arguments.ToArray());
+        Assert.AreSequenceEqual(["false"], entry.Arguments.ToArray());
 
         Assert.IsTrue(aggregated.TryGetCommandLineOptionFromProviders("timeout", out bool isSet, out string[] arguments));
         Assert.IsTrue(isSet);
-        Assert.AreSequenceEqual(new[] { "false" }, arguments);
+        Assert.AreSequenceEqual(["false"], arguments);
     }
 
     [TestMethod]
@@ -679,11 +679,11 @@ public sealed class JsonCommandLineOptionsTests
 
         JsonCommandLineOptionEntry entry = Assert.ContainsSingle(aggregated.EnumerateJsonCommandLineOptions());
         Assert.AreEqual("timeout", entry.OptionName);
-        Assert.AreSequenceEqual(new[] { "30s" }, entry.Arguments.ToArray());
+        Assert.AreSequenceEqual(["30s"], entry.Arguments.ToArray());
 
         Assert.IsTrue(aggregated.TryGetCommandLineOptionFromProviders("timeout", out bool isSet, out string[] arguments));
         Assert.IsTrue(isSet);
-        Assert.AreSequenceEqual(new[] { "30s" }, arguments);
+        Assert.AreSequenceEqual(["30s"], arguments);
     }
 
     [TestMethod]
@@ -755,11 +755,11 @@ public sealed class JsonCommandLineOptionsTests
             new CommandLineOption("filter-uid", "desc", ArgumentArity.OneOrMore, isHidden: false)));
 
         JsonCommandLineOptionEntry entry = Assert.ContainsSingle(aggregated.EnumerateJsonCommandLineOptions());
-        Assert.AreSequenceEqual(new[] { "a", "b" }, entry.Arguments.ToArray());
+        Assert.AreSequenceEqual(["a", "b"], entry.Arguments.ToArray());
 
         Assert.IsTrue(aggregated.TryGetCommandLineOptionFromProviders("filter-uid", out bool isSet, out string[] arguments));
         Assert.IsTrue(isSet);
-        Assert.AreSequenceEqual(new[] { "a", "b" }, arguments);
+        Assert.AreSequenceEqual(["a", "b"], arguments);
     }
 
     [TestMethod]
@@ -774,7 +774,7 @@ public sealed class JsonCommandLineOptionsTests
             new CommandLineOption("timeout", "desc", ArgumentArity.ExactlyOne, isHidden: false)));
 
         JsonCommandLineOptionEntry entry = Assert.ContainsSingle(aggregated.EnumerateJsonCommandLineOptions());
-        Assert.AreSequenceEqual(new[] { "true" }, entry.Arguments.ToArray());
+        Assert.AreSequenceEqual(["true"], entry.Arguments.ToArray());
     }
 
     [TestMethod]

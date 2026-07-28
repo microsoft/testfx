@@ -80,7 +80,7 @@ public sealed class TestHostOrchestratorManagerTests
 
         PublicApi.TestHostOrchestratorConfiguration config = await manager.BuildAsync(_serviceProvider);
 
-        Assert.HasCount(0, config.TestHostOrchestrators);
+        Assert.IsEmpty(config.TestHostOrchestrators);
     }
 
     [TestMethod]

@@ -1,13 +1,17 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
+
 namespace Microsoft.Testing.Platform.Helpers;
 
 // https://github.com/dotnet/runtime/blob/019c8d72effbdb4f69564695f1df7c4417ec060d/src/libraries/System.Private.CoreLib/src/System/PasteArguments.cs
+[Embedded]
 internal static partial class PasteArguments
 {
-    // WARNING: Don't change the signature of this internal method. It's exposed via IVT to other assemblies.
-    // Renaming it is a BREAKING CHANGE.
+    // This helper is embedded and source-linked into consuming assemblies (see [Embedded]).
+    // It is no longer exposed via IVT metadata, so renaming it is only a source-level change
+    // for the consumers that source-link it, not a binary breaking change.
     internal static void AppendArgument(StringBuilder stringBuilder, string argument)
     {
         if (stringBuilder.Length != 0)

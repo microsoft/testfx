@@ -31,7 +31,7 @@ internal sealed partial class MSTestSettings
     /// </summary>
     public MSTestSettings()
     {
-        CaptureDebugTraces = true;
+        OutputCaptureMode = TestOutputCaptureMode.Result;
         MapInconclusiveToFailed = false;
         MapNotRunnableToFailed = true;
         TreatDiscoveryWarningsAsErrors = true;
@@ -44,6 +44,8 @@ internal sealed partial class MSTestSettings
         ClassCleanupTimeout = 0;
         TestInitializeTimeout = 0;
         TestCleanupTimeout = 0;
+        GlobalTestInitializeTimeout = 0;
+        GlobalTestCleanupTimeout = 0;
         CooperativeCancellationTimeout = false;
         OrderTestsByNameInClass = false;
         RandomizeTestOrder = false;
@@ -78,7 +80,12 @@ internal sealed partial class MSTestSettings
     /// <summary>
     /// Gets a value indicating whether capture debug traces.
     /// </summary>
-    public bool CaptureDebugTraces { get; private set; }
+    public bool CaptureDebugTraces => OutputCaptureMode != TestOutputCaptureMode.None;
+
+    /// <summary>
+    /// Gets a value indicating how Console/Trace output produced during test execution is handled.
+    /// </summary>
+    internal TestOutputCaptureMode OutputCaptureMode { get; private set; }
 
     /// <summary>
     /// Gets a value indicating whether an inconclusive result be mapped to failed test.
@@ -144,14 +151,24 @@ internal sealed partial class MSTestSettings
     internal int ClassCleanupTimeout { get; private set; }
 
     /// <summary>
-    ///  Gets specified global TestInitializeTimeout timeout.
+    ///  Gets specified TestInitialize timeout.
     /// </summary>
     internal int TestInitializeTimeout { get; private set; }
 
     /// <summary>
-    ///  Gets specified global TestCleanupTimeout timeout.
+    ///  Gets specified TestCleanup timeout.
     /// </summary>
     internal int TestCleanupTimeout { get; private set; }
+
+    /// <summary>
+    ///  Gets specified GlobalTestInitialize timeout. Falls back to <see cref="TestInitializeTimeout"/> when not set.
+    /// </summary>
+    internal int GlobalTestInitializeTimeout { get; private set; }
+
+    /// <summary>
+    ///  Gets specified GlobalTestCleanup timeout. Falls back to <see cref="TestCleanupTimeout"/> when not set.
+    /// </summary>
+    internal int GlobalTestCleanupTimeout { get; private set; }
 
     /// <summary>
     /// Gets a value indicating whether all timeouts should be cooperative.

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Helpers;
@@ -134,7 +134,7 @@ internal sealed partial class ServerTestHost
                             // This is intentionally not using PlatformResources.ExceptionDuringCancellationWarningMessage
                             // It's meant for troubleshooting and shouldn't be localized.
                             // The localized message that is user-facing will be displayed in the DisplayAsync call next line.
-                            await _logger.LogWarningAsync($"Exception during the cancellation of request id '{args.CancelRequestId}'").ConfigureAwait(false);
+                            QueueLog(LogLevel.Warning, $"Exception during the cancellation of request id '{args.CancelRequestId}': {cancellationException}");
 
                             await ServiceProvider.GetOutputDevice().DisplayAsync(
                                 this,

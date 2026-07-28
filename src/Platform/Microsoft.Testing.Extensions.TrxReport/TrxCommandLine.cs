@@ -12,7 +12,8 @@ internal sealed class TrxReportGeneratorCommandLine : ReportGeneratorCommandLine
 
     public TrxReportGeneratorCommandLine()
         : base(
-            nameof(TrxReportGeneratorCommandLine),
+            // Stable extension UID. Do not change: it feeds telemetry, --info output, and artifact metadata.
+            "TrxReportGeneratorCommandLine",
             ExtensionResources.TrxReportGeneratorDisplayName,
             ExtensionResources.TrxReportGeneratorDescription,
             TrxReportOptionName,

@@ -135,12 +135,12 @@ public class TestExecutionManagerTests : TestContainer
         expectedResultList.SequenceEqual(_frameworkHandle.ResultsList).Should().BeTrue();
     }
 
-    public void SendTestResults_WhenUnitTestResultsIsEmpty_RecordsEndWithoutResult()
+    public async Task SendTestResults_WhenUnitTestResultsIsEmpty_RecordsEndWithoutResult()
     {
         TestCase testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
         Microsoft.VisualStudio.TestTools.UnitTesting.TestResult[] unitTestResults = [];
 
-        _testExecutionManager.SendTestResults(ToUnitTestElement(testCase), unitTestResults, DateTimeOffset.Now, DateTimeOffset.Now, _frameworkHandle.ToTestResultRecorder(EnvironmentWrapper.Instance.MachineName, MSTestSettings.CurrentSettings));
+        await _testExecutionManager.SendTestResultsAsync(ToUnitTestElement(testCase), unitTestResults, DateTimeOffset.Now, DateTimeOffset.Now, _frameworkHandle.ToTestResultRecorder(EnvironmentWrapper.Instance.MachineName, MSTestSettings.CurrentSettings));
 
         _frameworkHandle.TestCaseEndList.Should().Equal("PassingTest:None");
         _frameworkHandle.ResultsList.Should().BeEmpty();
@@ -332,6 +332,38 @@ public class TestExecutionManagerTests : TestContainer
         await _testExecutionManager.RunTestsAsync(ToUnitTestElements(tests), CurrentDeploymentContext, _frameworkHandle.ToAdapterMessageLogger(), TestResultRecorder, new TestElementFilterProvider(_runContext), new TestRunCancellationToken());
 
         VerifyTcmProperties(DummyTestClass.TestContextProperties, testCase);
+    }
+
+    public async Task RunTestsShouldKeepTcmPropertiesOutOfClassLifecycleAndSiblingTestContexts()
+    {
+        TestCase testWithTcmProperty = GetTestCase(typeof(DummyTestClassWithScopedTcmProperties), nameof(DummyTestClassWithScopedTcmProperties.TestWithTcmProperty));
+        testWithTcmProperty.SetPropertyValue(AdapterTestProperties.TestCaseIdProperty, 1401);
+        TestCase siblingTest = GetTestCase(typeof(DummyTestClassWithScopedTcmProperties), nameof(DummyTestClassWithScopedTcmProperties.SiblingTest));
+
+        TestablePlatformServiceProvider testablePlatformService = SetupTestablePlatformService();
+        testablePlatformService.MockSettingsProvider
+            .Setup(sp => sp.GetProperties(It.IsAny<string>()))
+            .Returns(new Dictionary<string, object> { ["SourceProperty"] = "SourceValue" });
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+            """
+            <RunSettings>
+              <RunConfiguration>
+                <DisableAppDomain>True</DisableAppDomain>
+              </RunConfiguration>
+            </RunSettings>
+            """);
+
+        await _testExecutionManager.RunTestsAsync(
+            ToUnitTestElements(testWithTcmProperty, siblingTest),
+            CurrentDeploymentContext,
+            _frameworkHandle.ToAdapterMessageLogger(),
+            TestResultRecorder,
+            new TestElementFilterProvider(_runContext),
+            new TestRunCancellationToken());
+
+        _frameworkHandle.TestCaseEndList.Should().Equal(
+            $"{nameof(DummyTestClassWithScopedTcmProperties.TestWithTcmProperty)}:Passed",
+            $"{nameof(DummyTestClassWithScopedTcmProperties.SiblingTest)}:Passed");
     }
 
     public async Task RunTestsForTestShouldPassInDeploymentInformationAsPropertiesToTheTest()
@@ -1012,6 +1044,64 @@ public class TestExecutionManagerTests : TestContainer
         [TestMethod]
         [Ignore]
         public void IgnoredTest() => Assert.Fail();
+    }
+
+    [DummyTestClass]
+    [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "This is a MSTest sample class so it's expected to use MSTest assertions")]
+    private sealed class DummyTestClassWithScopedTcmProperties : IDisposable
+    {
+        private readonly TestContext _testContext;
+
+        public DummyTestClassWithScopedTcmProperties(TestContext testContext)
+        {
+            _testContext = testContext;
+            AssertExpectedTestProperties(testContext);
+        }
+
+        [ClassInitialize]
+        public static void ClassInitialize(TestContext context)
+        {
+            AssertSourceProperty(context);
+            Assert.IsFalse(context.Properties.ContainsKey(AdapterTestProperties.TestCaseIdProperty.Id));
+        }
+
+        [TestInitialize]
+        public void TestInitialize() => AssertExpectedTestProperties(_testContext);
+
+        [TestMethod]
+        public void TestWithTcmProperty() => AssertExpectedTestProperties(_testContext);
+
+        [TestMethod]
+        public void SiblingTest() => AssertExpectedTestProperties(_testContext);
+
+        [TestCleanup]
+        public void TestCleanup() => AssertExpectedTestProperties(_testContext);
+
+        public void Dispose() => AssertExpectedTestProperties(_testContext);
+
+        [ClassCleanup]
+        public static void ClassCleanup(TestContext context)
+        {
+            AssertSourceProperty(context);
+            Assert.IsFalse(context.Properties.ContainsKey(AdapterTestProperties.TestCaseIdProperty.Id));
+        }
+
+        private static void AssertSourceProperty(TestContext context)
+            => Assert.AreEqual("SourceValue", context.Properties["SourceProperty"]);
+
+        private static void AssertExpectedTestProperties(TestContext context)
+        {
+            AssertSourceProperty(context);
+            if (context.TestName == nameof(TestWithTcmProperty))
+            {
+                Assert.AreEqual(1401, context.Properties[AdapterTestProperties.TestCaseIdProperty.Id]);
+            }
+            else
+            {
+                Assert.AreEqual(nameof(SiblingTest), context.TestName);
+                Assert.IsFalse(context.Properties.ContainsKey(AdapterTestProperties.TestCaseIdProperty.Id));
+            }
+        }
     }
 
     [DummyTestClass]

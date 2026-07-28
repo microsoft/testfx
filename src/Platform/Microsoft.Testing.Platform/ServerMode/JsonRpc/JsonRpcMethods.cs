@@ -40,11 +40,13 @@ internal static class JsonRpcStrings
     public const string Capabilities = "capabilities";
     public const string Testing = "testing";
     public const string DebuggerProvider = "debuggerProvider";
+    public const string IsStateful = "isStateful";
     public const string SupportsDiscovery = "supportsDiscovery";
     public const string MultiRequestSupport = "experimental_multiRequestSupport";
     public const string VSTestProviderSupport = "vstestProvider";
     public const string AttachmentsSupport = "attachmentsSupport";
     public const string MultiConnectionProvider = "multipleConnectionProvider";
+    public const string SupportsTestCoverageMessages = "supportsTestCoverageMessages";
 
     // Discovery and run
     public const string RunId = "runId";

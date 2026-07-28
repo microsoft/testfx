@@ -29,6 +29,130 @@ internal static class AssertionValueRenderer
                 ? AssertionValueFormatterRegistry.Render(value, BuiltInRenderer)
                 : RenderBuiltIn(value);
 
+    /// <summary>
+    /// Determines whether a rendered string is exactly the representation produced by the built-in renderer.
+    /// </summary>
+    internal static bool IsBuiltInStringRendering(string value, string rendered)
+    {
+        if (rendered.Length < 2 || rendered[0] != '"' || rendered[rendered.Length - 1] != '"')
+        {
+            return false;
+        }
+
+        int renderedIndex = 1;
+        foreach (char c in value)
+        {
+            switch (c)
+            {
+                case '"':
+                    if (!TryMatch(rendered, ref renderedIndex, '\\', '"'))
+                    {
+                        return false;
+                    }
+
+                    break;
+                case '\\':
+                    if (!TryMatch(rendered, ref renderedIndex, '\\', '\\'))
+                    {
+                        return false;
+                    }
+
+                    break;
+                case '\n':
+                    if (!TryMatch(rendered, ref renderedIndex, '\\', 'n'))
+                    {
+                        return false;
+                    }
+
+                    break;
+                case '\r':
+                    if (!TryMatch(rendered, ref renderedIndex, '\\', 'r'))
+                    {
+                        return false;
+                    }
+
+                    break;
+                case '\t':
+                    if (!TryMatch(rendered, ref renderedIndex, '\\', 't'))
+                    {
+                        return false;
+                    }
+
+                    break;
+                case '\0':
+                    if (!TryMatch(rendered, ref renderedIndex, '\\', '0'))
+                    {
+                        return false;
+                    }
+
+                    break;
+                default:
+                    if (char.IsControl(c))
+                    {
+                        if (!TryMatchUnicodeEscape(rendered, ref renderedIndex, c))
+                        {
+                            return false;
+                        }
+                    }
+                    else if (!TryMatch(rendered, ref renderedIndex, c))
+                    {
+                        return false;
+                    }
+
+                    break;
+            }
+        }
+
+        return renderedIndex == rendered.Length - 1;
+    }
+
+    private static char GetHexDigit(int value)
+    {
+        int nibble = value & 0xF;
+        return (char)(nibble < 10 ? '0' + nibble : 'A' + nibble - 10);
+    }
+
+    private static bool TryMatch(string rendered, ref int renderedIndex, char expected)
+    {
+        if (renderedIndex >= rendered.Length - 1 || rendered[renderedIndex] != expected)
+        {
+            return false;
+        }
+
+        renderedIndex++;
+        return true;
+    }
+
+    private static bool TryMatch(string rendered, ref int renderedIndex, char first, char second)
+    {
+        if (renderedIndex + 2 > rendered.Length - 1
+            || rendered[renderedIndex] != first
+            || rendered[renderedIndex + 1] != second)
+        {
+            return false;
+        }
+
+        renderedIndex += 2;
+        return true;
+    }
+
+    private static bool TryMatchUnicodeEscape(string rendered, ref int renderedIndex, char value)
+    {
+        if (renderedIndex + 6 > rendered.Length - 1
+            || rendered[renderedIndex] != '\\'
+            || rendered[renderedIndex + 1] != 'u'
+            || rendered[renderedIndex + 2] != GetHexDigit(value >> 12)
+            || rendered[renderedIndex + 3] != GetHexDigit(value >> 8)
+            || rendered[renderedIndex + 4] != GetHexDigit(value >> 4)
+            || rendered[renderedIndex + 5] != GetHexDigit(value))
+        {
+            return false;
+        }
+
+        renderedIndex += 6;
+        return true;
+    }
+
     private static string RenderBuiltIn(object? value)
         => value switch
         {

@@ -37,7 +37,10 @@ internal static class UnitTestElementSinkExtensions
         public HostDiscoverySink(ITestCaseDiscoverySink discoverySink)
             => _discoverySink = discoverySink;
 
-        public void SendTestElement(UnitTestElement testElement)
-            => _discoverySink.SendTestCase(testElement.GetOrCreateHostTestCase());
+        public Task SendTestElementAsync(UnitTestElement testElement)
+        {
+            _discoverySink.SendTestCase(testElement.GetOrCreateHostTestCase());
+            return Task.CompletedTask;
+        }
     }
 }

@@ -1,10 +1,15 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice.Terminal;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.TestHost;
+
+using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
@@ -12,6 +17,8 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [UnsupportedOSPlatform("browser")]
 public sealed class TerminalTestReporterTests
 {
+    public TestContext TestContext { get; set; } = null!;
+
     [TestMethod]
     public void ExceptionFlattener_WhenNestedInnerExceptions_ShouldKeepAllMessagesInOrder()
     {
@@ -514,6 +521,242 @@ public sealed class TerminalTestReporterTests
     }
 
     [TestMethod]
+    public void TestProgressStateAwareTerminal_ProgressMessages_AreReplacedRemovedAndLimited()
+    {
+        var terminal = new RecordingTerminal();
+        var renderer = new RecordingProgressRenderer();
+        using var progressAwareTerminal = new TestProgressStateAwareTerminal(terminal, () => true, renderer);
+
+        for (int i = 0; i < TestProgressStateAwareTerminal.MaximumVisibleProgressMessages + 1; i++)
+        {
+            progressAwareTerminal.UpdateProgressMessage("execution", "instance", "producer", $"message-{i}", $"Text {i}");
+        }
+
+        progressAwareTerminal.UpdateProgressMessage("execution", "instance", "producer", "message-1", "Updated");
+        progressAwareTerminal.UpdateProgressMessage("execution", "instance", "producer", "message-5", null);
+        progressAwareTerminal.WriteToTerminal(static _ => { });
+
+        Assert.HasCount(TestProgressStateAwareTerminal.MaximumVisibleProgressMessages, renderer.Messages);
+        Assert.Contains("Updated", renderer.Messages.Select(static message => message.Text));
+        Assert.DoesNotContain("Text 5", renderer.Messages.Select(static message => message.Text));
+        Assert.HasCount(1, renderer.Messages.Where(static message => message.Text == "Updated"));
+    }
+
+    [TestMethod]
+    public void TestProgressStateAwareTerminal_ProgressMessageIdentityComponentsRemainIndependent()
+    {
+        var terminal = new RecordingTerminal();
+        var renderer = new RecordingProgressRenderer();
+        using var progressAwareTerminal = new TestProgressStateAwareTerminal(terminal, () => true, renderer);
+
+        progressAwareTerminal.UpdateProgressMessage("execution-1", "instance-1", "producer-1", "shared", "base");
+        progressAwareTerminal.UpdateProgressMessage("execution-1", "instance-1", "producer-2", "shared", "other producer");
+        progressAwareTerminal.UpdateProgressMessage("execution-2", "instance-1", "producer-1", "shared", "other execution");
+        progressAwareTerminal.UpdateProgressMessage("execution-1", "instance-2", "producer-1", "shared", "other instance");
+        progressAwareTerminal.UpdateProgressMessage("execution-1", "instance-1", "producer-2", "shared", null);
+        progressAwareTerminal.UpdateProgressMessage("execution-2", "instance-1", "producer-1", "shared", "updated execution");
+        progressAwareTerminal.WriteToTerminal(static _ => { });
+
+        Assert.AreSequenceEqual(
+            new[] { "base", "other instance", "updated execution" },
+            renderer.Messages.Select(static message => message.Text).OrderBy(static message => message));
+    }
+
+    [TestMethod]
+    public void TestProgressStateAwareTerminal_AfterTerminalShrinks_TrimsMessagesAndReservesWorkerRows()
+    {
+        var terminal = new RecordingTerminal { Height = 10 };
+        var renderer = new RecordingProgressRenderer();
+        using var progressAwareTerminal = new TestProgressStateAwareTerminal(terminal, () => true, renderer);
+        var stopwatchFactory = new StopwatchFactory();
+
+        progressAwareTerminal.StartShowingProgress(workerCount: 2);
+        progressAwareTerminal.AddWorker(new TestProgressState(1, "a.dll", "net8.0", "x64", stopwatchFactory.CreateStopwatch(), isDiscovery: false));
+        progressAwareTerminal.AddWorker(new TestProgressState(2, "b.dll", "net8.0", "x64", stopwatchFactory.CreateStopwatch(), isDiscovery: false));
+        for (int i = 0; i < TestProgressStateAwareTerminal.MaximumVisibleProgressMessages; i++)
+        {
+            progressAwareTerminal.UpdateProgressMessage("execution", "instance", "producer", $"message-{i}", $"Text {i}");
+        }
+
+        terminal.Height = 4;
+        progressAwareTerminal.WriteToTerminal(static _ => { });
+        progressAwareTerminal.StopShowingProgress();
+
+        Assert.IsEmpty(renderer.Messages);
+    }
+
+    [TestMethod]
+    public void TestProgressStateAwareTerminal_WhenProgressIsDisabled_WritesChangedMessagesDurably()
+    {
+        var terminal = new RecordingTerminal();
+        using var progressAwareTerminal = new TestProgressStateAwareTerminal(terminal, () => false, new CursorProgressRenderer());
+
+        progressAwareTerminal.UpdateProgressMessage("execution", "instance", "producer", "message", "Restoring");
+        progressAwareTerminal.UpdateProgressMessage("execution", "instance", "producer", "message", "Restoring");
+        progressAwareTerminal.UpdateProgressMessage("execution", "instance", "producer", "message", "Restored");
+        progressAwareTerminal.UpdateProgressMessage("execution", "instance", "producer", "message", null);
+
+        Assert.HasCount(1, terminal.Events.Where(static e => e == "AppendLine:Restoring"));
+        Assert.HasCount(1, terminal.Events.Where(static e => e == "AppendLine:Restored"));
+    }
+
+    [TestMethod]
+    public void TestProgressStateAwareTerminal_WhenProgressIsDisabled_DeduplicationResetsBetweenSessions()
+    {
+        var terminal = new RecordingTerminal();
+        using var progressAwareTerminal = new TestProgressStateAwareTerminal(terminal, () => false, new CursorProgressRenderer());
+
+        progressAwareTerminal.StartShowingProgress(workerCount: 1);
+        progressAwareTerminal.UpdateProgressMessage("execution", "instance", "producer", "message", "Restoring");
+        progressAwareTerminal.StopShowingProgress();
+
+        progressAwareTerminal.StartShowingProgress(workerCount: 1);
+        progressAwareTerminal.UpdateProgressMessage("execution", "instance", "producer", "message", "Restoring");
+        progressAwareTerminal.StopShowingProgress();
+
+        Assert.HasCount(2, terminal.Events.Where(static e => e == "AppendLine:Restoring"));
+    }
+
+    [TestMethod]
+    public void TestProgressStateAwareTerminal_ClearProgressMessages_ResetsFallbackDeduplication()
+    {
+        var terminal = new RecordingTerminal();
+        using var progressAwareTerminal = new TestProgressStateAwareTerminal(terminal, () => false, new CursorProgressRenderer());
+
+        progressAwareTerminal.UpdateProgressMessage("execution", "instance", "producer", "message", "Restoring");
+        progressAwareTerminal.ClearProgressMessages();
+        progressAwareTerminal.UpdateProgressMessage("execution", "instance", "producer", "message", "Restoring");
+
+        Assert.HasCount(2, terminal.Events.Where(static e => e == "AppendLine:Restoring"));
+    }
+
+    [TestMethod]
+    public void AnsiTerminal_RenderProgress_RendersTransientMessageInProgressFrame()
+    {
+        var console = new StringBuilderConsole();
+        var terminal = new AnsiTerminal(console);
+
+        terminal.RenderProgress([], [new TerminalProgressMessageState(1, 1, "Restoring test assets")]);
+        int replacementStart = console.Output.Length;
+        terminal.RenderProgress([], [new TerminalProgressMessageState(1, 2, "Test assets restored")]);
+
+        Assert.Contains("Restoring test assets", console.Output);
+        string replacementRender = console.Output[replacementStart..];
+        int eraseIndex = replacementRender.IndexOf($"{AnsiCodes.CSI}{AnsiCodes.EraseInLine}", StringComparison.Ordinal);
+        int replacementIndex = replacementRender.IndexOf("Test assets restored", StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(0, eraseIndex);
+        Assert.IsGreaterThan(eraseIndex, replacementIndex, "Replacement text should be emitted after erasing the previous line.");
+        Assert.DoesNotContain("Restoring test assets", replacementRender);
+    }
+
+    [TestMethod]
+    public void AnsiTerminal_RenderProgress_ProgressMessageReservesFinalColumn()
+    {
+        var console = new StringBuilderConsoleWithCustomWidths(bufferWidth: 10, windowWidth: 10);
+        var terminal = new AnsiTerminal(console);
+
+        terminal.RenderProgress([], [new TerminalProgressMessageState(1, 1, "0123456789ABCDEF")]);
+
+        string renderedMessage = console.Output
+            .Split([Environment.NewLine], StringSplitOptions.RemoveEmptyEntries)
+            .Single();
+        Assert.HasCount(9, renderedMessage);
+    }
+
+    [TestMethod]
+    public void AnsiTerminal_RenderProgress_ExactWidthProgressMessageIsNotTruncated()
+    {
+        var console = new StringBuilderConsoleWithCustomWidths(bufferWidth: 10, windowWidth: 10);
+        var terminal = new AnsiTerminal(console);
+
+        terminal.RenderProgress([], [new TerminalProgressMessageState(1, 1, "012345678")]);
+
+        string renderedMessage = console.Output
+            .Split([Environment.NewLine], StringSplitOptions.RemoveEmptyEntries)
+            .Single();
+        Assert.AreEqual("012345678", renderedMessage);
+    }
+
+    [TestMethod]
+    public void AnsiTerminal_RenderProgress_WideProgressMessageUsesTerminalCellWidth()
+    {
+        var console = new StringBuilderConsoleWithCustomWidths(bufferWidth: 10, windowWidth: 10);
+        var terminal = new AnsiTerminal(console);
+
+        terminal.RenderProgress([], [new TerminalProgressMessageState(1, 1, "界界界界界界界界界")]);
+
+        string renderedMessage = console.Output
+            .Split([Environment.NewLine], StringSplitOptions.RemoveEmptyEntries)
+            .Single();
+        Assert.AreEqual("...界界界", renderedMessage);
+    }
+
+    [TestMethod]
+    public void AnsiTerminal_RenderProgress_NarrowProgressMessageDoesNotSplitSurrogatePair()
+    {
+        var console = new StringBuilderConsoleWithCustomWidths(bufferWidth: 2, windowWidth: 2);
+        var terminal = new AnsiTerminal(console);
+
+        terminal.RenderProgress([], [new TerminalProgressMessageState(1, 1, "😀")]);
+
+        Assert.AreEqual(string.Empty, console.Output.Replace(Environment.NewLine, string.Empty));
+    }
+
+    [TestMethod]
+    public void AnsiTerminal_RenderProgress_FlagSequenceUsesGraphemeCellWidth()
+    {
+        var console = new StringBuilderConsoleWithCustomWidths(bufferWidth: 6, windowWidth: 6);
+        var terminal = new AnsiTerminal(console);
+
+        terminal.RenderProgress([], [new TerminalProgressMessageState(1, 1, "🇩🇪🇪🇸🇫🇷")]);
+
+        string renderedMessage = console.Output
+            .Split([Environment.NewLine], StringSplitOptions.RemoveEmptyEntries)
+            .Single();
+        Assert.AreEqual("...🇫🇷", renderedMessage);
+    }
+
+    [TestMethod]
+    public void AnsiTerminal_RenderProgress_OneCellBudgetDoesNotRenderFlag()
+    {
+        var console = new StringBuilderConsoleWithCustomWidths(bufferWidth: 2, windowWidth: 2);
+        var terminal = new AnsiTerminal(console);
+
+        terminal.RenderProgress([], [new TerminalProgressMessageState(1, 1, "🇺🇸")]);
+
+        Assert.AreEqual(string.Empty, console.Output.Replace(Environment.NewLine, string.Empty));
+    }
+
+    [TestMethod]
+    public void AnsiTerminal_RenderProgress_MalformedSurrogateUsesReplacementCharacter()
+    {
+        var console = new StringBuilderConsoleWithCustomWidths(bufferWidth: 10, windowWidth: 10);
+        var terminal = new AnsiTerminal(console);
+
+        terminal.RenderProgress([], [new TerminalProgressMessageState(1, 1, "\uD83D")]);
+
+        string renderedMessage = console.Output
+            .Split([Environment.NewLine], StringSplitOptions.RemoveEmptyEntries)
+            .Single();
+        Assert.AreEqual("\uFFFD", renderedMessage);
+    }
+
+    [TestMethod]
+    [DataRow(1, 0)]
+    [DataRow(2, 1)]
+    [DataRow(3, 2)]
+    public void AnsiTerminal_RenderProgress_NarrowTerminalDoesNotWriteReservedColumn(int width, int expectedMessageLength)
+    {
+        var console = new StringBuilderConsoleWithCustomWidths(bufferWidth: width, windowWidth: width);
+        var terminal = new AnsiTerminal(console);
+
+        terminal.RenderProgress([], [new TerminalProgressMessageState(1, 1, "0123456789")]);
+
+        string renderedMessage = console.Output.Replace(Environment.NewLine, string.Empty);
+        Assert.HasCount(expectedMessageLength, renderedMessage);
+    }
+
+    [TestMethod]
     public void TestProgressStateAwareTerminal_CanStopProgressAcrossMultipleSessions()
     {
         var terminal = new RecordingTerminal();
@@ -528,6 +771,31 @@ public sealed class TerminalTestReporterTests
         Assert.HasCount(2, terminal.Events.Where(e => e == "StartBusyIndicator"));
         Assert.HasCount(2, terminal.Events.Where(e => e == "EraseProgress"));
         Assert.HasCount(2, terminal.Events.Where(e => e == "StopBusyIndicator"));
+    }
+
+    [TestMethod]
+    public void TestProgressStateAwareTerminal_RenderFailure_LogsAndSuppressesLoggerFailure()
+    {
+        var terminal = new RecordingTerminal();
+        var renderer = new ThrowingProgressRenderer();
+        using var logAttempted = new ManualResetEventSlim();
+        Mock<ILogger> logger = new();
+        logger
+            .Setup(x => x.Log(LogLevel.Debug, It.IsAny<string>(), null, LoggingExtensions.Formatter))
+            .Callback<LogLevel, string, Exception?, Func<string, Exception?, string>>(
+                (_, message, _, _) =>
+                {
+                    Assert.Contains(nameof(InvalidOperationException), message);
+                    logAttempted.Set();
+                })
+            .Throws(new IOException("Logging failed."));
+        using var progressAwareTerminal = new TestProgressStateAwareTerminal(terminal, () => true, renderer, logger.Object);
+
+        progressAwareTerminal.StartShowingProgress(workerCount: 1);
+
+        Assert.IsTrue(logAttempted.Wait(TimeSpan.FromSeconds(5), TestContext.CancellationToken), "Expected the render failure to be logged.");
+        progressAwareTerminal.StopShowingProgress();
+        Assert.Contains("EraseProgress", terminal.Events);
     }
 
     [TestMethod]
@@ -608,6 +876,357 @@ public sealed class TerminalTestReporterTests
         Assert.Contains("failed-stdout", output);
         Assert.Contains("failed-stderr", output);
     }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WhenNoEntries_WritesNothing()
+    {
+        var console = new StringBuilderConsole();
+        TerminalTestReporter reporter = CreateCoverageReporter(console);
+
+        reporter.AppendCoverageSummary([], []);
+
+        Assert.AreEqual(string.Empty, console.Output);
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WhenThresholdPasses_RendersPassedComparison()
+    {
+        var console = new StringBuilderConsole();
+        TerminalTestReporter reporter = CreateCoverageReporter(console);
+        TestCoverageThresholdMessage threshold = CreateThreshold(
+            CoverageScope.Overall, CoverageMetric.Line, CoverageAggregation.Minimum,
+            actual: 85.5, required: 80, aggregatedOver: CoverageScopeLevel.Module);
+
+        reporter.AppendCoverageSummary([], [threshold]);
+
+        Assert.Contains("Coverage Threshold Results:", console.Output);
+        Assert.Contains("Total - Line (Minimum over Module): 85.5% >= 80.0% threshold", console.Output);
+        Assert.DoesNotContain("Coverage Threshold Failures:", console.Output);
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WhenThresholdFails_RendersFailedComparison()
+    {
+        var console = new StringBuilderConsole();
+        TerminalTestReporter reporter = CreateCoverageReporter(console);
+        TestCoverageThresholdMessage threshold = CreateThreshold(
+            CoverageScope.Overall, CoverageMetric.Branch, CoverageAggregation.Total,
+            actual: 75, required: 80, aggregatedOver: CoverageScopeLevel.Module);
+
+        reporter.AppendCoverageSummary([], [threshold]);
+
+        Assert.Contains("Total - Branch (Total over Module): 75.0% < 80.0% threshold", console.Output);
+        Assert.DoesNotContain(">=", console.Output);
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WhenRoundedValuesWouldLookEqual_UsesEnoughPrecision()
+    {
+        var console = new StringBuilderConsole();
+        TerminalTestReporter reporter = CreateCoverageReporter(console);
+        TestCoverageThresholdMessage threshold = CreateThreshold(
+            CoverageScope.Overall, CoverageMetric.Line, CoverageAggregation.None,
+            actual: 79.96, required: 80);
+
+        reporter.AppendCoverageSummary([], [threshold]);
+
+        string actual = 79.96d.ToString("G17", CultureInfo.InvariantCulture);
+        string required = 80d.ToString("G17", CultureInfo.InvariantCulture);
+        Assert.Contains($"Total - Line: {actual}% < {required}% threshold", console.Output);
+        Assert.DoesNotContain("80.0% < 80.0%", console.Output);
+    }
+
+    [TestMethod]
+    [DataRow(true, false, "No coverable data (failed by policy)")]
+    [DataRow(false, true, "No coverable data (passed by policy)")]
+    public void AppendCoverageSummary_WhenThresholdHasNoData_RendersPolicyResult(
+        bool treatNoDataAsFailure,
+        bool expectedPassed,
+        string expectedText)
+    {
+        var console = new StringBuilderConsole();
+        TerminalTestReporter reporter = CreateCoverageReporter(console);
+        var threshold = new TestCoverageThresholdMessage(
+            new SessionUid("session"),
+            CoverageScope.Overall,
+            CoverageMetric.Line,
+            CoverageAggregation.None,
+            actualPercentage: double.NaN,
+            requiredPercentage: 80,
+            hasCoverableData: false,
+            producerId: "producer",
+            treatNoDataAsFailure: treatNoDataAsFailure);
+
+        reporter.AppendCoverageSummary([], [threshold]);
+
+        Assert.AreEqual(expectedPassed, threshold.Passed);
+        Assert.Contains($"Total - Line: {expectedText}", console.Output);
+        Assert.DoesNotContain("%", console.Output);
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WhenCoverageMetricHasNoData_RendersNAWithoutPercent()
+    {
+        var console = new StringBuilderConsole();
+        TerminalTestReporter reporter = CreateCoverageReporter(console);
+        var summary = new CoverageScopeSummary(
+            new SessionUid("session"),
+            CoverageScope.Overall,
+            [new CoverageMetricResult(CoverageMetric.Line, coveredCount: 0, coverableCount: 0, producerId: "producer")]);
+
+        reporter.AppendCoverageSummary([summary], []);
+
+        Assert.Contains("Total - Line: N/A", console.Output);
+        Assert.DoesNotContain("N/A%", console.Output);
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WhenThresholdOnly_DoesNotEmitDoubleBlankLineBeforeHeading()
+    {
+        var console = new StringBuilderConsole();
+        TerminalTestReporter reporter = CreateCoverageReporter(console);
+        TestCoverageThresholdMessage threshold = CreateThreshold(
+            CoverageScope.Overall, CoverageMetric.Branch, CoverageAggregation.Total,
+            actual: 75, required: 80, aggregatedOver: CoverageScopeLevel.Module);
+
+        reporter.AppendCoverageSummary([], [threshold]);
+
+        string output = console.Output.Replace("\r\n", "\n");
+        Assert.Contains("Coverage Threshold Results:", output);
+        Assert.DoesNotContain("\n\n", output);
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WhenMixedThresholds_RendersBothPassAndFail()
+    {
+        var console = new StringBuilderConsole();
+        TerminalTestReporter reporter = CreateCoverageReporter(console);
+        TestCoverageThresholdMessage passing = CreateThreshold(
+            CoverageScope.Overall, CoverageMetric.Line, CoverageAggregation.Minimum,
+            actual: 90, required: 80, aggregatedOver: CoverageScopeLevel.Module);
+        TestCoverageThresholdMessage failing = CreateThreshold(
+            CoverageScope.Overall, CoverageMetric.Method, CoverageAggregation.Average,
+            actual: 70, required: 80, aggregatedOver: CoverageScopeLevel.Type);
+
+        reporter.AppendCoverageSummary([], [passing, failing]);
+
+        Assert.Contains("Line (Minimum over Module): 90.0% >= 80.0% threshold", console.Output);
+        Assert.Contains("Method (Average over Type): 70.0% < 80.0% threshold", console.Output);
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WithForceAnsi_ColorsPassedGreenAndFailedRed()
+    {
+        var console = new StringBuilderConsole();
+        TerminalTestReporter reporter = CreateCoverageReporter(console, AnsiMode.ForceAnsi);
+        TestCoverageThresholdMessage passing = CreateThreshold(
+            CoverageScope.Overall, CoverageMetric.Line, CoverageAggregation.None, actual: 90, required: 80);
+        TestCoverageThresholdMessage failing = CreateThreshold(
+            CoverageScope.Overall, CoverageMetric.Branch, CoverageAggregation.None, actual: 70, required: 80);
+
+        reporter.AppendCoverageSummary([], [passing, failing]);
+
+        string escaped = ShowEscape(console.Output)!;
+        Assert.Contains("\x241b[32m    Total - Line:", escaped);
+        Assert.Contains("\x241b[31m    Total - Branch:", escaped);
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WhenScopesPresent_RendersPercentagesFromCounts()
+    {
+        var console = new StringBuilderConsole();
+        TerminalTestReporter reporter = CreateCoverageReporter(console);
+        var overall = new CoverageScopeSummary(
+            new SessionUid("session"),
+            CoverageScope.Overall,
+            [new CoverageMetricResult(CoverageMetric.Line, coveredCount: 855, coverableCount: 1000, producerId: "producer")]);
+        var module = new CoverageScopeSummary(
+            new SessionUid("session"),
+            new CoverageScope(CoverageScopeLevel.Module, "MyModule.dll"),
+            [new CoverageMetricResult(CoverageMetric.Branch, coveredCount: 3, coverableCount: 4, producerId: "producer")]);
+
+        reporter.AppendCoverageSummary([overall, module], []);
+
+        Assert.Contains("Code Coverage Summary:", console.Output);
+        Assert.Contains("Total - Line: 85.5%", console.Output);
+        Assert.Contains("MyModule.dll - Branch: 75.0%", console.Output);
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WhenOnlyDetailedScopes_WritesNothing()
+    {
+        var console = new StringBuilderConsole();
+        TerminalTestReporter reporter = CreateCoverageReporter(console);
+        var summary = new CoverageScopeSummary(
+            new SessionUid("session"),
+            new CoverageScope(CoverageScopeLevel.Type, "MyNamespace.MyType"),
+            [new CoverageMetricResult(CoverageMetric.Line, coveredCount: 8, coverableCount: 10, producerId: "producer")]);
+
+        reporter.AppendCoverageSummary([summary], []);
+
+        Assert.AreEqual(string.Empty, console.Output);
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WhenThresholdHasNamedScopeAndPopulation_RendersBothLabels()
+    {
+        var console = new StringBuilderConsole();
+        TerminalTestReporter reporter = CreateCoverageReporter(console);
+        TestCoverageThresholdMessage threshold = CreateThreshold(
+            new CoverageScope(CoverageScopeLevel.Module, "MyModule.dll"),
+            CoverageMetric.Line,
+            CoverageAggregation.Minimum,
+            actual: 81,
+            required: 80,
+            aggregatedOver: CoverageScopeLevel.File);
+
+        reporter.AppendCoverageSummary([], [threshold]);
+
+        Assert.Contains("MyModule.dll - Line (Minimum over File): 81.0% >= 80.0% threshold", console.Output);
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WhenScopeAndCustomMetricContainControls_NormalizesLabels()
+    {
+        var console = new StringBuilderConsole();
+        TerminalTestReporter reporter = CreateCoverageReporter(console);
+        var summary = new CoverageScopeSummary(
+            new SessionUid("session"),
+            new CoverageScope(CoverageScopeLevel.Module, "Module\nName"),
+            [new CoverageMetricResult(
+                CoverageMetric.Custom,
+                coveredCount: 1,
+                coverableCount: 2,
+                producerId: "producer",
+                customMetricName: "MC/DC\tMetric")]);
+
+        reporter.AppendCoverageSummary([summary], []);
+
+        Assert.Contains("Module␊Name - MC/DC␉Metric: 50.0%", console.Output);
+        Assert.DoesNotContain("Module\nName", console.Output);
+        Assert.DoesNotContain("MC/DC\tMetric", console.Output);
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WhenMetricLabelIsDuplicated_IncludesNormalizedProducerIds()
+    {
+        var console = new StringBuilderConsole();
+        TerminalTestReporter reporter = CreateCoverageReporter(console);
+        var summary = new CoverageScopeSummary(
+            new SessionUid("session"),
+            CoverageScope.Overall,
+            [
+                new CoverageMetricResult(CoverageMetric.Line, coveredCount: 8, coverableCount: 10, producerId: "producer-a"),
+                new CoverageMetricResult(CoverageMetric.Line, coveredCount: 7, coverableCount: 10, producerId: "producer\nb"),
+                new CoverageMetricResult(CoverageMetric.Branch, coveredCount: 6, coverableCount: 10, producerId: "producer-a"),
+            ]);
+
+        reporter.AppendCoverageSummary([summary], []);
+
+        Assert.Contains("Total - Line [producer-a]: 80.0%", console.Output);
+        Assert.Contains("Total - Line [producer␊b]: 70.0%", console.Output);
+        Assert.Contains("Total - Branch: 60.0%", console.Output);
+        Assert.DoesNotContain("Branch [producer-a]", console.Output);
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WhenThresholdLabelIsDuplicated_IncludesNormalizedProducerIds()
+    {
+        var console = new StringBuilderConsole();
+        TerminalTestReporter reporter = CreateCoverageReporter(console);
+        TestCoverageThresholdMessage first = new(
+            new SessionUid("session"),
+            CoverageScope.Overall,
+            CoverageMetric.Line,
+            CoverageAggregation.Total,
+            actualPercentage: 90,
+            requiredPercentage: 80,
+            hasCoverableData: true,
+            producerId: "producer-a",
+            aggregatedOver: CoverageScopeLevel.Module);
+        TestCoverageThresholdMessage second = new(
+            new SessionUid("session"),
+            CoverageScope.Overall,
+            CoverageMetric.Line,
+            CoverageAggregation.Total,
+            actualPercentage: 85,
+            requiredPercentage: 80,
+            hasCoverableData: true,
+            producerId: "producer\nb",
+            aggregatedOver: CoverageScopeLevel.Module);
+        TestCoverageThresholdMessage unique = CreateThreshold(
+            CoverageScope.Overall,
+            CoverageMetric.Branch,
+            CoverageAggregation.None,
+            actual: 90,
+            required: 80);
+
+        reporter.AppendCoverageSummary([], [first, second, unique]);
+
+        Assert.Contains("Total - Line (Total over Module) [producer-a]: 90.0% >= 80.0% threshold", console.Output);
+        Assert.Contains("Total - Line (Total over Module) [producer␊b]: 85.0% >= 80.0% threshold", console.Output);
+        Assert.Contains("Total - Branch: 90.0% >= 80.0% threshold", console.Output);
+        Assert.DoesNotContain("Branch [", console.Output);
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_NonInvariantCurrentCulture_UsesInvariantCoverageNumbers()
+    {
+        CultureInfo originalCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("fr-FR");
+            var console = new StringBuilderConsole();
+            TerminalTestReporter reporter = CreateCoverageReporter(console);
+            var summary = new CoverageScopeSummary(
+                new SessionUid("session"),
+                CoverageScope.Overall,
+                [new CoverageMetricResult(CoverageMetric.Line, coveredCount: 1, coverableCount: 2, producerId: "producer")]);
+            TestCoverageThresholdMessage threshold = CreateThreshold(
+                CoverageScope.Overall,
+                CoverageMetric.Line,
+                CoverageAggregation.None,
+                actual: 79.5,
+                required: 80);
+
+            reporter.AppendCoverageSummary([summary], [threshold]);
+
+            Assert.Contains("Total - Line: 50.0%", console.Output);
+            Assert.Contains("Total - Line: 79.5% < 80.0% threshold", console.Output);
+            Assert.DoesNotContain("50,0%", console.Output);
+            Assert.DoesNotContain("79,5%", console.Output);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+        }
+    }
+
+    private static TestCoverageThresholdMessage CreateThreshold(
+        CoverageScope scope,
+        CoverageMetric metric,
+        CoverageAggregation aggregation,
+        double actual,
+        double required,
+        CoverageScopeLevel? aggregatedOver = null)
+        => new(
+            new SessionUid("session"),
+            scope,
+            metric,
+            aggregation,
+            actual,
+            required,
+            hasCoverableData: true,
+            producerId: "producer",
+            aggregatedOver: aggregatedOver);
+
+    private static TerminalTestReporter CreateCoverageReporter(StringBuilderConsole console, AnsiMode ansiMode = AnsiMode.NoAnsi)
+        => new(console, static () => false, new TerminalTestReporterOptions
+        {
+            ShowPassedTests = () => true,
+            AnsiMode = ansiMode,
+            ShowProgress = () => false,
+        });
 
     private static string? ShowEscape(string? text)
     {
@@ -715,7 +1334,7 @@ public sealed class TerminalTestReporterTests
 
         public void HideCursor() => throw new NotImplementedException();
 
-        public void RenderProgress(TestProgressState?[] progress) => throw new NotImplementedException();
+        public void RenderProgress(TestProgressState?[] progress, TerminalProgressMessageState[] messages) => throw new NotImplementedException();
 
         public void ResetColor()
         {
@@ -744,7 +1363,7 @@ public sealed class TerminalTestReporterTests
 
         public int Width => int.MaxValue;
 
-        public int Height => int.MaxValue;
+        public int Height { get; set; } = int.MaxValue;
 
         public void Append(char value) => Events.Add($"Append:{value}");
 
@@ -762,7 +1381,7 @@ public sealed class TerminalTestReporterTests
 
         public void MoveCursorUp(int lineCount) => Events.Add($"MoveCursorUp:{lineCount}");
 
-        public void RenderProgress(TestProgressState?[] progress) => Events.Add("RenderProgress");
+        public void RenderProgress(TestProgressState?[] progress, TerminalProgressMessageState[] messages) => Events.Add("RenderProgress");
 
         public void ResetColor() => Events.Add("ResetColor");
 
@@ -779,6 +1398,57 @@ public sealed class TerminalTestReporterTests
         public void StopBusyIndicator() => Events.Add("StopBusyIndicator");
 
         public void StopUpdate() => Events.Add("StopUpdate");
+    }
+
+    private sealed class RecordingProgressRenderer : IProgressRenderer
+    {
+        public TimeSpan TickInterval => TimeSpan.FromDays(1);
+
+        public TerminalProgressMessageState[] Messages { get; private set; } = [];
+
+        public void OnStart()
+        {
+        }
+
+        public void OnTick(ITerminal terminal, TestProgressState?[] progressItems, TerminalProgressMessageState[]? messages = null)
+            => Messages = messages ?? [];
+
+        public void OnWrite(
+            ITerminal terminal,
+            TestProgressState?[] progressItems,
+            Action<ITerminal> write,
+            TerminalProgressMessageState[]? messages = null)
+        {
+            Messages = messages ?? [];
+            write(terminal);
+        }
+
+        public void OnTestCompleted()
+        {
+        }
+    }
+
+    private sealed class ThrowingProgressRenderer : IProgressRenderer
+    {
+        public TimeSpan TickInterval => TimeSpan.FromMilliseconds(1);
+
+        public void OnStart()
+        {
+        }
+
+        public void OnTick(ITerminal terminal, TestProgressState?[] progressItems, TerminalProgressMessageState[]? messages = null)
+            => throw new InvalidOperationException("Rendering failed.");
+
+        public void OnWrite(
+            ITerminal terminal,
+            TestProgressState?[] progressItems,
+            Action<ITerminal> write,
+            TerminalProgressMessageState[]? messages = null)
+            => write(terminal);
+
+        public void OnTestCompleted()
+        {
+        }
     }
 
     private class StackTraceException : Exception
@@ -994,6 +1664,38 @@ public sealed class TerminalTestReporterTests
 
         Assert.IsNotNull(active);
         Assert.AreEqual("MyTest", active.Text);
+    }
+
+    [TestMethod]
+    public void TestNodeResultsState_RemoveRunningTestNode_RemovesWithoutRecordingOutcome()
+    {
+        var stopwatchFactory = new StopwatchFactory();
+        var state = new TestNodeResultsState(1);
+        state.AddRunningTestNode(id: 10, uid: "uid-1", name: "DroppedTest", stopwatchFactory.CreateStopwatch());
+
+        state.RemoveRunningTestNode("uid-1");
+
+        Assert.AreEqual(0, state.Count);
+        Assert.IsNull(state.GetSingleActiveOrSummaryTask());
+    }
+
+    [TestMethod]
+    public void TerminalTestReporter_TestCompletedWithoutResult_DoesNotRecordOutcome()
+    {
+        using var terminalReporter = new TerminalTestReporter(
+            new StringBuilderConsole(),
+            new TerminalTestReporterOptions
+            {
+                ShowActiveTests = true,
+                ShowProgress = () => false,
+            });
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: false);
+        terminalReporter.AssemblyRunStarted("test.dll", "net8.0", "x64", executionId: "0", instanceId: "0");
+        terminalReporter.TestInProgress(executionId: "0", testNodeUid: "uid-1", displayName: "DroppedTest");
+
+        terminalReporter.TestCompletedWithoutResult(executionId: "0", testNodeUid: "uid-1");
+
+        Assert.AreEqual(0, terminalReporter.TotalTests);
     }
 
     [TestMethod]
@@ -1380,7 +2082,7 @@ public sealed class TerminalTestReporterTests
 
         string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\MyTests.dll" : "/repo/MyTests.dll";
         const string executionId = "exec-1";
-        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-1");
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-1", attemptNumber: 1);
 
         ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-1", testUid: "t-pass-1", TestOutcome.Passed);
         ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-1", testUid: "t-pass-2", TestOutcome.Passed);
@@ -1530,8 +2232,7 @@ public sealed class TerminalTestReporterTests
 
     // Ported from the dotnet/sdk TerminalTestReporterTests: when an assembly's tests were retried, the per-assembly
     // summary appends a "/r{N}" segment so the user can tell the final counts came from retries. Attempt 1 fails the
-    // test; attempt 2 (a new instance id under the same execution id) passes it, so the final tally is 1 passed with
-    // 1 retried.
+    // test; attempt 2 passes it, so the final tally is 1 passed with 1 retried.
     [TestMethod]
     public void AssemblyRunCompleted_WhenTestsWereRetried_ShowsRetriedCount()
     {
@@ -1550,11 +2251,11 @@ public sealed class TerminalTestReporterTests
         const string executionId = "exec-flaky";
 
         // Attempt 1: register the first instance and report a failure.
-        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-1");
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-1", attemptNumber: 1);
         ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-1", testUid: "flaky-1", TestOutcome.Fail);
 
-        // Attempt 2: a new instance id triggers a retry; the failing test now passes.
-        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-2");
+        // Attempt 2: the explicit attempt number identifies the retry; the failing test now passes.
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-2", attemptNumber: 2);
         ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-2", testUid: "flaky-1", TestOutcome.Passed);
 
         terminalReporter.AssemblyRunCompleted(executionId, exitCode: 0, outputData: null, errorData: null);
@@ -1587,11 +2288,11 @@ public sealed class TerminalTestReporterTests
         const string executionId = "exec-flaky";
 
         // Attempt 1 fails the test...
-        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-1");
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-1", attemptNumber: 1);
         ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-1", testUid: "flaky-1", TestOutcome.Fail);
 
-        // ...attempt 2 (new instance id) retries and passes it.
-        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-2");
+        // ...attempt 2 retries and passes it.
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-2", attemptNumber: 2);
         ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-2", testUid: "flaky-1", TestOutcome.Passed);
 
         terminalReporter.AssemblyRunCompleted(executionId, exitCode: 0, outputData: null, errorData: null);
@@ -1834,6 +2535,235 @@ public sealed class TerminalTestReporterTests
         Assert.Contains(ExpectedCounts(1, 0, 0), assemblyLine);
     }
 
+    [TestMethod]
+    public void AssemblyRunStarted_WithMultipleInstancesInOneAttempt_DoesNotTreatShardsAsRetries()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        TerminalTestReporter terminalReporter = CreateOrchestratorReporter(stringBuilderConsole);
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: true);
+
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\ShardedFlaky.dll" : "/repo/ShardedFlaky.dll";
+        const string executionId = "exec-sharded";
+
+        Parallel.Invoke(
+            () =>
+            {
+                terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, "attempt-1-shard-1", attemptNumber: 1);
+                ReportOrchestratorTest(terminalReporter, assembly, executionId, "attempt-1-shard-1", "flaky", TestOutcome.Fail);
+            },
+            () =>
+            {
+                terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, "attempt-1-shard-2", attemptNumber: 1);
+                ReportOrchestratorTest(terminalReporter, assembly, executionId, "attempt-1-shard-2", "passing", TestOutcome.Passed);
+            });
+
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, "attempt-2-shard-1", attemptNumber: 2);
+        ReportOrchestratorTest(terminalReporter, assembly, executionId, "attempt-2-shard-1", "flaky", TestOutcome.Passed);
+        terminalReporter.AssemblyRunCompleted(executionId, exitCode: 0, outputData: null, errorData: null);
+
+        string output = stringBuilderConsole.Output;
+        Assert.Contains(ExpectedCounts(2, 0, 0, retried: 1), GetAssemblySummaryLine(output, assembly));
+        Assert.Contains($"({string.Format(CultureInfo.CurrentCulture, TerminalResources.Try, 2)})", output);
+        Assert.DoesNotContain($"({string.Format(CultureInfo.CurrentCulture, TerminalResources.Try, 3)})", output);
+    }
+
+    [TestMethod]
+    public void TestExecutionCompleted_WhenShowSlowestTestsSet_PrintsFlatSlowestSectionRankedByDuration()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+            SlowestTestsCount = 2,
+        });
+
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, 1, isDiscovery: false, isHelp: false, isRetry: false);
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", "0", "0");
+
+        // A failed slowest test and a passed medium test should surface (all outcomes are eligible); the fast skipped
+        // test falls outside the requested top-2.
+        terminalReporter.TestCompleted("0", testNodeUid: "SlowFailedTest", "SlowFailedTest", TestOutcome.Fail, TimeSpan.FromSeconds(10),
+            informativeMessage: null, errorMessage: "boom", exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+        terminalReporter.TestCompleted("0", testNodeUid: "MediumPassedTest", "MediumPassedTest", TestOutcome.Passed, TimeSpan.FromSeconds(5),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+        terminalReporter.TestCompleted("0", testNodeUid: "FastSkippedTest", "FastSkippedTest", TestOutcome.Skipped, TimeSpan.FromSeconds(1),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+
+        terminalReporter.AssemblyRunCompleted("0");
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: null);
+
+        string output = stringBuilderConsole.Output;
+        int headerIndex = output.IndexOf(TerminalResources.SlowestTests, StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(0, headerIndex, $"Expected a slowest-tests section. Output:{Environment.NewLine}{output}");
+
+        string slowestSection = output.Substring(headerIndex);
+        int slowIndex = slowestSection.IndexOf("SlowFailedTest", StringComparison.Ordinal);
+        int mediumIndex = slowestSection.IndexOf("MediumPassedTest", StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(0, slowIndex, "Slowest test should be listed.");
+        Assert.IsGreaterThanOrEqualTo(0, mediumIndex, "Second-slowest test should be listed.");
+        Assert.IsLessThan(mediumIndex, slowIndex, "Tests should be listed from slowest to fastest.");
+        Assert.IsFalse(slowestSection.Contains("FastSkippedTest", StringComparison.Ordinal), "The fastest test should not appear in the top-2 slowest section.");
+    }
+
+    [TestMethod]
+    public void TestExecutionCompleted_WhenShowSlowestTestsNotSet_DoesNotPrintSlowestSection()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+        });
+
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, 1, isDiscovery: false, isHelp: false, isRetry: false);
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", "0", "0");
+        terminalReporter.TestCompleted("0", testNodeUid: "SomeTest", "SomeTest", TestOutcome.Passed, TimeSpan.FromSeconds(10),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+        terminalReporter.AssemblyRunCompleted("0");
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: null);
+
+        Assert.IsFalse(stringBuilderConsole.Output.Contains(TerminalResources.SlowestTests, StringComparison.Ordinal));
+    }
+
+    // Verifies the reporter's multi-assembly rendering path: when SlowestTestsCount is set and more than one
+    // assembly is registered (as the dotnet test orchestrator does), each assembly gets its own slowest-tests
+    // sub-list. This exercises the shared reporter directly; note that wiring `dotnet test --show-slowest-tests`
+    // to set SlowestTestsCount is owned by the dotnet/sdk CLI (TerminalReporterContract.props excludes the MTP
+    // options provider) and is out of scope for this repo.
+    [TestMethod]
+    public void TestExecutionCompleted_WithMultipleAssemblies_WhenShowSlowestTestsSet_PrintsPerAssemblySlowest()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+            ShowAssembly = true,
+            ShowAssemblyStartAndComplete = false,
+            SlowestTestsCount = 1,
+        });
+
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 2, isDiscovery: false, isHelp: false, isRetry: false);
+
+        string assemblyA = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\A.Tests.dll" : "/repo/A.Tests.dll";
+        string assemblyB = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\B.Tests.dll" : "/repo/B.Tests.dll";
+        terminalReporter.AssemblyRunStarted(assemblyA, "net9.0", "x64", executionId: "exec-A", instanceId: "inst-A");
+        terminalReporter.AssemblyRunStarted(assemblyB, "net9.0", "x64", executionId: "exec-B", instanceId: "inst-B");
+
+        ReportOrchestratorTestWithDuration(terminalReporter, assemblyA, "exec-A", "inst-A", "a-slow", TestOutcome.Passed, TimeSpan.FromSeconds(9));
+        ReportOrchestratorTestWithDuration(terminalReporter, assemblyA, "exec-A", "inst-A", "a-fast", TestOutcome.Passed, TimeSpan.FromSeconds(7));
+        ReportOrchestratorTestWithDuration(terminalReporter, assemblyB, "exec-B", "inst-B", "b-slow", TestOutcome.Passed, TimeSpan.FromSeconds(6));
+        ReportOrchestratorTestWithDuration(terminalReporter, assemblyB, "exec-B", "inst-B", "b-fast", TestOutcome.Passed, TimeSpan.FromSeconds(2));
+
+        terminalReporter.AssemblyRunCompleted(executionId: "exec-A", exitCode: 0, outputData: null, errorData: null);
+        terminalReporter.AssemblyRunCompleted(executionId: "exec-B", exitCode: 0, outputData: null, errorData: null);
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: 0);
+
+        string output = stringBuilderConsole.Output;
+        int headerIndex = output.IndexOf(TerminalResources.SlowestTests, StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(0, headerIndex, $"Expected a slowest-tests section. Output:{Environment.NewLine}{output}");
+
+        string slowestSection = output.Substring(headerIndex);
+        // Durations are chosen so a-fast (7s) is globally slower than b-slow (6s): a merged global ranking would
+        // surface both A tests and drop b-slow, so asserting b-slow is present and a-fast is absent proves the
+        // ranking is scoped per assembly (each assembly contributes only its own top-1).
+        Assert.Contains("a-slow", slowestSection);
+        Assert.Contains("b-slow", slowestSection);
+        Assert.IsFalse(slowestSection.Contains("a-fast", StringComparison.Ordinal), "Faster test of assembly A should not appear in its top-1 slowest.");
+        Assert.IsFalse(slowestSection.Contains("b-fast", StringComparison.Ordinal), "Faster test of assembly B should not appear in its top-1 slowest.");
+    }
+
+    // Regression test for the retry case: a timed first attempt followed by a retry that reports no timing must
+    // drop the stale first-attempt duration instead of keeping it ranked in the slowest section.
+    [TestMethod]
+    public void TestExecutionCompleted_WhenTimedTestRetriedWithoutTiming_DropsStaleDurationFromSlowest()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+            ShowAssembly = true,
+            ShowAssemblyStartAndComplete = false,
+            SlowestTestsCount = 5,
+        });
+
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: true);
+
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\Flaky.Tests.dll" : "/repo/Flaky.Tests.dll";
+        const string executionId = "exec-flaky";
+
+        // Attempt 1: the flaky test fails with a large (10s) reported duration, and a stable test passes quickly.
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-1");
+        ReportOrchestratorTestWithDuration(terminalReporter, assembly, executionId, "inst-1", "flaky", TestOutcome.Fail, TimeSpan.FromSeconds(10));
+        ReportOrchestratorTestWithDuration(terminalReporter, assembly, executionId, "inst-1", "stable", TestOutcome.Passed, TimeSpan.FromSeconds(1));
+
+        // Attempt 2 (new instance id): the retry passes but reports no timing.
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-2");
+        ReportOrchestratorTestWithDuration(terminalReporter, assembly, executionId, "inst-2", "flaky", TestOutcome.Passed, duration: null);
+
+        terminalReporter.AssemblyRunCompleted(executionId, exitCode: 0, outputData: null, errorData: null);
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: 0);
+
+        string output = stringBuilderConsole.Output;
+        int headerIndex = output.IndexOf(TerminalResources.SlowestTests, StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(0, headerIndex, $"Expected a slowest-tests section. Output:{Environment.NewLine}{output}");
+
+        string slowestSection = output.Substring(headerIndex);
+        Assert.Contains("stable", slowestSection);
+        Assert.IsFalse(slowestSection.Contains("flaky", StringComparison.Ordinal), "The retried test's stale first-attempt duration should have been dropped once the retry reported no timing.");
+    }
+
+    // Regression test for the retry-replacement behavior: when the same uid is reported across two attempts with
+    // different durations, only the latest attempt's duration must be ranked (not the earlier attempt's).
+    [TestMethod]
+    public void TestExecutionCompleted_WhenTestRetriedWithDifferentDuration_RanksOnlyLatestAttempt()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+            ShowAssembly = true,
+            ShowAssemblyStartAndComplete = false,
+            SlowestTestsCount = 5,
+        });
+
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: true);
+
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\Flaky.Tests.dll" : "/repo/Flaky.Tests.dll";
+        const string executionId = "exec-flaky";
+
+        // Attempt 1: the flaky test fails taking 10s; another test passes taking 5s.
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-1");
+        ReportOrchestratorTestWithDuration(terminalReporter, assembly, executionId, "inst-1", "flaky", TestOutcome.Fail, TimeSpan.FromSeconds(10));
+        ReportOrchestratorTestWithDuration(terminalReporter, assembly, executionId, "inst-1", "other", TestOutcome.Passed, TimeSpan.FromSeconds(5));
+
+        // Attempt 2 (new instance id): the retry passes quickly (2s).
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-2");
+        ReportOrchestratorTestWithDuration(terminalReporter, assembly, executionId, "inst-2", "flaky", TestOutcome.Passed, TimeSpan.FromSeconds(2));
+
+        terminalReporter.AssemblyRunCompleted(executionId, exitCode: 0, outputData: null, errorData: null);
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: 0);
+
+        string output = stringBuilderConsole.Output;
+        int headerIndex = output.IndexOf(TerminalResources.SlowestTests, StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(0, headerIndex, $"Expected a slowest-tests section. Output:{Environment.NewLine}{output}");
+
+        string slowestSection = output.Substring(headerIndex);
+        // The stale 10s first attempt must not be ranked; the latest attempt's 2s wins, so 'other' (5s) ranks above
+        // 'flaky' (2s). If the first attempt leaked, 'flaky' would rank first and the 10s duration would appear.
+        Assert.IsFalse(slowestSection.Contains("10s", StringComparison.Ordinal), "The first attempt's 10s duration must not be ranked after the retry replaced it.");
+        int otherIndex = slowestSection.IndexOf("other", StringComparison.Ordinal);
+        int flakyIndex = slowestSection.IndexOf("flaky", StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(0, otherIndex, "Expected 'other' to be listed.");
+        Assert.IsGreaterThanOrEqualTo(0, flakyIndex, "Expected 'flaky' to be listed.");
+        Assert.IsLessThan(flakyIndex, otherIndex, "'other' (5s) should rank above the retried 'flaky' (2s), proving only the latest attempt's duration is used.");
+    }
+
     private static TerminalTestReporter CreateOrchestratorReporter(StringBuilderConsole console, bool showAssemblyStartAndComplete = true)
         => new(console, new TerminalTestReporterOptions
         {
@@ -1855,6 +2785,24 @@ public sealed class TerminalTestReporterTests
             informativeMessage: null,
             outcome,
             duration: TimeSpan.FromMilliseconds(1),
+            exceptions: null,
+            expected: null,
+            actual: null,
+            standardOutput: null,
+            errorOutput: null);
+
+    private static void ReportOrchestratorTestWithDuration(TerminalTestReporter reporter, string assembly, string executionId, string instanceId, string testUid, TestOutcome outcome, TimeSpan? duration)
+        => reporter.TestCompleted(
+            assembly,
+            targetFramework: "net9.0",
+            architecture: "x64",
+            executionId,
+            instanceId,
+            testNodeUid: testUid,
+            displayName: testUid,
+            informativeMessage: null,
+            outcome,
+            duration,
             exceptions: null,
             expected: null,
             actual: null,

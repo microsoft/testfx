@@ -4,7 +4,53 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
-## <a name="2.3.0" />[2.3.0] - UNRELEASED
+## <a name="2.4.0" />[2.4.0] - UNRELEASED
+
+See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4.3.3...v4.4.0)
+
+### Added
+
+* Add `--report-azdo-groups <on|off>` and `--report-azdo-annotations <on|off>` toggles to Azure DevOps report extension by @Evangelink in [#9542](https://github.com/microsoft/testfx/pull/9542)
+* Re-print errored assemblies in dotnet test end-of-run recap by @Evangelink in [#9545](https://github.com/microsoft/testfx/pull/9545)
+* Add server-initiated session cancellation to the dotnet test IPC protocol by @Evangelink in [#9549](https://github.com/microsoft/testfx/pull/9549)
+
+## <a name="2.3.3" />[2.3.3] - UNRELEASED
+
+See full log [of v4.3.2...v4.3.3](https://github.com/microsoft/testfx/compare/v4.3.2...v4.3.3)
+
+### Changed
+
+* Produce portable PDBs for official builds so symbols can be published to symbol servers by @Evangelink in [#10006](https://github.com/microsoft/testfx/pull/10006)
+
+### Fixed
+
+* Restore compatibility with the deprecated MSTest.Engine used by source-generated test projects by @Evangelink in [#9938](https://github.com/microsoft/testfx/pull/9938)
+* Regenerate source-generated entry points and extension registrations after the Microsoft.Testing.Platform.MSBuild task assembly is updated by @Evangelink in [#10082](https://github.com/microsoft/testfx/pull/10082)
+* Fix VSTestBridge throwing `IndexOutOfRangeException` when a UID after the first starts with a filter operator by @azat-msft in [#9771](https://github.com/microsoft/testfx/pull/9771)
+* Prevent diagnostic file-logger shutdown from crashing an otherwise successful test run under thread-pool starvation by @Evangelink in [#9802](https://github.com/microsoft/testfx/pull/9802)
+* Fix VSTestBridge interpreting a GUID-shaped fully-qualified test name as a test ID by @Evangelink in [#9794](https://github.com/microsoft/testfx/pull/9794)
+* Support comments in `testconfig.json` on .NET Framework by @Evangelink in [#10144](https://github.com/microsoft/testfx/pull/10144)
+* Fix `Microsoft.Testing.Extensions.AzureDevOpsReport` crashing during teardown from duplicate data-consumer disposal after a successful test run by @Evangelink in [#10195](https://github.com/microsoft/testfx/pull/10195)
+
+## <a name="2.3.2" />[2.3.2] - 2026-07-13
+
+Servicing release to keep Microsoft.Testing.Platform aligned with the MSTest 4.3.2 release. No functional platform changes beyond the localization updates below.
+
+### Changed
+
+* Update localized resources for the Azure DevOps, GitHub Actions and Retry extensions and terminal output by @Evangelink in [#9847](https://github.com/microsoft/testfx/pull/9847)
+
+### Fixed
+
+* Fix localization placeholder in the GitHub Actions report resources by @Evangelink in [#9891](https://github.com/microsoft/testfx/pull/9891)
+
+## <a name="2.3.1" />[2.3.1] - 2026-07-08
+
+### Fixed
+
+* Fix forward-compat crash (`MissingMethodException`) loading old 2.x extensions (Telemetry, TrxReport, VSTestBridge) on .NET Framework by @Evangelink in [#9739](https://github.com/microsoft/testfx/pull/9739)
+
+## <a name="2.3.0" />[2.3.0] - 2026-07-07
 
 See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4.2.3...v4.3.0)
 
@@ -44,10 +90,8 @@ See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4
 * Forward Azure DevOps logging commands over the dotnet test pipe for multi-assembly test runs by @Evangelink in [#9463](https://github.com/microsoft/testfx/pull/9463)
 * Add `PropertyBag.FirstOrDefault<TProperty>()` for efficient single-property lookup without per-call array allocation by @Evangelink in [#9488](https://github.com/microsoft/testfx/pull/9488)
 * Add experimental `Microsoft.Testing.Extensions.GitHubActionsReport` extension emitting GitHub Actions workflow commands (per-assembly log groups, failure annotations, job summary, slow-test notices) by @azat-msft in [#9541](https://github.com/microsoft/testfx/pull/9541)
-* Add `--report-azdo-groups <on|off>` and `--report-azdo-annotations <on|off>` toggles to Azure DevOps report extension by @Evangelink in [#9542](https://github.com/microsoft/testfx/pull/9542)
-* Re-print errored assemblies in dotnet test end-of-run recap by @Evangelink in [#9545](https://github.com/microsoft/testfx/pull/9545)
-* Add server-initiated session cancellation to the dotnet test IPC protocol by @Evangelink in [#9549](https://github.com/microsoft/testfx/pull/9549)
 * Emit `::warning` annotations for skipped tests in `Microsoft.Testing.Extensions.GitHubActionsReport` by @Evangelink in [#9641](https://github.com/microsoft/testfx/pull/9641)
+* Let an explicit `--minimum-expected-tests N` govern the zero-tests verdict, so a run of fewer than N tests reports the minimum-expected violation (exit code 9) instead of "zero tests ran" (exit code 8) even when no tests ran. This lets a `dotnet test --test-modules` orchestrator tell a stricter local-minimum violation apart from an empty module (#7457) by @Copilot in [#9709](https://github.com/microsoft/testfx/pull/9709)
 
 ### Fixed
 
@@ -86,6 +130,27 @@ See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4
 * Fix --list-tests json output under --server mode by streaming discovered tests to the SDK over the dotnet-test pipe by @Evangelink in [#9192](https://github.com/microsoft/testfx/pull/9192)
 * Make AzureDevOps summary report file name unique per assembly by @Evangelink in [#9264](https://github.com/microsoft/testfx/pull/9264)
 * Fix `--treenode-filter` + `--filter-uid` mutual exclusion: validated during command-line validation (proper `InvalidCommandLine` exit code) instead of a late `NotSupportedException`; documentation gaps for the `!` NOT operator and property-filter semantics addressed by @Evangelink in [#9458](https://github.com/microsoft/testfx/pull/9458)
+
+### Artifacts
+
+* Microsoft.Testing.Platform: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Platform/2.3.0)
+* Microsoft.Testing.Platform.MSBuild: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Platform.MSBuild/2.3.0)
+* Microsoft.Testing.Extensions.AzureDevOpsReport: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureDevOpsReport/2.3.0)
+* Microsoft.Testing.Extensions.CrashDump: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/2.3.0)
+* Microsoft.Testing.Extensions.HangDump: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/2.3.0)
+* Microsoft.Testing.Extensions.HotReload: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/2.3.0)
+* Microsoft.Testing.Extensions.HtmlReport: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HtmlReport/2.3.0)
+* Microsoft.Testing.Extensions.Retry: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/2.3.0)
+* Microsoft.Testing.Extensions.Telemetry: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/2.3.0)
+* Microsoft.Testing.Extensions.TrxReport: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/2.3.0)
+* Microsoft.Testing.Extensions.TrxReport.Abstractions: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/2.3.0)
+* Microsoft.Testing.Extensions.VSTestBridge: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.VSTestBridge/2.3.0)
+* Microsoft.Testing.Extensions.CtrfReport: [1.0.0-alpha.26357.13](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CtrfReport/1.0.0-alpha.26357.13)
+* Microsoft.Testing.Extensions.GitHubActionsReport: [1.0.0-alpha.26357.13](https://www.nuget.org/packages/Microsoft.Testing.Extensions.GitHubActionsReport/1.0.0-alpha.26357.13)
+* Microsoft.Testing.Extensions.JUnitReport: [1.0.0-alpha.26357.13](https://www.nuget.org/packages/Microsoft.Testing.Extensions.JUnitReport/1.0.0-alpha.26357.13)
+* Microsoft.Testing.Extensions.Logging: [1.0.0-alpha.26357.13](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Logging/1.0.0-alpha.26357.13)
+* Microsoft.Testing.Extensions.PackagedApp: [1.0.0-alpha.26357.13](https://www.nuget.org/packages/Microsoft.Testing.Extensions.PackagedApp/1.0.0-alpha.26357.13)
+* Microsoft.Testing.Extensions.VideoRecorder: [1.0.0-alpha.26357.13](https://www.nuget.org/packages/Microsoft.Testing.Extensions.VideoRecorder/1.0.0-alpha.26357.13)
 
 ## <a name="2.2.3" />[2.2.3] - 2026-05-14
 

@@ -50,7 +50,7 @@ internal static class UnitTestElementExtensions
         // string testFullName = this.TestMethod.HasManagedMethodAndTypeProperties
         //     ? $"{TestMethod.ManagedTypeName}.{TestMethod.ManagedMethodName}"
         //     : $"{TestMethod.FullClassName}.{TestMethod.Name}";
-        string testFullName = $"{testMethod.FullClassName}.{testMethod.Name}";
+        string testFullName = testMethod.FullyQualifiedName;
 
         TestCase testCase = new(testFullName, EngineConstants.ExecutorUri, testMethod.AssemblyName)
         {
@@ -84,7 +84,7 @@ internal static class UnitTestElementExtensions
         }
 
         // Set priority if present
-        if (element.Priority != null)
+        if (element.Priority is not null)
         {
             testCase.SetPropertyValue(AdapterTestProperties.PriorityProperty, element.Priority.Value);
         }
@@ -97,7 +97,7 @@ internal static class UnitTestElementExtensions
             }
         }
 
-        if (element.WorkItemIds != null)
+        if (element.WorkItemIds is not null)
         {
             testCase.SetPropertyValue(AdapterTestProperties.WorkItemIdsProperty, element.WorkItemIds);
         }
@@ -114,6 +114,12 @@ internal static class UnitTestElementExtensions
         if (element.DoNotParallelize)
         {
             testCase.SetPropertyValue(AdapterTestProperties.DoNotParallelizeProperty, element.DoNotParallelize);
+        }
+
+        // Set the declared resource locks if present, so they survive the discovery -> execution round-trip.
+        if (element.ResourceLocks is { Length: > 0 } resourceLocks)
+        {
+            testCase.SetPropertyValue(AdapterTestProperties.ResourceLocksProperty, Array.ConvertAll(resourceLocks, ResourceLockInfo.Encode));
         }
 
         if (element.UnfoldingStrategy != TestDataSourceUnfoldingStrategy.Auto)
@@ -140,6 +146,28 @@ internal static class UnitTestElementExtensions
         testCase.Id = GenerateSerializedDataStrategyTestId(element, testFullName);
 
         return testCase;
+    }
+
+    /// <summary>
+    /// Computes the stable test identifier for a <see cref="UnitTestElement"/> without materializing a VSTest
+    /// <see cref="TestCase"/>. This is the same identifier surfaced as <see cref="TestCase.Id"/> by
+    /// <see cref="ToTestCase"/>, exposed neutrally so the native Microsoft.Testing.Platform integration can build
+    /// a <c>TestNode</c> UID without depending on the VSTest object model.
+    /// </summary>
+    /// <param name="element">The test element to identify.</param>
+    /// <returns>The stable, versioned test identifier.</returns>
+    internal static Guid GetTestId(this UnitTestElement element)
+    {
+        if (element.CachedTestNodeUid is { } cachedTestId)
+        {
+            return cachedTestId;
+        }
+
+        TestMethod testMethod = element.TestMethod;
+        string testFullName = testMethod.FullyQualifiedName;
+        Guid testId = GenerateSerializedDataStrategyTestId(element, testFullName);
+        element.CachedTestNodeUid = testId;
+        return testId;
     }
 
     private static Guid GenerateSerializedDataStrategyTestId(UnitTestElement element, string testFullName)

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
@@ -86,6 +86,29 @@ public sealed class DotnetTestPassthroughOutputDeviceTests
         var device = new DotnetTestPassthroughOutputDevice(serviceProvider.Object);
 
         await device.DisplayAsync(Producer, new TextOutputDeviceData("just some info"), CancellationToken.None);
+
+        serviceProvider.Verify(p => p.GetService(It.IsAny<Type>()), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task DisplayAsync_WithSessionMessageButNoConnection_IsSwallowedWithoutThrowing()
+    {
+        var serviceProvider = new Mock<IServiceProvider>();
+        serviceProvider.Setup(p => p.GetService(typeof(IPushOnlyProtocol))).Returns(null!);
+        var device = new DotnetTestPassthroughOutputDevice(serviceProvider.Object);
+
+        await device.DisplayAsync(Producer, new SessionMessageOutputDeviceData("Restoring test assets"), CancellationToken.None);
+
+        serviceProvider.Verify(p => p.GetService(typeof(IPushOnlyProtocol)), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task DisplayAsync_WithProgressMessage_IsSwallowedWithoutResolvingTheConnection()
+    {
+        var serviceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        var device = new DotnetTestPassthroughOutputDevice(serviceProvider.Object);
+
+        await device.DisplayAsync(Producer, new ProgressMessageOutputDeviceData("restore", "Restoring test assets"), CancellationToken.None);
 
         serviceProvider.Verify(p => p.GetService(It.IsAny<Type>()), Times.Never);
     }

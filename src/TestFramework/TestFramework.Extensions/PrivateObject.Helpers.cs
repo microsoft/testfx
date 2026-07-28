@@ -81,7 +81,7 @@ public partial class PrivateObject
         var finalCandidates = new MethodInfo[methodCandidates.Count];
         methodCandidates.CopyTo(finalCandidates, 0);
 
-        // TODO: Check if it's possible to have parameterTypes null here as we assert it's not null above.
+        // parameterTypes is only asserted non-null in debug builds (see above), so the null check is kept as a defensive guard for release builds.
         if (parameterTypes == null || parameterTypes.Length != 0)
         {
             // Now that we have a preliminary list of candidates, select the most appropriate one.

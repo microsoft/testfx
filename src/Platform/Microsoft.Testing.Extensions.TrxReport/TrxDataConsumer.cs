@@ -172,7 +172,7 @@ shouldUseOutOfProcessTrxGeneration: {shouldUseOutOfProcessTrxGeneration}
             // This tells the TestHostController process the info of the registered ITestFramework.
             // The TestHostController needs that info to create the TrxReportEngine so that the info are written to the TRX file.
             // Note: TestHostController cannot retrieve ITestFramework from service provider which is why we need the extra complexity here.
-            // TODO: Investigate if TestHostController can/should have access to ITestFramework and simplify this.
+            // It would be worth investigating whether TestHostController can/should have access to ITestFramework to simplify this.
             await _trxTestApplicationLifecycleCallbacks.NamedPipeClient.RequestReplyAsync<TestAdapterInformationRequest, VoidResponse>(new TestAdapterInformationRequest(_testFramework.Uid, _testFramework.Version), cancellationToken)
                 .TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken).ConfigureAwait(false);
         }
@@ -251,7 +251,7 @@ shouldUseOutOfProcessTrxGeneration: {shouldUseOutOfProcessTrxGeneration}
         // If we are running with out-of-process mode, we communicate via pipe to the TestHostController and send the ReportFileNameRequest.
         if (!TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(_commandLineOptionsService))
         {
-            await _messageBus.PublishAsync(this, new SessionFileArtifact(testSessionContext.SessionUid, new FileInfo(reportFileName), ExtensionResources.TrxReportArtifactDisplayName, ExtensionResources.TrxReportArtifactDescription)).ConfigureAwait(false);
+            await _messageBus.PublishAsync(this, new SessionFileArtifact(testSessionContext.SessionUid, new FileInfo(reportFileName), ExtensionResources.TrxReportArtifactDisplayName, ExtensionResources.TrxReportArtifactDescription, TrxReportEngine.TrxArtifactKind)).ConfigureAwait(false);
         }
         else
         {

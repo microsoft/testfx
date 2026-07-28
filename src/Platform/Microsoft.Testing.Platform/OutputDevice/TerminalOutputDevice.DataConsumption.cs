@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.Messages;
@@ -22,61 +22,102 @@ internal sealed partial class TerminalOutputDevice
 
         if (_isListTestsJson)
         {
-            // Machine-readable mode: keep stdout reserved for the JSON document so consumers can
-            // pipe it directly. Errors and exceptions still need surfacing somewhere, so route
-            // them to stderr via WriteToStandardErrorAsync (the only place that bypasses IConsole,
-            // which does not abstract stderr today). Azure Pipelines ##vso commands are skipped
-            // here: they must be written to stdout to be processed, but stdout belongs to JSON.
-            // Warnings and informational text are dropped to keep stdout strictly JSON.
-            switch (data)
+            using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
             {
-                case ErrorMessageOutputDeviceData errorData:
-                    await LogDebugAsync(errorData.Message).ConfigureAwait(false);
-                    await WriteToStandardErrorAsync(errorData.Message).ConfigureAwait(false);
-                    break;
+                // Machine-readable mode: keep stdout reserved for the JSON document so consumers can
+                // pipe it directly. Errors and exceptions still need surfacing somewhere, so route
+                // them to stderr via WriteToStandardErrorAsync (the only place that bypasses IConsole,
+                // which does not abstract stderr today). Azure Pipelines ##vso commands are skipped
+                // here: they must be written to stdout to be processed, but stdout belongs to JSON.
+                // Warnings and regular informational text are dropped, while structured session and progress
+                // messages are routed to stderr, keeping stdout strictly JSON.
+                switch (data)
+                {
+                    case SessionMessageOutputDeviceData sessionMessageData:
+                        await LogDebugAsync(sessionMessageData.Message).ConfigureAwait(false);
+                        await WriteToStandardErrorAsync(sessionMessageData.Message).ConfigureAwait(false);
+                        break;
 
-                case ExceptionOutputDeviceData exceptionData:
-                    string exceptionText = exceptionData.Exception.ToString();
-                    await LogDebugAsync(exceptionText).ConfigureAwait(false);
-                    await WriteToStandardErrorAsync(exceptionText).ConfigureAwait(false);
-                    break;
+                    case ProgressMessageOutputDeviceData progressMessageData:
+                        await LogDebugAsync(progressMessageData.Message ?? string.Empty).ConfigureAwait(false);
+                        var identity = new ProgressMessageIdentity(producer.Uid, progressMessageData.Key);
+                        if (progressMessageData.Message is null)
+                        {
+                            _jsonProgressMessages.Remove(identity);
+                        }
+                        else if (!_jsonProgressMessages.TryGetValue(identity, out string? existingMessage)
+                            || existingMessage != progressMessageData.Message)
+                        {
+                            _jsonProgressMessages[identity] = progressMessageData.Message;
+                            await WriteToStandardErrorAsync(progressMessageData.Message).ConfigureAwait(false);
+                        }
+
+                        break;
+
+                    case ErrorMessageOutputDeviceData errorData:
+                        await LogDebugAsync(errorData.Message).ConfigureAwait(false);
+                        await WriteToStandardErrorAsync(errorData.Message).ConfigureAwait(false);
+                        break;
+
+                    case ExceptionOutputDeviceData exceptionData:
+                        string exceptionText = exceptionData.Exception.ToString();
+                        await LogDebugAsync(exceptionText).ConfigureAwait(false);
+                        await WriteToStandardErrorAsync(exceptionText).ConfigureAwait(false);
+                        break;
+                }
             }
 
             return;
         }
 
+        TerminalTestReporter terminalTestReporter = _terminalTestReporter ?? throw ApplicationStateGuard.Unreachable();
         using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
         {
             switch (data)
             {
+                case SessionMessageOutputDeviceData sessionMessageData:
+                    await LogDebugAsync(sessionMessageData.Message).ConfigureAwait(false);
+                    terminalTestReporter.WriteMessage(sessionMessageData.Message);
+                    break;
+
+                case ProgressMessageOutputDeviceData progressMessageData:
+                    await LogDebugAsync(progressMessageData.Message ?? string.Empty).ConfigureAwait(false);
+                    terminalTestReporter.UpdateProgressMessage(
+                        InProcessExecutionId,
+                        InProcessExecutionId,
+                        producer.Uid,
+                        progressMessageData.Key,
+                        progressMessageData.Message);
+                    break;
+
                 case FormattedTextOutputDeviceData formattedTextData:
                     await LogDebugAsync(formattedTextData.Text).ConfigureAwait(false);
-                    _terminalTestReporter.WriteMessage(formattedTextData.Text, formattedTextData.ForegroundColor as SystemConsoleColor, formattedTextData.Padding);
+                    terminalTestReporter.WriteMessage(formattedTextData.Text, formattedTextData.ForegroundColor as SystemConsoleColor, formattedTextData.Padding);
                     break;
 
                 case TextOutputDeviceData textData:
                     await LogDebugAsync(textData.Text).ConfigureAwait(false);
-                    _terminalTestReporter.WriteMessage(textData.Text);
+                    terminalTestReporter.WriteMessage(textData.Text);
                     break;
 
                 case WarningMessageOutputDeviceData warningData:
                     await LogDebugAsync(warningData.Message).ConfigureAwait(false);
                     if (_isAzureDevOpsEnvironment)
                     {
-                        _terminalTestReporter.WriteMessage(AzureDevOpsLogIssueFormatter.FormatLogIssue(AzureDevOpsLogIssueFormatter.SeverityWarning, warningData.Message));
+                        terminalTestReporter.WriteMessage(AzureDevOpsLogIssueFormatter.FormatLogIssue(AzureDevOpsLogIssueFormatter.SeverityWarning, warningData.Message));
                     }
 
-                    _terminalTestReporter.WriteWarningMessage(warningData.Message, null);
+                    terminalTestReporter.WriteWarningMessage(warningData.Message, null);
                     break;
 
                 case ErrorMessageOutputDeviceData errorData:
                     await LogDebugAsync(errorData.Message).ConfigureAwait(false);
                     if (_isAzureDevOpsEnvironment)
                     {
-                        _terminalTestReporter.WriteMessage(AzureDevOpsLogIssueFormatter.FormatLogIssue(AzureDevOpsLogIssueFormatter.SeverityError, errorData.Message));
+                        terminalTestReporter.WriteMessage(AzureDevOpsLogIssueFormatter.FormatLogIssue(AzureDevOpsLogIssueFormatter.SeverityError, errorData.Message));
                     }
 
-                    _terminalTestReporter.WriteErrorMessage(errorData.Message, null);
+                    terminalTestReporter.WriteErrorMessage(errorData.Message, null);
                     break;
 
                 case ExceptionOutputDeviceData exceptionOutputDeviceData:
@@ -84,10 +125,10 @@ internal sealed partial class TerminalOutputDevice
                     await LogDebugAsync(exceptionMessage).ConfigureAwait(false);
                     if (_isAzureDevOpsEnvironment)
                     {
-                        _terminalTestReporter.WriteMessage(AzureDevOpsLogIssueFormatter.FormatLogIssue(AzureDevOpsLogIssueFormatter.SeverityError, exceptionMessage));
+                        terminalTestReporter.WriteMessage(AzureDevOpsLogIssueFormatter.FormatLogIssue(AzureDevOpsLogIssueFormatter.SeverityError, exceptionMessage));
                     }
 
-                    _terminalTestReporter.WriteErrorMessage(exceptionOutputDeviceData.Exception);
+                    terminalTestReporter.WriteErrorMessage(exceptionOutputDeviceData.Exception);
                     break;
             }
         }
@@ -97,6 +138,7 @@ internal sealed partial class TerminalOutputDevice
     {
         RoslynDebug.Assert(_terminalTestReporter is not null);
         cancellationToken.ThrowIfCancellationRequested();
+        TerminalTestReporter terminalTestReporter = _terminalTestReporter ?? throw ApplicationStateGuard.Unreachable();
 
         // Under --server (e.g. `dotnet test` with `--server dotnettestcli`) the terminal device does not
         // buffer or render anything: data flows to the SDK through the dotnet-test pipe instead, and the
@@ -129,6 +171,7 @@ internal sealed partial class TerminalOutputDevice
                 StandardOutputProperty? stdoutProp = null;
                 StandardErrorProperty? stderrProp = null;
                 TestNodeStateProperty? nodeState = null;
+                bool executionCompleted = false;
                 PropertyBag.PropertyBagEnumerator enumerator = testNodeStateChanged.TestNode.Properties.GetStructEnumerator();
                 while (enumerator.MoveNext())
                 {
@@ -138,8 +181,9 @@ internal sealed partial class TerminalOutputDevice
                         case StandardOutputProperty so: stdoutProp = so; break;
                         case StandardErrorProperty se: stderrProp = se; break;
                         case TestNodeStateProperty s: nodeState = s; break;
+                        case TestNodeExecutionCompletedProperty: executionCompleted = true; break;
                         case FileArtifactProperty fa:
-                            _terminalTestReporter.ArtifactAdded(
+                            terminalTestReporter.ArtifactAdded(
                                 outOfProcess: _processRole != TestProcessRole.TestHost,
                                 assembly: _assemblyName,
                                 targetFramework: _targetFramework,
@@ -155,17 +199,25 @@ internal sealed partial class TerminalOutputDevice
                 string? standardOutput = stdoutProp?.StandardOutput;
                 string? standardError = stderrProp?.StandardError;
 
+                if (executionCompleted)
+                {
+                    terminalTestReporter.TestCompletedWithoutResult(
+                        InProcessExecutionId,
+                        testNodeStateChanged.TestNode.Uid.Value);
+                    break;
+                }
+
                 switch (nodeState)
                 {
                     case InProgressTestNodeStateProperty:
-                        _terminalTestReporter.TestInProgress(
+                        terminalTestReporter.TestInProgress(
                             InProcessExecutionId,
                             testNodeStateChanged.TestNode.Uid.Value,
                             testNodeStateChanged.TestNode.DisplayName);
                         break;
 
                     case ErrorTestNodeStateProperty errorState:
-                        _terminalTestReporter.TestCompleted(
+                        terminalTestReporter.TestCompleted(
                             InProcessExecutionId,
                             testNodeStateChanged.TestNode.Uid.Value,
                             testNodeStateChanged.TestNode.DisplayName,
@@ -181,7 +233,7 @@ internal sealed partial class TerminalOutputDevice
                         break;
 
                     case FailedTestNodeStateProperty failedState:
-                        _terminalTestReporter.TestCompleted(
+                        terminalTestReporter.TestCompleted(
                             InProcessExecutionId,
                             testNodeStateChanged.TestNode.Uid.Value,
                             testNodeStateChanged.TestNode.DisplayName,
@@ -197,7 +249,7 @@ internal sealed partial class TerminalOutputDevice
                         break;
 
                     case TimeoutTestNodeStateProperty timeoutState:
-                        _terminalTestReporter.TestCompleted(
+                        terminalTestReporter.TestCompleted(
                             InProcessExecutionId,
                             testNodeStateChanged.TestNode.Uid.Value,
                             testNodeStateChanged.TestNode.DisplayName,
@@ -215,7 +267,7 @@ internal sealed partial class TerminalOutputDevice
 #pragma warning disable CS0618, MTP0001 // Type or member is obsolete
                     case CancelledTestNodeStateProperty cancelledState:
 #pragma warning restore CS0618, MTP0001 // Type or member is obsolete
-                        _terminalTestReporter.TestCompleted(
+                        terminalTestReporter.TestCompleted(
                             InProcessExecutionId,
                             testNodeStateChanged.TestNode.Uid.Value,
                             testNodeStateChanged.TestNode.DisplayName,
@@ -231,7 +283,7 @@ internal sealed partial class TerminalOutputDevice
                         break;
 
                     case PassedTestNodeStateProperty:
-                        _terminalTestReporter.TestCompleted(
+                        terminalTestReporter.TestCompleted(
                             InProcessExecutionId,
                             testNodeStateChanged.TestNode.Uid.Value,
                             testNodeStateChanged.TestNode.DisplayName,
@@ -247,7 +299,7 @@ internal sealed partial class TerminalOutputDevice
                         break;
 
                     case SkippedTestNodeStateProperty skippedState:
-                        _terminalTestReporter.TestCompleted(
+                        terminalTestReporter.TestCompleted(
                             InProcessExecutionId,
                             testNodeStateChanged.TestNode.Uid.Value,
                             testNodeStateChanged.TestNode.DisplayName,
@@ -263,7 +315,7 @@ internal sealed partial class TerminalOutputDevice
                         break;
 
                     case DiscoveredTestNodeStateProperty:
-                        _terminalTestReporter.TestDiscovered(InProcessExecutionId, testNodeStateChanged.TestNode.DisplayName);
+                        terminalTestReporter.TestDiscovered(InProcessExecutionId, testNodeStateChanged.TestNode.DisplayName);
                         break;
                 }
 
@@ -271,7 +323,7 @@ internal sealed partial class TerminalOutputDevice
 
             case SessionFileArtifact artifact:
                 {
-                    _terminalTestReporter.ArtifactAdded(
+                    terminalTestReporter.ArtifactAdded(
                         outOfProcess: _processRole != TestProcessRole.TestHost,
                         assembly: _assemblyName,
                         targetFramework: _targetFramework,
@@ -284,7 +336,7 @@ internal sealed partial class TerminalOutputDevice
                 break;
             case FileArtifact artifact:
                 {
-                    _terminalTestReporter.ArtifactAdded(
+                    terminalTestReporter.ArtifactAdded(
                         outOfProcess: _processRole != TestProcessRole.TestHost,
                         assembly: _assemblyName,
                         targetFramework: _targetFramework,

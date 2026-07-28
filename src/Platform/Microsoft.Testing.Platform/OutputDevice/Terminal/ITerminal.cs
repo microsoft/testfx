@@ -39,7 +39,7 @@ internal interface ITerminal
 
     void EraseProgress();
 
-    void RenderProgress(TestProgressState?[] progress);
+    void RenderProgress(TestProgressState?[] progress, TerminalProgressMessageState[] messages);
 
     void StartBusyIndicator();
 

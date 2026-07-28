@@ -84,7 +84,7 @@ internal sealed class AzureDevOpsRunIdCoordinator
                 throw new InvalidOperationException(AzureDevOpsResources.AzureDevOpsLivePublishingRunIdFileMismatch);
             }
 
-            // TODO: Elect a deterministic surviving participant when the owner lease expires before writing azdo-runid.<buildId>.json.
+            // A deterministic surviving participant could be elected when the owner lease expires before writing azdo-runid.<buildId>.json.
             throw new InvalidOperationException(AzureDevOpsResources.AzureDevOpsLivePublishingMissingRunIdFile);
         }
         catch

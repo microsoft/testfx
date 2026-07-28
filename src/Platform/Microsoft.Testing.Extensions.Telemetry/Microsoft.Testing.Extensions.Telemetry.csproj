@@ -9,6 +9,8 @@
     <!-- Embedded helpers from Microsoft.Testing.Platform -->
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\CIEnvironmentDetector.cs" Link="Helpers\CIEnvironmentDetector.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\RoslynString.cs" Link="Helpers\RoslynString.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\RoslynDebug.cs" Link="Helpers\RoslynDebug.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\RuntimeFeatureHelper.cs" Link="Helpers\RuntimeFeatureHelper.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Messages\SingleConsumerUnboundedChannel.cs" Link="Helpers\SingleConsumerUnboundedChannel.cs" />
   </ItemGroup>
 
@@ -31,6 +33,8 @@ This package provides telemetry for the platform.]]>
     <AdditionalFiles Include="BannedSymbols.txt" />
     <AdditionalFiles Include="PublicAPI\PublicAPI.Shipped.txt" />
     <AdditionalFiles Include="PublicAPI\PublicAPI.Unshipped.txt" />
+    <AdditionalFiles Include="InternalAPI\InternalAPI.Shipped.txt" />
+    <AdditionalFiles Include="InternalAPI\InternalAPI.Unshipped.txt" />
   </ItemGroup>
 
   <!-- Nuget package layout -->

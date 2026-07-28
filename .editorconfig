@@ -478,6 +478,20 @@ dotnet_diagnostic.CA2248.severity = warning
 # RS0041: Do not use 'Obsolete' attribute
 dotnet_diagnostic.RS0041.severity = none
 
+# RS0051-RS0061: Internal APIs
+dotnet_diagnostic.RS0051.severity = warning
+dotnet_diagnostic.RS0052.severity = warning
+dotnet_diagnostic.RS0053.severity = warning
+dotnet_diagnostic.RS0054.severity = warning
+dotnet_diagnostic.RS0055.severity = warning
+dotnet_diagnostic.RS0056.severity = warning
+## Do not use oblivious types
+dotnet_diagnostic.RS0057.severity = none
+dotnet_diagnostic.RS0058.severity = warning
+dotnet_diagnostic.RS0059.severity = warning
+dotnet_diagnostic.RS0060.severity = warning
+dotnet_diagnostic.RS0061.severity = warning
+
 # Disabled due to bug https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/3687
 # SA1010: Opening square brackets should be spaced correctly
 dotnet_diagnostic.SA1010.severity = none
@@ -844,3 +858,31 @@ resharper_replace_conditional_expression_with_null_coalescing_highlighting = war
 
 # Redundant cast
 resharper_redundant_cast_highlighting = warning
+
+# The internal API analyzers (RS0051-RS0061) must not track generated code.
+# Generated files - BuildInfo.cs (version-stamped constants that differ per build,
+# e.g. "1.0.0-ci" vs "2.4.0-dev"), RESX-generated resource accessors, and *.g.cs
+# content-file sources - are implementation details, not a stable API surface.
+[*.g.cs]
+dotnet_diagnostic.RS0051.severity = none
+dotnet_diagnostic.RS0052.severity = none
+dotnet_diagnostic.RS0053.severity = none
+dotnet_diagnostic.RS0054.severity = none
+dotnet_diagnostic.RS0055.severity = none
+dotnet_diagnostic.RS0056.severity = none
+dotnet_diagnostic.RS0058.severity = none
+dotnet_diagnostic.RS0059.severity = none
+dotnet_diagnostic.RS0060.severity = none
+dotnet_diagnostic.RS0061.severity = none
+
+[artifacts/obj/**/*.cs]
+dotnet_diagnostic.RS0051.severity = none
+dotnet_diagnostic.RS0052.severity = none
+dotnet_diagnostic.RS0053.severity = none
+dotnet_diagnostic.RS0054.severity = none
+dotnet_diagnostic.RS0055.severity = none
+dotnet_diagnostic.RS0056.severity = none
+dotnet_diagnostic.RS0058.severity = none
+dotnet_diagnostic.RS0059.severity = none
+dotnet_diagnostic.RS0060.severity = none
+dotnet_diagnostic.RS0061.severity = none

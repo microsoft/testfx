@@ -4,15 +4,22 @@
 # AFTER InitializeDotNetCli has bootstrapped the repo-local .dotnet/ SDK, so
 # $RepoRoot and the helpers from eng/common/tools.ps1 are in scope.
 #
-# Currently required by samples/WasiPlayground/WasiPlayground.csproj which
-# targets net10.0 with <UsingWasiRuntimeWorkload>true</UsingWasiRuntimeWorkload>
-# and would otherwise fail with NETSDK1147 in CI.
+# Required by the wasm acceptance tests (and the browser-wasm sample):
+#   - test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/WasmExecutionTests.cs
+#   - test/IntegrationTests/MSTest.Acceptance.IntegrationTests/WasmExecutionTests.cs
+#   - test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/BrowserWasmExecutionTests.cs
+#   - samples/BrowserPlayground
+# `wasi-experimental-net10` is needed by the always-on `dotnet build -r wasi-wasm` assertions, whose
+# generated asset sets <UsingWasiRuntimeWorkload>true</UsingWasiRuntimeWorkload> (see WasmExecutionTests.cs);
+# otherwise NETSDK1147 in CI. `wasm-tools-net10` is needed by the gated `dotnet publish -r wasi-wasm` step the
+# wasi execution tests perform AND by the browser-wasm build/publish path (BrowserWasmExecutionTests /
+# BrowserPlayground) — for browser-wasm it is required even by `dotnet build`. Installing it here means CI
+# actually exercises the browser-wasm build (and, where 'node' is present, the end-to-end run) instead of the
+# acceptance test silently going Inconclusive on every leg. Running the wasi execution tests to completion
+# additionally needs `wasmtime` on PATH; when it (or `node`, for browser-wasm) is absent the tests mark
+# themselves inconclusive.
 
-$RequiredWorkloads = @('wasi-experimental-net10')
-
-# Note: `wasm-tools-net10` is documented in samples/WasiPlayground/README.md
-# as a prerequisite for `dotnet publish`, but it is not needed by the repo's
-# `dotnet build` so we keep the CI install minimal.
+$RequiredWorkloads = @('wasi-experimental-net10', 'wasm-tools-net10')
 
 $dotnetRoot = if (-not [string]::IsNullOrEmpty($env:DOTNET_INSTALL_DIR)) {
   $env:DOTNET_INSTALL_DIR

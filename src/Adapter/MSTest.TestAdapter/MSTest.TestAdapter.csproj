@@ -23,7 +23,7 @@
     -->
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <PackageId>MSTest.TestAdapter</PackageId>
-    <PackageTags>MSTest TestFramework TestAdapter VisualStudio Unittest MSTestV2 Microsoft</PackageTags>
+    <PackageTags>$(CommonPackageTags) MSTest TestFramework TestAdapter VisualStudio MSTestV2</PackageTags>
     <PackageDescription>
       MSTest is Microsoft supported Test Framework.
 
@@ -66,7 +66,8 @@
 
     <!-- Curated package dependencies. PrivateAssets="none" so all assets (including build/buildTransitive
          targets, e.g. from Microsoft.Testing.Platform.MSBuild) flow to consumers. -->
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.VSTestBridge\Microsoft.Testing.Extensions.VSTestBridge.csproj" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " PrivateAssets="none" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport.Abstractions\Microsoft.Testing.Extensions.TrxReport.Abstractions.csproj" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " PrivateAssets="none" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.Telemetry\Microsoft.Testing.Extensions.Telemetry.csproj" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " PrivateAssets="none" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.MSBuild\Microsoft.Testing.Platform.MSBuild.csproj" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " PrivateAssets="none" />
     <!-- On Windows the package depends on MSTest.TestFramework, matching the historical MSTest.TestAdapter.nuspec.
          The historical MSTest.TestAdapter.NonWindows.nuspec did NOT declare this dependency, so on non-Windows builds
@@ -83,11 +84,16 @@
     <PackageReference Include="System.Threading.Tasks.Extensions" Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' OR '$(TargetFramework)' == '$(UwpMinimum)' " />
     <PackageReference Include="System.Memory" Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' OR '$(TargetFramework)' == '$(UwpMinimum)' " />
 
-    <!-- The adapter's VSTest-facing code (VSTestAdapter\*, AdapterTestProperties) uses the VSTest object model
-         directly. On other TFMs it flows in transitively via Microsoft.Testing.Extensions.VSTestBridge, but that
-         reference is not added for UWP (see above), and PlatformServices no longer references the object model,
-         so it is referenced explicitly here for UWP. -->
-    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " />
+    <!-- The adapter's VSTest-facing code (VSTestAdapter\*, AdapterTestProperties) and the native Microsoft.Testing.Platform
+         integration (TestingPlatformAdapter\MSTestFilterContext) use the VSTest object model directly. It used to flow
+         in transitively via Microsoft.Testing.Extensions.VSTestBridge; now that the bridge reference is gone it is
+         referenced explicitly for every TFM. -->
+    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" />
+
+    <!-- The native Microsoft.Testing.Platform integration (TestingPlatformAdapter\MSTestFilterContext, guarded by
+         !WINDOWS_UWP) parses VSTest filter expressions via the Filter source package. It flows in transitively via
+         the VSTestBridge today (PrivateAssets=all there), so reference it explicitly where the native path builds. -->
+    <PackageReference Include="Microsoft.TestPlatform.Filter.Source" PrivateAssets="all" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " />
   </ItemGroup>
 
   <ItemGroup>
@@ -95,12 +101,23 @@
     <AdditionalFiles Include="BannedSymbols.txt" />
     <AdditionalFiles Include="PublicAPI\uwp\PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' OR '$(TargetFramework)' == '$(ModernUwpMinimum)' " />
     <AdditionalFiles Include="PublicAPI\uwp\PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' OR '$(TargetFramework)' == '$(ModernUwpMinimum)' " />
+    <AdditionalFiles Include="InternalAPI\uwp\InternalAPI.Shipped.txt" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' OR '$(TargetFramework)' == '$(ModernUwpMinimum)' " />
+    <AdditionalFiles Include="InternalAPI\uwp\InternalAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' OR '$(TargetFramework)' == '$(ModernUwpMinimum)' " />
     <AdditionalFiles Include="PublicAPI\PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' AND '$(TargetFramework)' != '$(ModernUwpMinimum)' " />
     <AdditionalFiles Include="PublicAPI\PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' AND '$(TargetFramework)' != '$(ModernUwpMinimum)' " />
+    <AdditionalFiles Include="InternalAPI\InternalAPI.Shipped.txt" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' AND '$(TargetFramework)' != '$(ModernUwpMinimum)' " />
+    <AdditionalFiles Include="InternalAPI\InternalAPI.Unshipped.txt" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' AND '$(TargetFramework)' != '$(ModernUwpMinimum)' " />
   </ItemGroup>
 
   <ItemGroup>
     <Compile Include="$(RepoRoot)src\Adapter\Shared\BannerMessageHelper.cs" Link="Shared\BannerMessageHelper.cs" />
+    <!-- Dependency-free logic shared with the VSTestBridge runsettings/test-parameter providers (see issue #9762). -->
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\RunSettingsProviderHelper.cs" Link="Shared\RunSettingsProviderHelper.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\RunSettingsCommandLineOptionsProviderBase.cs" Link="Shared\RunSettingsCommandLineOptionsProviderBase.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\RunSettingsConfigurationProviderBase.cs" Link="Shared\RunSettingsConfigurationProviderBase.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\RunSettingsEnvironmentVariableProviderBase.cs" Link="Shared\RunSettingsEnvironmentVariableProviderBase.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\TestRunParametersCommandLineOptionsProviderBase.cs" Link="Shared\TestRunParametersCommandLineOptionsProviderBase.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\TestCaseFilterCommandLineOptionsProviderBase.cs" Link="Shared\TestCaseFilterCommandLineOptionsProviderBase.cs" />
     <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
@@ -200,8 +217,7 @@
     <InternalsVisibleTo Include="DynamicProxyGenAssembly2" Key="$(MoqPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTestAdapter.PlatformServices.UnitTests" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="MSTest.VstestConsoleWrapper.IntegrationTests" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="MSTest.IntegrationTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="MSTest.Acceptance.IntegrationTests" Key="$(VsPublicKey)" />
 
     <!-- UseParallelizeAttributeAnalyzerTests need to conditionally include adapter. So it needs typeof(...).Assembly -->
     <!-- We are making everything in adapter as internal. -->

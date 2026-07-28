@@ -19,8 +19,8 @@ public sealed class TimeoutWhenExpiresTests : AcceptanceTestBase<TimeoutWhenExpi
         ["baseClassCleanup"] = ("TestClassBase.ClassCleanupBase", "Class cleanup", "BASE_CLASSCLEANUP", "ClassCleanupTimeout"),
         ["testInit"] = ("TestClass.TestInit", "Test initialize", "TESTINIT", "TestInitializeTimeout"),
         ["testCleanup"] = ("TestClass.TestCleanupMethod", "Test cleanup", "TESTCLEANUP", "TestCleanupTimeout"),
-        ["globalTestInit"] = ("TestClass.GlobalTestInit", "Test initialize", "GLOBALTESTINIT", "TestInitializeTimeout"),
-        ["globalTestCleanup"] = ("TestClass.GlobalTestCleanupMethod", "Test cleanup", "GLOBALTESTCLEANUP", "TestCleanupTimeout"),
+        ["globalTestInit"] = ("TestClass.GlobalTestInit", "Global test initialize", "GLOBALTESTINIT", "TestInitializeTimeout"),
+        ["globalTestCleanup"] = ("TestClass.GlobalTestCleanupMethod", "Global test cleanup", "GLOBALTESTCLEANUP", "TestCleanupTimeout"),
     };
 
     [TestMethod]

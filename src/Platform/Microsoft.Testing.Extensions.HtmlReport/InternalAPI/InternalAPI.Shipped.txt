@@ -1,0 +1,264 @@
+#nullable enable
+~override Microsoft.Testing.Extensions.CapturedExceptionDetails.Equals(object obj) -> bool
+~override Microsoft.Testing.Extensions.CapturedExceptionDetails.ToString() -> string
+~override Microsoft.Testing.Extensions.CapturedTestResultCoreData.Equals(object obj) -> bool
+~override Microsoft.Testing.Extensions.CapturedTestResultCoreData.ToString() -> string
+~override Microsoft.Testing.Extensions.CapturedTestResultProperties.Equals(object obj) -> bool
+~override Microsoft.Testing.Extensions.CapturedTestResultProperties.ToString() -> string
+~override Microsoft.Testing.Extensions.ReportEngineContext.Equals(object obj) -> bool
+~override Microsoft.Testing.Extensions.ReportEngineContext.ToString() -> string
+abstract Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.ArtifactDescription.get -> string!
+abstract Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.ArtifactDisplayName.get -> string!
+abstract Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.Description.get -> string!
+abstract Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.DisplayName.get -> string!
+abstract Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.GenerateReportAsync(TCapturedTestResult![]! tests, System.DateTimeOffset testStartTime, int exitCode, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<(string! FileName, string? Warning)>!
+abstract Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.GetGenerationLogMessage(int testResultCount) -> string!
+abstract Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.TryCapture(Microsoft.Testing.Platform.Extensions.Messages.TestNodeUpdateMessage! update) -> TCapturedTestResult?
+abstract Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.Uid.get -> string!
+const Microsoft.Testing.Extensions.HtmlReport.HtmlReportGeneratorCommandLine.HtmlReportFileNameOptionName = "report-html-filename" -> string!
+const Microsoft.Testing.Extensions.HtmlReport.HtmlReportGeneratorCommandLine.HtmlReportOptionName = "report-html" -> string!
+const Microsoft.Testing.Extensions.TestResultCaptureHelper.MaxIdentityFieldLength = 4096 -> int
+const Microsoft.Testing.Extensions.TestResultCaptureHelper.MaxMessageLength = 16384 -> int
+const Microsoft.Testing.Extensions.TestResultCaptureHelper.MaxStackTraceLength = 32768 -> int
+const Microsoft.Testing.Extensions.TestResultCaptureHelper.MaxStandardStreamLength = 32768 -> int
+const Microsoft.Testing.Extensions.TestResultCaptureHelper.MaxTraitFieldLength = 1024 -> int
+Microsoft.CodeAnalysis.EmbeddedAttribute
+Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
+Microsoft.Testing.Extensions.CapturedExceptionDetails
+Microsoft.Testing.Extensions.CapturedExceptionDetails.CapturedExceptionDetails() -> void
+Microsoft.Testing.Extensions.CapturedExceptionDetails.CapturedExceptionDetails(string? ErrorMessage, string? StackTrace, string? ExceptionType) -> void
+Microsoft.Testing.Extensions.CapturedExceptionDetails.Deconstruct(out string? ErrorMessage, out string? StackTrace, out string? ExceptionType) -> void
+Microsoft.Testing.Extensions.CapturedExceptionDetails.Equals(Microsoft.Testing.Extensions.CapturedExceptionDetails other) -> bool
+Microsoft.Testing.Extensions.CapturedExceptionDetails.ErrorMessage.get -> string?
+Microsoft.Testing.Extensions.CapturedExceptionDetails.ErrorMessage.init -> void
+Microsoft.Testing.Extensions.CapturedExceptionDetails.ExceptionType.get -> string?
+Microsoft.Testing.Extensions.CapturedExceptionDetails.ExceptionType.init -> void
+Microsoft.Testing.Extensions.CapturedExceptionDetails.StackTrace.get -> string?
+Microsoft.Testing.Extensions.CapturedExceptionDetails.StackTrace.init -> void
+Microsoft.Testing.Extensions.CapturedTestResultBase
+Microsoft.Testing.Extensions.CapturedTestResultBase.CapturedTestResultBase() -> void
+Microsoft.Testing.Extensions.CapturedTestResultBase.ClassName.get -> string?
+Microsoft.Testing.Extensions.CapturedTestResultBase.ClassName.set -> void
+Microsoft.Testing.Extensions.CapturedTestResultBase.DisplayName.get -> string!
+Microsoft.Testing.Extensions.CapturedTestResultBase.DisplayName.set -> void
+Microsoft.Testing.Extensions.CapturedTestResultBase.Duration.get -> System.TimeSpan
+Microsoft.Testing.Extensions.CapturedTestResultBase.Duration.set -> void
+Microsoft.Testing.Extensions.CapturedTestResultBase.EndTime.get -> System.DateTimeOffset?
+Microsoft.Testing.Extensions.CapturedTestResultBase.EndTime.set -> void
+Microsoft.Testing.Extensions.CapturedTestResultBase.ErrorMessage.get -> string?
+Microsoft.Testing.Extensions.CapturedTestResultBase.ErrorMessage.set -> void
+Microsoft.Testing.Extensions.CapturedTestResultBase.ExceptionType.get -> string?
+Microsoft.Testing.Extensions.CapturedTestResultBase.ExceptionType.set -> void
+Microsoft.Testing.Extensions.CapturedTestResultBase.MethodName.get -> string?
+Microsoft.Testing.Extensions.CapturedTestResultBase.MethodName.set -> void
+Microsoft.Testing.Extensions.CapturedTestResultBase.PopulateBaseFields(Microsoft.Testing.Platform.Extensions.Messages.TestNode! node, in Microsoft.Testing.Extensions.CapturedTestResultCoreData core) -> void
+Microsoft.Testing.Extensions.CapturedTestResultBase.StackTrace.get -> string?
+Microsoft.Testing.Extensions.CapturedTestResultBase.StackTrace.set -> void
+Microsoft.Testing.Extensions.CapturedTestResultBase.StandardError.get -> string?
+Microsoft.Testing.Extensions.CapturedTestResultBase.StandardError.set -> void
+Microsoft.Testing.Extensions.CapturedTestResultBase.StandardOutput.get -> string?
+Microsoft.Testing.Extensions.CapturedTestResultBase.StandardOutput.set -> void
+Microsoft.Testing.Extensions.CapturedTestResultBase.StartTime.get -> System.DateTimeOffset?
+Microsoft.Testing.Extensions.CapturedTestResultBase.StartTime.set -> void
+Microsoft.Testing.Extensions.CapturedTestResultBase.Traits.get -> System.Collections.Generic.IReadOnlyList<System.Collections.Generic.KeyValuePair<string!, string!>>?
+Microsoft.Testing.Extensions.CapturedTestResultBase.Traits.set -> void
+Microsoft.Testing.Extensions.CapturedTestResultBase.Uid.get -> string!
+Microsoft.Testing.Extensions.CapturedTestResultBase.Uid.set -> void
+Microsoft.Testing.Extensions.CapturedTestResultCoreData
+Microsoft.Testing.Extensions.CapturedTestResultCoreData.CapturedTestResultCoreData() -> void
+Microsoft.Testing.Extensions.CapturedTestResultCoreData.CapturedTestResultCoreData(Microsoft.Testing.Platform.Extensions.Messages.TestNodeStateProperty! State, Microsoft.Testing.Extensions.CapturedTestResultProperties Properties, System.TimeSpan Duration, string? ClassName, string? MethodName, Microsoft.Testing.Extensions.CapturedExceptionDetails ExceptionDetails) -> void
+Microsoft.Testing.Extensions.CapturedTestResultCoreData.ClassName.get -> string?
+Microsoft.Testing.Extensions.CapturedTestResultCoreData.ClassName.init -> void
+Microsoft.Testing.Extensions.CapturedTestResultCoreData.Deconstruct(out Microsoft.Testing.Platform.Extensions.Messages.TestNodeStateProperty! State, out Microsoft.Testing.Extensions.CapturedTestResultProperties Properties, out System.TimeSpan Duration, out string? ClassName, out string? MethodName, out Microsoft.Testing.Extensions.CapturedExceptionDetails ExceptionDetails) -> void
+Microsoft.Testing.Extensions.CapturedTestResultCoreData.Duration.get -> System.TimeSpan
+Microsoft.Testing.Extensions.CapturedTestResultCoreData.Duration.init -> void
+Microsoft.Testing.Extensions.CapturedTestResultCoreData.Equals(Microsoft.Testing.Extensions.CapturedTestResultCoreData other) -> bool
+Microsoft.Testing.Extensions.CapturedTestResultCoreData.ExceptionDetails.get -> Microsoft.Testing.Extensions.CapturedExceptionDetails
+Microsoft.Testing.Extensions.CapturedTestResultCoreData.ExceptionDetails.init -> void
+Microsoft.Testing.Extensions.CapturedTestResultCoreData.MethodName.get -> string?
+Microsoft.Testing.Extensions.CapturedTestResultCoreData.MethodName.init -> void
+Microsoft.Testing.Extensions.CapturedTestResultCoreData.Properties.get -> Microsoft.Testing.Extensions.CapturedTestResultProperties
+Microsoft.Testing.Extensions.CapturedTestResultCoreData.Properties.init -> void
+Microsoft.Testing.Extensions.CapturedTestResultCoreData.State.get -> Microsoft.Testing.Platform.Extensions.Messages.TestNodeStateProperty!
+Microsoft.Testing.Extensions.CapturedTestResultCoreData.State.init -> void
+Microsoft.Testing.Extensions.CapturedTestResultProperties
+Microsoft.Testing.Extensions.CapturedTestResultProperties.CapturedTestResultProperties() -> void
+Microsoft.Testing.Extensions.CapturedTestResultProperties.CapturedTestResultProperties(Microsoft.Testing.Platform.Extensions.Messages.TimingProperty? Timing, Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty? Identifier, Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty? StandardOutput, Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty? StandardError, Microsoft.Testing.Platform.Extensions.Messages.TestFileLocationProperty? Location, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.KeyValuePair<string!, string!>>? Traits) -> void
+Microsoft.Testing.Extensions.CapturedTestResultProperties.Deconstruct(out Microsoft.Testing.Platform.Extensions.Messages.TimingProperty? Timing, out Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty? Identifier, out Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty? StandardOutput, out Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty? StandardError, out Microsoft.Testing.Platform.Extensions.Messages.TestFileLocationProperty? Location, out System.Collections.Generic.IReadOnlyList<System.Collections.Generic.KeyValuePair<string!, string!>>? Traits) -> void
+Microsoft.Testing.Extensions.CapturedTestResultProperties.Equals(Microsoft.Testing.Extensions.CapturedTestResultProperties other) -> bool
+Microsoft.Testing.Extensions.CapturedTestResultProperties.Identifier.get -> Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty?
+Microsoft.Testing.Extensions.CapturedTestResultProperties.Identifier.init -> void
+Microsoft.Testing.Extensions.CapturedTestResultProperties.Location.get -> Microsoft.Testing.Platform.Extensions.Messages.TestFileLocationProperty?
+Microsoft.Testing.Extensions.CapturedTestResultProperties.Location.init -> void
+Microsoft.Testing.Extensions.CapturedTestResultProperties.StandardError.get -> Microsoft.Testing.Platform.Extensions.Messages.StandardErrorProperty?
+Microsoft.Testing.Extensions.CapturedTestResultProperties.StandardError.init -> void
+Microsoft.Testing.Extensions.CapturedTestResultProperties.StandardOutput.get -> Microsoft.Testing.Platform.Extensions.Messages.StandardOutputProperty?
+Microsoft.Testing.Extensions.CapturedTestResultProperties.StandardOutput.init -> void
+Microsoft.Testing.Extensions.CapturedTestResultProperties.Timing.get -> Microsoft.Testing.Platform.Extensions.Messages.TimingProperty?
+Microsoft.Testing.Extensions.CapturedTestResultProperties.Timing.init -> void
+Microsoft.Testing.Extensions.CapturedTestResultProperties.Traits.get -> System.Collections.Generic.IReadOnlyList<System.Collections.Generic.KeyValuePair<string!, string!>>?
+Microsoft.Testing.Extensions.CapturedTestResultProperties.Traits.init -> void
+Microsoft.Testing.Extensions.HtmlReport.CapturedTestResult
+Microsoft.Testing.Extensions.HtmlReport.CapturedTestResult.CapturedTestResult() -> void
+Microsoft.Testing.Extensions.HtmlReport.CapturedTestResult.Outcome.get -> string!
+Microsoft.Testing.Extensions.HtmlReport.CapturedTestResult.Outcome.init -> void
+Microsoft.Testing.Extensions.HtmlReport.HtmlReportEngine
+Microsoft.Testing.Extensions.HtmlReport.HtmlReportEngine.GenerateReportAsync(Microsoft.Testing.Extensions.HtmlReport.CapturedTestResult![]! results) -> System.Threading.Tasks.Task<(string! FileName, string? Warning)>!
+Microsoft.Testing.Extensions.HtmlReport.HtmlReportEngine.HtmlReportEngine(Microsoft.Testing.Extensions.ReportEngineContext context) -> void
+Microsoft.Testing.Extensions.HtmlReport.HtmlReportGenerator
+Microsoft.Testing.Extensions.HtmlReport.HtmlReportGenerator.HtmlReportGenerator(System.IServiceProvider! serviceProvider) -> void
+Microsoft.Testing.Extensions.HtmlReport.HtmlReportGeneratorCommandLine
+Microsoft.Testing.Extensions.HtmlReport.HtmlReportGeneratorCommandLine.HtmlReportGeneratorCommandLine() -> void
+Microsoft.Testing.Extensions.HtmlReport.TestResultCapture
+Microsoft.Testing.Extensions.ReportEngineBase
+Microsoft.Testing.Extensions.ReportEngineBase.BuildDefaultFileName(string! extension) -> string!
+Microsoft.Testing.Extensions.ReportEngineBase.ReportEngineBase(Microsoft.Testing.Extensions.ReportEngineContext context) -> void
+Microsoft.Testing.Extensions.ReportEngineBase.ResolveOutputPath(string! fileNameOptionName, string! extension) -> (string! FinalPath, bool WasExplicit)
+Microsoft.Testing.Extensions.ReportEngineBase.ResolveOutputPath(string! fileNameOptionName, System.Func<string!>! defaultFileNameFactory) -> (string! FinalPath, bool WasExplicit)
+Microsoft.Testing.Extensions.ReportEngineBase.ResolveProvidedFileName(string! template) -> string!
+Microsoft.Testing.Extensions.ReportEngineBase.WriteBytesAsync(string! path, System.IO.FileMode mode, byte[]! bytes) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.ReportEngineContext
+Microsoft.Testing.Extensions.ReportEngineContext.CancellationToken.get -> System.Threading.CancellationToken
+Microsoft.Testing.Extensions.ReportEngineContext.CancellationToken.init -> void
+Microsoft.Testing.Extensions.ReportEngineContext.Clock.get -> Microsoft.Testing.Platform.Helpers.IClock!
+Microsoft.Testing.Extensions.ReportEngineContext.Clock.init -> void
+Microsoft.Testing.Extensions.ReportEngineContext.CommandLineOptions.get -> Microsoft.Testing.Platform.CommandLine.ICommandLineOptions!
+Microsoft.Testing.Extensions.ReportEngineContext.CommandLineOptions.init -> void
+Microsoft.Testing.Extensions.ReportEngineContext.Configuration.get -> Microsoft.Testing.Platform.Configurations.IConfiguration!
+Microsoft.Testing.Extensions.ReportEngineContext.Configuration.init -> void
+Microsoft.Testing.Extensions.ReportEngineContext.Deconstruct(out Microsoft.Testing.Platform.Helpers.IFileSystem! FileSystem, out Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! TestApplicationModuleInfo, out Microsoft.Testing.Platform.Helpers.IEnvironment! Environment, out Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! CommandLineOptions, out Microsoft.Testing.Platform.Configurations.IConfiguration! Configuration, out Microsoft.Testing.Platform.Helpers.IClock! Clock, out Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework! TestFramework, out System.DateTimeOffset TestStartTime, out int ExitCode, out System.Threading.CancellationToken CancellationToken) -> void
+Microsoft.Testing.Extensions.ReportEngineContext.Environment.get -> Microsoft.Testing.Platform.Helpers.IEnvironment!
+Microsoft.Testing.Extensions.ReportEngineContext.Environment.init -> void
+Microsoft.Testing.Extensions.ReportEngineContext.Equals(Microsoft.Testing.Extensions.ReportEngineContext other) -> bool
+Microsoft.Testing.Extensions.ReportEngineContext.ExitCode.get -> int
+Microsoft.Testing.Extensions.ReportEngineContext.ExitCode.init -> void
+Microsoft.Testing.Extensions.ReportEngineContext.FileSystem.get -> Microsoft.Testing.Platform.Helpers.IFileSystem!
+Microsoft.Testing.Extensions.ReportEngineContext.FileSystem.init -> void
+Microsoft.Testing.Extensions.ReportEngineContext.ReportEngineContext() -> void
+Microsoft.Testing.Extensions.ReportEngineContext.ReportEngineContext(Microsoft.Testing.Platform.Helpers.IFileSystem! FileSystem, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! TestApplicationModuleInfo, Microsoft.Testing.Platform.Helpers.IEnvironment! Environment, Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! CommandLineOptions, Microsoft.Testing.Platform.Configurations.IConfiguration! Configuration, Microsoft.Testing.Platform.Helpers.IClock! Clock, Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework! TestFramework, System.DateTimeOffset TestStartTime, int ExitCode, System.Threading.CancellationToken CancellationToken) -> void
+Microsoft.Testing.Extensions.ReportEngineContext.TestApplicationModuleInfo.get -> Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo!
+Microsoft.Testing.Extensions.ReportEngineContext.TestApplicationModuleInfo.init -> void
+Microsoft.Testing.Extensions.ReportEngineContext.TestFramework.get -> Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework!
+Microsoft.Testing.Extensions.ReportEngineContext.TestFramework.init -> void
+Microsoft.Testing.Extensions.ReportEngineContext.TestStartTime.get -> System.DateTimeOffset
+Microsoft.Testing.Extensions.ReportEngineContext.TestStartTime.init -> void
+Microsoft.Testing.Extensions.ReportFileNameHelper
+Microsoft.Testing.Extensions.ReportFileNameSanitizer
+Microsoft.Testing.Extensions.ReportFileNameValidator
+Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>
+Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.Clock.get -> Microsoft.Testing.Platform.Helpers.IClock!
+Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.CommandLineOptions.get -> Microsoft.Testing.Platform.CommandLine.ICommandLineOptions!
+Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.Configuration.get -> Microsoft.Testing.Platform.Configurations.IConfiguration!
+Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.ConsumeAsync(Microsoft.Testing.Platform.Extensions.Messages.IDataProducer! dataProducer, Microsoft.Testing.Platform.Extensions.Messages.IData! value, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.CreateReportEngineContext(System.DateTimeOffset testStartTime, int exitCode, System.Threading.CancellationToken cancellationToken) -> Microsoft.Testing.Extensions.ReportEngineContext
+Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.DataTypesConsumed.get -> System.Type![]!
+Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.DataTypesProduced.get -> System.Type![]!
+Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.Environment.get -> Microsoft.Testing.Platform.Helpers.IEnvironment!
+Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.FileSystem.get -> Microsoft.Testing.Platform.Helpers.IFileSystem!
+Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.OnTestSessionFinishingAsync(Microsoft.Testing.Platform.Services.ITestSessionContext! testSessionContext) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.OnTestSessionStartingAsync(Microsoft.Testing.Platform.Services.ITestSessionContext! testSessionContext) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.ReportGeneratorBase(Microsoft.Testing.Platform.Configurations.IConfiguration! configuration, Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.Messages.IMessageBus! messageBus, Microsoft.Testing.Platform.Helpers.IClock! clock, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDevice, Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework! testFramework, Microsoft.Testing.Platform.Services.ITestApplicationProcessExitCode! testApplicationProcessExitCode, Microsoft.Testing.Platform.Logging.ILogger<TGenerator!>! logger, string! optionName) -> void
+Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.ReportGeneratorBase(System.IServiceProvider! serviceProvider, string! optionName) -> void
+Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.TestApplicationModuleInfo.get -> Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo!
+Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.TestFramework.get -> Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework!
+Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.Version.get -> string!
+Microsoft.Testing.Extensions.ReportGeneratorCommandLineBase
+Microsoft.Testing.Extensions.ReportGeneratorCommandLineBase.ReportGeneratorCommandLineBase(string! providerName, string! displayName, string! description, string! reportOptionName, string! reportFileNameOptionName, string! reportOptionDescription, string! reportFileNameOptionDescription, string! fileExtension, string! fileNameMustNotBeEmpty, string! fileNameExtensionIsNotExpected, string! relativePathMustStayUnderResultsDirectory, string! fileNameRequiresReport, string! reportIsNotValidForDiscovery) -> void
+Microsoft.Testing.Extensions.ReportProviderRegistration
+Microsoft.Testing.Extensions.TargetFrameworkMonikerHelper
+Microsoft.Testing.Extensions.TestResultCaptureHelper
+Microsoft.Testing.Platform.Helpers.ApplicationStateGuard
+Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.AtLeastOneTestFailed = 2 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.DependentProcessExited = 11 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.GenericFailure = 1 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.IncompatibleProtocolVersion = 12 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.InvalidCommandLine = 5 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.InvalidPlatformSetup = 4 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.MinimumExpectedTestsPolicyViolation = 9 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.Success = 0 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.TestAdapterTestSessionFailure = 10 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.TestExecutionStoppedForMaxFailedTests = 13 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.TestHostProcessExitedNonGracefully = 7 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.TestSessionAborted = 3 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.ZeroTests = 8 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser
+Microsoft.Testing.Platform.Resources.PlatformResources
+Microsoft.Testing.Platform.RoslynString
+Microsoft.Testing.Platform.Services.ArtifactNamingHelper
+override Microsoft.Testing.Extensions.CapturedExceptionDetails.GetHashCode() -> int
+override Microsoft.Testing.Extensions.CapturedTestResultCoreData.GetHashCode() -> int
+override Microsoft.Testing.Extensions.CapturedTestResultProperties.GetHashCode() -> int
+override Microsoft.Testing.Extensions.HtmlReport.HtmlReportGenerator.Description.get -> string!
+override Microsoft.Testing.Extensions.HtmlReport.HtmlReportGenerator.DisplayName.get -> string!
+override Microsoft.Testing.Extensions.HtmlReport.HtmlReportGenerator.Uid.get -> string!
+override Microsoft.Testing.Extensions.ReportEngineContext.GetHashCode() -> int
+override Microsoft.Testing.Extensions.ReportGeneratorCommandLineBase.ValidateCommandLineOptionsAsync(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+override Microsoft.Testing.Extensions.ReportGeneratorCommandLineBase.ValidateOptionArgumentsAsync(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+Polyfills.Polyfill
+Polyfills.Polyfill.extension(System.OperatingSystem)
+readonly Microsoft.Testing.Extensions.ReportEngineBase._cancellationToken -> System.Threading.CancellationToken
+readonly Microsoft.Testing.Extensions.ReportEngineBase._clock -> Microsoft.Testing.Platform.Helpers.IClock!
+readonly Microsoft.Testing.Extensions.ReportEngineBase._commandLineOptions -> Microsoft.Testing.Platform.CommandLine.ICommandLineOptions!
+readonly Microsoft.Testing.Extensions.ReportEngineBase._configuration -> Microsoft.Testing.Platform.Configurations.IConfiguration!
+readonly Microsoft.Testing.Extensions.ReportEngineBase._environment -> Microsoft.Testing.Platform.Helpers.IEnvironment!
+readonly Microsoft.Testing.Extensions.ReportEngineBase._exitCode -> int
+readonly Microsoft.Testing.Extensions.ReportEngineBase._fileSystem -> Microsoft.Testing.Platform.Helpers.IFileSystem!
+readonly Microsoft.Testing.Extensions.ReportEngineBase._testApplicationModuleInfo -> Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo!
+readonly Microsoft.Testing.Extensions.ReportEngineBase._testFramework -> Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework!
+readonly Microsoft.Testing.Extensions.ReportEngineBase._testStartTime -> System.DateTimeOffset
+static Microsoft.Testing.Extensions.CapturedExceptionDetails.operator !=(Microsoft.Testing.Extensions.CapturedExceptionDetails left, Microsoft.Testing.Extensions.CapturedExceptionDetails right) -> bool
+static Microsoft.Testing.Extensions.CapturedExceptionDetails.operator ==(Microsoft.Testing.Extensions.CapturedExceptionDetails left, Microsoft.Testing.Extensions.CapturedExceptionDetails right) -> bool
+static Microsoft.Testing.Extensions.CapturedTestResultCoreData.operator !=(Microsoft.Testing.Extensions.CapturedTestResultCoreData left, Microsoft.Testing.Extensions.CapturedTestResultCoreData right) -> bool
+static Microsoft.Testing.Extensions.CapturedTestResultCoreData.operator ==(Microsoft.Testing.Extensions.CapturedTestResultCoreData left, Microsoft.Testing.Extensions.CapturedTestResultCoreData right) -> bool
+static Microsoft.Testing.Extensions.CapturedTestResultProperties.operator !=(Microsoft.Testing.Extensions.CapturedTestResultProperties left, Microsoft.Testing.Extensions.CapturedTestResultProperties right) -> bool
+static Microsoft.Testing.Extensions.CapturedTestResultProperties.operator ==(Microsoft.Testing.Extensions.CapturedTestResultProperties left, Microsoft.Testing.Extensions.CapturedTestResultProperties right) -> bool
+static Microsoft.Testing.Extensions.HtmlReport.TestResultCapture.TryCapture(Microsoft.Testing.Platform.Extensions.Messages.TestNode! node) -> Microsoft.Testing.Extensions.HtmlReport.CapturedTestResult?
+static Microsoft.Testing.Extensions.ReportEngineBase.BuildDefaultFileName(string! testApplicationModule, string! extension) -> string!
+static Microsoft.Testing.Extensions.ReportEngineBase.GetProvidedFileName(string![]? providedFileName) -> string!
+static Microsoft.Testing.Extensions.ReportEngineBase.ReplaceInvalidFileNameChars(string! fileName) -> string!
+static Microsoft.Testing.Extensions.ReportEngineContext.operator !=(Microsoft.Testing.Extensions.ReportEngineContext left, Microsoft.Testing.Extensions.ReportEngineContext right) -> bool
+static Microsoft.Testing.Extensions.ReportEngineContext.operator ==(Microsoft.Testing.Extensions.ReportEngineContext left, Microsoft.Testing.Extensions.ReportEngineContext right) -> bool
+static Microsoft.Testing.Extensions.ReportFileNameHelper.ResolveAndSanitize(string! template, string! processName, string! processId, System.DateTimeOffset now) -> string!
+static Microsoft.Testing.Extensions.ReportFileNameSanitizer.ReplaceInvalidFileNameChars(string! fileName) -> string!
+static Microsoft.Testing.Extensions.ReportFileNameValidator.EscapesResultsDirectory(string! path) -> bool
+static Microsoft.Testing.Extensions.ReportFileNameValidator.ValidateReportCommandLineOptionsAsync(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, string! reportOptionName, string! reportFileNameOptionName, string! fileNameRequiresReportErrorMessage, string! reportIsNotValidForDiscoveryErrorMessage, string! discoverTestsOptionName) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+static Microsoft.Testing.Extensions.ReportFileNameValidator.ValidateReportFileNameArgumentAsync(string![]! arguments, string! expectedExtension, string! emptyErrorMessage, string! badExtensionErrorMessage, string! escapesDirectoryErrorMessage) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+static Microsoft.Testing.Extensions.ReportProviderRegistration.AddReportProvider<TGenerator>(Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder, string! invalidBuilderTypeErrorMessage, System.Func<Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider!>! commandLineFactory, System.Func<System.IServiceProvider!, TGenerator!>! generatorFactory) -> void
+static Microsoft.Testing.Extensions.TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform() -> string!
+static Microsoft.Testing.Extensions.TestResultCaptureHelper.ClassifyOutcome(Microsoft.Testing.Platform.Extensions.Messages.TestNodeStateProperty! state) -> string!
+static Microsoft.Testing.Extensions.TestResultCaptureHelper.ExtractExceptionDetails(Microsoft.Testing.Platform.Extensions.Messages.TestNodeStateProperty! state) -> Microsoft.Testing.Extensions.CapturedExceptionDetails
+static Microsoft.Testing.Extensions.TestResultCaptureHelper.ExtractProperties(Microsoft.Testing.Platform.Extensions.Messages.PropertyBag! propertyBag, bool includeLocation = false) -> Microsoft.Testing.Extensions.CapturedTestResultProperties
+static Microsoft.Testing.Extensions.TestResultCaptureHelper.GetClassAndMethodName(Microsoft.Testing.Platform.Extensions.Messages.TestMethodIdentifierProperty? identifier) -> (string? ClassName, string? MethodName)
+static Microsoft.Testing.Extensions.TestResultCaptureHelper.Truncate(string? value, int maxLength) -> string?
+static Microsoft.Testing.Extensions.TestResultCaptureHelper.TryCaptureCore(Microsoft.Testing.Platform.Extensions.Messages.TestNode! node, bool includeLocation = false) -> Microsoft.Testing.Extensions.CapturedTestResultCoreData?
+static Microsoft.Testing.Platform.Helpers.ApplicationStateGuard.Ensure(bool condition, string! errorMessage) -> void
+static Microsoft.Testing.Platform.Helpers.ApplicationStateGuard.Ensure(bool condition, string? path = null, int line = 0) -> void
+static Microsoft.Testing.Platform.Helpers.ApplicationStateGuard.Unreachable(string? path = null, int line = 0) -> System.Diagnostics.UnreachableException!
+static Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser.BuildTargetFrameworkMoniker(string? shortTargetFramework, string? targetPlatformName) -> string?
+static Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser.GetShortTargetFramework(string? frameworkDescription) -> string?
+static Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser.GetShortTargetFrameworkIncludingPlatform(System.Reflection.Assembly? entryAssembly) -> string?
+static Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser.GetTargetPlatformName(System.Reflection.Assembly? entryAssembly) -> string?
+static Microsoft.Testing.Platform.Resources.PlatformResources.GetResourceString(string! resourceKey) -> string!
+static Microsoft.Testing.Platform.Resources.PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage.get -> string!
+static Microsoft.Testing.Platform.Resources.PlatformResources.ResourceManager.get -> System.Resources.ResourceManager!
+static Microsoft.Testing.Platform.RoslynString.IsNullOrEmpty(string? value) -> bool
+static Microsoft.Testing.Platform.RoslynString.IsNullOrWhiteSpace(string? value) -> bool
+static Microsoft.Testing.Platform.Services.ArtifactNamingHelper.GetStandardReplacements(string! processName, string! processId, System.DateTimeOffset timestamp) -> System.Collections.Generic.Dictionary<string!, string!>!
+static Microsoft.Testing.Platform.Services.ArtifactNamingHelper.ResolveTemplate(string! template, System.Collections.Generic.IDictionary<string!, string!>? replacements = null) -> string!
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsAndroid() -> bool
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsBrowser() -> bool
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsIOS() -> bool
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsTvOS() -> bool
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsWasi() -> bool
+static Polyfills.Polyfill.IsAndroid() -> bool
+static Polyfills.Polyfill.IsBrowser() -> bool
+static Polyfills.Polyfill.IsIOS() -> bool
+static Polyfills.Polyfill.IsTvOS() -> bool
+static Polyfills.Polyfill.IsWasi() -> bool
+static System.Numerics.Hashing.HashHelpers.Combine(int h1, int h2) -> int
+System.Numerics.Hashing.HashHelpers
+System.Runtime.CompilerServices.CompilerLoweringPreserveAttribute
+System.Runtime.CompilerServices.CompilerLoweringPreserveAttribute.CompilerLoweringPreserveAttribute() -> void
+virtual Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.OnTestNodeUpdate(Microsoft.Testing.Platform.Extensions.Messages.TestNodeUpdateMessage! update) -> void

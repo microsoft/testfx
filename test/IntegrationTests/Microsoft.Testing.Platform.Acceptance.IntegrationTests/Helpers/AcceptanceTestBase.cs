@@ -35,6 +35,32 @@ public abstract class AcceptanceTestBase
                     ? "osx-x64"
                     : throw new NotSupportedException("Current OS is not supported");
 
+    protected static string BuildDefaultDiagnosticFilePathPattern(string diagPath, string assetName, string tfm)
+    {
+        string arch = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
+        const string FileNamePlaceholder = "__DIAG_FILENAME__";
+        string combinedPath = Path.Combine(diagPath, FileNamePlaceholder).Replace(@"\", @"\\");
+        return combinedPath.Replace(FileNamePlaceholder, $@"{assetName}_{Regex.Escape(tfm)}_{arch}_\d{{15}}\.diag");
+    }
+
+    protected static string GetTestExecutablePath(Microsoft.Testing.TestInfrastructure.TestHost testHost)
+        => RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? testHost.FullName
+            : testHost.FullName + ".dll";
+
+    protected static async Task<Microsoft.Testing.TestInfrastructure.TestHost> CloneTestHostAsync(
+        Microsoft.Testing.TestInfrastructure.TestHost testHost,
+        TempDirectory clone,
+        string assetName)
+    {
+        await clone.CopyDirectoryAsync(
+            testHost.DirectoryName,
+            clone.Path,
+            retainAttributes: !RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+
+        return Microsoft.Testing.TestInfrastructure.TestHost.LocateFrom(clone.Path, assetName);
+    }
+
     public static string MSTestVersion { get; private set; }
 
     public static string MSTestSourceGenerationVersion { get; private set; }

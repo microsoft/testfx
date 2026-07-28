@@ -45,7 +45,7 @@ internal partial class TestDataConnectionSql
 
             SchemaMetaData[] metadatas = GetSchemaMetaData();
 
-            // TODO: may be find better way to enumerate tables/views.
+            // There may be a better way to enumerate tables/views.
             foreach (SchemaMetaData metadata in metadatas)
             {
                 DataTable? dataTable = null;

@@ -73,12 +73,11 @@ public sealed class TestClassShouldBeValidAnalyzer : DiagnosticAnalyzer
 
         if (namedTypeSymbol.GetResultantVisibility() is { } resultantVisibility)
         {
-            if (!canDiscoverInternals && resultantVisibility != SymbolVisibility.Public)
-            {
-                context.ReportDiagnostic(namedTypeSymbol.CreateDiagnostic(TestClassShouldBeValidRule, namedTypeSymbol.Name));
-                return;
-            }
-            else if (canDiscoverInternals && resultantVisibility == SymbolVisibility.Private)
+            bool isVisibilityInvalid = canDiscoverInternals
+                ? resultantVisibility == SymbolVisibility.Private
+                : resultantVisibility != SymbolVisibility.Public;
+
+            if (isVisibilityInvalid)
             {
                 context.ReportDiagnostic(namedTypeSymbol.CreateDiagnostic(TestClassShouldBeValidRule, namedTypeSymbol.Name));
                 return;

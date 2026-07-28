@@ -24,10 +24,12 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : CommandLi
     public const string ShowOutputAllArgument = "all";
     public const string ShowOutputFailedArgument = "failed";
     public const string ShowOutputNoneArgument = "none";
+    public const string ShowSlowestTestsOption = "show-slowest-tests";
 
     public TerminalTestReporterCommandLineOptionsProvider()
         : base(
-            nameof(TerminalTestReporterCommandLineOptionsProvider),
+            // Stable extension UID. Do not change: it feeds telemetry, --info output, and artifact metadata.
+            "TerminalTestReporterCommandLineOptionsProvider",
             PlatformVersion.Version,
             TerminalResources.TerminalTestReporterDisplayName,
             TerminalResources.TerminalTestReporterDescription,
@@ -39,6 +41,7 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : CommandLi
                 new(OutputOption, TerminalResources.TerminalOutputOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
                 new(ShowStdoutOption, TerminalResources.TerminalShowStdoutOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
                 new(ShowStderrOption, TerminalResources.TerminalShowStderrOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
+                new(ShowSlowestTestsOption, TerminalResources.TerminalShowSlowestTestsOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
             ])
     {
     }
@@ -60,8 +63,18 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : CommandLi
             ShowStdoutOption or ShowStderrOption => arguments.Length == 1 && IsValidShowOutputArgument(arguments[0])
                 ? ValidationResult.ValidTask
                 : ValidationResult.InvalidTask(TerminalResources.TerminalShowOutputOptionInvalidArgument),
+            ShowSlowestTestsOption => arguments.Length == 1
+                && int.TryParse(arguments[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out int count) && count >= 1
+                ? ValidationResult.ValidTask
+                : ValidationResult.InvalidTask(TerminalResources.TerminalShowSlowestTestsOptionInvalidArgument),
             _ => throw ApplicationStateGuard.Unreachable(),
         };
+
+    internal static bool IsProgressEnabled(ICommandLineOptions commandLineOptions)
+        => commandLineOptions.TryGetOptionArgumentList(ProgressOption, out string[]? arguments)
+            && arguments is { Length: > 0 }
+                ? !CommandLineOptionArgumentValidator.IsOffValue(arguments[0])
+                : !commandLineOptions.IsOptionSet(NoProgressOption);
 
     private static bool IsValidShowOutputArgument(string argument)
         => ShowOutputAllArgument.Equals(argument, StringComparison.OrdinalIgnoreCase)

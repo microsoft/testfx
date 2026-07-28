@@ -10,11 +10,13 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
-internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOutputDeviceDataProducer
+internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOutputDeviceDataProducer, IDisposable
 {
     private readonly FileLoggerProvider? _fileLoggerProvider;
     private readonly IStopPoliciesService _policiesService;
-    private readonly ConcurrentBag<ServerLogMessage> _messages = [];
+    private readonly ConcurrentQueue<ServerLogMessage> _messages = [];
+    private readonly Dictionary<ProgressMessageIdentity, string> _progressMessages = [];
+    private readonly SemaphoreSlim _progressMessagesSemaphore = new(1, 1);
 
     private ServerTestHost? _serverTestHost;
 
@@ -38,7 +40,7 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
         // messages to Test Explorer as well.
         _serverTestHost = serverTestHost;
 
-        while (_messages.TryTake(out ServerLogMessage? message))
+        while (_messages.TryDequeue(out ServerLogMessage? message))
         {
             await LogAsync(message, serverTestHost.ServiceProvider.GetTestApplicationCancellationTokenSource().CancellationToken).ConfigureAwait(false);
         }
@@ -53,12 +55,51 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
     public string Description => nameof(ServerModePerCallOutputDevice);
 
     public async Task DisplayAfterSessionEndRunAsync(CancellationToken cancellationToken)
-        => await LogAsync(LogLevel.Trace, PlatformResources.FinishedTestSession, padding: null, cancellationToken).ConfigureAwait(false);
+    {
+        await _progressMessagesSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            _progressMessages.Clear();
+        }
+        finally
+        {
+            _progressMessagesSemaphore.Release();
+        }
+
+        await LogAsync(LogLevel.Trace, PlatformResources.FinishedTestSession, padding: null, cancellationToken).ConfigureAwait(false);
+    }
 
     public async Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken)
     {
         switch (data)
         {
+            case SessionMessageOutputDeviceData sessionMessageData:
+                await LogAsync(LogLevel.Information, sessionMessageData.Message, padding: null, cancellationToken).ConfigureAwait(false);
+                break;
+
+            case ProgressMessageOutputDeviceData progressMessageData:
+                var identity = new ProgressMessageIdentity(producer.Uid, progressMessageData.Key);
+                await _progressMessagesSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+                try
+                {
+                    if (progressMessageData.Message is null)
+                    {
+                        _progressMessages.Remove(identity);
+                    }
+                    else if (!_progressMessages.TryGetValue(identity, out string? existingMessage)
+                        || existingMessage != progressMessageData.Message)
+                    {
+                        _progressMessages[identity] = progressMessageData.Message;
+                        await LogAsync(LogLevel.Information, progressMessageData.Message, padding: null, cancellationToken).ConfigureAwait(false);
+                    }
+                }
+                finally
+                {
+                    _progressMessagesSemaphore.Release();
+                }
+
+                break;
+
             case FormattedTextOutputDeviceData formattedTextOutputDeviceData:
                 await LogAsync(LogLevel.Information, formattedTextOutputDeviceData.Text, formattedTextOutputDeviceData.Padding, cancellationToken).ConfigureAwait(false);
                 break;
@@ -80,6 +121,8 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
                 break;
         }
     }
+
+    private readonly record struct ProgressMessageIdentity(string ProducerUid, string Key);
 
     public async Task DisplayBannerAsync(string? bannerMessage, CancellationToken cancellationToken)
     {
@@ -103,6 +146,9 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
+    public void Dispose()
+        => _progressMessagesSemaphore.Dispose();
+
     private async Task LogAsync(LogLevel logLevel, string message, int? padding, CancellationToken cancellationToken)
         => await LogAsync(GetServerLogMessage(logLevel, message, padding), cancellationToken).ConfigureAwait(false);
 
@@ -110,7 +156,7 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
     {
         if (_serverTestHost is null)
         {
-            _messages.Add(message);
+            _messages.Enqueue(message);
         }
         else
         {

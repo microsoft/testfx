@@ -26,7 +26,7 @@ internal sealed class MSTestDiscoverer : ITestDiscoverer
 
     // The parameterless constructor is required by VSTest, which instantiates the
     // discoverer via reflection. The internal constructor exists for tests and for the
-    // MTP bridge (MSTestBridgedTestFramework) which injects a telemetry sender.
+    // native Microsoft.Testing.Platform framework (MSTestTestFramework) which injects a telemetry sender.
     public MSTestDiscoverer()
         : this(new TestSourceHandler())
     {
@@ -59,6 +59,31 @@ internal sealed class MSTestDiscoverer : ITestDiscoverer
 
     internal async Task DiscoverTestsAsync(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink, IConfiguration? configuration, bool isMTP)
     {
+        if (discoverySink is null)
+        {
+            throw new ArgumentNullException(nameof(discoverySink));
+        }
+
+        await DiscoverTestsCoreAsync(sources, discoveryContext, logger, elementSink: null, discoverySink, configuration, isMTP).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Discovers tests, reporting each discovered element directly to a platform-agnostic
+    /// <see cref="IUnitTestElementSink"/> (used by the native Microsoft.Testing.Platform integration, which
+    /// publishes test nodes itself and does not need a VSTest <see cref="ITestCaseDiscoverySink"/>).
+    /// </summary>
+    internal async Task DiscoverTestsAsync(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, IUnitTestElementSink elementSink, IConfiguration? configuration, bool isMTP)
+    {
+        if (elementSink is null)
+        {
+            throw new ArgumentNullException(nameof(elementSink));
+        }
+
+        await DiscoverTestsCoreAsync(sources, discoveryContext, logger, elementSink, discoverySink: null, configuration, isMTP).ConfigureAwait(false);
+    }
+
+    private async Task DiscoverTestsCoreAsync(IEnumerable<string> sources, IDiscoveryContext? discoveryContext, IMessageLogger logger, IUnitTestElementSink? elementSink, ITestCaseDiscoverySink? discoverySink, IConfiguration? configuration, bool isMTP)
+    {
         if (sources is null)
         {
             throw new ArgumentNullException(nameof(sources));
@@ -69,37 +94,26 @@ internal sealed class MSTestDiscoverer : ITestDiscoverer
             throw new ArgumentNullException(nameof(logger));
         }
 
-        if (discoverySink is null)
-        {
-            throw new ArgumentNullException(nameof(discoverySink));
-        }
+        // Unwrap the VSTest discovery context into neutral inputs at this boundary and hand them to the
+        // platform-agnostic engine. The engine owns telemetry lifetime and the calls into the platform-services
+        // discovery pipeline; it never depends on the VSTest object model.
+        IAdapterMessageLogger adapterLogger = logger.ToAdapterMessageLogger();
+        IUnitTestElementSink unitTestElementSink = elementSink ?? discoverySink!.ToUnitTestElementSink();
 
-        // Initialize telemetry collection if not already set (e.g. first call in the session).
 #if !WINDOWS_UWP && !WIN_UI
-        if (!MSTestTelemetryDataCollector.IsTelemetryOptedOut())
-        {
-            _ = MSTestTelemetryDataCollector.EnsureInitialized();
-        }
+        var engine = new MSTestEngine(CancellationToken.None, _telemetrySender);
+#else
+        var engine = new MSTestEngine(CancellationToken.None);
 #endif
 
-        try
-        {
-            IAdapterMessageLogger adapterLogger = logger.ToAdapterMessageLogger();
-            if (MSTestDiscovererHelpers.InitializeDiscovery(sources, discoveryContext?.RunSettings?.SettingsXml, adapterLogger, configuration, _testSourceHandler))
-            {
-                new UnitTestDiscoverer(_testSourceHandler).DiscoverTests(sources, adapterLogger, discoverySink.ToUnitTestElementSink(), discoveryContext?.RunSettings?.SettingsXml, new TestElementFilterProvider(discoveryContext), isMTP);
-            }
-        }
-        finally
-        {
-#if !WINDOWS_UWP && !WIN_UI
-            // Send the discovery telemetry event ('mstest/discovery'). This always runs at the
-            // end of discovery — for discover-only sessions it is the only event; for sessions
-            // where a run follows, MSTestExecutor will send a separate 'mstest/sessionexit' event
-            // carrying assertion usage. Keeping the two events distinct avoids settings/attribute
-            // duplication and lets each event be self-contained.
-            await MSTestTelemetryDataCollector.SendDiscoveryTelemetryAndResetAsync(_telemetrySender).ConfigureAwait(false);
-#endif
-        }
+        await engine.DiscoverAsync(
+            sources,
+            discoveryContext?.RunSettings?.SettingsXml,
+            adapterLogger,
+            unitTestElementSink,
+            new TestElementFilterProvider(discoveryContext),
+            configuration,
+            _testSourceHandler,
+            isMTP).ConfigureAwait(false);
     }
 }

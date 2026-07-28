@@ -100,8 +100,9 @@ When no user message is provided, this line is simply omitted (no blank line is 
 Labeled lines showing the concrete values, separated from the narrative block above by a blank line:
 
 ```text
-expected: "hello world"
-actual:   "hello wrold"
+expected:   "hello world"
+actual:     "hello wrold"
+difference: --------^
 ```
 
 The blank line creates a clear visual boundary between the narrative (summary + user message) and the evidence (values + details). Values are flush-left — no indentation — so they can be copy-pasted directly (e.g. in a TDD workflow where you update an expected value from the failure output).
@@ -133,7 +134,7 @@ actual:
 "line one\nLINE TWO\nline three"
 ```
 
-For very long strings where the value is truncated, the `...` appears inside the quotes: `"...context around difference..."`.
+For very long string comparisons, supplemental `expected near:` / `actual near:` previews place ASCII `...` inside the quotes: `"...context around difference..."`. The unchanged full values follow in a separate evidence block.
 
 ### Assertion-Specific Details
 
@@ -274,8 +275,9 @@ Assertion failed. Expected strings to be equal.
 Strings have same length (11) but differ at 1 location(s). First difference at index 7.
 The greeting should include the user's full name
 
-expected: "hello world"
-actual:   "hello wrold"
+expected:   "hello world"
+actual:     "hello wrold"
+difference: --------^
 
 Assert.AreEqual(expected, actual)
    at MyTests.GreetingTests.ShouldFormatName() in GreetingTests.cs:line 42
@@ -319,14 +321,14 @@ Assert.ThrowsExactly<ArgumentException>(() => Validate(input))
 
 ```text
 Assertion failed. Expected strings to be equal.
-Strings have different lengths (expected: 50000, actual: 49997) and differ at 1 location(s). First difference at index 1042.
+Strings have same length (277) and differ at 1 location(s). First difference at index 222.
 
-expected:
-"...configuration that spans many lines and contains the production database
-connection string along with various timeout settings..."
-actual:
-"...configuration that spans many lines and contains the staging database
-connection string along with various timeout settings..."
+expected near: "...field11  1234.56  field12  1234.56  field13  1234.56  field14  1234.56..."
+actual near:   "...field11  1234.56  field12  1234.56  field13  1234.57  field14  1234.56..."
+difference:    -------------------------------------------------------^
+
+expected: "field1  1234.56  field2  1234.56  field3  1234.56  field4  1234.56  field5  1234.56  field6  1234.56  field7  1234.56  field8  1234.56  field9  1234.56  field10  1234.56  field11  1234.56  field12  1234.56  field13  1234.56  field14  1234.56  field15  1234.56  field16  1234.56"
+actual:   "field1  1234.56  field2  1234.56  field3  1234.56  field4  1234.56  field5  1234.56  field6  1234.56  field7  1234.56  field8  1234.56  field9  1234.56  field10  1234.56  field11  1234.56  field12  1234.56  field13  1234.57  field14  1234.56  field15  1234.56  field16  1234.56"
 
 Assert.AreEqual(expectedConfig, actualConfig)
    at MyTests.ConfigTests.ShouldLoadProductionConfig() in ConfigTests.cs:line 88
@@ -1032,7 +1034,41 @@ The diff count tells the developer whether this is a typo (1 location) or a fund
 
 The "substantially different" threshold is **50%**, measured by edit distance ratio (`editDistance / max(len1, len2) > 0.5`). For strings shorter than 20 characters, the per-index detail is always shown regardless of percentage — short strings are cheap to diff visually.
 
-Note: Inline diff markers (e.g. `^` caret under the first differing character, or xUnit-style `↓`/`↑` arrows) are intentionally **deferred** to a future enhancement. The first-difference-index in the summary line provides location information, and adding caret markers introduces rendering complexity (alignment with tabs, Unicode, control characters) that is fragile across terminal environments. The structured format makes it straightforward to add diff markers later as an additional line between `expected:` and `actual:` without breaking the format.
+The first difference is also pinpointed visually. For short strings, a `difference:` line follows the unchanged full values without repeating them:
+
+```text
+expected:   "aaXa"
+actual:     "aaba"
+difference: ---^
+```
+
+For long strings, a bounded context block precedes the unchanged full evidence:
+
+```text
+expected near: "...shared-prefix-before-X-shared-suffix..."
+actual near:   "...shared-prefix-before-Y-shared-suffix..."
+difference:    -------------------------^
+
+expected: "<full expected value>"
+actual:   "<full actual value>"
+```
+
+The context preview has an internal rendered budget of approximately 101 characters, including quotes, ASCII `...`, and inline marker delimiters. This keeps diagnostic output independent of the mismatch index and leaves room for its evidence label on a 120-column display. The budget is deliberately not public configuration: it controls only the supplemental locator, never the full evidence.
+
+Preview construction follows these rules:
+
+1. Preview text uses the same escaping rules as normal assertion value rendering (`\"`, `\\`, `\n`, `\r`, `\t`, `\0`, and `\uXXXX` for other controls).
+2. Previews are assembled from complete text elements. An escape sequence, surrogate pair, combining sequence, emoji modifier or variation sequence, regional-indicator pair, and zero-width-joiner emoji sequence is never split merely to fill the budget. Implementations use `StringInfo` text-element boundaries and merge emoji sequences where older target frameworks expose narrower boundaries.
+3. A caret is used only when both mismatch positions map to the same reliable rendered column. Escaped ASCII prefixes are reliable. A non-ASCII mismatching glyph is also eligible when the rendered prefix before it is reliable.
+4. If column placement is ambiguous, the complete mismatching text elements are surrounded with `[[...]]` in the bounded previews instead. A mismatching text element whose rendered form alone would consume more than half of the preview budget is represented as `[[<text element>]]`, with its bounded code-point diagnostic identifying the content. Short strings avoid duplicating the whole values and identify only the mismatching fragments on the `difference:` line.
+5. Non-ASCII or multi-scalar mismatches add scalar diagnostics, for example `code points: expected U+1F30D; actual U+1F30E` or `code points: expected U+00E9; actual U+0065 U+0301`. Unpaired surrogates are rendered deterministically as escaped `U+D800`-style values. A missing text element in a prefix mismatch is `<end>`.
+6. Culture-aware comparisons retain independent expected and actual cursors. The summary keeps its compatible single first-difference index, while the locator uses the paired positions so collation expansions do not point at the wrong glyph.
+
+The full `expected:` and `actual:` evidence remains rendered exactly as before and follows any bounded preview. The same full rendered strings continue to populate `AssertFailedException.ExpectedText`, `AssertFailedException.ActualText`, `exception.Data["assert.expected"]`, `exception.Data["assert.actual"]`, and the corresponding Microsoft.Testing.Platform protocol fields. Preview ellipses, carets, inline markers, and code-point diagnostics are message-only evidence and never enter those structured fields.
+
+When a custom string value formatter changes either rendered string from the built-in quoted and escaped representation, supplemental raw-derived locator diagnostics are suppressed. The message retains the custom `expected:` and `actual:` evidence and all structured expected/actual fields, but does not add a bounded preview, mismatch fragment, caret, or code-point diagnostics that could reveal the raw string. Formatters for unrelated value types do not affect string locator diagnostics.
+
+The evidence labels are static English labels, consistent with the existing RFC-defined `expected:`, `actual:`, `ignore case:`, and `culture:` labels. They are not sentence resources, so this change does not add `.resx` or XLF entries.
 
 ### Collection Diff Rules
 
@@ -1074,7 +1110,7 @@ To ensure consistency across all assertions, values displayed in the evidence bl
 
 ## Value Truncation
 
-Values should be displayed in full whenever practical. Truncation should be a last resort, not a layout workaround. When truncation *is* necessary (e.g. a 10 MB string), the following rules apply:
+Values should be displayed in full whenever practical. Truncation should be a last resort, not a layout workaround. The bounded `expected near:` / `actual near:` string-difference previews described above do not truncate or replace the full evidence; they are supplemental. When truncation of the full evidence *is* necessary (e.g. a 10 MB string), the following rules apply:
 
 1. Truncation is indicated by `...` at the point of truncation.
 2. The maximum displayed length defaults to **1024 characters**. This fits ~20 lines of 50-character-wide terminal output — enough to show meaningful context around a diff point without flooding CI logs. Configurable via `.runsettings` or `testconfig.json` (see [Configuration](#configuration)).

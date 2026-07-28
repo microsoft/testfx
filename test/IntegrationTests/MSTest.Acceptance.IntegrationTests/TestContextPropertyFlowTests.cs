@@ -26,8 +26,22 @@ public sealed class TestContextPropertyFlowTests : AcceptanceTestBase<TestContex
         // PropertyFlowTests: TestMethodOne + TestMethodTwo = 2
         // SecondClassTests: TestMethod = 1
         // DataRowFlowTests: two data rows = 2
-        // Total = 5
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 5, skipped: 0);
+        // PerTestPropertyScopeTests: TestWithFirstProperties + TestWithSecondProperties = 2
+        // Total = 7
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 7, skipped: 0);
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task PerTestPropertiesAreScopedToTheirTest(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--filter ClassName=PerTestPropertyScopeTests",
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(0);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 2, skipped: 0);
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
@@ -70,6 +84,7 @@ public sealed class PropertyFlowTests
     [AssemblyInitialize]
     public static void AssemblyInit(TestContext context)
     {
+        PropertyScopeAssertions.AssertNoPerTestProperties(context);
         context.Properties["AssemblyInitKey"] = "AssemblyInitValue";
         context.Properties["SharedKey"] = "FromAssemblyInit";
     }
@@ -129,6 +144,7 @@ public sealed class PropertyFlowTests
     [AssemblyCleanup]
     public static void AssemblyCleanup(TestContext context)
     {
+        PropertyScopeAssertions.AssertNoPerTestProperties(context);
         // AssemblyCleanup must see AssemblyInit-set properties, including any override the
         // AssemblyInit itself made. It must NOT see ClassInit-set properties (those are class-scoped).
         Assert.AreEqual("AssemblyInitValue", context.Properties["AssemblyInitKey"]);
@@ -140,6 +156,104 @@ public sealed class PropertyFlowTests
         Assert.IsFalse(
             context.Properties.ContainsKey("SecondClassKey"),
             "Properties set by SecondClassTests.ClassInitialize should not flow to AssemblyCleanup.");
+    }
+}
+
+internal static class PropertyScopeAssertions
+{
+    private static readonly string[] PerTestPropertyKeys =
+    [
+        "FirstTestProperty",
+        "FirstTestCategory",
+        "SecondTestProperty",
+        "SecondTestCategory",
+    ];
+
+    public static void AssertNoPerTestProperties(TestContext context)
+    {
+        foreach (string key in PerTestPropertyKeys)
+        {
+            Assert.IsFalse(
+                context.Properties.ContainsKey(key),
+                $"Per-test property '{key}' must not be visible in a lifecycle or sibling-test context.");
+        }
+    }
+}
+
+// Regression coverage for https://github.com/microsoft/testfx/issues/10041. The test that
+// triggers ClassInitialize may carry method-level properties, categories, or host metadata.
+// Those values belong only to that test's execution context and must not be captured in the
+// class lifecycle snapshot or flow to sibling tests.
+[TestClass]
+public sealed class PerTestPropertyScopeTests : System.IDisposable
+{
+    private readonly TestContext _testContext;
+
+    public PerTestPropertyScopeTests(TestContext testContext)
+    {
+        _testContext = testContext;
+        AssertExpectedPerTestProperties(testContext);
+    }
+
+    [ClassInitialize]
+    public static void ClassInit(TestContext context)
+    {
+        Assert.AreEqual("AssemblyInitValue", context.Properties["AssemblyInitKey"]);
+        PropertyScopeAssertions.AssertNoPerTestProperties(context);
+        context.Properties["PerTestScopeClassInitKey"] = "PerTestScopeClassInitValue";
+    }
+
+    [TestInitialize]
+    public void TestInit() => AssertExpectedPerTestProperties(_testContext);
+
+    [TestMethod]
+    [TestProperty("FirstTestProperty", "FirstTestValue")]
+    [TestCategory("FirstTestCategory")]
+    public void TestWithFirstProperties() => AssertExpectedPerTestProperties(_testContext);
+
+    [TestMethod]
+    [TestProperty("SecondTestProperty", "SecondTestValue")]
+    [TestCategory("SecondTestCategory")]
+    public void TestWithSecondProperties() => AssertExpectedPerTestProperties(_testContext);
+
+    [TestCleanup]
+    public void TestCleanup() => AssertExpectedPerTestProperties(_testContext);
+
+    public void Dispose() => AssertExpectedPerTestProperties(_testContext);
+
+    [ClassCleanup]
+    public static void ClassCleanup(TestContext context)
+    {
+        Assert.AreEqual("AssemblyInitValue", context.Properties["AssemblyInitKey"]);
+        Assert.AreEqual("PerTestScopeClassInitValue", context.Properties["PerTestScopeClassInitKey"]);
+        PropertyScopeAssertions.AssertNoPerTestProperties(context);
+    }
+
+    private static void AssertExpectedPerTestProperties(TestContext context)
+    {
+        Assert.AreEqual("AssemblyInitValue", context.Properties["AssemblyInitKey"]);
+        Assert.AreEqual("PerTestScopeClassInitValue", context.Properties["PerTestScopeClassInitKey"]);
+
+        switch (context.TestName)
+        {
+            case nameof(TestWithFirstProperties):
+                Assert.AreEqual("FirstTestValue", context.Properties["FirstTestProperty"]);
+                Assert.IsTrue(context.Properties.ContainsKey("FirstTestCategory"));
+                Assert.IsFalse(context.Properties.ContainsKey("SecondTestProperty"));
+                Assert.IsFalse(context.Properties.ContainsKey("SecondTestCategory"));
+                break;
+
+            case nameof(TestWithSecondProperties):
+                Assert.AreEqual("SecondTestValue", context.Properties["SecondTestProperty"]);
+                Assert.IsTrue(context.Properties.ContainsKey("SecondTestCategory"));
+                Assert.IsFalse(context.Properties.ContainsKey("FirstTestProperty"));
+                Assert.IsFalse(context.Properties.ContainsKey("FirstTestCategory"));
+                break;
+
+            default:
+                Assert.Fail($"Unexpected test name '{context.TestName}'.");
+                break;
+        }
     }
 }
 

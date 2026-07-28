@@ -384,7 +384,7 @@ internal class MSTestAdapterSettings
                 else
                 {
                     string message = string.Format(CultureInfo.CurrentCulture, Resource.InvalidSettingsXmlElement, reader.Name, "AssemblyResolution");
-                    throw new InvalidRunSettingsException(message);
+                    throw new AdapterSettingsException(message);
                 }
 
                 // Move to the next element under tag AssemblyResolution

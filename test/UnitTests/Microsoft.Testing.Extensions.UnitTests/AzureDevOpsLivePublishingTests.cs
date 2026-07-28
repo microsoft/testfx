@@ -440,7 +440,7 @@ public sealed class AzureDevOpsLivePublishingTests
         await StartPublisherAsync(publisher);
         await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), CreateMessage(node), CancellationToken.None);
 
-        Assert.HasCount(0, client.UploadTestResultAttachmentCalls);
+        Assert.IsEmpty(client.UploadTestResultAttachmentCalls);
     }
 
     [TestMethod]
@@ -496,7 +496,7 @@ public sealed class AzureDevOpsLivePublishingTests
         await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
 
         Assert.AreEqual(1, publishCalls);
-        Assert.HasCount(0, client.UploadTestResultAttachmentCalls);
+        Assert.IsEmpty(client.UploadTestResultAttachmentCalls);
         Assert.Contains(AzureDevOpsResources.AzureDevOpsLivePublishingResultIdParseFailedWarning, string.Join(Environment.NewLine, logger.Logs));
     }
 
@@ -634,7 +634,7 @@ public sealed class AzureDevOpsLivePublishingTests
         await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), new SessionFileArtifact(sessionUid, new FileInfo(logPath), "log"), CancellationToken.None);
         await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
 
-        Assert.HasCount(0, client.UploadTestRunAttachmentCalls);
+        Assert.IsEmpty(client.UploadTestRunAttachmentCalls);
     }
 
     [TestMethod]

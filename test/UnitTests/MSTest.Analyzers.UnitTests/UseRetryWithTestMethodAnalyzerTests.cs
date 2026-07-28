@@ -265,4 +265,115 @@ public sealed class UseRetryWithTestMethodAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
+
+    [TestMethod]
+    public async Task WhenNonTestMethodHasCustomDerivedRetryAttribute_Diagnostic()
+    {
+        // The analyzer uses Inherits() to detect RetryBaseAttribute subclasses.
+        // A user-defined subclass of RetryBaseAttribute on a non-test method should trigger the diagnostic.
+        string code = """
+            #pragma warning disable MSTESTEXP
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyRetryAttribute : RetryBaseAttribute
+            {
+                protected override Task<RetryResult> ExecuteAsync(RetryContext context) => Task.FromResult(new RetryResult());
+            }
+            #pragma warning restore MSTESTEXP
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [MyRetry]
+                public void [|M|]()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodHasCustomDerivedRetryAttribute_NoDiagnostic()
+    {
+        // A user-defined RetryBaseAttribute subclass on an actual test method should NOT trigger the diagnostic.
+        string code = """
+            #pragma warning disable MSTESTEXP
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyRetryAttribute : RetryBaseAttribute
+            {
+                protected override Task<RetryResult> ExecuteAsync(RetryContext context) => Task.FromResult(new RetryResult());
+            }
+            #pragma warning restore MSTESTEXP
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [MyRetry]
+                public void M()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenNonTestClassHasCustomDerivedRetryAttribute_Diagnostic()
+    {
+        // A user-defined RetryBaseAttribute subclass on a non-test class should trigger the diagnostic.
+        string code = """
+            #pragma warning disable MSTESTEXP
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyRetryAttribute : RetryBaseAttribute
+            {
+                protected override Task<RetryResult> ExecuteAsync(RetryContext context) => Task.FromResult(new RetryResult());
+            }
+            #pragma warning restore MSTESTEXP
+
+            [MyRetry]
+            public class [|MyClass|]
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenTestClassHasCustomDerivedRetryAttribute_NoDiagnostic()
+    {
+        // A user-defined RetryBaseAttribute subclass on an actual test class should NOT trigger the diagnostic.
+        string code = """
+            #pragma warning disable MSTESTEXP
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyRetryAttribute : RetryBaseAttribute
+            {
+                protected override Task<RetryResult> ExecuteAsync(RetryContext context) => Task.FromResult(new RetryResult());
+            }
+            #pragma warning restore MSTESTEXP
+
+            [TestClass]
+            [MyRetry]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void M()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
 }

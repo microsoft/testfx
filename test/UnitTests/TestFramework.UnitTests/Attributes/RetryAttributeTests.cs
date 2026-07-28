@@ -172,4 +172,29 @@ public class RetryAttributeTests : TestContainer
 
         callCount.Should().Be(1);
     }
+
+    public async Task ExecuteAsync_WhenMultipleAttempts_AllResultsContainsEveryAttemptInOrder()
+    {
+        var attribute = new RetryAttribute(maxRetryAttempts: 3);
+        int callCount = 0;
+
+        TestResult[] firstRunResults = [new TestResult { Outcome = UnitTestOutcome.Failed }];
+        var context = new RetryContext(
+            () =>
+            {
+                callCount++;
+                UnitTestOutcome outcome = callCount < 3 ? UnitTestOutcome.Failed : UnitTestOutcome.Passed;
+                return Task.FromResult(new[] { new TestResult { Outcome = outcome } });
+            },
+            firstRunResults);
+
+        RetryResult result = await attribute.ExecuteAsync(context);
+
+        result.AllResults.Should().HaveCount(3);
+        result.AllResults.Select(r => r.Single().Outcome).Should().Equal(
+            UnitTestOutcome.Failed,
+            UnitTestOutcome.Failed,
+            UnitTestOutcome.Passed);
+        result.AllResults[result.AllResults.Count - 1].Should().BeSameAs(result.TryGetLast());
+    }
 }

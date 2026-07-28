@@ -36,6 +36,25 @@ gh aw audit <run-id>
 
 For deeper guidance — creating, updating, debugging, upgrading, or wrapping MCP servers — see the dispatcher [`.github/agents/agentic-workflows.agent.md`](../agents/agentic-workflows.agent.md), which routes to the canonical `gh-aw` prompts.
 
+### Compile on the pinned toolchain, and check the pins afterwards
+
+> [!WARNING]
+> A locally installed `gh aw` extension can silently rewrite action pins in **every** `.lock.yml` it touches, even when its `compiler_version` header matches CI. Observed corruptions include `actions/checkout` being downgraded (v7.0.1 → v7.0.0) and `github/gh-aw-actions/setup` losing its immutable SHA in favour of a mutable `@v0.83.1` tag. See [#10258](https://github.com/microsoft/testfx/issues/10258).
+
+The authoritative toolchain is the pinned `github/gh-aw-actions/setup-cli` action used by [`agentics-maintenance.yml`](./agentics-maintenance.yml); recompiling there self-heals an affected lock file. `.github/aw/actions-lock.json` records the SHA every action must resolve to.
+
+Because the `compiler_version` header asserts an identity claim rather than the emitted bytes, always re-read the diff of a local compile — a change to a `uses:` pin that you did not intend is the tell. The repository also enforces this automatically:
+
+```bash
+# Offline, deterministic audit of every `uses:` pin in .github/workflows/
+python .github/scripts/check_action_pins.py
+
+# Print the resolved pin table (useful when reconciling a drift report)
+python .github/scripts/check_action_pins.py --list
+```
+
+[`check-action-pins.yml`](./check-action-pins.yml) runs the same script on every pull request that touches `.github/workflows/**`, `.github/actions/**`, `.github/aw/actions-lock.json`, or the script itself. It fails when a generated workflow carries an unpinned `uses:`, when a pin disagrees with `.github/aw/actions-lock.json`, or when one action resolves to more than one SHA across the repository.
+
 ## Secrets & authentication
 
 Agentic workflows authenticate through repository secrets:
@@ -142,6 +161,59 @@ a workflow needs elevated access (then use the GitHub App above).
 > cause — *AI credits budget exceeded*, an engine/inference error, or transient
 > container-image / AWF-binary download failures are all unrelated to authentication.
 > Only the *"Lockdown Check Failed … custom GitHub token"* banner indicates a PAT issue.
+> For the recurring `Install GitHub Copilot CLI` download failure, see
+> [Known transient failures](#known-transient-failures) below.
+
+## Known transient failures
+
+### `detection` job fails at `Install GitHub Copilot CLI`
+
+**Symptom.** The `agent` job succeeds, the `detection` job fails on its `Install GitHub Copilot CLI`
+step, and `safe_outputs` is **skipped** — so only the workflow's configured safe outputs (in the
+observed run of `grade-tests-on-pr`, the grading comment) are suppressed. The `[aw] Detection Runs`
+tracker issue still records the run as `warning | parse_error`, because the threat-detection result
+file was never written. The step log shows repeated
+`curl: (22) The requested URL returned error: 504` while fetching `SHA256SUMS.txt` from
+`github/copilot-cli` releases.
+
+**Why `safe_outputs` disappears.** Every generated lock file gates that job on
+`needs.detection.result == 'success'`. `safe-outputs.threat-detection.continue-on-error` (default
+`true`) only tolerates a *parse* failure of a detection run that actually happened — it does not
+change the gate, so a job-level infrastructure failure still swallows the outputs. Setting it
+explicitly in frontmatter is a no-op; the compiled condition is byte-identical.
+
+**Root cause.** `gh aw compile` bakes an *exact* Copilot CLI version into every `.lock.yml`
+(`install_copilot_cli.sh <version>`), taken from gh-aw's own `DefaultCopilotVersion` constant.
+Passing an explicit version makes `install_copilot_cli.sh` skip compat-matrix resolution, so the
+toolcache lookup runs with `range: none..none` and can never match the CLI the hosted runner image
+already ships. Every agentic workflow run therefore downloads the CLI twice — once in the `agent`
+job, once in the `detection` job — and each download is a chance to hit a transient GitHub CDN 5xx.
+The gap is structural, not a stale-image problem: `github/gh-aw-actions`'s `compat.json` caps
+`max-agent` at `1.0.56` (exactly what the runner image caches), while `DefaultCopilotVersion` is
+already `1.0.73` on gh-aw v0.83.1 and `1.0.75` on `main` — so bumping gh-aw *widens* the gap.
+
+**There is no repo-side fix.** All of the following were evaluated and rejected:
+
+- `engine.version` is silently ignored for the Copilot engine — gh-aw overwrites it with
+  `DefaultCopilotVersion` (`pkg/workflow/copilot_engine_installation.go`, still the case on `main`).
+  `gh aw compile --strict` reports no error, and the regenerated lock keeps the pinned version.
+- Hand-editing a `.lock.yml` (older pin, extra retries) is overwritten on the next `gh aw compile`.
+- `engine.command:` pointed at `/opt/hostedtoolcache/copilot-cli/<version>/x64/bin/copilot` bypasses
+  the install step, but hardcodes a path that rotates with runner images and skips the `.copilot`
+  ownership fix and stale `awf-*-chroot-home` cleanup that `install_copilot_cli.sh` performs.
+- `safe-outputs.threat-detection.steps:` *does* inject steps ahead of `Install GitHub Copilot CLI`,
+  so a retry/pre-warm shim is technically possible — but it would have to be repeated in every
+  workflow, re-download from the same CDN, and hardcode both the drifting version pin and the
+  toolcache layout. That trades a rare transient failure for permanent maintenance debt.
+- Disabling `threat-detection` removes the failure by removing a security control.
+
+**What to do.** Nothing structural — re-run the failed workflow. The occurrence rate is roughly one
+run per tracker issue, and the tracker auto-expires via its `gh-aw-expires` marker. A durable fix
+belongs upstream in [`github/gh-aw`][gh-aw]: either pin `DefaultCopilotVersion` to the exact CLI
+version the hosted runner toolcache is expected to contain (in practice the `compat.json`
+`max-agent`, with a CI guard against drift), or pass the compat range to the toolcache lookup even
+when a version is pinned. Merely choosing a default somewhere inside the compat window still
+downloads unless that exact version is cached.
 
 ## Catalog
 
@@ -163,11 +235,13 @@ a workflow needs elevated access (then use the GitHub App above).
 
 | Workflow | Trigger | Description |
 | --- | --- | --- |
-| [`build-failure-analysis.md`](./build-failure-analysis.md) | PR opened/synchronize/reopened on `main` or `rel/*` | Runs `./build.sh --binaryLog`; on failure, the `build-failure-analyst` agent reads JSON dumps from the binlog, posts a summary comment, and attaches inline `suggestion` blocks. Advisory only — not a gating check. |
-| [`build-failure-analysis-command.md`](./build-failure-analysis-command.md) | `/analyze-build-failure` on a PR | Re-runs the build-failure analysis on demand (after force-pushes, dismissed comments, etc.). |
+| [`build-failure-analysis.md`](./build-failure-analysis.md) | Azure Pipelines `microsoft.testfx` check `completed` (failure) on a PR to `main` or `rel/*` | Downloads the binary logs the failed Azure DevOps build already produced (all build legs — it does **not** rebuild), and the `build-failure-analyst` agent queries them via `binlog-mcp`, posts a summary comment, and attaches inline `suggestion` blocks. Advisory only — not a gating check. |
+| [`build-failure-analysis-command.md`](./build-failure-analysis-command.md) | `/analyze-build-failure` on a PR | Re-runs the analysis on demand: inspects the PR's latest `microsoft.testfx` build and, only when it failed, downloads its binlogs and analyzes them (no rebuild). |
 | [`add-tests.md`](./add-tests.md) | `/add-tests` on a PR | Generates unit tests for code introduced in a pull request. |
 | [`grade-tests-on-pr.agent.md`](./grade-tests-on-pr.agent.md) | PR opened/reopened/synchronize/ready_for_review touching `test/**` | Automatically grades new and modified test methods and posts a single PR scorecard comment via the `grade-tests` skill. |
 | [`grade-tests.agent.md`](./grade-tests.agent.md) | `/grade-tests` on a PR | Re-runs the test-quality grading on demand. |
+| [`parallel-safety-audit.md`](./parallel-safety-audit.md) | PR opened/reopened/synchronize/ready_for_review touching `test/**`, or the repo-root `Directory.Build.props` / `Directory.Build.targets` / `Directory.Packages.props` | Audits the changed MSTest tests for parallel-safety (process-global state, shared filesystem paths, `[ResourceLock]`/`[DoNotParallelize]` reconciliation, over-serialization) and posts a ranked, scope-aware readiness report. Complements analyzer MSTEST0073 (and the forthcoming MSTEST0074–0077). |
+| [`parallel-safety-audit-command.md`](./parallel-safety-audit-command.md) | `/parallel-audit` on a PR | Re-runs the parallel-safety audit on demand. |
 
 #### Continuous quality improvers (scheduled)
 
@@ -204,11 +278,11 @@ a workflow needs elevated access (then use the GitHub App above).
 | [`agentics-maintenance.yml`](./agentics-maintenance.yml) | Schedule + manual + reusable + issues | Maintains the agentic workflow ecosystem itself (re-compilation, dependency bumps, etc.). |
 | [`backport.yml`](./backport.yml) | `/backport` comment + issues + schedule | Backports merged PRs to release branches on demand. |
 | [`backport-base.yml`](./backport-base.yml) | Reusable | Shared logic invoked by `backport.yml` to perform the actual backport. |
+| [`check-action-pins.yml`](./check-action-pins.yml) | PR + push + manual | Audits every `uses:` pin in `.github/workflows/` against `.github/aw/actions-lock.json` and flags unpinned or drifting actions in generated `.lock.yml` files. |
 | [`check-vendored-files.yml`](./check-vendored-files.yml) | Schedule + manual + PR + issues | Verifies that files vendored from external sources (such as `eng/common`) stay in sync. |
 | [`copilot-setup-steps.yml`](./copilot-setup-steps.yml) | PR + push + manual | Bootstraps a Copilot Coding Agent environment with the right .NET SDK and tooling. |
 | [`dedup-analysis.yml`](./dedup-analysis.yml) | Schedule + manual + issues | Code Duplication Analysis (jscpd-based). |
 | [`enable-auto-merge.yml`](./enable-auto-merge.yml) | `pull_request_target` | Enables auto-merge on eligible PRs. |
-| [`fv-docs-validation.yml`](./fv-docs-validation.yml) | PR + push + manual | Validates documentation referenced by the friend-validation (FV) program. |
 | [`markdownlint.yml`](./markdownlint.yml) | PR | Runs `markdownlint` on changed Markdown files. |
 
 ## Shared components
@@ -222,6 +296,7 @@ Reusable agentic-workflow snippets imported via `imports:` in workflow frontmatt
 | [`shared/formatting.md`](./shared/formatting.md) | Quality improver workflows (output formatting conventions) |
 | [`shared/msbuild-review-shared.md`](./shared/msbuild-review-shared.md) | `msbuild-quality-review.md` |
 | [`shared/grade-tests-shared.md`](./shared/grade-tests-shared.md) | `grade-tests-on-pr.agent.md`, `grade-tests.agent.md` |
+| [`shared/parallel-safety-audit-shared.md`](./shared/parallel-safety-audit-shared.md) | `parallel-safety-audit.md`, `parallel-safety-audit-command.md` |
 | [`shared/repo-build-setup.md`](./shared/repo-build-setup.md) | Workflows that need to restore + build the repo before the agent runs |
 | [`shared/reporting.md`](./shared/reporting.md) | Quality improver workflows (issue/PR body templates) |
 | [`shared/review-shared.md`](./shared/review-shared.md) | `review.agent.md`, `review-on-open.agent.md`, `review-after-autofix.agent.md` |
@@ -232,7 +307,8 @@ Reusable agentic-workflow snippets imported via `imports:` in workflow frontmatt
 - **Source of truth.** Edit the `.md` file (and any imported `shared/*.md`); never the `.lock.yml`.
 - **One change, one compile.** After editing an agentic workflow source, run `gh aw compile <workflow-id>` and commit the regenerated `.lock.yml` in the same change.
 - **Same applies to Dependabot updates** that touch generated manifests (e.g. `package.json` / `requirements.txt` / `go.mod`) if `gh aw compile` ever emits them under `.github/workflows/`: never merge those PRs directly; update the source `.md` files and rerun `gh aw compile --dependabot` to bundle the fixes.
-- **Pinned actions only.** Strict mode pins every `uses:` reference to a SHA; the compiler enforces this.
+- **Pinned actions only.** Strict mode pins every `uses:` reference to a SHA; the compiler enforces this, and [`check-action-pins.yml`](./check-action-pins.yml) verifies it independently of the compiler.
+- **Compile on the pinned toolchain.** A locally installed `gh aw` build can emit corrupted pins ([#10258](https://github.com/microsoft/testfx/issues/10258)); always review the diff of a local compile and run `python .github/scripts/check_action_pins.py` before pushing.
 - **Minimal permissions.** Workflows declare the least privilege they need; write capabilities flow through gh-aw `safe-outputs:` rather than direct `permissions: write-all`.
 
 [gh-aw]: https://github.com/github/gh-aw

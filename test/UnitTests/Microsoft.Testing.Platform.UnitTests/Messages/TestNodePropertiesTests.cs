@@ -153,6 +153,12 @@ public sealed class TestNodePropertiesTests
             new CancelledTestNodeStateProperty(new Exception("some message")).ToString());
 
     [TestMethod]
+    public void CustomTestNodeStateProperty_ToStringUsesRuntimeTypeName()
+        => Assert.AreEqual(
+            "CustomTestNodeStateProperty { Explanation = some explanation }",
+            new CustomTestNodeStateProperty("some explanation").ToString());
+
+    [TestMethod]
     public void TimingProperty_ToStringIsCorrect()
     {
         DateTimeOffset startTime = new(2021, 9, 1, 0, 0, 0, default);
@@ -191,4 +197,12 @@ public sealed class TestNodePropertiesTests
         => Assert.AreEqual(
             "TestMetadataProperty { Key = some name, Value = some value }",
             new TestMetadataProperty("some name", "some value").ToString());
+
+    private sealed class CustomTestNodeStateProperty : TestNodeStateProperty
+    {
+        public CustomTestNodeStateProperty(string? explanation)
+            : base(explanation)
+        {
+        }
+    }
 }

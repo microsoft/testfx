@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.ComponentModel;
+
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
@@ -72,6 +74,14 @@ public static class ServiceProviderExtensions
         => serviceProvider.GetRequiredService<IConfiguration>();
 
     /// <summary>
+    /// Gets the artifact naming service from the <see cref="IServiceProvider"/>.
+    /// </summary>
+    /// <param name="serviceProvider">The service provider.</param>
+    /// <returns>The artifact naming service.</returns>
+    public static IArtifactNamingService GetArtifactNamingService(this IServiceProvider serviceProvider)
+        => serviceProvider.GetRequiredService<IArtifactNamingService>();
+
+    /// <summary>
     /// Gets the command line options from the <see cref="IServiceProvider"/>.
     /// </summary>
     /// <param name="serviceProvider">The service provider.</param>
@@ -135,7 +145,14 @@ public static class ServiceProviderExtensions
     internal static ITestSessionContext GetTestSessionContext(this IServiceProvider serviceProvider)
         => serviceProvider.GetRequiredServiceInternal<ITestSessionContext>();
 
-    internal static IClock GetSystemClock(this IServiceProvider serviceProvider)
+    /// <summary>
+    /// <b>Infrastructure.</b> Gets the platform system clock. Not intended for direct use by application code.
+    /// </summary>
+    /// <param name="serviceProvider">The service provider.</param>
+    /// <returns>The platform <see cref="IClock"/>.</returns>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    [Experimental("TPINTERNAL")]
+    public static IClock GetSystemClock(this IServiceProvider serviceProvider)
         => serviceProvider.GetRequiredServiceInternal<IClock>();
 
     internal static ITask GetTask(this IServiceProvider serviceProvider)

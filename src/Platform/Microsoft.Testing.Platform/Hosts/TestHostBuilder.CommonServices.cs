@@ -13,6 +13,7 @@ using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
 using Microsoft.Testing.Platform.TestHostControllers;
+using Microsoft.Testing.Platform.Tools;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
@@ -64,6 +65,7 @@ internal sealed partial class TestHostBuilder
         serviceProvider.TryAddService(_testApplicationModuleInfo);
         serviceProvider.TryAddService(testHostControllerInfo);
         serviceProvider.TryAddService(systemClock);
+        serviceProvider.TryAddService(new ArtifactNamingService(_testApplicationModuleInfo, systemEnvironment, systemClock));
 
         SystemMonitor systemMonitor = new();
         serviceProvider.TryAddService(systemMonitor);
@@ -172,6 +174,11 @@ internal sealed partial class TestHostBuilder
         // Reuse the shared helper so the pipe-protocol detection stays in one place.
         bool isPipeProtocol = context.CommandLineHandler.HasDotnetTestServerOption();
 
+        // Register the single coverage accumulator before the output device is built so the terminal
+        // output device can read from it (rather than buffering its own copy of the coverage messages).
+        serviceProvider.AddService(new TestCoverageCapabilities());
+        serviceProvider.AddService(new TestCoverageResult(loggerFactoryProxy));
+
         context.ProxyOutputDevice = await _outputDisplay.BuildAsync(serviceProvider, context.IsJsonRpcProtocol, isPipeProtocol).ConfigureAwait(false);
 
         if (loggingState.FileLoggerProvider is not null)
@@ -220,8 +227,15 @@ internal sealed partial class TestHostBuilder
             // catches that later (ValidateOptionsAreNotDuplicated) and reports a clear error. Skip
             // duplicates here so the normalization step itself doesn't crash for that malformed setup.
             var optionByName = new Dictionary<string, CommandLineOption>(StringComparer.OrdinalIgnoreCase);
+            IEnumerable<ICommandLineOptionsProvider> extensionOptionsProviders =
+                loggingState.CommandLineParseResult.ToolName is string toolName
+                    ? context.CommandLineHandler.ExtensionsCommandLineOptionsProviders
+                        .OfType<IToolCommandLineOptionsProvider>()
+                        .Where(provider => provider.ToolName == toolName)
+                    : context.CommandLineHandler.ExtensionsCommandLineOptionsProviders
+                        .Where(provider => provider is not IToolCommandLineOptionsProvider);
             foreach (ICommandLineOptionsProvider optionsProvider in context.CommandLineHandler.SystemCommandLineOptionsProviders
-                .Concat(context.CommandLineHandler.ExtensionsCommandLineOptionsProviders))
+                .Concat(extensionOptionsProviders))
             {
                 foreach (CommandLineOption option in optionsProvider.GetCommandLineOptions())
                 {
@@ -263,7 +277,7 @@ internal sealed partial class TestHostBuilder
             context.CommandLineHandler,
             jsonCommandLineOptions).ConfigureAwait(false);
 
-        if (!loggingState.CommandLineParseResult.HasTool && !commandLineValidationResult.IsValid)
+        if (!commandLineValidationResult.IsValid)
         {
             await DisplayBannerIfEnabledAsync(context.CommandLineHandler, context.ProxyOutputDevice, context.TestFrameworkCapabilities, context.TestApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
             await context.ProxyOutputDevice.DisplayAsync(context.CommandLineHandler, new ErrorMessageOutputDeviceData(commandLineValidationResult.ErrorMessage), context.TestApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
@@ -317,7 +331,8 @@ internal sealed partial class TestHostBuilder
             serviceProvider.GetCommandLineOptions(),
             serviceProvider.GetEnvironment(),
             context.PoliciesService,
-            serviceProvider.GetPlatformOTelService()));
+            serviceProvider.GetPlatformOTelService(),
+            serviceProvider.GetRequiredService<ITestCoverageResult>()));
 
         ChatClientManager.BuildChatClients(serviceProvider);
 

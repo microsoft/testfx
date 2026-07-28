@@ -15,5 +15,8 @@ internal static class Constants
     public const string ReflectionMetadataHookFullName =
         "global::Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.ReflectionMetadataHook";
 
+    public const string DynamicDataSourceResolverFullName =
+        "global::Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceResolver";
+
     public const string GeneratedFileSuffix = ".MSTestReflectionMetadata.g.cs";
 }

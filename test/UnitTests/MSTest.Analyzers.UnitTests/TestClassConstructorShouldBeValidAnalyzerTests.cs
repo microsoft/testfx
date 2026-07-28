@@ -343,4 +343,98 @@ public sealed class TestClassConstructorShouldBeValidAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
+
+    [TestMethod]
+    public async Task WhenDerivedTestClassAttributeHasPrivateConstructor_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [STATestClass]
+            public class {|#0:MyTestClass|}
+            {
+                private MyTestClass()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic(TestClassConstructorShouldBeValidAnalyzer.TestClassConstructorShouldBeValidRule)
+                .WithLocation(0)
+                .WithArguments("MyTestClass"),
+            code);
+    }
+
+    [TestMethod]
+    public async Task WhenDerivedTestClassAttributeHasPublicParameterlessConstructor_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [STATestClass]
+            public class MyTestClass
+            {
+                public MyTestClass()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenCustomDerivedTestClassAttributeHasInternalConstructor_Diagnostic()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [AttributeUsage(AttributeTargets.Class)]
+            public class MyTestClassAttribute : TestClassAttribute
+            {
+            }
+
+            [MyTestClass]
+            public class {|#0:MyTestClass|}
+            {
+                internal MyTestClass()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic(TestClassConstructorShouldBeValidAnalyzer.TestClassConstructorShouldBeValidRule)
+                .WithLocation(0)
+                .WithArguments("MyTestClass"),
+            code);
+    }
+
+    [TestMethod]
+    public async Task WhenCustomDerivedTestClassAttributeHasPublicConstructor_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [AttributeUsage(AttributeTargets.Class)]
+            public class MyTestClassAttribute : TestClassAttribute
+            {
+            }
+
+            [MyTestClass]
+            public class MyTestClass
+            {
+                public MyTestClass()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
 }

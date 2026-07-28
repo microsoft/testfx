@@ -407,7 +407,7 @@ public class TestMethodInfoTests : TestContainer
 
     public async Task TestMethodInfoInvokeShouldClearStdOutAfterReporting()
     {
-        DummyTestClass.TestMethodBody = o => _testContextImplementation.WriteConsoleOut("output1");
+        DummyTestClass.TestMethodBody = o => _testContextImplementation.StandardOutputBuilder.Append("output1");
 
         var method = new TestMethodInfo(
             _methodInfo,
@@ -420,7 +420,7 @@ public class TestMethodInfoTests : TestContainer
         TestResult result1 = await method.InvokeAsync(null);
         result1.LogOutput.Should().Contain("output1");
 
-        DummyTestClass.TestMethodBody = o => _testContextImplementation.WriteConsoleOut("output2");
+        DummyTestClass.TestMethodBody = o => _testContextImplementation.StandardOutputBuilder.Append("output2");
         TestResult result2 = await method.InvokeAsync(null);
 
         result2.LogOutput.Should().Contain("output2");
@@ -429,7 +429,7 @@ public class TestMethodInfoTests : TestContainer
 
     public async Task TestMethodInfoInvokeShouldClearStdErrAfterReporting()
     {
-        DummyTestClass.TestMethodBody = o => _testContextImplementation.WriteConsoleErr("error1");
+        DummyTestClass.TestMethodBody = o => _testContextImplementation.StandardErrorBuilder.Append("error1");
 
         var method = new TestMethodInfo(
             _methodInfo,
@@ -442,7 +442,7 @@ public class TestMethodInfoTests : TestContainer
         TestResult result1 = await method.InvokeAsync(null);
         result1.LogError.Should().Contain("error1");
 
-        DummyTestClass.TestMethodBody = o => _testContextImplementation.WriteConsoleErr("error2");
+        DummyTestClass.TestMethodBody = o => _testContextImplementation.StandardErrorBuilder.Append("error2");
         TestResult result2 = await method.InvokeAsync(null);
 
         result2.LogError.Should().Contain("error2");
@@ -451,7 +451,7 @@ public class TestMethodInfoTests : TestContainer
 
     public async Task TestMethodInfoInvokeShouldClearDebugTraceAfterReporting()
     {
-        DummyTestClass.TestMethodBody = o => _testContextImplementation.WriteTrace("trace1");
+        DummyTestClass.TestMethodBody = o => _testContextImplementation.TraceBuilder.Append("trace1");
 
         var method = new TestMethodInfo(
             _methodInfo,
@@ -464,7 +464,7 @@ public class TestMethodInfoTests : TestContainer
         TestResult result1 = await method.InvokeAsync(null);
         result1.DebugTrace.Should().Contain("trace1");
 
-        DummyTestClass.TestMethodBody = o => _testContextImplementation.WriteTrace("trace2");
+        DummyTestClass.TestMethodBody = o => _testContextImplementation.TraceBuilder.Append("trace2");
         TestResult result2 = await method.InvokeAsync(null);
 
         result2.DebugTrace.Should().Contain("trace2");
@@ -693,6 +693,19 @@ public class TestMethodInfoTests : TestContainer
             "System.NotImplementedException: dummyExceptionMessage");
         exception.Should().NotBeNull();
         exception?.Message.Should().Be(errorMessage);
+    }
+
+    public async Task TestMethodInfoInvokeShouldSetInnerExceptionToRealExceptionIfSetTestContextThrows()
+    {
+        var thrownException = new NotImplementedException("dummyExceptionMessage");
+        DummyTestClass.TestContextSetterBody = value => throw thrownException;
+
+        TestFailedException exception = (await _testMethodInfo.InvokeAsync(null)).TestFailureException as TestFailedException
+            ?? throw new InvalidOperationException("Expected a TestFailedException when setting TestContext throws.");
+
+        // The real user exception must be preserved as the inner exception so that callers/loggers
+        // relying on the exception chain (e.g. IDEs, TRX viewers) can still get to the original cause.
+        exception.InnerException.Should().BeSameAs(thrownException);
     }
 
     public async Task TestMethodInfoInvokeShouldSetStackTraceInformationIfSetTestContextThrows()
@@ -1777,7 +1790,100 @@ public class TestMethodInfoTests : TestContainer
         ((string[])expectedArguments[1]).SequenceEqual((string[])resolvedArguments[1]!).Should().BeTrue();
     }
 
-    // Regression tests for https://github.com/microsoft/testfx/issues/7846
+    // Regression test for https://github.com/microsoft/testfx/issues/9949
+    // The params/required parameter metadata is a pure function of the MethodInfo and is cached at process
+    // scope keyed by MethodInfo. Discovery unfolds data sources by default, so each row constructs a fresh
+    // TestMethodInfo for the same MethodInfo; the reflective scan must still run only once across them.
+    public void ResolveArguments_ComputesParameterMetadataOncePerMethodAcrossInstances()
+    {
+        TestMethodInfo.ResetParameterMetadataCacheForTesting();
+        MethodInfo paramsArgumentMethod = typeof(DummyTestClass).GetMethod("DummyParamsArgumentMethod")!;
+
+        for (int i = 0; i < 5; i++)
+        {
+            var method = new TestMethodInfo(paramsArgumentMethod, _testClassInfo)
+            {
+                TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+                Executor = _testMethodAttribute,
+            };
+
+            object?[] resolvedArguments = method.ResolveArguments([i, "str1", "str2"]);
+            resolvedArguments.Length.Should().Be(2);
+            resolvedArguments[1].Should().BeOfType<string[]>();
+        }
+
+        TestMethodInfo.ParameterMetadataScanCount.Should().Be(1);
+    }
+
+    // Regression test for https://github.com/microsoft/testfx/issues/9949
+    // Under method-level parallelization several rows for the same MethodInfo can reach the cache-miss path
+    // concurrently. The Lazy execution-and-publication cache must still collapse them to a single scan.
+    // The test is made deterministic by (1) confirming every worker is parked before releasing them together
+    // and (2) holding the first scan open (via a callback) so competing workers provably reach the still-empty
+    // cache while it runs — a direct compute-then-store cache would record more than one scan here.
+    public async Task ResolveArguments_ComputesParameterMetadataOnceUnderConcurrentFirstAccess()
+    {
+        TestMethodInfo.ResetParameterMetadataCacheForTesting();
+        MethodInfo paramsArgumentMethod = typeof(DummyTestClass).GetMethod("DummyParamsArgumentMethod")!;
+
+        const int concurrency = 8;
+        using var startGate = new ManualResetEventSlim(false);
+        using var scanStarted = new ManualResetEventSlim(false);
+        using var releaseScan = new ManualResetEventSlim(false);
+        int parkedWorkers = 0;
+
+        // Hold the first scan open until the test releases it, so any competing misses accumulate meanwhile.
+        TestMethodInfo.SetParameterMetadataScanCallbackForTesting(() =>
+        {
+            scanStarted.Set();
+            releaseScan.Wait();
+        });
+
+        try
+        {
+            var tasks = new Task<object?[]>[concurrency];
+            for (int i = 0; i < concurrency; i++)
+            {
+                tasks[i] = Task.Run(() =>
+                {
+                    var method = new TestMethodInfo(paramsArgumentMethod, _testClassInfo)
+                    {
+                        TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+                        Executor = _testMethodAttribute,
+                    };
+
+                    Interlocked.Increment(ref parkedWorkers);
+                    startGate.Wait();
+                    return method.ResolveArguments([1, "str1", "str2"]);
+                });
+            }
+
+            // Release the workers only once all of them are provably waiting at the gate.
+            SpinWait.SpinUntil(() => Volatile.Read(ref parkedWorkers) == concurrency);
+            startGate.Set();
+
+            // Wait until one scan is in progress, then give the other workers time to hit the cache-miss
+            // path before letting the scan finish and publish its result.
+            scanStarted.Wait();
+            Thread.Sleep(100);
+            releaseScan.Set();
+
+            object?[][] results = await Task.WhenAll(tasks);
+
+            TestMethodInfo.ParameterMetadataScanCount.Should().Be(1);
+            foreach (object?[] resolvedArguments in results)
+            {
+                resolvedArguments.Length.Should().Be(2);
+                resolvedArguments[1].Should().BeOfType<string[]>();
+            }
+        }
+        finally
+        {
+            releaseScan.Set();
+            TestMethodInfo.SetParameterMetadataScanCallbackForTesting(null);
+        }
+    }
+
     // Verify that log output buffers are cleared between invocations to prevent
     // exponential memory growth with DynamicData tests.
     // NOTE: The TestClassInfo (class init/cleanup) and UnitTestRunner (assembly init/cleanup)
@@ -1785,7 +1891,7 @@ public class TestMethodInfoTests : TestContainer
     // TestContextImplementationTests.GetAndClear{Output,Error,Trace}_ShouldReturnContentThenClearBuffer.
     public async Task InvokeAsync_ShouldNotAccumulateLogOutputAcrossMultipleInvocations()
     {
-        DummyTestClass.TestMethodBody = _ => _testContextImplementation.WriteConsoleOut("invocation_output");
+        DummyTestClass.TestMethodBody = _ => _testContextImplementation.StandardOutputBuilder.Append("invocation_output");
 
         TestResult result1 = await _testMethodInfo.InvokeAsync(null);
         TestResult result2 = await _testMethodInfo.InvokeAsync(null);
@@ -1796,7 +1902,7 @@ public class TestMethodInfoTests : TestContainer
 
     public async Task InvokeAsync_ShouldNotAccumulateLogErrorAcrossMultipleInvocations()
     {
-        DummyTestClass.TestMethodBody = _ => _testContextImplementation.WriteConsoleErr("error_output");
+        DummyTestClass.TestMethodBody = _ => _testContextImplementation.StandardErrorBuilder.Append("error_output");
 
         TestResult result1 = await _testMethodInfo.InvokeAsync(null);
         TestResult result2 = await _testMethodInfo.InvokeAsync(null);
@@ -1807,13 +1913,15 @@ public class TestMethodInfoTests : TestContainer
 
     public async Task InvokeAsync_ShouldNotAccumulateDebugTraceAcrossMultipleInvocations()
     {
-        DummyTestClass.TestMethodBody = _ => _testContextImplementation.WriteTrace("trace_output");
+        DummyTestClass.TestMethodBody = _ => _testContextImplementation.TraceBuilder.Append("trace_output");
 
         TestResult result1 = await _testMethodInfo.InvokeAsync(null);
         TestResult result2 = await _testMethodInfo.InvokeAsync(null);
 
         result1.DebugTrace.Should().Be("trace_output");
         result2.DebugTrace.Should().Be("trace_output");
+        result1.LogError.Should().BeNull();
+        result2.LogError.Should().BeNull();
     }
 
     public void Ctor_WhenMethodHasMultipleRetryBaseAttributes_ThrowsTypeInspectionException()

@@ -11,4 +11,7 @@ public sealed record ClientCapabilities(
 
 public sealed record ClientTestingCapabilities(
     [property: JsonProperty("debuggerProvider")]
-    bool DebuggerProvider);
+    bool DebuggerProvider,
+
+    [property: JsonProperty("isStateful")]
+    bool IsStateful = false);

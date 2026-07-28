@@ -16,13 +16,47 @@ public class FileArtifact : PropertyBagData
     /// <param name="fileInfo">The file information.</param>
     /// <param name="displayName">The display name.</param>
     /// <param name="description">The description.</param>
+    // This shipped constructor intentionally keeps its optional 'description' parameter for binary
+    // compatibility; the newer overload below adds 'kind'. Folding them into a single constructor
+    // would binary-break existing compiled callers of this 3-parameter overload, so RS0027 (which
+    // wants the optional-parameter overload to have the most parameters) is suppressed here.
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
     public FileArtifact(FileInfo fileInfo, string displayName, string? description = null)
+#pragma warning restore RS0027
         : base(displayName, description) => FileInfo = fileInfo;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FileArtifact"/> class with a producer-asserted artifact kind.
+    /// </summary>
+    /// <param name="fileInfo">The file information.</param>
+    /// <param name="displayName">The display name.</param>
+    /// <param name="description">The description.</param>
+    /// <param name="kind">
+    /// An optional producer-asserted, reverse-DNS identifier of the artifact format
+    /// (e.g. <c>microsoft.testing.trx</c>). Used by post-processing to group artifacts of
+    /// the same kind for consolidation. <see langword="null"/> when the producer does not
+    /// declare a kind.
+    /// </param>
+    [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+    public FileArtifact(FileInfo fileInfo, string displayName, string? description, string? kind)
+        : base(displayName, description)
+    {
+        FileInfo = fileInfo;
+        Kind = kind;
+    }
 
     /// <summary>
     /// Gets the file information.
     /// </summary>
     public FileInfo FileInfo { get; }
+
+    /// <summary>
+    /// Gets the producer-asserted, reverse-DNS identifier of the artifact format
+    /// (e.g. <c>microsoft.testing.trx</c>), or <see langword="null"/> when the producer
+    /// did not declare one.
+    /// </summary>
+    [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+    public string? Kind { get; }
 
     /// <inheritdoc/>
     public override string ToString()
@@ -73,13 +107,48 @@ public class SessionFileArtifact : DataWithSessionUid
     /// <param name="fileInfo">The file information.</param>
     /// <param name="displayName">The display name.</param>
     /// <param name="description">The description.</param>
+    // This shipped constructor intentionally keeps its optional 'description' parameter for binary
+    // compatibility; the newer overload below adds 'kind'. Folding them into a single constructor
+    // would binary-break existing compiled callers of this 4-parameter overload, so RS0027 (which
+    // wants the optional-parameter overload to have the most parameters) is suppressed here.
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
     public SessionFileArtifact(SessionUid sessionUid, FileInfo fileInfo, string displayName, string? description = null)
+#pragma warning restore RS0027
         : base(displayName, description, sessionUid) => FileInfo = fileInfo;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SessionFileArtifact"/> class with a producer-asserted artifact kind.
+    /// </summary>
+    /// <param name="sessionUid">The session UID.</param>
+    /// <param name="fileInfo">The file information.</param>
+    /// <param name="displayName">The display name.</param>
+    /// <param name="description">The description.</param>
+    /// <param name="kind">
+    /// An optional producer-asserted, reverse-DNS identifier of the artifact format
+    /// (e.g. <c>microsoft.testing.trx</c>). Used by post-processing to group artifacts of
+    /// the same kind for consolidation. <see langword="null"/> when the producer does not
+    /// declare a kind.
+    /// </param>
+    [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+    public SessionFileArtifact(SessionUid sessionUid, FileInfo fileInfo, string displayName, string? description, string? kind)
+        : base(displayName, description, sessionUid)
+    {
+        FileInfo = fileInfo;
+        Kind = kind;
+    }
 
     /// <summary>
     /// Gets the file information.
     /// </summary>
     public FileInfo FileInfo { get; }
+
+    /// <summary>
+    /// Gets the producer-asserted, reverse-DNS identifier of the artifact format
+    /// (e.g. <c>microsoft.testing.trx</c>), or <see langword="null"/> when the producer
+    /// did not declare one.
+    /// </summary>
+    [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+    public string? Kind { get; }
 
     /// <inheritdoc/>
     public override string ToString()

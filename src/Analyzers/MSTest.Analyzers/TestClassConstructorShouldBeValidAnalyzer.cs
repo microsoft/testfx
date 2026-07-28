@@ -60,7 +60,7 @@ public sealed class TestClassConstructorShouldBeValidAnalyzer : DiagnosticAnalyz
         if (namedTypeSymbol.TypeKind != TypeKind.Class
             || namedTypeSymbol.IsAbstract
             || namedTypeSymbol.IsStatic
-            || !namedTypeSymbol.GetAttributes().Any(attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, testClassAttributeSymbol)))
+            || !namedTypeSymbol.IsTestClass(testClassAttributeSymbol))
         {
             return;
         }

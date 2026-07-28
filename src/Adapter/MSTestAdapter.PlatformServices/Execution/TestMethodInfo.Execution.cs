@@ -102,7 +102,7 @@ internal partial class TestMethodInfo
                     }
                 }
 
-                // TODO remove dry violation with TestMethodRunner
+                // This duplicates logic in TestMethodRunner (DRY violation).
                 bool setTestContextSucessful = false;
                 if (_executionContext is null)
                 {
@@ -348,7 +348,7 @@ internal partial class TestMethodInfo
 
         TestResult timeoutResult = new() { Outcome = UnitTestOutcome.Timeout, TestFailureException = new TestFailedException(UnitTestOutcome.Timeout, errorMessage) };
 
-        // TODO: execution context propagation here may still not be accurate.
+        // Execution context propagation here may still not be accurate.
         // if test init was successfully executed by ExecuteAsyncAction, but then the test itself timed out or cancelled,
         // then at this point we will run the cleanup on an execution context that doesn't have any state set by the test initialize.
 
@@ -362,7 +362,7 @@ internal partial class TestMethodInfo
         {
             try
             {
-                // TODO: Avoid blocking.
+                // Ideally this would avoid blocking.
                 // This used to always happen, but now is moved to the code path where there is a Timeout on the test method.
                 // The GetAwaiter().GetResult() call here can be a source of deadlocks, especially for UWP/WinUI.
                 // When the test method has `await`s with ConfigureAwait(true) (which is the default), the continuation is

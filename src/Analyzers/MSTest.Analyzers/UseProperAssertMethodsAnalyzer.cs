@@ -114,6 +114,11 @@ namespace MSTest.Analyzers;
 /// <code>Assert.IsFalse(myEnumerable.Contains(item, comparer))</code>
 /// </description>
 /// </item>
+/// <item>
+/// <description>
+/// <code>Assert.HasCount(0, myCollection)</code>
+/// </description>
+/// </item>
 /// </list>
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
@@ -262,12 +267,13 @@ public sealed partial class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
             INamedTypeSymbol objectTypeSymbol = context.Compilation.GetSpecialType(SpecialType.System_Object);
             context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemLinqEnumerable, out INamedTypeSymbol? enumerableTypeSymbol);
             INamedTypeSymbol? iComparableOfTSymbol = context.Compilation.GetTypeByMetadataName("System.IComparable`1");
+            context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemCollectionsIDictionary, out INamedTypeSymbol? iDictionaryTypeSymbol);
 
-            context.RegisterOperationAction(context => AnalyzeInvocationOperation(context, assertTypeSymbol, objectTypeSymbol, enumerableTypeSymbol, iComparableOfTSymbol), OperationKind.Invocation);
+            context.RegisterOperationAction(context => AnalyzeInvocationOperation(context, assertTypeSymbol, objectTypeSymbol, enumerableTypeSymbol, iComparableOfTSymbol, iDictionaryTypeSymbol), OperationKind.Invocation);
         });
     }
 
-    private static void AnalyzeInvocationOperation(OperationAnalysisContext context, INamedTypeSymbol assertTypeSymbol, INamedTypeSymbol objectTypeSymbol, INamedTypeSymbol? enumerableTypeSymbol, INamedTypeSymbol? iComparableOfTSymbol)
+    private static void AnalyzeInvocationOperation(OperationAnalysisContext context, INamedTypeSymbol assertTypeSymbol, INamedTypeSymbol objectTypeSymbol, INamedTypeSymbol? enumerableTypeSymbol, INamedTypeSymbol? iComparableOfTSymbol, INamedTypeSymbol? iDictionaryTypeSymbol)
     {
         var operation = (IInvocationOperation)context.Operation;
         IMethodSymbol targetMethod = operation.TargetMethod;
@@ -284,11 +290,11 @@ public sealed partial class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
         switch (targetMethod.Name)
         {
             case "IsTrue":
-                AnalyzeIsTrueOrIsFalseInvocation(context, firstArgument, isTrueInvocation: true, objectTypeSymbol, enumerableTypeSymbol, iComparableOfTSymbol);
+                AnalyzeIsTrueOrIsFalseInvocation(context, firstArgument, isTrueInvocation: true, objectTypeSymbol, enumerableTypeSymbol, iComparableOfTSymbol, iDictionaryTypeSymbol);
                 break;
 
             case "IsFalse":
-                AnalyzeIsTrueOrIsFalseInvocation(context, firstArgument, isTrueInvocation: false, objectTypeSymbol, enumerableTypeSymbol, iComparableOfTSymbol);
+                AnalyzeIsTrueOrIsFalseInvocation(context, firstArgument, isTrueInvocation: false, objectTypeSymbol, enumerableTypeSymbol, iComparableOfTSymbol, iDictionaryTypeSymbol);
                 break;
 
             case "AreEqual":
@@ -297,6 +303,10 @@ public sealed partial class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
 
             case "AreNotEqual":
                 AnalyzeAreEqualOrAreNotEqualInvocation(context, firstArgument, isAreEqualInvocation: false, assertTypeSymbol, objectTypeSymbol, enumerableTypeSymbol);
+                break;
+
+            case "HasCount":
+                AnalyzeHasCountInvocation(context, firstArgument);
                 break;
         }
     }

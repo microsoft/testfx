@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="ja" original="../TerminalResources.resx">
     <body>
@@ -22,10 +22,160 @@
         <target state="translated">テスト セッションを取り消しています...</target>
         <note />
       </trans-unit>
+      <trans-unit id="CodeCoverageSummary">
+        <source>Code Coverage Summary:</source>
+        <target state="translated">コード カバレッジの要約:</target>
+        <note>Heading printed before the per-scope code coverage percentages in the run summary.</note>
+      </trans-unit>
       <trans-unit id="ConsoleIsAlreadyInBatchingMode">
         <source>Console is already in batching mode.</source>
         <target state="translated">コンソールは既にバッチ 処理モードです。</target>
         <note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</note>
+      </trans-unit>
+      <trans-unit id="CoverageAggregationAverage">
+        <source>Average</source>
+        <target state="translated">平均</target>
+        <note>Label for the average-across-scopes statistic used in a coverage threshold comparison (e.g. 'Line (Average): ...').</note>
+      </trans-unit>
+      <trans-unit id="CoverageAggregationMaximum">
+        <source>Maximum</source>
+        <target state="translated">最大</target>
+        <note>Label for the maximum-across-scopes statistic used in a coverage threshold comparison (e.g. 'Line (Maximum): ...').</note>
+      </trans-unit>
+      <trans-unit id="CoverageAggregationMinimum">
+        <source>Minimum</source>
+        <target state="translated">最小</target>
+        <note>Label for the minimum-across-scopes statistic used in a coverage threshold comparison (e.g. 'Line (Minimum): ...').</note>
+      </trans-unit>
+      <trans-unit id="CoverageAggregationOver">
+        <source>{0} over {1}</source>
+        <target state="new">{0} over {1}</target>
+        <note>Coverage threshold aggregation description. {0} is the aggregation label and {1} is the population scope level.</note>
+      </trans-unit>
+      <trans-unit id="CoverageAggregationTotal">
+        <source>Total</source>
+        <target state="translated">合計</target>
+        <note>Label for the total (aggregate) statistic used in a coverage threshold comparison (e.g. 'Line (Total): ...').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricBlock">
+        <source>Block</source>
+        <target state="translated">ブロック</target>
+        <note>Label for block code coverage in the coverage summary (e.g. 'Total - Block: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricBranch">
+        <source>Branch</source>
+        <target state="translated">ブランチ</target>
+        <note>Label for branch code coverage in the coverage summary (e.g. 'Total - Branch: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricClass">
+        <source>Class</source>
+        <target state="translated">クラス</target>
+        <note>Label for class code coverage in the coverage summary (e.g. 'Total - Class: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricComplexity">
+        <source>Complexity</source>
+        <target state="translated">複雑さ</target>
+        <note>Label for cyclomatic complexity in the coverage summary (e.g. 'Total - Complexity: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricCondition">
+        <source>Condition</source>
+        <target state="translated">条件</target>
+        <note>Label for condition code coverage in the coverage summary (e.g. 'Total - Condition: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricFunction">
+        <source>Function</source>
+        <target state="translated">関数</target>
+        <note>Label for function code coverage in the coverage summary (e.g. 'Total - Function: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricInstruction">
+        <source>Instruction</source>
+        <target state="translated">命令</target>
+        <note>Label for instruction code coverage in the coverage summary (e.g. 'Total - Instruction: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricLine">
+        <source>Line</source>
+        <target state="translated">行</target>
+        <note>Label for line code coverage in the coverage summary (e.g. 'Total - Line: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricMethod">
+        <source>Method</source>
+        <target state="translated">メソッド</target>
+        <note>Label for method code coverage in the coverage summary (e.g. 'Total - Method: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricRegion">
+        <source>Region</source>
+        <target state="translated">地域</target>
+        <note>Label for region code coverage in the coverage summary (e.g. 'Total - Region: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricStatement">
+        <source>Statement</source>
+        <target state="translated">ステートメント</target>
+        <note>Label for statement code coverage in the coverage summary (e.g. 'Total - Statement: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricWithProducer">
+        <source>{0} [{1}]</source>
+        <target state="translated">{0} [{1}]</target>
+        <note>Disambiguates duplicate coverage metric rows. {0} is the metric label and {1} is the coverage producer id.</note>
+      </trans-unit>
+      <trans-unit id="CoverageNoData">
+        <source>N/A</source>
+        <target state="translated">N/A</target>
+        <note>Placeholder shown instead of a percentage when a coverage metric has no coverable data.</note>
+      </trans-unit>
+      <trans-unit id="CoverageScopeAssembly">
+        <source>Assembly</source>
+        <target state="translated">アセンブリ</target>
+        <note>Label for the assembly scope level in coverage threshold aggregation descriptions.</note>
+      </trans-unit>
+      <trans-unit id="CoverageScopeFile">
+        <source>File</source>
+        <target state="translated">ファイル</target>
+        <note>Label for the file scope level in coverage threshold aggregation descriptions.</note>
+      </trans-unit>
+      <trans-unit id="CoverageScopeModule">
+        <source>Module</source>
+        <target state="translated">モジュール</target>
+        <note>Label for the module scope level in coverage threshold aggregation descriptions.</note>
+      </trans-unit>
+      <trans-unit id="CoverageScopeNamespace">
+        <source>Namespace</source>
+        <target state="translated">名前空間</target>
+        <note>Label for the namespace scope level in coverage threshold aggregation descriptions.</note>
+      </trans-unit>
+      <trans-unit id="CoverageScopeOverall">
+        <source>Total</source>
+        <target state="translated">合計</target>
+        <note>Label for the whole-run (overall) scope in the coverage summary (e.g. 'Total - Line: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageScopeType">
+        <source>Type</source>
+        <target state="translated">種類</target>
+        <note>Label for the type scope level in coverage threshold aggregation descriptions.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdFailed">
+        <source>{0}% &lt; {1}% threshold</source>
+        <target state="translated">{0}% &lt; {1}% しきい値</target>
+        <note>Coverage threshold comparison shown when the threshold is not met. {0} is the actual coverage percentage, {1} is the threshold percentage.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdNoDataFailed">
+        <source>No coverable data (failed by policy)</source>
+        <target state="translated">カバー可能なデータがありません (ポリシーで不合格)</target>
+        <note>Coverage threshold result shown when a scope has no coverable data and the configured policy treats that as a failure.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdNoDataPassed">
+        <source>No coverable data (passed by policy)</source>
+        <target state="translated">カバー可能なデータがありません (ポリシーで合格)</target>
+        <note>Coverage threshold result shown when a scope has no coverable data and the configured policy treats that as a pass.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdPassed">
+        <source>{0}% &gt;= {1}% threshold</source>
+        <target state="translated">{0}% &gt;= {1}% しきい値</target>
+        <note>Coverage threshold comparison shown when the threshold is met. {0} is the actual coverage percentage, {1} is the threshold percentage.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdResults">
+        <source>Coverage Threshold Results:</source>
+        <target state="translated">カバレッジのしきい値の結果:</target>
+        <note>Heading printed before the coverage threshold pass/fail comparisons in the run summary.</note>
       </trans-unit>
       <trans-unit id="DiscoveredTestsInAssembly">
         <source>Discovered {0} tests in assembly</source>
@@ -59,7 +209,7 @@
       </trans-unit>
       <trans-unit id="ErroredAssembliesHeader">
         <source>Errored assemblies:</source>
-        <target state="new">Errored assemblies:</target>
+        <target state="translated">エラーが発生したアセンブリ:</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCode">
@@ -150,6 +300,11 @@
       <trans-unit id="SkippedLowercase">
         <source>skipped</source>
         <target state="translated">スキップされました</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="SlowestTests">
+        <source>Slowest tests:</source>
+        <target state="translated">最も遅いテスト:</target>
         <note />
       </trans-unit>
       <trans-unit id="StackFrameAt">
@@ -250,6 +405,16 @@ This option takes precedence over the deprecated --no-progress flag.</target>
         <source>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</source>
         <target state="translated">--show-stdout と --show-stderr には、値が 'All'、'Failed'、または 'None' の 1 つのパラメーターが必要です。</target>
         <note>{Locked="--show-stdout"}{Locked="--show-stderr"}{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowSlowestTestsOptionDescription">
+        <source>Show the specified number of slowest tests (by reported execution duration) in the run summary. Expects a positive integer.</source>
+        <target state="translated">実行サマリーに、報告された実行時間に基づく最も遅いテストを指定した数だけ表示します。正の整数が必要です。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowSlowestTestsOptionInvalidArgument">
+        <source>--show-slowest-tests expects a single positive integer parameter.</source>
+        <target state="translated">--show-slowest-tests には、正の整数パラメーターが 1 つ必要です。</target>
+        <note>{Locked="--show-slowest-tests"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowStderrOptionDescription">
         <source>Determines when to show captured error output of a test.

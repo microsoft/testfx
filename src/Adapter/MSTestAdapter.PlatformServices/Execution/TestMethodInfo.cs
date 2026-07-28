@@ -72,6 +72,80 @@ internal partial class TestMethodInfo : ITestMethod
     /// <inheritdoc />
     ParameterInfo[] ITestMethod.ParameterTypes => (ParameterInfo[])ParameterTypes.Clone();
 
+    // Immutable parameter metadata (params-parameter index and required-parameter count) is a pure function
+    // of the MethodInfo. It is cached at process scope keyed by MethodInfo so that ResolveArguments does not
+    // re-run a reflective attribute scan for it. This is shared across TestMethodInfo instances, so even the
+    // default execution path — where discovery unfolds data sources and each row constructs a fresh
+    // TestMethodInfo — performs the scan only once per test method rather than once per row.
+    // The Lazy ensures the scan runs exactly once per method even when method-level parallelization lets
+    // several unfolded rows reach the miss path concurrently.
+    private static readonly ConcurrentDictionary<MethodInfo, Lazy<ParameterMetadata>> ParameterMetadataCache = new();
+
+    // Test-only instrumentation counting how many times the reflective parameter scan actually ran, so tests
+    // can assert that repeated and concurrent access for one MethodInfo collapses to a single computation.
+    private static int s_parameterMetadataScanCount;
+
+    // Test-only callback invoked at the start of each parameter scan. Tests use it to hold a scan open long
+    // enough to make competing cache misses race deterministically. Never set outside tests.
+    private static Action? s_onParameterMetadataScanForTesting;
+
+    internal static int ParameterMetadataScanCount => s_parameterMetadataScanCount;
+
+    internal static void SetParameterMetadataScanCallbackForTesting(Action? callback)
+        => s_onParameterMetadataScanForTesting = callback;
+
+    internal static void ResetParameterMetadataCacheForTesting()
+    {
+        ParameterMetadataCache.Clear();
+        Interlocked.Exchange(ref s_parameterMetadataScanCount, 0);
+        s_onParameterMetadataScanForTesting = null;
+    }
+
+    private ParameterMetadata GetParameterMetadata()
+    {
+        if (!ParameterMetadataCache.TryGetValue(MethodInfo, out Lazy<ParameterMetadata>? metadata))
+        {
+            ParameterInfo[] parametersInfo = ParameterTypes;
+            metadata = ParameterMetadataCache.GetOrAdd(
+                MethodInfo,
+                _ => new Lazy<ParameterMetadata>(() => ParameterMetadata.Compute(parametersInfo), isThreadSafe: true));
+        }
+
+        return metadata.Value;
+    }
+
+    private readonly record struct ParameterMetadata(int ParamsParameterIndex, int RequiredParameterCount)
+    {
+        internal bool HasParams => ParamsParameterIndex >= 0;
+
+        internal static ParameterMetadata Compute(ParameterInfo[] parametersInfo)
+        {
+            Interlocked.Increment(ref s_parameterMetadataScanCount);
+            s_onParameterMetadataScanForTesting?.Invoke();
+            int requiredParameterCount = 0;
+            int paramsParameterIndex = -1;
+            for (int i = 0; i < parametersInfo.Length; i++)
+            {
+                ParameterInfo parameter = parametersInfo[i];
+
+                // A params array parameter is not required and, when present, is always the last parameter.
+                // Use IsDefined rather than GetCustomAttribute to avoid materializing the attribute instance.
+                if (parameter.IsDefined(typeof(ParamArrayAttribute), inherit: false))
+                {
+                    paramsParameterIndex = i;
+                    break;
+                }
+
+                if (!parameter.IsOptional)
+                {
+                    requiredParameterCount++;
+                }
+            }
+
+            return new ParameterMetadata(paramsParameterIndex, requiredParameterCount);
+        }
+    }
+
     /// <summary>
     /// Gets the return type of the test method.
     /// </summary>

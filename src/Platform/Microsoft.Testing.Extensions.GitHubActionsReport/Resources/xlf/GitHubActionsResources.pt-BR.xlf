@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="AnnotationTitle">
         <source>Test failed: {0}</source>
-        <target state="new">Test failed: {0}</target>
+        <target state="translated">Falha no teste: {0}</target>
         <note>{0} is the fully qualified test name.</note>
       </trans-unit>
       <trans-unit id="AnnotationsOptionDescription">
@@ -14,17 +14,102 @@
       </trans-unit>
       <trans-unit id="Description">
         <source>GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</source>
-        <target state="new">GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</target>
+        <target state="translated">O gerador de relatórios do GitHub Actions emite comandos de fluxo de trabalho para que as execuções de teste proporcionem uma experiência de primeira classe no GitHub Actions.</target>
         <note />
       </trans-unit>
       <trans-unit id="DisplayName">
         <source>GitHub Actions report generator</source>
-        <target state="new">GitHub Actions report generator</target>
+        <target state="translated">Gerador de relatório do GitHub Actions</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeAnnotationTitle">
+        <source>Test run failed (exit code {0}: {1})</source>
+        <target state="translated">A execução de teste falhou (código de saída {0}: {1})</target>
+        <note>{0} is the numeric exit code, {1} is the exit code name (not localized).</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeCallout">
+        <source>Exit code {0} — {1}: {2}</source>
+        <target state="translated">Código de saída {0} — {1}: {2}</target>
+        <note>{0} is the numeric exit code, {1} is the exit code name (not localized), {2} is the reason. Rendered as a callout in the job summary.</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonAtLeastOneTestFailed">
+        <source>At least one test failed.</source>
+        <target state="translated">Pelo menos um teste falhou.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonCoverageThresholdFailed">
+        <source>One or more code coverage thresholds were not met.</source>
+        <target state="translated">Um ou mais limites de cobertura de código não foram atingidos.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonDependentProcessExited">
+        <source>A dependent process exited unexpectedly.</source>
+        <target state="translated">Um processo dependente foi encerrado inesperadamente.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonGenericFailure">
+        <source>The test run failed.</source>
+        <target state="translated">A execução de teste falhou.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonIncompatibleProtocolVersion">
+        <source>An incompatible protocol version was negotiated.</source>
+        <target state="translated">Foi negociada uma versão de protocolo incompatível.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonInvalidCommandLine">
+        <source>The command line arguments are invalid.</source>
+        <target state="translated">Os argumentos da linha de comando são inválidos.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonInvalidPlatformSetup">
+        <source>The test platform setup is invalid.</source>
+        <target state="translated">A configuração da plataforma de teste é inválida.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonMinimumExpectedTestsPolicyViolation">
+        <source>Fewer tests ran than required by --minimum-expected-tests.</source>
+        <target state="translated">Menos testes foram executados do que o exigido por --minimum-expected-tests.</target>
+        <note>{Locked="--minimum-expected-tests"}</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonSuccess">
+        <source>The test run succeeded.</source>
+        <target state="translated">A execução de teste foi concluída com êxito.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestAdapterTestSessionFailure">
+        <source>The test adapter reported a test session failure.</source>
+        <target state="translated">O adaptador de teste relatou uma falha na sessão de teste.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestExecutionStoppedForMaxFailedTests">
+        <source>Test execution stopped after reaching the limit set by --maximum-failed-tests.</source>
+        <target state="translated">A execução de teste foi interrompida após atingir o limite definido por --maximum-failed-tests.</target>
+        <note>{Locked="--maximum-failed-tests"}</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestHostProcessExitedNonGracefully">
+        <source>The test host process exited non-gracefully.</source>
+        <target state="translated">O processo de host de teste foi encerrado de forma não normal.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestSessionAborted">
+        <source>The test session was aborted.</source>
+        <target state="translated">A sessão de teste foi anulada.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonUnknown">
+        <source>The test run reported a non-success exit code.</source>
+        <target state="translated">A execução de teste relatou um código de saída diferente de êxito.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonZeroTests">
+        <source>No tests were found to run. This often means a test filter matched nothing.</source>
+        <target state="translated">Nenhum teste foi encontrado para execução. Isso geralmente significa que um filtro de teste não encontrou correspondências.</target>
         <note />
       </trans-unit>
       <trans-unit id="GroupTitle">
         <source>Tests: {0} ({1})</source>
-        <target state="new">Tests: {0} ({1})</target>
+        <target state="translated">Testes: {0} ({1})</target>
         <note>{0} is the assembly name, {1} is the target framework moniker.</note>
       </trans-unit>
       <trans-unit id="GroupsOptionDescription">
@@ -34,7 +119,7 @@
       </trans-unit>
       <trans-unit id="InvalidOnOffValue">
         <source>Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
-        <target state="new">Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</target>
+        <target state="translated">Valor inválido ‘{0}’. Os valores válidos são 'on' (ou 'true', 'enable', '1') ou 'off' (ou 'false', 'disable' e '0').</target>
         <note>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
       </trans-unit>
       <trans-unit id="InvalidSlowTestThreshold">
@@ -44,27 +129,27 @@
       </trans-unit>
       <trans-unit id="NoFailureMessageFallback">
         <source>The test failed without providing a failure message.</source>
-        <target state="new">The test failed without providing a failure message.</target>
+        <target state="translated">O teste falhou sem fornecer uma mensagem de falha.</target>
         <note />
       </trans-unit>
       <trans-unit id="NoSkipReasonFallback">
         <source>The test was skipped without providing a reason.</source>
-        <target state="new">The test was skipped without providing a reason.</target>
+        <target state="translated">O teste foi ignorado sem fornecer um motivo.</target>
         <note />
       </trans-unit>
       <trans-unit id="OptionDescription">
         <source>Enable GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</source>
-        <target state="new">Enable GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</target>
+        <target state="translated">Habilite o gerador de relatórios do GitHub Actions para emitir comandos de fluxo de trabalho para que as execuções de teste proporcionem uma experiência de primeira classe no GitHub Actions.</target>
         <note />
       </trans-unit>
       <trans-unit id="SkippedAnnotationTitle">
         <source>Test skipped: {0}</source>
-        <target state="new">Test skipped: {0}</target>
+        <target state="translated">Teste ignorado: {0}</target>
         <note>{0} is the fully qualified test name.</note>
       </trans-unit>
       <trans-unit id="SlowTestNoticeTitle">
         <source>Slow test: {0}</source>
-        <target state="new">Slow test: {0}</target>
+        <target state="translated">Teste lento: {0}</target>
         <note>{0} is the fully qualified test name.</note>
       </trans-unit>
       <trans-unit id="SlowTestNoticesOptionDescription">
@@ -74,7 +159,7 @@
       </trans-unit>
       <trans-unit id="SlowTestStillRunning">
         <source>{0} still running after {1}s</source>
-        <target state="new">{0} still running after {1}s</target>
+        <target state="translated">{0} ainda em execução após {1}s</target>
         <note>{0} is the fully qualified test name, {1} is the elapsed seconds.</note>
       </trans-unit>
       <trans-unit id="SlowTestThresholdOptionDescription">
@@ -89,7 +174,7 @@
       </trans-unit>
       <trans-unit id="StepSummaryWriteFailedWarning">
         <source>Failed to write the GitHub Actions job summary to '{0}': {1}</source>
-        <target state="new">Failed to write the GitHub Actions job summary to '{0}': {1}</target>
+        <target state="translated">Falha ao gravar o resumo do trabalho do GitHub Actions em '{0}': {1}</target>
         <note>{0} is the file path, {1} is the error message.</note>
       </trans-unit>
     </body>

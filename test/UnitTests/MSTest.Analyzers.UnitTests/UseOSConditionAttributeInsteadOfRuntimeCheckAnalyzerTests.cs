@@ -815,4 +815,130 @@ public sealed class UseOSConditionAttributeInsteadOfRuntimeCheckAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenOSPlatformCreateWithKnownPlatform_Diagnostic()
+    {
+        // OSPlatform.Create("Windows") exercises the Create() branch in TryGetOSPlatformFromIsOSPlatformCall.
+        // The platform name "Windows" maps to OperatingSystems.Windows, so the fixer applies.
+        string code = """
+            using System.Runtime.InteropServices;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    [|if (!RuntimeInformation.IsOSPlatform(OSPlatform.Create("Windows")))
+                    {
+                        return;
+                    }|]
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Runtime.InteropServices;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [OSCondition(OperatingSystems.Windows)]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenOSPlatformCreateWithUnknownPlatform_Diagnostic()
+    {
+        // OSPlatform.Create("CustomOS") exercises the Create() branch but with a platform name
+        // that has no matching OperatingSystems enum value. The analyzer fires but the fixer
+        // offers no code fix (no matching OperatingSystems member), so the code is unchanged.
+        string code = """
+            using System.Runtime.InteropServices;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    [|if (!RuntimeInformation.IsOSPlatform(OSPlatform.Create("CustomOS")))
+                    {
+                        return;
+                    }|]
+                }
+            }
+            """;
+
+        // The expected fixed code is identical to the input: the fixer cannot map "CustomOS"
+        // to an OperatingSystems enum value, so running the code fix leaves the source unchanged.
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenOperatingSystemIsIOS_Diagnostic()
+    {
+        // OperatingSystem.IsIOS() maps to OS platform "iOS", which has no corresponding
+        // OperatingSystems enum value. The analyzer fires but the fixer offers no code fix.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    [|if (!OperatingSystem.IsIOS())
+                    {
+                        return;
+                    }|]
+                }
+            }
+            """;
+
+        // The expected fixed code is identical to the input: "iOS" has no OperatingSystems
+        // enum value, so running the code fix leaves the source unchanged.
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenOperatingSystemIsAndroid_Diagnostic()
+    {
+        // OperatingSystem.IsAndroid() maps to OS platform "Android", which has no corresponding
+        // OperatingSystems enum value. The analyzer fires but the fixer offers no code fix.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    [|if (!OperatingSystem.IsAndroid())
+                    {
+                        return;
+                    }|]
+                }
+            }
+            """;
+
+        // The expected fixed code is identical to the input: "Android" has no OperatingSystems
+        // enum value, so running the code fix leaves the source unchanged.
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
 }

@@ -8,6 +8,10 @@ The communication is based on JSON-RPC and describes the RPC messages sent in or
 > [!TIP]
 > Here is the summary of [differences compared to vstest](./002-protocol-vstest.md).
 
+This document describes the JSON-RPC server-mode protocol. The separate, binary
+[`dotnet test` named-pipe protocol](./004-protocol-dotnet-test-pipe.md) (`--server dotnettestcli`)
+is specified in its own document.
+
 ## API overview
 
 Here's the current list of APIs that supported by the client.
@@ -225,6 +229,13 @@ interface InitializeParams {
             // If true, the client supports the testing/testUpdates/attachments request.
             attachmentsSupport: true,
 
+            // If true, the client is stateful: it persists an addressable set of test nodes for the
+            // whole session and keeps each node in its last-known state until it is explicitly updated
+            // (for example, an IDE test explorer). If false or missing, the client is stateless: it
+            // consumes test updates as a stream and does not retain node state after the run
+            // (for example, `dotnet test`). Defaults to false.
+            isStateful: true,
+
             // If true, the client support a port to which child processes
             // can connect to.
             // Note: The test runner is expected to ensure the synchronization of messages
@@ -265,6 +276,11 @@ interface InitializeResponse {
             // The client will then wait on both to complete,
             // before it marks a test run as completed.
             attachmentsProvider?: boolean;
+
+            // If true, the server understands the first-class test-coverage message contract.
+            // This advertises protocol support only; it does not imply that an enabled extension
+            // will produce coverage during the run.
+            supportsTestCoverageMessages?: boolean;
         },
     }
 }
@@ -544,7 +560,7 @@ Request:
 interface RunTestsParams {
     // The set of tests selected by the user to run.
     // If not specified all tests will run.
-    testCases?: TestNode[],
+    tests?: TestNode[],
 
     // Token which should be specified for all update notifications.
     // This way the client can under which the update notifications should be reported.

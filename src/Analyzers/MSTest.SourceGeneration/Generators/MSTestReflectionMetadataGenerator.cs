@@ -81,7 +81,7 @@ internal sealed class MSTestReflectionMetadataGenerator : IIncrementalGenerator
             {
                 ct.ThrowIfCancellationRequested();
                 return new AssemblyMetadataModel(
-                    TestClassModelBuilder.BuildAttributes(c.Assembly.GetAttributes(), c.Assembly));
+                    AttributeMaterializationHelper.BuildAttributes(c.Assembly.GetAttributes(), c.Assembly));
             });
 
         IncrementalValueProvider<(string? AssemblyName, AssemblyMetadataModel Metadata, ImmutableArray<TestClassModel> Classes, bool ReflectionFree)> combined =

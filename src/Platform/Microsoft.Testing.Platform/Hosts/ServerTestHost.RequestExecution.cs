@@ -38,7 +38,7 @@ internal sealed partial class ServerTestHost
 
             case (JsonRpcMethods.Initialize, InitializeRequestArgs args):
                 _client = new(args.ClientInfo.Name, args.ClientInfo.Version);
-                _clientInfoService = new ClientInfoService(args.ClientInfo.Name, args.ClientInfo.Version);
+                _clientInfoService = new ClientInfoService(args.ClientInfo.Name, args.ClientInfo.Version, new ClientCapabilitiesService(args.Capabilities.IsStateful));
                 await _logger.LogDebugAsync($"Connection established with '{_client.Id}', protocol version {_client.Version}").ConfigureAwait(false);
 
                 INamedFeatureCapability? namedFeatureCapability = ServiceProvider.GetTestFrameworkCapabilities().GetCapability<INamedFeatureCapability>();

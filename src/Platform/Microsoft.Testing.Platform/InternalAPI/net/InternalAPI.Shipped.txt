@@ -1,0 +1,58 @@
+#nullable enable
+abstract Microsoft.Testing.Platform.ServerMode.Json.JsonCollectionDeserializer<TCollection>.CreateObject(Microsoft.Testing.Platform.ServerMode.Json.Json! json, System.Text.Json.JsonElement element) -> TCollection
+Microsoft.Testing.Platform.Helpers.IEnvironment.ProcessPath.get -> string?
+Microsoft.Testing.Platform.Helpers.IMainModule.FileName.get -> string?
+Microsoft.Testing.Platform.Helpers.SystemEnvironment.ProcessPath.get -> string?
+Microsoft.Testing.Platform.Helpers.SystemFileStream.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Microsoft.Testing.Platform.Helpers.SystemMainModule.FileName.get -> string?
+Microsoft.Testing.Platform.Helpers.SystemMainModule.SystemMainModule(System.Diagnostics.ProcessModule? processModule) -> void
+Microsoft.Testing.Platform.Hosts.TestHostControlledHost.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Microsoft.Testing.Platform.IPC.NamedPipeServer.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Microsoft.Testing.Platform.Logging.FileLogger.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Microsoft.Testing.Platform.Logging.FileLoggerProvider.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Microsoft.Testing.Platform.Logging.LoggerFactory.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Microsoft.Testing.Platform.Logging.LoggerFactoryProxy.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Microsoft.Testing.Platform.Messages.AsyncConsumerDataProcessor.AsyncConsumerDataProcessor(Microsoft.Testing.Platform.Extensions.IDataConsumer! consumer, Microsoft.Testing.Platform.Helpers.ITask! task, System.Threading.CancellationToken cancellationToken) -> void
+Microsoft.Testing.Platform.OutputDevice.BrowserOutputDevice
+Microsoft.Testing.Platform.OutputDevice.BrowserOutputDevice.BrowserOutputDevice(Microsoft.Testing.Platform.Helpers.IConsole! console, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.Helpers.IAsyncMonitor! asyncMonitor, Microsoft.Testing.Platform.Helpers.IRuntimeFeature! runtimeFeature, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Services.IPlatformInformation! platformInformation, Microsoft.Testing.Platform.Services.IStopPoliciesService! policiesService) -> void
+Microsoft.Testing.Platform.ServerMode.FormatterUtilities.MessageFormatter.Deserialize<T>(System.ReadOnlyMemory<char> serializedUtf8Content) -> T
+Microsoft.Testing.Platform.ServerMode.IMessageFormatter.Deserialize<T>(System.ReadOnlyMemory<char> serializedUtf8Content) -> T
+Microsoft.Testing.Platform.ServerMode.Json.Json
+Microsoft.Testing.Platform.ServerMode.Json.Json.Bind<T>(System.Text.Json.JsonElement element, string? property = null) -> T
+Microsoft.Testing.Platform.ServerMode.Json.Json.Deserialize<T>(System.ReadOnlyMemory<char> utf8Json) -> T
+Microsoft.Testing.Platform.ServerMode.Json.Json.Json(System.Collections.Generic.Dictionary<System.Type!, Microsoft.Testing.Platform.ServerMode.Json.JsonSerializer!>? serializers = null, System.Collections.Generic.Dictionary<System.Type!, Microsoft.Testing.Platform.ServerMode.Json.JsonDeserializer!>? deserializers = null) -> void
+Microsoft.Testing.Platform.ServerMode.Json.Json.SerializeAsync(object! obj) -> System.Threading.Tasks.Task<string!>!
+Microsoft.Testing.Platform.ServerMode.Json.Json.TryArrayBind<T>(System.Text.Json.JsonElement element, out T[]? value, string? property = null) -> bool
+Microsoft.Testing.Platform.ServerMode.Json.Json.TryBind<T>(System.Text.Json.JsonElement element, out T? value, string? property = null) -> bool
+Microsoft.Testing.Platform.ServerMode.Json.JsonCollectionDeserializer<TCollection>
+Microsoft.Testing.Platform.ServerMode.Json.JsonCollectionDeserializer<TCollection>.JsonCollectionDeserializer() -> void
+Microsoft.Testing.Platform.ServerMode.Json.JsonDeserializer
+Microsoft.Testing.Platform.ServerMode.Json.JsonDeserializer.JsonDeserializer() -> void
+Microsoft.Testing.Platform.ServerMode.Json.JsonElementDeserializer<T>
+Microsoft.Testing.Platform.ServerMode.Json.JsonElementDeserializer<T>.CreateObject(Microsoft.Testing.Platform.ServerMode.Json.Json! json, System.Text.Json.JsonElement element) -> T
+Microsoft.Testing.Platform.ServerMode.Json.JsonElementDeserializer<T>.JsonElementDeserializer(System.Func<Microsoft.Testing.Platform.ServerMode.Json.Json!, System.Text.Json.JsonElement, T>! createObject) -> void
+Microsoft.Testing.Platform.ServerMode.Json.JsonObjectSerializer
+Microsoft.Testing.Platform.ServerMode.Json.JsonObjectSerializer.GetProperties(object! o) -> (string! Key, object? Value)[]?
+Microsoft.Testing.Platform.ServerMode.Json.JsonObjectSerializer.JsonObjectSerializer() -> void
+Microsoft.Testing.Platform.ServerMode.Json.JsonObjectSerializer.Properties.get -> System.Func<object!, (string! Key, object? Value)[]?>?
+Microsoft.Testing.Platform.ServerMode.Json.JsonObjectSerializer.Properties.set -> void
+Microsoft.Testing.Platform.ServerMode.Json.JsonObjectSerializer<T>
+Microsoft.Testing.Platform.ServerMode.Json.JsonObjectSerializer<T>.JsonObjectSerializer(System.Func<T, (string! Key, object? Value)[]?>! value) -> void
+Microsoft.Testing.Platform.ServerMode.Json.JsonSerializer
+Microsoft.Testing.Platform.ServerMode.Json.JsonSerializer.JsonSerializer() -> void
+Microsoft.Testing.Platform.ServerMode.Json.JsonValueSerializer
+Microsoft.Testing.Platform.ServerMode.Json.JsonValueSerializer.JsonValueSerializer() -> void
+Microsoft.Testing.Platform.ServerMode.Json.JsonValueSerializer.Serialize.get -> System.Action<System.Text.Json.Utf8JsonWriter!, object!>!
+Microsoft.Testing.Platform.ServerMode.Json.JsonValueSerializer.Serialize.set -> void
+Microsoft.Testing.Platform.ServerMode.Json.JsonValueSerializer<T>
+Microsoft.Testing.Platform.ServerMode.Json.JsonValueSerializer<T>.JsonValueSerializer(System.Action<System.Text.Json.Utf8JsonWriter!, T>! value) -> void
+override Microsoft.Testing.Platform.OutputDevice.BrowserOutputDevice.Description.get -> string!
+override Microsoft.Testing.Platform.OutputDevice.BrowserOutputDevice.DisplayName.get -> string!
+override Microsoft.Testing.Platform.ServerMode.DiscoverRequestArgs.<Clone>$() -> Microsoft.Testing.Platform.ServerMode.DiscoverRequestArgs!
+override Microsoft.Testing.Platform.ServerMode.DiscoverResponseArgs.<Clone>$() -> Microsoft.Testing.Platform.ServerMode.DiscoverResponseArgs!
+override Microsoft.Testing.Platform.ServerMode.ErrorMessage.<Clone>$() -> Microsoft.Testing.Platform.ServerMode.ErrorMessage!
+override Microsoft.Testing.Platform.ServerMode.NotificationMessage.<Clone>$() -> Microsoft.Testing.Platform.ServerMode.NotificationMessage!
+override Microsoft.Testing.Platform.ServerMode.RequestMessage.<Clone>$() -> Microsoft.Testing.Platform.ServerMode.RequestMessage!
+override Microsoft.Testing.Platform.ServerMode.ResponseMessage.<Clone>$() -> Microsoft.Testing.Platform.ServerMode.ResponseMessage!
+override Microsoft.Testing.Platform.ServerMode.RunRequestArgs.<Clone>$() -> Microsoft.Testing.Platform.ServerMode.RunRequestArgs!
+override Microsoft.Testing.Platform.ServerMode.RunResponseArgs.<Clone>$() -> Microsoft.Testing.Platform.ServerMode.RunResponseArgs!

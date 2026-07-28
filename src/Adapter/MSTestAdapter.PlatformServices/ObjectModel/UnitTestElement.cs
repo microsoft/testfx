@@ -57,6 +57,13 @@ internal sealed class UnitTestElement
     /// </summary>
     public bool DoNotParallelize { get; set; }
 
+    /// <summary>
+    /// Gets or sets the resource locks declared on this test (via <c>[ResourceLock]</c> on the method and/or its
+    /// class), used by the parallel scheduler to serialize only the tests that contend on the same resource key.
+    /// The array is distinct by key and ordinally sorted by resource. <see langword="null"/> when none are declared.
+    /// </summary>
+    public ResourceLockInfo[]? ResourceLocks { get; set; }
+
 #if !WINDOWS_UWP && !WIN_UI
     /// <summary>
     /// Gets or sets the deployment items for the test method.
@@ -102,6 +109,20 @@ internal sealed class UnitTestElement
 #endif
     internal object? HostRecordingHandle { get; set; }
 
+    /// <summary>
+    /// Gets or sets the lazily-computed stable test identifier (see <c>UnitTestElementExtensions.GetTestId</c>).
+    /// In the native Microsoft.Testing.Platform path <c>GetTestId()</c> is called twice per test per run (once when
+    /// recording the start and once when recording the result), both times with the same element instance, so the
+    /// computed value is cached here to avoid recomputing the hash. It must be cleared whenever a mutation changes a
+    /// hash input; the only such mutations after an element enters the execution pipeline change
+    /// <see cref="ObjectModel.TestMethod.AssemblyName"/> via <see cref="CloneWithSource"/> /
+    /// <see cref="CloneWithUpdatedSource"/>, which reset it.
+    /// </summary>
+#if NETFRAMEWORK
+    [field: NonSerialized]
+#endif
+    internal Guid? CachedTestNodeUid { get; set; }
+
     internal UnitTestElement Clone()
     {
         var clone = (UnitTestElement)MemberwiseClone();
@@ -118,6 +139,7 @@ internal sealed class UnitTestElement
     {
         var clone = (UnitTestElement)MemberwiseClone();
         clone.TestMethod = TestMethod.CloneWithUpdatedSource(source);
+        clone.CachedTestNodeUid = null;
         return clone;
     }
 
@@ -127,6 +149,7 @@ internal sealed class UnitTestElement
     {
         var clone = (UnitTestElement)MemberwiseClone();
         clone.TestMethod = TestMethod.CloneWithSource(source);
+        clone.CachedTestNodeUid = null;
         return clone;
     }
 

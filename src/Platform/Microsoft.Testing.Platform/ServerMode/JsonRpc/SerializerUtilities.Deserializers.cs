@@ -110,8 +110,9 @@ internal static partial class SerializerUtilities
             IDictionary<string, object?> capabilities = GetRequiredPropertyFromJson<IDictionary<string, object?>>(properties, JsonRpcStrings.Capabilities);
             IDictionary<string, object?> testingCapabilities = GetRequiredPropertyFromJson<IDictionary<string, object?>>(capabilities, JsonRpcStrings.Testing);
             bool debuggerProvider = GetRequiredPropertyFromJson<bool>(testingCapabilities, JsonRpcStrings.DebuggerProvider);
+            bool isStateful = GetOptionalPropertyFromJson(testingCapabilities, JsonRpcStrings.IsStateful) as bool? ?? false;
 
-            return new ClientCapabilities(debuggerProvider);
+            return new ClientCapabilities(debuggerProvider, isStateful);
         });
 
         Deserializers[typeof(InitializeResponseArgs)] = new ObjectDeserializer<InitializeResponseArgs>(properties =>

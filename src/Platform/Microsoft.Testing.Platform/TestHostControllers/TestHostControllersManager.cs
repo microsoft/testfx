@@ -23,6 +23,14 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
     private readonly List<ICompositeExtensionFactory> _alreadyBuiltServices = [];
     private readonly List<ICompositeExtensionFactory> _dataConsumersCompositeServiceFactories = [];
 
+    private static void ThrowIfBrowserPlatform()
+    {
+        if (OperatingSystem.IsBrowser())
+        {
+            throw new PlatformNotSupportedException(PlatformResources.TestHostControllerProcessRestartNotSupportedOnWebAssembly);
+        }
+    }
+
     [UnsupportedOSPlatform("browser")]
     public void AddEnvironmentVariableProvider(Func<IServiceProvider, ITestHostEnvironmentVariableProvider> environmentVariableProviderFactory)
         => AddEnvironmentVariableProvider(environmentVariableProviderFactory, insertAtStart: false);
@@ -33,10 +41,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
 
     private void AddEnvironmentVariableProvider(Func<IServiceProvider, ITestHostEnvironmentVariableProvider> environmentVariableProviderFactory, bool insertAtStart)
     {
-        if (OperatingSystem.IsBrowser())
-        {
-            throw new PlatformNotSupportedException(PlatformResources.TestHostControllerProcessRestartNotSupportedOnWebAssembly);
-        }
+        ThrowIfBrowserPlatform();
 
         _ = environmentVariableProviderFactory ?? throw new ArgumentNullException(nameof(environmentVariableProviderFactory));
         if (insertAtStart)
@@ -54,10 +59,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
     public void AddEnvironmentVariableProvider<T>(CompositeExtensionFactory<T> compositeServiceFactory)
         where T : class, ITestHostEnvironmentVariableProvider
     {
-        if (OperatingSystem.IsBrowser())
-        {
-            throw new PlatformNotSupportedException(PlatformResources.TestHostControllerProcessRestartNotSupportedOnWebAssembly);
-        }
+        ThrowIfBrowserPlatform();
 
         _ = compositeServiceFactory ?? throw new ArgumentNullException(nameof(compositeServiceFactory));
         if (_environmentVariableProviderCompositeFactories.Contains(compositeServiceFactory))
@@ -72,10 +74,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
     [UnsupportedOSPlatform("browser")]
     public void AddProcessLifetimeHandler(Func<IServiceProvider, ITestHostProcessLifetimeHandler> lifetimeHandler)
     {
-        if (OperatingSystem.IsBrowser())
-        {
-            throw new PlatformNotSupportedException(PlatformResources.TestHostControllerProcessRestartNotSupportedOnWebAssembly);
-        }
+        ThrowIfBrowserPlatform();
 
         _ = lifetimeHandler ?? throw new ArgumentNullException(nameof(lifetimeHandler));
         _lifetimeHandlerFactories.Add(lifetimeHandler);
@@ -86,10 +85,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
     public void AddProcessLifetimeHandler<T>(CompositeExtensionFactory<T> compositeServiceFactory)
         where T : class, ITestHostProcessLifetimeHandler
     {
-        if (OperatingSystem.IsBrowser())
-        {
-            throw new PlatformNotSupportedException(PlatformResources.TestHostControllerProcessRestartNotSupportedOnWebAssembly);
-        }
+        ThrowIfBrowserPlatform();
 
         _ = compositeServiceFactory ?? throw new ArgumentNullException(nameof(compositeServiceFactory));
         if (_lifetimeHandlerCompositeFactories.Contains(compositeServiceFactory))
@@ -104,10 +100,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
     [UnsupportedOSPlatform("browser")]
     public void AddTestHostLauncher(Func<IServiceProvider, ITestHostLauncher> testHostLauncherFactory)
     {
-        if (OperatingSystem.IsBrowser())
-        {
-            throw new PlatformNotSupportedException(PlatformResources.TestHostControllerProcessRestartNotSupportedOnWebAssembly);
-        }
+        ThrowIfBrowserPlatform();
 
         _ = testHostLauncherFactory ?? throw new ArgumentNullException(nameof(testHostLauncherFactory));
         _testHostLauncherFactories.Add(testHostLauncherFactory);
@@ -118,10 +111,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
     public void AddTestHostLauncher<T>(CompositeExtensionFactory<T> compositeServiceFactory)
         where T : class, ITestHostLauncher
     {
-        if (OperatingSystem.IsBrowser())
-        {
-            throw new PlatformNotSupportedException(PlatformResources.TestHostControllerProcessRestartNotSupportedOnWebAssembly);
-        }
+        ThrowIfBrowserPlatform();
 
         _ = compositeServiceFactory ?? throw new ArgumentNullException(nameof(compositeServiceFactory));
         if (_testHostLauncherCompositeFactories.Contains(compositeServiceFactory))
@@ -137,10 +127,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
     public void AddDataConsumer<T>(CompositeExtensionFactory<T> compositeServiceFactory)
         where T : class, IDataConsumer
     {
-        if (OperatingSystem.IsBrowser())
-        {
-            throw new PlatformNotSupportedException(PlatformResources.TestHostControllerProcessRestartNotSupportedOnWebAssembly);
-        }
+        ThrowIfBrowserPlatform();
 
         _ = compositeServiceFactory ?? throw new ArgumentNullException(nameof(compositeServiceFactory));
         if (_dataConsumersCompositeServiceFactories.Contains(compositeServiceFactory))

@@ -103,6 +103,7 @@ internal static partial class SerializerUtilities
             [JsonRpcStrings.VSTestProviderSupport] = capabilities.VSTestProviderSupport,
             [JsonRpcStrings.AttachmentsSupport] = capabilities.SupportsAttachments,
             [JsonRpcStrings.MultiConnectionProvider] = capabilities.MultiConnectionProvider,
+            [JsonRpcStrings.SupportsTestCoverageMessages] = ServerTestingCapabilities.SupportsTestCoverageMessages,
         });
 
         Serializers[typeof(LogEventArgs)] = new ObjectSerializer<LogEventArgs>(ev =>

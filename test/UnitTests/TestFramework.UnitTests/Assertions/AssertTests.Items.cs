@@ -293,6 +293,197 @@ public partial class AssertTests
         Assert.HasCount(0, Array.Empty<string>(), $"User-provided message: {o}");
         o.WasToStringCalled.Should().BeFalse();
     }
+
+    public void IsEmpty_ReadOnlySpan_WhenEmpty_ShouldPass()
+    {
+        ReadOnlySpan<int> span = [];
+        Assert.IsEmpty(span);
+    }
+
+    public void IsEmpty_Span_WhenEmpty_ShouldPass()
+    {
+        Span<int> span = [];
+        Assert.IsEmpty(span);
+    }
+
+    public void IsEmpty_Memory_WhenEmpty_ShouldPass()
+    {
+        Memory<int> memory = Array.Empty<int>();
+        Assert.IsEmpty(memory);
+    }
+
+    public void IsEmpty_ReadOnlyMemory_WhenEmpty_ShouldPass()
+    {
+        ReadOnlyMemory<int> memory = Array.Empty<int>();
+        Assert.IsEmpty(memory);
+    }
+
+    public void IsEmpty_ReadOnlySpan_InterpolatedString_WhenEmpty_ShouldNotEvaluateMessage()
+    {
+        DummyClassTrackingToStringCalls o = new();
+        ReadOnlySpan<int> span = [];
+        Assert.IsEmpty(span, $"User-provided message: {o}");
+        o.WasToStringCalled.Should().BeFalse();
+    }
+
+    public void IsEmpty_ReadOnlySpan_WhenNotEmpty_ShouldFail()
+    {
+        int[] array = [1];
+        ReadOnlySpan<int> span = array;
+        // ReadOnlySpan cannot be captured by a lambda, so call directly inside a try/catch.
+        Exception? exception = null;
+        try
+        {
+            Assert.IsEmpty(span);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+
+        exception.Should().NotBeNull();
+        exception!.Message.Should().Be(
+            """
+            Assertion failed. Expected collection to be empty.
+
+            expected count: 0
+            actual count:   1
+
+            Assert.IsEmpty(span)
+            """);
+    }
+
+    public void IsEmpty_Memory_WhenNotEmpty_ShouldFail()
+    {
+        int[] array = [1];
+        Memory<int> memory = array;
+        Action action = () => Assert.IsEmpty(memory);
+        action.Should().Throw<Exception>()
+            .WithMessage(
+                """
+                Assertion failed. Expected collection to be empty.
+
+                expected count: 0
+                actual count:   1
+
+                Assert.IsEmpty(memory)
+                """);
+    }
+
+    public void IsEmpty_Memory_InterpolatedString_WhenNotEmpty_ShouldEvaluateMessageAndFail()
+    {
+        int[] array = [1];
+        Memory<int> memory = array;
+        DummyClassTrackingToStringCalls o = new();
+        Action action = () => Assert.IsEmpty(memory, $"User-provided message: {o}");
+        action.Should().Throw<Exception>()
+            .WithMessage(
+                """
+                Assertion failed. Expected collection to be empty.
+                User-provided message: DummyClassTrackingToStringCalls
+
+                expected count: 0
+                actual count:   1
+
+                Assert.IsEmpty(memory)
+                """);
+        o.WasToStringCalled.Should().BeTrue();
+    }
+
+    public void IsNotEmpty_ReadOnlySpan_WhenNotEmpty_ShouldPass()
+    {
+        int[] array = [1];
+        ReadOnlySpan<int> span = array;
+        Assert.IsNotEmpty(span);
+    }
+
+    public void IsNotEmpty_Span_WhenNotEmpty_ShouldPass()
+    {
+        int[] array = [1];
+        Span<int> span = array;
+        Assert.IsNotEmpty(span);
+    }
+
+    public void IsNotEmpty_Memory_WhenNotEmpty_ShouldPass()
+    {
+        int[] array = [1];
+        Memory<int> memory = array;
+        Assert.IsNotEmpty(memory);
+    }
+
+    public void IsNotEmpty_ReadOnlyMemory_WhenNotEmpty_ShouldPass()
+    {
+        int[] array = [1];
+        ReadOnlyMemory<int> memory = array;
+        Assert.IsNotEmpty(memory);
+    }
+
+    public void IsNotEmpty_ReadOnlySpan_InterpolatedString_WhenNotEmpty_ShouldNotEvaluateMessage()
+    {
+        DummyClassTrackingToStringCalls o = new();
+        int[] array = [1];
+        ReadOnlySpan<int> span = array;
+        Assert.IsNotEmpty(span, $"User-provided message: {o}");
+        o.WasToStringCalled.Should().BeFalse();
+    }
+
+    public void IsNotEmpty_ReadOnlySpan_WhenEmpty_ShouldFail()
+    {
+        ReadOnlySpan<int> span = [];
+        // ReadOnlySpan cannot be captured by a lambda, so call directly inside a try/catch.
+        Exception? exception = null;
+        try
+        {
+            Assert.IsNotEmpty(span);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+
+        exception.Should().NotBeNull();
+        exception!.Message.Should().Be(
+            """
+            Assertion failed. Expected collection to not be empty.
+
+            actual count: 0
+
+            Assert.IsNotEmpty(span)
+            """);
+    }
+
+    public void IsNotEmpty_Memory_WhenEmpty_ShouldFail()
+    {
+        Memory<int> memory = Array.Empty<int>();
+        Action action = () => Assert.IsNotEmpty(memory);
+        action.Should().Throw<Exception>()
+            .WithMessage(
+                """
+                Assertion failed. Expected collection to not be empty.
+
+                actual count: 0
+
+                Assert.IsNotEmpty(memory)
+                """);
+    }
+
+    public void IsNotEmpty_Memory_InterpolatedString_WhenEmpty_ShouldEvaluateMessageAndFail()
+    {
+        Memory<int> memory = Array.Empty<int>();
+        DummyClassTrackingToStringCalls o = new();
+        Action action = () => Assert.IsNotEmpty(memory, $"User-provided message: {o}");
+        action.Should().Throw<Exception>()
+            .WithMessage(
+                """
+                Assertion failed. Expected collection to not be empty.
+                User-provided message: DummyClassTrackingToStringCalls
+
+                actual count: 0
+
+                Assert.IsNotEmpty(memory)
+                """);
+        o.WasToStringCalled.Should().BeTrue();
+    }
 #endif
 
     public void NotAny_WhenEmpty_ShouldPass()
@@ -374,9 +565,9 @@ public partial class AssertTests
     {
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
-        Func<Task> action = async () => Assert.ContainsSingle(Array.Empty<int>(), $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
+        Func<Task> action = async () => Assert.ContainsSingle(new List<int>(), $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"*Expected collection to contain exactly one element.*User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}*expected count:*1*actual count:*0*Assert.ContainsSingle(Array.Empty<int>())*");
+            .WithMessage($"*Expected collection to contain exactly one element.*User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}*expected count:*1*actual count:*0*Assert.ContainsSingle(new List<int>())*");
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -384,9 +575,9 @@ public partial class AssertTests
     {
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
-        Func<Task> action = async () => Assert.ContainsSingle([1, 2, 3], $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
+        Func<Task> action = async () => Assert.ContainsSingle(new List<int> { 1, 2, 3 }, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"*Expected collection to contain exactly one element.*User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}*expected count:*1*actual count:*3*Assert.ContainsSingle([1, 2, 3])*");
+            .WithMessage($"*Expected collection to contain exactly one element.*User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}*expected count:*1*actual count:*3*Assert.ContainsSingle(new List<int>*");
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -482,7 +673,10 @@ public partial class AssertTests
     {
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
-        Func<Task> action = async () => Assert.IsNotEmpty(Array.Empty<string>(), $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
+        // Use a List<string> (not an array) so this exercises the IEnumerable<T> overload: arrays now
+        // bind to the ReadOnlySpan<T> overload, and a span cannot be preserved across an await.
+        var collection = new List<string>();
+        Func<Task> action = async () => Assert.IsNotEmpty(collection, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
             .WithMessage(
                 $$"""
@@ -491,7 +685,7 @@ public partial class AssertTests
 
                 actual count: 0
 
-                Assert.IsNotEmpty(Array.Empty<string>())
+                Assert.IsNotEmpty(collection)
                 """);
         o.WasToStringCalled.Should().BeTrue();
     }

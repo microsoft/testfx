@@ -13,17 +13,17 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
 public partial class AssertTests : TestContainer
 {
     public void ContainsAll_Generic_AllPresent_ShouldPass()
-        => Assert.ContainsAll(new[] { 1, 2 }, new[] { 1, 2, 3 });
+        => Assert.ContainsAll([1, 2], [1, 2, 3]);
 
     public void ContainsAll_Generic_EmptyExpected_ShouldPass()
-        => Assert.ContainsAll(Array.Empty<int>(), new[] { 1, 2, 3 });
+        => Assert.ContainsAll([], [1, 2, 3]);
 
     public void ContainsAll_Generic_DuplicatesWithinCollectionMultiplicity_ShouldPass()
-        => Assert.ContainsAll(new[] { 1, 1, 2 }, new[] { 1, 1, 2, 3 });
+        => Assert.ContainsAll([1, 1, 2], [1, 1, 2, 3]);
 
     public void ContainsAll_Generic_DuplicatesExceedCollectionMultiplicity_ShouldFail()
     {
-        Action action = () => Assert.ContainsAll(new[] { 1, 1, 1 }, new[] { 1, 1 });
+        Action action = () => Assert.ContainsAll([1, 1, 1], [1, 1]);
         action.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
@@ -33,14 +33,14 @@ public partial class AssertTests : TestContainer
                 expected:   [1, 1, 1]
                 collection: [1, 1]
 
-                Assert.ContainsAll(new[] { 1, 1, 1 }, new[] { 1, 1 })
+                Assert.ContainsAll([1, 1, 1], [1, 1])
                 """);
     }
 
     public void ContainsAll_Generic_MultipleMissing_PreservesFirstSeenOrderAndMultiplicity()
     {
         // Walk: 3 ✓, 1 ✓, 1 → missing(1), 4 → missing(4), 1 → missing(1)  =>  [1, 4, 1]
-        Action action = () => Assert.ContainsAll(new[] { 3, 1, 1, 4, 1 }, new[] { 1, 2, 3 });
+        Action action = () => Assert.ContainsAll([3, 1, 1, 4, 1], [1, 2, 3]);
         action.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
@@ -50,13 +50,13 @@ public partial class AssertTests : TestContainer
                 expected:   [3, 1, 1, 4, 1]
                 collection: [1, 2, 3]
 
-                Assert.ContainsAll(new[] { 3, 1, 1, 4, 1 }, new[] { 1, 2, 3 })
+                Assert.ContainsAll([3, 1, 1, 4, 1], [1, 2, 3])
                 """);
     }
 
     public void ContainsAll_Generic_ExcessInMiddleOfMatchingRun_ReportsOnlyExcess()
     {
-        Action action = () => Assert.ContainsAll(new[] { 1, 2, 1, 3 }, new[] { 1, 2, 3 });
+        Action action = () => Assert.ContainsAll([1, 2, 1, 3], [1, 2, 3]);
         action.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
@@ -66,16 +66,16 @@ public partial class AssertTests : TestContainer
                 expected:   [1, 2, 1, 3]
                 collection: [1, 2, 3]
 
-                Assert.ContainsAll(new[] { 1, 2, 1, 3 }, new[] { 1, 2, 3 })
+                Assert.ContainsAll([1, 2, 1, 3], [1, 2, 3])
                 """);
     }
 
     public void DoesNotContainAll_Generic_DuplicatesExceedCollectionMultiplicity_ShouldPass()
-        => Assert.DoesNotContainAll(new[] { 1, 1 }, new[] { 1 });
+        => Assert.DoesNotContainAll([1, 1], [1]);
 
     public void DoesNotContainAll_Generic_DuplicatesWithinCollectionMultiplicity_ShouldFail()
     {
-        Action action = () => Assert.DoesNotContainAll(new[] { 1, 1 }, new[] { 1, 1, 2 });
+        Action action = () => Assert.DoesNotContainAll([1, 1], [1, 1, 2]);
         action.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
@@ -84,13 +84,13 @@ public partial class AssertTests : TestContainer
                 notExpected: [1, 1]
                 collection:  [1, 1, 2]
 
-                Assert.DoesNotContainAll(new[] { 1, 1 }, new[] { 1, 1, 2 })
+                Assert.DoesNotContainAll([1, 1], [1, 1, 2])
                 """);
     }
 
     public void ContainsAll_Generic_MissingElement_ShouldFail()
     {
-        Action action = () => Assert.ContainsAll(new[] { 1, 2, 3 }, new[] { 1, 2 });
+        Action action = () => Assert.ContainsAll([1, 2, 3], [1, 2]);
         action.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
@@ -100,13 +100,13 @@ public partial class AssertTests : TestContainer
                 expected:   [1, 2, 3]
                 collection: [1, 2]
 
-                Assert.ContainsAll(new[] { 1, 2, 3 }, new[] { 1, 2 })
+                Assert.ContainsAll([1, 2, 3], [1, 2])
                 """);
     }
 
     public void ContainsAll_Generic_NullInExpectedButNotInCollection_ShouldFail()
     {
-        Action action = () => Assert.ContainsAll(new string?[] { "a", null }, new string?[] { "a" });
+        Action action = () => Assert.ContainsAll(["a", null], ["a"]);
         action.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
@@ -116,13 +116,13 @@ public partial class AssertTests : TestContainer
                 expected:   ["a", null]
                 collection: ["a"]
 
-                Assert.ContainsAll(new string?[] { "a", null }, new string?[] { "a" })
+                Assert.ContainsAll(["a", null], ["a"])
                 """);
     }
 
     public void ContainsAll_Generic_StringMessage_MissingElement_ShouldFail()
     {
-        Action action = () => Assert.ContainsAll(new[] { 1, 2, 3 }, new[] { 1, 2 }, "User-provided message");
+        Action action = () => Assert.ContainsAll([1, 2, 3], [1, 2], "User-provided message");
         action.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
@@ -133,16 +133,16 @@ public partial class AssertTests : TestContainer
                 expected:   [1, 2, 3]
                 collection: [1, 2]
 
-                Assert.ContainsAll(new[] { 1, 2, 3 }, new[] { 1, 2 })
+                Assert.ContainsAll([1, 2, 3], [1, 2])
                 """);
     }
 
     public void ContainsAll_Generic_WithComparer_AllPresent_ShouldPass()
-        => Assert.ContainsAll(new[] { "A" }, new[] { "a", "b" }, new CaseInsensitiveStringComparer());
+        => Assert.ContainsAll(["A"], ["a", "b"], new CaseInsensitiveStringComparer());
 
     public void ContainsAll_Generic_WithComparer_MissingElement_ShouldFail()
     {
-        Action action = () => Assert.ContainsAll(new[] { "A", "C" }, new[] { "a", "b" }, new CaseInsensitiveStringComparer());
+        Action action = () => Assert.ContainsAll(["A", "C"], ["a", "b"], new CaseInsensitiveStringComparer());
         action.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
@@ -153,27 +153,29 @@ public partial class AssertTests : TestContainer
                 collection: ["a", "b"]
                 comparer:   CaseInsensitiveStringComparer
 
-                Assert.ContainsAll(new[] { "A", "C" }, new[] { "a", "b" }, <comparer>)
+                Assert.ContainsAll(["A", "C"], ["a", "b"], <comparer>)
                 """);
     }
 
     public void ContainsAll_Generic_NullExpected_ShouldFail()
     {
-        Action action = () => Assert.ContainsAll(null, new[] { 1, 2 });
+        IEnumerable<int> collection = [1, 2];
+        Action action = () => Assert.ContainsAll(null, collection);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("Assert.ContainsAll failed. The parameter 'expected' is invalid. The value cannot be null.");
     }
 
     public void ContainsAll_Generic_NullCollection_ShouldFail()
     {
-        Action action = () => Assert.ContainsAll(new[] { 1, 2 }, null);
+        IEnumerable<int>? collection = null;
+        Action action = () => Assert.ContainsAll([1, 2], collection);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("Assert.ContainsAll failed. The parameter 'collection' is invalid. The value cannot be null.");
     }
 
     public void ContainsAll_Generic_NullComparer_ShouldFail()
     {
-        Action action = () => Assert.ContainsAll(new[] { 1 }, new[] { 1 }, (IEqualityComparer<int>?)null);
+        Action action = () => Assert.ContainsAll([1], [1], (IEqualityComparer<int>?)null);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("Assert.ContainsAll failed. The parameter 'comparer' is invalid. The value cannot be null.");
     }
@@ -225,11 +227,11 @@ public partial class AssertTests : TestContainer
     }
 
     public void DoesNotContainAll_Generic_MissingElement_ShouldPass()
-        => Assert.DoesNotContainAll(new[] { 1, 2, 3 }, new[] { 1, 2 });
+        => Assert.DoesNotContainAll([1, 2, 3], [1, 2]);
 
     public void DoesNotContainAll_Generic_AllPresent_ShouldFail()
     {
-        Action action = () => Assert.DoesNotContainAll(new[] { 1, 2 }, new[] { 1, 2, 3 });
+        Action action = () => Assert.DoesNotContainAll([1, 2], [1, 2, 3]);
         action.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
@@ -238,13 +240,13 @@ public partial class AssertTests : TestContainer
                 notExpected: [1, 2]
                 collection:  [1, 2, 3]
 
-                Assert.DoesNotContainAll(new[] { 1, 2 }, new[] { 1, 2, 3 })
+                Assert.DoesNotContainAll([1, 2], [1, 2, 3])
                 """);
     }
 
     public void DoesNotContainAll_Generic_StringMessage_AllPresent_ShouldFail()
     {
-        Action action = () => Assert.DoesNotContainAll(new[] { 1 }, new[] { 1, 2 }, "User-provided message");
+        Action action = () => Assert.DoesNotContainAll([1], [1, 2], "User-provided message");
         action.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
@@ -254,16 +256,16 @@ public partial class AssertTests : TestContainer
                 notExpected: [1]
                 collection:  [1, 2]
 
-                Assert.DoesNotContainAll(new[] { 1 }, new[] { 1, 2 })
+                Assert.DoesNotContainAll([1], [1, 2])
                 """);
     }
 
     public void DoesNotContainAll_Generic_WithComparer_MissingElement_ShouldPass()
-        => Assert.DoesNotContainAll(new[] { "A", "C" }, new[] { "a", "b" }, new CaseInsensitiveStringComparer());
+        => Assert.DoesNotContainAll(["A", "C"], ["a", "b"], new CaseInsensitiveStringComparer());
 
     public void DoesNotContainAll_Generic_WithComparer_AllPresent_ShouldFail()
     {
-        Action action = () => Assert.DoesNotContainAll(new[] { "A" }, new[] { "a", "b" }, new CaseInsensitiveStringComparer());
+        Action action = () => Assert.DoesNotContainAll(["A"], ["a", "b"], new CaseInsensitiveStringComparer());
         action.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
@@ -273,27 +275,29 @@ public partial class AssertTests : TestContainer
                 collection:  ["a", "b"]
                 comparer:    CaseInsensitiveStringComparer
 
-                Assert.DoesNotContainAll(new[] { "A" }, new[] { "a", "b" }, <comparer>)
+                Assert.DoesNotContainAll(["A"], ["a", "b"], <comparer>)
                 """);
     }
 
     public void DoesNotContainAll_Generic_NullExpected_ShouldFail()
     {
-        Action action = () => Assert.DoesNotContainAll(null, new[] { 1, 2 });
+        IEnumerable<int> collection = [1, 2];
+        Action action = () => Assert.DoesNotContainAll(null, collection);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("Assert.DoesNotContainAll failed. The parameter 'notExpected' is invalid. The value cannot be null.");
     }
 
     public void DoesNotContainAll_Generic_NullCollection_ShouldFail()
     {
-        Action action = () => Assert.DoesNotContainAll(new[] { 1, 2 }, null);
+        IEnumerable<int>? collection = null;
+        Action action = () => Assert.DoesNotContainAll([1, 2], collection);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("Assert.DoesNotContainAll failed. The parameter 'collection' is invalid. The value cannot be null.");
     }
 
     public void DoesNotContainAll_Generic_NullComparer_ShouldFail()
     {
-        Action action = () => Assert.DoesNotContainAll(new[] { 1 }, new[] { 1 }, (IEqualityComparer<int>?)null);
+        Action action = () => Assert.DoesNotContainAll([1], [1], (IEqualityComparer<int>?)null);
         action.Should().Throw<AssertFailedException>()
             .WithMessage("Assert.DoesNotContainAll failed. The parameter 'comparer' is invalid. The value cannot be null.");
     }
@@ -342,7 +346,7 @@ public partial class AssertTests : TestContainer
 
     public void DoesNotContainAll_Generic_BothEmpty_ShouldFail()
     {
-        Action action = () => Assert.DoesNotContainAll(Array.Empty<int>(), Array.Empty<int>());
+        Action action = () => Assert.DoesNotContainAll<int>([], []);
         action.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
@@ -351,13 +355,13 @@ public partial class AssertTests : TestContainer
                 notExpected: []
                 collection:  []
 
-                Assert.DoesNotContainAll(Array.Empty<int>(), Array.Empty<int>())
+                Assert.DoesNotContainAll([], [])
                 """);
     }
 
     public void DoesNotContainAll_Generic_EmptyExpected_ShouldFail()
     {
-        Action action = () => Assert.DoesNotContainAll(Array.Empty<int>(), new[] { 1 });
+        Action action = () => Assert.DoesNotContainAll([], [1]);
         action.Should().Throw<AssertFailedException>()
             .WithMessage(
                 """
@@ -366,7 +370,7 @@ public partial class AssertTests : TestContainer
                 notExpected: []
                 collection:  [1]
 
-                Assert.DoesNotContainAll(Array.Empty<int>(), new[] { 1 })
+                Assert.DoesNotContainAll([], [1])
                 """);
     }
 
@@ -389,7 +393,7 @@ public partial class AssertTests : TestContainer
     }
 
     public void ContainsAll_Generic_NullInCollectionButNotInExpected_ShouldPass()
-        => Assert.ContainsAll(new string?[] { "a" }, new string?[] { "a", null });
+        => Assert.ContainsAll(["a"], ["a", null]);
 
     public void ContainsAll_Generic_WithComparer_NoCallerArgumentExpression_ShouldRenderPlaceholderCallSite()
     {
@@ -397,8 +401,8 @@ public partial class AssertTests : TestContainer
         // [CallerArgumentExpression] values. The call site must still render with placeholders,
         // including a "<comparer>" placeholder, so the failure shows which overload was invoked.
         Action action = () => Assert.ContainsAll(
-            new[] { "A", "C" },
-            new[] { "a", "b" },
+            ["A", "C"],
+            ["a", "b"],
             new CaseInsensitiveStringComparer(),
             message: null,
             expectedExpression: string.Empty,
@@ -420,8 +424,8 @@ public partial class AssertTests : TestContainer
     public void DoesNotContainAll_Generic_WithComparer_NoCallerArgumentExpression_ShouldRenderPlaceholderCallSite()
     {
         Action action = () => Assert.DoesNotContainAll(
-            new[] { "A" },
-            new[] { "a", "b" },
+            ["A"],
+            ["a", "b"],
             new CaseInsensitiveStringComparer(),
             message: null,
             notExpectedExpression: string.Empty,
@@ -441,7 +445,7 @@ public partial class AssertTests : TestContainer
 
     public void ContainsAll_AssertFailedException_PopulatesExpectedAndActual()
     {
-        Action action = () => Assert.ContainsAll(new[] { 1, 2, 3 }, new[] { 1, 2 });
+        Action action = () => Assert.ContainsAll([1, 2, 3], [1, 2]);
         AssertFailedException ex = action.Should().Throw<AssertFailedException>().Which;
         ex.ExpectedText.Should().Be("[1, 2, 3]");
         ex.ActualText.Should().Be("[1, 2]");
@@ -449,7 +453,7 @@ public partial class AssertTests : TestContainer
 
     public void DoesNotContainAll_AssertFailedException_PopulatesActualOnly()
     {
-        Action action = () => Assert.DoesNotContainAll(new[] { 1 }, new[] { 1, 2 });
+        Action action = () => Assert.DoesNotContainAll([1], [1, 2]);
         AssertFailedException ex = action.Should().Throw<AssertFailedException>().Which;
         ex.ExpectedText.Should().BeNull();
         ex.ActualText.Should().Be("[1, 2]");

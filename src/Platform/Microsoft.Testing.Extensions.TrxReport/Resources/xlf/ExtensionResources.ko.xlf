@@ -3,9 +3,19 @@
   <file datatype="xml" source-language="en" target-language="ko" original="../ExtensionResources.resx">
     <body>
       <trans-unit id="InvalidTestApplicationBuilderType">
-        <source>TRX report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">TRX 보고서 생성기는 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder' 유형의 작성기에서만 작동합니다.</target>
-        <note>Do not localize {Locked="Microsoft.Testing.Platform.Builder.TestApplicationBuilder"}.</note>
+        <source>TRX report generation and merge tools require a test application builder that supports artifact post-processing</source>
+        <target state="translated">TRX 보고서 생성 및 병합 도구를 사용하려면 아티팩트 후처리를 지원하는 테스트 애플리케이션 작성기가 필요합니다.</target>
+        <note>Do not localize format name {Locked="TRX"}.</note>
+      </trans-unit>
+      <trans-unit id="TrxArtifactPostProcessorDescription">
+        <source>Merges TRX reports produced by Microsoft.Testing.Extensions.TrxReport</source>
+        <target state="translated">Microsoft.Testing.Extensions.TrxReport에서 생성한 TRX 보고서 병합</target>
+        <note>Do not localize format name {Locked="TRX"} or assembly name {Locked="Microsoft.Testing.Extensions.TrxReport"}.</note>
+      </trans-unit>
+      <trans-unit id="TrxArtifactPostProcessorDisplayName">
+        <source>TRX report merger</source>
+        <target state="translated">TRX 보고서 병합기</target>
+        <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxComparerToolBaselineFileOptionDescription">
         <source>The baseline TRX file</source>
@@ -41,6 +51,51 @@
         <source>Warning: Trx file '{0}' already exists and will be overwritten.</source>
         <target state="translated">경고: Trx 파일 '{0}' 이미 있으므로 덮어씁니다.</target>
         <note>{0} is the {Locked="TRX"} report file path.</note>
+      </trans-unit>
+      <trans-unit id="TrxMergeToolDescription">
+        <source>Merges multiple TRX files into one from the command line</source>
+        <target state="translated">명령줄에서 여러 TRX 파일을 하나로 병합</target>
+        <note>Do not localize format name {Locked="TRX"}.</note>
+      </trans-unit>
+      <trans-unit id="TrxMergeToolDisplayName">
+        <source>TRX report merge tool</source>
+        <target state="translated">TRX 보고서 병합 도구</target>
+        <note>Do not localize format name {Locked="TRX"}.</note>
+      </trans-unit>
+      <trans-unit id="TrxMergeToolInputOptionDescription">
+        <source>Two or more input TRX file paths</source>
+        <target state="translated">둘 이상의 입력 TRX 파일 경로</target>
+        <note>Do not localize option name {Locked="--input"} or format name {Locked="TRX"}.</note>
+      </trans-unit>
+      <trans-unit id="TrxMergeToolInvalidInputs">
+        <source>'--input' expects two or more existing TRX file paths</source>
+        <target state="translated">'--input'에는 기존 TRX 파일 경로가 두 개 이상 필요함</target>
+        <note>Do not localize option name {Locked="--input"} or format name {Locked="TRX"}.</note>
+      </trans-unit>
+      <trans-unit id="TrxMergeToolInvalidOutput">
+        <source>'--output-trx' expects one TRX file path</source>
+        <target state="translated">'--output-trx'에는 TRX 파일 경로가 하나 필요함</target>
+        <note>Do not localize option name {Locked="--output-trx"} or format name {Locked="TRX"}.</note>
+      </trans-unit>
+      <trans-unit id="TrxMergeToolOutputOptionDescription">
+        <source>The output TRX file path</source>
+        <target state="translated">출력 TRX 파일 경로</target>
+        <note>Do not localize option name {Locked="--output-trx"} or format name {Locked="TRX"}.</note>
+      </trans-unit>
+      <trans-unit id="TrxMergedArtifactDescription">
+        <source>{0} TRX files merged</source>
+        <target state="translated">{0}개의 TRX 파일이 병합됨</target>
+        <note>{0} is the number of merged files. Do not localize format name {Locked="TRX"}.</note>
+      </trans-unit>
+      <trans-unit id="TrxMergedArtifactDisplayName">
+        <source>TRX report (merged)</source>
+        <target state="translated">TRX 보고서(병합됨)</target>
+        <note>Do not localize format name {Locked="TRX"}.</note>
+      </trans-unit>
+      <trans-unit id="TrxMergedRunName">
+        <source>Merged TRX report</source>
+        <target state="translated">병합된 TRX 보고서</target>
+        <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportArtifactDescription">
         <source>Test session</source>

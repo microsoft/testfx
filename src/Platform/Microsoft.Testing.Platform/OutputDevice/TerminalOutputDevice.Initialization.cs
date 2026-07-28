@@ -1,8 +1,9 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice.Terminal;
 using Microsoft.Testing.Platform.Resources;
 
@@ -101,19 +102,18 @@ internal sealed partial class TerminalOutputDevice
         // --progress <auto|on|off> is the modern, positive form. When present it wins over the legacy
         // --no-progress flag. --no-progress keeps working as a deprecated alias for --progress off and
         // emits a single deprecation warning per process.
-        bool noProgress;
-        if (_commandLineOptions.TryGetOptionArgumentList(TerminalTestReporterCommandLineOptionsProvider.ProgressOption, out string[]? progressArguments)
-            && progressArguments is { Length: > 0 })
-        {
-            // 'on' and 'auto' currently behave the same: progress is shown unless the terminal is not capable
-            // of in-place updates (NoAnsi/SimpleAnsi) or we are a test-host controller, --list-tests, or server
-            // mode. A dedicated heartbeat renderer for the non-cursor modes is tracked by #9125.
-            noProgress = CommandLineOptionArgumentValidator.IsOffValue(progressArguments[0]);
-        }
-        else if (_commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoProgressOption))
-        {
-            noProgress = true;
+        bool progressOptionSet = _commandLineOptions.TryGetOptionArgumentList(
+            TerminalTestReporterCommandLineOptionsProvider.ProgressOption,
+            out string[]? progressArguments)
+            && progressArguments is { Length: > 0 };
 
+        // 'on' and 'auto' currently behave the same: progress is shown unless the terminal is not capable
+        // of in-place updates (NoAnsi/SimpleAnsi) or we are a test-host controller, --list-tests, or server
+        // mode. A dedicated heartbeat renderer for the non-cursor modes is tracked by #9125.
+        bool noProgress = !TerminalTestReporterCommandLineOptionsProvider.IsProgressEnabled(_commandLineOptions);
+        if (!progressOptionSet
+            && _commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoProgressOption))
+        {
             // The deprecation warning is a nudge for interactive users to move to --progress off. We deliberately
             // do not emit it in CI: it is invisible noise there, and build infrastructure (e.g. the Arcade SDK test
             // runner) passes --no-progress unconditionally, so emitting to stderr would surface as a build error in
@@ -122,10 +122,6 @@ internal sealed partial class TerminalOutputDevice
             {
                 await WriteToStandardErrorAsync(PlatformResources.TerminalNoProgressDeprecatedWarning).ConfigureAwait(false);
             }
-        }
-        else
-        {
-            noProgress = false;
         }
 
         // _runtimeFeature.IsHotReloadEnabled is not set to true here, even if the session will be HotReload,
@@ -142,6 +138,7 @@ internal sealed partial class TerminalOutputDevice
 
         OutputShowMode showStdout = GetShowOutputMode(_commandLineOptions, TerminalTestReporterCommandLineOptionsProvider.ShowStdoutOption, isLLMEnvironment);
         OutputShowMode showStderr = GetShowOutputMode(_commandLineOptions, TerminalTestReporterCommandLineOptionsProvider.ShowStderrOption, isLLMEnvironment);
+        int slowestTestsCount = GetSlowestTestsCount(_commandLineOptions);
 
         Func<bool?> shouldShowProgress = noProgress
             // User preference is to not show progress.
@@ -168,23 +165,25 @@ internal sealed partial class TerminalOutputDevice
             ShowProgress = shouldShowProgress,
             ShowStdout = showStdout,
             ShowStderr = showStderr,
-            HeartbeatSilenceThreshold = GetProgressThreshold(_environment, MTP_PROGRESS_SILENCE_SECONDS, defaultSeconds: 30),
-            SlowTestThreshold = GetProgressThreshold(_environment, MTP_PROGRESS_SLOW_TEST_SECONDS, defaultSeconds: 60),
-        });
+            HeartbeatSilenceThreshold = ProgressReportingConfiguration.GetThreshold(
+                _environment, ProgressReportingConfiguration.MTP_PROGRESS_SILENCE_SECONDS, defaultSeconds: 30),
+            SlowTestThreshold = ProgressReportingConfiguration.GetThreshold(
+                _environment, ProgressReportingConfiguration.MTP_PROGRESS_SLOW_TEST_SECONDS, defaultSeconds: 60),
+            SlowestTestsCount = slowestTestsCount,
+        }, _loggerFactory.CreateLogger<TestProgressStateAwareTerminal>());
     }
 
-    // Reads an integer number of seconds from the given environment variable, falling back to
-    // <paramref name="defaultSeconds"/> when unset or invalid. A value of 0 disables the related
-    // heartbeat rule (returns TimeSpan.Zero). Negative or non-integer values are ignored.
-    private static TimeSpan GetProgressThreshold(IEnvironment environment, string variableName, int defaultSeconds)
-    {
-        string? raw = environment.GetEnvironmentVariable(variableName);
-        return !RoslynString.IsNullOrWhiteSpace(raw)
-            && int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out int seconds)
-            && seconds >= 0
-            ? TimeSpan.FromSeconds(seconds)
-            : TimeSpan.FromSeconds(defaultSeconds);
-    }
+    // Reads the --show-slowest-tests option, returning the requested count of slowest tests to list in the
+    // summary. Returns 0 (feature off) when the option is absent. The value has already been validated to be a
+    // positive integer by TerminalTestReporterCommandLineOptionsProvider. Internal for unit testing the parse seam
+    // that feeds TerminalTestReporterOptions.SlowestTestsCount.
+    internal static int GetSlowestTestsCount(ICommandLineOptions commandLineOptions)
+        => commandLineOptions.TryGetOptionArgumentList(TerminalTestReporterCommandLineOptionsProvider.ShowSlowestTestsOption, out string[]? arguments)
+            && arguments is [string value]
+            && int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int count)
+            && count >= 1
+                ? count
+                : 0;
 
     // When the option is absent, default to OutputShowMode.Failed when running under a known
     // LLM/AI environment (less token noise for agents) and to OutputShowMode.All otherwise.

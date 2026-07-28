@@ -80,17 +80,21 @@ internal sealed class AzureDevOpsSlowTestReporter : SlowTestReporterBase
 
     protected override string GetTestName(TestNode testNode) => TestNodeIdentity.GetTestName(testNode);
 
+    protected override string GetDisplayLabel(TestNode testNode) => TestNodeIdentity.GetDisplayLabel(testNode);
+
     protected override TimeSpan ResolveThreshold(string testName)
     {
         bool hasStats = _historyService.TryGetDurationStats(testName, out DurationHistoryStats stats);
         return AzureDevOpsSlowTestThresholds.ComputeThreshold(_staticThreshold, stats, hasStats, Volatile.Read(ref _multiplier), _minimumSampleCount);
     }
 
-    protected override Task EmitSlowTestAsync(string testName, TimeSpan elapsed, CancellationToken cancellationToken)
+    protected override Task EmitSlowTestAsync(string testName, string displayLabel, TimeSpan elapsed, CancellationToken cancellationToken)
     {
         string elapsedText = AzureDevOpsSlowTestThresholds.FormatDuration(elapsed.TotalMilliseconds);
-        string line = string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.SlowTestStillRunning, elapsedText, testName);
+        string line = string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.SlowTestStillRunning, elapsedText, displayLabel);
 
+        // History is aggregated by the stable fully-qualified name (testName), not the per-instance
+        // display label, so the decoration lookup keeps using testName.
         if (_historyService.TryGetDurationStats(testName, out DurationHistoryStats stats)
             && AzureDevOpsSlowTestThresholds.HasUsableHistory(stats, hasStats: true, _minimumSampleCount))
         {

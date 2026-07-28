@@ -55,7 +55,8 @@ internal sealed class AzureDevOpsCommandLineProvider : CommandLineOptionsProvide
 
     public AzureDevOpsCommandLineProvider()
         : base(
-            nameof(AzureDevOpsCommandLineProvider),
+            // Stable extension UID. Do not change: it feeds telemetry, --info output, and artifact metadata.
+            "AzureDevOpsCommandLineProvider",
             ExtensionVersion.DefaultSemVer,
             AzureDevOpsResources.DisplayName,
             AzureDevOpsResources.Description,

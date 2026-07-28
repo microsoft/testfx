@@ -13,7 +13,12 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 internal sealed class DiscoveryContextAdapter : ContextAdapterBase, IDiscoveryContext
 {
     public DiscoveryContextAdapter(ICommandLineOptions commandLineOptions, IRunSettings runSettings, ITestExecutionFilter filter)
-        : base(commandLineOptions, runSettings, filter)
+        : this(commandLineOptions, runSettings, filter, useFullyQualifiedNameAsUid: false)
+    {
+    }
+
+    public DiscoveryContextAdapter(ICommandLineOptions commandLineOptions, IRunSettings runSettings, ITestExecutionFilter filter, bool useFullyQualifiedNameAsUid)
+        : base(commandLineOptions, runSettings, filter, useFullyQualifiedNameAsUid)
     {
     }
 }

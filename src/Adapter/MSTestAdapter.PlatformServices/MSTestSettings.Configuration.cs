@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WINDOWS_UWP
@@ -24,7 +24,24 @@ internal sealed partial class MSTestSettings
     /// <param name="settingsXml">The run settings XML, or <see langword="null"/> when none was provided.</param>
     /// <param name="logger"> The logger for messages. </param>
     /// <param name="configuration">The configuration.</param>
+#if !WINDOWS_UWP
     internal static void PopulateSettings(string? settingsXml, IAdapterMessageLogger? logger, IConfiguration? configuration)
+    {
+        try
+        {
+            PopulateSettingsCore(settingsXml, logger, configuration);
+        }
+        catch (XmlException ex)
+        {
+            throw new AdapterSettingsException(Resource.InvalidSettingsXml, ex);
+        }
+    }
+#else
+    internal static void PopulateSettings(string? settingsXml, IAdapterMessageLogger? logger, IConfiguration? configuration)
+        => PopulateSettingsCore(settingsXml, logger, configuration);
+#endif
+
+    private static void PopulateSettingsCore(string? settingsXml, IAdapterMessageLogger? logger, IConfiguration? configuration)
     {
 #if !WINDOWS_UWP
         if (configuration?["mstest"] is not null
@@ -114,6 +131,29 @@ internal sealed partial class MSTestSettings
         }
     }
 
+    private static void ParseCaptureTraceOutputSetting(IConfiguration configuration, string key, IAdapterMessageLogger? logger, Action<TestOutputCaptureMode> setSetting)
+    {
+        if (configuration[$"mstest:{key}"] is not string value)
+        {
+            return;
+        }
+
+        // Accept the legacy boolean spelling (true -> Result, false -> None) as well as the
+        // TestOutputCaptureMode enum names (None/Result/Live) so existing configs keep working.
+        if (bool.TryParse(value, out bool boolResult))
+        {
+            setSetting(boolResult ? TestOutputCaptureMode.Result : TestOutputCaptureMode.None);
+        }
+        else if (TryParseCaptureMode(value, out TestOutputCaptureMode mode))
+        {
+            setSetting(mode);
+        }
+        else
+        {
+            logger?.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, key));
+        }
+    }
+
     private static void ParseDebuggerLaunchModeSetting(IConfiguration configuration, string key, IAdapterMessageLogger? logger, Action<DebuggerLaunchMode> setSetting)
     {
         if (configuration[$"mstest:{key}"] is not string value)
@@ -193,7 +233,7 @@ internal sealed partial class MSTestSettings
 
         ParseBooleanSetting(configuration, "execution:randomizeTestOrder", logger, value => settings.RandomizeTestOrder = value);
         ParseSignedIntegerSetting(configuration, "execution:randomTestOrderSeed", logger, value => settings.RandomTestOrderSeed = value);
-        ParseBooleanSetting(configuration, "output:captureTrace", logger, value => settings.CaptureDebugTraces = value);
+        ParseCaptureTraceOutputSetting(configuration, "output:captureTrace", logger, value => settings.OutputCaptureMode = value);
         ParseBooleanSetting(configuration, "parallelism:enabled", logger, value => settings.DisableParallelization = !value);
         ParseBooleanSetting(configuration, "execution:mapInconclusiveToFailed", logger, value => settings.MapInconclusiveToFailed = value);
         ParseBooleanSetting(configuration, "execution:mapNotRunnableToFailed", logger, value => settings.MapNotRunnableToFailed = value);
@@ -208,6 +248,8 @@ internal sealed partial class MSTestSettings
         ParseTimeoutSetting(configuration, "timeout:classCleanup", logger, value => settings.ClassCleanupTimeout = value);
         ParseTimeoutSetting(configuration, "timeout:testInitialize", logger, value => settings.TestInitializeTimeout = value);
         ParseTimeoutSetting(configuration, "timeout:testCleanup", logger, value => settings.TestCleanupTimeout = value);
+        ParseTimeoutSetting(configuration, "timeout:globalTestInitialize", logger, value => settings.GlobalTestInitializeTimeout = value);
+        ParseTimeoutSetting(configuration, "timeout:globalTestCleanup", logger, value => settings.GlobalTestCleanupTimeout = value);
 
         if (configuration["mstest:parallelism:workers"] is string workers)
         {

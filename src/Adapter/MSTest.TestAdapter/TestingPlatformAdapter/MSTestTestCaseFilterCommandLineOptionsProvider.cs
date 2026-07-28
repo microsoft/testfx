@@ -1,0 +1,23 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+#if !WINDOWS_UWP
+using Microsoft.Testing.Extensions;
+using Microsoft.Testing.Platform.Extensions;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Resources;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter;
+
+/// <summary>
+/// MSTest-native command-line provider for the VSTest <c>--filter</c> (test case filter) option. Mirrors the VSTest
+/// bridge's <c>TestCaseFilterCommandLineOptionsProvider</c> (identical option name and description).
+/// </summary>
+[SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "We can use MTP from this folder")]
+internal sealed class MSTestTestCaseFilterCommandLineOptionsProvider : TestCaseFilterCommandLineOptionsProviderBase
+{
+    public MSTestTestCaseFilterCommandLineOptionsProvider(IExtension extension)
+        : base(extension, PlatformAdapterResources.TestCaseFilterOptionDescription)
+    {
+    }
+}
+#endif

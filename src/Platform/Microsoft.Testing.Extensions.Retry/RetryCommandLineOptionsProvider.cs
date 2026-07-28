@@ -19,7 +19,8 @@ internal sealed class RetryCommandLineOptionsProvider : CommandLineOptionsProvid
 
     public RetryCommandLineOptionsProvider()
         : base(
-            nameof(RetryCommandLineOptionsProvider),
+            // Stable extension UID. Do not change: it feeds telemetry, --info output, and artifact metadata.
+            "RetryCommandLineOptionsProvider",
             ExtensionVersion.DefaultSemVer,
             ExtensionResources.RetryFailedTestsExtensionDisplayName,
             ExtensionResources.RetryFailedTestsExtensionDescription,

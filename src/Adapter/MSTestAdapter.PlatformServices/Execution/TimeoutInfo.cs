@@ -35,6 +35,15 @@ internal readonly struct TimeoutInfo
                 FixtureKind.ClassCleanup => MSTestSettings.CurrentSettings.ClassCleanupTimeout,
                 FixtureKind.TestInitialize => MSTestSettings.CurrentSettings.TestInitializeTimeout,
                 FixtureKind.TestCleanup => MSTestSettings.CurrentSettings.TestCleanupTimeout,
+
+                // Global test fixtures prefer their dedicated timeout, but fall back to the per-test
+                // initialize/cleanup timeout so existing configurations keep applying to them.
+                FixtureKind.GlobalTestInitialize => MSTestSettings.CurrentSettings.GlobalTestInitializeTimeout > 0
+                    ? MSTestSettings.CurrentSettings.GlobalTestInitializeTimeout
+                    : MSTestSettings.CurrentSettings.TestInitializeTimeout,
+                FixtureKind.GlobalTestCleanup => MSTestSettings.CurrentSettings.GlobalTestCleanupTimeout > 0
+                    ? MSTestSettings.CurrentSettings.GlobalTestCleanupTimeout
+                    : MSTestSettings.CurrentSettings.TestCleanupTimeout,
                 _ => throw new NotSupportedException("Unsupported fixture kind " + fixtureKind),
             },
             MSTestSettings.CurrentSettings.CooperativeCancellationTimeout);

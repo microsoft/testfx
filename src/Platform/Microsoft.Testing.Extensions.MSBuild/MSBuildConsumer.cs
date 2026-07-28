@@ -115,16 +115,13 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
             }
         }
 
-        string? duration = timingProperty is null ? null :
-            ToHumanReadableDuration(timingProperty.GlobalTiming.Duration.TotalMilliseconds);
-
         switch (stateProperty)
         {
             case ErrorTestNodeStateProperty errorState:
                 await HandleFailuresAsync(
                     testNodeStateChanged.TestNode.DisplayName,
                     isCanceled: false,
-                    duration: duration,
+                    duration: timingProperty is null ? null : ToHumanReadableDuration(timingProperty.GlobalTiming.Duration.TotalMilliseconds),
                     errorMessage: errorState.Exception?.Message ?? errorState.Explanation,
                     errorStackTrace: errorState.Exception?.StackTrace,
                     expected: null,
@@ -138,7 +135,7 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
                 await HandleFailuresAsync(
                     testNodeStateChanged.TestNode.DisplayName,
                     isCanceled: false,
-                    duration: duration,
+                    duration: timingProperty is null ? null : ToHumanReadableDuration(timingProperty.GlobalTiming.Duration.TotalMilliseconds),
                     errorMessage: failedState.Exception?.Message ?? failedState.Explanation,
                     errorStackTrace: failedState.Exception?.StackTrace,
                     expected: failedState.Exception?.Data["assert.expected"] as string,
@@ -152,7 +149,7 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
                 await HandleFailuresAsync(
                     testNodeStateChanged.TestNode.DisplayName,
                     isCanceled: true,
-                    duration: duration,
+                    duration: timingProperty is null ? null : ToHumanReadableDuration(timingProperty.GlobalTiming.Duration.TotalMilliseconds),
                     errorMessage: timeoutState.Exception?.Message ?? timeoutState.Explanation,
                     errorStackTrace: timeoutState.Exception?.StackTrace,
                     expected: null,
@@ -168,7 +165,7 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
                 await HandleFailuresAsync(
                     testNodeStateChanged.TestNode.DisplayName,
                     isCanceled: true,
-                    duration: duration,
+                    duration: timingProperty is null ? null : ToHumanReadableDuration(timingProperty.GlobalTiming.Duration.TotalMilliseconds),
                     errorMessage: canceledState.Exception?.Message ?? canceledState.Explanation,
                     errorStackTrace: canceledState.Exception?.StackTrace,
                     expected: null,
