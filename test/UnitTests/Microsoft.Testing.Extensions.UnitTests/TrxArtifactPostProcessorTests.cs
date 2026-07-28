@@ -66,8 +66,40 @@ public sealed class TrxArtifactPostProcessorTests
             Assert.AreSequenceEqual(
                 new[] { "first.trx", "second.trx" },
                 Directory.GetFiles(directory, "*.trx").Select(Path.GetFileName).OrderBy(name => name, StringComparer.Ordinal));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
 
+    [TestMethod]
+    public async Task ProcessAsync_WithReorderedInputs_ProducesIdenticalOutput()
+    {
+        // RFC 018 requires processing to be deterministic and idempotent, because orchestrators may retry
+        // transient failures. The run id is derived from the ordered inputs, so reversing them must still
+        // land on the same output path with byte-identical content.
+        string directory = Path.Combine(Path.GetTempPath(), $"trx-post-processor-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            string firstPath = Path.Combine(directory, "first.trx");
+            string secondPath = Path.Combine(directory, "second.trx");
+            WriteMinimalReport(firstPath, "first");
+            WriteMinimalReport(secondPath, "second");
+            TrxArtifactPostProcessor processor = new();
+
+            ProcessedArtifact? output = await processor.ProcessAsync(
+                [
+                    new InputArtifact(firstPath, TrxReportEngine.TrxArtifactKind, null, null, null, "execution-1"),
+                    new InputArtifact(secondPath, TrxReportEngine.TrxArtifactKind, null, null, null, "execution-2"),
+                ],
+                directory,
+                CancellationToken.None);
+
+            Assert.IsNotNull(output);
             byte[] firstMerge = File.ReadAllBytes(output.Path);
+
             ProcessedArtifact? retriedOutput = await processor.ProcessAsync(
                 [
                     new InputArtifact(secondPath, TrxReportEngine.TrxArtifactKind, null, null, null, "execution-2"),
@@ -77,6 +109,7 @@ public sealed class TrxArtifactPostProcessorTests
                 CancellationToken.None);
 
             Assert.IsNotNull(retriedOutput);
+            Assert.AreEqual(output.Path, retriedOutput.Path);
             Assert.AreSequenceEqual(firstMerge, File.ReadAllBytes(retriedOutput.Path));
         }
         finally
