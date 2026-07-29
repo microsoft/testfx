@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
@@ -371,6 +371,206 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.DoesNotContain("\r", configuration.RunName);
         Assert.DoesNotContain("\n", configuration.RunName);
         Assert.IsLessThanOrEqualTo(AzureDevOpsLivePublishingConstants.MaxRunNameLength, configuration.RunName.Length);
+    }
+
+    [TestMethod]
+    public async Task CreatePublisher_PopulatesPipelineReferenceFromPipelineVariables()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMock(
+            processId: GetAliveProcessId(),
+            stageName: "Build",
+            jobName: "Test_Linux",
+            phaseName: "RunTests",
+            stageAttempt: "2",
+            phaseAttempt: "3",
+            jobAttempt: "4");
+        AzureDevOpsPublishConfiguration? capturedConfiguration = null;
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(2, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out _, out _, environment: environment);
+        client.CreateTestRunAsyncFunc = (configuration, _) =>
+        {
+            capturedConfiguration = configuration;
+            return Task.FromResult(56);
+        };
+
+        await StartPublisherAsync(publisher);
+
+        Assert.IsNotNull(capturedConfiguration);
+        AzureDevOpsPipelineReference? pipelineReference = capturedConfiguration!.PipelineReference;
+        Assert.IsNotNull(pipelineReference);
+        Assert.AreEqual("Build", pipelineReference!.StageName);
+        Assert.AreEqual(2, pipelineReference.StageAttempt);
+        Assert.AreEqual("RunTests", pipelineReference.PhaseName);
+        Assert.AreEqual(3, pipelineReference.PhaseAttempt);
+        Assert.AreEqual("Test_Linux", pipelineReference.JobName);
+        Assert.AreEqual(4, pipelineReference.JobAttempt);
+    }
+
+    [TestMethod]
+    public async Task CreatePublisher_MissingStagePhaseAndJob_LeavesPipelineReferenceNull()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMock(processId: GetAliveProcessId(), stageName: null, jobName: null);
+        AzureDevOpsPublishConfiguration? capturedConfiguration = null;
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(2, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out _, out _, environment: environment);
+        client.CreateTestRunAsyncFunc = (configuration, _) =>
+        {
+            capturedConfiguration = configuration;
+            return Task.FromResult(57);
+        };
+
+        await StartPublisherAsync(publisher);
+
+        Assert.IsNotNull(capturedConfiguration);
+        Assert.IsNull(capturedConfiguration!.PipelineReference);
+    }
+
+    [TestMethod]
+    public async Task CreatePublisher_NonNumericAttempts_LeavesAttemptsNull()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMock(processId: GetAliveProcessId(), stageAttempt: "not-a-number");
+        AzureDevOpsPublishConfiguration? capturedConfiguration = null;
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(2, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out _, out _, environment: environment);
+        client.CreateTestRunAsyncFunc = (configuration, _) =>
+        {
+            capturedConfiguration = configuration;
+            return Task.FromResult(58);
+        };
+
+        await StartPublisherAsync(publisher);
+
+        Assert.IsNotNull(capturedConfiguration);
+        Assert.IsNotNull(capturedConfiguration!.PipelineReference);
+        Assert.IsNull(capturedConfiguration.PipelineReference!.StageAttempt);
+        Assert.IsNull(capturedConfiguration.PipelineReference.PhaseName);
+    }
+
+    [TestMethod]
+    public async Task OnTestSessionStartingAsync_DisplaysTestRunUrlSoResultsCanBeFollowedLive()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        CollectingOutputDevice outputDevice = new();
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(2, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out _, out _, outputDevice: outputDevice);
+        client.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(4242);
+
+        await StartPublisherAsync(publisher);
+
+        Assert.ContainsSingle(outputDevice.Lines);
+        Assert.Contains("https://dev.azure.com/org/project/_TestManagement/Runs?runId=4242&_a=resultQuery", outputDevice.Lines[0]);
+        Assert.IsEmpty(outputDevice.Warnings);
+    }
+
+    [TestMethod]
+    public async Task AzureDevOpsTestResultsClient_CreateTestRun_SendsStartedDateAndPipelineReference()
+    {
+        FakeTask task = new();
+        FakeClock clock = new() { UtcNow = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero) };
+        string? capturedBody = null;
+        QueueHttpMessageHandler handler = new(
+            async (request, cancellationToken) =>
+            {
+                capturedBody = await ReadRequestBodyAsync(request, cancellationToken);
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("{\"id\":9}"),
+                };
+            });
+        using HttpClient httpClient = new(handler)
+        {
+            Timeout = Timeout.InfiniteTimeSpan,
+        };
+        AzureDevOpsTestResultsClient client = new(httpClient, task, clock);
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "tests.dll", "results")
+        {
+            PipelineReference = new AzureDevOpsPipelineReference("Build", 2, "RunTests", 3, "Test_Linux", 4),
+        };
+
+        int runId = await client.CreateTestRunAsync(configuration, CancellationToken.None);
+
+        Assert.AreEqual(9, runId);
+        Assert.IsNotNull(capturedBody);
+        using var document = JsonDocument.Parse(capturedBody!);
+        JsonElement root = document.RootElement;
+        Assert.AreEqual("2025-01-01T00:00:00+00:00", root.GetProperty("startedDate").GetString());
+
+        JsonElement pipelineReference = root.GetProperty("pipelineReference");
+
+        // Azure DevOps requires pipelineId to match build.id.
+        Assert.AreEqual(123, pipelineReference.GetProperty("pipelineId").GetInt32());
+        Assert.AreEqual(root.GetProperty("build").GetProperty("id").GetInt32(), pipelineReference.GetProperty("pipelineId").GetInt32());
+        Assert.AreEqual("Build", pipelineReference.GetProperty("stageReference").GetProperty("stageName").GetString());
+        Assert.AreEqual(2, pipelineReference.GetProperty("stageReference").GetProperty("attempt").GetInt32());
+        Assert.AreEqual("RunTests", pipelineReference.GetProperty("phaseReference").GetProperty("phaseName").GetString());
+        Assert.AreEqual(3, pipelineReference.GetProperty("phaseReference").GetProperty("attempt").GetInt32());
+        Assert.AreEqual("Test_Linux", pipelineReference.GetProperty("jobReference").GetProperty("jobName").GetString());
+        Assert.AreEqual(4, pipelineReference.GetProperty("jobReference").GetProperty("attempt").GetInt32());
+    }
+
+    [TestMethod]
+    public async Task AzureDevOpsTestResultsClient_CreateTestRun_OmitsPipelineReferenceWhenUnavailable()
+    {
+        FakeTask task = new();
+        FakeClock clock = new() { UtcNow = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero) };
+        string? capturedBody = null;
+        QueueHttpMessageHandler handler = new(
+            async (request, cancellationToken) =>
+            {
+                capturedBody = await ReadRequestBodyAsync(request, cancellationToken);
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("{\"id\":10}"),
+                };
+            });
+        using HttpClient httpClient = new(handler)
+        {
+            Timeout = Timeout.InfiniteTimeSpan,
+        };
+        AzureDevOpsTestResultsClient client = new(httpClient, task, clock);
+
+        int runId = await client.CreateTestRunAsync(new AzureDevOpsPublishConfiguration("https://dev.azure.com/org/", "project", "token", 123, "run", "tests.dll", "results"), CancellationToken.None);
+
+        Assert.AreEqual(10, runId);
+        Assert.IsNotNull(capturedBody);
+        using var document = JsonDocument.Parse(capturedBody!);
+        Assert.IsFalse(document.RootElement.TryGetProperty("pipelineReference", out _));
+    }
+
+    [TestMethod]
+    public async Task AzureDevOpsTestResultsClient_CreateTestRun_OmitsStageAndPhaseWhenOnlyJobIsKnown()
+    {
+        FakeTask task = new();
+        FakeClock clock = new() { UtcNow = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero) };
+        string? capturedBody = null;
+        QueueHttpMessageHandler handler = new(
+            async (request, cancellationToken) =>
+            {
+                capturedBody = await ReadRequestBodyAsync(request, cancellationToken);
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("{\"id\":11}"),
+                };
+            });
+        using HttpClient httpClient = new(handler)
+        {
+            Timeout = Timeout.InfiniteTimeSpan,
+        };
+        AzureDevOpsTestResultsClient client = new(httpClient, task, clock);
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "tests.dll", "results")
+        {
+            PipelineReference = new AzureDevOpsPipelineReference(StageName: null, StageAttempt: null, PhaseName: null, PhaseAttempt: null, JobName: "Test_Linux", JobAttempt: null),
+        };
+
+        int runId = await client.CreateTestRunAsync(configuration, CancellationToken.None);
+
+        Assert.AreEqual(11, runId);
+        Assert.IsNotNull(capturedBody);
+        using var document = JsonDocument.Parse(capturedBody!);
+        JsonElement pipelineReference = document.RootElement.GetProperty("pipelineReference");
+        Assert.IsFalse(pipelineReference.TryGetProperty("stageReference", out _));
+        Assert.IsFalse(pipelineReference.TryGetProperty("phaseReference", out _));
+        Assert.AreEqual("Test_Linux", pipelineReference.GetProperty("jobReference").GetProperty("jobName").GetString());
+        Assert.IsFalse(pipelineReference.GetProperty("jobReference").TryGetProperty("attempt", out _));
     }
 
     [TestMethod]
@@ -1115,6 +1315,16 @@ public sealed class AzureDevOpsLivePublishingTests
         => Process.GetCurrentProcess().Id;
 #endif
 
+    private static async Task<string> ReadRequestBodyAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+#if NET
+        => await request.Content!.ReadAsStringAsync(cancellationToken);
+#else
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return await request.Content!.ReadAsStringAsync();
+    }
+#endif
+
     private static void TryDeleteDirectory(string path)
     {
         try
@@ -1132,7 +1342,14 @@ public sealed class AzureDevOpsLivePublishingTests
         }
     }
 
-    private static Mock<IEnvironment> CreateEnvironmentMock(int processId, string? stageName = "stage", string? jobName = "job")
+    private static Mock<IEnvironment> CreateEnvironmentMock(
+        int processId,
+        string? stageName = "stage",
+        string? jobName = "job",
+        string? phaseName = null,
+        string? stageAttempt = null,
+        string? phaseAttempt = null,
+        string? jobAttempt = null)
     {
         Mock<IEnvironment> environment = new();
         environment.SetupGet(x => x.ProcessId).Returns(processId);
@@ -1145,6 +1362,10 @@ public sealed class AzureDevOpsLivePublishingTests
         environment.Setup(x => x.GetEnvironmentVariable("AGENT_NAME")).Returns("agent-name");
         environment.Setup(x => x.GetEnvironmentVariable("SYSTEM_STAGENAME")).Returns(stageName);
         environment.Setup(x => x.GetEnvironmentVariable("SYSTEM_JOBNAME")).Returns(jobName);
+        environment.Setup(x => x.GetEnvironmentVariable("SYSTEM_PHASENAME")).Returns(phaseName);
+        environment.Setup(x => x.GetEnvironmentVariable("SYSTEM_STAGEATTEMPT")).Returns(stageAttempt);
+        environment.Setup(x => x.GetEnvironmentVariable("SYSTEM_PHASEATTEMPT")).Returns(phaseAttempt);
+        environment.Setup(x => x.GetEnvironmentVariable("SYSTEM_JOBATTEMPT")).Returns(jobAttempt);
         return environment;
     }
 
@@ -1223,9 +1444,26 @@ public sealed class AzureDevOpsLivePublishingTests
     {
         public List<string> Lines { get; } = [];
 
+        public List<string> Warnings { get; } = [];
+
         public Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken)
         {
-            Lines.Add(((WarningMessageOutputDeviceData)data).Message);
+            switch (data)
+            {
+                case WarningMessageOutputDeviceData warning:
+                    Warnings.Add(warning.Message);
+                    Lines.Add(warning.Message);
+                    break;
+
+                case TextOutputDeviceData text:
+                    Lines.Add(text.Text);
+                    break;
+
+                default:
+                    Assert.Fail($"Unexpected output device data type '{data.GetType()}'.");
+                    break;
+            }
+
             return Task.CompletedTask;
         }
     }

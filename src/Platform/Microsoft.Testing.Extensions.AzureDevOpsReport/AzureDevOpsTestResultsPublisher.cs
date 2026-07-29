@@ -150,6 +150,22 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
                 testSessionContext.CancellationToken).ConfigureAwait(false);
             CurrentRunId = _coordinatedRun.RunId;
 
+            // Results stream into the run as tests complete, but the build's Tests tab only lists the run
+            // once it is finalized. Point users at the run itself so they can watch results arrive live,
+            // and say when the Tests tab catches up so an empty tab mid-run is not mistaken for a failure.
+            // Only the process that created the run reports it: every other process shares the same run id
+            // and would just repeat the same line.
+            if (_coordinatedRun.IsOwner)
+            {
+                await DisplayAsync(
+                    string.Format(
+                        CultureInfo.InvariantCulture,
+                        AzureDevOpsResources.AzureDevOpsLivePublishingRunCreated,
+                        CurrentRunId.Value,
+                        BuildTestRunUrl(publishConfiguration, CurrentRunId.Value)),
+                    testSessionContext.CancellationToken).ConfigureAwait(false);
+            }
+
             // Start a background loop that flushes pending results on the time-based interval even
             // when no new TestNodeUpdateMessages arrive (e.g. at the tail end of a slow test run).
             _backgroundFlushCts = new CancellationTokenSource();
@@ -177,18 +193,34 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
     private async Task WarnAsync(string message, CancellationToken cancellationToken)
     {
         TryLogWarning(message);
+        await DisplayCoreAsync(new WarningMessageOutputDeviceData(message), cancellationToken).ConfigureAwait(false);
+    }
 
+    /// <summary>
+    /// Reports informational live-publishing progress on the output device.
+    /// </summary>
+    /// <remarks>
+    /// Never throws, for the same reason as <see cref="WarnAsync"/>.
+    /// </remarks>
+    private Task DisplayAsync(string message, CancellationToken cancellationToken)
+        => DisplayCoreAsync(new TextOutputDeviceData(message), cancellationToken);
+
+    private async Task DisplayCoreAsync(IOutputDeviceData data, CancellationToken cancellationToken)
+    {
         try
         {
-            await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(message), cancellationToken).ConfigureAwait(false);
+            await _outputDevice.DisplayAsync(this, data, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
-            // The message is already in the diagnostic log; losing the console copy is preferable to
-            // failing the test run from inside a diagnostic helper.
+            // The message is already in the diagnostic log (for warnings); losing the console copy is
+            // preferable to failing the test run from inside a diagnostic helper.
             TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingWarningDisplayFailed} {ex.Message}");
         }
     }
+
+    private static string BuildTestRunUrl(AzureDevOpsPublishConfiguration configuration, int runId)
+        => $"{configuration.CollectionUri.TrimEnd('/')}/{Uri.EscapeDataString(configuration.Project)}/_TestManagement/Runs?runId={runId}&_a=resultQuery";
 
     /// <summary>
     /// Logs a warning, swallowing any failure from the logging providers.

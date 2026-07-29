@@ -13,6 +13,11 @@ See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4
 * Add `--report-azdo-groups <on|off>` and `--report-azdo-annotations <on|off>` toggles to Azure DevOps report extension by @Evangelink in [#9542](https://github.com/microsoft/testfx/pull/9542)
 * Re-print errored assemblies in dotnet test end-of-run recap by @Evangelink in [#9545](https://github.com/microsoft/testfx/pull/9545)
 * Add server-initiated session cancellation to the dotnet test IPC protocol by @Evangelink in [#9549](https://github.com/microsoft/testfx/pull/9549)
+* Report the Azure DevOps test run URL when `--publish-azdo-test-results` creates the run, so results can be followed while the tests are still running, and clarify that the build's Tests tab only lists the run once it completes in [#10191](https://github.com/microsoft/testfx/issues/10191)
+
+### Changed
+
+* Send `pipelineReference` (stage, phase and job, with their attempt numbers) and `startedDate` when `--publish-azdo-test-results` creates an Azure DevOps test run, so the run is attributed to the stage and job that produced it in multi-stage pipelines instead of only to the build
 
 ### Fixed
 

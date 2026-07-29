@@ -37,7 +37,33 @@ internal sealed record AzureDevOpsPublishConfiguration(
     int BuildId,
     string RunName,
     string AutomatedTestStorage,
-    string ResultsDirectory);
+    string ResultsDirectory)
+{
+    /// <summary>
+    /// Gets the stage/phase/job the test run belongs to, when running in a pipeline that exposes it.
+    /// </summary>
+    /// <remarks>
+    /// Declared as a property rather than a positional parameter so that adding it does not change the
+    /// record's constructor and deconstructor signatures.
+    /// </remarks>
+    public AzureDevOpsPipelineReference? PipelineReference { get; init; }
+}
+
+/// <summary>
+/// Identifies the pipeline stage, phase and job that produced a test run.
+/// </summary>
+/// <remarks>
+/// Azure DevOps uses this to attribute the run to the right stage/job of a multi-stage pipeline. Without
+/// it, the run is only linked to the build as a whole, so per-stage test reporting is unavailable.
+/// Every part is optional because the corresponding pipeline variables are not always defined.
+/// </remarks>
+internal sealed record AzureDevOpsPipelineReference(
+    string? StageName,
+    int? StageAttempt,
+    string? PhaseName,
+    int? PhaseAttempt,
+    string? JobName,
+    int? JobAttempt);
 
 internal sealed record AzureDevOpsTestCaseResult(
     [property: JsonPropertyName("automatedTestName")] string AutomatedTestName,
