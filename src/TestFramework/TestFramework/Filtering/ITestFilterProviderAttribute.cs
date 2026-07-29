@@ -20,5 +20,12 @@ internal interface ITestFilterProviderAttribute
     /// <summary>
     /// Gets the <see cref="ITestFilter"/> implementation registered by this attribute.
     /// </summary>
+    /// <remarks>
+    /// The <see cref="DynamicallyAccessedMembersAttribute"/> annotation must stay identical on this
+    /// declaration and on every implementation: the adapter reads the filter type through this interface and
+    /// passes it to a parameter that requires the same annotation, and trimming resolves annotations from
+    /// the declaring member. A mismatch is reported as IL2093.
+    /// </remarks>
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
     Type FilterType { get; }
 }

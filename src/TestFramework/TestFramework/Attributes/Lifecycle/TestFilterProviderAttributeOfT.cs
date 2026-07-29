@@ -36,8 +36,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </para>
 /// <para>
 /// This attribute is only available when targeting .NET. On .NET Framework, use the non-generic
-/// <see cref="TestFilterProviderAttribute"/>. Test projects that multi-target both can select the
-/// right form with <c>#if NET</c>.
+/// <see cref="TestFilterProviderAttribute"/>. A test project that multi-targets both can select the
+/// right form with <c>#if NET</c>:
+/// <code>
+/// #if NET
+/// [assembly: TestFilterProvider&lt;MyFilter&gt;]
+/// #else
+/// [assembly: TestFilterProvider(typeof(MyFilter))]
+/// #endif
+/// </code>
 /// </para>
 /// </remarks>
 /// <example>
@@ -68,6 +75,7 @@ public sealed class TestFilterProviderAttribute<
     /// <summary>
     /// Gets the <see cref="ITestFilter"/> implementation registered by this attribute.
     /// </summary>
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
     public Type FilterType => typeof(TFilter);
 }
 
