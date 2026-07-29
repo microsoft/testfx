@@ -75,8 +75,14 @@ public sealed class TestFilterProviderAttribute<
     /// <summary>
     /// Gets the <see cref="ITestFilter"/> implementation registered by this attribute.
     /// </summary>
+    /// <remarks>
+    /// Implemented explicitly so it stays off the public surface: <typeparamref name="TFilter"/> already
+    /// tells a consumer which filter is registered, and the property exists only for the adapter to read
+    /// the two attribute shapes uniformly. The <see cref="DynamicallyAccessedMembersAttribute"/> annotation
+    /// must match the interface declaration, or trimming reports IL2093.
+    /// </remarks>
     [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
-    public Type FilterType => typeof(TFilter);
+    Type ITestFilterProviderAttribute.FilterType => typeof(TFilter);
 }
 
 #endif
