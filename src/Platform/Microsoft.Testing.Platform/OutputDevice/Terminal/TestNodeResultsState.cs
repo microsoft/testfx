@@ -23,6 +23,11 @@ internal sealed class TestNodeResultsState
     // Reusable buffer for GetRunningTasks — cleared and rebuilt each call to avoid per-tick list allocation.
     private readonly List<TestDetailState> _runningTasksBuffer = [];
 
+    // Cache for GetSingleActiveOrSummaryTask: avoids re-formatting the summary string on every render tick
+    // when the count of running tests hasn't changed.
+    private int _cachedSummaryCount = -1;
+    private string _cachedSummaryText = string.Empty;
+
     public int Count => _testNodeProgressStates.Count;
 
     public void AddRunningTestNode(int id, string uid, string name, IStopwatch stopwatch) => _testNodeProgressStates[uid] = new TestDetailState(id, stopwatch, name);
@@ -62,7 +67,13 @@ internal sealed class TestNodeResultsState
             return first;
         }
 
-        _summaryDetail.Text = string.Format(CultureInfo.CurrentCulture, TerminalResources.ActiveTestsRunning_FullTestsCount, count);
+        if (count != _cachedSummaryCount)
+        {
+            _cachedSummaryCount = count;
+            _cachedSummaryText = string.Format(CultureInfo.CurrentCulture, TerminalResources.ActiveTestsRunning_FullTestsCount, count);
+        }
+
+        _summaryDetail.Text = _cachedSummaryText;
         return _summaryDetail;
     }
 
