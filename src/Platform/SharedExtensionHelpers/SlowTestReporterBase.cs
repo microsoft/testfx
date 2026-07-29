@@ -77,6 +77,17 @@ internal abstract class SlowTestReporterBase : IDataConsumer, ITestSessionLifeti
                 return Task.CompletedTask;
             }
 
+            // The scan loop needs a dedicated background thread. Single-threaded WebAssembly runtimes have
+            // none: ITask.RunLongRunning throws PlatformNotSupportedException there, and scheduling the loop
+            // with Task.Run instead would not help because it could not run while the single thread executes
+            // tests, and awaiting it in OnTestSessionFinishingAsync would then hang. Slow-test surfacing is a
+            // best-effort diagnostic, so stay dormant — same decision as ShutdownProgressReporter. Checked
+            // before OnActivating so we also skip its (potentially expensive) host warm-up.
+            if (!RuntimeFeatureHelper.IsMultiThreaded)
+            {
+                return Task.CompletedTask;
+            }
+
             // Host-specific activation gate (e.g. Azure DevOps requires TF_BUILD and warms up history state).
             if (!OnActivating())
             {

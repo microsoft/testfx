@@ -19,12 +19,6 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 public sealed class TrxResultStreamingStoreTests
 {
     [TestMethod]
-    public void IsBackgroundWriterSupported_OnNonWebAssemblyHost_IsTrue()
-        => Assert.IsTrue(
-            TrxResultStreamingStore.IsBackgroundWriterSupported,
-            "The unit tests never run on browser-wasm/wasi-wasm, so the background writer must be selected by default.");
-
-    [TestMethod]
     public void Ctor_WhenBackgroundWriterUnavailable_DoesNotStartWriterThread()
     {
         using var temp = TempDirectory.Create();
@@ -40,6 +34,9 @@ public sealed class TrxResultStreamingStoreTests
     [TestMethod]
     public void Ctor_WhenBackgroundWriterAvailable_UsesBackgroundWriter()
     {
+        // The parameterless-ish public ctor resolves the mode from RuntimeFeatureHelper.IsMultiThreaded.
+        // Unit tests never run on browser-wasm/wasi-wasm, so the background writer must be selected here;
+        // this fails if the runtime probe is inverted.
         using var temp = TempDirectory.Create();
         using var store = new TrxResultStreamingStore(temp.NewFilePath(), new RealFileSystem(), new RealTask(), Mock.Of<ILogger>());
 

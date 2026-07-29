@@ -7,18 +7,14 @@ using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 
-#if !NETCOREAPP
-using Polyfills;
-#endif
-
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming;
 
 // BlockingCollection<T> is annotated [UnsupportedOSPlatform("browser")] which propagates to every
 // member access. On single-threaded WebAssembly runtimes this type never allocates the queue and never
-// starts the background writer (see IsBackgroundWriterSupported and the inline mode below), so the
-// browser-unsafe members are unreachable there. Suppress CA1416 file-scoped rather than propagating the
-// attribute through the ctor / call chain, which would force every caller to add platform guards for a
-// code path that browser never hits.
+// starts the background writer (see RuntimeFeatureHelper.IsMultiThreaded and the inline mode below), so
+// the browser-unsafe members are unreachable there. Suppress CA1416 file-scoped rather than propagating
+// the attribute through the ctor / call chain, which would force every caller to add platform guards for
+// a code path that browser never hits.
 // NOTE: When adding new code to this file, prefer to keep browser-unsafe APIs limited to the queue
 // helpers below — the suppression is intentionally broad only because BlockingCollection touches
 // every method that drains it.
@@ -71,7 +67,7 @@ internal sealed class TrxResultStreamingStore : IDisposable
     }
 
     internal TrxResultStreamingStore(string filePath, IFileSystem fileSystem, ITask task, ILogger logger, int batchSize, int flushIntervalMs)
-        : this(filePath, fileSystem, task, logger, batchSize, flushIntervalMs, IsBackgroundWriterSupported)
+        : this(filePath, fileSystem, task, logger, batchSize, flushIntervalMs, RuntimeFeatureHelper.IsMultiThreaded)
     {
     }
 
@@ -102,16 +98,9 @@ internal sealed class TrxResultStreamingStore : IDisposable
     }
 
     /// <summary>
-    /// Gets a value indicating whether the current runtime can host the dedicated writer thread. Browser and
-    /// WASI WebAssembly are single-threaded: <see cref="ITask.RunLongRunning"/> cannot create a thread and
-    /// <see cref="BlockingCollection{T}"/> waits throw <see cref="PlatformNotSupportedException"/>.
-    /// </summary>
-    internal static bool IsBackgroundWriterSupported
-        => !OperatingSystem.IsBrowser() && !OperatingSystem.IsWasi();
-
-    /// <summary>
     /// Gets a value indicating whether records are serialized synchronously on the enqueueing thread
-    /// instead of being handed to a background writer.
+    /// instead of being handed to a background writer. True on single-threaded WebAssembly runtimes,
+    /// where <see cref="RuntimeFeatureHelper.IsMultiThreaded"/> is false.
     /// </summary>
     internal bool IsInline => _queue is null;
 
