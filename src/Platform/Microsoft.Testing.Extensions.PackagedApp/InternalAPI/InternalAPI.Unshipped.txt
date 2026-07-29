@@ -13,6 +13,7 @@ Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.PackageName.get -> str
 Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.Publisher.get -> string!
 Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.ResolveApplication(string? executableFileName) -> Microsoft.Testing.Extensions.PackagedApp.AppxApplicationInfo?
 const Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.AppxManifestFileName = "AppxManifest.xml" -> string!
+const Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.MaxManifestSearchDepth = 2 -> int
 static Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.ComputePublisherId(string! publisher) -> string!
 static Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.FindManifestPath(string! startDirectory) -> string?
 static Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.GetManifestPath(string! layoutDirectory) -> string?
@@ -28,3 +29,5 @@ static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.TryGetTestHostControllerPid(System.Collections.Generic.IReadOnlyList<string!>! arguments) -> string?
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.Write(string! filePath, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, string?>>! entries) -> void
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackReader.TryApplyConnectBackEnvironment(System.Collections.Generic.IReadOnlyList<string!>! commandLineArguments) -> void
+Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostLauncher.PackagedAppTestHostLauncher(string! testApplicationDirectory, System.Func<string!, string?>! getEnvironmentVariable) -> void
+const Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostLauncher.LauncherModeEnvironmentVariable = "TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER" -> string!

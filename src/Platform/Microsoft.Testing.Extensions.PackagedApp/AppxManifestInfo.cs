@@ -27,6 +27,12 @@ internal sealed class AppxManifestInfo
     /// </summary>
     internal const string AppxManifestFileName = "AppxManifest.xml";
 
+    /// <summary>
+    /// How many ancestor directories above the starting one <see cref="FindManifestPath(string)"/> will
+    /// probe. See that method's remarks for why the search is bounded.
+    /// </summary>
+    internal const int MaxManifestSearchDepth = 2;
+
     // The alphabet Windows uses to encode the publisher hash (Douglas Crockford's base32: the digits
     // and lowercase letters with i, l, o and u removed). Must not be reordered.
     private const string PublisherHashAlphabet = "0123456789abcdefghjkmnpqrstvwxyz";
@@ -74,7 +80,7 @@ internal sealed class AppxManifestInfo
     }
 
     /// <summary>
-    /// Searches <paramref name="startDirectory"/> and each of its ancestors for an
+    /// Searches <paramref name="startDirectory"/> and a bounded number of its ancestors for an
     /// <c>AppxManifest.xml</c> and returns the path to the nearest one. A packaged app's manifest
     /// lives at the package layout root, but an <c>Application/@Executable</c> can point into a
     /// subdirectory (for example <c>bin\host.exe</c>), so the executable's own directory is not
@@ -82,14 +88,23 @@ internal sealed class AppxManifestInfo
     /// does not miss a packaged layout and fall through to <c>Process.Start</c>. Like
     /// <see cref="GetManifestPath(string)"/> this is a cheap existence probe that never parses.
     /// </summary>
+    /// <remarks>
+    /// The walk is deliberately capped at <see cref="MaxManifestSearchDepth"/> levels rather than
+    /// running to the drive root. This result decides both which app to activate and whether the
+    /// launcher takes over the run at all, so an unrelated <c>AppxManifest.xml</c> sitting in a shared
+    /// build root or a CI staging directory must not be able to classify an ordinary test app as
+    /// packaged. A real package layout keeps its manifest at most a couple of levels above the
+    /// executable.
+    /// </remarks>
     /// <param name="startDirectory">The directory to start searching from (typically the executable's directory).</param>
     /// <returns>
-    /// The full path to the nearest <c>AppxManifest.xml</c> at or above <paramref name="startDirectory"/>;
-    /// otherwise <see langword="null"/>.
+    /// The full path to the nearest <c>AppxManifest.xml</c> at or above <paramref name="startDirectory"/>
+    /// within the search depth; otherwise <see langword="null"/>.
     /// </returns>
     public static string? FindManifestPath(string startDirectory)
     {
-        for (DirectoryInfo? directory = new(startDirectory); directory is not null; directory = directory.Parent)
+        DirectoryInfo? directory = new(startDirectory);
+        for (int depth = 0; directory is not null && depth <= MaxManifestSearchDepth; directory = directory.Parent, depth++)
         {
             string? manifestPath = GetManifestPath(directory.FullName);
             if (manifestPath is not null)
