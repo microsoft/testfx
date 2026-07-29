@@ -1132,4 +1132,36 @@ The type declaring these methods should also respect the following rules:
     <value>Passing a hardcoded absolute path, or a relative path literal, directly to a filesystem-mutating 'File.*'/'Directory.*' method (for example 'File.WriteAllText' or 'Directory.CreateDirectory') targets a location shared by every other test in the assembly; relative paths additionally resolve against the process-global current directory. Under in-assembly parallelization two tests can then write to the same location concurrently. Only statically constant paths passed to a mutating API are flagged; reads, path construction, and paths built from variables are left to the parallel-safety audit skill. Prefer a unique per-test directory such as 'TestContext.TestTempDirectory'.</value>
     <comment>{Locked="File.*"}{Locked="Directory.*"}{Locked="TestContext.TestTempDirectory"}</comment>
   </data>
+  <data name="TestFilterProviderShouldBeValidTitle" xml:space="preserve">
+    <value>'[TestFilterProvider]' should reference a valid test filter type</value>
+    <comment>{Locked="[TestFilterProvider]"}</comment>
+  </data>
+  <data name="TestFilterProviderShouldBeValidDescription" xml:space="preserve">
+    <value>'[assembly: TestFilterProvider(typeof(MyFilter))]' passes the filter type as a 'Type', so the compiler accepts any type at all. The adapter validates it only when it materializes the filter, and then fails the whole run. The referenced type must be non-generic and instantiable, implement 'ITestFilter' and expose a public parameterless constructor, and at most one provider may be registered per test assembly. When targeting .NET, the generic '[assembly: TestFilterProvider&lt;MyFilter&gt;]' form enforces the interface and constructor requirements through generic constraints instead.</value>
+    <comment>{Locked="[assembly: TestFilterProvider(typeof(MyFilter))]"}{Locked="[assembly: TestFilterProvider&lt;MyFilter&gt;]"}{Locked="Type"}{Locked="ITestFilter"}</comment>
+  </data>
+  <data name="TestFilterProviderShouldBeValidMessageFormat_Generic" xml:space="preserve">
+    <value>'[TestFilterProvider]' references generic type '{0}'; the test filter type must not be generic</value>
+    <comment>{0} is the referenced type name. {Locked="[TestFilterProvider]"}</comment>
+  </data>
+  <data name="TestFilterProviderShouldBeValidMessageFormat_NotInstantiable" xml:space="preserve">
+    <value>'[TestFilterProvider]' references type '{0}', which cannot be instantiated</value>
+    <comment>{0} is the referenced type name. {Locked="[TestFilterProvider]"}</comment>
+  </data>
+  <data name="TestFilterProviderShouldBeValidMessageFormat_NotATestFilter" xml:space="preserve">
+    <value>'[TestFilterProvider]' references type '{0}', which does not implement 'ITestFilter'</value>
+    <comment>{0} is the referenced type name. {Locked="[TestFilterProvider]"}{Locked="ITestFilter"}</comment>
+  </data>
+  <data name="TestFilterProviderShouldBeValidMessageFormat_NoParameterlessConstructor" xml:space="preserve">
+    <value>'[TestFilterProvider]' references type '{0}', which does not declare a public parameterless constructor</value>
+    <comment>{0} is the referenced type name. {Locked="[TestFilterProvider]"}</comment>
+  </data>
+  <data name="TestFilterProviderShouldBeValidMessageFormat_Multiple" xml:space="preserve">
+    <value>The assembly registers more than one '[TestFilterProvider]'; at most one is allowed per test assembly, so compose the filtering strategies inside a single 'ITestFilter' implementation</value>
+    <comment>{Locked="[TestFilterProvider]"}{Locked="ITestFilter"}</comment>
+  </data>
+  <data name="TestFilterProviderShouldBeValidMessageFormat_Null" xml:space="preserve">
+    <value>'[TestFilterProvider]' is given a null filter type; pass the 'ITestFilter' implementation to run, for example 'typeof(MyFilter)'</value>
+    <comment>{Locked="[TestFilterProvider]"}{Locked="ITestFilter"}{Locked="typeof(MyFilter)"}</comment>
+  </data>
 </root>

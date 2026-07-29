@@ -14,3 +14,4 @@ MSTEST0077 | Usage | Info | SharedFileSystemPathInTestAnalyzer, [Documentation](
 MSTEST0078 | Usage | Warning | DependsOnShouldBeValidAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0078)
 MSTEST0079 | Usage | Info | UseArchitectureConditionAttributeInsteadOfRuntimeCheckAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0079)
 MSTEST0080 | Usage | Info | UseCIConditionAttributeInsteadOfEnvironmentCheckAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0080)
+MSTEST0081 | Usage | Warning | TestFilterProviderShouldBeValidAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0081)
