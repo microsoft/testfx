@@ -1,9 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Combinatorial.MSTest;
+
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.TestInfrastructure;
 
 namespace MSTest.Acceptance.IntegrationTests;
 
@@ -46,9 +49,33 @@ public sealed class TestFilterProviderRegistrationTests : AcceptanceTestBase<Tes
         testHostResult.AssertOutputContains("Skipped by the provider");
     }
 
+    // Reflection is only one of the metadata paths. Under AotSourceGeneration the adapter serves
+    // assembly attributes from a materialized set through SourceGeneratedReflectionOperations, which
+    // filters with Type.IsInstanceOfType rather than reflecting -- a genuinely different route for both
+    // the concrete-type and the interface lookup this PR introduced. Pin the same behaviour on every
+    // mode the harness runs, so the reflection-free path is exercised and not merely compiled.
+    [TestMethod]
+    [CombinatorialData]
+    public async Task TestFilterProvider_IsDiscoveredAndApplied_UnderEveryMetadataMode([MetadataModeValues] MetadataMode metadataMode)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent, metadataMode: metadataMode);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 1);
+        testHostResult.AssertOutputContains("Skipped by the provider");
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string ProjectName = "TestFilterProviderRegistration";
+
+        // AotSourceGeneration is opt-in because it has not been validated across the whole corpus, but it
+        // is the only mode that publishes a materialized assembly-attribute set -- exactly what the
+        // provider lookup reads -- so this asset builds and runs against it.
+        protected override IReadOnlyList<MetadataMode> SourceGenMetadataModes { get; }
+            = [MetadataMode.SourceGeneration, MetadataMode.AotSourceGeneration];
 
         public string ProjectPath => GetAssetPath(ProjectName);
 
