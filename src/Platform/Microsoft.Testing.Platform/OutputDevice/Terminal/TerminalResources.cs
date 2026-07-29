@@ -191,15 +191,15 @@ internal static partial class TerminalResources
 
     internal static string @TerminalProgressSlowTest => GetResourceString("TerminalProgressSlowTest");
 
+    internal static string @TerminalShowFlakyTestsOptionDescription => GetResourceString("TerminalShowFlakyTestsOptionDescription");
+
+    internal static string @TerminalShowFlakyTestsOptionInvalidArgument => GetResourceString("TerminalShowFlakyTestsOptionInvalidArgument");
+
     internal static string @TerminalShowOutputOptionInvalidArgument => GetResourceString("TerminalShowOutputOptionInvalidArgument");
 
     internal static string @TerminalShowSlowestTestsOptionDescription => GetResourceString("TerminalShowSlowestTestsOptionDescription");
 
     internal static string @TerminalShowSlowestTestsOptionInvalidArgument => GetResourceString("TerminalShowSlowestTestsOptionInvalidArgument");
-
-    internal static string @TerminalShowFlakyTestsOptionDescription => GetResourceString("TerminalShowFlakyTestsOptionDescription");
-
-    internal static string @TerminalShowFlakyTestsOptionInvalidArgument => GetResourceString("TerminalShowFlakyTestsOptionInvalidArgument");
 
     internal static string @TerminalShowStderrOptionDescription => GetResourceString("TerminalShowStderrOptionDescription");
 

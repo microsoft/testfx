@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under dual-license. See LICENSE.PLATFORMTOOLS.txt file in the project root for full license information.
 
 using Microsoft.Testing.Platform.IPC;
@@ -7,18 +7,29 @@ using Microsoft.Testing.Platform.IPC.Serializers;
 namespace Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers;
 
 /// <summary>
-/// Reports one attempt's outcome tally back to the retry orchestrator at the end of its test session.
+/// Reports one attempt's outcome tally back to the retry orchestrator at the end of its test session, together with
+/// the tests it was asked to retry that actually recovered.
 /// </summary>
 /// <remarks>
 /// The orchestrator is the only component that sees every attempt, so it is the only one that can summarize the run
 /// as a whole. It therefore needs the full breakdown rather than just a total, because the per-attempt summaries are
 /// suppressed in favour of the single retry summary.
 /// <para>
+/// The counts are per <em>result</em>, matching what the platform run summary reports, so that a folded data-driven
+/// test (several results sharing one test node uid) contributes one unit per data row exactly as it does there.
+/// </para>
+/// <para>
+/// <see cref="RecoveredTestUids"/> is reported explicitly rather than inferred by the orchestrator as "was retried
+/// and is absent from the failed set". That inference silently treats a test that never ran — because the attempt
+/// crashed, was cancelled, or matched no filter — as having recovered. Only the attempt itself knows which retried
+/// tests genuinely passed. The list is bounded by the retry set, so it stays small even for a large suite.
+/// </para>
+/// <para>
 /// Both ends of this pipe are always the same build — the orchestrator relaunches its own executable for every
 /// attempt — so the payload can be extended without a protocol-compatibility window.
 /// </para>
 /// </remarks>
-internal sealed class TestRunCountsRequest(int passedTests, int failedTests, int skippedTests) : IRequest
+internal sealed class TestRunCountsRequest(int passedTests, int failedTests, int skippedTests, string[] recoveredTestUids, string[] skippedRetriedTestUids) : IRequest
 {
     public int PassedTests { get; } = passedTests;
 
@@ -27,13 +38,27 @@ internal sealed class TestRunCountsRequest(int passedTests, int failedTests, int
     public int SkippedTests { get; } = skippedTests;
 
     /// <summary>
-    /// Gets the number of tests that actually executed (skipped excluded), which is what the failure-threshold
-    /// policy measures its percentage against.
+    /// Gets the uids of the tests this attempt was asked to retry and which passed. Empty for the first attempt,
+    /// which is not retrying anything.
+    /// </summary>
+    public string[] RecoveredTestUids { get; } = recoveredTestUids;
+
+    /// <summary>
+    /// Gets the uids of the tests this attempt was asked to retry and which came back skipped. They stop being
+    /// retried (only failures are), so their outcome for the run changed from failed to skipped and the suite's
+    /// skipped count has to follow, otherwise they would silently be counted as having succeeded.
+    /// </summary>
+    public string[] SkippedRetriedTestUids { get; } = skippedRetriedTestUids;
+
+    /// <summary>
+    /// Gets the number of test results that actually executed (skipped excluded), which is the denominator the
+    /// failure-threshold policy measures its percentage against.
     /// </summary>
     public int ExecutedTests => PassedTests + FailedTests;
 
     /// <summary>
-    /// Gets the total number of tests including skipped ones, matching what the platform run summary calls "total".
+    /// Gets the total number of test results including skipped ones, matching what the platform run summary calls
+    /// "total".
     /// </summary>
     public int TotalTests => PassedTests + FailedTests + SkippedTests;
 }
@@ -47,7 +72,9 @@ internal sealed class TestRunCountsRequestSerializer : NamedPipeSerializer<TestR
         int passed = ReadInt(stream);
         int failed = ReadInt(stream);
         int skipped = ReadInt(stream);
-        return new(passed, failed, skipped);
+        string[] recovered = ReadUids(stream);
+        string[] skippedRetried = ReadUids(stream);
+        return new(passed, failed, skipped, recovered, skippedRetried);
     }
 
     protected override void SerializeCore(TestRunCountsRequest objectToSerialize, Stream stream)
@@ -55,5 +82,28 @@ internal sealed class TestRunCountsRequestSerializer : NamedPipeSerializer<TestR
         WriteInt(stream, objectToSerialize.PassedTests);
         WriteInt(stream, objectToSerialize.FailedTests);
         WriteInt(stream, objectToSerialize.SkippedTests);
+        WriteUids(stream, objectToSerialize.RecoveredTestUids);
+        WriteUids(stream, objectToSerialize.SkippedRetriedTestUids);
+    }
+
+    private static string[] ReadUids(Stream stream)
+    {
+        int count = ReadInt(stream);
+        string[] uids = new string[count];
+        for (int i = 0; i < count; i++)
+        {
+            uids[i] = ReadString(stream);
+        }
+
+        return uids;
+    }
+
+    private static void WriteUids(Stream stream, string[] uids)
+    {
+        WriteInt(stream, uids.Length);
+        foreach (string uid in uids)
+        {
+            WriteString(stream, uid);
+        }
     }
 }

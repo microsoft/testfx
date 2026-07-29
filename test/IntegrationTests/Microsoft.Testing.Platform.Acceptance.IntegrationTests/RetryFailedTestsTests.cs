@@ -110,6 +110,44 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         }
     }
 
+    /// <summary>
+    /// A test that fails and then comes back <em>skipped</em> on the retry has not recovered, so it must not be
+    /// counted or listed as flaky. This guards the accounting against inferring recovery from "was retried and is
+    /// no longer in the failed set", which also matches a test that never produced a passing result.
+    /// </summary>
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task RetryFailedTests_WhenRetriedTestIsSkipped_IsNotReportedAsFlaky(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--retry-failed-tests 1 --results-directory {resultDirectory}",
+            new()
+            {
+                { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
+                { "METHOD1", "1" },
+                { "FAIL", "1" },
+                { "SKIPONRETRY", "1" },
+                { "RESULTDIR", resultDirectory },
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        // The retry produced no failing result, so the run ends green — but the test never passed either.
+        testHostResult.AssertOutputContains("Retry summary:");
+        testHostResult.AssertOutputContains("  retried: 1 test(s), 1 extra run(s)");
+        testHostResult.AssertOutputDoesNotContain("  flaky:");
+        testHostResult.AssertOutputDoesNotContain("Flaky tests:");
+        testHostResult.AssertOutputDoesNotContain("TestMethod1 (failed -> passed)");
+
+        // Its outcome moved from failed to skipped, so the counts must follow: 3 total, 2 that really passed and
+        // the one that ended skipped. Counting it as succeeded would be the same error in a different place.
+        testHostResult.AssertOutputContains("  total: 3");
+        testHostResult.AssertOutputContains("  failed: 0");
+        testHostResult.AssertOutputContains("  succeeded: 2");
+        testHostResult.AssertOutputContains("  skipped: 1");
+    }
+
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task RetryFailedTests_WithDelay_StripsDelayFromChildArgs(string tfm)
@@ -525,7 +563,16 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
         if (IsIncluded(uidFilter, treeNodeFilter, "1", "TestMethod1"))
         {
-            if (TestMethod1(fail, resultDir, crash))
+            // SKIPONRETRY makes TestMethod1 fail on the first attempt and come back SKIPPED on the retry. A skipped
+            // test has not recovered, so it must not be counted or listed as flaky. Inferring recovery from
+            // "no longer in the failed set" would wrongly report it as 'failed -> passed'.
+            bool skipOnRetry = Environment.GetEnvironmentVariable("SKIPONRETRY") == "1" && uidFilter is not null;
+            if (skipOnRetry)
+            {
+                await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+                    new TestNode() { Uid = "1", DisplayName = "TestMethod1", Properties = new(new SkippedTestNodeStateProperty(), testMethod1Identifier) }));
+            }
+            else if (TestMethod1(fail, resultDir, crash))
             {
                 await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
                     new TestNode() { Uid = "1", DisplayName = "TestMethod1", Properties = new(PassedTestNodeStateProperty.CachedInstance, testMethod1Identifier) }));

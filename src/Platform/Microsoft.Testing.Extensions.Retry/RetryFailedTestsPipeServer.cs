@@ -48,14 +48,46 @@ internal sealed class RetryFailedTestsPipeServer : IDisposable
     /// </remarks>
     public Dictionary<string, string> FailedTests { get; } = [];
 
+    /// <summary>
+    /// Gets the number of test <em>results</em> that executed (skipped excluded) in this attempt.
+    /// </summary>
+    /// <remarks>
+    /// Counted per result rather than per uid, matching the platform run summary, so that a folded data-driven test
+    /// contributes one unit per data row. <see cref="FailedTests"/> is keyed by uid because it drives the retry
+    /// filter; the two must therefore never be combined into a single ratio without care — see
+    /// <see cref="FailedTestResults"/>.
+    /// </remarks>
     public int TotalTestRan { get; private set; }
 
     /// <summary>
-    /// Gets the number of tests skipped in this attempt. Reported separately from <see cref="TotalTestRan"/> (which
-    /// counts only executed tests, as the failure-threshold policy requires) so the summary's "total" can include
-    /// them and match the platform run summary.
+    /// Gets the number of failing test <em>results</em> in this attempt, i.e. the same unit as
+    /// <see cref="TotalTestRan"/>. The failure-threshold policy uses this pair so its percentage stays consistent.
+    /// </summary>
+    public int FailedTestResults { get; private set; }
+
+    /// <summary>
+    /// Gets the number of skipped test results in this attempt. Reported separately from <see cref="TotalTestRan"/>
+    /// (which counts only executed tests, as the failure-threshold policy requires) so the summary's "total" can
+    /// include them and match the platform run summary.
     /// </summary>
     public int SkippedTests { get; private set; }
+
+    /// <summary>
+    /// Gets the uids of the tests this attempt was asked to retry which genuinely passed.
+    /// </summary>
+    public IReadOnlyList<string> RecoveredTests { get; private set; } = [];
+
+    /// <summary>
+    /// Gets the uids of the tests this attempt was asked to retry which came back skipped.
+    /// </summary>
+    public IReadOnlyList<string> SkippedRetriedTests { get; private set; } = [];
+
+    /// <summary>
+    /// Gets a value indicating whether the attempt reported its counts at all. An attempt that dies before its test
+    /// session finishes (crash, FailFast, abort) never sends them, leaving the counts at zero — which must not be
+    /// mistaken for "a run of zero tests".
+    /// </summary>
+    public bool CountsReported { get; private set; }
 
     public Task WaitForConnectionAsync(CancellationToken cancellationToken)
         => _singleConnectionNamedPipeServer.WaitConnectionAsync(cancellationToken);
@@ -80,7 +112,11 @@ internal sealed class RetryFailedTestsPipeServer : IDisposable
         if (request is TestRunCountsRequest testRunCounts)
         {
             TotalTestRan = testRunCounts.ExecutedTests;
+            FailedTestResults = testRunCounts.FailedTests;
             SkippedTests = testRunCounts.SkippedTests;
+            RecoveredTests = testRunCounts.RecoveredTestUids;
+            SkippedRetriedTests = testRunCounts.SkippedRetriedTestUids;
+            CountsReported = true;
             return Task.FromResult((IResponse)VoidResponse.CachedInstance);
         }
 

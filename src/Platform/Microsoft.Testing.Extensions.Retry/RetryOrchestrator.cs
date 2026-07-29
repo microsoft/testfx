@@ -116,17 +116,21 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
         string retryRootFolder = CreateRetriesDirectory(resultDirectory);
         bool retryInterrupted = false;
 
-        // Retry summary accounting (single-assembly). The orchestrator learns each attempt's failed test set (uid ->
-        // display name) and the total number of tests that ran, so it can reconcile the attempts into one headline
-        // with exact, nameable sets rather than count arithmetic:
-        //   retried = union of every attempt-that-was-followed-by-another attempt's failed set
-        //   flaky   = retried minus the final attempt's failed set
-        // The richer passed/skipped split stays in the per-attempt child summaries.
+        // Retry summary accounting (single-assembly). The orchestrator is the only component that observes every
+        // attempt, so it reconciles them into one headline:
+        //   retried = union of the failed sets of the attempts that were followed by another attempt
+        //   flaky   = union of the tests each attempt reported as recovered
+        // Recovery is reported by the attempt that observed it rather than inferred here as "retried and no longer
+        // in the failed set": that inference also matches a test which never ran, so an attempt that crashed or
+        // matched no filter would silently promote its pending tests to "passed" and "flaky".
         var orchestrationStopwatch = Stopwatch.StartNew();
         int suiteTotalTests = 0;
         int suiteSkippedTests = 0;
+        bool suiteCountsKnown = false;
         Dictionary<string, string> retriedTests = [];
-        Dictionary<string, string> finalFailedTests = [];
+        Dictionary<string, string> flakyTestsByUid = [];
+        HashSet<string> retriedThenSkipped = [];
+        int finalFailedTestResults = 0;
         int retriedExecutions = 0;
 
         // Parse the delay once before the loop since command-line options don't change.
@@ -194,9 +198,40 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                 // The first attempt runs the full suite, so its counts are the suite's. Skipped tests are tracked
                 // separately because a retry attempt re-runs only the failed set, so no later attempt can observe
                 // them — and because "total" must include them to line up with the platform run summary.
+                //
+                // An attempt that dies before its session finishes never reports counts, leaving them at zero. That
+                // is recorded rather than presented as a suite of zero tests, which would print a total smaller
+                // than the failed count.
+                suiteCountsKnown = retryFailedTestsPipeServer.CountsReported;
                 suiteTotalTests = retryFailedTestsPipeServer.TotalTestRan + retryFailedTestsPipeServer.SkippedTests;
                 suiteSkippedTests = retryFailedTestsPipeServer.SkippedTests;
             }
+
+            // Whatever this attempt recovered is final: a recovered test is not carried into the next attempt's
+            // failed set, so it is never re-run and cannot regress.
+            foreach (string recoveredUid in retryFailedTestsPipeServer.RecoveredTests)
+            {
+                if (retriedTests.TryGetValue(recoveredUid, out string? displayName))
+                {
+                    flakyTestsByUid[recoveredUid] = displayName;
+                }
+            }
+
+            // A retried test that came back skipped also stops being retried, but it never passed. Its outcome for
+            // the run therefore moved from failed to skipped, and the suite's skipped count — captured on the first
+            // attempt, where the test was still failing — has to absorb it so the derived succeeded count stays
+            // honest.
+            foreach (string skippedUid in retryFailedTestsPipeServer.SkippedRetriedTests)
+            {
+                if (retriedTests.ContainsKey(skippedUid))
+                {
+                    retriedThenSkipped.Add(skippedUid);
+                }
+            }
+
+            // The run's failing count always reflects the most recent attempt, which re-ran every test still
+            // failing. Counted per result so it stays in the same unit as the total.
+            finalFailedTestResults = retryFailedTestsPipeServer.FailedTestResults;
 
             if (attemptResult.ExitCode != (int)ExitCode.Success)
             {
@@ -204,15 +239,8 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                 {
                     await outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteFailedWithWrongExitCode, attemptResult.ExitCode)), cancellationToken).ConfigureAwait(false);
                     retryInterrupted = true;
-
-                    // Still record what this attempt managed to report, so the summary below describes the run that
-                    // actually happened instead of silently falling back to the previous attempt's numbers. A fresh
-                    // pipe server (and dictionary) is created per attempt, so holding the reference is safe.
-                    finalFailedTests = retryFailedTestsPipeServer.FailedTests;
                     break;
                 }
-
-                finalFailedTests = retryFailedTestsPipeServer.FailedTests;
 
                 // Check thresholds only on the first attempt (computed against the full suite).
                 if (attemptCount == 1 && await RetryThresholdPolicy.EvaluateAsync(_commandLineOptions, this, outputDevice, retryFailedTestsPipeServer, cancellationToken).ConfigureAwait(false))
@@ -249,7 +277,6 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
             }
             else
             {
-                finalFailedTests = [];
                 break;
             }
         }
@@ -259,16 +286,7 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
         // The summary is reported on every path, including the ones that stopped retrying early: knowing what the
         // run ended up with (and which tests were flaky) is exactly as useful when the threshold policy disabled
         // retrying or an attempt exited unexpectedly as when the retry loop ran to completion.
-        // "flaky" = retried at some point, but not failing at the end — the headline value of the retry feature.
-        List<string> flakyTests = [];
-        foreach (KeyValuePair<string, string> retriedTest in retriedTests)
-        {
-            if (!finalFailedTests.ContainsKey(retriedTest.Key))
-            {
-                flakyTests.Add(retriedTest.Value);
-            }
-        }
-
+        List<string> flakyTests = [.. flakyTestsByUid.Values];
         flakyTests.Sort(StringComparer.Ordinal);
 
         await RetrySummaryReporter.ReportSummaryAsync(
@@ -279,9 +297,10 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                 ExitCodes = exitCodes,
                 AttemptCount = attemptCount,
                 UserMaxRetryCount = userMaxRetryCount,
+                SuiteCountsKnown = suiteCountsKnown,
                 SuiteTotalTests = suiteTotalTests,
-                SuiteSkippedTests = suiteSkippedTests,
-                FinalFailedTests = finalFailedTests.Count,
+                SuiteSkippedTests = suiteSkippedTests + retriedThenSkipped.Count,
+                FinalFailedTests = finalFailedTestResults,
                 RetriedTests = retriedTests.Count,
                 RetriedExecutions = retriedExecutions,
                 FlakyTests = flakyTests,
