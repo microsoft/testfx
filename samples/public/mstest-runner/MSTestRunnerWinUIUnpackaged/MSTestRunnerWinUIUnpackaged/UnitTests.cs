@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
@@ -10,11 +12,13 @@ namespace MSTestRunnerWinUIUnpackaged;
 [TestClass]
 public partial class UnitTest1
 {
+    /// <summary>
+    /// Asserts the property that defines this sample: the app runs with no MSIX package identity.
+    /// <c>Package.Current</c> is only available to a packaged app and throws otherwise.
+    /// </summary>
     [TestMethod]
-    public void TestMethod1()
-#pragma warning disable MSTEST0032 // Assertion condition is always true
-        => Assert.AreEqual(0, 0);
-#pragma warning restore MSTEST0032 // Assertion condition is always true
+    public void AppRunsWithoutPackageIdentity()
+        => Assert.ThrowsExactly<InvalidOperationException>(() => _ = Windows.ApplicationModel.Package.Current);
 
     /// <summary>
     /// A plain [TestMethod] that touches a Windows App SDK WinRT type. In an unpackaged app this only
