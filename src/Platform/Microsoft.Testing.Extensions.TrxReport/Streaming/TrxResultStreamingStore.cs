@@ -21,10 +21,10 @@ namespace Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming;
 #pragma warning disable CA1416
 
 /// <summary>
-/// Append-only store that streams <see cref="TrxTestResult"/> records to a sidecar file. Producers (test
-/// result consumers) enqueue without blocking on disk I/O: a single background writer task drains a
-/// <see cref="BlockingCollection{T}"/>, batching records by size or time window and flushing to disk so a
-/// crash after the flush leaves a recoverable file on disk.
+/// Append-only store that streams <see cref="TrxTestResult"/> records to a sidecar file. On multithreaded
+/// runtimes, producers (test result consumers) enqueue without blocking on disk I/O: a single background
+/// writer task drains a <see cref="BlockingCollection{T}"/>, batching records by size or time window and
+/// flushing to disk so a crash after the flush leaves a recoverable file on disk.
 /// </summary>
 /// <remarks>
 /// Single-threaded WebAssembly runtimes (<c>browser-wasm</c>, <c>wasi-wasm</c>) cannot create the dedicated

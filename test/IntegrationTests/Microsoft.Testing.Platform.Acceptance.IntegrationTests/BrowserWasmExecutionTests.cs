@@ -18,7 +18,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 /// <c>node</c> via the same loader, which is what this test uses instead of a real browser.
 /// </para>
 ///
-/// <para>Seven complementary assertions, mirroring <see cref="WasmExecutionTests"/>:</para>
+/// <para>Eight complementary assertions, mirroring <see cref="WasmExecutionTests"/>:</para>
 /// <list type="number">
 ///   <item>
 ///     <see cref="BrowserWasmBuild_GeneratesTestingPlatformEntryPoint"/> builds for
