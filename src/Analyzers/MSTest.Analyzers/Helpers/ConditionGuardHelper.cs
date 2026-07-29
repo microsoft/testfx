@@ -25,7 +25,8 @@ internal static class ConditionGuardHelper
     /// <param name="assertSymbol">The <c>Assert</c> type symbol.</param>
     /// <returns><see langword="true"/> when the guard can be replaced by a condition attribute.</returns>
     public static bool IsSkipGuard(IConditionalOperation conditionalOperation, IBlockOperation? methodBody, INamedTypeSymbol assertSymbol)
-        => HasNoElseBranch(conditionalOperation)
+        => HasNoDirectives(conditionalOperation)
+        && HasNoElseBranch(conditionalOperation)
         && IsFirstStatementOfMethodBody(conditionalOperation, methodBody)
         && IsEarlyReturnOrAssertInconclusive(conditionalOperation.WhenTrue, assertSymbol);
 
@@ -51,6 +52,12 @@ internal static class ConditionGuardHelper
 
         return holder;
     }
+
+    private static bool HasNoDirectives(IConditionalOperation conditionalOperation)
+        // A guard wrapped in (or containing) preprocessor directives can't be lifted into an attribute: removing it
+        // would take its leading '#if' with it and orphan the '#endif', and the attribute would apply to every build
+        // configuration instead of the conditional one.
+        => !conditionalOperation.Syntax.ContainsDirectives;
 
     private static bool HasNoElseBranch(IConditionalOperation conditionalOperation)
         => conditionalOperation.WhenFalse is null or IBlockOperation { Operations.Length: 0 };

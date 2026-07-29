@@ -347,6 +347,39 @@ public sealed class UseCIConditionAttributeInsteadOfEnvironmentCheckAnalyzerTest
     }
 
     [TestMethod]
+    public async Task WhenGuardIsWrappedInPreprocessorDirectives_NoDiagnostic()
+    {
+        // Removing the guard would delete its leading '#if' and orphan the '#endif', and the generated attribute
+        // would apply to every build configuration rather than the conditional one. The check lives in the shared
+        // 'ConditionGuardHelper', so this also covers MSTEST0079. It can't be asserted from the MSTEST0079 test class:
+        // that class is '#if NET'-gated, and directives inside a raw string literal in a disabled region are still
+        // lexed as directives and get normalized to column 0, which breaks the literal.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    #if !SKIP_CI_GUARD
+                    if (Environment.GetEnvironmentVariable("CI") == null)
+                    {
+                        return;
+                    }
+                    #endif
+
+                    Assert.IsTrue(true);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
     public async Task WhenVariableIsAProviderSpecificFlag_NoDiagnostic()
     {
         string code = """
