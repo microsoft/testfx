@@ -95,6 +95,12 @@ public class TypeCacheTestFilterProviderTests : TestContainer
         filter.Should().NotBeNull().And.BeOfType<NoOpFilter>();
     }
 
+    // Pins the behaviour: with a marker whose framework predates the internal contract, discovery must
+    // still resolve the filter through the concrete attribute and must never reach the contract lookup
+    // (stubbed here to throw, as an older framework's missing type would).
+    //
+    // Note what this does NOT prove: the interface is loadable in this process, so it cannot catch the JIT
+    // eagerly *resolving* ITestFilterProviderAttribute. The test below pins that separately.
     public void GetOrLoadTestFilter_WhenNonGenericMarkerComesFromFrameworkWithoutInternalContract_UsesConcreteAttributeLookup()
     {
         const string AssemblySource = nameof(GetOrLoadTestFilter_WhenNonGenericMarkerComesFromFrameworkWithoutInternalContract_UsesConcreteAttributeLookup);
@@ -120,6 +126,30 @@ public class TypeCacheTestFilterProviderTests : TestContainer
         mockReflectionOperations.Verify(
             operations => operations.GetCustomAttributes(assembly, typeof(ITestFilterProviderAttribute)),
             Times.Never);
+    }
+
+    // What actually protects the old-framework path is structural: every reference to the internal contract
+    // lives in its own method that the JIT is forbidden to inline back into the caller, so a framework
+    // without the type never has to resolve it. An in-process test cannot observe that (the type is
+    // loadable here), so pin the isolation itself -- dropping the attribute fails here rather than only in
+    // a mismatched-package install, which nothing else in the suite would catch.
+    public void GenericProviderHelpers_AreNotInlined_SoAnOlderFrameworkNeverResolvesTheContract()
+    {
+        string[] isolatedMethods =
+        [
+            "GetGenericTestFilterProviderAttributes",
+            "InstantiateTestFilterFromGenericProvider",
+        ];
+
+        foreach (string methodName in isolatedMethods)
+        {
+            MethodInfo? method = typeof(TypeCache).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Static);
+
+            method.Should().NotBeNull($"'{methodName}' is what keeps the ITestFilterProviderAttribute reference out of the non-generic discovery path");
+            (method!.MethodImplementationFlags & MethodImplAttributes.NoInlining).Should().Be(
+                MethodImplAttributes.NoInlining,
+                $"inlining '{methodName}' would pull the ITestFilterProviderAttribute reference back into its caller and make an older MSTest.TestFramework resolve a type it does not have");
+        }
     }
 
     // The metadata probe has to recognize every supported marker shape without instantiating the attribute.
