@@ -380,9 +380,12 @@ that the publisher reads back from the wasm virtual filesystem, completing the r
 
 **Separate wasm concern — threading, not HTTP.** `--report-azdo --report-azdo-slow-test-history <days>`
 additionally starts the shared slow-test scan loop (`SlowTestReporterBase`), which calls
-`ITask.RunLongRunning`. Single-threaded wasm cannot create that thread, so that specific option
-combination is governed by the platform's `RuntimeFeatureHelper.IsMultiThreaded` probe rather than by
-anything in this fix. Everything else in the extension is reachable on `browser-wasm`.
+`ITask.RunLongRunning`. Single-threaded wasm cannot create that thread, and `SlowTestReporterBase` does
+not currently consult `RuntimeFeatureHelper.IsMultiThreaded` before starting the loop, so that option
+combination is still unsupported here and is left to a separate change. It fails softly rather than
+loudly: `OnTestSessionStartingAsync` catches the exception and logs it, so the scan loop silently never
+runs and the reporter is left marked active — visible only under `--diagnostic`. Everything else in the
+extension is reachable on `browser-wasm`.
 
 **Not verified.** Nobody has run this from a real browser tab against `dev.azure.com`. CORS is not
 expected to be the blocker: `dev.azure.com` answers the preflight for these calls with

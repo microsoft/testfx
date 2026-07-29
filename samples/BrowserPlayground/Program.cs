@@ -21,8 +21,11 @@ testApplicationBuilder.AddAppInsightsTelemetryProvider();
 //   would let a user pass --report-trx and hit PlatformNotSupportedException.
 // - AddHangDumpProvider / AddCrashDumpProvider: dumps rely on System.Diagnostics.Process,
 //   which is unsupported in the browser sandbox (see #8557).
-// - AddAzureDevOpsProvider: its HttpClient sets AutomaticDecompression, which the browser
-//   HttpClientHandler does not support.
+// - AddAzureDevOpsProvider: the AutomaticDecompression blocker is fixed (#10313 — the opt-in is
+//   now skipped where the handler does not support it), but registering it would expose
+//   --report-azdo-slow-test-history, whose scan loop still calls ITask.RunLongRunning
+//   unconditionally (see SlowTestReporterBase). See the README section "Azure DevOps report on
+//   browser-wasm".
 // Threading is not an issue for the registered providers: the platform detects the
 // single-threaded wasm runtime (RuntimeFeatureHelper.IsMultiThreaded == false) and runs the
 // pipeline inline, exactly as it does on wasi-wasm.
