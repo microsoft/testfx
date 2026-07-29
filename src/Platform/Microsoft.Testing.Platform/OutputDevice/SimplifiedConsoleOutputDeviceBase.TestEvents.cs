@@ -106,11 +106,11 @@ internal abstract partial class SimplifiedConsoleOutputDeviceBase
         ConsoleError(builder.ToString());
     }
 
-    public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
+    public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
         if (cancellationToken.IsCancellationRequested)
         {
-            return Task.CompletedTask;
+            return;
         }
 
         switch (value)
@@ -122,6 +122,7 @@ internal abstract partial class SimplifiedConsoleOutputDeviceBase
                 // field access, so the win here is code-path simplification and consistency with the established single-pass pattern.
                 TimingProperty? timingProp = null;
                 TestNodeStateProperty? nodeStateProp = null;
+                List<FileArtifactProperty>? fileArtifacts = null;
                 bool executionCompleted = false;
                 PropertyBag.PropertyBagEnumerator enumerator = testNodeStateChanged.TestNode.Properties.GetStructEnumerator();
                 while (enumerator.MoveNext())
@@ -130,6 +131,7 @@ internal abstract partial class SimplifiedConsoleOutputDeviceBase
                     {
                         case TimingProperty t: timingProp = t; break;
                         case TestNodeStateProperty s: nodeStateProp = s; break;
+                        case FileArtifactProperty f: (fileArtifacts ??= []).Add(f); break;
                         case TestNodeExecutionCompletedProperty: executionCompleted = true; break;
                     }
                 }
@@ -155,12 +157,12 @@ internal abstract partial class SimplifiedConsoleOutputDeviceBase
                     case InProgressTestNodeStateProperty:
                         if (DisplayActiveTestProgress)
                         {
-                            return DisplayAsync(
+                            await DisplayAsync(
                                 this,
                                 new ProgressMessageOutputDeviceData(
                                     testNodeStateChanged.TestNode.Uid.Value,
                                     $"running {testNodeStateChanged.TestNode.DisplayName}"),
-                                cancellationToken);
+                                cancellationToken).ConfigureAwait(false);
                         }
 
                         break;
@@ -200,32 +202,34 @@ internal abstract partial class SimplifiedConsoleOutputDeviceBase
 
                 if (testCompleted && DisplayActiveTestProgress)
                 {
-                    return DisplayAsync(
+                    await DisplayAsync(
                         this,
                         new ProgressMessageOutputDeviceData(testNodeStateChanged.TestNode.Uid.Value, message: null),
-                        cancellationToken);
+                        cancellationToken).ConfigureAwait(false);
                 }
 
-                // Tracked by https://github.com/microsoft/testfx/issues/8086:
-                // surface per-test file artifacts in the simplified console output once the format is defined.
+                if (fileArtifacts is not null)
+                {
+                    foreach (FileArtifactProperty artifact in fileArtifacts)
+                    {
+                        await DisplayArtifactAsync(artifact.FileInfo, artifact.DisplayName, cancellationToken).ConfigureAwait(false);
+                    }
+                }
+
                 break;
 
-            case SessionFileArtifact:
-                {
-                    // Tracked by https://github.com/microsoft/testfx/issues/8086:
-                    // session-level artifacts are currently ignored by this output device.
-                }
-
+            case SessionFileArtifact sessionFileArtifact:
+                await DisplayArtifactAsync(sessionFileArtifact.FileInfo, sessionFileArtifact.DisplayName, cancellationToken).ConfigureAwait(false);
                 break;
-            case FileArtifact:
-                {
-                    // Tracked by https://github.com/microsoft/testfx/issues/8086:
-                    // file artifacts are currently ignored by this output device.
-                }
-
+            case FileArtifact fileArtifact:
+                await DisplayArtifactAsync(fileArtifact.FileInfo, fileArtifact.DisplayName, cancellationToken).ConfigureAwait(false);
                 break;
         }
-
-        return Task.CompletedTask;
     }
+
+    // Report artifacts as soon as they arrive instead of buffering them for the run summary. A browser or
+    // WASI session can terminate before normal session teardown, and immediate output still tells the user
+    // which artifact was produced while DisplayAsync serializes the line with the other console output.
+    private Task DisplayArtifactAsync(FileInfo fileInfo, string displayName, CancellationToken cancellationToken)
+        => DisplayAsync(this, new TextOutputDeviceData($"{displayName}: {fileInfo.FullName}"), cancellationToken);
 }

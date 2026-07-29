@@ -18,7 +18,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 /// <c>node</c> via the same loader, which is what this test uses instead of a real browser.
 /// </para>
 ///
-/// <para>Seven complementary assertions, mirroring <see cref="WasmExecutionTests"/>:</para>
+/// <para>Eight complementary assertions, mirroring <see cref="WasmExecutionTests"/>:</para>
 /// <list type="number">
 ///   <item>
 ///     <see cref="BrowserWasmBuild_GeneratesTestingPlatformEntryPoint"/> builds for
@@ -40,6 +40,12 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 ///     reported as failed. Skipped (inconclusive) only when the <c>wasm-tools</c> workload or
 ///     <c>node</c> is unavailable; otherwise publish must succeed and the run must exit with
 ///     <c>AtLeastOneTestFailed</c>.
+///   </item>
+///   <item>
+///     <see cref="BrowserWasmExecution_TrxReport_RunsWithoutPlatformNotSupported"/> runs the same MSTest
+///     project with <c>--report-trx</c>, guarding the inline TRX streaming store that replaces the
+///     dedicated writer thread and the blocking queue on single-threaded WebAssembly runtimes, and
+///     asserts the generated TRX artifact is reported in Node output.
 ///   </item>
 ///   <item>
 ///     <see cref="BrowserWasmExecution_CustomHostRunsExistingTestAssemblyWithoutCompetingEntryPoint"/>
@@ -1016,6 +1022,50 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
     }
 
     [TestMethod]
+    public async Task BrowserWasmExecution_TrxReport_RunsWithoutPlatformNotSupported()
+    {
+        // --report-trx used to crash mid-run on browser-wasm: the TRX streaming store handed its writer
+        // to ITask.RunLongRunning (a dedicated thread) and drained a BlockingCollection<T>, both
+        // unsupported on the single-threaded WebAssembly runtime. The store now serializes inline there.
+        string? node = WasmRuntime.LocateNode();
+        if (node is null)
+        {
+            Assert.Inconclusive(WasmRuntime.NodeUnavailableMessage);
+            return;
+        }
+
+        using TestAsset generator = await GenerateBrowserWasmAssetAsync();
+        string trxFileName = $"{Guid.NewGuid():N}.trx";
+
+        (int exitCode, _, _, string combined) = await PublishAndRunUnderNodeAsync(
+            generator, node, $"--report-trx --report-trx-filename {trxFileName}");
+
+        Assert.IsFalse(
+            combined.Contains("PlatformNotSupportedException", StringComparison.Ordinal)
+                || combined.Contains("Arg_PlatformNotSupported", StringComparison.Ordinal),
+            $"--report-trx must not hit a PlatformNotSupportedException under browser-wasm.{Environment.NewLine}{combined}");
+
+        // The TRX consumer sees every test result, so a faulted store would also break the run summary.
+        Assert.IsTrue(
+            combined.Contains("succeeded: 2", StringComparison.Ordinal) && combined.Contains("failed: 1", StringComparison.Ordinal),
+            $"Expected the browser-wasm run summary to be unaffected by TRX reporting.{Environment.NewLine}{combined}");
+
+        string? trxArtifactLine = combined.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+            .FirstOrDefault(line => line.EndsWith(trxFileName, StringComparison.Ordinal));
+        Assert.IsNotNull(
+            trxArtifactLine,
+            $"Expected the generated TRX artifact '{trxFileName}' to be reported in Node output.{Environment.NewLine}{combined}");
+        Assert.Contains("TRX Report: ", trxArtifactLine);
+
+        // The asset has one intentionally failing test: requiring AtLeastOneTestFailed (rather than any
+        // non-zero code) keeps a TRX-generation crash from masquerading as the expected outcome.
+        Assert.AreEqual(
+            (int)ExitCode.AtLeastOneTestFailed,
+            exitCode,
+            $"Expected exit code {(int)ExitCode.AtLeastOneTestFailed} (AtLeastOneTestFailed) with --report-trx enabled.{Environment.NewLine}{combined}");
+    }
+
+    [TestMethod]
     public async Task BrowserWasmExecution_CustomHostRunsExistingTestAssemblyWithoutCompetingEntryPoint()
     {
         string? node = WasmRuntime.LocateNode();
@@ -1266,7 +1316,7 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
     // Publishes the generated browser-wasm asset, staging + booting it under Node. Only a missing
     // 'wasm-tools' workload is an acceptable skip (Inconclusive); any other publish failure is a real
     // regression and fails the test. Returns the process exit code plus captured stdout/stderr.
-    private async Task<(int ExitCode, string Output, string Error, string Combined)> PublishAndRunUnderNodeAsync(TestAsset generator, string node)
+    private async Task<(int ExitCode, string Output, string Error, string Combined)> PublishAndRunUnderNodeAsync(TestAsset generator, string node, string? arguments = null)
     {
         DotnetMuxerResult publishResult = await WasmRuntime.PublishForBrowserAsync(
             generator.TargetAssetPath, TargetFramework, TestContext.CancellationToken);
@@ -1284,7 +1334,7 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
             Directory.Exists(appBundle),
             $"Expected the browser-wasm AppBundle directory at '{appBundle}'.");
 
-        return await WasmRuntime.RunUnderNodeAsync(node, appBundle, NodeRunnerSource, TestContext.CancellationToken);
+        return await WasmRuntime.RunUnderNodeAsync(node, appBundle, NodeRunnerSource, TestContext.CancellationToken, arguments);
     }
 
     private async Task<HttpGatewayScenarioResult> RunDotnetTestHttpScenarioAsync(string node, string appBundle, string scenario)

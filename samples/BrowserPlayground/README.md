@@ -346,13 +346,21 @@ are guarded off by `OperatingSystem.IsBrowser()` in the platform:
 
 | Feature | Reason |
 | --- | --- |
-| TRX report (`--report-trx`) | `TrxDataConsumer` creates a `TrxResultStreamingStore` whose background writer uses `BlockingCollection<T>` and `ITask.RunLongRunning`, both unsupported on browser; the TRX lifecycle handlers are gated by `OperatingSystem.IsBrowser()`. |
 | Hang dump / crash dump | Rely on `System.Diagnostics.Process`, unsupported in the browser (see [#8557](https://github.com/microsoft/testfx/issues/8557)). |
-| Server mode / `dotnet test` pipe | Depends on TCP/named-pipe IPC, unavailable in the browser. |
+| Server mode (`--server jsonrpc`) and the named-pipe `--dotnet-test-pipe` transport | Depend on TCP/named-pipe IPC, unavailable in the browser. `--server dotnettestcli` itself *is* reachable through the HTTP transport (`--dotnet-test-transport http`). |
 | `--exit-on-process-exit`, wait-for-debugger | No host process model in the browser. |
 | Synchronous file-logger flush | Not supported in the browser (throws `PlatformNotSupportedException`). |
 
-That is why `Program.cs` registers only the telemetry provider (`AddAppInsightsTelemetryProvider`).
+TRX reporting (`--report-trx`) is supported by browser hosts that register the TRX provider: the streaming
+store that backs it drops its dedicated writer thread and its `BlockingCollection<T>` on single-threaded
+WebAssembly runtimes and serializes each record inline instead, producing the same on-disk format. The
+console reports the artifact's display name and virtual file-system path when it is produced. Neither a
+real browser nor the checked-in headless Node runner mounts or exports that virtual file system, so the
+report is not retrievable from the host and disappears when the WebAssembly runtime exits. A custom host
+must mount or export the virtual file system to collect the report.
+
+This sample registers only the telemetry provider (`AddAppInsightsTelemetryProvider`), so its checked-in
+Node runner does not expose `--report-trx`.
 
 ### Azure DevOps report on browser-wasm
 
@@ -378,14 +386,11 @@ that the publisher reads back from the wasm virtual filesystem, completing the r
 `##vso[task.logissue …]` annotation for the failing test all work with no
 `PlatformNotSupportedException`.
 
-**Separate wasm concern — threading, not HTTP.** `--report-azdo --report-azdo-slow-test-history <days>`
-additionally starts the shared slow-test scan loop (`SlowTestReporterBase`), which calls
-`ITask.RunLongRunning`. Single-threaded wasm cannot create that thread, and `SlowTestReporterBase` does
-not currently consult `RuntimeFeatureHelper.IsMultiThreaded` before starting the loop, so that option
-combination is still unsupported here and is left to a separate change. It fails softly rather than
-loudly: `OnTestSessionStartingAsync` catches the exception and logs it, so the scan loop silently never
-runs and the reporter is left marked active — visible only under `--diagnostic`. Everything else in the
-extension is reachable on `browser-wasm`.
+`--report-azdo-slow-test-history <days>` normally starts the shared slow-test scan loop
+(`SlowTestReporterBase`) on a dedicated background thread. Single-threaded WebAssembly cannot create
+that thread, so the reporter detects the runtime and stays dormant without performing history I/O or
+calling `ITask.RunLongRunning`. The rest of the Azure DevOps report remains available on
+`browser-wasm`.
 
 **Not verified.** Nobody has run this from a real browser tab against `dev.azure.com`. CORS is not
 expected to be the blocker: `dev.azure.com` answers the preflight for these calls with

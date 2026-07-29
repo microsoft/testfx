@@ -7,6 +7,7 @@ using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.TestHost;
 
 using Moq;
 
@@ -69,6 +70,51 @@ public sealed class SimplifiedConsoleOutputDeviceTests
         await device.DisplayAsync(Producer, new ProgressMessageOutputDeviceData("restore", "Restoring"), CancellationToken.None);
 
         Assert.AreSequenceEqual(new[] { "Restoring", "Restoring" }, device.Messages);
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_TestNodeFileArtifact_WritesDisplayNameAndFullPath()
+    {
+        using var asyncMonitor = new SystemAsyncMonitor();
+        RecordingSimplifiedOutputDevice device = CreateOutputDevice(asyncMonitor);
+        var artifact = new FileInfo(Path.Combine("artifacts", "test-result.trx"));
+
+        await device.ConsumeAsync(
+            null!,
+            CreateTestNodeUpdate(new FileArtifactProperty(artifact, "Test Result")),
+            CancellationToken.None);
+
+        Assert.AreSequenceEqual(new[] { $"Test Result: {artifact.FullName}" }, device.Messages);
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_SessionFileArtifact_WritesDisplayNameAndFullPath()
+    {
+        using var asyncMonitor = new SystemAsyncMonitor();
+        RecordingSimplifiedOutputDevice device = CreateOutputDevice(asyncMonitor);
+        var artifact = new FileInfo(Path.Combine("artifacts", "session-result.trx"));
+
+        await device.ConsumeAsync(
+            null!,
+            new SessionFileArtifact(new SessionUid("session"), artifact, "Session Result"),
+            CancellationToken.None);
+
+        Assert.AreSequenceEqual(new[] { $"Session Result: {artifact.FullName}" }, device.Messages);
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_FileArtifact_WritesDisplayNameAndFullPath()
+    {
+        using var asyncMonitor = new SystemAsyncMonitor();
+        RecordingSimplifiedOutputDevice device = CreateOutputDevice(asyncMonitor);
+        var artifact = new FileInfo(Path.Combine("artifacts", "run-result.trx"));
+
+        await device.ConsumeAsync(
+            null!,
+            new FileArtifact(artifact, "Run Result"),
+            CancellationToken.None);
+
+        Assert.AreSequenceEqual(new[] { $"Run Result: {artifact.FullName}" }, device.Messages);
     }
 
     [TestMethod]

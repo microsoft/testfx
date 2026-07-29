@@ -1,4 +1,6 @@
 #nullable enable
+Microsoft.Testing.Platform.Helpers.RuntimeFeatureHelper
+static Microsoft.Testing.Platform.Helpers.RuntimeFeatureHelper.IsMultiThreaded.get -> bool
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER = "TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER" -> string!
 const Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportEngine.TrxArtifactKind = "microsoft.testing.trx" -> string!
 const Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId.Kind = 7 -> ushort
@@ -76,3 +78,5 @@ Microsoft.Testing.Platform.IPC.NamedPipeConnectionBase.WriteMessageAsync(System.
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxLongPathHelper
 static Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxLongPathHelper.GetPathForFileSystemAccess(string! path) -> string!
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportEngine.AttachmentWarnings.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxResultStreamingStore.IsInline.get -> bool
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxResultStreamingStore.TrxResultStreamingStore(string! filePath, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Helpers.ITask! task, Microsoft.Testing.Platform.Logging.ILogger! logger, int batchSize, int flushIntervalMs, bool useBackgroundWriter) -> void
