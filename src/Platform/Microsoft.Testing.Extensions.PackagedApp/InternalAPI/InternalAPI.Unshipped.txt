@@ -12,6 +12,7 @@ Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.PackageFamilyName.get 
 Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.PackageName.get -> string!
 Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.Publisher.get -> string!
 Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.ResolveApplication(string? executableFileName) -> Microsoft.Testing.Extensions.PackagedApp.AppxApplicationInfo?
+Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.ResolveApplication(string! manifestDirectory, string! executablePath) -> Microsoft.Testing.Extensions.PackagedApp.AppxApplicationInfo?
 const Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.AppxManifestFileName = "AppxManifest.xml" -> string!
 static Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.ComputePublisherId(string! publisher) -> string!
 static Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.FindManifestPath(string! startDirectory) -> string?

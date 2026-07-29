@@ -279,6 +279,35 @@ public sealed class AppxManifestInfoTests
     // *different* application next to it must not be attributed: ResolveApplication would then pick that
     // sole entry and the launcher would activate the wrong Application User Model ID. Enablement has no
     // executable to match, so it still attributes on the directory.
+    // A package may legally declare two applications whose executables share a file name in different
+    // subdirectories. The file name alone cannot tell them apart, so resolving by it would report an
+    // ambiguity and refuse to activate; the full path the launcher already validated does distinguish them.
+    [TestMethod]
+    public void ResolveApplication_WithSameFileNameInDifferentDirectories_ResolvesByFullPath()
+    {
+        const string ManifestXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10">
+              <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="First" Executable="bin1\host.exe" />
+                <Application Id="Second" Executable="bin2\host.exe" />
+              </Applications>
+            </Package>
+            """;
+
+        AppxManifestInfo info = ReadManifest(ManifestXml);
+        string manifestDirectory = Path.Combine(Path.GetTempPath(), "AppxManifestInfoTests", Guid.NewGuid().ToString("N"));
+
+        AppxApplicationInfo? application = info.ResolveApplication(manifestDirectory, Path.Combine(manifestDirectory, "bin2", "host.exe"));
+
+        Assert.IsNotNull(application);
+        Assert.AreEqual("Second", application.Id);
+
+        // The file-name-only overload cannot disambiguate these, which is why the full path is carried through.
+        Assert.ThrowsExactly<InvalidOperationException>(() => info.ResolveApplication("host.exe"));
+    }
+
     [TestMethod]
     public void FindManifestPath_WhenAncestorManifestDeclaresADifferentExecutableInTheAppDirectory_MatchesOnlyForEnablement()
     {

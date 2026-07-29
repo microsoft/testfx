@@ -7,7 +7,7 @@ WinUI 3 test apps come in two flavors, and which one you use decides how the tes
 | **Packaged** (MSIX) | unset (the default) | yes | The app must be registered with the OS and activated by Application User Model ID (AUMID). `Process.Start` cannot start it. |
 | **Unpackaged** | `None` | no | It is an ordinary Windows executable. `Process.Start` is all that is needed. |
 
-Both flavors are supported when you run on [Microsoft.Testing.Platform](https://learn.microsoft.com/dotnet/core/testing/unit-testing-platform-intro) (MTP), which you enable with `<EnableMSTestRunner>true</EnableMSTestRunner>`. Under MTP the WinUI app **is** the test host: it hosts the platform in-process, so no external test host provider has to deploy or activate anything.
+Both flavors are supported when you run on [Microsoft.Testing.Platform](https://learn.microsoft.com/dotnet/core/testing/unit-testing-platform-intro) (MTP), which you enable with `<EnableMSTestRunner>true</EnableMSTestRunner>`. Under MTP the WinUI app **is** the test host: it hosts the platform in-process, so VSTest's appx runtime provider is never involved. A packaged app still needs the [`Microsoft.Testing.Extensions.PackagedApp`](#packaged-msix-winui) launcher to register and AUMID-activate that host, because a packaged app cannot be started with `Process.Start`; an unpackaged app needs nothing extra.
 
 > [!NOTE]
 > Unpackaged WinUI is not supported under VSTest. VSTest routes every `UseWinUI` project through its `UwpTestHostRuntimeProvider`, which unconditionally reads an `AppxManifest.xml` from the build output and fails with `FileNotFoundException` when there is none. That provider ships in Visual Studio, not in this repository. See [#2784](https://github.com/microsoft/testfx/issues/2784).
@@ -41,7 +41,17 @@ Set `WindowsPackageType` to `None` and enable the MSTest runner:
 
 Point `[UITestMethod]` at a dispatcher queue so UI tests run on the UI thread. Which mechanism you use depends on whether the test app is itself the WinUI app:
 
-**Self-hosted (the app is the test host).** The process has already called `Application.Start`, so publish that dispatcher directly:
+**Self-hosted (the app is the test host).** A WinUI app already generates its own entry point from its `ApplicationDefinition`, so tell the platform not to generate a competing one, and host the platform yourself from `OnLaunched`:
+
+```xml
+<PropertyGroup>
+  <EnableMSTestRunner>true</EnableMSTestRunner>
+  <!-- The WinUI app owns its entry point; without this the platform generates a second one. -->
+  <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
+</PropertyGroup>
+```
+
+The process has already called `Application.Start`, so publish that dispatcher directly rather than letting the attribute start another application:
 
 ```csharp
 protected override async void OnLaunched(LaunchActivatedEventArgs args)
@@ -49,7 +59,16 @@ protected override async void OnLaunched(LaunchActivatedEventArgs args)
     _window = new UnitTestAppWindow();
     _window.Activate();
     UITestMethodAttribute.DispatcherQueue = _window.DispatcherQueue;
-    // ... host Microsoft.Testing.Platform here ...
+
+    string[] cliArgs = Environment.GetCommandLineArgs().Skip(1).ToArray();
+    ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(cliArgs);
+    builder.AddSelfRegisteredExtensions(cliArgs);
+    using ITestApplication app = await builder.BuildAsync();
+
+    // The WinUI-generated entry point is 'void', so publish the exit code yourself.
+    Environment.ExitCode = await app.RunAsync();
+    _window.Close();
+    Exit();
 }
 ```
 
@@ -104,10 +123,18 @@ The launcher therefore decides for itself, per run:
 | Situation | Launcher enabled? | Effect |
 | --- | --- | --- |
 | Not Windows | no | Nothing changes. Packaged Windows apps are a Windows-only concept. |
-| Packaged layout (`AppxManifest.xml` found at or above the app directory) | yes | The layout is registered and activated by AUMID. |
+| Packaged layout (an `AppxManifest.xml` that describes this app — see below) | yes | The layout is registered and activated by AUMID. |
 | Any other layout — including unpackaged WinUI and ordinary console test apps | no | The platform keeps its default in-process / `Process.Start` path. |
 
 So an **unpackaged** WinUI app that references `Microsoft.Testing.Extensions.PackagedApp` (directly, or transitively through a shared `Directory.Packages.props`) pays nothing for it: no extra process, and no copy of the build output into a deployment directory.
+
+### How a manifest is attributed to your app
+
+"Packaged layout" means a manifest that actually describes *this* app, not merely any `AppxManifest.xml` somewhere above it:
+
+- An `AppxManifest.xml` **in the app's own directory** is taken as the app's layout.
+- An `AppxManifest.xml` in an **ancestor** directory is used only when one of its `<Application>` entries declares an `Executable` that resolves back to the app directory — and, when the launcher is actually starting the host, to that exact executable. This is what lets `Application/@Executable` point into a subdirectory of the package root at any depth.
+- An ancestor manifest that declares no matching `Executable` is ignored, so a stray manifest in a shared build root or CI staging directory cannot classify an unrelated test app as packaged.
 
 ### Overriding the decision
 

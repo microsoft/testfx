@@ -17,8 +17,10 @@ Registering an *enabled* test host launcher switches the run to the test host co
 | Situation | Enabled? |
 | --- | --- |
 | Not Windows | no |
-| Packaged layout (`AppxManifest.xml` at or above the app directory) | yes |
+| Packaged layout (an `AppxManifest.xml` that describes this app) | yes |
 | Any other layout, including **unpackaged WinUI** and ordinary console test apps | no |
+
+A manifest in the app's own directory is taken as the app's layout. A manifest in an ancestor directory is used only when one of its `<Application>` entries declares an `Executable` resolving back to the app directory (and, at launch, to that exact executable), which supports `Application/@Executable` pointing into a package subdirectory at any depth while keeping a stray manifest in a shared build root from classifying an unrelated app as packaged.
 
 So referencing this package from an unpackaged app costs nothing: no extra process, and no copy of the build output.
 

@@ -247,6 +247,35 @@ internal sealed class AppxManifestInfo
     }
 
     /// <summary>
+    /// Resolves the application whose test host the platform asked to launch, preferring the one whose
+    /// declared executable resolves exactly to <paramref name="executablePath"/>. A package may declare
+    /// several applications whose executables share a file name in different subdirectories, and the
+    /// file name alone cannot tell those apart; the full path can. Falls back to file-name matching
+    /// (see <see cref="ResolveApplication(string?)"/>) when no application declares this exact path,
+    /// which is the usual case for a manifest that omits <c>Application/@Executable</c>.
+    /// </summary>
+    /// <param name="manifestDirectory">The directory holding the manifest, used to resolve package-relative executables.</param>
+    /// <param name="executablePath">The full path of the executable the platform asked to launch.</param>
+    /// <returns>
+    /// The matching application, or <see langword="null"/> when the manifest declares no application.
+    /// </returns>
+    /// <exception cref="InvalidOperationException">
+    /// The manifest declares multiple applications and none matches <paramref name="executablePath"/>
+    /// uniquely, by full path or by file name.
+    /// </exception>
+    public AppxApplicationInfo? ResolveApplication(string manifestDirectory, string executablePath)
+    {
+        string fullExecutablePath = Path.GetFullPath(executablePath);
+        AppxApplicationInfo[] exactMatches = [.. Applications.Where(application =>
+            application.Executable is not null
+            && string.Equals(ResolvePackageRelativePath(manifestDirectory, application.Executable), fullExecutablePath, StringComparison.OrdinalIgnoreCase))];
+
+        return exactMatches.Length == 1
+            ? exactMatches[0]
+            : ResolveApplication(Path.GetFileName(executablePath));
+    }
+
+    /// <summary>
     /// Resolves the application whose test host the platform asked to launch. Most packages declare a
     /// single application, which is returned directly. When a package declares several, the entry is
     /// disambiguated by matching <paramref name="executableFileName"/> against each

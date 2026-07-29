@@ -182,7 +182,7 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher
         // Resolve the application matching the executable the platform asked to launch so activation
         // targets the AUMID of the right app (a package can declare several applications). A package
         // that declares no application has no AUMID to activate.
-        AppxApplicationInfo application = manifestInfo.ResolveApplication(Path.GetFileName(context.FileName))
+        AppxApplicationInfo application = manifestInfo.ResolveApplication(Path.GetDirectoryName(manifestPath)!, context.FileName)
             ?? throw new InvalidOperationException(
                 string.Format(
                     CultureInfo.CurrentCulture,
@@ -264,7 +264,7 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher
         // cannot host the run.
         _ = cancellationToken;
         var manifestInfo = AppxManifestInfo.ReadFromManifest(manifestPath);
-        AppxApplicationInfo? application = manifestInfo.ResolveApplication(Path.GetFileName(context.FileName));
+        AppxApplicationInfo? application = manifestInfo.ResolveApplication(Path.GetDirectoryName(manifestPath)!, context.FileName);
         throw new InvalidOperationException(
             string.Format(
                 CultureInfo.CurrentCulture,
