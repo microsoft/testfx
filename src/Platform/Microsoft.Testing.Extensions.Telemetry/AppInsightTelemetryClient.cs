@@ -24,7 +24,30 @@ internal sealed class AppInsightTelemetryClient : ITelemetryClient
     }
 
     public void TrackEvent(string eventName, Dictionary<string, string> properties, Dictionary<string, double> metrics)
-        => _telemetryClient.TrackEvent(eventName, properties, metrics);
+    {
+        // Microsoft.ApplicationInsights 3.x (an OpenTelemetry shim) removed the metrics parameter
+        // from TrackEvent. Tracking metrics separately via TrackMetric() would emit uncorrelated
+        // metric instruments that are neither enriched with this client's context (session/OS) nor
+        // tied back to the event, and would additionally require every metric key to satisfy the
+        // OpenTelemetry instrument-name syntax (no spaces, must start with a letter).
+        //
+        // Instead we fold the numeric measurements into the event's properties as invariant-culture
+        // strings. This keeps a single correlated, context-enriched customEvent and imposes no naming
+        // restrictions on the keys. Consumers read these values back with todouble(customDimensions[...]).
+        if (metrics.Count == 0)
+        {
+            _telemetryClient.TrackEvent(eventName, properties);
+            return;
+        }
+
+        var combinedProperties = new Dictionary<string, string>(properties);
+        foreach (KeyValuePair<string, double> metric in metrics)
+        {
+            combinedProperties[metric.Key] = metric.Value.ToString("R", CultureInfo.InvariantCulture);
+        }
+
+        _telemetryClient.TrackEvent(eventName, combinedProperties);
+    }
 
     public void Flush()
         => _telemetryClient.Flush();

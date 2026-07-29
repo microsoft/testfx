@@ -313,3 +313,5 @@ Microsoft.Testing.Platform.OutputDevice.SlowTestThresholdState.SlowTestThreshold
 static Microsoft.Testing.Platform.OutputDevice.ProgressReportingConfiguration.GetThreshold(Microsoft.Testing.Platform.Helpers.IEnvironment! environment, string! variableName, int defaultSeconds) -> System.TimeSpan
 Microsoft.Testing.Platform.Extensions.Messages.TestNodeExecutionCompletedProperty
 static Microsoft.Testing.Platform.Extensions.Messages.TestNodeExecutionCompletedProperty.CachedInstance.get -> Microsoft.Testing.Platform.Extensions.Messages.TestNodeExecutionCompletedProperty!
+*REMOVED*const Microsoft.Testing.Platform.Telemetry.TelemetryProperties.VersionValue = "20" -> string!
+const Microsoft.Testing.Platform.Telemetry.TelemetryProperties.VersionValue = "21" -> string!
