@@ -415,7 +415,15 @@ internal sealed class TestProgressState
             {
                 if (value.LastAttemptNumber == currentAttemptNumber)
                 {
-                    // Another result for the same test node in the same attempt — just increment.
+                    // Another result for the same test node in the same attempt — just increment. When the uid has
+                    // already been superseded once, this result belongs to a retry attempt and is itself an extra
+                    // execution: a folded data-driven test reports one result per row, so counting only the first
+                    // would undercount the extra runs those rows actually cost.
+                    if (_retriedUids.Contains(testNodeUid))
+                    {
+                        _retriedExecutions++;
+                    }
+
                     _testUidToResults[testNodeUid] = incrementTestNodeInfoEntry(value);
                 }
                 else if (currentAttemptNumber > value.LastAttemptNumber)

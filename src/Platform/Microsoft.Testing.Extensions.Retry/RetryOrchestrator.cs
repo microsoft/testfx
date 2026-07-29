@@ -207,11 +207,15 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                 suiteSkippedTests = retryFailedTestsPipeServer.SkippedTests;
             }
 
+            // Results this attempt actually observed. Reporting counts is not the same as having run something: an
+            // attempt whose filter matched nothing reports a well-formed set of zeros, which must not be mistaken
+            // for "nothing is failing any more".
+            int observedResults = retryFailedTestsPipeServer.TotalTestRan + retryFailedTestsPipeServer.SkippedTests;
+            bool attemptObservedResults = retryFailedTestsPipeServer.CountsReported && observedResults > 0;
+
             if (pendingRetriedTests.Count > 0)
             {
-                int observedRetriedResults = retryFailedTestsPipeServer.TotalTestRan + retryFailedTestsPipeServer.SkippedTests;
-
-                if (retryFailedTestsPipeServer.CountsReported && observedRetriedResults > 0)
+                if (attemptObservedResults)
                 {
                     // Scheduling a retry is not enough to count it: the child can die before the selected tests
                     // produce results. Commit the pending retry only after the following attempt reports counts.
@@ -220,7 +224,7 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                         retriedTests[retriedTest.Key] = retriedTest.Value;
                     }
 
-                    retriedExecutions += observedRetriedResults;
+                    retriedExecutions += observedResults;
                 }
 
                 pendingRetriedTests.Clear();
@@ -245,11 +249,12 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
             // the total and failed counts stay correct and the block always adds up, which a naive adjustment
             // did not.
 
-            // The run's failing count always reflects the most recent attempt that got far enough to report, which
+            // The run's failing count always reflects the most recent attempt that actually ran something, which
             // re-ran every test still failing. Counted per result so it stays in the same unit as the total. An
-            // attempt that died before its session finished reports nothing, and must not silently reset this to
-            // zero — that would render a red verdict above "failed: 0".
-            if (retryFailedTestsPipeServer.CountsReported)
+            // attempt that died before its session finished, or that ran nothing because its filter matched no
+            // test, must not silently reset this to zero: that would render a red verdict above "failed: 0" and
+            // derive the still-failing tests as succeeded.
+            if (attemptObservedResults)
             {
                 finalFailedTestResults = retryFailedTestsPipeServer.FailedTestResults;
             }

@@ -2391,8 +2391,10 @@ public sealed class TerminalTestReporterTests
 
         string output = stringBuilderConsole.Output;
 
+        // The retry produced two results under the one uid, so it cost two extra runs even though only one test
+        // was retried. Counting the first row alone would disagree with the retry extension, which counts results.
         Assert.Contains(ExpectedCounts(1, 0, 1, retried: 1), GetAssemblySummaryLine(output, assembly));
-        Assert.Contains($"{TerminalResources.Retried}: {string.Format(CultureInfo.CurrentCulture, TerminalResources.RetriedTestsAndRuns, 1, 1)}", output);
+        Assert.Contains($"{TerminalResources.Retried}: {string.Format(CultureInfo.CurrentCulture, TerminalResources.RetriedTestsAndRuns, 1, 2)}", output);
         Assert.DoesNotContain("flaky:", output);
         Assert.DoesNotContain(TerminalResources.FlakyTests, output);
     }

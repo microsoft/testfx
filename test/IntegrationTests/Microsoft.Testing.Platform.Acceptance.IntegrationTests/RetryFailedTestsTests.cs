@@ -133,8 +133,10 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             },
             cancellationToken: TestContext.CancellationToken);
 
-        // The retry produced no failing result, so the run ends green — but the test never passed either.
-        testHostResult.AssertOutputContains("Retry summary:");
+        // The retry produced no failing result, so the run ends green — but the test never passed either. Assert
+        // the exact verdict rather than just the header, so a regression that turns this red still fails the test.
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        testHostResult.AssertOutputContains("Retry summary: Passed! after 2/2 attempts");
         testHostResult.AssertOutputContains("  retried: 1 test(s), 1 extra run(s)");
         testHostResult.AssertOutputDoesNotContain("  flaky:");
         testHostResult.AssertOutputDoesNotContain("Flaky tests:");
@@ -191,6 +193,41 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         // Nothing recovered, so nothing is flaky.
         testHostResult.AssertOutputDoesNotContain("  flaky:");
         testHostResult.AssertOutputDoesNotContain("Flaky tests:");
+    }
+
+    /// <summary>
+    /// Exercises the <c>--show-flaky-tests</c> option end to end. The unit tests set the reporter option directly,
+    /// so without this nothing verifies that the flag parses, nor that the retry orchestrator's own resolver
+    /// (<c>FlakyTestsReportingOptions</c>, which runs in a different process from the terminal reporter) honours
+    /// it. Only the flaky count and the named section are suppressed; the retried accounting stays.
+    /// </summary>
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task RetryFailedTests_WithShowFlakyTestsOff_SuppressesFlakyCountAndSection(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--retry-failed-tests 3 --show-flaky-tests off --results-directory {resultDirectory}",
+            new()
+            {
+                { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
+                { "METHOD1", "1" },
+                { "FAIL", "0" },
+                { "RESULTDIR", resultDirectory },
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        testHostResult.AssertOutputContains("Retry summary: Passed! after 2/4 attempts");
+
+        // TestMethod1 recovered, so this run is flaky; the option must hide both renderings of that.
+        testHostResult.AssertOutputDoesNotContain("  flaky:");
+        testHostResult.AssertOutputDoesNotContain("Flaky tests:");
+        testHostResult.AssertOutputDoesNotContain("TestMethod1 (failed -> passed)");
+
+        // Retry accounting is not part of the flaky feature and must survive.
+        testHostResult.AssertOutputContains("  retried: 1 test(s), 1 extra run(s)");
     }
 
     [TestMethod]
