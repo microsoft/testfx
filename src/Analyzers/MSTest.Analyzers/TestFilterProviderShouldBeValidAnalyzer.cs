@@ -144,9 +144,15 @@ public sealed class TestFilterProviderShouldBeValidAnalyzer : DiagnosticAnalyzer
     {
         if (!TryGetFilterType(provider, testFilterProviderAttributeSymbol, out ITypeSymbol? filterType))
         {
-            // The non-generic attribute accepts a null Type, which compiles but throws from the attribute
-            // constructor at run time and surfaces as UTA073.
-            Report(context, provider, NullRule);
+            // typeof(...) cannot yield null, but a null literal binds to the Type parameter and compiles,
+            // then throws from the attribute constructor at run time and surfaces as UTA073. Anything else
+            // that fails to resolve here is an attribute application the compiler itself rejects (wrong
+            // arity, wrong argument type), so reporting on top of its error would just be noise.
+            if (IsExplicitNullFilterType(provider, testFilterProviderAttributeSymbol))
+            {
+                Report(context, provider, NullRule);
+            }
+
             return;
         }
 
@@ -200,6 +206,21 @@ public sealed class TestFilterProviderShouldBeValidAnalyzer : DiagnosticAnalyzer
             Report(context, provider, NoParameterlessConstructorRule, filterTypeName);
         }
     }
+
+    /// <summary>
+    /// Whether the non-generic attribute was applied with an explicit <see langword="null"/> filter type,
+    /// as opposed to an application the compiler could not bind at all.
+    /// </summary>
+    /// <remarks>
+    /// <c>AttributeConstructor</c> is only non-null once overload resolution succeeded, which is what
+    /// separates <c>[assembly: TestFilterProvider(null)]</c> (compiles, fails at run time) from
+    /// <c>[assembly: TestFilterProvider()]</c> or <c>[assembly: TestFilterProvider(1)]</c> (already a
+    /// compiler error, so MSTEST0081 must stay quiet).
+    /// </remarks>
+    private static bool IsExplicitNullFilterType(AttributeData provider, INamedTypeSymbol testFilterProviderAttributeSymbol)
+        => SymbolEqualityComparer.Default.Equals(provider.AttributeClass, testFilterProviderAttributeSymbol)
+            && provider.AttributeConstructor is not null
+            && provider.ConstructorArguments is [{ Kind: TypedConstantKind.Type, Value: null }];
 
     private static bool TryGetFilterType(
         AttributeData provider,

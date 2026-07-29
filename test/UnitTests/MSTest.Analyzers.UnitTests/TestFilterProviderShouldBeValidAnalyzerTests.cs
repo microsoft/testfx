@@ -297,6 +297,28 @@ public sealed class TestFilterProviderShouldBeValidAnalyzerTests
             VerifyCS.Diagnostic(TestFilterProviderShouldBeValidAnalyzer.NullRule).WithLocation(0));
     }
 
+    // A malformed application is already a compiler error, so MSTEST0081 must stay quiet rather than stack
+    // a misleading "null filter type" diagnostic on top of it.
+    [TestMethod]
+    public async Task WhenAttributeHasNoArgument_NoAnalyzerDiagnostic()
+    {
+        string code = Header + """
+            [assembly: {|CS7036:TestFilterProvider()|}]
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenAttributeArgumentIsNotAType_NoAnalyzerDiagnostic()
+    {
+        string code = Header + """
+            [assembly: TestFilterProvider({|CS1503:1|})]
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
 #if NET
     // TestFilterProviderAttribute<TFilter> only exists in the .NET assets of MSTest.TestFramework, so these
     // cases cannot be compiled when this test project runs on .NET Framework.
