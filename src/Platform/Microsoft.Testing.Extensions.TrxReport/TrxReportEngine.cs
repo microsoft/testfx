@@ -73,6 +73,14 @@ internal sealed partial class TrxReportEngine
         _fileSystem = fileSystem;
     }
 
+    /// <summary>
+    /// Gets the warnings produced while copying attachments into the TRX results directory, in the
+    /// same order they were recorded. A dropped attachment does not fail the run, so callers are
+    /// expected to surface these on the output device — otherwise the only trace of the missing
+    /// <c>ResultFile</c> is a <c>RunInfo</c> buried in the generated TRX.
+    /// </summary>
+    public IReadOnlyList<string> AttachmentWarnings { get; private set; } = [];
+
     public async Task<(string FileName, string? Warning)> GenerateReportAsync(IReadOnlyList<TrxTestResult> testResults, string testHostCrashInfo = "", bool isTestHostCrashed = false)
         => await ReportFileWriterHelper.RetryWhenIOExceptionAsync(_clock, async () =>
         {
@@ -108,6 +116,10 @@ internal sealed partial class TrxReportEngine
             string trxOutcome = isTestHostCrashed || _exitCode != (int)ExitCode.Success || hasFailedTests ? "Failed" : "Completed";
 
             AddResultSummary(testRun, trxOutcome, runDeploymentRoot, testHostCrashInfo, _exitCode, summaryCounts, attachmentWarnings, isTestHostCrashed);
+
+            // Assign after AddResultSummary because session-level attachments are copied there, and
+            // reassign on every retry attempt so a retried generation does not report stale warnings.
+            AttachmentWarnings = attachmentWarnings;
 
             // will need catch Unauthorized access
             document.Add(testRun);
