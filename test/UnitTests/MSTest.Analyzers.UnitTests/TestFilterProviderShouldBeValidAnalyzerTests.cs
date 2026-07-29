@@ -22,6 +22,14 @@ public sealed class TestFilterProviderShouldBeValidAnalyzerTests
 
         """;
 
+    // The _NoDiagnostic tests below are deliberately negative: they pin that valid shapes, unrelated
+    // attributes and compiler-rejected applications are left alone. Individually a "silent analyzer"
+    // mutation would survive them, which is exactly what the paired _Diagnostic tests are for -- every
+    // branch asserted as silent here has a companion asserting the exact rule, location and arguments when
+    // that branch should fire. For instance WhenFilterTypeIsStruct_NoDiagnostic pins the struct exemption
+    // on the constructor check while WhenFilterTypeHasNoPublicParameterlessConstructor_Diagnostic pins the
+    // firing side of it, and WhenFilterTypeDoesNotImplementITestFilter_Diagnostic does the same for the
+    // interface check the struct also passes through.
     [TestMethod]
     public async Task WhenFilterTypeIsValid_NoDiagnostic()
     {
