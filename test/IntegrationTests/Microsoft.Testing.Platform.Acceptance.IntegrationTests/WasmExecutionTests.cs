@@ -24,9 +24,11 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 /// <para>
 /// Some extensions have their own wasi limitations unrelated to threading and are therefore not
 /// exercised here: the hang-dump provider relies on <c>System.Diagnostics.Process</c>
-/// (<see href="https://github.com/microsoft/testfx/issues/8557"/>) and the Azure DevOps provider's
-/// <c>HttpClient</c> sets <c>AutomaticDecompression</c>, which the wasi <c>HttpClientHandler</c> does
-/// not support.
+/// (<see href="https://github.com/microsoft/testfx/issues/8557"/>). The Azure DevOps provider's
+/// <c>HttpClient</c> no longer sets <c>AutomaticDecompression</c> where the handler does not support
+/// it (<see href="https://github.com/microsoft/testfx/issues/10313"/>), which removes that blocker on
+/// wasi as well as on browser, but it has only been exercised end to end on <c>browser-wasm</c>
+/// (see <c>BrowserWasmExecutionTests</c>), not here.
 /// </para>
 ///
 /// <para>Two complementary assertions:</para>
