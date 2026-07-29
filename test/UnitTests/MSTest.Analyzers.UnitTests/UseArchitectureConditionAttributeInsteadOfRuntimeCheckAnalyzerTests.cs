@@ -1,6 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis.Testing;
+
+using Microsoft.Testing.TestInfrastructure;
+
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.UseArchitectureConditionAttributeInsteadOfRuntimeCheckAnalyzer,
     MSTest.Analyzers.UseArchitectureConditionAttributeInsteadOfRuntimeCheckFixer>;
@@ -391,6 +395,41 @@ public sealed class UseArchitectureConditionAttributeInsteadOfRuntimeCheckAnalyz
             """;
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenTestArchitecturesLacksTheComparedArchitecture_NoDiagnostic()
+    {
+        // The verified compilation targets net9.0, so 'Architecture.RiscV64' resolves, while the referenced MSTest
+        // build is the net8.0 asset whose 'TestArchitectures' has no matching member. Reporting here would offer a
+        // fix that generates uncompilable 'TestArchitectures.RiscV64', so the analyzer must stay silent.
+        string code = """
+            using System.Runtime.InteropServices;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    if (RuntimeInformation.ProcessArchitecture != Architecture.RiscV64)
+                    {
+                        return;
+                    }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test
+        {
+            TestCode = code,
+            FixedCode = code,
+            ReferenceAssemblies = ReferenceAssemblies.Net.Net90
+                .WithNuGetConfigFilePath(Path.Combine(RootFinder.Find(), "NuGet.config")),
+        };
+
+        await test.RunAsync();
     }
 
     [TestMethod]
