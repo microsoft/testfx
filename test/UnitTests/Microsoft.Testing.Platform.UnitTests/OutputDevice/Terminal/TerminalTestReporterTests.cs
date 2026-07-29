@@ -1854,27 +1854,34 @@ public sealed class TerminalTestReporterTests
                 stopwatchFactory.AddTime(TimeSpan.FromSeconds(1));
             }
 
-            string first = state.GetSingleActiveOrSummaryTask()!.Text;
+            // Each culture is changed on its own so that both halves of the key are covered
+            // independently: changing them together would let either comparison be dropped without
+            // failing this test. The count stays at 5 throughout.
+            string enUS = state.GetSingleActiveOrSummaryTask()!.Text;
 
             // Do NOT remove these interleaved calls. TestDetailState.Text's setter ignores writes that are
             // ordinally equal to the current value, so two back-to-back calls could return the previous
             // instance even without the cache. Flipping the shared summary detail to the other message
             // shape forces the setter to assign on the next call, which is what makes the reference
             // assertions below meaningful.
-            Assert.AreNotEqual(first, state.GetRunningTasks(maxCount: 3)[2].Text);
+            FlipToMoreRunningShape(state);
 
+            // CurrentCulture alone governs how the count is formatted.
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("fr-FR");
+            string frenchNumbers = state.GetSingleActiveOrSummaryTask()!.Text;
+            Assert.AreNotSame(enUS, frenchNumbers);
+
+            FlipToMoreRunningShape(state);
+
+            // CurrentUICulture alone governs which localized resource is loaded.
             CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("fr-FR");
+            string frFR = state.GetSingleActiveOrSummaryTask()!.Text;
+            Assert.AreNotSame(frenchNumbers, frFR);
 
-            // Same count, different culture: the cache must not serve the text formatted under en-US.
-            string second = state.GetSingleActiveOrSummaryTask()!.Text;
-            Assert.AreNotSame(first, second);
+            FlipToMoreRunningShape(state);
 
-            Assert.AreNotEqual(second, state.GetRunningTasks(maxCount: 3)[2].Text);
-
-            // ...and it must re-arm for the new culture rather than formatting on every call from now on.
-            string third = state.GetSingleActiveOrSummaryTask()!.Text;
-            Assert.AreSame(second, third);
+            // ...and the cache must re-arm for the new culture rather than formatting on every call.
+            Assert.AreSame(frFR, state.GetSingleActiveOrSummaryTask()!.Text);
         }
         finally
         {
@@ -1882,6 +1889,72 @@ public sealed class TerminalTestReporterTests
             CultureInfo.CurrentUICulture = originalUICulture;
         }
     }
+
+    [TestMethod]
+    [DoNotParallelize]
+    public void TestNodeResultsState_GetRunningTasks_WhenCultureChanges_ReformatsSummary()
+    {
+        CultureInfo originalCulture = CultureInfo.CurrentCulture;
+        CultureInfo originalUICulture = CultureInfo.CurrentUICulture;
+
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("en-US");
+
+            var stopwatchFactory = new StopwatchFactory();
+            var state = new TestNodeResultsState(1);
+            for (int i = 0; i < 5; i++)
+            {
+                state.AddRunningTestNode(id: 10 + i, uid: $"uid-{i}", name: $"Test{i}", stopwatchFactory.CreateStopwatch());
+                stopwatchFactory.AddTime(TimeSpan.FromSeconds(1));
+            }
+
+            // The "... N more running" cache is independent of the "N tests running" one, so it needs its
+            // own coverage for each half of the key. The interleaved calls flip the shared summary detail
+            // to the other shape for the same reason as in the GetSingleActiveOrSummaryTask counterpart.
+            string enUS = GetMoreRunningText(state);
+
+            FlipToTestsRunningShape(state);
+
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("fr-FR");
+            string frenchNumbers = GetMoreRunningText(state);
+            Assert.AreNotSame(enUS, frenchNumbers);
+
+            FlipToTestsRunningShape(state);
+
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("fr-FR");
+            string frFR = GetMoreRunningText(state);
+            Assert.AreNotSame(frenchNumbers, frFR);
+
+            FlipToTestsRunningShape(state);
+
+            Assert.AreSame(frFR, GetMoreRunningText(state));
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+            CultureInfo.CurrentUICulture = originalUICulture;
+        }
+    }
+
+    /// <summary>
+    /// Returns the trailing "... N more running" summary, which <see cref="TestNodeResultsState.GetRunningTasks"/>
+    /// appends when there are more running tests than <c>maxCount</c> allows it to list.
+    /// </summary>
+    private static string GetMoreRunningText(TestNodeResultsState state) => state.GetRunningTasks(maxCount: 3)[2].Text;
+
+    /// <summary>
+    /// Rewrites the shared summary detail to the "... N more running" shape so that the next write of the
+    /// "N tests running" shape is not swallowed by <c>TestDetailState.Text</c>'s ordinal-equality guard.
+    /// </summary>
+    private static void FlipToMoreRunningShape(TestNodeResultsState state) => state.GetRunningTasks(maxCount: 3);
+
+    /// <summary>
+    /// Rewrites the shared summary detail to the "N tests running" shape, the mirror of
+    /// <see cref="FlipToMoreRunningShape"/>.
+    /// </summary>
+    private static void FlipToTestsRunningShape(TestNodeResultsState state) => state.GetSingleActiveOrSummaryTask();
 
     [TestMethod]
     public void TestNodeResultsState_GetSingleActiveOrSummaryTask_WhenCountChanges_ReformatsSummary()
