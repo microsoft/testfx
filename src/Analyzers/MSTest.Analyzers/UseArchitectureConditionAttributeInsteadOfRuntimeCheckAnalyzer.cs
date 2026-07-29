@@ -49,6 +49,7 @@ public sealed class UseArchitectureConditionAttributeInsteadOfRuntimeCheckAnalyz
         context.RegisterCompilationStartAction(context =>
         {
             if (!context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestMethodAttribute, out INamedTypeSymbol? testMethodAttributeSymbol) ||
+                !context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingConditionBaseAttribute, out INamedTypeSymbol? conditionBaseAttributeSymbol) ||
                 !context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssert, out INamedTypeSymbol? assertSymbol) ||
                 !context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemRuntimeInteropServicesRuntimeInformation, out INamedTypeSymbol? runtimeInformationSymbol) ||
                 !context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemRuntimeInteropServicesArchitecture, out INamedTypeSymbol? architectureSymbol))
@@ -58,7 +59,7 @@ public sealed class UseArchitectureConditionAttributeInsteadOfRuntimeCheckAnalyz
 
             // '[ArchitectureCondition]' and 'TestArchitectures' only exist on the .NET flavor of MSTest, so there is
             // nothing to suggest when compiling against the .NET Framework reference assemblies.
-            if (!context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingArchitectureConditionAttribute, out INamedTypeSymbol? architectureConditionAttributeSymbol) ||
+            if (!context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingArchitectureConditionAttribute, out INamedTypeSymbol? _) ||
                 !context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestArchitectures, out INamedTypeSymbol? testArchitecturesSymbol))
             {
                 return;
@@ -82,10 +83,13 @@ public sealed class UseArchitectureConditionAttributeInsteadOfRuntimeCheckAnalyz
 
                 ImmutableArray<AttributeData> attributes = methodSymbol.GetAttributes();
 
-                // 'ArchitectureConditionAttribute' doesn't allow multiple usages, so adding a second one would not
-                // compile. Leave these methods alone rather than offering a fix that breaks the build.
+                // Bail out when the method already carries a condition attribute. Adding a second
+                // 'ArchitectureConditionAttribute' would not compile because it isn't 'AllowMultiple', and adding one
+                // next to any other condition attribute can change behavior: conditions are OR-combined when they
+                // share a 'GroupName' and AND-combined otherwise, and a custom attribute's 'GroupName' is an arbitrary
+                // property implementation that can't be resolved statically.
                 if (!attributes.Any(attr => attr.AttributeClass is not null && attr.AttributeClass.Inherits(testMethodAttributeSymbol)) ||
-                    attributes.Any(attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, architectureConditionAttributeSymbol)))
+                    attributes.Any(attr => attr.AttributeClass is not null && attr.AttributeClass.Inherits(conditionBaseAttributeSymbol)))
                 {
                     return;
                 }

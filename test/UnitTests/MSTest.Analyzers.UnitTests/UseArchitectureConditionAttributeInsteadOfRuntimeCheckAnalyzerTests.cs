@@ -436,6 +436,45 @@ public sealed class UseArchitectureConditionAttributeInsteadOfRuntimeCheckAnalyz
     }
 
     [TestMethod]
+    public async Task WhenMethodHasACustomConditionAttribute_NoDiagnostic()
+    {
+        // A custom condition's 'GroupName' is an arbitrary property implementation. If it happens to return
+        // "ArchitectureCondition", adding '[ArchitectureCondition]' would OR the two instead of ANDing them.
+        string code = """
+            using System.Runtime.InteropServices;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public sealed class MyConditionAttribute : ConditionBaseAttribute
+            {
+                public MyConditionAttribute()
+                    : base(ConditionMode.Include)
+                {
+                }
+
+                public override string GroupName => "ArchitectureCondition";
+
+                public override bool IsConditionMet => true;
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [MyCondition]
+                public void TestMethod()
+                {
+                    if (RuntimeInformation.ProcessArchitecture != Architecture.X64)
+                    {
+                        return;
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
     public async Task WhenMethodAlreadyHasArchitectureCondition_NoDiagnostic()
     {
         string code = """

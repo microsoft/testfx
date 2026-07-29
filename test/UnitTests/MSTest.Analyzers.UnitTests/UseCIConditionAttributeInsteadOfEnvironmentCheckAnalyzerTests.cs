@@ -557,6 +557,45 @@ public sealed class UseCIConditionAttributeInsteadOfEnvironmentCheckAnalyzerTest
     }
 
     [TestMethod]
+    public async Task WhenMethodHasACustomConditionAttribute_NoDiagnostic()
+    {
+        // A custom condition's 'GroupName' is an arbitrary property implementation. If it happens to return
+        // "CIConditionAttribute", adding '[CICondition]' would OR the two instead of ANDing them.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public sealed class MyConditionAttribute : ConditionBaseAttribute
+            {
+                public MyConditionAttribute()
+                    : base(ConditionMode.Include)
+                {
+                }
+
+                public override string GroupName => "CIConditionAttribute";
+
+                public override bool IsConditionMet => true;
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [MyCondition]
+                public void TestMethod()
+                {
+                    if (Environment.GetEnvironmentVariable("CI") == null)
+                    {
+                        return;
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
     public async Task WhenMethodAlreadyHasCICondition_NoDiagnostic()
     {
         string code = """

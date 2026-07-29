@@ -58,8 +58,9 @@ public sealed class UseCIConditionAttributeInsteadOfEnvironmentCheckAnalyzer : D
         context.RegisterCompilationStartAction(context =>
         {
             if (!context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestMethodAttribute, out INamedTypeSymbol? testMethodAttributeSymbol) ||
+                !context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingConditionBaseAttribute, out INamedTypeSymbol? conditionBaseAttributeSymbol) ||
                 !context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssert, out INamedTypeSymbol? assertSymbol) ||
-                !context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingCIConditionAttribute, out INamedTypeSymbol? ciConditionAttributeSymbol) ||
+                !context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingCIConditionAttribute, out INamedTypeSymbol? _) ||
                 !context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemEnvironment, out INamedTypeSymbol? environmentSymbol))
             {
                 return;
@@ -83,10 +84,13 @@ public sealed class UseCIConditionAttributeInsteadOfEnvironmentCheckAnalyzer : D
 
                 ImmutableArray<AttributeData> attributes = methodSymbol.GetAttributes();
 
-                // 'CIConditionAttribute' doesn't allow multiple usages, so adding a second one would not compile.
-                // Leave these methods alone rather than offering a fix that breaks the build.
+                // Bail out when the method already carries a condition attribute. Adding a second
+                // 'CIConditionAttribute' would not compile because it isn't 'AllowMultiple', and adding one next to any
+                // other condition attribute can change behavior: conditions are OR-combined when they share a
+                // 'GroupName' and AND-combined otherwise, and a custom attribute's 'GroupName' is an arbitrary property
+                // implementation that can't be resolved statically.
                 if (!attributes.Any(attr => attr.AttributeClass is not null && attr.AttributeClass.Inherits(testMethodAttributeSymbol)) ||
-                    attributes.Any(attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, ciConditionAttributeSymbol)))
+                    attributes.Any(attr => attr.AttributeClass is not null && attr.AttributeClass.Inherits(conditionBaseAttributeSymbol)))
                 {
                     return;
                 }
