@@ -28,10 +28,12 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
     // test reports several results under one uid, so a uid must not count as recovered when any of its rows failed.
     private readonly HashSet<string> _notRecoveredTests = [];
 
-    // Uids from the retry set whose only outcome this attempt was "skipped". Such a test stops being retried
-    // without ever passing, so the run's skipped count has to absorb it — otherwise the derived succeeded count
-    // would claim it passed.
-    private readonly HashSet<string> _skippedRetriedTests = [];
+    // Number of SKIPPED RESULTS per retry-set uid in this attempt. A count rather than a set because a folded
+    // data-driven test reports one result per data row under a single uid, and the orchestrator adds this to a
+    // per-result skipped total. Failing and skipped rows of the same uid are both real and are counted in their
+    // own bucket, so a failing row must not erase a skipped one — that also keeps the bookkeeping independent of
+    // the order results arrive in.
+    private readonly Dictionary<string, int> _skippedRetriedTests = [];
 
     private RetryLifecycleCallbacks? _retryFailedTestsLifecycleCallbacks;
     private HashSet<string>? _testsBeingRetried;
@@ -117,12 +119,8 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
 
         if (skipped)
         {
-            _skippedRetriedTests.Add(uid);
-        }
-        else
-        {
-            // A failing row outranks a skipped one: the test is still failing, not skipped.
-            _skippedRetriedTests.Remove(uid);
+            _skippedRetriedTests.TryGetValue(uid, out int count);
+            _skippedRetriedTests[uid] = count + 1;
         }
     }
 

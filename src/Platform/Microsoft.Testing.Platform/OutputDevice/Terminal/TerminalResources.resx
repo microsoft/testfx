@@ -173,8 +173,8 @@
     <comment>Header of the run summary section that lists tests which failed at least once but eventually passed after a retry.</comment>
   </data>
   <data name="FlakyLowercase" xml:space="preserve">
-    <value>flaky</value>
-    <comment>Label of the run summary line counting tests that failed at least once but eventually passed, e.g. 'flaky: 2'. Keep parallel to the 'failed'/'succeeded'/'skipped' labels.</comment>
+    <value>flaky: {0} (passed after retry)</value>
+    <comment>{0} is the number of tests that failed at least once but eventually passed. Rendered in the run summary after the 'skipped' line. The parenthetical is important: it states that these tests are already included in the 'succeeded' count rather than forming a fourth outcome category alongside failed/succeeded/skipped.</comment>
   </data>
   <data name="FlakyTransition" xml:space="preserve">
     <value>failed -&gt; passed</value>

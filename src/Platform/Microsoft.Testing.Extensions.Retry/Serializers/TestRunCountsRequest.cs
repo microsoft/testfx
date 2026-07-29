@@ -29,7 +29,7 @@ namespace Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers;
 /// attempt — so the payload can be extended without a protocol-compatibility window.
 /// </para>
 /// </remarks>
-internal sealed class TestRunCountsRequest(int passedTests, int failedTests, int skippedTests, string[] recoveredTestUids, string[] skippedRetriedTestUids) : IRequest
+internal sealed class TestRunCountsRequest(int passedTests, int failedTests, int skippedTests, string[] recoveredTestUids, KeyValuePair<string, int>[] skippedRetriedTestResults) : IRequest
 {
     public int PassedTests { get; } = passedTests;
 
@@ -44,11 +44,13 @@ internal sealed class TestRunCountsRequest(int passedTests, int failedTests, int
     public string[] RecoveredTestUids { get; } = recoveredTestUids;
 
     /// <summary>
-    /// Gets the uids of the tests this attempt was asked to retry and which came back skipped. They stop being
-    /// retried (only failures are), so their outcome for the run changed from failed to skipped and the suite's
-    /// skipped count has to follow, otherwise they would silently be counted as having succeeded.
+    /// Gets, per test this attempt was asked to retry, how many of its results were skipped. A count rather than a
+    /// flag because a folded data-driven test reports one result per data row under a single uid; the orchestrator
+    /// adds these to a per-result skipped total, so the units have to match. Such results stop being retried (only
+    /// failures are) without ever passing, so the run's skipped count has to absorb them — otherwise the derived
+    /// succeeded count would claim they passed.
     /// </summary>
-    public string[] SkippedRetriedTestUids { get; } = skippedRetriedTestUids;
+    public KeyValuePair<string, int>[] SkippedRetriedTestResults { get; } = skippedRetriedTestResults;
 
     /// <summary>
     /// Gets the number of test results that actually executed (skipped excluded), which is the denominator the
@@ -73,7 +75,15 @@ internal sealed class TestRunCountsRequestSerializer : NamedPipeSerializer<TestR
         int failed = ReadInt(stream);
         int skipped = ReadInt(stream);
         string[] recovered = ReadUids(stream);
-        string[] skippedRetried = ReadUids(stream);
+
+        int skippedRetriedCount = ReadInt(stream);
+        var skippedRetried = new KeyValuePair<string, int>[skippedRetriedCount];
+        for (int i = 0; i < skippedRetriedCount; i++)
+        {
+            string uid = ReadString(stream);
+            skippedRetried[i] = new(uid, ReadInt(stream));
+        }
+
         return new(passed, failed, skipped, recovered, skippedRetried);
     }
 
@@ -83,7 +93,13 @@ internal sealed class TestRunCountsRequestSerializer : NamedPipeSerializer<TestR
         WriteInt(stream, objectToSerialize.FailedTests);
         WriteInt(stream, objectToSerialize.SkippedTests);
         WriteUids(stream, objectToSerialize.RecoveredTestUids);
-        WriteUids(stream, objectToSerialize.SkippedRetriedTestUids);
+
+        WriteInt(stream, objectToSerialize.SkippedRetriedTestResults.Length);
+        foreach (KeyValuePair<string, int> entry in objectToSerialize.SkippedRetriedTestResults)
+        {
+            WriteString(stream, entry.Key);
+            WriteInt(stream, entry.Value);
+        }
     }
 
     private static string[] ReadUids(Stream stream)

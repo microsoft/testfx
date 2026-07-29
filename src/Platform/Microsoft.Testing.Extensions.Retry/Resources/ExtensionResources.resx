@@ -165,8 +165,8 @@
     <comment>{0} is the number of tests still failing after the final attempt. Two leading spaces and the lowercase 'failed:' label mirror the platform run summary.</comment>
   </data>
   <data name="RetrySummaryFlakyLine" xml:space="preserve">
-    <value>  flaky: {0}</value>
-    <comment>{0} is the number of tests that failed at least once but eventually passed. Two leading spaces and the lowercase 'flaky:' label mirror the platform run summary.</comment>
+    <value>  flaky: {0} (passed after retry)</value>
+    <comment>{0} is the number of tests that failed at least once but eventually passed. Two leading spaces mirror the platform run summary. The parenthetical is important: it states that these tests are already included in the 'succeeded' count rather than forming a fourth outcome category alongside failed/succeeded/skipped.</comment>
   </data>
   <data name="RetrySummaryFlakyTestsHeader" xml:space="preserve">
     <value>Flaky tests:</value>

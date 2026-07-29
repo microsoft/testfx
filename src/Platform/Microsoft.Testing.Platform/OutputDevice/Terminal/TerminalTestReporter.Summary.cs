@@ -424,7 +424,7 @@ internal sealed partial class TerminalTestReporter
         if (flakyTests > 0 && _options.ShowFlakyTests)
         {
             terminal.SetColor(TerminalColor.DarkYellow);
-            terminal.AppendLine($"{SingleIndentation}{TerminalResources.FlakyLowercase}: {flakyTests}");
+            terminal.AppendLine($"{SingleIndentation}{string.Format(CultureInfo.CurrentCulture, TerminalResources.FlakyLowercase, flakyTests)}");
             terminal.ResetColor();
         }
 

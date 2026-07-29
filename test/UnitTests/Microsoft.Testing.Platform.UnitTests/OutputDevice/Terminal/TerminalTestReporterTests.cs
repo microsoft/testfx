@@ -2314,7 +2314,7 @@ public sealed class TerminalTestReporterTests
         Assert.Contains($"{TerminalResources.Retried}: {string.Format(CultureInfo.CurrentCulture, TerminalResources.RetriedTestsAndRuns, 1, 1)}", output);
 
         // The test failed once and then passed, so it is flaky and is both counted and named.
-        Assert.Contains($"{TerminalResources.FlakyLowercase}: 1", output);
+        Assert.Contains(string.Format(CultureInfo.CurrentCulture, TerminalResources.FlakyLowercase, 1), output);
         Assert.Contains(TerminalResources.FlakyTests, output);
 
         // The retry also surfaces in the per-assembly "(try N) Running tests from" banner.
@@ -2354,7 +2354,7 @@ public sealed class TerminalTestReporterTests
         string output = stringBuilderConsole.Output;
 
         Assert.Contains($"{TerminalResources.Retried}: {string.Format(CultureInfo.CurrentCulture, TerminalResources.RetriedTestsAndRuns, 1, 1)}", output);
-        Assert.DoesNotContain($"{TerminalResources.FlakyLowercase}: ", output);
+        Assert.DoesNotContain("flaky:", output);
         Assert.DoesNotContain(TerminalResources.FlakyTests, output);
     }
 
@@ -2390,7 +2390,7 @@ public sealed class TerminalTestReporterTests
 
         string output = stringBuilderConsole.Output;
 
-        Assert.DoesNotContain($"{TerminalResources.FlakyLowercase}: ", output);
+        Assert.DoesNotContain("flaky:", output);
         Assert.DoesNotContain(TerminalResources.FlakyTests, output);
         Assert.Contains($"{TerminalResources.Retried}: {string.Format(CultureInfo.CurrentCulture, TerminalResources.RetriedTestsAndRuns, 1, 1)}", output);
     }
@@ -2415,7 +2415,7 @@ public sealed class TerminalTestReporterTests
 
         string output = stringBuilderConsole.Output;
 
-        Assert.DoesNotContain($"{TerminalResources.FlakyLowercase}: ", output);
+        Assert.DoesNotContain("flaky:", output);
         Assert.DoesNotContain($"{TerminalResources.Retried}: ", output);
     }
 

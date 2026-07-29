@@ -78,9 +78,9 @@ internal sealed class RetryFailedTestsPipeServer : IDisposable
     public IReadOnlyList<string> RecoveredTests { get; private set; } = [];
 
     /// <summary>
-    /// Gets the uids of the tests this attempt was asked to retry which came back skipped.
+    /// Gets, per test this attempt was asked to retry, how many of its results were skipped.
     /// </summary>
-    public IReadOnlyList<string> SkippedRetriedTests { get; private set; } = [];
+    public IReadOnlyList<KeyValuePair<string, int>> SkippedRetriedTests { get; private set; } = [];
 
     /// <summary>
     /// Gets a value indicating whether the attempt reported its counts at all. An attempt that dies before its test
@@ -115,7 +115,7 @@ internal sealed class RetryFailedTestsPipeServer : IDisposable
             FailedTestResults = testRunCounts.FailedTests;
             SkippedTests = testRunCounts.SkippedTests;
             RecoveredTests = testRunCounts.RecoveredTestUids;
-            SkippedRetriedTests = testRunCounts.SkippedRetriedTestUids;
+            SkippedRetriedTests = testRunCounts.SkippedRetriedTestResults;
             CountsReported = true;
             return Task.FromResult((IResponse)VoidResponse.CachedInstance);
         }

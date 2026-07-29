@@ -66,7 +66,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             testHostResult.AssertOutputContains("  failed: 0");
             testHostResult.AssertOutputContains("  succeeded: 3");
             testHostResult.AssertOutputContains("  skipped: 0");
-            testHostResult.AssertOutputContains("  flaky: 1");
+            testHostResult.AssertOutputContains("  flaky: 1 (passed after retry)");
             // The single retried test cost exactly one extra run; the old "(+N retried)" suffix conflated the two.
             testHostResult.AssertOutputContains("  retried: 1 test(s), 1 extra run(s)");
             // ...and it is named, which is the whole point of the flaky report.
@@ -146,6 +146,43 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         testHostResult.AssertOutputContains("  failed: 0");
         testHostResult.AssertOutputContains("  succeeded: 2");
         testHostResult.AssertOutputContains("  skipped: 1");
+    }
+
+    /// <summary>
+    /// When a retry attempt dies before its test session finishes it reports no counts at all. The summary must
+    /// keep the last figures it actually received instead of treating the missing report as "zero failures", which
+    /// would render a red verdict above a green-looking tally.
+    /// </summary>
+    [TestMethod]
+    // Uses FailFast, and crash dumps are not supported on .NET Framework at the moment.
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    public async Task RetryFailedTests_WhenRetryAttemptCrashes_KeepsLastReportedCounts(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--retry-failed-tests 1 --results-directory {resultDirectory}",
+            new()
+            {
+                { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
+                { "METHOD1", "1" },
+                { "FAIL", "1" },
+                { "CRASHONRETRY", "1" },
+                { "RESULTDIR", resultDirectory },
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertOutputContains("Retry summary: Failed!");
+
+        // The crashed retry reported nothing, so the run's figures are the first attempt's: one test still failing
+        // out of three. Resetting to "failed: 0" would contradict the red verdict directly above it.
+        testHostResult.AssertOutputContains("  total: 3");
+        testHostResult.AssertOutputContains("  failed: 1");
+        testHostResult.AssertOutputContains("  succeeded: 2");
+
+        // Nothing recovered, so nothing is flaky.
+        testHostResult.AssertOutputDoesNotContain("  flaky:");
+        testHostResult.AssertOutputDoesNotContain("Flaky tests:");
     }
 
     [TestMethod]
@@ -567,6 +604,15 @@ public class DummyTestFramework : ITestFramework, IDataProducer
             // test has not recovered, so it must not be counted or listed as flaky. Inferring recovery from
             // "no longer in the failed set" would wrongly report it as 'failed -> passed'.
             bool skipOnRetry = Environment.GetEnvironmentVariable("SKIPONRETRY") == "1" && uidFilter is not null;
+
+            // CRASHONRETRY lets the FIRST attempt report its results normally and kills the RETRY attempt before it
+            // can report anything. The summary must then keep the last counts it actually received rather than
+            // resetting them to zero.
+            if (Environment.GetEnvironmentVariable("CRASHONRETRY") == "1" && uidFilter is not null)
+            {
+                Environment.FailFast("CRASHONRETRY");
+            }
+
             if (skipOnRetry)
             {
                 await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
