@@ -80,9 +80,26 @@ public class TrxLongPathHelperTests
     [TestMethod]
     public void GetPathForFileSystemAccess_WhenPathIsShort_ReturnsPathUnchanged()
     {
-        string path = Path.Combine(Path.GetTempPath(), "short.txt");
+        // Deliberately a *relative* path. For a short path the helper must hand back exactly what it
+        // was given rather than the resolved form, and an absolute path cannot distinguish those two
+        // because it is equal to its own Path.GetFullPath result - so a helper that wrongly returned
+        // the resolved path for short inputs would still pass.
+        const string RelativePath = "short.txt";
 
-        Assert.AreEqual(path, TrxLongPathHelper.GetPathForFileSystemAccess(path));
+        string originalCurrentDirectory = Directory.GetCurrentDirectory();
+        try
+        {
+            // Anchor the working directory somewhere short so the resolved form stays under MAX_PATH
+            // however deeply the repository happens to be cloned.
+            Directory.SetCurrentDirectory(Path.GetTempPath());
+            Assert.IsLessThan(MaxShortPathLength, Path.GetFullPath(RelativePath).Length);
+
+            Assert.AreEqual(RelativePath, TrxLongPathHelper.GetPathForFileSystemAccess(RelativePath));
+        }
+        finally
+        {
+            Directory.SetCurrentDirectory(originalCurrentDirectory);
+        }
     }
 }
 
