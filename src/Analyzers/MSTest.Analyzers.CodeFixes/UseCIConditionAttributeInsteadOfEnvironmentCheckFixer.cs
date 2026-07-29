@@ -57,7 +57,7 @@ public sealed class UseCIConditionAttributeInsteadOfEnvironmentCheckFixer : Code
             CodeAction.Create(
                 title: CodeFixResources.UseCIConditionAttributeInsteadOfEnvironmentCheckFix,
                 createChangedDocument: ct => SkipGuardCodeFixHelper.ReplaceGuardWithAttributeAsync(
-                    context.Document, methodDeclaration, ifStatement, "CICondition", [$"ConditionMode.{conditionMode}"], ct),
+                    context.Document, methodDeclaration, ifStatement, "CIConditionAttribute", [$"ConditionMode.{conditionMode}"], ct),
                 equivalenceKey: nameof(UseCIConditionAttributeInsteadOfEnvironmentCheckFixer)),
             diagnostic);
     }

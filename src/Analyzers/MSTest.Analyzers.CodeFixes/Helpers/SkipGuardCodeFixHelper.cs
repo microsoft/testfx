@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Editing;
+using Microsoft.CodeAnalysis.Simplification;
 
 namespace MSTest.Analyzers.Helpers;
 
@@ -14,21 +15,23 @@ namespace MSTest.Analyzers.Helpers;
 /// </summary>
 internal static class SkipGuardCodeFixHelper
 {
+    private const string MSTestNamespace = "Microsoft.VisualStudio.TestTools.UnitTesting";
+
     /// <summary>
     /// Removes the guard from the method and adds the given attribute to it.
     /// </summary>
     /// <param name="document">The document to update.</param>
     /// <param name="methodDeclaration">The test method holding the guard.</param>
     /// <param name="ifStatement">The guard to remove.</param>
-    /// <param name="attributeName">The attribute name to add, without the 'Attribute' suffix.</param>
-    /// <param name="arguments">The attribute arguments, as source text. Can be empty for a parameterless attribute.</param>
+    /// <param name="attributeTypeName">The metadata name of the attribute to add, relative to the MSTest namespace.</param>
+    /// <param name="arguments">The attribute arguments, as source text relative to the MSTest namespace.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The updated document.</returns>
     public static async Task<Document> ReplaceGuardWithAttributeAsync(
         Document document,
         MethodDeclarationSyntax methodDeclaration,
         IfStatementSyntax ifStatement,
-        string attributeName,
+        string attributeTypeName,
         string[] arguments,
         CancellationToken cancellationToken)
     {
@@ -40,20 +43,25 @@ internal static class SkipGuardCodeFixHelper
             return document;
         }
 
-        editor.ReplaceNode(methodDeclaration, modifiedMethod.AddAttributeLists(CreateAttributeList(attributeName, arguments)));
+        editor.ReplaceNode(methodDeclaration, modifiedMethod.AddAttributeLists(CreateAttributeList(attributeTypeName, arguments)));
         return editor.GetChangedDocument();
     }
 
-    private static AttributeListSyntax CreateAttributeList(string attributeName, string[] arguments)
+    private static AttributeListSyntax CreateAttributeList(string attributeTypeName, string[] arguments)
     {
-        AttributeSyntax attribute = SyntaxFactory.Attribute(SyntaxFactory.IdentifierName(attributeName));
+        // Generate fully qualified names and let the simplifier shorten them. The test method may be decorated with a
+        // fully qualified '[Microsoft.VisualStudio.TestTools.UnitTesting.TestMethod]' without importing the namespace,
+        // or the file may declare a conflicting type, and unqualified identifiers wouldn't compile in either case.
+        AttributeSyntax attribute = SyntaxFactory.Attribute(
+            SyntaxFactory.ParseName($"{MSTestNamespace}.{attributeTypeName}").WithAdditionalAnnotations(Simplifier.Annotation));
 
         if (arguments.Length > 0)
         {
             attribute = attribute.WithArgumentList(
                 SyntaxFactory.AttributeArgumentList(
                     SyntaxFactory.SeparatedList(
-                        arguments.Select(argument => SyntaxFactory.AttributeArgument(SyntaxFactory.ParseExpression(argument))))));
+                        arguments.Select(argument => SyntaxFactory.AttributeArgument(
+                            SyntaxFactory.ParseExpression($"{MSTestNamespace}.{argument}").WithAdditionalAnnotations(Simplifier.Annotation))))));
         }
 
         return SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(attribute));
@@ -78,8 +86,8 @@ internal static class SkipGuardCodeFixHelper
             if (index >= 0 && index < block.Statements.Count - 1)
             {
                 StatementSyntax nextStatement = block.Statements[index + 1];
-                SyntaxTriviaList cleanedTrivia = new(nextStatement.GetLeadingTrivia().Where(t => !t.IsKind(SyntaxKind.EndOfLineTrivia)));
-                StatementSyntax newNextStatement = nextStatement.WithLeadingTrivia(cleanedTrivia);
+                StatementSyntax newNextStatement = nextStatement.WithLeadingTrivia(
+                    RemoveLeadingBlankLines(nextStatement.GetLeadingTrivia()));
                 trackedMethod = trackedMethod.ReplaceNode(nextStatement, newNextStatement);
                 trackedIfStatement = trackedMethod.GetCurrentNode(ifStatement);
             }
@@ -88,5 +96,23 @@ internal static class SkipGuardCodeFixHelper
         return trackedIfStatement is not null
             ? trackedMethod.RemoveNode(trackedIfStatement, SyntaxRemoveOptions.KeepNoTrivia)
             : null;
+    }
+
+    private static SyntaxTriviaList RemoveLeadingBlankLines(SyntaxTriviaList leadingTrivia)
+    {
+        // Only strip line endings from the whitespace run that precedes the first comment or directive. Filtering the
+        // whole list would also drop the newline that terminates a comment, which would join the following statement
+        // onto the comment line and silently comment the code out.
+        int firstMeaningfulTrivia = 0;
+        while (firstMeaningfulTrivia < leadingTrivia.Count &&
+            (leadingTrivia[firstMeaningfulTrivia].IsKind(SyntaxKind.WhitespaceTrivia) ||
+                leadingTrivia[firstMeaningfulTrivia].IsKind(SyntaxKind.EndOfLineTrivia)))
+        {
+            firstMeaningfulTrivia++;
+        }
+
+        return new SyntaxTriviaList(
+            leadingTrivia.Take(firstMeaningfulTrivia).Where(t => !t.IsKind(SyntaxKind.EndOfLineTrivia))
+                .Concat(leadingTrivia.Skip(firstMeaningfulTrivia)));
     }
 }

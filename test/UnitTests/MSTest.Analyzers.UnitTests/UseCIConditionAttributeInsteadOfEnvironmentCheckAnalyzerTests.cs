@@ -82,7 +82,7 @@ public sealed class UseCIConditionAttributeInsteadOfEnvironmentCheckAnalyzerTest
                 [TestMethod]
                 public void TestMethod()
                 {
-                    [|if (Environment.GetEnvironmentVariable("TF_BUILD") != null)
+                    [|if (Environment.GetEnvironmentVariable("CI") != null)
                     {
                         return;
                     }|]
@@ -121,7 +121,7 @@ public sealed class UseCIConditionAttributeInsteadOfEnvironmentCheckAnalyzerTest
                 [TestMethod]
                 public void TestMethod()
                 {
-                    [|if (Environment.GetEnvironmentVariable("GITHUB_ACTIONS") is null)
+                    [|if (Environment.GetEnvironmentVariable("CI") is null)
                     {
                         return;
                     }|]
@@ -263,6 +263,111 @@ public sealed class UseCIConditionAttributeInsteadOfEnvironmentCheckAnalyzerTest
             """;
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodAttributeIsFullyQualified_FixIsFullyQualified()
+    {
+        string code = """
+            using System;
+
+            [Microsoft.VisualStudio.TestTools.UnitTesting.TestClass]
+            public class MyTestClass
+            {
+                [Microsoft.VisualStudio.TestTools.UnitTesting.TestMethod]
+                public void TestMethod()
+                {
+                    [|if (Environment.GetEnvironmentVariable("CI") == null)
+                    {
+                        return;
+                    }|]
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+
+            [Microsoft.VisualStudio.TestTools.UnitTesting.TestClass]
+            public class MyTestClass
+            {
+                [Microsoft.VisualStudio.TestTools.UnitTesting.TestMethod]
+                [Microsoft.VisualStudio.TestTools.UnitTesting.CICondition(Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode.Include)]
+                public void TestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenNextStatementHasALeadingComment_TheCommentIsPreserved()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    [|if (Environment.GetEnvironmentVariable("CI") == null)
+                    {
+                        return;
+                    }|]
+
+                    // This comment must not swallow the assertion below.
+                    Assert.IsTrue(true);
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [CICondition(ConditionMode.Include)]
+                public void TestMethod()
+                {
+                    // This comment must not swallow the assertion below.
+                    Assert.IsTrue(true);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenVariableIsAProviderSpecificFlag_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    if (Environment.GetEnvironmentVariable("TF_BUILD") == null)
+                    {
+                        return;
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
     [TestMethod]

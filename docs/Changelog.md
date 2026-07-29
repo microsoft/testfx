@@ -14,7 +14,7 @@ See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4
 * Add dedicated timeout configuration for `[GlobalTestInitialize]` / `[GlobalTestCleanup]` fixtures via the `timeout:globalTestInitialize` / `timeout:globalTestCleanup` `testconfig.json` keys (RunSettings XML: `GlobalTestInitializeTimeout` / `GlobalTestCleanupTimeout`). These fall back to the per-test `testInitialize` / `testCleanup` timeouts when unset, and global fixture timeout/cancellation diagnostics now use dedicated messages ("Global test initialize/cleanup method ...") in [#9985](https://github.com/microsoft/testfx/issues/9985)
 * Add a code fix for MSTEST0041 that adds `[TestClass]` to a type decorated with a `ConditionBaseAttribute`-derived attribute in [#10283](https://github.com/microsoft/testfx/pull/10283)
 * Add MSTEST0079, which suggests replacing a `RuntimeInformation.ProcessArchitecture` guard at the top of a test method (early `return` or `Assert.Inconclusive`) with `[ArchitectureCondition]`, along with a code fix in [#10271](https://github.com/microsoft/testfx/issues/10271)
-* Add MSTEST0080, which suggests replacing a null check on a continuous integration environment variable at the top of a test method (early `return` or `Assert.Inconclusive`) with `[CICondition]`, along with a code fix in [#10271](https://github.com/microsoft/testfx/issues/10271)
+* Add MSTEST0080, which suggests replacing a null check on the `CI` environment variable at the top of a test method (early `return` or `Assert.Inconclusive`) with `[CICondition]`, along with a code fix in [#10271](https://github.com/microsoft/testfx/issues/10271)
 
 ### Changed
 

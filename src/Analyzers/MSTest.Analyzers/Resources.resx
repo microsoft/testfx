@@ -900,8 +900,8 @@ The type declaring these methods should also respect the following rules:
     <comment>{Locked="Environment.GetEnvironmentVariable"}{Locked="Assert.Inconclusive"}{Locked="[CICondition]"}</comment>
   </data>
   <data name="UseCIConditionAttributeInsteadOfEnvironmentCheckDescription" xml:space="preserve">
-    <value>Test methods that null-check a continuous integration environment variable and then early return or call 'Assert.Inconclusive' should use the '[CICondition]' attribute instead. This attribute recognizes all the CI providers MSTest knows about, and it reports the test as skipped instead of passed.</value>
-    <comment>{Locked="Assert.Inconclusive"}{Locked="[CICondition]"}</comment>
+    <value>Test methods that null-check the 'CI' environment variable and then early return or call 'Assert.Inconclusive' should use the '[CICondition]' attribute instead. This attribute recognizes all the continuous integration providers MSTest knows about and parses their values, and it reports the test as skipped instead of passed.</value>
+    <comment>{Locked="CI"}{Locked="Assert.Inconclusive"}{Locked="[CICondition]"}</comment>
   </data>
   <data name="DuplicateTestMethodAttributeTitle" xml:space="preserve">
     <value>Avoid duplicate test method attributes</value>

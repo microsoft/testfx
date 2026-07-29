@@ -25,19 +25,12 @@ public sealed class UseCIConditionAttributeInsteadOfEnvironmentCheckAnalyzer : D
     internal const string ExcludeMode = "Exclude";
 
     /// <summary>
-    /// The environment variables that <c>CIConditionAttribute</c> itself looks at. Keep in sync with
-    /// <c>CIEnvironmentDetector</c> so we never suggest replacing a check the attribute doesn't cover.
+    /// The environment variable a null check can stand in for. Deliberately limited to the general-use 'CI' flag that
+    /// every major provider sets: a guard on a provider-specific variable (say 'TF_BUILD') means "skip on Azure
+    /// Pipelines", while '[CICondition]' means "skip on any CI", so replacing it would change which environments run
+    /// the test.
     /// </summary>
-    private static readonly ImmutableHashSet<string> CIEnvironmentVariables = ImmutableHashSet.Create(
-        StringComparer.Ordinal,
-        "TF_BUILD",
-        "GITHUB_ACTIONS",
-        "APPVEYOR",
-        "CI",
-        "TRAVIS",
-        "CIRCLECI",
-        "TEAMCITY_VERSION",
-        "JB_SPACE_API_URL");
+    private const string CIEnvironmentVariable = "CI";
 
     private static readonly LocalizableResourceString Title = new(nameof(Resources.UseCIConditionAttributeInsteadOfEnvironmentCheckTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.UseCIConditionAttributeInsteadOfEnvironmentCheckMessageFormat), Resources.ResourceManager, typeof(Resources));
@@ -218,6 +211,5 @@ public sealed class UseCIConditionAttributeInsteadOfEnvironmentCheckAnalyzer : D
         => operation is IInvocationOperation invocation &&
             SymbolEqualityComparer.Default.Equals(invocation.TargetMethod, getEnvironmentVariableMethod) &&
             invocation.Arguments.Length == 1 &&
-            invocation.Arguments[0].Value.ConstantValue is { HasValue: true, Value: string variableName } &&
-            CIEnvironmentVariables.Contains(variableName);
+            invocation.Arguments[0].Value.ConstantValue is { HasValue: true, Value: CIEnvironmentVariable };
 }

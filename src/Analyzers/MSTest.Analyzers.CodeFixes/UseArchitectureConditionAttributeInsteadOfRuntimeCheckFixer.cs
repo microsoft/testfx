@@ -64,7 +64,7 @@ public sealed class UseArchitectureConditionAttributeInsteadOfRuntimeCheckFixer 
             CodeAction.Create(
                 title: CodeFixResources.UseArchitectureConditionAttributeInsteadOfRuntimeCheckFix,
                 createChangedDocument: ct => SkipGuardCodeFixHelper.ReplaceGuardWithAttributeAsync(
-                    context.Document, methodDeclaration, ifStatement, "ArchitectureCondition", arguments, ct),
+                    context.Document, methodDeclaration, ifStatement, "ArchitectureConditionAttribute", arguments, ct),
                 equivalenceKey: nameof(UseArchitectureConditionAttributeInsteadOfRuntimeCheckFixer)),
             diagnostic);
     }
