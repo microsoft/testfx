@@ -148,7 +148,7 @@ Extension options:
     --publish-azdo-run-name
         Custom Azure DevOps test run name for live test-result publishing.
     --publish-azdo-test-results
-        Publish test results live to the Azure DevOps Tests tab.
+        Publish test results to an Azure DevOps test run as tests complete. The run is listed in the build's Tests tab once the test session finishes.
     --report-azdo
         Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.
     --report-azdo-annotations
@@ -460,7 +460,7 @@ Registered command line providers:
       --publish-azdo-test-results
         Arity: 0
         Hidden: False
-        Description: Publish test results live to the Azure DevOps Tests tab.
+        Description: Publish test results to an Azure DevOps test run as tests complete. The run is listed in the build's Tests tab once the test session finishes.
       --report-azdo
         Arity: 0
         Hidden: False

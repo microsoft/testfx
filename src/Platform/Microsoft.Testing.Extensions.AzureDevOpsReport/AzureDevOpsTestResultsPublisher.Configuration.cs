@@ -55,9 +55,40 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
             runName = configuredRunName;
         }
 
-        publishConfiguration = new AzureDevOpsPublishConfiguration(collectionUri!, project!, accessToken!, buildId, runName, automatedTestStorage, resultsDirectory);
+        publishConfiguration = new AzureDevOpsPublishConfiguration(collectionUri!, project!, accessToken!, buildId, runName, automatedTestStorage, resultsDirectory)
+        {
+            PipelineReference = CreatePipelineReference(stageName, jobName),
+        };
         return true;
     }
+
+    private AzureDevOpsPipelineReference? CreatePipelineReference(string? stageName, string? jobName)
+    {
+        string? phaseName = _environment.GetEnvironmentVariable("SYSTEM_PHASENAME");
+        int? stageAttempt = GetOptionalEnvironmentVariableAsInt32("SYSTEM_STAGEATTEMPT");
+        int? phaseAttempt = GetOptionalEnvironmentVariableAsInt32("SYSTEM_PHASEATTEMPT");
+        int? jobAttempt = GetOptionalEnvironmentVariableAsInt32("SYSTEM_JOBATTEMPT");
+
+        // Azure DevOps rejects a reference that names nothing, and a run without any stage/job context is
+        // better linked to the build alone than to an empty reference.
+        return RoslynString.IsNullOrWhiteSpace(stageName) && RoslynString.IsNullOrWhiteSpace(phaseName) && RoslynString.IsNullOrWhiteSpace(jobName)
+            ? null
+            : new AzureDevOpsPipelineReference(
+                NullIfWhiteSpace(stageName),
+                stageAttempt,
+                NullIfWhiteSpace(phaseName),
+                phaseAttempt,
+                NullIfWhiteSpace(jobName),
+                jobAttempt);
+    }
+
+    private int? GetOptionalEnvironmentVariableAsInt32(string variableName)
+        => int.TryParse(_environment.GetEnvironmentVariable(variableName), NumberStyles.Integer, CultureInfo.InvariantCulture, out int value)
+            ? value
+            : null;
+
+    private static string? NullIfWhiteSpace(string? value)
+        => RoslynString.IsNullOrWhiteSpace(value) ? null : value;
 
     private string? GetRequiredEnvironmentVariable(string variableName, List<string> missingVariables)
     {
