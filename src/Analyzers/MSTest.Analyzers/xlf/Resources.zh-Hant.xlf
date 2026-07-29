@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="zh-Hant" original="../Resources.resx">
     <body>
@@ -312,32 +312,32 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="CultureMutationUnderParallelizationDescription">
         <source>'CultureInfo.DefaultThreadCurrentCulture' and 'DefaultThreadCurrentUICulture' set the default culture for the whole process, so every concurrently running test observes the change and formatting or parsing can be corrupted under in-assembly parallelization. The per-thread and ambient forms are intentionally not flagged: on modern .NET the 'Thread.CurrentThread.CurrentCulture' / 'CurrentUICulture' and 'CultureInfo.CurrentCulture' / 'CurrentUICulture' setters all assign an 'AsyncLocal'-backed value that flows with the execution context, so they do not corrupt sibling tests or leak onto later-pooled threads. Because the flagged setters are process-wide, restoring the previous value in a 'finally' does not help - concurrently running tests still observe the changed culture for the duration of the mutation; declare '[DoNotParallelize]' on the test, or avoid mutating process-wide culture, instead.</source>
-        <target state="new">'CultureInfo.DefaultThreadCurrentCulture' and 'DefaultThreadCurrentUICulture' set the default culture for the whole process, so every concurrently running test observes the change and formatting or parsing can be corrupted under in-assembly parallelization. The per-thread and ambient forms are intentionally not flagged: on modern .NET the 'Thread.CurrentThread.CurrentCulture' / 'CurrentUICulture' and 'CultureInfo.CurrentCulture' / 'CurrentUICulture' setters all assign an 'AsyncLocal'-backed value that flows with the execution context, so they do not corrupt sibling tests or leak onto later-pooled threads. Because the flagged setters are process-wide, restoring the previous value in a 'finally' does not help - concurrently running tests still observe the changed culture for the duration of the mutation; declare '[DoNotParallelize]' on the test, or avoid mutating process-wide culture, instead.</target>
+        <target state="translated">'CultureInfo.DefaultThreadCurrentCulture' 和 'DefaultThreadCurrentUICulture' 會設定整個處理序的預設文化特性，因此每個同時執行的測試都會發現變更，且在組件內平行處理之下的格式化或剖析可能會毀損。故意未標記每個執行緒和環境表單: 在新式 .NET 上， 'Thread.CurrentThread.CurrentCulture' / 'CurrentUICulture' 和 'CultureInfo.CurrentCulture' / 'CurrentUICulture' setter 全都會指派隨著執行內容流動的 'AsyncLocal' 支援值，因此不會毀損同層級測試或外洩至稍後集合的執行緒。因為已標記的 setter 為全處理序 setter，所以還原 'finally' 中的前一個值沒有幫助 - 同時執行的測試仍會在變更期間發現已變更的文化特性; 在測試上宣告 '[DoNotParallelize]', 或避免改變全處理序文化特性。</target>
         <note>{Locked="CultureInfo.DefaultThreadCurrentCulture"}{Locked="DefaultThreadCurrentUICulture"}{Locked="Thread.CurrentThread.CurrentCulture"}{Locked="CurrentUICulture"}{Locked="CultureInfo.CurrentCulture"}{Locked="AsyncLocal"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="CultureMutationUnderParallelizationMessageFormat">
         <source>'{0}' sets the default culture for the whole process, so every concurrently running test observes the change, which can corrupt formatting and parsing in tests running in parallel; avoid mutating it in a parallelized test suite, or declare '[DoNotParallelize]'</source>
-        <target state="new">'{0}' sets the default culture for the whole process, so every concurrently running test observes the change, which can corrupt formatting and parsing in tests running in parallel; avoid mutating it in a parallelized test suite, or declare '[DoNotParallelize]'</target>
+        <target state="translated">'{0}'會設定整個處理序的預設文化特性，因此每個同時執行的測試都會發現變更，這可能使平行執行測試中的格式化和剖析毀損; 避免在平行化測試套件中改變它，或宣告 '[DoNotParallelize]'</target>
         <note>{0} is the mutated API (for example 'CultureInfo.DefaultThreadCurrentCulture'). {Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="CultureMutationUnderParallelizationTitle">
         <source>Avoid mutating process-wide culture in a parallelized test</source>
-        <target state="new">Avoid mutating process-wide culture in a parallelized test</target>
+        <target state="translated">避免在平行化測試中將改變全處理序文化特性</target>
         <note />
       </trans-unit>
       <trans-unit id="CurrentDirectoryMutationUnderParallelizationDescription">
         <source>The current directory is process-global on every operating system and, unlike culture, has no thread-scoped or async-scoped equivalent. A test that changes it corrupts the working directory of every test running concurrently, and relative paths resolved elsewhere in the suite silently point at the wrong location. A '[ResourceLock]' serializes the contending tests and makes the mutation safe, but it remains a design smell in a parallel suite: prefer passing absolute paths so the current directory never needs to change.</source>
-        <target state="new">The current directory is process-global on every operating system and, unlike culture, has no thread-scoped or async-scoped equivalent. A test that changes it corrupts the working directory of every test running concurrently, and relative paths resolved elsewhere in the suite silently point at the wrong location. A '[ResourceLock]' serializes the contending tests and makes the mutation safe, but it remains a design smell in a parallel suite: prefer passing absolute paths so the current directory never needs to change.</target>
+        <target state="translated">目前目錄在每個作業系統上都是處理序全域目錄，而且與文化特性不同，沒有執行緒範圍或非同步範圍的對等項目。變更它的測試會毀損同時執行之每個測試的工作目錄，而在套件中別處解析的相對路徑會以無訊息方式指向錯誤的位置。'[ResourceLock]' 會將競爭的測試序列化，並且讓變動安全，但它仍然是平行套件中的設計異味：偏好傳遞絕對路徑，讓目前目錄永遠不需要變更。</target>
         <note>{Locked="[ResourceLock]"}</note>
       </trans-unit>
       <trans-unit id="CurrentDirectoryMutationUnderParallelizationMessageFormat">
         <source>'{0}' changes the process-global current directory, which has no per-thread equivalent and is observed by every concurrently running test; avoid mutating it in a parallelized test suite (declare '[ResourceLock(WellKnownResources.CurrentDirectory)]' to at least coordinate, or '[DoNotParallelize]')</source>
-        <target state="new">'{0}' changes the process-global current directory, which has no per-thread equivalent and is observed by every concurrently running test; avoid mutating it in a parallelized test suite (declare '[ResourceLock(WellKnownResources.CurrentDirectory)]' to at least coordinate, or '[DoNotParallelize]')</target>
+        <target state="translated">'{0}' 會變更處理序全域目前目錄，該目錄沒有每個執行緒同等項目，而且會由每個同時執行的測試發現; 避免在平行化測試套件中將它轉變 (至少宣告 '[ResourceLock(WellKnownResources.CurrentDirectory)]' 為坐標，或 '[DoNotParallelize]')</target>
         <note>{0} is the mutated API (for example 'Directory.SetCurrentDirectory'). {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="CurrentDirectoryMutationUnderParallelizationTitle">
         <source>Avoid changing the current directory in a parallelized test</source>
-        <target state="new">Avoid changing the current directory in a parallelized test</target>
+        <target state="translated">避免在平行化測試中變更目前的目錄</target>
         <note />
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidDescription">
@@ -747,12 +747,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="PreferConstantForResourceLockDescription">
         <source>'[ResourceLock]' matches tests by exact string equality of the resource key. A bare string literal fails open: a typo produces a different key, so conflicting tests are no longer serialized and race silently instead of failing with an error. Referencing a shared constant makes typos a compile error and lets the compiler enforce that every test contending on the same resource uses the same key.</source>
-        <target state="new">'[ResourceLock]' matches tests by exact string equality of the resource key. A bare string literal fails open: a typo produces a different key, so conflicting tests are no longer serialized and race silently instead of failing with an error. Referencing a shared constant makes typos a compile error and lets the compiler enforce that every test contending on the same resource uses the same key.</target>
+        <target state="translated">'[ResourceLock]' 依資源金鑰的確切字串相等性來比對測試。無法開啟裸機字串長值: 錯字會產生不同的金鑰，因此有衝突的測試不再序列化並默默地競爭，而不會因錯誤而失敗。參照共用常數會使錯字成為編譯錯誤，並可讓編譯器強制在相同資源上競爭的每一項測試都使用相同的金鑰。</target>
         <note>{Locked="[ResourceLock]"}</note>
       </trans-unit>
       <trans-unit id="PreferConstantForResourceLockMessageFormat">
         <source>The '[ResourceLock]' resource key '{0}' is a bare string literal; reference a shared constant (such as a 'WellKnownResources' member or your own 'const') so that typos do not silently produce a different, unshared key</source>
-        <target state="new">The '[ResourceLock]' resource key '{0}' is a bare string literal; reference a shared constant (such as a 'WellKnownResources' member or your own 'const') so that typos do not silently produce a different, unshared key</target>
+        <target state="translated">'[ResourceLock]' 資源金鑰 '{0}' 是裸機字串長值; 參照共用常數 (例如 'WellKnownResources' 成員或您自己的 'const')，讓錯字不會默默地產生不同的未共用金鑰</target>
         <note>{0} is the resource key value. {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="'const'"}</note>
       </trans-unit>
       <trans-unit id="PreferConstantForResourceLockTitle">
@@ -872,17 +872,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="SharedFileSystemPathInTestDescription">
         <source>Passing a hardcoded absolute path, or a relative path literal, directly to a filesystem-mutating 'File.*'/'Directory.*' method (for example 'File.WriteAllText' or 'Directory.CreateDirectory') targets a location shared by every other test in the assembly; relative paths additionally resolve against the process-global current directory. Under in-assembly parallelization two tests can then write to the same location concurrently. Only statically constant paths passed to a mutating API are flagged; reads, path construction, and paths built from variables are left to the parallel-safety audit skill. Prefer a unique per-test directory such as 'TestContext.TestTempDirectory'.</source>
-        <target state="new">Passing a hardcoded absolute path, or a relative path literal, directly to a filesystem-mutating 'File.*'/'Directory.*' method (for example 'File.WriteAllText' or 'Directory.CreateDirectory') targets a location shared by every other test in the assembly; relative paths additionally resolve against the process-global current directory. Under in-assembly parallelization two tests can then write to the same location concurrently. Only statically constant paths passed to a mutating API are flagged; reads, path construction, and paths built from variables are left to the parallel-safety audit skill. Prefer a unique per-test directory such as 'TestContext.TestTempDirectory'.</target>
+        <target state="translated">將硬式編碼的絕對路徑或相對路徑常值直接傳遞至檔案系統可變 'File.*'/'Directory.*' 方法 (例如 'File.WriteAllText' 或 'Directory.CreateDirectory')，會將目標設為組件中每個其他測試所共用的位置; 相對路徑會額外針對處理序全域目前目錄解析。在組件內平行處理之下，兩個測試可接著同時寫入相同的位置。只會標記傳遞至可變 API 的靜態常數路徑; 讀取、路徑結構，以及從變數建立的路徑會留給平行安全的稽核技能。偏好唯一的每個測試目錄，例如 'TestContext.TestTempDirectory'。</target>
         <note>{Locked="File.*"}{Locked="Directory.*"}{Locked="TestContext.TestTempDirectory"}</note>
       </trans-unit>
       <trans-unit id="SharedFileSystemPathInTestMessageFormat">
         <source>The path '{0}' is a fixed location shared by every test in the assembly (and, when relative, resolves against the process-global current directory), so parallel tests that write to it can collide; use a unique per-test location such as 'TestContext.TestTempDirectory'</source>
-        <target state="new">The path '{0}' is a fixed location shared by every test in the assembly (and, when relative, resolves against the process-global current directory), so parallel tests that write to it can collide; use a unique per-test location such as 'TestContext.TestTempDirectory'</target>
+        <target state="translated">路徑 '{0}' 是組件中每個測試共用的固定位置 (相對位置會針對處理序全域目前目錄解析)，因此寫入其中的平行測試可能會衝突; 使用唯一的每個測試位置，例如 'TestContext.TestTempDirectory'</target>
         <note>{0} is the offending path literal. {Locked="TestContext.TestTempDirectory"}</note>
       </trans-unit>
       <trans-unit id="SharedFileSystemPathInTestTitle">
         <source>Avoid hardcoded or shared filesystem paths in a parallelized test</source>
-        <target state="new">Avoid hardcoded or shared filesystem paths in a parallelized test</target>
+        <target state="translated">避免平行化測試中硬式編碼或共用的檔案系統路徑</target>
         <note />
       </trans-unit>
       <trans-unit id="StringAssertToAssertMessageFormat">
@@ -932,17 +932,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="UndeclaredProcessGlobalStateMutationDescription">
         <source>Mutating process-global state (such as environment variables or the console redirection) from a test is unsafe once in-assembly parallelization is enabled, because a sibling test running concurrently observes the mutation. Unlike '[ResourceLock]', which fails open when a key is forgotten, this rule flags the mutation at compile time. Declare '[ResourceLock]' with the matching 'WellKnownResources' key to serialize contending tests, or '[DoNotParallelize]' to opt the test out of parallelization.</source>
-        <target state="new">Mutating process-global state (such as environment variables or the console redirection) from a test is unsafe once in-assembly parallelization is enabled, because a sibling test running concurrently observes the mutation. Unlike '[ResourceLock]', which fails open when a key is forgotten, this rule flags the mutation at compile time. Declare '[ResourceLock]' with the matching 'WellKnownResources' key to serialize contending tests, or '[DoNotParallelize]' to opt the test out of parallelization.</target>
+        <target state="translated">一旦啟用組件內平行處理，測試的可變處理序全域狀態 (例如環境變數或主控台重新導向) 不安全，因為同時執行的同層級測試觀察到變動。不同於 '[ResourceLock]' (在忘記金鑰時開啟失敗)，此規則會在編譯時標記變動。使用相符 'WellKnownResources' 金鑰宣告'[ResourceLock]' 以序列化競爭的測試，或宣告 '[DoNotParallelize]' 使測試退出平行處理。</target>
         <note>{Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="UndeclaredProcessGlobalStateMutationMessageFormat">
         <source>'{0}' mutates process-global state and is unsafe when tests run in parallel; declare '[ResourceLock(WellKnownResources.{1})]' on the test (or '[DoNotParallelize]')</source>
-        <target state="new">'{0}' mutates process-global state and is unsafe when tests run in parallel; declare '[ResourceLock(WellKnownResources.{1})]' on the test (or '[DoNotParallelize]')</target>
+        <target state="translated">'{0}' 會改變處理序全域狀態，且在測試平行執行時並不安全; 在測試上宣告 '[ResourceLock(WellKnownResources.{1})]' (或 '[DoNotParallelize]')</target>
         <note>{0} is the mutated API (for example 'Environment.SetEnvironmentVariable'). {1} is a 'WellKnownResources' member name. {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="UndeclaredProcessGlobalStateMutationTitle">
         <source>Test mutating process-global state should declare a resource lock</source>
-        <target state="new">Test mutating process-global state should declare a resource lock</target>
+        <target state="translated">測試可變處理序全域狀態應該宣告資源鎖定</target>
         <note />
       </trans-unit>
       <trans-unit id="UseArchitectureConditionAttributeInsteadOfRuntimeCheckDescription">
