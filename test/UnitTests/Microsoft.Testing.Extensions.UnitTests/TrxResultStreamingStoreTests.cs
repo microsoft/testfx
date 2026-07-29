@@ -38,9 +38,11 @@ public sealed class TrxResultStreamingStoreTests
         // Unit tests never run on browser-wasm/wasi-wasm, so the background writer must be selected here;
         // this fails if the runtime probe is inverted.
         using var temp = TempDirectory.Create();
-        using var store = new TrxResultStreamingStore(temp.NewFilePath(), new RealFileSystem(), new RealTask(), Mock.Of<ILogger>());
+        var task = new RealTask();
+        using var store = new TrxResultStreamingStore(temp.NewFilePath(), new RealFileSystem(), task, Mock.Of<ILogger>());
 
         Assert.IsFalse(store.IsInline);
+        Assert.AreEqual(1, task.RunLongRunningCallCount);
     }
 
     [TestMethod]
@@ -265,6 +267,8 @@ public sealed class TrxResultStreamingStoreTests
 
     private sealed class RealTask : ITask
     {
+        public int RunLongRunningCallCount { get; private set; }
+
         public Task Run(Action action) => Task.Run(action);
 
         public Task Run(Func<Task> function, CancellationToken cancellationToken) => Task.Run(function, cancellationToken);
@@ -272,7 +276,10 @@ public sealed class TrxResultStreamingStoreTests
         public Task<T> Run<T>(Func<Task<T>?> function, CancellationToken cancellationToken) => Task.Run(function, cancellationToken);
 
         public Task RunLongRunning(Func<Task> action, string name, CancellationToken cancellationToken)
-            => Task.Factory.StartNew(action, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default).Unwrap();
+        {
+            RunLongRunningCallCount++;
+            return Task.Factory.StartNew(action, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default).Unwrap();
+        }
 
         public Task WhenAll(params Task[] tasks) => Task.WhenAll(tasks);
 
