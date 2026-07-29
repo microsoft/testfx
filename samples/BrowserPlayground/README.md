@@ -386,14 +386,11 @@ that the publisher reads back from the wasm virtual filesystem, completing the r
 `##vso[task.logissue …]` annotation for the failing test all work with no
 `PlatformNotSupportedException`.
 
-**Separate wasm concern — threading, not HTTP.** `--report-azdo --report-azdo-slow-test-history <days>`
-additionally starts the shared slow-test scan loop (`SlowTestReporterBase`), which calls
-`ITask.RunLongRunning`. Single-threaded wasm cannot create that thread, and `SlowTestReporterBase` does
-not currently consult `RuntimeFeatureHelper.IsMultiThreaded` before starting the loop, so that option
-combination is still unsupported here and is left to a separate change. It fails softly rather than
-loudly: `OnTestSessionStartingAsync` catches the exception and logs it, so the scan loop silently never
-runs and the reporter is left marked active — visible only under `--diagnostic`. Everything else in the
-extension is reachable on `browser-wasm`.
+`--report-azdo-slow-test-history <days>` normally starts the shared slow-test scan loop
+(`SlowTestReporterBase`) on a dedicated background thread. Single-threaded WebAssembly cannot create
+that thread, so the reporter detects the runtime and stays dormant without performing history I/O or
+calling `ITask.RunLongRunning`. The rest of the Azure DevOps report remains available on
+`browser-wasm`.
 
 **Not verified.** Nobody has run this from a real browser tab against `dev.azure.com`. CORS is not
 expected to be the blocker: `dev.azure.com` answers the preflight for these calls with

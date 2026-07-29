@@ -16,11 +16,6 @@ testApplicationBuilder.AddAppInsightsTelemetryProvider();
 // The following extensions are intentionally NOT registered on browser-wasm:
 // - AddHangDumpProvider / AddCrashDumpProvider: dumps rely on System.Diagnostics.Process,
 //   which is unsupported in the browser sandbox (see #8557).
-// - AddAzureDevOpsProvider: the AutomaticDecompression blocker is fixed (#10313 — the opt-in is
-//   now skipped where the handler does not support it), but registering it would expose
-//   --report-azdo-slow-test-history, whose scan loop still calls ITask.RunLongRunning
-//   unconditionally (see SlowTestReporterBase). See the README section "Azure DevOps report on
-//   browser-wasm".
 // Threading is not an issue for the registered providers: the platform detects the
 // single-threaded wasm runtime (RuntimeFeatureHelper.IsMultiThreaded == false) and runs the
 // pipeline inline, exactly as it does on wasi-wasm.
