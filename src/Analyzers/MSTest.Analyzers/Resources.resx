@@ -879,6 +879,30 @@ The type declaring these methods should also respect the following rules:
     <value>Test methods that use 'RuntimeInformation.IsOSPlatform' with early return or 'Assert.Inconclusive' should use the '[OSCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify OS-specific test requirements.</value>
     <comment>{Locked="RuntimeInformation.IsOSPlatform"}{Locked="Assert.Inconclusive"}{Locked="[OSCondition]"}</comment>
   </data>
+  <data name="UseArchitectureConditionAttributeInsteadOfRuntimeCheckTitle" xml:space="preserve">
+    <value>Use '[ArchitectureCondition]' attribute instead of 'RuntimeInformation.ProcessArchitecture' checks with early return or 'Assert.Inconclusive'</value>
+    <comment>{Locked="RuntimeInformation.ProcessArchitecture"}{Locked="Assert.Inconclusive"}{Locked="[ArchitectureCondition]"}</comment>
+  </data>
+  <data name="UseArchitectureConditionAttributeInsteadOfRuntimeCheckMessageFormat" xml:space="preserve">
+    <value>Use '[ArchitectureCondition]' attribute instead of 'RuntimeInformation.ProcessArchitecture' checks with early return or 'Assert.Inconclusive'</value>
+    <comment>{Locked="RuntimeInformation.ProcessArchitecture"}{Locked="Assert.Inconclusive"}{Locked="[ArchitectureCondition]"}</comment>
+  </data>
+  <data name="UseArchitectureConditionAttributeInsteadOfRuntimeCheckDescription" xml:space="preserve">
+    <value>Test methods that compare 'RuntimeInformation.ProcessArchitecture' and then early return or call 'Assert.Inconclusive' should use the '[ArchitectureCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify architecture-specific test requirements, and it reports the test as skipped rather than passed, which an early return does not.</value>
+    <comment>{Locked="RuntimeInformation.ProcessArchitecture"}{Locked="Assert.Inconclusive"}{Locked="[ArchitectureCondition]"}</comment>
+  </data>
+  <data name="UseCIConditionAttributeInsteadOfEnvironmentCheckTitle" xml:space="preserve">
+    <value>Use '[CICondition]' attribute instead of 'Environment.GetEnvironmentVariable' checks with early return or 'Assert.Inconclusive'</value>
+    <comment>{Locked="Environment.GetEnvironmentVariable"}{Locked="Assert.Inconclusive"}{Locked="[CICondition]"}</comment>
+  </data>
+  <data name="UseCIConditionAttributeInsteadOfEnvironmentCheckMessageFormat" xml:space="preserve">
+    <value>Use '[CICondition]' attribute instead of 'Environment.GetEnvironmentVariable' checks with early return or 'Assert.Inconclusive'</value>
+    <comment>{Locked="Environment.GetEnvironmentVariable"}{Locked="Assert.Inconclusive"}{Locked="[CICondition]"}</comment>
+  </data>
+  <data name="UseCIConditionAttributeInsteadOfEnvironmentCheckDescription" xml:space="preserve">
+    <value>Test methods that null-check the 'CI' environment variable and then early return or call 'Assert.Inconclusive' should use the '[CICondition]' attribute instead. This attribute recognizes all the continuous integration providers MSTest knows about and parses their values, and it reports the test as skipped rather than passed, which an early return does not.</value>
+    <comment>{Locked="CI"}{Locked="Assert.Inconclusive"}{Locked="[CICondition]"}</comment>
+  </data>
   <data name="DuplicateTestMethodAttributeTitle" xml:space="preserve">
     <value>Avoid duplicate test method attributes</value>
   </data>
