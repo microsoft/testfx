@@ -81,8 +81,12 @@ internal abstract class SlowTestReporterBase : IDataConsumer, ITestSessionLifeti
             // none: ITask.RunLongRunning throws PlatformNotSupportedException there, and scheduling the loop
             // with Task.Run instead would not help because it could not run while the single thread executes
             // tests, and awaiting it in OnTestSessionFinishingAsync would then hang. Slow-test surfacing is a
-            // best-effort diagnostic, so stay dormant — same decision as ShutdownProgressReporter. Checked
-            // before OnActivating so we also skip its (potentially expensive) host warm-up.
+            // best-effort diagnostic, so stay dormant — same decision as ShutdownProgressReporter.
+            //
+            // Without this the throw was caught by the handler below and written to the diagnostic log, so the
+            // reporter stayed marked active with no scan loop: no crash, but a failure invisible outside
+            // --diagnostic. Checked before OnActivating so we also skip its (potentially expensive) host
+            // warm-up, which for Azure DevOps performs slow-test history I/O.
             if (!RuntimeFeatureHelper.IsMultiThreaded)
             {
                 return Task.CompletedTask;
