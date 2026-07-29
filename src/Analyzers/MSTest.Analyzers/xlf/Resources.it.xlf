@@ -905,6 +905,41 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
         <target state="translated">La proprietà 'TestContext' deve essere valida</target>
         <note>{Locked="TestContext"}</note>
       </trans-unit>
+      <trans-unit id="TestFilterProviderShouldBeValidDescription">
+        <source>'[assembly: TestFilterProvider(typeof(MyFilter))]' passes the filter type as a 'Type', so the compiler accepts any type at all. The adapter validates it only when it materializes the filter, and then fails the whole run. The referenced type must be a non-generic, concrete class that implements 'ITestFilter' and exposes a public parameterless constructor, and at most one provider may be registered per test assembly. When targeting .NET, the generic '[assembly: TestFilterProvider&lt;MyFilter&gt;]' form enforces most of these through generic constraints instead.</source>
+        <target state="new">'[assembly: TestFilterProvider(typeof(MyFilter))]' passes the filter type as a 'Type', so the compiler accepts any type at all. The adapter validates it only when it materializes the filter, and then fails the whole run. The referenced type must be a non-generic, concrete class that implements 'ITestFilter' and exposes a public parameterless constructor, and at most one provider may be registered per test assembly. When targeting .NET, the generic '[assembly: TestFilterProvider&lt;MyFilter&gt;]' form enforces most of these through generic constraints instead.</target>
+        <note>{Locked="[assembly: TestFilterProvider(typeof(MyFilter))]"}{Locked="[assembly: TestFilterProvider&lt;MyFilter&gt;]"}{Locked="Type"}{Locked="ITestFilter"}</note>
+      </trans-unit>
+      <trans-unit id="TestFilterProviderShouldBeValidMessageFormat_Generic">
+        <source>'[TestFilterProvider]' references generic type '{0}'; the test filter type must not be generic</source>
+        <target state="new">'[TestFilterProvider]' references generic type '{0}'; the test filter type must not be generic</target>
+        <note>{0} is the referenced type name. {Locked="[TestFilterProvider]"}</note>
+      </trans-unit>
+      <trans-unit id="TestFilterProviderShouldBeValidMessageFormat_Multiple">
+        <source>The assembly registers more than one '[TestFilterProvider]'; at most one is allowed per test assembly, so compose the filtering strategies inside a single 'ITestFilter' implementation</source>
+        <target state="new">The assembly registers more than one '[TestFilterProvider]'; at most one is allowed per test assembly, so compose the filtering strategies inside a single 'ITestFilter' implementation</target>
+        <note>{Locked="[TestFilterProvider]"}{Locked="ITestFilter"}</note>
+      </trans-unit>
+      <trans-unit id="TestFilterProviderShouldBeValidMessageFormat_NoParameterlessConstructor">
+        <source>'[TestFilterProvider]' references type '{0}', which does not declare a public parameterless constructor</source>
+        <target state="new">'[TestFilterProvider]' references type '{0}', which does not declare a public parameterless constructor</target>
+        <note>{0} is the referenced type name. {Locked="[TestFilterProvider]"}</note>
+      </trans-unit>
+      <trans-unit id="TestFilterProviderShouldBeValidMessageFormat_NotATestFilter">
+        <source>'[TestFilterProvider]' references type '{0}', which does not implement 'ITestFilter'</source>
+        <target state="new">'[TestFilterProvider]' references type '{0}', which does not implement 'ITestFilter'</target>
+        <note>{0} is the referenced type name. {Locked="[TestFilterProvider]"}{Locked="ITestFilter"}</note>
+      </trans-unit>
+      <trans-unit id="TestFilterProviderShouldBeValidMessageFormat_NotInstantiable">
+        <source>'[TestFilterProvider]' references type '{0}', which is not a concrete class and so cannot be instantiated</source>
+        <target state="new">'[TestFilterProvider]' references type '{0}', which is not a concrete class and so cannot be instantiated</target>
+        <note>{0} is the referenced type name. {Locked="[TestFilterProvider]"}</note>
+      </trans-unit>
+      <trans-unit id="TestFilterProviderShouldBeValidTitle">
+        <source>'[TestFilterProvider]' should reference a valid test filter type</source>
+        <target state="new">'[TestFilterProvider]' should reference a valid test filter type</target>
+        <note>{Locked="[TestFilterProvider]"}</note>
+      </trans-unit>
       <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationMessageFormat">
         <source>TestMethodAttribute derived class '{0}' should add CallerFilePath and CallerLineNumber parameters to its constructor</source>
         <target state="translated">La classe derivata TestMethodAttribute '{0}' deve aggiungere i parametri CallerFilePath e CallerLineNumber al costruttore</target>

@@ -31,6 +31,7 @@ internal static class WellKnownTypeNames
     public const string MicrosoftVisualStudioTestToolsUnitTestingGlobalTestInitializeAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.GlobalTestInitializeAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingIgnoreAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.IgnoreAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingInheritanceBehavior = "Microsoft.VisualStudio.TestTools.UnitTesting.InheritanceBehavior";
+    public const string MicrosoftVisualStudioTestToolsUnitTestingITestFilter = "Microsoft.VisualStudio.TestTools.UnitTesting.ITestFilter";
     public const string MicrosoftVisualStudioTestToolsUnitTestingMemberConditionAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.MemberConditionAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingOSConditionAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.OSConditionAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingOwnerAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.OwnerAttribute";
@@ -42,6 +43,7 @@ internal static class WellKnownTypeNames
     public const string MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingTestCleanupAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingTestContext = "Microsoft.VisualStudio.TestTools.UnitTesting.TestContext";
+    public const string MicrosoftVisualStudioTestToolsUnitTestingTestFilterProviderAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterProviderAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingTestInitializeAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingTestMethodAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingTestPropertyAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.TestPropertyAttribute";

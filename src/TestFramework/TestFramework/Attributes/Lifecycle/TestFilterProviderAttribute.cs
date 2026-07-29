@@ -21,6 +21,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// run and reused for every test of that assembly.
 /// </para>
 /// <para>
+/// Because the filter type is passed as a <see cref="Type"/>, none of those requirements are
+/// checked by the compiler. The <c>MSTEST0079</c> analyzer validates them at build time, and on
+/// .NET the generic <c>TestFilterProviderAttribute&lt;TFilter&gt;</c> variant enforces them
+/// through generic constraints instead.
+/// </para>
+/// <para>
 /// The filter runs <em>before</em> the test type is loaded, before <c>[AssemblyInitialize]</c>,
 /// before <c>[ClassInitialize]</c>, and before the test constructor is invoked, so dropping or
 /// skipping a test through <see cref="ITestFilter"/> avoids paying any of those costs.
@@ -42,7 +48,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </example>
 [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false, Inherited = false)]
 [Experimental("MSTESTEXP", UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
-public sealed class TestFilterProviderAttribute : Attribute
+public class TestFilterProviderAttribute : Attribute
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="TestFilterProviderAttribute"/> class.

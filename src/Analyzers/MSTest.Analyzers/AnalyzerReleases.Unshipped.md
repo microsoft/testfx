@@ -12,3 +12,4 @@ MSTEST0075 | Usage | Info | CurrentDirectoryMutationUnderParallelizationAnalyzer
 MSTEST0076 | Usage | Info | CultureMutationUnderParallelizationAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0076)
 MSTEST0077 | Usage | Info | SharedFileSystemPathInTestAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0077)
 MSTEST0078 | Usage | Warning | DependsOnShouldBeValidAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0078)
+MSTEST0079 | Usage | Warning | TestFilterProviderShouldBeValidAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0079)

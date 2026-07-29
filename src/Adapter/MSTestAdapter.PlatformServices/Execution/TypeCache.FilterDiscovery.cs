@@ -149,9 +149,22 @@ internal sealed partial class TypeCache
         // Compare on the attribute type's FullName so we don't trigger attribute construction,
         // mirroring the AssemblyFixtureProvider probe.
         string markerFullName = typeof(TestFilterProviderAttribute).FullName!;
+
+        // The type-safe TestFilterProviderAttribute<TFilter> derives from the non-generic marker, so
+        // it is picked up by the GetCustomAttributes(assembly, typeof(TestFilterProviderAttribute))
+        // lookup below. Its CustomAttributeData reports the *constructed* type though, whose FullName
+        // embeds the type argument, so this probe has to compare against the generic type definition.
+        string genericMarkerFullName = markerFullName + "`1";
+
         foreach (CustomAttributeData data in assembly.GetCustomAttributesData())
         {
-            if (string.Equals(data.AttributeType.FullName, markerFullName, StringComparison.Ordinal))
+            Type attributeType = data.AttributeType;
+            string? attributeFullName = attributeType.IsGenericType
+                ? attributeType.GetGenericTypeDefinition().FullName
+                : attributeType.FullName;
+
+            if (string.Equals(attributeFullName, markerFullName, StringComparison.Ordinal)
+                || string.Equals(attributeFullName, genericMarkerFullName, StringComparison.Ordinal))
             {
                 return true;
             }

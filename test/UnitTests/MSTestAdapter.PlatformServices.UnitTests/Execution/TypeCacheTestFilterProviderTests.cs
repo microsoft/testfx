@@ -88,6 +88,20 @@ public class TypeCacheTestFilterProviderTests : TestContainer
         filter.Should().NotBeNull().And.BeOfType<NoOpFilter>();
     }
 
+#if NET
+    // The generic attribute is only shipped in the .NET assets of MSTest.TestFramework, because .NET
+    // Framework reflection cannot materialize a generic custom attribute at all.
+    public void GenericTestFilterProviderAttribute_IsDiscoverableAsNonGenericMarkerAndExposesTypeArgument()
+    {
+        // Deriving from the non-generic attribute is what makes the adapter's
+        // GetCustomAttributes(assembly, typeof(TestFilterProviderAttribute)) lookup pick the generic form up.
+        TestFilterProviderAttribute attribute = new TestFilterProviderAttribute<NoOpFilter>();
+
+        attribute.FilterType.Should().Be(typeof(NoOpFilter));
+        TypeCache.InstantiateTestFilter(attribute.FilterType).Should().BeOfType<NoOpFilter>();
+    }
+#endif
+
     // ----- test types -----
     public sealed class NoOpFilter : ITestFilter
     {
