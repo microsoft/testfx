@@ -327,6 +327,32 @@ public sealed class TestFilterProviderShouldBeValidAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    // Reflection treats a type nested in a generic container as generic, so the adapter rejects it with
+    // UTA074. Roslyn agrees -- IsGenericType is documented as "this type or some containing type has type
+    // parameters" -- so no ContainingType walk is needed here; these two tests pin that equivalence, which
+    // is not obvious from the API name and has been queried in review.
+    [TestMethod]
+    public async Task WhenFilterTypeIsNestedInGenericType_Diagnostic()
+    {
+        string code = Header + """
+            [assembly: {|#0:TestFilterProvider(typeof(Outer<int>.NestedFilter))|}]
+
+            public class Outer<T>
+            {
+                public sealed class NestedFilter : ITestFilter
+                {
+                    public TestFilterResult Filter(TestFilterContext context) => TestFilterResult.Run;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(TestFilterProviderShouldBeValidAnalyzer.GenericRule)
+                .WithLocation(0)
+                .WithArguments("Outer<int>.NestedFilter"));
+    }
+
 #if NET
     // TestFilterProviderAttribute<TFilter> only exists in the .NET assets of MSTest.TestFramework, so these
     // cases cannot be compiled when this test project runs on .NET Framework.
@@ -394,6 +420,30 @@ public sealed class TestFilterProviderShouldBeValidAnalyzerTests
             """;
 
         await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    // The generic form goes through the same check: 'Outer<int>.NestedFilter' satisfies
+    // 'ITestFilter, new()', so it compiles and only this check stops it reaching UTA074 at run time.
+    [TestMethod]
+    public async Task WhenGenericProviderReferencesTypeNestedInGenericType_Diagnostic()
+    {
+        string code = Header + """
+            [assembly: {|#0:TestFilterProvider<Outer<int>.NestedFilter>|}]
+
+            public class Outer<T>
+            {
+                public sealed class NestedFilter : ITestFilter
+                {
+                    public TestFilterResult Filter(TestFilterContext context) => TestFilterResult.Run;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(TestFilterProviderShouldBeValidAnalyzer.GenericRule)
+                .WithLocation(0)
+                .WithArguments("Outer<int>.NestedFilter"));
     }
 
     // The generic constraints cannot rule this one out: a closed generic satisfies 'ITestFilter, new()'

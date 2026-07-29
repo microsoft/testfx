@@ -175,7 +175,10 @@ public sealed class TestFilterProviderShouldBeValidAnalyzer : DiagnosticAnalyzer
         string filterTypeName = namedFilterType.ToDisplayString();
 
         // Both open (typeof(MyFilter<>)) and closed (typeof(MyFilter<int>)) generics are rejected by
-        // the adapter, so IsGenericType is the right predicate rather than IsUnboundGenericType.
+        // the adapter, so IsGenericType is the right predicate rather than IsUnboundGenericType. It also
+        // already covers a type nested in a generic container (Outer<int>.NestedFilter), which reflection
+        // likewise reports as generic: Roslyn defines IsGenericType as "this type or some containing type
+        // has type parameters", so no ContainingType walk is needed. See the nested-generic tests.
         if (namedFilterType.IsGenericType)
         {
             Report(context, provider, GenericRule, filterTypeName);
