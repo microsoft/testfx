@@ -15,7 +15,7 @@ namespace MSTest.Analyzers.Helpers;
 /// </summary>
 internal static class SkipGuardCodeFixHelper
 {
-    private const string MSTestNamespace = "Microsoft.VisualStudio.TestTools.UnitTesting";
+    private const string MSTestNamespace = "global::Microsoft.VisualStudio.TestTools.UnitTesting";
 
     /// <summary>
     /// Removes the guard from the method and adds the given attribute to it.
@@ -49,9 +49,10 @@ internal static class SkipGuardCodeFixHelper
 
     private static AttributeListSyntax CreateAttributeList(string attributeTypeName, string[] arguments)
     {
-        // Generate fully qualified names and let the simplifier shorten them. The test method may be decorated with a
+        // Generate root-qualified names and let the simplifier shorten them. The test method may be decorated with a
         // fully qualified '[Microsoft.VisualStudio.TestTools.UnitTesting.TestMethod]' without importing the namespace,
-        // or the file may declare a conflicting type, and unqualified identifiers wouldn't compile in either case.
+        // or the file may declare a conflicting type or a 'Microsoft' alias, and anything less than a 'global::'
+        // qualified name could bind to the wrong symbol or not compile at all.
         AttributeSyntax attribute = SyntaxFactory.Attribute(
             SyntaxFactory.ParseName($"{MSTestNamespace}.{attributeTypeName}").WithAdditionalAnnotations(Simplifier.Annotation));
 

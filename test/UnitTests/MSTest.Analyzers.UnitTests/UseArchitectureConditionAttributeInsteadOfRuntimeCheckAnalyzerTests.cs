@@ -503,6 +503,36 @@ public sealed class UseArchitectureConditionAttributeInsteadOfRuntimeCheckAnalyz
     }
 
     [TestMethod]
+    public async Task WhenGuardReturnsAValue_NoDiagnostic()
+    {
+        // A test method that isn't 'async' can return a value from the guard. Removing it would drop the call.
+        string code = """
+            using System.Runtime.InteropServices;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public Task TestMethod()
+                {
+                    if (RuntimeInformation.ProcessArchitecture != Architecture.X64)
+                    {
+                        return CleanupAsync();
+                    }
+
+                    return Task.CompletedTask;
+                }
+
+                private static Task CleanupAsync() => Task.CompletedTask;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
     public async Task WhenComparingAgainstAField_NoDiagnostic()
     {
         string code = """
@@ -518,6 +548,37 @@ public sealed class UseArchitectureConditionAttributeInsteadOfRuntimeCheckAnalyz
                 public void TestMethod()
                 {
                     if (RuntimeInformation.ProcessArchitecture != Expected)
+                    {
+                        return;
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+}
+#else
+// On the .NET Framework test target the verifier references the netfx flavor of MSTest, which has no
+// 'ArchitectureConditionAttribute'. That is the surface the analyzer's type-presence bailout exists for, so it is the
+// one place the bailout can actually be asserted.
+[TestClass]
+public sealed class UseArchitectureConditionAttributeInsteadOfRuntimeCheckOnNetFrameworkTests
+{
+    [TestMethod]
+    public async Task WhenArchitectureConditionAttributeIsNotAvailable_NoDiagnostic()
+    {
+        string code = """
+            using System.Runtime.InteropServices;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    if (RuntimeInformation.ProcessArchitecture != Architecture.X64)
                     {
                         return;
                     }

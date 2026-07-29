@@ -79,7 +79,9 @@ internal static class ConditionGuardHelper
     private static bool IsReturnOrAssertInconclusive(IOperation operation, INamedTypeSymbol assertSymbol)
         => operation switch
         {
-            IReturnOperation => true,
+            // Only a value-less 'return' is a pure skip. A test method that isn't 'async' can return a value, as in
+            // 'return CleanupAsync();', and dropping that would delete a call the test still needs to make.
+            IReturnOperation { ReturnedValue: null } => true,
             IExpressionStatementOperation { Operation: IInvocationOperation invocation } =>
                 invocation.TargetMethod.Name == "Inconclusive" &&
                 SymbolEqualityComparer.Default.Equals(invocation.TargetMethod.ContainingType, assertSymbol),
