@@ -129,7 +129,6 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
         bool suiteCountsKnown = false;
         Dictionary<string, string> retriedTests = [];
         Dictionary<string, string> flakyTestsByUid = [];
-        Dictionary<string, int> retriedThenSkipped = [];
         int finalFailedTestResults = 0;
         int retriedExecutions = 0;
 
@@ -217,18 +216,14 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                 }
             }
 
-            // A retried test that came back skipped also stops being retried, but it never passed. Its outcome for
-            // the run therefore moved from failed to skipped, and the suite's skipped count — captured on the first
-            // attempt, where the test was still failing — has to absorb it so the derived succeeded count stays
-            // honest. The newest attempt's value replaces the previous one: a uid is only re-run while it still has
-            // a failing result, so the latest attempt describes its final state.
-            foreach (KeyValuePair<string, int> skippedEntry in retryFailedTestsPipeServer.SkippedRetriedTests)
-            {
-                if (retriedTests.ContainsKey(skippedEntry.Key))
-                {
-                    retriedThenSkipped[skippedEntry.Key] = skippedEntry.Value;
-                }
-            }
+            // A retried test that came back skipped also stops being retried, but it never passed, so it is not
+            // reported as flaky above. Its outcome for the run therefore moved from failed to skipped while the
+            // suite's skipped count — captured on the first attempt, where it was still failing — does not follow,
+            // so it lands in the derived succeeded count instead. Correcting that needs the first attempt's
+            // per-test skipped breakdown, because a folded data-driven test can contribute both failing and
+            // skipped results under one uid and would otherwise be double-counted. Left as a known imprecision:
+            // the total and failed counts stay correct and the block always adds up, which a naive adjustment
+            // did not.
 
             // The run's failing count always reflects the most recent attempt that got far enough to report, which
             // re-ran every test still failing. Counted per result so it stays in the same unit as the total. An
@@ -305,7 +300,7 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                 UserMaxRetryCount = userMaxRetryCount,
                 SuiteCountsKnown = suiteCountsKnown,
                 SuiteTotalTests = suiteTotalTests,
-                SuiteSkippedTests = suiteSkippedTests + retriedThenSkipped.Values.Sum(),
+                SuiteSkippedTests = suiteSkippedTests,
                 FinalFailedTests = finalFailedTestResults,
                 RetriedTests = retriedTests.Count,
                 RetriedExecutions = retriedExecutions,

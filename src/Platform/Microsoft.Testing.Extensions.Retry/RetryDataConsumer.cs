@@ -28,13 +28,6 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
     // test reports several results under one uid, so a uid must not count as recovered when any of its rows failed.
     private readonly HashSet<string> _notRecoveredTests = [];
 
-    // Number of SKIPPED RESULTS per retry-set uid in this attempt. A count rather than a set because a folded
-    // data-driven test reports one result per data row under a single uid, and the orchestrator adds this to a
-    // per-result skipped total. Failing and skipped rows of the same uid are both real and are counted in their
-    // own bucket, so a failing row must not erase a skipped one — that also keeps the bookkeeping independent of
-    // the order results arrive in.
-    private readonly Dictionary<string, int> _skippedRetriedTests = [];
-
     private RetryLifecycleCallbacks? _retryFailedTestsLifecycleCallbacks;
     private HashSet<string>? _testsBeingRetried;
     private int _passedTests;
@@ -77,7 +70,7 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
             ApplicationStateGuard.Ensure(_retryFailedTestsLifecycleCallbacks.Client is not null);
             await _retryFailedTestsLifecycleCallbacks.Client.RequestReplyAsync<FailedTestRequest, VoidResponse>(new FailedTestRequest(uid, testNodeUpdateMessage.TestNode.DisplayName), cancellationToken).ConfigureAwait(false);
             _failedTests++;
-            MarkNotRecovered(uid, skipped: false);
+            MarkNotRecovered(uid);
         }
         else if (nodeState is PassedTestNodeStateProperty)
         {
@@ -88,9 +81,9 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
         {
             // Skipped tests are counted so the orchestrator's "total" matches the platform run summary's "total",
             // which includes them. A test that was retried and came back skipped did not recover: it produced no
-            // passing result, so it must not be reported as flaky, and the run's skipped count must absorb it.
+            // passing result, so it must not be reported as flaky.
             _skippedTests++;
-            MarkNotRecovered(uid, skipped: true);
+            MarkNotRecovered(uid);
         }
     }
 
@@ -107,20 +100,12 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
         }
     }
 
-    private void MarkNotRecovered(string uid, bool skipped)
+    private void MarkNotRecovered(string uid)
     {
-        if (_testsBeingRetried is null || !_testsBeingRetried.Contains(uid))
+        if (_testsBeingRetried is not null && _testsBeingRetried.Contains(uid))
         {
-            return;
-        }
-
-        _notRecoveredTests.Add(uid);
-        _recoveredTests.Remove(uid);
-
-        if (skipped)
-        {
-            _skippedRetriedTests.TryGetValue(uid, out int count);
-            _skippedRetriedTests[uid] = count + 1;
+            _notRecoveredTests.Add(uid);
+            _recoveredTests.Remove(uid);
         }
     }
 
@@ -129,7 +114,7 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
         ApplicationStateGuard.Ensure(_retryFailedTestsLifecycleCallbacks is not null);
         ApplicationStateGuard.Ensure(_retryFailedTestsLifecycleCallbacks.Client is not null);
         await _retryFailedTestsLifecycleCallbacks.Client.RequestReplyAsync<TestRunCountsRequest, VoidResponse>(
-            new TestRunCountsRequest(_passedTests, _failedTests, _skippedTests, [.. _recoveredTests], [.. _skippedRetriedTests]),
+            new TestRunCountsRequest(_passedTests, _failedTests, _skippedTests, [.. _recoveredTests]),
             testSessionContext.CancellationToken).ConfigureAwait(false);
     }
 

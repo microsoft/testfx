@@ -45,7 +45,6 @@ Microsoft.Testing.Extensions.Policy.RetryFailedTestsPipeServer.SkippedTests.get 
 Microsoft.Testing.Extensions.Policy.RetryRunSummary.SuiteSkippedTests.get -> int
 Microsoft.Testing.Extensions.Policy.RetryRunSummary.SuiteSkippedTests.init -> void
 Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TestRunCountsRequest
-Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TestRunCountsRequest.TestRunCountsRequest(int passedTests, int failedTests, int skippedTests, string![]! recoveredTestUids, System.Collections.Generic.KeyValuePair<string!, int>[]! skippedRetriedTestResults) -> void
 Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TestRunCountsRequest.PassedTests.get -> int
 Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TestRunCountsRequest.FailedTests.get -> int
 Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TestRunCountsRequest.SkippedTests.get -> int
@@ -66,5 +65,4 @@ Microsoft.Testing.Extensions.Policy.RetryFailedTestsPipeServer.RecoveredTests.ge
 Microsoft.Testing.Extensions.Policy.RetryFailedTestsPipeServer.CountsReported.get -> bool
 Microsoft.Testing.Extensions.Policy.RetryRunSummary.SuiteCountsKnown.get -> bool
 Microsoft.Testing.Extensions.Policy.RetryRunSummary.SuiteCountsKnown.init -> void
-Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TestRunCountsRequest.SkippedRetriedTestResults.get -> System.Collections.Generic.KeyValuePair<string!, int>[]!
-Microsoft.Testing.Extensions.Policy.RetryFailedTestsPipeServer.SkippedRetriedTests.get -> System.Collections.Generic.IReadOnlyList<System.Collections.Generic.KeyValuePair<string!, int>>!
+Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TestRunCountsRequest.TestRunCountsRequest(int passedTests, int failedTests, int skippedTests, string![]! recoveredTestUids) -> void
