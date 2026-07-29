@@ -25,7 +25,7 @@ internal sealed partial class TestDependencyGraph
     {
         projectionCycleTests = null;
 
-        // -1 marks "not scheduled in the parallel phase", which is what the edge projection below tests for.
+        // Tests not scheduled in the parallel phase keep -1: the edge projection below relies on that to skip them.
         int[] chunkOfTest = new int[tests.Length];
         chunkOfTest.AsSpan().Fill(-1);
 

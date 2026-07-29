@@ -154,7 +154,7 @@ internal sealed partial class TestDependencyGraph
         (int[][] testPrerequisites, bool[] proceedOnFailure) = ResolveEdges(tests, warnings);
 
         string?[] cycleMessageByTest = FindCycles(testPrerequisites, tests, errors);
-        bool[] isBroken = Array.ConvertAll(cycleMessageByTest, cycleMessage => cycleMessage is not null);
+        bool[] isBroken = Array.ConvertAll(cycleMessageByTest, static cycleMessage => cycleMessage is not null);
 
         // A test in a cycle cannot be ordered, so it is dropped from scheduling and reported as failed, with
         // the description of the cycle *it* is in. Its dependents keep the edge: at run time the prerequisite
