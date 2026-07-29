@@ -27,47 +27,43 @@ internal static class RetryThresholdPolicy
         RetryFailedTestsPipeServer retryFailedTestsPipeServer,
         CancellationToken cancellationToken)
     {
-        double? maxFailedTests = null;
-        double? maxPercentage = null;
-        double? maxCount = null;
+        // The two threshold options intentionally use different units. The percentage option is a ratio over the
+        // platform result counts, so its numerator must be failed results too. The count option is an absolute number
+        // of failed tests, so folded data-driven rows sharing one uid count as one test. The options are mutually
+        // exclusive, keeping each branch internally consistent.
         if (commandLineOptions.TryGetOptionArgumentList(RetryCommandLineOptionsProvider.RetryFailedTestsMaxPercentageOptionName, out string[]? retryFailedTestsMaxPercentage))
         {
-            maxPercentage = double.Parse(retryFailedTestsMaxPercentage[0], CultureInfo.InvariantCulture);
-            maxFailedTests = maxPercentage / 100 * retryFailedTestsPipeServer.TotalTestRan;
+            double maxPercentage = double.Parse(retryFailedTestsMaxPercentage[0], CultureInfo.InvariantCulture);
+            double maxFailedTestResults = maxPercentage / 100 * retryFailedTestsPipeServer.TotalTestRan;
+            if (retryFailedTestsPipeServer.FailedTestResults <= maxFailedTestResults)
+            {
+                return false;
+            }
+
+            StringBuilder explanation = new();
+            explanation.AppendLine(ExtensionResources.FailureThresholdPolicy);
+            double failedPercentage = Math.Round(retryFailedTestsPipeServer.FailedTestResults / (double)retryFailedTestsPipeServer.TotalTestRan * 100, 2);
+            explanation.AppendLine(string.Format(CultureInfo.InvariantCulture, ExtensionResources.FailureThresholdPolicyMaxPercentage, maxPercentage, failedPercentage, retryFailedTestsPipeServer.FailedTestResults, retryFailedTestsPipeServer.TotalTestRan));
+            await outputDevice.DisplayAsync(producer, new ErrorMessageOutputDeviceData(explanation.ToString()), cancellationToken).ConfigureAwait(false);
+            return true;
         }
 
         if (commandLineOptions.TryGetOptionArgumentList(RetryCommandLineOptionsProvider.RetryFailedTestsMaxTestsOptionName, out string[]? retryFailedTestsMaxCount))
         {
-            maxCount = double.Parse(retryFailedTestsMaxCount[0], CultureInfo.InvariantCulture);
-            maxFailedTests = maxCount.Value;
+            int maxCount = int.Parse(retryFailedTestsMaxCount[0], CultureInfo.InvariantCulture);
+            int failedTests = retryFailedTestsPipeServer.FailedTests.Count;
+            if (failedTests <= maxCount)
+            {
+                return false;
+            }
+
+            StringBuilder explanation = new();
+            explanation.AppendLine(ExtensionResources.FailureThresholdPolicy);
+            explanation.AppendLine(string.Format(CultureInfo.InvariantCulture, ExtensionResources.FailureThresholdPolicyMaxCount, maxCount, failedTests));
+            await outputDevice.DisplayAsync(producer, new ErrorMessageOutputDeviceData(explanation.ToString()), cancellationToken).ConfigureAwait(false);
+            return true;
         }
 
-        // If threshold policy is not enabled, or the failed set is within the threshold, keep retrying.
-        //
-        // Both sides of this comparison count test RESULTS, which is the unit this policy has always measured
-        // and the same one the platform run summary reports. Using the distinct-uid count of
-        // RetryFailedTestsPipeServer.FailedTests here instead would mix units: a folded data-driven test
-        // contributes one uid but one result per data row, so the percentage would silently become more
-        // permissive than its denominator implies.
-        if (maxFailedTests is null || retryFailedTestsPipeServer.FailedTestResults <= maxFailedTests)
-        {
-            return false;
-        }
-
-        StringBuilder explanation = new();
-        explanation.AppendLine(ExtensionResources.FailureThresholdPolicy);
-        if (maxPercentage is not null)
-        {
-            double failedPercentage = Math.Round(retryFailedTestsPipeServer.FailedTestResults / (double)retryFailedTestsPipeServer.TotalTestRan * 100, 2);
-            explanation.AppendLine(string.Format(CultureInfo.InvariantCulture, ExtensionResources.FailureThresholdPolicyMaxPercentage, maxPercentage, failedPercentage, retryFailedTestsPipeServer.FailedTestResults, retryFailedTestsPipeServer.TotalTestRan));
-        }
-
-        if (maxCount is not null)
-        {
-            explanation.AppendLine(string.Format(CultureInfo.InvariantCulture, ExtensionResources.FailureThresholdPolicyMaxCount, maxCount, retryFailedTestsPipeServer.FailedTestResults));
-        }
-
-        await outputDevice.DisplayAsync(producer, new ErrorMessageOutputDeviceData(explanation.ToString()), cancellationToken).ConfigureAwait(false);
-        return true;
+        return false;
     }
 }

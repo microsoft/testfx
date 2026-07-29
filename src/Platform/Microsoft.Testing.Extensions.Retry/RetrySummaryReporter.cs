@@ -43,12 +43,13 @@ internal readonly struct RetryRunSummary
     public required int FinalFailedTests { get; init; }
 
     /// <summary>
-    /// Gets the number of distinct tests that were re-run at least once.
+    /// Gets the number of distinct tests that were scheduled for retry and whose retry attempt reported at least
+    /// one result.
     /// </summary>
     public required int RetriedTests { get; init; }
 
     /// <summary>
-    /// Gets the number of extra test executions those retries cost.
+    /// Gets the number of extra test results those retries produced.
     /// </summary>
     public required int RetriedExecutions { get; init; }
 
@@ -176,13 +177,42 @@ internal static class RetrySummaryReporter
             {
                 await outputDevice.DisplayAsync(
                     producer,
-                    new FormattedTextOutputDeviceData(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetrySummaryFlakyTestLine, flakyTest))
+                    new FormattedTextOutputDeviceData(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetrySummaryFlakyTestLine, MakeControlCharactersVisible(flakyTest)))
                     {
                         ForegroundColor = new SystemConsoleColor { ConsoleColor = ConsoleColor.DarkYellow },
                     },
                     cancellationToken).ConfigureAwait(false);
             }
         }
+    }
+
+    /// <summary>
+    /// Replaces control characters with their Unicode "control picture" equivalents, so a display name carrying a
+    /// newline or an ESC sequence cannot forge extra summary lines or steer the terminal. Test display names come
+    /// from user code (including data-driven arguments), so they are untrusted here.
+    /// </summary>
+    /// <remarks>
+    /// Mirrors the policy of the terminal reporter's own <c>MakeControlCharactersVisible</c>, which is private to a
+    /// type embedded in Microsoft.Testing.Platform and so cannot be shared with this extension.
+    /// </remarks>
+    private static string MakeControlCharactersVisible(string text)
+    {
+        StringBuilder? builder = null;
+        for (int i = 0; i < text.Length; i++)
+        {
+            char c = text[i];
+            if (char.IsControl(c))
+            {
+                builder ??= new StringBuilder(text.Length).Append(text, 0, i);
+                builder.Append((char)(0x2400 + c));
+            }
+            else
+            {
+                builder?.Append(c);
+            }
+        }
+
+        return builder?.ToString() ?? text;
     }
 
     public static async Task MoveArtifactsAsync(

@@ -458,8 +458,10 @@ internal sealed class TestProgressState
     /// must hold <see cref="_lock"/>.
     /// </summary>
     private bool IsFlakyCore(string testNodeUid)
+        // A skipped row under a folded uid is not recovery either: not every result of the final attempt passed.
         => _testUidToResults.TryGetValue(testNodeUid, out TestNodeInfoEntry entry)
             && entry.Failed == 0
+            && entry.Skipped == 0
             && entry.Passed > 0;
 
     /// <summary>

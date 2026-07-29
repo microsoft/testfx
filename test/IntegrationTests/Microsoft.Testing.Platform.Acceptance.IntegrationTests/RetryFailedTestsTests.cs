@@ -176,13 +176,17 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             },
             cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertOutputContains("Retry summary: Failed!");
+        testHostResult.AssertOutputContains("Retry summary: Failed! after 2/2 attempts");
+        testHostResult.AssertOutputDoesNotContain("(retrying stopped early)");
 
         // The crashed retry reported nothing, so the run's figures are the first attempt's: one test still failing
         // out of three. Resetting to "failed: 0" would contradict the red verdict directly above it.
         testHostResult.AssertOutputContains("  total: 3");
         testHostResult.AssertOutputContains("  failed: 1");
         testHostResult.AssertOutputContains("  succeeded: 2");
+
+        // The retry was launched but produced no reported counts, so it is not counted as an observed retry.
+        testHostResult.AssertOutputDoesNotContain("  retried:");
 
         // Nothing recovered, so nothing is flaky.
         testHostResult.AssertOutputDoesNotContain("  flaky:");
@@ -302,6 +306,34 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             testHostResult.AssertOutputContains("  succeeded: 3");
             AssertOutputContainsExactlyOnce(testHostResult, "Test run summary:");
         }
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task RetryFailedTests_MaxTestsCountWithNoRetries_ReportsAttemptsExhausted(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--retry-failed-tests 0 --retry-failed-tests-max-tests 1 --results-directory {resultDirectory}",
+            new()
+            {
+                { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
+                { "RESULTDIR", resultDirectory },
+                { "METHOD1", "1" },
+                { "METHOD2", "1" },
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+        testHostResult.AssertOutputContains("Failure threshold policy is enabled, failed tests will not be restarted.");
+        testHostResult.AssertOutputContains("Maximum failed tests threshold is 1 and 2 tests failed");
+        testHostResult.AssertOutputContains("Retry summary: Failed! after 1/1 attempts");
+        testHostResult.AssertOutputDoesNotContain("(retrying stopped early)");
+        testHostResult.AssertOutputContains("  total: 3");
+        testHostResult.AssertOutputContains("  failed: 2");
+        testHostResult.AssertOutputContains("  succeeded: 1");
+        testHostResult.AssertOutputDoesNotContain("  retried:");
     }
 
     [TestMethod]

@@ -118,7 +118,7 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
 
         // Retry summary accounting (single-assembly). The orchestrator is the only component that observes every
         // attempt, so it reconciles them into one headline:
-        //   retried = union of the failed sets of the attempts that were followed by another attempt
+        //   retried = union of the scheduled retry sets whose following attempt reported at least one result
         //   flaky   = union of the tests each attempt reported as recovered
         // Recovery is reported by the attempt that observed it rather than inferred here as "retried and no longer
         // in the failed set": that inference also matches a test which never ran, so an attempt that crashed or
@@ -131,6 +131,7 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
         Dictionary<string, string> flakyTestsByUid = [];
         int finalFailedTestResults = 0;
         int retriedExecutions = 0;
+        Dictionary<string, string> pendingRetriedTests = [];
 
         // Parse the delay once before the loop since command-line options don't change.
         TimeSpan? retryDelay = null;
@@ -206,6 +207,25 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                 suiteSkippedTests = retryFailedTestsPipeServer.SkippedTests;
             }
 
+            if (pendingRetriedTests.Count > 0)
+            {
+                int observedRetriedResults = retryFailedTestsPipeServer.TotalTestRan + retryFailedTestsPipeServer.SkippedTests;
+
+                if (retryFailedTestsPipeServer.CountsReported && observedRetriedResults > 0)
+                {
+                    // Scheduling a retry is not enough to count it: the child can die before the selected tests
+                    // produce results. Commit the pending retry only after the following attempt reports counts.
+                    foreach (KeyValuePair<string, string> retriedTest in pendingRetriedTests)
+                    {
+                        retriedTests[retriedTest.Key] = retriedTest.Value;
+                    }
+
+                    retriedExecutions += observedRetriedResults;
+                }
+
+                pendingRetriedTests.Clear();
+            }
+
             // Whatever this attempt recovered is final: a recovered test is not carried into the next attempt's
             // failed set, so it is never re-run and cannot regress.
             foreach (string recoveredUid in retryFailedTestsPipeServer.RecoveredTests)
@@ -264,14 +284,13 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                         },
                         cancellationToken).ConfigureAwait(false);
 
-                    // Each retried attempt re-runs exactly this attempt's failed set, so those tests are the ones
-                    // that get retried, and their count is the number of extra executions the retry adds.
+                    // Keep the scheduled retry contribution pending. The next attempt may crash before producing
+                    // test results, and such a launch must not be reported as an observed retry.
+                    pendingRetriedTests.Clear();
                     foreach (KeyValuePair<string, string> failedTest in retryFailedTestsPipeServer.FailedTests)
                     {
-                        retriedTests[failedTest.Key] = failedTest.Value;
+                        pendingRetriedTests[failedTest.Key] = failedTest.Value;
                     }
-
-                    retriedExecutions += failedThisAttempt;
                 }
 
                 lastListOfFailedId = [.. retryFailedTestsPipeServer.FailedTests.Keys];
@@ -306,7 +325,7 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                 RetriedExecutions = retriedExecutions,
                 FlakyTests = flakyTests,
                 ShowFlakyTests = FlakyTestsReportingOptions.IsEnabled(_commandLineOptions),
-                StoppedEarly = thresholdPolicyKickedIn || retryInterrupted,
+                StoppedEarly = (thresholdPolicyKickedIn || retryInterrupted) && attemptCount < userMaxRetryCount + 1,
                 Elapsed = orchestrationStopwatch.Elapsed,
             },
             cancellationToken).ConfigureAwait(false);

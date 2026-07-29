@@ -2358,6 +2358,45 @@ public sealed class TerminalTestReporterTests
         Assert.DoesNotContain(TerminalResources.FlakyTests, output);
     }
 
+    // A folded data-driven test can report several final-attempt rows under the same uid. If any row is skipped,
+    // the uid was retried but did not fully recover, so it must not be counted as flaky.
+    [TestMethod]
+    public void TestExecutionCompleted_WhenRetriedFoldedTestPassesAndSkips_CountsRetriedButNotFlaky()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+            ShowPassedTests = () => true,
+            ShowAssembly = true,
+            ShowAssemblyStartAndComplete = true,
+        });
+
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: true);
+
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\Folded.Tests.dll" : "/repo/Folded.Tests.dll";
+        const string executionId = "exec-folded";
+        const string testUid = "folded-1";
+
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-1", attemptNumber: 1);
+        ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-1", testUid: testUid, TestOutcome.Fail);
+
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-2", attemptNumber: 2);
+        ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-2", testUid: testUid, TestOutcome.Passed);
+        ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-2", testUid: testUid, TestOutcome.Skipped);
+
+        terminalReporter.AssemblyRunCompleted(executionId, exitCode: 0, outputData: null, errorData: null);
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: 0);
+
+        string output = stringBuilderConsole.Output;
+
+        Assert.Contains(ExpectedCounts(1, 0, 1, retried: 1), GetAssemblySummaryLine(output, assembly));
+        Assert.Contains($"{TerminalResources.Retried}: {string.Format(CultureInfo.CurrentCulture, TerminalResources.RetriedTestsAndRuns, 1, 1)}", output);
+        Assert.DoesNotContain("flaky:", output);
+        Assert.DoesNotContain(TerminalResources.FlakyTests, output);
+    }
+
     // --show-flaky-tests off suppresses both the "flaky:" count line and the "Flaky tests" section, while leaving
     // the "retried:" accounting (which is not part of the flaky feature) in place.
     [TestMethod]
