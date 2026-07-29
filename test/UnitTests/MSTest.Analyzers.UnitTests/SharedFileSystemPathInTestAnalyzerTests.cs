@@ -526,7 +526,8 @@ public sealed class SharedFileSystemPathInTestAnalyzerTests
     [TestMethod]
     public async Task WhenTestMethodDeletesDirectoryWithConstantPath_Diagnostic()
     {
-        // Directory.Delete mutates its single 'path' argument, including through the recursive overload.
+        // Directory.Delete mutates the entry named by 'path'; the recursive overload adds only a bool, which the
+        // string-typed parameter filter skips, so the constant directory path is still the reported argument.
         string code = """
             using System.IO;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -585,7 +586,7 @@ public sealed class SharedFileSystemPathInTestAnalyzerTests
     public async Task WhenTestMethodMovesDirectoryToConstantDestination_Diagnostic()
     {
         // Directory.Move also creates its destination directory, so a constant 'destDirName' is a mutation on its
-        // own - unlike File.Copy, where only the destination role is flagged and the source is merely read.
+        // own, even when the source is per-test unique.
         string code = """
             using System.IO;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -609,5 +610,61 @@ public sealed class SharedFileSystemPathInTestAnalyzerTests
             VerifyCS.Diagnostic(SharedFileSystemPathInTestAnalyzer.Rule)
                 .WithLocation(0)
                 .WithArguments("dest-dir"));
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodMovesDirectoryBetweenConstantPaths_SingleDiagnosticForSource()
+    {
+        // Both Directory.Move positions are mutations, but the analyzer reports the first constant mutated path it
+        // finds rather than one diagnostic per position, so this invocation yields a single diagnostic naming the
+        // source. Pinning that keeps the "report once per invocation" contract observable.
+        string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    {|#0:Directory.Move("source-dir", "dest-dir")|};
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(SharedFileSystemPathInTestAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("source-dir"));
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodReadsConstantDirectoryPath_NoDiagnostic()
+    {
+        // The Directory.* allowlist must stay as narrow as the File.* one: enumerating or probing a shared directory
+        // at a fixed path does not mutate it, so the delete/move coverage above is pinned from both directions.
+        string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    bool exists = Directory.Exists("shared-dir");
+                    string[] files = Directory.GetFiles("shared-dir");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
     }
 }
