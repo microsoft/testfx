@@ -1,4 +1,6 @@
 #nullable enable
+Microsoft.Testing.Platform.Helpers.RuntimeFeatureHelper
+static Microsoft.Testing.Platform.Helpers.RuntimeFeatureHelper.IsMultiThreaded.get -> bool
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER = "TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER" -> string!
 const Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportEngine.TrxArtifactKind = "microsoft.testing.trx" -> string!
 const Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId.Kind = 7 -> ushort
