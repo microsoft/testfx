@@ -549,7 +549,7 @@ Tatsächlich: {2}</target>
       </trans-unit>
       <trans-unit id="InvalidResourceLockResource">
         <source>The resource key of a [ResourceLock] must be a non-empty, non-whitespace string. An empty key would silently serialize unrelated tests that also use an empty key.</source>
-        <target state="translated">Der „[ResourceLock]“-Ressourcenschlüssel muss eine nicht leere Zeichenfolge ohne Leerzeichen sein. Ein leerer Schlüssel serialisiert nicht verknüpfte Tests im Hintergrund, die ebenfalls einen leeren Schlüssel verwenden.</target>
+        <target state="new">The resource key of a [ResourceLock] must be a non-empty, non-whitespace string. An empty key would silently serialize unrelated tests that also use an empty key.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsEmptyFailedSummary">
