@@ -1835,6 +1835,55 @@ public sealed class TerminalTestReporterTests
     }
 
     [TestMethod]
+    [DoNotParallelize]
+    public void TestNodeResultsState_GetSingleActiveOrSummaryTask_WhenCultureChanges_ReformatsSummary()
+    {
+        CultureInfo originalCulture = CultureInfo.CurrentCulture;
+        CultureInfo originalUICulture = CultureInfo.CurrentUICulture;
+
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("en-US");
+
+            var stopwatchFactory = new StopwatchFactory();
+            var state = new TestNodeResultsState(1);
+            for (int i = 0; i < 5; i++)
+            {
+                state.AddRunningTestNode(id: 10 + i, uid: $"uid-{i}", name: $"Test{i}", stopwatchFactory.CreateStopwatch());
+                stopwatchFactory.AddTime(TimeSpan.FromSeconds(1));
+            }
+
+            string first = state.GetSingleActiveOrSummaryTask()!.Text;
+
+            // Do NOT remove these interleaved calls. TestDetailState.Text's setter ignores writes that are
+            // ordinally equal to the current value, so two back-to-back calls could return the previous
+            // instance even without the cache. Flipping the shared summary detail to the other message
+            // shape forces the setter to assign on the next call, which is what makes the reference
+            // assertions below meaningful.
+            Assert.AreNotEqual(first, state.GetRunningTasks(maxCount: 3)[2].Text);
+
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("fr-FR");
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("fr-FR");
+
+            // Same count, different culture: the cache must not serve the text formatted under en-US.
+            string second = state.GetSingleActiveOrSummaryTask()!.Text;
+            Assert.AreNotSame(first, second);
+
+            Assert.AreNotEqual(second, state.GetRunningTasks(maxCount: 3)[2].Text);
+
+            // ...and it must re-arm for the new culture rather than formatting on every call from now on.
+            string third = state.GetSingleActiveOrSummaryTask()!.Text;
+            Assert.AreSame(second, third);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+            CultureInfo.CurrentUICulture = originalUICulture;
+        }
+    }
+
+    [TestMethod]
     public void TestNodeResultsState_GetSingleActiveOrSummaryTask_WhenCountChanges_ReformatsSummary()
     {
         var stopwatchFactory = new StopwatchFactory();

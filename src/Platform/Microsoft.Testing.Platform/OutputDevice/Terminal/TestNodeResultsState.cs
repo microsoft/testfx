@@ -27,15 +27,19 @@ internal sealed class TestNodeResultsState
     // every renderer tick (500ms for the cursor renderer, 1s for the heartbeat one), and the cursor
     // renderer additionally repaints its frame on every write to the terminal, while the running-test
     // count only changes when a test starts or completes. Formatting on every render therefore allocates
-    // a string identical to the previous one. -1 is a sentinel that never matches a real count, so the
-    // first call always formats.
+    // a string identical to the previous one. The key is the count plus both cultures that can change the
+    // result — CurrentUICulture selects the localized resource, CurrentCulture formats the number — so a
+    // hit is always byte-identical to formatting right now. The cultures start null, so the first call for
+    // each shape always formats.
     // Like _runningTasksBuffer, these fields are not synchronized: every caller is reached through
     // IProgressRenderer.OnTick/OnWrite, which TestProgressStateAwareTerminal serializes under its lock.
-    // They also assume the culture does not change mid-run, since the text cached for a given count
-    // otherwise stays pinned to the culture of the call that produced it.
-    private int _cachedFullTestsCount = -1;
+    private int _cachedFullTestsCount;
+    private CultureInfo? _cachedFullTestsCulture;
+    private CultureInfo? _cachedFullTestsUICulture;
     private string _cachedFullTestsText = string.Empty;
-    private int _cachedMoreTestsCount = -1;
+    private int _cachedMoreTestsCount;
+    private CultureInfo? _cachedMoreTestsCulture;
+    private CultureInfo? _cachedMoreTestsUICulture;
     private string _cachedMoreTestsText = string.Empty;
 
     public int Count => _testNodeProgressStates.Count;
@@ -147,14 +151,20 @@ internal sealed class TestNodeResultsState
 
     /// <summary>
     /// Returns the "N tests running" text for <paramref name="count"/>, reusing the previously
-    /// formatted string when the count is unchanged since the last call.
+    /// formatted string when the count and effective cultures are unchanged since the last call.
     /// </summary>
     private string GetFullTestsCountText(int count)
     {
-        if (_cachedFullTestsCount != count)
+        CultureInfo culture = CultureInfo.CurrentCulture;
+        CultureInfo uiCulture = CultureInfo.CurrentUICulture;
+        if (_cachedFullTestsCount != count
+            || !ReferenceEquals(_cachedFullTestsCulture, culture)
+            || !ReferenceEquals(_cachedFullTestsUICulture, uiCulture))
         {
-            _cachedFullTestsText = string.Format(CultureInfo.CurrentCulture, TerminalResources.ActiveTestsRunning_FullTestsCount, count);
+            _cachedFullTestsText = string.Format(culture, TerminalResources.ActiveTestsRunning_FullTestsCount, count);
             _cachedFullTestsCount = count;
+            _cachedFullTestsCulture = culture;
+            _cachedFullTestsUICulture = uiCulture;
         }
 
         return _cachedFullTestsText;
@@ -162,14 +172,20 @@ internal sealed class TestNodeResultsState
 
     /// <summary>
     /// Returns the "... N more running" text for <paramref name="count"/>, reusing the previously
-    /// formatted string when the count is unchanged since the last call.
+    /// formatted string when the count and effective cultures are unchanged since the last call.
     /// </summary>
     private string GetMoreTestsCountText(int count)
     {
-        if (_cachedMoreTestsCount != count)
+        CultureInfo culture = CultureInfo.CurrentCulture;
+        CultureInfo uiCulture = CultureInfo.CurrentUICulture;
+        if (_cachedMoreTestsCount != count
+            || !ReferenceEquals(_cachedMoreTestsCulture, culture)
+            || !ReferenceEquals(_cachedMoreTestsUICulture, uiCulture))
         {
-            _cachedMoreTestsText = $"... {string.Format(CultureInfo.CurrentCulture, TerminalResources.ActiveTestsRunning_MoreTestsCount, count)}";
+            _cachedMoreTestsText = $"... {string.Format(culture, TerminalResources.ActiveTestsRunning_MoreTestsCount, count)}";
             _cachedMoreTestsCount = count;
+            _cachedMoreTestsCulture = culture;
+            _cachedMoreTestsUICulture = uiCulture;
         }
 
         return _cachedMoreTestsText;
