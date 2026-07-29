@@ -1,13 +1,13 @@
 # Efficiency Improver — Persistent Memory for microsoft/testfx
 
 ## Last Updated
-2026-07-27 UTC
+2026-07-29 UTC
 
 ## Round-Robin Schedule
 
 Tasks run this session: **2 (scan), 7 (monthly summary)**
-Last run before this: Tasks 2/3 (2026-07-26)
-Next run should prioritise: Tasks 3 (implement if new opportunity found), 5 (issue comments), 6 (infra), 7 (always)
+Last run before this: Tasks 2/7 (2026-07-27)
+Next run should prioritise: Tasks 4 (PR maintenance), 5 (issue comments), 6 (infra), 7 (always)
 
 ## Build / Test / Benchmark Commands
 
@@ -39,15 +39,10 @@ Notes:
 - **Server mode TestNode serializer**: Uses LINQ Select().ToList() per test update — minor, dominated by network I/O, not worth changing.
 - **TestCaseExtensions.GetTestName / GetClassNameWhenFullyQualifiedNameStartsWith**: Was allocating `$"{testClassName}."` on every call per test case. Now in main.
 - **Maintainer commit #10141**: "Pool IPC serializer string buffers" — maintainers independently pooling buffers in IPC serializer (2026-07-22).
-- **TestNodeResultsState**: Already well-optimized — reusable `_runningTasksBuffer`, allocation-free single-task fast path, in-place sort, summary detail reuse.
-- **FileLogger**: Channel-based async logging, `GetUpperCaseName` uses interned literal switch (no boxing/ToString().ToUpper). Already optimal.
-- **PropertyBag**: Linked-list based, zero array allocation for small bags. Already optimal.
-- **HumanReadableDurationFormatter**: NET8+ fast path uses `string.Create`. Already optimal for common case.
-- **AsynchronousMessageBus.PublishAsync**: `_isTraceLoggingEnabled` guards StringBuilder allocation. `Array.IndexOf` on `DataTypesProduced` is O(n) but array is tiny (1-3 elements) — not measurable.
-- **ShutdownProgressReporter.Snapshot()**: LINQ OrderByDescending + ToArray — shutdown only, not hot path.
-- **DotnetTestHttpClient.RequestReplyAsync**: `framedRequest.ToArray()` copies MemoryStream — HTTP transport only, low volume (batched requests), not hot.
-- **TypeEnumerator**: `string.Join(",", Array.ConvertAll(parameters, ...))` — test-discovery-time, not execution hot path.
-- **MSTestTestNodeConverter**: `string.Join(Environment.NewLine, ...)` guarded by `Count > 0` — only on failure.
+- **TreeNodeFilter**: Already well-optimized — struct enumerator for PropertyBag, compiled Regex per ValueExpression, no allocations in hot matching path.
+- **AzureDevOpsReport (new, #10331)**: All new files reviewed — ConcurrentQueue for pending results, appropriate Dictionary/StringComparer patterns, `BuildMarkdown` uses `OrderByDescending` only at report-generation time (not per-test). No hot-path inefficiencies.
+- **Assert.ContainsAll / AreAllDistinct**: ReadOnlySpan overloads call `.ToArray()` then pass to generic impl — unavoidable; no span-based impl for dictionary counting. Not a hot path.
+- **TestMethodFilter.cs (new)**: No LINQ or Regex allocations. Already efficient.
 
 ## Open PRs / Issues Created by Efficiency Improver
 
@@ -80,7 +75,8 @@ Notes:
 
 | Date | PR/Issue | Summary |
 |------|----------|---------|
-| 2026-07-27 | scan only | Scanned TestNodeResultsState, FileLogger, PropertyBag, HumanReadableDurationFormatter, AsynchronousMessageBus, DotnetTestHttpClient, TypeEnumerator — all already optimized; no new HIGH/MEDIUM opportunities |
+| 2026-07-29 | scan only | Scanned TreeNodeFilter, AzureDevOps extension (new #10331), TestMethodFilter, Assert.ContainsAll — all already well-optimized; no new HIGH/MEDIUM opportunities |
+| 2026-07-27 | scan only | Scanned TestNodeResultsState, FileLogger, PropertyBag, MessageBus, DotnetTest HTTP transport, Analyzer hot paths — all already well-optimized; no new HIGH/MEDIUM opportunities found |
 | 2026-07-22 | scan only | Verified TestCaseExtensions fix in main; maintainer commit #10141 pools IPC string buffers independently; no new HIGH opportunities found |
 | 2026-07-16 | branch pushed (landed in main) | Avoid string interpolation allocations in GetTestName/GetClassNameWhenFullyQualifiedNameStartsWith |
 | 2026-07-10 | PR# TBD (branch efficiency/stacktrace-string-split — no longer needed, already in main) | StackTraceHelper already fixed in main |
@@ -98,6 +94,6 @@ Notes:
 
 ## Backlog Cursor
 
-- Code scan cursor: CtrfReport ✅, HtmlReport ✅, Adapter/ ✅, TestFramework/ ✅, Platform/ hot paths ✅, VSTestBridge ✅, AzureDevOpsReport ✅, MSBuild tasks ✅, TrxReport ✅, ServerMode ✅, Platform/Capabilities ✅, Platform/Terminal (full) ✅, Retry ✅, IPC/Serializers ✅, Platform/Messages ✅, Platform/Logging ✅, Platform/DotnetTest transport ✅, MSTest.Analyzers (new parallel-safety) ✅
+- Code scan cursor: CtrfReport ✅, HtmlReport ✅, Adapter/ ✅, TestFramework/ ✅, Platform/ hot paths ✅, VSTestBridge ✅, AzureDevOpsReport ✅, MSBuild tasks ✅, TrxReport ✅, ServerMode ✅, Platform/Capabilities ✅, Platform/Terminal (full) ✅, Retry ✅, IPC/Serializers ✅, Platform/Messages ✅, Platform/Logging ✅, Platform/DotnetTest transport ✅, MSTest.Analyzers (new parallel-safety) ✅, Platform/Requests (TreeNodeFilter) ✅, AzureDevOps extension new code (#10331) ✅
 - Issue comments cursor: #8824 ✅, #9712 ✅ — next: scan for new efficiency issues
-- Next code scan area: Platform/Requests (filter evaluation), Platform/TestNode serialization path
+- Next code scan area: Retry extension, HangDump, CrashDump, Platform/Retry paths
