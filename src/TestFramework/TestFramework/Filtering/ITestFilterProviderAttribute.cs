@@ -13,7 +13,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// point, and a user-defined provider attribute decides which filter it registers inside its own
 /// constructor — something no build-time analyzer could validate. Keeping the contract internal means the
 /// supported shapes stay exactly <see cref="TestFilterProviderAttribute"/> and
-/// <c>TestFilterProviderAttribute&lt;TFilter&gt;</c>, both of which <c>MSTEST0079</c> can fully check.
+/// <c>TestFilterProviderAttribute&lt;TFilter&gt;</c>, both of which <c>MSTEST0081</c> can fully check.
 /// </remarks>
 internal interface ITestFilterProviderAttribute
 {

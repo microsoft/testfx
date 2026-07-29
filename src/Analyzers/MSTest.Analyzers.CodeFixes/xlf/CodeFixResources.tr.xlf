@@ -172,6 +172,11 @@
         <target state="translated">'Execute' geçersiz kılmasını 'ExecuteAsync' olarak dönüştür</target>
         <note>{Locked="ExecuteAsync"}{Locked="Execute"}</note>
       </trans-unit>
+      <trans-unit id="UseArchitectureConditionAttributeInsteadOfRuntimeCheckFix">
+        <source>Use '[ArchitectureCondition]' attribute</source>
+        <target state="new">Use '[ArchitectureCondition]' attribute</target>
+        <note>{Locked="[ArchitectureCondition]"}</note>
+      </trans-unit>
       <trans-unit id="UseAsyncAssertionFix">
         <source>Use async assertion</source>
         <target state="new">Use async assertion</target>
@@ -181,6 +186,11 @@
         <source>Add '[TestMethod]'</source>
         <target state="translated">'[TestMethod]' ekle</target>
         <note>{Locked="[TestMethod]"}</note>
+      </trans-unit>
+      <trans-unit id="UseCIConditionAttributeInsteadOfEnvironmentCheckFix">
+        <source>Use '[CICondition]' attribute</source>
+        <target state="new">Use '[CICondition]' attribute</target>
+        <note>{Locked="[CICondition]"}</note>
       </trans-unit>
       <trans-unit id="UseContainsKeyInsteadOfContainsFix">
         <source>Use 'ContainsKey' instead of 'Contains'</source>

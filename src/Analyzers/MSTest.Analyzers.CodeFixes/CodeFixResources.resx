@@ -246,6 +246,14 @@
     <value>Use '[OSCondition]' attribute</value>
     <comment>{Locked="[OSCondition]"}</comment>
   </data>
+  <data name="UseArchitectureConditionAttributeInsteadOfRuntimeCheckFix" xml:space="preserve">
+    <value>Use '[ArchitectureCondition]' attribute</value>
+    <comment>{Locked="[ArchitectureCondition]"}</comment>
+  </data>
+  <data name="UseCIConditionAttributeInsteadOfEnvironmentCheckFix" xml:space="preserve">
+    <value>Use '[CICondition]' attribute</value>
+    <comment>{Locked="[CICondition]"}</comment>
+  </data>
   <data name="AvoidOutRefTestMethodParametersFix" xml:space="preserve">
     <value>Remove 'out' and 'ref' modifiers</value>
     <comment>{Locked="out"}{Locked="ref"}</comment>

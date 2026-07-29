@@ -13,7 +13,7 @@ using MSTest.Analyzers.Helpers;
 namespace MSTest.Analyzers;
 
 /// <summary>
-/// MSTEST0079: <inheritdoc cref="Resources.TestFilterProviderShouldBeValidTitle"/>.
+/// MSTEST0081: <inheritdoc cref="Resources.TestFilterProviderShouldBeValidTitle"/>.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -24,11 +24,12 @@ namespace MSTest.Analyzers;
 /// </para>
 /// <para>
 /// The generic <c>[assembly: TestFilterProvider&lt;MyFilter&gt;]</c> form (available when targeting
-/// .NET) already enforces most of these through its <c>class, ITestFilter, new()</c> constraints, so
-/// in practice only the "must not be generic" rule can fire for it. It is still analyzed, together
-/// with the non-generic form, for the "at most one provider per assembly" rule: the two attributes
-/// are distinct types, so the compiler's own duplicate-attribute check does not see them as
-/// duplicates even though the adapter does.
+/// .NET) enforces the interface and constructor requirements through its
+/// <c>ITestFilter, new()</c> constraints, so those two can no longer fire for it. The remaining rules
+/// still apply: a closed generic type argument satisfies the constraints but is rejected at run time,
+/// and the "at most one provider per assembly" rule spans both forms — they are distinct types, so
+/// the compiler's own duplicate-attribute check does not see them as duplicates even though the
+/// adapter does.
 /// </para>
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
@@ -176,8 +177,10 @@ public sealed class TestFilterProviderShouldBeValidAnalyzer : DiagnosticAnalyzer
         }
 
         // Roslyn models a static class with IsStatic (not IsAbstract), but in IL it is abstract+sealed and
-        // the adapter rejects it through its IsAbstract check, so it belongs in this bucket too.
-        if (namedFilterType.IsAbstract || namedFilterType.IsStatic || namedFilterType.TypeKind == TypeKind.Interface)
+        // the adapter rejects it through its IsAbstract check, so it belongs in this bucket too. A byref-like
+        // type is grouped here as well: it can implement ITestFilter and would otherwise be waved through as
+        // a struct, but it cannot be boxed, so Activator.CreateInstance always fails with UTA077.
+        if (namedFilterType.IsAbstract || namedFilterType.IsStatic || namedFilterType.IsRefLikeType || namedFilterType.TypeKind == TypeKind.Interface)
         {
             Report(context, provider, NotInstantiableRule, filterTypeName);
             return;

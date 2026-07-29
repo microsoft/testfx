@@ -22,9 +22,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </para>
 /// <para>
 /// Because the filter type is passed as a <see cref="Type"/>, none of those requirements are
-/// checked by the compiler. The <c>MSTEST0079</c> analyzer validates them at build time, and on
-/// .NET the generic <c>TestFilterProviderAttribute&lt;TFilter&gt;</c> variant enforces them
-/// through generic constraints instead.
+/// checked by the compiler. The <c>MSTEST0081</c> analyzer validates them at build time. On .NET the
+/// generic <c>TestFilterProviderAttribute&lt;TFilter&gt;</c> variant additionally enforces the
+/// <see cref="ITestFilter"/> and public-parameterless-constructor requirements through its generic
+/// constraints; the remaining ones are still only reported by <c>MSTEST0081</c>.
 /// </para>
 /// <para>
 /// The filter runs <em>before</em> the test type is loaded, before <c>[AssemblyInitialize]</c>,

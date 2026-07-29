@@ -879,6 +879,30 @@ The type declaring these methods should also respect the following rules:
     <value>Test methods that use 'RuntimeInformation.IsOSPlatform' with early return or 'Assert.Inconclusive' should use the '[OSCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify OS-specific test requirements.</value>
     <comment>{Locked="RuntimeInformation.IsOSPlatform"}{Locked="Assert.Inconclusive"}{Locked="[OSCondition]"}</comment>
   </data>
+  <data name="UseArchitectureConditionAttributeInsteadOfRuntimeCheckTitle" xml:space="preserve">
+    <value>Use '[ArchitectureCondition]' attribute instead of 'RuntimeInformation.ProcessArchitecture' checks with early return or 'Assert.Inconclusive'</value>
+    <comment>{Locked="RuntimeInformation.ProcessArchitecture"}{Locked="Assert.Inconclusive"}{Locked="[ArchitectureCondition]"}</comment>
+  </data>
+  <data name="UseArchitectureConditionAttributeInsteadOfRuntimeCheckMessageFormat" xml:space="preserve">
+    <value>Use '[ArchitectureCondition]' attribute instead of 'RuntimeInformation.ProcessArchitecture' checks with early return or 'Assert.Inconclusive'</value>
+    <comment>{Locked="RuntimeInformation.ProcessArchitecture"}{Locked="Assert.Inconclusive"}{Locked="[ArchitectureCondition]"}</comment>
+  </data>
+  <data name="UseArchitectureConditionAttributeInsteadOfRuntimeCheckDescription" xml:space="preserve">
+    <value>Test methods that compare 'RuntimeInformation.ProcessArchitecture' and then early return or call 'Assert.Inconclusive' should use the '[ArchitectureCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify architecture-specific test requirements, and it reports the test as skipped rather than passed, which an early return does not.</value>
+    <comment>{Locked="RuntimeInformation.ProcessArchitecture"}{Locked="Assert.Inconclusive"}{Locked="[ArchitectureCondition]"}</comment>
+  </data>
+  <data name="UseCIConditionAttributeInsteadOfEnvironmentCheckTitle" xml:space="preserve">
+    <value>Use '[CICondition]' attribute instead of 'Environment.GetEnvironmentVariable' checks with early return or 'Assert.Inconclusive'</value>
+    <comment>{Locked="Environment.GetEnvironmentVariable"}{Locked="Assert.Inconclusive"}{Locked="[CICondition]"}</comment>
+  </data>
+  <data name="UseCIConditionAttributeInsteadOfEnvironmentCheckMessageFormat" xml:space="preserve">
+    <value>Use '[CICondition]' attribute instead of 'Environment.GetEnvironmentVariable' checks with early return or 'Assert.Inconclusive'</value>
+    <comment>{Locked="Environment.GetEnvironmentVariable"}{Locked="Assert.Inconclusive"}{Locked="[CICondition]"}</comment>
+  </data>
+  <data name="UseCIConditionAttributeInsteadOfEnvironmentCheckDescription" xml:space="preserve">
+    <value>Test methods that null-check the 'CI' environment variable and then early return or call 'Assert.Inconclusive' should use the '[CICondition]' attribute instead. This attribute recognizes all the continuous integration providers MSTest knows about and parses their values, and it reports the test as skipped rather than passed, which an early return does not.</value>
+    <comment>{Locked="CI"}{Locked="Assert.Inconclusive"}{Locked="[CICondition]"}</comment>
+  </data>
   <data name="DuplicateTestMethodAttributeTitle" xml:space="preserve">
     <value>Avoid duplicate test method attributes</value>
   </data>
@@ -1058,7 +1082,7 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="PreferConstantForResourceLockMessageFormat" xml:space="preserve">
     <value>The '[ResourceLock]' resource key '{0}' is a bare string literal; reference a shared constant (such as a 'WellKnownResources' member or your own 'const') so that typos do not silently produce a different, unshared key</value>
-    <comment>{0} is the resource key value. {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="const"}</comment>
+    <comment>{0} is the resource key value. {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="'const'"}</comment>
   </data>
   <data name="PreferConstantForResourceLockDescription" xml:space="preserve">
     <value>'[ResourceLock]' matches tests by exact string equality of the resource key. A bare string literal fails open: a typo produces a different key, so conflicting tests are no longer serialized and race silently instead of failing with an error. Referencing a shared constant makes typos a compile error and lets the compiler enforce that every test contending on the same resource uses the same key.</value>
@@ -1113,7 +1137,7 @@ The type declaring these methods should also respect the following rules:
     <comment>{Locked="[TestFilterProvider]"}</comment>
   </data>
   <data name="TestFilterProviderShouldBeValidDescription" xml:space="preserve">
-    <value>'[assembly: TestFilterProvider(typeof(MyFilter))]' passes the filter type as a 'Type', so the compiler accepts any type at all. The adapter validates it only when it materializes the filter, and then fails the whole run. The referenced type must be a non-generic, concrete class that implements 'ITestFilter' and exposes a public parameterless constructor, and at most one provider may be registered per test assembly. When targeting .NET, the generic '[assembly: TestFilterProvider&lt;MyFilter&gt;]' form enforces most of these through generic constraints instead.</value>
+    <value>'[assembly: TestFilterProvider(typeof(MyFilter))]' passes the filter type as a 'Type', so the compiler accepts any type at all. The adapter validates it only when it materializes the filter, and then fails the whole run. The referenced type must be non-generic and instantiable, implement 'ITestFilter' and expose a public parameterless constructor, and at most one provider may be registered per test assembly. When targeting .NET, the generic '[assembly: TestFilterProvider&lt;MyFilter&gt;]' form enforces the interface and constructor requirements through generic constraints instead.</value>
     <comment>{Locked="[assembly: TestFilterProvider(typeof(MyFilter))]"}{Locked="[assembly: TestFilterProvider&lt;MyFilter&gt;]"}{Locked="Type"}{Locked="ITestFilter"}</comment>
   </data>
   <data name="TestFilterProviderShouldBeValidMessageFormat_Generic" xml:space="preserve">
@@ -1121,7 +1145,7 @@ The type declaring these methods should also respect the following rules:
     <comment>{0} is the referenced type name. {Locked="[TestFilterProvider]"}</comment>
   </data>
   <data name="TestFilterProviderShouldBeValidMessageFormat_NotInstantiable" xml:space="preserve">
-    <value>'[TestFilterProvider]' references type '{0}', which is not a concrete class and so cannot be instantiated</value>
+    <value>'[TestFilterProvider]' references type '{0}', which cannot be instantiated</value>
     <comment>{0} is the referenced type name. {Locked="[TestFilterProvider]"}</comment>
   </data>
   <data name="TestFilterProviderShouldBeValidMessageFormat_NotATestFilter" xml:space="preserve">

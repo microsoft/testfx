@@ -101,3 +101,4 @@ static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.TestDe
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.TestDependencyInfo.Encode(Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.TestDependencyInfo! info) -> string!
 static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.ConfigureLiveOutputWriter(System.IO.TextWriter! liveOutputWriter) -> void
 static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SetLiveOutputWriterForTesting(System.IO.TextWriter! liveOutputWriter) -> System.IDisposable!
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TypeCache.IsTestFilterProviderMarkerType(System.Type? attributeType) -> bool

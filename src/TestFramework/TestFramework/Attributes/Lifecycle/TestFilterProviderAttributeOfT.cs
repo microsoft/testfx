@@ -32,7 +32,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// Everything else behaves exactly like <see cref="TestFilterProviderAttribute"/>, including the
 /// "at most one per test assembly" rule — the two attributes count as one and the same registration,
 /// so applying both to a single assembly is an error. They are distinct types, so the compiler does
-/// not report that as a duplicate attribute; <c>MSTEST0079</c> does.
+/// not report that as a duplicate attribute; <c>MSTEST0081</c> does.
 /// </para>
 /// <para>
 /// This attribute is only available when targeting .NET. On .NET Framework, use the non-generic
