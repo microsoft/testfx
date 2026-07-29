@@ -647,7 +647,9 @@ public sealed class SharedFileSystemPathInTestAnalyzerTests
     {
         // The Directory.* allowlist must stay as narrow as the File.* one: enumerating or probing a shared directory
         // at a fixed path does not mutate it, so the delete/move coverage above is pinned from both directions.
+        // 'Directory.GetLastWriteTime' additionally pins the Get*/Set* asymmetry: only the Set*Time* family mutates.
         string code = """
+            using System;
             using System.IO;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -661,10 +663,189 @@ public sealed class SharedFileSystemPathInTestAnalyzerTests
                 {
                     bool exists = Directory.Exists("shared-dir");
                     string[] files = Directory.GetFiles("shared-dir");
+                    DateTime lastWrite = Directory.GetLastWriteTime("shared-dir");
                 }
             }
             """;
 
         await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodCreatesDirectorySymbolicLinkWithConstantPath_Diagnostic()
+    {
+        // Directory.CreateSymbolicLink creates the entry named by 'path', so a constant link path collides with any
+        // other test creating the same link.
+        string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string target = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+                    {|#0:Directory.CreateSymbolicLink("shared-link", target)|};
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(SharedFileSystemPathInTestAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("shared-link"));
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodCreatesDirectorySymbolicLinkToConstantTarget_NoDiagnostic()
+    {
+        // Only 'path' is created by Directory.CreateSymbolicLink; 'pathToTarget' merely names an existing directory
+        // the link points at, so a constant target - like a shared fixture directory - must not be flagged.
+        string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string link = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+                    Directory.CreateSymbolicLink(link, "shared-fixture-dir");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    [DataRow("SetCreationTime")]
+    [DataRow("SetCreationTimeUtc")]
+    [DataRow("SetLastAccessTime")]
+    [DataRow("SetLastAccessTimeUtc")]
+    [DataRow("SetLastWriteTime")]
+    [DataRow("SetLastWriteTimeUtc")]
+    public async Task WhenTestMethodSetsDirectoryTimestampWithConstantPath_Diagnostic(string methodName)
+    {
+        // The Directory.Set*Time* family rewrites the metadata of the entry named by 'path'. That is a mutation two
+        // parallel tests can interleave on, so every member of the allowlist arm must fire on a constant path.
+        string code = $$"""
+            using System;
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    {|#0:Directory.{{methodName}}("shared-dir", DateTime.Now)|};
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(SharedFileSystemPathInTestAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("shared-dir"));
+    }
+
+    [TestMethod]
+    public async Task WhenDoNotParallelizeDeclared_NoDiagnostic()
+    {
+        // A class-level [DoNotParallelize] runs every test of the class in the sequential phase, so no other test can
+        // be touching the same path at the same time and the collision risk the rule reports about disappears.
+        string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            [DoNotParallelize]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    File.WriteAllText("shared.txt", "data");
+                    File.Delete("shared.txt");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodHasMethodLevelDoNotParallelize_NoDiagnostic()
+    {
+        // A method-level [DoNotParallelize] is honored by discovery for real test methods, so it opts the mutation out
+        // of the parallel phase just as the class-level attribute does.
+        string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [DoNotParallelize]
+                public void MyTestMethod()
+                {
+                    File.Delete("shared.txt");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenFixtureMethodHasMethodLevelDoNotParallelize_Diagnostic()
+    {
+        // [DoNotParallelize] on a fixture method is ignored at runtime - only test methods carry the flag through
+        // discovery - so it must not silence a constant-path mutation inside [TestInitialize].
+        string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestInitialize]
+                [DoNotParallelize]
+                public void Setup()
+                {
+                    {|#0:File.WriteAllText("setup.txt", "data")|};
+                }
+
+                [TestMethod]
+                public void MyTestMethod() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(SharedFileSystemPathInTestAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("setup.txt"));
     }
 }
