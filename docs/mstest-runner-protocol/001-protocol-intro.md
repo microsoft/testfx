@@ -410,6 +410,24 @@ interface TestNode {
     // Example: "time.duration-ms": 45.8143,
     'time.duration-ms'?: number;
 
+    // In-process retry attribution, sent when a test framework re-runs a test within a single
+    // test host run (for example MSTest's [Retry] attribute) and reports every attempt under the
+    // same node uid. Absent when the test was not retried.
+    //
+    // 'retry.attempt' is the 1-based attempt number; the first execution is 1.
+    // 'retry.is-superseded' is true when a later attempt for the same node follows, i.e. this
+    // update is NOT the test's final outcome. Clients that show one row per test should ignore
+    // updates where it is true; clients that show the retry history should keep them.
+    //
+    // This is independent from the out-of-process --retry-failed-tests orchestrator, which
+    // re-launches the whole test host instead. When both are active the two compose: the host
+    // attempt is the major number and 'retry.attempt' the minor one.
+    // Example: "retry.attempt": 2,
+    'retry.attempt'?: number;
+
+    // Example: "retry.is-superseded": false,
+    'retry.is-superseded'?: boolean;
+
     // Note: The error consists of the stacktrace, error message and also the assertion properties.
     // If assertion properties are missing the exception would show in the UI as:
     // Message:

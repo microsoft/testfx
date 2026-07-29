@@ -99,7 +99,7 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         // same test node uid. Only the final attempt is the test's outcome, so superseded attempts must not be
         // counted here: otherwise a test that failed once and then passed would still leave _failedTestsCount > 0
         // and make the process exit with ExitCode.AtLeastOneTestFailed.
-        if (message.TestNode.Properties.SingleOrDefault<RetryAttemptProperty>() is { IsSuperseded: true })
+        if (message.TestNode.IsSupersededRetryAttempt())
         {
             return Task.CompletedTask;
         }

@@ -227,7 +227,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
                     // A test framework that retries a test in-process reports every attempt under the same test
                     // node uid. Azure DevOps keys results by automated test name, so publishing the superseded
                     // attempts would create duplicate rows for one test; only the final attempt is published.
-                    if (testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<RetryAttemptProperty>() is { IsSuperseded: true })
+                    if (testNodeUpdateMessage.TestNode.IsSupersededRetryAttempt())
                     {
                         return;
                     }

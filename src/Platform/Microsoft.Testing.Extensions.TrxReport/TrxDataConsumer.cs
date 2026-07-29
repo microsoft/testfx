@@ -126,7 +126,7 @@ internal sealed class TrxReportGenerator :
                 // uid. TRX has one <TestDefinition> per test id, so keeping the superseded attempts would emit
                 // several <UnitTestResult> rows pointing at the same definition and inflate the run summary. Only
                 // the final attempt - the test's actual outcome - is recorded.
-                if (nodeChangedMessage.TestNode.Properties.SingleOrDefault<RetryAttemptProperty>() is { IsSuperseded: true })
+                if (nodeChangedMessage.TestNode.IsSupersededRetryAttempt())
                 {
                     return;
                 }

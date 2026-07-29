@@ -117,7 +117,7 @@ internal sealed class AzureDevOpsReporter :
         // A test framework that retries a test in-process reports every attempt under the same test node uid. An
         // attempt that a later one supersedes is not a build failure, so it must not raise an Azure DevOps error
         // annotation: only the final attempt is annotated.
-        if (nodeUpdateMessage.TestNode.Properties.SingleOrDefault<RetryAttemptProperty>() is { IsSuperseded: true })
+        if (nodeUpdateMessage.TestNode.IsSupersededRetryAttempt())
         {
             return;
         }

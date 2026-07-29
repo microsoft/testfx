@@ -49,6 +49,45 @@ public sealed class FormatterUtilitiesTests
         Assert.IsNull(response.Result);
     }
 
+    [TestMethod]
+    public async Task Serialize_TestNodeWithRetryAttempt_EmitsRetryProperties()
+    {
+        // An unhandled property falls through the serializer's type chain and is silently dropped, which would
+        // leave a server-mode client unable to tell repeated updates for the same uid apart. Both serializer
+        // implementations (System.Text.Json on .NET, Jsonite on .NET Framework) must carry the attribution.
+        var testNode = new TestNode
+        {
+            Uid = new TestNodeUid("uid"),
+            DisplayName = "DisplayName",
+            Properties = new PropertyBag(
+                PassedTestNodeStateProperty.CachedInstance,
+                new RetryAttemptProperty(2, isSuperseded: false)),
+        };
+
+        string serialized = (await _formatter.SerializeAsync(testNode)).Replace(" ", string.Empty);
+
+        Assert.Contains("\"retry.attempt\":2", serialized, serialized);
+        Assert.Contains("\"retry.is-superseded\":false", serialized, serialized);
+    }
+
+    [TestMethod]
+    public async Task Serialize_TestNodeWithSupersededRetryAttempt_EmitsIsSupersededTrue()
+    {
+        var testNode = new TestNode
+        {
+            Uid = new TestNodeUid("uid"),
+            DisplayName = "DisplayName",
+            Properties = new PropertyBag(
+                new FailedTestNodeStateProperty("boom"),
+                new RetryAttemptProperty(1, isSuperseded: true)),
+        };
+
+        string serialized = (await _formatter.SerializeAsync(testNode)).Replace(" ", string.Empty);
+
+        Assert.Contains("\"retry.attempt\":1", serialized, serialized);
+        Assert.Contains("\"retry.is-superseded\":true", serialized, serialized);
+    }
+
     [DynamicData(nameof(SerializerTypesForDynamicData), DynamicDataDisplayName = nameof(FormatSerializerTypes))]
     [TestMethod]
     public async Task SerializeDeserialize_Succeed(Type type)

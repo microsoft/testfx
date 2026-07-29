@@ -61,7 +61,7 @@ internal sealed class JUnitReportGenerator : ReportGeneratorBase<JUnitReportGene
         // JUnit has no notion of attempts: keeping the superseded ones would add extra <testcase> elements (renamed
         // "[attempt N]" by JUnitSuiteBuilder) and inflate the suite totals, so only the final attempt is captured.
         // CTRF and the HTML report deliberately do the opposite and keep the whole history.
-        => update.TestNode.Properties.SingleOrDefault<RetryAttemptProperty>() is { IsSuperseded: true }
+        => update.TestNode.IsSupersededRetryAttempt()
             ? null
             : TestResultCapture.TryCapture(update);
 
