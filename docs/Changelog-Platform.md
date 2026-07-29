@@ -18,6 +18,8 @@ See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4
 
 * Fix `Microsoft.Testing.Extensions.AzureDevOpsReport` crashing with `ObjectDisposedException` during teardown, after results were already published, when the platform disposes the live test-results publisher more than once in [#10191](https://github.com/microsoft/testfx/issues/10191)
 * Report Azure DevOps live-publishing failures (missing configuration, test run creation, unpublished results, attachment uploads and run finalization) on the output device instead of only in the opt-in diagnostic log, so `--publish-azdo-test-results` no longer fails silently in [#10191](https://github.com/microsoft/testfx/issues/10191)
+* Fix TRX attachments being silently dropped on .NET Framework when the destination path exceeds the Windows `MAX_PATH` limit. Both per-test `ResultFile` entries and session-level `CollectorDataEntries` attachments (crash dumps, hang dumps and other extension artifacts) could disappear from the report while the run still reported success in [#10312](https://github.com/microsoft/testfx/issues/10312)
+* Report attachments that could not be copied into the TRX results directory on the output device instead of only in the `RunInfos` section of the generated TRX in [#10312](https://github.com/microsoft/testfx/issues/10312)
 
 ## <a name="2.3.3" />[2.3.3] - 2026-07-28
 

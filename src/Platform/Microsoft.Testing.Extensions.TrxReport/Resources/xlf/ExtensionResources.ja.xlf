@@ -17,6 +17,11 @@
         <target state="translated">TRX レポート マージャー</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
+      <trans-unit id="TrxAttachmentCopyFailed">
+        <source>Unable to copy attachment '{0}' into the TRX results directory. The attachment will be skipped. Reason: {1}.</source>
+        <target state="new">Unable to copy attachment '{0}' into the TRX results directory. The attachment will be skipped. Reason: {1}.</target>
+        <note>{0} is the full path of the attachment that could not be copied. {1} is the name of the exception type that was thrown, e.g. 'UnauthorizedAccessException'. {Locked="TRX"}</note>
+      </trans-unit>
       <trans-unit id="TrxComparerToolBaselineFileOptionDescription">
         <source>The baseline TRX file</source>
         <target state="translated">ベースライン TRX ファイル</target>

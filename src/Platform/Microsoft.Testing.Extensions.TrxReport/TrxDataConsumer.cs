@@ -226,6 +226,13 @@ shouldUseOutOfProcessTrxGeneration: {shouldUseOutOfProcessTrxGeneration}
             await _outputDisplay.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), testSessionContext.CancellationToken).ConfigureAwait(false);
         }
 
+        // An attachment that could not be copied is silently missing from the TRX otherwise: the run
+        // still succeeds and the only record is a RunInfo inside the report nobody reads until later.
+        foreach (string attachmentWarning in trxReportGeneratorEngine.AttachmentWarnings)
+        {
+            await _outputDisplay.DisplayAsync(this, new WarningMessageOutputDeviceData(attachmentWarning), testSessionContext.CancellationToken).ConfigureAwait(false);
+        }
+
         if (_crashRecoveryUnavailable)
         {
             // Surface this on the output device too — a single Warning log line at first-result time is
