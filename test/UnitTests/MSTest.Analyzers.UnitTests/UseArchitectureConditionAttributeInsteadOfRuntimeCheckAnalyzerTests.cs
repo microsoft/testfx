@@ -8,6 +8,9 @@ using Microsoft.Testing.TestInfrastructure;
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.UseArchitectureConditionAttributeInsteadOfRuntimeCheckAnalyzer,
     MSTest.Analyzers.UseArchitectureConditionAttributeInsteadOfRuntimeCheckFixer>;
+using VerifyVB = MSTest.Analyzers.Test.VisualBasicCodeFixVerifier<
+    MSTest.Analyzers.UseArchitectureConditionAttributeInsteadOfRuntimeCheckAnalyzer,
+    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
 namespace MSTest.Analyzers.Test;
 
@@ -458,7 +461,49 @@ public sealed class UseArchitectureConditionAttributeInsteadOfRuntimeCheckAnalyz
     }
 
     [TestMethod]
-    public async Task WhenComparingAgainstALocal_NoDiagnostic()
+    public async Task WhenArchitectureCheckWithEarlyReturn_VisualBasic_Diagnostic()
+    {
+        string code = """
+            Imports System.Runtime.InteropServices
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <TestClass>
+            Public Class MyTestClass
+                <TestMethod>
+                Public Sub TestMethod()
+                    [|If RuntimeInformation.ProcessArchitecture <> Architecture.X64 Then
+                        Return
+                    End If|]
+                End Sub
+            End Class
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenNoArchitectureCheckUsed_VisualBasic_NoDiagnostic()
+    {
+        string code = """
+            Imports System.Runtime.InteropServices
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <TestClass>
+            Public Class MyTestClass
+                <TestMethod>
+                Public Sub TestMethod()
+                    If RuntimeInformation.OSArchitecture <> Architecture.X64 Then
+                        Return
+                    End If
+                End Sub
+            End Class
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenComparingAgainstAField_NoDiagnostic()
     {
         string code = """
             using System.Runtime.InteropServices;

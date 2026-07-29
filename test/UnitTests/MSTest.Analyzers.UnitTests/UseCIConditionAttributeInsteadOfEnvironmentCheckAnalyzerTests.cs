@@ -4,6 +4,9 @@
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.UseCIConditionAttributeInsteadOfEnvironmentCheckAnalyzer,
     MSTest.Analyzers.UseCIConditionAttributeInsteadOfEnvironmentCheckFixer>;
+using VerifyVB = MSTest.Analyzers.Test.VisualBasicCodeFixVerifier<
+    MSTest.Analyzers.UseCIConditionAttributeInsteadOfEnvironmentCheckAnalyzer,
+    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
 namespace MSTest.Analyzers.Test;
 
@@ -576,6 +579,69 @@ public sealed class UseCIConditionAttributeInsteadOfEnvironmentCheckAnalyzerTest
             """;
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenVariableIsNothing_VisualBasic_Diagnostic()
+    {
+        string code = """
+            Imports System
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <TestClass>
+            Public Class MyTestClass
+                <TestMethod>
+                Public Sub TestMethod()
+                    [|If Environment.GetEnvironmentVariable("CI") Is Nothing Then
+                        Return
+                    End If|]
+                End Sub
+            End Class
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenVariableIsNotNothing_VisualBasic_Diagnostic()
+    {
+        string code = """
+            Imports System
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <TestClass>
+            Public Class MyTestClass
+                <TestMethod>
+                Public Sub TestMethod()
+                    [|If Environment.GetEnvironmentVariable("CI") IsNot Nothing Then
+                        Return
+                    End If|]
+                End Sub
+            End Class
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenVariableIsNotACIVariable_VisualBasic_NoDiagnostic()
+    {
+        string code = """
+            Imports System
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            <TestClass>
+            Public Class MyTestClass
+                <TestMethod>
+                Public Sub TestMethod()
+                    If Environment.GetEnvironmentVariable("MY_CUSTOM_VARIABLE") Is Nothing Then
+                        Return
+                    End If
+                End Sub
+            End Class
+            """;
+
+        await VerifyVB.VerifyAnalyzerAsync(code);
     }
 
     [TestMethod]
