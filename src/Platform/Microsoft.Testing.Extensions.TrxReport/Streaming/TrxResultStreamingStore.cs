@@ -385,9 +385,9 @@ internal sealed class TrxResultStreamingStore : IDisposable
         }
 
         string? directory = Path.GetDirectoryName(FilePath);
-        if (!RoslynString.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+        if (!RoslynString.IsNullOrEmpty(directory) && !_fileSystem.ExistDirectory(directory))
         {
-            Directory.CreateDirectory(directory);
+            _fileSystem.CreateDirectory(directory);
         }
 
         // FileShare.Read so a slow / hung writer can't block ReadAll if CompleteAsync times out.

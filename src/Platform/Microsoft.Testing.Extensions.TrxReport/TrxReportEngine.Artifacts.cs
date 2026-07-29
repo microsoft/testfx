@@ -5,6 +5,7 @@ using Microsoft.Testing.Extensions.TrxReport.Resources;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
@@ -38,11 +39,15 @@ internal sealed partial class TrxReportEngine
 
         AttachmentWarnings = attachmentWarnings;
 
-        using FileStream fs = File.OpenWrite(trxFile.FullName);
+        // FileMode.Create rather than the File.OpenWrite equivalent (OpenOrCreate): this is a full
+        // rewrite of the document, and OpenOrCreate would leave trailing bytes from the previous
+        // contents behind if the new document were ever shorter.
+        // Note that we need to dispose the IFileStream, not the inner stream.
+        using IFileStream fs = _fileSystem.NewFileStream(trxFile.FullName, FileMode.Create, FileAccess.Write);
 #if NETCOREAPP
-        await document.SaveAsync(fs, SaveOptions.None, _cancellationToken).ConfigureAwait(false);
+        await document.SaveAsync(fs.Stream, SaveOptions.None, _cancellationToken).ConfigureAwait(false);
 #else
-        document.Save(fs, SaveOptions.None);
+        document.Save(fs.Stream, SaveOptions.None);
 #endif
     }
 
@@ -100,7 +105,7 @@ internal sealed partial class TrxReportEngine
         int nameCounter = 0;
 
         // If the file already exists, append a number to the end of the file name
-        while (File.Exists(TrxLongPathHelper.GetPathForFileSystemAccess(destination)))
+        while (_fileSystem.ExistFile(TrxLongPathHelper.GetPathForFileSystemAccess(destination)))
         {
             nameCounter++;
             destination = Path.Combine(artifactDirectory, $"{Path.GetFileNameWithoutExtension(fileName)}_{nameCounter}{Path.GetExtension(fileName)}");
@@ -122,9 +127,9 @@ internal sealed partial class TrxReportEngine
         // Only the file-system calls get the extended-length form; the returned value stays in its
         // display form because it is the base of the path recorded in the TRX.
         string directoryNameForFileSystemAccess = TrxLongPathHelper.GetPathForFileSystemAccess(directoryName);
-        if (!Directory.Exists(directoryNameForFileSystemAccess))
+        if (!_fileSystem.ExistDirectory(directoryNameForFileSystemAccess))
         {
-            Directory.CreateDirectory(directoryNameForFileSystemAccess);
+            _fileSystem.CreateDirectory(directoryNameForFileSystemAccess);
         }
 
         return directoryName;
