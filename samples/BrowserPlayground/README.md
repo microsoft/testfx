@@ -353,9 +353,9 @@ are guarded off by `OperatingSystem.IsBrowser()` in the platform:
 
 TRX reporting (`--report-trx`) *is* supported: the streaming store that backs it drops its dedicated
 writer thread and its `BlockingCollection<T>` on single-threaded WebAssembly runtimes and serializes
-each record inline instead, producing the same on-disk format. Note that the report is written through
-the runtime's virtual file system, so in a real browser it is not retrievable from the host machine —
-only the headless Node host gives you a file you can collect.
+each record inline instead, producing the same on-disk format. The console reports the artifact's display
+name and virtual file-system path when it is produced. In a real browser that path is not retrievable from
+the host machine; only the headless Node host gives you a file you can collect.
 
 That is why `Program.cs` registers only the telemetry provider (`AddAppInsightsTelemetryProvider`).
 

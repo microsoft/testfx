@@ -44,7 +44,8 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 ///   <item>
 ///     <see cref="BrowserWasmExecution_TrxReport_RunsWithoutPlatformNotSupported"/> runs the same MSTest
 ///     project with <c>--report-trx</c>, guarding the inline TRX streaming store that replaces the
-///     dedicated writer thread and the blocking queue on single-threaded WebAssembly runtimes.
+///     dedicated writer thread and the blocking queue on single-threaded WebAssembly runtimes, and
+///     asserts the generated TRX artifact is reported in Node output.
 ///   </item>
 ///   <item>
 ///     <see cref="BrowserWasmExecution_CustomHostRunsExistingTestAssemblyWithoutCompetingEntryPoint"/>
@@ -1034,9 +1035,10 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
         }
 
         using TestAsset generator = await GenerateBrowserWasmAssetAsync();
+        string trxFileName = $"{Guid.NewGuid():N}.trx";
 
         (int exitCode, _, _, string combined) = await PublishAndRunUnderNodeAsync(
-            generator, node, $"--report-trx --report-trx-filename {Guid.NewGuid():N}.trx");
+            generator, node, $"--report-trx --report-trx-filename {trxFileName}");
 
         Assert.IsFalse(
             combined.Contains("PlatformNotSupportedException", StringComparison.Ordinal)
@@ -1047,6 +1049,13 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
         Assert.IsTrue(
             combined.Contains("succeeded: 2", StringComparison.Ordinal) && combined.Contains("failed: 1", StringComparison.Ordinal),
             $"Expected the browser-wasm run summary to be unaffected by TRX reporting.{Environment.NewLine}{combined}");
+
+        string? trxArtifactLine = combined.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+            .FirstOrDefault(line => line.EndsWith(trxFileName, StringComparison.Ordinal));
+        Assert.IsNotNull(
+            trxArtifactLine,
+            $"Expected the generated TRX artifact '{trxFileName}' to be reported in Node output.{Environment.NewLine}{combined}");
+        Assert.Contains("TRX Report: ", trxArtifactLine);
 
         // The asset has one intentionally failing test: requiring AtLeastOneTestFailed (rather than any
         // non-zero code) keeps a TRX-generation crash from masquerading as the expected outcome.
