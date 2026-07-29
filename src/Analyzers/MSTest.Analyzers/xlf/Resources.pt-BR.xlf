@@ -752,8 +752,8 @@ O tipo que declara esses métodos também deve respeitar as seguintes regras:
       </trans-unit>
       <trans-unit id="PreferConstantForResourceLockMessageFormat">
         <source>The '[ResourceLock]' resource key '{0}' is a bare string literal; reference a shared constant (such as a 'WellKnownResources' member or your own 'const') so that typos do not silently produce a different, unshared key</source>
-        <target state="translated">A chave de recurso '[ResourceLock]' '{0}' é um literal de cadeia de caracteres simples; referencie uma constante compartilhada (como um membro de 'WellKnownResources' ou sua própria 'const') para que erros de digitação não produzam silenciosamente uma chave diferente e não compartilhada</target>
-        <note>{0} is the resource key value. {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="const"}</note>
+        <target state="needs-review-translation">A chave de recurso '[ResourceLock]' '{0}' é um literal de cadeia de caracteres simples; referencie uma constante compartilhada (como um membro de 'WellKnownResources' ou sua própria 'const') para que erros de digitação não produzam silenciosamente uma chave diferente e não compartilhada</target>
+        <note>{0} is the resource key value. {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="'const'"}</note>
       </trans-unit>
       <trans-unit id="PreferConstantForResourceLockTitle">
         <source>Prefer a named constant for the '[ResourceLock]' resource key</source>

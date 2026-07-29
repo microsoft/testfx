@@ -1058,7 +1058,7 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="PreferConstantForResourceLockMessageFormat" xml:space="preserve">
     <value>The '[ResourceLock]' resource key '{0}' is a bare string literal; reference a shared constant (such as a 'WellKnownResources' member or your own 'const') so that typos do not silently produce a different, unshared key</value>
-    <comment>{0} is the resource key value. {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="const"}</comment>
+    <comment>{0} is the resource key value. {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="'const'"}</comment>
   </data>
   <data name="PreferConstantForResourceLockDescription" xml:space="preserve">
     <value>'[ResourceLock]' matches tests by exact string equality of the resource key. A bare string literal fails open: a typo produces a different key, so conflicting tests are no longer serialized and race silently instead of failing with an error. Referencing a shared constant makes typos a compile error and lets the compiler enforce that every test contending on the same resource uses the same key.</value>
