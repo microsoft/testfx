@@ -48,7 +48,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </example>
 [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false, Inherited = false)]
 [Experimental("MSTESTEXP", UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
-public class TestFilterProviderAttribute : Attribute
+public sealed class TestFilterProviderAttribute : Attribute, ITestFilterProviderAttribute
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="TestFilterProviderAttribute"/> class.

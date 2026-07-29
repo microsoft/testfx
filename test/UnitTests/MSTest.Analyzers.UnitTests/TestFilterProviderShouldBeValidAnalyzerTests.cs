@@ -234,6 +234,37 @@ public sealed class TestFilterProviderShouldBeValidAnalyzerTests
                 .WithArguments("MyFilter"));
     }
 
+    // TestFilterProviderAttribute and TestFilterProviderAttribute<TFilter> are both sealed and the contract
+    // they share is internal to MSTest, so a user-defined attribute can never register a filter. This pins
+    // that down: an unrelated assembly attribute must not be mistaken for a provider.
+    [TestMethod]
+    public async Task WhenUnrelatedAssemblyAttributeIsApplied_NoDiagnostic()
+    {
+        string code = Header + """
+            [assembly: Nightly]
+
+            public sealed class NightlyAttribute : System.Attribute
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    // typeof(...) cannot produce null, but a plain null literal binds to the Type parameter and compiles.
+    // At run time the attribute constructor throws and discovery reports UTA073.
+    [TestMethod]
+    public async Task WhenFilterTypeIsNull_Diagnostic()
+    {
+        string code = Header + """
+            [assembly: {|#0:TestFilterProvider(null)|}]
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(TestFilterProviderShouldBeValidAnalyzer.NullRule).WithLocation(0));
+    }
+
 #if NET
     // TestFilterProviderAttribute<TFilter> only exists in the .NET assets of MSTest.TestFramework, so these
     // cases cannot be compiled when this test project runs on .NET Framework.
@@ -252,7 +283,25 @@ public sealed class TestFilterProviderShouldBeValidAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
-    // The generic constraints cannot rule this one out: a closed generic satisfies 'class, ITestFilter, new()'
+    // A struct filter works through the non-generic attribute, so the generic form must accept it too —
+    // otherwise a valid registration could not be migrated to the type-safe shape. This is why
+    // TestFilterProviderAttribute<TFilter> deliberately has no 'class' constraint.
+    [TestMethod]
+    public async Task WhenGenericProviderReferencesStruct_NoDiagnostic()
+    {
+        string code = Header + """
+            [assembly: TestFilterProvider<MyFilter>]
+
+            public struct MyFilter : ITestFilter
+            {
+                public TestFilterResult Filter(TestFilterContext context) => TestFilterResult.Run;
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    // The generic constraints cannot rule this one out: a closed generic satisfies 'ITestFilter, new()'
     // but is still rejected by the adapter at run time.
     [TestMethod]
     public async Task WhenGenericProviderReferencesGenericFilter_Diagnostic()

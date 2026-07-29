@@ -1136,4 +1136,8 @@ The type declaring these methods should also respect the following rules:
     <value>The assembly registers more than one '[TestFilterProvider]'; at most one is allowed per test assembly, so compose the filtering strategies inside a single 'ITestFilter' implementation</value>
     <comment>{Locked="[TestFilterProvider]"}{Locked="ITestFilter"}</comment>
   </data>
+  <data name="TestFilterProviderShouldBeValidMessageFormat_Null" xml:space="preserve">
+    <value>'[TestFilterProvider]' is given a null filter type; pass the 'ITestFilter' implementation to run, for example 'typeof(MyFilter)'</value>
+    <comment>{Locked="[TestFilterProvider]"}{Locked="ITestFilter"}{Locked="typeof(MyFilter)"}</comment>
+  </data>
 </root>

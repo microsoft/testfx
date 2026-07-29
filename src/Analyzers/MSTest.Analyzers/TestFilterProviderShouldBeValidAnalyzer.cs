@@ -63,13 +63,18 @@ public sealed class TestFilterProviderShouldBeValidAnalyzer : DiagnosticAnalyzer
     public static readonly DiagnosticDescriptor MultipleRule = GenericRule
         .WithMessage(new(nameof(Resources.TestFilterProviderShouldBeValidMessageFormat_Multiple), Resources.ResourceManager, typeof(Resources)));
 
+    /// <inheritdoc cref="Resources.TestFilterProviderShouldBeValidMessageFormat_Null"/>
+    public static readonly DiagnosticDescriptor NullRule = GenericRule
+        .WithMessage(new(nameof(Resources.TestFilterProviderShouldBeValidMessageFormat_Null), Resources.ResourceManager, typeof(Resources)));
+
     /// <inheritdoc />
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = ImmutableArray.Create(
         GenericRule,
         NotInstantiableRule,
         NotATestFilterRule,
         NoParameterlessConstructorRule,
-        MultipleRule);
+        MultipleRule,
+        NullRule);
 
     /// <inheritdoc />
     public override void Initialize(AnalysisContext context)
@@ -88,10 +93,14 @@ public sealed class TestFilterProviderShouldBeValidAnalyzer : DiagnosticAnalyzer
             return;
         }
 
+        // Optional: the generic attribute only exists in the .NET assets of MSTest.TestFramework, so it is
+        // absent when compiling against the .NET Framework / netstandard2.0 asset.
+        context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestFilterProviderAttribute1, out INamedTypeSymbol? genericTestFilterProviderAttributeSymbol);
+
         // Only the test assembly's own markers matter: the adapter reads [TestFilterProvider] from the
         // test source and ignores the attribute on referenced libraries.
         var providers = context.Compilation.Assembly.GetAttributes()
-            .Where(attribute => IsTestFilterProvider(attribute.AttributeClass, testFilterProviderAttributeSymbol))
+            .Where(attribute => IsTestFilterProvider(attribute.AttributeClass, testFilterProviderAttributeSymbol, genericTestFilterProviderAttributeSymbol))
             .ToImmutableArray();
 
         if (providers.Length > 1)
@@ -108,12 +117,23 @@ public sealed class TestFilterProviderShouldBeValidAnalyzer : DiagnosticAnalyzer
         }
     }
 
-    private static bool IsTestFilterProvider(INamedTypeSymbol? attributeClass, INamedTypeSymbol testFilterProviderAttributeSymbol)
-        // TestFilterProviderAttribute<TFilter> derives from TestFilterProviderAttribute, and the adapter
-        // treats both as the same registration, so both shapes are in scope here.
+    /// <summary>
+    /// Whether <paramref name="attributeClass"/> is one of the two attribute shapes that register an
+    /// <c>ITestFilter</c>.
+    /// </summary>
+    /// <remarks>
+    /// Both attributes are sealed and the contract they share is internal to MSTest, so these are the only
+    /// registrations that can exist. That is what lets this analyzer validate every provider it recognizes
+    /// instead of having to bail out on shapes whose filter type is not statically knowable.
+    /// </remarks>
+    private static bool IsTestFilterProvider(
+        INamedTypeSymbol? attributeClass,
+        INamedTypeSymbol testFilterProviderAttributeSymbol,
+        INamedTypeSymbol? genericTestFilterProviderAttributeSymbol)
         => attributeClass is not null
             && (SymbolEqualityComparer.Default.Equals(attributeClass, testFilterProviderAttributeSymbol)
-                || attributeClass.Inherits(testFilterProviderAttributeSymbol));
+                || (genericTestFilterProviderAttributeSymbol is not null
+                    && SymbolEqualityComparer.Default.Equals(attributeClass.OriginalDefinition, genericTestFilterProviderAttributeSymbol)));
 
     private static void AnalyzeProvider(
         CompilationAnalysisContext context,
@@ -121,11 +141,18 @@ public sealed class TestFilterProviderShouldBeValidAnalyzer : DiagnosticAnalyzer
         INamedTypeSymbol testFilterProviderAttributeSymbol,
         INamedTypeSymbol testFilterSymbol)
     {
-        if (!TryGetFilterType(provider, testFilterProviderAttributeSymbol, out ITypeSymbol? filterType)
-            || filterType.TypeKind == TypeKind.Error)
+        if (!TryGetFilterType(provider, testFilterProviderAttributeSymbol, out ITypeSymbol? filterType))
         {
-            // Either the attribute is malformed (the compiler already reports that) or the referenced
-            // type does not bind, in which case any diagnostic we add would just be noise.
+            // The non-generic attribute accepts a null Type, which compiles but throws from the attribute
+            // constructor at run time and surfaces as UTA073.
+            Report(context, provider, NullRule);
+            return;
+        }
+
+        if (filterType.TypeKind == TypeKind.Error)
+        {
+            // The referenced type does not bind; the compiler already reports that, and any diagnostic we
+            // add on top would just be noise.
             return;
         }
 
@@ -182,7 +209,8 @@ public sealed class TestFilterProviderShouldBeValidAnalyzer : DiagnosticAnalyzer
             return filterType is not null;
         }
 
-        // The generic form carries the filter type as its single type argument.
+        // Otherwise this is the generic form (IsTestFilterProvider admits nothing else), which carries the
+        // filter type as its single type argument.
         filterType = provider.AttributeClass is { TypeArguments: [ITypeSymbol typeArgument] } ? typeArgument : null;
         return filterType is not null;
     }

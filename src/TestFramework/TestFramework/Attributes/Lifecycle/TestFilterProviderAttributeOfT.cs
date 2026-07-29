@@ -3,7 +3,8 @@
 
 // Generic attributes are unusable on .NET Framework: its reflection stack throws
 // NotSupportedException("Generic types are not valid.") as soon as a custom attribute with a
-// generic type is materialized, and CustomAttributeData reports the shared __Canon instantiation
+// generic type is materialized — and it does so for the whole assembly's attribute enumeration,
+// not just this attribute — while CustomAttributeData reports the shared __Canon instantiation
 // instead of the real type argument. Exposing this type only on .NET turns what would be a hard
 // runtime failure into a plain compile-time error for anyone targeting .NET Framework, who can
 // still use the non-generic TestFilterProviderAttribute.
@@ -24,17 +25,19 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <para>
 /// This is the type-safe form of <c>[assembly: TestFilterProvider(typeof(MyFilter))]</c>. The
 /// generic constraints make the compiler enforce, at build time, what the non-generic attribute can
-/// only validate at run time: <typeparamref name="TFilter"/> must be a class, must implement
-/// <see cref="ITestFilter"/>, and must expose a public parameterless constructor.
+/// only validate at run time: <typeparamref name="TFilter"/> must implement <see cref="ITestFilter"/>
+/// and expose a public parameterless constructor.
 /// </para>
 /// <para>
 /// Everything else behaves exactly like <see cref="TestFilterProviderAttribute"/>, including the
-/// "at most one per test assembly" rule — the two attributes count as one and the same
-/// registration, so applying both to a single assembly is an error.
+/// "at most one per test assembly" rule — the two attributes count as one and the same registration,
+/// so applying both to a single assembly is an error. They are distinct types, so the compiler does
+/// not report that as a duplicate attribute; <c>MSTEST0079</c> does.
 /// </para>
 /// <para>
 /// This attribute is only available when targeting .NET. On .NET Framework, use the non-generic
-/// <see cref="TestFilterProviderAttribute"/>.
+/// <see cref="TestFilterProviderAttribute"/>. Test projects that multi-target both can select the
+/// right form with <c>#if NET</c>.
 /// </para>
 /// </remarks>
 /// <example>
@@ -55,16 +58,17 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 [Experimental("MSTESTEXP", UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
 public sealed class TestFilterProviderAttribute<
     [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] TFilter>
-    : TestFilterProviderAttribute
-    where TFilter : class, ITestFilter, new()
+    : Attribute, ITestFilterProviderAttribute
+    // Deliberately no 'class' constraint: the adapter instantiates the filter through
+    // Activator.CreateInstance and only needs an ITestFilter back, so a struct filter is as valid here as
+    // it already is through the non-generic attribute. Requiring a class would make a working non-generic
+    // registration impossible to migrate to this form.
+    where TFilter : ITestFilter, new()
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="TestFilterProviderAttribute{TFilter}"/> class.
+    /// Gets the <see cref="ITestFilter"/> implementation registered by this attribute.
     /// </summary>
-    public TestFilterProviderAttribute()
-        : base(typeof(TFilter))
-    {
-    }
+    public Type FilterType => typeof(TFilter);
 }
 
 #endif

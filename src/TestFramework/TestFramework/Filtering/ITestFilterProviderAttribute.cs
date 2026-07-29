@@ -1,0 +1,24 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
+
+/// <summary>
+/// Implemented by every attribute shape that registers an <see cref="ITestFilter"/> for a test assembly,
+/// so the adapter can find and read them all with a single
+/// <c>Assembly.GetCustomAttributes(typeof(ITestFilterProviderAttribute))</c> lookup.
+/// </summary>
+/// <remarks>
+/// Deliberately internal. Making it public would turn "registers a test filter" into an open extension
+/// point, and a user-defined provider attribute decides which filter it registers inside its own
+/// constructor — something no build-time analyzer could validate. Keeping the contract internal means the
+/// supported shapes stay exactly <see cref="TestFilterProviderAttribute"/> and
+/// <c>TestFilterProviderAttribute&lt;TFilter&gt;</c>, both of which <c>MSTEST0079</c> can fully check.
+/// </remarks>
+internal interface ITestFilterProviderAttribute
+{
+    /// <summary>
+    /// Gets the <see cref="ITestFilter"/> implementation registered by this attribute.
+    /// </summary>
+    Type FilterType { get; }
+}

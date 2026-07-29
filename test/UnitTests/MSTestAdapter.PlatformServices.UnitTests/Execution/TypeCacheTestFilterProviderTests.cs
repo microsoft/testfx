@@ -88,14 +88,35 @@ public class TypeCacheTestFilterProviderTests : TestContainer
         filter.Should().NotBeNull().And.BeOfType<NoOpFilter>();
     }
 
+    // The metadata probe guards a GetCustomAttributes lookup that matches by assignability, so it has to
+    // recognize every shape that lookup would return. Missing one silently drops the user's filter, which is
+    // the exact failure mode [TestFilterProvider] is designed to avoid. The probe's enumeration over
+    // GetCustomAttributesData is trivial; what these tests pin down is the type-matching decision it makes
+    // per attribute.
+    public void IsTestFilterProviderMarkerType_WhenTypeIsTheNonGenericMarker_ReturnsTrue()
+        => TypeCache.IsTestFilterProviderMarkerType(typeof(TestFilterProviderAttribute)).Should().BeTrue();
+
+    public void IsTestFilterProviderMarkerType_WhenTypeIsUnrelatedAttribute_ReturnsFalse()
+        => TypeCache.IsTestFilterProviderMarkerType(typeof(TestClassAttribute)).Should().BeFalse();
+
+    public void IsTestFilterProviderMarkerType_WhenTypeIsNull_ReturnsFalse()
+        => TypeCache.IsTestFilterProviderMarkerType(null).Should().BeFalse();
+
+#if NET
+    // The constructed generic type's FullName embeds the type argument, so comparing it directly against the
+    // marker's FullName would miss it — hence the generic-type-definition normalization in the probe.
+    public void IsTestFilterProviderMarkerType_WhenTypeIsGenericMarker_ReturnsTrue()
+        => TypeCache.IsTestFilterProviderMarkerType(typeof(TestFilterProviderAttribute<NoOpFilter>)).Should().BeTrue();
+#endif
+
 #if NET
     // The generic attribute is only shipped in the .NET assets of MSTest.TestFramework, because .NET
     // Framework reflection cannot materialize a generic custom attribute at all.
-    public void GenericTestFilterProviderAttribute_IsDiscoverableAsNonGenericMarkerAndExposesTypeArgument()
+    public void GenericTestFilterProviderAttribute_IsDiscoverableAsMarkerAndExposesTypeArgument()
     {
-        // Deriving from the non-generic attribute is what makes the adapter's
-        // GetCustomAttributes(assembly, typeof(TestFilterProviderAttribute)) lookup pick the generic form up.
-        TestFilterProviderAttribute attribute = new TestFilterProviderAttribute<NoOpFilter>();
+        // Implementing the internal ITestFilterProviderAttribute is what makes the adapter's
+        // GetCustomAttributes(assembly, typeof(ITestFilterProviderAttribute)) lookup pick the generic form up.
+        ITestFilterProviderAttribute attribute = new TestFilterProviderAttribute<NoOpFilter>();
 
         attribute.FilterType.Should().Be(typeof(NoOpFilter));
         TypeCache.InstantiateTestFilter(attribute.FilterType).Should().BeOfType<NoOpFilter>();

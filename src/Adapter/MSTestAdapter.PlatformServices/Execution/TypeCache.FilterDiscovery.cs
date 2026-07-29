@@ -76,7 +76,7 @@ internal sealed partial class TypeCache
         object[] markers;
         try
         {
-            markers = PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(testAssembly, typeof(TestFilterProviderAttribute));
+            markers = PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(testAssembly, typeof(ITestFilterProviderAttribute));
         }
         catch (Exception ex)
         {
@@ -107,7 +107,7 @@ internal sealed partial class TypeCache
             throw new TypeInspectionException(message);
         }
 
-        return markers[0] is TestFilterProviderAttribute { FilterType: { } filterType }
+        return markers[0] is ITestFilterProviderAttribute { FilterType: { } filterType }
             ? InstantiateTestFilter(filterType)
             : null;
     }
@@ -146,31 +146,51 @@ internal sealed partial class TypeCache
 
     private static bool HasTestFilterProviderMarker(Assembly assembly)
     {
-        // Compare on the attribute type's FullName so we don't trigger attribute construction,
-        // mirroring the AssemblyFixtureProvider probe.
-        string markerFullName = typeof(TestFilterProviderAttribute).FullName!;
-
-        // The type-safe TestFilterProviderAttribute<TFilter> derives from the non-generic marker, so
-        // it is picked up by the GetCustomAttributes(assembly, typeof(TestFilterProviderAttribute))
-        // lookup below. Its CustomAttributeData reports the *constructed* type though, whose FullName
-        // embeds the type argument, so this probe has to compare against the generic type definition.
-        string genericMarkerFullName = markerFullName + "`1";
-
         foreach (CustomAttributeData data in assembly.GetCustomAttributesData())
         {
-            Type attributeType = data.AttributeType;
-            string? attributeFullName = attributeType.IsGenericType
-                ? attributeType.GetGenericTypeDefinition().FullName
-                : attributeType.FullName;
-
-            if (string.Equals(attributeFullName, markerFullName, StringComparison.Ordinal)
-                || string.Equals(attributeFullName, genericMarkerFullName, StringComparison.Ordinal))
+            if (IsTestFilterProviderMarkerType(data.AttributeType))
             {
                 return true;
             }
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Whether <paramref name="attributeType"/> is one of the two attribute shapes that register an
+    /// <see cref="ITestFilter"/>: <see cref="TestFilterProviderAttribute"/> or
+    /// <c>TestFilterProviderAttribute&lt;TFilter&gt;</c>.
+    /// </summary>
+    /// <remarks>
+    /// Comparing type names keeps this a metadata-only probe: it never constructs the attribute, so it
+    /// cannot trip on a <c>typeof(...)</c> argument whose target assembly fails to resolve — which is the
+    /// whole point of probing metadata before the real lookup.
+    /// <para>
+    /// Matching exact names is only safe because both attributes are <see langword="sealed"/> and the
+    /// contract they share (<c>ITestFilterProviderAttribute</c>) is internal, so this list cannot grow
+    /// behind our back. Were the attributes user-derivable, the guarded assignability-based
+    /// <c>GetCustomAttributes</c> lookup would return subclasses this probe rejects, silently dropping the
+    /// user's filter.
+    /// </para>
+    /// </remarks>
+    internal static bool IsTestFilterProviderMarkerType(Type? attributeType)
+    {
+        if (attributeType is null)
+        {
+            return false;
+        }
+
+        // A constructed generic type's FullName embeds the type argument, so compare the generic type
+        // definition to recognize TestFilterProviderAttribute<TFilter>.
+        string? attributeFullName = attributeType.IsGenericType
+            ? attributeType.GetGenericTypeDefinition().FullName
+            : attributeType.FullName;
+
+        string markerFullName = typeof(TestFilterProviderAttribute).FullName!;
+
+        return string.Equals(attributeFullName, markerFullName, StringComparison.Ordinal)
+            || string.Equals(attributeFullName, markerFullName + "`1", StringComparison.Ordinal);
     }
 
     // Tiny holder so the cache can distinguish "not computed yet" (missing key) from

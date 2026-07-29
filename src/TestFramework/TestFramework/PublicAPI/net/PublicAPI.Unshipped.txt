@@ -148,4 +148,5 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotEmpty<T>(System.
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotEmpty<T>(System.Span<T> collection, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotEmptyInterpolatedStringHandler<T> message, string! collectionExpression = "") -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotEmpty<T>(System.Span<T> collection, string? message = "", string! collectionExpression = "") -> void
 [MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterProviderAttribute<TFilter>
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterProviderAttribute<TFilter>.FilterType.get -> System.Type!
 [MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterProviderAttribute<TFilter>.TestFilterProviderAttribute() -> void
