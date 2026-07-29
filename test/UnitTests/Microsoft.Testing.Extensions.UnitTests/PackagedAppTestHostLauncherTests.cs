@@ -50,9 +50,16 @@ public sealed class PackagedAppTestHostLauncherTests
         => AssertIsEnabledAsync(expected: true, manifestXml: null, mode: "  AlWaYs  ");
 
     // A typo in an environment variable must not do anything beyond falling back to the default (probe
-    // the layout), and must never fail the run.
+    // the layout), and must never fail the run. Asserting against a packaged layout is what proves the
+    // probe actually ran: expecting false on a loose layout would be indistinguishable from an
+    // unrecognized mode short-circuiting straight to disabled.
     [TestMethod]
+    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "Packaged Windows apps are a Windows-only scenario; the launcher is unconditionally disabled elsewhere.")]
     public Task IsEnabledAsync_WithUnrecognizedMode_FallsBackToProbingTheLayout()
+        => AssertIsEnabledAsync(expected: true, PackagedManifestXml, mode: "alwyas");
+
+    [TestMethod]
+    public Task IsEnabledAsync_WithUnrecognizedModeAndLooseLayout_IsDisabled()
         => AssertIsEnabledAsync(expected: false, manifestXml: null, mode: "alwyas");
 
     // The layout probe walks up from the app directory because Application/@Executable may point into a
