@@ -35,6 +35,62 @@ internal sealed partial class UnitTestRunner
     internal async Task<TestResult[]> RunSingleTestAsync(UnitTestElement unitTestElement, IDictionary<string, object?> testContextProperties, IAdapterMessageLogger messageLogger)
         => await RunSingleTestAsync(unitTestElement, testContextProperties, testContextProperties, messageLogger).ConfigureAwait(false);
 
+    // Task cannot cross app domains.
+    // For now, TestExecutionManager will call this sync method which is hacky.
+    internal TestResult[] NotifyTestNotRun(
+        UnitTestElement unitTestElement,
+        IDictionary<string, object?> testContextProperties,
+        IDictionary<string, object?> lifecycleContextProperties,
+        IAdapterMessageLogger messageLogger)
+        => NotifyTestNotRunAsync(unitTestElement, testContextProperties, lifecycleContextProperties, messageLogger).GetAwaiter().GetResult();
+
+    /// <summary>
+    /// Tells the runner that a selected test is not going to execute, because the scheduler decided its
+    /// outcome without running it - its prerequisite did not pass, or it is part of a dependency cycle.
+    /// </summary>
+    /// <remarks>
+    /// The class-cleanup countdown is built from every <em>selected</em> test, so a test that never reaches
+    /// <see cref="RunSingleTestAsync(UnitTestElement, IDictionary{string, object?}, IDictionary{string, object?}, IAdapterMessageLogger)"/>
+    /// still owes its decrement. This performs exactly the bookkeeping a filtered-out test does, which is
+    /// the same situation: selected, counted, never run.
+    /// </remarks>
+    /// <param name="unitTestElement">The test that will not run.</param>
+    /// <param name="testContextProperties">Properties scoped to this test.</param>
+    /// <param name="lifecycleContextProperties">Properties scoped to assembly and class lifecycle methods.</param>
+    /// <param name="messageLogger">The message logger.</param>
+    /// <returns>
+    /// Any results produced by cleanup that this call triggered - empty unless a <c>[ClassCleanup]</c> or
+    /// <c>[AssemblyCleanup]</c> ran and failed. The test's own "skipped" or "failed" result is reported by
+    /// the caller, which is what decided the outcome.
+    /// </returns>
+    internal async Task<TestResult[]> NotifyTestNotRunAsync(
+        UnitTestElement unitTestElement,
+        IDictionary<string, object?> testContextProperties,
+        IDictionary<string, object?> lifecycleContextProperties,
+        IAdapterMessageLogger messageLogger)
+    {
+        if (unitTestElement is null)
+        {
+            throw new ArgumentNullException(nameof(unitTestElement));
+        }
+
+        ITestContext? testContextForTestExecution = null;
+        try
+        {
+            testContextForTestExecution = PlatformServiceProvider.Instance.GetTestContext(unitTestElement.TestMethod, null, testContextProperties, messageLogger, UnitTestOutcome.InProgress);
+            return await FinishTestThatDidNotRunAsync(
+                unitTestElement.TestMethod,
+                lifecycleContextProperties,
+                messageLogger,
+                [],
+                testContextForTestExecution).ConfigureAwait(false);
+        }
+        finally
+        {
+            (testContextForTestExecution as IDisposable)?.Dispose();
+        }
+    }
+
     /// <summary>
     /// Runs a single test.
     /// </summary>
@@ -82,7 +138,7 @@ internal sealed partial class UnitTestRunner
             TestResult[]? filterResult = ApplyTestFilter(unitTestElement);
             if (filterResult is not null)
             {
-                return await FinishFilteredOutTestAsync(
+                return await FinishTestThatDidNotRunAsync(
                     testMethod,
                     lifecycleContextProperties,
                     messageLogger,
@@ -118,7 +174,7 @@ internal sealed partial class UnitTestRunner
 
                 // Remember that assembly initialize ran for this assembly so the end-of-assembly cleanup
                 // guard still fires even when the last test of the assembly is filtered out (and therefore
-                // has no testMethodInfo of its own). See FinishFilteredOutTestAsync.
+                // has no testMethodInfo of its own). See FinishTestThatDidNotRunAsync.
                 _assemblyInitializeWasExecuted |= assemblyInfo.IsAssemblyInitializeExecuted;
 
                 if (assemblyInitializeResult.Outcome != UnitTestOutcome.Passed)

@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
-using Microsoft.Testing.Platform.Logging;
 
 namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 
@@ -29,7 +28,8 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingRunAttachmentFailed} {ex.Message}");
+                Interlocked.Increment(ref _failedAttachmentCount);
+                TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingRunAttachmentFailed} {ex.Message}");
             }
         }
     }
@@ -53,7 +53,8 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingResultAttachmentFailed} {ex.Message}");
+                Interlocked.Increment(ref _failedAttachmentCount);
+                TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingResultAttachmentFailed} {ex.Message}");
             }
         }
     }
@@ -81,7 +82,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
+                TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
             }
         }
     }
@@ -149,7 +150,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
 
                     // Reset the interval countdown so a transient failure does not cause a tight retry loop.
                     _lastFlushTime = _clock.UtcNow;
-                    _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
+                    TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
                     return;
                 }
 
@@ -160,7 +161,8 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
                 {
                     if (BatchHasAttachments(batch))
                     {
-                        _logger.LogWarning(AzureDevOpsResources.AzureDevOpsLivePublishingResultIdParseFailedWarning);
+                        Interlocked.Add(ref _failedAttachmentCount, CountAttachments(batch));
+                        TryLogWarning(AzureDevOpsResources.AzureDevOpsLivePublishingResultIdParseFailedWarning);
                     }
 
                     continue;
@@ -188,7 +190,12 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingResultAttachmentFailed} {ex.Message}");
+                        // Individual upload failures are already counted inside UploadResultAttachmentsAsync
+                        // (whose logging is non-throwing), so reaching here means RenewLeaseAsync threw and no
+                        // upload was attempted at all. Count the whole set, otherwise these attachments are
+                        // dropped uncounted and the end-of-session summary under-reports.
+                        Interlocked.Add(ref _failedAttachmentCount, batch[i].Attachments.Count);
+                        TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingResultAttachmentFailed} {ex.Message}");
                     }
                 }
             }
@@ -210,6 +217,17 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         }
 
         return false;
+    }
+
+    private static int CountAttachments(IReadOnlyList<AzureDevOpsTestCaseResultWithAttachments> batch)
+    {
+        int count = 0;
+        for (int i = 0; i < batch.Count; i++)
+        {
+            count += batch[i].Attachments.Count;
+        }
+
+        return count;
     }
 
     private bool ShouldFlushUnsafe(bool force)

@@ -11,3 +11,4 @@ MSTEST0074 | Usage | Info | UndeclaredProcessGlobalStateMutationAnalyzer, [Docum
 MSTEST0075 | Usage | Info | CurrentDirectoryMutationUnderParallelizationAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0075)
 MSTEST0076 | Usage | Info | CultureMutationUnderParallelizationAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0076)
 MSTEST0077 | Usage | Info | SharedFileSystemPathInTestAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0077)
+MSTEST0078 | Usage | Warning | DependsOnShouldBeValidAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0078)
