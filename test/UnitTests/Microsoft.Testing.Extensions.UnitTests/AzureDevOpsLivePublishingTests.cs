@@ -429,7 +429,11 @@ public sealed class AzureDevOpsLivePublishingTests
     public async Task CreatePublisher_NonNumericAttempts_LeavesAttemptsNull()
     {
         using TestDirectory directory = CreateTestDirectory();
-        Mock<IEnvironment> environment = CreateEnvironmentMock(processId: GetAliveProcessId(), stageAttempt: "not-a-number");
+        Mock<IEnvironment> environment = CreateEnvironmentMock(
+            processId: GetAliveProcessId(),
+            stageAttempt: "not-a-number",
+            phaseAttempt: "1.5",
+            jobAttempt: string.Empty);
         AzureDevOpsPublishConfiguration? capturedConfiguration = null;
         AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(2, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out _, out _, environment: environment);
         client.CreateTestRunAsyncFunc = (configuration, _) =>
@@ -442,7 +446,12 @@ public sealed class AzureDevOpsLivePublishingTests
 
         Assert.IsNotNull(capturedConfiguration);
         Assert.IsNotNull(capturedConfiguration!.PipelineReference);
+
+        // One assertion per attempt so every parse of an unusable value is pinned, and the run is still
+        // published rather than being failed by an attempt number the agent did not set sensibly.
         Assert.IsNull(capturedConfiguration.PipelineReference!.StageAttempt);
+        Assert.IsNull(capturedConfiguration.PipelineReference.PhaseAttempt);
+        Assert.IsNull(capturedConfiguration.PipelineReference.JobAttempt);
         Assert.IsNull(capturedConfiguration.PipelineReference.PhaseName);
     }
 
