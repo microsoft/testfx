@@ -159,11 +159,11 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher
         string sourceDirectory = Path.GetDirectoryName(context.FileName)
             ?? throw new InvalidOperationException($"Unable to determine the source directory of '{context.FileName}'.");
 
-        // A packaged (MSIX) app is detected by the presence of an AppxManifest.xml. The manifest lives
-        // at the package layout root, which may be an ancestor of the executable's directory
+        // A packaged (MSIX) app is detected by a matching AppxManifest.xml. The manifest lives at the
+        // package layout root, which may be an ancestor of the executable's directory
         // (Application/@Executable can point into a subdirectory), so search upward rather than only the
-        // executable's directory.
-        string? manifestPath = AppxManifestInfo.FindManifestPath(sourceDirectory);
+        // executable's directory while rejecting stray ancestor manifests that do not describe this host.
+        string? manifestPath = AppxManifestInfo.FindManifestPath(sourceDirectory, context.FileName);
         if (manifestPath is not null)
         {
             return await LaunchPackagedAsync(context, manifestPath, cancellationToken).ConfigureAwait(false);

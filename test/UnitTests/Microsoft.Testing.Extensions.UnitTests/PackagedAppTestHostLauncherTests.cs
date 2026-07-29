@@ -56,16 +56,38 @@ public sealed class PackagedAppTestHostLauncherTests
         => AssertIsEnabledAsync(expected: false, manifestXml: null, mode: "alwyas");
 
     // The layout probe walks up from the app directory because Application/@Executable may point into a
-    // subdirectory, but the walk is bounded: an unrelated manifest far above (a shared build root, a CI
-    // staging directory) must not classify an ordinary test app as packaged and take over its run.
+    // subdirectory. Ancestor manifests are accepted only when they describe the app directory, so an
+    // unrelated manifest far above (a shared build root, a CI staging directory) must not classify an
+    // ordinary test app as packaged and take over its run.
     [TestMethod]
     [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "Packaged Windows apps are a Windows-only scenario; the launcher is unconditionally disabled elsewhere.")]
-    public Task IsEnabledAsync_WithManifestJustWithinSearchDepth_IsEnabled()
-        => AssertIsEnabledForManifestAtDepthAsync(AppxManifestInfo.MaxManifestSearchDepth, expected: true);
+    public Task IsEnabledAsync_WithAncestorManifestDeclaringDeepExecutable_IsEnabled()
+    {
+        const int AppSubdirectoryDepth = 4;
+        return AssertIsEnabledForManifestAsync(
+            BuildManifestXml(
+                "Contoso.MyTestApp",
+                MicrosoftStorePublisher,
+                applicationId: "App",
+                executable: GetNestedExecutablePath(AppSubdirectoryDepth, "MyTestApp.exe")),
+            expected: true,
+            appSubdirectoryDepth: AppSubdirectoryDepth);
+    }
 
     [TestMethod]
-    public Task IsEnabledAsync_WithManifestBeyondSearchDepth_IsDisabled()
-        => AssertIsEnabledForManifestAtDepthAsync(AppxManifestInfo.MaxManifestSearchDepth + 1, expected: false);
+    public Task IsEnabledAsync_WithStrayAncestorManifest_IsDisabled()
+        => AssertIsEnabledForManifestAsync(
+            BuildManifestXml(
+                "Contoso.MyOtherApp",
+                MicrosoftStorePublisher,
+                applicationId: "App",
+                executable: "other\\MyTestApp.exe"),
+            expected: false,
+            appSubdirectoryDepth: 4);
+
+    [TestMethod]
+    public Task IsEnabledAsync_WithMalformedAncestorManifest_IsDisabled()
+        => AssertIsEnabledForManifestAsync("not xml", expected: false, appSubdirectoryDepth: 4);
 
     // Packaged Windows apps are a Windows-only concept, so neither a packaged layout nor an explicit
     // 'always' may register the launcher elsewhere: that would force every non-Windows run onto the
@@ -116,12 +138,31 @@ public sealed class PackagedAppTestHostLauncherTests
         Assert.Contains($"Contoso.MyTestApp_{MicrosoftStorePublisherId}!Second", exception.Message);
     }
 
+    [TestMethod]
+    public async Task LaunchTestHostAsync_WithAncestorManifestDeclaringDeepExecutable_ThrowsWithApplicationUserModelId()
+    {
+        const int AppSubdirectoryDepth = 4;
+        InvalidOperationException exception = await LaunchInLayoutContainingManifestAsync(
+            BuildManifestXml(
+                "Contoso.MyTestApp",
+                MicrosoftStorePublisher,
+                applicationId: "App",
+                executable: GetNestedExecutablePath(AppSubdirectoryDepth, "MyTestApp.exe")),
+            testHostFileName: "MyTestApp.exe",
+            appSubdirectoryDepth: AppSubdirectoryDepth);
+
+        Assert.Contains($"Contoso.MyTestApp_{MicrosoftStorePublisherId}!App", exception.Message);
+    }
+
     private static Task<InvalidOperationException> LaunchInLayoutContainingManifestAsync(string? applicationId)
         => LaunchInLayoutContainingManifestAsync(
             BuildManifestXml("Contoso.MyTestApp", MicrosoftStorePublisher, applicationId),
             testHostFileName: "MyTestApp.exe");
 
-    private static async Task<InvalidOperationException> LaunchInLayoutContainingManifestAsync(string manifestXml, string testHostFileName)
+    private static async Task<InvalidOperationException> LaunchInLayoutContainingManifestAsync(
+        string manifestXml,
+        string testHostFileName,
+        int appSubdirectoryDepth = 0)
     {
         InvalidOperationException? exception = null;
 
@@ -136,7 +177,8 @@ public sealed class PackagedAppTestHostLauncherTests
             exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
                 () => launcher.LaunchTestHostAsync(context, CancellationToken.None));
 #pragma warning restore TPEXP
-        });
+        },
+        appSubdirectoryDepth);
 
         return exception!;
     }
@@ -158,23 +200,23 @@ public sealed class PackagedAppTestHostLauncherTests
         });
 
     /// <summary>
-    /// Places a manifest at the layout root and the app <paramref name="depth"/> directory levels below
-    /// it, then asserts whether the launcher's bounded upward probe still finds it.
+    /// Places a manifest at the layout root and the app <paramref name="appSubdirectoryDepth"/>
+    /// directory levels below it, then asserts whether the launcher's upward probe still finds it.
     /// </summary>
-    private static Task AssertIsEnabledForManifestAtDepthAsync(int depth, bool expected)
-        => RunInTemporaryLayoutAsync(PackagedManifestXml, async (_, appDirectory) =>
+    private static Task AssertIsEnabledForManifestAsync(string manifestXml, bool expected, int appSubdirectoryDepth)
+        => RunInTemporaryLayoutAsync(manifestXml, async (_, appDirectory) =>
         {
             var launcher = new PackagedAppTestHostLauncher(appDirectory, static _ => null);
 
             Assert.AreEqual(expected, await launcher.IsEnabledAsync());
         },
-        appSubdirectoryDepth: depth);
+        appSubdirectoryDepth);
 
     /// <summary>
     /// Runs <paramref name="action"/> against a throw-away layout, optionally containing an
     /// <c>AppxManifest.xml</c> at its root so the layout classifies as packaged. The action receives the
-    /// layout root and the app directory, which sit <paramref name="appSubdirectoryDepth"/> levels apart
-    /// so the bounded upward manifest probe can be exercised. Passing the directory explicitly (rather
+    /// layout root and the app directory, which sit <paramref name="appSubdirectoryDepth"/> levels
+    /// apart so the upward manifest probe can be exercised. Passing the directory explicitly (rather
     /// than relying on the test run's own output directory) keeps these tests independent of where the
     /// test host happens to run from.
     /// </summary>
@@ -201,12 +243,16 @@ public sealed class PackagedAppTestHostLauncherTests
     }
 
     private static string BuildManifestXml(string name, string publisher, string? applicationId)
+        => BuildManifestXml(name, publisher, applicationId, executable: null);
+
+    private static string BuildManifestXml(string name, string publisher, string? applicationId, string? executable)
     {
+        string executableAttribute = executable is null ? string.Empty : $" Executable=\"{executable}\"";
         string applications = applicationId is null
             ? string.Empty
             : $"""
                  <Applications>
-                   <Application Id="{applicationId}" />
+                   <Application Id="{applicationId}"{executableAttribute} />
                  </Applications>
                """;
 
@@ -218,6 +264,9 @@ public sealed class PackagedAppTestHostLauncherTests
             </Package>
             """;
     }
+
+    private static string GetNestedExecutablePath(int depth, string fileName)
+        => string.Join("\\", Enumerable.Repeat("nested", depth).Append(fileName));
 }
 
 #endif

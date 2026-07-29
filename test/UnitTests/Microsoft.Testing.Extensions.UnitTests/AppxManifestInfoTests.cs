@@ -225,22 +225,34 @@ public sealed class AppxManifestInfoTests
     }
 
     [TestMethod]
-    public void FindManifestPath_WhenManifestIsInAnAncestorDirectory_ReturnsTheNearestManifest()
+    public void FindManifestPath_WhenManifestIsInAnAncestorDirectoryAndDeclaresExecutable_ReturnsTheNearestManifest()
     {
         // Model a valid MSIX layout where the manifest sits at the package root but the executable
         // lives in a subdirectory (Application/@Executable = "bin\host.exe").
         string root = Path.Combine(Path.GetTempPath(), "AppxManifestInfoTests", Guid.NewGuid().ToString("N"));
         string executableDirectory = Path.Combine(root, "bin");
+        string executablePath = Path.Combine(executableDirectory, "host.exe");
         Directory.CreateDirectory(executableDirectory);
         try
         {
             string manifestPath = Path.Combine(root, AppxManifestInfo.AppxManifestFileName);
-            File.WriteAllText(manifestPath, "not xml");
+            File.WriteAllText(
+                manifestPath,
+                """
+                <?xml version="1.0" encoding="utf-8"?>
+                <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10">
+                  <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+                  <Applications>
+                    <Application Id="App" Executable="bin\host.exe" />
+                  </Applications>
+                </Package>
+                """);
 
             // GetManifestPath only probes the executable's own directory and must miss the ancestor
             // manifest, whereas FindManifestPath walks up and locates it.
             Assert.IsNull(AppxManifestInfo.GetManifestPath(executableDirectory));
             Assert.AreEqual(manifestPath, AppxManifestInfo.FindManifestPath(executableDirectory));
+            Assert.AreEqual(manifestPath, AppxManifestInfo.FindManifestPath(executableDirectory, executablePath));
         }
         finally
         {
@@ -260,6 +272,55 @@ public sealed class AppxManifestInfoTests
         finally
         {
             Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void FindManifestPath_WhenAncestorManifestDoesNotMatchExecutable_ReturnsNull()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "AppxManifestInfoTests", Guid.NewGuid().ToString("N"));
+        string executableDirectory = Path.Combine(root, "bin");
+        Directory.CreateDirectory(executableDirectory);
+        try
+        {
+            string manifestPath = Path.Combine(root, AppxManifestInfo.AppxManifestFileName);
+            File.WriteAllText(
+                manifestPath,
+                """
+                <?xml version="1.0" encoding="utf-8"?>
+                <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10">
+                  <Identity Name="Contoso.MyOtherApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+                  <Applications>
+                    <Application Id="App" Executable="other\host.exe" />
+                  </Applications>
+                </Package>
+                """);
+
+            Assert.IsNull(AppxManifestInfo.FindManifestPath(executableDirectory));
+            Assert.IsNull(AppxManifestInfo.FindManifestPath(executableDirectory, Path.Combine(executableDirectory, "host.exe")));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void FindManifestPath_WhenAncestorManifestIsMalformed_ReturnsNull()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "AppxManifestInfoTests", Guid.NewGuid().ToString("N"));
+        string executableDirectory = Path.Combine(root, "bin");
+        Directory.CreateDirectory(executableDirectory);
+        try
+        {
+            File.WriteAllText(Path.Combine(root, AppxManifestInfo.AppxManifestFileName), "not xml");
+
+            Assert.IsNull(AppxManifestInfo.FindManifestPath(executableDirectory));
+            Assert.IsNull(AppxManifestInfo.FindManifestPath(executableDirectory, Path.Combine(executableDirectory, "host.exe")));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
         }
     }
 

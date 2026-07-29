@@ -27,12 +27,6 @@ internal sealed class AppxManifestInfo
     /// </summary>
     internal const string AppxManifestFileName = "AppxManifest.xml";
 
-    /// <summary>
-    /// How many ancestor directories above the starting one <see cref="FindManifestPath(string)"/> will
-    /// probe. See that method's remarks for why the search is bounded.
-    /// </summary>
-    internal const int MaxManifestSearchDepth = 2;
-
     // The alphabet Windows uses to encode the publisher hash (Douglas Crockford's base32: the digits
     // and lowercase letters with i, l, o and u removed). Must not be reordered.
     private const string PublisherHashAlphabet = "0123456789abcdefghjkmnpqrstvwxyz";
@@ -80,40 +74,100 @@ internal sealed class AppxManifestInfo
     }
 
     /// <summary>
-    /// Searches <paramref name="startDirectory"/> and a bounded number of its ancestors for an
-    /// <c>AppxManifest.xml</c> and returns the path to the nearest one. A packaged app's manifest
-    /// lives at the package layout root, but an <c>Application/@Executable</c> can point into a
-    /// subdirectory (for example <c>bin\host.exe</c>), so the executable's own directory is not
-    /// necessarily the root. Walking up locates the manifest in that valid layout too, so the launcher
-    /// does not miss a packaged layout and fall through to <c>Process.Start</c>. Like
-    /// <see cref="GetManifestPath(string)"/> this is a cheap existence probe that never parses.
+    /// Searches <paramref name="startDirectory"/> and its ancestors for an <c>AppxManifest.xml</c>
+    /// that plausibly describes the app under <paramref name="startDirectory"/>. A packaged app's
+    /// manifest lives at the package layout root, but an <c>Application/@Executable</c> can point into
+    /// an arbitrarily deep subdirectory (for example <c>bin\host.exe</c>), so the executable's own
+    /// directory is not necessarily the root. The manifest in <paramref name="startDirectory"/> is
+    /// accepted as the app's own layout without parsing; ancestor manifests are parsed and accepted only
+    /// when an application executable resolves back to <paramref name="startDirectory"/>. Malformed or
+    /// unreadable ancestor manifests are ignored.
     /// </summary>
-    /// <remarks>
-    /// The walk is deliberately capped at <see cref="MaxManifestSearchDepth"/> levels rather than
-    /// running to the drive root. This result decides both which app to activate and whether the
-    /// launcher takes over the run at all, so an unrelated <c>AppxManifest.xml</c> sitting in a shared
-    /// build root or a CI staging directory must not be able to classify an ordinary test app as
-    /// packaged. A real package layout keeps its manifest at most a couple of levels above the
-    /// executable.
-    /// </remarks>
     /// <param name="startDirectory">The directory to start searching from (typically the executable's directory).</param>
     /// <returns>
     /// The full path to the nearest <c>AppxManifest.xml</c> at or above <paramref name="startDirectory"/>
-    /// within the search depth; otherwise <see langword="null"/>.
+    /// that matches the app directory; otherwise <see langword="null"/>.
     /// </returns>
     public static string? FindManifestPath(string startDirectory)
+        => FindManifestPathCore(startDirectory, executablePath: null);
+
+    /// <summary>
+    /// Searches <paramref name="startDirectory"/> and its ancestors for an <c>AppxManifest.xml</c>
+    /// that plausibly describes <paramref name="executablePath"/>. The manifest in
+    /// <paramref name="startDirectory"/> is accepted as the app's own layout without parsing; ancestor
+    /// manifests are parsed and accepted only when an application executable resolves to
+    /// <paramref name="executablePath"/>, or into <paramref name="startDirectory"/> to stay consistent
+    /// with directory-only enablement. Malformed or unreadable ancestor manifests are ignored.
+    /// </summary>
+    /// <param name="startDirectory">The directory to start searching from (typically the executable's directory).</param>
+    /// <param name="executablePath">The executable that the manifest must describe when found in an ancestor directory.</param>
+    /// <returns>
+    /// The full path to the nearest matching <c>AppxManifest.xml</c> at or above
+    /// <paramref name="startDirectory"/>; otherwise <see langword="null"/>.
+    /// </returns>
+    public static string? FindManifestPath(string startDirectory, string executablePath)
+        => FindManifestPathCore(startDirectory, executablePath);
+
+    private static string? FindManifestPathCore(string startDirectory, string? executablePath)
     {
+        string fullStartDirectory = Path.GetFullPath(startDirectory);
+        string? fullExecutablePath = executablePath is null ? null : Path.GetFullPath(executablePath);
         DirectoryInfo? directory = new(startDirectory);
-        for (int depth = 0; directory is not null && depth <= MaxManifestSearchDepth; directory = directory.Parent, depth++)
+        bool isStartDirectory = true;
+        while (directory is not null)
         {
             string? manifestPath = GetManifestPath(directory.FullName);
-            if (manifestPath is not null)
+            if (manifestPath is not null
+                && (isStartDirectory || IsAncestorManifestForApp(manifestPath, directory.FullName, fullStartDirectory, fullExecutablePath)))
             {
                 return manifestPath;
             }
+
+            directory = directory.Parent;
+            isStartDirectory = false;
         }
 
         return null;
+    }
+
+    private static bool IsAncestorManifestForApp(string manifestPath, string manifestDirectory, string appDirectory, string? executablePath)
+    {
+        AppxManifestInfo manifestInfo;
+        try
+        {
+            manifestInfo = ReadFromManifest(manifestPath);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or System.Xml.XmlException)
+        {
+            return false;
+        }
+
+        foreach (AppxApplicationInfo application in manifestInfo.Applications)
+        {
+            if (application.Executable is null)
+            {
+                continue;
+            }
+
+            string? applicationExecutablePath = ResolvePackageRelativePath(manifestDirectory, application.Executable);
+            if (applicationExecutablePath is null)
+            {
+                continue;
+            }
+
+            if (executablePath is not null
+                && string.Equals(applicationExecutablePath, executablePath, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            if (string.Equals(Path.GetDirectoryName(applicationExecutablePath), appDirectory, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>Reads and parses the manifest at <paramref name="manifestPath"/>.</summary>
@@ -217,6 +271,28 @@ internal sealed class AppxManifestInfo
     {
         int lastSeparator = executable.LastIndexOfAny(['\\', '/']);
         return lastSeparator < 0 ? executable : executable[(lastSeparator + 1)..];
+    }
+
+    private static string? ResolvePackageRelativePath(string manifestDirectory, string packageRelativePath)
+    {
+        if (packageRelativePath.Length == 0
+            || packageRelativePath[0] is '\\' or '/'
+            || packageRelativePath.Contains(':', StringComparison.Ordinal))
+        {
+            return null;
+        }
+
+        string fullManifestDirectory = Path.GetFullPath(manifestDirectory);
+        string[] pathSegments = packageRelativePath.Split(['\\', '/'], StringSplitOptions.RemoveEmptyEntries);
+        string resolvedPath = Path.GetFullPath(Path.Combine([fullManifestDirectory, .. pathSegments]));
+        string relativePath = Path.GetRelativePath(fullManifestDirectory, resolvedPath);
+
+        return relativePath == ".."
+            || relativePath.StartsWith($"..{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+            || relativePath.StartsWith($"..{Path.AltDirectorySeparatorChar}", StringComparison.Ordinal)
+            || Path.IsPathRooted(relativePath)
+            ? null
+            : resolvedPath;
     }
 
     /// <summary>
