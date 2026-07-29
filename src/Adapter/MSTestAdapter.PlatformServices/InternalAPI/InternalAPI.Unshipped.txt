@@ -104,5 +104,6 @@ static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helper
 static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers.AttributeQueryHelper.GetFirstAttributeOrDefault<TAttribute>(System.Attribute![]! attributes) -> TAttribute?
 static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers.AttributeQueryHelper.GetSingleAttributeOrDefault<TAttribute>(System.Attribute![]! attributes) -> TAttribute?
 static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers.AttributeQueryHelper.IsAttributeDefined<TAttribute>(System.Attribute![]! attributes) -> bool
+static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers.AttributeQueryHelper.PerformActionOnAttribute<TAttribute, TState>(System.Attribute![]! attributes, System.Action<TAttribute!, TState?>! action, TState? state) -> void
 static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.ConfigureLiveOutputWriter(System.IO.TextWriter! liveOutputWriter) -> void
 static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SetLiveOutputWriterForTesting(System.IO.TextWriter! liveOutputWriter) -> System.IDisposable!

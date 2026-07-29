@@ -17,8 +17,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Hel
 /// </remarks>
 internal static class AttributeQueryHelper
 {
-    private const string NullAttributeMessage = "AttributeQueryHelper: internal error: null entry in the attributes array.";
-
     /// <summary>
     /// Checks whether <paramref name="attributes"/> contains an attribute of the given type, or an attribute that
     /// derives from it. e.g. <c>[MyTestClass]</c> deriving from <c>[TestClass]</c> matches when looking for <c>[TestClass]</c>.
@@ -31,7 +29,7 @@ internal static class AttributeQueryHelper
     {
         foreach (Attribute attribute in attributes)
         {
-            DebugEx.Assert(attribute is not null, NullAttributeMessage);
+            AssertNotNull<TAttribute>(attribute);
 
             if (attribute is TAttribute)
             {
@@ -47,6 +45,13 @@ internal static class AttributeQueryHelper
     /// Use this together with an attribute that does not allow multiple and is sealed. In such case there cannot be
     /// more attributes, and this will avoid the cost of checking for more than one attribute.
     /// </summary>
+    /// <remarks>
+    /// <typeparamref name="TAttribute"/> being sealed is a caller contract enforced by a DEBUG-only assert. On .NET
+    /// Framework DEBUG builds <see cref="DebugEx.Assert(bool, string)"/> calls <see cref="Environment.FailFast(string, Exception)"/>,
+    /// so violating it takes down the test host instead of failing a single test. Use
+    /// <see cref="GetSingleAttributeOrDefault{TAttribute}"/> or <see cref="GetAttributes{TAttribute}"/> for non-sealed
+    /// attribute types.
+    /// </remarks>
     /// <typeparam name="TAttribute">Type of the attribute to find.</typeparam>
     /// <param name="attributes">The attributes to inspect.</param>
     /// <returns>The attribute that is found or null.</returns>
@@ -61,7 +66,7 @@ internal static class AttributeQueryHelper
 
         foreach (Attribute attribute in attributes)
         {
-            DebugEx.Assert(attribute is not null, NullAttributeMessage);
+            AssertNotNull<TAttribute>(attribute);
 
             if (attribute is TAttribute attributeAsTAttribute)
             {
@@ -85,7 +90,7 @@ internal static class AttributeQueryHelper
         TAttribute? foundAttribute = null;
         foreach (Attribute attribute in attributes)
         {
-            DebugEx.Assert(attribute is not null, NullAttributeMessage);
+            AssertNotNull<TAttribute>(attribute);
 
             if (attribute is TAttribute attributeAsTAttribute)
             {
@@ -104,15 +109,19 @@ internal static class AttributeQueryHelper
     /// <summary>
     /// Gets every attribute which is of the given type or a subtype of it.
     /// </summary>
+    /// <remarks>
+    /// Filtering is lazy, but <paramref name="attributes"/> is captured eagerly by the caller, so any argument
+    /// validation performed while resolving the attribute array happens before enumeration starts.
+    /// </remarks>
     /// <typeparam name="TAttribute">The attribute type.</typeparam>
     /// <param name="attributes">The attributes to inspect.</param>
-    /// <returns>The matching attributes.</returns>
+    /// <returns>The matching attributes, in declaration order.</returns>
     public static IEnumerable<TAttribute> GetAttributes<TAttribute>(Attribute[] attributes)
         where TAttribute : Attribute
     {
         foreach (Attribute attribute in attributes)
         {
-            DebugEx.Assert(attribute is not null, NullAttributeMessage);
+            AssertNotNull<TAttribute>(attribute);
 
             if (attribute is TAttribute attributeAsTAttribute)
             {
@@ -120,4 +129,35 @@ internal static class AttributeQueryHelper
             }
         }
     }
+
+    /// <summary>
+    /// Invokes <paramref name="action"/> for every attribute which is of the given type or a subtype of it.
+    /// </summary>
+    /// <remarks>
+    /// This is the allocation-free counterpart of <see cref="GetAttributes{TAttribute}"/>: it avoids the iterator
+    /// state machine that enumerating the returned sequence would allocate.
+    /// </remarks>
+    /// <typeparam name="TAttribute">The attribute type.</typeparam>
+    /// <typeparam name="TState">The type of state to be passed to <paramref name="action"/>.</typeparam>
+    /// <param name="attributes">The attributes to inspect.</param>
+    /// <param name="action">The action to perform.</param>
+    /// <param name="state">The state to pass to <paramref name="action"/>.</param>
+    public static void PerformActionOnAttribute<TAttribute, TState>(Attribute[] attributes, Action<TAttribute, TState?> action, TState? state)
+        where TAttribute : Attribute
+    {
+        foreach (Attribute attribute in attributes)
+        {
+            AssertNotNull<TAttribute>(attribute);
+
+            if (attribute is TAttribute attributeAsTAttribute)
+            {
+                action(attributeAsTAttribute, state);
+            }
+        }
+    }
+
+    [Conditional("DEBUG")]
+    private static void AssertNotNull<TAttribute>(Attribute attribute)
+        where TAttribute : Attribute
+        => DebugEx.Assert(attribute is not null, $"{nameof(AttributeQueryHelper)}: internal error: null entry in the attributes array while looking for '{typeof(TAttribute)}'.");
 }

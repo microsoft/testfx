@@ -164,18 +164,7 @@ internal class ReflectHelper
     /// <param name="state">The state to pass to action.</param>
     internal static void PerformActionOnAttribute<TAttributeType, TState>(ICustomAttributeProvider attributeProvider, Action<TAttributeType, TState?> action, TState? state)
         where TAttributeType : Attribute
-    {
-        Attribute[] attributes = GetCustomAttributesCached(attributeProvider);
-        foreach (Attribute attribute in attributes)
-        {
-            DebugEx.Assert(attribute != null, "ReflectHelper.DefinesAttributeDerivedFrom: internal error: wrong value in the attributes dictionary.");
-
-            if (attribute is TAttributeType attributeAsAttributeType)
-            {
-                action(attributeAsAttributeType, state);
-            }
-        }
-    }
+        => AttributeQueryHelper.PerformActionOnAttribute(GetCustomAttributesCached(attributeProvider), action, state);
 
     /// <summary>
     /// Gets and caches the attributes for the given type, or method.

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 
 using AwesomeAssertions;
 
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration;
 
 using TestFramework.ForTestingMSTest;
@@ -214,6 +215,25 @@ public sealed class SourceGeneratedReflectionOperationsTests : TestContainer
         operations.GetFirstAttributeOrDefault<DerivedMarkerAttribute>(method).Should().BeSameAs(generated);
         operations.GetSingleAttributeOrDefault<MarkerAttribute>(method).Should().BeSameAs(generated);
         operations.GetAttributes<MarkerAttribute>(method).Should().ContainSingle().Which.Should().BeSameAs(generated);
+    }
+
+    public void MethodAttributeHelpers_GetSingleAttributeOrDefault_ThrowsLocalizedErrorOnDuplicates()
+    {
+        MethodInfo method = typeof(AttributedSample).GetMethod(nameof(AttributedSample.AttributedMethod))!;
+        var provider = new SourceGeneratedReflectionDataProvider
+        {
+            TypeMethodAttributes = new Dictionary<MethodInfo, Attribute[]>
+            {
+                [method] = [new MarkerAttribute("first"), new DerivedMarkerAttribute("second")],
+            },
+        };
+        var operations = new SourceGeneratedReflectionOperations(provider);
+
+        Action action = () => operations.GetSingleAttributeOrDefault<MarkerAttribute>(method);
+
+        // Regression test for #10302: this path used to throw a hardcoded, non-localizable English message.
+        action.Should().Throw<InvalidOperationException>()
+            .WithMessage(string.Format(CultureInfo.InvariantCulture, Resource.DuplicateAttributeError, typeof(MarkerAttribute)));
     }
 
     public void CompositeProvider_MergesMethodAttributesFromMultipleProviders()
