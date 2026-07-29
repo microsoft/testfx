@@ -82,10 +82,14 @@ Out of process file artifacts produced:
         // ResultFile silently disappeared from the report while the run still reported success.
         // See https://github.com/microsoft/testfx/issues/10312.
         const int PaddedResultsDirectoryLength = 180;
-        int paddingLength = Math.Max(1, PaddedResultsDirectoryLength - AssetFixture.TargetAssetPath.Length - 1);
-
         string fileName = Guid.NewGuid().ToString("N");
-        string testResultsPath = Path.Combine(AssetFixture.TargetAssetPath, new string('p', paddingLength));
+
+        // The padded segment carries a unique prefix: acceptance tests run with method-level
+        // parallelism, so sharing one fixed directory name across the TFM cases would make them race
+        // on the same results tree.
+        string uniqueSegment = Guid.NewGuid().ToString("N");
+        int paddingLength = Math.Max(1, PaddedResultsDirectoryLength - AssetFixture.TargetAssetPath.Length - 1 - uniqueSegment.Length);
+        string testResultsPath = Path.Combine(AssetFixture.TargetAssetPath, uniqueSegment + new string('p', paddingLength));
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             $"--report-trx --report-trx-filename {fileName}.trx --results-directory \"{testResultsPath}\"",
