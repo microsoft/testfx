@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="pl" original="../ExtensionResources.resx">
     <body>
@@ -14,7 +14,7 @@
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDescription">
         <source>Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there, and — in the Windows build — registers a packaged, full-trust MSIX desktop test host and activates it by Application User Model ID. True UWP/AppContainer hosts are not supported. See https://github.com/microsoft/testfx/issues/9933.</source>
-        <target state="new">Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there, and — in the Windows build — registers a packaged, full-trust MSIX desktop test host and activates it by Application User Model ID. True UWP/AppContainer hosts are not supported. See https://github.com/microsoft/testfx/issues/9933.</target>
+        <target state="translated">Wdraża niespakowany (w układzie luźnym) host testowy systemu Windows (na przykład niespakowany WinUI) do izolowanego katalogu i stamtąd go uruchamia, a — w kompilacji dla systemu Windows — rejestruje spakowanego hosta testowego aplikacji klasycznej MSIX z pełnym zaufaniem i aktywuje go za pomocą identyfikatora modelu użytkownika aplikacji. Rzeczywiste hosty UWP/AppContainer nie są obsługiwane. Zobacz: https://github.com/microsoft/testfx/issues/9933.</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDisplayName">
