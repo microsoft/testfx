@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under dual-license. See LICENSE.PLATFORMTOOLS.txt file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.Policy.Resources;
@@ -116,14 +116,22 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
         string retryRootFolder = CreateRetriesDirectory(resultDirectory);
         bool retryInterrupted = false;
 
-        // Retry summary accounting (single-assembly). The orchestrator only learns each attempt's failed UID set and
-        // the total number of tests that ran, so the richer passed/skipped split stays in the per-attempt child
-        // summaries; here we reconcile the attempts into one headline (mirroring the platform run summary idiom).
+        // Retry summary accounting (single-assembly). The orchestrator is the only component that observes every
+        // attempt, so it reconciles them into one headline:
+        //   retried = union of the scheduled retry sets whose following attempt reported at least one result
+        //   flaky   = union of the tests each attempt reported as recovered
+        // Recovery is reported by the attempt that observed it rather than inferred here as "retried and no longer
+        // in the failed set": that inference also matches a test which never ran, so an attempt that crashed or
+        // matched no filter would silently promote its pending tests to "passed" and "flaky".
         var orchestrationStopwatch = Stopwatch.StartNew();
         int suiteTotalTests = 0;
-        int firstAttemptFailedTests = 0;
-        int finalFailedTests = 0;
+        int suiteSkippedTests = 0;
+        bool suiteCountsKnown = false;
+        Dictionary<string, string> retriedTests = [];
+        Dictionary<string, string> flakyTestsByUid = [];
+        int finalFailedTestResults = 0;
         int retriedExecutions = 0;
+        Dictionary<string, string> pendingRetriedTests = [];
 
         // Parse the delay once before the loop since command-line options don't change.
         TimeSpan? retryDelay = null;
@@ -184,13 +192,71 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
 
             exitCodes.Add(attemptResult.ExitCode);
 
-            int failedThisAttempt = retryFailedTestsPipeServer.FailedUID?.Count ?? 0;
+            int failedThisAttempt = retryFailedTestsPipeServer.FailedTests.Count;
             if (attemptCount == 1)
             {
-                // The first attempt runs the full suite, so its total is the suite size that the final summary
-                // reconciles against; its failed set is the upper bound for the "flaky" (failed-then-passed) count.
-                suiteTotalTests = retryFailedTestsPipeServer.TotalTestRan;
-                firstAttemptFailedTests = failedThisAttempt;
+                // The first attempt runs the full suite, so its counts are the suite's. Skipped tests are tracked
+                // separately because a retry attempt re-runs only the failed set, so no later attempt can observe
+                // them — and because "total" must include them to line up with the platform run summary.
+                //
+                // An attempt that dies before its session finishes never reports counts, leaving them at zero. That
+                // is recorded rather than presented as a suite of zero tests, which would print a total smaller
+                // than the failed count.
+                suiteCountsKnown = retryFailedTestsPipeServer.CountsReported;
+                suiteTotalTests = retryFailedTestsPipeServer.TotalTestRan + retryFailedTestsPipeServer.SkippedTests;
+                suiteSkippedTests = retryFailedTestsPipeServer.SkippedTests;
+            }
+
+            // Results this attempt actually observed. Reporting counts is not the same as having run something: an
+            // attempt whose filter matched nothing reports a well-formed set of zeros, which must not be mistaken
+            // for "nothing is failing any more".
+            int observedResults = retryFailedTestsPipeServer.TotalTestRan + retryFailedTestsPipeServer.SkippedTests;
+            bool attemptObservedResults = retryFailedTestsPipeServer.CountsReported && observedResults > 0;
+
+            if (pendingRetriedTests.Count > 0)
+            {
+                if (attemptObservedResults)
+                {
+                    // Scheduling a retry is not enough to count it: the child can die before the selected tests
+                    // produce results. Commit the pending retry only after the following attempt reports counts.
+                    foreach (KeyValuePair<string, string> retriedTest in pendingRetriedTests)
+                    {
+                        retriedTests[retriedTest.Key] = retriedTest.Value;
+                    }
+
+                    retriedExecutions += observedResults;
+                }
+
+                pendingRetriedTests.Clear();
+            }
+
+            // Whatever this attempt recovered is final: a recovered test is not carried into the next attempt's
+            // failed set, so it is never re-run and cannot regress.
+            foreach (string recoveredUid in retryFailedTestsPipeServer.RecoveredTests)
+            {
+                if (retriedTests.TryGetValue(recoveredUid, out string? displayName))
+                {
+                    flakyTestsByUid[recoveredUid] = displayName;
+                }
+            }
+
+            // A retried test that came back skipped also stops being retried, but it never passed, so it is not
+            // reported as flaky above. Its outcome for the run therefore moved from failed to skipped while the
+            // suite's skipped count — captured on the first attempt, where it was still failing — does not follow,
+            // so it lands in the derived succeeded count instead. Correcting that needs the first attempt's
+            // per-test skipped breakdown, because a folded data-driven test can contribute both failing and
+            // skipped results under one uid and would otherwise be double-counted. Left as a known imprecision:
+            // the total and failed counts stay correct and the block always adds up, which a naive adjustment
+            // did not.
+
+            // The run's failing count always reflects the most recent attempt that actually ran something, which
+            // re-ran every test still failing. Counted per result so it stays in the same unit as the total. An
+            // attempt that died before its session finished, or that ran nothing because its filter matched no
+            // test, must not silently reset this to zero: that would render a red verdict above "failed: 0" and
+            // derive the still-failing tests as succeeded.
+            if (attemptObservedResults)
+            {
+                finalFailedTestResults = retryFailedTestsPipeServer.FailedTestResults;
             }
 
             if (attemptResult.ExitCode != (int)ExitCode.Success)
@@ -201,8 +267,6 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                     retryInterrupted = true;
                     break;
                 }
-
-                finalFailedTests = failedThisAttempt;
 
                 // Check thresholds only on the first attempt (computed against the full suite).
                 if (attemptCount == 1 && await RetryThresholdPolicy.EvaluateAsync(_commandLineOptions, this, outputDevice, retryFailedTestsPipeServer, cancellationToken).ConfigureAwait(false))
@@ -225,40 +289,51 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                         },
                         cancellationToken).ConfigureAwait(false);
 
-                    // Each retried attempt re-runs exactly this attempt's failed set, so its failed count is the
-                    // number of extra executions added by the retry — the platform "(+N retried)" semantics.
-                    retriedExecutions += failedThisAttempt;
+                    // Keep the scheduled retry contribution pending. The next attempt may crash before producing
+                    // test results, and such a launch must not be reported as an observed retry.
+                    pendingRetriedTests.Clear();
+                    foreach (KeyValuePair<string, string> failedTest in retryFailedTestsPipeServer.FailedTests)
+                    {
+                        pendingRetriedTests[failedTest.Key] = failedTest.Value;
+                    }
                 }
 
-                lastListOfFailedId = retryFailedTestsPipeServer.FailedUID?.ToArray();
+                lastListOfFailedId = [.. retryFailedTestsPipeServer.FailedTests.Keys];
             }
             else
             {
-                finalFailedTests = 0;
                 break;
             }
         }
 
         orchestrationStopwatch.Stop();
 
-        if (!thresholdPolicyKickedIn && !retryInterrupted)
-        {
-            await RetrySummaryReporter.ReportSummaryAsync(
-                this,
-                outputDevice,
-                new RetryRunSummary
-                {
-                    ExitCodes = exitCodes,
-                    AttemptCount = attemptCount,
-                    UserMaxRetryCount = userMaxRetryCount,
-                    SuiteTotalTests = suiteTotalTests,
-                    FirstAttemptFailedTests = firstAttemptFailedTests,
-                    FinalFailedTests = finalFailedTests,
-                    RetriedExecutions = retriedExecutions,
-                    Elapsed = orchestrationStopwatch.Elapsed,
-                },
-                cancellationToken).ConfigureAwait(false);
-        }
+        // The summary is reported on every path, including the ones that stopped retrying early: knowing what the
+        // run ended up with (and which tests were flaky) is exactly as useful when the threshold policy disabled
+        // retrying or an attempt exited unexpectedly as when the retry loop ran to completion.
+        List<string> flakyTests = [.. flakyTestsByUid.Values];
+        flakyTests.Sort(StringComparer.Ordinal);
+
+        await RetrySummaryReporter.ReportSummaryAsync(
+            this,
+            outputDevice,
+            new RetryRunSummary
+            {
+                ExitCodes = exitCodes,
+                AttemptCount = attemptCount,
+                UserMaxRetryCount = userMaxRetryCount,
+                SuiteCountsKnown = suiteCountsKnown,
+                SuiteTotalTests = suiteTotalTests,
+                SuiteSkippedTests = suiteSkippedTests,
+                FinalFailedTests = finalFailedTestResults,
+                RetriedTests = retriedTests.Count,
+                RetriedExecutions = retriedExecutions,
+                FlakyTests = flakyTests,
+                ShowFlakyTests = FlakyTestsReportingOptions.IsEnabled(_commandLineOptions),
+                StoppedEarly = (thresholdPolicyKickedIn || retryInterrupted) && attemptCount < userMaxRetryCount + 1,
+                Elapsed = orchestrationStopwatch.Elapsed,
+            },
+            cancellationToken).ConfigureAwait(false);
 
         ApplicationStateGuard.Ensure(currentTryResultFolder is not null);
 

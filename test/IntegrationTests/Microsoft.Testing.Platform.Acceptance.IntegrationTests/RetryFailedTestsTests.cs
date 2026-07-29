@@ -10,6 +10,26 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
 {
     private const string AssetName = "RetryFailedTests";
 
+    /// <summary>
+    /// Asserts that <paramref name="value"/> occurs exactly once in the test host output. Used for the run-summary
+    /// header under retry: only the first attempt (which executes the whole suite) prints one, while the retry
+    /// attempts — which re-run just the previously-failed tests — have theirs suppressed in favour of the single
+    /// reconciled retry summary. A plain "contains" assertion would not catch a regression that re-introduced the
+    /// per-attempt summaries.
+    /// </summary>
+    private static void AssertOutputContainsExactlyOnce(TestHostResult testHostResult, string value)
+    {
+        int count = 0;
+        int index = testHostResult.StandardOutput.IndexOf(value, StringComparison.Ordinal);
+        while (index >= 0)
+        {
+            count++;
+            index = testHostResult.StandardOutput.IndexOf(value, index + value.Length, StringComparison.Ordinal);
+        }
+
+        Assert.AreEqual(1, count, $"Expected '{value}' exactly once in the output, found {count}.{Environment.NewLine}{testHostResult.StandardOutput}");
+    }
+
     internal static IEnumerable<(string Arguments, bool FailOnly)> GetMatrix()
     {
         foreach (string tfm in TargetFrameworks.All)
@@ -42,10 +62,22 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         {
             testHostResult.AssertExitCodeIs(ExitCode.Success);
             testHostResult.AssertOutputContains("Retry summary: Passed! after 2/4 attempts");
-            testHostResult.AssertOutputContains("  flaky: 1");
-            testHostResult.AssertOutputContains("  total: 3 (+1 retried)");
-            testHostResult.AssertOutputContains("Failed! -");
-            testHostResult.AssertOutputContains("Passed! -");
+            testHostResult.AssertOutputContains("  total: 3");
+            testHostResult.AssertOutputContains("  failed: 0");
+            testHostResult.AssertOutputContains("  succeeded: 3");
+            testHostResult.AssertOutputContains("  skipped: 0");
+            testHostResult.AssertOutputContains("  flaky: 1 (passed after retry)");
+            // The single retried test cost exactly one extra run; the old "(+N retried)" suffix conflated the two.
+            testHostResult.AssertOutputContains("  retried: 1 test(s), 1 extra run(s)");
+            // ...and it is named, which is the whole point of the flaky report.
+            testHostResult.AssertOutputContains("Flaky tests:");
+            testHostResult.AssertOutputContains("TestMethod1 (failed -> passed)");
+
+            // The first attempt runs the whole suite, so its summary is accurate and is kept.
+            testHostResult.AssertOutputContains("Test run summary: Failed!");
+            // The retry attempt re-ran only TestMethod1, so its summary would have claimed "total: 1" for a
+            // three-test suite. It is suppressed; the retry summary reconciles the attempts instead.
+            testHostResult.AssertOutputDoesNotContain("Test run summary: Passed!");
 
             string[] trxFiles = Directory.GetFiles(resultDirectory, "*.trx", SearchOption.AllDirectories);
             Assert.HasCount(2, trxFiles);
@@ -65,9 +97,137 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             testHostResult.AssertOutputContains("Retry: attempt 3/4 failed - 1 failing test(s), retrying");
             // The final (4th) attempt is reported by the summary verdict, not by an amber "retrying" line.
             testHostResult.AssertOutputDoesNotContain("Retry: attempt 4/4 failed");
+            testHostResult.AssertOutputContains("  total: 3");
             testHostResult.AssertOutputContains("  failed: 1");
-            testHostResult.AssertOutputContains("Failed! -");
+            testHostResult.AssertOutputContains("  succeeded: 2");
+            // The test was retried but never recovered, so it is retried-but-not-flaky: no flaky count, no listing.
+            testHostResult.AssertOutputContains("  retried: 1 test(s), 3 extra run(s)");
+            testHostResult.AssertOutputDoesNotContain("  flaky:");
+            testHostResult.AssertOutputDoesNotContain("Flaky tests:");
+            // Only the first attempt's summary survives; the three retry attempts each re-ran a single test and
+            // would otherwise have printed three more "total: 1" blocks.
+            AssertOutputContainsExactlyOnce(testHostResult, "Test run summary:");
         }
+    }
+
+    /// <summary>
+    /// A test that fails and then comes back <em>skipped</em> on the retry has not recovered, so it must not be
+    /// counted or listed as flaky. This guards the accounting against inferring recovery from "was retried and is
+    /// no longer in the failed set", which also matches a test that never produced a passing result.
+    /// </summary>
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task RetryFailedTests_WhenRetriedTestIsSkipped_IsNotReportedAsFlaky(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--retry-failed-tests 1 --results-directory {resultDirectory}",
+            new()
+            {
+                { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
+                { "METHOD1", "1" },
+                { "FAIL", "1" },
+                { "SKIPONRETRY", "1" },
+                { "RESULTDIR", resultDirectory },
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        // The retry produced no failing result, so the run ends green — but the test never passed either. Assert
+        // the exact verdict rather than just the header, so a regression that turns this red still fails the test.
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        testHostResult.AssertOutputContains("Retry summary: Passed! after 2/2 attempts");
+        testHostResult.AssertOutputContains("  retried: 1 test(s), 1 extra run(s)");
+        testHostResult.AssertOutputDoesNotContain("  flaky:");
+        testHostResult.AssertOutputDoesNotContain("Flaky tests:");
+        testHostResult.AssertOutputDoesNotContain("TestMethod1 (failed -> passed)");
+
+        // Known imprecision: the outcome counts come from the first attempt's suite composition with only the
+        // failures refreshed, so a test whose outcome changed from failed to skipped lands in "succeeded" rather
+        // than "skipped". Correcting it needs the first attempt's per-test skipped breakdown (a folded data-driven
+        // test can contribute both failing and skipped results under one uid). Asserted as-is so the block is
+        // known to stay internally consistent — total == failed + succeeded + skipped — which is what a naive
+        // correction broke.
+        testHostResult.AssertOutputContains("  total: 3");
+        testHostResult.AssertOutputContains("  failed: 0");
+        testHostResult.AssertOutputContains("  succeeded: 3");
+        testHostResult.AssertOutputContains("  skipped: 0");
+    }
+
+    /// <summary>
+    /// When a retry attempt dies before its test session finishes it reports no counts at all. The summary must
+    /// keep the last figures it actually received instead of treating the missing report as "zero failures", which
+    /// would render a red verdict above a green-looking tally.
+    /// </summary>
+    [TestMethod]
+    // Uses FailFast, and crash dumps are not supported on .NET Framework at the moment.
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    public async Task RetryFailedTests_WhenRetryAttemptCrashes_KeepsLastReportedCounts(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--retry-failed-tests 1 --results-directory {resultDirectory}",
+            new()
+            {
+                { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
+                { "METHOD1", "1" },
+                { "FAIL", "1" },
+                { "CRASHONRETRY", "1" },
+                { "RESULTDIR", resultDirectory },
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertOutputContains("Retry summary: Failed! after 2/2 attempts");
+        testHostResult.AssertOutputDoesNotContain("(retrying stopped early)");
+
+        // The crashed retry reported nothing, so the run's figures are the first attempt's: one test still failing
+        // out of three. Resetting to "failed: 0" would contradict the red verdict directly above it.
+        testHostResult.AssertOutputContains("  total: 3");
+        testHostResult.AssertOutputContains("  failed: 1");
+        testHostResult.AssertOutputContains("  succeeded: 2");
+
+        // The retry was launched but produced no reported counts, so it is not counted as an observed retry.
+        testHostResult.AssertOutputDoesNotContain("  retried:");
+
+        // Nothing recovered, so nothing is flaky.
+        testHostResult.AssertOutputDoesNotContain("  flaky:");
+        testHostResult.AssertOutputDoesNotContain("Flaky tests:");
+    }
+
+    /// <summary>
+    /// Exercises the <c>--show-flaky-tests</c> option end to end. The unit tests set the reporter option directly,
+    /// so without this nothing verifies that the flag parses, nor that the retry orchestrator's own resolver
+    /// (<c>FlakyTestsReportingOptions</c>, which runs in a different process from the terminal reporter) honours
+    /// it. Only the flaky count and the named section are suppressed; the retried accounting stays.
+    /// </summary>
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task RetryFailedTests_WithShowFlakyTestsOff_SuppressesFlakyCountAndSection(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--retry-failed-tests 3 --show-flaky-tests off --results-directory {resultDirectory}",
+            new()
+            {
+                { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
+                { "METHOD1", "1" },
+                { "FAIL", "0" },
+                { "RESULTDIR", resultDirectory },
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        testHostResult.AssertOutputContains("Retry summary: Passed! after 2/4 attempts");
+
+        // TestMethod1 recovered, so this run is flaky; the option must hide both renderings of that.
+        testHostResult.AssertOutputDoesNotContain("  flaky:");
+        testHostResult.AssertOutputDoesNotContain("Flaky tests:");
+        testHostResult.AssertOutputDoesNotContain("TestMethod1 (failed -> passed)");
+
+        // Retry accounting is not part of the flaky feature and must survive.
+        testHostResult.AssertOutputContains("  retried: 1 test(s), 1 extra run(s)");
     }
 
     [TestMethod]
@@ -127,14 +287,24 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
             testHostResult.AssertOutputContains("Failure threshold policy is enabled, failed tests will not be restarted.");
             testHostResult.AssertOutputContains("Percentage failed threshold is 50% and 66.67% tests failed (2/3)");
-            testHostResult.AssertOutputContains("Failed! -");
+            // The threshold stopped retrying after the first attempt. That attempt no longer prints its own
+            // summary, so the retry summary is what accounts for the run — using the "stopped early" wording
+            // rather than "1/4 attempts", which would imply the other three ran and failed.
+            testHostResult.AssertOutputContains("Retry summary: Failed! after 1 attempt(s) (retrying stopped early)");
+            testHostResult.AssertOutputContains("  total: 3");
+            testHostResult.AssertOutputContains("  failed: 2");
+            testHostResult.AssertOutputContains("  succeeded: 1");
+            testHostResult.AssertOutputDoesNotContain("  retried:");
+            // Retrying never started, so only the first attempt's summary is present.
+            AssertOutputContainsExactlyOnce(testHostResult, "Test run summary:");
         }
         else
         {
             testHostResult.AssertExitCodeIs(ExitCode.Success);
             testHostResult.AssertOutputContains("Retry summary: Passed! after 2/4 attempts");
-            testHostResult.AssertOutputContains("Failed! -");
-            testHostResult.AssertOutputContains("Passed! -");
+            testHostResult.AssertOutputContains("  total: 3");
+            testHostResult.AssertOutputContains("  succeeded: 3");
+            AssertOutputContainsExactlyOnce(testHostResult, "Test run summary:");
         }
     }
 
@@ -159,15 +329,48 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
             testHostResult.AssertOutputContains("Failure threshold policy is enabled, failed tests will not be restarted.");
             testHostResult.AssertOutputContains("Maximum failed tests threshold is 1 and 2 tests failed");
-            testHostResult.AssertOutputContains("Failed! -");
+            testHostResult.AssertOutputContains("Retry summary: Failed! after 1 attempt(s) (retrying stopped early)");
+            testHostResult.AssertOutputContains("  total: 3");
+            testHostResult.AssertOutputContains("  failed: 2");
+            testHostResult.AssertOutputContains("  succeeded: 1");
+            AssertOutputContainsExactlyOnce(testHostResult, "Test run summary:");
         }
         else
         {
             testHostResult.AssertExitCodeIs(ExitCode.Success);
             testHostResult.AssertOutputContains("Retry summary: Passed! after 2/4 attempts");
-            testHostResult.AssertOutputContains("Failed! -");
-            testHostResult.AssertOutputContains("Passed! -");
+            testHostResult.AssertOutputContains("  total: 3");
+            testHostResult.AssertOutputContains("  succeeded: 3");
+            AssertOutputContainsExactlyOnce(testHostResult, "Test run summary:");
         }
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task RetryFailedTests_MaxTestsCountWithNoRetries_ReportsAttemptsExhausted(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--retry-failed-tests 0 --retry-failed-tests-max-tests 1 --results-directory {resultDirectory}",
+            new()
+            {
+                { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
+                { "RESULTDIR", resultDirectory },
+                { "METHOD1", "1" },
+                { "METHOD2", "1" },
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+        testHostResult.AssertOutputContains("Failure threshold policy is enabled, failed tests will not be restarted.");
+        testHostResult.AssertOutputContains("Maximum failed tests threshold is 1 and 2 tests failed");
+        testHostResult.AssertOutputContains("Retry summary: Failed! after 1/1 attempts");
+        testHostResult.AssertOutputDoesNotContain("(retrying stopped early)");
+        testHostResult.AssertOutputContains("  total: 3");
+        testHostResult.AssertOutputContains("  failed: 2");
+        testHostResult.AssertOutputContains("  succeeded: 1");
+        testHostResult.AssertOutputDoesNotContain("  retried:");
     }
 
     [TestMethod]
@@ -225,12 +428,14 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         foreach (string logFile in logFilesFromInvokeTestingPlatformTask)
         {
             string logFileContents = File.ReadAllText(logFile);
+            // Nothing was retried, so the single attempt keeps its own summary and the retry summary reports the
+            // same run without any retry accounting.
             Assert.Contains("Test run summary: Passed!", logFileContents);
-            Assert.Contains("total: 3", logFileContents);
-            // Zero-retry runs must not advertise a retried suffix on the total line.
-            Assert.DoesNotContain("retried)", logFileContents);
-            Assert.Contains("succeeded: 3", logFileContents);
             Assert.Contains("Retry summary: Passed! on the first attempt (no retries needed)", logFileContents);
+            Assert.Contains("total: 3", logFileContents);
+            Assert.Contains("succeeded: 3", logFileContents);
+            Assert.DoesNotContain("retried:", logFileContents);
+            Assert.DoesNotContain("flaky:", logFileContents);
         }
     }
 
@@ -468,7 +673,25 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
         if (IsIncluded(uidFilter, treeNodeFilter, "1", "TestMethod1"))
         {
-            if (TestMethod1(fail, resultDir, crash))
+            // SKIPONRETRY makes TestMethod1 fail on the first attempt and come back SKIPPED on the retry. A skipped
+            // test has not recovered, so it must not be counted or listed as flaky. Inferring recovery from
+            // "no longer in the failed set" would wrongly report it as 'failed -> passed'.
+            bool skipOnRetry = Environment.GetEnvironmentVariable("SKIPONRETRY") == "1" && uidFilter is not null;
+
+            // CRASHONRETRY lets the FIRST attempt report its results normally and kills the RETRY attempt before it
+            // can report anything. The summary must then keep the last counts it actually received rather than
+            // resetting them to zero.
+            if (Environment.GetEnvironmentVariable("CRASHONRETRY") == "1" && uidFilter is not null)
+            {
+                Environment.FailFast("CRASHONRETRY");
+            }
+
+            if (skipOnRetry)
+            {
+                await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
+                    new TestNode() { Uid = "1", DisplayName = "TestMethod1", Properties = new(new SkippedTestNodeStateProperty(), testMethod1Identifier) }));
+            }
+            else if (TestMethod1(fail, resultDir, crash))
             {
                 await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
                     new TestNode() { Uid = "1", DisplayName = "TestMethod1", Properties = new(PassedTestNodeStateProperty.CachedInstance, testMethod1Identifier) }));
