@@ -291,4 +291,69 @@ public sealed class CultureMutationUnderParallelizationAnalyzerTests
                 .WithLocation(0)
                 .WithArguments("CultureInfo.DefaultThreadCurrentCulture"));
     }
+
+    [TestMethod]
+    public async Task WhenTestInitializeSetsDefaultThreadCurrentCulture_Diagnostic()
+    {
+        // [TestInitialize] is a class-scoped fixture included in GetFixtureAttributeSymbols, so mutations inside
+        // it must be reported just like mutations inside a test method.
+        string code = """
+            using System.Globalization;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestInitialize]
+                public void Setup()
+                {
+                    {|#0:CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture|};
+                }
+
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(CultureMutationUnderParallelizationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("CultureInfo.DefaultThreadCurrentCulture"));
+    }
+
+    [TestMethod]
+    public async Task WhenAssemblyInitializeSetsDefaultThreadCurrentCulture_NoDiagnostic()
+    {
+        // [AssemblyInitialize] is deliberately excluded from GetFixtureAttributeSymbols: it is serialized and
+        // every worker awaits it before running any test, so a process-global mutation there cannot race a
+        // concurrent test. Flagging it would be a false positive.
+        string code = """
+            using System.Globalization;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [AssemblyInitialize]
+                public static void AssemblySetup(TestContext context)
+                {
+                    CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+                }
+
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }
