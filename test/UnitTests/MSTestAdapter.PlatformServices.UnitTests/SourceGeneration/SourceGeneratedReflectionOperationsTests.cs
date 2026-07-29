@@ -208,7 +208,10 @@ public sealed class SourceGeneratedReflectionOperationsTests : TestContainer
         var operations = new SourceGeneratedReflectionOperations(provider);
 
         operations.IsAttributeDefined<MarkerAttribute>(method).Should().BeTrue();
-        operations.GetFirstAttributeOrDefault<MarkerAttribute>(method).Should().BeSameAs(generated);
+
+        // GetFirstAttributeOrDefault is contractually restricted to sealed attribute types (a non-sealed
+        // type can be matched by several derived attributes), so it is queried with the sealed derived type.
+        operations.GetFirstAttributeOrDefault<DerivedMarkerAttribute>(method).Should().BeSameAs(generated);
         operations.GetSingleAttributeOrDefault<MarkerAttribute>(method).Should().BeSameAs(generated);
         operations.GetAttributes<MarkerAttribute>(method).Should().ContainSingle().Which.Should().BeSameAs(generated);
     }
