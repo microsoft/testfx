@@ -47,7 +47,7 @@ Out of process file artifacts produced:
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             $"--report-trx --report-trx-filename {fileName}.trx --results-directory \"{testResultsPath}\"",
-            new() { ["WITH_ARTIFACT"] = "1" },
+            new() { ["WITH_ARTIFACT"] = $"{Guid.NewGuid():N}.txt" },
             cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
@@ -84,16 +84,17 @@ Out of process file artifacts produced:
         const int PaddedResultsDirectoryLength = 180;
         string fileName = Guid.NewGuid().ToString("N");
 
-        // The padded segment carries a unique prefix: acceptance tests run with method-level
-        // parallelism, so sharing one fixed directory name across the TFM cases would make them race
-        // on the same results tree.
+        // The padded segment carries a unique prefix, and the artifact file name is unique per run:
+        // acceptance tests use method-level parallelism, so a fixed results directory would race the
+        // TFM cases against each other, and a fixed artifact name would race this test against the
+        // other WITH_ARTIFACT test for the same TFM (they share the test host's output folder).
         string uniqueSegment = Guid.NewGuid().ToString("N");
         int paddingLength = Math.Max(1, PaddedResultsDirectoryLength - AssetFixture.TargetAssetPath.Length - 1 - uniqueSegment.Length);
         string testResultsPath = Path.Combine(AssetFixture.TargetAssetPath, uniqueSegment + new string('p', paddingLength));
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             $"--report-trx --report-trx-filename {fileName}.trx --results-directory \"{testResultsPath}\"",
-            new() { ["WITH_ARTIFACT"] = "1" },
+            new() { ["WITH_ARTIFACT"] = $"{Guid.NewGuid():N}.txt" },
             cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
@@ -394,9 +395,13 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
         var testMethodIdentifier = new TestMethodIdentifierProperty(string.Empty, string.Empty, "DummyClassName", "Test", 0, Array.Empty<string>(), string.Empty);
         PropertyBag properties = new(PassedTestNodeStateProperty.CachedInstance, testMethodIdentifier);
-        if (Environment.GetEnvironmentVariable("WITH_ARTIFACT") == "1")
+        // WITH_ARTIFACT carries the file name rather than a flag: the working directory is the test
+        // host's own output folder, which is shared by every test method using this asset for a given
+        // target framework, so a fixed name would have concurrent hosts writing and copying the same
+        // file under method-level parallelism.
+        if (Environment.GetEnvironmentVariable("WITH_ARTIFACT") is { Length: > 0 } artifactFileName)
         {
-            string artifactPath = Path.Combine(Directory.GetCurrentDirectory(), "test-artifact.txt");
+            string artifactPath = Path.Combine(Directory.GetCurrentDirectory(), artifactFileName);
             File.WriteAllText(artifactPath, "artifact");
             properties.Add(new FileArtifactProperty(new FileInfo(artifactPath), "TestMethod", "description"));
         }
