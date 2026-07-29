@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 extern alias ghactions;
@@ -162,7 +162,7 @@ public sealed class GitHubActionsSlowTestReporterTests
     }
 
     [TestMethod]
-    public async Task OnTestSessionStarting_WhenDormant_DoesNotStartBackgroundScanLoopAsync()
+    public async Task OnTestSessionStarting_WhenNotOnGitHubActions_DoesNotStartBackgroundScanLoopAsync()
     {
         NonRunningTask task = new();
         GitHubActionsSlowTestReporter reporter = CreateReporter(new CapturingOutputDevice(), githubActions: false, task: task);

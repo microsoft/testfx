@@ -96,6 +96,7 @@ public sealed class TrxResultStreamingStoreTests
         var store = new TrxResultStreamingStore(filePath, new RealFileSystem(), new ThreadlessTask(), Mock.Of<ILogger>(), batchSize: 64, flushIntervalMs: 1, useBackgroundWriter: false);
         store.Enqueue(Result("u0"));
 
+        Assert.AreEqual(1, store.BufferedCount, "Record enqueued before Dispose must be persisted, not silently dropped.");
         store.Dispose();
 
         // The handle must be released: on Windows an open writer would make the delete fail.
