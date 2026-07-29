@@ -23,6 +23,21 @@ internal sealed class TestNodeResultsState
     // Reusable buffer for GetRunningTasks — cleared and rebuilt each call to avoid per-tick list allocation.
     private readonly List<TestDetailState> _runningTasksBuffer = [];
 
+    // Caches for the two summary messages rendered on the progress row. The summaries are re-rendered on
+    // every renderer tick (500ms for the cursor renderer, 1s for the heartbeat one), and the cursor
+    // renderer additionally repaints its frame on every write to the terminal, while the running-test
+    // count only changes when a test starts or completes. Formatting on every render therefore allocates
+    // a string identical to the previous one. -1 is a sentinel that never matches a real count, so the
+    // first call always formats.
+    // Like _runningTasksBuffer, these fields are not synchronized: every caller is reached through
+    // IProgressRenderer.OnTick/OnWrite, which TestProgressStateAwareTerminal serializes under its lock.
+    // They also assume the culture does not change mid-run, since the text cached for a given count
+    // otherwise stays pinned to the culture of the call that produced it.
+    private int _cachedFullTestsCount = -1;
+    private string _cachedFullTestsText = string.Empty;
+    private int _cachedMoreTestsCount = -1;
+    private string _cachedMoreTestsText = string.Empty;
+
     public int Count => _testNodeProgressStates.Count;
 
     public void AddRunningTestNode(int id, string uid, string name, IStopwatch stopwatch) => _testNodeProgressStates[uid] = new TestDetailState(id, stopwatch, name);
@@ -62,7 +77,7 @@ internal sealed class TestNodeResultsState
             return first;
         }
 
-        _summaryDetail.Text = string.Format(CultureInfo.CurrentCulture, TerminalResources.ActiveTestsRunning_FullTestsCount, count);
+        _summaryDetail.Text = GetFullTestsCountText(count);
         return _summaryDetail;
     }
 
@@ -114,9 +129,9 @@ internal sealed class TestNodeResultsState
             _summaryDetail.Text =
                 itemsToTake == 0
                     // Note: If itemsToTake is 0, then we only show two lines, the project summary and the number of running tests.
-                    ? string.Format(CultureInfo.CurrentCulture, TerminalResources.ActiveTestsRunning_FullTestsCount, _runningTasksBuffer.Count)
+                    ? GetFullTestsCountText(_runningTasksBuffer.Count)
                     // If itemsToTake is larger, then we show the project summary, active tests, and the number of active tests that are not shown.
-                    : $"... {string.Format(CultureInfo.CurrentCulture, TerminalResources.ActiveTestsRunning_MoreTestsCount, _runningTasksBuffer.Count - itemsToTake)}";
+                    : GetMoreTestsCountText(_runningTasksBuffer.Count - itemsToTake);
 
             // Truncate in-place to avoid allocating a second list/array.
             if (itemsToTake < _runningTasksBuffer.Count)
@@ -128,5 +143,35 @@ internal sealed class TestNodeResultsState
         }
 
         return _runningTasksBuffer;
+    }
+
+    /// <summary>
+    /// Returns the "N tests running" text for <paramref name="count"/>, reusing the previously
+    /// formatted string when the count is unchanged since the last call.
+    /// </summary>
+    private string GetFullTestsCountText(int count)
+    {
+        if (_cachedFullTestsCount != count)
+        {
+            _cachedFullTestsText = string.Format(CultureInfo.CurrentCulture, TerminalResources.ActiveTestsRunning_FullTestsCount, count);
+            _cachedFullTestsCount = count;
+        }
+
+        return _cachedFullTestsText;
+    }
+
+    /// <summary>
+    /// Returns the "... N more running" text for <paramref name="count"/>, reusing the previously
+    /// formatted string when the count is unchanged since the last call.
+    /// </summary>
+    private string GetMoreTestsCountText(int count)
+    {
+        if (_cachedMoreTestsCount != count)
+        {
+            _cachedMoreTestsText = $"... {string.Format(CultureInfo.CurrentCulture, TerminalResources.ActiveTestsRunning_MoreTestsCount, count)}";
+            _cachedMoreTestsCount = count;
+        }
+
+        return _cachedMoreTestsText;
     }
 }

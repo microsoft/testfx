@@ -1808,6 +1808,147 @@ public sealed class TerminalTestReporterTests
     }
 
     [TestMethod]
+    public void TestNodeResultsState_GetSingleActiveOrSummaryTask_WhenCountUnchanged_ReusesFormattedSummaryString()
+    {
+        var stopwatchFactory = new StopwatchFactory();
+        var state = new TestNodeResultsState(1);
+        for (int i = 0; i < 5; i++)
+        {
+            state.AddRunningTestNode(id: 10 + i, uid: $"uid-{i}", name: $"Test{i}", stopwatchFactory.CreateStopwatch());
+            stopwatchFactory.AddTime(TimeSpan.FromSeconds(1));
+        }
+
+        string first = state.GetSingleActiveOrSummaryTask()!.Text;
+
+        // Do NOT remove this interleaved call. TestDetailState.Text's setter ignores writes that are
+        // ordinally equal to the current value, so two back-to-back calls would return the very first
+        // instance even without the cache, making the AreSame assertion below vacuous. Flipping the
+        // shared summary detail to the other message shape forces the setter to assign on the next call,
+        // so only the count-keyed cache can hand back the same instance.
+        string interleaved = state.GetRunningTasks(maxCount: 3)[2].Text;
+        Assert.AreNotEqual(first, interleaved);
+
+        string second = state.GetSingleActiveOrSummaryTask()!.Text;
+
+        Assert.AreEqual(string.Format(CultureInfo.CurrentCulture, PlatformResources.ActiveTestsRunning_FullTestsCount, 5), first);
+        Assert.AreSame(first, second);
+    }
+
+    [TestMethod]
+    public void TestNodeResultsState_GetSingleActiveOrSummaryTask_WhenCountChanges_ReformatsSummary()
+    {
+        var stopwatchFactory = new StopwatchFactory();
+        var state = new TestNodeResultsState(1);
+        state.AddRunningTestNode(id: 10, uid: "uid-1", name: "T1", stopwatchFactory.CreateStopwatch());
+        state.AddRunningTestNode(id: 11, uid: "uid-2", name: "T2", stopwatchFactory.CreateStopwatch());
+
+        string? twoRunning = state.GetSingleActiveOrSummaryTask()?.Text;
+        state.AddRunningTestNode(id: 12, uid: "uid-3", name: "T3", stopwatchFactory.CreateStopwatch());
+        string? threeRunning = state.GetSingleActiveOrSummaryTask()?.Text;
+
+        Assert.AreEqual(string.Format(CultureInfo.CurrentCulture, PlatformResources.ActiveTestsRunning_FullTestsCount, 2), twoRunning);
+        Assert.AreEqual(string.Format(CultureInfo.CurrentCulture, PlatformResources.ActiveTestsRunning_FullTestsCount, 3), threeRunning);
+    }
+
+    [TestMethod]
+    public void TestNodeResultsState_GetRunningTasks_WhenCountUnchanged_ReusesFormattedSummaryString()
+    {
+        var stopwatchFactory = new StopwatchFactory();
+        var state = new TestNodeResultsState(1);
+        for (int i = 0; i < 5; i++)
+        {
+            state.AddRunningTestNode(id: 10 + i, uid: $"uid-{i}", name: $"Test{i}", stopwatchFactory.CreateStopwatch());
+            stopwatchFactory.AddTime(TimeSpan.FromSeconds(1));
+        }
+
+        // maxCount 3 truncates, so the trailing entry is the "... N more running" summary.
+        string first = state.GetRunningTasks(maxCount: 3)[2].Text;
+
+        // See the note in the GetSingleActiveOrSummaryTask counterpart: this interleaved call flips the
+        // shared summary detail to the other message shape so the AreSame assertion below is meaningful.
+        string interleaved = state.GetSingleActiveOrSummaryTask()!.Text;
+        Assert.AreNotEqual(first, interleaved);
+
+        string second = state.GetRunningTasks(maxCount: 3)[2].Text;
+
+        Assert.AreEqual($"... {string.Format(CultureInfo.CurrentCulture, PlatformResources.ActiveTestsRunning_MoreTestsCount, 3)}", first);
+        Assert.AreSame(first, second);
+    }
+
+    [TestMethod]
+    public void TestNodeResultsState_GetRunningTasks_WhenCountChanges_ReformatsSummary()
+    {
+        var stopwatchFactory = new StopwatchFactory();
+        var state = new TestNodeResultsState(1);
+        for (int i = 0; i < 5; i++)
+        {
+            state.AddRunningTestNode(id: 10 + i, uid: $"uid-{i}", name: $"Test{i}", stopwatchFactory.CreateStopwatch());
+            stopwatchFactory.AddTime(TimeSpan.FromSeconds(1));
+        }
+
+        // 5 running, maxCount 3 => 2 shown + "... 3 more running".
+        string fiveRunning = state.GetRunningTasks(maxCount: 3)[2].Text;
+
+        // 4 running, maxCount 3 => 2 shown + "... 2 more running".
+        state.RemoveRunningTestNode("uid-0");
+        string fourRunning = state.GetRunningTasks(maxCount: 3)[2].Text;
+
+        Assert.AreEqual($"... {string.Format(CultureInfo.CurrentCulture, PlatformResources.ActiveTestsRunning_MoreTestsCount, 3)}", fiveRunning);
+        Assert.AreEqual($"... {string.Format(CultureInfo.CurrentCulture, PlatformResources.ActiveTestsRunning_MoreTestsCount, 2)}", fourRunning);
+    }
+
+    [TestMethod]
+    public void TestNodeResultsState_FullCountSummary_IsSharedBetweenGetRunningTasksAndGetSingleActiveOrSummaryTask()
+    {
+        var stopwatchFactory = new StopwatchFactory();
+        var state = new TestNodeResultsState(1);
+        for (int i = 0; i < 3; i++)
+        {
+            state.AddRunningTestNode(id: 10 + i, uid: $"uid-{i}", name: $"Test{i}", stopwatchFactory.CreateStopwatch());
+            stopwatchFactory.AddTime(TimeSpan.FromSeconds(1));
+        }
+
+        // maxCount 1 leaves no room for individual tests, so GetRunningTasks emits the same
+        // "N tests running" message that GetSingleActiveOrSummaryTask produces.
+        string fromGetRunningTasks = state.GetRunningTasks(maxCount: 1)[0].Text;
+
+        // Flip to the "... N more running" shape so the Text setter is forced to assign again below.
+        string interleaved = state.GetRunningTasks(maxCount: 2)[1].Text;
+        Assert.AreNotEqual(fromGetRunningTasks, interleaved);
+
+        string fromGetSingleActive = state.GetSingleActiveOrSummaryTask()!.Text;
+
+        Assert.AreEqual(string.Format(CultureInfo.CurrentCulture, PlatformResources.ActiveTestsRunning_FullTestsCount, 3), fromGetRunningTasks);
+        Assert.AreSame(fromGetRunningTasks, fromGetSingleActive);
+    }
+
+    [TestMethod]
+    public void TestNodeResultsState_SummaryCaches_DoNotLeakBetweenTheTwoMessageShapes()
+    {
+        var stopwatchFactory = new StopwatchFactory();
+        var state = new TestNodeResultsState(1);
+        for (int i = 0; i < 5; i++)
+        {
+            state.AddRunningTestNode(id: 10 + i, uid: $"uid-{i}", name: $"Test{i}", stopwatchFactory.CreateStopwatch());
+            stopwatchFactory.AddTime(TimeSpan.FromSeconds(1));
+        }
+
+        // 5 running, maxCount 3 => 2 shown + "... 3 more running". This caches the "more" message for the number 3.
+        Assert.AreEqual(
+            $"... {string.Format(CultureInfo.CurrentCulture, PlatformResources.ActiveTestsRunning_MoreTestsCount, 3)}",
+            state.GetRunningTasks(maxCount: 3)[2].Text);
+
+        // Drop to 3 running. The count now collides with the number cached above, so a cache keyed only
+        // on the count would wrongly serve the "... 3 more running" text as the "3 tests running" summary.
+        state.RemoveRunningTestNode("uid-0");
+        state.RemoveRunningTestNode("uid-1");
+
+        Assert.AreEqual(
+            string.Format(CultureInfo.CurrentCulture, PlatformResources.ActiveTestsRunning_FullTestsCount, 3),
+            state.GetSingleActiveOrSummaryTask()?.Text);
+    }
+
+    [TestMethod]
     public void TerminalTestReporter_WhenInDiscoveryMode_ShouldIncrementDiscoveredTests()
     {
         // Arrange
