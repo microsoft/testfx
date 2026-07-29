@@ -348,12 +348,53 @@ are guarded off by `OperatingSystem.IsBrowser()` in the platform:
 | --- | --- |
 | TRX report (`--report-trx`) | `TrxDataConsumer` creates a `TrxResultStreamingStore` whose background writer uses `BlockingCollection<T>` and `ITask.RunLongRunning`, both unsupported on browser; the TRX lifecycle handlers are gated by `OperatingSystem.IsBrowser()`. |
 | Hang dump / crash dump | Rely on `System.Diagnostics.Process`, unsupported in the browser (see [#8557](https://github.com/microsoft/testfx/issues/8557)). |
-| Azure DevOps report | Its `HttpClient` sets `AutomaticDecompression`, unsupported by the browser `HttpClientHandler`. |
 | Server mode / `dotnet test` pipe | Depends on TCP/named-pipe IPC, unavailable in the browser. |
 | `--exit-on-process-exit`, wait-for-debugger | No host process model in the browser. |
 | Synchronous file-logger flush | Not supported in the browser (throws `PlatformNotSupportedException`). |
 
 That is why `Program.cs` registers only the telemetry provider (`AddAppInsightsTelemetryProvider`).
+
+### Azure DevOps report on browser-wasm
+
+The Azure DevOps report extension used to be listed above: its shared `HttpClient` set
+`HttpClientHandler.AutomaticDecompression`, which the browser handler rejects with
+`PlatformNotSupportedException` because the browser stack delegates to `fetch`, which already decodes
+`gzip`/`deflate` itself. That opt-in is now skipped where the handler does not support it
+([#10313](https://github.com/microsoft/testfx/issues/10313)), so the extension loads and publishes on
+`browser-wasm`.
+
+Running it end to end surfaced a second blocker that had nothing to do with HTTP: `--report-azdo`
+annotates a failing test's stack frame relative to the repository root, and the shared `RootFinder`
+throws when there is no `.git` directory anywhere above the application base directory — which is
+always true of the wasm virtual filesystem. That now degrades to a message-only
+`##vso[task.logissue type=error]` annotation, the same allowance the GitHub Actions reporter already
+made.
+
+**Verified.** `BrowserWasmExecution_AzureDevOpsLivePublishingReachesStubbedRestApi` publishes a real
+`browser-wasm` test app, boots it headlessly under Node, and drives `--publish-azdo-test-results`
+(together with `--report-azdo`) against a stub Azure DevOps REST API served from a Node worker.
+Creating the run, publishing both test results with their outcomes, uploading a file-backed attachment
+that the publisher reads back from the wasm virtual filesystem, completing the run, and emitting the
+`##vso[task.logissue …]` annotation for the failing test all work with no
+`PlatformNotSupportedException`.
+
+**Separate wasm concern — threading, not HTTP.** `--report-azdo --report-azdo-slow-test-history <days>`
+additionally starts the shared slow-test scan loop (`SlowTestReporterBase`), which calls
+`ITask.RunLongRunning`. Single-threaded wasm cannot create that thread, so that specific option
+combination is governed by the platform's `RuntimeFeatureHelper.IsMultiThreaded` probe rather than by
+anything in this fix. Everything else in the extension is reachable on `browser-wasm`.
+
+**Not verified.** Nobody has run this from a real browser tab against `dev.azure.com`. CORS is not
+expected to be the blocker: `dev.azure.com` answers the preflight for these calls with
+`Access-Control-Allow-Origin: *`, `Access-Control-Allow-Methods: OPTIONS,GET,POST,PATCH,PUT,DELETE`
+and an `Access-Control-Allow-Headers` list that always includes `authorization`, and the extension
+authenticates with an explicit `Authorization: Basic` header rather than cookies (so the wildcard
+origin is usable). That is live-service behavior rather than a contract, and an on-premises Azure
+DevOps Server can be configured differently. Note also that publishing from a page means
+`SYSTEM_ACCESSTOKEN` has to be delivered to that page, so this only makes sense for a trusted,
+CI-hosted origin. The history-backed options (`--report-azdo-flaky-history`,
+`--report-azdo-slow-test-history`) use a plain `HttpClient` with no handler configuration — no
+browser-unsupported surface — but they have not been exercised on `browser-wasm`.
 
 ## Build configuration notes
 

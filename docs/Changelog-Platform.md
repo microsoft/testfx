@@ -18,6 +18,8 @@ See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4
 
 * Fix `Microsoft.Testing.Extensions.AzureDevOpsReport` crashing with `ObjectDisposedException` during teardown, after results were already published, when the platform disposes the live test-results publisher more than once in [#10191](https://github.com/microsoft/testfx/issues/10191)
 * Report Azure DevOps live-publishing failures (missing configuration, test run creation, unpublished results, attachment uploads and run finalization) on the output device instead of only in the opt-in diagnostic log, so `--publish-azdo-test-results` no longer fails silently in [#10191](https://github.com/microsoft/testfx/issues/10191)
+* Fix `Microsoft.Testing.Extensions.AzureDevOpsReport` throwing `PlatformNotSupportedException` on `browser-wasm` (and `wasi-wasm`): the shared `HttpClient` now only opts into `HttpClientHandler.AutomaticDecompression` where the handler supports it, since `fetch` and `wasi:http` already decode `gzip`/`deflate` responses themselves in [#10313](https://github.com/microsoft/testfx/issues/10313)
+* Fix `--report-azdo` faulting the test run with `Could not find solution root, .git not found in ... or any parent directory.` when annotating a failing test from an application that does not run inside a git checkout (a published app, a container, or `browser-wasm`, whose virtual filesystem has no `.git`); the reporter now degrades to a message-only annotation, matching the GitHub Actions reporter in [#10313](https://github.com/microsoft/testfx/issues/10313)
 
 ## <a name="2.3.3" />[2.3.3] - 2026-07-28
 

@@ -53,6 +53,16 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 ///     directly guarding the <c>BrowserOutputDevice.JSConsoleWarn</c> fix. Same skip conditions.
 ///   </item>
 ///   <item>
+///     <see cref="BrowserWasmExecution_AzureDevOpsLivePublishingReachesStubbedRestApi"/> publishes a
+///     browser-WASM test application that registers the Azure DevOps report extension, points it at a
+///     local Node HTTP server standing in for the Azure DevOps REST API, and asserts the whole
+///     <c>--publish-azdo-test-results</c> pipeline (create run, publish results, upload a file-backed
+///     attachment read from the wasm virtual filesystem, complete the run) round-trips without a
+///     <see cref="PlatformNotSupportedException"/>, and that <c>--report-azdo</c> annotates the failing
+///     test — guarding the <c>AutomaticDecompression</c> fix for
+///     <see href="https://github.com/microsoft/testfx/issues/10313"/>.
+///   </item>
+///   <item>
 ///     <see cref="BrowserWasmExecution_RunSettingsEnvironmentVariables_FailsWithClearDiagnostic"/>
 ///     verifies that unsupported runsettings environment variables fail with a clear browser-specific
 ///     diagnostic rather than a platform exception.
@@ -522,6 +532,259 @@ public sealed class UnitTest1
     private const string WarningText = "browser-wasm framework warning marker";
     private const string ErrorText = "browser-wasm framework error marker";
 
+    // Bearer-equivalent secret handed to the Azure DevOps publisher. Like the dotnet test HTTP token it
+    // must never surface in host diagnostics, which the test asserts.
+    private const string AzureDevOpsAccessToken = "browser-wasm-azdo-test-access-token";
+
+    // Azure DevOps values the stub REST API and the assertions agree on.
+    private const string AzureDevOpsProject = "BrowserWasmProject";
+    private const string AzureDevOpsBuildId = "10313";
+    private const int AzureDevOpsRunId = 4242;
+    private const string AzureDevOpsAttachmentFileName = "azdo-browser-attachment.txt";
+    private const string AzureDevOpsAttachmentContent = "browser-wasm attachment read from the wasm virtual filesystem";
+
+    // Minimal browser-wasm MSTest project that registers the Azure DevOps report extension. One test
+    // passes and one fails after attaching a file written to the wasm virtual filesystem, so the run
+    // exercises both the results batch and the file-backed attachment upload.
+    private const string AzureDevOpsSourceCode = """
+#file BrowserAzureDevOpsProject.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>$TargetFramework$</TargetFramework>
+    <RuntimeIdentifier>$BrowserRid$</RuntimeIdentifier>
+    <OutputType>Exe</OutputType>
+    <SelfContained>true</SelfContained>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
+    <WasmMainJSPath>main.js</WasmMainJSPath>
+    <WasmBuildNative>false</WasmBuildNative>
+    <PublishTrimmed>false</PublishTrimmed>
+    <NoWarn>$(NoWarn);NETSDK1201</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MSTest" Version="$MSTestVersion$" />
+    <PackageReference Include="Microsoft.Testing.Extensions.AzureDevOpsReport" Version="$MicrosoftTestingPlatformVersion$" />
+  </ItemGroup>
+
+</Project>
+
+#file main.js
+import { dotnet } from './_framework/dotnet.js';
+const { runMain } = await dotnet.withApplicationArgumentsFromQuery().create();
+const exitCode = await runMain();
+globalThis.mtpExitCode = exitCode;
+
+#file UnitTest1.cs
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public sealed class UnitTest1
+{
+    public TestContext TestContext { get; set; } = null!;
+
+    [TestMethod]
+    public void PassingTest()
+        => Assert.AreEqual(4, 2 + 2);
+
+    [TestMethod]
+    public void FailingTestWithAttachment()
+    {
+        // Attachments are only collected for non-passing outcomes, so this test both writes the file
+        // into the wasm virtual filesystem and fails, forcing the publisher to read it back.
+        string path = Path.Combine(Path.GetTempPath(), "$AttachmentFileName$");
+        File.WriteAllText(path, "$AttachmentContent$");
+        TestContext.AddResultFile(path);
+        Assert.Fail("Intentional failure so the Azure DevOps publisher uploads the attachment.");
+    }
+}
+""";
+
+    // Node runner for the Azure DevOps live-publishing scenario. It stands up a stub Azure DevOps REST
+    // API on a worker thread (same shape as the dotnet test HTTP gateway above), feeds the pipeline
+    // environment variables the publisher requires through the dotnet.js host builder, and reports what
+    // the WASM app actually sent so the test can assert on the full publish pipeline. '--report-azdo' is
+    // passed alongside '--publish-azdo-test-results' so the console annotation reporter is covered too.
+    private const string AzureDevOpsNodeRunnerSource = """
+import { Worker } from 'node:worker_threads';
+
+const token = '$Token$';
+const project = '$Project$';
+const runId = $RunId$;
+function gatewayMain() {
+const http = require('node:http');
+const { parentPort, workerData } = require('node:worker_threads');
+const { token, runId } = workerData;
+const summary = {
+    createRunRequests: 0,
+    createRunStates: [],
+    publishedTestOutcomes: [],
+    attachments: [],
+    patchedStates: [],
+    authorizedRequests: 0,
+    unauthorizedRequests: 0,
+    acceptHeaders: [],
+    unexpectedRequests: [],
+};
+
+const expectedAuthorization = 'Basic ' + Buffer.from(':' + token, 'utf8').toString('base64');
+
+const server = http.createServer(async (request, response) => {
+    const chunks = [];
+    for await (const chunk of request) {
+        chunks.push(chunk);
+    }
+
+    const body = Buffer.concat(chunks).toString('utf8');
+    if (request.headers.authorization === expectedAuthorization) {
+        summary.authorizedRequests++;
+    }
+    else {
+        summary.unauthorizedRequests++;
+    }
+
+    const accept = request.headers.accept ?? '';
+    if (!summary.acceptHeaders.includes(accept)) {
+        summary.acceptHeaders.push(accept);
+    }
+
+    let payload = '{}';
+    if (request.method === 'POST' && request.url.includes('/_apis/test/runs?')) {
+        summary.createRunRequests++;
+        summary.createRunStates.push(JSON.parse(body).state);
+        payload = JSON.stringify({ id: runId });
+    }
+    else if (request.method === 'POST' && request.url.includes('/results?')) {
+        const results = JSON.parse(body);
+        payload = JSON.stringify({
+            count: results.length,
+            value: results.map((result, index) => {
+                summary.publishedTestOutcomes.push(result.testCaseTitle + '=' + result.outcome);
+                return { id: 5000 + index, automatedTestName: result.automatedTestName };
+            }),
+        });
+    }
+    else if (request.method === 'POST' && request.url.includes('/attachments?')) {
+        const attachment = JSON.parse(body);
+        summary.attachments.push({
+            fileName: attachment.fileName,
+            attachmentType: attachment.attachmentType,
+            content: Buffer.from(attachment.stream, 'base64').toString('utf8'),
+        });
+        payload = JSON.stringify({ id: 6001 });
+    }
+    else if (request.method === 'PATCH') {
+        summary.patchedStates.push(JSON.parse(body).state);
+    }
+    else {
+        summary.unexpectedRequests.push(request.method + ' ' + request.url);
+    }
+
+    const responseBody = Buffer.from(payload, 'utf8');
+    response.writeHead(200, {
+        'Content-Type': 'application/json',
+        'Content-Length': responseBody.length,
+    });
+    response.end(responseBody);
+});
+
+parentPort.on('message', message => {
+    if (message !== 'close') {
+        return;
+    }
+
+    server.close(() => {
+        parentPort.postMessage({ type: 'result', summary });
+        parentPort.close();
+    });
+    server.closeIdleConnections?.();
+});
+
+server.listen(0, '127.0.0.1', () => {
+    parentPort.postMessage({ type: 'ready', port: server.address().port });
+});
+}
+
+const gatewaySource = '(' + gatewayMain.toString() + ')();';
+const gateway = new Worker(gatewaySource, {
+    eval: true,
+    workerData: { token, runId },
+});
+const gatewayMessages = new Map();
+const gatewayWaiters = new Map();
+gateway.on('message', message => {
+    const waiter = gatewayWaiters.get(message.type);
+    if (waiter) {
+        gatewayWaiters.delete(message.type);
+        waiter(message);
+    }
+    else {
+        gatewayMessages.set(message.type, message);
+    }
+});
+
+function receiveGatewayMessage(type) {
+    const message = gatewayMessages.get(type);
+    if (message) {
+        gatewayMessages.delete(type);
+        return Promise.resolve(message);
+    }
+
+    return new Promise(resolve => gatewayWaiters.set(type, resolve));
+}
+
+const ready = await receiveGatewayMessage('ready');
+const collectionUri = 'http://127.0.0.1:' + ready.port + '/collection/';
+
+// BrowserHttpHandler probes streaming-request support with new Request(""). Browsers resolve that
+// against the document URL, while Node rejects it before the real fetch. Preserve browser semantics
+// for that feature probe without replacing the product's HttpClient/fetch transport.
+const NodeRequest = globalThis.Request;
+globalThis.Request = class extends NodeRequest {
+    constructor(input, init) {
+        super(input === '' ? collectionUri : input, init);
+    }
+};
+
+const { dotnet } = await import('./_framework/dotnet.js');
+
+let exitCode = 99;
+let thrown = false;
+try {
+    const { runMain } = await dotnet
+        .withEnvironmentVariable('TF_BUILD', 'True')
+        .withEnvironmentVariable('SYSTEM_COLLECTIONURI', collectionUri)
+        .withEnvironmentVariable('SYSTEM_TEAMPROJECT', project)
+        .withEnvironmentVariable('SYSTEM_ACCESSTOKEN', token)
+        .withEnvironmentVariable('BUILD_BUILDID', '$BuildId$')
+        .withApplicationArguments('--publish-azdo-test-results', '--report-azdo')
+        .create();
+    exitCode = await runMain();
+}
+catch (error) {
+    thrown = true;
+    console.error(error);
+}
+
+gateway.postMessage('close');
+const gatewayResult = await receiveGatewayMessage('result');
+await gateway.terminate();
+
+const result = 'AZDO_GATEWAY_RESULT=' + JSON.stringify({
+    exitCode,
+    thrown,
+    ...gatewayResult.summary,
+});
+// Flush the observation marker before terminating: the browser emulation can retain Node handles
+// after managed Main returns.
+await new Promise(resolve => process.stdout.write(result + '\n', resolve));
+await new Promise(resolve => setTimeout(resolve, 100));
+process.exit(exitCode);
+""";
+
     // A minimal custom-framework browser-wasm project (no MSTest) that emits a warning and an error
     // through IOutputDevice, then reports a single passing test. Unlike the MSTest asset it hosts MTP
     // via its own Program.Main (like samples/BrowserPlayground), so the warning path through
@@ -839,6 +1102,109 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
     }
 
     [TestMethod]
+    public async Task BrowserWasmExecution_AzureDevOpsLivePublishingReachesStubbedRestApi()
+    {
+        // Guards the AutomaticDecompression fix (https://github.com/microsoft/testfx/issues/10313): the
+        // browser HttpClientHandler throws PlatformNotSupportedException from that setter, which used to
+        // make the Azure DevOps report extension unusable on browser-wasm. Rather than only asserting the
+        // setter no longer throws, this drives the whole live-publishing pipeline against a stub Azure
+        // DevOps REST API served from Node.
+        string? node = WasmRuntime.LocateNode();
+        if (node is null)
+        {
+            Assert.Inconclusive(WasmRuntime.NodeUnavailableMessage);
+            return;
+        }
+
+        using TestAsset generator = await GenerateBrowserWasmAzureDevOpsAssetAsync();
+
+        DotnetMuxerResult publishResult = await WasmRuntime.PublishForBrowserAsync(
+            generator.TargetAssetPath, TargetFramework, TestContext.CancellationToken);
+        if (publishResult.ExitCode != 0)
+        {
+            Assert.IsTrue(
+                WasmRuntime.IsMissingWasmToolsWorkload(publishResult),
+                $"'dotnet publish -r browser-wasm' failed for an unexpected reason (not a missing 'wasm-tools' workload).{Environment.NewLine}{publishResult}");
+            Assert.Inconclusive(
+                $"Skipping browser-wasm execution: the 'wasm-tools' workload is not installed.{Environment.NewLine}{publishResult}");
+        }
+
+        string appBundle = WasmRuntime.GetBrowserAppBundlePath(generator.TargetAssetPath, TargetFramework);
+        Assert.IsTrue(Directory.Exists(appBundle), $"Expected the browser-wasm AppBundle directory at '{appBundle}'.");
+
+        string runner = AzureDevOpsNodeRunnerSource
+            .PatchCodeWithReplace("$Token$", AzureDevOpsAccessToken)
+            .PatchCodeWithReplace("$Project$", AzureDevOpsProject)
+            .PatchCodeWithReplace("$RunId$", AzureDevOpsRunId.ToString(CultureInfo.InvariantCulture))
+            .PatchCodeWithReplace("$BuildId$", AzureDevOpsBuildId);
+        (_, _, _, string combined) = await WasmRuntime.RunUnderNodeAsync(
+            node, appBundle, runner, TestContext.CancellationToken);
+
+        Assert.DoesNotContain(AzureDevOpsAccessToken, combined, "The Azure DevOps access token must never be written to host diagnostics.");
+        Assert.IsFalse(
+            combined.Contains("PlatformNotSupportedException", StringComparison.Ordinal),
+            $"The Azure DevOps publisher hit a PlatformNotSupportedException under browser-wasm.{Environment.NewLine}{combined}");
+
+        // '--report-azdo' is passed too, so the console annotation reporter must also have run: the
+        // failing test is reported as an Azure DevOps logissue command.
+        Assert.IsTrue(
+            combined.Contains("##vso[task.logissue type=error", StringComparison.Ordinal),
+            $"Expected the Azure DevOps reporter to annotate the failing test under browser-wasm.{Environment.NewLine}{combined}");
+
+        const string marker = "AZDO_GATEWAY_RESULT=";
+        int markerIndex = combined.LastIndexOf(marker, StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(0, markerIndex, $"The Node Azure DevOps stub did not report its observations.{Environment.NewLine}{combined}");
+        int jsonStart = markerIndex + marker.Length;
+        int jsonEnd = combined.IndexOfAny(['\r', '\n'], jsonStart);
+        string json = jsonEnd < 0 ? combined[jsonStart..] : combined[jsonStart..jsonEnd];
+
+        using var document = System.Text.Json.JsonDocument.Parse(json);
+        System.Text.Json.JsonElement root = document.RootElement;
+
+        Assert.IsFalse(root.GetProperty("thrown").GetBoolean(), $"The browser-wasm host threw while publishing.{Environment.NewLine}{combined}");
+        Assert.IsEmpty(
+            root.GetProperty("unexpectedRequests").EnumerateArray().Select(static element => element.GetString()!).ToArray(),
+            $"The publisher issued requests the stub Azure DevOps API did not recognize.{Environment.NewLine}{combined}");
+        Assert.AreEqual(0, root.GetProperty("unauthorizedRequests").GetInt32(), $"Every request must carry the basic auth header.{Environment.NewLine}{combined}");
+        Assert.IsGreaterThan(0, root.GetProperty("authorizedRequests").GetInt32(), $"The publisher never reached the stub Azure DevOps API.{Environment.NewLine}{combined}");
+
+        // The run is created once, in the InProgress state, and completed at the end of the session.
+        Assert.AreEqual(1, root.GetProperty("createRunRequests").GetInt32(), combined);
+        Assert.AreSequenceEqual(
+            ["InProgress"],
+            root.GetProperty("createRunStates").EnumerateArray().Select(static element => element.GetString()).ToArray(),
+            combined);
+        Assert.AreSequenceEqual(
+            ["Completed"],
+            root.GetProperty("patchedStates").EnumerateArray().Select(static element => element.GetString()).ToArray(),
+            combined);
+
+        // Both tests are published with their real outcomes, and the run ends with the
+        // "at least one test failed" exit code (so the publisher did not swallow the failure).
+        Assert.AreEqual((int)ExitCode.AtLeastOneTestFailed, root.GetProperty("exitCode").GetInt32(), combined);
+        string[] publishedTestOutcomes = [.. root.GetProperty("publishedTestOutcomes").EnumerateArray().Select(static element => element.GetString()!)];
+        Assert.ContainsSingle(publishedTestOutcomes.Where(static outcome => outcome == "PassingTest=Passed"), combined);
+        Assert.ContainsSingle(publishedTestOutcomes.Where(static outcome => outcome == "FailingTestWithAttachment=Failed"), combined);
+
+        // The file-backed attachment proves TryBuildAttachmentRequest reads from the wasm virtual
+        // filesystem and base64-encodes the real bytes; the inline console attachments come from the
+        // failing test's captured output.
+        (string FileName, string AttachmentType, string Content)[] attachments =
+        [
+            .. root.GetProperty("attachments").EnumerateArray().Select(static element =>
+                (element.GetProperty("fileName").GetString()!,
+                 element.GetProperty("attachmentType").GetString()!,
+                 element.GetProperty("content").GetString()!)),
+        ];
+
+        (string FileName, string AttachmentType, string Content) fileAttachment = Assert.ContainsSingle(
+            attachments.Where(static attachment => attachment.FileName == AzureDevOpsAttachmentFileName),
+            $"Expected the file artifact written by the failing test to be uploaded.{Environment.NewLine}{combined}");
+        Assert.AreEqual("GeneralAttachment", fileAttachment.AttachmentType, combined);
+        Assert.AreEqual(AzureDevOpsAttachmentContent, fileAttachment.Content, combined);
+    }
+
+    [TestMethod]
     public async Task BrowserWasmExecution_RunSettingsEnvironmentVariables_FailsWithClearDiagnostic()
     {
         // Guards RunSettingsCommandLineOptionsProviderBase.ValidateCommandLineOptionsAsync: a runsettings
@@ -1009,4 +1375,15 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
                 .PatchCodeWithReplace("$TargetFramework$", TargetFramework)
                 .PatchCodeWithReplace("$BrowserRid$", WasmRuntime.BrowserRid)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
+
+    private Task<TestAsset> GenerateBrowserWasmAzureDevOpsAssetAsync()
+        => TestAsset.GenerateAssetAsync(
+            "BrowserAzureDevOpsProject",
+            AzureDevOpsSourceCode
+                .PatchCodeWithReplace("$TargetFramework$", TargetFramework)
+                .PatchCodeWithReplace("$BrowserRid$", WasmRuntime.BrowserRid)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$AttachmentFileName$", AzureDevOpsAttachmentFileName)
+                .PatchCodeWithReplace("$AttachmentContent$", AzureDevOpsAttachmentContent));
 }

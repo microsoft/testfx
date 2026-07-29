@@ -11,6 +11,10 @@ using System.Text.Json.Serialization;
 using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
 using Microsoft.Testing.Platform.Helpers;
 
+#if !NETCOREAPP
+using Polyfills;
+#endif
+
 namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 
 internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClient
@@ -153,17 +157,42 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
     }
 
     private static HttpClient CreateHttpClient()
-    {
-        HttpClientHandler handler = new()
-        {
-            AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip,
-        };
-
-        return new HttpClient(handler, disposeHandler: false)
+        => new(CreateHttpClientHandler(), disposeHandler: false)
         {
             Timeout = Timeout.InfiniteTimeSpan,
         };
+
+    /// <summary>
+    /// Creates the handler backing the shared <see cref="HttpClient"/>, opting into transparent
+    /// response decompression only where the platform supports it.
+    /// </summary>
+    /// <remarks>
+    /// The <c>browser</c> and <c>wasi</c> handlers delegate to <c>fetch</c> / <c>wasi:http</c>, which
+    /// decode <c>gzip</c>/<c>deflate</c> responses themselves, and their
+    /// <see cref="HttpClientHandler.AutomaticDecompression"/> setter throws
+    /// <see cref="PlatformNotSupportedException"/>. Skipping the opt-in there is therefore not a
+    /// behavior change. See <see href="https://github.com/microsoft/testfx/issues/10313"/>.
+    /// </remarks>
+    internal static HttpClientHandler CreateHttpClientHandler()
+    {
+        HttpClientHandler handler = new();
+        if (ShouldOptInToAutomaticDecompression(handler))
+        {
+            handler.AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip;
+        }
+
+        return handler;
     }
+
+    /// <summary>
+    /// Determines whether <see cref="HttpClientHandler.AutomaticDecompression"/> can be set on
+    /// <paramref name="handler"/>. The <c>OperatingSystem.IsBrowser()</c> check is what the
+    /// platform-compatibility annotation on the property requires; the
+    /// <see cref="HttpClientHandler.SupportsAutomaticDecompression"/> probe additionally covers the
+    /// other handlers (for example <c>wasi</c>) that do not implement it.
+    /// </summary>
+    internal static bool ShouldOptInToAutomaticDecompression(HttpClientHandler handler)
+        => !OperatingSystem.IsBrowser() && handler.SupportsAutomaticDecompression;
 
     private static Uri BuildRunsUri(string collectionUri, string project)
         => new(new Uri(collectionUri, UriKind.Absolute), $"{Uri.EscapeDataString(project)}/_apis/test/runs?api-version={ApiVersion}");
