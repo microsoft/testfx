@@ -737,7 +737,9 @@ public sealed class SharedFileSystemPathInTestAnalyzerTests
     public async Task WhenTestMethodSetsDirectoryTimestampWithConstantPath_Diagnostic(string methodName)
     {
         // The Directory.Set*Time* family rewrites the metadata of the entry named by 'path'. That is a mutation two
-        // parallel tests can interleave on, so every member of the allowlist arm must fire on a constant path.
+        // parallel tests can interleave on, so every member of the allowlist arm must fire on a constant path. The
+        // timestamp value is irrelevant here - only string-typed parameters are inspected - so 'default' keeps the
+        // snippet neutral between the local-time and the *Utc members.
         string code = $$"""
             using System;
             using System.IO;
@@ -751,7 +753,7 @@ public sealed class SharedFileSystemPathInTestAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    {|#0:Directory.{{methodName}}("shared-dir", DateTime.Now)|};
+                    {|#0:Directory.{{methodName}}("shared-dir", default(DateTime))|};
                 }
             }
             """;
