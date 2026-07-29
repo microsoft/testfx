@@ -16,9 +16,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// needed, compose them explicitly inside a single <see cref="ITestFilter"/> implementation.
 /// </para>
 /// <para>
-/// The filter type must be a non-generic class with a public parameterless constructor that
-/// implements <see cref="ITestFilter"/>. A single instance is created per test assembly per test
-/// run and reused for every test of that assembly.
+/// The filter type must be non-generic and instantiable — a concrete class or a struct, but not a
+/// <c>ref struct</c> — with a public parameterless constructor, and must implement
+/// <see cref="ITestFilter"/>. A single instance is created per test assembly per test run and reused
+/// for every test of that assembly.
 /// </para>
 /// <para>
 /// Because the filter type is passed as a <see cref="Type"/>, none of those requirements are
@@ -56,8 +57,8 @@ public sealed class TestFilterProviderAttribute : Attribute, ITestFilterProvider
     /// </summary>
     /// <param name="filterType">
     /// The <see cref="ITestFilter"/> implementation to instantiate and invoke for every test in
-    /// the consuming test assembly. Must be a non-generic class with a public parameterless
-    /// constructor.
+    /// the consuming test assembly. Must be a non-generic, instantiable type with a public
+    /// parameterless constructor.
     /// </param>
     public TestFilterProviderAttribute(
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] Type filterType)
