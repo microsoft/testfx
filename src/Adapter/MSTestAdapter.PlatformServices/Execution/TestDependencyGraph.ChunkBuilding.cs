@@ -25,10 +25,7 @@ internal sealed partial class TestDependencyGraph
     {
         projectionCycleTests = null;
         int[] chunkOfTest = new int[tests.Length];
-        for (int i = 0; i < chunkOfTest.Length; i++)
-        {
-            chunkOfTest[i] = -1;
-        }
+        Array.Fill(chunkOfTest, -1);
 
         var chunkMembers = new List<List<int>>();
         if (scope == ExecutionScope.ClassLevel)
