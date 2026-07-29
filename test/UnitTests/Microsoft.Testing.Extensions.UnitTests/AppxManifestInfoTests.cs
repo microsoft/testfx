@@ -275,6 +275,43 @@ public sealed class AppxManifestInfoTests
         }
     }
 
+    // The launch path is handed the exact executable it must start, so a manifest that declares a
+    // *different* application next to it must not be attributed: ResolveApplication would then pick that
+    // sole entry and the launcher would activate the wrong Application User Model ID. Enablement has no
+    // executable to match, so it still attributes on the directory.
+    [TestMethod]
+    public void FindManifestPath_WhenAncestorManifestDeclaresADifferentExecutableInTheAppDirectory_MatchesOnlyForEnablement()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "AppxManifestInfoTests", Guid.NewGuid().ToString("N"));
+        string executableDirectory = Path.Combine(root, "bin");
+        Directory.CreateDirectory(executableDirectory);
+        try
+        {
+            string manifestPath = Path.Combine(root, AppxManifestInfo.AppxManifestFileName);
+            File.WriteAllText(
+                manifestPath,
+                """
+                <?xml version="1.0" encoding="utf-8"?>
+                <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10">
+                  <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+                  <Applications>
+                    <Application Id="App" Executable="bin\other.exe" />
+                  </Applications>
+                </Package>
+                """);
+
+            // Enablement only knows the directory, and the manifest does place an application there.
+            Assert.AreEqual(manifestPath, AppxManifestInfo.FindManifestPath(executableDirectory));
+
+            // The launch path knows it was asked for host.exe, which this manifest does not declare.
+            Assert.IsNull(AppxManifestInfo.FindManifestPath(executableDirectory, Path.Combine(executableDirectory, "host.exe")));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
     [TestMethod]
     public void FindManifestPath_WhenAncestorManifestDoesNotMatchExecutable_ReturnsNull()
     {

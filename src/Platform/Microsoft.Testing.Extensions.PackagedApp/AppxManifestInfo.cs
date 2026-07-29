@@ -94,10 +94,12 @@ internal sealed class AppxManifestInfo
     /// <summary>
     /// Searches <paramref name="startDirectory"/> and its ancestors for an <c>AppxManifest.xml</c>
     /// that plausibly describes <paramref name="executablePath"/>. The manifest in
-    /// <paramref name="startDirectory"/> is accepted as the app's own layout without parsing; ancestor
-    /// manifests are parsed and accepted only when an application executable resolves to
-    /// <paramref name="executablePath"/>, or into <paramref name="startDirectory"/> to stay consistent
-    /// with directory-only enablement. Malformed or unreadable ancestor manifests are ignored.
+    /// <paramref name="startDirectory"/> is accepted as the app's own layout without parsing; an
+    /// ancestor manifest is parsed and accepted only when one of its applications declares exactly
+    /// <paramref name="executablePath"/>. Matching the whole path (rather than just the directory, as
+    /// the enablement overload must) keeps a package that declares a different application alongside it
+    /// from being activated under the wrong Application User Model ID. Malformed or unreadable ancestor
+    /// manifests are ignored.
     /// </summary>
     /// <param name="startDirectory">The directory to start searching from (typically the executable's directory).</param>
     /// <param name="executablePath">The executable that the manifest must describe when found in an ancestor directory.</param>
@@ -158,12 +160,22 @@ internal sealed class AppxManifestInfo
                 continue;
             }
 
-            if (executablePath is not null
-                && string.Equals(applicationExecutablePath, executablePath, StringComparison.OrdinalIgnoreCase))
+            if (executablePath is not null)
             {
-                return true;
+                // The launch path knows exactly which executable it was asked to start, so it must match
+                // that entry. Accepting any executable that merely sits in the same directory would let a
+                // package that declares a different application there be activated under the wrong
+                // Application User Model ID.
+                if (string.Equals(applicationExecutablePath, executablePath, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+
+                continue;
             }
 
+            // Enablement only knows the app directory (there is no launch context yet), so attribute the
+            // manifest when it places an application there.
             string? applicationDirectory = Path.GetDirectoryName(applicationExecutablePath);
             if (applicationDirectory is not null
                 && string.Equals(NormalizeDirectory(applicationDirectory), appDirectory, StringComparison.OrdinalIgnoreCase))
