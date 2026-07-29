@@ -355,6 +355,39 @@ public sealed class TestFilterProviderShouldBeValidAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    // The 'ITestFilter, new()' constraints already make these compiler errors, so MSTEST0081 must not
+    // stack a second diagnostic on top of CS0311 / CS0310.
+    [TestMethod]
+    public async Task WhenGenericProviderViolatesInterfaceConstraint_NoAnalyzerDiagnostic()
+    {
+        string code = Header + """
+            [assembly: TestFilterProvider<{|CS0311:NotAFilter|}>]
+
+            public sealed class NotAFilter
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenGenericProviderViolatesConstructorConstraint_NoAnalyzerDiagnostic()
+    {
+        string code = Header + """
+            [assembly: TestFilterProvider<{|CS0310:MyFilter|}>]
+
+            public sealed class MyFilter : ITestFilter
+            {
+                private MyFilter() { }
+
+                public TestFilterResult Filter(TestFilterContext context) => TestFilterResult.Run;
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
     // The generic constraints cannot rule this one out: a closed generic satisfies 'ITestFilter, new()'
     // but is still rejected by the adapter at run time.
     [TestMethod]

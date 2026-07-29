@@ -182,6 +182,15 @@ public sealed class TestFilterProviderShouldBeValidAnalyzer : DiagnosticAnalyzer
             return;
         }
 
+        if (!SymbolEqualityComparer.Default.Equals(provider.AttributeClass, testFilterProviderAttributeSymbol))
+        {
+            // The generic shape got here, and every remaining requirement is already enforced by its
+            // 'ITestFilter, new()' constraints — a violation is a compiler error (CS0310/CS0311), so
+            // reporting on top of it would just stack diagnostics. Only the closed-generic case above can
+            // satisfy the constraints and still fail at run time.
+            return;
+        }
+
         // Roslyn models a static class with IsStatic (not IsAbstract), but in IL it is abstract+sealed and
         // the adapter rejects it through its IsAbstract check, so it belongs in this bucket too. A byref-like
         // type is grouped here as well: it can implement ITestFilter and would otherwise be waved through as

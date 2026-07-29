@@ -230,18 +230,25 @@ internal sealed partial class TypeCache
 
         // A constructed generic type's FullName embeds the type argument, so compare the generic type
         // definition to recognize TestFilterProviderAttribute<TFilter>.
-        string? attributeFullName = attributeType.IsGenericType
-            ? attributeType.GetGenericTypeDefinition().FullName
-            : attributeType.FullName;
+        Type attributeDefinition = attributeType.IsGenericType
+            ? attributeType.GetGenericTypeDefinition()
+            : attributeType;
 
         string markerFullName = typeof(TestFilterProviderAttribute).FullName!;
 
-        if (string.Equals(attributeFullName, markerFullName, StringComparison.Ordinal))
+        if (string.Equals(attributeDefinition.FullName, markerFullName, StringComparison.Ordinal))
         {
             return true;
         }
 
-        isGeneric = string.Equals(attributeFullName, markerFullName + "`1", StringComparison.Ordinal);
+        // The generic marker additionally has to come from the same assembly as the non-generic one.
+        // Name matching alone would let an unrelated assembly that happens to declare this namespace and
+        // name flip the flag, and the only thing the flag gates is the ITestFilterProviderAttribute
+        // lookup -- which is precisely the type an older MSTest.TestFramework does not have. That would
+        // turn a squatted name into UTA073 on a framework that is otherwise fine.
+        isGeneric = string.Equals(attributeDefinition.FullName, markerFullName + "`1", StringComparison.Ordinal)
+            && attributeDefinition.Assembly == typeof(TestFilterProviderAttribute).Assembly;
+
         return isGeneric;
     }
 

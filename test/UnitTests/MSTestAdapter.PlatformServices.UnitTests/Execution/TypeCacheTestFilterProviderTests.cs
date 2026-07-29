@@ -170,6 +170,34 @@ public class TypeCacheTestFilterProviderTests : TestContainer
     // marker's FullName would miss it — hence the generic-type-definition normalization in the probe.
     public void IsTestFilterProviderMarkerType_WhenTypeIsGenericMarker_ReturnsTrue()
         => TypeCache.IsTestFilterProviderMarkerType(typeof(TestFilterProviderAttribute<NoOpFilter>)).Should().BeTrue();
+
+    // Name matching alone would let a type that merely squats MSTest's namespace and name flip the
+    // "generic marker present" flag, and that flag is what gates the ITestFilterProviderAttribute lookup --
+    // the very type an older MSTest.TestFramework does not have. Requiring the same declaring assembly
+    // keeps a squatted name from turning into UTA073 on a framework that is otherwise fine.
+    public void IsTestFilterProviderMarkerType_WhenGenericMarkerNameComesFromAnotherAssembly_ReturnsFalse()
+    {
+        Type squatted = CreateSquattedGenericMarkerType();
+
+        squatted.GetGenericTypeDefinition().FullName.Should().Be(
+            typeof(TestFilterProviderAttribute).FullName + "`1",
+            "the test is only meaningful if the squatted type really does share the marker's full name");
+        squatted.Assembly.Should().NotBeSameAs(typeof(TestFilterProviderAttribute).Assembly);
+
+        TypeCache.IsTestFilterProviderMarkerType(squatted).Should().BeFalse();
+    }
+
+    private static Type CreateSquattedGenericMarkerType()
+    {
+        ModuleBuilder moduleBuilder = DefineDynamicAssembly().DefineDynamicModule("SquatModule");
+        TypeBuilder typeBuilder = moduleBuilder.DefineType(
+            typeof(TestFilterProviderAttribute).FullName + "`1",
+            TypeAttributes.Public | TypeAttributes.Sealed,
+            typeof(Attribute));
+        typeBuilder.DefineGenericParameters("TFilter");
+
+        return typeBuilder.CreateTypeInfo()!.MakeGenericType(typeof(NoOpFilter));
+    }
 #endif
 
 #if NET
