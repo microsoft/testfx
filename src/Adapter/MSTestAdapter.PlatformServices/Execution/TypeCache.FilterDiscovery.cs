@@ -68,15 +68,43 @@ internal sealed partial class TypeCache
     {
         // Cheap metadata-only probe first: avoid loading the filter's Type unless the attribute is
         // actually present. Mirrors the AssemblyFixtureProvider probe pattern.
-        if (!HasTestFilterProviderMarker(testAssembly))
+        if (!HasTestFilterProviderMarker(testAssembly, out bool hasGenericMarker))
         {
             return null;
         }
 
-        object[] markers;
+        object[] nonGenericMarkers = GetTestFilterProviderAttributes(testAssembly, typeof(TestFilterProviderAttribute));
+        object[] genericMarkers = hasGenericMarker
+            ? GetGenericTestFilterProviderAttributes(testAssembly)
+            : [];
+
+        int markerCount = nonGenericMarkers.Length + genericMarkers.Length;
+        if (markerCount == 0)
+        {
+            return null;
+        }
+
+        if (markerCount > 1)
+        {
+            string message = string.Format(
+                CultureInfo.CurrentCulture,
+                Resource.UTA_TestFilterProviderMultipleDeclared,
+                SafeGetAssemblyName(testAssembly) ?? "<unknown>");
+            throw new TypeInspectionException(message);
+        }
+
+        return nonGenericMarkers.Length == 1
+            ? nonGenericMarkers[0] is TestFilterProviderAttribute { FilterType: { } filterType }
+                ? InstantiateTestFilter(filterType)
+                : null
+            : InstantiateTestFilterFromGenericProvider(genericMarkers[0]);
+    }
+
+    private static object[] GetTestFilterProviderAttributes(Assembly testAssembly, Type attributeType)
+    {
         try
         {
-            markers = PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(testAssembly, typeof(ITestFilterProviderAttribute));
+            return PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(testAssembly, attributeType);
         }
         catch (Exception ex)
         {
@@ -92,25 +120,35 @@ internal sealed partial class TypeCache
                 ex.Message);
             throw new TypeInspectionException(message, ex);
         }
+    }
 
-        if (markers is null || markers.Length == 0)
-        {
-            return null;
-        }
+    /// <summary>
+    /// Resolves the generic <c>TestFilterProviderAttribute&lt;TFilter&gt;</c> markers through the internal
+    /// <see cref="ITestFilterProviderAttribute"/> contract.
+    /// </summary>
+    /// <remarks>
+    /// Kept out of <see cref="DiscoverTestFilterFromProvider"/>, and explicitly not inlined, so that the
+    /// reference to <see cref="ITestFilterProviderAttribute"/> is only resolved once a generic marker has
+    /// actually been seen in metadata. A newer adapter running against an older MSTest.TestFramework — where
+    /// neither this contract nor the generic attribute exists — must never have to load the type, otherwise
+    /// discovery of the shipped non-generic attribute would fail with UTA073.
+    /// </remarks>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static object[] GetGenericTestFilterProviderAttributes(Assembly testAssembly)
+    {
+        // The lookup matches by assignability, so it also returns the non-generic attribute; keep only the
+        // generic shape here, since the non-generic one is resolved through its own concrete type.
+        object[] markers = GetTestFilterProviderAttributes(testAssembly, typeof(ITestFilterProviderAttribute));
 
-        if (markers.Length > 1)
-        {
-            string message = string.Format(
-                CultureInfo.CurrentCulture,
-                Resource.UTA_TestFilterProviderMultipleDeclared,
-                SafeGetAssemblyName(testAssembly) ?? "<unknown>");
-            throw new TypeInspectionException(message);
-        }
+        return [.. markers.Where(marker => IsTestFilterProviderMarkerType(marker.GetType(), out bool isGeneric) && isGeneric)];
+    }
 
-        return markers[0] is ITestFilterProviderAttribute { FilterType: { } filterType }
+    /// <inheritdoc cref="GetGenericTestFilterProviderAttributes"/>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static ITestFilter? InstantiateTestFilterFromGenericProvider(object marker)
+        => marker is ITestFilterProviderAttribute { FilterType: { } filterType }
             ? InstantiateTestFilter(filterType)
             : null;
-    }
 
     internal static ITestFilter InstantiateTestFilter(
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] Type filterType)
@@ -144,17 +182,21 @@ internal sealed partial class TypeCache
         }
     }
 
-    private static bool HasTestFilterProviderMarker(Assembly assembly)
+    private static bool HasTestFilterProviderMarker(Assembly assembly, out bool hasGenericMarker)
     {
+        bool hasMarker = false;
+        hasGenericMarker = false;
+
         foreach (CustomAttributeData data in assembly.GetCustomAttributesData())
         {
-            if (IsTestFilterProviderMarkerType(data.AttributeType))
+            if (IsTestFilterProviderMarkerType(data.AttributeType, out bool isGeneric))
             {
-                return true;
+                hasMarker = true;
+                hasGenericMarker |= isGeneric;
             }
         }
 
-        return false;
+        return hasMarker;
     }
 
     /// <summary>
@@ -175,7 +217,12 @@ internal sealed partial class TypeCache
     /// </para>
     /// </remarks>
     internal static bool IsTestFilterProviderMarkerType(Type? attributeType)
+        => IsTestFilterProviderMarkerType(attributeType, out _);
+
+    private static bool IsTestFilterProviderMarkerType(Type? attributeType, out bool isGeneric)
     {
+        isGeneric = false;
+
         if (attributeType is null)
         {
             return false;
@@ -189,8 +236,13 @@ internal sealed partial class TypeCache
 
         string markerFullName = typeof(TestFilterProviderAttribute).FullName!;
 
-        return string.Equals(attributeFullName, markerFullName, StringComparison.Ordinal)
-            || string.Equals(attributeFullName, markerFullName + "`1", StringComparison.Ordinal);
+        if (string.Equals(attributeFullName, markerFullName, StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        isGeneric = string.Equals(attributeFullName, markerFullName + "`1", StringComparison.Ordinal);
+        return isGeneric;
     }
 
     // Tiny holder so the cache can distinguish "not computed yet" (missing key) from

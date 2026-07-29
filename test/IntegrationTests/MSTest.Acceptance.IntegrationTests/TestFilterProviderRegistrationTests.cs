@@ -14,9 +14,9 @@ namespace MSTest.Acceptance.IntegrationTests;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Both attributes implement the internal <c>ITestFilterProviderAttribute</c> contract, and the adapter
-/// resolves them with a single <c>GetCustomAttributes(typeof(ITestFilterProviderAttribute))</c> lookup
-/// guarded by a metadata-only marker probe. This test is what proves that lookup and that probe resolve
+/// The adapter guards discovery with a metadata-only marker probe, preserves the original concrete
+/// <c>TestFilterProviderAttribute</c> lookup for the shipped non-generic shape, and uses the internal
+/// <c>ITestFilterProviderAttribute</c> contract for the generic shape. This test proves those paths resolve
 /// each shape at run time — in particular that a constructed generic attribute, whose
 /// <c>CustomAttributeData</c> reports a <c>FullName</c> embedding the type argument, is still recognized.
 /// </para>

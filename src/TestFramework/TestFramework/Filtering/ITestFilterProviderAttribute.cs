@@ -4,9 +4,9 @@
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
-/// Implemented by every attribute shape that registers an <see cref="ITestFilter"/> for a test assembly,
-/// so the adapter can find and read them all with a single
-/// <c>Assembly.GetCustomAttributes(typeof(ITestFilterProviderAttribute))</c> lookup.
+/// Shared by the built-in attribute shapes that register an <see cref="ITestFilter"/> for a test assembly.
+/// The adapter preserves the shipped non-generic attribute lookup through its concrete type and uses this
+/// contract for the generic shape.
 /// </summary>
 /// <remarks>
 /// Deliberately internal. Making it public would turn "registers a test filter" into an open extension

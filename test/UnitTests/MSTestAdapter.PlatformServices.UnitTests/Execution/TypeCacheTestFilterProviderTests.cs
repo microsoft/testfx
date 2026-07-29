@@ -1,12 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Reflection;
+using System.Reflection.Emit;
+
 using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
+
+using Moq;
 
 using TestFramework.ForTestingMSTest;
 
@@ -88,11 +95,37 @@ public class TypeCacheTestFilterProviderTests : TestContainer
         filter.Should().NotBeNull().And.BeOfType<NoOpFilter>();
     }
 
-    // The metadata probe guards a GetCustomAttributes lookup that matches by assignability, so it has to
-    // recognize every shape that lookup would return. Missing one silently drops the user's filter, which is
-    // the exact failure mode [TestFilterProvider] is designed to avoid. The probe's enumeration over
-    // GetCustomAttributesData is trivial; what these tests pin down is the type-matching decision it makes
-    // per attribute.
+    public void GetOrLoadTestFilter_WhenNonGenericMarkerComesFromFrameworkWithoutInternalContract_UsesConcreteAttributeLookup()
+    {
+        const string AssemblySource = nameof(GetOrLoadTestFilter_WhenNonGenericMarkerComesFromFrameworkWithoutInternalContract_UsesConcreteAttributeLookup);
+
+        Assembly assembly = CreateDynamicAssemblyWithTestFilterProviderAttribute();
+        var reflectionOperations = new ReflectionOperations();
+        var mockReflectionOperations = new Mock<IReflectionOperations>(MockBehavior.Strict);
+
+        _testablePlatformServiceProvider.MockFileOperations
+            .Setup(fileOperations => fileOperations.LoadAssembly(AssemblySource))
+            .Returns(assembly);
+        mockReflectionOperations
+            .Setup(operations => operations.GetCustomAttributes(assembly, typeof(TestFilterProviderAttribute)))
+            .Returns(() => reflectionOperations.GetCustomAttributes(assembly, typeof(TestFilterProviderAttribute)));
+        mockReflectionOperations
+            .Setup(operations => operations.GetCustomAttributes(assembly, typeof(ITestFilterProviderAttribute)))
+            .Throws(new TypeLoadException("Older MSTest.TestFramework does not have this contract."));
+        _testablePlatformServiceProvider.SetupMockReflectionOperations(mockReflectionOperations);
+
+        ITestFilter? filter = new TypeCache().GetOrLoadTestFilter(AssemblySource);
+
+        filter.Should().BeOfType<NoOpFilter>();
+        mockReflectionOperations.Verify(
+            operations => operations.GetCustomAttributes(assembly, typeof(ITestFilterProviderAttribute)),
+            Times.Never);
+    }
+
+    // The metadata probe has to recognize every supported marker shape without instantiating the attribute.
+    // Missing one silently drops the user's filter, which is the exact failure mode [TestFilterProvider] is
+    // designed to avoid. The probe's enumeration over GetCustomAttributesData is trivial; what these tests
+    // pin down is the type-matching decision it makes per attribute.
     public void IsTestFilterProviderMarkerType_WhenTypeIsTheNonGenericMarker_ReturnsTrue()
         => TypeCache.IsTestFilterProviderMarkerType(typeof(TestFilterProviderAttribute)).Should().BeTrue();
 
@@ -114,13 +147,35 @@ public class TypeCacheTestFilterProviderTests : TestContainer
     // Framework reflection cannot materialize a generic custom attribute at all.
     public void GenericTestFilterProviderAttribute_IsDiscoverableAsMarkerAndExposesTypeArgument()
     {
-        // Implementing the internal ITestFilterProviderAttribute is what makes the adapter's
-        // GetCustomAttributes(assembly, typeof(ITestFilterProviderAttribute)) lookup pick the generic form up.
+        // Implementing the internal ITestFilterProviderAttribute is what lets the adapter's generic-provider
+        // lookup pick the generic form up.
         ITestFilterProviderAttribute attribute = new TestFilterProviderAttribute<NoOpFilter>();
 
         attribute.FilterType.Should().Be(typeof(NoOpFilter));
         TypeCache.InstantiateTestFilter(attribute.FilterType).Should().BeOfType<NoOpFilter>();
     }
+#endif
+
+    private static Assembly CreateDynamicAssemblyWithTestFilterProviderAttribute()
+    {
+        AssemblyBuilder assemblyBuilder = DefineDynamicAssembly();
+        ConstructorInfo constructor = typeof(TestFilterProviderAttribute).GetConstructor([typeof(Type)])!;
+        var attributeBuilder = new CustomAttributeBuilder(constructor, [typeof(NoOpFilter)]);
+        assemblyBuilder.SetCustomAttribute(attributeBuilder);
+
+        return assemblyBuilder;
+    }
+
+#if NETFRAMEWORK
+    private static AssemblyBuilder DefineDynamicAssembly()
+        => AppDomain.CurrentDomain.DefineDynamicAssembly(
+            new AssemblyName("TestFilterProviderVersionSkew" + Guid.NewGuid().ToString("N")),
+            AssemblyBuilderAccess.Run);
+#else
+    private static AssemblyBuilder DefineDynamicAssembly()
+        => AssemblyBuilder.DefineDynamicAssembly(
+            new AssemblyName("TestFilterProviderVersionSkew" + Guid.NewGuid().ToString("N")),
+            AssemblyBuilderAccess.Run);
 #endif
 
     // ----- test types -----
