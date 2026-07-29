@@ -456,8 +456,10 @@ public sealed class AzureDevOpsLivePublishingTests
 
         await StartPublisherAsync(publisher);
 
-        Assert.ContainsSingle(outputDevice.Lines);
-        Assert.Contains("https://dev.azure.com/org/project/_TestManagement/Runs?runId=4242&_a=resultQuery", outputDevice.Lines[0]);
+        // Must be a session message, not plain informational text: the dotnet test pipe discards the
+        // latter, and dotnet test is how this extension usually runs in a pipeline.
+        Assert.ContainsSingle(outputDevice.SessionMessages);
+        Assert.Contains("https://dev.azure.com/org/project/_TestManagement/Runs?runId=4242&_a=resultQuery", outputDevice.SessionMessages[0]);
         Assert.IsEmpty(outputDevice.Warnings);
     }
 
@@ -1446,6 +1448,8 @@ public sealed class AzureDevOpsLivePublishingTests
 
         public List<string> Warnings { get; } = [];
 
+        public List<string> SessionMessages { get; } = [];
+
         public Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken)
         {
             switch (data)
@@ -1455,8 +1459,9 @@ public sealed class AzureDevOpsLivePublishingTests
                     Lines.Add(warning.Message);
                     break;
 
-                case TextOutputDeviceData text:
-                    Lines.Add(text.Text);
+                case SessionMessageOutputDeviceData sessionMessage:
+                    SessionMessages.Add(sessionMessage.Message);
+                    Lines.Add(sessionMessage.Message);
                     break;
 
                 default:

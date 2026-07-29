@@ -200,10 +200,12 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
     /// Reports informational live-publishing progress on the output device.
     /// </summary>
     /// <remarks>
-    /// Never throws, for the same reason as <see cref="WarnAsync"/>.
+    /// Sent as a <see cref="SessionMessageOutputDeviceData"/> rather than plain text because the
+    /// <c>dotnet test</c> pipe deliberately discards informational text, and <c>dotnet test</c> is the
+    /// usual way this extension runs in a pipeline. Never throws, for the same reason as <see cref="WarnAsync"/>.
     /// </remarks>
     private Task DisplayAsync(string message, CancellationToken cancellationToken)
-        => DisplayCoreAsync(new TextOutputDeviceData(message), cancellationToken);
+        => DisplayCoreAsync(new SessionMessageOutputDeviceData(message), cancellationToken);
 
     private async Task DisplayCoreAsync(IOutputDeviceData data, CancellationToken cancellationToken)
     {
