@@ -346,11 +346,16 @@ are guarded off by `OperatingSystem.IsBrowser()` in the platform:
 
 | Feature | Reason |
 | --- | --- |
-| TRX report (`--report-trx`) | `TrxDataConsumer` creates a `TrxResultStreamingStore` whose background writer uses `BlockingCollection<T>` and `ITask.RunLongRunning`, both unsupported on browser; the TRX lifecycle handlers are gated by `OperatingSystem.IsBrowser()`. |
 | Hang dump / crash dump | Rely on `System.Diagnostics.Process`, unsupported in the browser (see [#8557](https://github.com/microsoft/testfx/issues/8557)). |
-| Server mode / `dotnet test` pipe | Depends on TCP/named-pipe IPC, unavailable in the browser. |
+| Server mode (`--server jsonrpc`) and the named-pipe `--dotnet-test-pipe` transport | Depend on TCP/named-pipe IPC, unavailable in the browser. `--server dotnettestcli` itself *is* reachable through the HTTP transport (`--dotnet-test-transport http`). |
 | `--exit-on-process-exit`, wait-for-debugger | No host process model in the browser. |
 | Synchronous file-logger flush | Not supported in the browser (throws `PlatformNotSupportedException`). |
+
+TRX reporting (`--report-trx`) *is* supported: the streaming store that backs it drops its dedicated
+writer thread and its `BlockingCollection<T>` on single-threaded WebAssembly runtimes and serializes
+each record inline instead, producing the same on-disk format. Note that the report is written through
+the runtime's virtual file system, so in a real browser it is not retrievable from the host machine —
+only the headless Node host gives you a file you can collect.
 
 That is why `Program.cs` registers only the telemetry provider (`AddAppInsightsTelemetryProvider`).
 

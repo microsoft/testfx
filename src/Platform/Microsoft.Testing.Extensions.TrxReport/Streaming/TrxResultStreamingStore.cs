@@ -7,25 +7,35 @@ using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 
+#if !NETCOREAPP
+using Polyfills;
+#endif
+
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming;
 
 // BlockingCollection<T> is annotated [UnsupportedOSPlatform("browser")] which propagates to every
-// member access. TRX reporting itself is not supported on the browser host (see TrxReportExtensions
-// where the lifecycle handlers are gated by OperatingSystem.IsBrowser()), but this type may still be
-// referenced from the always-registered TrxReportGenerator. Suppress CA1416 file-scoped rather than
-// propagating the attribute through the ctor / call chain, which would force every caller to add
-// platform guards for a code path that browser never hits.
+// member access. On single-threaded WebAssembly runtimes this type never allocates the queue and never
+// starts the background writer (see IsBackgroundWriterSupported and the inline mode below), so the
+// browser-unsafe members are unreachable there. Suppress CA1416 file-scoped rather than propagating the
+// attribute through the ctor / call chain, which would force every caller to add platform guards for a
+// code path that browser never hits.
 // NOTE: When adding new code to this file, prefer to keep browser-unsafe APIs limited to the queue
 // helpers below — the suppression is intentionally broad only because BlockingCollection touches
 // every method that drains it.
 #pragma warning disable CA1416
 
 /// <summary>
-/// Append-only store that streams <see cref="TrxTestResult"/> records to a sidecar file via a single
-/// background writer task draining a <see cref="BlockingCollection{T}"/>. Producers (test result consumers)
-/// enqueue without blocking on disk I/O. The writer batches records by size or time window and flushes
-/// to disk so a crash after the flush leaves a recoverable file on disk.
+/// Append-only store that streams <see cref="TrxTestResult"/> records to a sidecar file. Producers (test
+/// result consumers) enqueue without blocking on disk I/O: a single background writer task drains a
+/// <see cref="BlockingCollection{T}"/>, batching records by size or time window and flushing to disk so a
+/// crash after the flush leaves a recoverable file on disk.
 /// </summary>
+/// <remarks>
+/// Single-threaded WebAssembly runtimes (<c>browser-wasm</c>, <c>wasi-wasm</c>) cannot create the dedicated
+/// writer thread and cannot block on the queue, so the store switches to an <em>inline</em> mode: records are
+/// serialized synchronously on the calling thread as they are enqueued. The on-disk format, retry/truncation
+/// behavior, and drop accounting are identical; only the hand-off is different.
+/// </remarks>
 internal sealed class TrxResultStreamingStore : IDisposable
 {
     // Tuned for typical test runs. A large enough batch to amortize syscalls, small enough to flush
@@ -40,14 +50,16 @@ internal sealed class TrxResultStreamingStore : IDisposable
     private readonly ILogger _logger;
     private readonly int _batchSize;
     private readonly int _flushIntervalMs;
-#pragma warning disable IDE0028 // Inner ConcurrentQueue type must be explicit so the writer thread sees FIFO semantics.
-    private readonly BlockingCollection<TrxTestResult> _queue = new(new ConcurrentQueue<TrxTestResult>());
-#pragma warning restore IDE0028
-    private readonly Task _writerTask;
+    private readonly BlockingCollection<TrxTestResult>? _queue;
+    // Null in inline mode: there is no background writer to await.
+    private readonly Task? _writerTask;
+    // Reused single-record buffer for inline writes so enqueueing does not allocate a list per record.
+    private readonly List<TrxTestResult>? _inlineBatch;
     private readonly CancellationTokenSource _disposeCts = new();
     private IFileStream? _fileStream;
     private BinaryWriter? _writer;
     private bool _initialized;
+    private bool _inlineCompleted;
     private volatile bool _faulted;
     private volatile bool _completionTimedOut;
     private int _writtenCount;
@@ -59,6 +71,11 @@ internal sealed class TrxResultStreamingStore : IDisposable
     }
 
     internal TrxResultStreamingStore(string filePath, IFileSystem fileSystem, ITask task, ILogger logger, int batchSize, int flushIntervalMs)
+        : this(filePath, fileSystem, task, logger, batchSize, flushIntervalMs, IsBackgroundWriterSupported)
+    {
+    }
+
+    internal TrxResultStreamingStore(string filePath, IFileSystem fileSystem, ITask task, ILogger logger, int batchSize, int flushIntervalMs, bool useBackgroundWriter)
     {
         FilePath = filePath;
         _fileSystem = fileSystem;
@@ -66,11 +83,37 @@ internal sealed class TrxResultStreamingStore : IDisposable
         _logger = logger;
         _batchSize = batchSize;
         _flushIntervalMs = flushIntervalMs;
+
+        if (!useBackgroundWriter)
+        {
+            // Inline mode: no queue, no thread, no blocking wait. Enqueue serializes on the caller.
+            _inlineBatch = [];
+            return;
+        }
+
+#pragma warning disable IDE0028 // Inner ConcurrentQueue type must be explicit so the writer thread sees FIFO semantics.
+        _queue = new(new ConcurrentQueue<TrxTestResult>());
+#pragma warning restore IDE0028
+
         // BlockingCollection<T>.TryTake blocks the calling thread for up to _flushIntervalMs when
         // the queue is idle. Running the writer on a dedicated long-running thread instead of the
         // shared threadpool keeps it from starving threadpool consumers while it sleeps on the queue.
         _writerTask = task.RunLongRunning(WriteLoopAsync, "TRX streaming store writer", CancellationToken.None);
     }
+
+    /// <summary>
+    /// Gets a value indicating whether the current runtime can host the dedicated writer thread. Browser and
+    /// WASI WebAssembly are single-threaded: <see cref="ITask.RunLongRunning"/> cannot create a thread and
+    /// <see cref="BlockingCollection{T}"/> waits throw <see cref="PlatformNotSupportedException"/>.
+    /// </summary>
+    internal static bool IsBackgroundWriterSupported
+        => !OperatingSystem.IsBrowser() && !OperatingSystem.IsWasi();
+
+    /// <summary>
+    /// Gets a value indicating whether records are serialized synchronously on the enqueueing thread
+    /// instead of being handed to a background writer.
+    /// </summary>
+    internal bool IsInline => _queue is null;
 
     /// <summary>
     /// Gets the path of the sidecar file.
@@ -104,12 +147,19 @@ internal sealed class TrxResultStreamingStore : IDisposable
     public bool CompletionTimedOut => _completionTimedOut;
 
     /// <summary>
-    /// Enqueue a record for asynchronous write. Returns immediately. If the writer is faulted or completed
-    /// the record is dropped (with a debug log). We do not throw because losing TRX intermediate records
-    /// must never break the test session.
+    /// Enqueue a record for asynchronous write. Returns immediately. In inline mode the record is instead
+    /// serialized synchronously before returning, so it is already durable. If the writer is faulted or
+    /// completed the record is dropped (with a debug log). We do not throw because losing TRX intermediate
+    /// records must never break the test session.
     /// </summary>
     public void Enqueue(TrxTestResult result)
     {
+        if (_queue is null)
+        {
+            EnqueueInline(result);
+            return;
+        }
+
         if (_queue.IsAddingCompleted || _faulted)
         {
             LogDrop("writer is completed or faulted");
@@ -133,19 +183,58 @@ internal sealed class TrxResultStreamingStore : IDisposable
         }
     }
 
+    // Inline mode has no producer/consumer hand-off: the record is serialized on the calling thread.
+    // WriteBatch already accounts per-record write failures, so only failures escaping it (file/directory
+    // provisioning) fault the store.
+    private void EnqueueInline(TrxTestResult result)
+    {
+        if (_inlineCompleted || _faulted)
+        {
+            LogDrop("writer is completed or faulted");
+            return;
+        }
+
+        ApplicationStateGuard.Ensure(_inlineBatch is not null);
+        _inlineBatch.Clear();
+        _inlineBatch.Add(result);
+        try
+        {
+            WriteBatch(_inlineBatch);
+        }
+        catch (Exception ex)
+        {
+            _faulted = true;
+            Interlocked.Increment(ref _droppedCount);
+            TryLogError(
+                "TRX streaming store inline writer faulted; intermediate file may be incomplete. 1 record was dropped and will not appear in the TRX.",
+                ex);
+        }
+        finally
+        {
+            _inlineBatch.Clear();
+        }
+    }
+
     /// <summary>
     /// Signal completion and wait for the writer task to drain. Bounded by the platform hang timeout
-    /// so a stuck writer (slow network drive, locked file) cannot hang the session.
+    /// so a stuck writer (slow network drive, locked file) cannot hang the session. In inline mode there
+    /// is nothing to drain, so this only closes the file.
     /// </summary>
     public async Task CompleteAsync(CancellationToken cancellationToken)
     {
+        if (_queue is null)
+        {
+            CompleteInline();
+            return;
+        }
+
         if (!_queue.IsAddingCompleted)
         {
             _queue.CompleteAdding();
         }
 
         Task timeout = _task.Delay(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken);
-        Task completed = await Task.WhenAny(_writerTask, timeout).ConfigureAwait(false);
+        Task completed = await Task.WhenAny(_writerTask!, timeout).ConfigureAwait(false);
         if (completed != _writerTask)
         {
             // If the timeout fired because of cancellation, surface that as the real cause rather than
@@ -161,9 +250,21 @@ internal sealed class TrxResultStreamingStore : IDisposable
         }
     }
 
+    private void CompleteInline()
+    {
+        if (_inlineCompleted)
+        {
+            return;
+        }
+
+        _inlineCompleted = true;
+        CloseFile();
+    }
+
 #pragma warning disable VSTHRD103 // The writer runs on a dedicated long-running thread; synchronous waits keep queue polling off the threadpool.
     private Task WriteLoopAsync()
     {
+        ApplicationStateGuard.Ensure(_queue is not null);
         var batch = new List<TrxTestResult>(_batchSize);
         try
         {
@@ -200,20 +301,11 @@ internal sealed class TrxResultStreamingStore : IDisposable
             _faulted = true;
 
             // Stop accepting further records immediately so producers don't busy-drop for the rest
-            // of the session via the IsAddingCompleted-or-_faulted gate in Enqueue.
-            if (!_queue.IsAddingCompleted)
-            {
-                _queue.CompleteAdding();
-            }
-
-            // Account for records that the writer pulled into the local batch but never wrote, plus
-            // any records that were already in the queue when we faulted. Without this the consumer
-            // sees DroppedCount == 0 and reports "TRX is complete" when it isn't.
-            int discarded = batch.Count;
-            while (_queue.TryTake(out _))
-            {
-                discarded++;
-            }
+            // of the session via the IsAddingCompleted-or-_faulted gate in Enqueue. Account for records
+            // that the writer pulled into the local batch but never wrote, plus any records that were
+            // already in the queue when we faulted. Without this the consumer sees DroppedCount == 0 and
+            // reports "TRX is complete" when it isn't.
+            int discarded = batch.Count + CompleteAndDrainQueue();
 
             if (discarded > 0)
             {
@@ -226,20 +318,51 @@ internal sealed class TrxResultStreamingStore : IDisposable
         }
         finally
         {
-            try
-            {
-                _fileStream?.Stream.Flush();
-
-                _writer?.Dispose();
-                _fileStream?.Dispose();
-            }
-            catch (Exception ex)
-            {
-                TryLogError("Failed to close TRX streaming store file.", ex);
-            }
+            CloseFile();
         }
 
         return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Stop accepting new records and drop whatever is still queued, returning how many were dropped.
+    /// Returns 0 in inline mode, where there is no queue and <see cref="Enqueue"/> is gated by the
+    /// faulted/completed flags instead.
+    /// </summary>
+    private int CompleteAndDrainQueue()
+    {
+        if (_queue is null)
+        {
+            return 0;
+        }
+
+        if (!_queue.IsAddingCompleted)
+        {
+            _queue.CompleteAdding();
+        }
+
+        int dropped = 0;
+        while (_queue.TryTake(out _))
+        {
+            dropped++;
+        }
+
+        return dropped;
+    }
+
+    private void CloseFile()
+    {
+        try
+        {
+            _fileStream?.Stream.Flush();
+
+            _writer?.Dispose();
+            _fileStream?.Dispose();
+        }
+        catch (Exception ex)
+        {
+            TryLogError("Failed to close TRX streaming store file.", ex);
+        }
     }
 
     private void WriteBatch(List<TrxTestResult> batch)
@@ -283,16 +406,7 @@ internal sealed class TrxResultStreamingStore : IDisposable
                     // as dropped instead of being silently written past the corruption.
                     // Note: the outer catch already counted (batch.Count - written) as dropped.
                     _faulted = true;
-                    if (!_queue.IsAddingCompleted)
-                    {
-                        _queue.CompleteAdding();
-                    }
-
-                    int additionalDropped = 0;
-                    while (_queue.TryTake(out _))
-                    {
-                        additionalDropped++;
-                    }
+                    int additionalDropped = CompleteAndDrainQueue();
 
                     if (additionalDropped > 0)
                     {
@@ -363,7 +477,16 @@ internal sealed class TrxResultStreamingStore : IDisposable
 
             try
             {
-                _task.Delay(TimeSpan.FromMilliseconds(RetryBaseDelayMs * attempt), _disposeCts.Token).GetAwaiter().GetResult();
+                if (_queue is null)
+                {
+                    // Inline mode runs on the (single) calling thread — often the sole WebAssembly thread —
+                    // where a blocking wait would deadlock the runtime. Retry immediately instead of backing off.
+                    _disposeCts.Token.ThrowIfCancellationRequested();
+                }
+                else
+                {
+                    _task.Delay(TimeSpan.FromMilliseconds(RetryBaseDelayMs * attempt), _disposeCts.Token).GetAwaiter().GetResult();
+                }
             }
             catch (OperationCanceledException)
             {
@@ -375,8 +498,10 @@ internal sealed class TrxResultStreamingStore : IDisposable
     }
 #pragma warning restore VSTHRD103
 
-    // Must only be called from the writer thread. Lazy because most test runs may not produce results
-    // before they hit cancellation/discovery; we don't want to provision a file we never use.
+    // Must only be called from the writer thread (or, in inline mode, from the enqueueing thread — the
+    // platform serializes ConsumeAsync per data consumer, so there is only ever one). Lazy because most
+    // test runs may not produce results before they hit cancellation/discovery; we don't want to provision
+    // a file we never use.
     private void EnsureFileOpen()
     {
         if (_initialized)
@@ -433,6 +558,15 @@ internal sealed class TrxResultStreamingStore : IDisposable
 
     public void Dispose()
     {
+        if (_queue is null)
+        {
+            // Inline mode: nothing to drain and no thread to join. Blocking here would deadlock the
+            // single WebAssembly thread.
+            CompleteInline();
+            _disposeCts.Dispose();
+            return;
+        }
+
         if (!_queue.IsAddingCompleted)
         {
             _queue.CompleteAdding();
@@ -442,7 +576,7 @@ internal sealed class TrxResultStreamingStore : IDisposable
 
         try
         {
-            _writerTask.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout);
+            _writerTask!.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout);
         }
         catch (AggregateException)
         {
