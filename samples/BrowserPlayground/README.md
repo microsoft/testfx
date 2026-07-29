@@ -351,15 +351,16 @@ are guarded off by `OperatingSystem.IsBrowser()` in the platform:
 | `--exit-on-process-exit`, wait-for-debugger | No host process model in the browser. |
 | Synchronous file-logger flush | Not supported in the browser (throws `PlatformNotSupportedException`). |
 
-TRX reporting (`--report-trx`) *is* supported: the streaming store that backs it drops its dedicated
-writer thread and its `BlockingCollection<T>` on single-threaded WebAssembly runtimes and serializes
-each record inline instead, producing the same on-disk format. The console reports the artifact's display
-name and virtual file-system path when it is produced. Neither a real browser nor the checked-in headless
-Node runner mounts or exports that virtual file system, so the report is not retrievable from the host and
-disappears when the WebAssembly runtime exits. A custom host must mount or export the virtual file system
-to collect the report.
+TRX reporting (`--report-trx`) is supported by browser hosts that register the TRX provider: the streaming
+store that backs it drops its dedicated writer thread and its `BlockingCollection<T>` on single-threaded
+WebAssembly runtimes and serializes each record inline instead, producing the same on-disk format. The
+console reports the artifact's display name and virtual file-system path when it is produced. Neither a
+real browser nor the checked-in headless Node runner mounts or exports that virtual file system, so the
+report is not retrievable from the host and disappears when the WebAssembly runtime exits. A custom host
+must mount or export the virtual file system to collect the report.
 
-That is why `Program.cs` registers only the telemetry provider (`AddAppInsightsTelemetryProvider`).
+This sample registers only the telemetry provider (`AddAppInsightsTelemetryProvider`), so its checked-in
+Node runner does not expose `--report-trx`.
 
 ### Azure DevOps report on browser-wasm
 

@@ -14,11 +14,6 @@ testApplicationBuilder.RegisterTestFramework(_ => new TestFrameworkCapabilities(
 testApplicationBuilder.AddAppInsightsTelemetryProvider();
 
 // The following extensions are intentionally NOT registered on browser-wasm:
-// - AddTrxReportProvider: with --report-trx enabled, TrxDataConsumer creates a
-//   TrxResultStreamingStore whose background writer calls ITask.RunLongRunning (and uses
-//   BlockingCollection<T>), both unsupported on browser; the TRX lifecycle handlers are
-//   themselves gated by OperatingSystem.IsBrowser() (see TrxReportExtensions). Registering it
-//   would let a user pass --report-trx and hit PlatformNotSupportedException.
 // - AddHangDumpProvider / AddCrashDumpProvider: dumps rely on System.Diagnostics.Process,
 //   which is unsupported in the browser sandbox (see #8557).
 // - AddAzureDevOpsProvider: the AutomaticDecompression blocker is fixed (#10313 — the opt-in is
