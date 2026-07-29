@@ -493,4 +493,121 @@ public sealed class SharedFileSystemPathInTestAnalyzerTests
                 .WithLocation(0)
                 .WithArguments("setup.txt"));
     }
+
+    [TestMethod]
+    public async Task WhenTestMethodDeletesFileWithConstantPath_Diagnostic()
+    {
+        // File.Delete removes the entry named by its single 'path' argument, so a constant path is a mutation
+        // that races with any other test touching the same file.
+        string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    {|#0:File.Delete("shared.txt")|};
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(SharedFileSystemPathInTestAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("shared.txt"));
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodDeletesDirectoryWithConstantPath_Diagnostic()
+    {
+        // Directory.Delete mutates its single 'path' argument, including through the recursive overload.
+        string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    {|#0:Directory.Delete("shared-dir", recursive: true)|};
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(SharedFileSystemPathInTestAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("shared-dir"));
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodMovesDirectoryFromConstantSource_Diagnostic()
+    {
+        // Directory.Move deletes its source directory, so a constant 'sourceDirName' is a mutation and must be
+        // flagged even when the destination is per-test unique.
+        string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string destination = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+                    {|#0:Directory.Move("source-dir", destination)|};
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(SharedFileSystemPathInTestAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("source-dir"));
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodMovesDirectoryToConstantDestination_Diagnostic()
+    {
+        // Directory.Move also creates its destination directory, so a constant 'destDirName' is a mutation on its
+        // own - unlike File.Copy, where only the destination role is flagged and the source is merely read.
+        string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string source = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+                    {|#0:Directory.Move(source, "dest-dir")|};
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(SharedFileSystemPathInTestAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("dest-dir"));
+    }
 }
