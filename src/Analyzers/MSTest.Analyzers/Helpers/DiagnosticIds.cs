@@ -83,4 +83,6 @@ internal static class DiagnosticIds
     public const string CultureMutationUnderParallelizationRuleId = "MSTEST0076";
     public const string SharedFileSystemPathInTestRuleId = "MSTEST0077";
     public const string DependsOnShouldBeValidRuleId = "MSTEST0078";
+    public const string UseArchitectureConditionAttributeInsteadOfRuntimeCheckRuleId = "MSTEST0079";
+    public const string UseCIConditionAttributeInsteadOfEnvironmentCheckRuleId = "MSTEST0080";
 }
