@@ -110,7 +110,10 @@ internal sealed class AppxManifestInfo
 
     private static string? FindManifestPathCore(string startDirectory, string? executablePath)
     {
-        string fullStartDirectory = Path.GetFullPath(startDirectory);
+        // The trailing separator matters: the launcher passes AppContext.BaseDirectory, which ends with
+        // one, while Path.GetDirectoryName never returns one. Comparing the two unnormalized would never
+        // match, so a valid ancestor manifest would never be attributed during enablement.
+        string fullStartDirectory = NormalizeDirectory(startDirectory);
         string? fullExecutablePath = executablePath is null ? null : Path.GetFullPath(executablePath);
         DirectoryInfo? directory = new(startDirectory);
         bool isStartDirectory = true;
@@ -161,7 +164,9 @@ internal sealed class AppxManifestInfo
                 return true;
             }
 
-            if (string.Equals(Path.GetDirectoryName(applicationExecutablePath), appDirectory, StringComparison.OrdinalIgnoreCase))
+            string? applicationDirectory = Path.GetDirectoryName(applicationExecutablePath);
+            if (applicationDirectory is not null
+                && string.Equals(NormalizeDirectory(applicationDirectory), appDirectory, StringComparison.OrdinalIgnoreCase))
             {
                 return true;
             }
@@ -169,6 +174,14 @@ internal sealed class AppxManifestInfo
 
         return false;
     }
+
+    /// <summary>
+    /// Returns <paramref name="directory"/> as a full path without a trailing directory separator, so
+    /// that directories obtained from different APIs compare equal. <c>AppContext.BaseDirectory</c> ends
+    /// with a separator while <see cref="Path.GetDirectoryName(string)"/> never does.
+    /// </summary>
+    private static string NormalizeDirectory(string directory)
+        => Path.TrimEndingDirectorySeparator(Path.GetFullPath(directory));
 
     /// <summary>Reads and parses the manifest at <paramref name="manifestPath"/>.</summary>
     /// <param name="manifestPath">The path to an <c>AppxManifest.xml</c>.</param>

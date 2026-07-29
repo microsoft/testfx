@@ -96,6 +96,30 @@ public sealed class PackagedAppTestHostLauncherTests
     public Task IsEnabledAsync_WithMalformedAncestorManifest_IsDisabled()
         => AssertIsEnabledForManifestAsync("not xml", expected: false, appSubdirectoryDepth: 4);
 
+    // Regression test: the launcher passes AppContext.BaseDirectory, which ends with a directory
+    // separator, while Path.GetDirectoryName never returns one. Comparing them unnormalized silently
+    // failed to attribute any ancestor manifest, so enablement never fired in production even though
+    // the separator-free paths these tests build kept passing.
+    [TestMethod]
+    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "Packaged Windows apps are a Windows-only scenario; the launcher is unconditionally disabled elsewhere.")]
+    public Task IsEnabledAsync_WithTrailingSeparatorOnAppDirectory_IsEnabled()
+    {
+        const int AppSubdirectoryDepth = 4;
+        return RunInTemporaryLayoutAsync(
+            BuildManifestXml(
+                "Contoso.MyTestApp",
+                MicrosoftStorePublisher,
+                applicationId: "App",
+                executable: GetNestedExecutablePath(AppSubdirectoryDepth, "MyTestApp.exe")),
+            async (_, appDirectory) =>
+            {
+                var launcher = new PackagedAppTestHostLauncher(appDirectory + Path.DirectorySeparatorChar, static _ => null);
+
+                Assert.IsTrue(await launcher.IsEnabledAsync());
+            },
+            AppSubdirectoryDepth);
+    }
+
     // Packaged Windows apps are a Windows-only concept, so neither a packaged layout nor an explicit
     // 'always' may register the launcher elsewhere: that would force every non-Windows run onto the
     // controller host for a launcher that cannot work there.
