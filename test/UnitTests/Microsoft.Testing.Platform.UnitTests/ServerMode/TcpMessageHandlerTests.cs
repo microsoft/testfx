@@ -90,9 +90,18 @@ public sealed class TcpMessageHandlerTests
 
     /// <summary>
     /// The same round trip through <see cref="TcpMessageHandler"/> on both ends, using real server-to-client
-    /// notifications. The Jsonite formatter emits non-ASCII BMP characters unescaped, so this catches the
-    /// mismatch on the <c>#else</c> compilation branch even without a foreign peer. The second frame uses a
-    /// different method so a desynchronized read cannot accidentally satisfy the assertion.
+    /// notifications.
+    /// <para>
+    /// Note this test only exercises the byte/char mismatch on the <c>#else</c> (Jsonite) branch, which emits
+    /// non-ASCII BMP characters unescaped. On .NET the System.Text.Json formatter escapes every non-ASCII
+    /// character to <c>\uXXXX</c>, so the body reaches the wire as pure ASCII and this degrades to an ASCII
+    /// round trip — it is NOT cross-TFM coverage of the defect. That coverage comes from
+    /// <see cref="ReadAsync_RawUtf8FramesFromPeer_DoesNotDesynchronizeSubsequentFrames"/> and
+    /// <see cref="ReadAsync_BodyLargerThanReadBuffer_SpansMultipleRefillsWithoutDesynchronizing"/>, which
+    /// frame raw UTF-8 bytes themselves and so bypass formatter escaping on every TFM.
+    /// </para>
+    /// The second frame uses a different method so a desynchronized read cannot accidentally satisfy the
+    /// assertion.
     /// </summary>
     [TestMethod]
     public async Task ReadAsync_HandlerWrittenFramesWithNonAscii_DoesNotDesynchronizeSubsequentFrames()
