@@ -48,8 +48,12 @@ internal sealed class TcpMessageHandler(
     // Reused across header lines so the hot read path (server mode emits a notification per test) does not
     // allocate a fresh buffer per line. Safe to keep as state for the same reason _readBufferOffset/
     // _readBufferCount are: reads are single-threaded by construction, driven by exactly one read loop.
-    // It grows to the longest header line seen on the connection and stays there, which is bounded by the
-    // same trust boundary as Content-Length below (a loopback channel to a test host this process launched).
+    //
+    // It grows to the longest header line seen on the connection and stays there. Unlike a message body,
+    // a header line has no legitimate large case, so this is a weaker guarantee than the one that justifies
+    // leaving Content-Length uncapped: a peer that never sends a line terminator would grow it without
+    // bound. It is left uncapped because server mode is a loopback channel to a test host this process
+    // launched, but if a cap is ever wanted, headers are the cheaper and more defensible place to put one.
     private byte[] _headerLineBuffer = new byte[HeaderLineInitialCapacity];
 
     private int _readBufferOffset;
@@ -91,15 +95,14 @@ internal sealed class TcpMessageHandler(
                     return null;
                 }
 
-                // Content-Length counts UTF-8 bytes, so consume exactly that many bytes and decode
-                // afterwards. Reading characters here would under-read every multi-byte frame.
+                // Content-Length counts UTF-8 bytes, so consume exactly that many bytes and hand them to the
+                // formatter as bytes. Reading characters here would under-read every multi-byte frame.
                 //
-                // commandSize is taken from the wire without an upper bound. That is deliberate and
-                // pre-existing: server mode is a loopback channel to a test host this process launched, and
-                // legitimate bodies are unbounded in principle (a test node update can carry an arbitrarily
-                // large stack trace or captured stdout), so any cap would be a guess that risks rejecting
-                // valid traffic. Note the byte-based read below more than halves the previous worst-case
-                // allocation, which rented commandSize *chars*.
+                // commandSize is known non-negative (ReadHeadersAsync rejects anything else) but is otherwise
+                // taken from the wire without an upper bound. That is deliberate and pre-existing: server mode
+                // is a loopback channel to a test host this process launched, and legitimate bodies are
+                // unbounded in principle (a test node update can carry an arbitrarily large stack trace or
+                // captured stdout), so any cap would be a guess that risks rejecting valid traffic.
 #if NETCOREAPP
                 byte[] bodyBuffer = ArrayPool<byte>.Shared.Rent(commandSize);
                 try
@@ -110,17 +113,14 @@ internal sealed class TcpMessageHandler(
                         return null;
                     }
 
-                    int charCount = Encoding.UTF8.GetCharCount(bodyBuffer, 0, commandSize);
-                    char[] charsBuffer = ArrayPool<char>.Shared.Rent(charCount);
-                    try
-                    {
-                        Encoding.UTF8.GetChars(bodyBuffer, 0, commandSize, charsBuffer, 0);
-                        return _formatter.Deserialize<RpcMessage>(new ReadOnlyMemory<char>(charsBuffer, 0, charCount));
-                    }
-                    finally
-                    {
-                        ArrayPool<char>.Shared.Return(charsBuffer);
-                    }
+                    // The body is already UTF-8, which is what the formatter parses, so it is passed straight
+                    // through without transcoding. Note JsonDocument.Parse(ReadOnlyMemory<byte>) does NOT copy
+                    // its input: it reads out of this rented buffer until the document is disposed. That is
+                    // safe because Deserialize fully materializes the message before disposing the document,
+                    // which is the same requirement the previous char-based call already had (the char overload
+                    // rents its own byte array internally and returns it on dispose). Keep it that way: no
+                    // deserializer may retain a JsonElement past this call.
+                    return _formatter.Deserialize<RpcMessage>(new ReadOnlyMemory<byte>(bodyBuffer, 0, commandSize));
                 }
                 finally
                 {
@@ -191,14 +191,28 @@ internal sealed class TcpMessageHandler(
             if (line.StartsWith(ContentLengthHeaderName, StringComparison.OrdinalIgnoreCase))
             {
 #if NETCOREAPP
-                _ = int.TryParse(line.AsSpan()[ContentLengthHeaderName.Length..].Trim(), out contentSize);
+                bool parsed = int.TryParse(line.AsSpan()[ContentLengthHeaderName.Length..].Trim(), out contentSize);
 #else
                 // Substring rather than the range operator: string range indexing lowers to
                 // System.Range.GetOffsetAndLength, which pulls in System.Range/System.ValueTuple —
                 // neither is in-framework on net462, where this file is also compiled as source into
                 // the dependency-free MTP client package. Substring is behavior-identical.
-                _ = int.TryParse(line.Substring(ContentLengthHeaderName.Length).Trim(), out contentSize);
+                bool parsed = int.TryParse(line.Substring(ContentLengthHeaderName.Length).Trim(), out contentSize);
 #endif
+
+                // A Content-Length that does not parse (empty, non-numeric, or larger than Int32) or that is
+                // negative cannot frame a message, so report it as a lost connection and let ReadAsync return
+                // null. Both cases must be rejected here rather than passed on:
+                //
+                //  * int.TryParse leaves contentSize at 0 when it fails, which would silently be read as a
+                //    valid empty body instead of the malformed header it is;
+                //  * a negative length would reach ArrayPool.Rent (or new byte[]) below and surface as an
+                //    ArgumentOutOfRangeException (OverflowException on net462) that escapes the
+                //    SocketException/IOException filter in ReadAsync and tears down the read loop.
+                if (!parsed || contentSize < 0)
+                {
+                    return -1;
+                }
             }
         }
 
@@ -210,6 +224,11 @@ internal sealed class TcpMessageHandler(
     /// but they are decoded as UTF-8 (a superset) so a non-conformant peer cannot corrupt the framing.
     /// Returns <see langword="null"/> at end of stream.
     /// </summary>
+    /// <remarks>
+    /// Only LF terminates a line here. The <see cref="StreamReader"/> this replaced also treated a lone CR as
+    /// a terminator; the protocol always sends CRLF, so dropping that is deliberate and keeps a CR inside a
+    /// header value from splitting the line.
+    /// </remarks>
     private async Task<string?> ReadHeaderLineAsync(CancellationToken cancellationToken)
     {
         int lineLength = 0;

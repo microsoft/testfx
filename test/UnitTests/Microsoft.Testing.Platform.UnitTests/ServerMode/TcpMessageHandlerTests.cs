@@ -150,6 +150,10 @@ public sealed class TcpMessageHandlerTests
     /// A peer that writes its headers through a preamble-emitting encoder (for example
     /// <c>new StreamWriter(stream, Encoding.UTF8)</c>) prefixes the very first header line with a UTF-8
     /// byte-order mark. The reader must skip it, as the previous StreamReader-based implementation did.
+    /// <para>
+    /// Deliberately ASCII-only: the byte/char defect is covered elsewhere, and keeping non-ASCII out of this
+    /// frame means a failure here can only mean the preamble handling itself broke.
+    /// </para>
     /// </summary>
     [TestMethod]
     public async Task ReadAsync_LeadingByteOrderMark_IsSkipped()
@@ -158,13 +162,13 @@ public sealed class TcpMessageHandlerTests
 
         byte[] preamble = Encoding.UTF8.GetPreamble();
         await handlers.WriterStream.WriteAsync(preamble, 0, preamble.Length, TestContext.CancellationToken).ConfigureAwait(false);
-        WriteRawFrame(handlers.WriterStream, BuildNotificationJson(NonAsciiMethod));
+        WriteRawFrame(handlers.WriterStream, BuildNotificationJson("testing/first"));
         WriteRawFrame(handlers.WriterStream, BuildNotificationJson("testing/second"));
 
         var first = (NotificationMessage)(await ReadWithTimeoutAsync(handlers).ConfigureAwait(false))!;
         var second = (NotificationMessage)(await ReadWithTimeoutAsync(handlers).ConfigureAwait(false))!;
 
-        Assert.AreEqual(NonAsciiMethod, first.Method);
+        Assert.AreEqual("testing/first", first.Method);
         Assert.AreEqual("testing/second", second.Method);
     }
 
@@ -251,6 +255,40 @@ public sealed class TcpMessageHandlerTests
     }
 
     /// <summary>
+    /// A Content-Length that cannot frame a message must be reported as a graceful disconnect rather than
+    /// escaping as an exception the read loop does not expect.
+    /// <para>
+    /// A negative length is the sharp case: it reaches <c>ArrayPool.Rent</c> (or <c>new byte[]</c> on net462)
+    /// and surfaces as an <see cref="ArgumentOutOfRangeException"/>/<see cref="OverflowException"/>, neither
+    /// of which the <c>SocketException</c>/<c>IOException</c> filter in <c>ReadAsync</c> catches.
+    /// </para>
+    /// <para>
+    /// The unparseable cases are the quiet ones: <c>int.TryParse</c> leaves the length at 0 when it fails, so
+    /// a malformed header used to be read as a valid empty body and then fail later as a JSON parse error,
+    /// pointing at the payload instead of at the header that was actually wrong.
+    /// </para>
+    /// </summary>
+    [TestMethod]
+    [DataRow("-5", DisplayName = "negative")]
+    [DataRow("-2147483648", DisplayName = "int.MinValue")]
+    [DataRow("99999999999999", DisplayName = "larger than Int32")]
+    [DataRow("abc", DisplayName = "non-numeric")]
+    [DataRow("", DisplayName = "empty")]
+    public async Task ReadAsync_MalformedContentLength_ReturnsNull(string contentLength)
+    {
+        using ConnectedHandlers handlers = await ConnectedHandlers.CreateAsync().ConfigureAwait(false);
+
+        byte[] header = Encoding.ASCII.GetBytes(
+            $"Content-Length: {contentLength}\r\nContent-Type: application/testingplatform\r\n\r\n");
+        await handlers.WriterStream.WriteAsync(header, 0, header.Length, TestContext.CancellationToken).ConfigureAwait(false);
+        await handlers.WriterStream.FlushAsync(TestContext.CancellationToken).ConfigureAwait(false);
+
+        RpcMessage? message = await ReadWithTimeoutAsync(handlers).ConfigureAwait(false);
+
+        Assert.IsNull(message);
+    }
+
+    /// <summary>
     /// Builds a JSON-RPC notification body by hand, so the test controls the exact bytes that hit the wire
     /// rather than going through a formatter that may escape non-ASCII characters.
     /// </summary>
@@ -326,16 +364,31 @@ public sealed class TcpMessageHandlerTests
         {
             TcpListener listener = new(IPAddress.Loopback, 0);
             listener.Start();
-            int port = ((IPEndPoint)listener.LocalEndpoint).Port;
 
-            TcpClient clientSocket = new();
-            await clientSocket.ConnectAsync(IPAddress.Loopback, port).ConfigureAwait(false);
-            clientSocket.NoDelay = true;
+            TcpClient? clientSocket = null;
+            TcpClient? serverSocket = null;
+            try
+            {
+                int port = ((IPEndPoint)listener.LocalEndpoint).Port;
 
-            TcpClient serverSocket = await listener.AcceptTcpClientAsync().ConfigureAwait(false);
-            serverSocket.NoDelay = true;
+                clientSocket = new TcpClient();
+                await clientSocket.ConnectAsync(IPAddress.Loopback, port).ConfigureAwait(false);
+                clientSocket.NoDelay = true;
 
-            return new ConnectedHandlers(listener, clientSocket, serverSocket);
+                serverSocket = await listener.AcceptTcpClientAsync().ConfigureAwait(false);
+                serverSocket.NoDelay = true;
+
+                return new ConnectedHandlers(listener, clientSocket, serverSocket);
+            }
+            catch
+            {
+                // Without this the listener and any half-established socket leak for the rest of the run,
+                // which on a loopback-heavy suite shows up as port exhaustion rather than as this failure.
+                serverSocket?.Dispose();
+                clientSocket?.Dispose();
+                listener.Stop();
+                throw;
+            }
         }
 
         /// <summary>
