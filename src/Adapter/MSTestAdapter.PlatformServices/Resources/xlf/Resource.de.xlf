@@ -103,47 +103,47 @@ aber empfing {4} Argument(e) mit den Typen „{5}“.</target>
       </trans-unit>
       <trans-unit id="DependencyConfigurationDependentNotFound">
         <source>The 'mstest:execution:dependencies' configuration section declares dependencies for '{0}', which matches no test in this run. They are ignored.</source>
-        <target state="new">The 'mstest:execution:dependencies' configuration section declares dependencies for '{0}', which matches no test in this run. They are ignored.</target>
+        <target state="translated">Im Konfigurationsabschnitt „mstest:execution:dependencies“ werden Abhängigkeiten für „{0}“ deklariert, die keinem Test in diesem Lauf entsprechen. Sie werden ignoriert.</target>
         <note>{0} is the declared test reference. {Locked="mstest:execution:dependencies"}</note>
       </trans-unit>
       <trans-unit id="DependencyConfigurationEmptyChain">
         <source>The chain at index {0} of the 'mstest:execution:dependencies:chains' configuration section is empty and declares no dependency. Remove it: a chain needs at least two tests to express an order.</source>
-        <target state="new">The chain at index {0} of the 'mstest:execution:dependencies:chains' configuration section is empty and declares no dependency. Remove it: a chain needs at least two tests to express an order.</target>
+        <target state="translated">Die Kette am {0}-Index des Konfigurationsabschnitts „mstest:execution:dependencies:chains“ ist leer und deklariert keine Abhängigkeit. Entfernen Sie sie: Eine Kette benötigt mindestens zwei Tests, um eine Reihenfolge auszudrücken.</target>
         <note>{0} is the zero-based index of the empty chain. {Locked="mstest:execution:dependencies:chains"}</note>
       </trans-unit>
       <trans-unit id="DependencyConfigurationInvalidReference">
         <source>The test reference '{0}' in the 'mstest:execution:dependencies' configuration section is not valid. Use 'Namespace.Class.Method', or 'Namespace.Class.*' for every test of a class.</source>
-        <target state="new">The test reference '{0}' in the 'mstest:execution:dependencies' configuration section is not valid. Use 'Namespace.Class.Method', or 'Namespace.Class.*' for every test of a class.</target>
+        <target state="translated">Der Testverweis „{0}“ im Konfigurationsabschnitt „mstest:execution:dependencies“ ist ungültig. Verwenden Sie „Namespace.Class.Method“ oder „Namespace.Class.*“ für jeden Test einer Klasse.</target>
         <note>{0} is the invalid reference. {Locked="mstest:execution:dependencies"}</note>
       </trans-unit>
       <trans-unit id="DependencyConfigurationNodeWithoutPrerequisites">
         <source>The 'mstest:execution:dependencies' configuration section declares a node for '{0}' with no 'dependsOn' entries, which has no effect.</source>
-        <target state="new">The 'mstest:execution:dependencies' configuration section declares a node for '{0}' with no 'dependsOn' entries, which has no effect.</target>
+        <target state="translated">Der Konfigurationsabschnitt „mstest:execution:dependencies“ deklariert einen Knoten für „{0}“ ohne „dependsOn“-Einträge, was keine Wirkung hat.</target>
         <note>{0} is the declared test reference. {Locked="mstest:execution:dependencies"}{Locked="dependsOn"}</note>
       </trans-unit>
       <trans-unit id="DependencyConfigurationNodeWithoutTest">
         <source>The dependency node at index {0} of the 'mstest:execution:dependencies:nodes' configuration section has no 'test' value and is ignored.</source>
-        <target state="new">The dependency node at index {0} of the 'mstest:execution:dependencies:nodes' configuration section has no 'test' value and is ignored.</target>
+        <target state="translated">Der Abhängigkeitsknoten am {0}-Index des Konfigurationsabschnitts „mstest:execution:dependencies:nodes“ hat keinen Wert für „test“ und wird ignoriert.</target>
         <note>{0} is the zero-based index of the node. {Locked="mstest:execution:dependencies:nodes"}{Locked="test"}</note>
       </trans-unit>
       <trans-unit id="DependsOnClassLevelCycle">
         <source>Dependencies between the following test classes cannot be scheduled with class-level parallelization because the classes depend on each other: {0}. Their tests are run sequentially, in dependency order, so the declared order is still honored. Use &lt;Scope&gt;MethodLevel&lt;/Scope&gt; (or [Parallelize(Scope = ExecutionScope.MethodLevel)]) to schedule each test individually and run them in parallel again.</source>
-        <target state="new">Dependencies between the following test classes cannot be scheduled with class-level parallelization because the classes depend on each other: {0}. Their tests are run sequentially, in dependency order, so the declared order is still honored. Use &lt;Scope&gt;MethodLevel&lt;/Scope&gt; (or [Parallelize(Scope = ExecutionScope.MethodLevel)]) to schedule each test individually and run them in parallel again.</target>
+        <target state="translated">Abhängigkeiten zwischen den folgenden Testklassen können nicht mit Parallelisierung auf Klassenebene geplant werden, da die Klassen voneinander abhängen: {0}. Die Tests werden nacheinander in Abhängigkeitsreihenfolge ausgeführt, sodass die angegebene Reihenfolge weiterhin eingehalten wird. Verwenden Sie &lt;Scope&gt;MethodLevel&lt;/Scope&gt; (oder [Parallelize(Scope = ExecutionScope.MethodLevel)]), um jeden Test einzeln zu planen und wieder parallel auszuführen.</target>
         <note>{0} is a comma-separated list of test class names. {Locked="MethodLevel"}{Locked="[Parallelize(Scope = ExecutionScope.MethodLevel)]"}{Locked="Scope"}</note>
       </trans-unit>
       <trans-unit id="DependsOnCycle">
         <source>Dependency cycle detected between tests: {0}. The tests in the cycle cannot be ordered and are reported as failed. Remove one of the dependency declarations to break the cycle.</source>
-        <target state="new">Dependency cycle detected between tests: {0}. The tests in the cycle cannot be ordered and are reported as failed. Remove one of the dependency declarations to break the cycle.</target>
+        <target state="translated">Abhängigkeitszyklus zwischen Tests erkannt: {0}. Die Tests im Zyklus können nicht sortiert werden und werden als fehlgeschlagen gemeldet. Entfernen Sie eine der Abhängigkeitsdeklarationen, um den Zyklus zu unterbrechen.</target>
         <note>{0} is the cycle rendered as a path, for example 'A &gt; B &gt; A'.</note>
       </trans-unit>
       <trans-unit id="DependsOnPrerequisiteNotPassed">
         <source>Test skipped because it depends on '{0}', which did not pass.</source>
-        <target state="new">Test skipped because it depends on '{0}', which did not pass.</target>
+        <target state="translated">Test übersprungen, weil er von „{0}“ abhängt, der nicht bestanden wurde.</target>
         <note>{0} is the fully qualified name of the test that did not pass.</note>
       </trans-unit>
       <trans-unit id="DependsOnTargetNotFound">
         <source>Test '{0}' declares a dependency on '{1}', which matches no test in this test source. Dependencies are resolved within a single source, so a target in another test assembly is not supported. The dependency is ignored.</source>
-        <target state="new">Test '{0}' declares a dependency on '{1}', which matches no test in this test source. Dependencies are resolved within a single source, so a target in another test assembly is not supported. The dependency is ignored.</target>
+        <target state="translated">Test „{0}“ deklariert eine Abhängigkeit von „{1}“, die keinem Test in dieser Testquelle entspricht. Abhängigkeiten werden nur innerhalb einer einzelnen Quelle aufgelöst, sodass ein Ziel in einer anderen Testassembly nicht unterstützt wird. Die Abhängigkeit wird ignoriert.</target>
         <note>{0} is the fully qualified name of the test declaring the dependency. {1} is the declared target.</note>
       </trans-unit>
       <trans-unit id="DeploymentDependencyLoadFailed">
