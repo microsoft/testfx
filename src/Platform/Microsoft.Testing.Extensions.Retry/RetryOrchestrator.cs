@@ -86,12 +86,18 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
         environment.SetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_TRX_TESTRUN_ID, Guid.NewGuid().ToString("N"));
 
         // Every attempt is a separate process writing its own report, but together they are one logical run.
-        // Formats that can express that (CTRF 'runId') need all attempts to agree on a single id, so seed one
-        // here and let the launched test hosts inherit it. An id set by an outer orchestrator (for example
-        // 'dotnet test' correlating several modules) already covers these attempts, so it is preserved.
+        // Formats that can express that (CTRF 'runId') need all attempts to agree on a single id, so establish
+        // one here and let the launched test hosts inherit it. Preference order:
+        //   - an id already set explicitly (a CI job correlating several modules or machines) is kept;
+        //   - otherwise the dotnet test execution id, which already identifies THIS test application's process
+        //     tree, so the attempts stay part of that run instead of forming a separate one;
+        //   - otherwise a fresh id, because a standalone retried run is its own logical run.
         if (RoslynString.IsNullOrEmpty(environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_LOGICAL_RUN_ID)))
         {
-            environment.SetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_LOGICAL_RUN_ID, Guid.NewGuid().ToString("N"));
+            string? executionId = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID);
+            environment.SetEnvironmentVariable(
+                EnvironmentVariableConstants.TESTINGPLATFORM_LOGICAL_RUN_ID,
+                RoslynString.IsNullOrEmpty(executionId) ? Guid.NewGuid().ToString("D") : executionId!);
         }
 
         ILogger logger = _serviceProvider.GetLoggerFactory().CreateLogger<RetryOrchestrator>();

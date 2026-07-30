@@ -833,12 +833,13 @@ public class CtrfReportEngineTests
     [TestMethod]
     public async Task GenerateReportAsync_RunId_UsesTheSharedLogicalRunId()
     {
-        // ctrf-io/ctrf#58: every process of one logical run (the attempts of --retry-failed-tests, the modules
-        // of one dotnet test invocation) must stamp the same runId, so consumers can tie those documents back
-        // together. The orchestrator publishes that id through this environment variable.
+        // ctrf-io/ctrf#58: every process of one logical run — notably the successive attempts of
+        // --retry-failed-tests — must stamp the same runId so consumers can tie those documents back
+        // together. The retry orchestrator publishes that id through this environment variable.
         using var memoryStream = new MemoryFileStream();
         CtrfReportEngine engine = CreateEngine(memoryStream);
         _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_LOGICAL_RUN_ID")).Returns("run-42");
+        _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_DOTNETTEST_EXECUTIONID")).Returns("execution-7");
 
         await engine.GenerateReportAsync([Captured("p1", "Passing test", "passed")]);
 
@@ -849,6 +850,9 @@ public class CtrfReportEngineTests
     [TestMethod]
     public async Task GenerateReportAsync_RunId_FallsBackToTheDotnetTestExecutionId()
     {
+        // The execution id identifies this test application's own process tree. It is per root test application,
+        // not per 'dotnet test' invocation, so it correlates a module with its child processes — not with the
+        // sibling modules of a multi-project run, which legitimately report different logical runs.
         using var memoryStream = new MemoryFileStream();
         CtrfReportEngine engine = CreateEngine(memoryStream);
         _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_LOGICAL_RUN_ID")).Returns((string?)null);

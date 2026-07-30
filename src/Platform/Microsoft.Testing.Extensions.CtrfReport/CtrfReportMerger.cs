@@ -135,22 +135,29 @@ internal static class CtrfReportMerger
             {
                 foreach (JsonNode? test in testArray)
                 {
-                    mergedTests.Add(test?.DeepClone());
+                    // Only a Test object belongs in tests[]: the CTRF schema types the array's items as objects
+                    // with required members, so carrying a malformed element (a bare string, or a JSON null left
+                    // by a lazy producer) through would turn a defect localized to one input into an invalid
+                    // MERGED document — the artifact consumers actually read. This mirrors the check above, where
+                    // an input that fails the CTRF shape test is rejected outright rather than passed along.
+                    if (test is not JsonObject testObject)
+                    {
+                        continue;
+                    }
+
+                    mergedTests.Add(testObject.DeepClone());
 
                     // Fall back to per-test timing so a summary-less input (which the merger explicitly
                     // supports) still contributes to the merged min/max instead of being dropped or
                     // forcing the merged timestamp back to the Unix epoch.
-                    if (test is not null)
+                    if (TryReadLong(testObject, "start", out long testStart))
                     {
-                        if (TryReadLong(test, "start", out long testStart))
-                        {
-                            earliestStart = Min(earliestStart, testStart);
-                        }
+                        earliestStart = Min(earliestStart, testStart);
+                    }
 
-                        if (TryReadLong(test, "stop", out long testStop))
-                        {
-                            latestStop = Max(latestStop, testStop);
-                        }
+                    if (TryReadLong(testObject, "stop", out long testStop))
+                    {
+                        latestStop = Max(latestStop, testStop);
                     }
                 }
             }
@@ -197,16 +204,16 @@ internal static class CtrfReportMerger
 
         // Counters are derived from the merged tests[] rather than trusting each input's summary, so
         // summary.tests always equals the array length even when an input omitted or under-reported
-        // its summary.
+        // its summary. Every element is a Test object: non-objects were rejected during ingestion.
         long passed = 0, failed = 0, skipped = 0, pending = 0, other = 0, flaky = 0;
         foreach (JsonNode? test in tests)
         {
-            if (test is null)
+            if (test is not JsonObject testObject)
             {
                 continue;
             }
 
-            switch ((string?)test["status"])
+            switch ((string?)testObject["status"])
             {
                 case "passed": passed++; break;
                 case "failed": failed++; break;
@@ -215,7 +222,7 @@ internal static class CtrfReportMerger
                 default: other++; break;
             }
 
-            if (test["flaky"] is JsonValue flakyValue && flakyValue.TryGetValue(out bool isFlaky) && isFlaky)
+            if (testObject["flaky"] is JsonValue flakyValue && flakyValue.TryGetValue(out bool isFlaky) && isFlaky)
             {
                 flaky++;
             }
@@ -367,39 +374,40 @@ internal static class CtrfReportMerger
     /// </remarks>
     private static JsonArray CollapseRetryAttempts(JsonArray tests)
     {
-        var slots = new List<(JsonNode Final, List<JsonNode> Priors)>();
+        var slots = new List<(JsonObject Final, List<JsonObject> Priors)>();
         var byIdentity = new Dictionary<string, int>(StringComparer.Ordinal);
 
         foreach (JsonNode? test in tests)
         {
-            if (test is null)
+            // Non-objects were already rejected during ingestion; this only re-establishes the type.
+            if (test is not JsonObject testObject)
             {
                 continue;
             }
 
             // A row we cannot identify gets its own slot: fusing unrelated rows would lose results, whereas an
             // uncollapsed duplicate is merely redundant.
-            if (GetTestIdentity(test) is not string identity)
+            if (GetTestIdentity(testObject) is not string identity)
             {
-                slots.Add((test, []));
+                slots.Add((testObject, []));
                 continue;
             }
 
             if (byIdentity.TryGetValue(identity, out int index))
             {
-                (JsonNode previousFinal, List<JsonNode> priors) = slots[index];
+                (JsonObject previousFinal, List<JsonObject> priors) = slots[index];
                 priors.Add(previousFinal);
-                slots[index] = (test, priors);
+                slots[index] = (testObject, priors);
             }
             else
             {
                 byIdentity.Add(identity, slots.Count);
-                slots.Add((test, []));
+                slots.Add((testObject, []));
             }
         }
 
         var collapsed = new JsonArray();
-        foreach ((JsonNode final, List<JsonNode> priors) in slots)
+        foreach ((JsonObject final, List<JsonObject> priors) in slots)
         {
             collapsed.Add(BuildCollapsedTest(final, priors));
         }
@@ -412,14 +420,19 @@ internal static class CtrfReportMerger
     /// producer-supplied <c>extra.uid</c>, and finally the suite path plus name. Returns <see langword="null"/>
     /// when the row carries none of them.
     /// </summary>
-    private static string? GetTestIdentity(JsonNode test)
+    private static string? GetTestIdentity(JsonObject test)
     {
         if (test["testId"] is JsonValue testIdValue && testIdValue.TryGetValue(out string? testId) && !RoslynString.IsNullOrEmpty(testId))
         {
             return $"testId\u001f{testId}";
         }
 
-        if (test["extra"]?["uid"] is JsonValue uidValue && uidValue.TryGetValue(out string? uid) && !RoslynString.IsNullOrEmpty(uid))
+        // `extra` is free-form, so a foreign producer may well have written a string or an array there; indexing
+        // anything but an object by property name throws.
+        if (test["extra"] is JsonObject extra
+            && extra["uid"] is JsonValue uidValue
+            && uidValue.TryGetValue(out string? uid)
+            && !RoslynString.IsNullOrEmpty(uid))
         {
             return $"uid\u001f{uid}";
         }
@@ -441,7 +454,7 @@ internal static class CtrfReportMerger
         return identity.Append('\u001f').Append(name).ToString();
     }
 
-    private static JsonNode BuildCollapsedTest(JsonNode final, List<JsonNode> priors)
+    private static JsonNode BuildCollapsedTest(JsonObject final, List<JsonObject> priors)
     {
         var collapsed = (JsonObject)final.DeepClone();
         if (priors.Count == 0)
@@ -450,7 +463,7 @@ internal static class CtrfReportMerger
         }
 
         var history = new JsonArray();
-        foreach (JsonNode prior in priors)
+        foreach (JsonObject prior in priors)
         {
             AppendAttempts(history, prior);
         }
@@ -494,7 +507,7 @@ internal static class CtrfReportMerger
     /// Appends the executions a non-final attempt row represents — the attempts it already nested, then its own
     /// outcome — to the retry history being built.
     /// </summary>
-    private static void AppendAttempts(JsonArray history, JsonNode test)
+    private static void AppendAttempts(JsonArray history, JsonObject test)
     {
         if (test["retryAttempts"] is JsonArray nested)
         {
@@ -525,7 +538,7 @@ internal static class CtrfReportMerger
     /// fields than a test: everything else (name, suite, tags, labels, ...) either belongs to the collapsed test
     /// object or, like <c>rawStatus</c>, moves under <c>extra</c>, the only permitted extension point.
     /// </summary>
-    private static JsonNode ToRetryAttempt(JsonNode test)
+    private static JsonNode ToRetryAttempt(JsonObject test)
     {
         // 'attempt' is assigned by the caller, once the position of this execution in the history is known.
         var attempt = new JsonObject
@@ -557,10 +570,16 @@ internal static class CtrfReportMerger
         return attempt;
     }
 
-    private static bool TryReadLong(JsonNode summary, string propertyName, out long value)
+    /// <summary>
+    /// Reads an integral property from a JSON node, tolerating anything the node may actually be. The node comes
+    /// straight out of an untrusted document — <c>results.summary</c> is not guaranteed to be an object — so a
+    /// non-object must read as "absent" rather than throw: indexing a <see cref="JsonValue"/> by property name is
+    /// an <see cref="InvalidOperationException"/>.
+    /// </summary>
+    private static bool TryReadLong(JsonNode node, string propertyName, out long value)
     {
         value = 0;
-        if (summary[propertyName] is not JsonValue jsonValue)
+        if (node is not JsonObject jsonObject || jsonObject[propertyName] is not JsonValue jsonValue)
         {
             return false;
         }

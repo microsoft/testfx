@@ -778,6 +778,66 @@ public sealed class CtrfReportMergerTests
         Assert.AreEqual(1, (long)tests[1]!["retries"]!);
     }
 
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void Merge_RejectsMalformedTestRows_SoTheMergedDocumentStaysValid(bool collapseRetryAttempts)
+    {
+        // The mode is passed as a bool because CtrfMergeMode is internal and a test method must be public.
+        CtrfMergeMode mode = collapseRetryAttempts ? CtrfMergeMode.CollapseRetryAttempts : CtrfMergeMode.Concatenate;
+        // tests[] comes from an untrusted file. The CTRF schema types its items as Test objects, so carrying a
+        // bare string or a JSON null through would turn a defect localized to one input into an invalid MERGED
+        // document. Such rows are dropped — the same policy the merger already applies to a whole non-CTRF input
+        // — and both modes must agree on that, since the merged tests[] is the same array either way.
+        // `summary` is deliberately a string here too: `results.summary` is equally untrusted, and reading a
+        // property off a non-object node throws just as `tests[]` did.
+        string malformed = """
+            {"reportFormat":"CTRF","specVersion":"0.0.0","results":{"summary":"broken","tests":["oops",null,42]}}
+            """;
+        string wellFormed = BuildReport(testEntries: [Attempt("t", "passed", uid: "u1")]);
+
+        JsonNode results = JsonNode.Parse(CtrfReportMerger.Merge([malformed, wellFormed], mode))!["results"]!;
+
+        var tests = (JsonArray)results["tests"]!;
+        Assert.HasCount(1, tests, "Only the real test survives.");
+        Assert.AreEqual("t", (string?)tests[0]!["name"]);
+
+        // CTRF 8.1: summary.tests equals the tests[] length, and the status buckets must add back up to it —
+        // a dropped row must not leave a phantom entry in either the array or the counters.
+        JsonNode summary = results["summary"]!;
+        Assert.AreEqual(1, (long)summary["tests"]!);
+        Assert.AreEqual(1, (long)summary["passed"]!);
+        Assert.AreEqual(0, (long)summary["other"]!);
+        long bucketSum = (long)summary["passed"]! + (long)summary["failed"]! + (long)summary["skipped"]!
+            + (long)summary["pending"]! + (long)summary["other"]!;
+        Assert.AreEqual((long)summary["tests"]!, bucketSum, "Every counted test must land in exactly one status bucket.");
+    }
+
+    [TestMethod]
+    public void Merge_CollapseRetryAttempts_ToleratesNonObjectExtra()
+    {
+        // `extra` is free-form, so a foreign producer may put a string or an array there. Identity resolution
+        // must fall back to the suite/name key instead of throwing while indexing it.
+        static JsonObject WithExtra(string status, JsonNode extra)
+        {
+            JsonObject test = Test("t", status);
+            test["extra"] = extra;
+            return test;
+        }
+
+        string attempt1 = BuildReport(testEntries: [WithExtra("failed", "ci-run-14")]);
+        string attempt2 = BuildReport(testEntries: [WithExtra("passed", new JsonArray("a"))]);
+
+        var tests = (JsonArray)JsonNode.Parse(
+            CtrfReportMerger.Merge([attempt1, attempt2], CtrfMergeMode.CollapseRetryAttempts))!["results"]!["tests"]!;
+
+        // Both rows share the name identity, so they collapse even though neither carries a usable extra.uid.
+        Assert.HasCount(1, tests);
+        Assert.AreEqual("passed", (string?)tests[0]!["status"]);
+        Assert.AreEqual(1, (long)tests[0]!["retries"]!);
+        Assert.IsTrue((bool)tests[0]!["flaky"]!);
+    }
+
     private static JsonObject Attempt(string name, string status, string uid, long duration = 1, string? message = null)
     {
         var test = new JsonObject

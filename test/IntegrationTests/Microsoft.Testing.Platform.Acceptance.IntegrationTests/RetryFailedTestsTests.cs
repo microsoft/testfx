@@ -551,6 +551,59 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         testHostResult.AssertOutputDoesNotContain("Minimum expected tests policy violation");
     }
 
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    public async Task RetryFailedTests_CtrfReports_ShareRunIdButNotReportId(string tfm)
+    {
+        // Each attempt is a separate process that writes its own CTRF document, but together they are one
+        // logical run. Per ctrf-io/ctrf#58 those documents SHOULD share a `runId` while each stays a distinct
+        // artifact with its own `reportId`. This is the only test that exercises the cross-process contract:
+        // the engine unit tests mock IEnvironment, so they cannot observe the orchestrator's seeding.
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
+
+        // METHOD1=1 makes TestMethod1 fail on the first attempt and pass on the second, so exactly two
+        // attempts run and each writes a CTRF report.
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--retry-failed-tests 3 --report-ctrf --results-directory {resultDirectory}",
+            new()
+            {
+                { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
+                { "METHOD1", "1" },
+                { "RESULTDIR", resultDirectory },
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        testHostResult.AssertOutputContains("Retry summary: Passed! after 2/4 attempts");
+
+        // Attempts 1..N-1 stay under Retries/<n>/; only the final attempt's report is moved to the top level.
+        string[] ctrfFiles =
+        [
+            .. Directory.GetFiles(resultDirectory, "*.ctrf.json", SearchOption.AllDirectories).OrderBy(f => f, StringComparer.Ordinal),
+        ];
+        Assert.HasCount(2, ctrfFiles, $"Expected one CTRF report per attempt.{Environment.NewLine}{string.Join(Environment.NewLine, ctrfFiles)}");
+
+        string[] runIds = [.. ctrfFiles.Select(f => ReadRequiredStringProperty(f, "runId"))];
+        string[] reportIds = [.. ctrfFiles.Select(f => ReadRequiredStringProperty(f, "reportId"))];
+
+        Assert.AreEqual(runIds[0], runIds[1], "Both attempts belong to the same logical run, so they must share a runId.");
+        Assert.AreNotEqual(reportIds[0], reportIds[1], "Each attempt is a distinct artifact, so it must have its own reportId.");
+        Assert.AreNotEqual(runIds[0], reportIds[0], "runId and reportId identify different things and must not be the same value.");
+    }
+
+    private static string ReadRequiredStringProperty(string filePath, string propertyName)
+    {
+        using var document = System.Text.Json.JsonDocument.Parse(File.ReadAllText(filePath));
+        Assert.IsTrue(
+            document.RootElement.TryGetProperty(propertyName, out System.Text.Json.JsonElement value),
+            $"'{propertyName}' is missing from '{filePath}'.");
+
+        string? text = value.GetString();
+        Assert.IsFalse(string.IsNullOrEmpty(text), $"'{propertyName}' must be a non-empty string in '{filePath}'.");
+        return text!;
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public string TargetAssetPath => GetAssetPath(AssetName);
@@ -558,7 +611,8 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AssetName, AssetName,
                 TestCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingExtensionsCtrfReportVersion$", MicrosoftTestingExtensionsCtrfReportVersion));
 
         private const string TestCode = """
 #file RetryFailedTests.csproj
@@ -574,6 +628,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.CtrfReport" Version="$MicrosoftTestingExtensionsCtrfReportVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
@@ -611,6 +666,9 @@ public class Program
             (_,__) => new DummyTestFramework());
         builder.AddCrashDumpProvider();
         builder.AddTrxReportProvider();
+#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates.
+        builder.AddCtrfReportProvider();
+#pragma warning restore TPEXP
         builder.AddRetryProvider();
         builder.AddMSBuild();
         builder.AddTreeNodeFilterService(treeNodeFilterExtension);
