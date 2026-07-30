@@ -35,12 +35,16 @@ public partial class UnitTest1
         Assert.IsGreaterThan(0, releaseInfo.Length);
     }
 
-    // Use the UITestMethod attribute for tests that need to run on the UI thread.
+    /// <summary>
+    /// Use [UITestMethod] for tests that need the UI thread. WinUI controls can only be created there,
+    /// so constructing one would fail with RPC_E_WRONG_THREAD from a plain [TestMethod]. The control
+    /// reports the dispatcher of the thread that created it, which is what proves the dispatch happened.
+    /// </summary>
     [UITestMethod]
-    public void TestMethod2()
+    public void UITestMethodCreatesWinUIControlsOnTheUIThread()
     {
         var grid = new Grid();
 
-        Assert.AreEqual(0, grid.MinWidth);
+        Assert.IsNotNull(grid.DispatcherQueue);
     }
 }
