@@ -324,8 +324,13 @@ public sealed class AppxManifestInfoTests
         AppxManifestInfo info = ReadManifest(ManifestXml);
         string manifestDirectory = Path.Combine(Path.GetTempPath(), "AppxManifestInfoTests", Guid.NewGuid().ToString("N"));
 
-        Assert.ThrowsExactly<InvalidOperationException>(
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(
             () => info.ResolveApplication(manifestDirectory, Path.Combine(manifestDirectory, "Host.exe")));
+
+        // Naming both the executable that was asked for and the one the manifest declares is what makes
+        // this failure actionable, so it is asserted rather than just the exception type.
+        Assert.Contains("Host.exe", exception.Message);
+        Assert.Contains("Other.exe", exception.Message);
     }
 
     // A manifest that declares no executable at all cannot be validated, so the lenient behavior stays:
