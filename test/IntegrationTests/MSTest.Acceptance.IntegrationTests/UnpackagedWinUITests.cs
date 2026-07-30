@@ -53,6 +53,10 @@ public sealed class UnpackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
 {
     private const string TargetFramework = "net8.0-windows10.0.19041.0";
 
+    // Self-contained deployment of the Windows App SDK needs an explicit RID; it also puts the build
+    // output under a RID-specific folder, which BuildAssetAsync accounts for.
+    private const string RuntimeIdentifier = "win-x64";
+
     // The Windows App SDK version the assets build against, kept in one place so both assets stay in sync.
     // Must stay at or above the release that builds without the Visual Studio MrtCore PRI tasks.
     private const string WindowsAppSdkVersion = "1.8.251106002";
@@ -73,14 +77,11 @@ public sealed class UnpackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
 
         using TestAsset testAsset = await GenerateAssetAsync(AssetName, SelfHostedSourceCode);
         string testHostDirectory = await BuildAssetAsync(AssetName, testAsset);
-        var testHost = TestHost.LocateFrom(testHostDirectory, AssetName);
-
-        using CancellationTokenSource cancellation = CreateTimeoutCancellation();
-        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: cancellation.Token);
+        TestHostResult testHostResult = await ExecuteBoundedAsync(TestHost.LocateFrom(testHostDirectory, AssetName));
 
         // Passing all three proves in a single run that:
         //  - the app has no package identity yet still hosts the platform (unpackaged works at all),
-        //  - a plain [TestMethod] can call a Windows App SDK WinRT API, so the bootstrapper ran, and
+        //  - a plain [TestMethod] can call a Windows App SDK WinRT API, and
         //  - a [UITestMethod] reaches the UI thread through UITestMethodAttribute.DispatcherQueue.
         testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 3, skipped: 0);
@@ -102,10 +103,7 @@ public sealed class UnpackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
         // deterministic way to reach that catch block.
         using TestAsset testAsset = await GenerateAssetAsync(AssetName, WinUITestTargetSourceCode);
         string testHostDirectory = await BuildAssetAsync(AssetName, testAsset);
-        var testHost = TestHost.LocateFrom(testHostDirectory, AssetName);
-
-        using CancellationTokenSource cancellation = CreateTimeoutCancellation();
-        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: cancellation.Token);
+        TestHostResult testHostResult = await ExecuteBoundedAsync(TestHost.LocateFrom(testHostDirectory, AssetName));
 
         // The run has to finish and report a failed test rather than block forever, and the original
         // exception message has to reach the output so the cause is diagnosable. Asserting the message
@@ -115,11 +113,29 @@ public sealed class UnpackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
         testHostResult.AssertOutputContains(ThrowingConstructorMessage);
     }
 
-    private CancellationTokenSource CreateTimeoutCancellation()
+    /// <summary>
+    /// Runs the test host under <see cref="ExecutionTimeout"/>. The failure these tests guard against is
+    /// a <em>hang</em>, and a bare cancellation surfaces only as <c>TaskCanceledException</c> from
+    /// <c>WaitForExitAsync</c> with no indication of what the app was doing, so the timeout is turned
+    /// into a message that names the likely cause instead.
+    /// </summary>
+    private async Task<TestHostResult> ExecuteBoundedAsync(TestHost testHost)
     {
-        var cancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
         cancellation.CancelAfter(ExecutionTimeout);
-        return cancellation;
+        try
+        {
+            return await testHost.ExecuteAsync(cancellationToken: cancellation.Token);
+        }
+        catch (OperationCanceledException) when (cancellation.IsCancellationRequested && !TestContext.CancellationToken.IsCancellationRequested)
+        {
+            Assert.Fail(
+                $"The WinUI test host did not exit within {ExecutionTimeout}. It produced no result, which usually means it blocked during " +
+                "startup rather than while running tests - historically because an unpackaged app could not resolve the Windows App SDK " +
+                "runtime and its bootstrapper waited on a dialog. The asset is built Windows App SDK self-contained precisely to avoid " +
+                "that; check whether that setting still applies, and whether the agent can run a WinUI app at all.");
+            throw; // Unreachable: Assert.Fail always throws.
+        }
     }
 
     private static Task<TestAsset> GenerateAssetAsync(string assetName, string sourceCode)
@@ -128,6 +144,7 @@ public sealed class UnpackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
             sourceCode
                 .PatchCodeWithReplace("$AssetName$", assetName)
                 .PatchCodeWithReplace("$TargetFramework$", TargetFramework)
+                .PatchCodeWithReplace("$RuntimeIdentifier$", RuntimeIdentifier)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$WindowsAppSdkVersion$", WindowsAppSdkVersion)
                 .PatchCodeWithReplace("$WindowsSdkBuildToolsVersion$", WindowsSdkBuildToolsVersion)
@@ -154,7 +171,7 @@ public sealed class UnpackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
             cancellationToken: cancellationToken);
         Assert.AreEqual(0, buildResult.ExitCode, $"Building the unpackaged WinUI asset failed.{Environment.NewLine}{buildResult}");
 
-        string testHostDirectory = Path.Combine(testAsset.TargetAssetPath, "bin", "Release", TargetFramework);
+        string testHostDirectory = Path.Combine(testAsset.TargetAssetPath, "bin", "Release", TargetFramework, RuntimeIdentifier);
         Assert.IsTrue(
             Directory.Exists(testHostDirectory),
             $"Expected the built unpackaged WinUI app under '{testHostDirectory}'.");
@@ -180,6 +197,17 @@ public sealed class UnpackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
     <!-- The setting under test: run without MSIX package identity. -->
     <WindowsPackageType>None</WindowsPackageType>
     <EnableMsixTooling>false</EnableMsixTooling>
+
+    <!--
+      Carry the Windows App SDK with the app. A framework-dependent unpackaged app resolves the runtime
+      through the bootstrapper, which needs that runtime installed on the machine and blocks on a dialog
+      when it is missing, so on an agent without it the app hangs before it can report anything. Self-
+      contained removes both the machine dependency and the bootstrapper, letting these tests run
+      anywhere. What is under test here (no package identity, WinUI hosting MTP, [UITestMethod] on the UI
+      thread, process exit) does not depend on how the runtime is deployed.
+    -->
+    <RuntimeIdentifier>$RuntimeIdentifier$</RuntimeIdentifier>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
 
     <EnableMSTestRunner>true</EnableMSTestRunner>
 
@@ -226,6 +254,7 @@ public sealed class UnpackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
 using System;
 using System.Linq;
 using Microsoft.Testing.Platform.Builder;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
 
@@ -233,18 +262,14 @@ namespace $AssetName$;
 
 public partial class UnitTestApp : Application
 {
-    private Window? _window;
-
     public UnitTestApp() => InitializeComponent();
 
     protected override async void OnLaunched(LaunchActivatedEventArgs args)
     {
-        _window = new Window();
-        _window.Activate();
-
-        // This process has already called Application.Start, so [UITestMethod] must reuse this
-        // dispatcher. Using WinUITestTarget here instead would start a second application.
-        UITestMethodAttribute.DispatcherQueue = _window.DispatcherQueue;
+        // OnLaunched already runs on the UI thread, so take its dispatcher directly. No window is shown:
+        // [UITestMethod] only needs a dispatcher, and not creating one keeps the test host from depending
+        // on an interactive desktop. Using WinUITestTarget here instead would start a second application.
+        UITestMethodAttribute.DispatcherQueue = DispatcherQueue.GetForCurrentThread();
 
         try
         {
@@ -257,7 +282,6 @@ public partial class UnitTestApp : Application
         finally
         {
             // The app is the test host, so it has to shut itself down once the run is over.
-            _window.Close();
             Exit();
         }
     }
@@ -281,8 +305,8 @@ public class TestClass1
     [TestMethod]
     public void PlainTestMethod_CanCallWindowsAppSdkWinRT()
     {
-        // Resolving a Windows App SDK WinRT API in a process with no package identity only works once the
-        // bootstrapper has run. Without it this throws COMException (REGDB_E_CLASSNOTREG).
+        // A plain [TestMethod], not a [UITestMethod]: Windows App SDK WinRT has to be usable from an
+        // ordinary test thread in a process with no package identity.
         string runtimeInfo = Microsoft.Windows.ApplicationModel.WindowsAppRuntime.RuntimeInfo.AsString;
 
         Assert.IsFalse(string.IsNullOrEmpty(runtimeInfo));
@@ -318,6 +342,17 @@ public class TestClass1
     <!-- The setting under test: run without MSIX package identity. -->
     <WindowsPackageType>None</WindowsPackageType>
     <EnableMsixTooling>false</EnableMsixTooling>
+
+    <!--
+      Carry the Windows App SDK with the app. A framework-dependent unpackaged app resolves the runtime
+      through the bootstrapper, which needs that runtime installed on the machine and blocks on a dialog
+      when it is missing, so on an agent without it the app hangs before it can report anything. Self-
+      contained removes both the machine dependency and the bootstrapper, letting these tests run
+      anywhere. What is under test here (no package identity, WinUI hosting MTP, [UITestMethod] on the UI
+      thread, process exit) does not depend on how the runtime is deployed.
+    -->
+    <RuntimeIdentifier>$RuntimeIdentifier$</RuntimeIdentifier>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
 
     <!-- An ordinary test executable: the platform generates the entry point. -->
     <EnableMSTestRunner>true</EnableMSTestRunner>
