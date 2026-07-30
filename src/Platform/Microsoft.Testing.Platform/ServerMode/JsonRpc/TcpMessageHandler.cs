@@ -45,6 +45,13 @@ internal sealed class TcpMessageHandler(
     private readonly IMessageFormatter _formatter = formatter;
     private readonly ILogger _logger = new NopLogger();
 
+    // Reused across header lines so the hot read path (server mode emits a notification per test) does not
+    // allocate a fresh buffer per line. Safe to keep as state for the same reason _readBufferOffset/
+    // _readBufferCount are: reads are single-threaded by construction, driven by exactly one read loop.
+    // It grows to the longest header line seen on the connection and stays there, which is bounded by the
+    // same trust boundary as Content-Length below (a loopback channel to a test host this process launched).
+    private byte[] _headerLineBuffer = new byte[HeaderLineInitialCapacity];
+
     private int _readBufferOffset;
     private int _readBufferCount;
     private bool _preambleHandled;
@@ -86,6 +93,13 @@ internal sealed class TcpMessageHandler(
 
                 // Content-Length counts UTF-8 bytes, so consume exactly that many bytes and decode
                 // afterwards. Reading characters here would under-read every multi-byte frame.
+                //
+                // commandSize is taken from the wire without an upper bound. That is deliberate and
+                // pre-existing: server mode is a loopback channel to a test host this process launched, and
+                // legitimate bodies are unbounded in principle (a test node update can carry an arbitrarily
+                // large stack trace or captured stdout), so any cap would be a guess that risks rejecting
+                // valid traffic. Note the byte-based read below more than halves the previous worst-case
+                // allocation, which rented commandSize *chars*.
 #if NETCOREAPP
                 byte[] bodyBuffer = ArrayPool<byte>.Shared.Rent(commandSize);
                 try
@@ -198,38 +212,38 @@ internal sealed class TcpMessageHandler(
     /// </summary>
     private async Task<string?> ReadHeaderLineAsync(CancellationToken cancellationToken)
     {
-        // Headers are short; a small growable buffer avoids allocating per byte. Plain arrays rather than
-        // ArrayPool so this compiles on netstandard2.0/net462 (System.Buffers is out of framework there).
-        byte[] lineBuffer = new byte[HeaderLineInitialCapacity];
         int lineLength = 0;
         while (true)
         {
             if (_readBufferOffset == _readBufferCount && !await FillReadBufferAsync(cancellationToken).ConfigureAwait(false))
             {
                 // End of stream. A partial line is returned as-is; the caller fails the frame either way.
-                return lineLength == 0 ? null : TrimPreamble(Encoding.UTF8.GetString(lineBuffer, 0, lineLength));
+                return lineLength == 0 ? null : TrimPreamble(Encoding.UTF8.GetString(_headerLineBuffer, 0, lineLength));
             }
 
             byte current = _readBuffer[_readBufferOffset++];
             if (current == (byte)'\n')
             {
                 // Tolerate both CRLF and a bare LF.
-                if (lineLength > 0 && lineBuffer[lineLength - 1] == (byte)'\r')
+                if (lineLength > 0 && _headerLineBuffer[lineLength - 1] == (byte)'\r')
                 {
                     lineLength--;
                 }
 
-                return TrimPreamble(Encoding.UTF8.GetString(lineBuffer, 0, lineLength));
+                return TrimPreamble(Encoding.UTF8.GetString(_headerLineBuffer, 0, lineLength));
             }
 
-            if (lineLength == lineBuffer.Length)
+            if (lineLength == _headerLineBuffer.Length)
             {
-                byte[] grown = new byte[lineBuffer.Length * 2];
-                Array.Copy(lineBuffer, grown, lineLength);
-                lineBuffer = grown;
+                // Plain arrays rather than ArrayPool so this compiles on netstandard2.0/net462, where
+                // System.Buffers is out of framework and this file also ships as source in the
+                // dependency-free MTP client package.
+                byte[] grown = new byte[_headerLineBuffer.Length * 2];
+                Array.Copy(_headerLineBuffer, grown, lineLength);
+                _headerLineBuffer = grown;
             }
 
-            lineBuffer[lineLength++] = current;
+            _headerLineBuffer[lineLength++] = current;
         }
     }
 
