@@ -7,21 +7,26 @@ using Microsoft.Testing.Platform.Builder;
 namespace Microsoft.Testing.Extensions;
 
 /// <summary>
-/// Provides extension methods for adding Windows test host deployment support (non-packaged
-/// loose layouts such as unpackaged WinUI, and packaged, full-trust MSIX desktop apps) to the test
-/// application builder.
+/// Provides extension methods for adding Windows test host launch support (packaged, full-trust MSIX
+/// desktop apps, and — when opted in — non-packaged loose layouts) to the test application builder.
 /// </summary>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public static class PackagedAppExtensions
 {
     /// <summary>
-    /// Registers a test host launcher for Windows test applications. Non-packaged (loose-layout) hosts
-    /// (for example, unpackaged WinUI) are deployed into an isolated directory and launched from there.
-    /// Packaged, full-trust MSIX desktop hosts are registered with the OS and activated by Application
-    /// User Model ID in the Windows build of this extension (see
-    /// https://github.com/microsoft/testfx/issues/9933); the plain build rejects a packaged layout with
-    /// an actionable error. True UWP/AppContainer hosts are not supported by this connect-back transport.
+    /// Registers a test host launcher for Windows test applications. Packaged, full-trust MSIX desktop
+    /// hosts are registered with the OS and activated by Application User Model ID in the Windows build
+    /// of this extension (see https://github.com/microsoft/testfx/issues/9933); the plain build rejects
+    /// a packaged layout with an actionable error. True UWP/AppContainer hosts are not supported by this
+    /// connect-back transport.
     /// </summary>
+    /// <remarks>
+    /// The launcher only enables itself when the test application is a packaged layout, so calling this
+    /// from an app that is started normally — an unpackaged WinUI app, or an ordinary console test app —
+    /// leaves the platform on its default launch path and costs nothing. Set
+    /// <c>TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER</c> to <c>always</c> to opt a non-packaged (loose) layout
+    /// into deploy-and-launch, or to <c>never</c> to disable the launcher entirely.
+    /// </remarks>
     /// <param name="builder">The test application builder.</param>
     public static void AddPackagedAppDeployment(this ITestApplicationBuilder builder)
     {
