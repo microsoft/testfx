@@ -238,8 +238,7 @@ internal sealed class AppxManifestInfo
                     ? null
                     : new AppxApplicationInfo(applicationId, executable, $"{packageFamilyName}!{applicationId}");
             })
-            .Where(static application => application is not null)
-            .Select(static application => application!)
+            .OfType<AppxApplicationInfo>()
             .ToList()
             ?? [];
 
