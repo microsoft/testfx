@@ -298,6 +298,71 @@ public sealed class CurrentDirectoryMutationUnderParallelizationAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenTestInitializeSetsCurrentDirectoryViaDirectory_Diagnostic()
+    {
+        // [TestInitialize] is a class-scoped fixture included in GetFixtureAttributeSymbols, so mutations inside
+        // it must be reported just like mutations inside a test method.
+        string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestInitialize]
+                public void Setup()
+                {
+                    {|#0:Directory.SetCurrentDirectory("/tmp")|};
+                }
+
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(CurrentDirectoryMutationUnderParallelizationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Directory.SetCurrentDirectory"));
+    }
+
+    [TestMethod]
+    public async Task WhenAssemblyInitializeSetsCurrentDirectoryViaDirectory_NoDiagnostic()
+    {
+        // [AssemblyInitialize] is deliberately excluded from GetFixtureAttributeSymbols: it is serialized and
+        // every worker awaits it before running any test, so a process-global mutation there cannot race a
+        // concurrent test. Flagging it would be a false positive.
+        string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [AssemblyInitialize]
+                public static void AssemblySetup(TestContext context)
+                {
+                    Directory.SetCurrentDirectory("/tmp");
+                }
+
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
     public async Task WhenTestMethodSetsCurrentDirectory_VisualBasic_Diagnostic()
     {
         string code = """
