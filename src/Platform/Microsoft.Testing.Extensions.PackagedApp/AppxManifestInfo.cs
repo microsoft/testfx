@@ -261,7 +261,8 @@ internal sealed class AppxManifestInfo
     /// </returns>
     /// <exception cref="InvalidOperationException">
     /// The manifest declares application executables but none of them is
-    /// <paramref name="executablePath"/>, so it describes a different application.
+    /// <paramref name="executablePath"/> (so it describes a different application), or several
+    /// applications declare that same executable (so it cannot identify one of them).
     /// </exception>
     public AppxApplicationInfo? ResolveApplication(string manifestDirectory, string executablePath)
     {
@@ -273,6 +274,19 @@ internal sealed class AppxManifestInfo
         if (exactMatches.Length == 1)
         {
             return exactMatches[0];
+        }
+
+        if (exactMatches.Length > 1)
+        {
+            // Several applications declare this very executable, so it cannot identify one of them. That
+            // is an ambiguity, not a mismatch: name the candidate Application User Model IDs rather than
+            // claiming nothing matched.
+            throw new InvalidOperationException(
+                string.Format(
+                    CultureInfo.CurrentCulture,
+                    ExtensionResources.AmbiguousAppxManifestApplication,
+                    executablePath,
+                    string.Join(", ", exactMatches.Select(static application => application.AppUserModelId))));
         }
 
         // The manifest names executables, but not the one we were asked to launch: it describes a

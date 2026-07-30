@@ -279,6 +279,32 @@ public sealed class AppxManifestInfoTests
     // *different* application next to it must not be attributed: ResolveApplication would then pick that
     // sole entry and the launcher would activate the wrong Application User Model ID. Enablement has no
     // executable to match, so it still attributes on the directory.
+    // Two applications declaring the same executable is genuinely ambiguous rather than a mismatch, so
+    // the error must name the candidate AUMIDs instead of claiming that nothing declares the executable.
+    [TestMethod]
+    public void ResolveApplication_WithSeveralApplicationsDeclaringTheSameExecutable_ReportsTheCandidates()
+    {
+        const string ManifestXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10">
+              <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="First" Executable="Host.exe" />
+                <Application Id="Second" Executable="Host.exe" />
+              </Applications>
+            </Package>
+            """;
+
+        AppxManifestInfo info = ReadManifest(ManifestXml);
+        string manifestDirectory = Path.Combine(Path.GetTempPath(), "AppxManifestInfoTests", Guid.NewGuid().ToString("N"));
+
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(
+            () => info.ResolveApplication(manifestDirectory, Path.Combine(manifestDirectory, "Host.exe")));
+
+        Assert.Contains($"{info.PackageFamilyName}!First", exception.Message);
+        Assert.Contains($"{info.PackageFamilyName}!Second", exception.Message);
+    }
+
     // The manifest beside the app is accepted without parsing (the common-case fast path), so resolution
     // is the only thing standing between a mismatched manifest and the wrong AUMID: a layout holding
     // Host.exe next to a manifest whose sole application declares Other.exe must not activate Other.
