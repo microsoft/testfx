@@ -31,8 +31,10 @@ public partial class UnitTest1
     {
         var releaseInfo = Microsoft.Windows.ApplicationModel.WindowsAppRuntime.RuntimeInfo.AsString;
 
+        // A parseable version proves the bootstrapper resolved a real runtime, rather than the call
+        // merely returning some non-empty string.
         Assert.IsNotNull(releaseInfo);
-        Assert.IsGreaterThan(0, releaseInfo.Length);
+        Assert.IsTrue(Version.TryParse(releaseInfo, out _), $"Expected a Windows App Runtime version, got '{releaseInfo}'.");
     }
 
     /// <summary>
