@@ -7,6 +7,11 @@
         <target state="translated">Paketlenmiş uygulama bildirimi birden çok uygulama bildiriyor ve bunların hiçbiri benzersiz olarak '{0}' yürütülebilir dosyasıyla eşleşmiyor. Aday Uygulama Kullanıcı Modeli Kimlikleri: {1}.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AppxManifestApplicationExecutableMismatch">
+        <source>The packaged app manifest declares no application for the executable '{0}', so it describes a different application and activating it would target the wrong Application User Model ID. Declared application executables: {1}.</source>
+        <target state="new">The packaged app manifest declares no application for the executable '{0}', so it describes a different application and activating it would target the wrong Application User Model ID. Declared application executables: {1}.</target>
+        <note>Do not localize the technology name {Locked="Application User Model ID"}. {0} is an executable path. {1} is a comma-separated list of executable paths.</note>
+      </trans-unit>
       <trans-unit id="InvalidAppxManifestMissingIdentity">
         <source>The packaged app manifest does not declare a valid &lt;Identity Name="..." Publisher="..." /&gt; element.</source>
         <target state="translated">Paketlenmiş uygulama bildirimi geçerli bir &lt;Identity Name="..." Publisher="..." /&gt; öğesi belirtmiyor.</target>

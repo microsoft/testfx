@@ -7,6 +7,11 @@
         <target state="translated">Манифест упакованного приложения объявляет несколько приложений, и ни одно из них не соответствует однозначно исполняемому файлу "{0}". Идентификаторы пользовательской модели приложений-кандидатов: {1}.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AppxManifestApplicationExecutableMismatch">
+        <source>The packaged app manifest declares no application for the executable '{0}', so it describes a different application and activating it would target the wrong Application User Model ID. Declared application executables: {1}.</source>
+        <target state="new">The packaged app manifest declares no application for the executable '{0}', so it describes a different application and activating it would target the wrong Application User Model ID. Declared application executables: {1}.</target>
+        <note>Do not localize the technology name {Locked="Application User Model ID"}. {0} is an executable path. {1} is a comma-separated list of executable paths.</note>
+      </trans-unit>
       <trans-unit id="InvalidAppxManifestMissingIdentity">
         <source>The packaged app manifest does not declare a valid &lt;Identity Name="..." Publisher="..." /&gt; element.</source>
         <target state="translated">Манифест упакованного приложения не объявляет допустимый элемент &lt;Identity Name="..." Publisher="..." /&gt;.</target>

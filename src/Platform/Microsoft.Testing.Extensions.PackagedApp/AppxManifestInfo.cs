@@ -260,8 +260,8 @@ internal sealed class AppxManifestInfo
     /// The matching application, or <see langword="null"/> when the manifest declares no application.
     /// </returns>
     /// <exception cref="InvalidOperationException">
-    /// The manifest declares multiple applications and none matches <paramref name="executablePath"/>
-    /// uniquely, by full path or by file name.
+    /// The manifest declares application executables but none of them is
+    /// <paramref name="executablePath"/>, so it describes a different application.
     /// </exception>
     public AppxApplicationInfo? ResolveApplication(string manifestDirectory, string executablePath)
     {
@@ -270,9 +270,25 @@ internal sealed class AppxManifestInfo
             application.Executable is not null
             && string.Equals(ResolvePackageRelativePath(manifestDirectory, application.Executable), fullExecutablePath, StringComparison.OrdinalIgnoreCase))];
 
-        return exactMatches.Length == 1
-            ? exactMatches[0]
-            : ResolveApplication(Path.GetFileName(executablePath));
+        if (exactMatches.Length == 1)
+        {
+            return exactMatches[0];
+        }
+
+        // The manifest names executables, but not the one we were asked to launch: it describes a
+        // different application, and activating that would use the wrong Application User Model ID. Only
+        // fall back to file-name resolution when nothing declares an executable, which is the case that
+        // cannot be validated at all (a minimal manifest that omits Application/@Executable).
+        AppxApplicationInfo[] declaringApplications = [.. Applications.Where(static application => application.Executable is not null)];
+
+        return declaringApplications.Length == 0
+            ? ResolveApplication(Path.GetFileName(executablePath))
+            : throw new InvalidOperationException(
+                string.Format(
+                    CultureInfo.CurrentCulture,
+                    ExtensionResources.AppxManifestApplicationExecutableMismatch,
+                    executablePath,
+                    string.Join(", ", declaringApplications.Select(static application => application.Executable))));
     }
 
     /// <summary>

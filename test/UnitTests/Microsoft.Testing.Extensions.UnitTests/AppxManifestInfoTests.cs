@@ -279,6 +279,46 @@ public sealed class AppxManifestInfoTests
     // *different* application next to it must not be attributed: ResolveApplication would then pick that
     // sole entry and the launcher would activate the wrong Application User Model ID. Enablement has no
     // executable to match, so it still attributes on the directory.
+    // The manifest beside the app is accepted without parsing (the common-case fast path), so resolution
+    // is the only thing standing between a mismatched manifest and the wrong AUMID: a layout holding
+    // Host.exe next to a manifest whose sole application declares Other.exe must not activate Other.
+    [TestMethod]
+    public void ResolveApplication_WithSameDirectoryManifestDeclaringADifferentExecutable_Throws()
+    {
+        const string ManifestXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10">
+              <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="Other" Executable="Other.exe" />
+              </Applications>
+            </Package>
+            """;
+
+        AppxManifestInfo info = ReadManifest(ManifestXml);
+        string manifestDirectory = Path.Combine(Path.GetTempPath(), "AppxManifestInfoTests", Guid.NewGuid().ToString("N"));
+
+        Assert.ThrowsExactly<InvalidOperationException>(
+            () => info.ResolveApplication(manifestDirectory, Path.Combine(manifestDirectory, "Host.exe")));
+    }
+
+    // A manifest that declares no executable at all cannot be validated, so the lenient behavior stays:
+    // this is the minimal manifest shape the packaged acceptance assets and most fixtures use.
+    [TestMethod]
+    public void ResolveApplication_WithoutDeclaredExecutable_FallsBackToTheSoleApplication()
+    {
+        AppxManifestInfo info = ReadManifest(
+            name: "Contoso.MyTestApp",
+            publisher: MicrosoftStorePublisher,
+            applicationId: "App");
+        string manifestDirectory = Path.Combine(Path.GetTempPath(), "AppxManifestInfoTests", Guid.NewGuid().ToString("N"));
+
+        AppxApplicationInfo? application = info.ResolveApplication(manifestDirectory, Path.Combine(manifestDirectory, "Host.exe"));
+
+        Assert.IsNotNull(application);
+        Assert.AreEqual("App", application.Id);
+    }
+
     // A package may legally declare two applications whose executables share a file name in different
     // subdirectories. The file name alone cannot tell them apart, so resolving by it would report an
     // ambiguity and refuse to activate; the full path the launcher already validated does distinguish them.

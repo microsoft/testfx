@@ -7,6 +7,11 @@
         <target state="translated">Il manifesto dell'app in pacchetto dichiara più applicazioni e nessuna corrisponde in modo univoco all'eseguibile '{0}'. ID modello utente applicazione candidata: {1}.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AppxManifestApplicationExecutableMismatch">
+        <source>The packaged app manifest declares no application for the executable '{0}', so it describes a different application and activating it would target the wrong Application User Model ID. Declared application executables: {1}.</source>
+        <target state="new">The packaged app manifest declares no application for the executable '{0}', so it describes a different application and activating it would target the wrong Application User Model ID. Declared application executables: {1}.</target>
+        <note>Do not localize the technology name {Locked="Application User Model ID"}. {0} is an executable path. {1} is a comma-separated list of executable paths.</note>
+      </trans-unit>
       <trans-unit id="InvalidAppxManifestMissingIdentity">
         <source>The packaged app manifest does not declare a valid &lt;Identity Name="..." Publisher="..." /&gt; element.</source>
         <target state="translated">Il manifesto dell'app in pacchetto non dichiara un elemento &lt;Identity Name="..." Publisher="..." /&gt; valido.</target>
