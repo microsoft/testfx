@@ -38,7 +38,8 @@ public partial class UnitTest1
     /// <summary>
     /// Use [UITestMethod] for tests that need the UI thread. WinUI controls can only be created there,
     /// so constructing one would fail with RPC_E_WRONG_THREAD from a plain [TestMethod]. The control
-    /// reports the dispatcher of the thread that created it, which is what proves the dispatch happened.
+    /// reports the dispatcher of the thread that created it, and that dispatcher confirms the test body
+    /// is itself running on that thread.
     /// </summary>
     [UITestMethod]
     public void UITestMethodCreatesWinUIControlsOnTheUIThread()
@@ -46,5 +47,6 @@ public partial class UnitTest1
         var grid = new Grid();
 
         Assert.IsNotNull(grid.DispatcherQueue);
+        Assert.IsTrue(grid.DispatcherQueue.HasThreadAccess, "The Grid was not created on the UI thread.");
     }
 }
