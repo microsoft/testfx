@@ -975,6 +975,47 @@ public sealed class CtrfReportMergerTests
             tests.Select(t => (string?)t!["status"]).ToArray());
     }
 
+    [TestMethod]
+    public void Merge_CollapseRetryAttempts_KeepsRetryHistorySchemaValid()
+    {
+        // CTRF section 11 constrains a retry attempt: `status` must be one of five values, and no unknown field
+        // may appear outside `extra`. Both a promoted test row and an attempt an input already nested must be
+        // shaped to that, otherwise one foreign document makes the merged history schema-invalid.
+        JsonObject firstAttempt = Test("t", "failed");
+        firstAttempt["extra"] = new JsonObject { ["uid"] = "u1" };
+        firstAttempt["status"] = 7;
+        firstAttempt["retryAttempts"] = new JsonArray(new JsonObject
+        {
+            ["attempt"] = 1,
+            ["status"] = 3,
+            ["message"] = "nested",
+            ["name"] = "a test-only field section 11 forbids",
+        });
+
+        JsonObject finalAttempt = Test("t", "passed");
+        finalAttempt["extra"] = new JsonObject { ["uid"] = "u1" };
+
+        string report = BuildReport(testEntries: [firstAttempt, finalAttempt]);
+
+        JsonNode test = ((JsonArray)JsonNode.Parse(
+            CtrfReportMerger.Merge([report], CtrfMergeMode.CollapseRetryAttempts))!["results"]!["tests"]!)[0]!;
+
+        var retryAttempts = (JsonArray)test["retryAttempts"]!;
+        Assert.HasCount(2, retryAttempts);
+
+        // The nested attempt keeps its diagnostics but loses the wrong-typed status and the test-only field.
+        Assert.AreEqual("other", (string?)retryAttempts[0]!["status"], "A non-string status is normalized.");
+        Assert.AreEqual("nested", (string?)retryAttempts[0]!["message"]);
+        Assert.IsNull(retryAttempts[0]!["name"], "Section 11 forbids unknown fields outside 'extra'.");
+
+        // The promoted row is normalized the same way.
+        Assert.AreEqual("other", (string?)retryAttempts[1]!["status"]);
+
+        // Attempt numbers stay a contiguous 1..N-1 sequence after the projection.
+        Assert.AreEqual(1, (long)retryAttempts[0]!["attempt"]!);
+        Assert.AreEqual(2, (long)retryAttempts[1]!["attempt"]!);
+    }
+
     private static JsonObject Attempt(string name, string status, string uid, long duration = 1, string? message = null)
     {
         var test = new JsonObject

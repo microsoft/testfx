@@ -552,9 +552,10 @@ internal static class CtrfReportMerger
     }
 
     /// <summary>
-    /// Copies retry attempt objects an input already recorded into the history being built, skipping entries that
-    /// are not objects: a <see langword="null"/> element could not describe an execution and is not a valid retry
-    /// attempt object.
+    /// Copies the retry attempts an input already recorded into the history being built, projecting each through
+    /// the same section 11 shaping as a promoted test row so a foreign producer's nested attempt cannot smuggle a
+    /// wrong-typed status or a disallowed field into the merged history. Entries that are not objects are skipped:
+    /// they could not describe an execution.
     /// </summary>
     private static void AppendNestedAttempts(JsonArray history, JsonArray nested)
     {
@@ -562,7 +563,7 @@ internal static class CtrfReportMerger
         {
             if (attempt is JsonObject attemptObject)
             {
-                history.Add(attemptObject.DeepClone());
+                history.Add(ToRetryAttempt(attemptObject));
             }
         }
     }
@@ -578,7 +579,7 @@ internal static class CtrfReportMerger
         var attempt = new JsonObject
         {
             ["attempt"] = 1,
-            ["status"] = test["status"]?.DeepClone() ?? "other",
+            ["status"] = ReadStatus(test),
         };
 
         foreach (string field in RetryAttemptFields)
@@ -611,6 +612,18 @@ internal static class CtrfReportMerger
     /// </summary>
     private static string? ReadString(JsonObject owner, string propertyName)
         => owner[propertyName] is JsonValue value && value.TryGetValue(out string? text) ? text : null;
+
+    /// <summary>
+    /// Reads a CTRF status, normalizing anything outside the vocabulary section 11.3 allows — a wrong-typed
+    /// value, or a status this producer invented — to <c>other</c>. Copying such a value verbatim into a retry
+    /// attempt would make the merged document schema-invalid, and <c>other</c> is both a legal status and the
+    /// bucket the summary already counts it in.
+    /// </summary>
+    private static string ReadStatus(JsonObject owner)
+    {
+        string? status = ReadString(owner, "status");
+        return status is "passed" or "failed" or "skipped" or "pending" or "other" ? status : "other";
+    }
 
     /// <summary>
     /// Reads an integral property from a JSON node, tolerating anything the node may actually be. The node comes
