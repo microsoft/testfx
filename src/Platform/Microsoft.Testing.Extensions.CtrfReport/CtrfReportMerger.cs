@@ -306,11 +306,11 @@ internal static class CtrfReportMerger
         return merged.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
     }
 
-    internal static async Task MergeToFileAsync(
+    internal static Task MergeToFileAsync(
         IReadOnlyList<string> inputPaths,
         string outputPath,
         CancellationToken cancellationToken)
-        => await MergeToFileAsync(inputPaths, outputPath, CtrfMergeMode.Concatenate, cancellationToken).ConfigureAwait(false);
+        => MergeToFileAsync(inputPaths, outputPath, CtrfMergeMode.Concatenate, cancellationToken);
 
     internal static async Task MergeToFileAsync(
         IReadOnlyList<string> inputPaths,
