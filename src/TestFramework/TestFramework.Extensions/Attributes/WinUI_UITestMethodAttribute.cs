@@ -106,10 +106,7 @@ public class UITestMethodAttribute : TestMethodAttribute
     }
 
     private static Type? GetApplicationType(Assembly assembly)
-    {
-        WinUITestTargetAttribute? attribute = assembly.GetCustomAttribute<WinUITestTargetAttribute>();
-        return attribute == null || attribute.ApplicationType == null ? null : attribute.ApplicationType;
-    }
+        => assembly.GetCustomAttribute<WinUITestTargetAttribute>()?.ApplicationType;
 
     private static DispatcherQueue? GetApplicationDispatcherQueue(Assembly assembly)
     {
