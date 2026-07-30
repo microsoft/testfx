@@ -17,6 +17,17 @@ internal interface IPlatformOpenTelemetryService : IDisposable
     IPlatformActivity? TestFrameworkActivity { get; set; }
 
     /// <summary>
+    /// Gets or sets the W3C <c>tracestate</c> inherited from the process that started this run.
+    /// </summary>
+    /// <remarks>
+    /// It lives on the service rather than on a single activity because <c>tracestate</c> is only inherited through
+    /// an in-process parent reference, and most of the platform's spans are created with an explicit parent id
+    /// string (which leaves no parent reference). The service therefore stamps it onto every such span, so the
+    /// vendor sampling decision published by the caller reaches the spans that carry the test data.
+    /// </remarks>
+    string? RootTraceState { get; set; }
+
+    /// <summary>
     /// Gets a value indicating whether an ambient (currently running) activity exists. Exposed as a boolean rather
     /// than as the activity itself so callers cannot accidentally dispose an activity they do not own.
     /// </summary>

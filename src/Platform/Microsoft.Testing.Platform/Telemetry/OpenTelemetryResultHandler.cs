@@ -359,10 +359,21 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
             }
         }
 
-        SetResultDetails(testNode, measurementTags, activity);
-        activity.Dispose();
+        try
+        {
+            SetResultDetails(testNode, measurementTags, activity);
+        }
+        finally
+        {
+            // The span was already dequeued, so it must be closed even if collecting the details throws on a
+            // malformed property bag; otherwise it would stay open until the handler is disposed.
+            activity.Dispose();
+        }
     }
 
+    /// <summary>
+    /// Collects the timing, output and artifact details of a completed test in a single pass over the property bag.
+    /// </summary>
     private void SetResultDetails(TestNode testNode, KeyValuePair<string, object?>[] measurementTags, IPlatformActivity? activity)
     {
         // Single pass over the property bag: replaces five separate walks

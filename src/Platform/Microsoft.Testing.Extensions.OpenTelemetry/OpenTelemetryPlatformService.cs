@@ -18,6 +18,8 @@ internal sealed class OpenTelemetryPlatformService : IPlatformOpenTelemetryServi
 
     public IPlatformActivity? TestFrameworkActivity { get; set; }
 
+    public string? RootTraceState { get; set; }
+
     public bool HasCurrentActivity => Activity.Current is not null;
 
     public IPlatformActivity? StartActivity([CallerMemberName] string name = "", IEnumerable<KeyValuePair<string, object?>>? tags = null, string? parentId = null, DateTimeOffset startTime = default, PlatformActivityKind kind = PlatformActivityKind.Internal, bool setAsCurrent = true)
@@ -26,6 +28,13 @@ internal sealed class OpenTelemetryPlatformService : IPlatformOpenTelemetryServi
         if (_activitySource.StartActivity(name, ToActivityKind(kind), tags: tags, startTime: startTime, parentId: parentId) is not Activity activity)
         {
             return null;
+        }
+
+        // Activity only derives tracestate from an in-process parent reference, which an explicit parent id string
+        // does not provide. Stamp it on so the caller's vendor sampling state survives down to the test spans.
+        if (RootTraceState is not null && activity.TraceStateString is null)
+        {
+            activity.TraceStateString = RootTraceState;
         }
 
         if (setAsCurrent)

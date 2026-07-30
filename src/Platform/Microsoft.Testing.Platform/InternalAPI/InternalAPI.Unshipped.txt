@@ -466,7 +466,7 @@ const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.At
 const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestRunResultStatus = "test.run.result.status" -> string!
 const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestRunSkippedCount = "test.run.skipped" -> string!
 const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestRunTotalCount = "test.run.total" -> string!
-Microsoft.Testing.Platform.Services.TestApplicationResult.ReportRunTelemetry(Microsoft.Testing.Platform.Telemetry.IPlatformActivity? runActivity) -> void
-Microsoft.Testing.Platform.Telemetry.IPlatformActivity.TraceState.get -> string?
-Microsoft.Testing.Platform.Telemetry.IPlatformActivity.TraceState.set -> void
 Microsoft.Testing.Platform.Telemetry.OpenTelemetryResultHandler.NotifyRunCompleted(int totalRanTests, int failedTests, int skippedTests, int exitCode, Microsoft.Testing.Platform.Telemetry.IPlatformActivity? runActivity = null) -> void
+Microsoft.Testing.Platform.Services.TestApplicationResult.ReportRunTelemetry(Microsoft.Testing.Platform.Telemetry.IPlatformActivity? runActivity, int exitCode) -> void
+Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryService.RootTraceState.get -> string?
+Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryService.RootTraceState.set -> void

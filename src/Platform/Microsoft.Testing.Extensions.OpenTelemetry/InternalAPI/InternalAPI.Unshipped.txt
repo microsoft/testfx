@@ -29,5 +29,5 @@ static Microsoft.Testing.Extensions.OpenTelemetry.OpenTelemetryEnvironmentVariab
 Microsoft.Testing.Extensions.OpenTelemetry.ActivityWrapper.ActivityWrapper(System.Diagnostics.Activity! activity, bool isAmbient = true) -> void
 Microsoft.Testing.Extensions.OpenTelemetry.OpenTelemetryPlatformService.HasCurrentActivity.get -> bool
 Microsoft.Testing.Extensions.OpenTelemetry.OpenTelemetryPlatformService.StartActivity(string! name = "", System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? tags = null, string? parentId = null, System.DateTimeOffset startTime = default(System.DateTimeOffset), Microsoft.Testing.Platform.Telemetry.PlatformActivityKind kind = Microsoft.Testing.Platform.Telemetry.PlatformActivityKind.Internal, bool setAsCurrent = true) -> Microsoft.Testing.Platform.Telemetry.IPlatformActivity?
-Microsoft.Testing.Extensions.OpenTelemetry.ActivityWrapper.TraceState.get -> string?
-Microsoft.Testing.Extensions.OpenTelemetry.ActivityWrapper.TraceState.set -> void
+Microsoft.Testing.Extensions.OpenTelemetry.OpenTelemetryPlatformService.RootTraceState.get -> string?
+Microsoft.Testing.Extensions.OpenTelemetry.OpenTelemetryPlatformService.RootTraceState.set -> void

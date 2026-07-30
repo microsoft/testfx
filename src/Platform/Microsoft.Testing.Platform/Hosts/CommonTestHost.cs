@@ -30,6 +30,16 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
 
     protected abstract bool RunTestApplicationLifeCycleCallbacks { get; }
 
+    /// <summary>
+    /// Gets a value indicating whether this host is the one that observes the test results, and therefore owns the
+    /// run-level verdict reported to telemetry.
+    /// </summary>
+    /// <remarks>
+    /// The test host controller shares the application's <c>TestApplicationResult</c> but never consumes a test node
+    /// update: the tests run in the child test host it launches.
+    /// </remarks>
+    private bool OwnsRunVerdict => this is not TestHostControllersTestHost;
+
     public async Task<int> RunAsync()
     {
         CancellationToken testApplicationCancellationToken = ServiceProvider.GetTestApplicationCancellationTokenSource().CancellationToken;
@@ -48,15 +58,16 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
             string? environmentParentId = platformOTelService is not null && !platformOTelService.HasCurrentActivity
                 ? EnvironmentTraceContext.TryGetParentId(ServiceProvider.GetEnvironment())
                 : null;
+
+            if (environmentParentId is not null && platformOTelService!.RootTraceState is null)
+            {
+                platformOTelService.RootTraceState = EnvironmentTraceContext.TryGetTraceState(ServiceProvider.GetEnvironment());
+            }
+
             activity = platformOTelService?.StartActivity(
                 hostType,
                 tags: [new(TestingPlatformSemanticConventions.Attributes.TestHostType, hostType)],
                 parentId: environmentParentId);
-
-            if (environmentParentId is not null && activity is not null)
-            {
-                activity.TraceState = EnvironmentTraceContext.TryGetTraceState(ServiceProvider.GetEnvironment());
-            }
 
             if (PushOnlyProtocol is null || PushOnlyProtocol?.IsServerMode == false)
             {
@@ -105,12 +116,26 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
         }
         finally
         {
+            // Normalize the cancellation verdict *before* the span and the run telemetry read it. The
+            // post-finally adjustment below runs too late for them, so without this a cancelled run was traced
+            // as a generic failure and test.run.exit_code did not match the code the process exits with.
+            if (testApplicationCancellationToken.IsCancellationRequested)
+            {
+                exitCode = (int)ExitCode.TestSessionAborted;
+            }
+
             // Emit the run-level telemetry while the OpenTelemetry providers and the root span are still alive.
             // DisposeServiceProviderAsync below tears the providers down in registration order, and they are
             // registered before TestApplicationResult, so anything recorded after this point would be dropped.
-            if (ServiceProvider.GetService<ITestApplicationProcessExitCode>() is TestApplicationResult testApplicationResult)
+            //
+            // Only the host that actually observed the results owns the verdict. The test host controller shares
+            // the same TestApplicationResult instance but consumes no TestNodeUpdateMessage (the tests run in the
+            // child process), so reporting from there would emit a second, contradictory run record with zero
+            // counts and a ZeroTests exit code.
+            if (OwnsRunVerdict
+                && ServiceProvider.GetService<ITestApplicationProcessExitCode>() is TestApplicationResult testApplicationResult)
             {
-                testApplicationResult.ReportRunTelemetry(activity);
+                testApplicationResult.ReportRunTelemetry(activity, exitCode);
             }
 
             // Record the run verdict on the root span before closing it, so a trace search on

@@ -23,12 +23,6 @@ internal interface IPlatformActivity : IDisposable
     /// </summary>
     bool IsRecording { get; }
 
-    /// <summary>
-    /// Gets or sets the W3C <c>tracestate</c> of the activity, which carries vendor-specific sampling and routing
-    /// decisions that must survive the hop into the test process.
-    /// </summary>
-    string? TraceState { get; set; }
-
     IPlatformActivity SetTag(string key, object? value);
 
     /// <summary>

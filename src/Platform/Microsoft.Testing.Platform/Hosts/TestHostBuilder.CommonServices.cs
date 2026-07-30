@@ -126,17 +126,16 @@ internal sealed partial class TestHostBuilder
 
             // Nest the whole run under the trace context of whoever started this process (a CI pipeline step,
             // `dotnet test`, an IDE, or the test host controller) so the run is not an orphan trace.
-            string? environmentParentId = EnvironmentTraceContext.TryGetParentId(systemEnvironment);
-            context.BuilderActivity = serviceProvider.GetServiceInternal<IPlatformOpenTelemetryService>()?.StartActivity(
-                TestingPlatformSemanticConventions.Activities.TestHostBuilder,
-                parentId: environmentParentId,
-                startTime: buildBuilderStart);
-
-            if (environmentParentId is not null && context.BuilderActivity is { } builderActivity)
+            IPlatformOpenTelemetryService? platformOTelService = serviceProvider.GetServiceInternal<IPlatformOpenTelemetryService>();
+            if (platformOTelService is not null)
             {
-                // tracestate is not derived from traceparent, so it has to be carried across explicitly or the
-                // parent's vendor-specific sampling decision is lost for the whole run.
-                builderActivity.TraceState = EnvironmentTraceContext.TryGetTraceState(systemEnvironment);
+                // Set before creating any span so every span picks it up, including the ones created with an
+                // explicit parent id (which do not inherit tracestate).
+                platformOTelService.RootTraceState = EnvironmentTraceContext.TryGetTraceState(systemEnvironment);
+                context.BuilderActivity = platformOTelService.StartActivity(
+                    TestingPlatformSemanticConventions.Activities.TestHostBuilder,
+                    parentId: EnvironmentTraceContext.TryGetParentId(systemEnvironment),
+                    startTime: buildBuilderStart);
             }
         }
 
