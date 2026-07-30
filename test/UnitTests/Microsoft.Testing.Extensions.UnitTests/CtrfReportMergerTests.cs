@@ -575,6 +575,9 @@ public sealed class CtrfReportMergerTests
         JsonNode merged = JsonNode.Parse(CtrfReportMerger.Merge([a, b]))!;
 
         Assert.IsNull(merged["runId"]);
+
+        // Suppressing the run correlation must not suppress the merged document's own identity.
+        Assert.IsNotNull((string?)merged["reportId"]);
     }
 
     [TestMethod]
@@ -588,6 +591,7 @@ public sealed class CtrfReportMergerTests
         JsonNode merged = JsonNode.Parse(CtrfReportMerger.Merge([a, b]))!;
 
         Assert.IsNull(merged["runId"]);
+        Assert.IsNotNull((string?)merged["reportId"]);
     }
 
     [TestMethod]
