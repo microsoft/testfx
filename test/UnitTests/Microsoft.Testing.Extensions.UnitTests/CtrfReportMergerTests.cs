@@ -1016,6 +1016,37 @@ public sealed class CtrfReportMergerTests
         Assert.AreEqual(2, (long)retryAttempts[1]!["attempt"]!);
     }
 
+    [TestMethod]
+    public void Merge_CollapseRetryAttempts_LeavesAnUnmergedRowExactlyAsWritten()
+    {
+        // Validity contract: the merger shapes what it synthesizes and relays what it passes through. A test
+        // that occurs in only one input (for example one that recovered through in-process retries and was
+        // therefore never re-run by the orchestrator) has nothing merged into it, so its row -- including the
+        // retryAttempts[] its producer already recorded -- must come out byte-identical. Repairing it here
+        // would make merging a single document mutate it.
+        JsonObject row = Test("t", "passed");
+        row["extra"] = new JsonObject { ["uid"] = "u1" };
+        row["retryAttempts"] = new JsonArray(new JsonObject
+        {
+            ["attempt"] = 7,
+            ["status"] = "failed",
+            ["message"] = "recorded by the producer",
+        });
+
+        string report = BuildReport(testEntries: [row]);
+        string original = ((JsonArray)JsonNode.Parse(report)!["results"]!["tests"]!)[0]!.ToJsonString();
+
+        var tests = (JsonArray)JsonNode.Parse(
+            CtrfReportMerger.Merge([report], CtrfMergeMode.CollapseRetryAttempts))!["results"]!["tests"]!;
+
+        Assert.HasCount(1, tests);
+        Assert.AreEqual(original, tests[0]!.ToJsonString(), "An unmerged row must be relayed verbatim.");
+
+        // Specifically: the producer's own attempt numbering is not rewritten, and retries/flaky are not invented.
+        Assert.AreEqual(7, (long)((JsonArray)tests[0]!["retryAttempts"]!)[0]!["attempt"]!);
+        Assert.IsNull(tests[0]!["retries"]);
+    }
+
     private static JsonObject Attempt(string name, string status, string uid, long duration = 1, string? message = null)
     {
         var test = new JsonObject

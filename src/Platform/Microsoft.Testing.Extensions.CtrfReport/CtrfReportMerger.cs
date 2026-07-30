@@ -22,6 +22,20 @@ namespace Microsoft.Testing.Extensions.CtrfReport;
 ///   <item><description><c>tool</c> keeps a concrete identity only when every input reported the exact same tool object; otherwise (inputs disagree or any input omits it) a neutral merger identity is used, so one framework is not attributed to another's tests.</description></item>
 ///   <item><description><c>environment</c> keeps the first report's shared fields, but module-specific values under <c>extra</c> (<c>testApplication</c>, <c>exitCode</c>) are dropped rather than presented as describing all merged modules.</description></item>
 /// </list>
+/// <para>
+/// Validity contract. The merger guarantees the shape of what it SYNTHESIZES — the summary, the identity
+/// fields, and the retry attempt objects it builds and renumbers — and PRESERVES verbatim what it merely
+/// passes through. The only thing it drops is an element that cannot be a Test at all (a non-object), because
+/// that alone would break the array's item type for every consumer of the merged file.
+/// </para>
+/// <para>
+/// It deliberately does NOT validate or repair the Test rows themselves, even though an input may carry a
+/// row with a missing or wrong-typed required field. Dropping such a row would lose a real result and
+/// rewriting it would fabricate an outcome the producer never reported, which are both worse than relaying a
+/// defect that belongs to the input document. A corollary is that merging a single document whose identities
+/// are already unique leaves its <c>tests[]</c> untouched: the merger combines reports, it is not a CTRF
+/// validator or linter.
+/// </para>
 /// </remarks>
 internal static class CtrfReportMerger
 {
@@ -491,6 +505,11 @@ internal static class CtrfReportMerger
     private static JsonNode BuildCollapsedTest(JsonObject final, List<JsonObject> priors)
     {
         var collapsed = (JsonObject)final.DeepClone();
+
+        // Nothing was merged into this row, so it is passed through rather than synthesized: its own
+        // `retryAttempts[]` (from in-process retries the producer already recorded) stays exactly as written.
+        // Below, once there ARE priors, the history becomes the merger's own array — it has to be rebuilt and
+        // renumbered into a contiguous 1..N-1 — which is why those entries are reshaped and these are not.
         if (priors.Count == 0)
         {
             return collapsed;
