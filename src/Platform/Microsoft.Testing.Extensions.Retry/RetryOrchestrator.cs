@@ -10,6 +10,7 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.Telemetry;
 
 namespace Microsoft.Testing.Extensions.Policy;
 
@@ -116,6 +117,15 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
         string retryRootFolder = CreateRetriesDirectory(resultDirectory);
         bool retryInterrupted = false;
 
+        // Retries are the single most useful thing to measure about a flaky suite, and the orchestrator is the only
+        // component that sees every attempt. Emitting the count here (rather than inferring it from duplicated test
+        // results downstream) makes "how much time do we burn on retries?" answerable from a dashboard.
+        IPlatformOpenTelemetryService? otelService = _serviceProvider.GetPlatformOTelService();
+        ICounter<int>? retryCounter = otelService?.CreateCounter<int>(
+            TestingPlatformSemanticConventions.Metrics.TestRetryCount,
+            TestingPlatformSemanticConventions.Units.Count,
+            "Number of test cases scheduled for a retry attempt.");
+
         // Retry summary accounting (single-assembly). The orchestrator is the only component that observes every
         // attempt, so it reconciles them into one headline:
         //   retried = union of the scheduled retry sets whose following attempt reported at least one result
@@ -145,6 +155,24 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
         while (attemptCount < userMaxRetryCount + 1)
         {
             attemptCount++;
+
+            // Each attempt is a child span of the orchestrator, so a trace shows exactly how many attempts a run
+            // needed and how long each of them took.
+            using IPlatformActivity? attemptActivity = otelService?.StartActivity(
+                "RetryAttempt",
+                tags:
+                [
+                    new(TestingPlatformSemanticConventions.Attributes.TestCaseRetryAttempt, attemptCount),
+                    new("test.retry.max_attempts", userMaxRetryCount + 1),
+                    new("test.retry.scheduled_count", lastListOfFailedId?.Length ?? 0),
+                ]);
+
+            if (attemptCount > 1)
+            {
+                retryCounter?.Add(
+                    lastListOfFailedId?.Length ?? 0,
+                    [new(TestingPlatformSemanticConventions.Attributes.TestCaseRetryAttempt, attemptCount)]);
+            }
 
             if (attemptCount > 1 && retryDelay is { } delay)
             {

@@ -123,7 +123,14 @@ internal sealed partial class TestHostBuilder
         if (((TelemetryManager)Telemetry).BuildOTelProvider(serviceProvider) is { } otelService)
         {
             serviceProvider.AddService(otelService);
-            context.BuilderActivity = serviceProvider.GetServiceInternal<IPlatformOpenTelemetryService>()?.StartActivity("TestHostBuilder", startTime: buildBuilderStart);
+
+            // Nest the whole run under the trace context of whoever started this process (a CI pipeline step,
+            // `dotnet test`, an IDE, or the test host controller) so the run is not an orphan trace.
+            string? environmentParentId = EnvironmentTraceContext.TryGetParentId(systemEnvironment);
+            context.BuilderActivity = serviceProvider.GetServiceInternal<IPlatformOpenTelemetryService>()?.StartActivity(
+                TestingPlatformSemanticConventions.Activities.TestHostBuilder,
+                parentId: environmentParentId,
+                startTime: buildBuilderStart);
         }
 
         _ = bool.TryParse(context.Configuration[PlatformConfigurationConstants.PlatformExitProcessOnUnhandledException], out bool isFileConfiguredToFailFast);

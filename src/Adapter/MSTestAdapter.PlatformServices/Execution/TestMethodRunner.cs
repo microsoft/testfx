@@ -75,6 +75,18 @@ internal sealed partial class TestMethodRunner
 
         TestResult[]? result = null;
 
+        // The engine-level span for the whole test method: it wraps test initialize, the body, test cleanup and any
+        // data-row expansion, so the platform's test-case span gains an explanation of where the time went.
+        using IMSTestActivity? activity = MSTestInstrumentation.IsEnabled
+            ? MSTestInstrumentation.StartActivity(
+                MSTestInstrumentation.ActivityNames.TestMethod,
+                [
+                    new(MSTestInstrumentation.Attributes.TestMethod, _test.DisplayName ?? _test.Name),
+                    new(MSTestInstrumentation.Attributes.TestClass, _test.FullClassName),
+                    new(MSTestInstrumentation.Attributes.TestAssembly, _test.AssemblyName),
+                ])
+            : null;
+
         try
         {
             result = await RunTestMethodAsync().ConfigureAwait(false);
@@ -84,6 +96,7 @@ internal sealed partial class TestMethodRunner
             // NOTE: We intentionally don't have any special casing for TestFailedException in this code path.
             // It's handled down by TestMethodInfo which also unwraps TargetInvocationException.
             // RunTestMethodAsync is not supposed to throw any exceptions. So it's always an **error** if we got an exception here.
+            activity?.RecordException(ex);
             result =
             [
                 new TestResult
@@ -101,9 +114,34 @@ internal sealed partial class TestMethodRunner
             firstResult.LogError = initializationErrorLogs + firstResult.LogError;
             firstResult.DebugTrace = initializationTrace + firstResult.DebugTrace;
             firstResult.TestContextMessages = initializationTestContextMessages + firstResult.TestContextMessages;
+
+            // A folded data-driven test produces several results for a single method invocation; reporting the
+            // count makes that visible in the trace instead of looking like a single test.
+            activity?.SetTag("test.case.result.count", result.Length);
+            activity?.SetTag("test.case.result.status", GetAggregateOutcomeName(result));
         }
 
         return result;
+    }
+
+    private static string GetAggregateOutcomeName(TestResult[] results)
+    {
+        bool anyFailed = false;
+        bool allSkipped = true;
+        foreach (TestResult testResult in results)
+        {
+            if (testResult.Outcome is not (UnitTestOutcome.Ignored or UnitTestOutcome.NotRunnable))
+            {
+                allSkipped = false;
+            }
+
+            if (testResult.Outcome is UnitTestOutcome.Failed or UnitTestOutcome.Error or UnitTestOutcome.Timeout)
+            {
+                anyFailed = true;
+            }
+        }
+
+        return anyFailed ? "failed" : allSkipped ? "skipped" : "passed";
     }
 
     /// <summary>

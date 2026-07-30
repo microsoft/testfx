@@ -43,6 +43,22 @@ internal static class EnvironmentVariableConstants
     public const string DOTNET_CLI_TELEMETRY_OPTOUT = nameof(DOTNET_CLI_TELEMETRY_OPTOUT);
     public const string DOTNET_NOLOGO = nameof(DOTNET_NOLOGO);
 
+    // OpenTelemetry
+    // W3C trace context of the process that started this test run, so the run nests under it.
+    public const string TRACEPARENT = nameof(TRACEPARENT);
+    public const string TRACESTATE = nameof(TRACESTATE);
+    public const string TESTINGPLATFORM_TRACEPARENT = nameof(TESTINGPLATFORM_TRACEPARENT);
+    public const string TESTINGPLATFORM_TRACESTATE = nameof(TESTINGPLATFORM_TRACESTATE);
+
+    // Opts out of capturing potentially large or sensitive test output (stdout/stderr) as span attributes.
+    public const string TESTINGPLATFORM_OTEL_CAPTURE_TEST_OUTPUT = nameof(TESTINGPLATFORM_OTEL_CAPTURE_TEST_OUTPUT);
+
+    // Maximum number of characters kept for a single captured output/stack trace attribute.
+    public const string TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT = nameof(TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT);
+
+    // Opts out of emitting the pre-4.x attribute and instrument names alongside the semantic-convention ones.
+    public const string TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES = nameof(TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES);
+
     // Debugging
     public const string TESTINGPLATFORM_LAUNCH_ATTACH_DEBUGGER = nameof(TESTINGPLATFORM_LAUNCH_ATTACH_DEBUGGER);
     public const string TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER = nameof(TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER);

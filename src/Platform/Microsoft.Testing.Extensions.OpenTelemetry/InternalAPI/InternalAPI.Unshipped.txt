@@ -1,1 +1,30 @@
 #nullable enable
+Microsoft.Testing.Extensions.OpenTelemetry.ActivityWrapper.AddEvent(string! name, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? tags = null, System.DateTimeOffset timestamp = default(System.DateTimeOffset)) -> Microsoft.Testing.Platform.Telemetry.IPlatformActivity!
+Microsoft.Testing.Extensions.OpenTelemetry.ActivityWrapper.IsRecording.get -> bool
+Microsoft.Testing.Extensions.OpenTelemetry.ActivityWrapper.RecordException(System.Exception! exception, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? additionalTags = null) -> Microsoft.Testing.Platform.Telemetry.IPlatformActivity!
+Microsoft.Testing.Extensions.OpenTelemetry.ActivityWrapper.SetStatus(Microsoft.Testing.Platform.Telemetry.PlatformActivityStatusCode statusCode, string? description = null) -> Microsoft.Testing.Platform.Telemetry.IPlatformActivity!
+Microsoft.Testing.Extensions.OpenTelemetry.ActivityWrapper.SpanId.get -> string?
+Microsoft.Testing.Extensions.OpenTelemetry.ActivityWrapper.TraceId.get -> string?
+Microsoft.Testing.Extensions.OpenTelemetry.CounterWrapper<T>.Add(T delta, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? tags) -> void
+Microsoft.Testing.Extensions.OpenTelemetry.HistogramWrapper<T>.Record(T value, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? tags) -> void
+Microsoft.Testing.Extensions.OpenTelemetry.MeasurementTags
+Microsoft.Testing.Extensions.OpenTelemetry.OpenTelemetryPlatformService.CreateObservableGauge<T>(string! name, System.Func<T>! observeValue, string? unit = null, string? description = null) -> void
+Microsoft.Testing.Extensions.OpenTelemetry.OpenTelemetryPlatformService.CreateUpDownCounter<T>(string! name, string? unit = null, string? description = null, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? tags = null) -> Microsoft.Testing.Platform.Telemetry.IUpDownCounter<T>!
+Microsoft.Testing.Extensions.OpenTelemetry.OpenTelemetryPlatformService.CurrentActivity.get -> Microsoft.Testing.Platform.Telemetry.IPlatformActivity?
+Microsoft.Testing.Extensions.OpenTelemetry.OpenTelemetryPlatformService.StartActivity(string! name = "", System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? tags = null, string? parentId = null, System.DateTimeOffset startTime = default(System.DateTimeOffset), Microsoft.Testing.Platform.Telemetry.PlatformActivityKind kind = Microsoft.Testing.Platform.Telemetry.PlatformActivityKind.Internal) -> Microsoft.Testing.Platform.Telemetry.IPlatformActivity?
+Microsoft.Testing.Extensions.OpenTelemetry.UpDownCounterWrapper<T>
+Microsoft.Testing.Extensions.OpenTelemetry.UpDownCounterWrapper<T>.Add(T delta, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? tags = null) -> void
+Microsoft.Testing.Extensions.OpenTelemetry.UpDownCounterWrapper<T>.UpDownCounterWrapper(System.Diagnostics.Metrics.UpDownCounter<T>! counter) -> void
+static Microsoft.Testing.Extensions.OpenTelemetry.MeasurementTags.ToArray(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? tags) -> System.Collections.Generic.KeyValuePair<string!, object?>[]!
+const Microsoft.Testing.Extensions.OpenTelemetry.TestingPlatformResourceDetector.UnknownServiceName = "unknown_test_service" -> string!
+Microsoft.Testing.Extensions.OpenTelemetry.TestingPlatformResourceDetector
+static Microsoft.Testing.Extensions.OpenTelemetry.TestingPlatformResourceDetector.GetResourceAttributes() -> System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object!>>!
+static Microsoft.Testing.Extensions.OpenTelemetry.TestingPlatformResourceDetector.GetServiceName() -> string!
+static Microsoft.Testing.Extensions.OpenTelemetry.TestingPlatformResourceDetector.GetServiceVersion() -> string?
+const Microsoft.Testing.Extensions.OpenTelemetry.OpenTelemetryEnvironmentVariables.ExporterOtlpEndpoint = "OTEL_EXPORTER_OTLP_ENDPOINT" -> string!
+const Microsoft.Testing.Extensions.OpenTelemetry.OpenTelemetryEnvironmentVariables.MetricsExporter = "OTEL_METRICS_EXPORTER" -> string!
+const Microsoft.Testing.Extensions.OpenTelemetry.OpenTelemetryEnvironmentVariables.SdkDisabled = "OTEL_SDK_DISABLED" -> string!
+const Microsoft.Testing.Extensions.OpenTelemetry.OpenTelemetryEnvironmentVariables.ServiceName = "OTEL_SERVICE_NAME" -> string!
+const Microsoft.Testing.Extensions.OpenTelemetry.OpenTelemetryEnvironmentVariables.TracesExporter = "OTEL_TRACES_EXPORTER" -> string!
+Microsoft.Testing.Extensions.OpenTelemetry.OpenTelemetryEnvironmentVariables
+static Microsoft.Testing.Extensions.OpenTelemetry.OpenTelemetryEnvironmentVariables.IsNullOrWhiteSpace(string? value) -> bool

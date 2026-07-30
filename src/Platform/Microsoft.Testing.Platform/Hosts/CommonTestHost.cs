@@ -42,7 +42,16 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
         {
             platformOTelService = ServiceProvider.GetPlatformOTelService();
             string hostType = GetHostType();
-            activity = platformOTelService?.StartActivity(hostType);
+
+            // When the builder activity has already been closed (or OTel was configured late) there is no ambient
+            // parent, so fall back to the W3C trace context published by the process that started this run.
+            string? environmentParentId = platformOTelService is not null && platformOTelService.CurrentActivity is null
+                ? EnvironmentTraceContext.TryGetParentId(ServiceProvider.GetEnvironment())
+                : null;
+            activity = platformOTelService?.StartActivity(
+                hostType,
+                tags: [new(TestingPlatformSemanticConventions.Attributes.TestHostType, hostType)],
+                parentId: environmentParentId);
 
             if (PushOnlyProtocol is null || PushOnlyProtocol?.IsServerMode == false)
             {
@@ -91,6 +100,12 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
         }
         finally
         {
+            // Record the run verdict on the root span before closing it, so a trace search on
+            // test.run.exit_code finds failing runs without having to open them.
+            activity?.SetTag(TestingPlatformSemanticConventions.Attributes.TestRunExitCode, exitCode);
+            activity?.SetStatus(
+                exitCode == (int)ExitCode.Success ? PlatformActivityStatusCode.Ok : PlatformActivityStatusCode.Error);
+
             // Dispose the activity
             activity?.Dispose();
 

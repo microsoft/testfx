@@ -186,6 +186,14 @@ internal sealed class TestAssemblyInfo
                 // Perform a check again.
                 if (!IsAssemblyInitializeExecuted)
                 {
+                    // Assembly initialize can dominate the wall-clock time of a run (spinning up a database,
+                    // a browser, ...). Giving it its own span is what lets you tell "the test is slow" apart
+                    // from "the assembly fixture is slow".
+                    using IMSTestActivity? activity = MSTestInstrumentation.StartFixtureActivity(
+                        MSTestInstrumentation.ActivityNames.AssemblyInitialize,
+                        "assembly_initialize",
+                        AssemblyInitializeMethod.DeclaringType?.FullName,
+                        Assembly.GetName().Name);
                     try
                     {
                         AssemblyInitializationException = await FixtureMethodRunner.RunWithTimeoutAndCancellationAsync(
@@ -220,6 +228,7 @@ internal sealed class TestAssemblyInfo
                     catch (Exception ex)
                     {
                         AssemblyInitializationException = GetTestFailedExceptionFromAssemblyInitializeException(ex, AssemblyInitializeMethod);
+                        activity?.RecordException(ex);
                     }
                     finally
                     {
@@ -273,6 +282,11 @@ internal sealed class TestAssemblyInfo
         try
         {
             await _assemblyInfoExecuteSyncSemaphore.WaitAsync().ConfigureAwait(false);
+            using IMSTestActivity? activity = MSTestInstrumentation.StartFixtureActivity(
+                MSTestInstrumentation.ActivityNames.AssemblyCleanup,
+                "assembly_cleanup",
+                AssemblyCleanupMethod.DeclaringType?.FullName,
+                Assembly.GetName().Name);
             AssemblyCleanupException = await FixtureMethodRunner.RunWithTimeoutAndCancellationAsync(
                  () => AssemblyCleanupMethod.InvokeAsFixtureMethodAsync(
                      testContext,

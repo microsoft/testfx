@@ -66,14 +66,14 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
         await logger.LogDebugAsync($"Test session UID: '{sessionId.Value}'").ConfigureAwait(false);
 
         IPlatformOpenTelemetryService? otelService = ServiceProvider.GetPlatformOTelService();
-        using (otelService?.StartActivity("CreateTestFrameworkSession", tags: [new("SessionUid", sessionId)]))
+        using (otelService?.StartActivity("CreateTestFrameworkSession", tags: [new(TestingPlatformSemanticConventions.Attributes.TestSessionId, sessionId.Value), new("SessionUid", sessionId)]))
         {
             CreateTestSessionResult createTestSessionResult = await testFramework.CreateTestSessionAsync(new(sessionId, cancellationToken)).ConfigureAwait(false);
             await HandleTestSessionResultAsync(logger, "CreateTestSession", sessionId, createTestSessionResult.IsSuccess, createTestSessionResult.WarningMessage, createTestSessionResult.ErrorMessage, cancellationToken).ConfigureAwait(false);
         }
 
         TestExecutionRequest request;
-        using (otelService?.StartActivity("CreateTestRequest", tags: [new("SessionUid", sessionId)]))
+        using (otelService?.StartActivity("CreateTestRequest", tags: [new(TestingPlatformSemanticConventions.Attributes.TestSessionId, sessionId.Value), new("SessionUid", sessionId)]))
         {
             ITestExecutionRequestFactory testExecutionRequestFactory = ServiceProvider.GetTestExecutionRequestFactory();
             request = await testExecutionRequestFactory.CreateRequestAsync(new(sessionId), cancellationToken).ConfigureAwait(false);
@@ -82,12 +82,20 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
         IMessageBus messageBus = ServiceProvider.GetMessageBus();
 
         // Execute the test request
-        using (otelService?.StartActivity("ExecuteTestRequest", tags: [new("SessionUid", sessionId), new("RequestType", request.GetType().Name)]))
+        using (otelService?.StartActivity(
+            "ExecuteTestRequest",
+            tags:
+            [
+                new(TestingPlatformSemanticConventions.Attributes.TestSessionId, sessionId.Value),
+                new(TestingPlatformSemanticConventions.Attributes.TestRunRequestType, request.GetType().Name),
+                new("SessionUid", sessionId),
+                new("RequestType", request.GetType().Name),
+            ]))
         {
             await ExecuteRequestAsync(testFramework, request, messageBus, cancellationToken).ConfigureAwait(false);
         }
 
-        using (otelService?.StartActivity("CloseTestFrameworkSession", tags: [new("SessionUid", sessionId)]))
+        using (otelService?.StartActivity("CloseTestFrameworkSession", tags: [new(TestingPlatformSemanticConventions.Attributes.TestSessionId, sessionId.Value), new("SessionUid", sessionId)]))
         {
             CloseTestSessionResult closeTestSessionResult = await testFramework.CloseTestSessionAsync(new(sessionId, cancellationToken)).ConfigureAwait(false);
             await HandleTestSessionResultAsync(logger, "CloseTestSession", sessionId, closeTestSessionResult.IsSuccess, closeTestSessionResult.WarningMessage, closeTestSessionResult.ErrorMessage, cancellationToken).ConfigureAwait(false);
@@ -105,7 +113,13 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
     public virtual async Task ExecuteRequestAsync(ITestFramework testFramework, TestExecutionRequest request, IMessageBus messageBus, CancellationToken cancellationToken)
     {
         IPlatformOpenTelemetryService? otelService = ServiceProvider.GetPlatformOTelService();
-        using IPlatformActivity? testFrameworkActivity = otelService?.StartActivity("TestFramework", testFramework.ToOTelTags());
+        using IPlatformActivity? testFrameworkActivity = otelService?.StartActivity(
+            TestingPlatformSemanticConventions.Activities.TestFramework,
+            [
+                new(TestingPlatformSemanticConventions.Attributes.TestFrameworkName, testFramework.DisplayName),
+                new(TestingPlatformSemanticConventions.Attributes.TestFrameworkVersion, testFramework.Version),
+                .. testFramework.ToOTelTags(),
+            ]);
         otelService?.TestFrameworkActivity = testFrameworkActivity;
         using SemaphoreSlim requestSemaphore = new(0, 1);
         await testFramework.ExecuteRequestAsync(new(request, messageBus, new SemaphoreSlimRequestCompleteNotifier(requestSemaphore), cancellationToken)).ConfigureAwait(false);

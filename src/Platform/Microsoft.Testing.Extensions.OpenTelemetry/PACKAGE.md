@@ -15,6 +15,10 @@ dotnet add package Microsoft.Testing.Extensions.OpenTelemetry
 This package extends Microsoft.Testing.Platform with:
 
 - **OpenTelemetry integration**: exposes the Microsoft Testing Platform activity source and meter (both named `Microsoft.Testing.Platform`) so test execution can be observed via the OpenTelemetry .NET SDK.
+- **Semantic conventions**: spans and metrics follow the OpenTelemetry conventions for tests (`test.case.name`, `test.case.result.status`, `test.suite.name`), code (`code.function.name`, `code.file.path`, `code.line.number`) and errors (`error.type`, `error.message`, plus an `exception` span event and an `Error` span status on failures). The pre-existing attribute and instrument names are still emitted by default so existing dashboards keep working; set `TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES=0` to drop them.
+- **Resource attributes**: `AddTestingPlatformResource()` describes *where* the run happened — test assembly, host, OS, runtime — and detects the CI provider, pipeline run, branch and commit (`cicd.*` / `vcs.*`) from GitHub Actions, Azure Pipelines, GitLab CI and Jenkins.
+- **Turnkey configuration**: `AddOpenTelemetryProviderFromEnvironment()` wires instrumentation, resource and an OTLP exporter purely from the standard `OTEL_*` environment variables, so a run can be exported without writing configuration code.
+- **Trace context propagation**: when the process that started the test run publishes a `TRACEPARENT` environment variable (CI runners, `dotnet test`, IDEs), the whole run nests under that trace instead of starting an orphan one.
 - **Lifecycle management**: ties the lifetime of a `TracerProvider` and `MeterProvider` to the test application, so they are disposed alongside the test host.
 - **Observability**: lets you route test execution data, via your own OpenTelemetry exporter configuration, into observability backends (e.g. Jaeger, Prometheus, Grafana).
 - **Standards-based**: leverages the OpenTelemetry .NET SDK so that data is sent only to the telemetry exporters and endpoints that you configure.
@@ -25,6 +29,30 @@ This package extends Microsoft.Testing.Platform with:
 > - register at least one exporter (for example `AddOtlpExporter`, `AddConsoleExporter`, or a vendor-specific exporter).
 >
 > Without instrumentation, no MTP activities or metrics are collected; without an exporter, collected telemetry is not emitted anywhere.
+>
+> Use `AddOpenTelemetryProviderFromEnvironment()` instead if you want all of that configured for you from the standard `OTEL_*` variables.
+
+## Emitted metrics
+
+| Instrument | Type | Unit | Description |
+| --- | --- | --- | --- |
+| `test.case.duration` | Histogram | `s` | Duration of a single test case, dimensioned by `test.case.result.status` and `test.suite.name`. |
+| `test.case.result.count` | Counter | `{test}` | Number of test cases, dimensioned by `test.case.result.status` and `test.suite.name`. |
+| `test.case.active` | UpDownCounter | `{test}` | Test cases currently running. |
+| `test.run.duration` | Histogram | `s` | Duration of the whole run, dimensioned by the run verdict and `test.run.exit_code`. |
+| `test.case.retry.count` | Counter | `{test}` | Test cases scheduled for a retry attempt (requires `Microsoft.Testing.Extensions.Retry`). |
+
+The legacy `tests.discovered` / `tests.started` / `tests.completed` / `tests.passed` / `tests.failed` / `tests.skipped` / `tests.unknown` counters and the `tests.duration` histogram (in milliseconds) are still emitted unless legacy attributes are disabled.
+
+## Configuration
+
+| Environment variable | Default | Meaning |
+| --- | --- | --- |
+| `TRACEPARENT` / `TRACESTATE` | unset | W3C trace context to nest the run under. |
+| `TESTINGPLATFORM_OTEL_CAPTURE_TEST_OUTPUT` | `1` | Attach captured stdout/stderr to test spans. Set to `0` when the output can contain secrets. |
+| `TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT` | `8192` | Maximum characters kept for a single string attribute. |
+| `TESTINGPLATFORM_OTEL_EMIT_LEGACY_ATTRIBUTES` | `1` | Emit the pre-semantic-convention attribute and instrument names alongside the new ones. |
+| `OTEL_SDK_DISABLED`, `OTEL_SERVICE_NAME`, `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_TRACES_EXPORTER`, `OTEL_METRICS_EXPORTER` | unset | Standard OpenTelemetry variables honored by `AddOpenTelemetryProviderFromEnvironment`. |
 
 ## Documentation
 

@@ -50,7 +50,7 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         _testCoverageResult = testCoverageResult;
         if (otelService is not null)
         {
-            _openTelemetryResultHandler = new OpenTelemetryResultHandler(otelService);
+            _openTelemetryResultHandler = new OpenTelemetryResultHandler(otelService, PlatformOpenTelemetryOptions.FromEnvironment(environment));
         }
 
         _isDiscovery = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey);
@@ -211,5 +211,15 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         => new() { TotalRanTests = _totalRanTests, TotalFailedTests = _failedTestsCount };
 
     public void Dispose()
-        => _openTelemetryResultHandler?.Dispose();
+    {
+        if (_openTelemetryResultHandler is null)
+        {
+            return;
+        }
+
+        // Emit the run-level metrics before tearing the handler down; this is the last point at which the
+        // final verdict and counts are known.
+        _openTelemetryResultHandler.NotifyRunCompleted(_totalRanTests, _failedTestsCount, _skippedTestsCount, GetProcessExitCode());
+        _openTelemetryResultHandler.Dispose();
+    }
 }
