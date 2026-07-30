@@ -134,7 +134,14 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
     /// <summary>
     /// Records the run-level metrics. Called once, when the run verdict is known.
     /// </summary>
-    internal void NotifyRunCompleted(int totalRanTests, int failedTests, int skippedTests, int exitCode)
+    /// <param name="totalRanTests">Number of tests that ran.</param>
+    /// <param name="failedTests">Number of tests that failed.</param>
+    /// <param name="skippedTests">Number of tests that were skipped.</param>
+    /// <param name="exitCode">The process exit code the run resolved to.</param>
+    /// <param name="runActivity">The root span of the run, if any. The counts go here rather than on the histogram
+    /// because they are unbounded values: as metric dimensions they would create a new time series per distinct
+    /// count, while on a span they are free.</param>
+    internal void NotifyRunCompleted(int totalRanTests, int failedTests, int skippedTests, int exitCode, IPlatformActivity? runActivity = null)
     {
         // Dispose can legitimately run more than once; recording a second data point would double count the run.
         if (_runCompletedReported)
@@ -147,11 +154,13 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
         _testRunDuration.Record(
             _runStopwatch.Elapsed.TotalSeconds,
             [
-                new(TestingPlatformSemanticConventions.Attributes.TestCaseResultStatus, failedTests > 0 ? TestingPlatformSemanticConventions.TestResultStatus.Failed : TestingPlatformSemanticConventions.TestResultStatus.Passed),
+                new(TestingPlatformSemanticConventions.Attributes.TestRunResultStatus, failedTests > 0 ? TestingPlatformSemanticConventions.TestResultStatus.Failed : TestingPlatformSemanticConventions.TestResultStatus.Passed),
                 new(TestingPlatformSemanticConventions.Attributes.TestRunExitCode, exitCode),
-                new("test.run.total", totalRanTests),
-                new("test.run.skipped", skippedTests),
             ]);
+
+        runActivity?.SetTag(TestingPlatformSemanticConventions.Attributes.TestRunTotalCount, totalRanTests);
+        runActivity?.SetTag(TestingPlatformSemanticConventions.Attributes.TestRunFailedCount, failedTests);
+        runActivity?.SetTag(TestingPlatformSemanticConventions.Attributes.TestRunSkippedCount, skippedTests);
     }
 
     public void Dispose()
@@ -296,29 +305,37 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
             return;
         }
 
+        string? truncatedExplanation = _options.Truncate(stateProperty.Explanation);
         activity.SetTag(TestingPlatformSemanticConventions.Attributes.TestCaseResultStatus, result);
-        activity.SetTag(TestingPlatformSemanticConventions.Attributes.TestCaseResultExplanation, _options.Truncate(stateProperty.Explanation));
+        activity.SetTag(TestingPlatformSemanticConventions.Attributes.TestCaseResultExplanation, truncatedExplanation);
 
         if (_options.EmitLegacyAttributes)
         {
             activity.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestResult, result);
-            activity.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestResultExplanation, stateProperty.Explanation);
+
+            // Truncated as well: emitting the legacy twin untruncated would defeat the size limit, since legacy
+            // attributes are on by default.
+            activity.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestResultExplanation, truncatedExplanation);
         }
 
         if (exception is not null)
         {
             // The OpenTelemetry convention is an "exception" event plus error.type/error.message on the span, and a
             // status of Error so the trace shows up as failed in every backend.
+            string? exceptionTypeName = exception.GetType().FullName;
+            string? truncatedMessage = _options.Truncate(exception.Message);
+            string? truncatedStackTrace = _options.Truncate(exception.StackTrace);
+
             activity.RecordException(exception);
-            activity.SetTag(TestingPlatformSemanticConventions.Attributes.ErrorType, exception.GetType().FullName);
-            activity.SetTag(TestingPlatformSemanticConventions.Attributes.ErrorMessage, _options.Truncate(exception.Message));
-            activity.SetTag(TestingPlatformSemanticConventions.Attributes.CodeStacktrace, _options.Truncate(exception.StackTrace));
+            activity.SetTag(TestingPlatformSemanticConventions.Attributes.ErrorType, exceptionTypeName);
+            activity.SetTag(TestingPlatformSemanticConventions.Attributes.ErrorMessage, truncatedMessage);
+            activity.SetTag(TestingPlatformSemanticConventions.Attributes.CodeStacktrace, truncatedStackTrace);
 
             if (_options.EmitLegacyAttributes)
             {
-                activity.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestResultExceptionType, exception.GetType().FullName);
-                activity.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestResultExceptionMessage, exception.Message);
-                activity.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestResultExceptionStackTrace, exception.StackTrace);
+                activity.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestResultExceptionType, exceptionTypeName);
+                activity.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestResultExceptionMessage, truncatedMessage);
+                activity.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestResultExceptionStackTrace, truncatedStackTrace);
             }
         }
         else
@@ -330,7 +347,7 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
                     TestingPlatformSemanticConventions.TestResultStatus.Skipped or TestingPlatformSemanticConventions.TestResultStatus.Unknown => PlatformActivityStatusCode.Unset,
                     _ => PlatformActivityStatusCode.Error,
                 },
-                stateProperty.Explanation);
+                truncatedExplanation);
         }
 
         if (timeoutTime is not null)
@@ -428,13 +445,18 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
             return;
         }
 
-        activity.SetTag(TestingPlatformSemanticConventions.Attributes.TestOutputStdout, _options.Truncate(standardOutputProperty?.StandardOutput) ?? string.Empty);
-        activity.SetTag(TestingPlatformSemanticConventions.Attributes.TestOutputStderr, _options.Truncate(standardErrorProperty?.StandardError) ?? string.Empty);
+        // Truncated for both the semantic-convention and the legacy names: test output routinely runs to megabytes
+        // and can contain secrets.
+        string standardOutput = _options.Truncate(standardOutputProperty?.StandardOutput) ?? string.Empty;
+        string standardError = _options.Truncate(standardErrorProperty?.StandardError) ?? string.Empty;
+
+        activity.SetTag(TestingPlatformSemanticConventions.Attributes.TestOutputStdout, standardOutput);
+        activity.SetTag(TestingPlatformSemanticConventions.Attributes.TestOutputStderr, standardError);
 
         if (_options.EmitLegacyAttributes)
         {
-            activity.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestStdout, standardOutputProperty?.StandardOutput ?? string.Empty);
-            activity.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestStderr, standardErrorProperty?.StandardError ?? string.Empty);
+            activity.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestStdout, standardOutput);
+            activity.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestStderr, standardError);
         }
     }
 }

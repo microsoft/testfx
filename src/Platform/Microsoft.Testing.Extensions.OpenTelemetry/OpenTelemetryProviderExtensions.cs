@@ -138,11 +138,19 @@ public static class OpenTelemetryProviderExtensions
         builder.AddOpenTelemetryProvider(
             tracing =>
             {
-                tracing
-                    .AddTestingPlatformInstrumentation()
-                    .ConfigureResource(resource => resource.AddTestingPlatformResource());
+                bool useOtlp = UseOtlpExporter(OpenTelemetryEnvironmentVariables.TracesExporter);
 
-                if (UseOtlpExporter(OpenTelemetryEnvironmentVariables.TracesExporter))
+                // Registering the source installs an ActivityListener that samples and fully tags every span, so
+                // when nothing will consume them we must not instrument at all - otherwise every test allocates a
+                // span (and copies its whole stdout/stderr into tags) just to have it dropped.
+                if (useOtlp || configureTracing is not null)
+                {
+                    tracing
+                        .AddTestingPlatformInstrumentation()
+                        .ConfigureResource(resource => resource.AddTestingPlatformResource());
+                }
+
+                if (useOtlp)
                 {
                     tracing.AddOtlpExporter();
                 }
@@ -151,11 +159,16 @@ public static class OpenTelemetryProviderExtensions
             },
             metrics =>
             {
-                metrics
-                    .AddTestingPlatformInstrumentation()
-                    .ConfigureResource(resource => resource.AddTestingPlatformResource());
+                bool useOtlp = UseOtlpExporter(OpenTelemetryEnvironmentVariables.MetricsExporter);
 
-                if (UseOtlpExporter(OpenTelemetryEnvironmentVariables.MetricsExporter))
+                if (useOtlp || configureMetrics is not null)
+                {
+                    metrics
+                        .AddTestingPlatformInstrumentation()
+                        .ConfigureResource(resource => resource.AddTestingPlatformResource());
+                }
+
+                if (useOtlp)
                 {
                     metrics.AddOtlpExporter();
                 }
@@ -169,9 +182,22 @@ public static class OpenTelemetryProviderExtensions
         string? configured = Environment.GetEnvironmentVariable(environmentVariableName);
 
         // Mirror the behavior of the OpenTelemetry auto-instrumentation: an endpoint alone is enough to opt in.
-        return OpenTelemetryEnvironmentVariables.IsNullOrWhiteSpace(configured)
-            ? !OpenTelemetryEnvironmentVariables.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(OpenTelemetryEnvironmentVariables.ExporterOtlpEndpoint))
-            : configured.Trim().Equals("otlp", StringComparison.OrdinalIgnoreCase);
+        if (OpenTelemetryEnvironmentVariables.IsNullOrWhiteSpace(configured))
+        {
+            return !OpenTelemetryEnvironmentVariables.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(OpenTelemetryEnvironmentVariables.ExporterOtlpEndpoint));
+        }
+
+        // The specification defines these variables as comma-separated lists, so 'otlp,console' must still enable
+        // the OTLP exporter rather than silently disabling all export.
+        foreach (string exporter in configured.Split(','))
+        {
+            if (exporter.Trim().Equals("otlp", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static bool IsTrue(string? value)

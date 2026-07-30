@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Telemetry;
 
 using Moq;
@@ -547,12 +548,22 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
     [TestMethod]
     public void NotifyRunCompleted_RecordsRunDurationWithVerdict()
     {
-        _handler.NotifyRunCompleted(totalRanTests: 10, failedTests: 2, skippedTests: 1, exitCode: 2);
+        Mock<IPlatformActivity> runActivity = new();
+        _handler.NotifyRunCompleted(totalRanTests: 10, failedTests: 2, skippedTests: 1, exitCode: 2, runActivity.Object);
 
         Assert.IsNotNull(_testRunDurationHistogram.LastRecordedValue);
         Assert.IsNotNull(_testRunDurationHistogram.LastTags);
-        Assert.Contains(t => t.Key == "test.case.result.status" && (string?)t.Value == "failed", _testRunDurationHistogram.LastTags);
+
+        // Only bounded dimensions belong on the histogram: the raw counts would create a new time series per
+        // distinct value.
+        Assert.Contains(t => t.Key == "test.run.result.status" && (string?)t.Value == "failed", _testRunDurationHistogram.LastTags);
         Assert.Contains(t => t.Key == "test.run.exit_code" && (int?)t.Value == 2, _testRunDurationHistogram.LastTags);
+        Assert.DoesNotContain(t => t.Key == "test.run.total", _testRunDurationHistogram.LastTags);
+
+        // The unbounded counts go on the span instead, where cardinality is free.
+        runActivity.Verify(a => a.SetTag("test.run.total", 10), Times.Once);
+        runActivity.Verify(a => a.SetTag("test.run.failed", 2), Times.Once);
+        runActivity.Verify(a => a.SetTag("test.run.skipped", 1), Times.Once);
     }
 
     [TestMethod]
@@ -641,6 +652,40 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
             It.IsAny<bool>())).Returns(activity.Object);
 
         return activity;
+    }
+
+    [TestMethod]
+    public void HandleTestResult_TruncatesLegacyAttributesToo()
+    {
+        // Legacy attributes are on by default, so leaving them untruncated would defeat the size limit entirely.
+        Mock<IEnvironment> environment = new();
+        environment.Setup(e => e.GetEnvironmentVariable("TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT")).Returns("10");
+        using OpenTelemetryResultHandler handler = new(_otelService.Object, PlatformOpenTelemetryOptions.FromEnvironment(environment.Object));
+
+        Mock<IPlatformActivity> activity = SetupActivityForTestNode("truncation");
+        string longOutput = new('x', 5000);
+        TestNode testNode = new()
+        {
+            Uid = new TestNodeUid("truncation"),
+            DisplayName = "Test",
+            Properties = new PropertyBag(
+                PassedTestNodeStateProperty.CachedInstance,
+                new StandardOutputProperty(longOutput),
+                new StandardErrorProperty(longOutput)),
+        };
+
+        handler.NotifyInProgress(testNode, null);
+        handler.NotifyPassed(testNode, new PassedTestNodeStateProperty(new string('e', 5000)));
+
+        string expected = new string('x', 10) + "…";
+        activity.Verify(a => a.SetTag("test.output.stdout", expected), Times.Once);
+        activity.Verify(a => a.SetTag("test.stdout", expected), Times.Once);
+        activity.Verify(a => a.SetTag("test.output.stderr", expected), Times.Once);
+        activity.Verify(a => a.SetTag("test.stderr", expected), Times.Once);
+
+        string expectedExplanation = new string('e', 10) + "…";
+        activity.Verify(a => a.SetTag("test.case.result.explanation", expectedExplanation), Times.Once);
+        activity.Verify(a => a.SetTag("test.result.explanation", expectedExplanation), Times.Once);
     }
 
     private sealed class FakeCounter<T> : ICounter<T>

@@ -43,7 +43,7 @@ internal static class TestingPlatformResourceDetector
     private static IEnumerable<KeyValuePair<string, object>> GetProcessAttributes()
     {
         yield return new("host.name", Environment.MachineName);
-        yield return new("host.arch", RuntimeInformation.OSArchitecture.ToString().ToLowerInvariant());
+        yield return new("host.arch", GetHostArchitecture());
         yield return new("os.type", GetOsType());
         yield return new("os.description", RuntimeInformation.OSDescription);
         yield return new("process.pid", GetCurrentProcessId());
@@ -71,6 +71,20 @@ internal static class TestingPlatformResourceDetector
             : RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? "darwin"
             : RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "linux"
             : "other";
+
+    /// <summary>
+    /// Maps <see cref="Architecture"/> onto the values allowed by the OpenTelemetry <c>host.arch</c> enum, which
+    /// does not use the .NET spellings (for example it says <c>amd64</c>, not <c>x64</c>).
+    /// </summary>
+    private static string GetHostArchitecture()
+        => RuntimeInformation.OSArchitecture switch
+        {
+            Architecture.X64 => "amd64",
+            Architecture.X86 => "x86",
+            Architecture.Arm => "arm32",
+            Architecture.Arm64 => "arm64",
+            _ => RuntimeInformation.OSArchitecture.ToString().ToLowerInvariant(),
+        };
 
     /// <summary>
     /// Detects the CI provider and maps its environment variables onto the OpenTelemetry <c>cicd.*</c> and

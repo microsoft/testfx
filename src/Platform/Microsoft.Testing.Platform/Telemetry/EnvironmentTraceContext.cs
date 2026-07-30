@@ -56,8 +56,14 @@ internal static class EnvironmentTraceContext
 
     /// <summary>
     /// Validates the <c>version-traceid-spanid-flags</c> shape, so a malformed variable in the environment cannot
-    /// poison the whole trace (System.Diagnostics silently drops invalid parent ids, which is much harder to debug).
+    /// poison the whole trace.
     /// </summary>
+    /// <remarks>
+    /// The rules mirror what <c>System.Diagnostics</c> enforces internally, because when it rejects a parent id it
+    /// does so silently and starts a brand new trace instead - which is exactly the hard-to-debug outcome this
+    /// validation exists to turn into a clean "no parent". In particular the hex digits must be lowercase and the
+    /// version must not be <c>ff</c>.
+    /// </remarks>
     internal static bool IsValidTraceParent([NotNullWhen(true)] string? traceParent)
     {
         if (traceParent is null || traceParent.Length != TraceParentLength)
@@ -70,6 +76,12 @@ internal static class EnvironmentTraceContext
             return false;
         }
 
+        // Version 'ff' is explicitly forbidden by the W3C specification.
+        if (traceParent[0] == 'f' && traceParent[1] == 'f')
+        {
+            return false;
+        }
+
         for (int i = 0; i < traceParent.Length; i++)
         {
             if (i is 2 or 35 or 52)
@@ -77,7 +89,7 @@ internal static class EnvironmentTraceContext
                 continue;
             }
 
-            if (!IsHex(traceParent[i]))
+            if (!IsLowerCaseHex(traceParent[i]))
             {
                 return false;
             }
@@ -100,6 +112,6 @@ internal static class EnvironmentTraceContext
         return true;
     }
 
-    private static bool IsHex(char c)
-        => c is (>= '0' and <= '9') or (>= 'a' and <= 'f') or (>= 'A' and <= 'F');
+    private static bool IsLowerCaseHex(char c)
+        => c is (>= '0' and <= '9') or (>= 'a' and <= 'f');
 }

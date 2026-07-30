@@ -15,7 +15,7 @@ public sealed class EnvironmentTraceContextTests
 
     [TestMethod]
     [DataRow(ValidTraceParent)]
-    [DataRow("00-0AF7651916CD43DD8448EB211C80319C-B7AD6B7169203331-00")]
+    [DataRow("01-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-00")]
     public void IsValidTraceParent_WithWellFormedValue_ReturnsTrue(string traceParent)
         => Assert.IsTrue(EnvironmentTraceContext.IsValidTraceParent(traceParent));
 
@@ -29,6 +29,10 @@ public sealed class EnvironmentTraceContextTests
     [DataRow("000af7651916cd43dd8448eb211c80319cb7ad6b716920333101")]
     // Non-hex character in the trace id.
     [DataRow("00-0zf7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01")]
+    // Uppercase hex: System.Diagnostics requires lowercase and silently starts a new trace otherwise.
+    [DataRow("00-0AF7651916CD43DD8448EB211C80319C-B7AD6B7169203331-01")]
+    // Version 'ff' is forbidden by the W3C specification and rejected by System.Diagnostics.
+    [DataRow("ff-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01")]
     // All-zero trace id is invalid per the W3C specification.
     [DataRow("00-00000000000000000000000000000000-b7ad6b7169203331-01")]
     // All-zero span id is invalid per the W3C specification.

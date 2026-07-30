@@ -117,7 +117,9 @@ internal sealed partial class TestMethodRunner
 
             // A folded data-driven test produces several results for a single method invocation; reporting the
             // count makes that visible in the trace instead of looking like a single test.
-            activity?.SetTag("test.case.result.count", result.Length);
+            // Note the name deliberately differs from the platform's `test.case.result.count` *metric*, which
+            // counts test cases per outcome across the run.
+            activity?.SetTag("test.case.data_row.count", result.Length);
             activity?.SetTag("test.case.result.status", GetAggregateOutcomeName(result));
         }
 

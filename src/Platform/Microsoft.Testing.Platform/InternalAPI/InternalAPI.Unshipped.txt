@@ -368,7 +368,6 @@ Microsoft.Testing.Platform.Telemetry.IPlatformActivity.TraceId.get -> string?
 Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryService.CreateObservableGauge<T>(string! name, System.Func<T>! observeValue, string? unit = null, string? description = null) -> void
 Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryService.CreateUpDownCounter<T>(string! name, string? unit = null, string? description = null, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? tags = null) -> Microsoft.Testing.Platform.Telemetry.IUpDownCounter<T>!
 Microsoft.Testing.Platform.Telemetry.IUpDownCounter<T>.Add(T delta, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? tags = null) -> void
-Microsoft.Testing.Platform.Telemetry.OpenTelemetryResultHandler.NotifyRunCompleted(int totalRanTests, int failedTests, int skippedTests, int exitCode) -> void
 Microsoft.Testing.Platform.Telemetry.OpenTelemetryResultHandler.OpenTelemetryResultHandler(Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryService! otelService, Microsoft.Testing.Platform.Telemetry.PlatformOpenTelemetryOptions! options) -> void
 Microsoft.Testing.Platform.Telemetry.PlatformOpenTelemetryOptions.AttributeValueLengthLimit.get -> int
 Microsoft.Testing.Platform.Telemetry.PlatformOpenTelemetryOptions.CaptureTestOutput.get -> bool
@@ -414,7 +413,6 @@ const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.At
 const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestArtifactKind = "test.artifact.kind" -> string!
 const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestArtifactPath = "test.artifact.path" -> string!
 const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestAssemblyName = "test.assembly.name" -> string!
-const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestCaseDurationMilliseconds = "test.case.duration" -> string!
 const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestCaseId = "test.case.id" -> string!
 const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestCaseName = "test.case.name" -> string!
 const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestCaseParentId = "test.case.parent.id" -> string!
@@ -463,4 +461,12 @@ Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attribut
 Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.TestResultStatus
 Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryService.HasCurrentActivity.get -> bool
 Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryService.StartActivity(string! name = "", System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? tags = null, string? parentId = null, System.DateTimeOffset startTime = default(System.DateTimeOffset), Microsoft.Testing.Platform.Telemetry.PlatformActivityKind kind = Microsoft.Testing.Platform.Telemetry.PlatformActivityKind.Internal, bool setAsCurrent = true) -> Microsoft.Testing.Platform.Telemetry.IPlatformActivity?
-Microsoft.Testing.Platform.Services.TestApplicationResult.ReportRunTelemetry() -> void
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestCaseDurationMilliseconds = "test.case.duration_ms" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestRunFailedCount = "test.run.failed" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestRunResultStatus = "test.run.result.status" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestRunSkippedCount = "test.run.skipped" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestRunTotalCount = "test.run.total" -> string!
+Microsoft.Testing.Platform.Services.TestApplicationResult.ReportRunTelemetry(Microsoft.Testing.Platform.Telemetry.IPlatformActivity? runActivity) -> void
+Microsoft.Testing.Platform.Telemetry.IPlatformActivity.TraceState.get -> string?
+Microsoft.Testing.Platform.Telemetry.IPlatformActivity.TraceState.set -> void
+Microsoft.Testing.Platform.Telemetry.OpenTelemetryResultHandler.NotifyRunCompleted(int totalRanTests, int failedTests, int skippedTests, int exitCode, Microsoft.Testing.Platform.Telemetry.IPlatformActivity? runActivity = null) -> void

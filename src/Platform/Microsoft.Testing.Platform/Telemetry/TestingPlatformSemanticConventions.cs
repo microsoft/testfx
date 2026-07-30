@@ -42,7 +42,10 @@ internal static class TestingPlatformSemanticConventions
         internal const string TestCaseParentId = "test.case.parent.id";
         internal const string TestCaseResultExplanation = "test.case.result.explanation";
         internal const string TestCaseTimeoutMilliseconds = "test.case.timeout";
-        internal const string TestCaseDurationMilliseconds = "test.case.duration";
+
+        // Deliberately not "test.case.duration": that name belongs to the seconds-valued histogram, and reusing it
+        // for a milliseconds-valued span attribute would make any uniform query wrong by a factor of 1000.
+        internal const string TestCaseDurationMilliseconds = "test.case.duration_ms";
         internal const string TestCaseRetryAttempt = "test.case.retry.attempt";
         internal const string TestAssemblyName = "test.assembly.name";
         internal const string TestFrameworkName = "test.framework.name";
@@ -50,6 +53,10 @@ internal static class TestingPlatformSemanticConventions
         internal const string TestSessionId = "test.session.id";
         internal const string TestHostType = "test.host.type";
         internal const string TestRunExitCode = "test.run.exit_code";
+        internal const string TestRunResultStatus = "test.run.result.status";
+        internal const string TestRunTotalCount = "test.run.total";
+        internal const string TestRunFailedCount = "test.run.failed";
+        internal const string TestRunSkippedCount = "test.run.skipped";
         internal const string TestRunRequestType = "test.run.request_type";
         internal const string TestArtifactPath = "test.artifact.path";
         internal const string TestArtifactKind = "test.artifact.kind";

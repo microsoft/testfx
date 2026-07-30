@@ -211,16 +211,17 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         => new() { TotalRanTests = _totalRanTests, TotalFailedTests = _failedTestsCount };
 
     /// <summary>
-    /// Emits the run-level OpenTelemetry metrics.
+    /// Emits the run-level OpenTelemetry metrics and tags the root span with the run counts.
     /// </summary>
+    /// <param name="runActivity">The root span of the run, if any.</param>
     /// <remarks>
     /// This deliberately does not live in <see cref="Dispose"/>: services are disposed in registration order, and the
     /// OpenTelemetry provider is registered long before this one, so by the time we were disposed the
     /// <c>MeterProvider</c> had already been shut down and the measurement was silently dropped. The host calls this
     /// from its <c>finally</c> block instead, while the providers and the root span are still alive.
     /// </remarks>
-    internal void ReportRunTelemetry()
-        => _openTelemetryResultHandler?.NotifyRunCompleted(_totalRanTests, _failedTestsCount, _skippedTestsCount, GetProcessExitCode());
+    internal void ReportRunTelemetry(IPlatformActivity? runActivity)
+        => _openTelemetryResultHandler?.NotifyRunCompleted(_totalRanTests, _failedTestsCount, _skippedTestsCount, GetProcessExitCode(), runActivity);
 
     public void Dispose()
         => _openTelemetryResultHandler?.Dispose();

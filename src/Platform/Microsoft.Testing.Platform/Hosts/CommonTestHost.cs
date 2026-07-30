@@ -53,6 +53,11 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
                 tags: [new(TestingPlatformSemanticConventions.Attributes.TestHostType, hostType)],
                 parentId: environmentParentId);
 
+            if (environmentParentId is not null && activity is not null)
+            {
+                activity.TraceState = EnvironmentTraceContext.TryGetTraceState(ServiceProvider.GetEnvironment());
+            }
+
             if (PushOnlyProtocol is null || PushOnlyProtocol?.IsServerMode == false)
             {
                 exitCode = await RunTestAppAsync(platformOTelService, testApplicationCancellationToken, alreadyDisposed).ConfigureAwait(false);
@@ -105,7 +110,7 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
             // registered before TestApplicationResult, so anything recorded after this point would be dropped.
             if (ServiceProvider.GetService<ITestApplicationProcessExitCode>() is TestApplicationResult testApplicationResult)
             {
-                testApplicationResult.ReportRunTelemetry();
+                testApplicationResult.ReportRunTelemetry(activity);
             }
 
             // Record the run verdict on the root span before closing it, so a trace search on

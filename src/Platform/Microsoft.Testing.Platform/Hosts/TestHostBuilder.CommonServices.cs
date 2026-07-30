@@ -131,6 +131,13 @@ internal sealed partial class TestHostBuilder
                 TestingPlatformSemanticConventions.Activities.TestHostBuilder,
                 parentId: environmentParentId,
                 startTime: buildBuilderStart);
+
+            if (environmentParentId is not null && context.BuilderActivity is { } builderActivity)
+            {
+                // tracestate is not derived from traceparent, so it has to be carried across explicitly or the
+                // parent's vendor-specific sampling decision is lost for the whole run.
+                builderActivity.TraceState = EnvironmentTraceContext.TryGetTraceState(systemEnvironment);
+            }
         }
 
         _ = bool.TryParse(context.Configuration[PlatformConfigurationConstants.PlatformExitProcessOnUnhandledException], out bool isFileConfiguredToFailFast);

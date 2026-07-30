@@ -21,6 +21,12 @@ internal sealed class ActivityWrapper(Activity activity, bool isAmbient = true) 
 
     public bool IsRecording => activity.IsAllDataRequested;
 
+    public string? TraceState
+    {
+        get => activity.TraceStateString;
+        set => activity.TraceStateString = value;
+    }
+
     public IPlatformActivity SetTag(string key, object? value)
     {
         activity.SetTag(key, value);
