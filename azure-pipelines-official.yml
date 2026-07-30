@@ -271,7 +271,21 @@ extends:
                   ArtifactName: TestResults_Linux_Attempt$(System.JobAttempt)
                 condition: always()
 
-      - ${{ if eq(variables['Build.SourceBranchName'], 'main') }}:
+    # Localization runs in its own stage rather than as a job of `build`.
+    # OneLocBuild hands the resource strings off to the loc service and then opens a PR back into
+    # microsoft/testfx using the shared dnceng `BotAccount-dotnet-bot-repo-PAT` secret. That check-in
+    # step can fail for reasons unrelated to the product (for example the "Microsoft Open Source"
+    # GitHub enterprise rejecting the shared classic PAT). While it was a job of `build`, such a
+    # failure failed the whole stage, which skipped the post-build `Validate Build Assets` and
+    # `Publish using Darc` stages (both depend on `build`) and silently stopped official publishing.
+    # Nothing that ships depends on the loc PR, so the stage stands alone: a break still turns the
+    # build red, but it no longer blocks publishing. Mirrors the dotnet/runtime layout.
+    # See https://github.com/microsoft/testfx/issues/10322 for the current PAT policy breakage.
+    - ${{ if eq(variables['Build.SourceBranchName'], 'main') }}:
+      - stage: Localization
+        # OneLocBuild only needs the sources, so it can run in parallel with `build`.
+        dependsOn: []
+        jobs:
         - template: /eng/common/templates-official/job/onelocbuild.yml@self
           parameters:
             GitHubOrg: microsoft
