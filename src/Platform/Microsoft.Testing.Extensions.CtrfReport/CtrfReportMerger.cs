@@ -110,7 +110,7 @@ internal static class CtrfReportMerger
                 continue;
             }
 
-            string? format = root["reportFormat"] is JsonValue formatValue && formatValue.TryGetValue(out string? formatText) ? formatText : null;
+            string? format = ReadString(root, "reportFormat");
             if (!string.Equals(format, "CTRF", StringComparison.OrdinalIgnoreCase))
             {
                 continue;
@@ -120,10 +120,7 @@ internal static class CtrfReportMerger
             reportCount++;
             acceptedReports.Add(reportJson);
 
-            distinctRunIds.Add(
-                root["runId"] is JsonValue runIdValue && runIdValue.TryGetValue(out string? runIdText) && !RoslynString.IsNullOrEmpty(runIdText)
-                    ? runIdText
-                    : string.Empty);
+            distinctRunIds.Add(ReadString(root, "runId") is { Length: > 0 } runIdText ? runIdText : string.Empty);
 
             if (root["results"]?["environment"] is JsonObject environment)
             {
@@ -213,7 +210,7 @@ internal static class CtrfReportMerger
                 continue;
             }
 
-            switch ((string?)testObject["status"])
+            switch (ReadString(testObject, "status"))
             {
                 case "passed": passed++; break;
                 case "failed": failed++; break;
@@ -422,22 +419,19 @@ internal static class CtrfReportMerger
     /// </summary>
     private static string? GetTestIdentity(JsonObject test)
     {
-        if (test["testId"] is JsonValue testIdValue && testIdValue.TryGetValue(out string? testId) && !RoslynString.IsNullOrEmpty(testId))
+        if (ReadString(test, "testId") is { Length: > 0 } testId)
         {
             return $"testId\u001f{testId}";
         }
 
         // `extra` is free-form, so a foreign producer may well have written a string or an array there; indexing
         // anything but an object by property name throws.
-        if (test["extra"] is JsonObject extra
-            && extra["uid"] is JsonValue uidValue
-            && uidValue.TryGetValue(out string? uid)
-            && !RoslynString.IsNullOrEmpty(uid))
+        if (test["extra"] is JsonObject extra && ReadString(extra, "uid") is { Length: > 0 } uid)
         {
             return $"uid\u001f{uid}";
         }
 
-        if (test["name"] is not JsonValue nameValue || !nameValue.TryGetValue(out string? name) || RoslynString.IsNullOrEmpty(name))
+        if (ReadString(test, "name") is not { Length: > 0 } name)
         {
             return null;
         }
@@ -447,7 +441,13 @@ internal static class CtrfReportMerger
         {
             foreach (JsonNode? segment in suite)
             {
-                identity.Append('\u001f').Append((string?)segment);
+                // A suite segment is normally a string, but the document is untrusted. Fall back to the
+                // segment's JSON text so a non-string segment still contributes a distinct, deterministic part
+                // of the key instead of throwing on the string conversion.
+                identity.Append('\u001f').Append(
+                    segment is JsonValue segmentValue && segmentValue.TryGetValue(out string? segmentText)
+                        ? segmentText
+                        : segment?.ToJsonString());
             }
         }
 
@@ -483,7 +483,7 @@ internal static class CtrfReportMerger
             }
 
             attempt["attempt"] = i + 1;
-            anyFailed |= (string?)attempt["status"] == "failed";
+            anyFailed |= ReadString(attempt, "status") == "failed";
         }
 
         collapsed["retryAttempts"] = history;
@@ -491,7 +491,7 @@ internal static class CtrfReportMerger
 
         // CTRF 9.22: flaky only when the FINAL status is passed after at least one failed attempt. Recomputed
         // (rather than inherited) because an input's own flag only describes the attempt that produced it.
-        if ((string?)collapsed["status"] == "passed" && anyFailed)
+        if (ReadString(collapsed, "status") == "passed" && anyFailed)
         {
             collapsed["flaky"] = true;
         }
@@ -569,6 +569,14 @@ internal static class CtrfReportMerger
 
         return attempt;
     }
+
+    /// <summary>
+    /// Reads a string property, treating a value of any other JSON type as absent. The explicit
+    /// <c>(string?)</c> conversion on a <see cref="JsonNode"/> THROWS for a non-string value rather than
+    /// yielding <see langword="null"/>, and every document reaching the merger is untrusted.
+    /// </summary>
+    private static string? ReadString(JsonObject owner, string propertyName)
+        => owner[propertyName] is JsonValue value && value.TryGetValue(out string? text) ? text : null;
 
     /// <summary>
     /// Reads an integral property from a JSON node, tolerating anything the node may actually be. The node comes

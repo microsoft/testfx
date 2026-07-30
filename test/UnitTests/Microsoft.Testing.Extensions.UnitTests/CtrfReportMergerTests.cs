@@ -790,24 +790,37 @@ public sealed class CtrfReportMergerTests
         // document. Such rows are dropped — the same policy the merger already applies to a whole non-CTRF input
         // — and both modes must agree on that, since the merged tests[] is the same array either way.
         // `summary` is deliberately a string here too: `results.summary` is equally untrusted, and reading a
-        // property off a non-object node throws just as `tests[]` did.
+        // property off a non-object node throws just as `tests[]` did. The well-formed-looking rows carry
+        // wrong-typed VALUES — a numeric `status`, a numeric `suite` segment, a numeric `status` inside a nested
+        // `retryAttempts[]` entry — because the explicit (string?) conversion on a JsonNode throws for a
+        // non-string value instead of yielding null.
         string malformed = """
-            {"reportFormat":"CTRF","specVersion":"0.0.0","results":{"summary":"broken","tests":["oops",null,42]}}
+            {"reportFormat":"CTRF","specVersion":"0.0.0","results":{"summary":"broken","tests":[
+              "oops",
+              null,
+              42,
+              {"name":"numeric status","status":7},
+              {"name":"numeric suite","status":"failed","suite":["A",7,{"x":1}]},
+              {"name":"nested","status":"passed","extra":{"uid":"n1"},"retryAttempts":[{"attempt":1,"status":3}]}
+            ]}}
             """;
         string wellFormed = BuildReport(testEntries: [Attempt("t", "passed", uid: "u1")]);
 
         JsonNode results = JsonNode.Parse(CtrfReportMerger.Merge([malformed, wellFormed], mode))!["results"]!;
 
         var tests = (JsonArray)results["tests"]!;
-        Assert.HasCount(1, tests, "Only the real test survives.");
-        Assert.AreEqual("t", (string?)tests[0]!["name"]);
+        Assert.HasCount(4, tests, "The three non-object elements are dropped; wrong-typed values are tolerated.");
+        Assert.AreEqual("numeric status", (string?)tests[0]!["name"]);
+        Assert.AreEqual("t", (string?)tests[3]!["name"]);
 
         // CTRF 8.1: summary.tests equals the tests[] length, and the status buckets must add back up to it —
-        // a dropped row must not leave a phantom entry in either the array or the counters.
+        // a dropped row must not leave a phantom entry in either the array or the counters. An unreadable
+        // status is classified as 'other' rather than crashing the merge.
         JsonNode summary = results["summary"]!;
-        Assert.AreEqual(1, (long)summary["tests"]!);
-        Assert.AreEqual(1, (long)summary["passed"]!);
-        Assert.AreEqual(0, (long)summary["other"]!);
+        Assert.AreEqual(4, (long)summary["tests"]!);
+        Assert.AreEqual(2, (long)summary["passed"]!);
+        Assert.AreEqual(1, (long)summary["failed"]!);
+        Assert.AreEqual(1, (long)summary["other"]!, "A non-string status is unclassifiable.");
         long bucketSum = (long)summary["passed"]! + (long)summary["failed"]! + (long)summary["skipped"]!
             + (long)summary["pending"]! + (long)summary["other"]!;
         Assert.AreEqual((long)summary["tests"]!, bucketSum, "Every counted test must land in exactly one status bucket.");
