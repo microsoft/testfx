@@ -58,6 +58,12 @@ internal static class EnvironmentVariableConstants
     // Unhandled Exception
     public const string TESTINGPLATFORM_EXIT_PROCESS_ON_UNHANDLED_EXCEPTION = nameof(TESTINGPLATFORM_EXIT_PROCESS_ON_UNHANDLED_EXCEPTION);
 
+    // Correlates every process that takes part in the same logical test run: the successive attempts launched by
+    // the retry orchestrator, or the modules of a single 'dotnet test' invocation. Report formats that model a
+    // logical run spanning several documents (CTRF 'runId') surface this value so a consumer can tie those
+    // documents back together. It may also be set externally to correlate shards running on different machines.
+    public const string TESTINGPLATFORM_LOGICAL_RUN_ID = nameof(TESTINGPLATFORM_LOGICAL_RUN_ID);
+
     // Trx
     public const string TESTINGPLATFORM_TRX_TESTRUN_ID = nameof(TESTINGPLATFORM_TRX_TESTRUN_ID);
 }

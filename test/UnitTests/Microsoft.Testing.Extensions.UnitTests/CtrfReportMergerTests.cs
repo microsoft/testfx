@@ -490,6 +490,7 @@ public sealed class CtrfReportMergerTests
         string toolName = "MSTest",
         string? toolVersion = null,
         string osPlatform = "test",
+        string? runId = null,
         IEnumerable<JsonObject>? testEntries = null)
     {
         var testArray = new JsonArray();
@@ -542,7 +543,257 @@ public sealed class CtrfReportMergerTests
             },
         };
 
+        if (runId is not null)
+        {
+            report["runId"] = runId;
+        }
+
         return report.ToJsonString();
+    }
+
+    [TestMethod]
+    public void Merge_CarriesRunId_WhenEveryInputReportsTheSameOne()
+    {
+        // Per-attempt (and per-shard) documents of one logical run share a runId; the merged document
+        // describes that same logical run, so it keeps the id while getting its own reportId.
+        string a = BuildReport(runId: "run-42", testEntries: [Test("a", "passed")]);
+        string b = BuildReport(runId: "run-42", testEntries: [Test("b", "passed")]);
+
+        JsonNode merged = JsonNode.Parse(CtrfReportMerger.Merge([a, b]))!;
+
+        Assert.AreEqual("run-42", (string?)merged["runId"]);
+        Assert.AreNotEqual("run-42", (string?)merged["reportId"]);
+        Assert.AreNotEqual((string?)JsonNode.Parse(a)!["reportId"], (string?)merged["reportId"]);
+    }
+
+    [TestMethod]
+    public void Merge_OmitsRunId_WhenInputsBelongToDifferentRuns()
+    {
+        string a = BuildReport(runId: "run-1");
+        string b = BuildReport(runId: "run-2");
+
+        JsonNode merged = JsonNode.Parse(CtrfReportMerger.Merge([a, b]))!;
+
+        Assert.IsNull(merged["runId"]);
+    }
+
+    [TestMethod]
+    public void Merge_OmitsRunId_WhenAnInputHasNone()
+    {
+        // An input with no runId may or may not belong to the same run, so claiming the known one would
+        // assert a correlation the inputs do not support.
+        string a = BuildReport(runId: "run-1");
+        string b = BuildReport();
+
+        JsonNode merged = JsonNode.Parse(CtrfReportMerger.Merge([a, b]))!;
+
+        Assert.IsNull(merged["runId"]);
+    }
+
+    [TestMethod]
+    public void Merge_DefaultMode_DoesNotCollapseRepeatedTests()
+    {
+        // Cross-module merges must keep every row: MTP UIDs are only unique within an assembly, so two
+        // same-named tests can legitimately come from different modules.
+        string attempt1 = BuildReport(testEntries: [Attempt("t", "failed", uid: "u1")]);
+        string attempt2 = BuildReport(testEntries: [Attempt("t", "passed", uid: "u1")]);
+
+        JsonNode results = JsonNode.Parse(CtrfReportMerger.Merge([attempt1, attempt2]))!["results"]!;
+
+        Assert.HasCount(2, (JsonArray)results["tests"]!);
+        Assert.AreEqual(2, (long)results["summary"]!["tests"]!);
+    }
+
+    [TestMethod]
+    public void Merge_CollapseRetryAttempts_FoldsEarlierAttemptsIntoRetryHistory()
+    {
+        // Three per-attempt documents of one orchestrated retry run: attempts 1 and 2 failed, attempt 3 passed.
+        string attempt1 = BuildReport(testEntries: [Attempt("flaky test", "failed", uid: "u1", duration: 120, message: "boom 1")]);
+        string attempt2 = BuildReport(testEntries: [Attempt("flaky test", "failed", uid: "u1", duration: 130, message: "boom 2")]);
+        string attempt3 = BuildReport(testEntries: [Attempt("flaky test", "passed", uid: "u1", duration: 140)]);
+
+        JsonNode results = JsonNode.Parse(CtrfReportMerger.Merge([attempt1, attempt2, attempt3], CtrfMergeMode.CollapseRetryAttempts))!["results"]!;
+
+        var tests = (JsonArray)results["tests"]!;
+        Assert.HasCount(1, tests);
+
+        JsonNode test = tests[0]!;
+        Assert.AreEqual("passed", (string?)test["status"]);
+        Assert.IsTrue((bool)test["flaky"]!);
+
+        // ctrf-io/ctrf#58: retryAttempts holds attempts 1..N-1, so retries == retryAttempts.length and the
+        // final attempt is retries + 1.
+        var retryAttempts = (JsonArray)test["retryAttempts"]!;
+        Assert.HasCount(2, retryAttempts);
+        Assert.AreEqual(2, (long)test["retries"]!);
+        Assert.AreEqual(1, (long)retryAttempts[0]!["attempt"]!);
+        Assert.AreEqual(2, (long)retryAttempts[1]!["attempt"]!);
+        Assert.AreEqual("boom 1", (string?)retryAttempts[0]!["message"]);
+        Assert.AreEqual("boom 2", (string?)retryAttempts[1]!["message"]);
+
+        // The test object carries the FINAL attempt's duration, not the sum across attempts.
+        Assert.AreEqual(140, (long)test["duration"]!);
+        Assert.AreEqual(120, (long)retryAttempts[0]!["duration"]!);
+    }
+
+    [TestMethod]
+    public void Merge_CollapseRetryAttempts_CountsLogicalTestsOnce()
+    {
+        // The scenario from ctrf-io/ctrf#58: a 4-test suite where each attempt re-runs only what failed.
+        // The merged document describes the logical run, so it reports 4 tests, not the 8 executions.
+        string attempt1 = BuildReport(testEntries:
+        [
+            Attempt("ok1", "passed", uid: "u1"),
+            Attempt("ok2", "passed", uid: "u2"),
+            Attempt("recovers", "failed", uid: "u3"),
+            Attempt("always fails", "failed", uid: "u4"),
+        ]);
+        string attempt2 = BuildReport(testEntries:
+        [
+            Attempt("recovers", "passed", uid: "u3"),
+            Attempt("always fails", "failed", uid: "u4"),
+        ]);
+        string attempt3 = BuildReport(testEntries: [Attempt("always fails", "failed", uid: "u4")]);
+        string attempt4 = BuildReport(testEntries: [Attempt("always fails", "failed", uid: "u4")]);
+
+        JsonNode results = JsonNode.Parse(
+            CtrfReportMerger.Merge([attempt1, attempt2, attempt3, attempt4], CtrfMergeMode.CollapseRetryAttempts))!["results"]!;
+
+        JsonNode summary = results["summary"]!;
+        Assert.AreEqual(4, (long)summary["tests"]!);
+        Assert.AreEqual(3, (long)summary["passed"]!);
+        Assert.AreEqual(1, (long)summary["failed"]!);
+        Assert.AreEqual(1, (long)summary["flaky"]!);
+        Assert.HasCount(4, (JsonArray)results["tests"]!);
+
+        JsonNode alwaysFails = ((JsonArray)results["tests"]!).Single(t => (string?)t!["name"] == "always fails")!;
+        Assert.AreEqual("failed", (string?)alwaysFails["status"]);
+        Assert.AreEqual(3, (long)alwaysFails["retries"]!);
+        Assert.IsNull(alwaysFails["flaky"]);
+
+        JsonNode neverRetried = ((JsonArray)results["tests"]!).Single(t => (string?)t!["name"] == "ok1")!;
+        Assert.IsNull(neverRetried["retries"]);
+        Assert.IsNull(neverRetried["retryAttempts"]);
+    }
+
+    [TestMethod]
+    public void Merge_CollapseRetryAttempts_FlattensInProcessRetriesOfEachAttempt()
+    {
+        // An attempt process can itself have retried the test in-process; those executions are already in its
+        // retryAttempts[] and must keep their place in the merged history instead of being dropped.
+        JsonObject firstAttempt = Attempt("t", "failed", uid: "u1", message: "second execution");
+        firstAttempt["retryAttempts"] = new JsonArray(new JsonObject
+        {
+            ["attempt"] = 1,
+            ["status"] = "failed",
+            ["message"] = "first execution",
+        });
+
+        string attempt1 = BuildReport(testEntries: [firstAttempt]);
+        string attempt2 = BuildReport(testEntries: [Attempt("t", "passed", uid: "u1")]);
+
+        JsonNode test = ((JsonArray)JsonNode.Parse(
+            CtrfReportMerger.Merge([attempt1, attempt2], CtrfMergeMode.CollapseRetryAttempts))!["results"]!["tests"]!)[0]!;
+
+        var retryAttempts = (JsonArray)test["retryAttempts"]!;
+        Assert.HasCount(2, retryAttempts);
+        Assert.AreEqual(3, (long)test["retries"]! + 1, "The final attempt is retries + 1.");
+        Assert.AreEqual("first execution", (string?)retryAttempts[0]!["message"]);
+        Assert.AreEqual("second execution", (string?)retryAttempts[1]!["message"]);
+        Assert.AreEqual(1, (long)retryAttempts[0]!["attempt"]!);
+        Assert.AreEqual(2, (long)retryAttempts[1]!["attempt"]!);
+    }
+
+    [TestMethod]
+    public void Merge_CollapseRetryAttempts_ProjectsAttemptsOntoRetryAttemptShape()
+    {
+        // CTRF section 11 forbids unknown fields on a retry attempt, so test-only fields must not leak into it;
+        // rawStatus has no attempt-level slot and moves under 'extra', the only permitted extension point.
+        JsonObject failing = Attempt("t", "failed", uid: "u1", message: "boom");
+        failing["rawStatus"] = "timedOut";
+        failing["suite"] = new JsonArray("NS", "C");
+        failing["tags"] = new JsonArray("slow");
+        failing["trace"] = "at X()";
+
+        string attempt1 = BuildReport(testEntries: [failing]);
+        string attempt2 = BuildReport(testEntries: [Attempt("t", "passed", uid: "u1")]);
+
+        JsonNode test = ((JsonArray)JsonNode.Parse(
+            CtrfReportMerger.Merge([attempt1, attempt2], CtrfMergeMode.CollapseRetryAttempts))!["results"]!["tests"]!)[0]!;
+
+        JsonNode retryAttempt = ((JsonArray)test["retryAttempts"]!)[0]!;
+        Assert.AreEqual("failed", (string?)retryAttempt["status"]);
+        Assert.AreEqual("boom", (string?)retryAttempt["message"]);
+        Assert.AreEqual("at X()", (string?)retryAttempt["trace"]);
+        Assert.AreEqual("timedOut", (string?)retryAttempt["extra"]!["rawStatus"]);
+        Assert.AreEqual("u1", (string?)retryAttempt["extra"]!["uid"]);
+        Assert.IsNull(retryAttempt["name"]);
+        Assert.IsNull(retryAttempt["suite"]);
+        Assert.IsNull(retryAttempt["tags"]);
+        Assert.IsNull(retryAttempt["rawStatus"]);
+    }
+
+    [TestMethod]
+    public void Merge_CollapseRetryAttempts_DropsStaleFlakyFlag_WhenFinalAttemptFails()
+    {
+        // An input's own flaky flag only describes the attempt that produced it; a later failure means the
+        // logical test is not flaky (CTRF 9.22 requires the FINAL status to be passed).
+        JsonObject recovered = Attempt("t", "passed", uid: "u1");
+        recovered["flaky"] = true;
+
+        string attempt1 = BuildReport(testEntries: [recovered]);
+        string attempt2 = BuildReport(testEntries: [Attempt("t", "failed", uid: "u1")]);
+
+        JsonNode results = JsonNode.Parse(
+            CtrfReportMerger.Merge([attempt1, attempt2], CtrfMergeMode.CollapseRetryAttempts))!["results"]!;
+
+        JsonNode test = ((JsonArray)results["tests"]!)[0]!;
+        Assert.AreEqual("failed", (string?)test["status"]);
+        Assert.IsNull(test["flaky"]);
+        Assert.AreEqual(0, (long)results["summary"]!["flaky"]!);
+    }
+
+    [TestMethod]
+    public void Merge_CollapseRetryAttempts_UsesNameAndSuite_WhenNoIdentifierIsAvailable()
+    {
+        // Without testId or extra.uid, the suite path plus name is the only identity available, and two tests
+        // that only share a name must not be fused.
+        static JsonObject Named(string name, string status, string suite)
+        {
+            JsonObject test = Test(name, status);
+            test["suite"] = new JsonArray(suite);
+            return test;
+        }
+
+        string attempt1 = BuildReport(testEntries: [Named("t", "failed", "A"), Named("t", "failed", "B")]);
+        string attempt2 = BuildReport(testEntries: [Named("t", "passed", "A"), Named("t", "failed", "B")]);
+
+        var tests = (JsonArray)JsonNode.Parse(
+            CtrfReportMerger.Merge([attempt1, attempt2], CtrfMergeMode.CollapseRetryAttempts))!["results"]!["tests"]!;
+
+        Assert.HasCount(2, tests);
+        Assert.AreEqual("passed", (string?)tests[0]!["status"]);
+        Assert.AreEqual("failed", (string?)tests[1]!["status"]);
+        Assert.AreEqual(1, (long)tests[0]!["retries"]!);
+        Assert.AreEqual(1, (long)tests[1]!["retries"]!);
+    }
+
+    private static JsonObject Attempt(string name, string status, string uid, long duration = 1, string? message = null)
+    {
+        var test = new JsonObject
+        {
+            ["name"] = name,
+            ["status"] = status,
+            ["duration"] = duration,
+            ["extra"] = new JsonObject { ["uid"] = uid },
+        };
+
+        if (message is not null)
+        {
+            test["message"] = message;
+        }
+
+        return test;
     }
 
     [TestMethod]

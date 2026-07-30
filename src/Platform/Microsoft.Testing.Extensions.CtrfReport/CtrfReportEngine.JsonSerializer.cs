@@ -4,6 +4,7 @@
 using System.Text.Json;
 
 using Microsoft.Testing.Platform;
+using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Extensions.CtrfReport;
 
@@ -68,6 +69,12 @@ internal sealed partial class CtrfReportEngine
             // Bump this constant whenever we update against a newer schema revision.
             writer.WriteString("specVersion", CtrfSpecVersion);
             writer.WriteString("reportId", Guid.NewGuid().ToString("D"));
+            // CTRF 5.4 (`runId`): identifies the logical run this document belongs to. A logical run can span
+            // several documents — the modules of one `dotnet test` invocation, or the successive processes of
+            // `--retry-failed-tests`, where each attempt writes its own document. ctrf-io/ctrf#58 confirmed that
+            // those per-execution documents (and any document merged from them) SHOULD share a `runId` while each
+            // keeps its own `reportId`. When nothing correlated this process, it is the whole logical run.
+            writer.WriteString("runId", ResolveRunId());
             writer.WriteString("timestamp", finishTime.ToString("O", CultureInfo.InvariantCulture));
             writer.WriteString(
                 "generatedBy",
@@ -151,5 +158,25 @@ internal sealed partial class CtrfReportEngine
         }
 
         return ms.ToArray();
+    }
+
+    /// <summary>
+    /// Resolves the CTRF <c>runId</c>: the id of the logical run this document belongs to.
+    /// </summary>
+    /// <remarks>
+    /// The retry orchestrator seeds <c>TESTINGPLATFORM_LOGICAL_RUN_ID</c> before launching its attempts, so every
+    /// attempt process stamps the same value; <c>dotnet test</c> already correlates the modules of one invocation
+    /// through its execution id, which serves the same purpose when no orchestrator is involved. Falling back to a
+    /// fresh id keeps the field a valid non-empty string for a standalone run, which is its own logical run.
+    /// </remarks>
+    private string ResolveRunId()
+    {
+        string? runId = _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_LOGICAL_RUN_ID);
+        if (RoslynString.IsNullOrEmpty(runId))
+        {
+            runId = _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID);
+        }
+
+        return RoslynString.IsNullOrEmpty(runId) ? Guid.NewGuid().ToString("D") : runId;
     }
 }

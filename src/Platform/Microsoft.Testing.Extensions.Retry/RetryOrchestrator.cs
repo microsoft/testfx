@@ -2,6 +2,7 @@
 // Licensed under dual-license. See LICENSE.PLATFORMTOOLS.txt file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.Policy.Resources;
+using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
@@ -83,6 +84,15 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
         }
 
         environment.SetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_TRX_TESTRUN_ID, Guid.NewGuid().ToString("N"));
+
+        // Every attempt is a separate process writing its own report, but together they are one logical run.
+        // Formats that can express that (CTRF 'runId') need all attempts to agree on a single id, so seed one
+        // here and let the launched test hosts inherit it. An id set by an outer orchestrator (for example
+        // 'dotnet test' correlating several modules) already covers these attempts, so it is preserved.
+        if (RoslynString.IsNullOrEmpty(environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_LOGICAL_RUN_ID)))
+        {
+            environment.SetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_LOGICAL_RUN_ID, Guid.NewGuid().ToString("N"));
+        }
 
         ILogger logger = _serviceProvider.GetLoggerFactory().CreateLogger<RetryOrchestrator>();
         IConfiguration configuration = _serviceProvider.GetConfiguration();

@@ -830,6 +830,53 @@ public class CtrfReportEngineTests
         Assert.AreEqual("only-line", stdout[0].GetString());
     }
 
+    [TestMethod]
+    public async Task GenerateReportAsync_RunId_UsesTheSharedLogicalRunId()
+    {
+        // ctrf-io/ctrf#58: every process of one logical run (the attempts of --retry-failed-tests, the modules
+        // of one dotnet test invocation) must stamp the same runId, so consumers can tie those documents back
+        // together. The orchestrator publishes that id through this environment variable.
+        using var memoryStream = new MemoryFileStream();
+        CtrfReportEngine engine = CreateEngine(memoryStream);
+        _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_LOGICAL_RUN_ID")).Returns("run-42");
+
+        await engine.GenerateReportAsync([Captured("p1", "Passing test", "passed")]);
+
+        using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
+        Assert.AreEqual("run-42", document.RootElement.GetProperty("runId").GetString());
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_RunId_FallsBackToTheDotnetTestExecutionId()
+    {
+        using var memoryStream = new MemoryFileStream();
+        CtrfReportEngine engine = CreateEngine(memoryStream);
+        _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_LOGICAL_RUN_ID")).Returns((string?)null);
+        _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_DOTNETTEST_EXECUTIONID")).Returns("execution-7");
+
+        await engine.GenerateReportAsync([Captured("p1", "Passing test", "passed")]);
+
+        using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
+        Assert.AreEqual("execution-7", document.RootElement.GetProperty("runId").GetString());
+    }
+
+    [TestMethod]
+    public async Task GenerateReportAsync_RunId_IsGenerated_WhenNothingCorrelatedTheProcess()
+    {
+        // A standalone run is its own logical run, and CTRF requires runId to be a non-empty string when present.
+        using var memoryStream = new MemoryFileStream();
+        CtrfReportEngine engine = CreateEngine(memoryStream);
+        _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_LOGICAL_RUN_ID")).Returns((string?)null);
+        _ = _environmentMock.Setup(x => x.GetEnvironmentVariable("TESTINGPLATFORM_DOTNETTEST_EXECUTIONID")).Returns((string?)null);
+
+        await engine.GenerateReportAsync([Captured("p1", "Passing test", "passed")]);
+
+        using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
+        string runId = document.RootElement.GetProperty("runId").GetString()!;
+        Assert.IsTrue(Guid.TryParse(runId, out _), $"Expected a generated id, got '{runId}'.");
+        Assert.AreNotEqual(document.RootElement.GetProperty("reportId").GetString(), runId);
+    }
+
     private CtrfReportEngine CreateEngine(MemoryFileStream stream)
     {
         _ = _fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
