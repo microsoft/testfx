@@ -77,6 +77,9 @@ internal sealed partial class CtrfReportEngine
 
         if (c.PriorAttempts.Count > 0)
         {
+            // CTRF 9.20/9.21 as clarified by ctrf-io/ctrf#58: `retries` is the number of
+            // re-executions, which equals `retryAttempts.length` because the array holds
+            // attempts 1..N-1 only — so the final attempt's number is `retries + 1`.
             writer.WriteNumber("retries", c.PriorAttempts.Count);
             writer.WritePropertyName("retryAttempts");
             writer.WriteStartArray();
