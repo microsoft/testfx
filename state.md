@@ -17,15 +17,15 @@ dotnet run --project <proj> -f net9.0 --no-build \
 
 | Task | Last Run     |
 |------|-------------|
-| 1    | 2026-07-14  |
+| 1    | 2026-07-30  |
 | 2    | 2026-07-28  |
 | 3    | 2026-07-27  |
 | 4    | 2026-07-27  |
 | 5    | 2026-07-27  |
 | 6    | 2026-07-28  |
-| 7    | 2026-07-28  |
+| 7    | 2026-07-30  |
 
-Next priority: Task 1 (oldest: 2026-07-14)
+Next priority: Tasks 3, 4, 5 (oldest: 2026-07-27)
 
 ## Completed Work
 
