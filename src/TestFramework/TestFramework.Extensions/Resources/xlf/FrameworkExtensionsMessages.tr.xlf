@@ -23,8 +23,8 @@
         <note>Do not localize the product name {Locked="WinUI"} or the API name {Locked="Application.Start"}. {0} is the message of the original failure.</note>
       </trans-unit>
       <trans-unit id="WinUIApplicationStartupTimedOut">
-        <source>The WinUI application under test did not finish initializing within {0}. Application.Start was called but never invoked its initialization callback.</source>
-        <target state="new">The WinUI application under test did not finish initializing within {0}. Application.Start was called but never invoked its initialization callback.</target>
+        <source>The WinUI application under test did not finish initializing within {0}. Application.Start was called but its initialization did not complete.</source>
+        <target state="new">The WinUI application under test did not finish initializing within {0}. Application.Start was called but its initialization did not complete.</target>
         <note>Do not localize the product name {Locked="WinUI"} or the API name {Locked="Application.Start"}. {0} is a timeout duration.</note>
       </trans-unit>
     </body>

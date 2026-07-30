@@ -130,7 +130,7 @@
     <comment>Do not localize the product names {Locked="WinUI"}{Locked="Windows App SDK"}.</comment>
   </data>
   <data name="WinUIApplicationStartupTimedOut" xml:space="preserve">
-    <value>The WinUI application under test did not finish initializing within {0}. Application.Start was called but never invoked its initialization callback.</value>
+    <value>The WinUI application under test did not finish initializing within {0}. Application.Start was called but its initialization did not complete.</value>
     <comment>Do not localize the product name {Locked="WinUI"} or the API name {Locked="Application.Start"}. {0} is a timeout duration.</comment>
   </data>
   <data name="WinUIApplicationInitializationAlreadyFailed" xml:space="preserve">

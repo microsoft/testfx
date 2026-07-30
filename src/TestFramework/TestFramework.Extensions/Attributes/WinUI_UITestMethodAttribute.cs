@@ -263,29 +263,12 @@ public class UITestMethodAttribute : TestMethodAttribute
         // incomplete and used to hang the whole run with no diagnostic at all (see issue #2784):
         //  - XAML tears this thread down for some native startup failures without surfacing a managed
         //    exception, so neither catch above runs. A dead thread therefore counts as a failure.
-        //  - Application.Start can block without ever invoking its callback (for example a modal dialog
-        //    during XAML initialization), keeping the thread alive. The overall timeout covers that.
+        //  - Startup can stall while the thread stays alive: Application.Start may block without ever
+        //    invoking its callback (for example a modal dialog during XAML initialization), or the
+        //    callback may block constructing the application. The overall timeout covers both.
         // On success the callback completes the wait while the thread keeps pumping, so this costs at
         // most one poll interval.
-        var startupTimer = Stopwatch.StartNew();
-        while (!tsc.Task.IsCompleted)
-        {
-            if (uiThread.Join(ThreadLivenessPollInterval))
-            {
-                tsc.TrySetException(new InvalidOperationException(FrameworkExtensionsMessages.WinUIApplicationFailedToStart));
-                break;
-            }
-
-            if (startupTimer.Elapsed > ApplicationStartupTimeout)
-            {
-                // The thread is still alive, so the application did not exit — it never finished coming
-                // up. Say that rather than reusing the "exited without initializing" message, which would
-                // point at the wrong cause.
-                tsc.TrySetException(new TimeoutException(
-                    string.Format(CultureInfo.CurrentCulture, FrameworkExtensionsMessages.WinUIApplicationStartupTimedOut, ApplicationStartupTimeout)));
-                break;
-            }
-        }
+        WaitForApplicationStartup(tsc, uiThread.Join, ApplicationStartupTimeout, ThreadLivenessPollInterval);
 
         try
         {
@@ -299,6 +282,47 @@ public class UITestMethodAttribute : TestMethodAttribute
             // generic message. A bare 'throw' preserves the original stack.
             s_applicationInitializationFailure = ex;
             throw;
+        }
+    }
+
+    /// <summary>
+    /// Waits for application startup to complete, and fails the wait rather than blocking forever when
+    /// the UI thread dies or startup stalls.
+    /// </summary>
+    /// <remarks>
+    /// Separated from the thread it observes so that both failure paths can be covered by tests without a
+    /// real XAML application: they are the guards that keep a startup problem a test failure rather than
+    /// the hung run described in issue #2784, and neither is reproducible on demand from a test host.
+    /// </remarks>
+    /// <typeparam name="T">The result the startup completion carries.</typeparam>
+    /// <param name="startupCompletion">Completed by the initialization callback once the application is up.</param>
+    /// <param name="waitForUiThreadExit">Waits the given interval for the UI thread to exit, returning whether it did.</param>
+    /// <param name="timeout">How long startup may take before it is reported as stalled.</param>
+    /// <param name="pollInterval">How long each liveness check waits for the UI thread to exit.</param>
+    internal static void WaitForApplicationStartup<T>(
+        TaskCompletionSource<T> startupCompletion,
+        Func<TimeSpan, bool> waitForUiThreadExit,
+        TimeSpan timeout,
+        TimeSpan pollInterval)
+    {
+        var startupTimer = Stopwatch.StartNew();
+        while (!startupCompletion.Task.IsCompleted)
+        {
+            if (waitForUiThreadExit(pollInterval))
+            {
+                startupCompletion.TrySetException(new InvalidOperationException(FrameworkExtensionsMessages.WinUIApplicationFailedToStart));
+                return;
+            }
+
+            if (startupTimer.Elapsed > timeout)
+            {
+                // The thread is still alive, so the application did not exit — it never finished coming
+                // up. Say that rather than reusing the "exited without initializing" message, which would
+                // point at the wrong cause.
+                startupCompletion.TrySetException(new TimeoutException(
+                    string.Format(CultureInfo.CurrentCulture, FrameworkExtensionsMessages.WinUIApplicationStartupTimedOut, timeout)));
+                return;
+            }
         }
     }
 }
