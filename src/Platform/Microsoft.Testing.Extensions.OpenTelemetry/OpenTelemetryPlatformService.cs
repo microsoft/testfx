@@ -18,13 +18,26 @@ internal sealed class OpenTelemetryPlatformService : IPlatformOpenTelemetryServi
 
     public IPlatformActivity? TestFrameworkActivity { get; set; }
 
-    public IPlatformActivity? CurrentActivity
-        => Activity.Current is { } current ? new ActivityWrapper(current) : null;
+    public bool HasCurrentActivity => Activity.Current is not null;
 
-    public IPlatformActivity? StartActivity([CallerMemberName] string name = "", IEnumerable<KeyValuePair<string, object?>>? tags = null, string? parentId = null, DateTimeOffset startTime = default, PlatformActivityKind kind = PlatformActivityKind.Internal)
-        => _activitySource.StartActivity(name, ToActivityKind(kind), tags: tags, startTime: startTime, parentId: parentId) is Activity activity
-            ? new ActivityWrapper(activity)
-            : null;
+    public IPlatformActivity? StartActivity([CallerMemberName] string name = "", IEnumerable<KeyValuePair<string, object?>>? tags = null, string? parentId = null, DateTimeOffset startTime = default, PlatformActivityKind kind = PlatformActivityKind.Internal, bool setAsCurrent = true)
+    {
+        Activity? ambientBeforeStart = setAsCurrent ? null : Activity.Current;
+        if (_activitySource.StartActivity(name, ToActivityKind(kind), tags: tags, startTime: startTime, parentId: parentId) is not Activity activity)
+        {
+            return null;
+        }
+
+        if (setAsCurrent)
+        {
+            return new ActivityWrapper(activity);
+        }
+
+        // StartActivity unconditionally publishes the new activity as Activity.Current. Undo that immediately so
+        // the span is timed and exported without ever leaking into an ExecutionContext captured by the code we wrap.
+        Activity.Current = ambientBeforeStart;
+        return new ActivityWrapper(activity, isAmbient: false);
+    }
 
     public ICounter<T> CreateCounter<T>(string name, string? unit = null, string? description = null, IEnumerable<KeyValuePair<string, object?>>? tags = null)
         where T : struct
@@ -52,8 +65,10 @@ internal sealed class OpenTelemetryPlatformService : IPlatformOpenTelemetryServi
 
     public void Dispose()
     {
+        // The Meter is intentionally not disposed: it is disposed of by the process exiting, and disposing it here
+        // would remove its instruments before the MeterProvider (registered after this service, and therefore
+        // disposed after it) gets a chance to flush the final measurements.
         _activitySource.Dispose();
-        _meter.Dispose();
         lock (_observableInstruments)
         {
             _observableInstruments.Clear();

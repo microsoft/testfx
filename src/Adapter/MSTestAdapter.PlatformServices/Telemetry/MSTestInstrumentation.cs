@@ -39,6 +39,15 @@ internal interface IMSTestActivity : IDisposable
 /// explanation for a slow test, whereas with it you can see that, say, <c>AssemblyInitialize</c> took 8 of the 9
 /// seconds, or that a fixture and not the test body threw.
 /// </para>
+/// <para>
+/// <b>Spans created here are never ambient.</b> MSTest captures the <see cref="System.Threading.ExecutionContext"/>
+/// after <c>AssemblyInitialize</c>, <c>ClassInitialize</c> and the test-level fixtures so that async-locals set there
+/// flow to every subsequent test (see <c>TestMethodRunner.ExecuteTestAsync</c>). The ambient activity is itself an
+/// async-local, so an ambient span would be captured into that context and restored for the rest of the run -
+/// parenting every later span, and any activity the user's own code starts, to a span that has long since ended.
+/// The factory therefore creates spans that are timed and exported but never published as the current activity, and
+/// parents them explicitly instead.
+/// </para>
 /// </remarks>
 internal static class MSTestInstrumentation
 {
@@ -71,7 +80,7 @@ internal static class MSTestInstrumentation
         internal const string TimeoutMilliseconds = "test.case.timeout";
     }
 
-    private static Func<string, IEnumerable<KeyValuePair<string, object?>>?, IMSTestActivity?>? s_activityFactory;
+    private static volatile Func<string, IEnumerable<KeyValuePair<string, object?>>?, IMSTestActivity?>? s_activityFactory;
 
     /// <summary>
     /// Gets a value indicating whether a tracing factory has been installed. Call sites should use this to avoid
@@ -95,13 +104,17 @@ internal static class MSTestInstrumentation
     /// Starts a span describing a fixture method (assembly/class/test initialize or cleanup).
     /// </summary>
     internal static IMSTestActivity? StartFixtureActivity(string name, string fixtureKind, string? owningType, string? assemblyName = null)
-        => s_activityFactory is null
+    {
+        // Read the volatile field once: the tag array must not be built when tracing is off.
+        Func<string, IEnumerable<KeyValuePair<string, object?>>?, IMSTestActivity?>? factory = s_activityFactory;
+        return factory is null
             ? null
-            : s_activityFactory(
+            : factory(
                 name,
                 [
                     new(Attributes.FixtureKind, fixtureKind),
                     new(Attributes.TestClass, owningType),
                     new(Attributes.TestAssembly, assemblyName),
                 ]);
+    }
 }

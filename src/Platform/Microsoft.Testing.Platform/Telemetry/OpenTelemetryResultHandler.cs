@@ -32,8 +32,11 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
     // multiple test nodes that share the same Uid (e.g. NUnit's [Values("one", "one")] or
     // MSTest's "folded" parameterized tests). When that happens we still want to track every
     // in-flight activity and pair them with results in FIFO order, instead of throwing.
-    private readonly Dictionary<TestNodeUid, Queue<IPlatformActivity>> _testActivities = [];
+    // The queued activity is nullable on purpose: when no tracer is listening StartActivity returns null, and we
+    // still need the entry so the in-flight bookkeeping (and therefore test.case.active) stays balanced.
+    private readonly Dictionary<TestNodeUid, Queue<IPlatformActivity?>> _testActivities = [];
     private bool _disposed;
+    private bool _runCompletedReported;
 
     public OpenTelemetryResultHandler(IPlatformOpenTelemetryService otelService)
         : this(otelService, PlatformOpenTelemetryOptions.Default)
@@ -105,34 +108,24 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
             parentId: _otelService.TestFrameworkActivity?.Id,
             tags: GetTestInitialInfo(testNode, parentUid));
 
-        if (activity is not null)
+        if (!_testActivities.TryGetValue(testNode.Uid, out Queue<IPlatformActivity?>? activities))
         {
-            if (!_testActivities.TryGetValue(testNode.Uid, out Queue<IPlatformActivity>? activities))
-            {
-                activities = new Queue<IPlatformActivity>();
-                _testActivities.Add(testNode.Uid, activities);
-            }
-
-            activities.Enqueue(activity);
+            activities = new Queue<IPlatformActivity?>();
+            _testActivities.Add(testNode.Uid, activities);
         }
+
+        activities.Enqueue(activity);
     }
 
     internal void NotifyExecutionCompleted(TestNode testNode)
     {
         _totalCompletedTests?.Add(1);
-        if (!_testActivities.TryGetValue(testNode.Uid, out Queue<IPlatformActivity>? activities) || activities.Count == 0)
+        if (!TryDequeueInFlight(testNode, out IPlatformActivity? activity))
         {
             return;
         }
 
-        IPlatformActivity activity = activities.Dequeue();
-        if (activities.Count == 0)
-        {
-            _testActivities.Remove(testNode.Uid);
-        }
-
-        _activeTestCases.Add(-1);
-        activity.Dispose();
+        activity?.Dispose();
     }
 
     internal void NotifyUnknown()
@@ -143,21 +136,22 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
     /// </summary>
     internal void NotifyRunCompleted(int totalRanTests, int failedTests, int skippedTests, int exitCode)
     {
+        // Dispose can legitimately run more than once; recording a second data point would double count the run.
+        if (_runCompletedReported)
+        {
+            return;
+        }
+
+        _runCompletedReported = true;
         _runStopwatch.Stop();
         _testRunDuration.Record(
             _runStopwatch.Elapsed.TotalSeconds,
             [
                 new(TestingPlatformSemanticConventions.Attributes.TestCaseResultStatus, failedTests > 0 ? TestingPlatformSemanticConventions.TestResultStatus.Failed : TestingPlatformSemanticConventions.TestResultStatus.Passed),
                 new(TestingPlatformSemanticConventions.Attributes.TestRunExitCode, exitCode),
+                new("test.run.total", totalRanTests),
+                new("test.run.skipped", skippedTests),
             ]);
-
-        if (_otelService.CurrentActivity is { } activity)
-        {
-            activity.SetTag("test.run.total", totalRanTests);
-            activity.SetTag("test.run.failed", failedTests);
-            activity.SetTag("test.run.skipped", skippedTests);
-            activity.SetTag(TestingPlatformSemanticConventions.Attributes.TestRunExitCode, exitCode);
-        }
     }
 
     public void Dispose()
@@ -168,15 +162,36 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
         }
 
         _disposed = true;
-        foreach (Queue<IPlatformActivity> activities in _testActivities.Values)
+        foreach (Queue<IPlatformActivity?> activities in _testActivities.Values)
         {
-            foreach (IPlatformActivity activity in activities)
+            foreach (IPlatformActivity? activity in activities)
             {
-                activity.Dispose();
+                activity?.Dispose();
             }
         }
 
         _testActivities.Clear();
+    }
+
+    /// <summary>
+    /// Removes the oldest in-flight entry for the node and keeps <c>test.case.active</c> balanced.
+    /// </summary>
+    private bool TryDequeueInFlight(TestNode testNode, out IPlatformActivity? activity)
+    {
+        activity = null;
+        if (!_testActivities.TryGetValue(testNode.Uid, out Queue<IPlatformActivity?>? activities) || activities.Count == 0)
+        {
+            return false;
+        }
+
+        activity = activities.Dequeue();
+        if (activities.Count == 0)
+        {
+            _testActivities.Remove(testNode.Uid);
+        }
+
+        _activeTestCases.Add(-1);
+        return true;
     }
 
     /// <summary>
@@ -272,21 +287,14 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
 
         _testCaseResultCount.Add(1, measurementTags);
 
-        if (!_testActivities.TryGetValue(testNode.Uid, out Queue<IPlatformActivity>? activities) || activities.Count == 0)
+        if (!TryDequeueInFlight(testNode, out IPlatformActivity? activity) || activity is null)
         {
-            // Even without an activity (the framework never reported the test as in-progress) we still want the
-            // duration recorded, otherwise a framework that only publishes final results produces no latency data.
+            // Either the framework never reported the test as in-progress, or nothing is listening so no span was
+            // created. Either way we still want the duration recorded, otherwise a framework that only publishes
+            // final results produces no latency data.
             SetResultDetails(testNode, measurementTags, activity: null);
             return;
         }
-
-        IPlatformActivity activity = activities.Dequeue();
-        if (activities.Count == 0)
-        {
-            _testActivities.Remove(testNode.Uid);
-        }
-
-        _activeTestCases.Add(-1);
 
         activity.SetTag(TestingPlatformSemanticConventions.Attributes.TestCaseResultStatus, result);
         activity.SetTag(TestingPlatformSemanticConventions.Attributes.TestCaseResultExplanation, _options.Truncate(stateProperty.Explanation));

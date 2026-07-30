@@ -210,16 +210,18 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
     public Statistics GetStatistics()
         => new() { TotalRanTests = _totalRanTests, TotalFailedTests = _failedTestsCount };
 
-    public void Dispose()
-    {
-        if (_openTelemetryResultHandler is null)
-        {
-            return;
-        }
+    /// <summary>
+    /// Emits the run-level OpenTelemetry metrics.
+    /// </summary>
+    /// <remarks>
+    /// This deliberately does not live in <see cref="Dispose"/>: services are disposed in registration order, and the
+    /// OpenTelemetry provider is registered long before this one, so by the time we were disposed the
+    /// <c>MeterProvider</c> had already been shut down and the measurement was silently dropped. The host calls this
+    /// from its <c>finally</c> block instead, while the providers and the root span are still alive.
+    /// </remarks>
+    internal void ReportRunTelemetry()
+        => _openTelemetryResultHandler?.NotifyRunCompleted(_totalRanTests, _failedTestsCount, _skippedTestsCount, GetProcessExitCode());
 
-        // Emit the run-level metrics before tearing the handler down; this is the last point at which the
-        // final verdict and counts are known.
-        _openTelemetryResultHandler.NotifyRunCompleted(_totalRanTests, _failedTestsCount, _skippedTestsCount, GetProcessExitCode());
-        _openTelemetryResultHandler.Dispose();
-    }
+    public void Dispose()
+        => _openTelemetryResultHandler?.Dispose();
 }

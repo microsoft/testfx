@@ -260,11 +260,13 @@ internal partial class TestMethodInfo
             timeout = localTimeout;
         }
 
-        using IMSTestActivity? activity = MSTestInstrumentation.StartFixtureActivity(
-            MSTestInstrumentation.ActivityNames.TestInitialize,
-            "test_initialize",
-            methodInfo.DeclaringType?.FullName,
-            methodInfo.DeclaringType?.Assembly.GetName().Name);
+        using IMSTestActivity? activity = MSTestInstrumentation.IsEnabled
+            ? MSTestInstrumentation.StartFixtureActivity(
+                MSTestInstrumentation.ActivityNames.TestInitialize,
+                "test_initialize",
+                methodInfo.DeclaringType?.FullName,
+                methodInfo.DeclaringType?.Assembly.GetName().Name)
+            : null;
 
         TestFailedException? result = await InvokeFixtureMethodAsync(
             methodInfo,
@@ -301,11 +303,13 @@ internal partial class TestMethodInfo
             timeout = localTimeout;
         }
 
-        using IMSTestActivity? activity = MSTestInstrumentation.StartFixtureActivity(
-            MSTestInstrumentation.ActivityNames.TestCleanup,
-            "test_cleanup",
-            methodInfo.DeclaringType?.FullName,
-            methodInfo.DeclaringType?.Assembly.GetName().Name);
+        using IMSTestActivity? activity = MSTestInstrumentation.IsEnabled
+            ? MSTestInstrumentation.StartFixtureActivity(
+                MSTestInstrumentation.ActivityNames.TestCleanup,
+                "test_cleanup",
+                methodInfo.DeclaringType?.FullName,
+                methodInfo.DeclaringType?.Assembly.GetName().Name)
+            : null;
 
         TestFailedException? result = await InvokeFixtureMethodAsync(
             methodInfo,

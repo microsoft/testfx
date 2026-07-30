@@ -36,7 +36,11 @@ internal sealed class MSTestPlatformActivity(IPlatformActivity activity) : IMSTe
         }
 
         MSTestInstrumentation.SetActivityFactory((name, tags)
-            => otelService.StartActivity(name, tags) is { } platformActivity
+            // setAsCurrent: false is required, not an optimization - see the remarks on MSTestInstrumentation.
+            // Because the spans are not ambient they cannot pick a parent up from the ambient context either, so
+            // they are parented explicitly to the same test-framework span the platform's test-case spans use,
+            // which keeps everything in one trace.
+            => otelService.StartActivity(name, tags, parentId: otelService.TestFrameworkActivity?.Id, setAsCurrent: false) is { } platformActivity
                 ? new MSTestPlatformActivity(platformActivity)
                 : null);
     }

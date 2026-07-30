@@ -17,12 +17,27 @@ internal interface IPlatformOpenTelemetryService : IDisposable
     IPlatformActivity? TestFrameworkActivity { get; set; }
 
     /// <summary>
-    /// Gets the ambient (innermost currently running) activity, if any. Frameworks and extensions use this to
-    /// parent their own spans without having to thread an activity through their call stack.
+    /// Gets a value indicating whether an ambient (currently running) activity exists. Exposed as a boolean rather
+    /// than as the activity itself so callers cannot accidentally dispose an activity they do not own.
     /// </summary>
-    IPlatformActivity? CurrentActivity { get; }
+    bool HasCurrentActivity { get; }
 
-    IPlatformActivity? StartActivity([CallerMemberName] string name = "", IEnumerable<KeyValuePair<string, object?>>? tags = null, string? parentId = null, DateTimeOffset startTime = default, PlatformActivityKind kind = PlatformActivityKind.Internal);
+    /// <summary>
+    /// Starts an activity.
+    /// </summary>
+    /// <param name="name">The span name.</param>
+    /// <param name="tags">Attributes to set on the span at creation time.</param>
+    /// <param name="parentId">An explicit parent. When <see langword="null"/> the ambient activity is used.</param>
+    /// <param name="startTime">An explicit start time, for spans that cover work that already began.</param>
+    /// <param name="kind">The span kind.</param>
+    /// <param name="setAsCurrent">
+    /// When <see langword="false"/>, the activity is created and timed but never becomes the ambient activity.
+    /// <para>This matters for code that captures an <see cref="System.Threading.ExecutionContext"/> while the span is
+    /// open: the ambient activity is an async-local, so it would be captured too and later restored - parenting
+    /// unrelated, much later work to a span that has already ended. MSTest does exactly that when it propagates
+    /// async-locals set by <c>AssemblyInitialize</c>/<c>ClassInitialize</c> to every subsequent test.</para>
+    /// </param>
+    IPlatformActivity? StartActivity([CallerMemberName] string name = "", IEnumerable<KeyValuePair<string, object?>>? tags = null, string? parentId = null, DateTimeOffset startTime = default, PlatformActivityKind kind = PlatformActivityKind.Internal, bool setAsCurrent = true);
 
     ICounter<T> CreateCounter<T>(string name, string? unit = null, string? description = null, IEnumerable<KeyValuePair<string, object?>>? tags = null)
         where T : struct;

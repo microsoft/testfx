@@ -45,7 +45,7 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
 
             // When the builder activity has already been closed (or OTel was configured late) there is no ambient
             // parent, so fall back to the W3C trace context published by the process that started this run.
-            string? environmentParentId = platformOTelService is not null && platformOTelService.CurrentActivity is null
+            string? environmentParentId = platformOTelService is not null && !platformOTelService.HasCurrentActivity
                 ? EnvironmentTraceContext.TryGetParentId(ServiceProvider.GetEnvironment())
                 : null;
             activity = platformOTelService?.StartActivity(
@@ -100,6 +100,14 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
         }
         finally
         {
+            // Emit the run-level telemetry while the OpenTelemetry providers and the root span are still alive.
+            // DisposeServiceProviderAsync below tears the providers down in registration order, and they are
+            // registered before TestApplicationResult, so anything recorded after this point would be dropped.
+            if (ServiceProvider.GetService<ITestApplicationProcessExitCode>() is TestApplicationResult testApplicationResult)
+            {
+                testApplicationResult.ReportRunTelemetry();
+            }
+
             // Record the run verdict on the root span before closing it, so a trace search on
             // test.run.exit_code finds failing runs without having to open them.
             activity?.SetTag(TestingPlatformSemanticConventions.Attributes.TestRunExitCode, exitCode);
