@@ -161,7 +161,7 @@ public sealed class JsonTests
 
         // Act
         string serialized = await _json.SerializeAsync(original);
-        ErrorMessage roundTripped = _json.Deserialize<ErrorMessage>(serialized.AsMemory());
+        ErrorMessage roundTripped = _json.Deserialize<ErrorMessage>(Encoding.UTF8.GetBytes(serialized).AsMemory());
 
         // Assert
         Assert.AreEqual(original.Id, roundTripped.Id);
@@ -182,7 +182,7 @@ public sealed class JsonTests
         });
 
         // Act
-        Person actual = json.Deserialize<Person>(new("""{"name":"Thomas"}""".ToCharArray()));
+        Person actual = json.Deserialize<Person>(Encoding.UTF8.GetBytes("""{"name":"Thomas"}""").AsMemory());
 
         // Assert
         Assert.AreEqual("Thomas", actual.Name);
@@ -216,7 +216,7 @@ public sealed class JsonTests
             """;
 
         // Act
-        InitializeRequestArgs args = json.Deserialize<InitializeRequestArgs>(initializeParams.AsMemory());
+        InitializeRequestArgs args = json.Deserialize<InitializeRequestArgs>(Encoding.UTF8.GetBytes(initializeParams).AsMemory());
 
         // Assert
         Assert.IsTrue(args.Capabilities.IsStateful);
@@ -236,7 +236,7 @@ public sealed class JsonTests
             """;
 
         // Act
-        InitializeRequestArgs args = json.Deserialize<InitializeRequestArgs>(initializeParams.AsMemory());
+        InitializeRequestArgs args = json.Deserialize<InitializeRequestArgs>(Encoding.UTF8.GetBytes(initializeParams).AsMemory());
 
         // Assert
         Assert.IsFalse(args.Capabilities.IsStateful);
@@ -301,7 +301,7 @@ public sealed class JsonTests
             """;
 
         // Act
-        IDictionary<string, object?> actual = json.Deserialize<IDictionary<string, object?>>(payload.AsMemory());
+        IDictionary<string, object?> actual = json.Deserialize<IDictionary<string, object?>>(Encoding.UTF8.GetBytes(payload).AsMemory());
 
         // Assert
         // Mirror the Jsonite reader exactly: a value that fits Int32 stays int, a larger integer widens to
@@ -324,7 +324,7 @@ public sealed class JsonTests
         const string payload = "[ 42, 9999999999, 40.5 ]";
 
         // Act
-        object[] actual = json.Deserialize<object[]>(payload.AsMemory());
+        object[] actual = json.Deserialize<object[]>(Encoding.UTF8.GetBytes(payload).AsMemory());
 
         // Assert
         Assert.HasCount(3, actual);

@@ -17,6 +17,18 @@ public sealed class FormatterUtilitiesTests
     public static IEnumerable<object[]> SerializerTypesForDynamicData
         => SerializerUtilities.SerializerTypes.Select(x => new object[] { x });
 
+    /// <summary>
+    /// Feeds a JSON string to the formatter the way the transport does. On .NET the formatter consumes UTF-8
+    /// bytes (Content-Length counts bytes, and that is what System.Text.Json parses); the Jsonite formatter
+    /// used elsewhere only accepts a string. Wrapping it here keeps that split out of every call site.
+    /// </summary>
+    private T Deserialize<T>(string json)
+#if NETCOREAPP
+        => _formatter.Deserialize<T>(Encoding.UTF8.GetBytes(json).AsMemory());
+#else
+        => _formatter.Deserialize<T>(json);
+#endif
+
     public FormatterUtilitiesTests()
         =>
 #if NETCOREAPP
@@ -28,21 +40,13 @@ public sealed class FormatterUtilitiesTests
     [TestMethod]
     public void CanDeserializeTaskResponse()
     {
-#pragma warning disable SA1009 // Closing parenthesis should be spaced correctly
-#pragma warning disable SA1111 // Closing parenthesis should be on line of last parameter
-        RpcMessage msg = _formatter.Deserialize<RpcMessage>("""
+        RpcMessage msg = Deserialize<RpcMessage>("""
             {
                 "jsonrpc": "2.0",
                 "id": 1,
                 "result": null
             }
-            """
-#if NETCOREAPP
-            .AsMemory()
-#endif
-            );
-#pragma warning restore SA1111 // Closing parenthesis should be on line of last parameter
-#pragma warning restore SA1009 // Closing parenthesis should be spaced correctly
+            """);
 
         var response = (ResponseMessage)msg;
         Assert.AreEqual(1, response.Id);
@@ -133,15 +137,7 @@ public sealed class FormatterUtilitiesTests
             }
             """;
 
-#pragma warning disable SA1009 // Closing parenthesis should be spaced correctly
-#pragma warning disable SA1111 // Closing parenthesis should be on line of last parameter
-        RpcMessage msg = _formatter.Deserialize<RpcMessage>(json
-#if NETCOREAPP
-            .AsMemory()
-#endif
-            );
-#pragma warning restore SA1111 // Closing parenthesis should be on line of last parameter
-#pragma warning restore SA1009 // Closing parenthesis should be spaced correctly
+        RpcMessage msg = Deserialize<RpcMessage>(json);
 
         var request = (RequestMessage)msg;
         Assert.AreEqual(42, request.Id);
@@ -166,15 +162,7 @@ public sealed class FormatterUtilitiesTests
             }
             """;
 
-#pragma warning disable SA1009 // Closing parenthesis should be spaced correctly
-#pragma warning disable SA1111 // Closing parenthesis should be on line of last parameter
-        RpcMessage msg = _formatter.Deserialize<RpcMessage>(json
-#if NETCOREAPP
-            .AsMemory()
-#endif
-            );
-#pragma warning restore SA1111 // Closing parenthesis should be on line of last parameter
-#pragma warning restore SA1009 // Closing parenthesis should be spaced correctly
+        RpcMessage msg = Deserialize<RpcMessage>(json);
 
         var request = (RequestMessage)msg;
         Assert.AreEqual(42, request.Id);
@@ -552,79 +540,16 @@ public sealed class FormatterUtilitiesTests
     }
 
     private object Deserialize(Type type, string instanceSerialized)
-    {
-        if (type == typeof(ErrorMessage))
+        => true switch
         {
-#if NETCOREAPP
-            return _formatter.Deserialize<ErrorMessage>(instanceSerialized.AsMemory());
-#else
-            return _formatter.Deserialize<ErrorMessage>(instanceSerialized);
-#endif
-        }
-
-        if (type == typeof(InitializeResponseArgs))
-        {
-#if NETCOREAPP
-            return _formatter.Deserialize<InitializeResponseArgs>(instanceSerialized.AsMemory());
-#else
-            return _formatter.Deserialize<InitializeResponseArgs>(instanceSerialized);
-#endif
-        }
-
-        if (type == typeof(ServerInfo))
-        {
-#if NETCOREAPP
-            return _formatter.Deserialize<ServerInfo>(instanceSerialized.AsMemory());
-#else
-            return _formatter.Deserialize<ServerInfo>(instanceSerialized);
-#endif
-        }
-
-        if (type == typeof(CancelRequestArgs))
-        {
-#if NETCOREAPP
-            return _formatter.Deserialize<CancelRequestArgs>(instanceSerialized.AsMemory());
-#else
-            return _formatter.Deserialize<CancelRequestArgs>(instanceSerialized);
-#endif
-        }
-
-        if (type == typeof(TestNode))
-        {
-#if NETCOREAPP
-            return _formatter.Deserialize<TestNode>(instanceSerialized.AsMemory());
-#else
-            return _formatter.Deserialize<TestNode>(instanceSerialized);
-#endif
-        }
-
-        if (type == typeof(DiscoverRequestArgs))
-        {
-#if NETCOREAPP
-            return _formatter.Deserialize<DiscoverRequestArgs>(instanceSerialized.AsMemory());
-#else
-            return _formatter.Deserialize<DiscoverRequestArgs>(instanceSerialized);
-#endif
-        }
-
-        if (type == typeof(RunRequestArgs))
-        {
-#if NETCOREAPP
-            return _formatter.Deserialize<RunRequestArgs>(instanceSerialized.AsMemory());
-#else
-            return _formatter.Deserialize<RunRequestArgs>(instanceSerialized);
-#endif
-        }
-
-        if (type == typeof(ServerCapabilities))
-        {
-#if NETCOREAPP
-            return _formatter.Deserialize<ServerCapabilities>(instanceSerialized.AsMemory());
-#else
-            return _formatter.Deserialize<ServerCapabilities>(instanceSerialized);
-#endif
-        }
-
-        throw new NotImplementedException($"Deserializer for type not implemented '{type}'");
-    }
+            _ when type == typeof(ErrorMessage) => Deserialize<ErrorMessage>(instanceSerialized)!,
+            _ when type == typeof(InitializeResponseArgs) => Deserialize<InitializeResponseArgs>(instanceSerialized)!,
+            _ when type == typeof(ServerInfo) => Deserialize<ServerInfo>(instanceSerialized)!,
+            _ when type == typeof(CancelRequestArgs) => Deserialize<CancelRequestArgs>(instanceSerialized)!,
+            _ when type == typeof(TestNode) => Deserialize<TestNode>(instanceSerialized)!,
+            _ when type == typeof(DiscoverRequestArgs) => Deserialize<DiscoverRequestArgs>(instanceSerialized)!,
+            _ when type == typeof(RunRequestArgs) => Deserialize<RunRequestArgs>(instanceSerialized)!,
+            _ when type == typeof(ServerCapabilities) => Deserialize<ServerCapabilities>(instanceSerialized)!,
+            _ => throw new NotImplementedException($"Deserializer for type not implemented '{type}'"),
+        };
 }
