@@ -539,7 +539,7 @@ Real: {2}</target>
       </trans-unit>
       <trans-unit id="InvalidDependsOnTestMethodName">
         <source>The test method name of a [DependsOn] must be a non-empty, non-whitespace string.</source>
-        <target state="new">The test method name of a [DependsOn] must be a non-empty, non-whitespace string.</target>
+        <target state="translated">El nombre del método de prueba de [DependsOn] debe ser una cadena que no esté vacía y que no sea un espacio en blanco.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidGitHubUrl">
