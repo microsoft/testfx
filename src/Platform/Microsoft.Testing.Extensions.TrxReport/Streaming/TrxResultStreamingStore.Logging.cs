@@ -26,7 +26,7 @@ internal sealed partial class TrxResultStreamingStore
         {
             _logger.LogDebug(message);
         }
-        catch
+        catch (Exception)
         {
             // Logging must remain best-effort and must not change writer failure behavior.
         }
@@ -38,7 +38,7 @@ internal sealed partial class TrxResultStreamingStore
         {
             _logger.LogWarning(message);
         }
-        catch
+        catch (Exception)
         {
             // Logging must remain best-effort and must not change writer failure behavior.
         }
@@ -50,7 +50,7 @@ internal sealed partial class TrxResultStreamingStore
         {
             _logger.LogError(message, ex);
         }
-        catch
+        catch (Exception)
         {
             // Logging must remain best-effort and must not change writer failure behavior.
         }

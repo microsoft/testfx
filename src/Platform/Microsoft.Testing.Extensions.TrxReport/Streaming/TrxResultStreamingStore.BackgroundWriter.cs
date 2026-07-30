@@ -201,6 +201,8 @@ internal sealed partial class TrxResultStreamingStore
         }
         catch (OperationCanceledException)
         {
+            // Dispose() cancels _disposeCts to stop the writer; WriteLoopAsync handles that expected
+            // shutdown cancellation, so there is nothing to report here.
         }
 
         _queue.Dispose();
