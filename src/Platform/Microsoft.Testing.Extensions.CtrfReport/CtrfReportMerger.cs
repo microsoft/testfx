@@ -414,21 +414,41 @@ internal static class CtrfReportMerger
 
     /// <summary>
     /// Computes the key identifying the logical test a row describes, preferring the CTRF <c>testId</c>, then the
-    /// producer-supplied <c>extra.uid</c>, and finally the suite path plus name. Returns <see langword="null"/>
-    /// when the row carries none of them.
+    /// legacy <c>id</c>, then the producer-supplied <c>extra.uid</c>, and finally the suite path plus name and the
+    /// other stable discriminators the Test object offers. Returns <see langword="null"/> when the row carries
+    /// none of them.
     /// </summary>
     /// <remarks>
-    /// The suite/name fallback length-prefixes every component rather than just separating them. A CTRF
-    /// <c>name</c> or suite segment is an arbitrary non-empty string, so it may itself contain the separator:
-    /// with plain separation, <c>suite: ["A"], name: "B\u001fC"</c> and <c>suite: ["A", "B"], name: "C"</c>
-    /// would produce the same key and collapse two unrelated tests into one, silently dropping a result.
-    /// Length prefixes make the encoding unambiguous whatever the components contain.
+    /// <para>
+    /// The identifier order follows CTRF 9.1: <c>id</c> is a stable test-case identifier that consumers treat as
+    /// legacy, using <c>testId</c> in preference only when both are present. Ignoring an <c>id</c>-only report
+    /// would drop it to the heuristic fallback and risk fusing distinct same-named tests.
+    /// </para>
+    /// <para>
+    /// The fallback length-prefixes every component rather than just separating them. A CTRF <c>name</c> or suite
+    /// segment is an arbitrary non-empty string, so it may itself contain the separator: with plain separation,
+    /// <c>suite: ["A"], name: "B\u001fC"</c> and <c>suite: ["A", "B"], name: "C"</c> would produce the same key
+    /// and collapse two unrelated tests into one, silently dropping a result. Length prefixes make the encoding
+    /// unambiguous whatever the components contain.
+    /// </para>
+    /// <para>
+    /// The fallback also folds in <c>filePath</c> (9.19) and <c>parameters</c> (9.30), because suite plus name
+    /// alone is not unique: parameterized rows share both while differing only in their parameters, and
+    /// same-named tests in different files differ only by path. If a producer were to serialize <c>parameters</c>
+    /// inconsistently between attempts, the effect is that a retry is not folded — a duplicated row rather than a
+    /// lost result, which is the safe direction to fail in.
+    /// </para>
     /// </remarks>
     private static string? GetTestIdentity(JsonObject test)
     {
         if (ReadString(test, "testId") is { Length: > 0 } testId)
         {
             return $"testId\u001f{testId}";
+        }
+
+        if (ReadString(test, "id") is { Length: > 0 } id)
+        {
+            return $"id\u001f{id}";
         }
 
         // `extra` is free-form, so a foreign producer may well have written a string or an array there; indexing
@@ -460,6 +480,8 @@ internal static class CtrfReportMerger
         }
 
         AppendIdentityComponent(identity, name);
+        AppendIdentityComponent(identity, ReadString(test, "filePath"));
+        AppendIdentityComponent(identity, test["parameters"]?.ToJsonString());
         return identity.ToString();
     }
 

@@ -910,6 +910,71 @@ public sealed class CtrfReportMergerTests
         Assert.IsNull(tests[1]!["retries"]);
     }
 
+    [TestMethod]
+    public void Merge_CollapseRetryAttempts_UsesLegacyIdWhenTestIdIsAbsent()
+    {
+        // CTRF 9.1: `id` is a stable test-case identifier that consumers treat as legacy, preferring `testId`
+        // only when both are present. An id-only report must therefore collapse on it rather than dropping to
+        // the suite/name heuristic, which would fuse these two distinct same-named tests.
+        static JsonObject WithId(string id, string status)
+        {
+            JsonObject test = Test("same name", status);
+            test["id"] = id;
+            return test;
+        }
+
+        string attempt1 = BuildReport(testEntries: [WithId("id-1", "failed"), WithId("id-2", "failed")]);
+        string attempt2 = BuildReport(testEntries: [WithId("id-1", "passed"), WithId("id-2", "failed")]);
+
+        var tests = (JsonArray)JsonNode.Parse(
+            CtrfReportMerger.Merge([attempt1, attempt2], CtrfMergeMode.CollapseRetryAttempts))!["results"]!["tests"]!;
+
+        Assert.HasCount(2, tests, "Two distinct ids must stay two tests.");
+        Assert.AreEqual("passed", (string?)tests[0]!["status"]);
+        Assert.IsTrue((bool)tests[0]!["flaky"]!);
+        Assert.AreEqual("failed", (string?)tests[1]!["status"]);
+        Assert.AreEqual(1, (long)tests[1]!["retries"]!);
+    }
+
+    [TestMethod]
+    public void Merge_CollapseRetryAttempts_DoesNotFuseRowsThatDifferOnlyByParametersOrFilePath()
+    {
+        // Suite plus name is not unique on its own: parameterized rows share both while differing in their
+        // parameters (CTRF 9.30), and same-named tests in different files differ only by path (9.19). Fusing
+        // them would silently drop a result.
+        static JsonObject Row(string status, JsonNode? parameters, string? filePath)
+        {
+            JsonObject test = Test("same name", status);
+            if (parameters is not null)
+            {
+                test["parameters"] = parameters;
+            }
+
+            if (filePath is not null)
+            {
+                test["filePath"] = filePath;
+            }
+
+            return test;
+        }
+
+        string report = BuildReport(testEntries:
+        [
+            Row("failed", new JsonObject { ["value"] = 1 }, null),
+            Row("passed", new JsonObject { ["value"] = 2 }, null),
+            Row("skipped", null, "a.cs"),
+            Row("passed", null, "b.cs"),
+        ]);
+
+        var tests = (JsonArray)JsonNode.Parse(
+            CtrfReportMerger.Merge([report], CtrfMergeMode.CollapseRetryAttempts))!["results"]!["tests"]!;
+
+        Assert.HasCount(4, tests, "Rows differing only by parameters or filePath are distinct tests.");
+        Assert.AreSequenceEqual(
+            (string?[])["failed", "passed", "skipped", "passed"],
+            tests.Select(t => (string?)t!["status"]).ToArray());
+    }
+
     private static JsonObject Attempt(string name, string status, string uid, long duration = 1, string? message = null)
     {
         var test = new JsonObject
