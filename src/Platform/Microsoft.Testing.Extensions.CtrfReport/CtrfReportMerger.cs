@@ -17,7 +17,7 @@ namespace Microsoft.Testing.Extensions.CtrfReport;
 /// <list type="bullet">
 ///   <item><description><c>results.tests[]</c> arrays are concatenated as-is, unless <see cref="CtrfMergeMode.CollapseRetryAttempts"/> asks for successive attempts of the same test to be folded into one row.</description></item>
 ///   <item><description><c>results.summary</c> counters are re-derived by counting the merged <c>tests[]</c> (so <c>summary.tests</c> always matches the array length); <c>start</c>/<c>stop</c> use the earliest/latest across inputs, <c>duration</c> is the resulting span.</description></item>
-///   <item><description><c>reportFormat</c> and <c>specVersion</c> are taken from the first report; <c>reportId</c> is derived deterministically from the inputs, so identical inputs reproduce the same id (RFC 018 idempotency).</description></item>
+///   <item><description><c>reportFormat</c> and <c>specVersion</c> are taken from the first report; <c>reportId</c> is derived deterministically from the inputs AND the merge mode, so identical inputs reproduce the same id (RFC 018 idempotency) while the two modes — which produce materially different documents — get distinct ids.</description></item>
 ///   <item><description><c>runId</c> is carried over when every input agrees on one, because the merged document describes the same logical run as its inputs while remaining a distinct artifact with its own <c>reportId</c> (see ctrf-io/ctrf#58).</description></item>
 ///   <item><description><c>tool</c> keeps a concrete identity only when every input reported the exact same tool object; otherwise (inputs disagree or any input omits it) a neutral merger identity is used, so one framework is not attributed to another's tests.</description></item>
 ///   <item><description><c>environment</c> keeps the first report's shared fields, but module-specific values under <c>extra</c> (<c>testApplication</c>, <c>exitCode</c>) are dropped rather than presented as describing all merged modules.</description></item>
@@ -269,7 +269,7 @@ internal static class CtrfReportMerger
         {
             ["reportFormat"] = first["reportFormat"]?.DeepClone() ?? "CTRF",
             ["specVersion"] = first["specVersion"]?.DeepClone() ?? "0.0.0",
-            ["reportId"] = CreateDeterministicReportId(acceptedReports),
+            ["reportId"] = CreateDeterministicReportId(acceptedReports, mode),
         };
 
         // A merged document is a new artifact (hence its own reportId) but it still describes the same logical
@@ -664,18 +664,24 @@ internal static class CtrfReportMerger
     }
 
     /// <summary>
-    /// Derives a stable <c>reportId</c> from the accepted CTRF input reports so identical inputs reproduce
-    /// the same id on every retry (RFC 018 idempotency) without a random source or reusing an input report's
-    /// id. Only the payloads that passed CTRF validation are hashed, so a rejected non-CTRF input cannot
-    /// alter the merged report's identity. A non-cryptographic 128-bit FNV-1a fill is sufficient here — the
-    /// id only needs to be deterministic and collision-resistant enough to identify a merged report, not
-    /// secret.
+    /// Derives a stable <c>reportId</c> from the accepted CTRF input reports and the merge mode, so identical
+    /// inputs merged the same way reproduce the same id on every retry (RFC 018 idempotency) without a random
+    /// source or reusing an input report's id, while the same inputs merged a DIFFERENT way — which yields a
+    /// materially different document — get a distinct id, as CTRF 5.3 requires. Only the payloads that passed
+    /// CTRF validation are hashed, so a rejected non-CTRF input cannot alter the merged report's identity. A
+    /// non-cryptographic 128-bit FNV-1a fill is sufficient here — the id only needs to be deterministic and
+    /// collision-resistant enough to identify a merged report, not secret.
     /// </summary>
-    private static string CreateDeterministicReportId(IReadOnlyList<string> acceptedReports)
+    private static string CreateDeterministicReportId(IReadOnlyList<string> acceptedReports, CtrfMergeMode mode)
     {
         const ulong fnvPrime = 1099511628211UL;
         ulong hashLow = 14695981039346656037UL;
         ulong hashHigh = 0x9E3779B97F4A7C15UL;
+
+        // Fold in the merge mode: the same inputs concatenated and collapsed are two materially different
+        // documents, and CTRF 5.3 wants a distinct reportId for each rather than one id naming both.
+        hashLow = (hashLow ^ (ulong)mode) * fnvPrime;
+        hashHigh = (hashHigh ^ ((ulong)mode + 1UL)) * fnvPrime;
 
         foreach (string report in acceptedReports)
         {

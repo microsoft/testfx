@@ -851,6 +851,32 @@ public sealed class CtrfReportMergerTests
         Assert.IsTrue((bool)tests[0]!["flaky"]!);
     }
 
+    [TestMethod]
+    public void Merge_ReportId_IsDeterministicPerModeAndDiffersBetweenModes()
+    {
+        // The two modes turn the same inputs into materially different documents (three rows vs one collapsed
+        // row here), so CTRF 5.3 requires each to get its own reportId — one id must not name both artifacts.
+        // Determinism per mode (RFC 018 idempotency) must survive that.
+        string attempt1 = BuildReport(testEntries: [Attempt("t", "failed", uid: "u1")]);
+        string attempt2 = BuildReport(testEntries: [Attempt("t", "passed", uid: "u1")]);
+        string[] inputs = [attempt1, attempt2];
+
+        string concatenated = (string)JsonNode.Parse(CtrfReportMerger.Merge(inputs, CtrfMergeMode.Concatenate))!["reportId"]!;
+        string collapsed = (string)JsonNode.Parse(CtrfReportMerger.Merge(inputs, CtrfMergeMode.CollapseRetryAttempts))!["reportId"]!;
+
+        Assert.AreNotEqual(concatenated, collapsed, "Two materially different merged documents must not share a reportId.");
+
+        // Re-merging the same inputs the same way reproduces the id.
+        Assert.AreEqual(concatenated, (string)JsonNode.Parse(CtrfReportMerger.Merge(inputs, CtrfMergeMode.Concatenate))!["reportId"]!);
+        Assert.AreEqual(collapsed, (string)JsonNode.Parse(CtrfReportMerger.Merge(inputs, CtrfMergeMode.CollapseRetryAttempts))!["reportId"]!);
+
+        // The default overload keeps concatenating, so it must agree with the explicit Concatenate mode.
+        Assert.AreEqual(concatenated, (string)JsonNode.Parse(CtrfReportMerger.Merge(inputs))!["reportId"]!);
+
+        // CTRF 5.3: reportId MUST be a valid UUID when present.
+        Assert.IsTrue(Guid.TryParse(collapsed, out _), $"reportId must be a UUID, got '{collapsed}'.");
+    }
+
     private static JsonObject Attempt(string name, string status, string uid, long duration = 1, string? message = null)
     {
         var test = new JsonObject

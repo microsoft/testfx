@@ -551,9 +551,22 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         testHostResult.AssertOutputDoesNotContain("Minimum expected tests policy violation");
     }
 
+    internal static IEnumerable<(string Tfm, string? SeededVariable)> GetRunIdMatrix()
+    {
+        foreach (string tfm in TargetFrameworks.Net)
+        {
+            // The orchestrator resolves the logical run id as: an explicitly set id wins, else the dotnet test
+            // execution id (which already identifies this test application's process tree), else a fresh one.
+            // Exercise all three branches.
+            yield return (tfm, null);
+            yield return (tfm, EnvironmentVariableConstants.TESTINGPLATFORM_LOGICAL_RUN_ID);
+            yield return (tfm, EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID);
+        }
+    }
+
     [TestMethod]
-    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
-    public async Task RetryFailedTests_CtrfReports_ShareRunIdButNotReportId(string tfm)
+    [DynamicData(nameof(GetRunIdMatrix))]
+    public async Task RetryFailedTests_CtrfReports_ShareRunIdButNotReportId(string tfm, string? seededVariable)
     {
         // Each attempt is a separate process that writes its own CTRF document, but together they are one
         // logical run. Per ctrf-io/ctrf#58 those documents SHOULD share a `runId` while each stays a distinct
@@ -564,14 +577,25 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
 
         // METHOD1=1 makes TestMethod1 fail on the first attempt and pass on the second, so exactly two
         // attempts run and each writes a CTRF report.
+        Dictionary<string, string?> environmentVariables = new()
+        {
+            { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
+            { "METHOD1", "1" },
+            { "RESULTDIR", resultDirectory },
+        };
+
+        // When a correlation id is supplied from outside, the attempts must adopt THAT id rather than minting
+        // their own — that is what lets a CI job tie several modules or machines into one logical run.
+        string? expectedRunId = null;
+        if (seededVariable is not null)
+        {
+            expectedRunId = $"seeded-{Guid.NewGuid():N}";
+            environmentVariables[seededVariable] = expectedRunId;
+        }
+
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             $"--retry-failed-tests 3 --report-ctrf --results-directory {resultDirectory}",
-            new()
-            {
-                { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
-                { "METHOD1", "1" },
-                { "RESULTDIR", resultDirectory },
-            },
+            environmentVariables,
             cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
@@ -590,6 +614,15 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         Assert.AreEqual(runIds[0], runIds[1], "Both attempts belong to the same logical run, so they must share a runId.");
         Assert.AreNotEqual(reportIds[0], reportIds[1], "Each attempt is a distinct artifact, so it must have its own reportId.");
         Assert.AreNotEqual(runIds[0], reportIds[0], "runId and reportId identify different things and must not be the same value.");
+
+        if (expectedRunId is not null)
+        {
+            Assert.AreEqual(expectedRunId, runIds[0], $"'{seededVariable}' must be honored instead of minting a new run id.");
+        }
+        else
+        {
+            Assert.IsTrue(Guid.TryParse(runIds[0], out _), $"An uncorrelated run must mint a GUID run id, got '{runIds[0]}'.");
+        }
     }
 
     private static string ReadRequiredStringProperty(string filePath, string propertyName)
