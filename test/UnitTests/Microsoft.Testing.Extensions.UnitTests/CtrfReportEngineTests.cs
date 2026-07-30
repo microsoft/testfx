@@ -845,6 +845,9 @@ public class CtrfReportEngineTests
 
         using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
         Assert.AreEqual("run-42", document.RootElement.GetProperty("runId").GetString());
+
+        // The run and the document are different things: a correlated run must not leak into the artifact id.
+        Assert.AreNotEqual("run-42", document.RootElement.GetProperty("reportId").GetString());
     }
 
     [TestMethod]
@@ -862,6 +865,7 @@ public class CtrfReportEngineTests
 
         using var document = JsonDocument.Parse(memoryStream.GetUtf8Content());
         Assert.AreEqual("execution-7", document.RootElement.GetProperty("runId").GetString());
+        Assert.AreNotEqual("execution-7", document.RootElement.GetProperty("reportId").GetString());
     }
 
     [TestMethod]
