@@ -259,12 +259,12 @@
       </trans-unit>
       <trans-unit id="CompositeTestExecutionFilterCannotContainNull">
         <source>A composite test execution filter cannot contain a null child filter.</source>
-        <target state="new">A composite test execution filter cannot contain a null child filter.</target>
+        <target state="translated">복합 테스트 실행 필터는 null 자식 필터를 포함할 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="CompositeTestExecutionFilterRequiresTwoFilters">
         <source>A composite test execution filter requires at least two child filters.</source>
-        <target state="new">A composite test execution filter requires at least two child filters.</target>
+        <target state="translated">복합 테스트 실행 필터에는 두 개 이상의 자식 필터가 필요합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ConfigurationFileNotFound">
@@ -1047,7 +1047,7 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
       </trans-unit>
       <trans-unit id="TestExecutionFilterProviderNotSupportedForServer">
         <source>Test execution filter provider '{0}' returned filter type '{1}' for a JSON-RPC server request. Provider constraints are not applied to server requests; return null when TestExecutionFilterContext.Origin is Server.</source>
-        <target state="new">Test execution filter provider '{0}' returned filter type '{1}' for a JSON-RPC server request. Provider constraints are not applied to server requests; return null when TestExecutionFilterContext.Origin is Server.</target>
+        <target state="translated">JSON-RPC 서버 요청에 대해 테스트 실행 필터 공급자 '{0}'이(가) 필터 유형 '{1}'을(를) 반환했습니다. 공급자 제약 조건은 서버 요청에 적용되지 않습니다. TestExecutionFilterContext.Origin이 Server인 경우 null을 반환합니다.</target>
         <note>{0} is the provider UID. {1} is the filter type. {Locked="JSON-RPC"}{Locked="null"}{Locked="TestExecutionFilterContext.Origin"}{Locked="Server"}</note>
       </trans-unit>
       <trans-unit id="TestFrameworkProxyApiShouldNotBeCalled">
@@ -1149,22 +1149,22 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
       </trans-unit>
       <trans-unit id="UnsupportedProviderTestExecutionFilter">
         <source>Test execution filter provider '{0}' returned unsupported filter type '{1}'. Providers can return only NopFilter, TestNodeUidListFilter, TreeNodeFilter, or an And CompositeTestExecutionFilter.</source>
-        <target state="new">Test execution filter provider '{0}' returned unsupported filter type '{1}'. Providers can return only NopFilter, TestNodeUidListFilter, TreeNodeFilter, or an And CompositeTestExecutionFilter.</target>
+        <target state="translated">테스트 실행 필터 공급자 '{0}'이(가) 지원되지 않는 필터 유형 '{1}'을(를) 반환했습니다. 공급자는 NopFilter, TestNodeUidListFilter, TreeNodeFilter 또는 And CompositeTestExecutionFilter만 반환할 수 있습니다.</target>
         <note>{0} is the provider UID. {1} is the unsupported filter type. {Locked="NopFilter"}{Locked="TestNodeUidListFilter"}{Locked="TreeNodeFilter"}{Locked="And"}{Locked="CompositeTestExecutionFilter"}</note>
       </trans-unit>
       <trans-unit id="UnsupportedRequestTestExecutionFilter">
         <source>The request contains unsupported test execution filter type '{0}'.</source>
-        <target state="new">The request contains unsupported test execution filter type '{0}'.</target>
+        <target state="translated">요청에 지원되지 않는 테스트 실행 필터 유형 '{0}'이(가) 포함되어 있습니다.</target>
         <note>{0} is the unsupported filter type.</note>
       </trans-unit>
       <trans-unit id="UnsupportedTestExecutionFilterOperator">
         <source>Only the And test execution filter operator is supported.</source>
-        <target state="new">Only the And test execution filter operator is supported.</target>
+        <target state="translated">And 테스트 실행 필터 연산자만 지원됩니다.</target>
         <note>{Locked="And"}</note>
       </trans-unit>
       <trans-unit id="UnsupportedTestExecutionFilterOperatorValue">
         <source>Test execution filter operator '{0}' is not supported. Only And is supported.</source>
-        <target state="new">Test execution filter operator '{0}' is not supported. Only And is supported.</target>
+        <target state="translated">테스트 실행 필터 연산자 '{0}'은(는) 지원되지 않습니다. And만 지원됩니다.</target>
         <note>{0} is the unsupported operator value. {Locked="And"}</note>
       </trans-unit>
       <trans-unit id="WaitDebuggerAttachNotSupportedInBrowserErrorMessage">
