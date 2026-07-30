@@ -15,7 +15,7 @@ namespace Microsoft.Testing.Extensions.CtrfReport;
 /// This is a pure, invocation-agnostic JSON-level merge (no I/O, no clock) that mirrors the
 /// TRX and JUnit mergers, demonstrating that the same post-processing shape fits a JSON format:
 /// <list type="bullet">
-///   <item><description><c>results.tests[]</c> arrays are concatenated as-is, unless <see cref="CtrfMergeMode.CollapseRetryAttempts"/> asks for successive attempts of the same test to be folded into one row.</description></item>
+///   <item><description><c>results.tests[]</c> arrays are concatenated, except that elements which are not Test objects are dropped so one input's malformed row cannot invalidate the merged document; <see cref="CtrfMergeMode.CollapseRetryAttempts"/> additionally folds successive attempts of the same test into one row.</description></item>
 ///   <item><description><c>results.summary</c> counters are re-derived by counting the merged <c>tests[]</c> (so <c>summary.tests</c> always matches the array length); <c>start</c>/<c>stop</c> use the earliest/latest across inputs, <c>duration</c> is the resulting span.</description></item>
 ///   <item><description><c>reportFormat</c> and <c>specVersion</c> are taken from the first report; <c>reportId</c> is derived deterministically from the inputs AND the merge mode, so identical inputs reproduce the same id (RFC 018 idempotency) while the two modes — which produce materially different documents — get distinct ids.</description></item>
 ///   <item><description><c>runId</c> is carried over when every input agrees on one, because the merged document describes the same logical run as its inputs while remaining a distinct artifact with its own <c>reportId</c> (see ctrf-io/ctrf#58).</description></item>
@@ -417,6 +417,13 @@ internal static class CtrfReportMerger
     /// producer-supplied <c>extra.uid</c>, and finally the suite path plus name. Returns <see langword="null"/>
     /// when the row carries none of them.
     /// </summary>
+    /// <remarks>
+    /// The suite/name fallback length-prefixes every component rather than just separating them. A CTRF
+    /// <c>name</c> or suite segment is an arbitrary non-empty string, so it may itself contain the separator:
+    /// with plain separation, <c>suite: ["A"], name: "B\u001fC"</c> and <c>suite: ["A", "B"], name: "C"</c>
+    /// would produce the same key and collapse two unrelated tests into one, silently dropping a result.
+    /// Length prefixes make the encoding unambiguous whatever the components contain.
+    /// </remarks>
     private static string? GetTestIdentity(JsonObject test)
     {
         if (ReadString(test, "testId") is { Length: > 0 } testId)
@@ -444,15 +451,20 @@ internal static class CtrfReportMerger
                 // A suite segment is normally a string, but the document is untrusted. Fall back to the
                 // segment's JSON text so a non-string segment still contributes a distinct, deterministic part
                 // of the key instead of throwing on the string conversion.
-                identity.Append('\u001f').Append(
+                AppendIdentityComponent(
+                    identity,
                     segment is JsonValue segmentValue && segmentValue.TryGetValue(out string? segmentText)
                         ? segmentText
                         : segment?.ToJsonString());
             }
         }
 
-        return identity.Append('\u001f').Append(name).ToString();
+        AppendIdentityComponent(identity, name);
+        return identity.ToString();
     }
+
+    private static void AppendIdentityComponent(StringBuilder identity, string? component)
+        => identity.Append('\u001f').Append(component?.Length ?? -1).Append(':').Append(component);
 
     private static JsonNode BuildCollapsedTest(JsonObject final, List<JsonObject> priors)
     {

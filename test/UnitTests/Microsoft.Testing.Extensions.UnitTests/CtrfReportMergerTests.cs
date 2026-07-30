@@ -881,6 +881,35 @@ public sealed class CtrfReportMergerTests
         Assert.IsTrue(Guid.TryParse(collapsed, out _), $"reportId must be a UUID, got '{collapsed}'.");
     }
 
+    [TestMethod]
+    public void Merge_CollapseRetryAttempts_DoesNotFuseTestsWhoseNameContainsTheIdentitySeparator()
+    {
+        // A CTRF `name` is an arbitrary non-empty string, so it may contain whatever character the identity key
+        // uses as a separator. With plain separation, suite ["A"] + name "B\u001fC" and suite ["A","B"] + name
+        // "C" flatten to the same key, which would fuse two unrelated tests and silently drop a result.
+        static JsonObject Named(string status, string name, params string[] suite)
+        {
+            JsonObject test = Test(name, status);
+            test["suite"] = new JsonArray([.. suite.Select(s => (JsonNode)JsonValue.Create(s)!)]);
+            return test;
+        }
+
+        string report = BuildReport(testEntries:
+        [
+            Named("failed", "B\u001fC", "A"),
+            Named("passed", "C", "A", "B"),
+        ]);
+
+        var tests = (JsonArray)JsonNode.Parse(
+            CtrfReportMerger.Merge([report], CtrfMergeMode.CollapseRetryAttempts))!["results"]!["tests"]!;
+
+        Assert.HasCount(2, tests, "Two distinct tests must not collapse into one.");
+        Assert.AreEqual("failed", (string?)tests[0]!["status"]);
+        Assert.AreEqual("passed", (string?)tests[1]!["status"]);
+        Assert.IsNull(tests[0]!["retries"], "Neither row is a retry of the other.");
+        Assert.IsNull(tests[1]!["retries"]);
+    }
+
     private static JsonObject Attempt(string name, string status, string uid, long duration = 1, string? message = null)
     {
         var test = new JsonObject
