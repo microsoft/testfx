@@ -37,6 +37,49 @@ public sealed class DotnetTestDataConsumerTests
         yield return [typeof(TimingProperty), CreateTimingProperty(), CreateTimingProperty()];
         yield return [typeof(StandardOutputProperty), new StandardOutputProperty("first"), new StandardOutputProperty("second")];
         yield return [typeof(StandardErrorProperty), new StandardErrorProperty("first"), new StandardErrorProperty("second")];
+        yield return [typeof(AssertionFailureProperty), new AssertionFailureProperty("first", null), new AssertionFailureProperty("second", null)];
+    }
+
+    [TestMethod]
+    public void GetTestNodeDetails_WhenFailedWithAssertionFailureProperty_PopulatesExpectedAndActual()
+    {
+        // The supported channel: no exception is required for the diff to reach the SDK.
+        DotnetTestDataConsumer.TestNodeDetails details = InvokeGetTestNodeDetails(
+            [new FailedTestNodeStateProperty("Assert.AreEqual failed."), new AssertionFailureProperty("5", "2")]);
+
+        Assert.AreEqual(TestStates.Failed, details.State);
+        Assert.AreEqual("5", details.Expected);
+        Assert.AreEqual("2", details.Actual);
+    }
+
+    [TestMethod]
+    public void GetTestNodeDetails_WhenFailedWithAssertionFailureProperty_PrefersPropertyOverExceptionData()
+    {
+        var exception = new InvalidOperationException("boom");
+        exception.Data["assert.expected"] = "legacy expected";
+        exception.Data["assert.actual"] = "legacy actual";
+
+        DotnetTestDataConsumer.TestNodeDetails details = InvokeGetTestNodeDetails(
+            [new FailedTestNodeStateProperty(exception), new AssertionFailureProperty("5", "2")]);
+
+        Assert.AreEqual("5", details.Expected);
+        Assert.AreEqual("2", details.Actual);
+    }
+
+    [TestMethod]
+    public void GetTestNodeDetails_WhenAssertionFailurePropertyIsOneSided_DoesNotSpliceInExceptionData()
+    {
+        // The property is authoritative as a whole: a half taken from the property and the other half from a
+        // stale Exception.Data entry would render a diff that never existed.
+        var exception = new InvalidOperationException("boom");
+        exception.Data["assert.expected"] = "legacy expected";
+        exception.Data["assert.actual"] = "legacy actual";
+
+        DotnetTestDataConsumer.TestNodeDetails details = InvokeGetTestNodeDetails(
+            [new FailedTestNodeStateProperty(exception), new AssertionFailureProperty("5", null)]);
+
+        Assert.AreEqual("5", details.Expected);
+        Assert.IsNull(details.Actual);
     }
 
     [TestMethod]
@@ -142,12 +185,15 @@ public sealed class DotnetTestDataConsumerTests
     }
 
     private static DotnetTestDataConsumer.TestNodeDetails InvokeGetTestNodeDetails(IProperty stateProperty)
+        => InvokeGetTestNodeDetails([stateProperty]);
+
+    private static DotnetTestDataConsumer.TestNodeDetails InvokeGetTestNodeDetails(IProperty[] properties)
     {
         TestNodeUpdateMessage testNodeUpdateMessage = new(new SessionUid("session"), new TestNode
         {
             Uid = new TestNodeUid("uid"),
             DisplayName = "DisplayName",
-            Properties = new PropertyBag(stateProperty),
+            Properties = new PropertyBag(properties),
         });
 
         MethodInfo getTestNodeDetails = typeof(DotnetTestDataConsumer).GetMethod("GetTestNodeDetails", BindingFlags.Static | BindingFlags.NonPublic)!;

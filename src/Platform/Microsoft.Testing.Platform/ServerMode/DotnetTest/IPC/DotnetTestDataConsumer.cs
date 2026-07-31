@@ -243,6 +243,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
         TimingProperty? timingProperty = null;
         StandardOutputProperty? standardOutputProperty = null;
         StandardErrorProperty? standardErrorProperty = null;
+        AssertionFailureProperty? assertionFailureProperty = null;
 
         // Mirror PropertyBag.OfType<T>()'s "first + overflow list" pattern so the common case of
         // zero or one match doesn't allocate a List<T>.
@@ -263,6 +264,9 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                     break;
                 case StandardErrorProperty errorProperty:
                     standardErrorProperty = GetSingleOrDefaultValue(standardErrorProperty, errorProperty);
+                    break;
+                case AssertionFailureProperty assertionFailure:
+                    assertionFailureProperty = GetSingleOrDefaultValue(assertionFailureProperty, assertionFailure);
                     break;
                 case FileArtifactProperty artifact:
                     if (firstArtifact is null)
@@ -330,11 +334,13 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                     reason = nodeState.Explanation;
                     exceptions = FlattenToExceptionMessages(reason, failedTestNodeStateProperty.Exception);
 
-                    // Mirror TerminalOutputDevice's single-assembly rendering: assertion libraries store the
-                    // structured expected/actual values on Exception.Data so the reporter can show a diff.
+                    // Mirror TerminalOutputDevice's single-assembly rendering so the SDK can show an
+                    // expected-vs-actual diff. AssertionFailureProperty is the supported channel;
+                    // Exception.Data is the legacy fallback for producers that have not been updated yet. The
+                    // choice is all-or-nothing so the two halves of a diff always come from the same producer.
                     // Only failed tests carry these (error/timeout/cancelled pass null, as in single-assembly).
-                    expected = failedTestNodeStateProperty.Exception?.Data["assert.expected"] as string;
-                    actual = failedTestNodeStateProperty.Exception?.Data["assert.actual"] as string;
+                    expected = assertionFailureProperty is not null ? assertionFailureProperty.Expected : failedTestNodeStateProperty.Exception?.Data["assert.expected"] as string;
+                    actual = assertionFailureProperty is not null ? assertionFailureProperty.Actual : failedTestNodeStateProperty.Exception?.Data["assert.actual"] as string;
                     break;
 
                 case ErrorTestNodeStateProperty errorTestNodeStateProperty:

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 // Note: System.Text.Json is only available in .NET 6.0 and above.
@@ -65,6 +65,14 @@ internal static partial class SerializerUtilities
 #else
                 JsonArray? traits = null;
 #endif
+
+                // Collected up-front because the assertion values are rendered inside the failed-state branch
+                // below, and property order inside the bag is not guaranteed. The state lookup is O(1) (it is a
+                // dedicated PropertyBag field), so non-failed nodes — discovery, in-progress, passed, which are
+                // the vast majority — never pay for the linked-list walk.
+                AssertionFailureProperty? assertionFailure = n.Properties.SingleOrDefault<TestNodeStateProperty>() is FailedTestNodeStateProperty
+                    ? n.Properties.SingleOrDefault<AssertionFailureProperty>()
+                    : null;
 
                 foreach (IProperty property in n.Properties)
                 {
@@ -166,10 +174,22 @@ internal static partial class SerializerUtilities
                                 {
                                     properties["execution-state"] = "failed";
                                     properties["error.message"] = failedTestNodeStateProperty.Explanation ?? failedTestNodeStateProperty.Exception?.Message;
-                                    if (failedTestNodeStateProperty.Exception != null)
+                                    Exception? exception = failedTestNodeStateProperty.Exception;
+                                    if (exception != null)
                                     {
-                                        Exception exception = failedTestNodeStateProperty.Exception;
                                         properties["error.stacktrace"] = exception.StackTrace ?? string.Empty;
+                                    }
+
+                                    // AssertionFailureProperty is the supported channel; Exception.Data is the
+                                    // legacy fallback for producers that have not been updated yet. The choice is
+                                    // all-or-nothing so the two halves of a diff always come from the same producer.
+                                    if (assertionFailure is not null)
+                                    {
+                                        properties["assert.actual"] = assertionFailure.Actual ?? string.Empty;
+                                        properties["assert.expected"] = assertionFailure.Expected ?? string.Empty;
+                                    }
+                                    else if (exception != null)
+                                    {
                                         properties["assert.actual"] = exception.Data["assert.actual"] ?? string.Empty;
                                         properties["assert.expected"] = exception.Data["assert.expected"] ?? string.Empty;
                                     }

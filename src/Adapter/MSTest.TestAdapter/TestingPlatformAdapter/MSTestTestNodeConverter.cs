@@ -78,6 +78,15 @@ internal static class MSTestTestNodeConverter
 
         AddOutcome(testNode, outcome, errorMessage, errorStackTrace);
 
+        // Surface the structured assertion values so consumers can render an expected-vs-actual diff. They
+        // cannot be read back from the reported exception: AddOutcome reports a synthetic
+        // MSTestTestNodeException built from the message and stack trace strings, not the original
+        // AssertFailedException.
+        if (result.ExceptionExpectedText is not null || result.ExceptionActualText is not null)
+        {
+            testNode.Properties.Add(new AssertionFailureProperty(result.ExceptionExpectedText, result.ExceptionActualText));
+        }
+
         if (isTrxEnabled)
         {
             AddTrxResultProperties(testNode, element, errorMessage, errorStackTrace, testMethodIdentifier);
