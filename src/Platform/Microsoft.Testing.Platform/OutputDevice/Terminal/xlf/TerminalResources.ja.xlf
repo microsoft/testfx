@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="ja" original="../TerminalResources.resx">
     <body>
@@ -49,7 +49,7 @@
       </trans-unit>
       <trans-unit id="CoverageAggregationOver">
         <source>{0} over {1}</source>
-        <target state="translated">{1} が {0} を超えています</target>
+        <target state="new">{0} over {1}</target>
         <note>Coverage threshold aggregation description. {0} is the aggregation label and {1} is the population scope level.</note>
       </trans-unit>
       <trans-unit id="CoverageAggregationTotal">
@@ -310,7 +310,6 @@
       <trans-unit id="Retried">
         <source>retried</source>
         <target state="translated">再試行済み</target>
-        <target state="needs-review-translation">再試行済み</target>
         <note>Label of the run summary line counting distinct tests that ran more than once because of a retry, e.g. 'retried: 2 tests, 4 extra runs'. Keep parallel to the 'failed'/'succeeded'/'skipped' labels.</note>
       </trans-unit>
       <trans-unit id="RetriedTestsAndRuns">

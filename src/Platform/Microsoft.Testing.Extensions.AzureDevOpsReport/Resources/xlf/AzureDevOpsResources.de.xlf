@@ -315,7 +315,6 @@
       <trans-unit id="PublishAzdoTestResultsOptionDescription">
         <source>Publish test results to an Azure DevOps test run as tests complete. The run is listed in the build's Tests tab once the test session finishes.</source>
         <target state="new">Publish test results to an Azure DevOps test run as tests complete. The run is listed in the build's Tests tab once the test session finishes.</target>
-        <target state="needs-review-translation">Testergebnisse live auf der Azure DevOps Registerkarte „Tests“ veröffentlichen.</target>
         <note />
       </trans-unit>
       <trans-unit id="QuarantineFileLoadFailedWarning">
