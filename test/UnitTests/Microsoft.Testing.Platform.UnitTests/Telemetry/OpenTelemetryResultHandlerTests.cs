@@ -136,8 +136,12 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
         TestNode testNode = CreateTestNode();
         _handler.NotifyInProgress(testNode, null);
 
-        // Should not throw when completing the test (no activity tracked).
+        // Should not throw when completing the test (no activity tracked), and the result must still be counted
+        // so that a metrics-only configuration keeps working.
         _handler.NotifyPassed(testNode, PassedTestNodeStateProperty.CachedInstance);
+
+        Assert.AreEqual(1, _testCaseResultCounter.Value);
+        Assert.AreEqual(0, _activeTestCases.Value);
     }
 
     [TestMethod]
@@ -668,7 +672,7 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
     }
 
     [TestMethod]
-    public void Dispose_WhileResultsAreStillArriving_DoesNotThrow()
+    public void Dispose_WhileResultsAreStillArriving_BalancesActiveCountAndDoesNotThrow()
     {
         SetupActivityForTestNode("racing");
         for (int i = 0; i < 200; i++)
@@ -692,6 +696,10 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
 
         _handler.Dispose();
         publisher.GetAwaiter().GetResult();
+
+        // Every in-flight entry is decremented exactly once, whether it was completed by the publisher or drained
+        // by Dispose, so the gauge must settle at zero no matter how the two interleave.
+        Assert.AreEqual(0, _activeTestCases.Value);
     }
 
     [TestMethod]
