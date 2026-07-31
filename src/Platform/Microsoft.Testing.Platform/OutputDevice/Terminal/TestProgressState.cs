@@ -4,7 +4,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Platform.Helpers;
 
-using TestNodeInfoEntry = (int Passed, int Skipped, int Failed, int LastAttemptNumber, int LastRetryAttemptNumber);
+using TestNodeInfoEntry = (int Passed, int Skipped, int Failed, int LastAttemptNumber, int LastRetryAttemptNumber, int Attempts);
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
@@ -462,7 +462,7 @@ internal sealed class TestProgressState
                         _uidWithEarlierFailure[testNodeUid] = displayName;
                     }
 
-                    _testUidToResults[testNodeUid] = incrementTestNodeInfoEntry((Passed: 0, Skipped: 0, Failed: 0, LastAttemptNumber: currentAttemptNumber, LastRetryAttemptNumber: retryAttemptNumber));
+                    _testUidToResults[testNodeUid] = incrementTestNodeInfoEntry((Passed: 0, Skipped: 0, Failed: 0, LastAttemptNumber: currentAttemptNumber, LastRetryAttemptNumber: retryAttemptNumber, Attempts: value.Attempts + 1));
                 }
                 else
                 {
@@ -472,7 +472,7 @@ internal sealed class TestProgressState
             }
             else
             {
-                _testUidToResults.Add(testNodeUid, incrementTestNodeInfoEntry((Passed: 0, Skipped: 0, Failed: 0, LastAttemptNumber: currentAttemptNumber, LastRetryAttemptNumber: retryAttemptNumber)));
+                _testUidToResults.Add(testNodeUid, incrementTestNodeInfoEntry((Passed: 0, Skipped: 0, Failed: 0, LastAttemptNumber: currentAttemptNumber, LastRetryAttemptNumber: retryAttemptNumber, Attempts: 1)));
             }
 
             incrementCountAction(this);
@@ -519,11 +519,11 @@ internal sealed class TestProgressState
             {
                 if (IsFlakyCore(entry.Key))
                 {
-                    // The attempt count is the pair (host attempt, in-process retry attempt): a test retried
-                    // in-process reports 1 host attempt but several retry attempts, so the larger of the two is
-                    // the number of times the test actually ran.
-                    TestNodeInfoEntry resultEntry = _testUidToResults[entry.Key];
-                    flaky.Add((entry.Value, Math.Max(resultEntry.LastAttemptNumber, resultEntry.LastRetryAttemptNumber)));
+                    // The attempt count is tracked per uid as transitions arrive rather than derived from the final
+                    // (host attempt, in-process attempt) pair: with both retry mechanisms active the pair advances
+                    // on either component, so (host 1, retry 1) -> (host 1, retry 2) -> (host 2, retry 1) is three
+                    // executions that neither component alone - nor their maximum - would report as three.
+                    flaky.Add((entry.Value, _testUidToResults[entry.Key].Attempts));
                 }
             }
 

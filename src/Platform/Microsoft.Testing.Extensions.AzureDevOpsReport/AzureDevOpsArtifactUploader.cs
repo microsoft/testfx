@@ -135,7 +135,8 @@ internal sealed class AzureDevOpsArtifactUploader : IDataConsumer, ITestSessionL
 
             switch (value)
             {
-                case TestNodeUpdateMessage nodeUpdateMessage when IsFailureState(nodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>()):
+                case TestNodeUpdateMessage nodeUpdateMessage when !nodeUpdateMessage.TestNode.IsSupersededRetryAttempt()
+                    && IsFailureState(nodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>()):
                     Interlocked.Exchange(ref _hasTestFailures, 1);
                     break;
 
