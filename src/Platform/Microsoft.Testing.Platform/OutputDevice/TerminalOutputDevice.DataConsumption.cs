@@ -256,8 +256,11 @@ internal sealed partial class TerminalOutputDevice
                             // AssertionFailureProperty is the supported channel; Exception.Data is the legacy
                             // fallback for producers that have not been updated yet. The choice is
                             // all-or-nothing so the two halves of a diff always come from the same producer.
-                            expected: assertionFailure is not null ? assertionFailure.Expected : failedState.Exception?.Data["assert.expected"] as string,
-                            actual: assertionFailure is not null ? assertionFailure.Actual : failedState.Exception?.Data["assert.actual"] as string,
+                            // Gated on whether a property was seen at all, not on the resolved value: a
+                            // duplicate resolves to null to suppress the diff, and that suppression must not
+                            // fall through to the legacy values.
+                            expected: hasAssertionFailure ? assertionFailure?.Expected : failedState.Exception?.Data["assert.expected"] as string,
+                            actual: hasAssertionFailure ? assertionFailure?.Actual : failedState.Exception?.Data["assert.actual"] as string,
                             standardOutput,
                             standardError);
                         break;
