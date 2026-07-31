@@ -20,10 +20,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 internal sealed partial class TestMethodRunner
 {
     /// <summary>
-    /// The aggregate outcome name reported on the span for a failing test, matching the OpenTelemetry
+    /// The aggregate outcome names reported on the span, matching the OpenTelemetry
     /// <c>test.case.result.status</c> enum.
     /// </summary>
     private const string FailedOutcomeName = "fail";
+    private const string PassedOutcomeName = "pass";
+    private const string SkippedOutcomeName = "skipped";
 
     /// <summary>
     /// Test context which needs to be passed to the various methods of the test.
@@ -79,7 +81,10 @@ internal sealed partial class TestMethodRunner
     {
         _testContext.Context.TestRunCount++;
 
-        TestResult[]? result = null;
+        // Never null once the try/catch below has run, but the compiler cannot prove that inside finally.
+        // Starting from an empty array keeps the null analysis honest without changing behavior on any
+        // reachable path (see the earlier review thread on this line).
+        TestResult[] result = [];
         bool exceptionRecorded = false;
 
         // The engine-level span for the whole test method: it wraps test initialize, the body, test cleanup and any
@@ -121,7 +126,7 @@ internal sealed partial class TestMethodRunner
         finally
         {
             // Assembly initialize and class initialize logs are pre-pended to the first result.
-            TestResult firstResult = result![0];
+            TestResult firstResult = result[0];
             firstResult.LogOutput = initializationLogs + firstResult.LogOutput;
             firstResult.LogError = initializationErrorLogs + firstResult.LogError;
             firstResult.DebugTrace = initializationTrace + firstResult.DebugTrace;
@@ -155,9 +160,10 @@ internal sealed partial class TestMethodRunner
     /// </summary>
     private static void MarkActivityFailed(IMSTestActivity activity, TestResult[] results)
     {
+        MSTestSettings settings = MSTestSettings.CurrentSettings;
         foreach (TestResult testResult in results)
         {
-            if (!IsFailingOutcome(testResult.Outcome))
+            if (MapOutcomeName(testResult.Outcome, settings) != FailedOutcomeName)
             {
                 continue;
             }
@@ -175,28 +181,47 @@ internal sealed partial class TestMethodRunner
         }
     }
 
-    private static bool IsFailingOutcome(UnitTestOutcome outcome)
-        => outcome is UnitTestOutcome.Failed or UnitTestOutcome.Error or UnitTestOutcome.Timeout;
-
     private static string GetAggregateOutcomeName(TestResult[] results)
     {
         bool anyFailed = false;
         bool allSkipped = true;
+        MSTestSettings settings = MSTestSettings.CurrentSettings;
         foreach (TestResult testResult in results)
         {
-            if (testResult.Outcome is not (UnitTestOutcome.Ignored or UnitTestOutcome.NotRunnable))
+            switch (MapOutcomeName(testResult.Outcome, settings))
             {
-                allSkipped = false;
-            }
-
-            if (IsFailingOutcome(testResult.Outcome))
-            {
-                anyFailed = true;
+                case FailedOutcomeName:
+                    anyFailed = true;
+                    allSkipped = false;
+                    break;
+                case SkippedOutcomeName:
+                    break;
+                default:
+                    allSkipped = false;
+                    break;
             }
         }
 
-        return anyFailed ? FailedOutcomeName : allSkipped ? "skipped" : "pass";
+        return anyFailed ? FailedOutcomeName : allSkipped ? SkippedOutcomeName : PassedOutcomeName;
     }
+
+    /// <summary>
+    /// Maps a single outcome onto the span's result status using the same rules the adapter applies when it
+    /// reports the result, so a span never disagrees with the reported outcome.
+    /// </summary>
+    /// <remarks>
+    /// Mirrors <c>UnitTestOutcomeHelper.ToTestOutcome</c>, which lives in the adapter layer above and cannot be
+    /// referenced from here: this assembly is deliberately free of the VSTest object model. Keep the two in sync.
+    /// </remarks>
+    private static string MapOutcomeName(UnitTestOutcome outcome, MSTestSettings settings)
+        => outcome switch
+        {
+            UnitTestOutcome.Passed => PassedOutcomeName,
+            UnitTestOutcome.Failed or UnitTestOutcome.Error or UnitTestOutcome.Timeout or UnitTestOutcome.Aborted or UnitTestOutcome.Unknown => FailedOutcomeName,
+            UnitTestOutcome.NotRunnable => settings.MapNotRunnableToFailed ? FailedOutcomeName : SkippedOutcomeName,
+            UnitTestOutcome.Inconclusive => settings.MapInconclusiveToFailed ? FailedOutcomeName : SkippedOutcomeName,
+            _ => SkippedOutcomeName,
+        };
 
     /// <summary>
     /// Runs the test method.

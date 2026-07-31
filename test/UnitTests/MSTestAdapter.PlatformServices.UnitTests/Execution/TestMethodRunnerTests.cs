@@ -211,6 +211,41 @@ public class TestMethodRunnerTests : TestContainer
         activity.FailureDescription.Should().Be(nameof(UnitTestOutcome.Failed));
     }
 
+    public async Task ExecuteForAbortedTestShouldReportFailStatusOnActivity()
+    {
+        // Aborted, Unknown and Inconclusive used to fall through to "pass" because they are neither in the
+        // failing set nor counted as skipped, which contradicted the outcome the adapter reports.
+        var activity = new FakeActivity();
+        MSTestInstrumentation.SetActivityFactory((_, _) => activity);
+        var testMethodInfo = new TestableTestMethodInfo(
+            _methodInfo,
+            _testClassInfo,
+            _testMethodOptions,
+            () => new TestResult { Outcome = UnitTestOutcome.Aborted });
+        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
+
+        await testMethodRunner.ExecuteAsync(string.Empty, string.Empty, string.Empty, string.Empty);
+
+        activity.Tags.Should().Contain(new KeyValuePair<string, object?>("test.case.result.status", "fail"));
+    }
+
+    public async Task ExecuteForInconclusiveTestShouldReportSkippedStatusOnActivityByDefault()
+    {
+        var activity = new FakeActivity();
+        MSTestInstrumentation.SetActivityFactory((_, _) => activity);
+        var testMethodInfo = new TestableTestMethodInfo(
+            _methodInfo,
+            _testClassInfo,
+            _testMethodOptions,
+            () => new TestResult { Outcome = UnitTestOutcome.Inconclusive });
+        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation);
+
+        await testMethodRunner.ExecuteAsync(string.Empty, string.Empty, string.Empty, string.Empty);
+
+        // MapInconclusiveToFailed defaults to false, so the adapter reports skipped and the span must agree.
+        activity.Tags.Should().Contain(new KeyValuePair<string, object?>("test.case.result.status", "skipped"));
+    }
+
     public async Task RunTestMethodForPassingTestThrowingExceptionShouldReturnTestResultWithPassedOutcome()
     {
         var testMethodInfo = new TestableTestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new TestResult { Outcome = UnitTestOutcome.Passed });
