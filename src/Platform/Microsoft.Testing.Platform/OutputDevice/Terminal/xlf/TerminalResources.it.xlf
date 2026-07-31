@@ -309,7 +309,7 @@
       </trans-unit>
       <trans-unit id="Retried">
         <source>retried</source>
-        <target state="needs-review-translation">ripetuto</target>
+        <target state="translated">ripetuto</target>
         <note>Label of the run summary line counting distinct tests that ran more than once because of a retry, e.g. 'retried: 2 tests, 4 extra runs'. Keep parallel to the 'failed'/'succeeded'/'skipped' labels.</note>
       </trans-unit>
       <trans-unit id="RetriedTestsAndRuns">

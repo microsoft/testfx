@@ -312,32 +312,32 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
       </trans-unit>
       <trans-unit id="CultureMutationUnderParallelizationDescription">
         <source>'CultureInfo.DefaultThreadCurrentCulture' and 'DefaultThreadCurrentUICulture' set the default culture for the whole process, so every concurrently running test observes the change and formatting or parsing can be corrupted under in-assembly parallelization. The per-thread and ambient forms are intentionally not flagged: on modern .NET the 'Thread.CurrentThread.CurrentCulture' / 'CurrentUICulture' and 'CultureInfo.CurrentCulture' / 'CurrentUICulture' setters all assign an 'AsyncLocal'-backed value that flows with the execution context, so they do not corrupt sibling tests or leak onto later-pooled threads. Because the flagged setters are process-wide, restoring the previous value in a 'finally' does not help - concurrently running tests still observe the changed culture for the duration of the mutation; declare '[DoNotParallelize]' on the test, or avoid mutating process-wide culture, instead.</source>
-        <target state="new">'CultureInfo.DefaultThreadCurrentCulture' and 'DefaultThreadCurrentUICulture' set the default culture for the whole process, so every concurrently running test observes the change and formatting or parsing can be corrupted under in-assembly parallelization. The per-thread and ambient forms are intentionally not flagged: on modern .NET the 'Thread.CurrentThread.CurrentCulture' / 'CurrentUICulture' and 'CultureInfo.CurrentCulture' / 'CurrentUICulture' setters all assign an 'AsyncLocal'-backed value that flows with the execution context, so they do not corrupt sibling tests or leak onto later-pooled threads. Because the flagged setters are process-wide, restoring the previous value in a 'finally' does not help - concurrently running tests still observe the changed culture for the duration of the mutation; declare '[DoNotParallelize]' on the test, or avoid mutating process-wide culture, instead.</target>
+        <target state="translated">'CultureInfo.DefaultThreadCurrentCulture' e 'DefaultThreadCurrentUICulture' impostano la cultura predefinita per l'intero processo, quindi ogni test in esecuzione contemporaneamente osserva la modifica e la formattazione o l'analisi possono essere compromesse durante la parallelizzazione all'interno dell'assembly. Le forme per thread e ambientali non vengono segnalate di proposito: nel .NET moderno, i setter 'Thread.CurrentThread.CurrentCulture' / 'CurrentUICulture' e 'CultureInfo.CurrentCulture' / 'CurrentUICulture' assegnano tutti un valore supportato da 'AsyncLocal' che scorre con il contesto di esecuzione, per cui non compromettono i test adiacenti né si propagano ai thread del pool riutilizzati in seguito. Poiché i setter segnalati sono a livello di processo, ripristinare il valore precedente in un 'finally' non aiuta: i test in esecuzione contemporanea osservano comunque la cultura modificata per tutta la durata della modifica; dichiara '[DoNotParallelize]' nel test, oppure evita di modificare la cultura a livello di processo.</target>
         <note>{Locked="CultureInfo.DefaultThreadCurrentCulture"}{Locked="DefaultThreadCurrentUICulture"}{Locked="Thread.CurrentThread.CurrentCulture"}{Locked="CurrentUICulture"}{Locked="CultureInfo.CurrentCulture"}{Locked="AsyncLocal"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="CultureMutationUnderParallelizationMessageFormat">
         <source>'{0}' sets the default culture for the whole process, so every concurrently running test observes the change, which can corrupt formatting and parsing in tests running in parallel; avoid mutating it in a parallelized test suite, or declare '[DoNotParallelize]'</source>
-        <target state="new">'{0}' sets the default culture for the whole process, so every concurrently running test observes the change, which can corrupt formatting and parsing in tests running in parallel; avoid mutating it in a parallelized test suite, or declare '[DoNotParallelize]'</target>
+        <target state="translated">'{0}' imposta la cultura predefinita per l'intero processo, quindi ogni test in esecuzione contemporaneamente osserva la modifica, che può compromettere la formattazione e l'analisi nei test eseguiti in parallelo; evita di modificarla in un gruppo di test parallelizzato, oppure dichiara '[DoNotParallelize]'</target>
         <note>{0} is the mutated API (for example 'CultureInfo.DefaultThreadCurrentCulture'). {Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="CultureMutationUnderParallelizationTitle">
         <source>Avoid mutating process-wide culture in a parallelized test</source>
-        <target state="new">Avoid mutating process-wide culture in a parallelized test</target>
+        <target state="translated">Evita di mutare le impostazioni cultura a livello di processo in un test parallelizzato</target>
         <note />
       </trans-unit>
       <trans-unit id="CurrentDirectoryMutationUnderParallelizationDescription">
         <source>The current directory is process-global on every operating system and, unlike culture, has no thread-scoped or async-scoped equivalent. A test that changes it corrupts the working directory of every test running concurrently, and relative paths resolved elsewhere in the suite silently point at the wrong location. A '[ResourceLock]' serializes the contending tests and makes the mutation safe, but it remains a design smell in a parallel suite: prefer passing absolute paths so the current directory never needs to change.</source>
-        <target state="new">The current directory is process-global on every operating system and, unlike culture, has no thread-scoped or async-scoped equivalent. A test that changes it corrupts the working directory of every test running concurrently, and relative paths resolved elsewhere in the suite silently point at the wrong location. A '[ResourceLock]' serializes the contending tests and makes the mutation safe, but it remains a design smell in a parallel suite: prefer passing absolute paths so the current directory never needs to change.</target>
+        <target state="translated">La directory corrente è globale del processo in ogni sistema operativo e, a differenza delle impostazioni cultura, non ha un equivalente con ambito per thread o asincrono. Un test che la modifica compromette la directory di lavoro di ogni test in esecuzione contemporaneamente e i percorsi relativi risolti altrove nella suite puntano in silenzio alla posizione sbagliata. Un '[ResourceLock]' serializza i test in conflitto e rende sicura la modifica, ma resta comunque un segnale di progettazione poco pulita in una suite parallelizzata: preferisci passare percorsi assoluti, in modo che la directory corrente non debba mai cambiare.</target>
         <note>{Locked="[ResourceLock]"}</note>
       </trans-unit>
       <trans-unit id="CurrentDirectoryMutationUnderParallelizationMessageFormat">
         <source>'{0}' changes the process-global current directory, which has no per-thread equivalent and is observed by every concurrently running test; avoid mutating it in a parallelized test suite (declare '[ResourceLock(WellKnownResources.CurrentDirectory)]' to at least coordinate, or '[DoNotParallelize]')</source>
-        <target state="new">'{0}' changes the process-global current directory, which has no per-thread equivalent and is observed by every concurrently running test; avoid mutating it in a parallelized test suite (declare '[ResourceLock(WellKnownResources.CurrentDirectory)]' to at least coordinate, or '[DoNotParallelize]')</target>
+        <target state="translated">'{0}' modifica la directory corrente globale del processo, che non ha un equivalente per thread ed è osservata da ogni test in esecuzione contemporaneamente; evita di modificarla in un gruppo di test parallelizzato (dichiara '[ResourceLock(WellKnownResources.CurrentDirectory)]' almeno per coordinare, oppure '[DoNotParallelize]')</target>
         <note>{0} is the mutated API (for example 'Directory.SetCurrentDirectory'). {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="CurrentDirectoryMutationUnderParallelizationTitle">
         <source>Avoid changing the current directory in a parallelized test</source>
-        <target state="new">Avoid changing the current directory in a parallelized test</target>
+        <target state="translated">Evita di cambiare la directory corrente in un test parallelizzato</target>
         <note />
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidDescription">
@@ -752,7 +752,7 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
       </trans-unit>
       <trans-unit id="PreferConstantForResourceLockMessageFormat">
         <source>The '[ResourceLock]' resource key '{0}' is a bare string literal; reference a shared constant (such as a 'WellKnownResources' member or your own 'const') so that typos do not silently produce a different, unshared key</source>
-        <target state="new">The '[ResourceLock]' resource key '{0}' is a bare string literal; reference a shared constant (such as a 'WellKnownResources' member or your own 'const') so that typos do not silently produce a different, unshared key</target>
+        <target state="translated">La chiave di risorsa ''[ResourceLock]'' ''{0}'' è un valore letterale stringa bare; fare riferimento a una costante condivisa, (ad esempio un membro ''WellKnownResources'' o il proprio ''const'') in modo che gli errori di digitazione non producano automaticamente una chiave diversa non condivisa</target>
         <note>{0} is the resource key value. {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="'const'"}</note>
       </trans-unit>
       <trans-unit id="PreferConstantForResourceLockTitle">
@@ -872,17 +872,17 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
       </trans-unit>
       <trans-unit id="SharedFileSystemPathInTestDescription">
         <source>Passing a hardcoded absolute path, or a relative path literal, directly to a filesystem-mutating 'File.*'/'Directory.*' method (for example 'File.WriteAllText' or 'Directory.CreateDirectory') targets a location shared by every other test in the assembly; relative paths additionally resolve against the process-global current directory. Under in-assembly parallelization two tests can then write to the same location concurrently. Only statically constant paths passed to a mutating API are flagged; reads, path construction, and paths built from variables are left to the parallel-safety audit skill. Prefer a unique per-test directory such as 'TestContext.TestTempDirectory'.</source>
-        <target state="new">Passing a hardcoded absolute path, or a relative path literal, directly to a filesystem-mutating 'File.*'/'Directory.*' method (for example 'File.WriteAllText' or 'Directory.CreateDirectory') targets a location shared by every other test in the assembly; relative paths additionally resolve against the process-global current directory. Under in-assembly parallelization two tests can then write to the same location concurrently. Only statically constant paths passed to a mutating API are flagged; reads, path construction, and paths built from variables are left to the parallel-safety audit skill. Prefer a unique per-test directory such as 'TestContext.TestTempDirectory'.</target>
+        <target state="translated">Il passaggio di un percorso assoluto hardcoded o di un valore letterale di percorso relativo direttamente a un metodo 'File.*'/'Directory.*' che modifica il file system (ad esempio 'File.WriteAllText' o 'Directory.CreateDirectory') è destinato a un percorso condiviso da tutti gli altri test nell'assembly; i percorsi relativi vengono inoltre risolti rispetto alla directory corrente globale del processo. Con la parallelizzazione all'interno dell'assembly, due test possono quindi scrivere contemporaneamente nella stessa posizione. Vengono segnalati solo i percorsi costanti statici passati a un'API che modifica lo stato; le letture, la composizione dei percorsi e i percorsi costruiti a partire da variabili vengono lasciati all'analisi di sicurezza sulla parallelizzazione. Preferisci una directory univoca per test, ad esempio 'TestContext.TestTempDirectory'.</target>
         <note>{Locked="File.*"}{Locked="Directory.*"}{Locked="TestContext.TestTempDirectory"}</note>
       </trans-unit>
       <trans-unit id="SharedFileSystemPathInTestMessageFormat">
         <source>The path '{0}' is a fixed location shared by every test in the assembly (and, when relative, resolves against the process-global current directory), so parallel tests that write to it can collide; use a unique per-test location such as 'TestContext.TestTempDirectory'</source>
-        <target state="new">The path '{0}' is a fixed location shared by every test in the assembly (and, when relative, resolves against the process-global current directory), so parallel tests that write to it can collide; use a unique per-test location such as 'TestContext.TestTempDirectory'</target>
+        <target state="translated">Il percorso '{0}' è una posizione fissa condivisa da ogni test nell'assembly e, se è relativo, viene risolto in base alla directory corrente globale del processo; quindi, i test paralleli che vi scrivono possono entrare in conflitto. Usa una posizione univoca per test, ad esempio 'TestContext.TestTempDirectory'</target>
         <note>{0} is the offending path literal. {Locked="TestContext.TestTempDirectory"}</note>
       </trans-unit>
       <trans-unit id="SharedFileSystemPathInTestTitle">
         <source>Avoid hardcoded or shared filesystem paths in a parallelized test</source>
-        <target state="new">Avoid hardcoded or shared filesystem paths in a parallelized test</target>
+        <target state="translated">Evita percorsi del file system codificati in modo fisso o condivisi in un test parallelizzato</target>
         <note />
       </trans-unit>
       <trans-unit id="StringAssertToAssertMessageFormat">
@@ -972,17 +972,17 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
       </trans-unit>
       <trans-unit id="UndeclaredProcessGlobalStateMutationDescription">
         <source>Mutating process-global state (such as environment variables or the console redirection) from a test is unsafe once in-assembly parallelization is enabled, because a sibling test running concurrently observes the mutation. Unlike '[ResourceLock]', which fails open when a key is forgotten, this rule flags the mutation at compile time. Declare '[ResourceLock]' with the matching 'WellKnownResources' key to serialize contending tests, or '[DoNotParallelize]' to opt the test out of parallelization.</source>
-        <target state="new">Mutating process-global state (such as environment variables or the console redirection) from a test is unsafe once in-assembly parallelization is enabled, because a sibling test running concurrently observes the mutation. Unlike '[ResourceLock]', which fails open when a key is forgotten, this rule flags the mutation at compile time. Declare '[ResourceLock]' with the matching 'WellKnownResources' key to serialize contending tests, or '[DoNotParallelize]' to opt the test out of parallelization.</target>
+        <target state="translated">La modifica dello stato globale del processo (ad esempio le variabili di ambiente o il reindirizzamento della console), da un test non è sicura quando la parallelizzazione all'interno dell'assembly è abilitata, perché un test adiacente in esecuzione contemporanea osserva la modifica. A differenza di '[ResourceLock]', che va in fail-open quando viene dimenticata una chiave, questa regola segnala la modifica in fase di compilazione. Dichiara '[ResourceLock]' con la chiave 'WellKnownResources' corrispondente per serializzare i test in conflitto, oppure '[DoNotParallelize]' per escludere il test dalla parallelizzazione.</target>
         <note>{Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="UndeclaredProcessGlobalStateMutationMessageFormat">
         <source>'{0}' mutates process-global state and is unsafe when tests run in parallel; declare '[ResourceLock(WellKnownResources.{1})]' on the test (or '[DoNotParallelize]')</source>
-        <target state="new">'{0}' mutates process-global state and is unsafe when tests run in parallel; declare '[ResourceLock(WellKnownResources.{1})]' on the test (or '[DoNotParallelize]')</target>
+        <target state="translated">'{0}' muta lo stato globale del processo e non è sicuro quando i test vengono eseguiti in parallelo; dichiarare '[ResourceLock(WellKnownResources.{1})]' sul test (o '[DoNotParallelize]')</target>
         <note>{0} is the mutated API (for example 'Environment.SetEnvironmentVariable'). {1} is a 'WellKnownResources' member name. {Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="UndeclaredProcessGlobalStateMutationTitle">
         <source>Test mutating process-global state should declare a resource lock</source>
-        <target state="new">Test mutating process-global state should declare a resource lock</target>
+        <target state="translated">Il test che muta lo stato globale del processo deve dichiarare un blocco delle risorse</target>
         <note />
       </trans-unit>
       <trans-unit id="UseArchitectureConditionAttributeInsteadOfRuntimeCheckDescription">

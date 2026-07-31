@@ -539,7 +539,7 @@ Gerçekte olan: {2}</target>
       </trans-unit>
       <trans-unit id="InvalidDependsOnTestMethodName">
         <source>The test method name of a [DependsOn] must be a non-empty, non-whitespace string.</source>
-        <target state="new">The test method name of a [DependsOn] must be a non-empty, non-whitespace string.</target>
+        <target state="translated">[DependsOn] öğesinin test metodu adı, boş olmayan ve boşluk içermeyen bir dize olmalıdır.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidGitHubUrl">

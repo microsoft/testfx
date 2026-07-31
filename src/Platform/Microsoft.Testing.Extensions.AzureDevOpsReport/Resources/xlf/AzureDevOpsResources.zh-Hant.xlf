@@ -314,7 +314,7 @@
       </trans-unit>
       <trans-unit id="PublishAzdoTestResultsOptionDescription">
         <source>Publish test results to an Azure DevOps test run as tests complete. The run is listed in the build's Tests tab once the test session finishes.</source>
-        <target state="needs-review-translation">將測試結果即時發佈至 Azure DevOps 測試索引標籤。</target>
+        <target state="new">Publish test results to an Azure DevOps test run as tests complete. The run is listed in the build's Tests tab once the test session finishes.</target>
         <note />
       </trans-unit>
       <trans-unit id="QuarantineFileLoadFailedWarning">

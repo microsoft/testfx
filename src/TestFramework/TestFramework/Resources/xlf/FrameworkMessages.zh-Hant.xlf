@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" original="../FrameworkMessages.resx" target-language="zh-Hant">
     <body>
@@ -539,7 +539,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="InvalidDependsOnTestMethodName">
         <source>The test method name of a [DependsOn] must be a non-empty, non-whitespace string.</source>
-        <target state="new">The test method name of a [DependsOn] must be a non-empty, non-whitespace string.</target>
+        <target state="translated">[DependsOn] 的測試方法名稱必須是非空白、非空格的字串。</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidGitHubUrl">

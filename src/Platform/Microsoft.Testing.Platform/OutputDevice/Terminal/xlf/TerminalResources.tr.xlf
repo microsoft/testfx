@@ -309,7 +309,7 @@
       </trans-unit>
       <trans-unit id="Retried">
         <source>retried</source>
-        <target state="needs-review-translation">yeniden denendi</target>
+        <target state="translated">yeniden denendi</target>
         <note>Label of the run summary line counting distinct tests that ran more than once because of a retry, e.g. 'retried: 2 tests, 4 extra runs'. Keep parallel to the 'failed'/'succeeded'/'skipped' labels.</note>
       </trans-unit>
       <trans-unit id="RetriedTestsAndRuns">
@@ -447,7 +447,7 @@ Passing the option without a value turns it on.</target>
       </trans-unit>
       <trans-unit id="TerminalShowSlowestTestsOptionDescription">
         <source>Show the specified number of slowest tests (by reported execution duration) in the run summary. Expects a positive integer.</source>
-        <target state="translated">Çalıştırma özetinde belirtilen sayıda en yavaş testi (bildirilen yürütme süresine göre) gösterir. Pozitif bir tamsayı bekliyor.</target>
+        <target state="translated">Çalıştırma özetinde, bildirilen çalışma süresine göre en yavaş testlerden belirtilen sayıda olanı gösterir. Değer, pozitif bir tamsayı olmalıdır.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalShowSlowestTestsOptionInvalidArgument">

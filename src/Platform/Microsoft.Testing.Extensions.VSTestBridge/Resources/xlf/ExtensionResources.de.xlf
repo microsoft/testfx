@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="de" original="../ExtensionResources.resx">
     <body>
@@ -9,7 +9,7 @@
       </trans-unit>
       <trans-unit id="RunSettingsEnvironmentVariablesNotSupportedOnBrowser">
         <source>The runsettings 'EnvironmentVariables' section is not supported on browser/WebAssembly platforms, because applying it requires restarting the test host process. Remove the section to run on browser-wasm.</source>
-        <target state="new">The runsettings 'EnvironmentVariables' section is not supported on browser/WebAssembly platforms, because applying it requires restarting the test host process. Remove the section to run on browser-wasm.</target>
+        <target state="translated">Der runsettings-Abschnitt „EnvironmentVariables“ wird auf Browser-/WebAssembly-Plattformen nicht unterstützt, da für die Anwendung ein Neustart des Testhostprozesses erforderlich ist. Entfernen Sie den Abschnitt, der auf browser-wasm ausgeführt werden soll.</target>
         <note>{Locked="runsettings"}{Locked="EnvironmentVariables"}{Locked="browser-wasm"}</note>
       </trans-unit>
       <trans-unit id="RunSettingsOptionDescription">
@@ -59,7 +59,7 @@
       </trans-unit>
       <trans-unit id="UnsupportedTestExecutionFilter">
         <source>Test execution filter type '{0}' is not supported by '{1}'. Supported filter types are NopFilter, TestNodeUidListFilter, and an And CompositeTestExecutionFilter.</source>
-        <target state="new">Test execution filter type '{0}' is not supported by '{1}'. Supported filter types are NopFilter, TestNodeUidListFilter, and an And CompositeTestExecutionFilter.</target>
+        <target state="translated">Der Testausführungsfiltertyp „{0}“ wird von „{1}“ nicht unterstützt. Unterstützte Filtertypen sind NopFilter, TestNodeUidListFilter und ein zusammengesetzter And-CompositeTestExecutionFilter.</target>
         <note>{0} is the unsupported filter type. {1} is the adapter name. {Locked="NopFilter"}{Locked="TestNodeUidListFilter"}{Locked="And"}{Locked="CompositeTestExecutionFilter"}</note>
       </trans-unit>
       <trans-unit id="VSTestBridgedTestFrameworkSessionAlreadyCreatedErrorMessage">

@@ -259,12 +259,12 @@
       </trans-unit>
       <trans-unit id="CompositeTestExecutionFilterCannotContainNull">
         <source>A composite test execution filter cannot contain a null child filter.</source>
-        <target state="new">A composite test execution filter cannot contain a null child filter.</target>
+        <target state="translated">复合测试执行筛选器不能包含 null 子筛选器。</target>
         <note />
       </trans-unit>
       <trans-unit id="CompositeTestExecutionFilterRequiresTwoFilters">
         <source>A composite test execution filter requires at least two child filters.</source>
-        <target state="new">A composite test execution filter requires at least two child filters.</target>
+        <target state="translated">复合测试执行筛选器至少需要两个子筛选器。</target>
         <note />
       </trans-unit>
       <trans-unit id="ConfigurationFileNotFound">
@@ -1047,7 +1047,7 @@ Microsoft 测试平台会收集使用数据，帮助我们改善体验。该数�
       </trans-unit>
       <trans-unit id="TestExecutionFilterProviderNotSupportedForServer">
         <source>Test execution filter provider '{0}' returned filter type '{1}' for a JSON-RPC server request. Provider constraints are not applied to server requests; return null when TestExecutionFilterContext.Origin is Server.</source>
-        <target state="new">Test execution filter provider '{0}' returned filter type '{1}' for a JSON-RPC server request. Provider constraints are not applied to server requests; return null when TestExecutionFilterContext.Origin is Server.</target>
+        <target state="translated">测试执行筛选器提供程序“{0}”为 JSON-RPC 服务器请求返回了筛选器类型“{1}”。提供程序约束不适用于服务器请求；当 TestExecutionFilterContext.Origin 为 Server 时返回 null。</target>
         <note>{0} is the provider UID. {1} is the filter type. {Locked="JSON-RPC"}{Locked="null"}{Locked="TestExecutionFilterContext.Origin"}{Locked="Server"}</note>
       </trans-unit>
       <trans-unit id="TestFrameworkProxyApiShouldNotBeCalled">
@@ -1149,22 +1149,22 @@ Microsoft 测试平台会收集使用数据，帮助我们改善体验。该数�
       </trans-unit>
       <trans-unit id="UnsupportedProviderTestExecutionFilter">
         <source>Test execution filter provider '{0}' returned unsupported filter type '{1}'. Providers can return only NopFilter, TestNodeUidListFilter, TreeNodeFilter, or an And CompositeTestExecutionFilter.</source>
-        <target state="new">Test execution filter provider '{0}' returned unsupported filter type '{1}'. Providers can return only NopFilter, TestNodeUidListFilter, TreeNodeFilter, or an And CompositeTestExecutionFilter.</target>
+        <target state="translated">测试执行筛选器提供程序“{0}”返回了不受支持的筛选器类型“{1}”。提供程序只能返回 NopFilter、TestNodeUidListFilter、TreeNodeFilter 或 And CompositeTestExecutionFilter。</target>
         <note>{0} is the provider UID. {1} is the unsupported filter type. {Locked="NopFilter"}{Locked="TestNodeUidListFilter"}{Locked="TreeNodeFilter"}{Locked="And"}{Locked="CompositeTestExecutionFilter"}</note>
       </trans-unit>
       <trans-unit id="UnsupportedRequestTestExecutionFilter">
         <source>The request contains unsupported test execution filter type '{0}'.</source>
-        <target state="new">The request contains unsupported test execution filter type '{0}'.</target>
+        <target state="translated">请求包含不受支持的测试执行筛选器类型“{0}”。</target>
         <note>{0} is the unsupported filter type.</note>
       </trans-unit>
       <trans-unit id="UnsupportedTestExecutionFilterOperator">
         <source>Only the And test execution filter operator is supported.</source>
-        <target state="new">Only the And test execution filter operator is supported.</target>
+        <target state="translated">仅支持 And 测试执行筛选器运算符。</target>
         <note>{Locked="And"}</note>
       </trans-unit>
       <trans-unit id="UnsupportedTestExecutionFilterOperatorValue">
         <source>Test execution filter operator '{0}' is not supported. Only And is supported.</source>
-        <target state="new">Test execution filter operator '{0}' is not supported. Only And is supported.</target>
+        <target state="translated">不支持测试执行筛选器运算符“{0}”。仅支持 And。</target>
         <note>{0} is the unsupported operator value. {Locked="And"}</note>
       </trans-unit>
       <trans-unit id="WaitDebuggerAttachNotSupportedInBrowserErrorMessage">
