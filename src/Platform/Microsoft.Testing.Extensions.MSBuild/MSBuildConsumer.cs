@@ -200,8 +200,8 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
     {
         _totalTests++;
         _totalFailedTests++;
-        ApplicationStateGuard.Ensure(_msBuildTestApplicationLifecycleCallbacks != null);
-        ApplicationStateGuard.Ensure(_msBuildTestApplicationLifecycleCallbacks.PipeClient != null);
+        ApplicationStateGuard.Ensure(_msBuildTestApplicationLifecycleCallbacks is not null);
+        ApplicationStateGuard.Ensure(_msBuildTestApplicationLifecycleCallbacks.PipeClient is not null);
         var failedTestInfoRequest = new FailedTestInfoRequest(testDisplayName, isCanceled, duration, errorMessage, errorStackTrace, expected, actual, codeFilePath, lineNumber);
         await _msBuildTestApplicationLifecycleCallbacks.PipeClient.RequestReplyAsync<FailedTestInfoRequest, VoidResponse>(failedTestInfoRequest, cancellationToken).ConfigureAwait(false);
     }
@@ -210,8 +210,8 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
     {
         string? duration = ToHumanReadableDuration(elapsed.TotalMilliseconds);
 
-        ApplicationStateGuard.Ensure(_msBuildTestApplicationLifecycleCallbacks != null);
-        ApplicationStateGuard.Ensure(_msBuildTestApplicationLifecycleCallbacks.PipeClient != null);
+        ApplicationStateGuard.Ensure(_msBuildTestApplicationLifecycleCallbacks is not null);
+        ApplicationStateGuard.Ensure(_msBuildTestApplicationLifecycleCallbacks.PipeClient is not null);
         bool allowSkipped = PlatformCommandLineProvider.GetZeroTestsPolicy(_commandLineOptions) == ZeroTestsPolicy.AllowSkipped;
         var runSummaryInfoRequest = new RunSummaryInfoRequest(_totalTests, _totalFailedTests, _totalPassedTests, _totalSkippedTests, duration, allowSkipped);
         await _msBuildTestApplicationLifecycleCallbacks.PipeClient.RequestReplyAsync<RunSummaryInfoRequest, VoidResponse>(runSummaryInfoRequest, cancellationToken).ConfigureAwait(false);
