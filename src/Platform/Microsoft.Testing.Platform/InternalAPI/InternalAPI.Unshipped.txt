@@ -334,6 +334,7 @@ Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.Sho
 Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.ShowRunSummary.init -> void
 const Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.ShowFlakyTestsOption = "show-flaky-tests" -> string!
 static Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.IsFlakyTestsReportingEnabled(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> bool
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporter.TestCompleted(string! executionId, string! testNodeUid, string! displayName, Microsoft.Testing.Platform.OutputDevice.Terminal.TestOutcome outcome, System.TimeSpan? duration, string? informativeMessage, string? errorMessage, System.Exception? exception, string? expected, string? actual, string? standardOutput, string? errorOutput, int retryAttemptNumber, bool isRetryAttempt) -> void
 Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.ReportPassingTest(string! testNodeUid, string! displayName, string! instanceId, int retryAttemptNumber) -> void
 Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.ReportSkippedTest(string! testNodeUid, string! displayName, string! instanceId, int retryAttemptNumber) -> void
 Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.ReportFailedTest(string! testNodeUid, string! displayName, string! instanceId, int retryAttemptNumber) -> void
