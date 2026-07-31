@@ -11,6 +11,12 @@ namespace Microsoft.Testing.Platform.Messages;
 internal static class ShutdownTimeouts
 {
     /// <summary>
+    /// Smallest override we accept: the downstream waits work in whole milliseconds, so anything below this
+    /// truncates to a zero timeout.
+    /// </summary>
+    private static readonly TimeSpan OneMillisecond = TimeSpan.FromMilliseconds(1);
+
+    /// <summary>
     /// Default value of <see cref="GetCanceledConsumerCompletion(IEnvironment)"/>.
     /// </summary>
     public static readonly TimeSpan DefaultCanceledConsumerCompletion = TimeSpan.FromSeconds(30);
@@ -51,10 +57,12 @@ internal static class ShutdownTimeouts
             return DefaultCanceledConsumerCompletion;
         }
 
-        // A positive value below TimeSpan's resolution (1e-300, say) rounds down to zero, which would make an
-        // aborted run abandon every consumer instantly rather than honoring a budget. Check the constructed
-        // value, not just the parsed number.
+        // A positive value can still degenerate into "no wait at all": anything below TimeSpan's resolution
+        // (1e-300, say) rounds to zero, and the downstream waits work in whole milliseconds, so a
+        // sub-millisecond value such as 0.0001 truncates to a zero timeout in SemaphoreSlim.WaitAsync. Either
+        // would make an aborted run abandon every consumer instantly rather than honoring a budget, so require
+        // at least a millisecond.
         var timeout = TimeSpan.FromSeconds(seconds);
-        return timeout > TimeSpan.Zero ? timeout : DefaultCanceledConsumerCompletion;
+        return timeout >= OneMillisecond ? timeout : DefaultCanceledConsumerCompletion;
     }
 }
