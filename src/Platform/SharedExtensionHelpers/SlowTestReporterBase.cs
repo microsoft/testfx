@@ -141,7 +141,13 @@ internal abstract class SlowTestReporterBase : IDataConsumer, ITestSessionLifeti
             else if (state is not null || update.TestNode.Properties.Any<TestNodeExecutionCompletedProperty>())
             {
                 // Any non-in-progress state, including outcome-less execution completion, is terminal for surfacing.
-                _inProgress.TryRemove(uid, out _);
+                // A retry sequence is the exception: it has one in-progress update for the whole test but a terminal
+                // update per attempt, so dropping the test on a superseded one would stop slow-test reporting while
+                // its next attempt is still running.
+                if (!update.TestNode.IsSupersededRetryAttempt())
+                {
+                    _inProgress.TryRemove(uid, out _);
+                }
             }
         }
         catch (OperationCanceledException)
