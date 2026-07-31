@@ -27,10 +27,13 @@ public sealed class TestApplicationResultTests : IDisposable
         var secondActivity = new Mock<IPlatformActivity>();
         var otelService = new Mock<IPlatformOpenTelemetryService>();
         otelService
-            .Setup(service => service.CreateCounter<int>(It.IsAny<string>(), null, null, null))
+            .Setup(service => service.CreateCounter<int>(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()))
             .Returns(Mock.Of<ICounter<int>>());
         otelService
-            .Setup(service => service.CreateHistogram<double>(It.IsAny<string>(), null, null, null))
+            .Setup(service => service.CreateUpDownCounter<int>(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()))
+            .Returns(Mock.Of<IUpDownCounter<int>>());
+        otelService
+            .Setup(service => service.CreateHistogram<double>(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()))
             .Returns(Mock.Of<IHistogram<double>>());
         otelService
             .SetupSequence(service => service.StartActivity(
@@ -118,6 +121,69 @@ public sealed class TestApplicationResultTests : IDisposable
             coverageResult.Object);
 
         Assert.AreEqual((int)ExitCode.ZeroTests, testApplicationResult.GetProcessExitCode());
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_SupersededRetryAttempt_DoesNotCloseTheTestActivity()
+    {
+        // A test framework that retries in-process reports one in-progress update (which opens the OpenTelemetry
+        // activity) followed by one result per attempt. Only the final attempt is the test's outcome, so only it
+        // may close the activity - otherwise the first superseded result would close it and the real outcome would
+        // find nothing in flight, reporting the retried test as failed in traces even though it passed.
+        var activity = new Mock<IPlatformActivity>();
+        var otelService = new Mock<IPlatformOpenTelemetryService>();
+        otelService
+            .Setup(service => service.CreateCounter<int>(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()))
+            .Returns(Mock.Of<ICounter<int>>());
+        otelService
+            .Setup(service => service.CreateUpDownCounter<int>(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()))
+            .Returns(Mock.Of<IUpDownCounter<int>>());
+        otelService
+            .Setup(service => service.CreateHistogram<double>(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()))
+            .Returns(Mock.Of<IHistogram<double>>());
+        otelService
+            .Setup(service => service.StartActivity(
+                It.IsAny<string>(),
+                It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+                It.IsAny<string?>(),
+                It.IsAny<DateTimeOffset>()))
+            .Returns(activity.Object);
+        using TestApplicationResult testApplicationResult = new(
+            Mock.Of<IOutputDevice>(),
+            Mock.Of<ICommandLineOptions>(),
+            Mock.Of<IEnvironment>(),
+            Mock.Of<IStopPoliciesService>(),
+            otelService.Object);
+
+        static TestNode CreateNode(params IProperty[] properties) => new()
+        {
+            Uid = "flaky-uid",
+            DisplayName = "FlakyTest",
+            Properties = new PropertyBag(properties),
+        };
+
+        // The in-progress update is reported once per test (not once per attempt) and opens the activity.
+        await testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(InProgressTestNodeStateProperty.CachedInstance)),
+            CancellationToken.None);
+
+        // Attempt 1 failed but was superseded: it must neither close the activity nor mark it failed.
+        await testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(new FailedTestNodeStateProperty("boom"), new RetryAttemptProperty(1, isSuperseded: true))),
+            CancellationToken.None);
+
+        activity.Verify(a => a.Dispose(), Times.Never);
+
+        // Attempt 2 passed and is the final outcome: it closes the activity exactly once.
+        await testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(PassedTestNodeStateProperty.CachedInstance, new RetryAttemptProperty(2, isSuperseded: false))),
+            CancellationToken.None);
+
+        activity.Verify(a => a.Dispose(), Times.Once);
+        Assert.AreEqual((int)ExitCode.Success, testApplicationResult.GetProcessExitCode());
     }
 
     [TestMethod]

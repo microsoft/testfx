@@ -197,6 +197,14 @@ internal sealed partial class TestClassInfo
             timeout = localTimeout;
         }
 
+        using IMSTestActivity? activity = MSTestInstrumentation.IsEnabled
+            ? MSTestInstrumentation.StartFixtureActivity(
+                MSTestInstrumentation.ActivityNames.ClassCleanup,
+                "class_cleanup",
+                methodInfo.DeclaringType?.FullName,
+                methodInfo.DeclaringType?.Assembly.GetName().Name)
+            : null;
+
         TestFailedException? result = await FixtureMethodRunner.RunWithTimeoutAndCancellationAsync(
             () => methodInfo.InvokeAsFixtureMethodAsync(
                 testContext,
@@ -207,6 +215,11 @@ internal sealed partial class TestClassInfo
             ExecutionContext ?? Parent.ExecutionContext,
             Resource.ClassCleanupWasCancelled,
             Resource.ClassCleanupTimedOut).ConfigureAwait(false);
+
+        if (result is not null)
+        {
+            activity?.RecordException(result);
+        }
 
         return result;
     }

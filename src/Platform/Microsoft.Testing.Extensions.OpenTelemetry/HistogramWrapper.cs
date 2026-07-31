@@ -18,4 +18,15 @@ internal sealed class HistogramWrapper<T> : IHistogram<T>
 
     public void Record(T value)
         => _histogram.Record(value);
+
+    public void Record(T value, IEnumerable<KeyValuePair<string, object?>>? tags)
+    {
+        if (tags is null)
+        {
+            _histogram.Record(value);
+            return;
+        }
+
+        _histogram.Record(value, MeasurementTags.ToArray(tags));
+    }
 }
