@@ -311,6 +311,9 @@ public sealed class AsynchronousMessageBusTests
         await asynchronousMessageBus.DisableAsync();
 
         Assert.AreEqual(0, consumer.ReceivedTypeA);
+
+        // The repeat call must also leave the bus fully drained, not just avoid throwing.
+        Assert.IsEmpty(asynchronousMessageBus.ConsumersStillRunning.ToList());
     }
 
     [TestMethod]
@@ -734,6 +737,10 @@ public sealed class AsynchronousMessageBusTests
         // The budget bounds the shutdown as a whole. Allow generous slack for slow machines, but stay well
         // below the consumerCount x budget that a per-consumer bound would produce.
         Assert.IsLessThan(TimeSpan.FromSeconds(consumerCount), stopwatch.Elapsed);
+
+        // Deterministic half of the same property: we bailed out of the wait with every consumer still going,
+        // rather than working through them one budget at a time.
+        Assert.HasCount(consumerCount, asynchronousMessageBus.ConsumersStillRunning.ToList());
 
         foreach (GatedConsumer consumer in consumers)
         {
