@@ -338,9 +338,19 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
 
     private static async Task LogShutdownWarningAsync(IServiceProvider serviceProvider, string message)
     {
-        if (serviceProvider.GetService<ILoggerFactory>()?.CreateLogger(nameof(CommonHost)) is { } logger)
+        try
         {
-            await logger.LogWarningAsync(message).ConfigureAwait(false);
+            if (serviceProvider.GetService<ILoggerFactory>()?.CreateLogger(nameof(CommonHost)) is { } logger)
+            {
+                await logger.LogWarningAsync(message).ConfigureAwait(false);
+            }
+        }
+        catch (Exception)
+        {
+            // This runs on teardown paths that are often already unwinding, and the logging stack is itself
+            // being torn down (a disposed LoggerFactoryProxy throws from CreateLogger, and providers can fail
+            // from LogAsync). A failed warning must not replace the exception we were reporting, nor abort the
+            // rest of the disposal.
         }
     }
 

@@ -79,24 +79,32 @@ internal sealed class BlockingConsumerDataProcessor : IAsyncConsumerDataProcesso
         // release it immediately afterwards. The message bus marks itself disabled before calling this,
         // so the platform stops issuing new publishes to this processor while we wait.
         //
-        // We intentionally wait without the cancellation token: an in-flight consumption already
-        // receives the token and will unwind promptly on shutdown, but we must still wait for it to
-        // release the permit before Dispose runs to avoid an ObjectDisposedException on the release.
-        // This mirrors AsyncConsumerDataProcessor.CompleteAddingAsync, which unconditionally awaits its
-        // consume task on every path.
-        if (_cancellationToken.IsCancellationRequested)
+        // We intentionally wait without the cancellation token once we are on the bounded path: an in-flight
+        // consumption already receives the token and will unwind promptly on shutdown, but we must still wait
+        // for it to release the permit before Dispose runs to avoid an ObjectDisposedException on the release.
+        //
+        // See ShutdownTimeouts.CanceledConsumerCompletion: on an aborted run the wait is bounded so a consumer
+        // that ignores the token cannot hang the abort, and IsConsumerRunning keeps reporting true if we give
+        // up so the platform does not dispose it underneath itself. The unbounded branch observes the token so
+        // that a cancellation arriving mid-wait downgrades to that bounded wait too, mirroring
+        // AsyncConsumerDataProcessor.CompleteAddingAsync.
+        if (!_cancellationToken.IsCancellationRequested)
         {
-            // See ShutdownTimeouts.CanceledConsumerCompletion: on an aborted run the wait is bounded so a
-            // consumer that ignores the token cannot hang the abort. IsConsumerRunning keeps reporting true
-            // if we give up, so the platform does not dispose it underneath itself.
-            if (!await _semaphore.WaitAsync(_canceledShutdownTimeout).ConfigureAwait(false))
+            try
             {
+                await _semaphore.WaitAsync(_cancellationToken).ConfigureAwait(false);
+                _semaphore.Release();
                 return;
             }
+            catch (OperationCanceledException oc) when (oc.CancellationToken == _cancellationToken)
+            {
+                // The run was canceled while we were waiting. Fall through to the bounded wait.
+            }
         }
-        else
+
+        if (!await _semaphore.WaitAsync(_canceledShutdownTimeout).ConfigureAwait(false))
         {
-            await _semaphore.WaitAsync().ConfigureAwait(false);
+            return;
         }
 
         _semaphore.Release();

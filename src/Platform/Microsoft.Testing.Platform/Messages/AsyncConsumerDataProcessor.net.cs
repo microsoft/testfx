@@ -44,7 +44,12 @@ internal sealed class AsyncConsumerDataProcessor : IAsyncConsumerDataProcessor
         DataConsumer = consumer;
         _cancellationToken = cancellationToken;
         _canceledShutdownTimeout = canceledShutdownTimeout;
-        _consumeTask = task.Run(ConsumeAsync, cancellationToken);
+
+        // The pump is scheduled without the run token on purpose. Task.Run cancels the work item before it
+        // ever starts if the token fires while it is still queued, and that would abandon payloads the channel
+        // has already accepted - exactly what the loop below exists to drain. The token reaches the consumer
+        // through ConsumeAsync instead.
+        _consumeTask = task.Run(ConsumeAsync, CancellationToken.None);
     }
 
     public IDataConsumer DataConsumer { get; }
@@ -136,6 +141,15 @@ internal sealed class AsyncConsumerDataProcessor : IAsyncConsumerDataProcessor
         }
         catch (TimeoutException)
         {
+            if (_consumeTask.IsCompleted)
+            {
+                // WaitAsync surfaces the consume task's own failure with the same exception type it uses for
+                // its timeout, so a consumer that threw TimeoutException would otherwise be silently swallowed.
+                // Re-awaiting the completed task rethrows the real exception with its stack.
+                await _consumeTask.ConfigureAwait(false);
+                return;
+            }
+
             // The consumer is ignoring the cancellation. We give up waiting so the abort can complete;
             // IsConsumerRunning keeps reporting true so the platform does not dispose it underneath itself.
         }
@@ -182,8 +196,17 @@ internal sealed class AsyncConsumerDataProcessor : IAsyncConsumerDataProcessor
     {
         _channel.Writer.TryComplete();
 
-        // Observe a faulted loop so it cannot resurface as an unobserved task exception.
-        _ = _consumeTask.Exception;
+        // On the timeout path the loop is deliberately still running, so reading Exception now would observe
+        // nothing and a later failure would resurface as an unobserved task exception. Observe it whenever it
+        // eventually completes instead.
+        ObserveConsumeTaskFailure(_consumeTask);
     }
+
+    private static void ObserveConsumeTaskFailure(Task consumeTask)
+        => _ = consumeTask.ContinueWith(
+            static task => _ = task.Exception,
+            CancellationToken.None,
+            TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+            TaskScheduler.Default);
 }
 #endif

@@ -483,9 +483,15 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
         // or a consumer can be disposed while its ConsumeAsync is still running. The in-run disable is not
         // enough: it is gated on there being lifetime handlers, and it is skipped entirely on every early-out
         // path (an invalid platform setup, or any failure between building the bus and reaching it).
+        object[] consumersStillRunning = [];
         if (ServiceProvider.GetService<BaseMessageBus>() is { } messageBus)
         {
             await EnsureMessageBusDisabledAsync(messageBus, ServiceProvider).ConfigureAwait(false);
+
+            // Disabling is bounded on an aborted run, so it can return while a consumer that ignores the
+            // cancellation token is still inside ConsumeAsync. Those instances must be skipped here too, for
+            // exactly the reason above: a multi-role extension is reached by these manual loops.
+            consumersStillRunning = [.. messageBus.ConsumersStillRunning];
         }
 
         ITestHostEnvironmentVariableProvider[] variableProviders = _testHostsInformation.EnvironmentVariableProviders;
@@ -493,14 +499,28 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
 
         List<object> alreadyDisposed = [with(lifetimeHandlers.Length + variableProviders.Length)];
 
+        // Recording them as already disposed is what keeps them from being disposed by the service-provider
+        // walk below either.
+        alreadyDisposed.AddRange(consumersStillRunning);
+
         foreach (ITestHostProcessLifetimeHandler service in lifetimeHandlers)
         {
+            if (alreadyDisposed.Contains(service))
+            {
+                continue;
+            }
+
             await DisposeHelper.DisposeAsync(service).ConfigureAwait(false);
             alreadyDisposed.Add(service);
         }
 
         foreach (ITestHostEnvironmentVariableProvider service in variableProviders)
         {
+            if (alreadyDisposed.Contains(service))
+            {
+                continue;
+            }
+
             await DisposeHelper.DisposeAsync(service).ConfigureAwait(false);
             alreadyDisposed.Add(service);
         }

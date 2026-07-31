@@ -594,6 +594,105 @@ public sealed class AsynchronousMessageBusTests
         consumer.AllowConsumeToComplete.SetResult(true);
     }
 
+    [TestMethod]
+    [DataRow("1e300", DisplayName = "Out of range")]
+    [DataRow("0", DisplayName = "Zero")]
+    [DataRow("-5", DisplayName = "Negative")]
+    [DataRow("abc", DisplayName = "Not a number")]
+    [DataRow("", DisplayName = "Empty")]
+    public void GetCanceledConsumerCompletion_WhenValueIsInvalidOrOutOfRange_ShouldFallBackToTheDefault(string value)
+    {
+        Mock<IEnvironment> environmentMock = new();
+        environmentMock
+            .Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_MESSAGEBUS_CANCELED_SHUTDOWN_TIMEOUT_SECONDS))
+            .Returns(value);
+
+        // An optional override must never be able to break the message bus. '1e300' in particular parses fine
+        // and would then overflow TimeSpan / the wait itself.
+        Assert.AreEqual(
+            ShutdownTimeouts.DefaultCanceledConsumerCompletion,
+            ShutdownTimeouts.GetCanceledConsumerCompletion(environmentMock.Object));
+    }
+
+    [TestMethod]
+    public void GetCanceledConsumerCompletion_WhenValueIsValid_ShouldUseIt()
+    {
+        Mock<IEnvironment> environmentMock = new();
+        environmentMock
+            .Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_MESSAGEBUS_CANCELED_SHUTDOWN_TIMEOUT_SECONDS))
+            .Returns("1.5");
+
+        Assert.AreEqual(TimeSpan.FromSeconds(1.5), ShutdownTimeouts.GetCanceledConsumerCompletion(environmentMock.Object));
+    }
+
+    [TestMethod]
+    public async Task DisableAsync_WhenConsumerThrowsTimeoutException_ShouldNotSwallowIt()
+    {
+        using MessageBusProxy proxy = new();
+        TimeoutThrowingConsumer consumer = new();
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
+            [consumer],
+            new CTRLPlusCCancellationTokenSource(),
+            new SystemTask(),
+            new NopLoggerFactory(),
+            new SystemEnvironment());
+        await asynchronousMessageBus.InitAsync();
+        proxy.SetBuiltMessageBus(asynchronousMessageBus);
+
+        DummyProducer producer = new("GatedProducer", typeof(GatedData));
+        await proxy.PublishAsync(producer, new GatedData());
+
+        // The shutdown budget is signalled with TimeoutException too, so a consumer that throws that exact type
+        // must not be mistaken for our own timeout and silently swallowed.
+        TimeoutException ex = await Assert.ThrowsExactlyAsync<TimeoutException>(async () => await asynchronousMessageBus.DisableAsync());
+        Assert.AreEqual("Consumer failure", ex.Message);
+    }
+
+    [TestMethod]
+    public async Task DisableAsync_WhenBlockingConsumerIgnoresTheTokenMidWait_ShouldDowngradeToTheBoundedWait()
+    {
+        using CTRLPlusCCancellationTokenSource cancellationTokenSource = new();
+        using MessageBusProxy proxy = new();
+        BlockingConsumer consumer = new("BlockingConsumer");
+
+        // Keep the shutdown budget short so the test does not have to wait for the 30s default.
+        Mock<IEnvironment> environmentMock = new();
+        environmentMock
+            .Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_MESSAGEBUS_CANCELED_SHUTDOWN_TIMEOUT_SECONDS))
+            .Returns("0.5");
+
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
+            [consumer],
+            cancellationTokenSource,
+            new SystemTask(),
+            new NopLoggerFactory(),
+            environmentMock.Object);
+        await asynchronousMessageBus.InitAsync();
+        proxy.SetBuiltMessageBus(asynchronousMessageBus);
+
+        DummyProducer producer = new("BlockingProducer", typeof(BlockingData));
+        Task publishTask = proxy.PublishAsync(producer, new BlockingData());
+        await consumer.ConsumeStarted.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+
+        // Nothing is canceled yet, so the blocking processor waits for the inline consumption without a bound.
+        Task disableTask = asynchronousMessageBus.DisableAsync();
+        await Task.Delay(TimeSpan.FromMilliseconds(200), TestContext.CancellationToken);
+        Assert.IsFalse(disableTask.IsCompleted);
+
+        // The abort arrives mid-wait. The blocking processor has to downgrade to the bounded wait just like the
+        // asynchronous one, otherwise a blocking consumer that ignores its token still hangs the abort.
+        cancellationTokenSource.Cancel();
+
+        Task completed = await Task.WhenAny(disableTask, Task.Delay(TimeSpan.FromSeconds(30), TestContext.CancellationToken));
+        Assert.AreSame(disableTask, completed, "DisableAsync kept waiting on a blocking consumer that ignores the cancellation token.");
+        await disableTask;
+
+        Assert.Contains(consumer, asynchronousMessageBus.ConsumersStillRunning.ToList());
+
+        consumer.AllowConsumeToComplete.SetResult(true);
+        await publishTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+    }
+
     private sealed class NopLoggerFactory : ILoggerFactory
     {
         public ILogger CreateLogger(string categoryName) => new NopLogger();
@@ -963,6 +1062,24 @@ public sealed class AsynchronousMessageBusTests
             await AllowConsumeToComplete.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
             Interlocked.Increment(ref _consumedCount);
         }
+    }
+
+    private sealed class TimeoutThrowingConsumer : IDataConsumer
+    {
+        public Type[] DataTypesConsumed => [typeof(GatedData)];
+
+        public string Uid => nameof(TimeoutThrowingConsumer);
+
+        public string Version => "1.0.0";
+
+        public string DisplayName => string.Empty;
+
+        public string Description => string.Empty;
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
+            => throw new TimeoutException("Consumer failure");
     }
 
     private sealed class ThrowingConsumer : IDataConsumer

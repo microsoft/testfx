@@ -31,7 +31,13 @@ internal static class ShutdownTimeouts
     public static TimeSpan GetCanceledConsumerCompletion(IEnvironment environment)
     {
         string? value = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_MESSAGEBUS_CANCELED_SHUTDOWN_TIMEOUT_SECONDS);
-        return double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double seconds) && seconds > 0
+
+        // The upper bound is what Task.WaitAsync and CancellationTokenSource.CancelAfter accept. Without it a
+        // syntactically valid but absurd value such as '1e300' would parse and then throw out of TimeSpan or the
+        // wait itself, so an optional override could break the message bus instead of being ignored.
+        return double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double seconds)
+            && seconds > 0
+            && seconds * 1000 <= Helpers.TaskExtensions.MaxSupportedTimeoutMs
             ? TimeSpan.FromSeconds(seconds)
             : DefaultCanceledConsumerCompletion;
     }
