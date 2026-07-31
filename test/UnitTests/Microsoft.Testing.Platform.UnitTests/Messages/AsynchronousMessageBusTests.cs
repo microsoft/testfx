@@ -693,6 +693,54 @@ public sealed class AsynchronousMessageBusTests
         await publishTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
     }
 
+    [TestMethod]
+    public async Task DisableAsync_WithManyCanceledConsumersIgnoringTheToken_ShouldNotMultiplyTheBudget()
+    {
+        using CTRLPlusCCancellationTokenSource cancellationTokenSource = new();
+        using MessageBusProxy proxy = new();
+
+        // Eight consumers that all park inside ConsumeAsync. The processors are completed sequentially, so a
+        // purely per-consumer bound would make the abort take 8 budgets instead of one.
+        const int consumerCount = 8;
+        GatedConsumer[] consumers = [.. Enumerable.Range(0, consumerCount).Select(i => new GatedConsumer($"GatedConsumer{i}"))];
+
+        Mock<IEnvironment> environmentMock = new();
+        environmentMock
+            .Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_MESSAGEBUS_CANCELED_SHUTDOWN_TIMEOUT_SECONDS))
+            .Returns("1");
+
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
+            [.. consumers],
+            cancellationTokenSource,
+            new SystemTask(),
+            new NopLoggerFactory(),
+            environmentMock.Object);
+        await asynchronousMessageBus.InitAsync();
+        proxy.SetBuiltMessageBus(asynchronousMessageBus);
+
+        DummyProducer producer = new("GatedProducer", typeof(GatedData));
+        await proxy.PublishAsync(producer, new GatedData());
+        foreach (GatedConsumer consumer in consumers)
+        {
+            await consumer.ConsumeStarted.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+        }
+
+        cancellationTokenSource.Cancel();
+
+        var stopwatch = Stopwatch.StartNew();
+        await asynchronousMessageBus.DisableAsync().TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+        stopwatch.Stop();
+
+        // The budget bounds the shutdown as a whole. Allow generous slack for slow machines, but stay well
+        // below the consumerCount x budget that a per-consumer bound would produce.
+        Assert.IsLessThan(TimeSpan.FromSeconds(consumerCount), stopwatch.Elapsed);
+
+        foreach (GatedConsumer consumer in consumers)
+        {
+            consumer.AllowConsumeToComplete.SetResult(true);
+        }
+    }
+
     private sealed class NopLoggerFactory : ILoggerFactory
     {
         public ILogger CreateLogger(string categoryName) => new NopLogger();

@@ -32,6 +32,7 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
 #pragma warning restore IDE0330
     private IAsyncConsumerDataProcessor[] _distinctProcessors = [];
     private long[] _drainLastReceived = [];
+    private TimeSpan _canceledShutdownTimeout = ShutdownTimeouts.DefaultCanceledConsumerCompletion;
     private IDataConsumer[]? _consumersRunningAtDispose;
     private Task? _disableTask;
     private volatile bool _disabled;
@@ -109,6 +110,7 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
     private async Task InitCoreAsync()
     {
         TimeSpan canceledShutdownTimeout = ShutdownTimeouts.GetCanceledConsumerCompletion(_environment);
+        _canceledShutdownTimeout = canceledShutdownTimeout;
         foreach (IDataConsumer consumer in _dataConsumers)
         {
             if (!await consumer.IsEnabledAsync().ConfigureAwait(false))
@@ -289,6 +291,57 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
     }
 
     private async Task DisableCoreAsync()
+    {
+        CancellationToken cancellationToken = _testApplicationCancellationTokenSource.CancellationToken;
+        Task completeAll = CompleteAllProcessorsAsync();
+
+        if (!cancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                // Normal shutdown: every consumer gets as long as it needs to flush its final results. The
+                // token is observed so that a cancellation arriving mid-wait downgrades to the bounded wait.
+                await completeAll.WaitAsync(Timeout.InfiniteTimeSpan, cancellationToken).ConfigureAwait(false);
+                return;
+            }
+            catch (OperationCanceledException oc) when (oc.CancellationToken == cancellationToken)
+            {
+                // The run was canceled while we were waiting. Fall through to the bounded wait, which returns
+                // immediately if the work happened to finish in the meantime.
+            }
+        }
+
+        try
+        {
+            // The budget bounds the shutdown as a whole rather than each consumer. The processors are completed
+            // sequentially, so a purely per-consumer bound would let N uncooperative consumers stretch an abort
+            // to N times the budget - which is the hang this bound exists to prevent.
+            await completeAll.WaitAsync(_canceledShutdownTimeout).ConfigureAwait(false);
+        }
+        catch (TimeoutException)
+        {
+            // WaitAsync also surfaces the task's own failure with this exception type, and the per-processor
+            // budget expires at the same moment as ours, so we must not decide from a racy IsCompleted check in
+            // an exception filter. Re-await instead: that rethrows a genuine consumer failure and returns
+            // quietly when the work simply finished as we gave up.
+            if (completeAll.IsCompleted)
+            {
+                await completeAll.ConfigureAwait(false);
+                return;
+            }
+
+            // We stop waiting so the abort can complete. Whatever did not finish keeps reporting
+            // IsConsumerRunning, so the platform leaves those consumers undisposed instead of racing them, and
+            // we observe the abandoned task so its failure cannot resurface as an unobserved task exception.
+            _ = completeAll.ContinueWith(
+                static task => _ = task.Exception,
+                CancellationToken.None,
+                TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+                TaskScheduler.Default);
+        }
+    }
+
+    private async Task CompleteAllProcessorsAsync()
     {
         // Complete every processor even if one of them faults, otherwise a single misbehaving consumer would
         // leave the remaining consumer loops running while they are being disposed.
