@@ -209,7 +209,9 @@ internal abstract partial class SimplifiedConsoleOutputDeviceBase
                         break;
                 }
 
-                if ((testCompleted || isSupersededAttempt) && DisplayActiveTestProgress)
+                // A superseded attempt leaves the test tracked (its next attempt is still running), so its
+                // "running" progress message must stay too - only the final attempt clears it.
+                if (testCompleted && DisplayActiveTestProgress)
                 {
                     await DisplayAsync(
                         this,

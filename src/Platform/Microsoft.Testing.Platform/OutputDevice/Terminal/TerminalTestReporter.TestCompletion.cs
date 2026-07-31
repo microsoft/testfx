@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
@@ -46,14 +47,14 @@ internal sealed partial class TerminalTestReporter
             actual,
             standardOutput,
             errorOutput,
-            retryAttemptNumber: 1,
-            isRetryAttempt: false);
+            retryAttempt: null);
 
     /// <summary>
-    /// In-process host overload carrying the in-process retry attribution of the result (see
-    /// <see cref="Extensions.Messages.RetryAttemptProperty"/>). <paramref name="isRetryAttempt"/> tells apart a
-    /// framework that does not retry (which reports attempt 1 and <see langword="false"/>) from the first attempt
-    /// of a retry sequence (attempt 1 and <see langword="true"/>), so the first attempt is annotated too.
+    /// In-process host overload carrying the in-process retry attribution of the result. Passing the
+    /// <see cref="Extensions.Messages.RetryAttemptProperty"/> itself rather than its parts keeps the three facts it
+    /// carries - the attempt number, that the result belongs to a retry sequence at all, and whether a later
+    /// attempt supersedes it - together, so a caller cannot forward some and drop the rest. A framework that does
+    /// not retry passes <see langword="null"/>.
     /// </summary>
     internal void TestCompleted(
         string executionId,
@@ -68,14 +69,13 @@ internal sealed partial class TerminalTestReporter
         string? actual,
         string? standardOutput,
         string? errorOutput,
-        int retryAttemptNumber,
-        bool isRetryAttempt)
+        RetryAttemptProperty? retryAttempt)
     {
         FlatException[] flatExceptions = ExceptionFlattener.Flatten(errorMessage, exception);
         TestCompleted(
             executionId,
             // In-process host: a single host attempt, so the instance id is the (fixed) execution id. In-process
-            // retries are attributed by retryAttemptNumber instead.
+            // retries are attributed by retryAttempt instead.
             instanceId: executionId,
             testNodeUid,
             displayName,
@@ -87,8 +87,7 @@ internal sealed partial class TerminalTestReporter
             actual,
             standardOutput,
             errorOutput,
-            retryAttemptNumber,
-            isRetryAttempt);
+            retryAttempt);
     }
 
     /// <summary>
@@ -129,10 +128,8 @@ internal sealed partial class TerminalTestReporter
             standardOutput,
             errorOutput,
             // The orchestrator attributes retries per host instance; it does not surface a test framework's
-            // in-process retry attempt, so results arriving through this path are always attempt 1 of their host
-            // attempt.
-            retryAttemptNumber: 1,
-            isRetryAttempt: false);
+            // in-process retry attempt, so results arriving through this path have no in-process attribution.
+            retryAttempt: null);
 
     private void TestCompleted(
         string executionId,
@@ -147,15 +144,20 @@ internal sealed partial class TerminalTestReporter
         string? actual,
         string? standardOutput,
         string? errorOutput,
-        int retryAttemptNumber,
-        bool isRetryAttempt)
+        RetryAttemptProperty? retryAttempt)
     {
         if (!_assemblies.TryGetValue(executionId, out TestProgressState? asm))
         {
             throw ApplicationStateGuard.Unreachable();
         }
 
-        if (_options.ShowActiveTests)
+        int retryAttemptNumber = retryAttempt?.AttemptNumber ?? 1;
+        bool isRetryAttempt = retryAttempt is not null;
+
+        // A retry sequence has one in-progress update for the whole test but a terminal update per attempt, so the
+        // running node is only removed once the final attempt arrives - otherwise --show-active-tests would drop
+        // the test while its next attempt is still executing.
+        if (_options.ShowActiveTests && retryAttempt is not { IsSuperseded: true })
         {
             asm.TestNodeResultsState?.RemoveRunningTestNode(testNodeUid);
         }

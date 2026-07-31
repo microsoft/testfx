@@ -263,10 +263,10 @@ public sealed class TerminalTestReporterTests
 
         terminalReporter.TestCompleted("0", testNodeUid: "FlakyTest", "FlakyTest", TestOutcome.Fail, TimeSpan.FromSeconds(10),
             informativeMessage: null, errorMessage: "Tests failed", exception: null, expected: null, actual: null,
-            standardOutput: null, errorOutput: null, retryAttemptNumber: 1, isRetryAttempt: true);
+            standardOutput: null, errorOutput: null, retryAttempt: new RetryAttemptProperty(1, isSuperseded: true));
         terminalReporter.TestCompleted("0", testNodeUid: "FlakyTest", "FlakyTest", TestOutcome.Passed, TimeSpan.FromSeconds(10),
             informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null,
-            standardOutput: null, errorOutput: null, retryAttemptNumber: 2, isRetryAttempt: true);
+            standardOutput: null, errorOutput: null, retryAttempt: new RetryAttemptProperty(2, isSuperseded: false));
 
         terminalReporter.AssemblyRunCompleted("0");
         terminalReporter.TestExecutionCompleted(endTime, exitCode: null);
