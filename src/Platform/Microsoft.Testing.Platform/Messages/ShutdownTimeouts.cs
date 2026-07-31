@@ -34,12 +34,14 @@ internal static class ShutdownTimeouts
     {
         string? value = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_MESSAGEBUS_CANCELED_SHUTDOWN_TIMEOUT_SECONDS);
 
-        // The upper bound is what Task.WaitAsync and CancellationTokenSource.CancelAfter accept. Without it a
-        // syntactically valid but absurd value such as '1e300' would parse and then throw out of TimeSpan or the
-        // wait itself, so an optional override could break the message bus instead of being ignored.
+        // The upper bound is the strictest downstream API: SemaphoreSlim.WaitAsync(TimeSpan) caps at
+        // Int32.MaxValue milliseconds, which is tighter than the Task.WaitAsync / CancelAfter limit. Without it
+        // a syntactically valid but absurd value ('1e300', or anything past ~24.8 days) would parse and then
+        // throw out of TimeSpan or the wait itself, so an optional override could break the message bus or the
+        // blocking-consumer shutdown instead of simply being ignored.
         return double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double seconds)
             && seconds > 0
-            && seconds * 1000 <= Helpers.TaskExtensions.MaxSupportedTimeoutMs
+            && seconds * 1000 <= int.MaxValue
             ? TimeSpan.FromSeconds(seconds)
             : DefaultCanceledConsumerCompletion;
     }

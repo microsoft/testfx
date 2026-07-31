@@ -599,6 +599,7 @@ public sealed class AsynchronousMessageBusTests
 
     [TestMethod]
     [DataRow("1e300", DisplayName = "Out of range")]
+    [DataRow("3000000", DisplayName = "Past the SemaphoreSlim limit")]
     [DataRow("0", DisplayName = "Zero")]
     [DataRow("-5", DisplayName = "Negative")]
     [DataRow("abc", DisplayName = "Not a number")]
