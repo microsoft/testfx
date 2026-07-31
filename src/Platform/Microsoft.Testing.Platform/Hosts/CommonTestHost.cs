@@ -276,30 +276,72 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
         CancellationToken cancellationToken = testSessionInfo.CancellationToken;
         try
         {
-            IPlatformOpenTelemetryService? otelService = serviceProvider.GetPlatformOTelService();
-            using (otelService?.StartActivity("OnTestSessionStarting"))
+            try
             {
-                await NotifyTestSessionStartAsync(testSessionInfo, baseMessageBus, serviceProvider, otelService).ConfigureAwait(false);
+                IPlatformOpenTelemetryService? otelService = serviceProvider.GetPlatformOTelService();
+                using (otelService?.StartActivity("OnTestSessionStarting"))
+                {
+                    await NotifyTestSessionStartAsync(testSessionInfo, baseMessageBus, serviceProvider, otelService).ConfigureAwait(false);
+                }
+
+                using (otelService?.StartActivity("TestFrameworkInvoker"))
+                {
+                    await serviceProvider.GetTestFrameworkInvoker().ExecuteAsync(testFramework, client, cancellationToken).ConfigureAwait(false);
+                }
+
+                using (otelService?.StartActivity("OnTestSessionEnding"))
+                {
+                    await NotifyTestSessionEndAsync(testSessionInfo, baseMessageBus, serviceProvider, otelService).ConfigureAwait(false);
+                }
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                // Do nothing we're canceled
             }
 
-            using (otelService?.StartActivity("TestFrameworkInvoker"))
-            {
-                await serviceProvider.GetTestFrameworkInvoker().ExecuteAsync(testFramework, client, cancellationToken).ConfigureAwait(false);
-            }
-
-            using (otelService?.StartActivity("OnTestSessionEnding"))
-            {
-                await NotifyTestSessionEndAsync(testSessionInfo, baseMessageBus, serviceProvider, otelService).ConfigureAwait(false);
-            }
+            // We keep the display after session out of the OperationCanceledException catch because we want to notify the IPlatformOutputDevice
+            // also in case of cancellation. Most likely it needs to notify users that the session was canceled.
+            await DisplayAfterSessionEndRunAsync(outputDevice, testSessionInfo).ConfigureAwait(false);
         }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        finally
         {
-            // Do nothing we're canceled
+            // The message bus shutdown handshake must complete before the services - and with them every
+            // IDataConsumer - get disposed, otherwise a consumer can still be inside ConsumeAsync while it is
+            // being disposed. NotifyTestSessionEndAsync does it on the happy path, but it is skipped whenever the
+            // session is canceled or fails, so we close the handshake here for every outcome.
+            await EnsureMessageBusDisabledAsync(baseMessageBus, serviceProvider).ConfigureAwait(false);
         }
+    }
 
-        // We keep the display after session out of the OperationCanceledException catch because we want to notify the IPlatformOutputDevice
-        // also in case of cancellation. Most likely it needs to notify users that the session was canceled.
-        await DisplayAfterSessionEndRunAsync(outputDevice, testSessionInfo).ConfigureAwait(false);
+    /// <summary>
+    /// Disables the message bus, which stops accepting new payloads and awaits every consumer loop, so that no
+    /// <see cref="Extensions.IDataConsumer.ConsumeAsync"/> can still be running once the consumers are disposed.
+    /// </summary>
+    /// <remarks>
+    /// This is a best-effort safety net that runs on teardown paths, including the ones that are already unwinding
+    /// because of a cancellation or a failure. Disabling is idempotent, so on the regular path this is a no-op and
+    /// any consumer failure has already been surfaced by the real call. Failures here are logged and swallowed
+    /// rather than replacing the exception that is being propagated; a consumer that survives the handshake is
+    /// reported through <see cref="BaseMessageBus.ConsumersStillRunning"/> and left undisposed.
+    /// </remarks>
+    protected static async Task EnsureMessageBusDisabledAsync(BaseMessageBus baseMessageBus, IServiceProvider serviceProvider)
+    {
+        try
+        {
+            await baseMessageBus.DisableAsync().ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            await LogShutdownWarningAsync(serviceProvider, $"Failed to disable the message bus during shutdown: {ex}").ConfigureAwait(false);
+        }
+    }
+
+    private static async Task LogShutdownWarningAsync(IServiceProvider serviceProvider, string message)
+    {
+        if (serviceProvider.GetService<ILoggerFactory>()?.CreateLogger(nameof(CommonHost)) is { } logger)
+        {
+            await logger.LogWarningAsync(message).ConfigureAwait(false);
+        }
     }
 
     private static async Task DisplayBeforeSessionStartAsync(ProxyOutputDevice outputDevice, ITestSessionContext sessionInfo)
@@ -352,7 +394,8 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
         TestSessionLifetimeHandlersContainer? testSessionLifetimeHandlersContainer = serviceProvider.GetService<TestSessionLifetimeHandlersContainer>();
         if (testSessionLifetimeHandlersContainer is null)
         {
-            // TODO: Is this reachable? If so, are we missing await baseMessageBus.DisableAsync() here? Tracked by https://github.com/microsoft/testfx/issues/8086.
+            // Nothing else to notify. The bus is disabled by the caller's teardown safety net
+            // (EnsureMessageBusDisabledAsync), which runs for every outcome of the session.
             return;
         }
 
@@ -465,18 +508,48 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
             }
 #pragma warning restore CS0618 // Type or member is obsolete
 
+            IDataConsumer[] consumersStillRunning = [];
+            if (service is BaseMessageBus messageBus)
+            {
+                // Never dispose a message bus - and therefore its consumers - while a consumer loop may still be
+                // running. Disabling completes the loops first and is idempotent, so this is a no-op whenever the
+                // session already closed the handshake.
+                await EnsureMessageBusDisabledAsync(messageBus, serviceProvider).ConfigureAwait(false);
+
+                // Snapshot before the bus is disposed: disposing it releases the processors.
+                consumersStillRunning = [.. messageBus.ConsumersStillRunning];
+            }
+
             if (!alreadyDisposed.Contains(service))
             {
                 await DisposeHelper.DisposeAsync(service).ConfigureAwait(false);
                 alreadyDisposed.Add(service);
             }
 
-            if (service is BaseMessageBus messageBus)
+            if (service is BaseMessageBus busWithConsumers)
             {
-                foreach (IDataConsumer dataConsumer in messageBus.DataConsumerServices)
+                foreach (IDataConsumer dataConsumer in busWithConsumers.DataConsumerServices)
                 {
                     if (filter is not null && !filter(dataConsumer))
                     {
+                        continue;
+                    }
+
+                    if (Array.IndexOf(consumersStillRunning, dataConsumer) >= 0)
+                    {
+                        // Its ConsumeAsync outlived the shutdown budget of an aborted run, so it is ignoring the
+                        // cancellation token. Disposing it now is precisely the race the handshake exists to
+                        // prevent, so we leak it and let the process exit reclaim it instead. Recording it as
+                        // already disposed is what makes that decision stick: the same consumer is usually also
+                        // registered as a plain service, and a host can walk the provider more than once.
+                        if (!alreadyDisposed.Contains(dataConsumer))
+                        {
+                            alreadyDisposed.Add(dataConsumer);
+                            await LogShutdownWarningAsync(
+                                serviceProvider,
+                                $"Not disposing data consumer '{dataConsumer.Uid}' because it is still consuming after the shutdown timeout elapsed.").ConfigureAwait(false);
+                        }
+
                         continue;
                     }
 

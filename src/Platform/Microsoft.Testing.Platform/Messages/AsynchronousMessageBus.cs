@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Runtime.ExceptionServices;
+
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
@@ -25,9 +27,14 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
     private readonly IDataConsumer[] _dataConsumers;
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
     private readonly IShutdownProgressReporter? _shutdownProgressReporter;
+#pragma warning disable IDE0330 // Use 'System.Threading.Lock' - not available on all target frameworks of this project.
+    private readonly object _disableLock = new();
+#pragma warning restore IDE0330
     private IAsyncConsumerDataProcessor[] _distinctProcessors = [];
     private long[] _drainLastReceived = [];
-    private bool _disabled;
+    private IDataConsumer[]? _consumersRunningAtDispose;
+    private Task? _disableTask;
+    private volatile bool _disabled;
 
     public AsynchronousMessageBus(
         IDataConsumer[] dataConsumers,
@@ -59,8 +66,49 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
     public override IDataConsumer[] DataConsumerServices
         => _dataConsumers;
 
+    public override IEnumerable<IDataConsumer> ConsumersStillRunning
+        // Once disposed the processors are gone, so we replay the set latched at that moment. The platform can
+        // walk a service provider more than once (each pass starts with its own "already disposed" list), and
+        // every pass has to reach the same conclusion, otherwise a later one would dispose a consumer that an
+        // earlier one deliberately spared.
+        => _consumersRunningAtDispose ?? EnumerateRunningConsumers();
+
+    private IEnumerable<IDataConsumer> EnumerateRunningConsumers()
+    {
+        foreach (IAsyncConsumerDataProcessor processor in _distinctProcessors)
+        {
+            if (processor.IsConsumerRunning)
+            {
+                yield return processor.DataConsumer;
+            }
+        }
+    }
+
     public override async Task InitAsync()
     {
+        try
+        {
+            await InitCoreAsync().ConfigureAwait(false);
+        }
+        catch
+        {
+            // The pumps of the processors we built before the failure are already running, and a bus whose
+            // InitAsync threw never reaches SetBuiltMessageBus, so nothing would ever complete their channels
+            // and they would park forever, rooting their consumers and everything queued for them.
+            foreach (IAsyncConsumerDataProcessor processor in _consumerProcessor.Values)
+            {
+                processor.Dispose();
+            }
+
+            _consumerProcessor.Clear();
+            _dataTypeConsumers.Clear();
+            throw;
+        }
+    }
+
+    private async Task InitCoreAsync()
+    {
+        TimeSpan canceledShutdownTimeout = ShutdownTimeouts.GetCanceledConsumerCompletion(_environment);
         foreach (IDataConsumer consumer in _dataConsumers)
         {
             if (!await consumer.IsEnabledAsync().ConfigureAwait(false))
@@ -91,8 +139,8 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
                     // AsyncConsumerDataProcessor background loop (started via Task.Run) would never run and the
                     // drain would hang. Force inline consumption for every consumer in that case.
                     asyncMultiProducerMultiConsumerDataProcessor = consumer is IBlockingDataConsumer || !RuntimeFeatureHelper.IsMultiThreaded
-                        ? new BlockingConsumerDataProcessor(consumer, _testApplicationCancellationTokenSource.CancellationToken)
-                        : new AsyncConsumerDataProcessor(consumer, _task, _testApplicationCancellationTokenSource.CancellationToken);
+                        ? new BlockingConsumerDataProcessor(consumer, _testApplicationCancellationTokenSource.CancellationToken, canceledShutdownTimeout)
+                        : new AsyncConsumerDataProcessor(consumer, _task, _testApplicationCancellationTokenSource.CancellationToken, canceledShutdownTimeout);
                     _consumerProcessor.Add(consumer, asyncMultiProducerMultiConsumerDataProcessor);
                 }
 
@@ -106,6 +154,15 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
 
     public override async Task PublishAsync(IDataProducer dataProducer, IData data)
     {
+        // The cancellation check comes first on purpose. Once the run is being aborted the platform closes the
+        // bus as part of the shutdown handshake, and teardown code that publishes at that point (an extension
+        // flushing state from its Dispose, for example) must observe a silent no-op rather than a hard failure
+        // that would mask the original cancellation.
+        if (_testApplicationCancellationTokenSource.CancellationToken.IsCancellationRequested)
+        {
+            return;
+        }
+
         if (_disabled)
         {
             throw new InvalidOperationException("The message bus has been drained and is no longer usable.");
@@ -114,11 +171,6 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
         if (_dataTypeConsumers is null)
         {
             throw new InvalidOperationException("The message bus has not been built yet.");
-        }
-
-        if (_testApplicationCancellationTokenSource.CancellationToken.IsCancellationRequested)
-        {
-            return;
         }
 
         if (_isTraceLoggingEnabled)
@@ -220,21 +272,64 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
 
     public override async Task DisableAsync()
     {
-        if (_disabled)
+        // Disabling is idempotent and every caller awaits the same completion. The regular session-end path
+        // disables the bus, and the host disables it again as a safety net before disposing the services
+        // (which is what guarantees the handshake also happens when the session was canceled or failed). A
+        // later caller must observe the *completion* of the first call and not merely the fact that it
+        // started, otherwise it would go on to dispose consumers whose loops are still running.
+        Task disableTask;
+        lock (_disableLock)
         {
-            throw new InvalidOperationException("AsynchronousMessageBus already disabled");
+            // Set synchronously, under the lock, so publishers stop as soon as anyone asks for the shutdown.
+            _disabled = true;
+            disableTask = _disableTask ??= DisableCoreAsync();
         }
 
-        _disabled = true;
+        await disableTask.ConfigureAwait(false);
+    }
 
+    private async Task DisableCoreAsync()
+    {
+        // Complete every processor even if one of them faults, otherwise a single misbehaving consumer would
+        // leave the remaining consumer loops running while they are being disposed.
+        List<Exception>? exceptions = null;
         foreach (IAsyncConsumerDataProcessor processor in _distinctProcessors)
         {
-            await processor.CompleteAddingAsync().ConfigureAwait(false);
+            try
+            {
+                using (_shutdownProgressReporter?.Track(processor.DataConsumer.Uid, processor.DataConsumer.DisplayName, nameof(IAsyncConsumerDataProcessor.CompleteAddingAsync)))
+                {
+                    await processor.CompleteAddingAsync().ConfigureAwait(false);
+                }
+            }
+            catch (Exception ex)
+            {
+                (exceptions ??= []).Add(ex);
+            }
         }
+
+        if (exceptions is null)
+        {
+            return;
+        }
+
+        if (exceptions.Count == 1)
+        {
+            // Rethrow the original exception with its stack intact, matching the previous fail-fast behavior.
+            ExceptionDispatchInfo.Capture(exceptions[0]).Throw();
+        }
+
+        throw new AggregateException(exceptions);
     }
 
     public override void Dispose()
     {
+        // Latch the verdict before the processors go away, so a later disposal pass over the same service
+        // provider still knows which consumers must not be touched. We deliberately never clear it: once we
+        // have decided a consumer is unsafe to dispose we keep sparing it rather than re-checking a processor
+        // we no longer own.
+        _consumersRunningAtDispose ??= [.. EnumerateRunningConsumers()];
+
         foreach (IAsyncConsumerDataProcessor processor in _distinctProcessors)
         {
             processor.Dispose();

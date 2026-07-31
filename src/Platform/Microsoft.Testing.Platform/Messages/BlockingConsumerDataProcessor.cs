@@ -15,6 +15,7 @@ namespace Microsoft.Testing.Platform.Messages;
 internal sealed class BlockingConsumerDataProcessor : IAsyncConsumerDataProcessor
 {
     private readonly CancellationToken _cancellationToken;
+    private readonly TimeSpan _canceledShutdownTimeout;
 
     // Serialize the inline consumption so that we honor the same "process only 1 data at a time"
     // guarantee that the asynchronous processor provides through its single reader.
@@ -23,12 +24,22 @@ internal sealed class BlockingConsumerDataProcessor : IAsyncConsumerDataProcesso
     private long _receivedCount;
 
     public BlockingConsumerDataProcessor(IDataConsumer dataConsumer, CancellationToken cancellationToken)
+        : this(dataConsumer, cancellationToken, ShutdownTimeouts.DefaultCanceledConsumerCompletion)
+    {
+    }
+
+    public BlockingConsumerDataProcessor(IDataConsumer dataConsumer, CancellationToken cancellationToken, TimeSpan canceledShutdownTimeout)
     {
         DataConsumer = dataConsumer;
         _cancellationToken = cancellationToken;
+        _canceledShutdownTimeout = canceledShutdownTimeout;
     }
 
     public IDataConsumer DataConsumer { get; }
+
+    // The data is consumed inline in PublishAsync, so the single permit being taken is exactly "a consumer
+    // is currently executing".
+    public bool IsConsumerRunning => _semaphore.CurrentCount == 0;
 
     public long ReceivedCount => Volatile.Read(ref _receivedCount);
 
@@ -73,7 +84,21 @@ internal sealed class BlockingConsumerDataProcessor : IAsyncConsumerDataProcesso
         // release the permit before Dispose runs to avoid an ObjectDisposedException on the release.
         // This mirrors AsyncConsumerDataProcessor.CompleteAddingAsync, which unconditionally awaits its
         // consume task on every path.
-        await _semaphore.WaitAsync().ConfigureAwait(false);
+        if (_cancellationToken.IsCancellationRequested)
+        {
+            // See ShutdownTimeouts.CanceledConsumerCompletion: on an aborted run the wait is bounded so a
+            // consumer that ignores the token cannot hang the abort. IsConsumerRunning keeps reporting true
+            // if we give up, so the platform does not dispose it underneath itself.
+            if (!await _semaphore.WaitAsync(_canceledShutdownTimeout).ConfigureAwait(false))
+            {
+                return;
+            }
+        }
+        else
+        {
+            await _semaphore.WaitAsync().ConfigureAwait(false);
+        }
+
         _semaphore.Release();
     }
 

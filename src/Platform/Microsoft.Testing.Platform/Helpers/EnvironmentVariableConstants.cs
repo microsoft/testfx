@@ -14,6 +14,10 @@ internal static class EnvironmentVariableConstants
     public const string TESTINGPLATFORM_DEFAULT_HANG_TIMEOUT = nameof(TESTINGPLATFORM_DEFAULT_HANG_TIMEOUT);
     public const string TESTINGPLATFORM_MESSAGEBUS_DRAINDATA_ATTEMPTS = nameof(TESTINGPLATFORM_MESSAGEBUS_DRAINDATA_ATTEMPTS);
 
+    // Overrides, in seconds, how long the message bus shutdown handshake waits for a consumer to finish once
+    // the run has already been canceled. See ShutdownTimeouts.
+    public const string TESTINGPLATFORM_MESSAGEBUS_CANCELED_SHUTDOWN_TIMEOUT_SECONDS = nameof(TESTINGPLATFORM_MESSAGEBUS_CANCELED_SHUTDOWN_TIMEOUT_SECONDS);
+
     // Overrides the directory where the IPC named pipe (Unix domain socket) files are created.
     // Only honored on Unix; Windows named pipes live in the kernel namespace, not on disk.
     public const string TESTINGPLATFORM_PIPE_DIRECTORY = nameof(TESTINGPLATFORM_PIPE_DIRECTORY);

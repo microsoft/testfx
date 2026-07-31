@@ -476,6 +476,18 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
 
     private async Task DisposeServicesAsync()
     {
+        // A CompositeExtensionFactory builds one object that is reused for every role it was registered
+        // under, so the lifetime handlers and environment-variable providers disposed below can be the very
+        // same instances that the message bus holds as IDataConsumer. Because we dispose them here, before
+        // DisposeServiceProviderAsync gets a chance to close the handshake, we have to disable the bus first
+        // or a consumer can be disposed while its ConsumeAsync is still running. The in-run disable is not
+        // enough: it is gated on there being lifetime handlers, and it is skipped entirely on every early-out
+        // path (an invalid platform setup, or any failure between building the bus and reaching it).
+        if (ServiceProvider.GetService<BaseMessageBus>() is { } messageBus)
+        {
+            await EnsureMessageBusDisabledAsync(messageBus, ServiceProvider).ConfigureAwait(false);
+        }
+
         ITestHostEnvironmentVariableProvider[] variableProviders = _testHostsInformation.EnvironmentVariableProviders;
         ITestHostProcessLifetimeHandler[] lifetimeHandlers = _testHostsInformation.LifetimeHandlers;
 
