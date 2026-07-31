@@ -39,9 +39,14 @@ internal static class ShutdownTimeouts
         // a syntactically valid but absurd value ('1e300', or anything past ~24.8 days) would parse and then
         // throw out of TimeSpan or the wait itself, so an optional override could break the message bus or the
         // blocking-consumer shutdown instead of simply being ignored.
-        if (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double seconds)
-            || seconds <= 0
-            || seconds * 1000 > int.MaxValue)
+        //
+        // Written as a conjunction on purpose: 'NaN' parses successfully and every comparison against it is
+        // false, so requiring the checks to pass rejects it, whereas negated guards would let it through.
+        bool isUsable = double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double seconds)
+            && seconds > 0
+            && seconds * 1000 <= int.MaxValue;
+
+        if (!isUsable)
         {
             return DefaultCanceledConsumerCompletion;
         }

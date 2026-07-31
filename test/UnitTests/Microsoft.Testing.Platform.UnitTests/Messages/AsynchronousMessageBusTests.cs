@@ -601,6 +601,7 @@ public sealed class AsynchronousMessageBusTests
     [DataRow("1e300", DisplayName = "Out of range")]
     [DataRow("3000000", DisplayName = "Past the SemaphoreSlim limit")]
     [DataRow("1e-300", DisplayName = "Rounds down to zero")]
+    [DataRow("NaN", DisplayName = "NaN")]
     [DataRow("0", DisplayName = "Zero")]
     [DataRow("-5", DisplayName = "Negative")]
     [DataRow("abc", DisplayName = "Not a number")]
@@ -827,7 +828,12 @@ public sealed class AsynchronousMessageBusTests
             => Task.CompletedTask;
     }
 
+    // This test asserts that the idle pumps have finished within a window, which depends on the background
+    // consumer tasks (started via ITask.Run) getting scheduled promptly. Under the assembly's method-level
+    // parallelism those tasks can be starved on .NET Framework, exactly as documented for
+    // DrainDataAsync_Loop_ShouldFail above. Running it non-parallel removes that contention.
     [TestMethod]
+    [DoNotParallelize]
     public async Task DisableAsync_WhenOnlyOneCanceledConsumerIgnoresTheToken_ShouldNotReportTheCooperativeOnes()
     {
         using CTRLPlusCCancellationTokenSource cancellationTokenSource = new();
