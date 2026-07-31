@@ -131,6 +131,10 @@ public sealed class FormatterUtilitiesTests
 
         Assert.Contains("\"assert.actual\":\"2\"", serialized);
         Assert.Contains("\"assert.expected\":\"5\"", serialized);
+
+        // Proves the property won rather than merely being present: an implementation that emitted both
+        // channels would satisfy the two assertions above.
+        Assert.DoesNotContain("legacy", serialized);
     }
 
     [TestMethod]
