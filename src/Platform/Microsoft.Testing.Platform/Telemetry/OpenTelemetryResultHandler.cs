@@ -45,6 +45,8 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
     // the cancellation path: a cancelled run skips the drain/disable step, so a consumer can still be publishing
     // results while the host disposes us. Guarding the bookkeeping keeps that race from throwing a collection-
     // modified exception out of the telemetry code during shutdown - telemetry must never fail a run.
+    // This is a local mitigation; the platform-level sequencing is tracked by
+    // https://github.com/microsoft/testfx/issues/10357 and this guard can be revisited once that is fixed.
 #if NET9_0_OR_GREATER
     private readonly Lock _syncRoot = new();
 #else
