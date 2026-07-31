@@ -89,9 +89,64 @@ jobs:
       pr-merge-sha: ${{ steps.fetch.outputs.pr-merge-sha }}
       ado-build-id: ${{ steps.fetch.outputs.ado-build-id }}
       ado-build-url: ${{ steps.fetch.outputs.ado-build-url }}
+      missing-legs: ${{ steps.fetch.outputs.missing-legs }}
     steps:
+      # Cost + abuse pre-gate. gh-aw's own role check (`roles: [admin,
+      # maintainer, write]`) lives in the generated `pre_activation` job, and
+      # that job is compiled with `needs: fetch-binlog` — so it only runs
+      # *after* this job has already pulled every build leg's logs artifact
+      # from Azure DevOps (hundreds of MB). Inverting the dependency would
+      # create a cycle, so the same permission check is repeated here, before
+      # anything is downloaded. `pre_activation` remains the authoritative
+      # role + command-position check; this is purely an early-out.
+      #
+      # Because the command uses `strategy: centralized`, this workflow is
+      # started by `agentic_commands.yml` via `workflow_dispatch`, so there is
+      # no `github.event.comment` payload — the original commenter is
+      # propagated in `aw_context.actor` (the same place `item_number` comes
+      # from above). `route_slash_command.cjs` in the dispatcher performs no
+      # permission check of its own, so without this step any commenter on any
+      # PR can trigger the full download.
+      #
+      # Check `role_name` and `permission` together: `role_name` reports the
+      # precise role (so `maintain` and `triage` stay distinct) while
+      # `permission` is the coarse legacy field, and a custom org role reports
+      # a non-standard name in `role_name` while still showing its push access
+      # in `permission`. Accepting the union of the two covers every shape
+      # without depending on which field carries the role. On any API failure
+      # `gh` emits an error document that has neither field, so the check falls
+      # into the deny branch; failing closed is the safe direction for a
+      # pre-gate.
+      - name: Verify the commenter has write access
+        id: perm
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMENTER: ${{ github.event.comment.user.login || fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').actor }}
+        run: |
+          set +e
+          authorized=false
+          if [ -z "${COMMENTER}" ]; then
+            echo "::warning::No actor resolved from the slash-command event / aw_context; skipping the binlog download."
+          else
+            resp=$(gh api "repos/${GITHUB_REPOSITORY}/collaborators/${COMMENTER}/permission" 2>/dev/null)
+            role=$(printf '%s' "${resp}" | jq -r '.role_name // empty' 2>/dev/null)
+            perm=$(printf '%s' "${resp}" | jq -r '.permission // empty' 2>/dev/null)
+            for r in "${role}" "${perm}"; do
+              case "${r}" in
+                admin|maintain|maintainer|write) authorized=true ;;
+              esac
+            done
+            if [ "${authorized}" = "true" ]; then
+              echo "'${COMMENTER}' has '${role:-${perm}}' access to ${GITHUB_REPOSITORY}; proceeding."
+            else
+              echo "::warning::'${COMMENTER}' does not have write access to ${GITHUB_REPOSITORY} (resolved role '${role:-none}'); skipping the binlog download."
+            fi
+          fi
+          echo "authorized=${authorized}" >> "$GITHUB_OUTPUT"
+
       - name: Download binlogs from the PR's latest failed Azure Pipelines build
         id: fetch
+        if: steps.perm.outputs.authorized == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           GH_AW_REPO: ${{ github.repository }}
@@ -192,15 +247,67 @@ jobs:
           mapfile -t names < <(printf '%s' "${artifacts_json}" | jq -r '.value // [] | map(select(.name | test("^Logs_Build_"))) | .[].name')
           [ "${#names[@]}" -eq 0 ] && { echo "::warning::No Logs_Build_* artifacts on build ${BUILD_ID}."; emit_none; }
 
+          # --- 5a. Which failed legs never published logs at all? ---
+          # The fail-closed check further down compares staged legs against the
+          # artifacts ADO *returned*, so it cannot see a leg that died before
+          # publishing its logs artifact — that leg is simply absent from
+          # `names`. Ask the timeline which jobs failed and record any whose
+          # logs never appeared. This is advisory rather than fail-closed: a
+          # failed job that legitimately publishes no `Logs_Build_*` artifact
+          # would otherwise suppress analysis of a real compile break in the
+          # same build. The agent is told about the gap so it cannot conclude
+          # "no build failure" from the legs that happened to upload.
+          #
+          # Match on tokens rather than a name prefix: timeline job names and
+          # artifact names are not spelled the same way. `Linux Debug` publishes
+          # `Logs_Build_Linux_Debug`, but `Windows Debug` publishes
+          # `Logs_Build_Windows_NT_Debug` — an inserted `NT` that any prefix
+          # rule would miss, reporting a missing leg on every Windows failure.
+          # Requiring each token of the job name to appear as a token of the
+          # artifact name handles both spellings.
+          timeline_json=$(curl -sSL --retry 3 --max-time 60 "${ADO_API}/build/builds/${BUILD_ID}/timeline?api-version=7.1" 2>/dev/null || true)
+          MISSING_LEGS=""
+          if [ -n "${timeline_json}" ]; then
+            while IFS= read -r jobname; do
+              [ -z "${jobname}" ] && continue
+              found=0
+              for n in "${names[@]}"; do
+                all=1
+                for tok in $(printf '%s' "${jobname}" | tr -c 'A-Za-z0-9' ' '); do
+                  case "_${n}_" in
+                    *_"${tok}"_*) ;;
+                    *) all=0; break ;;
+                  esac
+                done
+                [ "${all}" -eq 1 ] && { found=1; break; }
+              done
+              [ "${found}" -eq 0 ] && MISSING_LEGS="${MISSING_LEGS:+${MISSING_LEGS}, }${jobname}"
+            done < <(printf '%s' "${timeline_json}" | jq -r '.records // [] | map(select(.type=="Job" and .result=="failed")) | .[].name' 2>/dev/null)
+          fi
+          if [ -n "${MISSING_LEGS}" ]; then
+            echo "::warning::Failed leg(s) with no published logs artifact: ${MISSING_LEGS}"
+          fi
+
           # Guards for untrusted PR-produced archives: cap the compressed
           # download and the reported uncompressed size per artifact, bound
-          # extraction time, AND enforce a cumulative uncompressed budget across
-          # all legs so many individually-small artifacts can't collectively
-          # exhaust the runner's disk.
+          # extraction time, AND enforce cumulative budgets across all legs so
+          # many individually-small artifacts can't collectively exhaust the
+          # runner's disk or its network time.
           MAX_ZIP_BYTES=524288000       # 500 MB compressed per artifact
           MAX_UNZIP_BYTES=2147483648    # 2 GB uncompressed per artifact
           MAX_TOTAL_BYTES=4294967296    # 4 GB uncompressed across all artifacts
+          MAX_TOTAL_ZIP_BYTES=3221225472 # 3 GB compressed downloaded in total
+          MAX_ARTIFACTS=40              # legs to process (testfx currently has 7)
           TOTAL_BYTES=0
+          TOTAL_ZIP_BYTES=0
+          # Bound the work before starting: a pipeline change (or repeated leg
+          # retries) could grow the matched set well past today's count. Refuse
+          # rather than process a prefix of the list, because a partial view is
+          # exactly what the fail-closed check below exists to prevent.
+          if [ "${#names[@]}" -gt "${MAX_ARTIFACTS}" ]; then
+            echo "::warning::Build ${BUILD_ID} matched ${#names[@]} log artifacts, above the ${MAX_ARTIFACTS} cap; skipping."
+            emit_none
+          fi
           mkdir -p /tmp/binlogs
           count=0
           staged_legs=0
@@ -213,7 +320,7 @@ jobs:
             safe_name=$(printf '%s' "${name}" | tr -c 'A-Za-z0-9._-' '_')
             ai=$((ai + 1))
             url=$(printf '%s' "${artifacts_json}" | jq -r --arg n "${name}" '.value[] | select(.name==$n) | .resource.downloadUrl // empty')
-            [ -z "${url}" ] && continue
+            [ -z "${url}" ] && { echo "::warning::No download URL for ${name}."; continue; }
             rm -rf /tmp/ax /tmp/a.zip
             mkdir -p /tmp/ax
             # Hard-cap the bytes written to disk regardless of Content-Length:
@@ -226,6 +333,13 @@ jobs:
             if [ "${ZIP_BYTES}" -gt "${MAX_ZIP_BYTES}" ]; then
               echo "::warning::Skipping ${name}: download exceeded ${MAX_ZIP_BYTES} bytes."; continue
             fi
+            # Bound cumulative *compressed* bytes too. The per-artifact and
+            # cumulative-uncompressed caps still allow many mid-sized archives
+            # to be pulled over the network before any of them is inspected.
+            if [ $((TOTAL_ZIP_BYTES + ZIP_BYTES)) -gt "${MAX_TOTAL_ZIP_BYTES}" ]; then
+              echo "::warning::Cumulative compressed download budget ${MAX_TOTAL_ZIP_BYTES} reached at ${name}; stopping."; break
+            fi
+            TOTAL_ZIP_BYTES=$((TOTAL_ZIP_BYTES + ZIP_BYTES))
             UNCOMP=$(unzip -l /tmp/a.zip 2>/dev/null | tail -1 | awk '{print $1}')
             # Fail safe: if the uncompressed size isn't a plain integer (corrupt
             # zip / unexpected `unzip -l` output), we can't verify it — skip the
@@ -256,8 +370,18 @@ jobs:
             if unzip -Z1 /tmp/a.zip 2>/dev/null | grep -qE '(^/|(^|/)\.\.(/|$))'; then
               echo "::warning::Skipping ${name}: archive has a suspicious (absolute or ..) entry path."; continue
             fi
-            timeout 120 unzip -o /tmp/a.zip '*.binlog' -d /tmp/ax >/dev/null 2>&1 \
-              || { echo "::warning::Skipping ${name}: extraction failed or timed out."; continue; }
+            # `unzip` exit 11 means "no files matched" — the artifact carries no
+            # binlog at all. That is not an extraction failure: the leg did
+            # publish its logs, they simply contain no binlog, and the
+            # fail-closed check below already accounts for a leg that staged
+            # nothing. Reporting it as "extraction failed or timed out" sends
+            # the reader chasing a corrupt-archive theory that isn't there. Any
+            # other non-zero exit (corrupt archive, timeout) is a real failure.
+            uz=0
+            timeout 120 unzip -o /tmp/a.zip '*.binlog' -d /tmp/ax >/dev/null 2>&1 || uz=$?
+            if [ "${uz}" -ne 0 ] && [ "${uz}" -ne 11 ]; then
+              echo "::warning::Skipping ${name}: extraction failed or timed out (unzip exit ${uz})."; continue
+            fi
             # Consume the cumulative budget only once the archive actually
             # extracted — not on a suspicious-path or extraction-failure skip
             # above — so a skipped leg can't wrongly exhaust the budget and
@@ -326,6 +450,7 @@ jobs:
             echo "pr-merge-sha=${BUILD_MERGE_SHA}"
             echo "ado-build-id=${BUILD_ID}"
             echo "ado-build-url=${ADO_BUILD_UI}?buildId=${BUILD_ID}"
+            echo "missing-legs=${MISSING_LEGS}"
           } >> "$GITHUB_OUTPUT"
 
       - name: Upload analysis artifact
@@ -353,6 +478,7 @@ steps:
       GH_AW_PR_HEAD_SHA_VALUE: ${{ needs.fetch-binlog.outputs.pr-head-sha }}
       GH_AW_PR_MERGE_SHA_VALUE: ${{ needs.fetch-binlog.outputs.pr-merge-sha }}
       GH_AW_ADO_BUILD_URL_VALUE: ${{ needs.fetch-binlog.outputs.ado-build-url }}
+      GH_AW_MISSING_LEGS_VALUE: ${{ needs.fetch-binlog.outputs.missing-legs }}
       GH_AW_GITHUB_WORKSPACE: ${{ github.workspace }}
     run: |
       # See build-failure-analysis.md for the binlog path conventions. The
@@ -377,6 +503,7 @@ steps:
         echo "GH_AW_PR_HEAD_SHA=${GH_AW_PR_HEAD_SHA_VALUE}"
         echo "GH_AW_PR_MERGE_SHA=${GH_AW_PR_MERGE_SHA_VALUE}"
         echo "GH_AW_WORKSPACE=${GH_AW_GITHUB_WORKSPACE}"
+        echo "GH_AW_MISSING_LEGS=${GH_AW_MISSING_LEGS_VALUE}"
         echo "GH_AW_BINLOG_LIST<<GH_AW_EOF"
         printf '%s' "$LIST"
         echo "GH_AW_EOF"
