@@ -343,17 +343,27 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
 
     private async Task CompleteAllProcessorsAsync()
     {
-        // Complete every processor even if one of them faults, otherwise a single misbehaving consumer would
-        // leave the remaining consumer loops running while they are being disposed.
+        // Start every completion up front. CompleteAddingAsync both signals the processor (completing its
+        // channel) and waits for the loop, and the signalling half runs synchronously before its first await,
+        // so invoking them all here tells every consumer to stop before we block on any of them. Awaiting them
+        // one at a time instead would let the first uncooperative consumer burn the whole shared budget while
+        // the later pumps had not even been told to finish: they would still be parked on a non-cancelable
+        // read, and would then be reported as still running and skipped by disposal despite being perfectly
+        // cooperative.
+        var completions = new Task[_distinctProcessors.Length];
+        for (int i = 0; i < _distinctProcessors.Length; i++)
+        {
+            completions[i] = CompleteProcessorAsync(_distinctProcessors[i]);
+        }
+
+        // Await every one even if some fault, otherwise a single misbehaving consumer would leave the
+        // remaining consumer loops running while they are being disposed.
         List<Exception>? exceptions = null;
-        foreach (IAsyncConsumerDataProcessor processor in _distinctProcessors)
+        foreach (Task completion in completions)
         {
             try
             {
-                using (_shutdownProgressReporter?.Track(processor.DataConsumer.Uid, processor.DataConsumer.DisplayName, nameof(IAsyncConsumerDataProcessor.CompleteAddingAsync)))
-                {
-                    await processor.CompleteAddingAsync().ConfigureAwait(false);
-                }
+                await completion.ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -373,6 +383,14 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
         }
 
         throw new AggregateException(exceptions);
+    }
+
+    private async Task CompleteProcessorAsync(IAsyncConsumerDataProcessor processor)
+    {
+        using (_shutdownProgressReporter?.Track(processor.DataConsumer.Uid, processor.DataConsumer.DisplayName, nameof(IAsyncConsumerDataProcessor.CompleteAddingAsync)))
+        {
+            await processor.CompleteAddingAsync().ConfigureAwait(false);
+        }
     }
 
     public override void Dispose()

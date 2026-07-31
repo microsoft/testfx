@@ -826,6 +826,56 @@ public sealed class AsynchronousMessageBusTests
             => Task.CompletedTask;
     }
 
+    [TestMethod]
+    public async Task DisableAsync_WhenOnlyOneCanceledConsumerIgnoresTheToken_ShouldNotReportTheCooperativeOnes()
+    {
+        using CTRLPlusCCancellationTokenSource cancellationTokenSource = new();
+        using MessageBusProxy proxy = new();
+
+        // The stuck consumer is registered first, so it is the one that eats the shared budget. The others are
+        // idle and must still be told to stop before that wait begins.
+        GatedConsumer stuckConsumer = new("StuckConsumer");
+        GatedConsumer[] idleConsumers = [.. Enumerable.Range(0, 3).Select(i => new GatedConsumer($"IdleConsumer{i}"))];
+        foreach (GatedConsumer idle in idleConsumers)
+        {
+            idle.AllowConsumeToComplete.SetResult(true);
+        }
+
+        Mock<IEnvironment> environmentMock = new();
+        environmentMock
+            .Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_MESSAGEBUS_CANCELED_SHUTDOWN_TIMEOUT_SECONDS))
+            .Returns("1");
+
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
+            [stuckConsumer, .. idleConsumers],
+            cancellationTokenSource,
+            new SystemTask(),
+            new NopLoggerFactory(),
+            environmentMock.Object);
+        await asynchronousMessageBus.InitAsync();
+        proxy.SetBuiltMessageBus(asynchronousMessageBus);
+
+        DummyProducer producer = new("GatedProducer", typeof(GatedData));
+        await proxy.PublishAsync(producer, new GatedData());
+        await stuckConsumer.ConsumeStarted.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+
+        cancellationTokenSource.Cancel();
+
+        // Sample while the shutdown is still inside the shared budget. Correct behaviour signals every
+        // processor up front, so the idle pumps have long since finished by now and only the stuck consumer is
+        // reported. Signalling lazily inside the wait loop would leave them parked on a non-cancelable read,
+        // still unsignalled, because the stuck consumer has not released the loop yet.
+        Task disableTask = asynchronousMessageBus.DisableAsync();
+        await Task.Delay(TimeSpan.FromMilliseconds(200), TestContext.CancellationToken);
+
+        List<IDataConsumer> stillRunning = [.. asynchronousMessageBus.ConsumersStillRunning];
+        Assert.HasCount(1, stillRunning);
+        Assert.AreSame(stuckConsumer, stillRunning[0]);
+
+        stuckConsumer.AllowConsumeToComplete.SetResult(true);
+        await disableTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+    }
+
     private sealed class NopLoggerFactory : ILoggerFactory
     {
         public ILogger CreateLogger(string categoryName) => new NopLogger();
