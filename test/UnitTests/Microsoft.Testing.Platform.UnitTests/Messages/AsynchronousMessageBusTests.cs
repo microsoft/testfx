@@ -705,12 +705,13 @@ public sealed class AsynchronousMessageBusTests
         // Eight consumers that all park inside ConsumeAsync. The processors are completed sequentially, so a
         // purely per-consumer bound would make the abort take 8 budgets instead of one.
         const int consumerCount = 8;
+        const double budgetSeconds = 1;
         GatedConsumer[] consumers = [.. Enumerable.Range(0, consumerCount).Select(i => new GatedConsumer($"GatedConsumer{i}"))];
 
         Mock<IEnvironment> environmentMock = new();
         environmentMock
             .Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_MESSAGEBUS_CANCELED_SHUTDOWN_TIMEOUT_SECONDS))
-            .Returns("1");
+            .Returns(budgetSeconds.ToString(CultureInfo.InvariantCulture));
 
         using var asynchronousMessageBus = new AsynchronousMessageBus(
             [.. consumers],
@@ -734,9 +735,10 @@ public sealed class AsynchronousMessageBusTests
         await asynchronousMessageBus.DisableAsync().TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
         stopwatch.Stop();
 
-        // The budget bounds the shutdown as a whole. Allow generous slack for slow machines, but stay well
-        // below the consumerCount x budget that a per-consumer bound would produce.
-        Assert.IsLessThan(TimeSpan.FromSeconds(consumerCount), stopwatch.Elapsed);
+        // Correct behaviour takes about one budget; the per-consumer regression takes about
+        // consumerCount budgets. Sit halfway between the two so the check both separates them clearly and
+        // keeps several times the expected duration as slack for a loaded machine.
+        Assert.IsLessThan(TimeSpan.FromSeconds(consumerCount * budgetSeconds / 2), stopwatch.Elapsed);
 
         // Deterministic half of the same property: we bailed out of the wait with every consumer still going,
         // rather than working through them one budget at a time.
