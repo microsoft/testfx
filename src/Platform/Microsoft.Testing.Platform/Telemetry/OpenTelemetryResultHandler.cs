@@ -2,74 +2,146 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Telemetry;
 
 internal sealed class OpenTelemetryResultHandler : IDisposable
 {
+    /// <summary>
+    /// What Roslyn's <c>INamespaceSymbol.ToDisplayString()</c> returns for the global namespace.
+    /// </summary>
+    private const string RoslynGlobalNamespaceDisplayString = "<global namespace>";
+    private const string ExceptionEventName = "exception";
+    private const string ExceptionTypeTag = "exception.type";
+    private const string ExceptionMessageTag = "exception.message";
+    private const string ExceptionStackTraceTag = "exception.stacktrace";
+
     private readonly IPlatformOpenTelemetryService _otelService;
-    private readonly ICounter<int> _totalDiscoveredTests;
-    private readonly ICounter<int> _totalStartedTests;
-    private readonly ICounter<int> _totalCompletedTests;
-    private readonly ICounter<int> _totalPassedTests;
-    private readonly ICounter<int> _totalFailedTests;
-    private readonly ICounter<int> _totalSkippedTests;
-    private readonly ICounter<int> _totalUnknownTests;
-    private readonly IHistogram<double> _totalDuration;
+    private readonly PlatformOpenTelemetryOptions _options;
+
+    // Semantic-convention aligned instruments.
+    private readonly ICounter<int> _testCaseResultCount;
+    private readonly IHistogram<double> _testCaseDuration;
+    private readonly IUpDownCounter<int> _activeTestCases;
+    private readonly IHistogram<double> _testRunDuration;
+
+    // Legacy instruments, kept so existing dashboards keep working.
+    private readonly ICounter<int>? _totalDiscoveredTests;
+    private readonly ICounter<int>? _totalStartedTests;
+    private readonly ICounter<int>? _totalCompletedTests;
+    private readonly ICounter<int>? _totalPassedTests;
+    private readonly ICounter<int>? _totalFailedTests;
+    private readonly ICounter<int>? _totalSkippedTests;
+    private readonly ICounter<int>? _totalUnknownTests;
+    private readonly IHistogram<double>? _totalDuration;
+
+    private readonly Stopwatch _runStopwatch = Stopwatch.StartNew();
+
     // Note: we use a queue per Uid because frameworks are allowed (but discouraged) to produce
     // multiple test nodes that share the same Uid (e.g. NUnit's [Values("one", "one")] or
     // MSTest's "folded" parameterized tests). When that happens we still want to track every
     // in-flight activity and pair them with results in FIFO order, instead of throwing.
-    private readonly Dictionary<TestNodeUid, Queue<IPlatformActivity>> _testActivities = [];
+    // The queued activity is nullable on purpose: when no tracer is listening StartActivity returns null, and we
+    // still need the entry so the in-flight bookkeeping (and therefore test.case.active) stays balanced.
+    private readonly Dictionary<TestNodeUid, Queue<IPlatformActivity?>> _testActivities = [];
+
+    // The notifications are normally serialised by the message bus's single-reader consumer loop. They are not on
+    // the cancellation path: a cancelled run skips the drain/disable step, so a consumer can still be publishing
+    // results while the host disposes us. Guarding the bookkeeping keeps that race from throwing a collection-
+    // modified exception out of the telemetry code during shutdown - telemetry must never fail a run.
+    // This is a local mitigation; the platform-level sequencing is tracked by
+    // https://github.com/microsoft/testfx/issues/10357 and this guard can be revisited once that is fixed.
+#if NET9_0_OR_GREATER
+    private readonly Lock _syncRoot = new();
+#else
+    private readonly object _syncRoot = new();
+#endif
     private bool _disposed;
+    private bool _runCompletedReported;
 
     public OpenTelemetryResultHandler(IPlatformOpenTelemetryService otelService)
+        : this(otelService, PlatformOpenTelemetryOptions.Default)
+    {
+    }
+
+    public OpenTelemetryResultHandler(IPlatformOpenTelemetryService otelService, PlatformOpenTelemetryOptions options)
     {
         _otelService = otelService;
-        _totalDiscoveredTests = otelService.CreateCounter<int>("tests.discovered");
-        _totalStartedTests = otelService.CreateCounter<int>("tests.started");
-        _totalCompletedTests = otelService.CreateCounter<int>("tests.completed");
-        _totalPassedTests = otelService.CreateCounter<int>("tests.passed");
-        _totalFailedTests = otelService.CreateCounter<int>("tests.failed");
-        _totalSkippedTests = otelService.CreateCounter<int>("tests.skipped");
-        _totalUnknownTests = otelService.CreateCounter<int>("tests.unknown");
-        _totalDuration = otelService.CreateHistogram<double>("tests.duration");
+        _options = options;
+
+        _testCaseResultCount = otelService.CreateCounter<int>(
+            TestingPlatformSemanticConventions.Metrics.TestCaseResultCount,
+            TestingPlatformSemanticConventions.Units.Count,
+            "Number of test cases, dimensioned by result status.");
+        _testCaseDuration = otelService.CreateHistogram<double>(
+            TestingPlatformSemanticConventions.Metrics.TestCaseDuration,
+            TestingPlatformSemanticConventions.Units.Seconds,
+            "Duration of a single test case.");
+        _activeTestCases = otelService.CreateUpDownCounter<int>(
+            TestingPlatformSemanticConventions.Metrics.TestRunActiveCases,
+            TestingPlatformSemanticConventions.Units.Count,
+            "Number of test cases currently running.");
+        _testRunDuration = otelService.CreateHistogram<double>(
+            TestingPlatformSemanticConventions.Metrics.TestRunDuration,
+            TestingPlatformSemanticConventions.Units.Seconds,
+            "Duration of the whole test run.");
+
+        if (options.EmitLegacyAttributes)
+        {
+            _totalDiscoveredTests = otelService.CreateCounter<int>(TestingPlatformSemanticConventions.Metrics.LegacyTestsDiscovered);
+            _totalStartedTests = otelService.CreateCounter<int>(TestingPlatformSemanticConventions.Metrics.LegacyTestsStarted);
+            _totalCompletedTests = otelService.CreateCounter<int>(TestingPlatformSemanticConventions.Metrics.LegacyTestsCompleted);
+            _totalPassedTests = otelService.CreateCounter<int>(TestingPlatformSemanticConventions.Metrics.LegacyTestsPassed);
+            _totalFailedTests = otelService.CreateCounter<int>(TestingPlatformSemanticConventions.Metrics.LegacyTestsFailed);
+            _totalSkippedTests = otelService.CreateCounter<int>(TestingPlatformSemanticConventions.Metrics.LegacyTestsSkipped);
+            _totalUnknownTests = otelService.CreateCounter<int>(TestingPlatformSemanticConventions.Metrics.LegacyTestsUnknown);
+            _totalDuration = otelService.CreateHistogram<double>(TestingPlatformSemanticConventions.Metrics.LegacyTestsDuration);
+        }
     }
 
     internal void NotifyDiscovered()
-        => _totalDiscoveredTests.Add(1);
+        => _totalDiscoveredTests?.Add(1);
 
     internal void NotifyPassed(TestNode testNode, TestNodeStateProperty stateProperty)
     {
-        _totalPassedTests.Add(1);
+        _totalPassedTests?.Add(1);
         HandleTestResult(testNode, stateProperty);
     }
 
     internal void NotifyFailed(TestNode testNode, TestNodeStateProperty stateProperty)
     {
-        _totalFailedTests.Add(1);
+        _totalFailedTests?.Add(1);
         HandleTestResult(testNode, stateProperty);
     }
 
     internal void NotifySkipped(TestNode testNode, TestNodeStateProperty stateProperty)
     {
-        _totalSkippedTests.Add(1);
+        _totalSkippedTests?.Add(1);
         HandleTestResult(testNode, stateProperty);
     }
 
     internal void NotifyInProgress(TestNode testNode, TestNodeUid? parentUid)
     {
-        _totalStartedTests.Add(1);
+        _totalStartedTests?.Add(1);
         IPlatformActivity? activity = _otelService.StartActivity(
-            testNode.Uid,
+            GetActivityName(testNode),
             parentId: _otelService.TestFrameworkActivity?.Id,
             tags: GetTestInitialInfo(testNode, parentUid));
 
-        if (activity is not null)
+        lock (_syncRoot)
         {
-            if (!_testActivities.TryGetValue(testNode.Uid, out Queue<IPlatformActivity>? activities))
+            if (_disposed)
             {
-                activities = new Queue<IPlatformActivity>();
+                // A result arrived after shutdown started; close its span rather than tracking it.
+                activity?.Dispose();
+                return;
+            }
+
+            _activeTestCases.Add(1);
+            if (!_testActivities.TryGetValue(testNode.Uid, out Queue<IPlatformActivity?>? activities))
+            {
+                activities = new Queue<IPlatformActivity?>();
                 _testActivities.Add(testNode.Uid, activities);
             }
 
@@ -79,115 +151,329 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
 
     internal void NotifyExecutionCompleted(TestNode testNode)
     {
-        _totalCompletedTests.Add(1);
-        if (!_testActivities.TryGetValue(testNode.Uid, out Queue<IPlatformActivity>? activities) || activities.Count == 0)
+        _totalCompletedTests?.Add(1);
+        if (!TryDequeueInFlight(testNode, out IPlatformActivity? activity))
         {
             return;
         }
 
-        IPlatformActivity activity = activities.Dequeue();
-        if (activities.Count == 0)
-        {
-            _testActivities.Remove(testNode.Uid);
-        }
-
-        activity.Dispose();
+        activity?.Dispose();
     }
 
     internal void NotifyUnknown()
-        => _totalUnknownTests.Add(1);
+        => _totalUnknownTests?.Add(1);
+
+    /// <summary>
+    /// Records the run-level metrics. Called once, when the run verdict is known.
+    /// </summary>
+    /// <param name="totalRanTests">Number of tests that ran.</param>
+    /// <param name="failedTests">Number of tests that failed.</param>
+    /// <param name="skippedTests">Number of tests that were skipped.</param>
+    /// <param name="exitCode">The process exit code the run resolved to.</param>
+    /// <param name="runActivity">The root span of the run, if any. The counts go here rather than on the histogram
+    /// because they are unbounded values: as metric dimensions they would create a new time series per distinct
+    /// count, while on a span they are free.</param>
+    internal void NotifyRunCompleted(int totalRanTests, int failedTests, int skippedTests, int exitCode, IPlatformActivity? runActivity = null)
+    {
+        // Dispose can legitimately run more than once; recording a second data point would double count the run.
+        lock (_syncRoot)
+        {
+            if (_runCompletedReported)
+            {
+                return;
+            }
+
+            _runCompletedReported = true;
+        }
+
+        _runStopwatch.Stop();
+        _testRunDuration.Record(
+            _runStopwatch.Elapsed.TotalSeconds,
+            [
+                new(TestingPlatformSemanticConventions.Attributes.TestRunResultStatus, GetRunResultStatus(failedTests, exitCode)),
+                new(TestingPlatformSemanticConventions.Attributes.TestRunExitCode, exitCode),
+            ]);
+
+        runActivity?.SetTag(TestingPlatformSemanticConventions.Attributes.TestRunTotalCount, totalRanTests);
+        runActivity?.SetTag(TestingPlatformSemanticConventions.Attributes.TestRunFailedCount, failedTests);
+        runActivity?.SetTag(TestingPlatformSemanticConventions.Attributes.TestRunSkippedCount, skippedTests);
+    }
 
     public void Dispose()
     {
-        if (_disposed)
+        List<IPlatformActivity?> orphaned = [];
+        lock (_syncRoot)
         {
-            return;
-        }
-
-        _disposed = true;
-        foreach (Queue<IPlatformActivity> activities in _testActivities.Values)
-        {
-            foreach (IPlatformActivity activity in activities)
+            if (_disposed)
             {
-                activity.Dispose();
+                return;
             }
+
+            _disposed = true;
+
+            // Drain into a local list so the spans are closed outside the lock and a concurrent notification
+            // cannot mutate the dictionary while we walk it.
+            foreach (Queue<IPlatformActivity?> activities in _testActivities.Values)
+            {
+                orphaned.AddRange(activities);
+            }
+
+            if (orphaned.Count > 0)
+            {
+                _activeTestCases.Add(-orphaned.Count);
+            }
+
+            _testActivities.Clear();
         }
 
-        _testActivities.Clear();
+        foreach (IPlatformActivity? activity in orphaned)
+        {
+            activity?.Dispose();
+        }
     }
 
-    private static IEnumerable<KeyValuePair<string, object?>> GetTestInitialInfo(TestNode testNode, TestNodeUid? parentUid)
+    /// <summary>
+    /// Removes the oldest in-flight entry for the node and keeps <c>test.case.active</c> balanced.
+    /// </summary>
+    private bool TryDequeueInFlight(TestNode testNode, out IPlatformActivity? activity)
     {
-        yield return new("test.name", testNode.DisplayName);
-        yield return new("test.id", testNode.Uid.Value);
+        lock (_syncRoot)
+        {
+            activity = null;
+            if (!_testActivities.TryGetValue(testNode.Uid, out Queue<IPlatformActivity?>? activities) || activities.Count == 0)
+            {
+                return false;
+            }
+
+            activity = activities.Dequeue();
+            if (activities.Count == 0)
+            {
+                _testActivities.Remove(testNode.Uid);
+            }
+
+            _activeTestCases.Add(-1);
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// The OpenTelemetry conventions ask for the span name to be the test case name rather than an opaque id,
+    /// because it is what shows up in trace waterfalls and what backends group on.
+    /// </summary>
+    private static string GetActivityName(TestNode testNode)
+        => RoslynString.IsNullOrWhiteSpace(testNode.DisplayName) ? testNode.Uid.Value : testNode.DisplayName;
+
+    private static string? GetSuiteName(TestNode testNode)
+        => testNode.Properties.SingleOrDefault<TestMethodIdentifierProperty>()?.TypeName;
+
+    /// <summary>
+    /// Builds the value for <c>code.function.name</c>, which the convention defines as the fully qualified name.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A type in the global namespace contributes no namespace segment, so the name must not gain a leading dot.
+    /// Two spellings have to be recognised, because the property is a plain string filled in by whichever test
+    /// framework produced the node: an empty namespace (what MSTest produces, since it derives the namespace by
+    /// splitting the managed type name) and Roslyn's <c>&lt;global namespace&gt;</c>, which is what
+    /// <c>INamespaceSymbol.ToDisplayString()</c> returns when the caller does not first check
+    /// <c>IsGlobalNamespace</c>.
+    /// </para>
+    /// <para>
+    /// Dropping the segment - rather than emitting Roslyn's <c>global::</c> prefix - keeps the attribute
+    /// language-agnostic, matches the convention's own examples, and is consistent with how the rest of this
+    /// repository treats the global namespace (see <c>TestClassModelBuilder</c>, <c>ReflectionMetadataGenerator</c>
+    /// and <c>DiscoveredTestsJsonSerializer</c>, which all omit it).
+    /// </para>
+    /// </remarks>
+    private static string GetFullyQualifiedName(TestMethodIdentifierProperty identifierProperty)
+        => IsGlobalNamespace(identifierProperty.Namespace)
+            ? $"{identifierProperty.TypeName}.{identifierProperty.MethodName}"
+            : $"{identifierProperty.Namespace}.{identifierProperty.TypeName}.{identifierProperty.MethodName}";
+
+    private static bool IsGlobalNamespace(string? @namespace)
+        => RoslynString.IsNullOrEmpty(@namespace)
+            || @namespace == RoslynGlobalNamespaceDisplayString;
+
+    private static string GetRunResultStatus(int failedTests, int exitCode)
+        => failedTests > 0 || exitCode != (int)ExitCode.Success
+            ? TestingPlatformSemanticConventions.TestResultStatus.Fail
+            : TestingPlatformSemanticConventions.TestResultStatus.Pass;
+
+    private IEnumerable<KeyValuePair<string, object?>> GetTestInitialInfo(TestNode testNode, TestNodeUid? parentUid)
+    {
+        yield return new(TestingPlatformSemanticConventions.Attributes.TestCaseName, testNode.DisplayName);
+        yield return new(TestingPlatformSemanticConventions.Attributes.TestCaseId, testNode.Uid.Value);
         if (parentUid is not null)
         {
-            yield return new("test.parent.id", parentUid.Value);
+            yield return new(TestingPlatformSemanticConventions.Attributes.TestCaseParentId, parentUid.Value);
+        }
+
+        if (_options.EmitLegacyAttributes)
+        {
+            yield return new(TestingPlatformSemanticConventions.Attributes.LegacyTestName, testNode.DisplayName);
+            yield return new(TestingPlatformSemanticConventions.Attributes.LegacyTestId, testNode.Uid.Value);
+            if (parentUid is not null)
+            {
+                yield return new(TestingPlatformSemanticConventions.Attributes.LegacyTestParentId, parentUid.Value);
+            }
         }
 
         if (testNode.Properties.SingleOrDefault<TestMethodIdentifierProperty>() is { } identifierProperty)
         {
-            yield return new("test.method", identifierProperty.MethodName);
-            yield return new("test.class", identifierProperty.TypeName);
-            yield return new("test.namespace", identifierProperty.Namespace);
-            yield return new("test.assembly", identifierProperty.AssemblyFullName);
+            // code.function.name is defined as the *fully qualified* name; there is no separate namespace
+            // attribute (code.namespace is deprecated upstream).
+            yield return new(TestingPlatformSemanticConventions.Attributes.CodeFunctionName, GetFullyQualifiedName(identifierProperty));
+            yield return new(TestingPlatformSemanticConventions.Attributes.TestSuiteName, identifierProperty.TypeName);
+            yield return new(TestingPlatformSemanticConventions.Attributes.TestAssemblyName, identifierProperty.AssemblyFullName);
+
+            if (_options.EmitLegacyAttributes)
+            {
+                yield return new(TestingPlatformSemanticConventions.Attributes.LegacyTestMethod, identifierProperty.MethodName);
+                yield return new(TestingPlatformSemanticConventions.Attributes.LegacyTestClass, identifierProperty.TypeName);
+                yield return new(TestingPlatformSemanticConventions.Attributes.LegacyTestNamespace, identifierProperty.Namespace);
+                yield return new(TestingPlatformSemanticConventions.Attributes.LegacyTestAssembly, identifierProperty.AssemblyFullName);
+            }
         }
 
         if (testNode.Properties.SingleOrDefault<TestFileLocationProperty>() is { } testLocationProperty)
         {
-            yield return new("test.file.path", testLocationProperty.FilePath);
-            yield return new("test.line.start", testLocationProperty.LineSpan.Start.Line);
-            yield return new("test.line.end", testLocationProperty.LineSpan.End.Line);
+            yield return new(TestingPlatformSemanticConventions.Attributes.CodeFilePath, testLocationProperty.FilePath);
+            yield return new(TestingPlatformSemanticConventions.Attributes.CodeLineNumber, testLocationProperty.LineSpan.Start.Line);
+
+            if (_options.EmitLegacyAttributes)
+            {
+                yield return new(TestingPlatformSemanticConventions.Attributes.LegacyTestFilePath, testLocationProperty.FilePath);
+                yield return new(TestingPlatformSemanticConventions.Attributes.LegacyTestLineStart, testLocationProperty.LineSpan.Start.Line);
+                yield return new(TestingPlatformSemanticConventions.Attributes.LegacyTestLineEnd, testLocationProperty.LineSpan.End.Line);
+            }
         }
 
         foreach (TestMetadataProperty metadata in testNode.Properties.OfType<TestMetadataProperty>())
         {
-            yield return new KeyValuePair<string, object?>($"test.metadataProperty.{metadata.Key}", metadata.Value);
+            yield return new KeyValuePair<string, object?>($"{TestingPlatformSemanticConventions.Attributes.TestMetadataPrefix}{metadata.Key}", metadata.Value);
+            if (_options.EmitLegacyAttributes)
+            {
+                yield return new KeyValuePair<string, object?>($"{TestingPlatformSemanticConventions.Attributes.LegacyTestMetadataPrefix}{metadata.Key}", metadata.Value);
+            }
         }
     }
 
     private void HandleTestResult(TestNode testNode, TestNodeStateProperty stateProperty)
     {
-        _totalCompletedTests.Add(1);
-
-        if (!_testActivities.TryGetValue(testNode.Uid, out Queue<IPlatformActivity>? activities) || activities.Count == 0)
-        {
-            return;
-        }
-
-        IPlatformActivity activity = activities.Dequeue();
-        if (activities.Count == 0)
-        {
-            _testActivities.Remove(testNode.Uid);
-        }
+        _totalCompletedTests?.Add(1);
 
         (string result, Exception? exception, TimeSpan? timeoutTime) = stateProperty switch
         {
-            PassedTestNodeStateProperty => ("passed", null, null),
-            FailedTestNodeStateProperty failed => ("failed", failed.Exception, null),
-            ErrorTestNodeStateProperty error => ("error", error.Exception, null),
-            TimeoutTestNodeStateProperty timeout => ("timeout", timeout.Exception, timeout.Timeout),
+            PassedTestNodeStateProperty => (TestingPlatformSemanticConventions.TestResultStatus.Pass, null, null),
+            FailedTestNodeStateProperty failed => (TestingPlatformSemanticConventions.TestResultStatus.Fail, failed.Exception, null),
+            ErrorTestNodeStateProperty error => (TestingPlatformSemanticConventions.TestResultStatus.Error, error.Exception, null),
+            TimeoutTestNodeStateProperty timeout => (TestingPlatformSemanticConventions.TestResultStatus.Timeout, timeout.Exception, timeout.Timeout),
 #pragma warning disable CS0618, MTP0001 // Type or member is obsolete
-            CancelledTestNodeStateProperty cancelled => ("cancelled", cancelled.Exception, null),
+            CancelledTestNodeStateProperty cancelled => (TestingPlatformSemanticConventions.TestResultStatus.Cancelled, cancelled.Exception, null),
 #pragma warning restore CS0618, MTP0001 // Type or member is obsolete
-            SkippedTestNodeStateProperty => ("skipped", null, null),
-            _ => ("unknown", null, null),
+            SkippedTestNodeStateProperty => (TestingPlatformSemanticConventions.TestResultStatus.Skipped, null, null),
+            _ => (TestingPlatformSemanticConventions.TestResultStatus.Unknown, null, null),
         };
 
-        activity.SetTag("test.result", result);
-        activity.SetTag("test.result.explanation", stateProperty.Explanation);
+        KeyValuePair<string, object?>[] measurementTags =
+        [
+            new(TestingPlatformSemanticConventions.Attributes.TestCaseResultStatus, result),
+            new(TestingPlatformSemanticConventions.Attributes.TestSuiteName, GetSuiteName(testNode)),
+        ];
+
+        _testCaseResultCount.Add(1, measurementTags);
+
+        if (!TryDequeueInFlight(testNode, out IPlatformActivity? activity) || activity is null)
+        {
+            // Either the framework never reported the test as in-progress, or nothing is listening so no span was
+            // created. Either way we still want the duration recorded, otherwise a framework that only publishes
+            // final results produces no latency data.
+            SetResultDetails(testNode, measurementTags, activity: null);
+            return;
+        }
+
+        string? truncatedExplanation = _options.Truncate(stateProperty.Explanation);
+        activity.SetTag(TestingPlatformSemanticConventions.Attributes.TestCaseResultStatus, result);
+        activity.SetTag(TestingPlatformSemanticConventions.Attributes.TestCaseResultExplanation, truncatedExplanation);
+
+        if (_options.EmitLegacyAttributes)
+        {
+            // The legacy attribute keeps its original "passed"/"failed" spellings; the semantic-convention
+            // attribute uses the upstream "pass"/"fail" enum.
+            activity.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestResult, TestingPlatformSemanticConventions.TestResultStatus.ToLegacy(result));
+
+            // Truncated as well: emitting the legacy twin untruncated would defeat the size limit, since legacy
+            // attributes are on by default.
+            activity.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestResultExplanation, truncatedExplanation);
+        }
+
         if (exception is not null)
         {
-            activity.SetTag("test.result.exception.type", exception.GetType().FullName);
-            activity.SetTag("test.result.exception.message", exception.Message);
-            activity.SetTag("test.result.exception.stacktrace", exception.StackTrace);
+            // The OpenTelemetry convention is an "exception" event carrying the type/message/stack trace, plus
+            // error.type and a status of Error on the span so it shows up as failed in every backend.
+            // error.message is deliberately not set: it is deprecated upstream and NOT RECOMMENDED on spans
+            // because of its unbounded cardinality - the message is on the event instead.
+            string? exceptionTypeName = exception.GetType().FullName;
+            string? truncatedMessage = _options.Truncate(exception.Message);
+            string? truncatedStackTrace = _options.Truncate(exception.StackTrace);
+            string? truncatedExceptionStackTrace = _options.Truncate(exception.ToString());
+
+            activity.AddEvent(
+                ExceptionEventName,
+                [
+                    new(ExceptionTypeTag, exceptionTypeName),
+                    new(ExceptionMessageTag, truncatedMessage),
+                    new(ExceptionStackTraceTag, truncatedExceptionStackTrace),
+                ]);
+            activity.SetStatus(PlatformActivityStatusCode.Error, truncatedMessage);
+            activity.SetTag(TestingPlatformSemanticConventions.Attributes.ErrorType, exceptionTypeName);
+            activity.SetTag(TestingPlatformSemanticConventions.Attributes.CodeStacktrace, truncatedStackTrace);
+
+            if (_options.EmitLegacyAttributes)
+            {
+                activity.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestResultExceptionType, exceptionTypeName);
+                activity.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestResultExceptionMessage, truncatedMessage);
+                activity.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestResultExceptionStackTrace, truncatedStackTrace);
+            }
+        }
+        else
+        {
+            activity.SetStatus(
+                result switch
+                {
+                    TestingPlatformSemanticConventions.TestResultStatus.Pass => PlatformActivityStatusCode.Ok,
+                    TestingPlatformSemanticConventions.TestResultStatus.Skipped or TestingPlatformSemanticConventions.TestResultStatus.Unknown => PlatformActivityStatusCode.Unset,
+                    _ => PlatformActivityStatusCode.Error,
+                },
+                truncatedExplanation);
         }
 
         if (timeoutTime is not null)
         {
-            activity.SetTag("test.result.timeout.ms", timeoutTime.Value.TotalMilliseconds);
+            activity.SetTag(TestingPlatformSemanticConventions.Attributes.TestCaseTimeoutMilliseconds, timeoutTime.Value.TotalMilliseconds);
+            if (_options.EmitLegacyAttributes)
+            {
+                activity.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestResultTimeout, timeoutTime.Value.TotalMilliseconds);
+            }
         }
 
+        try
+        {
+            SetResultDetails(testNode, measurementTags, activity);
+        }
+        finally
+        {
+            // The span was already dequeued, so it must be closed even if collecting the details throws on a
+            // malformed property bag; otherwise it would stay open until the handler is disposed.
+            activity.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// Collects the timing, output and artifact details of a completed test in a single pass over the property bag.
+    /// </summary>
+    private void SetResultDetails(TestNode testNode, KeyValuePair<string, object?>[] measurementTags, IPlatformActivity? activity)
+    {
         // Single pass over the property bag: replaces five separate walks
         // (SingleOrDefault<TimingProperty>, OfType<TestMetadataProperty>, SingleOrDefault<StandardOutputProperty>,
         //  SingleOrDefault<StandardErrorProperty>, OfType<FileArtifactProperty>).
@@ -210,7 +496,12 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
                     timingProperty = tp;
                     break;
                 case TestMetadataProperty metadataProperty:
-                    activity.SetTag($"test.metadataProperty.{metadataProperty.Key}", metadataProperty.Value);
+                    activity?.SetTag($"{TestingPlatformSemanticConventions.Attributes.TestMetadataPrefix}{metadataProperty.Key}", metadataProperty.Value);
+                    if (_options.EmitLegacyAttributes)
+                    {
+                        activity?.SetTag($"{TestingPlatformSemanticConventions.Attributes.LegacyTestMetadataPrefix}{metadataProperty.Key}", metadataProperty.Value);
+                    }
+
                     break;
                 case StandardOutputProperty outputProperty:
                     if (standardOutputProperty is not null)
@@ -229,7 +520,7 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
                     standardErrorProperty = errorProperty;
                     break;
                 case FileArtifactProperty fileArtifactProperty:
-                    activity.SetTag($"test.artifact.file[{artifactIndex}].path", fileArtifactProperty.FileInfo.FullName);
+                    activity?.SetTag($"test.artifact.file[{artifactIndex}].path", fileArtifactProperty.FileInfo.FullName);
                     artifactIndex++;
                     break;
             }
@@ -238,18 +529,43 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
         if (timingProperty is not null)
         {
             double totalMilliseconds = timingProperty.GlobalTiming.Duration.TotalMilliseconds;
-            _totalDuration.Record(totalMilliseconds);
-            activity.SetTag("test.duration.ms", totalMilliseconds);
+            _testCaseDuration.Record(timingProperty.GlobalTiming.Duration.TotalSeconds, measurementTags);
+            _totalDuration?.Record(totalMilliseconds);
+            activity?.SetTag(TestingPlatformSemanticConventions.Attributes.TestCaseDurationMilliseconds, totalMilliseconds);
+            if (_options.EmitLegacyAttributes)
+            {
+                activity?.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestDuration, totalMilliseconds);
+            }
+
             foreach (StepTimingInfo step in timingProperty.StepTimings)
             {
-                activity.SetTag($"test.step{step.Id}.duration.ms", step.Timing.Duration.TotalMilliseconds);
-                activity.SetTag($"test.step{step.Id}.description", step.Description);
+                activity?.SetTag($"{TestingPlatformSemanticConventions.Attributes.TestStepPrefix}{step.Id}.duration", step.Timing.Duration.TotalMilliseconds);
+                activity?.SetTag($"{TestingPlatformSemanticConventions.Attributes.TestStepPrefix}{step.Id}.description", step.Description);
+                if (_options.EmitLegacyAttributes)
+                {
+                    activity?.SetTag($"test.step{step.Id}.duration.ms", step.Timing.Duration.TotalMilliseconds);
+                    activity?.SetTag($"test.step{step.Id}.description", step.Description);
+                }
             }
         }
 
-        activity.SetTag("test.stdout", standardOutputProperty?.StandardOutput ?? string.Empty);
-        activity.SetTag("test.stderr", standardErrorProperty?.StandardError ?? string.Empty);
+        if (activity is null || !_options.CaptureTestOutput)
+        {
+            return;
+        }
 
-        activity.Dispose();
+        // Truncated for both the semantic-convention and the legacy names: test output routinely runs to megabytes
+        // and can contain secrets.
+        string standardOutput = _options.Truncate(standardOutputProperty?.StandardOutput) ?? string.Empty;
+        string standardError = _options.Truncate(standardErrorProperty?.StandardError) ?? string.Empty;
+
+        activity.SetTag(TestingPlatformSemanticConventions.Attributes.TestOutputStdout, standardOutput);
+        activity.SetTag(TestingPlatformSemanticConventions.Attributes.TestOutputStderr, standardError);
+
+        if (_options.EmitLegacyAttributes)
+        {
+            activity.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestStdout, standardOutput);
+            activity.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestStderr, standardError);
+        }
     }
 }

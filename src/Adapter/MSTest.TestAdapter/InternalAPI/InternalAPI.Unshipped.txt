@@ -60,3 +60,10 @@ static Microsoft.Testing.Extensions.RunSettingsProviderHelper.TryLoadRunSettings
 static Microsoft.VisualStudio.TestTools.UnitTesting.MSTestTestNodeConverter.ToEmptyResultTestNode(Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement! element, bool isTrxEnabled) -> Microsoft.Testing.Platform.Extensions.Messages.TestNode!
 static readonly Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.AdapterTestProperties.DependenciesProperty -> Microsoft.VisualStudio.TestPlatform.ObjectModel.TestProperty!
 static readonly Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.AdapterTestProperties.ResourceLocksProperty -> Microsoft.VisualStudio.TestPlatform.ObjectModel.TestProperty!
+Microsoft.VisualStudio.TestTools.UnitTesting.MSTestPlatformActivity
+Microsoft.VisualStudio.TestTools.UnitTesting.MSTestPlatformActivity.Dispose() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.MSTestPlatformActivity.MSTestPlatformActivity(Microsoft.Testing.Platform.Telemetry.IPlatformActivity! activity) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.MSTestPlatformActivity.RecordException(System.Exception! exception) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.MSTestPlatformActivity.SetFailed(string? description) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.MSTestPlatformActivity.SetTag(string! key, object? value) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.MSTestPlatformActivity.TryEnable(System.IServiceProvider! serviceProvider) -> void

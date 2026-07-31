@@ -7,18 +7,16 @@ using Microsoft.Testing.Platform.Telemetry;
 
 namespace Microsoft.Testing.Extensions.OpenTelemetry;
 
-internal sealed class CounterWrapper<T> : ICounter<T>
+internal sealed class UpDownCounterWrapper<T> : IUpDownCounter<T>
     where T : struct
 {
-    private readonly Counter<T> _counter;
+    private readonly UpDownCounter<T> _counter;
 
-    public CounterWrapper(Counter<T> counter)
+    public UpDownCounterWrapper(UpDownCounter<T> counter)
         => _counter = counter
             ?? throw new ArgumentNullException(nameof(counter));
 
-    public void Add(T delta) => _counter.Add(delta);
-
-    public void Add(T delta, IEnumerable<KeyValuePair<string, object?>>? tags)
+    public void Add(T delta, IEnumerable<KeyValuePair<string, object?>>? tags = null)
     {
         if (tags is null)
         {

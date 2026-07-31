@@ -12,6 +12,21 @@
 *REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.WriteTrace(char value) -> void
 *REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.WriteTrace(string? value) -> void
 #nullable enable
+const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.ActivityNames.AssemblyCleanup = "MSTest.AssemblyCleanup" -> string!
+const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.ActivityNames.AssemblyInitialize = "MSTest.AssemblyInitialize" -> string!
+const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.ActivityNames.ClassCleanup = "MSTest.ClassCleanup" -> string!
+const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.ActivityNames.ClassInitialize = "MSTest.ClassInitialize" -> string!
+const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.ActivityNames.Discovery = "MSTest.Discovery" -> string!
+const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.ActivityNames.TestCleanup = "MSTest.TestCleanup" -> string!
+const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.ActivityNames.TestInitialize = "MSTest.TestInitialize" -> string!
+const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.ActivityNames.TestMethod = "MSTest.TestMethod" -> string!
+const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.Attributes.DataRowIndex = "test.case.data_row.index" -> string!
+const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.Attributes.FixtureKind = "test.fixture.kind" -> string!
+const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.Attributes.RetryAttempt = "test.case.retry.attempt" -> string!
+const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.Attributes.TestAssembly = "test.assembly.name" -> string!
+const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.Attributes.TestClass = "test.suite.name" -> string!
+const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.Attributes.TestMethod = "test.case.name" -> string!
+const Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.Attributes.TimeoutMilliseconds = "test.case.timeout" -> string!
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.AsyncReaderWriterLock
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.AsyncReaderWriterLock.AcquireReaderAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.IDisposable!>!
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.AsyncReaderWriterLock.AcquireWriterAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.IDisposable!>!
@@ -53,6 +68,13 @@ Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.UnitTestRunner.
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.UnitTestRunner.RunSingleTestAsync(Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement! unitTestElement, System.Collections.Generic.IDictionary<string!, object?>! testContextProperties, System.Collections.Generic.IDictionary<string!, object?>! lifecycleContextProperties, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IAdapterMessageLogger! messageLogger) -> System.Threading.Tasks.Task<Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]!>!
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.FixtureKind.GlobalTestCleanup = 7 -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.FixtureKind
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.FixtureKind.GlobalTestInitialize = 6 -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.FixtureKind
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.IMSTestActivity
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.IMSTestActivity.RecordException(System.Exception! exception) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.IMSTestActivity.SetTag(string! key, object? value) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.IMSTestActivity.SetFailed(string? description) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.ActivityNames
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.Attributes
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.DeclaredDependencies.get -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestDependencyDeclaration![]?
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.GlobalTestCleanupTimeout.get -> int
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.GlobalTestInitializeTimeout.get -> int
@@ -96,6 +118,10 @@ static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMeth
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.UnitTestRunner.CreateLiveOutputWriter(System.IO.Stream! standardOutput, System.Text.Encoding! encoding) -> System.IO.TextWriter!
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.RuntimeContext.IsMultiThreaded.get -> bool
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestDiscovererHelpers.GetSettingsExceptionMessage(Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.AdapterSettingsException! ex) -> string!
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.IsEnabled.get -> bool
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.SetActivityFactory(System.Func<string!, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>?, Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.IMSTestActivity?>? activityFactory) -> void
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.StartActivity(string! name, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? tags = null) -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.IMSTestActivity?
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestInstrumentation.StartFixtureActivity(string! name, string! fixtureKind, string? owningType, string? assemblyName = null) -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.IMSTestActivity?
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.ResourceLockInfo.Decode(string! encoded) -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.ResourceLockInfo!
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.ResourceLockInfo.Encode(Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.ResourceLockInfo! info) -> string!
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.TestDependencyInfo.Decode(string! encoded) -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.TestDependencyInfo!

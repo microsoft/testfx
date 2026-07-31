@@ -50,7 +50,7 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         _testCoverageResult = testCoverageResult;
         if (otelService is not null)
         {
-            _openTelemetryResultHandler = new OpenTelemetryResultHandler(otelService);
+            _openTelemetryResultHandler = new OpenTelemetryResultHandler(otelService, PlatformOpenTelemetryOptions.FromEnvironment(environment));
         }
 
         _isDiscovery = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey);
@@ -209,6 +209,21 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
 
     public Statistics GetStatistics()
         => new() { TotalRanTests = _totalRanTests, TotalFailedTests = _failedTestsCount };
+
+    /// <summary>
+    /// Emits the run-level OpenTelemetry metrics and tags the root span with the run counts.
+    /// </summary>
+    /// <param name="runActivity">The root span of the run, if any.</param>
+    /// <param name="exitCode">The exit code the host is about to return. Passed in rather than recomputed so the
+    /// telemetry always agrees with what the process actually exits with, including on the cancellation path.</param>
+    /// <remarks>
+    /// This deliberately does not live in <see cref="Dispose"/>: services are disposed in registration order, and the
+    /// OpenTelemetry provider is registered long before this one, so by the time we were disposed the
+    /// <c>MeterProvider</c> had already been shut down and the measurement was silently dropped. The host calls this
+    /// from its <c>finally</c> block instead, while the providers and the root span are still alive.
+    /// </remarks>
+    internal void ReportRunTelemetry(IPlatformActivity? runActivity, int exitCode)
+        => _openTelemetryResultHandler?.NotifyRunCompleted(_totalRanTests, _failedTestsCount, _skippedTestsCount, exitCode, runActivity);
 
     public void Dispose()
         => _openTelemetryResultHandler?.Dispose();

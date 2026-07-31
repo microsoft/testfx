@@ -27,10 +27,13 @@ public sealed class TestApplicationResultTests : IDisposable
         var secondActivity = new Mock<IPlatformActivity>();
         var otelService = new Mock<IPlatformOpenTelemetryService>();
         otelService
-            .Setup(service => service.CreateCounter<int>(It.IsAny<string>(), null, null, null))
+            .Setup(service => service.CreateCounter<int>(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()))
             .Returns(Mock.Of<ICounter<int>>());
         otelService
-            .Setup(service => service.CreateHistogram<double>(It.IsAny<string>(), null, null, null))
+            .Setup(service => service.CreateUpDownCounter<int>(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()))
+            .Returns(Mock.Of<IUpDownCounter<int>>());
+        otelService
+            .Setup(service => service.CreateHistogram<double>(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()))
             .Returns(Mock.Of<IHistogram<double>>());
         otelService
             .SetupSequence(service => service.StartActivity(
