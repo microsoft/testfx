@@ -220,9 +220,10 @@ public class TestResult
     /// <see cref="RetryBaseAttribute"/>. The first (non-retry) execution is attempt 1.
     /// </summary>
     /// <remarks>
-    /// Every attempt is reported to the test host so tooling can surface the in-process retry (see the
-    /// <c>RetryAttemptProperty</c> platform property). Results that are not part of a retry sequence keep the
-    /// default value of 1, which reports as "no retry happened" everywhere.
+    /// Every attempt is reported to Microsoft.Testing.Platform so tooling can surface the in-process retry (see
+    /// the <c>RetryAttemptProperty</c> platform property); the VSTest host receives only the final result.
+    /// Results that are not part of a retry sequence keep the default value of 1, which reports as "no retry
+    /// happened" everywhere.
     /// <para>
     /// Optional on .NET Framework so a payload written by a TestFramework build that predates this member still
     /// deserializes. Note the field then defaults to 0 rather than 1, because the initializer does not run during

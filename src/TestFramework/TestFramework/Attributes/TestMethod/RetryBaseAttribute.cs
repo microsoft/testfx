@@ -30,8 +30,9 @@ public abstract class RetryBaseAttribute : Attribute
     /// <param name="retryContext">An object to encapsulate the state needed for retry execution.</param>
     /// <returns>
     /// Returns a <see cref="RetryResult"/> object that contains the results of all attempts. The last added
-    /// element determines the test outcome; the earlier attempts are reported to the test host as superseded
-    /// attempts so tooling can surface the retry (attempt count, flaky detection, per-attempt error messages).
+    /// element determines the test outcome; under Microsoft.Testing.Platform the earlier attempts are also
+    /// reported, tagged as superseded, so tooling can surface the retry (attempt count, flaky detection,
+    /// per-attempt error messages). The VSTest host receives only the final result.
     /// </returns>
     [Experimental("MSTESTEXP", UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
     protected internal abstract Task<RetryResult> ExecuteAsync(RetryContext retryContext);
