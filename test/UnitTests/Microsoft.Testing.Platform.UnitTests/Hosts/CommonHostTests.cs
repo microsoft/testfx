@@ -130,7 +130,9 @@ public sealed class CommonHostTests
             new ClientInfo("client", "1.0.0"));
 
         // The cancellation path skips NotifyTestSessionEndAsync, so without the teardown safety net the bus
-        // would never be drained/disabled and consumers could still be running when they get disposed.
+        // would never be drained/disabled and consumers could still be running when they get disposed. The
+        // absent drain is the mechanism, so pin it: the disable here comes purely from the safety net.
+        baseMessageBusMock.Verify(x => x.DrainDataAsync(), Times.Never);
         baseMessageBusMock.Verify(x => x.DisableAsync(), Times.Once);
     }
 
