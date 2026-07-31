@@ -627,6 +627,47 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
     }
 
     [TestMethod]
+    public void NotifyInProgress_AfterDispose_ClosesTheSpanAndDoesNotTrackIt()
+    {
+        // A cancelled run skips the message-bus drain, so a consumer can still publish results while the host is
+        // disposing us. That must not throw or leave a span open.
+        Mock<IPlatformActivity> activity = SetupActivityForTestNode("late");
+        _handler.Dispose();
+
+        _handler.NotifyInProgress(CreateTestNode("late"), null);
+
+        activity.Verify(a => a.Dispose(), Times.Once);
+        Assert.AreEqual(0, _activeTestCases.Value);
+    }
+
+    [TestMethod]
+    public void Dispose_WhileResultsAreStillArriving_DoesNotThrow()
+    {
+        SetupActivityForTestNode("racing");
+        for (int i = 0; i < 200; i++)
+        {
+            _handler.NotifyInProgress(CreateTestNode($"racing-{i}"), null);
+        }
+
+        // Concurrently completing results while disposing used to throw "collection was modified" out of the
+        // telemetry path during shutdown.
+        Task publisher = Task.Factory.StartNew(
+            () =>
+            {
+                for (int i = 0; i < 200; i++)
+                {
+                    _handler.NotifyPassed(CreateTestNode($"racing-{i}"), PassedTestNodeStateProperty.CachedInstance);
+                }
+            },
+            CancellationToken.None,
+            TaskCreationOptions.LongRunning,
+            TaskScheduler.Default);
+
+        _handler.Dispose();
+        publisher.GetAwaiter().GetResult();
+    }
+
+    [TestMethod]
     public void NotifyRunCompleted_CalledTwice_RecordsRunDurationOnce()
     {
         _handler.NotifyRunCompleted(totalRanTests: 1, failedTests: 0, skippedTests: 0, exitCode: 0);

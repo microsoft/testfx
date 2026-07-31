@@ -35,6 +35,16 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
     // The queued activity is nullable on purpose: when no tracer is listening StartActivity returns null, and we
     // still need the entry so the in-flight bookkeeping (and therefore test.case.active) stays balanced.
     private readonly Dictionary<TestNodeUid, Queue<IPlatformActivity?>> _testActivities = [];
+
+    // The notifications are normally serialised by the message bus's single-reader consumer loop. They are not on
+    // the cancellation path: a cancelled run skips the drain/disable step, so a consumer can still be publishing
+    // results while the host disposes us. Guarding the bookkeeping keeps that race from throwing a collection-
+    // modified exception out of the telemetry code during shutdown - telemetry must never fail a run.
+#if NET9_0_OR_GREATER
+    private readonly Lock _syncRoot = new();
+#else
+    private readonly object _syncRoot = new();
+#endif
     private bool _disposed;
     private bool _runCompletedReported;
 
@@ -102,19 +112,29 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
     internal void NotifyInProgress(TestNode testNode, TestNodeUid? parentUid)
     {
         _totalStartedTests?.Add(1);
-        _activeTestCases.Add(1);
         IPlatformActivity? activity = _otelService.StartActivity(
             GetActivityName(testNode),
             parentId: _otelService.TestFrameworkActivity?.Id,
             tags: GetTestInitialInfo(testNode, parentUid));
 
-        if (!_testActivities.TryGetValue(testNode.Uid, out Queue<IPlatformActivity?>? activities))
+        lock (_syncRoot)
         {
-            activities = new Queue<IPlatformActivity?>();
-            _testActivities.Add(testNode.Uid, activities);
-        }
+            if (_disposed)
+            {
+                // A result arrived after shutdown started; close its span rather than tracking it.
+                activity?.Dispose();
+                return;
+            }
 
-        activities.Enqueue(activity);
+            _activeTestCases.Add(1);
+            if (!_testActivities.TryGetValue(testNode.Uid, out Queue<IPlatformActivity?>? activities))
+            {
+                activities = new Queue<IPlatformActivity?>();
+                _testActivities.Add(testNode.Uid, activities);
+            }
+
+            activities.Enqueue(activity);
+        }
     }
 
     internal void NotifyExecutionCompleted(TestNode testNode)
@@ -144,12 +164,16 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
     internal void NotifyRunCompleted(int totalRanTests, int failedTests, int skippedTests, int exitCode, IPlatformActivity? runActivity = null)
     {
         // Dispose can legitimately run more than once; recording a second data point would double count the run.
-        if (_runCompletedReported)
+        lock (_syncRoot)
         {
-            return;
+            if (_runCompletedReported)
+            {
+                return;
+            }
+
+            _runCompletedReported = true;
         }
 
-        _runCompletedReported = true;
         _runStopwatch.Stop();
         _testRunDuration.Record(
             _runStopwatch.Elapsed.TotalSeconds,
@@ -165,21 +189,30 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
 
     public void Dispose()
     {
-        if (_disposed)
+        List<IPlatformActivity?> orphaned = [];
+        lock (_syncRoot)
         {
-            return;
-        }
-
-        _disposed = true;
-        foreach (Queue<IPlatformActivity?> activities in _testActivities.Values)
-        {
-            foreach (IPlatformActivity? activity in activities)
+            if (_disposed)
             {
-                activity?.Dispose();
+                return;
             }
+
+            _disposed = true;
+
+            // Drain into a local list so the spans are closed outside the lock and a concurrent notification
+            // cannot mutate the dictionary while we walk it.
+            foreach (Queue<IPlatformActivity?> activities in _testActivities.Values)
+            {
+                orphaned.AddRange(activities);
+            }
+
+            _testActivities.Clear();
         }
 
-        _testActivities.Clear();
+        foreach (IPlatformActivity? activity in orphaned)
+        {
+            activity?.Dispose();
+        }
     }
 
     /// <summary>
@@ -187,20 +220,23 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
     /// </summary>
     private bool TryDequeueInFlight(TestNode testNode, out IPlatformActivity? activity)
     {
-        activity = null;
-        if (!_testActivities.TryGetValue(testNode.Uid, out Queue<IPlatformActivity?>? activities) || activities.Count == 0)
+        lock (_syncRoot)
         {
-            return false;
-        }
+            activity = null;
+            if (!_testActivities.TryGetValue(testNode.Uid, out Queue<IPlatformActivity?>? activities) || activities.Count == 0)
+            {
+                return false;
+            }
 
-        activity = activities.Dequeue();
-        if (activities.Count == 0)
-        {
-            _testActivities.Remove(testNode.Uid);
-        }
+            activity = activities.Dequeue();
+            if (activities.Count == 0)
+            {
+                _testActivities.Remove(testNode.Uid);
+            }
 
-        _activeTestCases.Add(-1);
-        return true;
+            _activeTestCases.Add(-1);
+            return true;
+        }
     }
 
     /// <summary>
