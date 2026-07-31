@@ -7,15 +7,20 @@
         <target state="translated">Paketlenmiş uygulama bildirimi birden çok uygulama bildiriyor ve bunların hiçbiri benzersiz olarak '{0}' yürütülebilir dosyasıyla eşleşmiyor. Aday Uygulama Kullanıcı Modeli Kimlikleri: {1}.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AppxManifestApplicationExecutableMismatch">
+        <source>The packaged app manifest declares no application for the executable '{0}', so it describes a different application and activating it would target the wrong Application User Model ID. Declared application executables: {1}.</source>
+        <target state="new">The packaged app manifest declares no application for the executable '{0}', so it describes a different application and activating it would target the wrong Application User Model ID. Declared application executables: {1}.</target>
+        <note>Do not localize the technology name {Locked="Application User Model ID"}. {0} is an executable path. {1} is a comma-separated list of executable paths.</note>
+      </trans-unit>
       <trans-unit id="InvalidAppxManifestMissingIdentity">
         <source>The packaged app manifest does not declare a valid &lt;Identity Name="..." Publisher="..." /&gt; element.</source>
         <target state="translated">Paketlenmiş uygulama bildirimi geçerli bir &lt;Identity Name="..." Publisher="..." /&gt; öğesi belirtmiyor.</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDescription">
-        <source>Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there, and — in the Windows build — registers a packaged, full-trust MSIX desktop test host and activates it by Application User Model ID. True UWP/AppContainer hosts are not supported. See https://github.com/microsoft/testfx/issues/9933.</source>
-        <target state="translated">Paketlenmemiş (gevşek düzenli) bir Windows test konağını (örneğin, paketlenmemiş WinUI) yalıtılmış bir dizine dağıtır ve oradan başlatır ve — Windows derlemesinde — paketlenmiş, tam güvenilir bir MSIX masaüstü test konağını kaydeder ve onu Uygulama Kullanıcı Modeli Kimliği ile etkinleştirir. Gerçek UWP/AppContainer konakları desteklenmez. https://github.com/microsoft/testfx/issues/9933 bağlantısına bakın.</target>
-        <note />
+        <source>Registers a packaged, full-trust MSIX desktop test host and activates it by Application User Model ID (Windows build), and — when opted in through TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=always — deploys a non-packaged (loose-layout) Windows test host to an isolated directory and launches it from there. Enabled only for a packaged layout by default, so an unpackaged app is left on the default launch path. True UWP/AppContainer hosts are not supported. See https://github.com/microsoft/testfx/issues/9933.</source>
+        <target state="new">Registers a packaged, full-trust MSIX desktop test host and activates it by Application User Model ID (Windows build), and — when opted in through TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=always — deploys a non-packaged (loose-layout) Windows test host to an isolated directory and launches it from there. Enabled only for a packaged layout by default, so an unpackaged app is left on the default launch path. True UWP/AppContainer hosts are not supported. See https://github.com/microsoft/testfx/issues/9933.</target>
+        <note>Do not localize the environment variable name or its value {Locked="TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER"}{Locked="always"}, nor the technology names {Locked="MSIX"}{Locked="Application User Model ID"}{Locked="Windows"}{Locked="UWP"}{Locked="AppContainer"}.</note>
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDisplayName">
         <source>Packaged app test host launcher</source>

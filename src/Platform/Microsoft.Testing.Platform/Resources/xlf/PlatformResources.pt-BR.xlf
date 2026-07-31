@@ -259,12 +259,12 @@
       </trans-unit>
       <trans-unit id="CompositeTestExecutionFilterCannotContainNull">
         <source>A composite test execution filter cannot contain a null child filter.</source>
-        <target state="new">A composite test execution filter cannot contain a null child filter.</target>
+        <target state="translated">Um filtro de execução de teste composto não pode conter um filtro filho nulo.</target>
         <note />
       </trans-unit>
       <trans-unit id="CompositeTestExecutionFilterRequiresTwoFilters">
         <source>A composite test execution filter requires at least two child filters.</source>
-        <target state="new">A composite test execution filter requires at least two child filters.</target>
+        <target state="translated">Um filtro de execução de teste composto requer pelo menos dois filtros filho.</target>
         <note />
       </trans-unit>
       <trans-unit id="ConfigurationFileNotFound">
@@ -1047,7 +1047,7 @@ Leia mais sobre a telemetria da Plataforma de Testes da Microsoft: https://aka.m
       </trans-unit>
       <trans-unit id="TestExecutionFilterProviderNotSupportedForServer">
         <source>Test execution filter provider '{0}' returned filter type '{1}' for a JSON-RPC server request. Provider constraints are not applied to server requests; return null when TestExecutionFilterContext.Origin is Server.</source>
-        <target state="new">Test execution filter provider '{0}' returned filter type '{1}' for a JSON-RPC server request. Provider constraints are not applied to server requests; return null when TestExecutionFilterContext.Origin is Server.</target>
+        <target state="translated">O provedor de filtro de execução de teste "{0}" retornou o tipo de filtro "{1}" para uma solicitação de servidor JSON-RPC. Restrições de provedor não são aplicadas a solicitações de servidor; retornará null quando TestExecutionFilterContext.Origin for Server.</target>
         <note>{0} is the provider UID. {1} is the filter type. {Locked="JSON-RPC"}{Locked="null"}{Locked="TestExecutionFilterContext.Origin"}{Locked="Server"}</note>
       </trans-unit>
       <trans-unit id="TestFrameworkProxyApiShouldNotBeCalled">
@@ -1149,22 +1149,22 @@ Leia mais sobre a telemetria da Plataforma de Testes da Microsoft: https://aka.m
       </trans-unit>
       <trans-unit id="UnsupportedProviderTestExecutionFilter">
         <source>Test execution filter provider '{0}' returned unsupported filter type '{1}'. Providers can return only NopFilter, TestNodeUidListFilter, TreeNodeFilter, or an And CompositeTestExecutionFilter.</source>
-        <target state="new">Test execution filter provider '{0}' returned unsupported filter type '{1}'. Providers can return only NopFilter, TestNodeUidListFilter, TreeNodeFilter, or an And CompositeTestExecutionFilter.</target>
+        <target state="translated">O provedor de filtro de execução de teste "{0}" retornou o tipo de filtro sem suporte "{1}". Os provedores podem retornar apenas NopFilter, TestNodeUidListFilter, TreeNodeFilter ou CompositeTestExecutionFilter And.</target>
         <note>{0} is the provider UID. {1} is the unsupported filter type. {Locked="NopFilter"}{Locked="TestNodeUidListFilter"}{Locked="TreeNodeFilter"}{Locked="And"}{Locked="CompositeTestExecutionFilter"}</note>
       </trans-unit>
       <trans-unit id="UnsupportedRequestTestExecutionFilter">
         <source>The request contains unsupported test execution filter type '{0}'.</source>
-        <target state="new">The request contains unsupported test execution filter type '{0}'.</target>
+        <target state="translated">A solicitação contém o tipo de filtro de execução de teste sem suporte "{0}".</target>
         <note>{0} is the unsupported filter type.</note>
       </trans-unit>
       <trans-unit id="UnsupportedTestExecutionFilterOperator">
         <source>Only the And test execution filter operator is supported.</source>
-        <target state="new">Only the And test execution filter operator is supported.</target>
+        <target state="translated">Há suporte apenas para o operador And do filtro de execução de teste.</target>
         <note>{Locked="And"}</note>
       </trans-unit>
       <trans-unit id="UnsupportedTestExecutionFilterOperatorValue">
         <source>Test execution filter operator '{0}' is not supported. Only And is supported.</source>
-        <target state="new">Test execution filter operator '{0}' is not supported. Only And is supported.</target>
+        <target state="translated">Não há suporte para o operador de filtro de execução de teste "{0}". Há suporte apenas para And.</target>
         <note>{0} is the unsupported operator value. {Locked="And"}</note>
       </trans-unit>
       <trans-unit id="WaitDebuggerAttachNotSupportedInBrowserErrorMessage">

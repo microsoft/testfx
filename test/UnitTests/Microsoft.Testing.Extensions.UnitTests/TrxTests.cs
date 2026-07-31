@@ -805,6 +805,28 @@ public class TrxTests
         Assert.Contains("Unable to copy attachment", warningText);
         Assert.Contains("badFile", warningText);
         Assert.Contains("UnauthorizedAccessException", warningText);
+
+        // The warning must also be reachable by the caller so it can be surfaced on the output device.
+        // Without that, a dropped attachment only shows up in the TRX nobody reads until much later.
+        Assert.ContainsSingle(trxReportEngine.AttachmentWarnings);
+        Assert.Contains("badFile", trxReportEngine.AttachmentWarnings[0]);
+    }
+
+    [TestMethod]
+    public async Task TrxReportEngine_GenerateReportAsync_WhenNoAttachmentFails_AttachmentWarningsIsEmpty()
+    {
+        // Arrange
+        using MemoryFileStream memoryStream = new();
+        var propertyBag = new PropertyBag(
+            new PassedTestNodeStateProperty(),
+            new FileArtifactProperty(new FileInfo("goodFile"), "TestMethod", "description"));
+        TrxReportEngine trxReportEngine = GenerateTrxReportEngine(memoryStream);
+
+        // Act
+        _ = await trxReportEngine.GenerateReportAsync([CreateTestNodeUpdate("test()", "TestMethod", propertyBag)]);
+
+        // Assert
+        Assert.IsEmpty(trxReportEngine.AttachmentWarnings);
     }
 
     [TestMethod]

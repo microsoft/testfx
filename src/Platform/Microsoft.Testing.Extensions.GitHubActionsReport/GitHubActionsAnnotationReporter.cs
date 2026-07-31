@@ -82,6 +82,14 @@ internal sealed class GitHubActionsAnnotationReporter :
                 return;
             }
 
+            // A test framework that retries in-process reports every attempt under the same test node uid. A
+            // superseded attempt is not the test's outcome, so annotating it would surface a GitHub error
+            // annotation for a [Retry] test that goes on to pass.
+            if (nodeUpdateMessage.TestNode.IsSupersededRetryAttempt())
+            {
+                return;
+            }
+
             // FirstOrDefault (not SingleOrDefault): a malformed node that somehow carries more than one state
             // property must degrade to "no annotation for this test" rather than throwing into the platform's
             // data-consumer dispatch.

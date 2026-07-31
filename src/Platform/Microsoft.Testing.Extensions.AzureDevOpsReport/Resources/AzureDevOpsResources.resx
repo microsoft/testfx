@@ -202,6 +202,10 @@
   <data name="AzureDevOpsLivePublishingRunAttachmentFailed" xml:space="preserve">
     <value>Azure DevOps live publishing failed to upload a test run attachment.</value>
   </data>
+  <data name="AzureDevOpsLivePublishingRunCreated" xml:space="preserve">
+    <value>Azure DevOps live publishing is streaming results to test run {0}, which you can follow while the tests are still running at {1}. The build's Tests tab lists the run once it completes.</value>
+    <comment>{0} is the Azure DevOps test run id. {1} is the URL of the test run.</comment>
+  </data>
   <data name="AzureDevOpsLivePublishingRunIdFileMismatch" xml:space="preserve">
     <value>Azure DevOps live publishing found an azdo-runid.&lt;buildId&gt;.json file for a different Azure DevOps project.</value>
     <comment>{Locked="azdo-runid.&lt;buildId&gt;.json"}</comment>
@@ -322,7 +326,7 @@
     <comment>{Locked="--publish-azdo-run-name"}{Locked="--publish-azdo-test-results"}</comment>
   </data>
   <data name="PublishAzdoTestResultsOptionDescription" xml:space="preserve">
-    <value>Publish test results live to the Azure DevOps Tests tab.</value>
+    <value>Publish test results to an Azure DevOps test run as tests complete. The run is listed in the build's Tests tab once the test session finishes.</value>
   </data>
   <data name="QuarantinedAnnotation" xml:space="preserve">
     <value>[quarantined]</value>

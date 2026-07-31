@@ -80,6 +80,7 @@ Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode.Liv
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode.None = 0 -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode.Result = 1 -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestRunCancellationToken.CancellationToken.get -> System.Threading.CancellationToken
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers.AttributeQueryHelper
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.SourceGeneratedReflectionDataProvider.Assembly.get -> System.Reflection.Assembly?
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.StandardErrorBuilder.get -> Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SynchronizedStringBuilder!
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.StandardOutputBuilder.get -> Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SynchronizedStringBuilder!
@@ -99,5 +100,11 @@ static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.Resour
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.ResourceLockInfo.Encode(Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.ResourceLockInfo! info) -> string!
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.TestDependencyInfo.Decode(string! encoded) -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.TestDependencyInfo!
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.TestDependencyInfo.Encode(Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.TestDependencyInfo! info) -> string!
+static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers.AttributeQueryHelper.GetAttributes<TAttribute>(System.Attribute![]! attributes) -> System.Collections.Generic.IEnumerable<TAttribute!>!
+static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers.AttributeQueryHelper.GetFirstAttributeOrDefault<TAttribute>(System.Attribute![]! attributes) -> TAttribute?
+static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers.AttributeQueryHelper.GetSingleAttributeOrDefault<TAttribute>(System.Attribute![]! attributes) -> TAttribute?
+static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers.AttributeQueryHelper.IsAttributeDefined<TAttribute>(System.Attribute![]! attributes) -> bool
+static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers.AttributeQueryHelper.PerformActionOnAttribute<TAttribute, TState>(System.Attribute![]! attributes, System.Action<TAttribute!, TState?>! action, TState? state) -> void
 static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.ConfigureLiveOutputWriter(System.IO.TextWriter! liveOutputWriter) -> void
 static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SetLiveOutputWriterForTesting(System.IO.TextWriter! liveOutputWriter) -> System.IDisposable!
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TypeCache.IsTestFilterProviderMarkerType(System.Type? attributeType) -> bool

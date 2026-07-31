@@ -59,7 +59,7 @@
       </trans-unit>
       <trans-unit id="UnsupportedTestExecutionFilter">
         <source>Test execution filter type '{0}' is not supported by '{1}'. Supported filter types are NopFilter, TestNodeUidListFilter, and an And CompositeTestExecutionFilter.</source>
-        <target state="new">Test execution filter type '{0}' is not supported by '{1}'. Supported filter types are NopFilter, TestNodeUidListFilter, and an And CompositeTestExecutionFilter.</target>
+        <target state="translated">'{1}' 不支援測試執行篩選條件類型 '{0}'。支援的篩選條件類型為 NopFilter、TestNodeUidListFilter，以及 And CompositeTestExecutionFilter。</target>
         <note>{0} is the unsupported filter type. {1} is the adapter name. {Locked="NopFilter"}{Locked="TestNodeUidListFilter"}{Locked="And"}{Locked="CompositeTestExecutionFilter"}</note>
       </trans-unit>
       <trans-unit id="VSTestBridgedTestFrameworkSessionAlreadyCreatedErrorMessage">

@@ -275,7 +275,7 @@ internal sealed partial class UnitTestRunner
                             cleanupResult.AssociatedUnitTestElement = lastRunnableUnitTest;
                         }
 
-                        result = [.. result, cleanupResult];
+                        result = [.. result, AlignAttemptNumber(cleanupResult, result)];
                     }
                 }
 
@@ -303,7 +303,7 @@ internal sealed partial class UnitTestRunner
                         assemblyCleanupResult.AssociatedUnitTestElement = _lastRunnableTestInWholeAssembly;
                     }
 
-                    result = [.. result, assemblyCleanupResult];
+                    result = [.. result, AlignAttemptNumber(assemblyCleanupResult, result)];
                 }
             }
 
@@ -357,6 +357,16 @@ internal sealed partial class UnitTestRunner
             throw ApplicationStateGuard.Unreachable();
         }
 
+        // An attempt that produced no result at all is an execution error, which the pipeline signals by an empty
+        // array (SendTestResultsAsync turns it into RecordEmptyResultAsync). Returning the earlier attempts here
+        // would hide that: the array would be non-empty, so the empty-result path would be skipped, every entry
+        // would then be filtered out as superseded, and AllPassed would vacuously return true - reporting a missing
+        // result as a passing test and unblocking its dependents. Preserve the empty-result contract instead.
+        if (retryAttempts[retryAttempts.Count - 1].Length == 0)
+        {
+            return [];
+        }
+
         int totalCount = firstAttempt.Length;
         foreach (TestResult[] attempt in retryAttempts)
         {
@@ -381,6 +391,30 @@ internal sealed partial class UnitTestRunner
                 combined.Add(result);
             }
         }
+    }
+
+    /// <summary>
+    /// Stamps a result produced outside the retry sequence (a class or assembly cleanup failure appended after the
+    /// test itself completed) with the attempt the test finished on.
+    /// </summary>
+    /// <remarks>
+    /// Cleanup results are reported under the same test node uid as the test, so a cleanup result left at the
+    /// default attempt 1 would look like an <em>earlier</em> attempt than a test that finished on attempt 2+. The
+    /// terminal's attempt ordering treats that as out-of-order arrival and throws, so the attempt number is carried
+    /// over here. The result is not marked superseded: it is part of the test's final outcome.
+    /// </remarks>
+    private static TestResult AlignAttemptNumber(TestResult result, TestResult[] precedingResults)
+    {
+        for (int i = precedingResults.Length - 1; i >= 0; i--)
+        {
+            if (!precedingResults[i].IsSupersededRetryAttempt)
+            {
+                result.RetryAttemptNumber = precedingResults[i].RetryAttemptNumber;
+                break;
+            }
+        }
+
+        return result;
     }
 
     /// <summary>

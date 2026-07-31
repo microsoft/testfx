@@ -50,7 +50,7 @@ Inline comments posted via `create_pull_request_review_comment` are bundled into
 4. **Performance Is an Architectural Concern** — Test frameworks run on every build. Allocation patterns, caching, reflection strategies, and collection type choices directly impact every developer's inner loop.
 5. **Cross-TFM Correctness Is Non-Negotiable** — Code targets `net462`, `netstandard2.0`, `net8.0`, and `net9.0`. All code paths must compile and behave correctly across all targets.
 6. **IPC Contract Stability** — The testing platform communicates over IPC (named pipes, JSON-RPC). Wire format changes must be backward-compatible with older clients and servers.
-7. **Localization Done Right** — User-facing strings go in `.resx` files. NEVER manually edit `*.xlf` files — the build generates them automatically.
+7. **Localization Done Right** — User-facing strings go in `.resx` files. NEVER manually edit `*.xlf` files — the build generates them automatically. `{Locked="…"}` markers match substrings, so they must be scoped precisely enough not to freeze unrelated words.
 8. **Tests Verify Tests** — As a test framework, test quality standards are higher than in consuming projects. Tests for MSTest itself use `TestFramework.ForTestingMSTest`; tests for MTP and analyzers use MSTest. Follow the test project's assertion conventions and `BannedSymbols.txt` policy for assertion libraries and styles.
 9. **Security at Every Boundary** — The platform loads and executes arbitrary user code via reflection. It must not crash, leak information, or allow path traversal regardless of what user tests do.
 10. **Explicit Over Implicit** — Test behavior should be predictable and traceable. Build output must not differ based on environment.
@@ -266,12 +266,26 @@ The test platform loads arbitrary user code — it must not crash regardless of 
 2. Never manually edit `*.xlf` files — build generates them.
 3. Use `nameof` for member references instead of string literals.
 4. Resource string formatting must use proper placeholders.
+5. `{Locked="…"}` comment markers match **substrings, not whole words**. A locked token that is also a substring of another word in the same message freezes that word too, so it can never be translated. Lock the token together with its surrounding punctuation (usually the quotes the message already uses) or use its longest unambiguous form.
+
+**Substring-collision example (real bug, [PR #10310](https://github.com/microsoft/testfx/pull/10310)):**
+
+```xml
+<!-- BAD: "const" also matches inside "constant", blocking its translation -->
+<value>… reference a shared constant (such as a 'WellKnownResources' member or your own 'const') …</value>
+<comment>{Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="const"}</comment>
+
+<!-- GOOD: quotes make the locked token match only the C# keyword -->
+<comment>{Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="'const'"}</comment>
+```
 
 **CHECK — Flag if:**
 - [ ] Hardcoded user-facing string instead of resource string
 - [ ] `*.xlf` file manually edited
 - [ ] String literal where `nameof` should be used
 - [ ] Resource string with incorrect/missing placeholders
+- [ ] `{Locked="X"}` where `X` also occurs as a substring of a translatable word in the same message (e.g. `const` inside `constant`, `class` inside `classes`, `int` inside `interface`) — require the quoted/longest form
+- [ ] `.resx` comment changed without the matching `*.xlf` `<note>` regeneration via `dotnet msbuild <project>.csproj /t:UpdateXlf`
 
 ---
 
@@ -557,7 +571,7 @@ Applies to changes in `eng/**/*.ps1`, `.github/scripts/**/*.ps1`, and any `*.ps1
 |---|------|-----------|-----------|
 | 1 | **Public API Shipping** | Declare in `PublicAPI.Unshipped.txt`. Run `eng/mark-shipped.ps1` to promote. Multi-TFM: `net8.0/`, `net9.0/`, `netstandard2.0/` subfolders. | `eng/mark-shipped.ps1` |
 | 2 | **No `init` on Public API** | New public API MUST NOT use `init` accessors. Existing MTP `init` accessors are grandfathered. | `.github/copilot-instructions.md` |
-| 3 | **Localization** | `.resx` for user-facing strings. Never edit `.xlf` — build generates them. | `src/*/Strings.resx` |
+| 3 | **Localization** | `.resx` for user-facing strings. Never edit `.xlf` — build generates them. `{Locked="…"}` is a substring match: quote or lengthen the token so it doesn't also lock a translatable word (`'const'`, not `const`). | `src/*/Strings.resx` |
 | 4 | **Test Architecture** | MSTest unit tests use `TestFramework.ForTestingMSTest`. MTP/analyzer tests use MSTest. Follow test project's assertion library policy (check `BannedSymbols.txt`). | `test/Utilities/TestFramework.ForTestingMSTest` |
 | 5 | **IPC Protocol** | Named pipes, JSON-RPC between test platform and runners. Wire format backward-compatible. | `src/Platform/` |
 | 6 | **Analyzer IDs** | `MSTEST0001`+ for MSTest analyzers. Unique across codebase. | `src/Analyzers/` |

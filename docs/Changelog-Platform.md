@@ -14,11 +14,23 @@ See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4
 * Re-print errored assemblies in dotnet test end-of-run recap by @Evangelink in [#9545](https://github.com/microsoft/testfx/pull/9545)
 * Add server-initiated session cancellation to the dotnet test IPC protocol by @Evangelink in [#9549](https://github.com/microsoft/testfx/pull/9549)
 * Add `RetryAttemptProperty`, a `TestNode` property that lets a test framework report several in-process attempts of the same test under one test node uid (`AttemptNumber` plus `IsSuperseded`). The terminal reporter annotates the attempts (`failed (try 1) MyTest`) and counts the test once, the process exit code and the TRX / JUnit / Azure DevOps reports ignore superseded attempts, and the CTRF report collapses them into `retries` / `retryAttempts[]` / `flaky` in [#10292](https://github.com/microsoft/testfx/issues/10292)
+* Report the Azure DevOps test run URL when `--publish-azdo-test-results` creates the run, so results can be followed while the tests are still running, and clarify that the build's Tests tab only lists the run once it completes in [#10191](https://github.com/microsoft/testfx/issues/10191)
+
+### Changed
+
+* Send `pipelineReference` (stage, phase and job, with their attempt numbers) and `startedDate` when `--publish-azdo-test-results` creates an Azure DevOps test run, so the run is attributed to the stage and job that produced it in multi-stage pipelines instead of only to the build
 
 ### Fixed
 
+* Fix `--report-trx` crashing with `PlatformNotSupportedException` on single-threaded WebAssembly runtimes (`browser-wasm` / `wasi-wasm`): the TRX streaming store now serializes records inline instead of starting a dedicated writer thread and draining a `BlockingCollection<T>` in [#2196](https://github.com/microsoft/testfx/issues/2196)
+* Keep the Azure DevOps and GitHub Actions slow-test reporters dormant on single-threaded WebAssembly runtimes instead of attempting to start a background scan loop that cannot run there. `ITask.RunLongRunning` throws `PlatformNotSupportedException` on `browser-wasm` / `wasi-wasm`; the reporter caught and logged it to the diagnostic log, then stayed marked active with no scan loop, so the failure was invisible outside `--diagnostic` in [#2196](https://github.com/microsoft/testfx/issues/2196)
+* Report test and session file artifacts through the simplified console output used by `browser-wasm` and `wasi-wasm`, including each artifact's display name and virtual file-system path, in [#10311](https://github.com/microsoft/testfx/issues/10311)
 * Fix `Microsoft.Testing.Extensions.AzureDevOpsReport` crashing with `ObjectDisposedException` during teardown, after results were already published, when the platform disposes the live test-results publisher more than once in [#10191](https://github.com/microsoft/testfx/issues/10191)
 * Report Azure DevOps live-publishing failures (missing configuration, test run creation, unpublished results, attachment uploads and run finalization) on the output device instead of only in the opt-in diagnostic log, so `--publish-azdo-test-results` no longer fails silently in [#10191](https://github.com/microsoft/testfx/issues/10191)
+* Fix `Microsoft.Testing.Extensions.AzureDevOpsReport` throwing `PlatformNotSupportedException` on `browser-wasm` (and `wasi-wasm`): the shared `HttpClient` now only opts into `HttpClientHandler.AutomaticDecompression` where the handler supports it, since `fetch` and `wasi:http` already decode `gzip`/`deflate` responses themselves in [#10313](https://github.com/microsoft/testfx/issues/10313)
+* Fix `--report-azdo` faulting the test run with `Could not find solution root, .git not found in ... or any parent directory.` when annotating a failing test from an application that does not run inside a git checkout (a published app, a container, or `browser-wasm`, whose virtual filesystem has no `.git`); the reporter now degrades to a message-only annotation, matching the GitHub Actions reporter in [#10313](https://github.com/microsoft/testfx/issues/10313)
+* Fix TRX attachments being silently dropped on .NET Framework when the destination path exceeds the Windows `MAX_PATH` limit. Both per-test `ResultFile` entries and session-level `CollectorDataEntries` attachments (crash dumps, hang dumps and other extension artifacts) could disappear from the report while the run still reported success in [#10312](https://github.com/microsoft/testfx/issues/10312)
+* Report attachments that could not be copied into the TRX results directory on the output device instead of only in the `RunInfos` section of the generated TRX in [#10312](https://github.com/microsoft/testfx/issues/10312)
 
 ## <a name="2.3.3" />[2.3.3] - 2026-07-28
 

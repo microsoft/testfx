@@ -125,6 +125,14 @@ internal static partial class TerminalResources
 
     internal static string @FailedWithErrors => GetResourceString("FailedWithErrors");
 
+    internal static string @FlakyAttempts => GetResourceString("FlakyAttempts");
+
+    internal static string @FlakyLowercase => GetResourceString("FlakyLowercase");
+
+    internal static string @FlakyTests => GetResourceString("FlakyTests");
+
+    internal static string @FlakyTransition => GetResourceString("FlakyTransition");
+
     internal static string @ForTest => GetResourceString("ForTest");
 
     internal static string @HandshakeFailuresHeader => GetResourceString("HandshakeFailuresHeader");
@@ -142,6 +150,8 @@ internal static partial class TerminalResources
     internal static string @PressCtrlCAgainToForceExit => GetResourceString("PressCtrlCAgainToForceExit");
 
     internal static string @Retried => GetResourceString("Retried");
+
+    internal static string @RetriedTestsAndRuns => GetResourceString("RetriedTestsAndRuns");
 
     internal static string @RunningTestsFrom => GetResourceString("RunningTestsFrom");
 
@@ -180,6 +190,10 @@ internal static partial class TerminalResources
     internal static string @TerminalProgressOptionInvalidArgument => GetResourceString("TerminalProgressOptionInvalidArgument");
 
     internal static string @TerminalProgressSlowTest => GetResourceString("TerminalProgressSlowTest");
+
+    internal static string @TerminalShowFlakyTestsOptionDescription => GetResourceString("TerminalShowFlakyTestsOptionDescription");
+
+    internal static string @TerminalShowFlakyTestsOptionInvalidArgument => GetResourceString("TerminalShowFlakyTestsOptionInvalidArgument");
 
     internal static string @TerminalShowOutputOptionInvalidArgument => GetResourceString("TerminalShowOutputOptionInvalidArgument");
 

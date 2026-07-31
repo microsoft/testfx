@@ -58,6 +58,16 @@ internal static class EnvironmentVariableConstants
     // Unhandled Exception
     public const string TESTINGPLATFORM_EXIT_PROCESS_ON_UNHANDLED_EXCEPTION = nameof(TESTINGPLATFORM_EXIT_PROCESS_ON_UNHANDLED_EXCEPTION);
 
+    // Correlates the processes that make up one logical test run, so report formats that can describe a run
+    // spanning several documents (CTRF 'runId') can tie those documents back together. The retry orchestrator
+    // sets it before launching its attempts, and any process tree started from there inherits it.
+    //
+    // NOTE: a multi-project 'dotnet test' does NOT set this. Each module is a separate root test application
+    // with its own execution id (see docs/mstest-runner-protocol/004-protocol-dotnet-test-pipe.md), so its
+    // modules are distinct execution trees. Correlating them — or correlating shards running on different
+    // machines — requires setting this variable explicitly before launching them.
+    public const string TESTINGPLATFORM_LOGICAL_RUN_ID = nameof(TESTINGPLATFORM_LOGICAL_RUN_ID);
+
     // Trx
     public const string TESTINGPLATFORM_TRX_TESTRUN_ID = nameof(TESTINGPLATFORM_TRX_TESTRUN_ID);
 }

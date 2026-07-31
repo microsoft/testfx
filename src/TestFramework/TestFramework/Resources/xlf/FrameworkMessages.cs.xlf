@@ -539,7 +539,7 @@ Skutečnost: {2}</target>
       </trans-unit>
       <trans-unit id="InvalidDependsOnTestMethodName">
         <source>The test method name of a [DependsOn] must be a non-empty, non-whitespace string.</source>
-        <target state="new">The test method name of a [DependsOn] must be a non-empty, non-whitespace string.</target>
+        <target state="translated">Název testovací metody atributu [DependsOn] musí být neprázdný řetězec, který neobsahuje pouze prázdné znaky.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidGitHubUrl">

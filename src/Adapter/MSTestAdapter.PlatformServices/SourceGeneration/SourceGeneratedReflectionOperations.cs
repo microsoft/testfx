@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration;
@@ -293,55 +294,19 @@ internal sealed class SourceGeneratedReflectionOperations : IReflectionOperation
 
     public bool IsAttributeDefined<TAttribute>(ICustomAttributeProvider attributeProvider)
         where TAttribute : Attribute
-    {
-        foreach (Attribute attr in GetCustomAttributesCached(attributeProvider))
-        {
-            if (attr is TAttribute)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
+        => AttributeQueryHelper.IsAttributeDefined<TAttribute>(GetCustomAttributesCached(attributeProvider));
 
     public TAttribute? GetFirstAttributeOrDefault<TAttribute>(ICustomAttributeProvider attributeProvider)
         where TAttribute : Attribute
-    {
-        foreach (Attribute attr in GetCustomAttributesCached(attributeProvider))
-        {
-            if (attr is TAttribute match)
-            {
-                return match;
-            }
-        }
-
-        return null;
-    }
+        => AttributeQueryHelper.GetFirstAttributeOrDefault<TAttribute>(GetCustomAttributesCached(attributeProvider));
 
     public TAttribute? GetSingleAttributeOrDefault<TAttribute>(ICustomAttributeProvider attributeProvider)
         where TAttribute : Attribute
-    {
-        TAttribute? first = null;
-        foreach (Attribute attr in GetCustomAttributesCached(attributeProvider))
-        {
-            if (attr is TAttribute match)
-            {
-                if (first is not null)
-                {
-                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Found multiple attributes of type '{0}' when only one was expected.", typeof(TAttribute)));
-                }
-
-                first = match;
-            }
-        }
-
-        return first;
-    }
+        => AttributeQueryHelper.GetSingleAttributeOrDefault<TAttribute>(GetCustomAttributesCached(attributeProvider));
 
     public IEnumerable<TAttributeType> GetAttributes<TAttributeType>(ICustomAttributeProvider attributeProvider)
         where TAttributeType : Attribute
-        => GetCustomAttributesCached(attributeProvider).OfType<TAttributeType>();
+        => AttributeQueryHelper.GetAttributes<TAttributeType>(GetCustomAttributesCached(attributeProvider));
 
     public Attribute[] GetCustomAttributesCached(ICustomAttributeProvider attributeProvider)
         => attributeProvider is null

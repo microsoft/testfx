@@ -82,6 +82,10 @@ Options:
         The directory where the test results are going to be placed.
         If the specified directory doesn't exist, it's created.
         The default is TestResults in the directory that contains the test application.
+    --show-flaky-tests
+        Control whether tests that failed at least once but eventually passed after a retry are listed in the run summary.
+        Valid values are 'on' (the default, also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+        Passing the option without a value turns it on.
     --show-slowest-tests
         Show the specified number of slowest tests (by reported execution duration) in the run summary. Expects a positive integer.
     --show-stderr

@@ -8,3 +8,5 @@ Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.RetryAttemptNumber.get -
 Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.RetryAttemptNumber.set -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.IsSupersededRetryAttempt.get -> bool
 Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.IsSupersededRetryAttempt.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.ITestFilterProviderAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.ITestFilterProviderAttribute.FilterType.get -> System.Type!

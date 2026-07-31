@@ -117,6 +117,11 @@
         <target state="translated">Azure DevOps 即時發佈無法上傳測試執行附件。</target>
         <note />
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingRunCreated">
+        <source>Azure DevOps live publishing is streaming results to test run {0}, which you can follow while the tests are still running at {1}. The build's Tests tab lists the run once it completes.</source>
+        <target state="new">Azure DevOps live publishing is streaming results to test run {0}, which you can follow while the tests are still running at {1}. The build's Tests tab lists the run once it completes.</target>
+        <note>{0} is the Azure DevOps test run id. {1} is the URL of the test run.</note>
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingRunIdFileMismatch">
         <source>Azure DevOps live publishing found an azdo-runid.&lt;buildId&gt;.json file for a different Azure DevOps project.</source>
         <target state="translated">Azure DevOps 即時發佈找到不同 Azure DevOps 專案的 azdo-runid.&lt;buildId&gt;.json 檔案。</target>
@@ -308,8 +313,8 @@
         <note>{Locked="--publish-azdo-run-name"}{Locked="--publish-azdo-test-results"}</note>
       </trans-unit>
       <trans-unit id="PublishAzdoTestResultsOptionDescription">
-        <source>Publish test results live to the Azure DevOps Tests tab.</source>
-        <target state="translated">將測試結果即時發佈至 Azure DevOps 測試索引標籤。</target>
+        <source>Publish test results to an Azure DevOps test run as tests complete. The run is listed in the build's Tests tab once the test session finishes.</source>
+        <target state="new">Publish test results to an Azure DevOps test run as tests complete. The run is listed in the build's Tests tab once the test session finishes.</target>
         <note />
       </trans-unit>
       <trans-unit id="QuarantineFileLoadFailedWarning">

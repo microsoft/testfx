@@ -237,6 +237,26 @@
         <target state="translated">a échoué avec {0} erreur(s)</target>
         <note>{0} is the number of errors in an assembly summary line</note>
       </trans-unit>
+      <trans-unit id="FlakyAttempts">
+        <source>{0} attempts</source>
+        <target state="new">{0} attempts</target>
+        <note>{0} is the total number of times the test ran (first run plus retries), shown next to a flaky test's name.</note>
+      </trans-unit>
+      <trans-unit id="FlakyLowercase">
+        <source>flaky: {0} (passed after retry)</source>
+        <target state="new">flaky: {0} (passed after retry)</target>
+        <note>{0} is the number of tests that failed at least once but eventually passed. Rendered in the run summary after the 'skipped' line. The parenthetical is important: it states that these tests are already included in the 'succeeded' count rather than forming a fourth outcome category alongside failed/succeeded/skipped.</note>
+      </trans-unit>
+      <trans-unit id="FlakyTests">
+        <source>Flaky tests:</source>
+        <target state="new">Flaky tests:</target>
+        <note>Header of the run summary section that lists tests which failed at least once but eventually passed after a retry.</note>
+      </trans-unit>
+      <trans-unit id="FlakyTransition">
+        <source>failed -&gt; passed</source>
+        <target state="new">failed -&gt; passed</target>
+        <note>Describes the outcome change of a flaky test, shown next to its name in the 'Flaky tests:' section. The arrow reads left (first outcome) to right (final outcome).</note>
+      </trans-unit>
       <trans-unit id="ForTest">
         <source>For test</source>
         <target state="translated">Pour le test</target>
@@ -290,7 +310,12 @@
       <trans-unit id="Retried">
         <source>retried</source>
         <target state="translated">réessayé</target>
-        <note>Suffix appended to the total test count in the run summary to indicate how many failed tests were retried, e.g. 'total: 5 (+2 retried)'.</note>
+        <note>Label of the run summary line counting distinct tests that ran more than once because of a retry, e.g. 'retried: 2 tests, 4 extra runs'. Keep parallel to the 'failed'/'succeeded'/'skipped' labels.</note>
+      </trans-unit>
+      <trans-unit id="RetriedTestsAndRuns">
+        <source>{0} test(s), {1} extra run(s)</source>
+        <target state="new">{0} test(s), {1} extra run(s)</target>
+        <note>{0} is the number of distinct tests that were retried. {1} is the number of additional executions those retries caused. Rendered after the 'retried:' label. The '(s)' suffix follows the existing convention used elsewhere in the platform for counts that may be one.</note>
       </trans-unit>
       <trans-unit id="RunningTestsFrom">
         <source>Running tests from</source>
@@ -400,6 +425,20 @@ Cette option prévaut sur l’indicateur --no-progress déconseillé.</target>
         <source>[slow] still running after {0}: {1}</source>
         <target state="translated">[slow] toujours en cours après {0} : {1}</target>
         <note>Line emitted on non-cursor terminals when a single test runs longer than the slow-test threshold. {0} is the elapsed duration, {1} is the test description. {Locked="[slow]"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowFlakyTestsOptionDescription">
+        <source>Control whether tests that failed at least once but eventually passed after a retry are listed in the run summary.
+Valid values are 'on' (the default, also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+Passing the option without a value turns it on.</source>
+        <target state="new">Control whether tests that failed at least once but eventually passed after a retry are listed in the run summary.
+Valid values are 'on' (the default, also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+Passing the option without a value turns it on.</target>
+        <note>Do not localize the values {Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}.</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowFlakyTestsOptionInvalidArgument">
+        <source>--show-flaky-tests expects no parameter, or a single 'on' or 'off' parameter.</source>
+        <target state="new">--show-flaky-tests expects no parameter, or a single 'on' or 'off' parameter.</target>
+        <note>{Locked="--show-flaky-tests"}{Locked="on"}{Locked="off"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowOutputOptionInvalidArgument">
         <source>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</source>

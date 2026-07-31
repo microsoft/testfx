@@ -130,6 +130,8 @@ internal sealed class MSTestTelemetryDataCollector
                 TimeoutAttribute => nameof(TimeoutAttribute),
                 IgnoreAttribute => nameof(IgnoreAttribute),
                 DoNotParallelizeAttribute => nameof(DoNotParallelizeAttribute),
+                ResourceLockAttribute => nameof(ResourceLockAttribute),
+                DependsOnAttribute => nameof(DependsOnAttribute),
                 RetryBaseAttribute => nameof(RetryBaseAttribute),
                 ConditionBaseAttribute => nameof(ConditionBaseAttribute),
                 TestCategoryAttribute => nameof(TestCategoryAttribute),
@@ -169,6 +171,8 @@ internal sealed class MSTestTelemetryDataCollector
                 TestClassAttribute => nameof(TestClassAttribute),
                 ParallelizeAttribute => nameof(ParallelizeAttribute),
                 DoNotParallelizeAttribute => nameof(DoNotParallelizeAttribute),
+                ResourceLockAttribute => nameof(ResourceLockAttribute),
+                DependsOnAttribute => nameof(DependsOnAttribute),
                 _ => null,
             };
 

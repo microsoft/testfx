@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER = "TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER" -> string!
 const Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId.Kind = 7 -> ushort
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_PIPE_DIRECTORY = "TESTINGPLATFORM_PIPE_DIRECTORY" -> string!
@@ -23,3 +23,46 @@ Microsoft.Testing.Platform.IPC.NamedPipeConnectionBase.ReadNextMessageAsync(Syst
 Microsoft.Testing.Platform.IPC.NamedPipeConnectionBase.WriteMessageAsync(System.IO.Stream! stream, Microsoft.Testing.Platform.IPC.INamedPipeSerializer! serializer, object! message, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 *REMOVED*Microsoft.Testing.Platform.IPC.NamedPipeConnectionBase.ReadNextMessageAsync(System.IO.Pipes.PipeStream! stream, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<object?>!
 *REMOVED*Microsoft.Testing.Platform.IPC.NamedPipeConnectionBase.WriteMessageAsync(System.IO.Pipes.PipeStream! stream, Microsoft.Testing.Platform.IPC.INamedPipeSerializer! serializer, object! message, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.CommandLine.FlakyTestsReportingOptions
+const Microsoft.Testing.Platform.CommandLine.FlakyTestsReportingOptions.ShowFlakyTestsOptionName = "show-flaky-tests" -> string!
+static Microsoft.Testing.Platform.CommandLine.FlakyTestsReportingOptions.IsEnabled(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> bool
+Microsoft.Testing.Extensions.Policy.RetryFailedTestsPipeServer.FailedTests.get -> System.Collections.Generic.Dictionary<string!, string!>!
+Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.FailedTestRequest.FailedTestRequest(string! uid, string! displayName) -> void
+Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.FailedTestRequest.DisplayName.get -> string!
+*REMOVED*Microsoft.Testing.Extensions.Policy.RetryFailedTestsPipeServer.FailedUID.get -> System.Collections.Generic.List<string!>?
+*REMOVED*Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.FailedTestRequest.FailedTestRequest(string! uid) -> void
+Microsoft.Testing.Extensions.Policy.RetryRunSummary.RetriedTests.get -> int
+Microsoft.Testing.Extensions.Policy.RetryRunSummary.RetriedTests.init -> void
+Microsoft.Testing.Extensions.Policy.RetryRunSummary.FlakyTests.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Microsoft.Testing.Extensions.Policy.RetryRunSummary.FlakyTests.init -> void
+Microsoft.Testing.Extensions.Policy.RetryRunSummary.ShowFlakyTests.get -> bool
+Microsoft.Testing.Extensions.Policy.RetryRunSummary.ShowFlakyTests.init -> void
+Microsoft.Testing.Extensions.Policy.RetryRunSummary.StoppedEarly.get -> bool
+Microsoft.Testing.Extensions.Policy.RetryRunSummary.StoppedEarly.init -> void
+*REMOVED*Microsoft.Testing.Extensions.Policy.RetryRunSummary.FirstAttemptFailedTests.get -> int
+*REMOVED*Microsoft.Testing.Extensions.Policy.RetryRunSummary.FirstAttemptFailedTests.init -> void
+Microsoft.Testing.Extensions.Policy.RetryFailedTestsPipeServer.SkippedTests.get -> int
+Microsoft.Testing.Extensions.Policy.RetryRunSummary.SuiteSkippedTests.get -> int
+Microsoft.Testing.Extensions.Policy.RetryRunSummary.SuiteSkippedTests.init -> void
+Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TestRunCountsRequest
+Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TestRunCountsRequest.PassedTests.get -> int
+Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TestRunCountsRequest.FailedTests.get -> int
+Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TestRunCountsRequest.SkippedTests.get -> int
+Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TestRunCountsRequest.ExecutedTests.get -> int
+Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TestRunCountsRequest.TotalTests.get -> int
+Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TestRunCountsRequestSerializer
+Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TestRunCountsRequestSerializer.TestRunCountsRequestSerializer() -> void
+override Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TestRunCountsRequestSerializer.Id.get -> int
+*REMOVED*Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TotalTestsRunRequest
+*REMOVED*Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TotalTestsRunRequest.TotalTests.get -> int
+*REMOVED*Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TotalTestsRunRequest.TotalTestsRunRequest(int totalTests) -> void
+*REMOVED*Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TotalTestsRunRequestSerializer
+*REMOVED*Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TotalTestsRunRequestSerializer.TotalTestsRunRequestSerializer() -> void
+*REMOVED*override Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TotalTestsRunRequestSerializer.Id.get -> int
+Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TestRunCountsRequest.RecoveredTestUids.get -> string![]!
+Microsoft.Testing.Extensions.Policy.RetryFailedTestsPipeServer.FailedTestResults.get -> int
+Microsoft.Testing.Extensions.Policy.RetryFailedTestsPipeServer.RecoveredTests.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Microsoft.Testing.Extensions.Policy.RetryFailedTestsPipeServer.CountsReported.get -> bool
+Microsoft.Testing.Extensions.Policy.RetryRunSummary.SuiteCountsKnown.get -> bool
+Microsoft.Testing.Extensions.Policy.RetryRunSummary.SuiteCountsKnown.init -> void
+Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers.TestRunCountsRequest.TestRunCountsRequest(int passedTests, int failedTests, int skippedTests, string![]! recoveredTestUids) -> void

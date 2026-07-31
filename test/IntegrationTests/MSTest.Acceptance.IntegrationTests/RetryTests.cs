@@ -41,8 +41,14 @@ public sealed class RetryTests : AcceptanceTestBase<RetryTests.TestAssetFixture>
         testHostResult.AssertOutputDoesNotContain("(try 1) TestMethod1");
 
         // 9 superseded failed attempts: 1 for TestMethod2, 2 for TestMethod3, 3 for TestMethod4 and 3 for
-        // TestMethod5 (whose 4th and final attempt is the one counted as failed).
-        testHostResult.AssertOutputContainsSummary(failed: 1, passed: 4, skipped: 0, retried: 9);
+        // TestMethod5 (whose 4th and final attempt is the one counted as failed). Rendered by the shared retry
+        // summary added in #10329, which in-process attempts now feed into as well.
+        testHostResult.AssertOutputContainsSummary(failed: 1, passed: 4, skipped: 0);
+        testHostResult.AssertOutputContains("retried:");
+
+        // TestMethod2/3/4 failed at least once and eventually passed, so they are flaky. TestMethod5 never
+        // passed, so it is a plain failure rather than flaky.
+        testHostResult.AssertOutputContains("flaky: 3");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
@@ -184,8 +190,10 @@ public sealed class ClassLevelRetryTests : AcceptanceTestBase<ClassLevelRetryTes
 
             testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
 
-            // 4 superseded attempts: 3 for ClassLevelOnly (4 runs) and 1 for MethodLevelOverride (2 runs).
-            testHostResult.AssertOutputContainsSummary(failed: 2, passed: 1, skipped: 0, retried: 4);
+            // ClassLevelOnly and MethodLevelOverride always fail, so nothing is flaky here - but both were
+            // retried, so the retry summary still reports the extra executions.
+            testHostResult.AssertOutputContainsSummary(failed: 2, passed: 1, skipped: 0);
+            testHostResult.AssertOutputContains("retried:");
 
             string markerFile = Path.Combine(markerDirectory, TestAssetFixture.MarkerFileName);
             Assert.IsTrue(

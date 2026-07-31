@@ -35,28 +35,7 @@ internal class ReflectHelper
     /// <returns>True if the attribute of the specified type is defined.</returns>
     public virtual /* for testing */ bool IsAttributeDefined<TAttribute>(ICustomAttributeProvider attributeProvider)
         where TAttribute : Attribute
-    {
-        if (attributeProvider is null)
-        {
-            throw new ArgumentNullException(nameof(attributeProvider));
-        }
-
-        // Get all attributes on the member.
-        Attribute[] attributes = GetCustomAttributesCached(attributeProvider);
-
-        // Try to find the attribute that is derived from baseAttrType.
-        foreach (Attribute attribute in attributes)
-        {
-            DebugEx.Assert(attribute != null, $"{nameof(ReflectHelper)}.{nameof(GetCustomAttributesCached)}: internal error: wrong value in the attributes dictionary.");
-
-            if (attribute is TAttribute)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
+        => AttributeQueryHelper.IsAttributeDefined<TAttribute>(GetCustomAttributesCached(attributeProvider));
 
 #if NETFRAMEWORK
     /// <summary>
@@ -79,25 +58,7 @@ internal class ReflectHelper
     /// <returns>The attribute that is found or null.</returns>
     public virtual /* for tests, for moq */ TAttribute? GetFirstAttributeOrDefault<TAttribute>(ICustomAttributeProvider attributeProvider)
         where TAttribute : Attribute
-    {
-        // If the attribute is not sealed, then it can allow multiple, even if AllowMultiple is false.
-        // This happens when a derived type is also applied along with the base type.
-        // Or, if the derived type modifies the attribute usage to allow multiple.
-        // So we want to ensure this is only called for sealed attributes.
-        DebugEx.Assert(typeof(TAttribute).IsSealed, $"Expected '{typeof(TAttribute)}' to be sealed, but was not.");
-
-        Attribute[] cachedAttributes = GetCustomAttributesCached(attributeProvider);
-
-        foreach (Attribute cachedAttribute in cachedAttributes)
-        {
-            if (cachedAttribute is TAttribute cachedAttributeAsTAttribute)
-            {
-                return cachedAttributeAsTAttribute;
-            }
-        }
-
-        return null;
-    }
+        => AttributeQueryHelper.GetFirstAttributeOrDefault<TAttribute>(GetCustomAttributesCached(attributeProvider));
 
     /// <summary>
     /// Gets first attribute that matches the type or is derived from it.
@@ -110,25 +71,7 @@ internal class ReflectHelper
     /// <exception cref="InvalidOperationException">Throws when multiple attributes are found (the attribute must allow multiple).</exception>
     public virtual /* for tests, for moq */ TAttribute? GetSingleAttributeOrDefault<TAttribute>(ICustomAttributeProvider attributeProvider)
         where TAttribute : Attribute
-    {
-        Attribute[] cachedAttributes = GetCustomAttributesCached(attributeProvider);
-
-        TAttribute? foundAttribute = null;
-        foreach (Attribute cachedAttribute in cachedAttributes)
-        {
-            if (cachedAttribute is TAttribute cachedAttributeAsTAttribute)
-            {
-                if (foundAttribute is not null)
-                {
-                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, Resource.DuplicateAttributeError, typeof(TAttribute)));
-                }
-
-                foundAttribute = cachedAttributeAsTAttribute;
-            }
-        }
-
-        return foundAttribute;
-    }
+        => AttributeQueryHelper.GetSingleAttributeOrDefault<TAttribute>(GetCustomAttributesCached(attributeProvider));
 
     /// <summary>
     /// Match return type of method.
@@ -209,20 +152,7 @@ internal class ReflectHelper
     /// <returns>An instance of the attribute.</returns>
     internal virtual /* for tests, for moq */ IEnumerable<TAttributeType> GetAttributes<TAttributeType>(ICustomAttributeProvider attributeProvider)
         where TAttributeType : Attribute
-    {
-        Attribute[] attributes = GetCustomAttributesCached(attributeProvider);
-
-        // Try to find the attribute that is derived from baseAttrType.
-        foreach (Attribute attribute in attributes)
-        {
-            DebugEx.Assert(attribute != null, "ReflectHelper.DefinesAttributeDerivedFrom: internal error: wrong value in the attributes dictionary.");
-
-            if (attribute is TAttributeType attributeAsAttributeType)
-            {
-                yield return attributeAsAttributeType;
-            }
-        }
-    }
+        => AttributeQueryHelper.GetAttributes<TAttributeType>(GetCustomAttributesCached(attributeProvider));
 
     /// <summary>
     /// Get attribute defined on a method which is of given type of subtype of given type.
@@ -234,18 +164,7 @@ internal class ReflectHelper
     /// <param name="state">The state to pass to action.</param>
     internal static void PerformActionOnAttribute<TAttributeType, TState>(ICustomAttributeProvider attributeProvider, Action<TAttributeType, TState?> action, TState? state)
         where TAttributeType : Attribute
-    {
-        Attribute[] attributes = GetCustomAttributesCached(attributeProvider);
-        foreach (Attribute attribute in attributes)
-        {
-            DebugEx.Assert(attribute != null, "ReflectHelper.DefinesAttributeDerivedFrom: internal error: wrong value in the attributes dictionary.");
-
-            if (attribute is TAttributeType attributeAsAttributeType)
-            {
-                action(attributeAsAttributeType, state);
-            }
-        }
-    }
+        => AttributeQueryHelper.PerformActionOnAttribute(GetCustomAttributesCached(attributeProvider), action, state);
 
     /// <summary>
     /// Gets and caches the attributes for the given type, or method.
