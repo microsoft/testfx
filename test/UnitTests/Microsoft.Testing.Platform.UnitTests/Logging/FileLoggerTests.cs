@@ -29,6 +29,14 @@ public sealed class FileLoggerTests : IDisposable
     // The sync-flush path renders only the time part, with the "HH:mm:ss.fff" format.
     private const string SyncFlushDefaultClockTimestamp = "00:00:00.000";
 
+    // Mirrors the private FileLogger.MaxLogFileCreationAttempts. If the production constant changes, the assertions
+    // below fail loudly, which is the intended way to notice that the retry budget was deliberately retuned.
+    private const int MaxLogFileCreationAttempts = 10;
+
+    // Retry candidates embed the process id so concurrent processes cannot walk the same sequence of candidates.
+    // The tests run in-process, so the very same value is expected in the generated names.
+    private static readonly int CurrentProcessId = new SystemEnvironment().ProcessId;
+
     private static readonly Func<string, Exception?, string> Formatter =
         (state, exception) =>
             string.Format(CultureInfo.InvariantCulture, "{0}{1}", state, exception is not null ? $" -- {exception}" : string.Empty);
@@ -89,17 +97,11 @@ public sealed class FileLoggerTests : IDisposable
     [TestMethod]
     public void FileLogger_NullFileSyncFlush_FileStreamCreated()
     {
-        // First return is to compute the expected file name. It's ok that first time is greater
-        // than all following ones.
-        _mockClock.SetupSequence(x => x.UtcNow)
-            .Returns(new DateTimeOffset(new(2023, 5, 29, 3, 42, 17)))
-            .Returns(new DateTimeOffset(new(2023, 5, 29, 3, 42, 13)))
-            .Returns(new DateTimeOffset(new(2023, 5, 29, 3, 42, 13)))
-            .Returns(new DateTimeOffset(new(2023, 5, 29, 3, 42, 14)))
-            .Returns(new DateTimeOffset(new(2023, 5, 29, 3, 42, 16)))
-            .Returns(new DateTimeOffset(new(2023, 5, 29, 3, 42, 17)));
+        _mockClock.Setup(x => x.UtcNow).Returns(new DateTimeOffset(new(2023, 5, 29, 3, 42, 17)));
 
-        string expectedFileName = $"{LogPrefix}_{_mockClock.Object.UtcNow.ToString("yyMMddHHmmssfff", CultureInfo.InvariantCulture)}.diag";
+        // The first candidate is taken (e.g. by another process that computed the same timestamp), so the logger
+        // must fall back to a suffixed name instead of retrying the very same one until the clock ticks.
+        string expectedFileName = $"{LogPrefix}_230529034217000_{CurrentProcessId}_1.diag";
         _mockStream.Setup(x => x.Name).Returns(expectedFileName);
         _mockFileStreamFactory
             .SetupSequence(x => x.Create(It.IsAny<string>(), FileMode.CreateNew, FileAccess.Write, FileShare.Read))
@@ -120,26 +122,28 @@ public sealed class FileLoggerTests : IDisposable
         }
 
         _mockFileStreamFactory.Verify(
+            x => x.Create(Path.Combine(LogFolder, $"{LogPrefix}_230529034217000.diag"), FileMode.CreateNew, FileAccess.Write, FileShare.Read),
+            Times.Once);
+        _mockFileStreamFactory.Verify(
             x => x.Create(Path.Combine(LogFolder, expectedFileName), FileMode.CreateNew, FileAccess.Write, FileShare.Read),
             Times.Once);
         Assert.AreEqual(expectedFileName, fileLoggerName);
     }
 
+    // Every attempt uses a name that is unique by construction, so the loop is bounded by attempt count and can never
+    // spin on a stalled or forward-jumping wall clock.
     [TestMethod]
-    public void FileLogger_NullFileSyncFlush_FileStreamCreationThrows()
+    public void FileLogger_NullFileSyncFlush_EveryAttemptUsesADistinctFileName()
     {
-        // First return is to compute the expected file name. It's ok that first time is greater
-        // than all following ones.
-        _mockClock
-            .SetupSequence(x => x.UtcNow)
-            .Returns(new DateTimeOffset(new(2023, 5, 29, 3, 42, 13)))
-            .Returns(new DateTimeOffset(new(2023, 5, 29, 3, 42, 17)));
-        _mockFileStreamFactory
-            .SetupSequence(x => x.Create(It.IsAny<string>(), FileMode.CreateNew, FileAccess.Write, FileShare.Read))
-            .Throws<IOException>()
-            .Returns(_mockStream.Object);
+        _mockClock.Setup(x => x.UtcNow).Returns(new DateTimeOffset(new(2023, 5, 29, 3, 42, 17)));
 
-        Assert.ThrowsExactly<InvalidOperationException>(() => _ = new FileLogger(
+        var attemptedPaths = new List<string>();
+        _mockFileStreamFactory
+            .Setup(x => x.Create(It.IsAny<string>(), FileMode.CreateNew, FileAccess.Write, FileShare.Read))
+            .Callback((string path, FileMode _1, FileAccess _2, FileShare _3) => attemptedPaths.Add(path))
+            .Throws(new IOException("There is not enough space on the disk."));
+
+        Assert.ThrowsExactly<IOException>(() => _ = new FileLogger(
             new(LogFolder, LogPrefix, fileName: null, syncFlush: true),
             LogLevel.Trace,
             _mockClock.Object,
@@ -147,6 +151,42 @@ public sealed class FileLoggerTests : IDisposable
             _mockConsole.Object,
             _mockFileSystem.Object,
             _mockFileStreamFactory.Object));
+
+        Assert.HasCount(MaxLogFileCreationAttempts, attemptedPaths);
+        Assert.HasCount(MaxLogFileCreationAttempts, attemptedPaths.Distinct().ToList());
+        Assert.AreEqual(Path.Combine(LogFolder, $"{LogPrefix}_230529034217000.diag"), attemptedPaths[0]);
+        Assert.AreEqual(Path.Combine(LogFolder, $"{LogPrefix}_230529034217000_{CurrentProcessId}_1.diag"), attemptedPaths[1]);
+    }
+
+    // The retry loop only recovers from a name collision. Any other IOException (disk full, deleted log folder, path
+    // too long, ...) fails identically on every attempt, and the original code swallowed it and reported a generic
+    // 'cannot create a unique log file', which hid the real cause.
+    [TestMethod]
+    public void FileLogger_NullFileSyncFlush_WhenEveryAttemptFails_ReportsAndChainsTheLastFailure()
+    {
+        _mockClock.Setup(x => x.UtcNow).Returns(new DateTimeOffset(new(2023, 5, 29, 3, 42, 17)));
+
+        var diskFull = new IOException("There is not enough space on the disk.");
+        _mockFileStreamFactory
+            .Setup(x => x.Create(It.IsAny<string>(), FileMode.CreateNew, FileAccess.Write, FileShare.Read))
+            .Throws(diskFull);
+
+        IOException exception = Assert.ThrowsExactly<IOException>(() => _ = new FileLogger(
+            new(LogFolder, LogPrefix, fileName: null, syncFlush: true),
+            LogLevel.Trace,
+            _mockClock.Object,
+            new SystemTask(),
+            _mockConsole.Object,
+            _mockFileSystem.Object,
+            _mockFileStreamFactory.Object));
+
+        Assert.AreSame(diskFull, exception.InnerException);
+
+        // The rendered message must carry the underlying failure and the folder we failed in: string.Format silently
+        // ignores surplus arguments, so dropping a placeholder from the resource string would go unnoticed otherwise.
+        Assert.Contains(diskFull.Message, exception.Message);
+        Assert.Contains(Path.Combine(LogFolder, $"{LogPrefix}_230529034217000_{CurrentProcessId}_{MaxLogFileCreationAttempts - 1}.diag"), exception.Message);
+        Assert.Contains(MaxLogFileCreationAttempts.ToString(CultureInfo.InvariantCulture), exception.Message);
     }
 
     [DataRow(true, true)]
