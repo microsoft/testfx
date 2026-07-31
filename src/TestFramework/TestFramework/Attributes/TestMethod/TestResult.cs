@@ -2,6 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
+#if NETFRAMEWORK
+using System.Runtime.Serialization;
+#endif
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -25,9 +28,14 @@ public class TestResult
     /// <para>
     /// Deliberately serialized on .NET Framework, unlike <see cref="TestFailureException"/>: the values this
     /// guards (<see cref="ExceptionExpectedText"/> / <see cref="ExceptionActualText"/>) do cross an AppDomain
-    /// boundary, so the count that governs them must cross too or the invariant is lost on the far side.
+    /// boundary, so the count that governs them must cross too or the invariant is lost on the far side. It is
+    /// optional so a payload written by a TestFramework build that predates this field still deserializes,
+    /// defaulting to zero.
     /// </para>
     /// </remarks>
+#if NETFRAMEWORK
+    [OptionalField]
+#endif
     private int _assertionComparisonCount;
 
     /// <summary>
@@ -119,12 +127,26 @@ public class TestResult
     /// Gets or sets the pre-formatted <c>expected</c> text of the assertion that failed the test, when the
     /// failure came from an assertion that has a natural expected value.
     /// </summary>
+    /// <remarks>
+    /// Optional on .NET Framework so a payload written by a TestFramework build that predates this member still
+    /// deserializes, defaulting to <see langword="null"/>.
+    /// </remarks>
+#if NETFRAMEWORK
+    [field: OptionalField]
+#endif
     internal string? ExceptionExpectedText { get; set; }
 
     /// <summary>
     /// Gets or sets the pre-formatted <c>actual</c> text of the assertion that failed the test, when the
     /// failure came from an assertion that has a natural actual value.
     /// </summary>
+    /// <remarks>
+    /// Optional on .NET Framework so a payload written by a TestFramework build that predates this member still
+    /// deserializes, defaulting to <see langword="null"/>.
+    /// </remarks>
+#if NETFRAMEWORK
+    [field: OptionalField]
+#endif
     internal string? ExceptionActualText { get; set; }
 
     /// <summary>
