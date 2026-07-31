@@ -175,7 +175,7 @@ internal static partial class SerializerUtilities
                                     properties["execution-state"] = "failed";
                                     properties["error.message"] = failedTestNodeStateProperty.Explanation ?? failedTestNodeStateProperty.Exception?.Message;
                                     Exception? exception = failedTestNodeStateProperty.Exception;
-                                    if (exception != null)
+                                    if (exception is not null)
                                     {
                                         properties["error.stacktrace"] = exception.StackTrace ?? string.Empty;
                                     }
@@ -188,7 +188,7 @@ internal static partial class SerializerUtilities
                                         properties["assert.actual"] = assertionFailure.Actual ?? string.Empty;
                                         properties["assert.expected"] = assertionFailure.Expected ?? string.Empty;
                                     }
-                                    else if (exception != null)
+                                    else if (exception is not null)
                                     {
                                         properties["assert.actual"] = exception.Data["assert.actual"] ?? string.Empty;
                                         properties["assert.expected"] = exception.Data["assert.expected"] ?? string.Empty;
@@ -201,7 +201,7 @@ internal static partial class SerializerUtilities
                                 {
                                     properties["execution-state"] = "timed-out";
                                     properties["error.message"] = timeoutTestNodeStateProperty.Explanation ?? timeoutTestNodeStateProperty.Exception?.Message;
-                                    if (timeoutTestNodeStateProperty.Exception != null)
+                                    if (timeoutTestNodeStateProperty.Exception is not null)
                                     {
                                         properties["error.stacktrace"] = timeoutTestNodeStateProperty.Exception.StackTrace ?? string.Empty;
                                     }
@@ -213,7 +213,7 @@ internal static partial class SerializerUtilities
                                 {
                                     properties["execution-state"] = "error";
                                     properties["error.message"] = errorTestNodeStateProperty.Explanation ?? errorTestNodeStateProperty.Exception?.Message;
-                                    if (errorTestNodeStateProperty.Exception != null)
+                                    if (errorTestNodeStateProperty.Exception is not null)
                                     {
                                         properties["error.stacktrace"] = errorTestNodeStateProperty.Exception.StackTrace ?? string.Empty;
                                     }
@@ -227,7 +227,7 @@ internal static partial class SerializerUtilities
                                 {
                                     properties["execution-state"] = "canceled";
                                     properties["error.message"] = canceledTestNodeStateProperty.Explanation ?? canceledTestNodeStateProperty.Exception?.Message;
-                                    if (canceledTestNodeStateProperty.Exception != null)
+                                    if (canceledTestNodeStateProperty.Exception is not null)
                                     {
                                         properties["error.stacktrace"] = canceledTestNodeStateProperty.Exception.StackTrace ?? string.Empty;
                                     }
