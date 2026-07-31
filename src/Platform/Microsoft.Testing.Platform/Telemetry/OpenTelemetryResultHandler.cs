@@ -7,6 +7,11 @@ namespace Microsoft.Testing.Platform.Telemetry;
 
 internal sealed class OpenTelemetryResultHandler : IDisposable
 {
+    /// <summary>
+    /// What Roslyn's <c>INamespaceSymbol.ToDisplayString()</c> returns for the global namespace.
+    /// </summary>
+    private const string RoslynGlobalNamespaceDisplayString = "<global namespace>";
+
     private readonly IPlatformOpenTelemetryService _otelService;
     private readonly PlatformOpenTelemetryOptions _options;
 
@@ -253,12 +258,29 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
     /// Builds the value for <c>code.function.name</c>, which the convention defines as the fully qualified name.
     /// </summary>
     /// <remarks>
-    /// The namespace is empty for a type declared in the global namespace, which must not produce a leading dot.
+    /// <para>
+    /// A type in the global namespace contributes no namespace segment, so the name must not gain a leading dot.
+    /// Two spellings have to be recognised, because the property is a plain string filled in by whichever test
+    /// framework produced the node: an empty namespace (what MSTest produces, since it derives the namespace by
+    /// splitting the managed type name) and Roslyn's <c>&lt;global namespace&gt;</c>, which is what
+    /// <c>INamespaceSymbol.ToDisplayString()</c> returns when the caller does not first check
+    /// <c>IsGlobalNamespace</c>.
+    /// </para>
+    /// <para>
+    /// Dropping the segment - rather than emitting Roslyn's <c>global::</c> prefix - keeps the attribute
+    /// language-agnostic, matches the convention's own examples, and is consistent with how the rest of this
+    /// repository treats the global namespace (see <c>TestClassModelBuilder</c>, <c>ReflectionMetadataGenerator</c>
+    /// and <c>DiscoveredTestsJsonSerializer</c>, which all omit it).
+    /// </para>
     /// </remarks>
     private static string GetFullyQualifiedName(TestMethodIdentifierProperty identifierProperty)
-        => RoslynString.IsNullOrEmpty(identifierProperty.Namespace)
+        => IsGlobalNamespace(identifierProperty.Namespace)
             ? $"{identifierProperty.TypeName}.{identifierProperty.MethodName}"
             : $"{identifierProperty.Namespace}.{identifierProperty.TypeName}.{identifierProperty.MethodName}";
+
+    private static bool IsGlobalNamespace(string? @namespace)
+        => RoslynString.IsNullOrEmpty(@namespace)
+            || @namespace == RoslynGlobalNamespaceDisplayString;
 
     private IEnumerable<KeyValuePair<string, object?>> GetTestInitialInfo(TestNode testNode, TestNodeUid? parentUid)
     {

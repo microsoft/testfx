@@ -692,10 +692,14 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
     }
 
     [TestMethod]
-    public void NotifyInProgress_ForTheGlobalNamespace_DoesNotEmitALeadingDot()
+    [DataRow("")]
+    // Roslyn's INamespaceSymbol.ToDisplayString() returns this for the global namespace, so a framework that
+    // does not first check IsGlobalNamespace hands us the sentinel rather than an empty string.
+    [DataRow("<global namespace>")]
+    public void NotifyInProgress_ForTheGlobalNamespace_DoesNotEmitALeadingDot(string @namespace)
     {
         IEnumerable<KeyValuePair<string, object?>>? capturedTags = CaptureInProgressTags(
-            new TestMethodIdentifierProperty("MyAssembly", string.Empty, "MyClass", "MyMethod", 0, [], "void"));
+            new TestMethodIdentifierProperty("MyAssembly", @namespace, "MyClass", "MyMethod", 0, [], "void"));
 
         Assert.IsNotNull(capturedTags);
         Assert.Contains(t => t.Key == "code.function.name" && (string?)t.Value == "MyClass.MyMethod", capturedTags);
