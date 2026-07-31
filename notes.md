@@ -11,6 +11,7 @@
 - **Single test (MTP)**: `dotnet run --project test/UnitTests/<Project> -f net8.0 --no-build -- --treenode-filter "/*/*/*/MyClass/MyMethod"`
 - **Single test via dotnet test**: `dotnet test test/UnitTests/<Project>/<Project>.csproj -f net8.0 --no-build -c Debug --filter "FullyQualifiedName~ClassName"`
 - **Single project test**: `./build.sh --test --projects "$(pwd)/test/UnitTests/<Project>/<Project>.csproj"`
+- **NOTE**: Repo requires dotnet SDK 11 preview — not available in agent sandbox. Cannot run tests locally; CI validates.
 
 ## Testing Frameworks & Patterns
 
@@ -19,28 +20,26 @@
 - MSTest itself (`TestFramework.UnitTests`) → use **AwesomeAssertions** in partial class `AssertTests : TestContainer` (TestContainer framework)
 - Each project has `BannedSymbols.txt` listing disallowed assertion APIs
 - **No VB.NET tests** for analyzers — repo constraint, maintainers not interested
+- Various test pattern notes (see below)
+
+## Key Test Pattern Notes
+
 - **IgnoreAttribute is sealed** — cannot derive from it in test scenarios
 - **sealed + inheritance in tests**: When writing tests that need multi-level inheritance, the first level class must NOT be sealed
 - **`[Experimental("MSTESTEXP")]` types** (`RetryContext`, `RetryResult`, `RetryBaseAttribute.ExecuteAsync`): do NOT inherit from `RetryBaseAttribute` in test code strings — would require `#pragma warning disable MSTESTEXP` (not used in tests). Use `[Retry]` directly.
 - **Static classes in Roslyn**: Static classes are NOT abstract (`IsAbstract=false`); they have `IsStatic=true`. The `UseDeploymentItem` analyzer's abstract-class early return does NOT apply to static classes.
 - **Nullable annotation (CS8632)**: In analyzer test code strings, avoid `object?` — use `object` instead, or add `#nullable enable` at top of test code string. The test harness doesn't enable nullable by default.
 - **ManagedMethod/ManagedType**: Listed in TestContextPropertyUsageAnalyzer restriction sets but these properties do NOT exist on the actual TestContext class — those entries are dead code in the restriction sets.
-- **VerifyCodeFixAsync for "no fix" case**: `VerifyCodeFixAsync(code, code)` (same string for both params, diagnostic markers preserved) IS valid when no fix is registered — framework compares actual output (unchanged) to expected fixedCode (same as original), and the kept diagnostic markers in fixedCode correctly express that the diagnostic remains. Verified working in `RemoveClassCleanupBehaviorArgumentFixerTests.WhenClassCleanupBehaviorReferencedOutsideAttribute_NoFix`.
-- **OperationAnalysisContext.ContainingSymbol for lambdas**: For `OperationKind.PropertyReference` inside a lambda, `context.ContainingSymbol` resolves to the **enclosing named method** (NOT the lambda's anonymous method). This means [AssemblyInitialize] attribute IS visible even inside a lambda — the TestContextPropertyUsageAnalyzer correctly fires for accesses inside lambdas.
-- **Discard variable name clash**: Do NOT use `_` as a parameter name if the test code also uses `_ = expr` discard assignments — the compiler binds `_` to the parameter (CS0029 if types differ).
-- **`Assert.AreSame(null, null)` is a compile error**: Calling `Assert.AreSame` with untyped null literals causes CS0411 (type inference failure). Use `(object)null` or a typed variable instead.
-- **AvoidAssertAreSameWithValueTypes fires for struct-constrained T**: Generic type parameters with `where T : struct` have `IsValueType == true`, so the analyzer correctly fires.
-- **`--treenode-filter` format**: Does NOT work for class-level filtering in MSTest.Analyzers.UnitTests; use `--filter "ClassName~MyClass"` or `--filter-uid "Namespace.ClassName.MethodName"` instead.
-- **DoNotUseShadowingAnalyzer**: `GetBaseMembers` walks the full inheritance chain via while-loop on `BaseType`; `IsMemberShadowing` handles only `IMethodSymbol` and `IPropertySymbol` — fields fall through to `return false`. Property type must match via `SymbolEqualityComparer` for shadowing detection.
-- **`[TestClass]` on structs**: CS0592 — `[TestClass]` is only valid on class declarations. For tests involving struct containing types, omit `[TestClass]` from the struct.
-- **GitHub issue/list APIs**: Failing with enterprise fine-grained token restriction (token lifetime >8 days). PR searches still work. Issue creation/commenting via safeoutputs works. Cannot list or search issues via MCP tools.
-- **`--no-build` on stale DLL**: After editing tests, always rebuild (`dotnet build`) before using `--no-build`; stale binary gives wrong test results.
-- **Generic class in FixtureUtils**: `ContainingType.IsGenericType && !allowGenericType` fires for GlobalTestFixtureShouldBeValid because `allowGenericType: false`. A `[TestClass] public class MyTestClass<T>` containing `[GlobalTestInitialize]` produces a diagnostic.
-- **DuplicateTestMethodAttributeAnalyzer has NO TestClass guard**: fires on duplicate TestMethod-derived attrs on any method, regardless of [TestClass].
-- **DuplicateTestMethodAttributeFixer first-wins**: keeps the first TestMethod-derived attribute encountered in attribute list order; subsequent ones are removed.
-- **PreferDisposeOverTestCleanupAnalyzer has NO TestClass guard**: fires on any method with [TestCleanup] regardless of whether the class has [TestClass]. ImplementsIDisposable fixer method checks semantic BaseList only (not full inheritance hierarchy).
-- **PreferConstructorOverTestInitializeAnalyzer has NO TestClass guard**: fires on any method with [TestInitialize] that returns void. Fixer merges into the FIRST non-static constructor found, even parameterized ctors.
-- **Unused using after code fix**: When a code fix removes the only usage of a namespace, the `using` becomes unused but remains in fixed code (fixers don't remove usings). Tests pass because unused usings are warnings not errors.
+- **VerifyCodeFixAsync for "no fix" case**: `VerifyCodeFixAsync(code, code)` (same string for both params, diagnostic markers preserved) IS valid when no fix is registered
+- **OperationAnalysisContext.ContainingSymbol for lambdas**: For `OperationKind.PropertyReference` inside a lambda, `context.ContainingSymbol` resolves to the **enclosing named method** (NOT the lambda's anonymous method).
+- **Discard variable name clash**: Do NOT use `_` as a parameter name if the test code also uses `_ = expr` discard assignments
+- **`Assert.AreSame(null, null)` is a compile error**: Use `(object)null` or a typed variable instead.
+- **AvoidAssertAreSameWithValueTypes fires for struct-constrained T**: Generic type parameters with `where T : struct` have `IsValueType == true`
+- **`--treenode-filter` format**: Does NOT work for class-level filtering in MSTest.Analyzers.UnitTests; use `--filter "ClassName~MyClass"` instead.
+- **`[TestClass]` on structs**: CS0592 — `[TestClass]` is only valid on class declarations.
+- **GitHub issue/list APIs**: Failing with enterprise fine-grained token restriction. PR searches still work. Issue creation/commenting via safeoutputs works.
+- **`--no-build` on stale DLL**: After editing tests, always rebuild before using `--no-build`; stale binary gives wrong test results.
+- **CultureMutation vs CurrentDirectory parallel safety analyzers**: Both use the same `ParallelSafetyHelper`. [TestInitialize] IS in GetFixtureAttributeSymbols (fires diagnostic). [AssemblyInitialize] is excluded (no diagnostic — serial, no race possible).
 
 ## Testing Opportunities Backlog
 
@@ -52,6 +51,7 @@
 
 | Date | Tasks |
 |------|-------|
+| 2026-07-31 | Task 3 (CurrentDirectoryMutationUnderParallelizationAnalyzer: TestInitialize+AssemblyInitialize fixture edge cases), Task 7 |
 | 2026-07-29 | Task 3 (CultureMutationUnderParallelizationAnalyzer MSTEST0076: 2 edge-case tests), Task 7 |
 | 2026-07-28 | Task 3 (UnusedParameterSuppressor MSTEST0047: 2 edge-case tests), Task 7 |
 | 2026-07-25 | Task 3 (DoNotStoreStaticTestContextAnalyzer: 2 edge-case tests), Task 7 |
@@ -68,10 +68,11 @@
 
 ## Last Run
 
-2026-07-29 UTC
+2026-07-31 UTC
 
 ## Completed Work (recent, summarized)
 
+- PR (2026-07-31) — CurrentDirectoryMutationUnderParallelizationAnalyzer: 2 fixture edge-case tests (TestInitialize fires, AssemblyInitialize suppressed)
 - PR (2026-07-29) — CultureMutationUnderParallelizationAnalyzer (MSTEST0076): 2 edge-case tests (TestInitialize fires, AssemblyInitialize suppressed)
 - PR (2026-07-28) — UnusedParameterSuppressor (MSTEST0047): 2 edge-case tests (user-defined AssemblyInitialize attr from different namespace not suppressed; user-defined TestContext type not suppressed)
 - PR (2026-07-25) — DoNotStoreStaticTestContextAnalyzer (MSTEST0024): 2 edge-case tests (??= coalesce NoDiagnostic, field-to-field assign NoDiagnostic)
