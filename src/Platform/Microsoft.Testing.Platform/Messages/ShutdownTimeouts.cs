@@ -39,10 +39,17 @@ internal static class ShutdownTimeouts
         // a syntactically valid but absurd value ('1e300', or anything past ~24.8 days) would parse and then
         // throw out of TimeSpan or the wait itself, so an optional override could break the message bus or the
         // blocking-consumer shutdown instead of simply being ignored.
-        return double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double seconds)
-            && seconds > 0
-            && seconds * 1000 <= int.MaxValue
-            ? TimeSpan.FromSeconds(seconds)
-            : DefaultCanceledConsumerCompletion;
+        if (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double seconds)
+            || seconds <= 0
+            || seconds * 1000 > int.MaxValue)
+        {
+            return DefaultCanceledConsumerCompletion;
+        }
+
+        // A positive value below TimeSpan's resolution (1e-300, say) rounds down to zero, which would make an
+        // aborted run abandon every consumer instantly rather than honoring a budget. Check the constructed
+        // value, not just the parsed number.
+        var timeout = TimeSpan.FromSeconds(seconds);
+        return timeout > TimeSpan.Zero ? timeout : DefaultCanceledConsumerCompletion;
     }
 }
