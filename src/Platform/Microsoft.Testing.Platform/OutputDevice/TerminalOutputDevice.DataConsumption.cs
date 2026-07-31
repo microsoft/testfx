@@ -171,6 +171,8 @@ internal sealed partial class TerminalOutputDevice
                 StandardOutputProperty? stdoutProp = null;
                 StandardErrorProperty? stderrProp = null;
                 TestNodeStateProperty? nodeState = null;
+                AssertionFailureProperty? assertionFailure = null;
+                bool hasAssertionFailure = false;
                 bool executionCompleted = false;
                 PropertyBag.PropertyBagEnumerator enumerator = testNodeStateChanged.TestNode.Properties.GetStructEnumerator();
                 while (enumerator.MoveNext())
@@ -181,6 +183,14 @@ internal sealed partial class TerminalOutputDevice
                         case StandardOutputProperty so: stdoutProp = so; break;
                         case StandardErrorProperty se: stderrProp = se; break;
                         case TestNodeStateProperty s: nodeState = s; break;
+
+                        // Two competing pairs cannot both be rendered and neither carries a label, so a
+                        // duplicate suppresses the diff instead of picking an arbitrary one. This walk is
+                        // deliberately non-throwing (see above), so it drops the value rather than failing.
+                        case AssertionFailureProperty af:
+                            assertionFailure = hasAssertionFailure ? null : af;
+                            hasAssertionFailure = true;
+                            break;
                         case TestNodeExecutionCompletedProperty: executionCompleted = true; break;
                         case FileArtifactProperty fa:
                             terminalTestReporter.ArtifactAdded(
@@ -242,8 +252,15 @@ internal sealed partial class TerminalOutputDevice
                             null,
                             failedState.Explanation,
                             failedState.Exception,
-                            expected: failedState.Exception?.Data["assert.expected"] as string,
-                            actual: failedState.Exception?.Data["assert.actual"] as string,
+
+                            // AssertionFailureProperty is the supported channel; Exception.Data is the legacy
+                            // fallback for producers that have not been updated yet. The choice is
+                            // all-or-nothing so the two halves of a diff always come from the same producer.
+                            // Gated on whether a property was seen at all, not on the resolved value: a
+                            // duplicate resolves to null to suppress the diff, and that suppression must not
+                            // fall through to the legacy values.
+                            expected: hasAssertionFailure ? assertionFailure?.Expected : failedState.Exception?.Data["assert.expected"] as string,
+                            actual: hasAssertionFailure ? assertionFailure?.Actual : failedState.Exception?.Data["assert.actual"] as string,
                             standardOutput,
                             standardError);
                         break;

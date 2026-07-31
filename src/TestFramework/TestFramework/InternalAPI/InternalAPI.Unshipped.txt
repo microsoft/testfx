@@ -6,3 +6,7 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceResolver.Tr
 static Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceResolver.TryGetDisplayName(System.Type! declaringType, string! methodName, System.Reflection.MethodInfo! testMethodInfo, object?[]? data, out string? displayName) -> bool
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestFilterProviderAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestFilterProviderAttribute.FilterType.get -> System.Type!
+Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.ExceptionActualText.get -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.ExceptionActualText.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.ExceptionExpectedText.get -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.ExceptionExpectedText.set -> void
