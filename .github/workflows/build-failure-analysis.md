@@ -272,20 +272,25 @@ jobs:
           # The fail-closed check further down compares staged legs against the
           # artifacts ADO *returned*, so it cannot see a leg that died before
           # publishing its logs artifact — that leg is simply absent from
-          # `names`. Ask the timeline which jobs failed and record any whose
-          # logs never appeared. This is advisory rather than fail-closed: a
-          # failed job that legitimately publishes no `Logs_Build_*` artifact
-          # would otherwise suppress analysis of a real compile break in the
-          # same build. The agent is told about the gap so it cannot conclude
+          # `names`. Ask the timeline instead. This is advisory rather than
+          # fail-closed: a failed job that legitimately publishes no logs would
+          # otherwise suppress analysis of a real compile break in the same build. The agent is told about the gap so it cannot conclude
           # "no build failure" from the legs that happened to upload.
           #
-          # Match on tokens rather than a name prefix: timeline job names and
-          # artifact names are not spelled the same way. `Linux Debug` publishes
-          # `Logs_Build_Linux_Debug`, but `Windows Debug` publishes
-          # `Logs_Build_Windows_NT_Debug` — an inserted `NT` that any prefix
-          # rule would miss, reporting a missing leg on every Windows failure.
-          # Requiring each token of the job name to appear as a token of the
-          # artifact name handles both spellings.
+          # Ask the timeline whether each leg's log *publish* succeeded rather
+          # than guessing its artifact name from its display name. The artifact
+          # is named from `$(Agent.Os)`, which is not what the job is called:
+          # `MacOS Debug` publishes `Logs_Build_Darwin_Debug`, and
+          # `WindowsSamples Debug` is named from `$(Agent.JobName)` instead. Name
+          # matching reported those healthy legs as missing on real builds —
+          # every macOS failure, and every `msbuild_cache_seed` job. Arcade's
+          # `Publish logs` task record answers the question directly, so no
+          # spelling has to be inferred. A failed job carrying no such task
+          # (the `Detect changed paths` classifier, the cache-seed stage) does
+          # not publish logs at all and is not treated as a missing leg.
+          #
+          # `canceled` and `abandoned` legs count alongside `failed`: they also
+          # finish without logs, and are a real gap in the artifact set.
           timeline_json=$(curl -sSL --retry 3 --max-time 60 "${ADO_API}/build/builds/${BUILD_ID}/timeline?api-version=7.1" 2>/dev/null || true)
           MISSING_LEGS=""
           # An unreadable timeline must not look like a complete build. A failed
@@ -300,27 +305,33 @@ jobs:
             timeline_ok=1
           fi
           if [ "${timeline_ok}" -eq 1 ]; then
-            while IFS= read -r jobname; do
-              [ -z "${jobname}" ] && continue
-              found=0
-              for n in "${names[@]}"; do
-                all=1
-                for tok in $(printf '%s' "${jobname}" | tr -c 'A-Za-z0-9' ' '); do
-                  case "_${n}_" in
-                    *_"${tok}"_*) ;;
-                    *) all=0; break ;;
-                  esac
-                done
-                [ "${all}" -eq 1 ] && { found=1; break; }
-              done
-              [ "${found}" -eq 0 ] && MISSING_LEGS="${MISSING_LEGS:+${MISSING_LEGS}, }${jobname}"
-            done < <(printf '%s' "${timeline_json}" | jq -r '.records // [] | map(select(.type=="Job" and .result=="failed")) | .[].name' 2>/dev/null)
+            # Job display names come from the pipeline YAML in the PR branch, so
+            # on a fork PR they are attacker-controlled. Strip control characters
+            # and bound the length before this value reaches `$GITHUB_OUTPUT` and
+            # `$GITHUB_ENV`, where an embedded newline would inject further
+            # `key=value` lines. The task name is matched on its alphanumerics
+            # because arcade spells it both `Publish logs` and `Publish Logs`,
+            # and some pipelines prefix a decorative emoji.
+            MISSING_LEGS=$(printf '%s' "${timeline_json}" | jq -r '
+              (.records // []) as $records
+              | ($records
+                 | map(select(.type == "Task"
+                              and (.name | ascii_downcase | gsub("[^a-z0-9]"; "") | test("publishlogs"))))) as $publishes
+              | $records
+              | map(select(.type == "Job"
+                           and (.result == "failed" or .result == "canceled" or .result == "abandoned")))
+              | map(. as $job
+                    | ($publishes | map(select(.parentId == $job.id))) as $mine
+                    | select(($mine | length) > 0
+                             and (($mine | map(select(.result == "succeeded")) | length) == 0))
+                    | ($job.name | gsub("[[:cntrl:]]"; " ")))
+              | join(", ")' 2>/dev/null | tr -d '\r\n' | cut -c1-400)
           fi
           if [ "${timeline_ok}" -ne 1 ]; then
             MISSING_LEGS="(unknown - could not read the build timeline)"
             echo "::warning::Could not read the timeline for build ${BUILD_ID}; unable to verify that every failed leg published a logs artifact."
           elif [ -n "${MISSING_LEGS}" ]; then
-            echo "::warning::Failed leg(s) with no published logs artifact: ${MISSING_LEGS}"
+            echo "::warning::Failed leg(s) whose logs were never published: ${MISSING_LEGS}"
           fi
 
           # Guards for untrusted PR-produced archives: cap the compressed
@@ -332,7 +343,7 @@ jobs:
           MAX_UNZIP_BYTES=2147483648    # 2 GB uncompressed per artifact
           MAX_TOTAL_BYTES=4294967296    # 4 GB uncompressed across all artifacts
           MAX_TOTAL_ZIP_BYTES=3221225472 # 3 GB compressed downloaded in total
-          MAX_ARTIFACTS=40              # legs to process (testfx currently has 7)
+          MAX_ARTIFACTS=40              # cap only; the real count is path-dependent
           TOTAL_BYTES=0
           TOTAL_ZIP_BYTES=0
           # Bound the work before starting: a pipeline change (or repeated leg
@@ -364,19 +375,27 @@ jobs:
             # length-less response write unbounded data before any post-check.
             curl -sSL --retry 3 --max-time 300 "${url}" 2>/dev/null | head -c $((MAX_ZIP_BYTES + 1)) > /tmp/a.zip || true
             ZIP_BYTES=$(stat -c%s /tmp/a.zip 2>/dev/null || echo 0)
+            # Bound cumulative *compressed* bytes too: the per-artifact and
+            # cumulative-uncompressed caps still allow many mid-sized archives
+            # to be pulled over the network before any of them is inspected.
+            #
+            # Charge the budget here, before the skips below, because the bytes
+            # are already on the wire by this point — `curl` above streams into
+            # `head -c` and only then is the size known. Charging after the
+            # per-artifact skip would let every oversized artifact cost a full
+            # MAX_ZIP_BYTES of network without ever being counted, so a build of
+            # MAX_ARTIFACTS oversized legs would download far past this budget
+            # while appearing to stay inside it.
+            TOTAL_ZIP_BYTES=$((TOTAL_ZIP_BYTES + ZIP_BYTES))
+            if [ "${TOTAL_ZIP_BYTES}" -gt "${MAX_TOTAL_ZIP_BYTES}" ]; then
+              echo "::warning::Cumulative compressed download budget ${MAX_TOTAL_ZIP_BYTES} reached at ${name}; stopping."; break
+            fi
             if [ "${ZIP_BYTES}" -eq 0 ]; then
               echo "::warning::Skipping ${name}: empty or failed download."; continue
             fi
             if [ "${ZIP_BYTES}" -gt "${MAX_ZIP_BYTES}" ]; then
               echo "::warning::Skipping ${name}: download exceeded ${MAX_ZIP_BYTES} bytes."; continue
             fi
-            # Bound cumulative *compressed* bytes too. The per-artifact and
-            # cumulative-uncompressed caps still allow many mid-sized archives
-            # to be pulled over the network before any of them is inspected.
-            if [ $((TOTAL_ZIP_BYTES + ZIP_BYTES)) -gt "${MAX_TOTAL_ZIP_BYTES}" ]; then
-              echo "::warning::Cumulative compressed download budget ${MAX_TOTAL_ZIP_BYTES} reached at ${name}; stopping."; break
-            fi
-            TOTAL_ZIP_BYTES=$((TOTAL_ZIP_BYTES + ZIP_BYTES))
             UNCOMP=$(unzip -l /tmp/a.zip 2>/dev/null | tail -1 | awk '{print $1}')
             # Fail safe: if the uncompressed size isn't a plain integer (corrupt
             # zip / unexpected `unzip -l` output), we can't verify it — skip the
@@ -414,9 +433,17 @@ jobs:
             # nothing. Reporting it as "extraction failed or timed out" sends
             # the reader chasing a corrupt-archive theory that isn't there. Any
             # other non-zero exit (corrupt archive, timeout) is a real failure.
+            #
+            # Both cases `continue`, so nothing was written to /tmp/ax and the
+            # uncompressed budget below is left untouched. Charging it for an
+            # archive that extracted nothing would let one large binlog-free
+            # artifact push a genuinely useful later leg past MAX_TOTAL_BYTES.
             uz=0
             timeout 120 unzip -o /tmp/a.zip '*.binlog' -d /tmp/ax >/dev/null 2>&1 || uz=$?
-            if [ "${uz}" -ne 0 ] && [ "${uz}" -ne 11 ]; then
+            if [ "${uz}" -eq 11 ]; then
+              echo "::warning::${name}: published logs contain no binlog; nothing to analyse from this leg."; continue
+            fi
+            if [ "${uz}" -ne 0 ]; then
               echo "::warning::Skipping ${name}: extraction failed or timed out (unzip exit ${uz})."; continue
             fi
             # Consume the cumulative budget only once the archive actually
@@ -481,13 +508,18 @@ jobs:
           fi
 
           {
+            # `missing-legs` is derived from ADO job display names, which come
+            # from pipeline YAML in the PR branch and are therefore
+            # fork-controlled. It is sanitized where it is assembled, and it is
+            # written first here so that even a future regression in that
+            # sanitizing cannot let it override a key emitted below.
+            echo "missing-legs=${MISSING_LEGS}"
             echo "binlog-found=true"
             echo "pr-number=${PR_NUMBER}"
             echo "pr-head-sha=${HEAD_SHA}"
             echo "pr-merge-sha=${BUILD_MERGE_SHA}"
             echo "ado-build-id=${BUILD_ID}"
             echo "ado-build-url=${ADO_BUILD_UI}?buildId=${BUILD_ID}"
-            echo "missing-legs=${MISSING_LEGS}"
           } >> "$GITHUB_OUTPUT"
 
       - name: Upload analysis artifact
