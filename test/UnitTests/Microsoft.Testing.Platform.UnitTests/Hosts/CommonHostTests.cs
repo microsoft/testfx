@@ -354,6 +354,31 @@ public sealed class CommonHostTests
         public void Dispose() => Interlocked.Increment(ref _disposeCount);
     }
 
+    [TestMethod]
+    public async Task DisposeServiceProviderAsync_WhenConsumerIsRegisteredBeforeTheBus_StillDoesNotDisposeIt()
+    {
+        Mock<IDataConsumer> runningConsumer = new();
+        runningConsumer.SetupGet(x => x.Uid).Returns("running");
+        Mock<IDisposable> disposableRunningConsumer = runningConsumer.As<IDisposable>();
+
+        Mock<BaseMessageBus> messageBus = new();
+        messageBus.Setup(x => x.DisableAsync()).Returns(Task.CompletedTask);
+        messageBus.SetupGet(x => x.DataConsumerServices).Returns([runningConsumer.Object]);
+        messageBus.SetupGet(x => x.ConsumersStillRunning).Returns([runningConsumer.Object]);
+
+        ServiceProvider serviceProvider = new();
+
+        // The output device and the coverage accumulator are registered well before BuildTestFrameworkAsync
+        // adds the bus, so a consumer can sit earlier in Services than the bus that owns it. Disabling only
+        // when the disposal loop reached the bus would already have disposed this one.
+        serviceProvider.AddService(runningConsumer.Object);
+        serviceProvider.AddService(messageBus.Object);
+
+        await TestableCommonHost.DisposeServiceProviderForTestingAsync(serviceProvider);
+
+        disposableRunningConsumer.Verify(x => x.Dispose(), Times.Never);
+    }
+
     private sealed class TestableCommonHost(ServiceProvider serviceProvider, bool runTestApplicationLifeCycleCallbacks = false) : CommonHost(serviceProvider)
     {
         protected override string HostType => "TestHost";

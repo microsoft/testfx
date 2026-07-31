@@ -121,9 +121,12 @@ internal sealed class AsyncConsumerDataProcessor : IAsyncConsumerDataProcessor
                     await _consumeTask.WaitAsync(Timeout.InfiniteTimeSpan, _cancellationToken).ConfigureAwait(false);
                     return;
                 }
-                catch (OperationCanceledException oc) when (oc.CancellationToken == _cancellationToken && !_consumeTask.IsCompleted)
+                catch (OperationCanceledException oc) when (oc.CancellationToken == _cancellationToken)
                 {
-                    // The run was canceled while we were waiting. Fall through to the bounded wait.
+                    // The run was canceled while we were waiting. Fall through to the bounded wait, which
+                    // returns (or rethrows the consumer's real failure) immediately if the loop happened to
+                    // finish in the meantime. Deciding that from an IsCompleted check in this filter would be a
+                    // race that silently turns a consumer failure into a swallowed cancellation.
                 }
             }
 

@@ -476,6 +476,38 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
     protected static async Task DisposeServiceProviderAsync(ServiceProvider serviceProvider, Func<object, bool>? filter = null, List<object>? alreadyDisposed = null, bool isProcessShutdown = false)
     {
         alreadyDisposed ??= [];
+
+        // Close the message bus handshake before disposing anything at all. Consumers are routinely registered
+        // as services in their own right, and several of them (the output device, the coverage accumulator) land
+        // in Services *before* the bus does, so disabling inline when the loop happens to reach the bus would
+        // already have disposed those consumers while their ConsumeAsync was still running.
+        foreach (object service in serviceProvider.Services)
+        {
+            if (service is not BaseMessageBus messageBus || (filter is not null && !filter(messageBus)))
+            {
+                continue;
+            }
+
+            await EnsureMessageBusDisabledAsync(messageBus, serviceProvider).ConfigureAwait(false);
+
+            // Disabling is bounded on an aborted run, so it can return with a consumer still inside
+            // ConsumeAsync. Recording those as already disposed is what keeps every loop below off them:
+            // disposing one now is precisely the race the handshake exists to prevent, so we leak it and let
+            // the process exit reclaim it instead.
+            foreach (IDataConsumer dataConsumer in messageBus.ConsumersStillRunning)
+            {
+                if (alreadyDisposed.Contains(dataConsumer))
+                {
+                    continue;
+                }
+
+                alreadyDisposed.Add(dataConsumer);
+                await LogShutdownWarningAsync(
+                    serviceProvider,
+                    $"Not disposing data consumer '{dataConsumer.Uid}' because it is still consuming after the shutdown timeout elapsed.").ConfigureAwait(false);
+            }
+        }
+
         foreach (object service in serviceProvider.Services)
         {
             // Logger is the most special service and we dispose it manually as last one, we want to be able to
@@ -518,18 +550,6 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
             }
 #pragma warning restore CS0618 // Type or member is obsolete
 
-            IDataConsumer[] consumersStillRunning = [];
-            if (service is BaseMessageBus messageBus)
-            {
-                // Never dispose a message bus - and therefore its consumers - while a consumer loop may still be
-                // running. Disabling completes the loops first and is idempotent, so this is a no-op whenever the
-                // session already closed the handshake.
-                await EnsureMessageBusDisabledAsync(messageBus, serviceProvider).ConfigureAwait(false);
-
-                // Snapshot before the bus is disposed: disposing it releases the processors.
-                consumersStillRunning = [.. messageBus.ConsumersStillRunning];
-            }
-
             if (!alreadyDisposed.Contains(service))
             {
                 await DisposeHelper.DisposeAsync(service).ConfigureAwait(false);
@@ -545,24 +565,8 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
                         continue;
                     }
 
-                    if (Array.IndexOf(consumersStillRunning, dataConsumer) >= 0)
-                    {
-                        // Its ConsumeAsync outlived the shutdown budget of an aborted run, so it is ignoring the
-                        // cancellation token. Disposing it now is precisely the race the handshake exists to
-                        // prevent, so we leak it and let the process exit reclaim it instead. Recording it as
-                        // already disposed is what makes that decision stick: the same consumer is usually also
-                        // registered as a plain service, and a host can walk the provider more than once.
-                        if (!alreadyDisposed.Contains(dataConsumer))
-                        {
-                            alreadyDisposed.Add(dataConsumer);
-                            await LogShutdownWarningAsync(
-                                serviceProvider,
-                                $"Not disposing data consumer '{dataConsumer.Uid}' because it is still consuming after the shutdown timeout elapsed.").ConfigureAwait(false);
-                        }
-
-                        continue;
-                    }
-
+                    // Consumers still inside ConsumeAsync were recorded as already disposed by the pre-pass
+                    // above, so this check is what spares them here.
                     if (!alreadyDisposed.Contains(dataConsumer))
                     {
                         await DisposeHelper.DisposeAsync(dataConsumer).ConfigureAwait(false);
