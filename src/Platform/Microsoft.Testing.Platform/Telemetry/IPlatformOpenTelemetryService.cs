@@ -36,19 +36,30 @@ internal interface IPlatformOpenTelemetryService : IDisposable
     /// <summary>
     /// Starts an activity.
     /// </summary>
-    /// <param name="name">The span name.</param>
-    /// <param name="tags">Attributes to set on the span at creation time.</param>
-    /// <param name="parentId">An explicit parent. When <see langword="null"/> the ambient activity is used.</param>
-    /// <param name="startTime">An explicit start time, for spans that cover work that already began.</param>
-    /// <param name="kind">The span kind.</param>
-    /// <param name="setAsCurrent">
-    /// When <see langword="false"/>, the activity is created and timed but never becomes the ambient activity.
-    /// <para>This matters for code that captures an <see cref="System.Threading.ExecutionContext"/> while the span is
+    /// <remarks>
+    /// <b>Do not change this signature.</b> Extensions ship independently of the platform, and the C# compiler
+    /// bakes optional-parameter defaults into the call site, so an already-published extension binary references
+    /// this exact signature. Adding a parameter here - even an optional one - removes that signature and makes the
+    /// older extension fail with a <c>MissingMethodException</c> at run time. Add a new method instead, and note
+    /// that no analyzer catches this: it only shows up in the forward-compatibility acceptance test.
+    /// </remarks>
+    IPlatformActivity? StartActivity([CallerMemberName] string name = "", IEnumerable<KeyValuePair<string, object?>>? tags = null, string? parentId = null, DateTimeOffset startTime = default);
+
+    /// <summary>
+    /// Starts an activity that is timed and exported but never becomes the ambient activity.
+    /// </summary>
+    /// <remarks>
+    /// This matters for code that captures an <see cref="System.Threading.ExecutionContext"/> while the span is
     /// open: the ambient activity is an async-local, so it would be captured too and later restored - parenting
     /// unrelated, much later work to a span that has already ended. MSTest does exactly that when it propagates
-    /// async-locals set by <c>AssemblyInitialize</c>/<c>ClassInitialize</c> to every subsequent test.</para>
-    /// </param>
-    IPlatformActivity? StartActivity([CallerMemberName] string name = "", IEnumerable<KeyValuePair<string, object?>>? tags = null, string? parentId = null, DateTimeOffset startTime = default, PlatformActivityKind kind = PlatformActivityKind.Internal, bool setAsCurrent = true);
+    /// async-locals set by <c>AssemblyInitialize</c>/<c>ClassInitialize</c> to every subsequent test.
+    /// <para>Because the span never becomes current it cannot inherit a parent from the ambient context either, so
+    /// pass <paramref name="parentId"/> explicitly to keep it in the right trace.</para>
+    /// </remarks>
+    /// <param name="name">The span name.</param>
+    /// <param name="tags">Attributes to set on the span at creation time.</param>
+    /// <param name="parentId">The explicit parent of the span.</param>
+    IPlatformActivity? StartNonAmbientActivity(string name, IEnumerable<KeyValuePair<string, object?>>? tags = null, string? parentId = null);
 
     ICounter<T> CreateCounter<T>(string name, string? unit = null, string? description = null, IEnumerable<KeyValuePair<string, object?>>? tags = null)
         where T : struct;

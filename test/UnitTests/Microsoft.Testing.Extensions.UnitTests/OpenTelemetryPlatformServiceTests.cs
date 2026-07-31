@@ -67,11 +67,11 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
     }
 
     [TestMethod]
-    public void StartActivity_WithSetAsCurrentFalse_NeverBecomesCurrent()
+    public void StartNonAmbientActivity_NeverBecomesCurrent()
     {
         // This is what keeps MSTest fixture spans out of the ExecutionContext that MSTest captures inside a
         // fixture and replays for the rest of the run.
-        using (_service.StartActivity(Name("non-ambient"), setAsCurrent: false))
+        using (_service.StartNonAmbientActivity(Name("non-ambient")))
         {
             Assert.AreSame(_ambientAtStart, Activity.Current);
         }
@@ -83,14 +83,14 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
     }
 
     [TestMethod]
-    public void StartActivity_WithSetAsCurrentFalse_DoesNotDisturbAnExistingAmbientActivity()
+    public void StartNonAmbientActivity_DoesNotDisturbAnExistingAmbientActivity()
     {
         using (_service.StartActivity(Name("outer")))
         {
             Activity? ambient = Activity.Current;
             Assert.IsNotNull(ambient);
 
-            using (_service.StartActivity(Name("inner"), setAsCurrent: false))
+            using (_service.StartNonAmbientActivity(Name("inner")))
             {
                 Assert.AreSame(ambient, Activity.Current);
             }
@@ -103,13 +103,13 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
     }
 
     [TestMethod]
-    public void StartActivity_WithExplicitParentId_KeepsTheSameTrace()
+    public void StartNonAmbientActivity_WithExplicitParentId_KeepsTheSameTrace()
     {
         using IPlatformActivity? parent = _service.StartActivity(Name("parent"));
         Assert.IsNotNull(parent);
         Assert.IsNotNull(parent.Id);
 
-        using IPlatformActivity? child = _service.StartActivity(Name("child"), parentId: parent.Id, setAsCurrent: false);
+        using IPlatformActivity? child = _service.StartNonAmbientActivity(Name("child"), parentId: parent.Id);
         Assert.IsNotNull(child);
         Assert.AreEqual(parent.TraceId, child.TraceId);
         Assert.AreNotEqual(parent.SpanId, child.SpanId);

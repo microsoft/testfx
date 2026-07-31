@@ -430,12 +430,6 @@ const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Te
 const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.TestResultStatus.Unknown = "unknown" -> string!
 Microsoft.Testing.Platform.Telemetry.EnvironmentTraceContext
 Microsoft.Testing.Platform.Telemetry.IUpDownCounter<T>
-Microsoft.Testing.Platform.Telemetry.PlatformActivityKind
-Microsoft.Testing.Platform.Telemetry.PlatformActivityKind.Client = 2 -> Microsoft.Testing.Platform.Telemetry.PlatformActivityKind
-Microsoft.Testing.Platform.Telemetry.PlatformActivityKind.Consumer = 4 -> Microsoft.Testing.Platform.Telemetry.PlatformActivityKind
-Microsoft.Testing.Platform.Telemetry.PlatformActivityKind.Internal = 0 -> Microsoft.Testing.Platform.Telemetry.PlatformActivityKind
-Microsoft.Testing.Platform.Telemetry.PlatformActivityKind.Producer = 3 -> Microsoft.Testing.Platform.Telemetry.PlatformActivityKind
-Microsoft.Testing.Platform.Telemetry.PlatformActivityKind.Server = 1 -> Microsoft.Testing.Platform.Telemetry.PlatformActivityKind
 Microsoft.Testing.Platform.Telemetry.PlatformActivityStatusCode
 Microsoft.Testing.Platform.Telemetry.PlatformActivityStatusCode.Error = 2 -> Microsoft.Testing.Platform.Telemetry.PlatformActivityStatusCode
 Microsoft.Testing.Platform.Telemetry.PlatformActivityStatusCode.Ok = 1 -> Microsoft.Testing.Platform.Telemetry.PlatformActivityStatusCode
@@ -445,7 +439,6 @@ Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions
 Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes
 Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.TestResultStatus
 Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryService.HasCurrentActivity.get -> bool
-Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryService.StartActivity(string! name = "", System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? tags = null, string? parentId = null, System.DateTimeOffset startTime = default(System.DateTimeOffset), Microsoft.Testing.Platform.Telemetry.PlatformActivityKind kind = Microsoft.Testing.Platform.Telemetry.PlatformActivityKind.Internal, bool setAsCurrent = true) -> Microsoft.Testing.Platform.Telemetry.IPlatformActivity?
 const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestCaseDurationMilliseconds = "test.case.duration_ms" -> string!
 const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestRunFailedCount = "test.run.failed" -> string!
 const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestRunResultStatus = "test.run.result.status" -> string!
@@ -458,3 +451,4 @@ Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryService.RootTraceStat
 const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.TestResultStatus.Fail = "fail" -> string!
 const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.TestResultStatus.Pass = "pass" -> string!
 static Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.TestResultStatus.ToLegacy(string! status) -> string!
+Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryService.StartNonAmbientActivity(string! name, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? tags = null, string? parentId = null) -> Microsoft.Testing.Platform.Telemetry.IPlatformActivity?

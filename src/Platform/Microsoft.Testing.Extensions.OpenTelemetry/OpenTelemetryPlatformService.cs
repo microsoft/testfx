@@ -22,30 +22,37 @@ internal sealed class OpenTelemetryPlatformService : IPlatformOpenTelemetryServi
 
     public bool HasCurrentActivity => Activity.Current is not null;
 
-    public IPlatformActivity? StartActivity([CallerMemberName] string name = "", IEnumerable<KeyValuePair<string, object?>>? tags = null, string? parentId = null, DateTimeOffset startTime = default, PlatformActivityKind kind = PlatformActivityKind.Internal, bool setAsCurrent = true)
+    public IPlatformActivity? StartActivity([CallerMemberName] string name = "", IEnumerable<KeyValuePair<string, object?>>? tags = null, string? parentId = null, DateTimeOffset startTime = default)
+        => _activitySource.StartActivity(name, ActivityKind.Internal, tags: tags, startTime: startTime, parentId: parentId) is Activity activity
+            ? new ActivityWrapper(Stamp(activity))
+            : null;
+
+    public IPlatformActivity? StartNonAmbientActivity(string name, IEnumerable<KeyValuePair<string, object?>>? tags = null, string? parentId = null)
     {
-        Activity? ambientBeforeStart = setAsCurrent ? null : Activity.Current;
-        if (_activitySource.StartActivity(name, ToActivityKind(kind), tags: tags, startTime: startTime, parentId: parentId) is not Activity activity)
+        Activity? ambientBeforeStart = Activity.Current;
+        if (_activitySource.StartActivity(name, ActivityKind.Internal, tags: tags, parentId: parentId) is not Activity activity)
         {
             return null;
-        }
-
-        // Activity only derives tracestate from an in-process parent reference, which an explicit parent id string
-        // does not provide. Stamp it on so the caller's vendor sampling state survives down to the test spans.
-        if (RootTraceState is not null && activity.TraceStateString is null)
-        {
-            activity.TraceStateString = RootTraceState;
-        }
-
-        if (setAsCurrent)
-        {
-            return new ActivityWrapper(activity);
         }
 
         // StartActivity unconditionally publishes the new activity as Activity.Current. Undo that immediately so
         // the span is timed and exported without ever leaking into an ExecutionContext captured by the code we wrap.
         Activity.Current = ambientBeforeStart;
-        return new ActivityWrapper(activity, isAmbient: false);
+        return new ActivityWrapper(Stamp(activity), isAmbient: false);
+    }
+
+    /// <summary>
+    /// Activity only derives tracestate from an in-process parent reference, which an explicit parent id string
+    /// does not provide. Stamp it on so the caller's vendor sampling state survives down to the test spans.
+    /// </summary>
+    private Activity Stamp(Activity activity)
+    {
+        if (RootTraceState is not null && activity.TraceStateString is null)
+        {
+            activity.TraceStateString = RootTraceState;
+        }
+
+        return activity;
     }
 
     public ICounter<T> CreateCounter<T>(string name, string? unit = null, string? description = null, IEnumerable<KeyValuePair<string, object?>>? tags = null)
@@ -83,14 +90,4 @@ internal sealed class OpenTelemetryPlatformService : IPlatformOpenTelemetryServi
             _observableInstruments.Clear();
         }
     }
-
-    private static ActivityKind ToActivityKind(PlatformActivityKind kind)
-        => kind switch
-        {
-            PlatformActivityKind.Server => ActivityKind.Server,
-            PlatformActivityKind.Client => ActivityKind.Client,
-            PlatformActivityKind.Producer => ActivityKind.Producer,
-            PlatformActivityKind.Consumer => ActivityKind.Consumer,
-            _ => ActivityKind.Internal,
-        };
 }

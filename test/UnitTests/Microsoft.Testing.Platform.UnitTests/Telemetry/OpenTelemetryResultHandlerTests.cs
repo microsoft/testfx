@@ -110,9 +110,7 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
             It.IsAny<string>(),
             It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
             It.IsAny<string?>(),
-            It.IsAny<DateTimeOffset>(),
-            It.IsAny<PlatformActivityKind>(),
-            It.IsAny<bool>())).Returns(activity.Object);
+            It.IsAny<DateTimeOffset>())).Returns(activity.Object);
 
         TestNode testNode = CreateTestNode();
         _handler.NotifyInProgress(testNode, null);
@@ -129,9 +127,7 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
             It.IsAny<string>(),
             It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
             It.IsAny<string?>(),
-            It.IsAny<DateTimeOffset>(),
-            It.IsAny<PlatformActivityKind>(),
-            It.IsAny<bool>())).Returns((IPlatformActivity?)null);
+            It.IsAny<DateTimeOffset>())).Returns((IPlatformActivity?)null);
 
         TestNode testNode = CreateTestNode();
         _handler.NotifyInProgress(testNode, null);
@@ -267,10 +263,8 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
             It.IsAny<string>(),
             It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
             It.IsAny<string?>(),
-            It.IsAny<DateTimeOffset>(),
-            It.IsAny<PlatformActivityKind>(),
-            It.IsAny<bool>()))
-            .Callback<string, IEnumerable<KeyValuePair<string, object?>>?, string?, DateTimeOffset, PlatformActivityKind, bool>((_, tags, _, _, _, _) => capturedTags = tags)
+            It.IsAny<DateTimeOffset>()))
+            .Callback<string, IEnumerable<KeyValuePair<string, object?>>?, string?, DateTimeOffset>((_, tags, _, _) => capturedTags = tags)
             .Returns(new Mock<IPlatformActivity>().Object);
 
         TestNode testNode = CreateTestNode("child");
@@ -294,9 +288,7 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
             It.IsAny<string>(),
             It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
             It.IsAny<string?>(),
-            It.IsAny<DateTimeOffset>(),
-            It.IsAny<PlatformActivityKind>(),
-            It.IsAny<bool>()))
+            It.IsAny<DateTimeOffset>()))
             .Returns(activity1.Object)
             .Returns(activity2.Object);
 
@@ -375,9 +367,7 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
             It.IsAny<string>(),
             It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
             It.IsAny<string?>(),
-            It.IsAny<DateTimeOffset>(),
-            It.IsAny<PlatformActivityKind>(),
-            It.IsAny<bool>()))
+            It.IsAny<DateTimeOffset>()))
             .Returns(activity1.Object)
             .Returns(activity2.Object);
 
@@ -404,9 +394,7 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
             It.IsAny<string>(),
             It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
             It.IsAny<string?>(),
-            It.IsAny<DateTimeOffset>(),
-            It.IsAny<PlatformActivityKind>(),
-            It.IsAny<bool>()))
+            It.IsAny<DateTimeOffset>()))
             .Returns(activity1.Object)
             .Returns(activity2.Object);
 
@@ -439,9 +427,7 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
             It.IsAny<string>(),
             It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
             It.IsAny<string?>(),
-            It.IsAny<DateTimeOffset>(),
-            It.IsAny<PlatformActivityKind>(),
-            It.IsAny<bool>()))
+            It.IsAny<DateTimeOffset>()))
             .Returns(activity1.Object)
             .Returns(activity2.Object);
 
@@ -557,10 +543,8 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
             It.IsAny<string>(),
             It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
             It.IsAny<string?>(),
-            It.IsAny<DateTimeOffset>(),
-            It.IsAny<PlatformActivityKind>(),
-            It.IsAny<bool>()))
-            .Callback<string, IEnumerable<KeyValuePair<string, object?>>?, string?, DateTimeOffset, PlatformActivityKind, bool>((_, tags, _, _, _, _) => capturedTags = tags?.ToList())
+            It.IsAny<DateTimeOffset>()))
+            .Callback<string, IEnumerable<KeyValuePair<string, object?>>?, string?, DateTimeOffset>((_, tags, _, _) => capturedTags = tags?.ToList())
             .Returns(new Mock<IPlatformActivity>().Object);
 
         _handler.NotifyInProgress(CreateTestNode("semconv-tags"), new TestNodeUid("parent"));
@@ -625,9 +609,7 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
             It.IsAny<string>(),
             It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
             It.IsAny<string?>(),
-            It.IsAny<DateTimeOffset>(),
-            It.IsAny<PlatformActivityKind>(),
-            It.IsAny<bool>())).Returns((IPlatformActivity?)null);
+            It.IsAny<DateTimeOffset>())).Returns((IPlatformActivity?)null);
 
         TestNode testNode = CreateTestNode("no-tracer");
         _handler.NotifyInProgress(testNode, null);
@@ -646,9 +628,7 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
             It.IsAny<string>(),
             It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
             It.IsAny<string?>(),
-            It.IsAny<DateTimeOffset>(),
-            It.IsAny<PlatformActivityKind>(),
-            It.IsAny<bool>())).Returns((IPlatformActivity?)null);
+            It.IsAny<DateTimeOffset>())).Returns((IPlatformActivity?)null);
 
         TestNode testNode = CreateTestNode("no-tracer-completed");
         _handler.NotifyInProgress(testNode, null);
@@ -747,10 +727,8 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
             It.IsAny<string>(),
             It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
             It.IsAny<string?>(),
-            It.IsAny<DateTimeOffset>(),
-            It.IsAny<PlatformActivityKind>(),
-            It.IsAny<bool>()))
-            .Callback<string, IEnumerable<KeyValuePair<string, object?>>?, string?, DateTimeOffset, PlatformActivityKind, bool>((_, tags, _, _, _, _) => capturedTags = tags?.ToList())
+            It.IsAny<DateTimeOffset>()))
+            .Callback<string, IEnumerable<KeyValuePair<string, object?>>?, string?, DateTimeOffset>((_, tags, _, _) => capturedTags = tags?.ToList())
             .Returns(new Mock<IPlatformActivity>().Object);
 
         _handler.NotifyInProgress(
@@ -793,9 +771,7 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
             It.IsAny<string>(),
             It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
             It.IsAny<string?>(),
-            It.IsAny<DateTimeOffset>(),
-            It.IsAny<PlatformActivityKind>(),
-            It.IsAny<bool>())).Returns(activity.Object);
+            It.IsAny<DateTimeOffset>())).Returns(activity.Object);
 
         return activity;
     }

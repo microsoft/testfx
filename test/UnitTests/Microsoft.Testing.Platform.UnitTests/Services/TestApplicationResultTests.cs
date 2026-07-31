@@ -40,9 +40,7 @@ public sealed class TestApplicationResultTests : IDisposable
                 It.IsAny<string>(),
                 It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
                 It.IsAny<string?>(),
-                It.IsAny<DateTimeOffset>(),
-                It.IsAny<PlatformActivityKind>(),
-                It.IsAny<bool>()))
+                It.IsAny<DateTimeOffset>()))
             .Returns(firstActivity.Object)
             .Returns(secondActivity.Object);
         using TestApplicationResult testApplicationResult = new(
