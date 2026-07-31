@@ -135,22 +135,29 @@ public static class OpenTelemetryProviderExtensions
             return;
         }
 
+        bool useOtlpTracing = UseOtlpExporter(OpenTelemetryEnvironmentVariables.TracesExporter);
+        bool useOtlpMetrics = UseOtlpExporter(OpenTelemetryEnvironmentVariables.MetricsExporter);
+        bool configureTracingProvider = useOtlpTracing || configureTracing is not null;
+        bool configureMetricsProvider = useOtlpMetrics || configureMetrics is not null;
+        if (!configureTracingProvider && !configureMetricsProvider)
+        {
+            return;
+        }
+
         builder.AddOpenTelemetryProvider(
             tracing =>
             {
-                bool useOtlp = UseOtlpExporter(OpenTelemetryEnvironmentVariables.TracesExporter);
-
                 // Registering the source installs an ActivityListener that samples and fully tags every span, so
                 // when nothing will consume them we must not instrument at all - otherwise every test allocates a
                 // span (and copies its whole stdout/stderr into tags) just to have it dropped.
-                if (useOtlp || configureTracing is not null)
+                if (configureTracingProvider)
                 {
                     tracing
                         .AddTestingPlatformInstrumentation()
                         .ConfigureResource(resource => resource.AddTestingPlatformResource());
                 }
 
-                if (useOtlp)
+                if (useOtlpTracing)
                 {
                     tracing.AddOtlpExporter();
                 }
@@ -159,16 +166,14 @@ public static class OpenTelemetryProviderExtensions
             },
             metrics =>
             {
-                bool useOtlp = UseOtlpExporter(OpenTelemetryEnvironmentVariables.MetricsExporter);
-
-                if (useOtlp || configureMetrics is not null)
+                if (configureMetricsProvider)
                 {
                     metrics
                         .AddTestingPlatformInstrumentation()
                         .ConfigureResource(resource => resource.AddTestingPlatformResource());
                 }
 
-                if (useOtlp)
+                if (useOtlpMetrics)
                 {
                     metrics.AddOtlpExporter();
                 }

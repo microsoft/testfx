@@ -332,6 +332,8 @@ Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.Sho
 Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.ShowRunSummary.init -> void
 const Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.ShowFlakyTestsOption = "show-flaky-tests" -> string!
 static Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.IsFlakyTestsReportingEnabled(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> bool
+static Microsoft.Testing.Platform.Helpers.ExtensionHelper.ConfigureOTelLegacyAttributes(Microsoft.Testing.Platform.Telemetry.PlatformOpenTelemetryOptions! options) -> void
+static Microsoft.Testing.Platform.Helpers.ExtensionHelper.EmitLegacyOTelAttributes.get -> bool
 const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Activities.TestFramework = "TestFramework" -> string!
 const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Activities.TestHostBuilder = "TestHostBuilder" -> string!
 const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics.LegacyTestsCompleted = "tests.completed" -> string!

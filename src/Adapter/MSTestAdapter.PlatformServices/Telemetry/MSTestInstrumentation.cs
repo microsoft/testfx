@@ -14,6 +14,11 @@ internal interface IMSTestActivity : IDisposable
     void SetTag(string key, object? value);
 
     /// <summary>
+    /// Marks the span as failed without recording an exception event.
+    /// </summary>
+    void SetFailed(string? description);
+
+    /// <summary>
     /// Records an exception on the span and marks it as failed.
     /// </summary>
     void RecordException(Exception exception);

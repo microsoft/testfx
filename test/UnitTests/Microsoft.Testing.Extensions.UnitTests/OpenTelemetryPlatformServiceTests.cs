@@ -175,17 +175,10 @@ public sealed class OpenTelemetryPlatformServiceTests : IDisposable
     }
 
     private static object? GetTag(ActivityEvent activityEvent, string key)
-    {
-        foreach (KeyValuePair<string, object?> tag in activityEvent.Tags)
-        {
-            if (tag.Key == key)
-            {
-                return tag.Value;
-            }
-        }
-
-        return null;
-    }
+        => activityEvent.Tags
+            .Where(tag => tag.Key == key)
+            .Select(tag => tag.Value)
+            .FirstOrDefault();
 
     private string Name(string name) => _namePrefix + name;
 

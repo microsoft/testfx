@@ -20,6 +20,9 @@ internal sealed class MSTestPlatformActivity(IPlatformActivity activity) : IMSTe
     public void RecordException(Exception exception)
         => activity.RecordException(exception);
 
+    public void SetFailed(string? description)
+        => activity.SetStatus(PlatformActivityStatusCode.Error, description);
+
     public void Dispose()
         => activity.Dispose();
 

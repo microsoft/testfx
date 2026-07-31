@@ -20,6 +20,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 internal sealed partial class TestMethodRunner
 {
     /// <summary>
+    /// The aggregate outcome name reported on the span for a failing test, matching the OpenTelemetry
+    /// <c>test.case.result.status</c> enum.
+    /// </summary>
+    private const string FailedOutcomeName = "fail";
+
+    /// <summary>
     /// Test context which needs to be passed to the various methods of the test.
     /// </summary>
     private readonly ITestContext _testContext;
@@ -74,6 +80,7 @@ internal sealed partial class TestMethodRunner
         _testContext.Context.TestRunCount++;
 
         TestResult[]? result = null;
+        bool exceptionRecorded = false;
 
         // The engine-level span for the whole test method: it wraps test initialize, the body, test cleanup and any
         // data-row expansion, so the platform's test-case span gains an explanation of where the time went.
@@ -96,7 +103,12 @@ internal sealed partial class TestMethodRunner
             // NOTE: We intentionally don't have any special casing for TestFailedException in this code path.
             // It's handled down by TestMethodInfo which also unwraps TargetInvocationException.
             // RunTestMethodAsync is not supposed to throw any exceptions. So it's always an **error** if we got an exception here.
-            activity?.RecordException(ex);
+            if (activity is not null)
+            {
+                activity.RecordException(ex);
+                exceptionRecorded = true;
+            }
+
             result =
             [
                 new TestResult
@@ -115,16 +127,56 @@ internal sealed partial class TestMethodRunner
             firstResult.DebugTrace = initializationTrace + firstResult.DebugTrace;
             firstResult.TestContextMessages = initializationTestContextMessages + firstResult.TestContextMessages;
 
-            // A folded data-driven test produces several results for a single method invocation; reporting the
-            // count makes that visible in the trace instead of looking like a single test.
-            // Note the name deliberately differs from the platform's `test.case.result.count` *metric*, which
-            // counts test cases per outcome across the run.
-            activity?.SetTag("test.case.data_row.count", result.Length);
-            activity?.SetTag("test.case.result.status", GetAggregateOutcomeName(result));
+            if (activity is not null)
+            {
+                // A folded data-driven test produces several results for a single method invocation; reporting the
+                // count makes that visible in the trace instead of looking like a single test.
+                // Note the name deliberately differs from the platform's `test.case.result.count` *metric*, which
+                // counts test cases per outcome across the run.
+                activity.SetTag("test.case.data_row.count", result.Length);
+                string aggregateOutcomeName = GetAggregateOutcomeName(result);
+                activity.SetTag("test.case.result.status", aggregateOutcomeName);
+
+                // An ordinary assertion failure is returned in the TestResult rather than thrown, so nothing above
+                // recorded it. Without this the span for a failed test would stay Unset and look green in a trace.
+                if (!exceptionRecorded && aggregateOutcomeName == FailedOutcomeName)
+                {
+                    MarkActivityFailed(activity, result);
+                }
+            }
         }
 
         return result;
     }
+
+    /// <summary>
+    /// Marks the span for a test whose failure was returned rather than thrown, preferring the recorded exception
+    /// so the trace carries the assertion message.
+    /// </summary>
+    private static void MarkActivityFailed(IMSTestActivity activity, TestResult[] results)
+    {
+        foreach (TestResult testResult in results)
+        {
+            if (!IsFailingOutcome(testResult.Outcome))
+            {
+                continue;
+            }
+
+            if (testResult.TestFailureException is { } failureException)
+            {
+                activity.RecordException(failureException);
+            }
+            else
+            {
+                activity.SetFailed(testResult.Outcome.ToString());
+            }
+
+            return;
+        }
+    }
+
+    private static bool IsFailingOutcome(UnitTestOutcome outcome)
+        => outcome is UnitTestOutcome.Failed or UnitTestOutcome.Error or UnitTestOutcome.Timeout;
 
     private static string GetAggregateOutcomeName(TestResult[] results)
     {
@@ -137,13 +189,13 @@ internal sealed partial class TestMethodRunner
                 allSkipped = false;
             }
 
-            if (testResult.Outcome is UnitTestOutcome.Failed or UnitTestOutcome.Error or UnitTestOutcome.Timeout)
+            if (IsFailingOutcome(testResult.Outcome))
             {
                 anyFailed = true;
             }
         }
 
-        return anyFailed ? "fail" : allSkipped ? "skipped" : "pass";
+        return anyFailed ? FailedOutcomeName : allSkipped ? "skipped" : "pass";
     }
 
     /// <summary>

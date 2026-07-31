@@ -177,9 +177,54 @@ internal static class TestingPlatformResourceDetector
             string? value = Environment.GetEnvironmentVariable(environmentVariableName);
             if (!OpenTelemetryEnvironmentVariables.IsNullOrWhiteSpace(value))
             {
+                if (attributeName == "vcs.repository.url.full")
+                {
+                    value = RemoveUrlUserInfo(value);
+                }
+
                 yield return new KeyValuePair<string, object>(attributeName, value);
             }
         }
+    }
+
+    private static string RemoveUrlUserInfo(string value)
+    {
+        int schemeSeparatorIndex = value.IndexOf("://", StringComparison.Ordinal);
+        if (schemeSeparatorIndex < 0)
+        {
+            return value;
+        }
+
+        int authorityStartIndex = schemeSeparatorIndex + 3;
+        int authorityEndIndex = value.Length;
+        int pathIndex = value.IndexOf('/', authorityStartIndex);
+        if (pathIndex >= 0)
+        {
+            authorityEndIndex = pathIndex;
+        }
+
+        int queryIndex = value.IndexOf('?', authorityStartIndex);
+        if (queryIndex >= 0 && queryIndex < authorityEndIndex)
+        {
+            authorityEndIndex = queryIndex;
+        }
+
+        int fragmentIndex = value.IndexOf('#', authorityStartIndex);
+        if (fragmentIndex >= 0 && fragmentIndex < authorityEndIndex)
+        {
+            authorityEndIndex = fragmentIndex;
+        }
+
+        int authorityLength = authorityEndIndex - authorityStartIndex;
+        if (authorityLength <= 0)
+        {
+            return value;
+        }
+
+        int userInfoEndIndex = value.LastIndexOf('@', authorityEndIndex - 1, authorityLength);
+        return userInfoEndIndex < authorityStartIndex
+            ? value
+            : value.Substring(0, authorityStartIndex) + value.Substring(userInfoEndIndex + 1);
     }
 
     private static bool IsTrue(string? value)

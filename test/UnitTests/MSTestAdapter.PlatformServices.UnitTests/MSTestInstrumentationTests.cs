@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -80,15 +80,37 @@ public sealed class MSTestInstrumentationTests : TestContainer
         MSTestInstrumentation.StartActivity("name").Should().BeNull();
     }
 
+    public void StartedActivityForwardsFailureSignalsToTheReturnedActivity()
+    {
+        FakeActivity? capturedActivity = null;
+        MSTestInstrumentation.SetActivityFactory((_, _) => capturedActivity = new FakeActivity());
+        var exception = new InvalidOperationException("Boom");
+
+        using IMSTestActivity? activity = MSTestInstrumentation.StartActivity("name");
+        activity.Should().NotBeNull();
+        activity!.SetFailed("Failed");
+        activity.RecordException(exception);
+
+        capturedActivity.Should().NotBeNull();
+        capturedActivity!.FailureDescription.Should().Be("Failed");
+        capturedActivity.RecordedException.Should().BeSameAs(exception);
+    }
+
     private sealed class FakeActivity : IMSTestActivity
     {
+        public string? FailureDescription { get; private set; }
+
+        public Exception? RecordedException { get; private set; }
+
         public void SetTag(string key, object? value)
         {
         }
 
+        public void SetFailed(string? description)
+            => FailureDescription = description;
+
         public void RecordException(Exception exception)
-        {
-        }
+            => RecordedException = exception;
 
         public void Dispose()
         {

@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Telemetry;
 
@@ -11,6 +12,10 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
     /// What Roslyn's <c>INamespaceSymbol.ToDisplayString()</c> returns for the global namespace.
     /// </summary>
     private const string RoslynGlobalNamespaceDisplayString = "<global namespace>";
+    private const string ExceptionEventName = "exception";
+    private const string ExceptionTypeTag = "exception.type";
+    private const string ExceptionMessageTag = "exception.message";
+    private const string ExceptionStackTraceTag = "exception.stacktrace";
 
     private readonly IPlatformOpenTelemetryService _otelService;
     private readonly PlatformOpenTelemetryOptions _options;
@@ -185,7 +190,7 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
         _testRunDuration.Record(
             _runStopwatch.Elapsed.TotalSeconds,
             [
-                new(TestingPlatformSemanticConventions.Attributes.TestRunResultStatus, failedTests > 0 ? TestingPlatformSemanticConventions.TestResultStatus.Fail : TestingPlatformSemanticConventions.TestResultStatus.Pass),
+                new(TestingPlatformSemanticConventions.Attributes.TestRunResultStatus, GetRunResultStatus(failedTests, exitCode)),
                 new(TestingPlatformSemanticConventions.Attributes.TestRunExitCode, exitCode),
             ]);
 
@@ -211,6 +216,11 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
             foreach (Queue<IPlatformActivity?> activities in _testActivities.Values)
             {
                 orphaned.AddRange(activities);
+            }
+
+            if (orphaned.Count > 0)
+            {
+                _activeTestCases.Add(-orphaned.Count);
             }
 
             _testActivities.Clear();
@@ -283,6 +293,11 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
     private static bool IsGlobalNamespace(string? @namespace)
         => RoslynString.IsNullOrEmpty(@namespace)
             || @namespace == RoslynGlobalNamespaceDisplayString;
+
+    private static string GetRunResultStatus(int failedTests, int exitCode)
+        => failedTests > 0 || exitCode != (int)ExitCode.Success
+            ? TestingPlatformSemanticConventions.TestResultStatus.Fail
+            : TestingPlatformSemanticConventions.TestResultStatus.Pass;
 
     private IEnumerable<KeyValuePair<string, object?>> GetTestInitialInfo(TestNode testNode, TestNodeUid? parentUid)
     {
@@ -401,8 +416,16 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
             string? exceptionTypeName = exception.GetType().FullName;
             string? truncatedMessage = _options.Truncate(exception.Message);
             string? truncatedStackTrace = _options.Truncate(exception.StackTrace);
+            string? truncatedExceptionStackTrace = _options.Truncate(exception.ToString());
 
-            activity.RecordException(exception);
+            activity.AddEvent(
+                ExceptionEventName,
+                [
+                    new(ExceptionTypeTag, exceptionTypeName),
+                    new(ExceptionMessageTag, truncatedMessage),
+                    new(ExceptionStackTraceTag, truncatedExceptionStackTrace),
+                ]);
+            activity.SetStatus(PlatformActivityStatusCode.Error, truncatedMessage);
             activity.SetTag(TestingPlatformSemanticConventions.Attributes.ErrorType, exceptionTypeName);
             activity.SetTag(TestingPlatformSemanticConventions.Attributes.CodeStacktrace, truncatedStackTrace);
 

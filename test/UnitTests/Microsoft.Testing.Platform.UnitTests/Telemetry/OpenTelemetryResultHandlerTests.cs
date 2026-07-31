@@ -298,9 +298,11 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
 
         _handler.NotifyInProgress(CreateTestNode("orphan-1"), null);
         _handler.NotifyInProgress(CreateTestNode("orphan-2"), null);
+        Assert.AreEqual(2, _activeTestCases.Value);
 
         _handler.Dispose();
 
+        Assert.AreEqual(0, _activeTestCases.Value);
         activity1.Verify(a => a.Dispose(), Times.Once);
         activity2.Verify(a => a.Dispose(), Times.Once);
     }
@@ -474,13 +476,28 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
     public void HandleTestResult_WithFailedState_RecordsExceptionAndErrorAttributes()
     {
         Mock<IPlatformActivity> activity = SetupActivityForTestNode("semconv-failed");
+        string? eventName = null;
+        IReadOnlyList<KeyValuePair<string, object?>>? exceptionEventTags = null;
+        activity.Setup(a => a.AddEvent(It.IsAny<string>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(), It.IsAny<DateTimeOffset>()))
+            .Callback<string, IEnumerable<KeyValuePair<string, object?>>?, DateTimeOffset>((name, tags, _) =>
+            {
+                eventName = name;
+                exceptionEventTags = tags?.ToList();
+            })
+            .Returns(activity.Object);
         TestNode testNode = CreateTestNode("semconv-failed");
         InvalidOperationException exception = new("boom");
 
         _handler.NotifyInProgress(testNode, null);
         _handler.NotifyFailed(testNode, new FailedTestNodeStateProperty(exception, "test failed"));
 
-        activity.Verify(a => a.RecordException(exception, It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()), Times.Once);
+        activity.Verify(a => a.RecordException(exception, It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()), Times.Never);
+        Assert.AreEqual("exception", eventName);
+        Assert.IsNotNull(exceptionEventTags);
+        Assert.Contains(t => t.Key == "exception.type" && (string?)t.Value == typeof(InvalidOperationException).FullName, exceptionEventTags);
+        Assert.Contains(t => t.Key == "exception.message" && (string?)t.Value == "boom", exceptionEventTags);
+        Assert.Contains(t => t.Key == "exception.stacktrace" && (string?)t.Value == exception.ToString(), exceptionEventTags);
+        activity.Verify(a => a.SetStatus(PlatformActivityStatusCode.Error, "boom"), Times.Once);
         activity.Verify(a => a.SetTag("error.type", typeof(InvalidOperationException).FullName), Times.Once);
 
         // error.message is deprecated upstream and NOT RECOMMENDED on spans; the message travels on the
@@ -555,7 +572,7 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
     public void NotifyRunCompleted_RecordsRunDurationWithVerdict()
     {
         Mock<IPlatformActivity> runActivity = new();
-        _handler.NotifyRunCompleted(totalRanTests: 10, failedTests: 2, skippedTests: 1, exitCode: 2, runActivity.Object);
+        _handler.NotifyRunCompleted(totalRanTests: 10, failedTests: 2, skippedTests: 1, exitCode: (int)ExitCode.AtLeastOneTestFailed, runActivity.Object);
 
         Assert.IsNotNull(_testRunDurationHistogram.LastRecordedValue);
         Assert.IsNotNull(_testRunDurationHistogram.LastTags);
@@ -563,13 +580,23 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
         // Only bounded dimensions belong on the histogram: the raw counts would create a new time series per
         // distinct value.
         Assert.Contains(t => t.Key == "test.run.result.status" && (string?)t.Value == "fail", _testRunDurationHistogram.LastTags);
-        Assert.Contains(t => t.Key == "test.run.exit_code" && (int?)t.Value == 2, _testRunDurationHistogram.LastTags);
+        Assert.Contains(t => t.Key == "test.run.exit_code" && (int?)t.Value == (int)ExitCode.AtLeastOneTestFailed, _testRunDurationHistogram.LastTags);
         Assert.DoesNotContain(t => t.Key == "test.run.total", _testRunDurationHistogram.LastTags);
 
         // The unbounded counts go on the span instead, where cardinality is free.
         runActivity.Verify(a => a.SetTag("test.run.total", 10), Times.Once);
         runActivity.Verify(a => a.SetTag("test.run.failed", 2), Times.Once);
         runActivity.Verify(a => a.SetTag("test.run.skipped", 1), Times.Once);
+    }
+
+    [TestMethod]
+    public void NotifyRunCompleted_WithNonSuccessExitCodeAndNoFailedTests_RecordsFailedVerdict()
+    {
+        _handler.NotifyRunCompleted(totalRanTests: 0, failedTests: 0, skippedTests: 0, exitCode: (int)ExitCode.ZeroTests);
+
+        Assert.IsNotNull(_testRunDurationHistogram.LastTags);
+        Assert.Contains(t => t.Key == "test.run.result.status" && (string?)t.Value == "fail", _testRunDurationHistogram.LastTags);
+        Assert.Contains(t => t.Key == "test.run.exit_code" && (int?)t.Value == (int)ExitCode.ZeroTests, _testRunDurationHistogram.LastTags);
     }
 
     [TestMethod]
@@ -737,6 +764,18 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
             DisplayName = "Test",
         };
 
+    private static Exception CreateExceptionWithStackTrace(string message)
+    {
+        try
+        {
+            throw new InvalidOperationException(message);
+        }
+        catch (Exception exception)
+        {
+            return exception;
+        }
+    }
+
     private Mock<IPlatformActivity> SetupActivityForTestNode(string testNodeUid)
     {
         Mock<IPlatformActivity> activity = new();
@@ -751,6 +790,33 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
             It.IsAny<bool>())).Returns(activity.Object);
 
         return activity;
+    }
+
+    [TestMethod]
+    public void HandleTestResult_TruncatesExceptionEventAndStatus()
+    {
+        Mock<IEnvironment> environment = new();
+        environment.Setup(e => e.GetEnvironmentVariable("TESTINGPLATFORM_OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT")).Returns("10");
+        using OpenTelemetryResultHandler handler = new(_otelService.Object, PlatformOpenTelemetryOptions.FromEnvironment(environment.Object));
+
+        Mock<IPlatformActivity> activity = SetupActivityForTestNode("truncated-exception");
+        IReadOnlyList<KeyValuePair<string, object?>>? exceptionEventTags = null;
+        activity.Setup(a => a.AddEvent(It.IsAny<string>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(), It.IsAny<DateTimeOffset>()))
+            .Callback<string, IEnumerable<KeyValuePair<string, object?>>?, DateTimeOffset>((_, tags, _) => exceptionEventTags = tags?.ToList())
+            .Returns(activity.Object);
+        Exception exception = CreateExceptionWithStackTrace(new string('m', 5000));
+        TestNode testNode = CreateTestNode("truncated-exception");
+
+        handler.NotifyInProgress(testNode, null);
+        handler.NotifyFailed(testNode, new FailedTestNodeStateProperty(exception));
+
+        string expectedMessage = new string('m', 10) + "…";
+        string expectedStackTrace = exception.ToString().Substring(0, 10) + "…";
+        Assert.IsNotNull(exceptionEventTags);
+        Assert.Contains(t => t.Key == "exception.message" && (string?)t.Value == expectedMessage, exceptionEventTags);
+        Assert.Contains(t => t.Key == "exception.stacktrace" && (string?)t.Value == expectedStackTrace, exceptionEventTags);
+        activity.Verify(a => a.SetStatus(PlatformActivityStatusCode.Error, expectedMessage), Times.Once);
+        activity.Verify(a => a.RecordException(exception, It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()), Times.Never);
     }
 
     [TestMethod]

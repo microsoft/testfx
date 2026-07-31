@@ -64,5 +64,6 @@ Microsoft.VisualStudio.TestTools.UnitTesting.MSTestPlatformActivity
 Microsoft.VisualStudio.TestTools.UnitTesting.MSTestPlatformActivity.Dispose() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.MSTestPlatformActivity.MSTestPlatformActivity(Microsoft.Testing.Platform.Telemetry.IPlatformActivity! activity) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.MSTestPlatformActivity.RecordException(System.Exception! exception) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.MSTestPlatformActivity.SetFailed(string? description) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.MSTestPlatformActivity.SetTag(string! key, object? value) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.MSTestPlatformActivity.TryEnable(System.IServiceProvider! serviceProvider) -> void
