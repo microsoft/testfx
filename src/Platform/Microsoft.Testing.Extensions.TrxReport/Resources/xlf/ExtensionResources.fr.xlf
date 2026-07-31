@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="fr" original="../ExtensionResources.resx">
     <body>
       <trans-unit id="InvalidTestApplicationBuilderType">
         <source>TRX report generation and merge tools require a test application builder that supports artifact post-processing</source>
-        <target state="new">TRX report generation and merge tools require a test application builder that supports artifact post-processing</target>
+        <target state="translated">Les outils de génération et de fusion de rapports TRX nécessitent un générateur d’application de test qui prend en charge le traitement ultérieurs des artefacts</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxArtifactPostProcessorDescription">

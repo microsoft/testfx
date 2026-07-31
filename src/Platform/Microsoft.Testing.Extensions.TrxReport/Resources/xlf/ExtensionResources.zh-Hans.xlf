@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="zh-Hans" original="../ExtensionResources.resx">
     <body>
@@ -74,7 +74,7 @@
       </trans-unit>
       <trans-unit id="TrxMergeToolInvalidInputs">
         <source>'--input' expects two or more existing TRX file paths</source>
-        <target state="new">'--input' expects two or more existing TRX file paths</target>
+        <target state="translated">"‌--input"‌ 需要两个或更多现有的 TRX 文件路径</target>
         <note>Do not localize option name {Locked="--input"} or format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolInvalidOutput">
