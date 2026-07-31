@@ -105,7 +105,7 @@ public class TestResult
                     bool isOnlyComparison = _assertionComparisonCount == 0 && newComparisons == 1;
                     ExceptionExpectedText = isOnlyComparison ? expectedText : null;
                     ExceptionActualText = isOnlyComparison ? actualText : null;
-                    _assertionComparisonCount += newComparisons;
+                    _assertionComparisonCount = Math.Min(2, _assertionComparisonCount + newComparisons);
                 }
             }
         }

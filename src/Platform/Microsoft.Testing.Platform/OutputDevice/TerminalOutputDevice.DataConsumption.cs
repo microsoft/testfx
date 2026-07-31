@@ -172,6 +172,7 @@ internal sealed partial class TerminalOutputDevice
                 StandardErrorProperty? stderrProp = null;
                 TestNodeStateProperty? nodeState = null;
                 AssertionFailureProperty? assertionFailure = null;
+                bool hasAssertionFailure = false;
                 bool executionCompleted = false;
                 PropertyBag.PropertyBagEnumerator enumerator = testNodeStateChanged.TestNode.Properties.GetStructEnumerator();
                 while (enumerator.MoveNext())
@@ -182,7 +183,14 @@ internal sealed partial class TerminalOutputDevice
                         case StandardOutputProperty so: stdoutProp = so; break;
                         case StandardErrorProperty se: stderrProp = se; break;
                         case TestNodeStateProperty s: nodeState = s; break;
-                        case AssertionFailureProperty af: assertionFailure = af; break;
+
+                        // Two competing pairs cannot both be rendered and neither carries a label, so a
+                        // duplicate suppresses the diff instead of picking an arbitrary one. This walk is
+                        // deliberately non-throwing (see above), so it drops the value rather than failing.
+                        case AssertionFailureProperty af:
+                            assertionFailure = hasAssertionFailure ? null : af;
+                            hasAssertionFailure = true;
+                            break;
                         case TestNodeExecutionCompletedProperty: executionCompleted = true; break;
                         case FileArtifactProperty fa:
                             terminalTestReporter.ArtifactAdded(
