@@ -461,11 +461,13 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
         _handler.NotifyInProgress(testNode, null);
         _handler.NotifyPassed(testNode, PassedTestNodeStateProperty.CachedInstance);
 
-        activity.Verify(a => a.SetTag("test.case.result.status", "passed"), Times.Once);
+        // The upstream test.case.result.status enum is "pass"/"fail"; the legacy attribute keeps "passed"/"failed".
+        activity.Verify(a => a.SetTag("test.case.result.status", "pass"), Times.Once);
+        activity.Verify(a => a.SetTag("test.result", "passed"), Times.Once);
         activity.Verify(a => a.SetStatus(PlatformActivityStatusCode.Ok, It.IsAny<string?>()), Times.Once);
         Assert.AreEqual(1, _testCaseResultCounter.Value);
         Assert.IsNotNull(_testCaseResultCounter.LastTags);
-        Assert.Contains(t => t.Key == "test.case.result.status" && (string?)t.Value == "passed", _testCaseResultCounter.LastTags);
+        Assert.Contains(t => t.Key == "test.case.result.status" && (string?)t.Value == "pass", _testCaseResultCounter.LastTags);
     }
 
     [TestMethod]
@@ -480,8 +482,12 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
 
         activity.Verify(a => a.RecordException(exception, It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()), Times.Once);
         activity.Verify(a => a.SetTag("error.type", typeof(InvalidOperationException).FullName), Times.Once);
-        activity.Verify(a => a.SetTag("error.message", "boom"), Times.Once);
-        Assert.Contains(t => t.Key == "test.case.result.status" && (string?)t.Value == "failed", _testCaseResultCounter.LastTags!);
+
+        // error.message is deprecated upstream and NOT RECOMMENDED on spans; the message travels on the
+        // exception event and on the legacy attribute instead.
+        activity.Verify(a => a.SetTag("error.message", It.IsAny<object?>()), Times.Never);
+        activity.Verify(a => a.SetTag("test.result.exception.message", "boom"), Times.Once);
+        Assert.Contains(t => t.Key == "test.case.result.status" && (string?)t.Value == "fail", _testCaseResultCounter.LastTags!);
     }
 
     [TestMethod]
@@ -556,7 +562,7 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
 
         // Only bounded dimensions belong on the histogram: the raw counts would create a new time series per
         // distinct value.
-        Assert.Contains(t => t.Key == "test.run.result.status" && (string?)t.Value == "failed", _testRunDurationHistogram.LastTags);
+        Assert.Contains(t => t.Key == "test.run.result.status" && (string?)t.Value == "fail", _testRunDurationHistogram.LastTags);
         Assert.Contains(t => t.Key == "test.run.exit_code" && (int?)t.Value == 2, _testRunDurationHistogram.LastTags);
         Assert.DoesNotContain(t => t.Key == "test.run.total", _testRunDurationHistogram.LastTags);
 

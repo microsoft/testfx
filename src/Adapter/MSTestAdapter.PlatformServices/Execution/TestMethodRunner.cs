@@ -143,7 +143,7 @@ internal sealed partial class TestMethodRunner
             }
         }
 
-        return anyFailed ? "failed" : allSkipped ? "skipped" : "passed";
+        return anyFailed ? "fail" : allSkipped ? "skipped" : "pass";
     }
 
     /// <summary>

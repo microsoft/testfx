@@ -154,7 +154,7 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
         _testRunDuration.Record(
             _runStopwatch.Elapsed.TotalSeconds,
             [
-                new(TestingPlatformSemanticConventions.Attributes.TestRunResultStatus, failedTests > 0 ? TestingPlatformSemanticConventions.TestResultStatus.Failed : TestingPlatformSemanticConventions.TestResultStatus.Passed),
+                new(TestingPlatformSemanticConventions.Attributes.TestRunResultStatus, failedTests > 0 ? TestingPlatformSemanticConventions.TestResultStatus.Fail : TestingPlatformSemanticConventions.TestResultStatus.Pass),
                 new(TestingPlatformSemanticConventions.Attributes.TestRunExitCode, exitCode),
             ]);
 
@@ -234,8 +234,9 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
 
         if (testNode.Properties.SingleOrDefault<TestMethodIdentifierProperty>() is { } identifierProperty)
         {
-            yield return new(TestingPlatformSemanticConventions.Attributes.CodeFunctionName, $"{identifierProperty.TypeName}.{identifierProperty.MethodName}");
-            yield return new(TestingPlatformSemanticConventions.Attributes.CodeNamespace, identifierProperty.Namespace);
+            // code.function.name is defined as the *fully qualified* name; there is no separate namespace
+            // attribute (code.namespace is deprecated upstream).
+            yield return new(TestingPlatformSemanticConventions.Attributes.CodeFunctionName, $"{identifierProperty.Namespace}.{identifierProperty.TypeName}.{identifierProperty.MethodName}");
             yield return new(TestingPlatformSemanticConventions.Attributes.TestSuiteName, identifierProperty.TypeName);
             yield return new(TestingPlatformSemanticConventions.Attributes.TestAssemblyName, identifierProperty.AssemblyFullName);
 
@@ -277,8 +278,8 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
 
         (string result, Exception? exception, TimeSpan? timeoutTime) = stateProperty switch
         {
-            PassedTestNodeStateProperty => (TestingPlatformSemanticConventions.TestResultStatus.Passed, null, null),
-            FailedTestNodeStateProperty failed => (TestingPlatformSemanticConventions.TestResultStatus.Failed, failed.Exception, null),
+            PassedTestNodeStateProperty => (TestingPlatformSemanticConventions.TestResultStatus.Pass, null, null),
+            FailedTestNodeStateProperty failed => (TestingPlatformSemanticConventions.TestResultStatus.Fail, failed.Exception, null),
             ErrorTestNodeStateProperty error => (TestingPlatformSemanticConventions.TestResultStatus.Error, error.Exception, null),
             TimeoutTestNodeStateProperty timeout => (TestingPlatformSemanticConventions.TestResultStatus.Timeout, timeout.Exception, timeout.Timeout),
 #pragma warning disable CS0618, MTP0001 // Type or member is obsolete
@@ -311,7 +312,9 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
 
         if (_options.EmitLegacyAttributes)
         {
-            activity.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestResult, result);
+            // The legacy attribute keeps its original "passed"/"failed" spellings; the semantic-convention
+            // attribute uses the upstream "pass"/"fail" enum.
+            activity.SetTag(TestingPlatformSemanticConventions.Attributes.LegacyTestResult, TestingPlatformSemanticConventions.TestResultStatus.ToLegacy(result));
 
             // Truncated as well: emitting the legacy twin untruncated would defeat the size limit, since legacy
             // attributes are on by default.
@@ -320,15 +323,16 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
 
         if (exception is not null)
         {
-            // The OpenTelemetry convention is an "exception" event plus error.type/error.message on the span, and a
-            // status of Error so the trace shows up as failed in every backend.
+            // The OpenTelemetry convention is an "exception" event carrying the type/message/stack trace, plus
+            // error.type and a status of Error on the span so it shows up as failed in every backend.
+            // error.message is deliberately not set: it is deprecated upstream and NOT RECOMMENDED on spans
+            // because of its unbounded cardinality - the message is on the event instead.
             string? exceptionTypeName = exception.GetType().FullName;
             string? truncatedMessage = _options.Truncate(exception.Message);
             string? truncatedStackTrace = _options.Truncate(exception.StackTrace);
 
             activity.RecordException(exception);
             activity.SetTag(TestingPlatformSemanticConventions.Attributes.ErrorType, exceptionTypeName);
-            activity.SetTag(TestingPlatformSemanticConventions.Attributes.ErrorMessage, truncatedMessage);
             activity.SetTag(TestingPlatformSemanticConventions.Attributes.CodeStacktrace, truncatedStackTrace);
 
             if (_options.EmitLegacyAttributes)
@@ -343,7 +347,7 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
             activity.SetStatus(
                 result switch
                 {
-                    TestingPlatformSemanticConventions.TestResultStatus.Passed => PlatformActivityStatusCode.Ok,
+                    TestingPlatformSemanticConventions.TestResultStatus.Pass => PlatformActivityStatusCode.Ok,
                     TestingPlatformSemanticConventions.TestResultStatus.Skipped or TestingPlatformSemanticConventions.TestResultStatus.Unknown => PlatformActivityStatusCode.Unset,
                     _ => PlatformActivityStatusCode.Error,
                 },

@@ -11,7 +11,6 @@ internal sealed class ActivityWrapper(Activity activity, bool isAmbient = true) 
     private const string ExceptionTypeTag = "exception.type";
     private const string ExceptionMessageTag = "exception.message";
     private const string ExceptionStackTraceTag = "exception.stacktrace";
-    private const string ExceptionEscapedTag = "exception.escaped";
 
     public string? Id => activity.Id;
 
@@ -58,12 +57,13 @@ internal sealed class ActivityWrapper(Activity activity, bool isAmbient = true) 
 
     public IPlatformActivity RecordException(Exception exception, IEnumerable<KeyValuePair<string, object?>>? additionalTags = null)
     {
+        // exception.escaped is deliberately omitted: it is deprecated upstream, and a test failure is reported
+        // through the result attributes rather than by letting the exception escape the span.
         ActivityTagsCollection tags = new()
         {
             [ExceptionTypeTag] = exception.GetType().FullName,
             [ExceptionMessageTag] = exception.Message,
             [ExceptionStackTraceTag] = exception.ToString(),
-            [ExceptionEscapedTag] = false,
         };
 
         if (additionalTags is not null)

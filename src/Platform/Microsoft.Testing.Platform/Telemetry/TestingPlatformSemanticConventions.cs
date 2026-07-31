@@ -7,10 +7,18 @@ namespace Microsoft.Testing.Platform.Telemetry;
 /// Well-known attribute and instrument names emitted by Microsoft.Testing.Platform.
 /// </summary>
 /// <remarks>
-/// Names follow the OpenTelemetry semantic conventions for tests (<c>test.*</c>), code
-/// (<c>code.*</c>), errors (<c>error.*</c>), CI/CD (<c>cicd.*</c>) and VCS (<c>vcs.*</c>).
-/// Some of those conventions are still in "development" status upstream; we keep them in one
-/// place so a rename upstream is a single-file change here.
+/// <para>
+/// Where an OpenTelemetry semantic convention exists, its exact name is used: <c>test.*</c>, <c>code.*</c>,
+/// <c>error.*</c>, <c>cicd.*</c>, <c>vcs.*</c>, <c>host.*</c>, <c>os.*</c> and <c>process.*</c>. Several of those
+/// are still at "development" or "release candidate" stability upstream, so keeping every name in one file means a
+/// rename upstream is a single-file change here.
+/// </para>
+/// <para>
+/// Names marked "platform extension" below have <b>no</b> upstream definition as of semantic conventions 1.43.0 -
+/// notably there are no upstream <c>test.*</c> metrics at all, and no upstream span conventions for test cases.
+/// They deliberately sit in the <c>test.*</c> namespace because that is where an upstream definition would land,
+/// and they are documented as ours rather than presented as standard.
+/// </para>
 /// </remarks>
 internal static class TestingPlatformSemanticConventions
 {
@@ -19,25 +27,25 @@ internal static class TestingPlatformSemanticConventions
     /// </summary>
     internal static class Attributes
     {
-        // ---- test.* (OTel semantic conventions for testing) ----
+        // ---- test.* (OpenTelemetry semantic conventions for testing, development stability) ----
         internal const string TestCaseName = "test.case.name";
         internal const string TestCaseResultStatus = "test.case.result.status";
         internal const string TestSuiteName = "test.suite.name";
-        internal const string TestRunId = "test.run.id";
 
-        // ---- code.* ----
+        // ---- code.* (stable) ----
+        // The convention asks for the *fully qualified* name here; there is no separate namespace attribute
+        // (code.namespace is deprecated upstream).
         internal const string CodeFunctionName = "code.function.name";
-        internal const string CodeNamespace = "code.namespace";
         internal const string CodeFilePath = "code.file.path";
         internal const string CodeLineNumber = "code.line.number";
-        internal const string CodeColumnNumber = "code.column.number";
         internal const string CodeStacktrace = "code.stacktrace";
 
-        // ---- error.* ----
+        // ---- error.* (stable) ----
+        // Only error.type: error.message is deprecated upstream and is NOT RECOMMENDED on spans because of its
+        // unbounded cardinality. The message travels on the exception event instead.
         internal const string ErrorType = "error.type";
-        internal const string ErrorMessage = "error.message";
 
-        // ---- Microsoft.Testing.Platform specific ----
+        // ---- Platform extensions: no upstream definition ----
         internal const string TestCaseId = "test.case.id";
         internal const string TestCaseParentId = "test.case.parent.id";
         internal const string TestCaseResultExplanation = "test.case.result.explanation";
@@ -58,8 +66,6 @@ internal static class TestingPlatformSemanticConventions
         internal const string TestRunFailedCount = "test.run.failed";
         internal const string TestRunSkippedCount = "test.run.skipped";
         internal const string TestRunRequestType = "test.run.request_type";
-        internal const string TestArtifactPath = "test.artifact.path";
-        internal const string TestArtifactKind = "test.artifact.kind";
         internal const string TestExtensionUid = "test.extension.uid";
         internal const string TestExtensionVersion = "test.extension.version";
         internal const string TestExtensionDisplayName = "test.extension.display_name";
@@ -95,32 +101,45 @@ internal static class TestingPlatformSemanticConventions
     /// <summary>
     /// Values for <see cref="Attributes.TestCaseResultStatus"/>.
     /// </summary>
+    /// <remarks>
+    /// Upstream defines exactly two well-known values, <c>pass</c> and <c>fail</c>. The remaining values are
+    /// custom (the specification explicitly allows that) because collapsing "skipped", "timed out" and "errored"
+    /// into "fail" would lose the distinction a test report is built on.
+    /// </remarks>
     internal static class TestResultStatus
     {
-        internal const string Passed = "passed";
-        internal const string Failed = "failed";
+        internal const string Pass = "pass";
+        internal const string Fail = "fail";
         internal const string Skipped = "skipped";
         internal const string Error = "error";
         internal const string Timeout = "timeout";
         internal const string Cancelled = "cancelled";
         internal const string Unknown = "unknown";
+
+        /// <summary>
+        /// Maps a status onto the value the pre-4.x <c>test.result</c> attribute used, so legacy dashboards keep
+        /// seeing the spellings they were built against.
+        /// </summary>
+        internal static string ToLegacy(string status)
+            => status switch
+            {
+                Pass => "passed",
+                Fail => "failed",
+                _ => status,
+            };
     }
 
     /// <summary>
-    /// Instrument (metric) names.
+    /// Instrument (metric) names. None of these are defined upstream: semantic conventions 1.43.0 has no
+    /// <c>test.*</c> metrics.
     /// </summary>
     internal static class Metrics
     {
-        // Semantic-convention aligned instruments.
         internal const string TestCaseDuration = "test.case.duration";
         internal const string TestCaseResultCount = "test.case.result.count";
         internal const string TestRunDuration = "test.run.duration";
         internal const string TestRunActiveCases = "test.case.active";
-        internal const string TestDiscoveryDuration = "test.discovery.duration";
-        internal const string TestArtifactCount = "test.artifact.count";
-        internal const string TestExtensionDuration = "test.extension.duration";
         internal const string TestRetryCount = "test.case.retry.count";
-        internal const string MessageBusMessageCount = "test.messagebus.message.count";
 
         // Legacy instruments kept for backward compatibility.
         internal const string LegacyTestsDiscovered = "tests.discovered";
@@ -139,10 +158,7 @@ internal static class TestingPlatformSemanticConventions
     internal static class Units
     {
         internal const string Seconds = "s";
-        internal const string Milliseconds = "ms";
         internal const string Count = "{test}";
-        internal const string Artifacts = "{artifact}";
-        internal const string Messages = "{message}";
     }
 
     /// <summary>
@@ -152,7 +168,5 @@ internal static class TestingPlatformSemanticConventions
     {
         internal const string TestHostBuilder = "TestHostBuilder";
         internal const string TestFramework = "TestFramework";
-        internal const string Discovery = "Discovery";
-        internal const string Run = "Run";
     }
 }

@@ -44,7 +44,14 @@ internal static class TestingPlatformResourceDetector
     {
         yield return new("host.name", Environment.MachineName);
         yield return new("host.arch", GetHostArchitecture());
-        yield return new("os.type", GetOsType());
+
+        // os.type has no defined catch-all value upstream, so an unrecognised platform omits the attribute rather
+        // than inventing one.
+        if (GetOsType() is { } osType)
+        {
+            yield return new("os.type", osType);
+        }
+
         yield return new("os.description", RuntimeInformation.OSDescription);
         yield return new("process.pid", GetCurrentProcessId());
         yield return new("process.runtime.name", ".NET");
@@ -66,11 +73,11 @@ internal static class TestingPlatformResourceDetector
 #endif
     }
 
-    private static string GetOsType()
+    private static string? GetOsType()
         => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "windows"
             : RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? "darwin"
             : RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "linux"
-            : "other";
+            : null;
 
     /// <summary>
     /// Maps <see cref="Architecture"/> onto the values allowed by the OpenTelemetry <c>host.arch</c> enum, which
@@ -90,6 +97,11 @@ internal static class TestingPlatformResourceDetector
     /// Detects the CI provider and maps its environment variables onto the OpenTelemetry <c>cicd.*</c> and
     /// <c>vcs.*</c> conventions, so a failing test can be correlated with the pipeline run and commit that produced it.
     /// </summary>
+    /// <remarks>
+    /// <c>cicd.pipeline.*</c> and <c>vcs.*</c> are upstream-defined (release candidate). <c>cicd.provider.name</c>
+    /// is <b>not</b>: as of semantic conventions 1.43.0 there is no attribute identifying the CI system, so this is
+    /// a platform extension sitting in the namespace where an upstream definition would land.
+    /// </remarks>
     private static IEnumerable<KeyValuePair<string, object>> GetCiAttributes()
     {
         if (IsTrue(Environment.GetEnvironmentVariable("GITHUB_ACTIONS")))
