@@ -196,3 +196,11 @@ Microsoft.Testing.Platform.Extensions.Messages.RetryAttemptProperty.Equals(Micro
 override Microsoft.Testing.Platform.Extensions.Messages.RetryAttemptProperty.ToString() -> string!
 override Microsoft.Testing.Platform.Extensions.Messages.RetryAttemptProperty.Equals(object? obj) -> bool
 override Microsoft.Testing.Platform.Extensions.Messages.RetryAttemptProperty.GetHashCode() -> int
+Microsoft.Testing.Platform.Extensions.Messages.AssertionFailureProperty
+Microsoft.Testing.Platform.Extensions.Messages.AssertionFailureProperty.Actual.get -> string?
+Microsoft.Testing.Platform.Extensions.Messages.AssertionFailureProperty.AssertionFailureProperty(string? expected, string? actual) -> void
+Microsoft.Testing.Platform.Extensions.Messages.AssertionFailureProperty.Equals(Microsoft.Testing.Platform.Extensions.Messages.AssertionFailureProperty? other) -> bool
+Microsoft.Testing.Platform.Extensions.Messages.AssertionFailureProperty.Expected.get -> string?
+override Microsoft.Testing.Platform.Extensions.Messages.AssertionFailureProperty.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.Extensions.Messages.AssertionFailureProperty.GetHashCode() -> int
+override Microsoft.Testing.Platform.Extensions.Messages.AssertionFailureProperty.ToString() -> string!

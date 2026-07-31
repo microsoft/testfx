@@ -19,6 +19,14 @@ internal sealed partial class Json
         List<KeyValuePair<string, string>>? traits = null;
         bool hasActionNodeType = false;
 
+        // Collected up-front because the assertion values are rendered inside the failed-state branch below,
+        // and property order inside the bag is not guaranteed. The state lookup is O(1) (it is a dedicated
+        // PropertyBag field), so non-failed nodes — discovery, in-progress, passed, which are the vast
+        // majority — never pay for the linked-list walk.
+        AssertionFailureProperty? assertionFailure = message.Properties.SingleOrDefault<TestNodeStateProperty>() is FailedTestNodeStateProperty
+            ? message.Properties.SingleOrDefault<AssertionFailureProperty>()
+            : null;
+
         int attachmentIndex = 0;
         foreach (IProperty property in message.Properties)
         {
@@ -120,6 +128,18 @@ internal sealed partial class Json
                             if (exception is not null)
                             {
                                 properties.Add(("error.stacktrace", exception.StackTrace ?? string.Empty));
+                            }
+
+                            // AssertionFailureProperty is the supported channel; Exception.Data is the legacy
+                            // fallback for producers that have not been updated yet. The choice is
+                            // all-or-nothing so the two halves of a diff always come from the same producer.
+                            if (assertionFailure is not null)
+                            {
+                                properties.Add(("assert.actual", assertionFailure.Actual ?? string.Empty));
+                                properties.Add(("assert.expected", assertionFailure.Expected ?? string.Empty));
+                            }
+                            else if (exception is not null)
+                            {
                                 properties.Add(("assert.actual", exception.Data["assert.actual"] ?? string.Empty));
                                 properties.Add(("assert.expected", exception.Data["assert.expected"] ?? string.Empty));
                             }

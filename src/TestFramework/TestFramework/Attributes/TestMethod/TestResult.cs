@@ -2,6 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
+#if NETFRAMEWORK
+using System.Runtime.Serialization;
+#endif
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -13,6 +16,28 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 #endif
 public class TestResult
 {
+    /// <summary>
+    /// Number of assertion failures carrying comparison values (an expected and/or actual text) observed across
+    /// all <see cref="TestFailureException"/> assignments, capped at 2. A single comparison can always be
+    /// attributed to the result; two or more compete, so none is reported.
+    /// </summary>
+    /// <remarks>
+    /// Failures that carry no comparison — <c>Assert.Fail</c>, or any non-assertion exception — deliberately do
+    /// not count. They add nothing that could be confused with the surviving pair, and counting them would make
+    /// a cleanup <c>Assert.Fail</c> suppress the body's diff while a cleanup <c>throw</c> would not.
+    /// <para>
+    /// Deliberately serialized on .NET Framework, unlike <see cref="TestFailureException"/>: the values this
+    /// guards (<see cref="ExceptionExpectedText"/> / <see cref="ExceptionActualText"/>) do cross an AppDomain
+    /// boundary, so the count that governs them must cross too or the invariant is lost on the far side. It is
+    /// optional so a payload written by a TestFramework build that predates this field still deserializes,
+    /// defaulting to zero.
+    /// </para>
+    /// </remarks>
+#if NETFRAMEWORK
+    [OptionalField]
+#endif
+    private int _assertionComparisonCount;
+
     /// <summary>
     /// Gets or sets the display name of the result. Useful when returning multiple results.
     /// If null then Method name is used as DisplayName.
@@ -72,12 +97,57 @@ public class TestResult
 
             ExceptionMessage = field.Message;
             ExceptionStackTrace = field.StackTrace;
+
+            // Capture the structured assertion values as strings, for the same reason ExceptionMessage and
+            // ExceptionStackTrace are captured: the exception instance itself does not survive an AppDomain
+            // boundary, and the adapter reports results from these strings rather than from the exception.
+            //
+            // Only an unambiguous single comparison is surfaced. This setter can be called more than once
+            // (e.g. a TestInitialize failure followed by a TestCleanup failure) and a single exception can
+            // itself report several failures, so the count is accumulated across both.
+            if (_assertionComparisonCount < 2)
+            {
+                int newComparisons = FindAssertionTexts(value, out string? expectedText, out string? actualText);
+                if (newComparisons > 0)
+                {
+                    bool isOnlyComparison = _assertionComparisonCount == 0 && newComparisons == 1;
+                    ExceptionExpectedText = isOnlyComparison ? expectedText : null;
+                    ExceptionActualText = isOnlyComparison ? actualText : null;
+                    _assertionComparisonCount = Math.Min(2, _assertionComparisonCount + newComparisons);
+                }
+            }
         }
     }
 
     internal string? ExceptionMessage { get; set; }
 
     internal string? ExceptionStackTrace { get; set; }
+
+    /// <summary>
+    /// Gets or sets the pre-formatted <c>expected</c> text of the assertion that failed the test, when the
+    /// failure came from an assertion that has a natural expected value.
+    /// </summary>
+    /// <remarks>
+    /// Optional on .NET Framework so a payload written by a TestFramework build that predates this member still
+    /// deserializes, defaulting to <see langword="null"/>.
+    /// </remarks>
+#if NETFRAMEWORK
+    [field: OptionalField]
+#endif
+    internal string? ExceptionExpectedText { get; set; }
+
+    /// <summary>
+    /// Gets or sets the pre-formatted <c>actual</c> text of the assertion that failed the test, when the
+    /// failure came from an assertion that has a natural actual value.
+    /// </summary>
+    /// <remarks>
+    /// Optional on .NET Framework so a payload written by a TestFramework build that predates this member still
+    /// deserializes, defaulting to <see langword="null"/>.
+    /// </remarks>
+#if NETFRAMEWORK
+    [field: OptionalField]
+#endif
+    internal string? ExceptionActualText { get; set; }
 
     /// <summary>
     /// Gets or sets the output of the message logged by test code.
@@ -169,4 +239,71 @@ public class TestResult
             Outcome = UnitTestOutcome.Ignored,
             IgnoreReason = ignoreReason,
         };
+
+    /// <summary>
+    /// Counts the assertion failures that carry comparison values (capped at 2) and reports the values of the
+    /// first one.
+    /// </summary>
+    /// <remarks>
+    /// The adapter wraps the original assertion exception in its own exception type, so the assertion the user
+    /// cares about is usually not the outermost one. The count matters because <c>assert.expected</c> /
+    /// <c>assert.actual</c> carry no label: two competing comparisons cannot both be reported and the surviving
+    /// one would look authoritative. Soft assertions (<c>Assert.Scope</c>) reach this shape by throwing a single
+    /// <see cref="AssertFailedException"/> wrapping an <see cref="AggregateException"/> of every collected
+    /// failure. The per-assertion values remain visible in the failure message itself.
+    /// </remarks>
+    /// <returns>The number of comparisons found, saturating at 2.</returns>
+    private static int FindAssertionTexts(Exception? exception, out string? expectedText, out string? actualText)
+    {
+        expectedText = null;
+        actualText = null;
+        int comparisonCount = 0;
+        Visit(exception, 0, ref comparisonCount, ref expectedText, ref actualText);
+
+        if (comparisonCount != 1)
+        {
+            expectedText = null;
+            actualText = null;
+        }
+
+        return comparisonCount;
+
+        static void Visit(Exception? exception, int depth, ref int comparisonCount, ref string? expectedText, ref string? actualText)
+        {
+            // Bound the walk so a pathologically deep exception chain cannot stall the test host. The depth is
+            // carried into the recursion so nesting cannot escape the bound.
+            const int MaxDepth = 10;
+
+            while (exception is not null && depth < MaxDepth && comparisonCount < 2)
+            {
+                if (exception is AssertFailedException assertFailedException
+                    && (assertFailedException.ExpectedText is not null || assertFailedException.ActualText is not null))
+                {
+                    comparisonCount++;
+                    if (expectedText is null && actualText is null)
+                    {
+                        expectedText = assertFailedException.ExpectedText;
+                        actualText = assertFailedException.ActualText;
+                    }
+                }
+
+                if (exception is AggregateException aggregateException)
+                {
+                    foreach (Exception innerException in aggregateException.InnerExceptions)
+                    {
+                        Visit(innerException, depth + 1, ref comparisonCount, ref expectedText, ref actualText);
+                        if (comparisonCount > 1)
+                        {
+                            return;
+                        }
+                    }
+
+                    return;
+                }
+
+                exception = exception.InnerException;
+                depth++;
+            }
+        }
+    }
 }

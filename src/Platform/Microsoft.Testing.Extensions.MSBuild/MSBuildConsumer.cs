@@ -87,6 +87,7 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
         TestNodeStateProperty? stateProperty = null;
         TimingProperty? timingProperty = null;
         TestFileLocationProperty? testFileLocationProperty = null;
+        AssertionFailureProperty? assertionFailureProperty = null;
 
         PropertyBag.PropertyBagEnumerator enumerator = testNodeStateChanged.TestNode.Properties.GetStructEnumerator();
         while (enumerator.MoveNext())
@@ -111,6 +112,14 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
                     }
 
                     testFileLocationProperty = f;
+                    break;
+                case AssertionFailureProperty a:
+                    if (assertionFailureProperty is not null)
+                    {
+                        throw new InvalidOperationException($"Found multiple properties of type '{typeof(AssertionFailureProperty)}'.");
+                    }
+
+                    assertionFailureProperty = a;
                     break;
             }
         }
@@ -146,8 +155,8 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
                     duration: timingProperty is null ? null : ToHumanReadableDuration(timingProperty.GlobalTiming.Duration.TotalMilliseconds),
                     errorMessage: failedState.Exception?.Message ?? failedState.Explanation,
                     errorStackTrace: failedState.Exception?.StackTrace,
-                    expected: failedState.Exception?.Data["assert.expected"] as string,
-                    actual: failedState.Exception?.Data["assert.actual"] as string,
+                    expected: assertionFailureProperty is not null ? assertionFailureProperty.Expected : failedState.Exception?.Data["assert.expected"] as string,
+                    actual: assertionFailureProperty is not null ? assertionFailureProperty.Actual : failedState.Exception?.Data["assert.actual"] as string,
                     testFileLocationProperty?.FilePath,
                     testFileLocationProperty?.LineSpan.Start.Line ?? 0,
                     cancellationToken).ConfigureAwait(false);

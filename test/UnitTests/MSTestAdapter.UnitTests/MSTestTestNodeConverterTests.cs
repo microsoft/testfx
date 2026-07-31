@@ -158,6 +158,51 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
         failed.Exception.StackTrace.Should().Be("at Some.Method()");
     }
 
+    public void ToResultTestNode_AddsAssertionFailureProperty_WhenResultCarriesAssertionTexts()
+    {
+        var result = new FrameworkTestResult
+        {
+            Outcome = UnitTestOutcome.Failed,
+            ExceptionMessage = "Assert.AreEqual failed.",
+            ExceptionExpectedText = "5",
+            ExceptionActualText = "2",
+        };
+
+        TestNode node = MSTestTestNodeConverter.ToResultTestNode(CreateElement(), result, DateTimeOffset.Now, DateTimeOffset.Now, isTrxEnabled: false, new MSTestSettings());
+
+        AssertionFailureProperty? assertionFailure = node.Properties.SingleOrDefault<AssertionFailureProperty>();
+        assertionFailure.Should().NotBeNull();
+        assertionFailure!.Expected.Should().Be("5");
+        assertionFailure.Actual.Should().Be("2");
+    }
+
+    public void ToResultTestNode_AddsAssertionFailureProperty_WhenOnlyExpectedTextIsKnown()
+    {
+        // Some assertions (e.g. CollectionAssert.Contains) only have a natural expected value.
+        var result = new FrameworkTestResult
+        {
+            Outcome = UnitTestOutcome.Failed,
+            ExceptionMessage = "CollectionAssert.Contains failed.",
+            ExceptionExpectedText = "\"c\"",
+        };
+
+        TestNode node = MSTestTestNodeConverter.ToResultTestNode(CreateElement(), result, DateTimeOffset.Now, DateTimeOffset.Now, isTrxEnabled: false, new MSTestSettings());
+
+        AssertionFailureProperty? assertionFailure = node.Properties.SingleOrDefault<AssertionFailureProperty>();
+        assertionFailure.Should().NotBeNull();
+        assertionFailure!.Expected.Should().Be("\"c\"");
+        assertionFailure.Actual.Should().BeNull();
+    }
+
+    public void ToResultTestNode_DoesNotAddAssertionFailureProperty_WhenFailureIsNotAnAssertion()
+    {
+        var result = new FrameworkTestResult { Outcome = UnitTestOutcome.Failed, ExceptionMessage = "boom" };
+
+        TestNode node = MSTestTestNodeConverter.ToResultTestNode(CreateElement(), result, DateTimeOffset.Now, DateTimeOffset.Now, isTrxEnabled: false, new MSTestSettings());
+
+        node.Properties.Any<AssertionFailureProperty>().Should().BeFalse();
+    }
+
     public void ToResultTestNode_MapsIgnoredOutcomeToSkipped()
     {
         TestNode node = ResultNode(UnitTestOutcome.Ignored);

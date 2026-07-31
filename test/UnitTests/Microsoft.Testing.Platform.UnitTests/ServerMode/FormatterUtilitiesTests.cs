@@ -129,6 +129,78 @@ public sealed class FormatterUtilitiesTests
             serialized);
     }
 
+    [TestMethod]
+    public async Task Serialize_FailedTestNodeWithAssertionFailureProperty_EmitsAssertValues()
+    {
+        // No exception at all: the assertion diff must still reach the client. This is the case the
+        // Exception.Data channel structurally cannot express.
+        var testNode = new TestNode
+        {
+            Uid = "failing-test",
+            DisplayName = "FailingTest",
+            Properties = new PropertyBag(
+                new FailedTestNodeStateProperty("Assert.AreEqual failed."),
+                new AssertionFailureProperty("5", "2")),
+        };
+
+        string serialized = (await _formatter.SerializeAsync(testNode)).Replace(" ", string.Empty);
+
+        Assert.AreEqual(
+            """{"uid":"failing-test","display-name":"FailingTest","node-type":"action","execution-state":"failed","error.message":"Assert.AreEqualfailed.","assert.actual":"2","assert.expected":"5"}""",
+            serialized);
+    }
+
+    [TestMethod]
+    public async Task Serialize_FailedTestNodeWithAssertionFailureProperty_PrefersPropertyOverExceptionData()
+    {
+        var exception = new InvalidOperationException("boom");
+        exception.Data["assert.expected"] = "legacy expected";
+        exception.Data["assert.actual"] = "legacy actual";
+
+        var testNode = new TestNode
+        {
+            Uid = "failing-test",
+            DisplayName = "FailingTest",
+            Properties = new PropertyBag(
+                new FailedTestNodeStateProperty(exception),
+                new AssertionFailureProperty("5", "2")),
+        };
+
+        string serialized = (await _formatter.SerializeAsync(testNode)).Replace(" ", string.Empty);
+
+        Assert.Contains("\"assert.actual\":\"2\"", serialized);
+        Assert.Contains("\"assert.expected\":\"5\"", serialized);
+
+        // Proves the property won rather than merely being present: an implementation that emitted both
+        // channels would satisfy the two assertions above.
+        Assert.DoesNotContain("legacy", serialized);
+    }
+
+    [TestMethod]
+    public async Task Serialize_OneSidedAssertionFailureProperty_DoesNotSpliceInExceptionData()
+    {
+        // The property is authoritative as a whole; the missing half must serialize as empty rather than
+        // falling back to an unrelated Exception.Data entry.
+        var exception = new InvalidOperationException("boom");
+        exception.Data["assert.expected"] = "legacy expected";
+        exception.Data["assert.actual"] = "legacy actual";
+
+        var testNode = new TestNode
+        {
+            Uid = "failing-test",
+            DisplayName = "FailingTest",
+            Properties = new PropertyBag(
+                new FailedTestNodeStateProperty(exception),
+                new AssertionFailureProperty("5", null)),
+        };
+
+        string serialized = (await _formatter.SerializeAsync(testNode)).Replace(" ", string.Empty);
+
+        Assert.Contains("\"assert.expected\":\"5\"", serialized);
+        Assert.Contains("\"assert.actual\":\"\"", serialized);
+        Assert.DoesNotContain("legacy", serialized);
+    }
+
     [DataRow(typeof(DiscoverRequestArgs))]
     [DataRow(typeof(RunRequestArgs))]
     [TestMethod]
