@@ -33,6 +33,38 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 internal static class MSTestTestNodeConverter
 {
     /// <summary>
+    /// Caches the <see cref="TestMethodIdentifierProperty"/> built for a given <see cref="TestMethod"/>.
+    /// </summary>
+    /// <remarks>
+    /// The property is a pure function of <see cref="TestMethod.ManagedTypeName"/> and
+    /// <see cref="TestMethod.ManagedMethodName"/>, both immutable for the lifetime of the instance, and building it
+    /// parses the managed method signature and allocates the namespace/type substrings. The same
+    /// <see cref="TestMethod"/> is converted several times per executed test (the in-progress node, then one result
+    /// node per data row), so the parse and its allocations are paid once per test method rather than once per node.
+    /// <para>
+    /// The cache lives here rather than as a lazy property on <see cref="TestMethod"/> (the way
+    /// <see cref="TestMethod.ManagedTypeName"/> caches itself) because <see cref="TestMethodIdentifierProperty"/>
+    /// is a Microsoft.Testing.Platform type, and MSTestAdapter.PlatformServices - where <see cref="TestMethod"/>
+    /// lives - does not reference the platform at all. Even within this assembly the platform is only reachable
+    /// from this folder, through the file-level RS0030 suppression above (see this project's BannedSymbols.txt).
+    /// </para>
+    /// <para>
+    /// Every consumer only ever reads the property, so handing the same instance to several nodes is safe. Note
+    /// that the type is not deeply immutable: <see cref="TestMethodIdentifierProperty.ParameterTypeFullNames"/> is
+    /// an array that used to be freshly allocated per node and is now shared, so consumers must keep treating it
+    /// as read-only.
+    /// </para>
+    /// <para>
+    /// The table holds only weak references to its keys, so entries disappear as soon as the
+    /// <see cref="TestMethod"/> becomes unreachable. <c>GetValue</c> is thread-safe: concurrent misses may each run
+    /// the factory, but a single value is published to every caller.
+    /// </para>
+    /// </remarks>
+#pragma warning disable IDE0028 // ConditionalWeakTable is not collection-expression-constructible on .NET Framework (CS9174).
+    private static readonly ConditionalWeakTable<TestMethod, TestMethodIdentifierProperty> TestMethodIdentifierCache = new();
+#pragma warning restore IDE0028
+
+    /// <summary>
     /// Builds a discovered-state <see cref="TestNode"/> for a discovered test.
     /// </summary>
     public static TestNode ToDiscoveredTestNode(UnitTestElement element, bool isTrxEnabled)
@@ -155,17 +187,22 @@ internal static class MSTestTestNodeConverter
     {
         // NOTE: ManagedMethodName, in case of MSTest, carries the parameter types, so we prefer it to display the
         // parameter types in Test Explorer. This mirrors what the VSTest bridge did in AddAdditionalProperties.
-        if (!testMethod.HasManagedMethodAndTypeProperties)
+        if (!testMethod.HasManagedMethodAndTypeProperties || StringEx.IsNullOrEmpty(testMethod.ManagedTypeName))
         {
             return null;
         }
 
-        string? managedType = testMethod.ManagedTypeName;
-        string? managedMethod = testMethod.ManagedMethodName;
-        if (StringEx.IsNullOrEmpty(managedType) || StringEx.IsNullOrEmpty(managedMethod))
-        {
-            return null;
-        }
+        // The method group conversion is cached by the compiler, so the lookup does not allocate a delegate.
+        TestMethodIdentifierProperty testMethodIdentifier = TestMethodIdentifierCache.GetValue(testMethod, BuildTestMethodIdentifier);
+        testNode.Properties.Add(testMethodIdentifier);
+        return testMethodIdentifier;
+    }
+
+    private static TestMethodIdentifierProperty BuildTestMethodIdentifier(TestMethod testMethod)
+    {
+        // AddTestMethodIdentifier is the only caller and has already validated both managed names.
+        string managedType = testMethod.ManagedTypeName!;
+        string managedMethod = testMethod.ManagedMethodName!;
 
         ManagedNameParser.ParseManagedMethodName(managedMethod, out string methodName, out int arity, out string[]? parameterTypes);
         parameterTypes ??= [];
@@ -176,9 +213,7 @@ internal static class MSTestTestNodeConverter
 
         // AssemblyFullName and ReturnTypeFullName are not carried by the neutral model today; kept empty to match
         // the current (bridge) behavior. Populating them is a follow-up enabled by this native path.
-        var testMethodIdentifier = new TestMethodIdentifierProperty(assemblyFullName: string.Empty, @namespace, typeName, methodName, arity, parameterTypes, returnTypeFullName: string.Empty);
-        testNode.Properties.Add(testMethodIdentifier);
-        return testMethodIdentifier;
+        return new TestMethodIdentifierProperty(assemblyFullName: string.Empty, @namespace, typeName, methodName, arity, parameterTypes, returnTypeFullName: string.Empty);
     }
 
     private static void AddOutcome(TestNode testNode, TestOutcome outcome, string? errorMessage, string? errorStackTrace)

@@ -91,6 +91,16 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
         node.Properties.Any<TestMethodIdentifierProperty>().Should().BeFalse();
     }
 
+    public void ToDiscoveredTestNode_DoesNotAddTestMethodIdentifier_WhenManagedTypeNameIsEmpty()
+    {
+        // ManagedTypeName is derived from FullClassName, so an empty class name leaves no usable type identity.
+        UnitTestElement element = CreateElement(fullClassName: string.Empty);
+
+        TestNode node = MSTestTestNodeConverter.ToDiscoveredTestNode(element, isTrxEnabled: false);
+
+        node.Properties.Any<TestMethodIdentifierProperty>().Should().BeFalse();
+    }
+
     public void ToDiscoveredTestNode_AddsFileLocation_WhenDeclaringFileKnown()
     {
         UnitTestElement element = CreateElement();
@@ -318,6 +328,37 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
 
         node.Properties.Any<Testing.Extensions.TrxReport.Abstractions.TrxExceptionProperty>().Should().BeFalse();
         node.Properties.Any<Testing.Extensions.TrxReport.Abstractions.TrxMessagesProperty>().Should().BeFalse();
+    }
+
+    // --- TestMethodIdentifier caching -------------------------------------------------------------------------
+    public void ToResultTestNode_ReusesTestMethodIdentifier_FromInProgressNode()
+    {
+        // The property is a pure function of the immutable managed names, so it is parsed and allocated once per
+        // TestMethod: the in-progress node and every result node are handed the very same cached instance.
+        UnitTestElement element = CreateElement();
+
+        TestMethodIdentifierProperty? inProgress = MSTestTestNodeConverter.ToInProgressTestNode(element, isTrxEnabled: false)
+            .Properties.SingleOrDefault<TestMethodIdentifierProperty>();
+        TestMethodIdentifierProperty? result = MSTestTestNodeConverter.ToResultTestNode(element, new FrameworkTestResult { Outcome = UnitTestOutcome.Passed }, DateTimeOffset.Now, DateTimeOffset.Now, isTrxEnabled: false, new MSTestSettings())
+            .Properties.SingleOrDefault<TestMethodIdentifierProperty>();
+
+        inProgress.Should().NotBeNull();
+        result.Should().BeSameAs(inProgress);
+    }
+
+    public void ToDiscoveredTestNode_DoesNotShareTestMethodIdentifier_AcrossDistinctTestMethods()
+    {
+        // The cache is keyed on the TestMethod instance, so two different test methods must never be conflated.
+        TestMethodIdentifierProperty? first = MSTestTestNodeConverter.ToDiscoveredTestNode(CreateElement(managedMethodName: "MethodA", name: "MethodA"), isTrxEnabled: false)
+            .Properties.SingleOrDefault<TestMethodIdentifierProperty>();
+        TestMethodIdentifierProperty? second = MSTestTestNodeConverter.ToDiscoveredTestNode(CreateElement(managedMethodName: "MethodB", name: "MethodB"), isTrxEnabled: false)
+            .Properties.SingleOrDefault<TestMethodIdentifierProperty>();
+
+        first.Should().NotBeNull();
+        second.Should().NotBeNull();
+        second.Should().NotBeSameAs(first);
+        first!.MethodName.Should().Be("MethodA");
+        second!.MethodName.Should().Be("MethodB");
     }
 
     // --- GetTestId caching ------------------------------------------------------------------------------------
