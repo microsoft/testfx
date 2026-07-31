@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="es" original="../Resources.resx">
     <body>
@@ -972,7 +972,7 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
       </trans-unit>
       <trans-unit id="UndeclaredProcessGlobalStateMutationDescription">
         <source>Mutating process-global state (such as environment variables or the console redirection) from a test is unsafe once in-assembly parallelization is enabled, because a sibling test running concurrently observes the mutation. Unlike '[ResourceLock]', which fails open when a key is forgotten, this rule flags the mutation at compile time. Declare '[ResourceLock]' with the matching 'WellKnownResources' key to serialize contending tests, or '[DoNotParallelize]' to opt the test out of parallelization.</source>
-        <target state="translated">La mutación del estado global del proceso (como las variables de entorno o el redireccionamiento de la consola) de una prueba no es segura una vez habilitada la paralelización en el ensamblado, ya que una prueba del mismo nivel que se ejecuta simultáneamente observa la mutación. A diferencia de "[ResourceLock]", que no se abre cuando se olvida una clave, esta regla marca la mutación en tiempo de compilación. Declare "[ResourceLock]" con la clave "WellKnownResources" coincidente para serializar las pruebas contendientes, o "[DoNotParallelize]" para dejar la prueba fuera de la paralelización.</target>
+        <target state="new">Mutating process-global state (such as environment variables or the console redirection) from a test is unsafe once in-assembly parallelization is enabled, because a sibling test running concurrently observes the mutation. Unlike '[ResourceLock]', which fails open when a key is forgotten, this rule flags the mutation at compile time. Declare '[ResourceLock]' with the matching 'WellKnownResources' key to serialize contending tests, or '[DoNotParallelize]' to opt the test out of parallelization.</target>
         <note>{Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="UndeclaredProcessGlobalStateMutationMessageFormat">

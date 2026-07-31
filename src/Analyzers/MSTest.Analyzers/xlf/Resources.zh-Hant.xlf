@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="zh-Hant" original="../Resources.resx">
     <body>
@@ -747,7 +747,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="PreferConstantForResourceLockDescription">
         <source>'[ResourceLock]' matches tests by exact string equality of the resource key. A bare string literal fails open: a typo produces a different key, so conflicting tests are no longer serialized and race silently instead of failing with an error. Referencing a shared constant makes typos a compile error and lets the compiler enforce that every test contending on the same resource uses the same key.</source>
-        <target state="translated">'[ResourceLock]' 依資源金鑰的確切字串相等性來比對測試。無法開啟裸機字串長值: 錯字會產生不同的金鑰，因此有衝突的測試不再序列化並默默地競爭，而不會因錯誤而失敗。參照共用常數會使錯字成為編譯錯誤，並可讓編譯器強制在相同資源上競爭的每一項測試都使用相同的金鑰。</target>
+        <target state="new">'[ResourceLock]' matches tests by exact string equality of the resource key. A bare string literal fails open: a typo produces a different key, so conflicting tests are no longer serialized and race silently instead of failing with an error. Referencing a shared constant makes typos a compile error and lets the compiler enforce that every test contending on the same resource uses the same key.</target>
         <note>{Locked="[ResourceLock]"}</note>
       </trans-unit>
       <trans-unit id="PreferConstantForResourceLockMessageFormat">
@@ -972,7 +972,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="UndeclaredProcessGlobalStateMutationDescription">
         <source>Mutating process-global state (such as environment variables or the console redirection) from a test is unsafe once in-assembly parallelization is enabled, because a sibling test running concurrently observes the mutation. Unlike '[ResourceLock]', which fails open when a key is forgotten, this rule flags the mutation at compile time. Declare '[ResourceLock]' with the matching 'WellKnownResources' key to serialize contending tests, or '[DoNotParallelize]' to opt the test out of parallelization.</source>
-        <target state="translated">一旦啟用組件內平行處理，測試的可變處理序全域狀態 (例如環境變數或主控台重新導向) 不安全，因為同時執行的同層級測試觀察到變動。不同於 '[ResourceLock]' (在忘記金鑰時開啟失敗)，此規則會在編譯時標記變動。使用相符 'WellKnownResources' 金鑰宣告'[ResourceLock]' 以序列化競爭的測試，或宣告 '[DoNotParallelize]' 使測試退出平行處理。</target>
+        <target state="new">Mutating process-global state (such as environment variables or the console redirection) from a test is unsafe once in-assembly parallelization is enabled, because a sibling test running concurrently observes the mutation. Unlike '[ResourceLock]', which fails open when a key is forgotten, this rule flags the mutation at compile time. Declare '[ResourceLock]' with the matching 'WellKnownResources' key to serialize contending tests, or '[DoNotParallelize]' to opt the test out of parallelization.</target>
         <note>{Locked="[ResourceLock]"}{Locked="WellKnownResources"}{Locked="[DoNotParallelize]"}</note>
       </trans-unit>
       <trans-unit id="UndeclaredProcessGlobalStateMutationMessageFormat">

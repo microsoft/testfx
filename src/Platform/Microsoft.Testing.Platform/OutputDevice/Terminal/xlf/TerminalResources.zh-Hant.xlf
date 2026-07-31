@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="zh-Hant" original="../TerminalResources.resx">
     <body>
@@ -59,7 +59,7 @@
       </trans-unit>
       <trans-unit id="CoverageMetricBlock">
         <source>Block</source>
-        <target state="translated">封鎖</target>
+        <target state="new">Block</target>
         <note>Label for block code coverage in the coverage summary (e.g. 'Total - Block: 95.0%').</note>
       </trans-unit>
       <trans-unit id="CoverageMetricBranch">
@@ -89,12 +89,12 @@
       </trans-unit>
       <trans-unit id="CoverageMetricInstruction">
         <source>Instruction</source>
-        <target state="translated">指示</target>
+        <target state="new">Instruction</target>
         <note>Label for instruction code coverage in the coverage summary (e.g. 'Total - Instruction: 95.0%').</note>
       </trans-unit>
       <trans-unit id="CoverageMetricLine">
         <source>Line</source>
-        <target state="translated">線</target>
+        <target state="new">Line</target>
         <note>Label for line code coverage in the coverage summary (e.g. 'Total - Line: 95.0%').</note>
       </trans-unit>
       <trans-unit id="CoverageMetricMethod">
