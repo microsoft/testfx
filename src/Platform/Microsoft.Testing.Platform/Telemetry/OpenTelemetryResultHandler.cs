@@ -249,6 +249,17 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
     private static string? GetSuiteName(TestNode testNode)
         => testNode.Properties.SingleOrDefault<TestMethodIdentifierProperty>()?.TypeName;
 
+    /// <summary>
+    /// Builds the value for <c>code.function.name</c>, which the convention defines as the fully qualified name.
+    /// </summary>
+    /// <remarks>
+    /// The namespace is empty for a type declared in the global namespace, which must not produce a leading dot.
+    /// </remarks>
+    private static string GetFullyQualifiedName(TestMethodIdentifierProperty identifierProperty)
+        => RoslynString.IsNullOrEmpty(identifierProperty.Namespace)
+            ? $"{identifierProperty.TypeName}.{identifierProperty.MethodName}"
+            : $"{identifierProperty.Namespace}.{identifierProperty.TypeName}.{identifierProperty.MethodName}";
+
     private IEnumerable<KeyValuePair<string, object?>> GetTestInitialInfo(TestNode testNode, TestNodeUid? parentUid)
     {
         yield return new(TestingPlatformSemanticConventions.Attributes.TestCaseName, testNode.DisplayName);
@@ -272,7 +283,7 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
         {
             // code.function.name is defined as the *fully qualified* name; there is no separate namespace
             // attribute (code.namespace is deprecated upstream).
-            yield return new(TestingPlatformSemanticConventions.Attributes.CodeFunctionName, $"{identifierProperty.Namespace}.{identifierProperty.TypeName}.{identifierProperty.MethodName}");
+            yield return new(TestingPlatformSemanticConventions.Attributes.CodeFunctionName, GetFullyQualifiedName(identifierProperty));
             yield return new(TestingPlatformSemanticConventions.Attributes.TestSuiteName, identifierProperty.TypeName);
             yield return new(TestingPlatformSemanticConventions.Attributes.TestAssemblyName, identifierProperty.AssemblyFullName);
 

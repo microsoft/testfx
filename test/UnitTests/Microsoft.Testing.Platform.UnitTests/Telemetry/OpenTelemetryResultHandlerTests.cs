@@ -678,6 +678,54 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
         Assert.IsNull(_testRunDurationHistogram.LastRecordedValue);
     }
 
+    [TestMethod]
+    public void NotifyInProgress_EmitsFullyQualifiedCodeFunctionName()
+    {
+        IEnumerable<KeyValuePair<string, object?>>? capturedTags = CaptureInProgressTags(
+            new TestMethodIdentifierProperty("MyAssembly", "My.Namespace", "MyClass", "MyMethod", 0, [], "void"));
+
+        Assert.IsNotNull(capturedTags);
+        Assert.Contains(t => t.Key == "code.function.name" && (string?)t.Value == "My.Namespace.MyClass.MyMethod", capturedTags);
+
+        // code.namespace is deprecated upstream and must not be emitted.
+        Assert.DoesNotContain(t => t.Key == "code.namespace", capturedTags);
+    }
+
+    [TestMethod]
+    public void NotifyInProgress_ForTheGlobalNamespace_DoesNotEmitALeadingDot()
+    {
+        IEnumerable<KeyValuePair<string, object?>>? capturedTags = CaptureInProgressTags(
+            new TestMethodIdentifierProperty("MyAssembly", string.Empty, "MyClass", "MyMethod", 0, [], "void"));
+
+        Assert.IsNotNull(capturedTags);
+        Assert.Contains(t => t.Key == "code.function.name" && (string?)t.Value == "MyClass.MyMethod", capturedTags);
+    }
+
+    private IEnumerable<KeyValuePair<string, object?>>? CaptureInProgressTags(TestMethodIdentifierProperty identifierProperty)
+    {
+        IEnumerable<KeyValuePair<string, object?>>? capturedTags = null;
+        _otelService.Setup(s => s.StartActivity(
+            It.IsAny<string>(),
+            It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+            It.IsAny<string?>(),
+            It.IsAny<DateTimeOffset>(),
+            It.IsAny<PlatformActivityKind>(),
+            It.IsAny<bool>()))
+            .Callback<string, IEnumerable<KeyValuePair<string, object?>>?, string?, DateTimeOffset, PlatformActivityKind, bool>((_, tags, _, _, _, _) => capturedTags = tags?.ToList())
+            .Returns(new Mock<IPlatformActivity>().Object);
+
+        _handler.NotifyInProgress(
+            new TestNode
+            {
+                Uid = new TestNodeUid("fqn"),
+                DisplayName = "Test",
+                Properties = new PropertyBag(identifierProperty),
+            },
+            null);
+
+        return capturedTags;
+    }
+
     private static TestNode CreateTestNode(string uid = "test-uid")
         => new()
         {
