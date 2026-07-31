@@ -748,6 +748,81 @@ public sealed class AsynchronousMessageBusTests
         }
     }
 
+    [TestMethod]
+    public async Task InitAsync_WhenALaterConsumerFails_ShouldTearDownTheProcessorsItAlreadyStarted()
+    {
+        GatedConsumer goodConsumer = new(nameof(GatedConsumer));
+        DisabledConsumer failingConsumer = new();
+        RecordingTask task = new();
+
+        var asynchronousMessageBus = new AsynchronousMessageBus(
+            [goodConsumer, failingConsumer],
+            new CTRLPlusCCancellationTokenSource(),
+            task,
+            new NopLoggerFactory(),
+            new SystemEnvironment());
+
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(asynchronousMessageBus.InitAsync);
+
+        // The first consumer's pump was already started before the second consumer failed validation.
+        Assert.IsNotEmpty(task.Started);
+
+        // A bus whose InitAsync threw never reaches SetBuiltMessageBus, so nothing else would ever complete
+        // that channel. Without the teardown the pump would park forever on a non-cancelable read, rooting the
+        // consumer and everything queued for it.
+        await Task.WhenAll(task.Started).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+    }
+
+    private sealed class RecordingTask : ITask
+    {
+        private readonly SystemTask _inner = new();
+
+        public List<Task> Started { get; } = [];
+
+        public Task Run(Func<Task> function, CancellationToken cancellationToken)
+        {
+            Task task = _inner.Run(function, cancellationToken);
+            lock (Started)
+            {
+                Started.Add(task);
+            }
+
+            return task;
+        }
+
+        public Task Run(Action action) => _inner.Run(action);
+
+        public Task<T> Run<T>(Func<Task<T>?> function, CancellationToken cancellationToken) => _inner.Run(function, cancellationToken);
+
+        // Not used by the message bus; forwarding would trip CA1416 since it is unsupported on browser.
+        public Task RunLongRunning(Func<Task> action, string name, CancellationToken cancellationToken) => throw new NotSupportedException();
+
+        public Task WhenAll(params Task[] tasks) => _inner.WhenAll(tasks);
+
+        public Task Delay(int millisecondDelay) => _inner.Delay(millisecondDelay);
+
+        public Task Delay(TimeSpan timeSpan, CancellationToken cancellationToken) => _inner.Delay(timeSpan, cancellationToken);
+    }
+
+    private sealed class DisabledConsumer : IDataConsumer
+    {
+        public Type[] DataTypesConsumed => [typeof(GatedData)];
+
+        public string Uid => nameof(DisabledConsumer);
+
+        public string Version => "1.0.0";
+
+        public string DisplayName => string.Empty;
+
+        public string Description => string.Empty;
+
+        // Makes AsynchronousMessageBus.InitAsync throw after the previous consumer's processor was built.
+        public Task<bool> IsEnabledAsync() => Task.FromResult(false);
+
+        public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
+            => Task.CompletedTask;
+    }
+
     private sealed class NopLoggerFactory : ILoggerFactory
     {
         public ILogger CreateLogger(string categoryName) => new NopLogger();

@@ -16,8 +16,10 @@ internal static class ShutdownTimeouts
     public static readonly TimeSpan DefaultCanceledConsumerCompletion = TimeSpan.FromSeconds(30);
 
     /// <summary>
-    /// Gets how long the handshake waits for a single consumer to finish once the run has already been
-    /// canceled. Can be overridden through
+    /// Gets the budget for completing the consumer handshake once the run has already been canceled. It bounds
+    /// the shutdown as a whole rather than each consumer: <see cref="AsynchronousMessageBus"/> completes its
+    /// processors sequentially, so a per-consumer budget would let N uncooperative consumers multiply it. Can
+    /// be overridden through
     /// <see cref="EnvironmentVariableConstants.TESTINGPLATFORM_MESSAGEBUS_CANCELED_SHUTDOWN_TIMEOUT_SECONDS"/>.
     /// </summary>
     /// <remarks>
@@ -26,7 +28,7 @@ internal static class ShutdownTimeouts
     /// cut off. On an aborted run the trade-off flips: a cooperative consumer unwinds as soon as it observes
     /// the cancellation token, so anything still running after this budget is ignoring the token, and letting
     /// it block the abort indefinitely would hang the cancellations that have no second escape hatch
-    /// ('--timeout', a server-initiated cancellation, '--maximum-failed-tests').
+    /// ('--timeout', '--maximum-failed-tests'), unlike an interactive Ctrl+C which can be pressed again.
     /// </remarks>
     public static TimeSpan GetCanceledConsumerCompletion(IEnvironment environment)
     {

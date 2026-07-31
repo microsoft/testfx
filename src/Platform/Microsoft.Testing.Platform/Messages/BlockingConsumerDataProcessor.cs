@@ -83,7 +83,7 @@ internal sealed class BlockingConsumerDataProcessor : IAsyncConsumerDataProcesso
         // consumption already receives the token and will unwind promptly on shutdown, but we must still wait
         // for it to release the permit before Dispose runs to avoid an ObjectDisposedException on the release.
         //
-        // See ShutdownTimeouts.CanceledConsumerCompletion: on an aborted run the wait is bounded so a consumer
+        // See ShutdownTimeouts.GetCanceledConsumerCompletion: on an aborted run the wait is bounded so a consumer
         // that ignores the token cannot hang the abort, and IsConsumerRunning keeps reporting true if we give
         // up so the platform does not dispose it underneath itself. The unbounded branch observes the token so
         // that a cancellation arriving mid-wait downgrades to that bounded wait too, mirroring
