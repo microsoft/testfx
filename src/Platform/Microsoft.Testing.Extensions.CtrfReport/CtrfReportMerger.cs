@@ -15,12 +15,27 @@ namespace Microsoft.Testing.Extensions.CtrfReport;
 /// This is a pure, invocation-agnostic JSON-level merge (no I/O, no clock) that mirrors the
 /// TRX and JUnit mergers, demonstrating that the same post-processing shape fits a JSON format:
 /// <list type="bullet">
-///   <item><description><c>results.tests[]</c> arrays are concatenated as-is.</description></item>
+///   <item><description><c>results.tests[]</c> arrays are concatenated, except that elements which are not Test objects are dropped so one input's malformed row cannot invalidate the merged document; <see cref="CtrfMergeMode.CollapseRetryAttempts"/> additionally folds successive attempts of the same test into one row.</description></item>
 ///   <item><description><c>results.summary</c> counters are re-derived by counting the merged <c>tests[]</c> (so <c>summary.tests</c> always matches the array length); <c>start</c>/<c>stop</c> use the earliest/latest across inputs, <c>duration</c> is the resulting span.</description></item>
-///   <item><description><c>reportFormat</c> and <c>specVersion</c> are taken from the first report; <c>reportId</c> is derived deterministically from the inputs, so identical inputs reproduce the same id (RFC 018 idempotency).</description></item>
+///   <item><description><c>reportFormat</c> and <c>specVersion</c> are taken from the first report; <c>reportId</c> is derived deterministically from the inputs AND the merge mode, so identical inputs reproduce the same id (RFC 018 idempotency) while the two modes — which produce materially different documents — get distinct ids.</description></item>
+///   <item><description><c>runId</c> is carried over when every input agrees on one, because the merged document describes the same logical run as its inputs while remaining a distinct artifact with its own <c>reportId</c> (see ctrf-io/ctrf#58).</description></item>
 ///   <item><description><c>tool</c> keeps a concrete identity only when every input reported the exact same tool object; otherwise (inputs disagree or any input omits it) a neutral merger identity is used, so one framework is not attributed to another's tests.</description></item>
 ///   <item><description><c>environment</c> keeps the first report's shared fields, but module-specific values under <c>extra</c> (<c>testApplication</c>, <c>exitCode</c>) are dropped rather than presented as describing all merged modules.</description></item>
 /// </list>
+/// <para>
+/// Validity contract. The merger guarantees the shape of what it SYNTHESIZES — the summary, the identity
+/// fields, and the retry attempt objects it builds and renumbers — and PRESERVES verbatim what it merely
+/// passes through. The only thing it drops is an element that cannot be a Test at all (a non-object), because
+/// that alone would break the array's item type for every consumer of the merged file.
+/// </para>
+/// <para>
+/// It deliberately does NOT validate or repair the Test rows themselves, even though an input may carry a
+/// row with a missing or wrong-typed required field. Dropping such a row would lose a real result and
+/// rewriting it would fabricate an outcome the producer never reported, which are both worse than relaying a
+/// defect that belongs to the input document. A corollary is that merging a single document whose identities
+/// are already unique leaves its <c>tests[]</c> untouched: the merger combines reports, it is not a CTRF
+/// validator or linter.
+/// </para>
 /// </remarks>
 internal static class CtrfReportMerger
 {
@@ -32,7 +47,28 @@ internal static class CtrfReportMerger
     // not by any input report.
     private const string GeneratedByName = "Microsoft.Testing.Extensions.CtrfReport";
 
+    // Fields a CTRF retry attempt object (section 11) shares with a test object and that carry over verbatim when
+    // a non-final attempt is folded into 'retryAttempts[]'. 'attempt' and 'status' are handled separately because
+    // they are required, and 'attemptId' is listed here because an input that assigned one keeps it.
+    private static readonly string[] RetryAttemptFields =
+    [
+        "attemptId",
+        "duration",
+        "message",
+        "trace",
+        "line",
+        "snippet",
+        "stdout",
+        "stderr",
+        "start",
+        "stop",
+        "attachments",
+    ];
+
     internal static string Merge(IReadOnlyList<string> inputReports)
+        => Merge(inputReports, CtrfMergeMode.Concatenate);
+
+    internal static string Merge(IReadOnlyList<string> inputReports, CtrfMergeMode mode)
     {
         if (inputReports is null)
         {
@@ -64,6 +100,10 @@ internal static class CtrfReportMerger
         JsonNode? firstTool = null;
         int reportCount = 0;
 
+        // The merged document belongs to the same logical run as its inputs only when they all belong to the
+        // same one, so a run id is carried over only when every input reported the very same value.
+        var distinctRunIds = new HashSet<string>(StringComparer.Ordinal);
+
         // Collect each input's environment so shared fields can be retained and module- or agent-specific
         // ones (values that differ across inputs) dropped, rather than attributing the first report's
         // environment to every merged test.
@@ -84,7 +124,7 @@ internal static class CtrfReportMerger
                 continue;
             }
 
-            string? format = root["reportFormat"] is JsonValue formatValue && formatValue.TryGetValue(out string? formatText) ? formatText : null;
+            string? format = ReadString(root, "reportFormat");
             if (!string.Equals(format, "CTRF", StringComparison.OrdinalIgnoreCase))
             {
                 continue;
@@ -93,6 +133,8 @@ internal static class CtrfReportMerger
             first ??= root;
             reportCount++;
             acceptedReports.Add(reportJson);
+
+            distinctRunIds.Add(ReadString(root, "runId") is { Length: > 0 } runIdText ? runIdText : string.Empty);
 
             if (root["results"]?["environment"] is JsonObject environment)
             {
@@ -104,22 +146,29 @@ internal static class CtrfReportMerger
             {
                 foreach (JsonNode? test in testArray)
                 {
-                    mergedTests.Add(test?.DeepClone());
+                    // Only a Test object belongs in tests[]: the CTRF schema types the array's items as objects
+                    // with required members, so carrying a malformed element (a bare string, or a JSON null left
+                    // by a lazy producer) through would turn a defect localized to one input into an invalid
+                    // MERGED document — the artifact consumers actually read. This mirrors the check above, where
+                    // an input that fails the CTRF shape test is rejected outright rather than passed along.
+                    if (test is not JsonObject testObject)
+                    {
+                        continue;
+                    }
+
+                    mergedTests.Add(testObject.DeepClone());
 
                     // Fall back to per-test timing so a summary-less input (which the merger explicitly
                     // supports) still contributes to the merged min/max instead of being dropped or
                     // forcing the merged timestamp back to the Unix epoch.
-                    if (test is not null)
+                    if (TryReadLong(testObject, "start", out long testStart))
                     {
-                        if (TryReadLong(test, "start", out long testStart))
-                        {
-                            earliestStart = Min(earliestStart, testStart);
-                        }
+                        earliestStart = Min(earliestStart, testStart);
+                    }
 
-                        if (TryReadLong(test, "stop", out long testStop))
-                        {
-                            latestStop = Max(latestStop, testStop);
-                        }
+                    if (TryReadLong(testObject, "stop", out long testStop))
+                    {
+                        latestStop = Max(latestStop, testStop);
                     }
                 }
             }
@@ -157,18 +206,25 @@ internal static class CtrfReportMerger
         long startMs = earliestStart ?? 0;
         long stopMs = latestStop ?? startMs;
 
+        // In retry mode the inputs are successive attempts of the same suite, so the same logical test can
+        // appear in several of them. Collapse those repeats into one row before counting, otherwise the same
+        // test would be reported (and counted) several times.
+        JsonArray tests = mode == CtrfMergeMode.CollapseRetryAttempts
+            ? CollapseRetryAttempts(mergedTests)
+            : mergedTests;
+
         // Counters are derived from the merged tests[] rather than trusting each input's summary, so
         // summary.tests always equals the array length even when an input omitted or under-reported
-        // its summary.
+        // its summary. Every element is a Test object: non-objects were rejected during ingestion.
         long passed = 0, failed = 0, skipped = 0, pending = 0, other = 0, flaky = 0;
-        foreach (JsonNode? test in mergedTests)
+        foreach (JsonNode? test in tests)
         {
-            if (test is null)
+            if (test is not JsonObject testObject)
             {
                 continue;
             }
 
-            switch ((string?)test["status"])
+            switch (ReadString(testObject, "status"))
             {
                 case "passed": passed++; break;
                 case "failed": failed++; break;
@@ -177,7 +233,7 @@ internal static class CtrfReportMerger
                 default: other++; break;
             }
 
-            if (test["flaky"] is JsonValue flakyValue && flakyValue.TryGetValue(out bool isFlaky) && isFlaky)
+            if (testObject["flaky"] is JsonValue flakyValue && flakyValue.TryGetValue(out bool isFlaky) && isFlaky)
             {
                 flaky++;
             }
@@ -185,7 +241,7 @@ internal static class CtrfReportMerger
 
         var summaryObject = new JsonObject
         {
-            ["tests"] = mergedTests.Count,
+            ["tests"] = tests.Count,
             ["passed"] = passed,
             ["failed"] = failed,
             ["skipped"] = skipped,
@@ -221,27 +277,45 @@ internal static class CtrfReportMerger
             resultsObject["environment"] = commonEnvironment;
         }
 
-        resultsObject["tests"] = mergedTests;
+        resultsObject["tests"] = tests;
 
         var merged = new JsonObject
         {
             ["reportFormat"] = first["reportFormat"]?.DeepClone() ?? "CTRF",
             ["specVersion"] = first["specVersion"]?.DeepClone() ?? "0.0.0",
-            ["reportId"] = CreateDeterministicReportId(acceptedReports),
-            ["timestamp"] = DateTimeOffset.FromUnixTimeMilliseconds(stopMs).ToString("O", CultureInfo.InvariantCulture),
-            // The merged document is produced by this merger, not by any input, so stamp its own identity
-            // rather than carrying the first input's 'generatedBy' (which could report a different producer
-            // or version when merging reports from different tool versions).
-            ["generatedBy"] = GeneratedByName,
-            ["results"] = resultsObject,
+            ["reportId"] = CreateDeterministicReportId(acceptedReports, mode),
         };
+
+        // A merged document is a new artifact (hence its own reportId) but it still describes the same logical
+        // run as the documents it was built from, so it carries their runId — provided they all agree on one.
+        // Inputs that disagree, or an input with no runId, contribute the empty sentinel and suppress the field
+        // rather than picking an arbitrary run to represent the whole merge.
+        if (distinctRunIds.Count == 1 && distinctRunIds.First() is { Length: > 0 } sharedRunId)
+        {
+            merged["runId"] = sharedRunId;
+        }
+
+        merged["timestamp"] = DateTimeOffset.FromUnixTimeMilliseconds(stopMs).ToString("O", CultureInfo.InvariantCulture);
+
+        // The merged document is produced by this merger, not by any input, so stamp its own identity
+        // rather than carrying the first input's 'generatedBy' (which could report a different producer
+        // or version when merging reports from different tool versions).
+        merged["generatedBy"] = GeneratedByName;
+        merged["results"] = resultsObject;
 
         return merged.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
     }
 
+    internal static Task MergeToFileAsync(
+        IReadOnlyList<string> inputPaths,
+        string outputPath,
+        CancellationToken cancellationToken)
+        => MergeToFileAsync(inputPaths, outputPath, CtrfMergeMode.Concatenate, cancellationToken);
+
     internal static async Task MergeToFileAsync(
         IReadOnlyList<string> inputPaths,
         string outputPath,
+        CtrfMergeMode mode,
         CancellationToken cancellationToken)
     {
         if (inputPaths is null)
@@ -276,7 +350,7 @@ internal static class CtrfReportMerger
 #endif
         }
 
-        string merged = Merge(reports);
+        string merged = Merge(reports, mode);
 
         string? outputDirectory = Path.GetDirectoryName(outputPath);
         if (!RoslynString.IsNullOrEmpty(outputDirectory))
@@ -297,10 +371,289 @@ internal static class CtrfReportMerger
         }).ConfigureAwait(false);
     }
 
-    private static bool TryReadLong(JsonNode summary, string propertyName, out long value)
+    /// <summary>
+    /// Folds successive attempts of the same logical test — the tests[] rows contributed, in attempt order, by
+    /// the per-attempt documents of one orchestrated retry run — into a single row per test.
+    /// </summary>
+    /// <remarks>
+    /// The retry model confirmed in ctrf-io/ctrf#58: the last attempt's outcome IS the test object, and
+    /// <c>retryAttempts[]</c> holds attempts <c>1..N-1</c> (the initial execution plus any earlier retries),
+    /// numbered from 1, so <c>retries == retryAttempts.length</c> and the final attempt is <c>retries + 1</c>.
+    /// The test object therefore keeps the FINAL attempt's <c>duration</c> (and <c>start</c>/<c>stop</c>), rather
+    /// than a sum across attempts. Attempts an input already recorded in its own <c>retryAttempts[]</c> (in-process
+    /// retries within a single attempt process) are flattened into the same history so no execution is lost.
+    /// </remarks>
+    private static JsonArray CollapseRetryAttempts(JsonArray tests)
+    {
+        var slots = new List<(JsonObject Final, List<JsonObject> Priors)>();
+        var byIdentity = new Dictionary<string, int>(StringComparer.Ordinal);
+
+        foreach (JsonNode? test in tests)
+        {
+            // Non-objects were already rejected during ingestion; this only re-establishes the type.
+            if (test is not JsonObject testObject)
+            {
+                continue;
+            }
+
+            // A row we cannot identify gets its own slot: fusing unrelated rows would lose results, whereas an
+            // uncollapsed duplicate is merely redundant.
+            if (GetTestIdentity(testObject) is not string identity)
+            {
+                slots.Add((testObject, []));
+                continue;
+            }
+
+            if (byIdentity.TryGetValue(identity, out int index))
+            {
+                (JsonObject previousFinal, List<JsonObject> priors) = slots[index];
+                priors.Add(previousFinal);
+                slots[index] = (testObject, priors);
+            }
+            else
+            {
+                byIdentity.Add(identity, slots.Count);
+                slots.Add((testObject, []));
+            }
+        }
+
+        var collapsed = new JsonArray();
+        foreach ((JsonObject final, List<JsonObject> priors) in slots)
+        {
+            collapsed.Add(BuildCollapsedTest(final, priors));
+        }
+
+        return collapsed;
+    }
+
+    /// <summary>
+    /// Computes the key identifying the logical test a row describes, preferring the CTRF <c>testId</c>, then the
+    /// legacy <c>id</c>, then the producer-supplied <c>extra.uid</c>, and finally the suite path plus name and the
+    /// other stable discriminators the Test object offers. Returns <see langword="null"/> when the row carries
+    /// none of them.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The identifier order follows CTRF 9.1: <c>id</c> is a stable test-case identifier that consumers treat as
+    /// legacy, using <c>testId</c> in preference only when both are present. Ignoring an <c>id</c>-only report
+    /// would drop it to the heuristic fallback and risk fusing distinct same-named tests.
+    /// </para>
+    /// <para>
+    /// The fallback length-prefixes every component rather than just separating them. A CTRF <c>name</c> or suite
+    /// segment is an arbitrary non-empty string, so it may itself contain the separator: with plain separation,
+    /// <c>suite: ["A"], name: "B\u001fC"</c> and <c>suite: ["A", "B"], name: "C"</c> would produce the same key
+    /// and collapse two unrelated tests into one, silently dropping a result. Length prefixes make the encoding
+    /// unambiguous whatever the components contain.
+    /// </para>
+    /// <para>
+    /// The fallback also folds in <c>filePath</c> (9.19) and <c>parameters</c> (9.30), because suite plus name
+    /// alone is not unique: parameterized rows share both while differing only in their parameters, and
+    /// same-named tests in different files differ only by path. If a producer were to serialize <c>parameters</c>
+    /// inconsistently between attempts, the effect is that a retry is not folded — a duplicated row rather than a
+    /// lost result, which is the safe direction to fail in.
+    /// </para>
+    /// </remarks>
+    private static string? GetTestIdentity(JsonObject test)
+    {
+        if (ReadString(test, "testId") is { Length: > 0 } testId)
+        {
+            return $"testId\u001f{testId}";
+        }
+
+        if (ReadString(test, "id") is { Length: > 0 } id)
+        {
+            return $"id\u001f{id}";
+        }
+
+        // `extra` is free-form, so a foreign producer may well have written a string or an array there; indexing
+        // anything but an object by property name throws.
+        if (test["extra"] is JsonObject extra && ReadString(extra, "uid") is { Length: > 0 } uid)
+        {
+            return $"uid\u001f{uid}";
+        }
+
+        if (ReadString(test, "name") is not { Length: > 0 } name)
+        {
+            return null;
+        }
+
+        var identity = new StringBuilder("name");
+        if (test["suite"] is JsonArray suite)
+        {
+            foreach (JsonNode? segment in suite)
+            {
+                // A suite segment is normally a string, but the document is untrusted. Fall back to the
+                // segment's JSON text so a non-string segment still contributes a distinct, deterministic part
+                // of the key instead of throwing on the string conversion.
+                AppendIdentityComponent(
+                    identity,
+                    segment is JsonValue segmentValue && segmentValue.TryGetValue(out string? segmentText)
+                        ? segmentText
+                        : segment?.ToJsonString());
+            }
+        }
+
+        AppendIdentityComponent(identity, name);
+        AppendIdentityComponent(identity, ReadString(test, "filePath"));
+        AppendIdentityComponent(identity, test["parameters"]?.ToJsonString());
+        return identity.ToString();
+    }
+
+    private static void AppendIdentityComponent(StringBuilder identity, string? component)
+        => identity.Append('\u001f').Append(component?.Length ?? -1).Append(':').Append(component);
+
+    private static JsonNode BuildCollapsedTest(JsonObject final, List<JsonObject> priors)
+    {
+        var collapsed = (JsonObject)final.DeepClone();
+
+        // Nothing was merged into this row, so it is passed through rather than synthesized: its own
+        // `retryAttempts[]` (from in-process retries the producer already recorded) stays exactly as written.
+        // Below, once there ARE priors, the history becomes the merger's own array — it has to be rebuilt and
+        // renumbered into a contiguous 1..N-1 — which is why those entries are reshaped and these are not.
+        if (priors.Count == 0)
+        {
+            return collapsed;
+        }
+
+        var history = new JsonArray();
+        foreach (JsonObject prior in priors)
+        {
+            AppendAttempts(history, prior);
+        }
+
+        // In-process retries observed by the final attempt precede its own outcome in the history.
+        if (collapsed["retryAttempts"] is JsonArray finalAttempts)
+        {
+            AppendNestedAttempts(history, finalAttempts);
+        }
+
+        bool anyFailed = false;
+        for (int i = 0; i < history.Count; i++)
+        {
+            if (history[i] is not JsonObject attempt)
+            {
+                continue;
+            }
+
+            attempt["attempt"] = i + 1;
+            anyFailed |= ReadString(attempt, "status") == "failed";
+        }
+
+        collapsed["retryAttempts"] = history;
+        collapsed["retries"] = history.Count;
+
+        // CTRF 9.22: flaky only when the FINAL status is passed after at least one failed attempt. Recomputed
+        // (rather than inherited) because an input's own flag only describes the attempt that produced it.
+        if (ReadString(collapsed, "status") == "passed" && anyFailed)
+        {
+            collapsed["flaky"] = true;
+        }
+        else
+        {
+            collapsed.Remove("flaky");
+        }
+
+        return collapsed;
+    }
+
+    /// <summary>
+    /// Appends the executions a non-final attempt row represents — the attempts it already nested, then its own
+    /// outcome — to the retry history being built.
+    /// </summary>
+    private static void AppendAttempts(JsonArray history, JsonObject test)
+    {
+        if (test["retryAttempts"] is JsonArray nested)
+        {
+            AppendNestedAttempts(history, nested);
+        }
+
+        history.Add(ToRetryAttempt(test));
+    }
+
+    /// <summary>
+    /// Copies the retry attempts an input already recorded into the history being built, projecting each through
+    /// the same section 11 shaping as a promoted test row so a foreign producer's nested attempt cannot smuggle a
+    /// wrong-typed status or a disallowed field into the merged history. Entries that are not objects are skipped:
+    /// they could not describe an execution.
+    /// </summary>
+    private static void AppendNestedAttempts(JsonArray history, JsonArray nested)
+    {
+        foreach (JsonNode? attempt in nested)
+        {
+            if (attempt is JsonObject attemptObject)
+            {
+                history.Add(ToRetryAttempt(attemptObject));
+            }
+        }
+    }
+
+    /// <summary>
+    /// Projects a test row onto the retry attempt object of CTRF section 11, which allows a narrower set of
+    /// fields than a test: everything else (name, suite, tags, labels, ...) either belongs to the collapsed test
+    /// object or, like <c>rawStatus</c>, moves under <c>extra</c>, the only permitted extension point.
+    /// </summary>
+    private static JsonNode ToRetryAttempt(JsonObject test)
+    {
+        // 'attempt' is assigned by the caller, once the position of this execution in the history is known.
+        var attempt = new JsonObject
+        {
+            ["attempt"] = 1,
+            ["status"] = ReadStatus(test),
+        };
+
+        foreach (string field in RetryAttemptFields)
+        {
+            if (test[field] is JsonNode value)
+            {
+                attempt[field] = value.DeepClone();
+            }
+        }
+
+        JsonObject? extra = test["extra"] is JsonObject testExtra ? (JsonObject)testExtra.DeepClone() : null;
+        if (test["rawStatus"] is JsonNode rawStatus)
+        {
+            extra ??= [];
+            extra["rawStatus"] = rawStatus.DeepClone();
+        }
+
+        if (extra is { Count: > 0 })
+        {
+            attempt["extra"] = extra;
+        }
+
+        return attempt;
+    }
+
+    /// <summary>
+    /// Reads a string property, treating a value of any other JSON type as absent. The explicit
+    /// <c>(string?)</c> conversion on a <see cref="JsonNode"/> THROWS for a non-string value rather than
+    /// yielding <see langword="null"/>, and every document reaching the merger is untrusted.
+    /// </summary>
+    private static string? ReadString(JsonObject owner, string propertyName)
+        => owner[propertyName] is JsonValue value && value.TryGetValue(out string? text) ? text : null;
+
+    /// <summary>
+    /// Reads a CTRF status, normalizing anything outside the vocabulary section 11.3 allows — a wrong-typed
+    /// value, or a status this producer invented — to <c>other</c>. Copying such a value verbatim into a retry
+    /// attempt would make the merged document schema-invalid, and <c>other</c> is both a legal status and the
+    /// bucket the summary already counts it in.
+    /// </summary>
+    private static string ReadStatus(JsonObject owner)
+    {
+        string? status = ReadString(owner, "status");
+        return status is "passed" or "failed" or "skipped" or "pending" or "other" ? status : "other";
+    }
+
+    /// <summary>
+    /// Reads an integral property from a JSON node, tolerating anything the node may actually be. The node comes
+    /// straight out of an untrusted document — <c>results.summary</c> is not guaranteed to be an object — so a
+    /// non-object must read as "absent" rather than throw: indexing a <see cref="JsonValue"/> by property name is
+    /// an <see cref="InvalidOperationException"/>.
+    /// </summary>
+    private static bool TryReadLong(JsonNode node, string propertyName, out long value)
     {
         value = 0;
-        if (summary[propertyName] is not JsonValue jsonValue)
+        if (node is not JsonObject jsonObject || jsonObject[propertyName] is not JsonValue jsonValue)
         {
             return false;
         }
@@ -377,18 +730,24 @@ internal static class CtrfReportMerger
     }
 
     /// <summary>
-    /// Derives a stable <c>reportId</c> from the accepted CTRF input reports so identical inputs reproduce
-    /// the same id on every retry (RFC 018 idempotency) without a random source or reusing an input report's
-    /// id. Only the payloads that passed CTRF validation are hashed, so a rejected non-CTRF input cannot
-    /// alter the merged report's identity. A non-cryptographic 128-bit FNV-1a fill is sufficient here — the
-    /// id only needs to be deterministic and collision-resistant enough to identify a merged report, not
-    /// secret.
+    /// Derives a stable <c>reportId</c> from the accepted CTRF input reports and the merge mode, so identical
+    /// inputs merged the same way reproduce the same id on every retry (RFC 018 idempotency) without a random
+    /// source or reusing an input report's id, while the same inputs merged a DIFFERENT way — which yields a
+    /// materially different document — get a distinct id, as CTRF 5.3 requires. Only the payloads that passed
+    /// CTRF validation are hashed, so a rejected non-CTRF input cannot alter the merged report's identity. A
+    /// non-cryptographic 128-bit FNV-1a fill is sufficient here — the id only needs to be deterministic and
+    /// collision-resistant enough to identify a merged report, not secret.
     /// </summary>
-    private static string CreateDeterministicReportId(IReadOnlyList<string> acceptedReports)
+    private static string CreateDeterministicReportId(IReadOnlyList<string> acceptedReports, CtrfMergeMode mode)
     {
         const ulong fnvPrime = 1099511628211UL;
         ulong hashLow = 14695981039346656037UL;
         ulong hashHigh = 0x9E3779B97F4A7C15UL;
+
+        // Fold in the merge mode: the same inputs concatenated and collapsed are two materially different
+        // documents, and CTRF 5.3 wants a distinct reportId for each rather than one id naming both.
+        hashLow = (hashLow ^ (ulong)mode) * fnvPrime;
+        hashHigh = (hashHigh ^ ((ulong)mode + 1UL)) * fnvPrime;
 
         foreach (string report in acceptedReports)
         {

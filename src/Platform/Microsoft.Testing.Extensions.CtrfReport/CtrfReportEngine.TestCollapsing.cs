@@ -56,6 +56,11 @@ internal sealed partial class CtrfReportEngine
         // For each UID, group all captures in arrival order: the latest entry becomes the
         // final test record, earlier entries become `retryAttempts[]`. Preserves the
         // insertion order of first-seen UIDs in the output (stable across runs).
+        //
+        // ctrf-io/ctrf#58 confirmed this is the intended CTRF model: `retryAttempts[]`
+        // is the attempt history PRECEDING the final attempt (attempts 1..N-1, initial
+        // execution included), and the final attempt is excluded because its outcome and
+        // diagnostics are carried by the test object itself.
         var byUid = new Dictionary<string, int>(StringComparer.Ordinal);
         var collapsed = new List<CollapsedTestResult>(results.Length);
         foreach (CapturedTestResult r in results)

@@ -170,7 +170,25 @@ internal sealed partial class TerminalOutputDevice
             SlowTestThreshold = ProgressReportingConfiguration.GetThreshold(
                 _environment, ProgressReportingConfiguration.MTP_PROGRESS_SLOW_TEST_SECONDS, defaultSeconds: 60),
             SlowestTestsCount = slowestTestsCount,
+            ShowFlakyTests = TerminalTestReporterCommandLineOptionsProvider.IsFlakyTestsReportingEnabled(_commandLineOptions),
+            ShowRunSummary = !IsRetryAttemptAfterTheFirst(_environment),
         }, _loggerFactory.CreateLogger<TestProgressStateAwareTerminal>());
+    }
+
+    /// <summary>
+    /// Returns whether this process is a <em>retry</em> attempt of a <c>--retry-failed-tests</c> run, that is the
+    /// second or a later one. The retry orchestrator stamps the 1-based attempt number on every test host it
+    /// launches, so anything above 1 re-runs only the tests that failed previously. Such an attempt must not print
+    /// a run summary: its counts describe that filtered subset, not the run, and the orchestrator reconciles every
+    /// attempt into a single retry summary at the end. The first attempt executes the whole suite, so its summary
+    /// is accurate and is left alone — as is every run that is not orchestrated at all.
+    /// </summary>
+    private static bool IsRetryAttemptAfterTheFirst(IEnvironment environment)
+    {
+        string? value = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER);
+        return !RoslynString.IsNullOrEmpty(value)
+            && int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out int attemptNumber)
+            && attemptNumber > 1;
     }
 
     // Reads the --show-slowest-tests option, returning the requested count of slowest tests to list in the

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 extern alias ghactions;
@@ -146,7 +146,33 @@ public sealed class GitHubActionsSlowTestReporterTests
         Assert.Contains("Ns.T.M (net9.0) still running after", joined);
     }
 
-    private static GitHubActionsSlowTestReporter CreateReporter(CapturingOutputDevice outputDevice, bool githubActions, Dictionary<string, string[]>? options = null)
+    [TestMethod]
+    public async Task OnTestSessionStarting_WhenActivatedOnMultiThreadedRuntime_StartsBackgroundScanLoopAsync()
+    {
+        // The scan loop is only started when RuntimeFeatureHelper.IsMultiThreaded is true, because
+        // ITask.RunLongRunning throws PlatformNotSupportedException on single-threaded WebAssembly
+        // runtimes. Unit tests never run on wasm, so here the loop must actually be started — this
+        // pins the wiring and fails if the guard is inverted or the loop is dropped altogether.
+        NonRunningTask task = new();
+        GitHubActionsSlowTestReporter reporter = CreateReporter(new CapturingOutputDevice(), githubActions: true, task: task);
+
+        await reporter.OnTestSessionStartingAsync(new TestSessionContextStub()).ConfigureAwait(false);
+
+        Assert.AreEqual(1, task.RunLongRunningCallCount);
+    }
+
+    [TestMethod]
+    public async Task OnTestSessionStarting_WhenNotOnGitHubActions_DoesNotStartBackgroundScanLoopAsync()
+    {
+        NonRunningTask task = new();
+        GitHubActionsSlowTestReporter reporter = CreateReporter(new CapturingOutputDevice(), githubActions: false, task: task);
+
+        await reporter.OnTestSessionStartingAsync(new TestSessionContextStub()).ConfigureAwait(false);
+
+        Assert.AreEqual(0, task.RunLongRunningCallCount);
+    }
+
+    private static GitHubActionsSlowTestReporter CreateReporter(CapturingOutputDevice outputDevice, bool githubActions, Dictionary<string, string[]>? options = null, NonRunningTask? task = null)
     {
         Mock<IEnvironment> environmentMock = new();
         environmentMock.Setup(x => x.GetEnvironmentVariable("GITHUB_ACTIONS")).Returns(githubActions ? "true" : null);
@@ -162,7 +188,7 @@ public sealed class GitHubActionsSlowTestReporterTests
             new FakeCommandLineOptions(commandLineOptions),
             environmentMock.Object,
             outputDevice,
-            new NonRunningTask(),
+            task ?? new NonRunningTask(),
             new FixedClock(Start),
             new StubLoggerFactory());
     }
@@ -219,6 +245,8 @@ public sealed class GitHubActionsSlowTestReporterTests
 
     private sealed class NonRunningTask : ITask
     {
+        public int RunLongRunningCallCount { get; private set; }
+
         public Task Delay(int millisecondDelay)
             => Task.CompletedTask;
 
@@ -238,7 +266,10 @@ public sealed class GitHubActionsSlowTestReporterTests
             => function()!;
 
         public Task RunLongRunning(Func<Task> action, string name, CancellationToken cancellationToken)
-            => Task.CompletedTask;
+        {
+            RunLongRunningCallCount++;
+            return Task.CompletedTask;
+        }
 
         public Task WhenAll(params Task[] tasks)
             => Task.WhenAll(tasks);

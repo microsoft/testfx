@@ -47,7 +47,7 @@ Out of process file artifacts produced:
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             $"--report-trx --report-trx-filename {fileName}.trx --results-directory \"{testResultsPath}\"",
-            new() { ["WITH_ARTIFACT"] = "1" },
+            new() { ["WITH_ARTIFACT"] = $"{Guid.NewGuid():N}.txt" },
             cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
@@ -68,6 +68,83 @@ Out of process file artifacts produced:
 
         string legacyArtifactPath = Path.Combine(testResultsPath, runDeploymentRoot, "In", normalizedResultFilePath);
         Assert.IsFalse(File.Exists(legacyArtifactPath), $"Artifact was copied to legacy path '{legacyArtifactPath}'.");
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Trx_WhenArtifactDestinationExceedsWindowsMaxPath_ArtifactIsStillCopied(string tfm)
+    {
+        // The per-test attachment layout appends '<runDeploymentRoot>/In/<executionId>/<machineName>/'
+        // to the results directory, which adds roughly 100 characters. Pad the results directory so the
+        // attachment lands beyond the Windows MAX_PATH limit while the TRX file itself (results
+        // directory + a 36 character name) stays comfortably below it. On .NET Framework the copy used
+        // to fail there with a DirectoryNotFoundException that was swallowed into a warning, so the
+        // ResultFile silently disappeared from the report while the run still reported success.
+        // See https://github.com/microsoft/testfx/issues/10312.
+        const int PaddedResultsDirectoryLength = 180;
+        string fileName = Guid.NewGuid().ToString("N");
+
+        // The padded segment carries a unique prefix, and the artifact file name is unique per run:
+        // acceptance tests use method-level parallelism, so a fixed results directory would race the
+        // TFM cases against each other, and a fixed artifact name would race this test against the
+        // other WITH_ARTIFACT test for the same TFM (they share the test host's output folder).
+        string uniqueSegment = Guid.NewGuid().ToString("N");
+        int paddingLength = Math.Max(1, PaddedResultsDirectoryLength - AssetFixture.TargetAssetPath.Length - 1 - uniqueSegment.Length);
+        string testResultsPath = Path.Combine(AssetFixture.TargetAssetPath, uniqueSegment + new string('p', paddingLength));
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--report-trx --report-trx-filename {fileName}.trx --results-directory \"{testResultsPath}\"",
+            new() { ["WITH_ARTIFACT"] = $"{Guid.NewGuid():N}.txt" },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        testHostResult.AssertOutputDoesNotContain("The attachment will be skipped.");
+
+        string[] trxFiles = Directory.GetFiles(testResultsPath, $"{fileName}.trx", SearchOption.AllDirectories);
+        Assert.HasCount(1, trxFiles, $"Expected exactly one trx file but found {trxFiles.Length}: {string.Join(", ", trxFiles)}");
+
+        var trxDocument = XDocument.Parse(File.ReadAllText(trxFiles[0]));
+        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+        XElement unitTestResult = trxDocument.Descendants(ns + "UnitTestResult").Single();
+        string relativeResultsDirectory = unitTestResult.Attribute("relativeResultsDirectory")!.Value;
+        string resultFilePath = unitTestResult.Descendants(ns + "ResultFile").Single().Attribute("path")!.Value;
+        string runDeploymentRoot = trxDocument.Descendants(ns + "Deployment").Single().Attribute("runDeploymentRoot")!.Value;
+        string normalizedResultFilePath = resultFilePath.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
+
+        string copiedArtifactPath = Path.Combine(testResultsPath, runDeploymentRoot, "In", relativeResultsDirectory, normalizedResultFilePath);
+        Assert.IsGreaterThan(260, copiedArtifactPath.Length, $"Expected the artifact destination to exceed MAX_PATH but it was {copiedArtifactPath.Length} characters: '{copiedArtifactPath}'.");
+        Assert.IsTrue(File.Exists(copiedArtifactPath), $"Expected copied artifact at '{copiedArtifactPath}' but it was not found.");
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Trx_WhenPerTestArtifactCannotBeCopied_WarningIsSurfacedAndResultFileIsSkipped(string tfm)
+    {
+        string fileName = Guid.NewGuid().ToString("N");
+        string testResultsPath = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--report-trx --report-trx-filename {fileName}.trx --results-directory \"{testResultsPath}\"",
+            new() { ["WITH_MISSING_ARTIFACT"] = "1" },
+            cancellationToken: TestContext.CancellationToken);
+
+        // Losing an attachment is not a run failure, but it must not be silent either: the warning has
+        // to reach the console and not only the RunInfos section of the generated TRX.
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        testHostResult.AssertOutputContains("missing-test-artifact.txt");
+        testHostResult.AssertOutputContains("The attachment will be skipped.");
+
+        string[] trxFiles = Directory.GetFiles(testResultsPath, $"{fileName}.trx", SearchOption.AllDirectories);
+        Assert.HasCount(1, trxFiles, $"Expected exactly one trx file but found {trxFiles.Length}: {string.Join(", ", trxFiles)}");
+
+        var trxDocument = XDocument.Parse(File.ReadAllText(trxFiles[0]));
+        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+        Assert.IsEmpty(
+            trxDocument.Descendants(ns + "ResultFile"),
+            $"Expected no ResultFile element because the attachment could not be copied. TRX was:{Environment.NewLine}{trxDocument}");
+
+        XElement warningRunInfo = trxDocument.Descendants(ns + "RunInfo").Single(runInfo => runInfo.Attribute("outcome")?.Value == "Warning");
+        Assert.Contains("missing-test-artifact.txt", warningRunInfo.Value);
     }
 
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
@@ -318,11 +395,22 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
         var testMethodIdentifier = new TestMethodIdentifierProperty(string.Empty, string.Empty, "DummyClassName", "Test", 0, Array.Empty<string>(), string.Empty);
         PropertyBag properties = new(PassedTestNodeStateProperty.CachedInstance, testMethodIdentifier);
-        if (Environment.GetEnvironmentVariable("WITH_ARTIFACT") == "1")
+        // WITH_ARTIFACT carries the file name rather than a flag: the working directory is the test
+        // host's own output folder, which is shared by every test method using this asset for a given
+        // target framework, so a fixed name would have concurrent hosts writing and copying the same
+        // file under method-level parallelism.
+        if (Environment.GetEnvironmentVariable("WITH_ARTIFACT") is { Length: > 0 } artifactFileName)
         {
-            string artifactPath = Path.Combine(Directory.GetCurrentDirectory(), "test-artifact.txt");
+            string artifactPath = Path.Combine(Directory.GetCurrentDirectory(), artifactFileName);
             File.WriteAllText(artifactPath, "artifact");
             properties.Add(new FileArtifactProperty(new FileInfo(artifactPath), "TestMethod", "description"));
+        }
+
+        if (Environment.GetEnvironmentVariable("WITH_MISSING_ARTIFACT") == "1")
+        {
+            // Deliberately never created so that the TRX attachment copy fails with an IOException.
+            string missingArtifactPath = Path.Combine(Directory.GetCurrentDirectory(), "missing-test-artifact.txt");
+            properties.Add(new FileArtifactProperty(new FileInfo(missingArtifactPath), "TestMethod", "description"));
         }
 
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,

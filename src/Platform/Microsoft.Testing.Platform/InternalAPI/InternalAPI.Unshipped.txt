@@ -313,3 +313,22 @@ Microsoft.Testing.Platform.OutputDevice.SlowTestThresholdState.SlowTestThreshold
 static Microsoft.Testing.Platform.OutputDevice.ProgressReportingConfiguration.GetThreshold(Microsoft.Testing.Platform.Helpers.IEnvironment! environment, string! variableName, int defaultSeconds) -> System.TimeSpan
 Microsoft.Testing.Platform.Extensions.Messages.TestNodeExecutionCompletedProperty
 static Microsoft.Testing.Platform.Extensions.Messages.TestNodeExecutionCompletedProperty.CachedInstance.get -> Microsoft.Testing.Platform.Extensions.Messages.TestNodeExecutionCompletedProperty!
+Microsoft.Testing.Platform.CommandLine.FlakyTestsReportingOptions
+const Microsoft.Testing.Platform.CommandLine.FlakyTestsReportingOptions.ShowFlakyTestsOptionName = "show-flaky-tests" -> string!
+static Microsoft.Testing.Platform.CommandLine.FlakyTestsReportingOptions.IsEnabled(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> bool
+*REMOVED*Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.ReportFailedTest(string! testNodeUid, string! instanceId) -> void
+*REMOVED*Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.ReportPassingTest(string! testNodeUid, string! instanceId) -> void
+*REMOVED*Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.ReportSkippedTest(string! testNodeUid, string! instanceId) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.ReportFailedTest(string! testNodeUid, string! displayName, string! instanceId) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.ReportPassingTest(string! testNodeUid, string! displayName, string! instanceId) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.ReportSkippedTest(string! testNodeUid, string! displayName, string! instanceId) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.FlakyTests.get -> int
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.RetriedExecutions.get -> int
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.RetriedTests.get -> int
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.GetFlakyTests() -> System.Collections.Generic.IReadOnlyList<(string! DisplayName, int Attempts)>!
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.ShowFlakyTests.get -> bool
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.ShowFlakyTests.init -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.ShowRunSummary.get -> bool
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.ShowRunSummary.init -> void
+const Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.ShowFlakyTestsOption = "show-flaky-tests" -> string!
+static Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.IsFlakyTestsReportingEnabled(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> bool

@@ -128,13 +128,13 @@ internal sealed partial class TerminalTestReporter
             case TestOutcome.Timeout:
             case TestOutcome.Canceled:
             case TestOutcome.Fail:
-                asm.ReportFailedTest(testNodeUid, instanceId);
+                asm.ReportFailedTest(testNodeUid, displayName, instanceId);
                 break;
             case TestOutcome.Passed:
-                asm.ReportPassingTest(testNodeUid, instanceId);
+                asm.ReportPassingTest(testNodeUid, displayName, instanceId);
                 break;
             case TestOutcome.Skipped:
-                asm.ReportSkippedTest(testNodeUid, instanceId);
+                asm.ReportSkippedTest(testNodeUid, displayName, instanceId);
                 break;
         }
 

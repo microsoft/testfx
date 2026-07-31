@@ -11,10 +11,10 @@ namespace Microsoft.Testing.Extensions.PackagedApp;
 
 /// <summary>
 /// An <see cref="ITestHostLauncher"/> for Windows test applications. It handles two layouts:
-/// a non-packaged (loose-layout) host — for example unpackaged WinUI — which is deployed into an
-/// isolated directory and launched from there; and a packaged, full-trust MSIX desktop host, which
-/// cannot be started with <c>Process.Start</c> and is instead registered with the OS and activated by
-/// Application User Model ID (AUMID).
+/// a packaged, full-trust MSIX desktop host, which cannot be started with <c>Process.Start</c> and is
+/// instead registered with the OS and activated by Application User Model ID (AUMID); and — when
+/// explicitly opted in — a non-packaged (loose-layout) host, which is deployed into an isolated
+/// directory and launched from there.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -39,8 +39,8 @@ namespace Microsoft.Testing.Extensions.PackagedApp;
 /// there, and the controller pipe is not granted the package SID. The full register-and-activate path
 /// ships only in the Windows build of this extension (<c>net*-windows10.0.19041.0</c>), where the
 /// <c>PackageManager</c> WinRT projection is available. The plain <c>net8.0</c>/<c>net9.0</c> build
-/// still deploys and launches non-packaged loose layouts, but rejects a packaged layout with an
-/// actionable error so a consumer that resolves that build is told to target a Windows TFM. Registering
+/// still deploys and launches an opted-in non-packaged loose layout, but rejects a packaged layout with
+/// an actionable error so a consumer that resolves that build is told to target a Windows TFM. Registering
 /// an unsigned build-output layout additionally requires Developer Mode (or sideloading) to be enabled
 /// on the machine.
 /// </para>
@@ -49,9 +49,58 @@ namespace Microsoft.Testing.Extensions.PackagedApp;
 /// the PID handshake, and the lifetime-handler dispatch; this launcher only performs the
 /// deploy/register-and-create step and returns an <see cref="ITestHostHandle"/> the platform monitors.
 /// </para>
+/// <para>
+/// Registering an <em>enabled</em> launcher forces the platform onto the test host controller
+/// (process restart) model, because a custom launcher only has an effect when an out-of-process test
+/// host is started. That is the right trade for a packaged app, which genuinely cannot be started in
+/// place, but it is pure overhead for an app that is simply started with <c>Process.Start</c> — most
+/// notably an <em>unpackaged</em> WinUI test app, which additionally does not want its layout copied
+/// to a deployment directory. The launcher therefore reports itself enabled only when it actually has
+/// work to do; see <see cref="IsEnabledAsync"/>.
+/// </para>
 /// </remarks>
 internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher
 {
+    /// <summary>
+    /// The environment variable that overrides how the launcher decides whether to take over the test
+    /// host launch. Accepted values are <c>auto</c> (the default when unset), <c>always</c> and
+    /// <c>never</c>, compared case-insensitively; any other value is treated as <c>auto</c> rather than
+    /// failing a run over a typo in an environment variable.
+    /// </summary>
+    internal const string LauncherModeEnvironmentVariable = "TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER";
+
+    /// <summary>Always take over the launch, even for a non-packaged (loose) layout.</summary>
+    private const string AlwaysMode = "always";
+
+    /// <summary>Never take over the launch, even for a packaged layout.</summary>
+    private const string NeverMode = "never";
+
+#if PACKAGEDAPP_WINRT
+    // The prefix of the environment variables the platform uses for the controller-to-host connect-back
+    // (pipe name, correlation id, parent PID, start time, skip-extension flag). Only these are handed off
+    // to the activated packaged host: they are exactly what the host needs to reach its controller, they
+    // contain no user-provided data (unlike broader TESTINGPLATFORM_* variables such as inline
+    // runsettings, which can carry secrets), and they are read after this extension's builder hook runs.
+    private const string ConnectBackEnvironmentVariablePrefix = "TESTINGPLATFORM_TESTHOSTCONTROLLER_";
+#endif
+
+    private readonly string _testApplicationDirectory;
+    private readonly Func<string, string?> _getEnvironmentVariable;
+
+    public PackagedAppTestHostLauncher()
+        // The controller process runs the very test application whose host is about to be launched, so
+        // its base directory is the layout the platform will ask this launcher to start. The launch
+        // context (which carries the authoritative path) does not exist yet when enablement is decided.
+        : this(AppContext.BaseDirectory, Environment.GetEnvironmentVariable)
+    {
+    }
+
+    internal PackagedAppTestHostLauncher(string testApplicationDirectory, Func<string, string?> getEnvironmentVariable)
+    {
+        _testApplicationDirectory = testApplicationDirectory;
+        _getEnvironmentVariable = getEnvironmentVariable;
+    }
+
     public string Uid => nameof(PackagedAppTestHostLauncher);
 
     public string Version => ExtensionVersion.DefaultSemVer;
@@ -60,10 +109,47 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher
 
     public string Description => ExtensionResources.PackagedAppExtensionDescription;
 
-    // Packaged Windows apps (UWP/WinUI) are a Windows-only concept. On other operating systems the
-    // launcher stays disabled so it is never registered, which keeps the platform on its default
-    // in-process/Process.Start path instead of forcing the controller (deploy-and-launch) host.
-    public Task<bool> IsEnabledAsync() => Task.FromResult(OperatingSystem.IsWindows());
+    /// <summary>
+    /// Reports whether this launcher should take over starting the test host.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Enabling a launcher is not free: the platform switches to the test host controller (process
+    /// restart) model for the whole run. The launcher therefore opts in only when the layout really
+    /// needs it — that is, when it is a packaged (MSIX) layout, which cannot be started with
+    /// <c>Process.Start</c> at all. A non-packaged layout (an ordinary console test app, or an
+    /// unpackaged WinUI app) is left to the platform's default in-process/<c>Process.Start</c> path, so
+    /// referencing this package in such an app costs nothing and never copies its layout to a
+    /// deployment directory.
+    /// </para>
+    /// <para>
+    /// Packaged Windows apps (UWP/WinUI) are a Windows-only concept, so the launcher stays disabled on
+    /// every other operating system regardless of the layout or the override.
+    /// </para>
+    /// <para>
+    /// <see cref="LauncherModeEnvironmentVariable"/> overrides the layout probe: <c>always</c> opts an
+    /// explicitly non-packaged (loose) layout into deploy-and-launch, and <c>never</c> is the escape
+    /// hatch that keeps the launcher out of the way even for a packaged layout.
+    /// </para>
+    /// </remarks>
+    /// <returns>A task producing <see langword="true"/> when the launcher should be registered.</returns>
+    public Task<bool> IsEnabledAsync() => Task.FromResult(IsEnabled());
+
+    private bool IsEnabled()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return false;
+        }
+
+        string? mode = _getEnvironmentVariable(LauncherModeEnvironmentVariable)?.Trim();
+
+        // 'never' wins over everything (escape hatch), 'always' opts a loose layout in, and anything
+        // else — including an unset or misspelled value — falls back to probing the layout.
+        return !string.Equals(mode, NeverMode, StringComparison.OrdinalIgnoreCase)
+            && (string.Equals(mode, AlwaysMode, StringComparison.OrdinalIgnoreCase)
+                || AppxManifestInfo.FindManifestPath(_testApplicationDirectory) is not null);
+    }
 
     public async Task<ITestHostHandle> LaunchTestHostAsync(TestHostLaunchContext context, CancellationToken cancellationToken)
     {
@@ -73,11 +159,11 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher
         string sourceDirectory = Path.GetDirectoryName(context.FileName)
             ?? throw new InvalidOperationException($"Unable to determine the source directory of '{context.FileName}'.");
 
-        // A packaged (MSIX) app is detected by the presence of an AppxManifest.xml. The manifest lives
-        // at the package layout root, which may be an ancestor of the executable's directory
+        // A packaged (MSIX) app is detected by a matching AppxManifest.xml. The manifest lives at the
+        // package layout root, which may be an ancestor of the executable's directory
         // (Application/@Executable can point into a subdirectory), so search upward rather than only the
-        // executable's directory.
-        string? manifestPath = AppxManifestInfo.FindManifestPath(sourceDirectory);
+        // executable's directory while rejecting stray ancestor manifests that do not describe this host.
+        string? manifestPath = AppxManifestInfo.FindManifestPath(sourceDirectory, context.FileName);
         if (manifestPath is not null)
         {
             return await LaunchPackagedAsync(context, manifestPath, cancellationToken).ConfigureAwait(false);
@@ -89,13 +175,6 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher
     }
 
 #if PACKAGEDAPP_WINRT
-    // The prefix of the environment variables the platform uses for the controller-to-host connect-back
-    // (pipe name, correlation id, parent PID, start time, skip-extension flag). Only these are handed off
-    // to the activated packaged host: they are exactly what the host needs to reach its controller, they
-    // contain no user-provided data (unlike broader TESTINGPLATFORM_* variables such as inline
-    // runsettings, which can carry secrets), and they are read after this extension's builder hook runs.
-    private const string ConnectBackEnvironmentVariablePrefix = "TESTINGPLATFORM_TESTHOSTCONTROLLER_";
-
     private static async Task<ITestHostHandle> LaunchPackagedAsync(TestHostLaunchContext context, string manifestPath, CancellationToken cancellationToken)
     {
         var manifestInfo = AppxManifestInfo.ReadFromManifest(manifestPath);
@@ -103,7 +182,7 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher
         // Resolve the application matching the executable the platform asked to launch so activation
         // targets the AUMID of the right app (a package can declare several applications). A package
         // that declares no application has no AUMID to activate.
-        AppxApplicationInfo application = manifestInfo.ResolveApplication(Path.GetFileName(context.FileName))
+        AppxApplicationInfo application = manifestInfo.ResolveApplication(Path.GetDirectoryName(manifestPath)!, context.FileName)
             ?? throw new InvalidOperationException(
                 string.Format(
                     CultureInfo.CurrentCulture,
@@ -185,7 +264,7 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher
         // cannot host the run.
         _ = cancellationToken;
         var manifestInfo = AppxManifestInfo.ReadFromManifest(manifestPath);
-        AppxApplicationInfo? application = manifestInfo.ResolveApplication(Path.GetFileName(context.FileName));
+        AppxApplicationInfo? application = manifestInfo.ResolveApplication(Path.GetDirectoryName(manifestPath)!, context.FileName);
         throw new InvalidOperationException(
             string.Format(
                 CultureInfo.CurrentCulture,

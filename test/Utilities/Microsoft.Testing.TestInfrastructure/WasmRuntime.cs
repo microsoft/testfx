@@ -237,14 +237,23 @@ public static class WasmRuntime
     /// process exit code plus captured stdout/stderr. The runner sets <c>process.exitCode</c> rather
     /// than calling <c>process.exit()</c> so Node drains redirected streams before exiting.
     /// </summary>
+    /// <param name="node">Absolute path to the <c>node</c> executable.</param>
+    /// <param name="appBundle">The published <c>AppBundle</c> directory, used as the working directory.</param>
+    /// <param name="nodeRunnerSource">The runner module staged as <c>runtests.mjs</c>.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <param name="arguments">
+    /// Optional Microsoft.Testing.Platform arguments appended after the runner. The default runner forwards
+    /// <c>process.argv.slice(2)</c> into the managed entry point, so these reach the test application.
+    /// </param>
     public static async Task<(int ExitCode, string Output, string Error, string Combined)> RunUnderNodeAsync(
-        string node, string appBundle, string nodeRunnerSource, CancellationToken cancellationToken)
+        string node, string appBundle, string nodeRunnerSource, CancellationToken cancellationToken, string? arguments = null)
     {
         File.WriteAllText(Path.Combine(appBundle, "runtests.mjs"), nodeRunnerSource);
 
+        string commandArguments = string.IsNullOrWhiteSpace(arguments) ? string.Empty : $" {arguments}";
         var commandLine = new CommandLine();
         int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
-            $"\"{node}\" runtests.mjs",
+            $"\"{node}\" runtests.mjs{commandArguments}",
             workingDirectory: appBundle,
             cancellationToken: cancellationToken);
 

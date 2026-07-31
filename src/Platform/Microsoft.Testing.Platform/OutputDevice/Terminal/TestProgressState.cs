@@ -34,12 +34,28 @@ internal sealed class TestProgressState
     // Only populated when the slowest-tests feature is enabled (the reporter gates the RecordTestDuration call),
     // so a run without the feature pays no memory cost here.
     private readonly Dictionary<string, (string DisplayName, TimeSpan Duration)> _testUidToDuration = [];
+
+    // Test nodes whose result was superseded by a later attempt while the earlier attempt had at least one failure.
+    // Combined with the final tally in _testUidToResults this yields the "flaky" set (failed at least once, but the
+    // final attempt passed). Kept separate from the tally so a test that keeps failing is retried-but-not-flaky.
+    // The value is the last-seen display name so the summary can list the test by name.
+    private readonly Dictionary<string, string> _uidWithEarlierFailure = [];
+
+    // Distinct test nodes that produced results in more than one attempt. This is the "how many tests were retried"
+    // figure, as opposed to _retriedExecutions ("how many extra runs did that cost"). The default string comparer is
+    // already ordinal, matching the dictionaries above.
+    private readonly HashSet<string> _retriedUids = [];
+
     private readonly List<string> _discoveredTestDisplayNames = [];
     private int _discoveredTests;
     private int _failedTests;
     private int _passedTests;
     private int _skippedTests;
     private int _retriedFailedTests;
+
+    // Total number of extra executions caused by retries (every result that superseded an earlier attempt), so the
+    // summary can distinguish "2 tests were retried" from "those retries cost 4 extra runs".
+    private int _retriedExecutions;
     private int _tryCount;
     private TestNodeResultsState? _testNodeResultsState;
 #pragma warning disable IDE0032 // Use auto property - synchronized access requires a backing field.
@@ -128,6 +144,53 @@ internal sealed class TestProgressState
             lock (_lock)
             {
                 return _retriedFailedTests;
+            }
+        }
+    }
+
+    /// <summary>Gets the number of distinct tests that produced results in more than one attempt.</summary>
+    public int RetriedTests
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return _retriedUids.Count;
+            }
+        }
+    }
+
+    /// <summary>Gets the number of extra executions caused by retries (results that superseded an earlier attempt).</summary>
+    public int RetriedExecutions
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return _retriedExecutions;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets the number of tests that failed at least once but whose final attempt passed.
+    /// </summary>
+    public int FlakyTests
+    {
+        get
+        {
+            lock (_lock)
+            {
+                int count = 0;
+                foreach (KeyValuePair<string, string> entry in _uidWithEarlierFailure)
+                {
+                    if (IsFlakyCore(entry.Key))
+                    {
+                        count++;
+                    }
+                }
+
+                return count;
             }
         }
     }
@@ -223,14 +286,14 @@ internal sealed class TestProgressState
         }
     }
 
-    public void ReportPassingTest(string testNodeUid, string instanceId)
-        => ReportGenericTestResult(testNodeUid, instanceId, static entry => entry with { Passed = entry.Passed + 1 }, static @this => @this._passedTests++);
+    public void ReportPassingTest(string testNodeUid, string displayName, string instanceId)
+        => ReportGenericTestResult(testNodeUid, displayName, instanceId, static entry => entry with { Passed = entry.Passed + 1 }, static @this => @this._passedTests++);
 
-    public void ReportSkippedTest(string testNodeUid, string instanceId)
-        => ReportGenericTestResult(testNodeUid, instanceId, static entry => entry with { Skipped = entry.Skipped + 1 }, static @this => @this._skippedTests++);
+    public void ReportSkippedTest(string testNodeUid, string displayName, string instanceId)
+        => ReportGenericTestResult(testNodeUid, displayName, instanceId, static entry => entry with { Skipped = entry.Skipped + 1 }, static @this => @this._skippedTests++);
 
-    public void ReportFailedTest(string testNodeUid, string instanceId)
-        => ReportGenericTestResult(testNodeUid, instanceId, static entry => entry with { Failed = entry.Failed + 1 }, static @this => @this._failedTests++);
+    public void ReportFailedTest(string testNodeUid, string displayName, string instanceId)
+        => ReportGenericTestResult(testNodeUid, displayName, instanceId, static entry => entry with { Failed = entry.Failed + 1 }, static @this => @this._failedTests++);
 
     internal void ReportDiscoveredTest(string? displayName)
     {
@@ -339,6 +402,7 @@ internal sealed class TestProgressState
 
     private void ReportGenericTestResult(
         string testNodeUid,
+        string displayName,
         string instanceId,
         Func<TestNodeInfoEntry, TestNodeInfoEntry> incrementTestNodeInfoEntry,
         Action<TestProgressState> incrementCountAction)
@@ -351,7 +415,15 @@ internal sealed class TestProgressState
             {
                 if (value.LastAttemptNumber == currentAttemptNumber)
                 {
-                    // Another result for the same test node in the same attempt — just increment.
+                    // Another result for the same test node in the same attempt — just increment. When the uid has
+                    // already been superseded once, this result belongs to a retry attempt and is itself an extra
+                    // execution: a folded data-driven test reports one result per row, so counting only the first
+                    // would undercount the extra runs those rows actually cost.
+                    if (_retriedUids.Contains(testNodeUid))
+                    {
+                        _retriedExecutions++;
+                    }
+
                     _testUidToResults[testNodeUid] = incrementTestNodeInfoEntry(value);
                 }
                 else if (currentAttemptNumber > value.LastAttemptNumber)
@@ -361,6 +433,17 @@ internal sealed class TestProgressState
                     _passedTests -= value.Passed;
                     _skippedTests -= value.Skipped;
                     _failedTests -= value.Failed;
+                    _retriedUids.Add(testNodeUid);
+                    _retriedExecutions++;
+
+                    // Remember that an earlier attempt failed. Whether that makes the test flaky depends on the
+                    // final tally, which is only known once the run ends, so the decision is deferred to
+                    // IsFlakyCore rather than made here.
+                    if (value.Failed > 0)
+                    {
+                        _uidWithEarlierFailure[testNodeUid] = displayName;
+                    }
+
                     _testUidToResults[testNodeUid] = incrementTestNodeInfoEntry((Passed: 0, Skipped: 0, Failed: 0, LastAttemptNumber: currentAttemptNumber));
                 }
                 else
@@ -375,6 +458,44 @@ internal sealed class TestProgressState
             }
 
             incrementCountAction(this);
+        }
+    }
+
+    /// <summary>
+    /// A test is flaky when an earlier attempt failed but the final attempt produced only passing results. Callers
+    /// must hold <see cref="_lock"/>.
+    /// </summary>
+    private bool IsFlakyCore(string testNodeUid)
+        // A skipped row under a folded uid is not recovery either: not every result of the final attempt passed.
+        => _testUidToResults.TryGetValue(testNodeUid, out TestNodeInfoEntry entry)
+            && entry.Failed == 0
+            && entry.Skipped == 0
+            && entry.Passed > 0;
+
+    /// <summary>
+    /// Returns the tests that failed at least once but eventually passed, as (display name, total attempts) pairs
+    /// ordered by display name so the rendering is deterministic for snapshot-based tests.
+    /// </summary>
+    public IReadOnlyList<(string DisplayName, int Attempts)> GetFlakyTests()
+    {
+        lock (_lock)
+        {
+            if (_uidWithEarlierFailure.Count == 0)
+            {
+                return [];
+            }
+
+            List<(string DisplayName, int Attempts)> flaky = [];
+            foreach (KeyValuePair<string, string> entry in _uidWithEarlierFailure)
+            {
+                if (IsFlakyCore(entry.Key))
+                {
+                    flaky.Add((entry.Value, _testUidToResults[entry.Key].LastAttemptNumber));
+                }
+            }
+
+            flaky.Sort(static (left, right) => StringComparer.Ordinal.Compare(left.DisplayName, right.DisplayName));
+            return flaky;
         }
     }
 

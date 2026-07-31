@@ -1808,6 +1808,269 @@ public sealed class TerminalTestReporterTests
     }
 
     [TestMethod]
+    public void TestNodeResultsState_GetSingleActiveOrSummaryTask_WhenCountUnchanged_ReusesFormattedSummaryString()
+    {
+        var stopwatchFactory = new StopwatchFactory();
+        var state = new TestNodeResultsState(1);
+        for (int i = 0; i < 5; i++)
+        {
+            state.AddRunningTestNode(id: 10 + i, uid: $"uid-{i}", name: $"Test{i}", stopwatchFactory.CreateStopwatch());
+            stopwatchFactory.AddTime(TimeSpan.FromSeconds(1));
+        }
+
+        string first = state.GetSingleActiveOrSummaryTask()!.Text;
+
+        // Do NOT remove this interleaved call. TestDetailState.Text's setter ignores writes that are
+        // ordinally equal to the current value, so two back-to-back calls would return the very first
+        // instance even without the cache, making the AreSame assertion below vacuous. Flipping the
+        // shared summary detail to the other message shape forces the setter to assign on the next call,
+        // so only the count-keyed cache can hand back the same instance.
+        string interleaved = state.GetRunningTasks(maxCount: 3)[2].Text;
+        Assert.AreNotEqual(first, interleaved);
+
+        string second = state.GetSingleActiveOrSummaryTask()!.Text;
+
+        Assert.AreEqual(string.Format(CultureInfo.CurrentCulture, PlatformResources.ActiveTestsRunning_FullTestsCount, 5), first);
+        Assert.AreSame(first, second);
+    }
+
+    [TestMethod]
+    [DoNotParallelize]
+    public void TestNodeResultsState_GetSingleActiveOrSummaryTask_WhenCultureChanges_ReformatsSummary()
+    {
+        CultureInfo originalCulture = CultureInfo.CurrentCulture;
+        CultureInfo originalUICulture = CultureInfo.CurrentUICulture;
+
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("en-US");
+
+            var stopwatchFactory = new StopwatchFactory();
+            var state = new TestNodeResultsState(1);
+            for (int i = 0; i < 5; i++)
+            {
+                state.AddRunningTestNode(id: 10 + i, uid: $"uid-{i}", name: $"Test{i}", stopwatchFactory.CreateStopwatch());
+                stopwatchFactory.AddTime(TimeSpan.FromSeconds(1));
+            }
+
+            // Each culture is changed on its own so that both halves of the key are covered
+            // independently: changing them together would let either comparison be dropped without
+            // failing this test. The count stays at 5 throughout.
+            string enUS = state.GetSingleActiveOrSummaryTask()!.Text;
+
+            // Do NOT remove these interleaved calls. TestDetailState.Text's setter ignores writes that are
+            // ordinally equal to the current value, so two back-to-back calls could return the previous
+            // instance even without the cache. Flipping the shared summary detail to the other message
+            // shape forces the setter to assign on the next call, which is what makes the reference
+            // assertions below meaningful.
+            FlipToMoreRunningShape(state);
+
+            // CurrentCulture alone governs how the count is formatted.
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("fr-FR");
+            string frenchNumbers = state.GetSingleActiveOrSummaryTask()!.Text;
+            Assert.AreNotSame(enUS, frenchNumbers);
+
+            FlipToMoreRunningShape(state);
+
+            // CurrentUICulture alone governs which localized resource is loaded.
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("fr-FR");
+            string frFR = state.GetSingleActiveOrSummaryTask()!.Text;
+            Assert.AreNotSame(frenchNumbers, frFR);
+
+            FlipToMoreRunningShape(state);
+
+            // ...and the cache must re-arm for the new culture rather than formatting on every call.
+            Assert.AreSame(frFR, state.GetSingleActiveOrSummaryTask()!.Text);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+            CultureInfo.CurrentUICulture = originalUICulture;
+        }
+    }
+
+    [TestMethod]
+    [DoNotParallelize]
+    public void TestNodeResultsState_GetRunningTasks_WhenCultureChanges_ReformatsSummary()
+    {
+        CultureInfo originalCulture = CultureInfo.CurrentCulture;
+        CultureInfo originalUICulture = CultureInfo.CurrentUICulture;
+
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("en-US");
+
+            var stopwatchFactory = new StopwatchFactory();
+            var state = new TestNodeResultsState(1);
+            for (int i = 0; i < 5; i++)
+            {
+                state.AddRunningTestNode(id: 10 + i, uid: $"uid-{i}", name: $"Test{i}", stopwatchFactory.CreateStopwatch());
+                stopwatchFactory.AddTime(TimeSpan.FromSeconds(1));
+            }
+
+            // The "... N more running" cache is independent of the "N tests running" one, so it needs its
+            // own coverage for each half of the key. The interleaved calls flip the shared summary detail
+            // to the other shape for the same reason as in the GetSingleActiveOrSummaryTask counterpart.
+            string enUS = GetMoreRunningText(state);
+
+            FlipToTestsRunningShape(state);
+
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("fr-FR");
+            string frenchNumbers = GetMoreRunningText(state);
+            Assert.AreNotSame(enUS, frenchNumbers);
+
+            FlipToTestsRunningShape(state);
+
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("fr-FR");
+            string frFR = GetMoreRunningText(state);
+            Assert.AreNotSame(frenchNumbers, frFR);
+
+            FlipToTestsRunningShape(state);
+
+            Assert.AreSame(frFR, GetMoreRunningText(state));
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+            CultureInfo.CurrentUICulture = originalUICulture;
+        }
+    }
+
+    /// <summary>
+    /// Returns the trailing "... N more running" summary, which <see cref="TestNodeResultsState.GetRunningTasks"/>
+    /// appends when there are more running tests than <c>maxCount</c> allows it to list.
+    /// </summary>
+    private static string GetMoreRunningText(TestNodeResultsState state) => state.GetRunningTasks(maxCount: 3)[2].Text;
+
+    /// <summary>
+    /// Rewrites the shared summary detail to the "... N more running" shape so that the next write of the
+    /// "N tests running" shape is not swallowed by <c>TestDetailState.Text</c>'s ordinal-equality guard.
+    /// </summary>
+    private static void FlipToMoreRunningShape(TestNodeResultsState state) => state.GetRunningTasks(maxCount: 3);
+
+    /// <summary>
+    /// Rewrites the shared summary detail to the "N tests running" shape, the mirror of
+    /// <see cref="FlipToMoreRunningShape"/>.
+    /// </summary>
+    private static void FlipToTestsRunningShape(TestNodeResultsState state) => state.GetSingleActiveOrSummaryTask();
+
+    [TestMethod]
+    public void TestNodeResultsState_GetSingleActiveOrSummaryTask_WhenCountChanges_ReformatsSummary()
+    {
+        var stopwatchFactory = new StopwatchFactory();
+        var state = new TestNodeResultsState(1);
+        state.AddRunningTestNode(id: 10, uid: "uid-1", name: "T1", stopwatchFactory.CreateStopwatch());
+        state.AddRunningTestNode(id: 11, uid: "uid-2", name: "T2", stopwatchFactory.CreateStopwatch());
+
+        string? twoRunning = state.GetSingleActiveOrSummaryTask()?.Text;
+        state.AddRunningTestNode(id: 12, uid: "uid-3", name: "T3", stopwatchFactory.CreateStopwatch());
+        string? threeRunning = state.GetSingleActiveOrSummaryTask()?.Text;
+
+        Assert.AreEqual(string.Format(CultureInfo.CurrentCulture, PlatformResources.ActiveTestsRunning_FullTestsCount, 2), twoRunning);
+        Assert.AreEqual(string.Format(CultureInfo.CurrentCulture, PlatformResources.ActiveTestsRunning_FullTestsCount, 3), threeRunning);
+    }
+
+    [TestMethod]
+    public void TestNodeResultsState_GetRunningTasks_WhenCountUnchanged_ReusesFormattedSummaryString()
+    {
+        var stopwatchFactory = new StopwatchFactory();
+        var state = new TestNodeResultsState(1);
+        for (int i = 0; i < 5; i++)
+        {
+            state.AddRunningTestNode(id: 10 + i, uid: $"uid-{i}", name: $"Test{i}", stopwatchFactory.CreateStopwatch());
+            stopwatchFactory.AddTime(TimeSpan.FromSeconds(1));
+        }
+
+        // maxCount 3 truncates, so the trailing entry is the "... N more running" summary.
+        string first = state.GetRunningTasks(maxCount: 3)[2].Text;
+
+        // See the note in the GetSingleActiveOrSummaryTask counterpart: this interleaved call flips the
+        // shared summary detail to the other message shape so the AreSame assertion below is meaningful.
+        string interleaved = state.GetSingleActiveOrSummaryTask()!.Text;
+        Assert.AreNotEqual(first, interleaved);
+
+        string second = state.GetRunningTasks(maxCount: 3)[2].Text;
+
+        Assert.AreEqual($"... {string.Format(CultureInfo.CurrentCulture, PlatformResources.ActiveTestsRunning_MoreTestsCount, 3)}", first);
+        Assert.AreSame(first, second);
+    }
+
+    [TestMethod]
+    public void TestNodeResultsState_GetRunningTasks_WhenCountChanges_ReformatsSummary()
+    {
+        var stopwatchFactory = new StopwatchFactory();
+        var state = new TestNodeResultsState(1);
+        for (int i = 0; i < 5; i++)
+        {
+            state.AddRunningTestNode(id: 10 + i, uid: $"uid-{i}", name: $"Test{i}", stopwatchFactory.CreateStopwatch());
+            stopwatchFactory.AddTime(TimeSpan.FromSeconds(1));
+        }
+
+        // 5 running, maxCount 3 => 2 shown + "... 3 more running".
+        string fiveRunning = state.GetRunningTasks(maxCount: 3)[2].Text;
+
+        // 4 running, maxCount 3 => 2 shown + "... 2 more running".
+        state.RemoveRunningTestNode("uid-0");
+        string fourRunning = state.GetRunningTasks(maxCount: 3)[2].Text;
+
+        Assert.AreEqual($"... {string.Format(CultureInfo.CurrentCulture, PlatformResources.ActiveTestsRunning_MoreTestsCount, 3)}", fiveRunning);
+        Assert.AreEqual($"... {string.Format(CultureInfo.CurrentCulture, PlatformResources.ActiveTestsRunning_MoreTestsCount, 2)}", fourRunning);
+    }
+
+    [TestMethod]
+    public void TestNodeResultsState_FullCountSummary_IsSharedBetweenGetRunningTasksAndGetSingleActiveOrSummaryTask()
+    {
+        var stopwatchFactory = new StopwatchFactory();
+        var state = new TestNodeResultsState(1);
+        for (int i = 0; i < 3; i++)
+        {
+            state.AddRunningTestNode(id: 10 + i, uid: $"uid-{i}", name: $"Test{i}", stopwatchFactory.CreateStopwatch());
+            stopwatchFactory.AddTime(TimeSpan.FromSeconds(1));
+        }
+
+        // maxCount 1 leaves no room for individual tests, so GetRunningTasks emits the same
+        // "N tests running" message that GetSingleActiveOrSummaryTask produces.
+        string fromGetRunningTasks = state.GetRunningTasks(maxCount: 1)[0].Text;
+
+        // Flip to the "... N more running" shape so the Text setter is forced to assign again below.
+        string interleaved = state.GetRunningTasks(maxCount: 2)[1].Text;
+        Assert.AreNotEqual(fromGetRunningTasks, interleaved);
+
+        string fromGetSingleActive = state.GetSingleActiveOrSummaryTask()!.Text;
+
+        Assert.AreEqual(string.Format(CultureInfo.CurrentCulture, PlatformResources.ActiveTestsRunning_FullTestsCount, 3), fromGetRunningTasks);
+        Assert.AreSame(fromGetRunningTasks, fromGetSingleActive);
+    }
+
+    [TestMethod]
+    public void TestNodeResultsState_SummaryCaches_DoNotLeakBetweenTheTwoMessageShapes()
+    {
+        var stopwatchFactory = new StopwatchFactory();
+        var state = new TestNodeResultsState(1);
+        for (int i = 0; i < 5; i++)
+        {
+            state.AddRunningTestNode(id: 10 + i, uid: $"uid-{i}", name: $"Test{i}", stopwatchFactory.CreateStopwatch());
+            stopwatchFactory.AddTime(TimeSpan.FromSeconds(1));
+        }
+
+        // 5 running, maxCount 3 => 2 shown + "... 3 more running". This caches the "more" message for the number 3.
+        Assert.AreEqual(
+            $"... {string.Format(CultureInfo.CurrentCulture, PlatformResources.ActiveTestsRunning_MoreTestsCount, 3)}",
+            state.GetRunningTasks(maxCount: 3)[2].Text);
+
+        // Drop to 3 running. The count now collides with the number cached above, so a cache keyed only
+        // on the count would wrongly serve the "... 3 more running" text as the "3 tests running" summary.
+        state.RemoveRunningTestNode("uid-0");
+        state.RemoveRunningTestNode("uid-1");
+
+        Assert.AreEqual(
+            string.Format(CultureInfo.CurrentCulture, PlatformResources.ActiveTestsRunning_FullTestsCount, 3),
+            state.GetSingleActiveOrSummaryTask()?.Text);
+    }
+
+    [TestMethod]
     public void TerminalTestReporter_WhenInDiscoveryMode_ShouldIncrementDiscoveredTests()
     {
         // Arrange
@@ -2267,7 +2530,7 @@ public sealed class TerminalTestReporterTests
     // Companion to the test above driving the FULL lifecycle to validate the two retry-specific renderings the
     // dotnet/sdk orchestrator acceptance test RunTestProjectWithWithRetryFeature_ShouldSucceed asserts:
     //   1) each per-test result line is annotated with "(try N)" so retried attempts are distinguishable, and
-    //   2) the run summary's total line is suffixed with "(+N retried)".
+    //   2) the run summary carries the dedicated "retried:" (and, for a recovered test, "flaky:") lines.
     // The in-process host never retries (isRetry stays false, TryCount stays 1), so neither rendering appears there.
     [TestMethod]
     public void TestExecutionCompleted_WhenTestsWereRetried_AnnotatesTryNumberAndSummaryRetriedCount()
@@ -2307,11 +2570,261 @@ public sealed class TerminalTestReporterTests
         Assert.Contains($"({tryTwo})", output);
         Assert.DoesNotContain($"({string.Format(CultureInfo.CurrentCulture, TerminalResources.Try, 3)})", output);
 
-        // 2) Summary total line carries the "(+1 retried)" suffix.
-        Assert.Contains($"{TerminalResources.TotalLowercase}: 1 (+1 {TerminalResources.Retried})", output);
+        // 2) The total line is a plain count again; the retry accounting moved to its own line, which distinguishes
+        // the single retried test from the single extra run it cost.
+        Assert.Contains($"{TerminalResources.TotalLowercase}: 1", output);
+        Assert.DoesNotContain($"(+1 {TerminalResources.Retried})", output);
+        Assert.Contains($"{TerminalResources.Retried}: {string.Format(CultureInfo.CurrentCulture, TerminalResources.RetriedTestsAndRuns, 1, 1)}", output);
+
+        // The test failed once and then passed, so it is flaky and is both counted and named.
+        Assert.Contains(string.Format(CultureInfo.CurrentCulture, TerminalResources.FlakyLowercase, 1), output);
+        Assert.Contains(TerminalResources.FlakyTests, output);
 
         // The retry also surfaces in the per-assembly "(try N) Running tests from" banner.
         Assert.Contains($"({tryTwo}) {TerminalResources.RunningTestsFrom}", output);
+    }
+
+    // A test that is retried but keeps failing is retried-but-not-flaky: it must be counted under "retried:" and
+    // must NOT appear in the flaky count or the "Flaky tests" section, whose whole point is "this one silently
+    // recovered". Its failure is already reported in full by the normal failed-test rendering.
+    [TestMethod]
+    public void TestExecutionCompleted_WhenRetriedTestKeepsFailing_CountsRetriedButNotFlaky()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+            ShowPassedTests = () => true,
+            ShowAssembly = true,
+            ShowAssemblyStartAndComplete = true,
+        });
+
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: true);
+
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\Broken.Tests.dll" : "/repo/Broken.Tests.dll";
+        const string executionId = "exec-broken";
+
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-1", attemptNumber: 1);
+        ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-1", testUid: "broken-1", TestOutcome.Fail);
+
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-2", attemptNumber: 2);
+        ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-2", testUid: "broken-1", TestOutcome.Fail);
+
+        terminalReporter.AssemblyRunCompleted(executionId, exitCode: 2, outputData: null, errorData: null);
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: 2);
+
+        string output = stringBuilderConsole.Output;
+
+        Assert.Contains($"{TerminalResources.Retried}: {string.Format(CultureInfo.CurrentCulture, TerminalResources.RetriedTestsAndRuns, 1, 1)}", output);
+        Assert.DoesNotContain("flaky:", output);
+        Assert.DoesNotContain(TerminalResources.FlakyTests, output);
+    }
+
+    // A folded data-driven test can report several final-attempt rows under the same uid. If any row is skipped,
+    // the uid was retried but did not fully recover, so it must not be counted as flaky.
+    [TestMethod]
+    public void TestExecutionCompleted_WhenRetriedFoldedTestPassesAndSkips_CountsRetriedButNotFlaky()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+            ShowPassedTests = () => true,
+            ShowAssembly = true,
+            ShowAssemblyStartAndComplete = true,
+        });
+
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: true);
+
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\Folded.Tests.dll" : "/repo/Folded.Tests.dll";
+        const string executionId = "exec-folded";
+        const string testUid = "folded-1";
+
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-1", attemptNumber: 1);
+        ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-1", testUid: testUid, TestOutcome.Fail);
+
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-2", attemptNumber: 2);
+        ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-2", testUid: testUid, TestOutcome.Passed);
+        ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-2", testUid: testUid, TestOutcome.Skipped);
+
+        terminalReporter.AssemblyRunCompleted(executionId, exitCode: 0, outputData: null, errorData: null);
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: 0);
+
+        string output = stringBuilderConsole.Output;
+
+        // The retry produced two results under the one uid, so it cost two extra runs even though only one test
+        // was retried. Counting the first row alone would disagree with the retry extension, which counts results.
+        Assert.Contains(ExpectedCounts(1, 0, 1, retried: 1), GetAssemblySummaryLine(output, assembly));
+        Assert.Contains($"{TerminalResources.Retried}: {string.Format(CultureInfo.CurrentCulture, TerminalResources.RetriedTestsAndRuns, 1, 2)}", output);
+        Assert.DoesNotContain("flaky:", output);
+        Assert.DoesNotContain(TerminalResources.FlakyTests, output);
+    }
+
+    // --show-flaky-tests off suppresses both the "flaky:" count line and the "Flaky tests" section, while leaving
+    // the "retried:" accounting (which is not part of the flaky feature) in place.
+    [TestMethod]
+    public void TestExecutionCompleted_WhenShowFlakyTestsIsOff_OmitsFlakyCountAndSection()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+            ShowPassedTests = () => true,
+            ShowAssembly = true,
+            ShowAssemblyStartAndComplete = true,
+            ShowFlakyTests = false,
+        });
+
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: true);
+
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\Flaky.Tests.dll" : "/repo/Flaky.Tests.dll";
+        const string executionId = "exec-flaky-off";
+
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-1", attemptNumber: 1);
+        ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-1", testUid: "flaky-1", TestOutcome.Fail);
+
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-2", attemptNumber: 2);
+        ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-2", testUid: "flaky-1", TestOutcome.Passed);
+
+        terminalReporter.AssemblyRunCompleted(executionId, exitCode: 0, outputData: null, errorData: null);
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: 0);
+
+        string output = stringBuilderConsole.Output;
+
+        Assert.DoesNotContain("flaky:", output);
+        Assert.DoesNotContain(TerminalResources.FlakyTests, output);
+        Assert.Contains($"{TerminalResources.Retried}: {string.Format(CultureInfo.CurrentCulture, TerminalResources.RetriedTestsAndRuns, 1, 1)}", output);
+    }
+
+    // A run where nothing was retried must keep its historical summary exactly: no "flaky:" line and no "retried:"
+    // line, so the common case is not made noisier by the feature.
+    [TestMethod]
+    public void TestExecutionCompleted_WhenNothingWasRetried_OmitsRetryLinesEntirely()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        TerminalTestReporter terminalReporter = CreateOrchestratorReporter(stringBuilderConsole);
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: false);
+
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\Stable.Tests.dll" : "/repo/Stable.Tests.dll";
+        const string executionId = "exec-stable";
+
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-1", attemptNumber: 1);
+        ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-1", testUid: "stable-1", TestOutcome.Passed);
+
+        terminalReporter.AssemblyRunCompleted(executionId, exitCode: 0, outputData: null, errorData: null);
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: 0);
+
+        string output = stringBuilderConsole.Output;
+
+        Assert.DoesNotContain("flaky:", output);
+        Assert.DoesNotContain($"{TerminalResources.Retried}: ", output);
+    }
+
+    // ShowRunSummary off is what a retry attempt (the second or a later one) of --retry-failed-tests runs with:
+    // those re-run only the previously-failed tests, so their verdict and counts would describe a filtered subset
+    // rather than the run. The orchestrator reconciles the attempts into one retry summary instead. The sections
+    // the orchestrator does NOT restate — produced artifacts and the slowest-tests ranking — must survive.
+    [TestMethod]
+    public void TestExecutionCompleted_WhenRunSummaryIsSuppressed_KeepsArtifactsAndSlowestTests()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+            ShowPassedTests = () => true,
+            SlowestTestsCount = 5,
+            ShowRunSummary = false,
+        });
+
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: false);
+
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\Attempt.Tests.dll" : "/repo/Attempt.Tests.dll";
+        string artifact = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\attempt.trx" : "/repo/attempt.trx";
+        const string executionId = "exec-attempt";
+
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-1");
+        terminalReporter.ArtifactAdded(outOfProcess: false, assembly: assembly, targetFramework: "net9.0", architecture: "x64", executionId: executionId, testName: null, artifact);
+        terminalReporter.TestCompleted(
+            assembly,
+            targetFramework: "net9.0",
+            architecture: "x64",
+            executionId,
+            instanceId: "inst-1",
+            testNodeUid: "slow-1",
+            displayName: "SlowTest",
+            informativeMessage: null,
+            TestOutcome.Passed,
+            duration: TimeSpan.FromSeconds(3),
+            exceptions: null,
+            expected: null,
+            actual: null,
+            standardOutput: null,
+            errorOutput: null);
+        terminalReporter.AssemblyRunCompleted(executionId);
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: 0);
+
+        string output = stringBuilderConsole.Output;
+
+        // The verdict and its counts belong to the orchestrator's retry summary now.
+        Assert.DoesNotContain(TerminalResources.TestRunSummary, output);
+        Assert.DoesNotContain($"{TerminalResources.TotalLowercase}: ", output);
+        Assert.DoesNotContain($"{TerminalResources.FailedLowercase}: ", output);
+        Assert.DoesNotContain($"{TerminalResources.SucceededLowercase}: ", output);
+
+        // ...but nothing else is lost: the orchestrator never restates these.
+        Assert.Contains(TerminalResources.InProcessArtifactsProduced, output);
+        Assert.Contains("attempt.trx", output);
+        Assert.Contains(TerminalResources.SlowestTests, output);
+        Assert.Contains("SlowTest", output);
+    }
+
+    // The default (ShowRunSummary on) must be completely unaffected: a normal run — and the first attempt of a
+    // retried one, which executes the whole suite — still prints its verdict and counts.
+    [TestMethod]
+    public void TestExecutionCompleted_ByDefault_StillPrintsRunSummary()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+            ShowPassedTests = () => true,
+        });
+
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: false);
+
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\Normal.Tests.dll" : "/repo/Normal.Tests.dll";
+        const string executionId = "exec-normal";
+
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-1");
+        terminalReporter.TestCompleted(
+            assembly,
+            targetFramework: "net9.0",
+            architecture: "x64",
+            executionId,
+            instanceId: "inst-1",
+            testNodeUid: "t-1",
+            displayName: "SomeTest",
+            informativeMessage: null,
+            TestOutcome.Passed,
+            duration: TimeSpan.FromMilliseconds(5),
+            exceptions: null,
+            expected: null,
+            actual: null,
+            standardOutput: null,
+            errorOutput: null);
+        terminalReporter.AssemblyRunCompleted(executionId);
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: 0);
+
+        string output = stringBuilderConsole.Output;
+
+        Assert.Contains(TerminalResources.TestRunSummary, output);
+        Assert.Contains($"{TerminalResources.TotalLowercase}: 1", output);
+        Assert.Contains($"{TerminalResources.SucceededLowercase}: 1", output);
     }
 
     // Orchestrator discovery (dotnet test --list-tests across N assemblies): each assembly gets a

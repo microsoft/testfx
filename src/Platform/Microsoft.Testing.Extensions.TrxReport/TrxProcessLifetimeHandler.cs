@@ -212,6 +212,8 @@ internal sealed class TrxProcessLifetimeHandler :
                 await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), cancellationToken).ConfigureAwait(false);
             }
 
+            await DisplayAttachmentWarningsAsync(trxReportGeneratorEngine, cancellationToken).ConfigureAwait(false);
+
             // Tell the user how many records survived the crash. Without this they have to grep the TRX
             // (or the controller logs) to know whether recovery did anything useful.
             string recoverySummary = recoveredResults.Count == 0
@@ -259,6 +261,7 @@ internal sealed class TrxProcessLifetimeHandler :
 #endif
 
             await trxReportGeneratorEngine.AddArtifactsAsync(trxFile, artifacts).ConfigureAwait(false);
+            await DisplayAttachmentWarningsAsync(trxReportGeneratorEngine, cancellationToken).ConfigureAwait(false);
         }
 
         await _messageBus.PublishAsync(this, new FileArtifact(trxFile, ExtensionResources.TrxReportArtifactDisplayName, ExtensionResources.TrxReportArtifactDescription, TrxReportEngine.TrxArtifactKind)).ConfigureAwait(false);
@@ -269,6 +272,16 @@ internal sealed class TrxProcessLifetimeHandler :
         // TRX in hand, the sidecar is no longer useful — sweep it so repeated CI runs don't accumulate
         // stale files in the test results directory.
         TryDeleteStreamingSidecar();
+    }
+
+    private async Task DisplayAttachmentWarningsAsync(TrxReportEngine engine, CancellationToken cancellationToken)
+    {
+        // An attachment that could not be copied is silently missing from the TRX otherwise: the run
+        // still succeeds and the only record is a RunInfo inside the report nobody reads until later.
+        foreach (string attachmentWarning in engine.AttachmentWarnings)
+        {
+            await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(attachmentWarning), cancellationToken).ConfigureAwait(false);
+        }
     }
 
     private Task<IResponse> CallbackAsync(IRequest request)

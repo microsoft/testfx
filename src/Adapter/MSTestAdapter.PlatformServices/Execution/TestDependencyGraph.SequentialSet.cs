@@ -19,11 +19,7 @@ internal sealed partial class TestDependencyGraph
         bool[] isSequential = new bool[tests.Length];
         if (!parallelizationEnabled)
         {
-            for (int i = 0; i < isSequential.Length; i++)
-            {
-                isSequential[i] = true;
-            }
-
+            isSequential.AsSpan().Fill(true);
             return isSequential;
         }
 
