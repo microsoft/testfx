@@ -331,10 +331,10 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
     }
 
     // --- TestMethodIdentifier caching -------------------------------------------------------------------------
-    public void ToResultTestNode_ReusesTestMethodIdentifier_FromInProgressNode()
+    public void ToResultTestNode_ProducesEquivalentTestMethodIdentifier_AsInProgressNode()
     {
-        // The property is a pure function of the immutable managed names, so it is parsed and allocated once per
-        // TestMethod: the in-progress node and every result node are handed the very same cached instance.
+        // The managed-name parse is cached per TestMethod, so the in-progress node and every result node must
+        // still agree on every field of the identifier.
         UnitTestElement element = CreateElement();
 
         TestMethodIdentifierProperty? inProgress = MSTestTestNodeConverter.ToInProgressTestNode(element, isTrxEnabled: false)
@@ -343,7 +343,23 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
             .Properties.SingleOrDefault<TestMethodIdentifierProperty>();
 
         inProgress.Should().NotBeNull();
-        result.Should().BeSameAs(inProgress);
+        result.Should().Be(inProgress);
+    }
+
+    public void ToResultTestNode_DoesNotShareParameterTypeArray_WithInProgressNode()
+    {
+        // TestMethodIdentifierProperty exposes ParameterTypeFullNames publicly, so nodes must never alias one
+        // array: a consumer that writes to it would otherwise corrupt every other node of the same test method.
+        UnitTestElement element = CreateElement(managedMethodName: "MyMethod(System.String)");
+
+        TestMethodIdentifierProperty inProgress = MSTestTestNodeConverter.ToInProgressTestNode(element, isTrxEnabled: false)
+            .Properties.Single<TestMethodIdentifierProperty>();
+        TestMethodIdentifierProperty result = MSTestTestNodeConverter.ToResultTestNode(element, new FrameworkTestResult { Outcome = UnitTestOutcome.Passed }, DateTimeOffset.Now, DateTimeOffset.Now, isTrxEnabled: false, new MSTestSettings())
+            .Properties.Single<TestMethodIdentifierProperty>();
+
+        inProgress.ParameterTypeFullNames.Should().Equal("System.String");
+        result.ParameterTypeFullNames.Should().Equal("System.String");
+        result.ParameterTypeFullNames.Should().NotBeSameAs(inProgress.ParameterTypeFullNames);
     }
 
     public void ToDiscoveredTestNode_DoesNotShareTestMethodIdentifier_AcrossDistinctTestMethods()
