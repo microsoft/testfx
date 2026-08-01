@@ -342,57 +342,57 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidDescription">
         <source>A '[DependsOn]' attribute references a test by name. A reference that matches no test is deliberately non-fatal at run time, so that running a subset of the suite stays possible, which means a typo or a rename silently drops the declared ordering. This analyzer reports the problems that can be decided at build time: a method that does not exist on the referenced type, a target that is not a test, a test that depends on itself, a dependency cycle visible in the compilation, a reference to a type from another assembly (dependencies are resolved within a single test source), and an attribute applied where it has no effect.</source>
-        <target state="new">A '[DependsOn]' attribute references a test by name. A reference that matches no test is deliberately non-fatal at run time, so that running a subset of the suite stays possible, which means a typo or a rename silently drops the declared ordering. This analyzer reports the problems that can be decided at build time: a method that does not exist on the referenced type, a target that is not a test, a test that depends on itself, a dependency cycle visible in the compilation, a reference to a type from another assembly (dependencies are resolved within a single test source), and an attribute applied where it has no effect.</target>
+        <target state="translated">Un attributo '[DependsOn]' fa riferimento a un test in base al nome. Un riferimento che non corrisponde a nessun test è volutamente non fatale in fase di esecuzione, per cui resta possibile eseguire un sottoinsieme della suite; questo significa che un errore di battitura o una ridenominazione rimuove in modo silenzioso l'ordinamento dichiarato. Questo analizzatore segnala i problemi che possono essere individuati in fase di compilazione: un metodo che non esiste nel tipo a cui si fa riferimento, una destinazione che non è un test, un test che dipende da se stesso, un ciclo di dipendenze visibile nella compilazione, un riferimento a un tipo di un altro assembly (le dipendenze vengono risolte all'interno di una singola origine di test) e un attributo applicato dove non ha effetto.</target>
         <note>{Locked="[DependsOn]"}</note>
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidMessageFormat_AbstractTarget">
         <source>'[DependsOn]' references abstract type '{0}'; its tests run under each derived test class rather than under '{0}', so the dependency is ignored at run time</source>
-        <target state="new">'[DependsOn]' references abstract type '{0}'; its tests run under each derived test class rather than under '{0}', so the dependency is ignored at run time</target>
+        <target state="translated">'[DependsOn]' fa riferimento al tipo astratto '{0}'; i relativi test vengono eseguiti in ogni classe di test derivata anziché in '{0}', per cui la dipendenza viene ignorata in fase di esecuzione</target>
         <note>{0} is the referenced type name. {Locked="[DependsOn]"}</note>
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidMessageFormat_Cycle">
         <source>'[DependsOn]' declares the dependency cycle '{0}', which fails every test in the cycle at run time</source>
-        <target state="new">'[DependsOn]' declares the dependency cycle '{0}', which fails every test in the cycle at run time</target>
+        <target state="translated">'[DependsOn]' dichiara il ciclo di dipendenze '{0}', che fa fallire tutti i test nel ciclo in fase di esecuzione</target>
         <note>{0} is the cycle path, for example 'MyTests.A &gt; MyTests.B &gt; MyTests.A'. {Locked="[DependsOn]"}</note>
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidMessageFormat_MethodNotFound">
         <source>'[DependsOn]' references method '{1}', which does not exist on type '{0}'</source>
-        <target state="new">'[DependsOn]' references method '{1}', which does not exist on type '{0}'</target>
+        <target state="translated">'[DependsOn]' fa riferimento al metodo '{1}', che non esiste nel tipo '{0}'</target>
         <note>{0} is the referenced type name. {1} is the referenced method name. {Locked="[DependsOn]"}</note>
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidMessageFormat_NoEffect">
         <source>'[DependsOn]' has no effect because '{0}' is not a test method</source>
-        <target state="new">'[DependsOn]' has no effect because '{0}' is not a test method</target>
+        <target state="translated">'[DependsOn]' non ha alcun effetto perché '{0}' non è un metodo di test</target>
         <note>{0} is the name of the method the attribute is applied to. {Locked="[DependsOn]"}</note>
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidMessageFormat_NoEffectOnClass">
         <source>'[DependsOn]' has no effect because discovery runs no test under '{0}'</source>
-        <target state="new">'[DependsOn]' has no effect because discovery runs no test under '{0}'</target>
+        <target state="translated">'[DependsOn]' non ha alcun effetto perché l'individuazione non esegue alcun test in '{0}'</target>
         <note>{0} is the name of the class the attribute is applied to. {Locked="[DependsOn]"}</note>
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidMessageFormat_NotATestClass">
         <source>'[DependsOn]' references type '{0}', which is not a test class, so the dependency is ignored at run time</source>
-        <target state="new">'[DependsOn]' references type '{0}', which is not a test class, so the dependency is ignored at run time</target>
+        <target state="translated">'[DependsOn]' fa riferimento al tipo '{0}', che non è una classe di test, quindi la dipendenza viene ignorata in fase di esecuzione</target>
         <note>{0} is the referenced type name. {Locked="[DependsOn]"}</note>
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidMessageFormat_NotATestMethod">
         <source>'[DependsOn]' references '{0}.{1}', which is not a test method, so the dependency is ignored at run time</source>
-        <target state="new">'[DependsOn]' references '{0}.{1}', which is not a test method, so the dependency is ignored at run time</target>
+        <target state="translated">'[DependsOn]' fa riferimento al tipo '{0}.{1}' che non è un metodo di test, quindi la dipendenza viene ignorata in fase di esecuzione</target>
         <note>{0} is the referenced type name. {1} is the referenced method name. {Locked="[DependsOn]"}</note>
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidMessageFormat_OtherAssembly">
         <source>'[DependsOn]' references type '{0}' from another assembly; dependencies are resolved within a single test source, so the dependency is ignored at run time</source>
-        <target state="new">'[DependsOn]' references type '{0}' from another assembly; dependencies are resolved within a single test source, so the dependency is ignored at run time</target>
+        <target state="translated">'[DependsOn]' fa riferimento al tipo '{0}' da un altro assembly; le dipendenze vengono risolte all'interno di una singola origine test, quindi la dipendenza viene ignorata in fase di esecuzione</target>
         <note>{0} is the referenced type name. {Locked="[DependsOn]"}</note>
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidMessageFormat_SelfReference">
         <source>'[DependsOn]' makes '{0}' depend on itself, which is a dependency cycle and fails the test at run time</source>
-        <target state="new">'[DependsOn]' makes '{0}' depend on itself, which is a dependency cycle and fails the test at run time</target>
+        <target state="translated">'[DependsOn]' fa dipendere '{0}' da se stesso, creando un ciclo di dipendenze che fa fallire il test in fase di esecuzione</target>
         <note>{0} is the test method name. {Locked="[DependsOn]"}</note>
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidTitle">
         <source>'[DependsOn]' arguments should be valid</source>
-        <target state="new">'[DependsOn]' arguments should be valid</target>
+        <target state="translated">Gli argomenti '[DependsOn]' devono essere validi</target>
         <note>{Locked="[DependsOn]"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidDescription">
@@ -907,42 +907,42 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
       </trans-unit>
       <trans-unit id="TestFilterProviderShouldBeValidDescription">
         <source>'[assembly: TestFilterProvider(typeof(MyFilter))]' passes the filter type as a 'Type', so the compiler accepts any type at all. The adapter validates it only when it materializes the filter, and then fails the whole run. The referenced type must be non-generic and instantiable, implement 'ITestFilter' and expose a public parameterless constructor, and at most one provider may be registered per test assembly. When targeting .NET, the generic '[assembly: TestFilterProvider&lt;MyFilter&gt;]' form enforces the interface and constructor requirements through generic constraints instead.</source>
-        <target state="new">'[assembly: TestFilterProvider(typeof(MyFilter))]' passes the filter type as a 'Type', so the compiler accepts any type at all. The adapter validates it only when it materializes the filter, and then fails the whole run. The referenced type must be non-generic and instantiable, implement 'ITestFilter' and expose a public parameterless constructor, and at most one provider may be registered per test assembly. When targeting .NET, the generic '[assembly: TestFilterProvider&lt;MyFilter&gt;]' form enforces the interface and constructor requirements through generic constraints instead.</target>
+        <target state="translated">'[assembly: TestFilterProvider(typeof(MyFilter))]' passa il tipo del filtro come 'Type', quindi il compilatore accetta qualsiasi tipo. L'adattatore lo convalida solo quando materializza il filtro e successivamente fa fallire l'intera esecuzione. Il tipo a cui si fa riferimento deve essere non generico e di cui è possibile creare istanze, implementare 'ITestFilter' ed esporre un costruttore pubblico senza parametri; inoltre, per ogni test assembly è possibile registrare al massimo un provider. Quando si usa .NET, il modulo generico '[assembly: TestFilterProvider&lt;MyFilter&gt;]' applica invece i requisiti dell'interfaccia e del costruttore tramite vincoli generici.</target>
         <note>{Locked="[assembly: TestFilterProvider(typeof(MyFilter))]"}{Locked="[assembly: TestFilterProvider&lt;MyFilter&gt;]"}{Locked="Type"}{Locked="ITestFilter"}</note>
       </trans-unit>
       <trans-unit id="TestFilterProviderShouldBeValidMessageFormat_Generic">
         <source>'[TestFilterProvider]' references generic type '{0}'; the test filter type must not be generic</source>
-        <target state="new">'[TestFilterProvider]' references generic type '{0}'; the test filter type must not be generic</target>
+        <target state="translated">'[TestFilterProvider]' fa riferimento al tipo generico '{0}'; il tipo di filtro di test non deve essere generico</target>
         <note>{0} is the referenced type name. {Locked="[TestFilterProvider]"}</note>
       </trans-unit>
       <trans-unit id="TestFilterProviderShouldBeValidMessageFormat_Multiple">
         <source>The assembly registers more than one '[TestFilterProvider]'; at most one is allowed per test assembly, so compose the filtering strategies inside a single 'ITestFilter' implementation</source>
-        <target state="new">The assembly registers more than one '[TestFilterProvider]'; at most one is allowed per test assembly, so compose the filtering strategies inside a single 'ITestFilter' implementation</target>
+        <target state="translated">L'assembly registra più di un '[TestFilterProvider]'; è consentito al massimo uno per assembly di test, per cui combinare le strategie di filtro all'interno di una singola implementazione di 'ITestFilter'</target>
         <note>{Locked="[TestFilterProvider]"}{Locked="ITestFilter"}</note>
       </trans-unit>
       <trans-unit id="TestFilterProviderShouldBeValidMessageFormat_NoParameterlessConstructor">
         <source>'[TestFilterProvider]' references type '{0}', which does not declare a public parameterless constructor</source>
-        <target state="new">'[TestFilterProvider]' references type '{0}', which does not declare a public parameterless constructor</target>
+        <target state="translated">'[TestFilterProvider]' fa riferimento al tipo '{0}', che non dichiara un costruttore pubblico senza parametri</target>
         <note>{0} is the referenced type name. {Locked="[TestFilterProvider]"}</note>
       </trans-unit>
       <trans-unit id="TestFilterProviderShouldBeValidMessageFormat_NotATestFilter">
         <source>'[TestFilterProvider]' references type '{0}', which does not implement 'ITestFilter'</source>
-        <target state="new">'[TestFilterProvider]' references type '{0}', which does not implement 'ITestFilter'</target>
+        <target state="translated">'[TestFilterProvider]' fa riferimento al tipo '{0}', che non implementa 'ITestFilter'</target>
         <note>{0} is the referenced type name. {Locked="[TestFilterProvider]"}{Locked="ITestFilter"}</note>
       </trans-unit>
       <trans-unit id="TestFilterProviderShouldBeValidMessageFormat_NotInstantiable">
         <source>'[TestFilterProvider]' references type '{0}', which cannot be instantiated</source>
-        <target state="new">'[TestFilterProvider]' references type '{0}', which cannot be instantiated</target>
+        <target state="translated">'[TestFilterProvider]' fa riferimento al tipo '{0}', per cui non è possibile creare un'istanza</target>
         <note>{0} is the referenced type name. {Locked="[TestFilterProvider]"}</note>
       </trans-unit>
       <trans-unit id="TestFilterProviderShouldBeValidMessageFormat_Null">
         <source>'[TestFilterProvider]' is given a null filter type; pass the 'ITestFilter' implementation to run, for example 'typeof(MyFilter)'</source>
-        <target state="new">'[TestFilterProvider]' is given a null filter type; pass the 'ITestFilter' implementation to run, for example 'typeof(MyFilter)'</target>
+        <target state="translated">'[TestFilterProvider]' riceve un tipo di filtro null; passare l'implementazione di 'ITestFilter' da eseguire, ad esempio 'typeof(MyFilter)'</target>
         <note>{Locked="[TestFilterProvider]"}{Locked="ITestFilter"}{Locked="typeof(MyFilter)"}</note>
       </trans-unit>
       <trans-unit id="TestFilterProviderShouldBeValidTitle">
         <source>'[TestFilterProvider]' should reference a valid test filter type</source>
-        <target state="new">'[TestFilterProvider]' should reference a valid test filter type</target>
+        <target state="translated">'[TestFilterProvider]' deve fare riferimento a un tipo di filtro di test valido</target>
         <note>{Locked="[TestFilterProvider]"}</note>
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationMessageFormat">
@@ -987,32 +987,32 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
       </trans-unit>
       <trans-unit id="UseArchitectureConditionAttributeInsteadOfRuntimeCheckDescription">
         <source>Test methods that compare 'RuntimeInformation.ProcessArchitecture' and then early return or call 'Assert.Inconclusive' should use the '[ArchitectureCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify architecture-specific test requirements, and it reports the test as skipped rather than passed, which an early return does not.</source>
-        <target state="new">Test methods that compare 'RuntimeInformation.ProcessArchitecture' and then early return or call 'Assert.Inconclusive' should use the '[ArchitectureCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify architecture-specific test requirements, and it reports the test as skipped rather than passed, which an early return does not.</target>
+        <target state="translated">I metodi di test che confrontano 'RuntimeInformation.ProcessArchitecture' e poi eseguono un ritorno anticipato o chiamano 'Assert.Inconclusive' devono usare invece l'attributo '[ArchitectureCondition]'. Questo attributo offre un modo più dichiarativo e facile da trovare per specificare i requisiti dei test in base all'architettura, e segnala il test come ignorato anziché superato, cosa che un ritorno anticipato non fa.</target>
         <note>{Locked="RuntimeInformation.ProcessArchitecture"}{Locked="Assert.Inconclusive"}{Locked="[ArchitectureCondition]"}</note>
       </trans-unit>
       <trans-unit id="UseArchitectureConditionAttributeInsteadOfRuntimeCheckMessageFormat">
         <source>Use '[ArchitectureCondition]' attribute instead of 'RuntimeInformation.ProcessArchitecture' checks with early return or 'Assert.Inconclusive'</source>
-        <target state="new">Use '[ArchitectureCondition]' attribute instead of 'RuntimeInformation.ProcessArchitecture' checks with early return or 'Assert.Inconclusive'</target>
+        <target state="translated">Usare l'attributo '[ArchitectureCondition]' invece dei controlli su 'RuntimeInformation.ProcessArchitecture' con ritorno anticipato o 'Assert.Inconclusive'</target>
         <note>{Locked="RuntimeInformation.ProcessArchitecture"}{Locked="Assert.Inconclusive"}{Locked="[ArchitectureCondition]"}</note>
       </trans-unit>
       <trans-unit id="UseArchitectureConditionAttributeInsteadOfRuntimeCheckTitle">
         <source>Use '[ArchitectureCondition]' attribute instead of 'RuntimeInformation.ProcessArchitecture' checks with early return or 'Assert.Inconclusive'</source>
-        <target state="new">Use '[ArchitectureCondition]' attribute instead of 'RuntimeInformation.ProcessArchitecture' checks with early return or 'Assert.Inconclusive'</target>
+        <target state="translated">Usare l'attributo '[ArchitectureCondition]' invece dei controlli su 'RuntimeInformation.ProcessArchitecture' con ritorno anticipato o 'Assert.Inconclusive'</target>
         <note>{Locked="RuntimeInformation.ProcessArchitecture"}{Locked="Assert.Inconclusive"}{Locked="[ArchitectureCondition]"}</note>
       </trans-unit>
       <trans-unit id="UseCIConditionAttributeInsteadOfEnvironmentCheckDescription">
         <source>Test methods that null-check the 'CI' environment variable and then early return or call 'Assert.Inconclusive' should use the '[CICondition]' attribute instead. This attribute recognizes all the continuous integration providers MSTest knows about and parses their values, and it reports the test as skipped rather than passed, which an early return does not.</source>
-        <target state="new">Test methods that null-check the 'CI' environment variable and then early return or call 'Assert.Inconclusive' should use the '[CICondition]' attribute instead. This attribute recognizes all the continuous integration providers MSTest knows about and parses their values, and it reports the test as skipped rather than passed, which an early return does not.</target>
+        <target state="translated">I metodi di test che verificano se la variabile di ambiente 'CI' è null e poi eseguono un ritorno anticipato o chiamano 'Assert.Inconclusive' devono usare invece l'attributo '[CICondition]'. Questo attributo riconosce tutti i provider di integrazione continua noti a MSTest e ne analizza i valori, e segnala il test come ignorato anziché superato, cosa che un ritorno anticipato non fa.</target>
         <note>{Locked="CI"}{Locked="Assert.Inconclusive"}{Locked="[CICondition]"}</note>
       </trans-unit>
       <trans-unit id="UseCIConditionAttributeInsteadOfEnvironmentCheckMessageFormat">
         <source>Use '[CICondition]' attribute instead of 'Environment.GetEnvironmentVariable' checks with early return or 'Assert.Inconclusive'</source>
-        <target state="new">Use '[CICondition]' attribute instead of 'Environment.GetEnvironmentVariable' checks with early return or 'Assert.Inconclusive'</target>
+        <target state="translated">Usare l'attributo '[CICondition]' invece dei controlli su 'Environment.GetEnvironmentVariable' con ritorno anticipato o 'Assert.Inconclusive'</target>
         <note>{Locked="Environment.GetEnvironmentVariable"}{Locked="Assert.Inconclusive"}{Locked="[CICondition]"}</note>
       </trans-unit>
       <trans-unit id="UseCIConditionAttributeInsteadOfEnvironmentCheckTitle">
         <source>Use '[CICondition]' attribute instead of 'Environment.GetEnvironmentVariable' checks with early return or 'Assert.Inconclusive'</source>
-        <target state="new">Use '[CICondition]' attribute instead of 'Environment.GetEnvironmentVariable' checks with early return or 'Assert.Inconclusive'</target>
+        <target state="translated">Usare l'attributo '[CICondition]' invece dei controlli su 'Environment.GetEnvironmentVariable' con ritorno anticipato o 'Assert.Inconclusive'</target>
         <note>{Locked="Environment.GetEnvironmentVariable"}{Locked="Assert.Inconclusive"}{Locked="[CICondition]"}</note>
       </trans-unit>
       <trans-unit id="UseCancellationTokenPropertyDescription">

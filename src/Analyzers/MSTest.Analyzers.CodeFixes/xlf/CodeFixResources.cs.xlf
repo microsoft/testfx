@@ -174,7 +174,7 @@
       </trans-unit>
       <trans-unit id="UseArchitectureConditionAttributeInsteadOfRuntimeCheckFix">
         <source>Use '[ArchitectureCondition]' attribute</source>
-        <target state="new">Use '[ArchitectureCondition]' attribute</target>
+        <target state="translated">Použít atribut [ArchitectureCondition]</target>
         <note>{Locked="[ArchitectureCondition]"}</note>
       </trans-unit>
       <trans-unit id="UseAsyncAssertionFix">
@@ -189,7 +189,7 @@
       </trans-unit>
       <trans-unit id="UseCIConditionAttributeInsteadOfEnvironmentCheckFix">
         <source>Use '[CICondition]' attribute</source>
-        <target state="new">Use '[CICondition]' attribute</target>
+        <target state="translated">Použít atribut [CICondition]</target>
         <note>{Locked="[CICondition]"}</note>
       </trans-unit>
       <trans-unit id="UseContainsKeyInsteadOfContainsFix">
