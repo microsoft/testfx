@@ -9,7 +9,7 @@
       </trans-unit>
       <trans-unit id="AppxManifestApplicationExecutableMismatch">
         <source>The packaged app manifest declares no application for the executable '{0}', so it describes a different application and activating it would target the wrong Application User Model ID. Declared application executables: {1}.</source>
-        <target state="new">The packaged app manifest declares no application for the executable '{0}', so it describes a different application and activating it would target the wrong Application User Model ID. Declared application executables: {1}.</target>
+        <target state="translated">Il manifesto dell'app in pacchetto non dichiara alcuna applicazione per l'eseguibile '{0}', quindi descrive un'applicazione diversa e attivandola verrebbe usato il Application User Model ID errato. Eseguibili dell'applicazione dichiarati: {1}.</target>
         <note>Do not localize the technology name {Locked="Application User Model ID"}. {0} is an executable path. {1} is a comma-separated list of executable paths.</note>
       </trans-unit>
       <trans-unit id="InvalidAppxManifestMissingIdentity">

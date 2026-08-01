@@ -9,7 +9,7 @@
       </trans-unit>
       <trans-unit id="AppxManifestApplicationExecutableMismatch">
         <source>The packaged app manifest declares no application for the executable '{0}', so it describes a different application and activating it would target the wrong Application User Model ID. Declared application executables: {1}.</source>
-        <target state="new">The packaged app manifest declares no application for the executable '{0}', so it describes a different application and activating it would target the wrong Application User Model ID. Declared application executables: {1}.</target>
+        <target state="translated">El manifiesto de la aplicación empaquetada no declara ninguna aplicación para el ejecutable "{0}", por lo que describe una aplicación distinta y, al activarla, se apuntaría al Application User Model ID incorrecto. Ejecutables de aplicación declarados: {1}.</target>
         <note>Do not localize the technology name {Locked="Application User Model ID"}. {0} is an executable path. {1} is a comma-separated list of executable paths.</note>
       </trans-unit>
       <trans-unit id="InvalidAppxManifestMissingIdentity">
@@ -19,7 +19,7 @@
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDescription">
         <source>Registers a packaged, full-trust MSIX desktop test host and activates it by Application User Model ID (Windows build), and — when opted in through TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=always — deploys a non-packaged (loose-layout) Windows test host to an isolated directory and launches it from there. Enabled only for a packaged layout by default, so an unpackaged app is left on the default launch path. True UWP/AppContainer hosts are not supported. See https://github.com/microsoft/testfx/issues/9933.</source>
-        <target state="new">Registers a packaged, full-trust MSIX desktop test host and activates it by Application User Model ID (Windows build), and — when opted in through TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=always — deploys a non-packaged (loose-layout) Windows test host to an isolated directory and launches it from there. Enabled only for a packaged layout by default, so an unpackaged app is left on the default launch path. True UWP/AppContainer hosts are not supported. See https://github.com/microsoft/testfx/issues/9933.</target>
+        <target state="translated">Registra un host de prueba de escritorio MSIX empaquetado y de confianza total, y lo activa mediante Application User Model ID (compilación de Windows); además, cuando se habilita mediante TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=always, implementa un host de prueba de Windows sin empaquetar (diseño flexible) en un directorio aislado y lo inicia desde allí. De manera predeterminada, solo está habilitado para un diseño empaquetado, por lo que una aplicación sin empaquetar se deja en la ruta de inicio predeterminada. No se admiten los hosts verdaderos de UWP/AppContainer. Consulte https://github.com/microsoft/testfx/issues/9933.</target>
         <note>Do not localize the environment variable name or its value {Locked="TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER"}{Locked="always"}, nor the technology names {Locked="MSIX"}{Locked="Application User Model ID"}{Locked="Windows"}{Locked="UWP"}{Locked="AppContainer"}.</note>
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDisplayName">
