@@ -201,6 +201,17 @@ internal sealed partial class Json
                 continue;
             }
 
+            // In-process retry attribution (MSTest's [Retry], ...). Kept in sync with
+            // SerializerUtilities.TestNodeSerializers.cs: an unhandled property falls through this chain and is
+            // silently dropped, which would leave a server-mode client unable to tell repeated updates for the same
+            // test node uid apart, or to know which one is the test's final outcome.
+            if (property is RetryAttemptProperty retryAttemptProperty)
+            {
+                properties.Add(("retry.attempt", retryAttemptProperty.AttemptNumber));
+                properties.Add(("retry.is-superseded", retryAttemptProperty.IsSuperseded));
+                continue;
+            }
+
             if (property is FileArtifactProperty artifact)
             {
                 properties.Add(($"attachments.{attachmentIndex}.uri", artifact.FileInfo.FullName));

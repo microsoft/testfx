@@ -248,6 +248,17 @@ internal static partial class SerializerUtilities
                         continue;
                     }
 
+                    // In-process retry attribution (MSTest's [Retry], ...). Without this the property would fall
+                    // through the chain and be silently dropped, so a server-mode client (an IDE) would see several
+                    // updates for the same test node uid with no way to tell the attempts apart or to know which
+                    // one is the test's final outcome.
+                    if (property is RetryAttemptProperty retryAttemptProperty)
+                    {
+                        properties["retry.attempt"] = retryAttemptProperty.AttemptNumber;
+                        properties["retry.is-superseded"] = retryAttemptProperty.IsSuperseded;
+                        continue;
+                    }
+
                     if (property is FileArtifactProperty artifact)
                     {
                         properties[$"attachments.{attachmentIndex}.uri"] = artifact.FileInfo.FullName;

@@ -124,6 +124,116 @@ public sealed class TestApplicationResultTests : IDisposable
     }
 
     [TestMethod]
+    public async Task ConsumeAsync_SupersededRetryAttempt_DoesNotCloseTheTestActivity()
+    {
+        // A test framework that retries in-process reports one in-progress update (which opens the OpenTelemetry
+        // activity) followed by one result per attempt. Only the final attempt is the test's outcome, so only it
+        // may close the activity - otherwise the first superseded result would close it and the real outcome would
+        // find nothing in flight, reporting the retried test as failed in traces even though it passed.
+        var activity = new Mock<IPlatformActivity>();
+        var otelService = new Mock<IPlatformOpenTelemetryService>();
+        otelService
+            .Setup(service => service.CreateCounter<int>(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()))
+            .Returns(Mock.Of<ICounter<int>>());
+        otelService
+            .Setup(service => service.CreateUpDownCounter<int>(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()))
+            .Returns(Mock.Of<IUpDownCounter<int>>());
+        otelService
+            .Setup(service => service.CreateHistogram<double>(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>()))
+            .Returns(Mock.Of<IHistogram<double>>());
+        otelService
+            .Setup(service => service.StartActivity(
+                It.IsAny<string>(),
+                It.IsAny<IEnumerable<KeyValuePair<string, object?>>?>(),
+                It.IsAny<string?>(),
+                It.IsAny<DateTimeOffset>()))
+            .Returns(activity.Object);
+        using TestApplicationResult testApplicationResult = new(
+            Mock.Of<IOutputDevice>(),
+            Mock.Of<ICommandLineOptions>(),
+            Mock.Of<IEnvironment>(),
+            Mock.Of<IStopPoliciesService>(),
+            otelService.Object);
+
+        static TestNode CreateNode(params IProperty[] properties) => new()
+        {
+            Uid = "flaky-uid",
+            DisplayName = "FlakyTest",
+            Properties = new PropertyBag(properties),
+        };
+
+        // The in-progress update is reported once per test (not once per attempt) and opens the activity.
+        await testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(InProgressTestNodeStateProperty.CachedInstance)),
+            CancellationToken.None);
+
+        // Attempt 1 failed but was superseded: it must neither close the activity nor mark it failed.
+        await testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(new FailedTestNodeStateProperty("boom"), new RetryAttemptProperty(1, isSuperseded: true))),
+            CancellationToken.None);
+
+        activity.Verify(a => a.Dispose(), Times.Never);
+
+        // Attempt 2 passed and is the final outcome: it closes the activity exactly once.
+        await testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(PassedTestNodeStateProperty.CachedInstance, new RetryAttemptProperty(2, isSuperseded: false))),
+            CancellationToken.None);
+
+        activity.Verify(a => a.Dispose(), Times.Once);
+        Assert.AreEqual((int)ExitCode.Success, testApplicationResult.GetProcessExitCode());
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_SupersededRetryAttempt_IsNotCountedAsFailure()
+    {
+        static TestNode CreateNode(IProperty state, IProperty retryAttempt) => new()
+        {
+            Uid = new TestNodeUid("flaky-test"),
+            DisplayName = "FlakyTest",
+            Properties = new PropertyBag(state, retryAttempt),
+        };
+
+        // Attempt 1 failed but was retried, attempt 2 passed: the test's outcome is "passed".
+        await _testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(new FailedTestNodeStateProperty("boom"), new RetryAttemptProperty(1, isSuperseded: true))),
+            CancellationToken.None);
+        await _testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(PassedTestNodeStateProperty.CachedInstance, new RetryAttemptProperty(2, isSuperseded: false))),
+            CancellationToken.None);
+
+        Assert.AreEqual((int)ExitCode.Success, _testApplicationResult.GetProcessExitCode());
+        Assert.AreEqual(0, _testApplicationResult.GetStatistics().TotalFailedTests);
+    }
+
+    [TestMethod]
+    public async Task ConsumeAsync_FinalRetryAttemptFailed_IsCountedAsFailure()
+    {
+        static TestNode CreateNode(IProperty state, IProperty retryAttempt) => new()
+        {
+            Uid = new TestNodeUid("always-failing-test"),
+            DisplayName = "AlwaysFailingTest",
+            Properties = new PropertyBag(state, retryAttempt),
+        };
+
+        await _testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(new FailedTestNodeStateProperty("boom"), new RetryAttemptProperty(1, isSuperseded: true))),
+            CancellationToken.None);
+        await _testApplicationResult.ConsumeAsync(
+            new DummyProducer(),
+            new TestNodeUpdateMessage(default, CreateNode(new FailedTestNodeStateProperty("boom"), new RetryAttemptProperty(2, isSuperseded: false))),
+            CancellationToken.None);
+
+        Assert.AreEqual((int)ExitCode.AtLeastOneTestFailed, _testApplicationResult.GetProcessExitCode());
+        Assert.AreEqual(1, _testApplicationResult.GetStatistics().TotalFailedTests);
+    }
+
+    [TestMethod]
     public async Task GetProcessExitCodeAsync_If_All_Skipped_ByDefault_Returns_Success()
     {
         await _testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(

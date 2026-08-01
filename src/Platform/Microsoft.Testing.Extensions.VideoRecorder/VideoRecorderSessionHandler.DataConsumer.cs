@@ -57,6 +57,17 @@ internal sealed partial class VideoRecorderSessionHandler
             return Task.CompletedTask;
         }
 
+        // A test framework that retries in-process reports every attempt under the same test node uid. A superseded
+        // attempt is not the test's outcome, so it must not mark the session as failed or contribute a failing
+        // TestRecord: otherwise a fail-then-pass [Retry] test would retain failure-only video artifacts (the whole
+        // session under --video-recorder-mode on-failure, or its own per-test clip) despite having passed.
+        // Returning before the _inFlight removal is deliberate: the entry stays until the final attempt, so the
+        // retained clip spans the whole retry sequence rather than starting at the last attempt.
+        if (update.TestNode.IsSupersededRetryAttempt())
+        {
+            return Task.CompletedTask;
+        }
+
         bool isFailure = state is FailedTestNodeStateProperty or ErrorTestNodeStateProperty or TimeoutTestNodeStateProperty;
 
         // Prefer the authoritative wall-clock timing the framework publishes on the terminal

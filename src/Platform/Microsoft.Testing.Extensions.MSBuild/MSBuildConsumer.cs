@@ -124,6 +124,14 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
             }
         }
 
+        // A test framework that retries in-process reports every attempt under the same test node uid. A
+        // superseded attempt is not the test's outcome, so logging it would emit an MSBuild error for a [Retry]
+        // test that goes on to pass - and fail the build.
+        if (testNodeStateChanged.TestNode.IsSupersededRetryAttempt())
+        {
+            return;
+        }
+
         switch (stateProperty)
         {
             case ErrorTestNodeStateProperty errorState:

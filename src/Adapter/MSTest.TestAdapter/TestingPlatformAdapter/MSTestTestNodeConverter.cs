@@ -96,6 +96,14 @@ internal static class MSTestTestNodeConverter
 
         testNode.Properties.Add(new TimingProperty(new(startTime, endTime, result.Duration), []));
 
+        // Surface an in-process retry (MSTest's [Retry]) so the platform can tell the attempts of one test apart
+        // instead of seeing repeated results for the same uid. Only added when a retry actually happened, so a
+        // regular test node is byte-identical to before.
+        if (result.RetryAttemptNumber > 1 || result.IsSupersededRetryAttempt)
+        {
+            testNode.Properties.Add(new RetryAttemptProperty(result.RetryAttemptNumber, result.IsSupersededRetryAttempt));
+        }
+
         AddAttachments(testNode, result);
 
         return testNode;

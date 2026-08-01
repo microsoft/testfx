@@ -145,6 +145,11 @@ internal sealed class HangDumpActivityIndicator : IDataConsumer, ITestSessionLif
             || state is PassedTestNodeStateProperty or ErrorTestNodeStateProperty or CancelledTestNodeStateProperty
 #pragma warning restore CS0618, MTP0001 // Type or member is obsolete
             or FailedTestNodeStateProperty or TimeoutTestNodeStateProperty or SkippedTestNodeStateProperty)
+            // A test framework that retries in-process reports a terminal update per attempt but only one
+            // in-progress update for the test. Dropping it from the in-progress set on a superseded attempt would
+            // leave the test untracked while its next attempt is still running, so a hang during that attempt
+            // would not be attributed to it in the hang dump's in-progress list.
+            && !nodeChangedMessage.TestNode.IsSupersededRetryAttempt()
             && _testsCurrentExecutionState.TryRemove(nodeChangedMessage.TestNode.Uid, out (string Name, Type Type, DateTimeOffset StartTime) record)
             && _traceLevelEnabled)
         {

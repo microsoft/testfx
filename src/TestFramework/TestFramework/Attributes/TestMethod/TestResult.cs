@@ -215,6 +215,41 @@ public class TestResult
     // The value of this property should either be null, or be of type UnitTestElement.
     internal object? AssociatedUnitTestElement { get; set; }
 
+    /// <summary>
+    /// Gets or sets the 1-based attempt this result belongs to when the test method is decorated with a
+    /// <see cref="RetryBaseAttribute"/>. The first (non-retry) execution is attempt 1.
+    /// </summary>
+    /// <remarks>
+    /// Every attempt is reported to Microsoft.Testing.Platform so tooling can surface the in-process retry (see
+    /// the <c>RetryAttemptProperty</c> platform property); the VSTest host receives only the final result.
+    /// Results that are not part of a retry sequence keep the default value of 1, which reports as "no retry
+    /// happened" everywhere.
+    /// <para>
+    /// Optional on .NET Framework so a payload written by a TestFramework build that predates this member still
+    /// deserializes. Note the field then defaults to 0 rather than 1, because the initializer does not run during
+    /// deserialization; every consumer treats a non-superseded result as the final outcome regardless of the
+    /// number, so an older payload still reports as "no retry happened".
+    /// </para>
+    /// </remarks>
+#if NETFRAMEWORK
+    [field: OptionalField]
+#endif
+    internal int RetryAttemptNumber { get; set; } = 1;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether a later retry attempt superseded this result, so it is not the
+    /// test's final outcome. Consumers that want exactly one result per test (VSTest, TRX, JUnit, the process
+    /// exit code) ignore superseded results.
+    /// </summary>
+    /// <remarks>
+    /// Optional on .NET Framework so a payload written by a TestFramework build that predates this member still
+    /// deserializes, defaulting to <see langword="false"/> - i.e. treated as the test's final outcome.
+    /// </remarks>
+#if NETFRAMEWORK
+    [field: OptionalField]
+#endif
+    internal bool IsSupersededRetryAttempt { get; set; }
+
     internal static TestResult CreateIgnoredResult(string? ignoreReason)
         => new()
         {

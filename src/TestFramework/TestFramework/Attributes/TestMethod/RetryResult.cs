@@ -18,6 +18,11 @@ public sealed class RetryResult
     /// Gets the test results of all retry attempts, in the order they were added.
     /// Each element corresponds to a single attempt and holds the test results produced by that attempt.
     /// </summary>
+    /// <remarks>
+    /// All attempts are reported to Microsoft.Testing.Platform: the last one as the test's outcome, the earlier
+    /// ones tagged as superseded so tooling can surface the retry (see the platform's <c>RetryAttemptProperty</c>).
+    /// The VSTest host has no notion of attempts, so it receives only the final result.
+    /// </remarks>
     public IReadOnlyList<TestResult[]> AllResults
         => _testResultsView ??= new ReadOnlyCollection<TestResult[]>(_testResults);
 
