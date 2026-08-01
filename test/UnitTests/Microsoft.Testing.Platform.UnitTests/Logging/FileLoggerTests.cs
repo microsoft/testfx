@@ -100,13 +100,16 @@ public sealed class FileLoggerTests : IDisposable
         _mockClock.Setup(x => x.UtcNow).Returns(new DateTimeOffset(new(2023, 5, 29, 3, 42, 17)));
 
         // The first candidate is taken (e.g. by another process that computed the same timestamp), so the logger
-        // must fall back to a suffixed name instead of retrying the very same one until the clock ticks.
-        string expectedFileName = $"{LogPrefix}_230529034217000_{CurrentProcessId}_1.diag";
-        _mockStream.Setup(x => x.Name).Returns(expectedFileName);
+        // must fall back to a discriminated name instead of retrying the very same one until the clock ticks.
+        var attemptedPaths = new List<string>();
         _mockFileStreamFactory
-            .SetupSequence(x => x.Create(It.IsAny<string>(), FileMode.CreateNew, FileAccess.Write, FileShare.Read))
-            .Throws<IOException>()
-            .Returns(_mockStream.Object);
+            .Setup(x => x.Create(It.IsAny<string>(), FileMode.CreateNew, FileAccess.Write, FileShare.Read))
+            .Callback((string path, FileMode _1, FileAccess _2, FileShare _3) =>
+            {
+                attemptedPaths.Add(path);
+                _mockStream.Setup(x => x.Name).Returns(Path.GetFileName(path));
+            })
+            .Returns(() => attemptedPaths.Count == 1 ? throw new IOException() : _mockStream.Object);
 
         string fileLoggerName;
         using (FileLogger fileLogger = new(
@@ -121,13 +124,11 @@ public sealed class FileLoggerTests : IDisposable
             fileLoggerName = fileLogger.FileName;
         }
 
-        _mockFileStreamFactory.Verify(
-            x => x.Create(Path.Combine(LogFolder, $"{LogPrefix}_230529034217000.diag"), FileMode.CreateNew, FileAccess.Write, FileShare.Read),
-            Times.Once);
-        _mockFileStreamFactory.Verify(
-            x => x.Create(Path.Combine(LogFolder, expectedFileName), FileMode.CreateNew, FileAccess.Write, FileShare.Read),
-            Times.Once);
-        Assert.AreEqual(expectedFileName, fileLoggerName);
+        Assert.HasCount(2, attemptedPaths);
+        Assert.AreEqual(Path.Combine(LogFolder, $"{LogPrefix}_230529034217000.diag"), attemptedPaths[0]);
+        Assert.StartsWith(Path.Combine(LogFolder, $"{LogPrefix}_230529034217000_{CurrentProcessId}_"), attemptedPaths[1]);
+        Assert.EndsWith(".diag", attemptedPaths[1]);
+        Assert.AreEqual(Path.GetFileName(attemptedPaths[1]), fileLoggerName);
     }
 
     // Every attempt uses a name that is unique by construction, so the loop is bounded by attempt count and can never
@@ -135,10 +136,41 @@ public sealed class FileLoggerTests : IDisposable
     [TestMethod]
     public void FileLogger_NullFileSyncFlush_EveryAttemptUsesADistinctFileName()
     {
-        _mockClock.Setup(x => x.UtcNow).Returns(new DateTimeOffset(new(2023, 5, 29, 3, 42, 17)));
+        List<string> attemptedPaths = CaptureAllAttemptedPaths();
+
+        Assert.HasCount(MaxLogFileCreationAttempts, attemptedPaths);
+        Assert.HasCount(MaxLogFileCreationAttempts, attemptedPaths.Distinct().ToList());
+        Assert.AreEqual(Path.Combine(LogFolder, $"{LogPrefix}_230529034217000.diag"), attemptedPaths[0]);
+        foreach (string retryPath in attemptedPaths.Skip(1))
+        {
+            Assert.StartsWith(Path.Combine(LogFolder, $"{LogPrefix}_230529034217000_{CurrentProcessId}_"), retryPath);
+        }
+    }
+
+    // Nothing enforces a single FileLogger per process, so two loggers created in the same clock tick must not walk
+    // the same ladder of candidate names and race each other through it.
+    [TestMethod]
+    public void FileLogger_NullFileSyncFlush_ConcurrentLoggersInTheSameTickNeverShareACandidateName()
+    {
+        List<string> firstLoggerPaths = CaptureAllAttemptedPaths();
+        List<string> secondLoggerPaths = CaptureAllAttemptedPaths();
+
+        // Only the very first candidate is shared: that is the one collision the retry loop exists to resolve.
+        List<string> shared = [.. firstLoggerPaths.Intersect(secondLoggerPaths)];
+        Assert.HasCount(1, shared);
+        Assert.AreEqual(Path.Combine(LogFolder, $"{LogPrefix}_230529034217000.diag"), shared[0]);
+    }
+
+    // Drives one FileLogger construction in which every attempt fails, returning the full ladder of candidate paths
+    // it walked. Uses a dedicated mock so it can be called twice within a single test.
+    private static List<string> CaptureAllAttemptedPaths()
+    {
+        var clock = new Mock<IClock>();
+        clock.Setup(x => x.UtcNow).Returns(new DateTimeOffset(new(2023, 5, 29, 3, 42, 17)));
 
         var attemptedPaths = new List<string>();
-        _mockFileStreamFactory
+        var fileStreamFactory = new Mock<IFileStreamFactory>();
+        fileStreamFactory
             .Setup(x => x.Create(It.IsAny<string>(), FileMode.CreateNew, FileAccess.Write, FileShare.Read))
             .Callback((string path, FileMode _1, FileAccess _2, FileShare _3) => attemptedPaths.Add(path))
             .Throws(new IOException("There is not enough space on the disk."));
@@ -146,16 +178,13 @@ public sealed class FileLoggerTests : IDisposable
         Assert.ThrowsExactly<IOException>(() => _ = new FileLogger(
             new(LogFolder, LogPrefix, fileName: null, syncFlush: true),
             LogLevel.Trace,
-            _mockClock.Object,
+            clock.Object,
             new SystemTask(),
-            _mockConsole.Object,
-            _mockFileSystem.Object,
-            _mockFileStreamFactory.Object));
+            new Mock<IConsole>().Object,
+            new Mock<IFileSystem>().Object,
+            fileStreamFactory.Object));
 
-        Assert.HasCount(MaxLogFileCreationAttempts, attemptedPaths);
-        Assert.HasCount(MaxLogFileCreationAttempts, attemptedPaths.Distinct().ToList());
-        Assert.AreEqual(Path.Combine(LogFolder, $"{LogPrefix}_230529034217000.diag"), attemptedPaths[0]);
-        Assert.AreEqual(Path.Combine(LogFolder, $"{LogPrefix}_230529034217000_{CurrentProcessId}_1.diag"), attemptedPaths[1]);
+        return attemptedPaths;
     }
 
     // The retry loop only recovers from a name collision. Any other IOException (disk full, deleted log folder, path
@@ -167,8 +196,10 @@ public sealed class FileLoggerTests : IDisposable
         _mockClock.Setup(x => x.UtcNow).Returns(new DateTimeOffset(new(2023, 5, 29, 3, 42, 17)));
 
         var diskFull = new IOException("There is not enough space on the disk.");
+        var attemptedPaths = new List<string>();
         _mockFileStreamFactory
             .Setup(x => x.Create(It.IsAny<string>(), FileMode.CreateNew, FileAccess.Write, FileShare.Read))
+            .Callback((string path, FileMode _1, FileAccess _2, FileShare _3) => attemptedPaths.Add(path))
             .Throws(diskFull);
 
         IOException exception = Assert.ThrowsExactly<IOException>(() => _ = new FileLogger(
@@ -182,10 +213,10 @@ public sealed class FileLoggerTests : IDisposable
 
         Assert.AreSame(diskFull, exception.InnerException);
 
-        // The rendered message must carry the underlying failure and the folder we failed in: string.Format silently
+        // The rendered message must carry the underlying failure and the path we failed on: string.Format silently
         // ignores surplus arguments, so dropping a placeholder from the resource string would go unnoticed otherwise.
         Assert.Contains(diskFull.Message, exception.Message);
-        Assert.Contains(Path.Combine(LogFolder, $"{LogPrefix}_230529034217000_{CurrentProcessId}_{MaxLogFileCreationAttempts - 1}.diag"), exception.Message);
+        Assert.Contains(attemptedPaths[^1], exception.Message);
         Assert.Contains(MaxLogFileCreationAttempts.ToString(CultureInfo.InvariantCulture), exception.Message);
     }
 

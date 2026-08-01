@@ -22,11 +22,11 @@ internal sealed class FileLogger : IDisposable
 {
     /// <summary>
     /// Number of attempts made to create the diagnostic log file before giving up. Every candidate after the first
-    /// carries the current process id and the attempt index, so candidates are unique both within this process and
-    /// against any other process racing on the same log folder: a collision can therefore only ever happen on the
-    /// first attempt. Bounding by attempts rather than by elapsed wall-clock time keeps the loop provably terminating
-    /// and immune to a stalled or forward-jumping clock (<see cref="IClock.UtcNow"/> is wall time, not monotonic).
-    /// FileLoggerTests mirrors this value; keep the two in sync.
+    /// carries the current process id and a process-wide counter, so candidates are unique across every logger in
+    /// this process and against any other process racing on the same log folder: a collision can therefore only ever
+    /// happen on the first attempt. Bounding by attempts rather than by elapsed wall-clock time keeps the loop
+    /// provably terminating and immune to a stalled or forward-jumping clock (<see cref="IClock.UtcNow"/> is wall
+    /// time, not monotonic). FileLoggerTests mirrors this value; keep the two in sync.
     /// </summary>
     private const int MaxLogFileCreationAttempts = 10;
 
@@ -35,6 +35,13 @@ internal sealed class FileLogger : IDisposable
     /// <see cref="SystemEnvironment"/> so the netstandard2.0 fallback lives in a single place.
     /// </summary>
     private static readonly int CurrentProcessId = new SystemEnvironment().ProcessId;
+
+    /// <summary>
+    /// Discriminates retry candidates process-wide. Nothing enforces a single <see cref="FileLogger"/> per process,
+    /// so two loggers created in the same clock tick would otherwise derive the identical ladder of candidate names
+    /// from timestamp + process id + attempt index and race each other through it.
+    /// </summary>
+    private static int s_retryCandidateCounter;
 
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private readonly FileLoggerOptions _options;
@@ -164,13 +171,14 @@ internal sealed class FileLogger : IDisposable
 
         for (int attempt = 0; attempt < MaxLogFileCreationAttempts; attempt++)
         {
-            // Retry candidates carry the process id and the attempt index so they are unique both within this process
-            // and against any other process racing on the same folder. Without that, every retry regenerated the very
-            // same name until the clock ticked (~15ms on Windows), and concurrent processes walked the identical
-            // sequence of candidates in lockstep, so each round could only ever let a single one of them through.
+            // Retry candidates carry the process id and a process-wide counter, so they are distinct across every
+            // logger in this process and against any other process racing on the same folder. Without that, every
+            // retry regenerated the very same name until the clock ticked (~15ms on Windows), and concurrent
+            // creations walked an identical ladder of candidates in lockstep, so each round could only ever let a
+            // single one of them through.
             fileName = attempt == 0
                 ? $"{_options.LogPrefixName}_{timestamp}.diag"
-                : $"{_options.LogPrefixName}_{timestamp}_{CurrentProcessId}_{attempt}.diag";
+                : $"{_options.LogPrefixName}_{timestamp}_{CurrentProcessId}_{Interlocked.Increment(ref s_retryCandidateCounter)}.diag";
             filePath = Path.Combine(_options.LogFolder, fileName);
 
             try
