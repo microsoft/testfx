@@ -54,7 +54,7 @@ internal sealed class AzureDevOpsRunIdCoordinator
             if (ownsOwnerFile)
             {
                 int runId = await createRunAsync(cancellationToken).ConfigureAwait(false);
-                await WriteRunIdFileAsync(runIdFilePath, configuration, runId, cancellationToken).ConfigureAwait(false);
+                await TryWriteRunIdFileAsync(runIdFilePath, configuration, runId, cancellationToken).ConfigureAwait(false);
                 return new AzureDevOpsCoordinatedRun(runId, true, configuration.BuildId, configuration.ResultsDirectory, runIdFilePath, ownerFilePath, participantFilePath);
             }
 
@@ -65,7 +65,7 @@ internal sealed class AzureDevOpsRunIdCoordinator
                 if (ownsOwnerFile)
                 {
                     int runId = await createRunAsync(cancellationToken).ConfigureAwait(false);
-                    await WriteRunIdFileAsync(runIdFilePath, configuration, runId, cancellationToken).ConfigureAwait(false);
+                    await TryWriteRunIdFileAsync(runIdFilePath, configuration, runId, cancellationToken).ConfigureAwait(false);
                     return new AzureDevOpsCoordinatedRun(runId, true, configuration.BuildId, configuration.ResultsDirectory, runIdFilePath, ownerFilePath, participantFilePath);
                 }
 
@@ -100,8 +100,28 @@ internal sealed class AzureDevOpsRunIdCoordinator
         }
     }
 
+    /// <summary>
+    /// Creates a handle to a run established by an ancestor process, which also owns completing it.
+    /// </summary>
+    /// <remarks>
+    /// No coordination files are involved: file-based coordination exists to elect an owner among peer
+    /// processes that cannot see each other, whereas here the owner is already known and outlives all of
+    /// them. <see cref="RenewLeaseAsync"/> and <see cref="FinalizeRunAsync"/> are therefore no-ops for the
+    /// returned run.
+    /// </remarks>
+    public static AzureDevOpsCoordinatedRun CreateInheritedRun(int runId, AzureDevOpsPublishConfiguration configuration)
+        => new(runId, IsOwner: false, configuration.BuildId, configuration.ResultsDirectory, RunIdFilePath: string.Empty, OwnerFilePath: string.Empty, ParticipantFilePath: string.Empty)
+        {
+            IsInherited = true,
+        };
+
     public async Task RenewLeaseAsync(AzureDevOpsCoordinatedRun coordinatedRun, CancellationToken cancellationToken)
     {
+        if (coordinatedRun.IsInherited)
+        {
+            return;
+        }
+
         await WriteLeaseFileAsync(coordinatedRun.ParticipantFilePath, CreateLeaseFile(coordinatedRun.BuildId), overwrite: true, cancellationToken).ConfigureAwait(false);
 
         if (coordinatedRun.IsOwner)
@@ -112,6 +132,13 @@ internal sealed class AzureDevOpsRunIdCoordinator
 
     public async Task FinalizeRunAsync(AzureDevOpsCoordinatedRun coordinatedRun, Func<CancellationToken, Task> finalizeRunAsync, CancellationToken cancellationToken)
     {
+        // The ancestor process that created the run completes it once every participant has exited.
+        // Completing it here would close the run while later attempts are still to come.
+        if (coordinatedRun.IsInherited)
+        {
+            return;
+        }
+
         TryDeleteFile(coordinatedRun.ParticipantFilePath);
 
         if (!coordinatedRun.IsOwner)
@@ -119,11 +146,24 @@ internal sealed class AzureDevOpsRunIdCoordinator
             return;
         }
 
-        DateTimeOffset timeoutAt = _clock.UtcNow + _options.CoordinationFinalizeTimeout;
+        // Two bounds, because "still waiting" and "not responding" are different situations. A participant
+        // whose process is provably alive is still publishing, and completing the run out from under it
+        // makes Azure DevOps reject everything it sends afterwards — losing results that used to reach a
+        // (separate) run before builds were consolidated. So keep waiting for live participants, up to a
+        // hard cap so a leaked process cannot stall the build forever. Participants we cannot prove alive
+        // (unreadable, mid-write) only get the short grace period.
+        DateTimeOffset unresponsiveDeadline = _clock.UtcNow + _options.CoordinationFinalizeTimeout;
+        DateTimeOffset hardDeadline = _clock.UtcNow + _options.CoordinationFinalizeMaxWaitTime;
 
         while (true)
         {
             string[] participantFiles = _fileSystem.GetFiles(coordinatedRun.ResultsDirectory, GetParticipantSearchPattern(coordinatedRun.BuildId), SearchOption.TopDirectoryOnly);
+
+            // Never wait on ourselves. Deleting our own lease above is best-effort (an antivirus or
+            // indexer holding the handle makes it fail and is exactly what TryDeleteFile tolerates), and
+            // this process trivially passes every liveness check — so without this the owner would keep
+            // renewing the grace period against its own leftover file until the hard cap.
+            participantFiles = [.. participantFiles.Where(participantFile => !string.Equals(participantFile, coordinatedRun.ParticipantFilePath, PathComparison.Comparison))];
             participantFiles = CleanupStaleParticipants(participantFiles);
 
             if (participantFiles.Length == 0)
@@ -131,7 +171,12 @@ internal sealed class AzureDevOpsRunIdCoordinator
                 break;
             }
 
-            if (_clock.UtcNow >= timeoutAt)
+            if (AnyParticipantProcessAlive(participantFiles))
+            {
+                unresponsiveDeadline = _clock.UtcNow + _options.CoordinationFinalizeTimeout;
+            }
+
+            if (_clock.UtcNow >= hardDeadline || _clock.UtcNow >= unresponsiveDeadline || cancellationToken.IsCancellationRequested)
             {
                 _logger.LogWarning(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingFinalizeWaitTimedOut, _options.CoordinationFinalizeTimeout, participantFiles.Length));
                 break;
@@ -149,6 +194,32 @@ internal sealed class AzureDevOpsRunIdCoordinator
             TryDeleteFile(coordinatedRun.OwnerFilePath);
             TryDeleteFile(coordinatedRun.RunIdFilePath);
         }
+    }
+
+    /// <summary>
+    /// Returns whether at least one of the given participants belongs to a process that is still running.
+    /// </summary>
+    /// <remarks>
+    /// Distinguishes "a peer is still publishing" from "a lease is lying around that nobody can vouch for".
+    /// Only the former justifies holding the run open past the short grace period.
+    /// </remarks>
+    private bool AnyParticipantProcessAlive(string[] participantFiles)
+    {
+        foreach (string participantFile in participantFiles)
+        {
+            AzureDevOpsLeaseFile? lease = ReadLease(participantFile).Lease;
+            int? processId = lease?.ProcessId ?? TryGetPid(participantFile);
+
+            // Our own process is always alive, so counting it would mean waiting for ourselves forever.
+            if (processId is { } participantProcessId
+                && participantProcessId != _environment.ProcessId
+                && IsProcessAlive(participantProcessId))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private string[] CleanupStaleParticipants(string[] participantFiles)
@@ -228,11 +299,16 @@ internal sealed class AzureDevOpsRunIdCoordinator
                     AzureDevOpsRunIdFile? runIdFile = JsonSerializer.Deserialize<AzureDevOpsRunIdFile>(content, JsonSerializerOptions);
                     if (runIdFile is not null)
                     {
-                        if (runIdFile.ExpiresAt <= _clock.UtcNow || runIdFile.BuildId != buildId)
+                        // A run-id file whose expiry has passed is only stale if nobody owns it any more.
+                        // An owner that does not renew its lease (a run orchestrator holds one for the whole
+                        // orchestration) is still publishing into that run, so deleting the file here would
+                        // send every joiner off to create a second run for the same build.
+                        if (runIdFile.BuildId != buildId
+                            || (runIdFile.ExpiresAt <= _clock.UtcNow && !IsOwnerStillAlive(ReadLease(ownerFilePath))))
                         {
                             TryDeleteFile(runIdFilePath);
                         }
-                        else
+                        else if (runIdFile.BuildId == buildId)
                         {
                             return runIdFile;
                         }
@@ -308,7 +384,8 @@ internal sealed class AzureDevOpsRunIdCoordinator
             return false;
         }
 
-        if (existing.Status is LeaseFileStatus.NotFound or LeaseFileStatus.Expired)
+        if (existing.Status is LeaseFileStatus.NotFound
+            || (existing.Status == LeaseFileStatus.Expired && !IsOwnerStillAlive(existing)))
         {
             TryDeleteFile(ownerFilePath);
             return await TryWriteLeaseFileAsync(ownerFilePath, lease, overwrite: false, cancellationToken).ConfigureAwait(false);
@@ -316,6 +393,21 @@ internal sealed class AzureDevOpsRunIdCoordinator
 
         return false;
     }
+
+    /// <summary>
+    /// Returns whether the process that wrote a lease is still running.
+    /// </summary>
+    /// <remarks>
+    /// Liveness, not wall-clock expiry, is the authoritative signal that an owner is still in charge. Not
+    /// every owner renews its lease: a run orchestrator holds one for the whole orchestration without a
+    /// natural point to refresh it, so on a build longer than
+    /// <see cref="AzureDevOpsTestResultsPublisherOptions.CoordinationFileExpiration"/> its lease goes stale
+    /// while it is very much still publishing. Taking over then would create a second Azure DevOps run for
+    /// the same build. Refusing to take over from a live process errs towards one run rather than two,
+    /// which is also how <see cref="CleanupStaleParticipants"/> already treats participants.
+    /// </remarks>
+    private static bool IsOwnerStillAlive(LeaseReadResult lease)
+        => lease.Lease is { } ownerLease && IsProcessAlive(ownerLease.ProcessId);
 
     private AzureDevOpsLeaseFile CreateLeaseFile(int buildId)
         => new(_environment.ProcessId, buildId, _clock.UtcNow + _options.CoordinationFileExpiration);
@@ -367,6 +459,27 @@ internal sealed class AzureDevOpsRunIdCoordinator
     [UnconditionalSuppressMessage("Aot", "IL3050", Justification = "The coordination payload type is internal, fixed, and controlled by this extension.")]
     private async Task WriteRunIdFileAsync(string runIdFilePath, AzureDevOpsPublishConfiguration configuration, int runId, CancellationToken cancellationToken)
         => await WriteJsonFileAsync(runIdFilePath, new AzureDevOpsRunIdFile(runId, configuration.BuildId, configuration.CollectionUri, configuration.Project, _clock.UtcNow + _options.CoordinationFileExpiration), overwrite: true, cancellationToken).ConfigureAwait(false);
+
+    /// <summary>
+    /// Publishes the run id for peers to join, tolerating a failure to write the file.
+    /// </summary>
+    /// <remarks>
+    /// The run already exists in Azure DevOps at this point, and this process is the only one that can
+    /// close it. Letting a local file-system failure propagate would discard that ownership and strand the
+    /// run in "InProgress" forever. Losing the file only costs the ability of peers to join — they fall
+    /// back to creating their own run, which is the pre-consolidation behaviour.
+    /// </remarks>
+    private async Task TryWriteRunIdFileAsync(string runIdFilePath, AzureDevOpsPublishConfiguration configuration, int runId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await WriteRunIdFileAsync(runIdFilePath, configuration, runId, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingFailedToDeleteCoordinationFile} {runIdFilePath}: {ex.Message}");
+        }
+    }
 
     [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification = "The coordination payload type is internal, fixed, and controlled by this extension.")]
     [UnconditionalSuppressMessage("Aot", "IL3050", Justification = "The coordination payload type is internal, fixed, and controlled by this extension.")]
@@ -458,7 +571,19 @@ internal sealed record AzureDevOpsCoordinatedRun(
     string ResultsDirectory,
     string RunIdFilePath,
     string OwnerFilePath,
-    string ParticipantFilePath);
+    string ParticipantFilePath)
+{
+    /// <summary>
+    /// Gets a value indicating whether the run was created by an ancestor process, which also owns closing it.
+    /// </summary>
+    /// <remarks>
+    /// Declared as a property rather than a positional parameter so that adding it does not change the
+    /// record's constructor and deconstructor signatures. An inherited run has no coordination files of
+    /// its own: the ancestor decides when the run ends, so there is no owner to elect and no participant
+    /// set to drain.
+    /// </remarks>
+    public bool IsInherited { get; init; }
+}
 
 internal sealed record AzureDevOpsRunIdFile(
     [property: JsonPropertyName("runId")] int RunId,

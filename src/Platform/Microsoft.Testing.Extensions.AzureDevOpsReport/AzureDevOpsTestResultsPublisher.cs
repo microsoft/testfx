@@ -133,7 +133,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
 
     public async Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
-        if (!TryCreatePublishConfiguration(out AzureDevOpsPublishConfiguration? publishConfiguration, out string? warning))
+        if (!AzureDevOpsPublishConfigurationFactory.TryCreate(_commandLineOptions, _configuration, _environment, _testApplicationModuleInfo, out AzureDevOpsPublishConfiguration? publishConfiguration, out string? warning))
         {
             await WarnAsync(warning, testSessionContext.CancellationToken).ConfigureAwait(false);
             return;
@@ -144,10 +144,16 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
 
         try
         {
-            _coordinatedRun = await _runIdCoordinator.AcquireRunAsync(
-                publishConfiguration,
-                cancellationToken => _client.CreateTestRunAsync(publishConfiguration, cancellationToken),
-                testSessionContext.CancellationToken).ConfigureAwait(false);
+            // An orchestrator (e.g. retry) creates the run before launching any test host, because the run
+            // must span every attempt. When that happened, join the existing run: this process neither
+            // created it nor can tell whether it is the last one to publish into it, so it must not
+            // complete it either. See AzureDevOpsTestRunOrchestratorLifetime.
+            _coordinatedRun = AzureDevOpsConstants.TryGetInheritedTestRunId(_environment, publishConfiguration.BuildId) is { } inheritedRunId
+                ? AzureDevOpsRunIdCoordinator.CreateInheritedRun(inheritedRunId, publishConfiguration)
+                : await _runIdCoordinator.AcquireRunAsync(
+                    publishConfiguration,
+                    cancellationToken => _client.CreateTestRunAsync(publishConfiguration, cancellationToken),
+                    testSessionContext.CancellationToken).ConfigureAwait(false);
             CurrentRunId = _coordinatedRun.RunId;
 
             // Results stream into the run as tests complete, but the build's Tests tab only lists the run
@@ -162,7 +168,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
                         CultureInfo.InvariantCulture,
                         AzureDevOpsResources.AzureDevOpsLivePublishingRunCreated,
                         CurrentRunId.Value,
-                        BuildTestRunUrl(publishConfiguration, CurrentRunId.Value)),
+                        AzureDevOpsPublishConfigurationFactory.BuildTestRunUrl(publishConfiguration, CurrentRunId.Value)),
                     testSessionContext.CancellationToken).ConfigureAwait(false);
             }
 
@@ -171,10 +177,12 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
             _backgroundFlushCts = new CancellationTokenSource();
             _backgroundFlushTask = Task.Run(() => BackgroundFlushLoopAsync(_backgroundFlushCts.Token));
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (Exception ex) when (!testSessionContext.CancellationToken.IsCancellationRequested)
         {
             // Reset state before reporting so a failure to display the warning can never leave the
-            // publisher half-initialized.
+            // publisher half-initialized. The filter tests the caller's token rather than the exception
+            // type because the HTTP client surfaces its own internal timeouts as TaskCanceledException;
+            // those must be reported, not rethrown as if the user had canceled.
             _publishConfiguration = null;
             _coordinatedRun = null;
             CurrentRunId = null;
@@ -220,9 +228,6 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
             TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingWarningDisplayFailed} {ex.Message}");
         }
     }
-
-    private static string BuildTestRunUrl(AzureDevOpsPublishConfiguration configuration, int runId)
-        => $"{configuration.CollectionUri.TrimEnd('/')}/{Uri.EscapeDataString(configuration.Project)}/_TestManagement/Runs?runId={runId}&_a=resultQuery";
 
     /// <summary>
     /// Logs a warning, swallowing any failure from the logging providers.
@@ -382,7 +387,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
         {
             // Use a fresh, non-canceled token so finalization (marking the run Aborted/Completed)
             // succeeds even when the test session itself has been canceled.
-            using var cleanupCts = new CancellationTokenSource(_options.CoordinationFinalizeTimeout + TimeSpan.FromSeconds(60));
+            using var cleanupCts = new CancellationTokenSource(_options.CoordinationFinalizeMaxWaitTime + TimeSpan.FromSeconds(60));
             await _runIdCoordinator.FinalizeRunAsync(
                 _coordinatedRun,
                 cancellationToken => _client.UpdateTestRunStateAsync(_publishConfiguration, CurrentRunId.Value, finalState, cancellationToken),

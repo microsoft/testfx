@@ -106,6 +106,23 @@ public static class AzureDevOpsExtensions
         // Registered last so its OnTestSessionFinishingAsync (the closing ##[endgroup]) runs after
         // the other AzDO handlers' finishing callbacks, ensuring the group wraps all their output.
         builder.TestHost.AddTestSessionLifetimeHandler(compositeLogGroupReporter);
+
+        // A test run must span every process an orchestrator launches (e.g. each --retry-failed-tests
+        // attempt), so its lifetime belongs to the orchestrator process rather than to any single test
+        // host. This is only built when an orchestrator is active, and is inert otherwise.
+        builder.TestHostOrchestrator.AddTestHostOrchestratorApplicationLifetime(serviceProvider =>
+            new AzureDevOpsTestRunOrchestratorLifetime(
+                serviceProvider.GetCommandLineOptions(),
+                serviceProvider.GetConfiguration(),
+                serviceProvider.GetEnvironment(),
+                serviceProvider.GetFileSystem(),
+                serviceProvider.GetOutputDevice(),
+                serviceProvider.GetTestApplicationModuleInfo(),
+                new AzureDevOpsTestResultsClient(serviceProvider.GetTask(), serviceProvider.GetClock()),
+                serviceProvider.GetTask(),
+                serviceProvider.GetClock(),
+                serviceProvider.GetLoggerFactory()));
+
         builder.CommandLine.AddProvider(() => new AzureDevOpsCommandLineProvider());
     }
 
