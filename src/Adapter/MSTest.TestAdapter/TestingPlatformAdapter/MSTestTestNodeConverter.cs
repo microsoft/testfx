@@ -217,6 +217,7 @@ internal static class MSTestTestNodeConverter
         private readonly string _methodName;
         private readonly int _arity;
         private readonly string[] _parameterTypeFullNames;
+        private TestMethodIdentifierProperty? _cachedParameterlessProperty;
 
         private ParsedManagedName(string @namespace, string typeName, string methodName, int arity, string[] parameterTypeFullNames)
         {
@@ -244,15 +245,20 @@ internal static class MSTestTestNodeConverter
 
         public TestMethodIdentifierProperty ToProperty()
         {
-            // Every node gets its own parameter array. TestMethodIdentifierProperty exposes it publicly, so
-            // aliasing one array across nodes would let a consumer that writes to it corrupt every other node
-            // built from the same test method. An empty array cannot be mutated, so the common parameterless
-            // case still allocates nothing here.
-            string[] parameterTypeFullNames = _parameterTypeFullNames.Length == 0 ? _parameterTypeFullNames : [.. _parameterTypeFullNames];
+            // For the common parameterless case, the property is immutable and can be reused
+            // across repeated executions of the same test method (retries, re-runs) within the
+            // same session. The empty array cannot be mutated by callers, so aliasing is safe.
+            if (_parameterTypeFullNames.Length == 0)
+            {
+                return _cachedParameterlessProperty ??= new TestMethodIdentifierProperty(
+                    assemblyFullName: string.Empty, _namespace, _typeName, _methodName, _arity,
+                    _parameterTypeFullNames, returnTypeFullName: string.Empty);
+            }
 
-            // AssemblyFullName and ReturnTypeFullName are not carried by the neutral model today; kept empty to
-            // match the current (bridge) behavior. Populating them is a follow-up enabled by this native path.
-            return new TestMethodIdentifierProperty(assemblyFullName: string.Empty, _namespace, _typeName, _methodName, _arity, parameterTypeFullNames, returnTypeFullName: string.Empty);
+            // Every non-parameterless node gets its own parameter array. TestMethodIdentifierProperty
+            // exposes it publicly, so aliasing one array across nodes would let a consumer that writes
+            // to it corrupt every other node built from the same test method.
+            return new TestMethodIdentifierProperty(assemblyFullName: string.Empty, _namespace, _typeName, _methodName, _arity, [.. _parameterTypeFullNames], returnTypeFullName: string.Empty);
         }
     }
 
