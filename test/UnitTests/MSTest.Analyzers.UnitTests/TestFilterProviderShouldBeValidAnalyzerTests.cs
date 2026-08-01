@@ -470,6 +470,33 @@ public sealed class TestFilterProviderShouldBeValidAnalyzerTests
                 .WithArguments("GenericFilter<int>"));
     }
 
+    // Two non-generic [assembly: TestFilterProvider(typeof(...))] registrations: the compiler's
+    // duplicate-attribute check fires for [AttributeUsage(AllowMultiple = false)] attributes, but
+    // TestFilterProviderAttribute *is* AllowMultiple, so both compile and the analyzer must flag both.
+    [TestMethod]
+    public async Task WhenTwoNonGenericProvidersAreRegistered_Diagnostic()
+    {
+        string code = Header + """
+            [assembly: {|#0:TestFilterProvider(typeof(MyFilter))|}]
+            [assembly: {|#1:TestFilterProvider(typeof(MyOtherFilter))|}]
+
+            public sealed class MyFilter : ITestFilter
+            {
+                public TestFilterResult Filter(TestFilterContext context) => TestFilterResult.Run;
+            }
+
+            public sealed class MyOtherFilter : ITestFilter
+            {
+                public TestFilterResult Filter(TestFilterContext context) => TestFilterResult.Run;
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(TestFilterProviderShouldBeValidAnalyzer.MultipleRule).WithLocation(0),
+            VerifyCS.Diagnostic(TestFilterProviderShouldBeValidAnalyzer.MultipleRule).WithLocation(1));
+    }
+
     // The two attributes are distinct types, so the compiler's own duplicate-attribute check does not fire
     // even though the adapter rejects the pair with UTA079.
     [TestMethod]
@@ -477,6 +504,33 @@ public sealed class TestFilterProviderShouldBeValidAnalyzerTests
     {
         string code = Header + """
             [assembly: {|#0:TestFilterProvider(typeof(MyFilter))|}]
+            [assembly: {|#1:TestFilterProvider<MyOtherFilter>|}]
+
+            public sealed class MyFilter : ITestFilter
+            {
+                public TestFilterResult Filter(TestFilterContext context) => TestFilterResult.Run;
+            }
+
+            public sealed class MyOtherFilter : ITestFilter
+            {
+                public TestFilterResult Filter(TestFilterContext context) => TestFilterResult.Run;
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(TestFilterProviderShouldBeValidAnalyzer.MultipleRule).WithLocation(0),
+            VerifyCS.Diagnostic(TestFilterProviderShouldBeValidAnalyzer.MultipleRule).WithLocation(1));
+    }
+
+    // Two generic [assembly: TestFilterProvider<T>] registrations: since the generic attribute is a
+    // distinct type from the non-generic one, the adapter still rejects the pair (UTA079), and the
+    // analyzer must flag both.
+    [TestMethod]
+    public async Task WhenTwoGenericProvidersAreRegistered_Diagnostic()
+    {
+        string code = Header + """
+            [assembly: {|#0:TestFilterProvider<MyFilter>|}]
             [assembly: {|#1:TestFilterProvider<MyOtherFilter>|}]
 
             public sealed class MyFilter : ITestFilter
