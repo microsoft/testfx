@@ -331,19 +331,25 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
     }
 
     // --- TestMethodIdentifier caching -------------------------------------------------------------------------
-    public void ToResultTestNode_ProducesEquivalentTestMethodIdentifier_AsInProgressNode()
+    public void ToResultTestNode_ReusesCachedManagedNameParse_FromInProgressNode()
     {
         // The managed-name parse is cached per TestMethod, so the in-progress node and every result node must
         // still agree on every field of the identifier.
         UnitTestElement element = CreateElement();
 
-        TestMethodIdentifierProperty? inProgress = MSTestTestNodeConverter.ToInProgressTestNode(element, isTrxEnabled: false)
-            .Properties.SingleOrDefault<TestMethodIdentifierProperty>();
-        TestMethodIdentifierProperty? result = MSTestTestNodeConverter.ToResultTestNode(element, new FrameworkTestResult { Outcome = UnitTestOutcome.Passed }, DateTimeOffset.Now, DateTimeOffset.Now, isTrxEnabled: false, new MSTestSettings())
-            .Properties.SingleOrDefault<TestMethodIdentifierProperty>();
+        TestMethodIdentifierProperty inProgress = MSTestTestNodeConverter.ToInProgressTestNode(element, isTrxEnabled: false)
+            .Properties.Single<TestMethodIdentifierProperty>();
+        TestMethodIdentifierProperty result = MSTestTestNodeConverter.ToResultTestNode(element, new FrameworkTestResult { Outcome = UnitTestOutcome.Passed }, DateTimeOffset.Now, DateTimeOffset.Now, isTrxEnabled: false, new MSTestSettings())
+            .Properties.Single<TestMethodIdentifierProperty>();
 
-        inProgress.Should().NotBeNull();
         result.Should().Be(inProgress);
+
+        // Namespace and TypeName are partial Substring results of ManagedTypeName, so re-running the parse would
+        // hand back fresh string instances. Reference equality is therefore what proves the cached parse was
+        // reused rather than redone - without the cache these assertions fail while the value equality above
+        // still passes.
+        result.Namespace.Should().BeSameAs(inProgress.Namespace);
+        result.TypeName.Should().BeSameAs(inProgress.TypeName);
     }
 
     public void ToResultTestNode_DoesNotShareParameterTypeArray_WithInProgressNode()
