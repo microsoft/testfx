@@ -1,13 +1,13 @@
 # Efficiency Improver — Persistent Memory for microsoft/testfx
 
 ## Last Updated
-2026-07-29 UTC
+2026-08-01 UTC
 
 ## Round-Robin Schedule
 
-Tasks run this session: **2 (scan), 7 (monthly summary)**
-Last run before this: Tasks 2/7 (2026-07-27)
-Next run should prioritise: Tasks 4 (PR maintenance), 5 (issue comments), 6 (infra), 7 (always)
+Tasks run this session: **2 (scan), 4 (PR maintenance), 7 (monthly summary)**
+Last run before this: Tasks 2/4/7 (2026-07-31)
+Next run should prioritise: Tasks 5 (issue comments), 6 (infra), 7 (always)
 
 ## Build / Test / Benchmark Commands
 
@@ -43,6 +43,10 @@ Notes:
 - **AzureDevOpsReport (new, #10331)**: All new files reviewed — ConcurrentQueue for pending results, appropriate Dictionary/StringComparer patterns, `BuildMarkdown` uses `OrderByDescending` only at report-generation time (not per-test). No hot-path inefficiencies.
 - **Assert.ContainsAll / AreAllDistinct**: ReadOnlySpan overloads call `.ToArray()` then pass to generic impl — unavoidable; no span-based impl for dictionary counting. Not a hot path.
 - **TestMethodFilter.cs (new)**: No LINQ or Regex allocations. Already efficient.
+- **OpenTelemetryResultHandler** (new #10358): Uses struct enumerator for single-pass property bag walk in `SetResultDetails`. `GetSuiteName` calls `SingleOrDefault<T>` separately (minor dup) — but this is OTel opt-in path, not worth optimizing.
+- **MSTestTestNodeConverter** (new #10366): Uses `ConditionalWeakTable` to cache `ParsedManagedName` parsing per TestMethod — excellent. Maintainer independently implemented this caching.
+- **TestResult.cs** (new #10353): `FindAssertionTexts` uses bounded recursive walk (MaxDepth=10), only called on failure path. Well-optimized.
+- **AssertionFailureProperty.ToString()**: Uses StringBuilder for simple string — only called for debugging. No action needed.
 
 ## Open PRs / Issues Created by Efficiency Improver
 
@@ -53,7 +57,8 @@ Notes:
 
 ## Monthly Summary Issue
 
-- Issue #9594 — `[efficiency-improver] Monthly Activity 2026-07` — open
+- Issue #9594 — `[efficiency-improver] Monthly Activity 2026-07` — closed (month ended)
+- New August issue: TBD (to be created this run)
 
 ## Issue Comments (Task 5)
 
@@ -75,9 +80,11 @@ Notes:
 
 | Date | PR/Issue | Summary |
 |------|----------|---------|
-| 2026-07-29 | scan only | Scanned TreeNodeFilter, AzureDevOps extension (new #10331), TestMethodFilter, Assert.ContainsAll — all already well-optimized; no new HIGH/MEDIUM opportunities |
-| 2026-07-27 | scan only | Scanned TestNodeResultsState, FileLogger, PropertyBag, MessageBus, DotnetTest HTTP transport, Analyzer hot paths — all already well-optimized; no new HIGH/MEDIUM opportunities found |
-| 2026-07-22 | scan only | Verified TestCaseExtensions fix in main; maintainer commit #10141 pools IPC string buffers independently; no new HIGH opportunities found |
+| 2026-08-01 | scan only | Scanned new OTel (#10358), MSTestTestNodeConverter caching (#10366), TestResult assertion texts (#10353) — all well-optimized by maintainers; no new HIGH/MEDIUM opportunities |
+| 2026-07-31 | scan only | Scanned new OpenTelemetry spans (#10358), CtrfReportMerger partials (#10354), RetryOrchestrator — all well-optimized |
+| 2026-07-29 | scan only | Scanned TreeNodeFilter, new AzureDevOps extension (#10331), TestMethodFilter, Assert.ContainsAll — all already well-optimized |
+| 2026-07-27 | scan only | Scanned TestNodeResultsState, FileLogger, PropertyBag, MessageBus, DotnetTest HTTP transport, Analyzer hot paths — all already well-optimized |
+| 2026-07-22 | scan only | Verified TestCaseExtensions fix in main; maintainer commit #10141 pools IPC string buffers independently |
 | 2026-07-16 | branch pushed (landed in main) | Avoid string interpolation allocations in GetTestName/GetClassNameWhenFullyQualifiedNameStartsWith |
 | 2026-07-10 | PR# TBD (branch efficiency/stacktrace-string-split — no longer needed, already in main) | StackTraceHelper already fixed in main |
 | 2026-07-09 | bool.Parse now in main | Cache `bool.Parse` results already in RFC 018 commit; no separate PR needed |
@@ -94,6 +101,6 @@ Notes:
 
 ## Backlog Cursor
 
-- Code scan cursor: CtrfReport ✅, HtmlReport ✅, Adapter/ ✅, TestFramework/ ✅, Platform/ hot paths ✅, VSTestBridge ✅, AzureDevOpsReport ✅, MSBuild tasks ✅, TrxReport ✅, ServerMode ✅, Platform/Capabilities ✅, Platform/Terminal (full) ✅, Retry ✅, IPC/Serializers ✅, Platform/Messages ✅, Platform/Logging ✅, Platform/DotnetTest transport ✅, MSTest.Analyzers (new parallel-safety) ✅, Platform/Requests (TreeNodeFilter) ✅, AzureDevOps extension new code (#10331) ✅
+- Code scan cursor: All July+Aug 2026 new code reviewed. Comprehensive scan complete through August 1.
 - Issue comments cursor: #8824 ✅, #9712 ✅ — next: scan for new efficiency issues
-- Next code scan area: Retry extension, HangDump, CrashDump, Platform/Retry paths
+- Next code scan area: Any new PRs after August 1 (esp. OTel, retry, assertion tooling areas)
