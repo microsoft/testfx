@@ -471,7 +471,14 @@ public sealed class TestFilterProviderShouldBeValidAnalyzerTests
     }
 
     // The two attributes are distinct types, so the compiler's own duplicate-attribute check does not fire
-    // even though the adapter rejects the pair with UTA079.
+    // even though the adapter rejects the pair with UTA079. This mixed pair is in fact the *only* shape that
+    // can reach MultipleRule from well-formed C#: both attributes are AllowMultiple = false, and Roslyn keys
+    // its duplicate check off the original definition, so a same-shape pair - two 'typeof' registrations, or
+    // two 'TestFilterProvider<T>' registrations, even with different T - is rejected as CS0579 and never
+    // reaches the adapter. Those two shapes are deliberately untested: MSTEST0081 does still fire on them
+    // (Roslyn keeps both attributes in the symbol model despite the duplicate error), but it reports the same
+    // defect CS0579 already reports, through the same analyzer branch this test covers - so such a test would
+    // add no coverage while pinning the analyzer's behavior on input that cannot compile.
     [TestMethod]
     public async Task WhenGenericAndNonGenericProvidersAreCombined_Diagnostic()
     {
@@ -494,6 +501,38 @@ public sealed class TestFilterProviderShouldBeValidAnalyzerTests
             code,
             VerifyCS.Diagnostic(TestFilterProviderShouldBeValidAnalyzer.MultipleRule).WithLocation(0),
             VerifyCS.Diagnostic(TestFilterProviderShouldBeValidAnalyzer.MultipleRule).WithLocation(1));
+    }
+
+    // MultipleRule and the per-provider rules are reported by two separate loops over the same set
+    // (AnalyzeCompilation), and the second one is not gated on the first. Every other multiple-provider test
+    // registers only valid filters, so nothing pins that the per-provider pass still runs once MultipleRule has
+    // fired: short-circuiting after the MultipleRule loop would leave them all green while silently hiding every
+    // other MSTEST0081 sub-rule from any assembly with more than one provider. Hence one registration here is
+    // also invalid on its own, so the assembly must report both MultipleRule twice and NotATestFilterRule once.
+    [TestMethod]
+    public async Task WhenMultipleProvidersAreRegisteredAndOneIsInvalid_Diagnostic()
+    {
+        string code = Header + """
+            [assembly: {|#0:TestFilterProvider(typeof(NotAFilter))|}]
+            [assembly: {|#1:TestFilterProvider<MyFilter>|}]
+
+            public sealed class NotAFilter
+            {
+            }
+
+            public sealed class MyFilter : ITestFilter
+            {
+                public TestFilterResult Filter(TestFilterContext context) => TestFilterResult.Run;
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(TestFilterProviderShouldBeValidAnalyzer.MultipleRule).WithLocation(0),
+            VerifyCS.Diagnostic(TestFilterProviderShouldBeValidAnalyzer.MultipleRule).WithLocation(1),
+            VerifyCS.Diagnostic(TestFilterProviderShouldBeValidAnalyzer.NotATestFilterRule)
+                .WithLocation(0)
+                .WithArguments("NotAFilter"));
     }
 #endif
 }
