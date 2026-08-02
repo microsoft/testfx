@@ -218,6 +218,9 @@ internal static class MSTestTestNodeConverter
         private readonly int _arity;
         private readonly string[] _parameterTypeFullNames;
 
+        // Only set for the parameterless case, where the produced property is fully immutable. See ToProperty().
+        private TestMethodIdentifierProperty? _cachedParameterlessProperty;
+
         private ParsedManagedName(string @namespace, string typeName, string methodName, int arity, string[] parameterTypeFullNames)
         {
             _namespace = @namespace;
@@ -244,15 +247,23 @@ internal static class MSTestTestNodeConverter
 
         public TestMethodIdentifierProperty ToProperty()
         {
-            // Every node gets its own parameter array. TestMethodIdentifierProperty exposes it publicly, so
-            // aliasing one array across nodes would let a consumer that writes to it corrupt every other node
-            // built from the same test method. An empty array cannot be mutated, so the common parameterless
-            // case still allocates nothing here.
-            string[] parameterTypeFullNames = _parameterTypeFullNames.Length == 0 ? _parameterTypeFullNames : [.. _parameterTypeFullNames];
-
             // AssemblyFullName and ReturnTypeFullName are not carried by the neutral model today; kept empty to
             // match the current (bridge) behavior. Populating them is a follow-up enabled by this native path.
-            return new TestMethodIdentifierProperty(assemblyFullName: string.Empty, _namespace, _typeName, _methodName, _arity, parameterTypeFullNames, returnTypeFullName: string.Empty);
+            if (_parameterTypeFullNames.Length == 0)
+            {
+                // Every other piece of state on the property is an immutable string or int, and an empty array
+                // cannot be mutated, so the whole property is safe to share across nodes. This is the common
+                // case (most test methods take no parameters), and the ParsedManagedName itself is cached per
+                // TestMethod, so a test that reports more than once (retries, re-runs) allocates nothing here.
+                return _cachedParameterlessProperty ??= new TestMethodIdentifierProperty(
+                    assemblyFullName: string.Empty, _namespace, _typeName, _methodName, _arity, _parameterTypeFullNames, returnTypeFullName: string.Empty);
+            }
+
+            // Every node gets its own parameter array. TestMethodIdentifierProperty exposes it publicly, so
+            // aliasing one array across nodes would let a consumer that writes to it corrupt every other node
+            // built from the same test method.
+            return new TestMethodIdentifierProperty(
+                assemblyFullName: string.Empty, _namespace, _typeName, _methodName, _arity, [.. _parameterTypeFullNames], returnTypeFullName: string.Empty);
         }
     }
 

@@ -352,6 +352,34 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
         result.TypeName.Should().BeSameAs(inProgress.TypeName);
     }
 
+    public void ToResultTestNode_ReusesTestMethodIdentifierInstance_ForParameterlessTestMethod()
+    {
+        // A parameterless identifier is fully immutable (readonly strings plus an empty, unmutatable parameter
+        // array), so the cached parse hands back the very same property instance instead of allocating a new one
+        // for every report of the same test method (retries, re-runs, ...).
+        UnitTestElement element = CreateElement();
+
+        TestMethodIdentifierProperty inProgress = MSTestTestNodeConverter.ToInProgressTestNode(element, isTrxEnabled: false)
+            .Properties.Single<TestMethodIdentifierProperty>();
+        TestMethodIdentifierProperty result = MSTestTestNodeConverter.ToResultTestNode(element, new FrameworkTestResult { Outcome = UnitTestOutcome.Passed }, DateTimeOffset.Now, DateTimeOffset.Now, isTrxEnabled: false, new MSTestSettings())
+            .Properties.Single<TestMethodIdentifierProperty>();
+
+        result.Should().BeSameAs(inProgress);
+    }
+
+    public void ToResultTestNode_DoesNotReuseTestMethodIdentifierInstance_ForParameterizedTestMethod()
+    {
+        // Parameterized identifiers expose a mutable array, so each node must keep getting its own property.
+        UnitTestElement element = CreateElement(managedMethodName: "MyMethod(System.String)");
+
+        TestMethodIdentifierProperty inProgress = MSTestTestNodeConverter.ToInProgressTestNode(element, isTrxEnabled: false)
+            .Properties.Single<TestMethodIdentifierProperty>();
+        TestMethodIdentifierProperty result = MSTestTestNodeConverter.ToResultTestNode(element, new FrameworkTestResult { Outcome = UnitTestOutcome.Passed }, DateTimeOffset.Now, DateTimeOffset.Now, isTrxEnabled: false, new MSTestSettings())
+            .Properties.Single<TestMethodIdentifierProperty>();
+
+        result.Should().NotBeSameAs(inProgress);
+    }
+
     public void ToResultTestNode_DoesNotShareParameterTypeArray_WithInProgressNode()
     {
         // TestMethodIdentifierProperty exposes ParameterTypeFullNames publicly, so nodes must never alias one

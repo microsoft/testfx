@@ -28,6 +28,11 @@ internal sealed class SilenceDrivenHeartbeatRenderer : IProgressRenderer
     // Only touched from the single rendering thread inside OnTick.
     private readonly Dictionary<long, SlowTestThresholdState> _slowTestThresholdStates = [];
 
+    // Scratch buffer for composing slow-test descriptions. Like _slowTestThresholdStates it is only touched
+    // from the single rendering thread inside OnTick, so it can be reused instead of allocating a builder
+    // (and its backing char array) for every surfaced slow test.
+    private readonly StringBuilder _slowTestDescriptionBuilder = new();
+
     private IStopwatch? _clock;
 
     // Ticks (on _clock's timeline) of the last activity (test completion) or last heartbeat emission.
@@ -174,9 +179,10 @@ internal sealed class SilenceDrivenHeartbeatRenderer : IProgressRenderer
         }
     }
 
-    private static string BuildSlowTestDescription(TestProgressState item, TestDetailState detail)
+    private string BuildSlowTestDescription(TestProgressState item, TestDetailState detail)
     {
-        var builder = new StringBuilder();
+        StringBuilder builder = _slowTestDescriptionBuilder;
+        builder.Clear();
         builder.Append(detail.Text);
         builder.Append(" (");
         builder.Append(item.AssemblyName);

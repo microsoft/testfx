@@ -160,7 +160,7 @@ internal sealed class AnsiTerminal : ITerminal
 
     public void StopUpdate()
     {
-        _console.Write(_stringBuilder.ToString());
+        _console.Write(_stringBuilder);
         _isBatching = false;
     }
 

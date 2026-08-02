@@ -1391,6 +1391,8 @@ public sealed class TerminalTestReporterTests
 
         public void Write(string? value) => _output.Append(value);
 
+        public void Write(StringBuilder value) => _output.Append(value.ToString());
+
         public void Write(char value) => _output.Append(value);
 
         public void WriteLine() => _output.AppendLine();
@@ -3678,6 +3680,10 @@ public sealed class TerminalTestReporterTests
         {
         }
 
+        public void Write(StringBuilder value)
+        {
+        }
+
         public void Write(char value)
         {
         }
@@ -3727,6 +3733,8 @@ public sealed class TerminalTestReporterTests
         }
 
         public void Write(string? value) => _output.Append(value);
+
+        public void Write(StringBuilder value) => _output.Append(value.ToString());
 
         public void Write(char value) => _output.Append(value);
 
