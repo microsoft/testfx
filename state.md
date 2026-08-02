@@ -12,21 +12,22 @@
 
 ## Task Schedule (last run dates)
 - Task 1 (Discover Commands): 2026-07-30
-- Task 2 (Identify Opportunities): 2026-08-01
-- Task 3 (Implement): 2026-08-01
-- Task 4 (Maintain PRs): 2026-07-31
+- Task 2 (Identify Opportunities): 2026-08-02
+- Task 3 (Implement): 2026-07-31 (no viable target found)
+- Task 4 (Maintain PRs): 2026-08-02 (no open perf-improver PRs)
 - Task 5 (Comment Issues): 2026-07-27
 - Task 6 (Infrastructure): 2026-07-28
-- Task 7 (Monthly Summary): 2026-08-01
+- Task 7 (Monthly Summary): 2026-08-02
 
 ## Monthly Activity Issue
-- Issue #9604 (July 2026, open) — transition to August issue next run
+- Issue #9604 (July 2026, open) — close when possible
+- August 2026: created this run (no number yet — check repo)
 
 ## Work In Progress
 None
 
 ## Optimization Backlog (low priority)
-1. `DotnetTestHttpClient`: `new byte[1]` trailing-byte check → `ReadByte()`. Very low priority.
+1. `DotnetTestHttpClient`: `new byte[1]` trailing-byte check → `Memory<byte>` on .NET. Very low priority (cold path).
 2. `SilenceDrivenHeartbeatRenderer.BuildSlowTestDescription`: `new StringBuilder()` per slow-test event. Very low priority.
 3. `AntiTerminal.StopUpdate()`: `_stringBuilder.ToString()` on every flush. Blocked by IConsole + netstandard2.0 compat.
 4. OpenTelemetryResultHandler: `GetFullyQualifiedName()` allocates string per test result - only matters for OTel users; low priority.
@@ -38,6 +39,7 @@ None
 - IPC BaseSerializer: already uses ArrayPool and stackalloc
 - Static readonly fields in this codebase: PascalCase (SA1311); collection expression `[]` preferred (IDE0028)
 - MSTestTestNodeConverter: ParsedManagedName cached per TestMethod via ConditionalWeakTable; TestMethodIdentifierProperty cached in ParsedManagedName for parameterless case
+- HumanReadableDurationFormatter: has NET8+ fast path for common case (< 1 hour, no ms) using string.Create
 - Backlog is now very slim — codebase is well-optimized for hot paths
 
 ## Completed Work (this month)
@@ -51,8 +53,7 @@ None
 - PR #10201 merged: eliminate per-test closure allocations in IPC deserializers
 - PR #10089 merged: replace Array.IndexOf state checks with direct type patterns
 ### August 2026
-- PR #aw_pr_paramless created 2026-08-01: cache TestMethodIdentifierProperty in ParsedManagedName for parameterless tests
-  Branch: perf-assist/cache-parameterless-test-method-identifier-property
+- Created Monthly Activity issue for August 2026
 
 ## Checked-off by Maintainer (do not re-suggest)
 (none yet for August 2026)
