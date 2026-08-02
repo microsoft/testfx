@@ -13,6 +13,11 @@ namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 internal sealed class AzureDevOpsRunIdCoordinator
 {
     private const string CoordinationFilePrefix = "azdo-runid";
+
+    /// <summary>
+    /// Build id recorded for a legacy plain-PID lease, which carries no build context of its own.
+    /// </summary>
+    private const int LegacyLeaseBuildId = 0;
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
@@ -344,9 +349,7 @@ internal sealed class AzureDevOpsRunIdCoordinator
 
                 LeaseReadResult ownerLease = ReadLease(ownerFilePath);
                 bool ownerStillActive = ownerLease.Status is LeaseFileStatus.Active or LeaseFileStatus.TransientReadError
-                    || (ownerLease.Status == LeaseFileStatus.Expired
-                        && ownerLease.Lease is { } expiredLease
-                        && IsProcessAlive(expiredLease.ProcessId));
+                    || (ownerLease.Status == LeaseFileStatus.Expired && IsOwnerStillAlive(ownerLease));
 
                 if (!ownerStillActive)
                 {
@@ -411,9 +414,14 @@ internal sealed class AzureDevOpsRunIdCoordinator
     /// while it is very much still publishing. Taking over then would create a second Azure DevOps run for
     /// the same build. Refusing to take over from a live process errs towards one run rather than two,
     /// which is also how <see cref="CleanupStaleParticipants"/> already treats participants.
+    /// <para>
+    /// The legacy plain-PID lease format is excluded: <see cref="ReadLease"/> deliberately reports it as
+    /// expired so it can be replaced, and it carries no build id to tell us which run it belongs to. A
+    /// reused pid would otherwise let a stale file from an older version block takeover indefinitely.
+    /// </para>
     /// </remarks>
     private static bool IsOwnerStillAlive(LeaseReadResult lease)
-        => lease.Lease is { } ownerLease && IsProcessAlive(ownerLease.ProcessId);
+        => lease.Lease is { BuildId: not LegacyLeaseBuildId } ownerLease && IsProcessAlive(ownerLease.ProcessId);
 
     private AzureDevOpsLeaseFile CreateLeaseFile(int buildId)
         => new(_environment.ProcessId, buildId, _clock.UtcNow + _options.CoordinationFileExpiration);
@@ -440,8 +448,10 @@ internal sealed class AzureDevOpsRunIdCoordinator
 
             if (int.TryParse(content, NumberStyles.Integer, CultureInfo.InvariantCulture, out int processId))
             {
-                // Legacy plain-PID lease format: treat as expired so the caller can take over.
-                return new LeaseReadResult(LeaseFileStatus.Expired, new AzureDevOpsLeaseFile(processId, 0, DateTimeOffset.MinValue));
+                // Legacy plain-PID lease format: treat as expired so the caller can take over. The sentinel
+                // build id marks it as carrying no build context, which is what keeps IsOwnerStillAlive from
+                // treating a reused pid as a live owner.
+                return new LeaseReadResult(LeaseFileStatus.Expired, new AzureDevOpsLeaseFile(processId, LegacyLeaseBuildId, DateTimeOffset.MinValue));
             }
 
             // The file exists but neither parser yielded a usable value. It might be mid-write —

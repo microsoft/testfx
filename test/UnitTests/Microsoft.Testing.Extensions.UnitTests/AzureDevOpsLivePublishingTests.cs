@@ -1765,6 +1765,33 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.IsTrue(run.IsOwner);
     }
 
+    [TestMethod]
+    public async Task RunIdCoordinator_OwnerLeaseWithoutBuildContext_CanStillBeTakenOverEvenWhenThatPidIsAlive()
+    {
+        // A lease carrying the sentinel build id has no build context to vouch for it - that is how
+        // ReadLease reports the legacy plain-pid format, which it deliberately marks replaceable. A pid
+        // that has since been reused must not be mistaken for a live owner, or takeover is blocked forever.
+        using TestDirectory directory = CreateTestDirectory();
+        FakeClock clock = new() { UtcNow = new DateTimeOffset(2025, 1, 1, 12, 0, 0, TimeSpan.Zero) };
+
+        // Advance the clock on every poll so that if takeover ever regresses the joiner wait reaches its
+        // deadline and the test fails, instead of spinning forever against a frozen clock.
+        FakeTask task = new(_ => clock.UtcNow += TimeSpan.FromSeconds(10));
+        AzureDevOpsTestResultsPublisherOptions options = new(10, TimeSpan.FromMinutes(1), 2, TimeSpan.FromMilliseconds(1));
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "storage", directory.Path);
+
+        Directory.CreateDirectory(directory.Path);
+        File.WriteAllText(
+            Path.Combine(directory.Path, "azdo-runid.123.owner"),
+            JsonSerializer.Serialize(new AzureDevOpsLeaseFile(GetAliveProcessId(), 0, clock.UtcNow.AddHours(-1))));
+
+        AzureDevOpsRunIdCoordinator coordinator = new(new SystemFileSystem(), task, clock, CreateEnvironmentMock(processId: GetAliveProcessId() + 1).Object, new CollectingLogger(), options);
+        AzureDevOpsCoordinatedRun run = await coordinator.AcquireRunAsync(configuration, _ => Task.FromResult(980), CancellationToken.None);
+
+        Assert.IsTrue(run.IsOwner, "A lease with no build context should never block takeover, whatever its pid is doing now.");
+        Assert.AreEqual(980, run.RunId);
+    }
+
     #endregion
 
     private static AzureDevOpsTestRunOrchestratorLifetime CreateOrchestratorLifetime(
