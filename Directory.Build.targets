@@ -15,10 +15,42 @@
     <PackageReadmeFile Condition=" '$(PackageReadmeFile)' == '' and Exists('PACKAGE.md') ">PACKAGE.md</PackageReadmeFile>
   </PropertyGroup>
 
-  <!-- Add a package README file from. -->
+  <!--
+    Compose the nuget.org description from a shared preamble (set per product area in
+    src/Directory.Build.props and src/Platform/Directory.Build.props) plus the package-specific
+    $(PackageDescriptionDetail). This keeps the boilerplate first paragraph in one place instead of
+    duplicating it in every packable project, and keeps the .csproj indentation out of the published
+    text. A project that needs full control can still set $(PackageDescription) directly.
+  -->
+  <PropertyGroup Condition=" '$(PackageDescriptionDetail)' != '' ">
+    <PackageDescription Condition=" '$(PackageDescriptionPreamble)' == '' ">$(PackageDescriptionDetail)</PackageDescription>
+    <PackageDescription Condition=" '$(PackageDescriptionPreamble)' != '' ">$(PackageDescriptionPreamble)
+
+$(PackageDescriptionDetail)</PackageDescription>
+  </PropertyGroup>
+
+  <!-- Pack the package README (PACKAGE.md by default, see above) into the root of the .nupkg. -->
   <ItemGroup Condition=" '$(PackageReadmeFile)' != '' ">
     <None Include="$(PackageReadmeFile)" Pack="true" PackagePath="\" />
   </ItemGroup>
+
+  <!--
+    Guard the nuget.org metadata that is easy to forget on a new package.
+
+    NuGet's Pack.targets defaults an unset $(PackageDescription) to the literal string
+    "Package Description" during evaluation, so Arcade's own "PackageDescription must be specified"
+    check (a target, and therefore evaluated later) can never fire and the placeholder ships. Three
+    packages reached nuget.org that way before this guard existed, so match the placeholder
+    explicitly rather than only the empty string.
+  -->
+  <Target Name="_ValidatePackageMetadata"
+          BeforeTargets="GenerateNuspec"
+          Condition=" '$(IsPackable)' == 'true' ">
+    <Error Condition=" '$(PackageDescription)' == '' or '$(PackageDescription)' == 'Package Description' "
+           Text="$(MSBuildProjectName) is packable but has no package description, so it would be published to nuget.org with NuGet's 'Package Description' placeholder. Set PackageDescriptionDetail (appended to the PackageDescriptionPreamble of the containing product area) or PackageDescription." />
+    <Error Condition=" '$(PackageReadmeFile)' == '' "
+           Text="$(MSBuildProjectName) is packable but has no package README, so its nuget.org page would show no rendered documentation. Add a PACKAGE.md next to the project file (it is picked up automatically) or set PackageReadmeFile." />
+  </Target>
 
   <ItemGroup Condition=" '$(GenerateBuildInfo)' == 'true' ">
     <PackageReference Include="Microsoft.DotNet.Build.Tasks.Templating" Version="$(MicrosoftDotNetBuildTasksTemplatingPackageVersion)" AllowExplicitReference="true" PrivateAssets="All" IsImplicitlyDefined="true" />

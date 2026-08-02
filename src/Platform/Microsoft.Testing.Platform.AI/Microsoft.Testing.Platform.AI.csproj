@@ -7,6 +7,11 @@
     <SuppressFinalPackageVersion>true</SuppressFinalPackageVersion>
   </PropertyGroup>
 
+  <!-- NuGet properties -->
+  <PropertyGroup>
+    <PackageDescriptionDetail>This package provides the AI extensibility abstractions of the platform, letting test frameworks and extensions consume a large language model through Microsoft.Extensions.AI without taking a dependency on a specific provider.</PackageDescriptionDetail>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
   </ItemGroup>

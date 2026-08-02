@@ -27,11 +27,7 @@
 
   <!-- NuGet properties -->
   <PropertyGroup>
-    <PackageDescription>
-      <![CDATA[MSTest is Microsoft supported Test Framework.
-
-This package provides the C# source generators that emit reflection metadata so that MSTest test assemblies can run trim-safe and NativeAOT-compatible.]]>
-    </PackageDescription>
+    <PackageDescriptionDetail>This package provides the C# source generators that emit reflection metadata so that MSTest test assemblies can run trim-safe and NativeAOT-compatible.</PackageDescriptionDetail>
   </PropertyGroup>
 
   <ItemGroup>

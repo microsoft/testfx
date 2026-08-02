@@ -17,11 +17,7 @@
 
   <!-- NuGet properties -->
   <PropertyGroup>
-    <PackageDescription>
-      <![CDATA[Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
-
-This package provides the core platform and the .NET implementation of the protocol.]]>
-    </PackageDescription>
+    <PackageDescriptionDetail>This package provides the core platform and the .NET implementation of the protocol.</PackageDescriptionDetail>
   </PropertyGroup>
 
   <!-- Exclude .NET Json api not available in netstandard2.0 -->

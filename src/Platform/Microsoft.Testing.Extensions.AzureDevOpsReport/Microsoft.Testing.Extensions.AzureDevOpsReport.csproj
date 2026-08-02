@@ -23,11 +23,7 @@
 
   <!-- NuGet properties -->
   <PropertyGroup>
-    <PackageDescription>
-      <![CDATA[Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
-
-This package extends Microsoft Testing Platform to provide a Azure DevOps reporting functionality.]]>
-    </PackageDescription>
+    <PackageDescriptionDetail>This package extends Microsoft Testing Platform to provide an Azure DevOps reporting functionality.</PackageDescriptionDetail>
   </PropertyGroup>
 
   <!-- NuGet package layout -->

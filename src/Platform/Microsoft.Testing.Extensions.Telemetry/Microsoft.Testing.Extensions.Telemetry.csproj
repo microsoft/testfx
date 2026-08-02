@@ -16,11 +16,7 @@
 
   <!-- NuGet properties -->
   <PropertyGroup>
-    <PackageDescription>
-      <![CDATA[Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
-
-This package provides telemetry for the platform.]]>
-    </PackageDescription>
+    <PackageDescriptionDetail>This package provides telemetry for the platform.</PackageDescriptionDetail>
   </PropertyGroup>
 
   <ItemGroup>
