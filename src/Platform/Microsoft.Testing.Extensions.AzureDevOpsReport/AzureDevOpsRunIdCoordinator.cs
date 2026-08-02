@@ -189,7 +189,10 @@ internal sealed class AzureDevOpsRunIdCoordinator
                 TimeSpan timeout = hardDeadlineExpired
                     ? _options.CoordinationFinalizeMaxWaitTime
                     : _options.CoordinationFinalizeTimeout;
-                _logger.LogWarning(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingFinalizeWaitTimedOut, timeout, participantFiles.Length));
+                // Best-effort: this is the recovery path, and letting a failing log provider escape here
+                // would skip finalizeRunAsync below and leave the run "InProgress" - the exact outcome the
+                // warning is reporting on.
+                TryLogWarning(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingFinalizeWaitTimedOut, timeout, participantFiles.Length));
                 break;
             }
 

@@ -1792,6 +1792,43 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.AreEqual(980, run.RunId);
     }
 
+    [TestMethod]
+    public async Task RunIdCoordinator_FinalizeRunAsync_TimeoutWarningThrows_StillClosesTheRun()
+    {
+        // The drain timeout warning sits directly in front of the call that completes the run. A log
+        // provider throwing there would skip it and leave the run "InProgress", which is exactly what the
+        // warning is reporting on.
+        using TestDirectory directory = CreateTestDirectory();
+        FakeClock clock = new() { UtcNow = new DateTimeOffset(2025, 1, 1, 12, 0, 0, TimeSpan.Zero) };
+        CollectingLogger logger = new();
+        FakeTask task = new(timeSpan => clock.UtcNow += timeSpan);
+        AzureDevOpsTestResultsPublisherOptions options = new(10, TimeSpan.FromSeconds(5), 5, TimeSpan.FromMilliseconds(10), TimeSpan.FromMilliseconds(30), TimeSpan.FromHours(4));
+        int aliveProcessId = GetAliveProcessId();
+        AzureDevOpsRunIdCoordinator coordinator = new(new SystemFileSystem(), task, clock, CreateEnvironmentMock(processId: aliveProcessId).Object, logger, options);
+
+        string ownerFilePath = Path.Combine(directory.Path, "azdo-runid.123.owner");
+        string runIdFilePath = Path.Combine(directory.Path, "azdo-runid.123.json");
+        string participantFilePath = Path.Combine(directory.Path, $"azdo-runid.123.participant.{aliveProcessId}.json");
+        File.WriteAllText(ownerFilePath, JsonSerializer.Serialize(new AzureDevOpsLeaseFile(aliveProcessId, 123, clock.UtcNow.AddHours(1))));
+        File.WriteAllText(runIdFilePath, JsonSerializer.Serialize(new AzureDevOpsRunIdFile(5, 123, "https://dev.azure.com/org/", "project", clock.UtcNow.AddHours(1))));
+
+        // A participant that cannot be vouched for, so the short grace period lapses and the warning fires.
+        File.WriteAllText(Path.Combine(directory.Path, $"azdo-runid.123.participant.{int.MaxValue - 1}.json"), "not-json");
+        logger.ThrowOnLog = true;
+
+        int finalizeCalls = 0;
+        await coordinator.FinalizeRunAsync(
+            new AzureDevOpsCoordinatedRun(5, true, 123, directory.Path, runIdFilePath, ownerFilePath, participantFilePath),
+            _ =>
+            {
+                finalizeCalls++;
+                return Task.CompletedTask;
+            },
+            CancellationToken.None);
+
+        Assert.AreEqual(1, finalizeCalls);
+    }
+
     #endregion
 
     private static AzureDevOpsTestRunOrchestratorLifetime CreateOrchestratorLifetime(
