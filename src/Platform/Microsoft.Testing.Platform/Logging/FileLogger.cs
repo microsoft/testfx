@@ -196,6 +196,11 @@ internal sealed class FileLogger : IDisposable
         // unique log file' hides the actual cause, which is what made the original CI failures undiagnosable. So we
         // surface the last failure both in the message and as the inner exception. The exception type matches the one
         // a single failed attempt would have thrown, so a caller can tolerate the whole operation with one filter.
+        //
+        // Only the last failure is reported, deliberately: the attempts differ solely by file name, so they share a
+        // root cause, and aggregating them would repeat it once per attempt, each with its own stack trace and a
+        // message that often embeds the differing path (so they would not reliably collapse) - precisely the wall of
+        // noise this method exists to replace, in the truncated CI log where it is read.
         ApplicationStateGuard.Ensure(lastFailure is not null);
         throw new IOException(
             string.Format(
