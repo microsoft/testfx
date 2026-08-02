@@ -272,4 +272,32 @@ public sealed class PreferTestMethodOverDataTestMethodAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
+
+    [TestMethod]
+    public async Task WhenMethodUsesCustomAttributeInheritingDataTestMethod_NoDiagnosticOnMethod()
+    {
+        // AnalyzeMethod uses SymbolEqualityComparer.Default.Equals (strict equality, not Inherits).
+        // A method decorated with a custom attribute that indirectly derives from DataTestMethodAttribute
+        // is NOT flagged by the method-level check. Only the class declaration itself is flagged
+        // by AnalyzeNamedType (direct inheritance check), and that fires on the attribute class
+        // declaration, not on the test method that uses it.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            internal class [|MyDataTestMethodAttribute|] : DataTestMethodAttribute
+            {
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [MyDataTestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
 }
