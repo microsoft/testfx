@@ -19,7 +19,7 @@
       </trans-unit>
       <trans-unit id="TrxAttachmentCopyFailed">
         <source>Unable to copy attachment '{0}' into the TRX results directory. The attachment will be skipped. Reason: {1}.</source>
-        <target state="new">Unable to copy attachment '{0}' into the TRX results directory. The attachment will be skipped. Reason: {1}.</target>
+        <target state="translated">无法将附件“{0}”复制到 TRX 结果目录。将跳过该附件。原因: {1}。</target>
         <note>{0} is the full path of the attachment that could not be copied. {1} is the name of the exception type that was thrown, e.g. 'UnauthorizedAccessException'. {Locked="TRX"}</note>
       </trans-unit>
       <trans-unit id="TrxComparerToolBaselineFileOptionDescription">

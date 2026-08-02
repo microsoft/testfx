@@ -342,57 +342,57 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidDescription">
         <source>A '[DependsOn]' attribute references a test by name. A reference that matches no test is deliberately non-fatal at run time, so that running a subset of the suite stays possible, which means a typo or a rename silently drops the declared ordering. This analyzer reports the problems that can be decided at build time: a method that does not exist on the referenced type, a target that is not a test, a test that depends on itself, a dependency cycle visible in the compilation, a reference to a type from another assembly (dependencies are resolved within a single test source), and an attribute applied where it has no effect.</source>
-        <target state="new">A '[DependsOn]' attribute references a test by name. A reference that matches no test is deliberately non-fatal at run time, so that running a subset of the suite stays possible, which means a typo or a rename silently drops the declared ordering. This analyzer reports the problems that can be decided at build time: a method that does not exist on the referenced type, a target that is not a test, a test that depends on itself, a dependency cycle visible in the compilation, a reference to a type from another assembly (dependencies are resolved within a single test source), and an attribute applied where it has no effect.</target>
+        <target state="translated">Atribut „[DependsOn]“ odkazuje na test podle názvu. Odkaz, který neodpovídá žádnému testu, není za běhu záměrně kritický, takže je možné spustit podmnožinu sady, což znamená, že překlep nebo přejmenování tiše odstraní deklarované pořadí. Tento analyzátor hlásí problémy, které lze rozhodnout při sestavování: metodu, která na odkazovaném typu neexistuje, cíl, který není test, test, který závisí sám na sobě, cyklus závislostí viditelný v kompilaci, odkaz na typ z jiného sestavení (závislosti se řeší v rámci jednoho zdroje testů) a atribut použitý tam, kde nemá žádný účinek.</target>
         <note>{Locked="[DependsOn]"}</note>
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidMessageFormat_AbstractTarget">
         <source>'[DependsOn]' references abstract type '{0}'; its tests run under each derived test class rather than under '{0}', so the dependency is ignored at run time</source>
-        <target state="new">'[DependsOn]' references abstract type '{0}'; its tests run under each derived test class rather than under '{0}', so the dependency is ignored at run time</target>
+        <target state="translated">„[DependsOn]“ odkazuje na abstraktní typ „{0}“; jeho testy se spouštějí pod každou odvozenou testovací třídou, nikoli pod „{0}“, takže se závislost za běhu ignoruje</target>
         <note>{0} is the referenced type name. {Locked="[DependsOn]"}</note>
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidMessageFormat_Cycle">
         <source>'[DependsOn]' declares the dependency cycle '{0}', which fails every test in the cycle at run time</source>
-        <target state="new">'[DependsOn]' declares the dependency cycle '{0}', which fails every test in the cycle at run time</target>
+        <target state="translated">[DependsOn] deklaruje cyklus závislostí {0}, který selže při každém testu v cyklu za běhu</target>
         <note>{0} is the cycle path, for example 'MyTests.A &gt; MyTests.B &gt; MyTests.A'. {Locked="[DependsOn]"}</note>
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidMessageFormat_MethodNotFound">
         <source>'[DependsOn]' references method '{1}', which does not exist on type '{0}'</source>
-        <target state="new">'[DependsOn]' references method '{1}', which does not exist on type '{0}'</target>
+        <target state="translated">[DependsOn] odkazuje na metodu „{1}“, která v typu {0} neexistuje</target>
         <note>{0} is the referenced type name. {1} is the referenced method name. {Locked="[DependsOn]"}</note>
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidMessageFormat_NoEffect">
         <source>'[DependsOn]' has no effect because '{0}' is not a test method</source>
-        <target state="new">'[DependsOn]' has no effect because '{0}' is not a test method</target>
+        <target state="translated">[DependsOn] nemá žádný účinek, protože {0} není testovací metoda</target>
         <note>{0} is the name of the method the attribute is applied to. {Locked="[DependsOn]"}</note>
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidMessageFormat_NoEffectOnClass">
         <source>'[DependsOn]' has no effect because discovery runs no test under '{0}'</source>
-        <target state="new">'[DependsOn]' has no effect because discovery runs no test under '{0}'</target>
+        <target state="translated">[DependsOn] nemá žádný účinek, protože zjišťování nespouští žádný test v rámci {0}</target>
         <note>{0} is the name of the class the attribute is applied to. {Locked="[DependsOn]"}</note>
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidMessageFormat_NotATestClass">
         <source>'[DependsOn]' references type '{0}', which is not a test class, so the dependency is ignored at run time</source>
-        <target state="new">'[DependsOn]' references type '{0}', which is not a test class, so the dependency is ignored at run time</target>
+        <target state="translated">[DependsOn] odkazuje na typ {0}, který není testovací třídou, takže závislost se za běhu ignoruje</target>
         <note>{0} is the referenced type name. {Locked="[DependsOn]"}</note>
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidMessageFormat_NotATestMethod">
         <source>'[DependsOn]' references '{0}.{1}', which is not a test method, so the dependency is ignored at run time</source>
-        <target state="new">'[DependsOn]' references '{0}.{1}', which is not a test method, so the dependency is ignored at run time</target>
+        <target state="translated">[DependsOn] odkazuje na {0}{1}, což není testovací metoda, takže závislost se za běhu ignoruje</target>
         <note>{0} is the referenced type name. {1} is the referenced method name. {Locked="[DependsOn]"}</note>
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidMessageFormat_OtherAssembly">
         <source>'[DependsOn]' references type '{0}' from another assembly; dependencies are resolved within a single test source, so the dependency is ignored at run time</source>
-        <target state="new">'[DependsOn]' references type '{0}' from another assembly; dependencies are resolved within a single test source, so the dependency is ignored at run time</target>
+        <target state="translated">[DependsOn] odkazuje na typ {0} z jiného sestavení; závislosti jsou vyřešeny v rámci jednoho zdroje testu, takže závislost se za běhu ignoruje</target>
         <note>{0} is the referenced type name. {Locked="[DependsOn]"}</note>
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidMessageFormat_SelfReference">
         <source>'[DependsOn]' makes '{0}' depend on itself, which is a dependency cycle and fails the test at run time</source>
-        <target state="new">'[DependsOn]' makes '{0}' depend on itself, which is a dependency cycle and fails the test at run time</target>
+        <target state="translated">[DependsOn] způsobí, že {0} závisí na sobě, což je cyklus závislosti a selže test za běhu</target>
         <note>{0} is the test method name. {Locked="[DependsOn]"}</note>
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidTitle">
         <source>'[DependsOn]' arguments should be valid</source>
-        <target state="new">'[DependsOn]' arguments should be valid</target>
+        <target state="translated">Argumenty [DependsOn] by měly být platné</target>
         <note>{Locked="[DependsOn]"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidDescription">
@@ -907,42 +907,42 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="TestFilterProviderShouldBeValidDescription">
         <source>'[assembly: TestFilterProvider(typeof(MyFilter))]' passes the filter type as a 'Type', so the compiler accepts any type at all. The adapter validates it only when it materializes the filter, and then fails the whole run. The referenced type must be non-generic and instantiable, implement 'ITestFilter' and expose a public parameterless constructor, and at most one provider may be registered per test assembly. When targeting .NET, the generic '[assembly: TestFilterProvider&lt;MyFilter&gt;]' form enforces the interface and constructor requirements through generic constraints instead.</source>
-        <target state="new">'[assembly: TestFilterProvider(typeof(MyFilter))]' passes the filter type as a 'Type', so the compiler accepts any type at all. The adapter validates it only when it materializes the filter, and then fails the whole run. The referenced type must be non-generic and instantiable, implement 'ITestFilter' and expose a public parameterless constructor, and at most one provider may be registered per test assembly. When targeting .NET, the generic '[assembly: TestFilterProvider&lt;MyFilter&gt;]' form enforces the interface and constructor requirements through generic constraints instead.</target>
+        <target state="translated">„[assembly: TestFilterProvider(typeof(MyFilter))]“ předává typ filtru jako „Type“, takže kompilátor přijímá libovolný typ. Adaptér ho ověří jenom v případě, že materializuje filtr, a pak selže celé spuštění. Odkazovaný typ musí být negenerický a instanciovatelný, musí implementovat „ITestFilter“ a musí zveřejňovat veřejný konstruktor bez parametrů a pro jedno testovací sestavení lze zaregistrovat nejvýše jednoho poskytovatele. Při cílení na .NET obecný formulář [assembly: TestFilterProvider&lt;MyFilter&gt;] vynucuje požadavky na rozhraní a konstruktor prostřednictvím obecných omezení.</target>
         <note>{Locked="[assembly: TestFilterProvider(typeof(MyFilter))]"}{Locked="[assembly: TestFilterProvider&lt;MyFilter&gt;]"}{Locked="Type"}{Locked="ITestFilter"}</note>
       </trans-unit>
       <trans-unit id="TestFilterProviderShouldBeValidMessageFormat_Generic">
         <source>'[TestFilterProvider]' references generic type '{0}'; the test filter type must not be generic</source>
-        <target state="new">'[TestFilterProvider]' references generic type '{0}'; the test filter type must not be generic</target>
+        <target state="translated">[TestFilterProvider] odkazuje na obecný typ {0}. Typ filtru testu nesmí být obecný</target>
         <note>{0} is the referenced type name. {Locked="[TestFilterProvider]"}</note>
       </trans-unit>
       <trans-unit id="TestFilterProviderShouldBeValidMessageFormat_Multiple">
         <source>The assembly registers more than one '[TestFilterProvider]'; at most one is allowed per test assembly, so compose the filtering strategies inside a single 'ITestFilter' implementation</source>
-        <target state="new">The assembly registers more than one '[TestFilterProvider]'; at most one is allowed per test assembly, so compose the filtering strategies inside a single 'ITestFilter' implementation</target>
+        <target state="translated">Sestavení registruje více než jednou položku „[TestFilterProvider]“; na jedno testovací sestavení je povolena nejvýše jedna, proto složte strategie filtrování do jedné implementace rozhraní „ITestFilter“</target>
         <note>{Locked="[TestFilterProvider]"}{Locked="ITestFilter"}</note>
       </trans-unit>
       <trans-unit id="TestFilterProviderShouldBeValidMessageFormat_NoParameterlessConstructor">
         <source>'[TestFilterProvider]' references type '{0}', which does not declare a public parameterless constructor</source>
-        <target state="new">'[TestFilterProvider]' references type '{0}', which does not declare a public parameterless constructor</target>
+        <target state="translated">[TestFilterProvider] odkazuje na typ {0}, který nedeklaruje veřejný konstruktor bez parametrů</target>
         <note>{0} is the referenced type name. {Locked="[TestFilterProvider]"}</note>
       </trans-unit>
       <trans-unit id="TestFilterProviderShouldBeValidMessageFormat_NotATestFilter">
         <source>'[TestFilterProvider]' references type '{0}', which does not implement 'ITestFilter'</source>
-        <target state="new">'[TestFilterProvider]' references type '{0}', which does not implement 'ITestFilter'</target>
+        <target state="translated">[TestFilterProvider] odkazuje na typ {0}, který neimplementuje ITestFilter</target>
         <note>{0} is the referenced type name. {Locked="[TestFilterProvider]"}{Locked="ITestFilter"}</note>
       </trans-unit>
       <trans-unit id="TestFilterProviderShouldBeValidMessageFormat_NotInstantiable">
         <source>'[TestFilterProvider]' references type '{0}', which cannot be instantiated</source>
-        <target state="new">'[TestFilterProvider]' references type '{0}', which cannot be instantiated</target>
+        <target state="translated">[TestFilterProvider] odkazuje na typ {0}, jehož instanci nelze vytvořit</target>
         <note>{0} is the referenced type name. {Locked="[TestFilterProvider]"}</note>
       </trans-unit>
       <trans-unit id="TestFilterProviderShouldBeValidMessageFormat_Null">
         <source>'[TestFilterProvider]' is given a null filter type; pass the 'ITestFilter' implementation to run, for example 'typeof(MyFilter)'</source>
-        <target state="new">'[TestFilterProvider]' is given a null filter type; pass the 'ITestFilter' implementation to run, for example 'typeof(MyFilter)'</target>
+        <target state="translated">[TestFilterProvider] má typ filtru s hodnotou null. předejte implementaci ITestFilter, která se má spustit, například typeof(MyFilter)</target>
         <note>{Locked="[TestFilterProvider]"}{Locked="ITestFilter"}{Locked="typeof(MyFilter)"}</note>
       </trans-unit>
       <trans-unit id="TestFilterProviderShouldBeValidTitle">
         <source>'[TestFilterProvider]' should reference a valid test filter type</source>
-        <target state="new">'[TestFilterProvider]' should reference a valid test filter type</target>
+        <target state="translated">[TestFilterProvider] by měl odkazovat na platný typ testovacího filtru</target>
         <note>{Locked="[TestFilterProvider]"}</note>
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationMessageFormat">
@@ -987,32 +987,32 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="UseArchitectureConditionAttributeInsteadOfRuntimeCheckDescription">
         <source>Test methods that compare 'RuntimeInformation.ProcessArchitecture' and then early return or call 'Assert.Inconclusive' should use the '[ArchitectureCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify architecture-specific test requirements, and it reports the test as skipped rather than passed, which an early return does not.</source>
-        <target state="new">Test methods that compare 'RuntimeInformation.ProcessArchitecture' and then early return or call 'Assert.Inconclusive' should use the '[ArchitectureCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify architecture-specific test requirements, and it reports the test as skipped rather than passed, which an early return does not.</target>
+        <target state="translated">Testovací metody, které porovnávají RuntimeInformation.ProcessArchitecture a pak přednostně vrací nebo volají Assert.Inconclusive, by místo toho měly používat atribut [ArchitectureCondition]. Tento atribut poskytuje deklarativnější a lépe dohledatelný způsob, jak zadat požadavky testu pro konkrétní architekturu, a hlásí test jako přeskočený, nikoli jako úspěšný, což předčasný návrat nedělá.</target>
         <note>{Locked="RuntimeInformation.ProcessArchitecture"}{Locked="Assert.Inconclusive"}{Locked="[ArchitectureCondition]"}</note>
       </trans-unit>
       <trans-unit id="UseArchitectureConditionAttributeInsteadOfRuntimeCheckMessageFormat">
         <source>Use '[ArchitectureCondition]' attribute instead of 'RuntimeInformation.ProcessArchitecture' checks with early return or 'Assert.Inconclusive'</source>
-        <target state="new">Use '[ArchitectureCondition]' attribute instead of 'RuntimeInformation.ProcessArchitecture' checks with early return or 'Assert.Inconclusive'</target>
+        <target state="translated">Místo kontrol nad hodnotou „RuntimeInformation.ProcessArchitecture“ použijte atribut „[ArchitectureCondition]“ s časným vrácením nebo „Assert.Inconclusive"</target>
         <note>{Locked="RuntimeInformation.ProcessArchitecture"}{Locked="Assert.Inconclusive"}{Locked="[ArchitectureCondition]"}</note>
       </trans-unit>
       <trans-unit id="UseArchitectureConditionAttributeInsteadOfRuntimeCheckTitle">
         <source>Use '[ArchitectureCondition]' attribute instead of 'RuntimeInformation.ProcessArchitecture' checks with early return or 'Assert.Inconclusive'</source>
-        <target state="new">Use '[ArchitectureCondition]' attribute instead of 'RuntimeInformation.ProcessArchitecture' checks with early return or 'Assert.Inconclusive'</target>
+        <target state="translated">Místo kontrol nad hodnotou „RuntimeInformation.ProcessArchitecture“ použijte atribut „[ArchitectureCondition]“ s časným vrácením nebo „Assert.Inconclusive"</target>
         <note>{Locked="RuntimeInformation.ProcessArchitecture"}{Locked="Assert.Inconclusive"}{Locked="[ArchitectureCondition]"}</note>
       </trans-unit>
       <trans-unit id="UseCIConditionAttributeInsteadOfEnvironmentCheckDescription">
         <source>Test methods that null-check the 'CI' environment variable and then early return or call 'Assert.Inconclusive' should use the '[CICondition]' attribute instead. This attribute recognizes all the continuous integration providers MSTest knows about and parses their values, and it reports the test as skipped rather than passed, which an early return does not.</source>
-        <target state="new">Test methods that null-check the 'CI' environment variable and then early return or call 'Assert.Inconclusive' should use the '[CICondition]' attribute instead. This attribute recognizes all the continuous integration providers MSTest knows about and parses their values, and it reports the test as skipped rather than passed, which an early return does not.</target>
+        <target state="translated">Testovací metody, které kontrolují, zda je proměnná prostředí „CI“ rovna null, a pak vracejí hodnotu nebo volají „Assert.Inconclusive“, by místo toho měly používat atribut „[CICondition]“. Tento atribut rozpoznává všechny poskytovatele průběžné integrace, které MSTest zná, a parsuje jejich hodnoty, a hlásí test jako přeskočený, nikoli jako úspěšný, což předčasný návrat nedělá.</target>
         <note>{Locked="CI"}{Locked="Assert.Inconclusive"}{Locked="[CICondition]"}</note>
       </trans-unit>
       <trans-unit id="UseCIConditionAttributeInsteadOfEnvironmentCheckMessageFormat">
         <source>Use '[CICondition]' attribute instead of 'Environment.GetEnvironmentVariable' checks with early return or 'Assert.Inconclusive'</source>
-        <target state="new">Use '[CICondition]' attribute instead of 'Environment.GetEnvironmentVariable' checks with early return or 'Assert.Inconclusive'</target>
+        <target state="translated">Místo kontrol nad hodnotou „Environment.GetEnvironmentVariable“ použijte atribut „[CICondition]“ s časným vrácením nebo „Assert.Inconclusive“</target>
         <note>{Locked="Environment.GetEnvironmentVariable"}{Locked="Assert.Inconclusive"}{Locked="[CICondition]"}</note>
       </trans-unit>
       <trans-unit id="UseCIConditionAttributeInsteadOfEnvironmentCheckTitle">
         <source>Use '[CICondition]' attribute instead of 'Environment.GetEnvironmentVariable' checks with early return or 'Assert.Inconclusive'</source>
-        <target state="new">Use '[CICondition]' attribute instead of 'Environment.GetEnvironmentVariable' checks with early return or 'Assert.Inconclusive'</target>
+        <target state="translated">Místo kontrol nad hodnotou „Environment.GetEnvironmentVariable“ použijte atribut „[CICondition]“ s časným vrácením nebo „Assert.Inconclusive“</target>
         <note>{Locked="Environment.GetEnvironmentVariable"}{Locked="Assert.Inconclusive"}{Locked="[CICondition]"}</note>
       </trans-unit>
       <trans-unit id="UseCancellationTokenPropertyDescription">

@@ -342,57 +342,57 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidDescription">
         <source>A '[DependsOn]' attribute references a test by name. A reference that matches no test is deliberately non-fatal at run time, so that running a subset of the suite stays possible, which means a typo or a rename silently drops the declared ordering. This analyzer reports the problems that can be decided at build time: a method that does not exist on the referenced type, a target that is not a test, a test that depends on itself, a dependency cycle visible in the compilation, a reference to a type from another assembly (dependencies are resolved within a single test source), and an attribute applied where it has no effect.</source>
-        <target state="new">A '[DependsOn]' attribute references a test by name. A reference that matches no test is deliberately non-fatal at run time, so that running a subset of the suite stays possible, which means a typo or a rename silently drops the declared ordering. This analyzer reports the problems that can be decided at build time: a method that does not exist on the referenced type, a target that is not a test, a test that depends on itself, a dependency cycle visible in the compilation, a reference to a type from another assembly (dependencies are resolved within a single test source), and an attribute applied where it has no effect.</target>
+        <target state="translated">'[DependsOn]' 특성은 이름으로 테스트를 참조합니다. 테스트와 일치하지 않는 참조는 런타임에서 의도적으로 치명적이지 않으므로, 테스트 모음의 일부만 실행해도 됩니다. 그 대신 오타나 이름 변경이 선언된 순서를 조용히 없앨 수 있습니다. 이 분석기는 빌드 시점에 판단할 수 있는 문제를 보고합니다. 여기에는 참조된 형식에 없는 메서드, 테스트가 아닌 대상, 자기 자신에 종속된 테스트, 컴파일에서 확인할 수 있는 종속성 순환, 다른 어셈블리의 형식에 대한 참조(종속성은 단일 테스트 소스 내에서 해결됨), 그리고 효과가 없는 위치에 적용된 특성이 포함됩니다.</target>
         <note>{Locked="[DependsOn]"}</note>
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidMessageFormat_AbstractTarget">
         <source>'[DependsOn]' references abstract type '{0}'; its tests run under each derived test class rather than under '{0}', so the dependency is ignored at run time</source>
-        <target state="new">'[DependsOn]' references abstract type '{0}'; its tests run under each derived test class rather than under '{0}', so the dependency is ignored at run time</target>
+        <target state="translated">'[DependsOn]'은 추상 형식 '{0}'을(를) 참조합니다. 해당 테스트는 '{0}' 아래가 아니라 각 파생 테스트 클래스에서 실행되므로 런타임에 종속성이 무시됩니다.</target>
         <note>{0} is the referenced type name. {Locked="[DependsOn]"}</note>
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidMessageFormat_Cycle">
         <source>'[DependsOn]' declares the dependency cycle '{0}', which fails every test in the cycle at run time</source>
-        <target state="new">'[DependsOn]' declares the dependency cycle '{0}', which fails every test in the cycle at run time</target>
+        <target state="translated">'[DependsOn]'은 종속성 순환 '{0}'을(를) 선언합니다. 이 순환에 있는 모든 테스트는 런타임에 실패합니다.</target>
         <note>{0} is the cycle path, for example 'MyTests.A &gt; MyTests.B &gt; MyTests.A'. {Locked="[DependsOn]"}</note>
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidMessageFormat_MethodNotFound">
         <source>'[DependsOn]' references method '{1}', which does not exist on type '{0}'</source>
-        <target state="new">'[DependsOn]' references method '{1}', which does not exist on type '{0}'</target>
+        <target state="translated">'[DependsOn]'은 형식 '{1}'에 없는 메서드 '{0}'을(를) 참조합니다.</target>
         <note>{0} is the referenced type name. {1} is the referenced method name. {Locked="[DependsOn]"}</note>
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidMessageFormat_NoEffect">
         <source>'[DependsOn]' has no effect because '{0}' is not a test method</source>
-        <target state="new">'[DependsOn]' has no effect because '{0}' is not a test method</target>
+        <target state="translated">'{0}'이(가) 테스트 메서드가 아니므로 '[DependsOn]'은 효과가 없습니다.</target>
         <note>{0} is the name of the method the attribute is applied to. {Locked="[DependsOn]"}</note>
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidMessageFormat_NoEffectOnClass">
         <source>'[DependsOn]' has no effect because discovery runs no test under '{0}'</source>
-        <target state="new">'[DependsOn]' has no effect because discovery runs no test under '{0}'</target>
+        <target state="translated">검색에서 '{0}' 아래의 테스트를 실행하지 않으므로 '[DependsOn]'은 효과가 없습니다.</target>
         <note>{0} is the name of the class the attribute is applied to. {Locked="[DependsOn]"}</note>
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidMessageFormat_NotATestClass">
         <source>'[DependsOn]' references type '{0}', which is not a test class, so the dependency is ignored at run time</source>
-        <target state="new">'[DependsOn]' references type '{0}', which is not a test class, so the dependency is ignored at run time</target>
+        <target state="translated">'[DependsOn]'은 테스트 클래스가 아닌 형식 '{0}'을(를) 참조하므로 런타임에 종속성이 무시됩니다.</target>
         <note>{0} is the referenced type name. {Locked="[DependsOn]"}</note>
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidMessageFormat_NotATestMethod">
         <source>'[DependsOn]' references '{0}.{1}', which is not a test method, so the dependency is ignored at run time</source>
-        <target state="new">'[DependsOn]' references '{0}.{1}', which is not a test method, so the dependency is ignored at run time</target>
+        <target state="translated">'[DependsOn]'은 테스트 메서드가 아닌 '{0}.{1}'을(를) 참조하므로 런타임에 종속성이 무시됩니다.</target>
         <note>{0} is the referenced type name. {1} is the referenced method name. {Locked="[DependsOn]"}</note>
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidMessageFormat_OtherAssembly">
         <source>'[DependsOn]' references type '{0}' from another assembly; dependencies are resolved within a single test source, so the dependency is ignored at run time</source>
-        <target state="new">'[DependsOn]' references type '{0}' from another assembly; dependencies are resolved within a single test source, so the dependency is ignored at run time</target>
+        <target state="translated">'[DependsOn]'은 다른 어셈블리의 형식 '{0}'을(를) 참조합니다. 종속성은 단일 테스트 소스 내에서 해결되므로 런타임에 종속성이 무시됩니다.</target>
         <note>{0} is the referenced type name. {Locked="[DependsOn]"}</note>
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidMessageFormat_SelfReference">
         <source>'[DependsOn]' makes '{0}' depend on itself, which is a dependency cycle and fails the test at run time</source>
-        <target state="new">'[DependsOn]' makes '{0}' depend on itself, which is a dependency cycle and fails the test at run time</target>
+        <target state="translated">'[DependsOn]'은 '{0}'이(가) 자기 자신에 종속되도록 지정합니다. 이는 종속성 순환이며 런타임에 테스트가 실패합니다.</target>
         <note>{0} is the test method name. {Locked="[DependsOn]"}</note>
       </trans-unit>
       <trans-unit id="DependsOnShouldBeValidTitle">
         <source>'[DependsOn]' arguments should be valid</source>
-        <target state="new">'[DependsOn]' arguments should be valid</target>
+        <target state="translated">'[DependsOn]' 인수는 올바른 값이어야 합니다.</target>
         <note>{Locked="[DependsOn]"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidDescription">
@@ -907,42 +907,42 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="TestFilterProviderShouldBeValidDescription">
         <source>'[assembly: TestFilterProvider(typeof(MyFilter))]' passes the filter type as a 'Type', so the compiler accepts any type at all. The adapter validates it only when it materializes the filter, and then fails the whole run. The referenced type must be non-generic and instantiable, implement 'ITestFilter' and expose a public parameterless constructor, and at most one provider may be registered per test assembly. When targeting .NET, the generic '[assembly: TestFilterProvider&lt;MyFilter&gt;]' form enforces the interface and constructor requirements through generic constraints instead.</source>
-        <target state="new">'[assembly: TestFilterProvider(typeof(MyFilter))]' passes the filter type as a 'Type', so the compiler accepts any type at all. The adapter validates it only when it materializes the filter, and then fails the whole run. The referenced type must be non-generic and instantiable, implement 'ITestFilter' and expose a public parameterless constructor, and at most one provider may be registered per test assembly. When targeting .NET, the generic '[assembly: TestFilterProvider&lt;MyFilter&gt;]' form enforces the interface and constructor requirements through generic constraints instead.</target>
+        <target state="translated">'[assembly: TestFilterProvider(typeof(MyFilter))]'는 필터 형식을 'Type'으로 전달하므로 컴파일러는 어떤 형식이든 허용합니다. 어댑터는 필터를 인스턴스화할 때만 유효성을 검사하고, 그때 전체 실행이 실패합니다. 참조된 형식은 제네릭이 아니고 인스턴스화할 수 있어야 하며, 'ITestFilter'를 구현하고, 매개 변수가 없는 public 생성자를 노출해야 합니다. 또한 테스트 어셈블리당 공급자는 하나만 등록할 수 있습니다. .NET을 대상으로 하는 경우에는 제네릭 '[assembly: TestFilterProvider&lt;MyFilter&gt;]' 형식이 대신 제네릭 제약 조건으로 인터페이스와 생성자 요구 사항을 강제합니다.</target>
         <note>{Locked="[assembly: TestFilterProvider(typeof(MyFilter))]"}{Locked="[assembly: TestFilterProvider&lt;MyFilter&gt;]"}{Locked="Type"}{Locked="ITestFilter"}</note>
       </trans-unit>
       <trans-unit id="TestFilterProviderShouldBeValidMessageFormat_Generic">
         <source>'[TestFilterProvider]' references generic type '{0}'; the test filter type must not be generic</source>
-        <target state="new">'[TestFilterProvider]' references generic type '{0}'; the test filter type must not be generic</target>
+        <target state="translated">'[TestFilterProvider]'는 제네릭 형식 '{0}'을(를) 참조합니다. 테스트 필터 형식은 제네릭이면 안 됩니다.</target>
         <note>{0} is the referenced type name. {Locked="[TestFilterProvider]"}</note>
       </trans-unit>
       <trans-unit id="TestFilterProviderShouldBeValidMessageFormat_Multiple">
         <source>The assembly registers more than one '[TestFilterProvider]'; at most one is allowed per test assembly, so compose the filtering strategies inside a single 'ITestFilter' implementation</source>
-        <target state="new">The assembly registers more than one '[TestFilterProvider]'; at most one is allowed per test assembly, so compose the filtering strategies inside a single 'ITestFilter' implementation</target>
+        <target state="translated">어셈블리에 '[TestFilterProvider]'가 둘 이상 등록되어 있습니다. 테스트 어셈블리당 하나만 허용되므로 단일 'ITestFilter' 구현 안에 필터링 전략을 구성하세요.</target>
         <note>{Locked="[TestFilterProvider]"}{Locked="ITestFilter"}</note>
       </trans-unit>
       <trans-unit id="TestFilterProviderShouldBeValidMessageFormat_NoParameterlessConstructor">
         <source>'[TestFilterProvider]' references type '{0}', which does not declare a public parameterless constructor</source>
-        <target state="new">'[TestFilterProvider]' references type '{0}', which does not declare a public parameterless constructor</target>
+        <target state="translated">'[TestFilterProvider]'는 public 매개 변수가 없는 생성자를 선언하지 않는 형식 '{0}'을(를) 참조합니다.</target>
         <note>{0} is the referenced type name. {Locked="[TestFilterProvider]"}</note>
       </trans-unit>
       <trans-unit id="TestFilterProviderShouldBeValidMessageFormat_NotATestFilter">
         <source>'[TestFilterProvider]' references type '{0}', which does not implement 'ITestFilter'</source>
-        <target state="new">'[TestFilterProvider]' references type '{0}', which does not implement 'ITestFilter'</target>
+        <target state="translated">'[TestFilterProvider]'는 'ITestFilter'를 구현하지 않는 형식 '{0}'을(를) 참조합니다.</target>
         <note>{0} is the referenced type name. {Locked="[TestFilterProvider]"}{Locked="ITestFilter"}</note>
       </trans-unit>
       <trans-unit id="TestFilterProviderShouldBeValidMessageFormat_NotInstantiable">
         <source>'[TestFilterProvider]' references type '{0}', which cannot be instantiated</source>
-        <target state="new">'[TestFilterProvider]' references type '{0}', which cannot be instantiated</target>
+        <target state="translated">'[TestFilterProvider]'는 인스턴스화할 수 없는 형식 '{0}'을(를) 참조합니다.</target>
         <note>{0} is the referenced type name. {Locked="[TestFilterProvider]"}</note>
       </trans-unit>
       <trans-unit id="TestFilterProviderShouldBeValidMessageFormat_Null">
         <source>'[TestFilterProvider]' is given a null filter type; pass the 'ITestFilter' implementation to run, for example 'typeof(MyFilter)'</source>
-        <target state="new">'[TestFilterProvider]' is given a null filter type; pass the 'ITestFilter' implementation to run, for example 'typeof(MyFilter)'</target>
+        <target state="translated">'[TestFilterProvider]'에 null 필터 형식이 지정되었습니다. 실행할 'ITestFilter' 구현을 전달하세요. 예를 들어 'typeof(MyFilter)'를 사용할 수 있습니다.</target>
         <note>{Locked="[TestFilterProvider]"}{Locked="ITestFilter"}{Locked="typeof(MyFilter)"}</note>
       </trans-unit>
       <trans-unit id="TestFilterProviderShouldBeValidTitle">
         <source>'[TestFilterProvider]' should reference a valid test filter type</source>
-        <target state="new">'[TestFilterProvider]' should reference a valid test filter type</target>
+        <target state="translated">'[TestFilterProvider]'는 올바른 테스트 필터 형식을 참조해야 합니다.</target>
         <note>{Locked="[TestFilterProvider]"}</note>
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationMessageFormat">
@@ -987,32 +987,32 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="UseArchitectureConditionAttributeInsteadOfRuntimeCheckDescription">
         <source>Test methods that compare 'RuntimeInformation.ProcessArchitecture' and then early return or call 'Assert.Inconclusive' should use the '[ArchitectureCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify architecture-specific test requirements, and it reports the test as skipped rather than passed, which an early return does not.</source>
-        <target state="new">Test methods that compare 'RuntimeInformation.ProcessArchitecture' and then early return or call 'Assert.Inconclusive' should use the '[ArchitectureCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify architecture-specific test requirements, and it reports the test as skipped rather than passed, which an early return does not.</target>
+        <target state="translated">테스트 메서드에서 'RuntimeInformation.ProcessArchitecture'를 비교한 다음 조기에 반환하거나 'Assert.Inconclusive'를 호출한다면, 대신 '[ArchitectureCondition]' 특성을 사용하세요. 이 특성은 아키텍처별 테스트 요구 사항을 더 선언적이고 찾기 쉬운 방식으로 지정할 수 있게 해 줍니다. 또한 조기에 반환하는 경우와 달리 테스트를 통과로 표시하지 않고 건너뜀으로 보고합니다.</target>
         <note>{Locked="RuntimeInformation.ProcessArchitecture"}{Locked="Assert.Inconclusive"}{Locked="[ArchitectureCondition]"}</note>
       </trans-unit>
       <trans-unit id="UseArchitectureConditionAttributeInsteadOfRuntimeCheckMessageFormat">
         <source>Use '[ArchitectureCondition]' attribute instead of 'RuntimeInformation.ProcessArchitecture' checks with early return or 'Assert.Inconclusive'</source>
-        <target state="new">Use '[ArchitectureCondition]' attribute instead of 'RuntimeInformation.ProcessArchitecture' checks with early return or 'Assert.Inconclusive'</target>
+        <target state="translated">초기 반환 또는 'Assert.Inconclusive'를 사용하는 'RuntimeInformation.ProcessArchitecture' 검사 대신 '[ArchitectureCondition]' 특성을 사용합니다.</target>
         <note>{Locked="RuntimeInformation.ProcessArchitecture"}{Locked="Assert.Inconclusive"}{Locked="[ArchitectureCondition]"}</note>
       </trans-unit>
       <trans-unit id="UseArchitectureConditionAttributeInsteadOfRuntimeCheckTitle">
         <source>Use '[ArchitectureCondition]' attribute instead of 'RuntimeInformation.ProcessArchitecture' checks with early return or 'Assert.Inconclusive'</source>
-        <target state="new">Use '[ArchitectureCondition]' attribute instead of 'RuntimeInformation.ProcessArchitecture' checks with early return or 'Assert.Inconclusive'</target>
+        <target state="translated">초기 반환 또는 'Assert.Inconclusive'를 사용하는 'RuntimeInformation.ProcessArchitecture' 검사 대신 '[ArchitectureCondition]' 특성을 사용합니다.</target>
         <note>{Locked="RuntimeInformation.ProcessArchitecture"}{Locked="Assert.Inconclusive"}{Locked="[ArchitectureCondition]"}</note>
       </trans-unit>
       <trans-unit id="UseCIConditionAttributeInsteadOfEnvironmentCheckDescription">
         <source>Test methods that null-check the 'CI' environment variable and then early return or call 'Assert.Inconclusive' should use the '[CICondition]' attribute instead. This attribute recognizes all the continuous integration providers MSTest knows about and parses their values, and it reports the test as skipped rather than passed, which an early return does not.</source>
-        <target state="new">Test methods that null-check the 'CI' environment variable and then early return or call 'Assert.Inconclusive' should use the '[CICondition]' attribute instead. This attribute recognizes all the continuous integration providers MSTest knows about and parses their values, and it reports the test as skipped rather than passed, which an early return does not.</target>
+        <target state="translated">테스트 메서드에서 'CI' 환경 변수가 null인지 확인한 다음 조기에 반환하거나 'Assert.Inconclusive'를 호출한다면, 대신 '[CICondition]' 특성을 사용하세요. 이 특성은 MSTest가 알고 있는 모든 지속적 통합 공급자를 인식하고 해당 값을 구문 분석합니다. 또한 조기에 반환하는 경우와 달리 테스트를 통과로 표시하지 않고 건너뜀으로 보고합니다.</target>
         <note>{Locked="CI"}{Locked="Assert.Inconclusive"}{Locked="[CICondition]"}</note>
       </trans-unit>
       <trans-unit id="UseCIConditionAttributeInsteadOfEnvironmentCheckMessageFormat">
         <source>Use '[CICondition]' attribute instead of 'Environment.GetEnvironmentVariable' checks with early return or 'Assert.Inconclusive'</source>
-        <target state="new">Use '[CICondition]' attribute instead of 'Environment.GetEnvironmentVariable' checks with early return or 'Assert.Inconclusive'</target>
+        <target state="translated">초기 반환 또는 'Assert.Inconclusive'를 사용하는 'Environment.GetEnvironmentVariable' 검사 대신 '[CICondition]' 특성을 사용합니다.</target>
         <note>{Locked="Environment.GetEnvironmentVariable"}{Locked="Assert.Inconclusive"}{Locked="[CICondition]"}</note>
       </trans-unit>
       <trans-unit id="UseCIConditionAttributeInsteadOfEnvironmentCheckTitle">
         <source>Use '[CICondition]' attribute instead of 'Environment.GetEnvironmentVariable' checks with early return or 'Assert.Inconclusive'</source>
-        <target state="new">Use '[CICondition]' attribute instead of 'Environment.GetEnvironmentVariable' checks with early return or 'Assert.Inconclusive'</target>
+        <target state="translated">초기 반환 또는 'Assert.Inconclusive'를 사용하는 'Environment.GetEnvironmentVariable' 검사 대신 '[CICondition]' 특성을 사용합니다.</target>
         <note>{Locked="Environment.GetEnvironmentVariable"}{Locked="Assert.Inconclusive"}{Locked="[CICondition]"}</note>
       </trans-unit>
       <trans-unit id="UseCancellationTokenPropertyDescription">

@@ -1047,7 +1047,7 @@ Więcej informacji o telemetrii platformy testowej firmy Microsoft: https://aka.
       </trans-unit>
       <trans-unit id="TestExecutionFilterProviderNotSupportedForServer">
         <source>Test execution filter provider '{0}' returned filter type '{1}' for a JSON-RPC server request. Provider constraints are not applied to server requests; return null when TestExecutionFilterContext.Origin is Server.</source>
-        <target state="new">Test execution filter provider '{0}' returned filter type '{1}' for a JSON-RPC server request. Provider constraints are not applied to server requests; return null when TestExecutionFilterContext.Origin is Server.</target>
+        <target state="translated">Dostawca filtru wykonywania testu „{0}” zwrócił typ filtru „{1}” dla żądania serwera JSON-RPC. Ograniczenia dostawcy nie są stosowane do żądań serwera; zwróć wartość null, jeśli TestExecutionFilterContext.Origin jest Server.</target>
         <note>{0} is the provider UID. {1} is the filter type. {Locked="JSON-RPC"}{Locked="null"}{Locked="TestExecutionFilterContext.Origin"}{Locked="Server"}</note>
       </trans-unit>
       <trans-unit id="TestFrameworkProxyApiShouldNotBeCalled">

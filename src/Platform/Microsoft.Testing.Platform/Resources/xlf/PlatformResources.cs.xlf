@@ -1047,7 +1047,7 @@ Přečtěte si další informace o telemetrii Microsoft Testing Platform: https:
       </trans-unit>
       <trans-unit id="TestExecutionFilterProviderNotSupportedForServer">
         <source>Test execution filter provider '{0}' returned filter type '{1}' for a JSON-RPC server request. Provider constraints are not applied to server requests; return null when TestExecutionFilterContext.Origin is Server.</source>
-        <target state="new">Test execution filter provider '{0}' returned filter type '{1}' for a JSON-RPC server request. Provider constraints are not applied to server requests; return null when TestExecutionFilterContext.Origin is Server.</target>
+        <target state="translated">Poskytovatel filtru spuštění testů „{0}“ vrátil pro žádost JSON-RPC serveru typ filtru „{1}“. Omezení zprostředkovatele se nevztahují na požadavky serveru. Vrátí hodnotu null, pokud TestExecutionFilterContext.Origin je Server.</target>
         <note>{0} is the provider UID. {1} is the filter type. {Locked="JSON-RPC"}{Locked="null"}{Locked="TestExecutionFilterContext.Origin"}{Locked="Server"}</note>
       </trans-unit>
       <trans-unit id="TestFrameworkProxyApiShouldNotBeCalled">
@@ -1164,7 +1164,7 @@ Přečtěte si další informace o telemetrii Microsoft Testing Platform: https:
       </trans-unit>
       <trans-unit id="UnsupportedTestExecutionFilterOperatorValue">
         <source>Test execution filter operator '{0}' is not supported. Only And is supported.</source>
-        <target state="new">Test execution filter operator '{0}' is not supported. Only And is supported.</target>
+        <target state="translated">Operátor filtru provádění testů {0} není podporován. Podporuje se jenom And.</target>
         <note>{0} is the unsupported operator value. {Locked="And"}</note>
       </trans-unit>
       <trans-unit id="WaitDebuggerAttachNotSupportedInBrowserErrorMessage">

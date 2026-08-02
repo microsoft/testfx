@@ -44,7 +44,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingAttachmentsDropped">
         <source>Azure DevOps live publishing could not upload {0} attachment(s); they will be missing from the Azure DevOps test run.</source>
-        <target state="new">Azure DevOps live publishing could not upload {0} attachment(s); they will be missing from the Azure DevOps test run.</target>
+        <target state="translated">La publicación en vivo de Azure DevOps no pudo cargar {0} los datos adjuntos; faltarán en la serie de pruebas Azure DevOps.</target>
         <note>{0} is the number of attachments that could not be uploaded.</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCompleteRunFailed">
@@ -109,7 +109,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingResultsDropped">
         <source>Azure DevOps live publishing could not publish {0} test result(s); they will be missing from the Azure DevOps test run.</source>
-        <target state="new">Azure DevOps live publishing could not publish {0} test result(s); they will be missing from the Azure DevOps test run.</target>
+        <target state="translated">La publicación en vivo de Azure DevOps no pudo publicar {0} resultado(s) de prueba; faltarán en la serie de pruebas de Azure DevOps.</target>
         <note>{0} is the number of test results that could not be published.</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingRunAttachmentFailed">
@@ -119,7 +119,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingRunCreated">
         <source>Azure DevOps live publishing is streaming results to test run {0}, which you can follow while the tests are still running at {1}. The build's Tests tab lists the run once it completes.</source>
-        <target state="new">Azure DevOps live publishing is streaming results to test run {0}, which you can follow while the tests are still running at {1}. The build's Tests tab lists the run once it completes.</target>
+        <target state="translated">La publicación en vivo de Azure DevOps está transmitiendo los resultados a la serie de pruebas {0}, que puede seguir mientras las pruebas siguen ejecutándose en {1}. La pestaña Pruebas de la compilación muestra la ejecución una vez que se completa.</target>
         <note>{0} is the Azure DevOps test run id. {1} is the URL of the test run.</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingRunIdFileMismatch">
@@ -129,7 +129,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingRunLeftInProgress">
         <source>The Azure DevOps test run was not marked as completed and may not appear in the build's Tests tab.</source>
-        <target state="new">The Azure DevOps test run was not marked as completed and may not appear in the build's Tests tab.</target>
+        <target state="translated">La serie de pruebas de Azure DevOps no se marcó como completada y es posible que no aparezca en la pestaña Pruebas de la compilación.</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingTimeoutErrorMessage">
@@ -144,7 +144,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingWarningDisplayFailed">
         <source>Azure DevOps live publishing could not display a warning on the output device.</source>
-        <target state="new">Azure DevOps live publishing could not display a warning on the output device.</target>
+        <target state="translated">La publicación en vivo de Azure DevOps no pudo mostrar una advertencia en el dispositivo de salida.</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsQuarantineFileRequiresAzureDevOps">
@@ -314,7 +314,7 @@
       </trans-unit>
       <trans-unit id="PublishAzdoTestResultsOptionDescription">
         <source>Publish test results to an Azure DevOps test run as tests complete. The run is listed in the build's Tests tab once the test session finishes.</source>
-        <target state="new">Publish test results to an Azure DevOps test run as tests complete. The run is listed in the build's Tests tab once the test session finishes.</target>
+        <target state="translated">Publique los resultados de las pruebas en una serie de pruebas de Azure DevOps a medida que se completan. La ejecución aparece en la pestaña Pruebas de la compilación una vez que finaliza la sesión de pruebas.</target>
         <note />
       </trans-unit>
       <trans-unit id="QuarantineFileLoadFailedWarning">
