@@ -25,11 +25,6 @@ internal sealed class DotnetTestHttpClient : NamedPipeConnectionBase, IClient
     private readonly bool _disposeHttpClient;
     private readonly SemaphoreSlim _requestLock = new(1, 1);
     private readonly CancellationTokenSource _disposeCancellationTokenSource = new();
-
-    // Scratch buffer for the "is there a second frame?" probe at the end of every reply. Requests are
-    // serialized by _requestLock, which is held for the whole request/response exchange, so a single
-    // instance-wide buffer can be reused instead of allocating one per request.
-    private readonly byte[] _trailingByteBuffer = new byte[1];
 #if NET9_0_OR_GREATER
     private readonly Lock _lifecycleLock = new();
 #else
@@ -164,7 +159,7 @@ internal sealed class DotnetTestHttpClient : NamedPipeConnectionBase, IClient
                     MaximumResponseFrameSize).ConfigureAwait(false)
                     ?? throw new IOException("The dotnet test HTTP gateway returned an empty or truncated response frame.");
 
-                byte[] trailingByte = _trailingByteBuffer;
+                byte[] trailingByte = new byte[1];
                 int trailingByteCount = await responseStream.ReadAsync(
                     trailingByte,
                     0,

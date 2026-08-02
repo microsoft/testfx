@@ -42,10 +42,13 @@ internal static class MSTestTestNodeConverter
     /// converted several times per executed test (the in-progress node, then one result node per data row), so the
     /// parse is paid once per test method rather than once per node.
     /// <para>
-    /// Only the parse is cached, not the resulting <see cref="TestMethodIdentifierProperty"/>: that type publicly
-    /// exposes its <see cref="TestMethodIdentifierProperty.ParameterTypeFullNames"/> array, so handing one instance
-    /// to several nodes would let any consumer that writes to the array corrupt every other node built from the
-    /// same test method. Each node therefore still gets its own property (see <see cref="ParsedManagedName.ToProperty"/>).
+    /// The resulting <see cref="TestMethodIdentifierProperty"/> is cached alongside the parse only for
+    /// parameterless test methods. That type publicly exposes its
+    /// <see cref="TestMethodIdentifierProperty.ParameterTypeFullNames"/> array, so sharing one instance is safe
+    /// exactly when that array is empty and therefore cannot be mutated; every other field is an immutable string
+    /// or int. A parameterized method must keep getting a fresh property carrying a fresh array copy, otherwise a
+    /// consumer that writes to the array would corrupt every other node built from the same test method (see
+    /// <see cref="ParsedManagedName.ToProperty"/>).
     /// </para>
     /// <para>
     /// The cache lives here rather than as a lazy property on <see cref="TestMethod"/> (the way
@@ -218,8 +221,11 @@ internal static class MSTestTestNodeConverter
         private readonly int _arity;
         private readonly string[] _parameterTypeFullNames;
 
-        // Only set for the parameterless case, where the produced property is fully immutable. See ToProperty().
-        private TestMethodIdentifierProperty? _cachedParameterlessProperty;
+        // Non-null exactly for parameterless methods, where the property is fully immutable and can therefore be
+        // handed to every node. Built eagerly so the field can stay readonly: ToProperty() is called immediately
+        // after every parse, so nothing is built that would not have been built anyway, and a lazy `??=` would
+        // make the shared instance depend on call ordering. See ToProperty().
+        private readonly TestMethodIdentifierProperty? _parameterlessProperty;
 
         private ParsedManagedName(string @namespace, string typeName, string methodName, int arity, string[] parameterTypeFullNames)
         {
@@ -228,6 +234,14 @@ internal static class MSTestTestNodeConverter
             _methodName = methodName;
             _arity = arity;
             _parameterTypeFullNames = parameterTypeFullNames;
+
+            // AssemblyFullName and ReturnTypeFullName are not carried by the neutral model today; kept empty to
+            // match the current (bridge) behavior. Populating them is a follow-up enabled by this native path.
+            if (parameterTypeFullNames.Length == 0)
+            {
+                _parameterlessProperty = new TestMethodIdentifierProperty(
+                    assemblyFullName: string.Empty, @namespace, typeName, methodName, arity, parameterTypeFullNames, returnTypeFullName: string.Empty);
+            }
         }
 
         public static ParsedManagedName Parse(TestMethod testMethod)
@@ -247,21 +261,18 @@ internal static class MSTestTestNodeConverter
 
         public TestMethodIdentifierProperty ToProperty()
         {
-            // AssemblyFullName and ReturnTypeFullName are not carried by the neutral model today; kept empty to
-            // match the current (bridge) behavior. Populating them is a follow-up enabled by this native path.
-            if (_parameterTypeFullNames.Length == 0)
+            // A parameterless property is fully immutable - every field is a string or int, and the empty array
+            // cannot be mutated - so the same instance is handed to every node. This is the common case, and the
+            // ParsedManagedName is cached per TestMethod, so the several nodes one executed test produces (the
+            // in-progress node, then one result node per data row and per in-process retry attempt) share it.
+            if (_parameterlessProperty is not null)
             {
-                // Every other piece of state on the property is an immutable string or int, and an empty array
-                // cannot be mutated, so the whole property is safe to share across nodes. This is the common
-                // case (most test methods take no parameters), and the ParsedManagedName itself is cached per
-                // TestMethod, so a test that reports more than once (retries, re-runs) allocates nothing here.
-                return _cachedParameterlessProperty ??= new TestMethodIdentifierProperty(
-                    assemblyFullName: string.Empty, _namespace, _typeName, _methodName, _arity, _parameterTypeFullNames, returnTypeFullName: string.Empty);
+                return _parameterlessProperty;
             }
 
-            // Every node gets its own parameter array. TestMethodIdentifierProperty exposes it publicly, so
-            // aliasing one array across nodes would let a consumer that writes to it corrupt every other node
-            // built from the same test method.
+            // A parameterized method must keep getting its own parameter array. TestMethodIdentifierProperty
+            // exposes it publicly, so aliasing one array across nodes would let a consumer that writes to it
+            // corrupt every other node built from the same test method.
             return new TestMethodIdentifierProperty(
                 assemblyFullName: string.Empty, _namespace, _typeName, _methodName, _arity, [.. _parameterTypeFullNames], returnTypeFullName: string.Empty);
         }
