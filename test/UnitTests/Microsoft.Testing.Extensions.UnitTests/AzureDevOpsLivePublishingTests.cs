@@ -1520,6 +1520,7 @@ public sealed class AzureDevOpsLivePublishingTests
 
         // A run left "InProgress" never appears in the build's Tests tab, so cancellation must still close it.
         Assert.HasCount(1, client.UpdateTestRunStateCalls);
+        Assert.AreEqual(4246, client.UpdateTestRunStateCalls[0].RunId);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.AbortedTestRunState, client.UpdateTestRunStateCalls[0].State);
     }
 
@@ -1535,6 +1536,7 @@ public sealed class AzureDevOpsLivePublishingTests
         await lifetime.AfterRunAsync(0 /* ExitCode.Success */, CancellationToken.None);
 
         Assert.HasCount(1, client.UpdateTestRunStateCalls);
+        Assert.AreEqual(4247, client.UpdateTestRunStateCalls[0].RunId);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, client.UpdateTestRunStateCalls[0].State);
     }
 
@@ -1568,6 +1570,7 @@ public sealed class AzureDevOpsLivePublishingTests
 
         Assert.HasCount(1, client.UpdateTestRunStateCalls);
         Assert.AreEqual(4248, client.UpdateTestRunStateCalls[0].RunId);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, client.UpdateTestRunStateCalls[0].State);
         Assert.Contains(AzureDevOpsResources.AzureDevOpsLivePublishingRunIdHandoffFailed, string.Join(Environment.NewLine, logger.Logs));
     }
 

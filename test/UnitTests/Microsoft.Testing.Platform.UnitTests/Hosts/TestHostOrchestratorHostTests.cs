@@ -151,6 +151,7 @@ public sealed class TestHostOrchestratorHostTests
 
         Assert.AreEqual(1, lifetime.BeforeRunCount);
         Assert.AreEqual(1, lifetime.AfterRunCount);
+        Assert.AreEqual(0, lifetime.LastExitCode);
         Assert.AreEqual(1, lifetime.DisposeCount);
     }
 
@@ -171,9 +172,13 @@ public sealed class TestHostOrchestratorHostTests
         InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(host.RunAsync);
 
         Assert.AreEqual("orchestrator exploded", exception.Message);
+        Assert.AreEqual(1, failing.BeforeRunCount);
         Assert.AreEqual(1, failing.AfterRunCount);
+        Assert.AreEqual((int)ExitCode.GenericFailure, failing.LastExitCode);
         Assert.AreEqual(1, failing.DisposeCount);
+        Assert.AreEqual(1, healthy.BeforeRunCount);
         Assert.AreEqual(1, healthy.AfterRunCount);
+        Assert.AreEqual((int)ExitCode.GenericFailure, healthy.LastExitCode);
         Assert.AreEqual(1, healthy.DisposeCount);
     }
 
