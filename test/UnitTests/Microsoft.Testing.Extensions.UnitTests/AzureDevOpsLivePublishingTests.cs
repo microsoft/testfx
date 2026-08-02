@@ -1829,6 +1829,56 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.AreEqual(1, finalizeCalls);
     }
 
+    [TestMethod]
+    public async Task RunIdCoordinator_FinalizeRunAsync_LivePeerThatNeverLeaves_StillFinalizesAtTheHardCap()
+    {
+        // The hard cap is what stops a leaked but still-running process from holding a run open forever.
+        // Without it the owner would keep renewing the grace period against a live peer indefinitely.
+        using TestDirectory directory = CreateTestDirectory();
+        FakeClock clock = new() { UtcNow = new DateTimeOffset(2025, 1, 1, 12, 0, 0, TimeSpan.Zero) };
+        AzureDevOpsTestResultsPublisherOptions options = new(10, TimeSpan.FromMinutes(1), 2, TimeSpan.FromMilliseconds(1), TimeSpan.FromSeconds(30), TimeSpan.FromHours(4));
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "storage", directory.Path);
+
+        // A peer that stays registered for the whole test and whose lease names a live process.
+        int ownerProcessId = GetAliveProcessId() + 1;
+        string peerParticipantPath = Path.Combine(directory.Path, "azdo-runid.123.participant.999998.json");
+        Directory.CreateDirectory(directory.Path);
+        File.WriteAllText(peerParticipantPath, $"{{\"processId\":{GetAliveProcessId()},\"buildId\":123,\"expiresAt\":\"{clock.UtcNow.AddHours(4):O}\"}}");
+
+        int delayCount = 0;
+        int maxPolls = (int)(options.CoordinationFinalizeMaxWaitTime.TotalSeconds / 20) + 10;
+        FakeTask task = new(_ =>
+        {
+            delayCount++;
+
+            // Fail loudly rather than spinning forever if the hard cap ever stops bounding the wait: a
+            // hung suite is far harder to diagnose than a failed assertion.
+            Assert.IsLessThanOrEqualTo(maxPolls, delayCount, "The owner never stopped waiting for a live peer, so the hard cap is not bounding the drain loop.");
+            clock.UtcNow += TimeSpan.FromSeconds(20);
+        });
+
+        AzureDevOpsRunIdCoordinator owner = new(new SystemFileSystem(), task, clock, CreateEnvironmentMock(processId: ownerProcessId).Object, new CollectingLogger(), options);
+        AzureDevOpsCoordinatedRun ownedRun = await owner.AcquireRunAsync(configuration, _ => Task.FromResult(990), CancellationToken.None);
+
+        int finalizeCalls = 0;
+        await owner.FinalizeRunAsync(
+            ownedRun,
+            _ =>
+            {
+                finalizeCalls++;
+                return Task.CompletedTask;
+            },
+            CancellationToken.None);
+
+        Assert.AreEqual(1, finalizeCalls);
+        Assert.IsTrue(File.Exists(peerParticipantPath), "The peer was supposed to outlive the wait, so the hard cap is what released it.");
+
+        // It waited well past the short grace period rather than giving up on a live peer immediately,
+        // and still stopped rather than waiting forever.
+        Assert.IsGreaterThan((int)(options.CoordinationFinalizeTimeout.TotalSeconds / 20), delayCount);
+        Assert.IsLessThanOrEqualTo((int)(options.CoordinationFinalizeMaxWaitTime.TotalSeconds / 20) + 2, delayCount);
+    }
+
     #endregion
 
     private static AzureDevOpsTestRunOrchestratorLifetime CreateOrchestratorLifetime(
