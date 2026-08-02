@@ -139,20 +139,29 @@ internal abstract partial class SimplifiedConsoleOutputDeviceBase
                 TimeSpan? duration = timingProp?.GlobalTiming.Duration;
                 bool testCompleted = executionCompleted;
 
+                // A test framework that retries in-process reports every attempt under the same test node uid. A
+                // superseded attempt is not the test's outcome, so it must not be counted or printed as a failure -
+                // a fail-then-pass [Retry] test would otherwise show a failed summary here.
+                bool isSupersededAttempt = testNodeStateChanged.TestNode.IsSupersededRetryAttempt();
+
                 if (nodeStateProp is InProgressTestNodeStateProperty)
                 {
                     _activeTestTracker.Start(testNodeStateChanged.TestNode.Uid, testNodeStateChanged.TestNode.DisplayName);
                 }
 #pragma warning disable CS0618, MTP0001 // Type or member is obsolete
-                else if (executionCompleted
+                else if ((executionCompleted
                     || nodeStateProp is PassedTestNodeStateProperty or ErrorTestNodeStateProperty or CancelledTestNodeStateProperty
 #pragma warning restore CS0618, MTP0001 // Type or member is obsolete
                     or FailedTestNodeStateProperty or TimeoutTestNodeStateProperty or SkippedTestNodeStateProperty)
+                    // A retry sequence has one in-progress update for the whole test but a terminal update per
+                    // attempt, so completing the tracker on a superseded one would stop tracking the test while
+                    // its next attempt is still running. Mirrors HangDumpActivityIndicator.
+                    && !isSupersededAttempt)
                 {
                     _activeTestTracker.Complete(testNodeStateChanged.TestNode.Uid);
                 }
 
-                switch (nodeStateProp)
+                switch (isSupersededAttempt ? null : nodeStateProp)
                 {
                     case InProgressTestNodeStateProperty:
                         if (DisplayActiveTestProgress)
@@ -200,6 +209,8 @@ internal abstract partial class SimplifiedConsoleOutputDeviceBase
                         break;
                 }
 
+                // A superseded attempt leaves the test tracked (its next attempt is still running), so its
+                // "running" progress message must stay too - only the final attempt clears it.
                 if (testCompleted && DisplayActiveTestProgress)
                 {
                     await DisplayAsync(

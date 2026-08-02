@@ -1,29 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Dependencies>
   <ToolsetDependencies>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="11.0.0-beta.26380.2">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="11.0.0-beta.26381.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>6dafa0516394d202aacd0542afac758965e0f275</Sha>
+      <Sha>93eebf1a31a5eaafd44326f1a81ca107913e098c</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Build.Tasks.Templating" Version="11.0.0-beta.26380.2">
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Templating" Version="11.0.0-beta.26381.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>6dafa0516394d202aacd0542afac758965e0f275</Sha>
+      <Sha>93eebf1a31a5eaafd44326f1a81ca107913e098c</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="11.0.0-beta.26380.2">
+    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="11.0.0-beta.26381.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>6dafa0516394d202aacd0542afac758965e0f275</Sha>
+      <Sha>93eebf1a31a5eaafd44326f1a81ca107913e098c</Sha>
     </Dependency>
     <Dependency Name="Microsoft.Testing.Extensions.CodeCoverage" Version="18.10.0-preview.26377.1">
       <Uri>https://dev.azure.com/devdiv/DevDiv/_git/vs-code-coverage</Uri>
       <Sha>e4984580a4331b341138ab5b71df2591bae0dc5e</Sha>
     </Dependency>
-    <Dependency Name="MSTest" Version="4.4.0-preview.26380.3">
+    <Dependency Name="MSTest" Version="4.4.0-preview.26401.2">
       <Uri>https://github.com/microsoft/testfx</Uri>
-      <Sha>e74ad224f2413a66061ec2758e7ae04107f4d874</Sha>
+      <Sha>f407ab9373e0644a10999cd3dfd1c97289de79b9</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Testing.Platform" Version="2.4.0-preview.26380.3">
+    <Dependency Name="Microsoft.Testing.Platform" Version="2.4.0-preview.26401.2">
       <Uri>https://github.com/microsoft/testfx</Uri>
-      <Sha>e74ad224f2413a66061ec2758e7ae04107f4d874</Sha>
+      <Sha>f407ab9373e0644a10999cd3dfd1c97289de79b9</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>

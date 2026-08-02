@@ -2,9 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
+using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Requests;
@@ -91,6 +94,89 @@ public sealed class CommonHostTests
     }
 
     [TestMethod]
+    public async Task ExecuteRequestAsync_WhenSessionIsCancelled_DisablesTheMessageBus()
+    {
+        CancellationToken cancellationToken = new(canceled: true);
+
+        Mock<IPlatformOutputDevice> outputDeviceMock = new();
+        outputDeviceMock.Setup(x => x.DisplayBeforeSessionStartAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        outputDeviceMock.Setup(x => x.DisplayAfterSessionEndRunAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+
+        ProxyOutputDevice proxyOutputDevice = new(outputDeviceMock.Object, null);
+
+        Mock<ITestSessionContext> sessionContextMock = new();
+        sessionContextMock.SetupGet(x => x.SessionUid).Returns(new SessionUid("session"));
+        sessionContextMock.SetupGet(x => x.CancellationToken).Returns(cancellationToken);
+
+        Mock<ITestFrameworkInvoker> testFrameworkInvokerMock = new();
+        testFrameworkInvokerMock
+            .Setup(x => x.ExecuteAsync(It.IsAny<ITestFramework>(), It.IsAny<ClientInfo>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new OperationCanceledException(cancellationToken));
+
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(testFrameworkInvokerMock.Object);
+        serviceProvider.AddService(new TestCoverageResult());
+
+        Mock<BaseMessageBus> baseMessageBusMock = new();
+        baseMessageBusMock.Setup(x => x.DrainDataAsync()).Returns(Task.CompletedTask);
+        baseMessageBusMock.Setup(x => x.DisableAsync()).Returns(Task.CompletedTask);
+
+        await TestableCommonHost.ExecuteRequestForTestingAsync(
+            proxyOutputDevice,
+            sessionContextMock.Object,
+            serviceProvider,
+            baseMessageBusMock.Object,
+            new Mock<ITestFramework>().Object,
+            new ClientInfo("client", "1.0.0"));
+
+        // The cancellation path skips NotifyTestSessionEndAsync, so without the teardown safety net the bus
+        // would never be drained/disabled and consumers could still be running when they get disposed. The
+        // absent drain is the mechanism, so pin it: the disable here comes purely from the safety net.
+        baseMessageBusMock.Verify(x => x.DrainDataAsync(), Times.Never);
+        baseMessageBusMock.Verify(x => x.DisableAsync(), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task ExecuteRequestAsync_WhenDisablingTheMessageBusFails_DoesNotMaskTheSessionOutcome()
+    {
+        Mock<IPlatformOutputDevice> outputDeviceMock = new();
+        outputDeviceMock.Setup(x => x.DisplayBeforeSessionStartAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        outputDeviceMock.Setup(x => x.DisplayAfterSessionEndRunAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+
+        ProxyOutputDevice proxyOutputDevice = new(outputDeviceMock.Object, null);
+
+        Mock<ITestSessionContext> sessionContextMock = new();
+        sessionContextMock.SetupGet(x => x.SessionUid).Returns(new SessionUid("session"));
+        sessionContextMock.SetupGet(x => x.CancellationToken).Returns(CancellationToken.None);
+
+        Mock<ITestFrameworkInvoker> testFrameworkInvokerMock = new();
+        testFrameworkInvokerMock
+            .Setup(x => x.ExecuteAsync(It.IsAny<ITestFramework>(), It.IsAny<ClientInfo>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("test framework failure"));
+
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(testFrameworkInvokerMock.Object);
+        serviceProvider.AddService(new TestCoverageResult());
+
+        Mock<BaseMessageBus> baseMessageBusMock = new();
+        baseMessageBusMock.Setup(x => x.DrainDataAsync()).Returns(Task.CompletedTask);
+        baseMessageBusMock.Setup(x => x.DisableAsync()).ThrowsAsync(new InvalidOperationException("disable failure"));
+
+        InvalidOperationException ex = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            async () => await TestableCommonHost.ExecuteRequestForTestingAsync(
+                proxyOutputDevice,
+                sessionContextMock.Object,
+                serviceProvider,
+                baseMessageBusMock.Object,
+                new Mock<ITestFramework>().Object,
+                new ClientInfo("client", "1.0.0")));
+
+        // The safety net is best effort: it must never replace the exception that is already propagating.
+        Assert.AreEqual("test framework failure", ex.Message);
+        baseMessageBusMock.Verify(x => x.DisableAsync(), Times.Once);
+    }
+
+    [TestMethod]
     public async Task DisposeServiceProviderAsync_WhenDataConsumerIsAlsoRegisteredAsService_DisposesOnce()
     {
         Mock<IDataConsumer> dataConsumer = new();
@@ -105,6 +191,192 @@ public sealed class CommonHostTests
         await TestableCommonHost.DisposeServiceProviderForTestingAsync(serviceProvider);
 
         disposableDataConsumer.Verify(x => x.Dispose(), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task DisposeServiceProviderAsync_DisablesTheMessageBusBeforeDisposingIt()
+    {
+        List<string> calls = [];
+
+        Mock<IDataConsumer> dataConsumer = new();
+        dataConsumer.As<IDisposable>().Setup(x => x.Dispose()).Callback(() => calls.Add("consumerDispose"));
+
+        Mock<BaseMessageBus> messageBus = new();
+        messageBus.SetupGet(x => x.DataConsumerServices).Returns([dataConsumer.Object]);
+        messageBus.Setup(x => x.DisableAsync()).Callback(() => calls.Add("disable")).Returns(Task.CompletedTask);
+        messageBus.Setup(x => x.Dispose()).Callback(() => calls.Add("busDispose"));
+
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(messageBus.Object);
+
+        await TestableCommonHost.DisposeServiceProviderForTestingAsync(serviceProvider);
+
+        // Disabling awaits the consumer loops, so it has to happen before the bus and its consumers are
+        // disposed. Otherwise a consumer can be disposed while its ConsumeAsync is still executing.
+        Assert.AreSequenceEqual(["disable", "busDispose", "consumerDispose"], calls);
+    }
+
+    [TestMethod]
+    public async Task DisposeServiceProviderAsync_WhenConsumerIsStillRunning_DoesNotDisposeIt()
+    {
+        Mock<IDataConsumer> runningConsumer = new();
+        runningConsumer.SetupGet(x => x.Uid).Returns("running");
+        Mock<IDisposable> disposableRunningConsumer = runningConsumer.As<IDisposable>();
+
+        Mock<IDataConsumer> finishedConsumer = new();
+        finishedConsumer.SetupGet(x => x.Uid).Returns("finished");
+        Mock<IDisposable> disposableFinishedConsumer = finishedConsumer.As<IDisposable>();
+
+        Mock<BaseMessageBus> messageBus = new();
+        messageBus.Setup(x => x.DisableAsync()).Returns(Task.CompletedTask);
+        messageBus.SetupGet(x => x.DataConsumerServices).Returns([runningConsumer.Object, finishedConsumer.Object]);
+        messageBus.SetupGet(x => x.ConsumersStillRunning).Returns([runningConsumer.Object]);
+
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(messageBus.Object);
+
+        // A data consumer is normally registered as a plain service too, and the bus is registered first. If
+        // the skip were not recorded, the consumer would simply be disposed later in the same pass.
+        serviceProvider.AddService(runningConsumer.Object);
+        serviceProvider.AddService(finishedConsumer.Object);
+
+        await TestableCommonHost.DisposeServiceProviderForTestingAsync(serviceProvider);
+
+        // The handshake could not complete for this one (a consumer that ignored the cancellation token during
+        // an abort). Disposing it now is exactly the race we are fixing, so it has to be left alone.
+        disposableRunningConsumer.Verify(x => x.Dispose(), Times.Never);
+        disposableFinishedConsumer.Verify(x => x.Dispose(), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task DisposeServiceProviderAsync_WhenCalledTwice_StillDoesNotDisposeAStillRunningConsumer()
+    {
+        using CTRLPlusCCancellationTokenSource cancellationTokenSource = new();
+        StuckConsumer consumer = new();
+
+        // Keep the shutdown budget short so the test does not have to wait for the 30s default.
+        Mock<IEnvironment> environmentMock = new();
+        environmentMock
+            .Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_MESSAGEBUS_CANCELED_SHUTDOWN_TIMEOUT_SECONDS))
+            .Returns("0.5");
+
+        MessageBusProxy proxy = new();
+        AsynchronousMessageBus bus = new(
+            [consumer],
+            cancellationTokenSource,
+            new SystemTask(),
+            new NopLoggerFactory(),
+            environmentMock.Object);
+        await bus.InitAsync();
+        proxy.SetBuiltMessageBus(bus);
+
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(proxy);
+
+        // A data consumer is normally registered as a plain service too, and the bus is registered first.
+        serviceProvider.AddService(consumer);
+
+        await proxy.PublishAsync(new StuckProducer(), new StuckData());
+        await consumer.ConsumeStarted.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+        cancellationTokenSource.Cancel();
+
+        // Hosts walk the provider more than once (ConsoleTestHost disposes it, then CommonHost.RunAsync's
+        // finally does it again) and each pass starts with a fresh "already disposed" list. The first pass
+        // disposes the bus, which drops its processors, so without a latched verdict the second pass would no
+        // longer know the consumer is unsafe and would dispose it mid-consumption.
+        await TestableCommonHost.DisposeServiceProviderForTestingAsync(serviceProvider);
+        await TestableCommonHost.DisposeServiceProviderForTestingAsync(serviceProvider);
+
+        Assert.AreEqual(0, consumer.DisposeCount);
+
+        consumer.AllowConsumeToComplete.SetResult(true);
+    }
+
+    private sealed class NopLoggerFactory : ILoggerFactory
+    {
+        public ILogger CreateLogger(string categoryName) => new NopLogger();
+    }
+
+    private sealed class StuckData : IData
+    {
+        public string DisplayName => nameof(StuckData);
+
+        public string? Description => nameof(StuckData);
+    }
+
+    private sealed class StuckProducer : IDataProducer
+    {
+        public Type[] DataTypesProduced => [typeof(StuckData)];
+
+        public string Uid => nameof(StuckProducer);
+
+        public string Version => "1.0.0";
+
+        public string DisplayName => string.Empty;
+
+        public string Description => string.Empty;
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+    }
+
+    /// <summary>
+    /// A consumer that never observes the cancellation token, so it is still inside
+    /// <see cref="ConsumeAsync"/> when the shutdown budget of the aborted run runs out.
+    /// </summary>
+    private sealed class StuckConsumer : IDataConsumer, IDisposable
+    {
+        private int _disposeCount;
+
+        public TaskCompletionSource<bool> ConsumeStarted { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public TaskCompletionSource<bool> AllowConsumeToComplete { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public int DisposeCount => Volatile.Read(ref _disposeCount);
+
+        public Type[] DataTypesConsumed => [typeof(StuckData)];
+
+        public string Uid => nameof(StuckConsumer);
+
+        public string Version => "1.0.0";
+
+        public string DisplayName => string.Empty;
+
+        public string Description => string.Empty;
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
+        {
+            ConsumeStarted.TrySetResult(true);
+            await AllowConsumeToComplete.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+        }
+
+        public void Dispose() => Interlocked.Increment(ref _disposeCount);
+    }
+
+    [TestMethod]
+    public async Task DisposeServiceProviderAsync_WhenConsumerIsRegisteredBeforeTheBus_StillDoesNotDisposeIt()
+    {
+        Mock<IDataConsumer> runningConsumer = new();
+        runningConsumer.SetupGet(x => x.Uid).Returns("running");
+        Mock<IDisposable> disposableRunningConsumer = runningConsumer.As<IDisposable>();
+
+        Mock<BaseMessageBus> messageBus = new();
+        messageBus.Setup(x => x.DisableAsync()).Returns(Task.CompletedTask);
+        messageBus.SetupGet(x => x.DataConsumerServices).Returns([runningConsumer.Object]);
+        messageBus.SetupGet(x => x.ConsumersStillRunning).Returns([runningConsumer.Object]);
+
+        ServiceProvider serviceProvider = new();
+
+        // The output device and the coverage accumulator are registered well before BuildTestFrameworkAsync
+        // adds the bus, so a consumer can sit earlier in Services than the bus that owns it. Disabling only
+        // when the disposal loop reached the bus would already have disposed this one.
+        serviceProvider.AddService(runningConsumer.Object);
+        serviceProvider.AddService(messageBus.Object);
+
+        await TestableCommonHost.DisposeServiceProviderForTestingAsync(serviceProvider);
+
+        disposableRunningConsumer.Verify(x => x.Dispose(), Times.Never);
     }
 
     private sealed class TestableCommonHost(ServiceProvider serviceProvider, bool runTestApplicationLifeCycleCallbacks = false) : CommonHost(serviceProvider)

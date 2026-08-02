@@ -19,6 +19,45 @@ public sealed class TerminalTestReporterTests
 {
     public TestContext TestContext { get; set; } = null!;
 
+    // When BOTH retry mechanisms are active the attempt pair advances on either component, so the number of
+    // executions cannot be derived from the final pair alone: (host 1, retry 1) -> (host 1, retry 2) ->
+    // (host 2, retry 1) is three executions, but the final pair is (2, 1) and its maximum is 2. The count is
+    // therefore tracked per uid as transitions arrive. Exercised directly on TestProgressState because the
+    // reporter's orchestrator overload cannot vary the in-process attempt.
+    [TestMethod]
+    public void GetFlakyTests_WhenBothRetryMechanismsAdvance_CountsEveryExecution()
+    {
+        var state = new TestProgressState(1, "assembly.dll", "net9.0", "x64", new StubStopwatch(), isDiscovery: false);
+        state.NotifyHandshake("inst-1", attemptNumber: 1);
+        state.NotifyHandshake("inst-2", attemptNumber: 2);
+
+        // Host attempt 1: the test fails, then an in-process [Retry] runs it again and it still fails.
+        state.ReportFailedTest("flaky-uid", "FlakyTest", "inst-1", retryAttemptNumber: 1);
+        state.ReportFailedTest("flaky-uid", "FlakyTest", "inst-1", retryAttemptNumber: 2);
+
+        // Host attempt 2: the orchestrator relaunches the host and the test passes on its first in-process try.
+        state.ReportPassingTest("flaky-uid", "FlakyTest", "inst-2", retryAttemptNumber: 1);
+
+        IReadOnlyList<(string DisplayName, int Attempts)> flaky = state.GetFlakyTests();
+
+        Assert.ContainsSingle(flaky);
+        Assert.AreEqual("FlakyTest", flaky[0].DisplayName);
+        Assert.AreEqual(3, flaky[0].Attempts, "the test ran three times, so it must not be reported as two attempts");
+    }
+
+    private sealed class StubStopwatch : IStopwatch
+    {
+        public TimeSpan Elapsed => TimeSpan.Zero;
+
+        public void Start()
+        {
+        }
+
+        public void Stop()
+        {
+        }
+    }
+
     [TestMethod]
     public void ExceptionFlattener_WhenNestedInnerExceptions_ShouldKeepAllMessagesInOrder()
     {
@@ -198,6 +237,63 @@ public sealed class TerminalTestReporterTests
             """;
 
         Assert.AreEqual(expected, ShowEscape(output));
+    }
+
+    [TestMethod]
+    public void InProcessRetry_AnnotatesAttemptsAndCountsTestOnce()
+    {
+        string targetFramework = "net8.0";
+        string architecture = "x64";
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
+
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
+        {
+            ShowPassedTests = () => true,
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+        });
+
+        DateTimeOffset startTime = DateTimeOffset.MinValue;
+        DateTimeOffset endTime = DateTimeOffset.MaxValue;
+
+        // isRetry is false: this is a plain in-process run, the retry comes from the test framework ([Retry]).
+        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false, isHelp: false, isRetry: false);
+        terminalReporter.AssemblyRunStarted(assembly, targetFramework, architecture, "0", "0");
+
+        terminalReporter.TestCompleted("0", testNodeUid: "FlakyTest", "FlakyTest", TestOutcome.Fail, TimeSpan.FromSeconds(10),
+            informativeMessage: null, errorMessage: "Tests failed", exception: null, expected: null, actual: null,
+            standardOutput: null, errorOutput: null, retryAttempt: new RetryAttemptProperty(1, isSuperseded: true));
+        terminalReporter.TestCompleted("0", testNodeUid: "FlakyTest", "FlakyTest", TestOutcome.Passed, TimeSpan.FromSeconds(10),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null,
+            standardOutput: null, errorOutput: null, retryAttempt: new RetryAttemptProperty(2, isSuperseded: false));
+
+        terminalReporter.AssemblyRunCompleted("0");
+        terminalReporter.TestExecutionCompleted(endTime, exitCode: null);
+
+        // The test is counted once (the final attempt), the earlier failure is reconciled into the retry summary,
+        // and the test is listed by name as flaky - the reporting added in #10329 now lights up for in-process
+        // [Retry] as well, which is the point of #10292.
+        string expected = $"""
+            failed (try 1) FlakyTest (10s 000ms)
+              Tests failed
+            passed (try 2) FlakyTest (10s 000ms)
+
+            Test run summary: Passed! - {assembly} (net8.0|x64)
+              total: 1
+              failed: 0
+              succeeded: 1
+              skipped: 0
+              flaky: 1 (passed after retry)
+              retried: 1 test(s), 1 extra run(s)
+              duration: 3652058d 23h 59m 59s 999ms
+
+            Flaky tests:
+              FlakyTest failed -> passed (2 attempts)
+
+            """;
+
+        Assert.AreEqual(expected, ShowEscape(stringBuilderConsole.Output));
     }
 
     [TestMethod]

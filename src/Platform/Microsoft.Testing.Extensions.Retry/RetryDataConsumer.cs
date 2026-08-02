@@ -59,6 +59,16 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
             return;
         }
 
+        // A test framework that retries in-process (MSTest's [Retry]) reports every attempt under the same test
+        // node uid. A superseded attempt is not the test's outcome: counting it here would both ask the
+        // orchestrator to relaunch the host for a test whose final in-process attempt passed, and inflate the run
+        // totals. Only the final attempt participates in the out-of-process retry decision, so the two retry
+        // mechanisms compose rather than multiply.
+        if (testNodeUpdateMessage.TestNode.IsSupersededRetryAttempt())
+        {
+            return;
+        }
+
         string uid = testNodeUpdateMessage.TestNode.Uid;
         if (nodeState is FailedTestNodeStateProperty or ErrorTestNodeStateProperty
             or TimeoutTestNodeStateProperty

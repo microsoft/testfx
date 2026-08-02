@@ -87,6 +87,7 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
         TestNodeStateProperty? stateProperty = null;
         TimingProperty? timingProperty = null;
         TestFileLocationProperty? testFileLocationProperty = null;
+        AssertionFailureProperty? assertionFailureProperty = null;
 
         PropertyBag.PropertyBagEnumerator enumerator = testNodeStateChanged.TestNode.Properties.GetStructEnumerator();
         while (enumerator.MoveNext())
@@ -112,7 +113,23 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
 
                     testFileLocationProperty = f;
                     break;
+                case AssertionFailureProperty a:
+                    if (assertionFailureProperty is not null)
+                    {
+                        throw new InvalidOperationException($"Found multiple properties of type '{typeof(AssertionFailureProperty)}'.");
+                    }
+
+                    assertionFailureProperty = a;
+                    break;
             }
+        }
+
+        // A test framework that retries in-process reports every attempt under the same test node uid. A
+        // superseded attempt is not the test's outcome, so logging it would emit an MSBuild error for a [Retry]
+        // test that goes on to pass - and fail the build.
+        if (testNodeStateChanged.TestNode.IsSupersededRetryAttempt())
+        {
+            return;
         }
 
         switch (stateProperty)
@@ -138,8 +155,8 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
                     duration: timingProperty is null ? null : ToHumanReadableDuration(timingProperty.GlobalTiming.Duration.TotalMilliseconds),
                     errorMessage: failedState.Exception?.Message ?? failedState.Explanation,
                     errorStackTrace: failedState.Exception?.StackTrace,
-                    expected: failedState.Exception?.Data["assert.expected"] as string,
-                    actual: failedState.Exception?.Data["assert.actual"] as string,
+                    expected: assertionFailureProperty is not null ? assertionFailureProperty.Expected : failedState.Exception?.Data["assert.expected"] as string,
+                    actual: assertionFailureProperty is not null ? assertionFailureProperty.Actual : failedState.Exception?.Data["assert.actual"] as string,
                     testFileLocationProperty?.FilePath,
                     testFileLocationProperty?.LineSpan.Start.Line ?? 0,
                     cancellationToken).ConfigureAwait(false);
@@ -191,8 +208,8 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
     {
         _totalTests++;
         _totalFailedTests++;
-        ApplicationStateGuard.Ensure(_msBuildTestApplicationLifecycleCallbacks != null);
-        ApplicationStateGuard.Ensure(_msBuildTestApplicationLifecycleCallbacks.PipeClient != null);
+        ApplicationStateGuard.Ensure(_msBuildTestApplicationLifecycleCallbacks is not null);
+        ApplicationStateGuard.Ensure(_msBuildTestApplicationLifecycleCallbacks.PipeClient is not null);
         var failedTestInfoRequest = new FailedTestInfoRequest(testDisplayName, isCanceled, duration, errorMessage, errorStackTrace, expected, actual, codeFilePath, lineNumber);
         await _msBuildTestApplicationLifecycleCallbacks.PipeClient.RequestReplyAsync<FailedTestInfoRequest, VoidResponse>(failedTestInfoRequest, cancellationToken).ConfigureAwait(false);
     }
@@ -201,8 +218,8 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
     {
         string? duration = ToHumanReadableDuration(elapsed.TotalMilliseconds);
 
-        ApplicationStateGuard.Ensure(_msBuildTestApplicationLifecycleCallbacks != null);
-        ApplicationStateGuard.Ensure(_msBuildTestApplicationLifecycleCallbacks.PipeClient != null);
+        ApplicationStateGuard.Ensure(_msBuildTestApplicationLifecycleCallbacks is not null);
+        ApplicationStateGuard.Ensure(_msBuildTestApplicationLifecycleCallbacks.PipeClient is not null);
         bool allowSkipped = PlatformCommandLineProvider.GetZeroTestsPolicy(_commandLineOptions) == ZeroTestsPolicy.AllowSkipped;
         var runSummaryInfoRequest = new RunSummaryInfoRequest(_totalTests, _totalFailedTests, _totalPassedTests, _totalSkippedTests, duration, allowSkipped);
         await _msBuildTestApplicationLifecycleCallbacks.PipeClient.RequestReplyAsync<RunSummaryInfoRequest, VoidResponse>(runSummaryInfoRequest, cancellationToken).ConfigureAwait(false);

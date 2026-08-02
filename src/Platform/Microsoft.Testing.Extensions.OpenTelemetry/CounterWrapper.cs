@@ -17,4 +17,15 @@ internal sealed class CounterWrapper<T> : ICounter<T>
             ?? throw new ArgumentNullException(nameof(counter));
 
     public void Add(T delta) => _counter.Add(delta);
+
+    public void Add(T delta, IEnumerable<KeyValuePair<string, object?>>? tags)
+    {
+        if (tags is null)
+        {
+            _counter.Add(delta);
+            return;
+        }
+
+        _counter.Add(delta, MeasurementTags.ToArray(tags));
+    }
 }

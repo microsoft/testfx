@@ -1,4 +1,10 @@
 #nullable enable
+Microsoft.Testing.Platform.Messages.AsyncConsumerDataProcessor.AsyncConsumerDataProcessor(Microsoft.Testing.Platform.Extensions.IDataConsumer! dataConsumer, Microsoft.Testing.Platform.Helpers.ITask! task, System.Threading.CancellationToken cancellationToken, System.TimeSpan canceledShutdownTimeout) -> void
+Microsoft.Testing.Platform.Messages.AsyncConsumerDataProcessor.IsConsumerRunning.get -> bool
+Microsoft.Testing.Platform.Messages.BlockingConsumerDataProcessor.BlockingConsumerDataProcessor(Microsoft.Testing.Platform.Extensions.IDataConsumer! dataConsumer, System.Threading.CancellationToken cancellationToken, System.TimeSpan canceledShutdownTimeout) -> void
+Microsoft.Testing.Platform.Messages.BlockingConsumerDataProcessor.IsConsumerRunning.get -> bool
+Microsoft.Testing.Platform.Messages.IAsyncConsumerDataProcessor.IsConsumerRunning.get -> bool
+Microsoft.Testing.Platform.Messages.ShutdownTimeouts
 Microsoft.Testing.Platform.Requests.ConsoleTestExecutionRequestFactory.ConsoleTestExecutionRequestFactory(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineService, Microsoft.Testing.Platform.Requests.ITestExecutionFilterFactory! testExecutionFilterFactory, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Requests.ITestExecutionFilterProvider!>! testExecutionFilterProviders) -> void
 Microsoft.Testing.Platform.Requests.ConsoleTestExecutionRequestFactory.CreateRequestAsync(Microsoft.Testing.Platform.TestHost.TestSessionContext! session, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Requests.TestExecutionRequest!>!
 Microsoft.Testing.Platform.Requests.ITestExecutionRequestFactory.CreateRequestAsync(Microsoft.Testing.Platform.TestHost.TestSessionContext! session, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Requests.TestExecutionRequest!>!
@@ -9,6 +15,12 @@ Microsoft.Testing.Platform.TestHost.TestHostManager.AddTestExecutionFilterProvid
 Microsoft.Testing.Platform.TestHost.TestHostManager.BuildTestExecutionFilterProvidersAsync(Microsoft.Testing.Platform.Services.ServiceProvider! serviceProvider) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Requests.ITestExecutionFilterProvider![]!>!
 static Microsoft.Testing.Platform.Requests.TestExecutionFilterComposer.ComposeAsync(Microsoft.Testing.Platform.Requests.ITestExecutionFilter! requestFilter, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Requests.ITestExecutionFilterProvider!>! providers, Microsoft.Testing.Platform.Requests.TestExecutionFilterContext! context, bool allowProviderContributions, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Requests.ITestExecutionFilter!>!
 static Microsoft.Testing.Platform.Requests.TestExecutionFilterComposer.GetLeafFilters(Microsoft.Testing.Platform.Requests.ITestExecutionFilter! filter) -> System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Requests.ITestExecutionFilter!>!
+override Microsoft.Testing.Platform.Messages.AsynchronousMessageBus.ConsumersStillRunning.get -> System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Extensions.IDataConsumer!>!
+override Microsoft.Testing.Platform.Messages.MessageBusProxy.ConsumersStillRunning.get -> System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Extensions.IDataConsumer!>!
+static Microsoft.Testing.Platform.Hosts.CommonHost.EnsureMessageBusDisabledAsync(Microsoft.Testing.Platform.Messages.BaseMessageBus! baseMessageBus, System.IServiceProvider! serviceProvider) -> System.Threading.Tasks.Task!
+static Microsoft.Testing.Platform.Messages.ShutdownTimeouts.GetCanceledConsumerCompletion(Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> System.TimeSpan
+static readonly Microsoft.Testing.Platform.Messages.ShutdownTimeouts.DefaultCanceledConsumerCompletion -> System.TimeSpan
+virtual Microsoft.Testing.Platform.Messages.BaseMessageBus.ConsumersStillRunning.get -> System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Extensions.IDataConsumer!>!
 *REMOVED*Microsoft.Testing.Platform.Requests.ConsoleTestExecutionRequestFactory.ConsoleTestExecutionRequestFactory(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineService, Microsoft.Testing.Platform.Requests.ITestExecutionFilterFactory! testExecutionFilterFactory) -> void
 *REMOVED*Microsoft.Testing.Platform.Requests.ConsoleTestExecutionRequestFactory.CreateRequestAsync(Microsoft.Testing.Platform.TestHost.TestSessionContext! session) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Requests.TestExecutionRequest!>!
 *REMOVED*Microsoft.Testing.Platform.Requests.ITestExecutionRequestFactory.CreateRequestAsync(Microsoft.Testing.Platform.TestHost.TestSessionContext! session) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Requests.TestExecutionRequest!>!
@@ -313,6 +325,8 @@ Microsoft.Testing.Platform.OutputDevice.SlowTestThresholdState.SlowTestThreshold
 static Microsoft.Testing.Platform.OutputDevice.ProgressReportingConfiguration.GetThreshold(Microsoft.Testing.Platform.Helpers.IEnvironment! environment, string! variableName, int defaultSeconds) -> System.TimeSpan
 Microsoft.Testing.Platform.Extensions.Messages.TestNodeExecutionCompletedProperty
 static Microsoft.Testing.Platform.Extensions.Messages.TestNodeExecutionCompletedProperty.CachedInstance.get -> Microsoft.Testing.Platform.Extensions.Messages.TestNodeExecutionCompletedProperty!
+Microsoft.Testing.Platform.Extensions.Messages.RetryAttemptPropertyExtensions
+static Microsoft.Testing.Platform.Extensions.Messages.RetryAttemptPropertyExtensions.IsSupersededRetryAttempt(this Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode) -> bool
 Microsoft.Testing.Platform.CommandLine.FlakyTestsReportingOptions
 const Microsoft.Testing.Platform.CommandLine.FlakyTestsReportingOptions.ShowFlakyTestsOptionName = "show-flaky-tests" -> string!
 static Microsoft.Testing.Platform.CommandLine.FlakyTestsReportingOptions.IsEnabled(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> bool
@@ -332,3 +346,127 @@ Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.Sho
 Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.ShowRunSummary.init -> void
 const Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.ShowFlakyTestsOption = "show-flaky-tests" -> string!
 static Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.IsFlakyTestsReportingEnabled(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> bool
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporter.TestCompleted(string! executionId, string! testNodeUid, string! displayName, Microsoft.Testing.Platform.OutputDevice.Terminal.TestOutcome outcome, System.TimeSpan? duration, string? informativeMessage, string? errorMessage, System.Exception? exception, string? expected, string? actual, string? standardOutput, string? errorOutput, Microsoft.Testing.Platform.Extensions.Messages.RetryAttemptProperty? retryAttempt) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.ReportPassingTest(string! testNodeUid, string! displayName, string! instanceId, int retryAttemptNumber) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.ReportSkippedTest(string! testNodeUid, string! displayName, string! instanceId, int retryAttemptNumber) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.ReportFailedTest(string! testNodeUid, string! displayName, string! instanceId, int retryAttemptNumber) -> void
+static Microsoft.Testing.Platform.Helpers.ExtensionHelper.ConfigureOTelLegacyAttributes(Microsoft.Testing.Platform.Telemetry.PlatformOpenTelemetryOptions! options) -> void
+static Microsoft.Testing.Platform.Helpers.ExtensionHelper.EmitLegacyOTelAttributes.get -> bool
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Activities.TestFramework = "TestFramework" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Activities.TestHostBuilder = "TestHostBuilder" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics.LegacyTestsCompleted = "tests.completed" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics.LegacyTestsDiscovered = "tests.discovered" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics.LegacyTestsDuration = "tests.duration" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics.LegacyTestsFailed = "tests.failed" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics.LegacyTestsPassed = "tests.passed" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics.LegacyTestsSkipped = "tests.skipped" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics.LegacyTestsStarted = "tests.started" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics.LegacyTestsUnknown = "tests.unknown" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics.TestCaseResultCount = "test.case.result.count" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics.TestRetryCount = "test.case.retry.count" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics.TestRunActiveCases = "test.case.active" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics.TestRunDuration = "test.run.duration" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Units.Count = "{test}" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Units.Seconds = "s" -> string!
+Microsoft.Testing.Platform.Telemetry.ICounter<T>.Add(T delta, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? tags) -> void
+Microsoft.Testing.Platform.Telemetry.IHistogram<T>.Record(T value, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? tags) -> void
+Microsoft.Testing.Platform.Telemetry.IPlatformActivity.AddEvent(string! name, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? tags = null, System.DateTimeOffset timestamp = default(System.DateTimeOffset)) -> Microsoft.Testing.Platform.Telemetry.IPlatformActivity!
+Microsoft.Testing.Platform.Telemetry.IPlatformActivity.IsRecording.get -> bool
+Microsoft.Testing.Platform.Telemetry.IPlatformActivity.RecordException(System.Exception! exception, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? additionalTags = null) -> Microsoft.Testing.Platform.Telemetry.IPlatformActivity!
+Microsoft.Testing.Platform.Telemetry.IPlatformActivity.SetStatus(Microsoft.Testing.Platform.Telemetry.PlatformActivityStatusCode statusCode, string? description = null) -> Microsoft.Testing.Platform.Telemetry.IPlatformActivity!
+Microsoft.Testing.Platform.Telemetry.IPlatformActivity.SpanId.get -> string?
+Microsoft.Testing.Platform.Telemetry.IPlatformActivity.TraceId.get -> string?
+Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryService.CreateObservableGauge<T>(string! name, System.Func<T>! observeValue, string? unit = null, string? description = null) -> void
+Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryService.CreateUpDownCounter<T>(string! name, string? unit = null, string? description = null, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? tags = null) -> Microsoft.Testing.Platform.Telemetry.IUpDownCounter<T>!
+Microsoft.Testing.Platform.Telemetry.IUpDownCounter<T>.Add(T delta, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? tags = null) -> void
+Microsoft.Testing.Platform.Telemetry.OpenTelemetryResultHandler.OpenTelemetryResultHandler(Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryService! otelService, Microsoft.Testing.Platform.Telemetry.PlatformOpenTelemetryOptions! options) -> void
+Microsoft.Testing.Platform.Telemetry.PlatformOpenTelemetryOptions.AttributeValueLengthLimit.get -> int
+Microsoft.Testing.Platform.Telemetry.PlatformOpenTelemetryOptions.CaptureTestOutput.get -> bool
+Microsoft.Testing.Platform.Telemetry.PlatformOpenTelemetryOptions.EmitLegacyAttributes.get -> bool
+Microsoft.Testing.Platform.Telemetry.PlatformOpenTelemetryOptions.Truncate(string? value) -> string?
+Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Activities
+Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics
+Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Units
+static Microsoft.Testing.Platform.Telemetry.EnvironmentTraceContext.IsValidTraceParent(string? traceParent) -> bool
+static Microsoft.Testing.Platform.Telemetry.EnvironmentTraceContext.TryGetParentId(Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> string?
+static Microsoft.Testing.Platform.Telemetry.EnvironmentTraceContext.TryGetTraceState(Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> string?
+static Microsoft.Testing.Platform.Telemetry.PlatformOpenTelemetryOptions.Default.get -> Microsoft.Testing.Platform.Telemetry.PlatformOpenTelemetryOptions!
+static Microsoft.Testing.Platform.Telemetry.PlatformOpenTelemetryOptions.FromEnvironment(Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> Microsoft.Testing.Platform.Telemetry.PlatformOpenTelemetryOptions!
+const Microsoft.Testing.Platform.Telemetry.PlatformOpenTelemetryOptions.DefaultAttributeValueLengthLimit = 8192 -> int
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.CodeFilePath = "code.file.path" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.CodeFunctionName = "code.function.name" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.CodeLineNumber = "code.line.number" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.CodeStacktrace = "code.stacktrace" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.ErrorType = "error.type" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestAssembly = "test.assembly" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestClass = "test.class" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestDuration = "test.duration.ms" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestFilePath = "test.file.path" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestId = "test.id" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestLineEnd = "test.line.end" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestLineStart = "test.line.start" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestMetadataPrefix = "test.metadataProperty." -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestMethod = "test.method" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestName = "test.name" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestNamespace = "test.namespace" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestParentId = "test.parent.id" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestResult = "test.result" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestResultExceptionMessage = "test.result.exception.message" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestResultExceptionStackTrace = "test.result.exception.stacktrace" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestResultExceptionType = "test.result.exception.type" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestResultExplanation = "test.result.explanation" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestResultTimeout = "test.result.timeout.ms" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestStderr = "test.stderr" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.LegacyTestStdout = "test.stdout" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestAssemblyName = "test.assembly.name" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestCaseId = "test.case.id" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestCaseName = "test.case.name" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestCaseParentId = "test.case.parent.id" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestCaseResultExplanation = "test.case.result.explanation" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestCaseResultStatus = "test.case.result.status" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestCaseRetryAttempt = "test.case.retry.attempt" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestCaseTimeoutMilliseconds = "test.case.timeout" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestExtensionDisplayName = "test.extension.display_name" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestExtensionUid = "test.extension.uid" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestExtensionVersion = "test.extension.version" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestFrameworkName = "test.framework.name" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestFrameworkVersion = "test.framework.version" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestHostType = "test.host.type" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestMetadataPrefix = "test.metadata." -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestOutputStderr = "test.output.stderr" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestOutputStdout = "test.output.stdout" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestRunExitCode = "test.run.exit_code" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestRunRequestType = "test.run.request_type" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestSessionId = "test.session.id" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestStepPrefix = "test.step." -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestSuiteName = "test.suite.name" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Metrics.TestCaseDuration = "test.case.duration" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.TestResultStatus.Cancelled = "cancelled" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.TestResultStatus.Error = "error" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.TestResultStatus.Skipped = "skipped" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.TestResultStatus.Timeout = "timeout" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.TestResultStatus.Unknown = "unknown" -> string!
+Microsoft.Testing.Platform.Telemetry.EnvironmentTraceContext
+Microsoft.Testing.Platform.Telemetry.IUpDownCounter<T>
+Microsoft.Testing.Platform.Telemetry.PlatformActivityStatusCode
+Microsoft.Testing.Platform.Telemetry.PlatformActivityStatusCode.Error = 2 -> Microsoft.Testing.Platform.Telemetry.PlatformActivityStatusCode
+Microsoft.Testing.Platform.Telemetry.PlatformActivityStatusCode.Ok = 1 -> Microsoft.Testing.Platform.Telemetry.PlatformActivityStatusCode
+Microsoft.Testing.Platform.Telemetry.PlatformActivityStatusCode.Unset = 0 -> Microsoft.Testing.Platform.Telemetry.PlatformActivityStatusCode
+Microsoft.Testing.Platform.Telemetry.PlatformOpenTelemetryOptions
+Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions
+Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes
+Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.TestResultStatus
+Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryService.HasCurrentActivity.get -> bool
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestCaseDurationMilliseconds = "test.case.duration_ms" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestRunFailedCount = "test.run.failed" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestRunResultStatus = "test.run.result.status" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestRunSkippedCount = "test.run.skipped" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Attributes.TestRunTotalCount = "test.run.total" -> string!
+Microsoft.Testing.Platform.Telemetry.OpenTelemetryResultHandler.NotifyRunCompleted(int totalRanTests, int failedTests, int skippedTests, int exitCode, Microsoft.Testing.Platform.Telemetry.IPlatformActivity? runActivity = null) -> void
+Microsoft.Testing.Platform.Services.TestApplicationResult.ReportRunTelemetry(Microsoft.Testing.Platform.Telemetry.IPlatformActivity? runActivity, int exitCode) -> void
+Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryService.RootTraceState.get -> string?
+Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryService.RootTraceState.set -> void
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.TestResultStatus.Fail = "fail" -> string!
+const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.TestResultStatus.Pass = "pass" -> string!
+static Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.TestResultStatus.ToLegacy(string! status) -> string!
+Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryService.StartNonAmbientActivity(string! name, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? tags = null, string? parentId = null) -> Microsoft.Testing.Platform.Telemetry.IPlatformActivity?

@@ -1,1 +1,3 @@
 #nullable enable
+[TPEXP]static Microsoft.Testing.Extensions.OpenTelemetryProviderExtensions.AddOpenTelemetryProviderFromEnvironment(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder, System.Action<OpenTelemetry.Trace.TracerProviderBuilder!>? configureTracing = null, System.Action<OpenTelemetry.Metrics.MeterProviderBuilder!>? configureMetrics = null) -> void
+[TPEXP]static Microsoft.Testing.Extensions.OpenTelemetryProviderExtensions.AddTestingPlatformResource(this OpenTelemetry.Resources.ResourceBuilder! builder) -> OpenTelemetry.Resources.ResourceBuilder!

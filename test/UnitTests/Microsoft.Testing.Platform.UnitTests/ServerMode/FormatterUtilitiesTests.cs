@@ -49,6 +49,45 @@ public sealed class FormatterUtilitiesTests
         Assert.IsNull(response.Result);
     }
 
+    [TestMethod]
+    public async Task Serialize_TestNodeWithRetryAttempt_EmitsRetryProperties()
+    {
+        // An unhandled property falls through the serializer's type chain and is silently dropped, which would
+        // leave a server-mode client unable to tell repeated updates for the same uid apart. Both serializer
+        // implementations (System.Text.Json on .NET, Jsonite on .NET Framework) must carry the attribution.
+        var testNode = new TestNode
+        {
+            Uid = new TestNodeUid("uid"),
+            DisplayName = "DisplayName",
+            Properties = new PropertyBag(
+                PassedTestNodeStateProperty.CachedInstance,
+                new RetryAttemptProperty(2, isSuperseded: false)),
+        };
+
+        string serialized = (await _formatter.SerializeAsync(testNode)).Replace(" ", string.Empty);
+
+        Assert.Contains("\"retry.attempt\":2", serialized, serialized);
+        Assert.Contains("\"retry.is-superseded\":false", serialized, serialized);
+    }
+
+    [TestMethod]
+    public async Task Serialize_TestNodeWithSupersededRetryAttempt_EmitsIsSupersededTrue()
+    {
+        var testNode = new TestNode
+        {
+            Uid = new TestNodeUid("uid"),
+            DisplayName = "DisplayName",
+            Properties = new PropertyBag(
+                new FailedTestNodeStateProperty("boom"),
+                new RetryAttemptProperty(1, isSuperseded: true)),
+        };
+
+        string serialized = (await _formatter.SerializeAsync(testNode)).Replace(" ", string.Empty);
+
+        Assert.Contains("\"retry.attempt\":1", serialized, serialized);
+        Assert.Contains("\"retry.is-superseded\":true", serialized, serialized);
+    }
+
     [DynamicData(nameof(SerializerTypesForDynamicData), DynamicDataDisplayName = nameof(FormatSerializerTypes))]
     [TestMethod]
     public async Task SerializeDeserialize_Succeed(Type type)
@@ -88,6 +127,78 @@ public sealed class FormatterUtilitiesTests
         Assert.AreEqual(
             """{"uid":"dropped-test","display-name":"DroppedTest","node-type":"action","execution-state":"discovered"}""",
             serialized);
+    }
+
+    [TestMethod]
+    public async Task Serialize_FailedTestNodeWithAssertionFailureProperty_EmitsAssertValues()
+    {
+        // No exception at all: the assertion diff must still reach the client. This is the case the
+        // Exception.Data channel structurally cannot express.
+        var testNode = new TestNode
+        {
+            Uid = "failing-test",
+            DisplayName = "FailingTest",
+            Properties = new PropertyBag(
+                new FailedTestNodeStateProperty("Assert.AreEqual failed."),
+                new AssertionFailureProperty("5", "2")),
+        };
+
+        string serialized = (await _formatter.SerializeAsync(testNode)).Replace(" ", string.Empty);
+
+        Assert.AreEqual(
+            """{"uid":"failing-test","display-name":"FailingTest","node-type":"action","execution-state":"failed","error.message":"Assert.AreEqualfailed.","assert.actual":"2","assert.expected":"5"}""",
+            serialized);
+    }
+
+    [TestMethod]
+    public async Task Serialize_FailedTestNodeWithAssertionFailureProperty_PrefersPropertyOverExceptionData()
+    {
+        var exception = new InvalidOperationException("boom");
+        exception.Data["assert.expected"] = "legacy expected";
+        exception.Data["assert.actual"] = "legacy actual";
+
+        var testNode = new TestNode
+        {
+            Uid = "failing-test",
+            DisplayName = "FailingTest",
+            Properties = new PropertyBag(
+                new FailedTestNodeStateProperty(exception),
+                new AssertionFailureProperty("5", "2")),
+        };
+
+        string serialized = (await _formatter.SerializeAsync(testNode)).Replace(" ", string.Empty);
+
+        Assert.Contains("\"assert.actual\":\"2\"", serialized);
+        Assert.Contains("\"assert.expected\":\"5\"", serialized);
+
+        // Proves the property won rather than merely being present: an implementation that emitted both
+        // channels would satisfy the two assertions above.
+        Assert.DoesNotContain("legacy", serialized);
+    }
+
+    [TestMethod]
+    public async Task Serialize_OneSidedAssertionFailureProperty_DoesNotSpliceInExceptionData()
+    {
+        // The property is authoritative as a whole; the missing half must serialize as empty rather than
+        // falling back to an unrelated Exception.Data entry.
+        var exception = new InvalidOperationException("boom");
+        exception.Data["assert.expected"] = "legacy expected";
+        exception.Data["assert.actual"] = "legacy actual";
+
+        var testNode = new TestNode
+        {
+            Uid = "failing-test",
+            DisplayName = "FailingTest",
+            Properties = new PropertyBag(
+                new FailedTestNodeStateProperty(exception),
+                new AssertionFailureProperty("5", null)),
+        };
+
+        string serialized = (await _formatter.SerializeAsync(testNode)).Replace(" ", string.Empty);
+
+        Assert.Contains("\"assert.expected\":\"5\"", serialized);
+        Assert.Contains("\"assert.actual\":\"\"", serialized);
+        Assert.DoesNotContain("legacy", serialized);
     }
 
     [DataRow(typeof(DiscoverRequestArgs))]
