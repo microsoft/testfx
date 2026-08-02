@@ -354,9 +354,9 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
 
     public void ToResultTestNode_ReusesTestMethodIdentifierInstance_ForParameterlessTestMethod()
     {
-        // A parameterless identifier is fully immutable (readonly strings plus an empty, unmutatable parameter
-        // array), so the cached parse hands back the very same property instance instead of allocating a new one
-        // for every report of the same test method (retries, re-runs, ...).
+        // A parameterless identifier is fully immutable (readonly strings plus an empty parameter array, which
+        // cannot be mutated), so the cached parse hands back the very same property instance instead of
+        // allocating a new one for every node built from the same test method.
         UnitTestElement element = CreateElement();
 
         TestMethodIdentifierProperty inProgress = MSTestTestNodeConverter.ToInProgressTestNode(element, isTrxEnabled: false)
