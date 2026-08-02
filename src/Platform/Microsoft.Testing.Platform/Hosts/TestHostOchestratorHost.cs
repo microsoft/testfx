@@ -62,6 +62,7 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
         }
 
         int exitCode;
+        bool orchestrationCanceled = false;
         await logger.LogInformationAsync($"Running test orchestrator '{testHostOrchestrator.Uid}'").ConfigureAwait(false);
         try
         {
@@ -75,6 +76,7 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
         catch (OperationCanceledException) when (applicationCancellationToken.CancellationToken.IsCancellationRequested)
         {
             // We do nothing we're canceling
+            orchestrationCanceled = true;
             exitCode = (int)ExitCode.TestSessionAborted;
         }
         catch
@@ -89,8 +91,10 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
         }
 
         // AfterRunAsync also runs when the orchestration was canceled, because cancellation is exactly when
-        // releasing what BeforeRunAsync acquired matters most.
-        await RunAfterRunAsync(exitCode, swallowFailures: false).ConfigureAwait(false);
+        // releasing what BeforeRunAsync acquired matters most. Cleanup failures only surface after normally
+        // completed orchestration; cancellation and fault paths already have their outcome, so cleanup is
+        // best-effort.
+        await RunAfterRunAsync(exitCode, swallowFailures: orchestrationCanceled).ConfigureAwait(false);
 
         return exitCode;
 
@@ -108,14 +112,17 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
                 }
                 catch (OperationCanceledException) when (applicationCancellationToken.CancellationToken.IsCancellationRequested)
                 {
-                    await logger.LogDebugAsync($"Orchestrator lifetime '{orchestratorLifetime.Uid}' did not complete AfterRunAsync because the run was canceled.").ConfigureAwait(false);
+                    await TryLogAsync(() => logger.LogDebugAsync(
+                        $"Orchestrator lifetime '{orchestratorLifetime.Uid}' did not complete AfterRunAsync because the run was canceled.")).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
+                    firstFailure ??= ex;
+
                     // Logged rather than discarded: a lifetime that consistently fails to release its
                     // resource is otherwise undiagnosable, even with --diagnostic.
-                    await logger.LogWarningAsync($"Orchestrator lifetime '{orchestratorLifetime.Uid}' failed in AfterRunAsync: {ex}").ConfigureAwait(false);
-                    firstFailure ??= ex;
+                    await TryLogAsync(() => logger.LogWarningAsync(
+                        $"Orchestrator lifetime '{orchestratorLifetime.Uid}' failed in AfterRunAsync: {ex}")).ConfigureAwait(false);
                 }
 
                 try
@@ -124,16 +131,30 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
                 }
                 catch (Exception ex)
                 {
-                    await logger.LogWarningAsync($"Orchestrator lifetime '{orchestratorLifetime.Uid}' failed to dispose: {ex}").ConfigureAwait(false);
                     firstFailure ??= ex;
+                    await TryLogAsync(() => logger.LogWarningAsync(
+                        $"Orchestrator lifetime '{orchestratorLifetime.Uid}' failed to dispose: {ex}")).ConfigureAwait(false);
                 }
             }
 
-            // On the faulted path the caller is about to rethrow the exception that actually failed the
-            // run; surfacing a cleanup failure instead would hide it.
+            // On cancellation and fault paths the caller already has an outcome to report; only surface
+            // cleanup failures after normal completion.
             if (firstFailure is not null && !swallowFailures)
             {
                 ExceptionDispatchInfo.Capture(firstFailure).Throw();
+            }
+        }
+
+        async Task TryLogAsync(Func<Task> logAsync)
+        {
+            try
+            {
+                await logAsync().ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                // Diagnostic logging in this cleanup path is best-effort; letting it escape could skip
+                // disposal or later lifetimes and strand the resources this loop exists to release.
             }
         }
     }

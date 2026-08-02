@@ -1366,6 +1366,7 @@ public sealed class AzureDevOpsLivePublishingTests
         await lifetime.AfterRunAsync(3 /* ExitCode.TestSessionAborted */, CancellationToken.None);
 
         Assert.HasCount(1, client.UpdateTestRunStateCalls);
+        Assert.AreEqual(4244, client.UpdateTestRunStateCalls[0].RunId);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.AbortedTestRunState, client.UpdateTestRunStateCalls[0].State);
     }
 
@@ -1534,6 +1535,7 @@ public sealed class AzureDevOpsLivePublishingTests
         await lifetime.AfterRunAsync(0 /* ExitCode.Success */, CancellationToken.None);
 
         Assert.HasCount(1, client.UpdateTestRunStateCalls);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, client.UpdateTestRunStateCalls[0].State);
     }
 
     [TestMethod]
@@ -1558,7 +1560,7 @@ public sealed class AzureDevOpsLivePublishingTests
         Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
         environment.Setup(x => x.SetEnvironmentVariable(AzureDevOpsConstants.TestRunIdEnvironmentVariableName, It.IsAny<string>()))
             .Throws(new SecurityException("environment is locked down"));
-        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out FakeAzureDevOpsTestResultsClient client, out _, environment);
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out FakeAzureDevOpsTestResultsClient client, out CollectingLogger logger, environment);
         client.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(4248);
 
         await lifetime.BeforeRunAsync(CancellationToken.None);
@@ -1566,6 +1568,7 @@ public sealed class AzureDevOpsLivePublishingTests
 
         Assert.HasCount(1, client.UpdateTestRunStateCalls);
         Assert.AreEqual(4248, client.UpdateTestRunStateCalls[0].RunId);
+        Assert.Contains(AzureDevOpsResources.AzureDevOpsLivePublishingRunIdHandoffFailed, string.Join(Environment.NewLine, logger.Logs));
     }
 
     [TestMethod]

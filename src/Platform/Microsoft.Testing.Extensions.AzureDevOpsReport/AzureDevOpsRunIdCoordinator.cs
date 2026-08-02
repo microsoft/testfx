@@ -176,9 +176,15 @@ internal sealed class AzureDevOpsRunIdCoordinator
                 unresponsiveDeadline = _clock.UtcNow + _options.CoordinationFinalizeTimeout;
             }
 
-            if (_clock.UtcNow >= hardDeadline || _clock.UtcNow >= unresponsiveDeadline || cancellationToken.IsCancellationRequested)
+            DateTimeOffset now = _clock.UtcNow;
+            bool hardDeadlineExpired = now >= hardDeadline;
+            bool unresponsiveDeadlineExpired = now >= unresponsiveDeadline;
+            if (hardDeadlineExpired || unresponsiveDeadlineExpired || cancellationToken.IsCancellationRequested)
             {
-                _logger.LogWarning(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingFinalizeWaitTimedOut, _options.CoordinationFinalizeTimeout, participantFiles.Length));
+                TimeSpan timeout = hardDeadlineExpired
+                    ? _options.CoordinationFinalizeMaxWaitTime
+                    : _options.CoordinationFinalizeTimeout;
+                _logger.LogWarning(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingFinalizeWaitTimedOut, timeout, participantFiles.Length));
                 break;
             }
 
@@ -477,7 +483,7 @@ internal sealed class AzureDevOpsRunIdCoordinator
         }
         catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
         {
-            _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingFailedToDeleteCoordinationFile} {runIdFilePath}: {ex.Message}");
+            _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingFailedToWriteCoordinationFile} {runIdFilePath}: {ex.Message}");
         }
     }
 

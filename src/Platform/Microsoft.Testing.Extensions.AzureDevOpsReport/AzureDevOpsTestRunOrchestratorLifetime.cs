@@ -172,7 +172,7 @@ internal sealed class AzureDevOpsTestRunOrchestratorLifetime : ITestHostOrchestr
         {
             // Without the handoff the attempts coordinate among themselves instead of joining this run,
             // which is degraded but not broken. The run itself stays owned by this process.
-            TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingCreateRunFailed} {ex.Message}");
+            TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingRunIdHandoffFailed} {ex.Message}");
         }
     }
 
@@ -242,7 +242,7 @@ internal sealed class AzureDevOpsTestRunOrchestratorLifetime : ITestHostOrchestr
         }
         catch (Exception ex)
         {
-            TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingCompleteRunFailed} {ex.Message}");
+            TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingRunIdHandoffFailed} {ex.Message}");
         }
     }
 

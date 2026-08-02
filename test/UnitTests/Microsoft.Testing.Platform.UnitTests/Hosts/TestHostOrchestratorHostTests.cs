@@ -50,6 +50,7 @@ public sealed class TestHostOrchestratorHostTests
         int exitCode = await host.RunAsync();
 
         Assert.AreEqual((int)ExitCode.TestSessionAborted, exitCode);
+        Assert.AreEqual(1, lifetime.BeforeRunCount);
         Assert.AreEqual(1, lifetime.AfterRunCount);
         Assert.AreEqual((int)ExitCode.TestSessionAborted, lifetime.LastExitCode);
         Assert.AreEqual(1, lifetime.DisposeCount);
@@ -67,7 +68,9 @@ public sealed class TestHostOrchestratorHostTests
         InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(host.RunAsync);
 
         Assert.AreEqual("orchestrator exploded", exception.Message);
+        Assert.AreEqual(1, lifetime.BeforeRunCount);
         Assert.AreEqual(1, lifetime.AfterRunCount);
+        Assert.AreEqual((int)ExitCode.GenericFailure, lifetime.LastExitCode);
         Assert.AreEqual(1, lifetime.DisposeCount);
     }
 
@@ -82,9 +85,14 @@ public sealed class TestHostOrchestratorHostTests
 
         await Assert.ThrowsExactlyAsync<InvalidOperationException>(host.RunAsync);
 
+        Assert.AreEqual(1, faulting.BeforeRunCount);
         Assert.AreEqual(1, faulting.AfterRunCount);
+        Assert.AreEqual((int)ExitCode.GenericFailure, faulting.LastExitCode);
+        Assert.AreEqual(1, faulting.DisposeCount);
         Assert.AreEqual(0, never.BeforeRunCount);
         Assert.AreEqual(1, never.AfterRunCount);
+        Assert.AreEqual((int)ExitCode.GenericFailure, never.LastExitCode);
+        Assert.AreEqual(1, never.DisposeCount);
     }
 
     [TestMethod]
@@ -101,8 +109,36 @@ public sealed class TestHostOrchestratorHostTests
         InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(host.RunAsync);
 
         Assert.AreEqual("orchestrator exploded", exception.Message);
+        Assert.AreEqual(1, failing.BeforeRunCount);
+        Assert.AreEqual(1, failing.AfterRunCount);
+        Assert.AreEqual((int)ExitCode.GenericFailure, failing.LastExitCode);
+        Assert.AreEqual(1, failing.DisposeCount);
+        Assert.AreEqual(1, healthy.BeforeRunCount);
         Assert.AreEqual(1, healthy.AfterRunCount);
+        Assert.AreEqual((int)ExitCode.GenericFailure, healthy.LastExitCode);
         Assert.AreEqual(1, healthy.DisposeCount);
+    }
+
+    [TestMethod]
+    public async Task RunAsync_OrchestratorCanceled_LifetimeAfterRunFailureIsSwallowed()
+    {
+        RecordingLifetime lifetime = new(afterRunException: new InvalidOperationException("cleanup exploded"));
+        TestHostOrchestratorHost host = CreateHost(
+            new RecordingOrchestrator(onOrchestrate: cancellationTokenSource =>
+            {
+                cancellationTokenSource.Cancel();
+                throw new OperationCanceledException();
+            }),
+            lifetime,
+            out _);
+
+        int exitCode = await host.RunAsync();
+
+        Assert.AreEqual((int)ExitCode.TestSessionAborted, exitCode);
+        Assert.AreEqual(1, lifetime.BeforeRunCount);
+        Assert.AreEqual(1, lifetime.AfterRunCount);
+        Assert.AreEqual((int)ExitCode.TestSessionAborted, lifetime.LastExitCode);
+        Assert.AreEqual(1, lifetime.DisposeCount);
     }
 
     [TestMethod]
@@ -113,8 +149,32 @@ public sealed class TestHostOrchestratorHostTests
 
         await host.RunAsync();
 
+        Assert.AreEqual(1, lifetime.BeforeRunCount);
         Assert.AreEqual(1, lifetime.AfterRunCount);
         Assert.AreEqual(1, lifetime.DisposeCount);
+    }
+
+    [TestMethod]
+    public async Task RunAsync_LoggerThrows_StillCleansUpEveryLifetime()
+    {
+        // Diagnostic logging in the cleanup loop is best-effort: the aggregate logger propagates provider
+        // exceptions, so a broken log provider must not skip disposal or the remaining lifetimes - the very
+        // resources this loop exists to release.
+        RecordingLifetime failing = new(afterRunException: new InvalidOperationException("cleanup exploded"));
+        RecordingLifetime healthy = new();
+        TestHostOrchestratorHost host = CreateHost(
+            new RecordingOrchestrator(onOrchestrate: _ => throw new InvalidOperationException("orchestrator exploded")),
+            [failing, healthy],
+            out _,
+            new ThrowingLoggerFactory());
+
+        InvalidOperationException exception = await Assert.ThrowsExactlyAsync<InvalidOperationException>(host.RunAsync);
+
+        Assert.AreEqual("orchestrator exploded", exception.Message);
+        Assert.AreEqual(1, failing.AfterRunCount);
+        Assert.AreEqual(1, failing.DisposeCount);
+        Assert.AreEqual(1, healthy.AfterRunCount);
+        Assert.AreEqual(1, healthy.DisposeCount);
     }
 
     private static TestHostOrchestratorHost CreateHost(
@@ -126,13 +186,14 @@ public sealed class TestHostOrchestratorHostTests
     private static TestHostOrchestratorHost CreateHost(
         RecordingOrchestrator orchestrator,
         RecordingLifetime[] lifetimes,
-        out FakeApplicationCancellationTokenSource cancellationTokenSource)
+        out FakeApplicationCancellationTokenSource cancellationTokenSource,
+        ILoggerFactory? loggerFactory = null)
     {
         ServiceProvider serviceProvider = new();
         cancellationTokenSource = new FakeApplicationCancellationTokenSource();
         orchestrator.CancellationTokenSource = cancellationTokenSource;
         serviceProvider.AddService(cancellationTokenSource);
-        serviceProvider.AddService(new NopLoggerFactory());
+        serviceProvider.AddService(loggerFactory ?? new NopLoggerFactory());
         serviceProvider.AddServices([.. lifetimes]);
 
         return new TestHostOrchestratorHost(new TestHostOrchestratorConfiguration([orchestrator]), serviceProvider);
@@ -243,6 +304,38 @@ public sealed class TestHostOrchestratorHostTests
 
             public Task LogAsync<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
                 => Task.CompletedTask;
+        }
+    }
+
+    /// <summary>
+    /// A logger whose provider throws for the levels the cleanup loop uses, mirroring the aggregate
+    /// logger's behaviour of propagating provider exceptions to the caller. Other levels pass through so
+    /// the host's own startup logging, which is outside the cleanup path, still works.
+    /// </summary>
+    private sealed class ThrowingLoggerFactory : ILoggerFactory
+    {
+        public ILogger CreateLogger(string categoryName) => new ThrowingLogger();
+
+        private sealed class ThrowingLogger : ILogger
+        {
+            public bool IsEnabled(LogLevel logLevel) => true;
+
+            public void Log<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+                => ThrowIfCleanupLevel(logLevel);
+
+            public Task LogAsync<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+            {
+                ThrowIfCleanupLevel(logLevel);
+                return Task.CompletedTask;
+            }
+
+            private static void ThrowIfCleanupLevel(LogLevel logLevel)
+            {
+                if (logLevel is LogLevel.Warning or LogLevel.Debug)
+                {
+                    throw new InvalidOperationException("log provider exploded");
+                }
+            }
         }
     }
 }
