@@ -471,9 +471,11 @@ internal sealed class AzureDevOpsRunIdCoordinator
     /// </summary>
     /// <remarks>
     /// The run already exists in Azure DevOps at this point, and this process is the only one that can
-    /// close it. Letting a local file-system failure propagate would discard that ownership and strand the
-    /// run in "InProgress" forever. Losing the file only costs the ability of peers to join — they fall
-    /// back to creating their own run, which is the pre-consolidation behaviour.
+    /// close it. Letting anything propagate here would unwind into the caller's cleanup, which deletes the
+    /// leases and never hands back the run, stranding it in "InProgress" forever. So nothing escapes:
+    /// not a file-system failure, not cancellation, and not a logger provider that throws while reporting
+    /// it. Losing the file costs peers the ability to join this run, which is degraded but recoverable;
+    /// losing the run itself is not.
     /// </remarks>
     private async Task TryWriteRunIdFileAsync(string runIdFilePath, AzureDevOpsPublishConfiguration configuration, int runId, CancellationToken cancellationToken)
     {
@@ -481,9 +483,29 @@ internal sealed class AzureDevOpsRunIdCoordinator
         {
             await WriteRunIdFileAsync(runIdFilePath, configuration, runId, cancellationToken).ConfigureAwait(false);
         }
-        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+        catch (Exception ex)
         {
-            _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingFailedToWriteCoordinationFile} {runIdFilePath}: {ex.Message}");
+            TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingFailedToWriteCoordinationFile} {runIdFilePath}: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Logs a warning, swallowing any failure from the logging providers.
+    /// </summary>
+    /// <remarks>
+    /// The aggregate logger invokes each provider directly, so a failing provider propagates. Every caller
+    /// here is already recovering from something, and letting a diagnostic replace the failure it was
+    /// describing would lose both.
+    /// </remarks>
+    private void TryLogWarning(string message)
+    {
+        try
+        {
+            _logger.LogWarning(message);
+        }
+        catch (Exception)
+        {
+            // There is nowhere left to report this: the diagnostic logger is the fallback sink.
         }
     }
 
@@ -538,11 +560,11 @@ internal sealed class AzureDevOpsRunIdCoordinator
         }
         catch (IOException ex)
         {
-            _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingFailedToDeleteCoordinationFile} {path}: {ex.Message}");
+            TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingFailedToDeleteCoordinationFile} {path}: {ex.Message}");
         }
         catch (UnauthorizedAccessException ex)
         {
-            _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingFailedToDeleteCoordinationFile} {path}: {ex.Message}");
+            TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingFailedToDeleteCoordinationFile} {path}: {ex.Message}");
         }
     }
 

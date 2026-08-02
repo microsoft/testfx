@@ -1727,6 +1727,41 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.AreEqual(0, delayCount, "The owner polled instead of completing immediately, so it was waiting on its own lease.");
     }
 
+    [TestMethod]
+    public async Task RunIdCoordinator_AcquireRunAsync_RunIdFileWriteFailsUnderCancellation_StillReturnsTheCreatedRun()
+    {
+        // Once the run exists in Azure DevOps this process is the only one that can close it. If anything
+        // escapes the run-id file write - including cancellation, or a log provider throwing while
+        // reporting the write failure - AcquireRunAsync's cleanup deletes the leases and never hands the
+        // run back, leaving it "InProgress" forever.
+        using TestDirectory directory = CreateTestDirectory();
+        using CancellationTokenSource canceled = new();
+        FakeClock clock = new() { UtcNow = new DateTimeOffset(2025, 1, 1, 12, 0, 0, TimeSpan.Zero) };
+        AzureDevOpsTestResultsPublisherOptions options = new(10, TimeSpan.FromMinutes(1), 2, TimeSpan.FromMilliseconds(1));
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "storage", directory.Path);
+
+        UnwritableFileSystem fileSystem = new();
+        CollectingLogger logger = new();
+        AzureDevOpsRunIdCoordinator coordinator = new(fileSystem, new FakeTask(), clock, CreateEnvironmentMock(processId: GetAliveProcessId()).Object, logger, options);
+
+        AzureDevOpsCoordinatedRun run = await coordinator.AcquireRunAsync(
+            configuration,
+            _ =>
+            {
+                // The run now exists remotely. Everything after this point must preserve ownership.
+                fileSystem.FailRunIdFileWrites = true;
+                logger.ThrowOnLog = true;
+#pragma warning disable VSTHRD103 // CancelAsync is only available on .NET 8+; this project also targets .NET Framework.
+                canceled.Cancel();
+#pragma warning restore VSTHRD103
+                return Task.FromResult(970);
+            },
+            canceled.Token);
+
+        Assert.AreEqual(970, run.RunId);
+        Assert.IsTrue(run.IsOwner);
+    }
+
     #endregion
 
     private static AzureDevOpsTestRunOrchestratorLifetime CreateOrchestratorLifetime(
@@ -1917,7 +1952,44 @@ public sealed class AzureDevOpsLivePublishingTests
     }
 
     /// <summary>
-    /// A real file system whose deletes fail, emulating a handle held by an antivirus or search indexer —
+    /// A real file system whose run-id coordination file writes fail on demand.
+    /// </summary>
+    private sealed class UnwritableFileSystem : IFileSystem
+    {
+        private readonly SystemFileSystem _inner = new();
+
+        public bool FailRunIdFileWrites { get; set; }
+
+        public IFileStream NewFileStream(string path, FileMode mode, FileAccess access, FileShare share)
+            => FailRunIdFileWrites && Path.GetFileName(path).EndsWith(".json", StringComparison.Ordinal) && !Path.GetFileName(path).Contains("participant")
+                ? throw new IOException($"The process cannot access the file '{path}' because it is being used by another process.")
+                : _inner.NewFileStream(path, mode, access, share);
+
+        public void CopyFile(string sourceFileName, string destFileName, bool overwrite = false) => _inner.CopyFile(sourceFileName, destFileName, overwrite);
+
+        public string CreateDirectory(string path) => _inner.CreateDirectory(path);
+
+        public void DeleteFile(string path) => _inner.DeleteFile(path);
+
+        public bool ExistDirectory(string? path) => _inner.ExistDirectory(path);
+
+        public bool ExistFile(string path) => _inner.ExistFile(path);
+
+        public string[] GetFiles(string path, string searchPattern, SearchOption searchOption) => _inner.GetFiles(path, searchPattern, searchOption);
+
+        public void MoveFile(string sourceFileName, string destFileName, bool overwrite = false) => _inner.MoveFile(sourceFileName, destFileName, overwrite);
+
+        public IFileStream NewFileStream(string path, FileMode mode) => _inner.NewFileStream(path, mode);
+
+        public IFileStream NewFileStream(string path, FileMode mode, FileAccess access) => _inner.NewFileStream(path, mode, access);
+
+        public string ReadAllText(string path) => _inner.ReadAllText(path);
+
+        public Task<string> ReadAllTextAsync(string path) => _inner.ReadAllTextAsync(path);
+    }
+
+    /// <summary>
+    /// A real file system whose deletes fail, emulating a handle held by an antivirus or search indexer -
     /// the situation the coordinator's best-effort deletes exist to tolerate.
     /// </summary>
     private sealed class UndeletableFileSystem : IFileSystem
