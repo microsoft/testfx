@@ -353,12 +353,23 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
             $"build -t:Test -p:TestingPlatformCaptureOutput=False -p:AddTestingPlatformEnvironmentVariableItem=true \"{testAsset.TargetAssetPath}\"",
             workingDirectory: testAsset.TargetAssetPath,
+            environmentVariables: new Dictionary<string, string?>
+            {
+                // Deliberately NOT declared as a TestingPlatformEnvironmentVariable item: it only reaches the test
+                // process by inheritance from the MSBuild process.
+                ["MTP_ENV_INHERITED"] = "inherited-value",
+            },
             cancellationToken: TestContext.CancellationToken);
 
         compilationResult.AssertOutputContains("[env] MTP_ENV_SIMPLE=simple-value");
 
         // The value is carried by item metadata, which MSBuild does not split on ';', so it must arrive intact.
         compilationResult.AssertOutputContains("[env] MTP_ENV_WITH_SEMICOLON=first;second");
+
+        // ToolTask layers EnvironmentVariables on top of the inherited environment rather than replacing it. This is
+        // the load-bearing half of the feature: if it ever became replace semantics, declaring a single variable would
+        // strip PATH / DOTNET_ROOT / ... from every test process, so pin it here alongside the declared values.
+        compilationResult.AssertOutputContains("[env] MTP_ENV_INHERITED=inherited-value");
     }
 
     private const string SourceCode = """
@@ -417,7 +428,7 @@ public class Program
 {
     public static async Task<int> Main(string[] args)
     {
-        foreach (string name in new[] { "MTP_ENV_SIMPLE", "MTP_ENV_WITH_SEMICOLON" })
+        foreach (string name in new[] { "MTP_ENV_SIMPLE", "MTP_ENV_WITH_SEMICOLON", "MTP_ENV_INHERITED" })
         {
             Console.WriteLine($"[env] {name}={Environment.GetEnvironmentVariable(name)}");
         }
