@@ -68,6 +68,140 @@ public sealed class InvokeTestingPlatformTaskTests
         Assert.DoesNotContain("normal output line", capturedStdout.ToString());
     }
 
+    [TestMethod]
+    public void AddAppHostDotnetRootEnvironmentVariable_AddsArchitectureSpecificVariableBeforeUserVariables()
+    {
+        using AppHostTaskFixture fixture = new();
+        TestableInvokeTestingPlatformTask task = fixture.CreateTask();
+        task.EnvironmentVariables = ["CUSTOM_VARIABLE=value"];
+
+        task.InvokeAddAppHostDotnetRootEnvironmentVariable();
+
+        Assert.IsNotNull(task.EnvironmentVariables);
+        Assert.HasCount(2, task.EnvironmentVariables);
+        Assert.AreEqual($"{GetDotnetRootArchitectureVariableName()}={fixture.DotnetRoot}", task.EnvironmentVariables[0]);
+        Assert.AreEqual("CUSTOM_VARIABLE=value", task.EnvironmentVariables[1]);
+    }
+
+    [TestMethod]
+    public void AddAppHostDotnetRootEnvironmentVariable_DoesNotOverrideExplicitDotnetRoot()
+    {
+        using AppHostTaskFixture fixture = new();
+        TestableInvokeTestingPlatformTask task = fixture.CreateTask();
+        task.EnvironmentVariables = ["DOTNET_ROOT=explicit"];
+
+        task.InvokeAddAppHostDotnetRootEnvironmentVariable();
+
+        Assert.IsNotNull(task.EnvironmentVariables);
+        Assert.HasCount(2, task.EnvironmentVariables);
+        Assert.AreEqual($"{GetDotnetRootArchitectureVariableName()}=", task.EnvironmentVariables[0]);
+        Assert.AreEqual("DOTNET_ROOT=explicit", task.EnvironmentVariables[1]);
+    }
+
+    [TestMethod]
+    public void AddAppHostDotnetRootEnvironmentVariable_DoesNotOverrideExplicitArchitectureSpecificDotnetRoot()
+    {
+        using AppHostTaskFixture fixture = new();
+        TestableInvokeTestingPlatformTask task = fixture.CreateTask();
+        string explicitVariable = $"{GetDotnetRootArchitectureVariableName()}=explicit";
+        task.EnvironmentVariables = [explicitVariable];
+
+        task.InvokeAddAppHostDotnetRootEnvironmentVariable();
+
+        Assert.IsNotNull(task.EnvironmentVariables);
+        Assert.HasCount(1, task.EnvironmentVariables);
+        Assert.AreEqual(explicitVariable, task.EnvironmentVariables[0]);
+    }
+
+    [TestMethod]
+    public void AddAppHostDotnetRootEnvironmentVariable_ExplicitDotnetRootInWindowsX86Process_ClearsBothArchitectureSpecificVariables()
+    {
+        using AppHostTaskFixture fixture = new();
+        TestableInvokeTestingPlatformTask task = fixture.CreateTask();
+        task.TestArchitecture = new TaskItem("X86");
+        task.EnvironmentVariables = ["DOTNET_ROOT=explicit"];
+
+        task.InvokeAddAppHostDotnetRootEnvironmentVariable(Architecture.X86, isWindows: true, is64BitOperatingSystem: true);
+
+        Assert.IsNotNull(task.EnvironmentVariables);
+        Assert.HasCount(3, task.EnvironmentVariables);
+        Assert.AreEqual("DOTNET_ROOT_X86=", task.EnvironmentVariables[0]);
+        Assert.AreEqual("DOTNET_ROOT(x86)=", task.EnvironmentVariables[1]);
+        Assert.AreEqual("DOTNET_ROOT=explicit", task.EnvironmentVariables[2]);
+    }
+
+    [TestMethod]
+    public void AddAppHostDotnetRootEnvironmentVariable_ExplicitWindowsX86DotnetRoot_ClearsOnlyArchitectureSpecificVariable()
+    {
+        using AppHostTaskFixture fixture = new();
+        TestableInvokeTestingPlatformTask task = fixture.CreateTask();
+        task.TestArchitecture = new TaskItem("X86");
+        task.EnvironmentVariables = ["DOTNET_ROOT(x86)=explicit"];
+
+        task.InvokeAddAppHostDotnetRootEnvironmentVariable(Architecture.X86, isWindows: true, is64BitOperatingSystem: true);
+
+        Assert.IsNotNull(task.EnvironmentVariables);
+        Assert.HasCount(2, task.EnvironmentVariables);
+        Assert.AreEqual("DOTNET_ROOT_X86=", task.EnvironmentVariables[0]);
+        Assert.AreEqual("DOTNET_ROOT(x86)=explicit", task.EnvironmentVariables[1]);
+    }
+
+    [TestMethod]
+    public void AddAppHostDotnetRootEnvironmentVariable_DoesNothingWhenDisabled()
+    {
+        using AppHostTaskFixture fixture = new();
+        TestableInvokeTestingPlatformTask task = fixture.CreateTask();
+        task.TestingPlatformDisableAppHostDotnetRoot = true;
+
+        task.InvokeAddAppHostDotnetRootEnvironmentVariable();
+
+        Assert.IsNull(task.EnvironmentVariables);
+    }
+
+    [TestMethod]
+    public void AddAppHostDotnetRootEnvironmentVariable_DoesNothingWithoutAppHost()
+    {
+        using AppHostTaskFixture fixture = new();
+        TestableInvokeTestingPlatformTask task = fixture.CreateTask();
+        task.UseAppHost = new TaskItem("false");
+
+        task.InvokeAddAppHostDotnetRootEnvironmentVariable();
+
+        Assert.IsNull(task.EnvironmentVariables);
+    }
+
+    [TestMethod]
+    public void AddAppHostDotnetRootEnvironmentVariable_DoesNothingForIncompatibleArchitecture()
+    {
+        using AppHostTaskFixture fixture = new();
+        TestableInvokeTestingPlatformTask task = fixture.CreateTask();
+        task.TestArchitecture = new TaskItem(RuntimeInformation.ProcessArchitecture is Architecture.X64 or Architecture.X86 ? "arm64" : "x64");
+
+        task.InvokeAddAppHostDotnetRootEnvironmentVariable();
+
+        Assert.IsNull(task.EnvironmentVariables);
+    }
+
+    [TestMethod]
+    [DataRow("X86", true, true, true)]
+    [DataRow("X86", true, false, false)]
+    [DataRow("X86", false, true, false)]
+    [DataRow("X64", true, true, false)]
+    public void IsWindowsX86ProcessOn64BitOperatingSystem_ReturnsExpectedResult(
+        string architecture,
+        bool isWindows,
+        bool is64BitOperatingSystem,
+        bool expected)
+        => Assert.AreEqual(
+            expected,
+            InvokeTestingPlatformTask.IsWindowsX86ProcessOn64BitOperatingSystem(
+                Enum.Parse<Architecture>(architecture),
+                isWindows,
+                is64BitOperatingSystem));
+
+    private static string GetDotnetRootArchitectureVariableName()
+        => $"DOTNET_ROOT_{RuntimeInformation.ProcessArchitecture.ToString().ToUpperInvariant()}";
+
     private sealed class TestableInvokeTestingPlatformTask : InvokeTestingPlatformTask
     {
         // MSBuild is the one that normally supplies the [Required] inputs; stub them out here so the test can focus
@@ -76,6 +210,7 @@ public sealed class InvokeTestingPlatformTaskTests
         public TestableInvokeTestingPlatformTask()
             : base(new StubFileSystem())
         {
+            BuildEngine = Mock.Of<IBuildEngine>();
             TargetPath = new TaskItem("MyAssembly.dll");
             TargetFramework = new TaskItem("net9.0");
             TestArchitecture = new TaskItem("x64");
@@ -87,6 +222,44 @@ public sealed class InvokeTestingPlatformTaskTests
 
         public void InvokeLogEventsFromTextOutput(string singleLine)
             => LogEventsFromTextOutput(singleLine, MessageImportance.High);
+
+        public void InvokeAddAppHostDotnetRootEnvironmentVariable()
+            => AddAppHostDotnetRootEnvironmentVariable();
+
+        public void InvokeAddAppHostDotnetRootEnvironmentVariable(
+            Architecture currentProcessArchitecture,
+            bool isWindows,
+            bool is64BitOperatingSystem)
+            => AddAppHostDotnetRootEnvironmentVariable(currentProcessArchitecture, isWindows, is64BitOperatingSystem);
+    }
+
+    private sealed class AppHostTaskFixture : IDisposable
+    {
+        private readonly string _appHostExtension = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ".exe" : string.Empty;
+
+        public AppHostTaskFixture()
+        {
+            Directory.CreateDirectory(DotnetRoot);
+            File.WriteAllText(Path.Combine(DotnetRoot, $"apphost{_appHostExtension}"), string.Empty);
+            File.WriteAllText(Path.Combine(DotnetRoot, RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dotnet.exe" : "dotnet"), string.Empty);
+        }
+
+        public string DotnetRoot { get; } = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+
+        public TestableInvokeTestingPlatformTask CreateTask()
+            => new()
+            {
+                TargetPath = new TaskItem(Path.Combine(DotnetRoot, $"apphost{_appHostExtension}")),
+                TargetDir = new TaskItem($"{DotnetRoot}{Path.DirectorySeparatorChar}"),
+                AssemblyName = new TaskItem("apphost"),
+                NativeExecutableExtension = new TaskItem(_appHostExtension),
+                UseAppHost = new TaskItem("true"),
+                IsExecutable = new TaskItem("true"),
+                TestArchitecture = new TaskItem(RuntimeInformation.ProcessArchitecture.ToString()),
+                DotnetHostPath = new TaskItem(Path.Combine(DotnetRoot, RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dotnet.exe" : "dotnet")),
+            };
+
+        public void Dispose() => Directory.Delete(DotnetRoot, recursive: true);
     }
 
     private sealed class StubFileSystem : IFileSystem

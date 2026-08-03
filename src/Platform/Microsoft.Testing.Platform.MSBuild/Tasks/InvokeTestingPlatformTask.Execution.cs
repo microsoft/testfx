@@ -94,6 +94,7 @@ public partial class InvokeTestingPlatformTask
         // begins streaming output) instead of re-parsing on every output line / failed-test request.
         _captureOutput = bool.Parse(TestingPlatformCaptureOutput.ItemSpec);
         _showTestsFailure = bool.Parse(TestingPlatformShowTestsFailure.ItemSpec);
+        AddAppHostDotnetRootEnvironmentVariable();
 
         bool returnValue = base.Execute();
         if (_toolCommand is not null)
