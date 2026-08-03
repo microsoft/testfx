@@ -151,7 +151,13 @@ This is a source-only package: it injects (as internal source) a client for the 
   <!-- Data model (TestNode + property model). Glob Messages\ then remove the server-only message bus. -->
   <ItemGroup>
     <Compile Include="$(MTPDir)Messages\*.cs" Link="Linked\Messages\%(Filename)%(Extension)" />
-    <!-- Server-only publish/subscribe message bus: not needed by the client. -->
+    <!--
+      Server-only message-bus infrastructure: not needed by the client. This is a deny-list on top of the
+      glob above, so any NEW server-only file added to the platform's Messages\ folder must be excluded here
+      (otherwise the glob sweeps it into the client package and it fails to compile against platform-only
+      services such as IEnvironment). New data-model files (TestNode properties, etc.) are picked up
+      automatically and should stay included.
+    -->
     <Compile Remove="$(MTPDir)Messages\AsyncConsumerDataProcessor.net.cs" />
     <Compile Remove="$(MTPDir)Messages\AsyncConsumerDataProcessor.netstandard.cs" />
     <Compile Remove="$(MTPDir)Messages\AsyncConsumerDataProcessorMessage.cs" />
@@ -162,6 +168,7 @@ This is a source-only package: it injects (as internal source) a client for the 
     <Compile Remove="$(MTPDir)Messages\IDataProducer.cs" />
     <Compile Remove="$(MTPDir)Messages\IMessageBus.cs" />
     <Compile Remove="$(MTPDir)Messages\MessageBusProxy.cs" />
+    <Compile Remove="$(MTPDir)Messages\ShutdownTimeouts.cs" />
     <Compile Remove="$(MTPDir)Messages\SingleConsumerUnboundedChannel.cs" />
   </ItemGroup>
 
