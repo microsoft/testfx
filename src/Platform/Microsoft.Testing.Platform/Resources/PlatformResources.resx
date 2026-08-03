@@ -1059,6 +1059,10 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
     <value>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' failed.</value>
     <comment>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path.</comment>
   </data>
+  <data name="DynamicExtensionHookMustNotBeAsyncVoidErrorMessage" xml:space="preserve">
+    <value>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' is declared 'async void'. The platform invokes the hook synchronously, so it would return at its first await: anything it registers after that point would race the test application's own setup, and any failure would be lost. Make the hook synchronous.</value>
+    <comment>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {Locked="'async void'"}</comment>
+  </data>
   <data name="DynamicExtensionsNotSupportedOnCurrentRuntimeErrorMessage" xml:space="preserve">
     <value>The extension manifest '{0}' declares extensions to load, but the current runtime does not support loading assemblies dynamically (for example when published with native AOT). Set the '{1}' property of each extension to false, remove the manifest, or set the '{2}' environment variable to 1.</value>
     <comment>{0} is the manifest file path. {1} is the name of the JSON property that disables an extension. {2} is the name of the environment variable that disables the feature.</comment>

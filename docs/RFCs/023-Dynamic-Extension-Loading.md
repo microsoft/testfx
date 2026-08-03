@@ -165,9 +165,10 @@ public static class TestingPlatformBuilderHook
 ```
 
 The platform looks up `typeFullName` in the loaded assembly and requires a **public static** method
-named `AddExtensions` taking exactly `(ITestApplicationBuilder, string[])` and returning `void`.
-Inherited static hooks are found. The `void` requirement is deliberate and is enforced (§6): the hook
-is invoked synchronously, so an `async Task` hook would never be awaited.
+named `AddExtensions` taking exactly `(ITestApplicationBuilder, string[])` and returning `void`
+synchronously. Inherited static hooks are found. The synchronous `void` requirement is deliberate and
+is enforced (§6) for both `async Task` and `async void`: the hook is invoked synchronously, so either
+would return at its first `await`.
 
 The hook receives the **real** builder, not a wrapper. Several shipped helpers — `AddOpenTelemetryProvider`,
 `AddRunSettingsService`, MSTest's `AddMSTest` — reach through `ITestApplicationBuilder` to the concrete
@@ -294,9 +295,9 @@ extension:
 - the assembly file does not exist, or cannot be loaded;
 - the type is not found in the assembly;
 - the type has no public static `AddExtensions(ITestApplicationBuilder, string[])`;
-- that method does not return `void` — the hook is invoked synchronously, so an `async Task` hook
-  would never be awaited, its registrations would race with `BuildAsync`, and its failures would be
-  swallowed;
+- that method does not return `void`, or is declared `async void` — the hook is invoked synchronously,
+  so either shape would return at its first `await`, its registrations would race `BuildAsync`, and its
+  failures would be swallowed;
 - the hook throws, or tries to register a test framework.
 
 Failing loudly is the deliberate choice. A manifest exists because someone decided that every run

@@ -35,6 +35,7 @@ public sealed class DynamicExtensionLoaderTests
         SecondRecordingHook.Reset();
         ThrowingHook.Reset();
         BaseHook.Reset();
+        AsyncVoidHook.Reset();
 
         _environment.Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_NODYNAMICEXTENSIONS)).Returns((string?)null);
         _runtimeFeature.SetupGet(x => x.IsDynamicCodeSupported).Returns(true);
@@ -347,6 +348,20 @@ public sealed class DynamicExtensionLoaderTests
 
         Assert.AreEqual(1, RecordingHook.InvocationCount);
         Assert.AreEqual(1, SecondRecordingHook.InvocationCount);
+    }
+
+    [TestMethod]
+    public async Task LoadAsync_WhenHookIsAsyncVoid_ThrowsRatherThanInvokingIt()
+    {
+        // 'async void' passes the return-type check but behaves like the Task-returning hook that check
+        // rejects: Invoke would return at the first await, so registrations would race the application's setup.
+        SetupManifest("a.testingplatformextensions.json", ManifestFor(typeof(AsyncVoidHook)));
+
+        InvalidOperationException ex = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => CreateLoader().LoadAsync(_builder.Object, Args));
+
+        Assert.Contains(nameof(AsyncVoidHook), ex.Message);
+        Assert.IsFalse(AsyncVoidHook.WasInvoked, "A hook that cannot run to completion synchronously must not be invoked at all.");
     }
 
     [TestMethod]
@@ -672,6 +687,25 @@ public sealed class DynamicExtensionLoaderTests
             _ = args;
             return 0;
         }
+    }
+
+    public static class AsyncVoidHook
+    {
+        public static bool WasInvoked { get; private set; }
+
+        // Deliberately 'async void': this fixture exists to prove the loader rejects that shape, which is
+        // exactly the crash-the-process hazard VSTHRD100 warns about. It is never invoked.
+#pragma warning disable VSTHRD100 // Avoid "async void" methods
+        public static async void AddExtensions(ITestApplicationBuilder builder, string[] args)
+#pragma warning restore VSTHRD100
+        {
+            _ = builder;
+            _ = args;
+            WasInvoked = true;
+            await Task.Yield();
+        }
+
+        public static void Reset() => WasInvoked = false;
     }
 
     public class BaseHook

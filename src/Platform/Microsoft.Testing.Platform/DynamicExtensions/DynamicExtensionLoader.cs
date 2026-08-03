@@ -336,6 +336,22 @@ internal sealed class DynamicExtensionLoader
                 hook.ReturnType.FullName ?? hook.ReturnType.Name));
         }
 
+        if (hook.IsDefined(typeof(AsyncStateMachineAttribute), inherit: false))
+        {
+            // 'async void' satisfies the return-type check above but behaves exactly like the Task-returning
+            // hook it rejects: Invoke returns at the first await, the registration guard is disposed, whatever
+            // the hook does afterwards races the application's own setup, and an exception past that point is
+            // never seen by the try/catch below. The compiler marks every async method with this attribute, so
+            // it is the one reliable way to tell the two apart through reflection.
+            throw new InvalidOperationException(string.Format(
+                CultureInfo.InvariantCulture,
+                PlatformResources.DynamicExtensionHookMustNotBeAsyncVoidErrorMessage,
+                entry.TypeFullName,
+                DynamicExtensionConstants.HookMethodName,
+                entry.ResolvedAssemblyPath,
+                entry.ManifestPath));
+        }
+
         try
         {
             // The hook gets the *real* builder, not a wrapper: shipped helpers such as
