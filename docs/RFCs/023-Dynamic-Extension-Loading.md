@@ -318,6 +318,14 @@ can be generated — and `<PublishAot>true</PublishAot>` turns it off even for b
 output still runs normally on CoreCLR (see `PublishAotNonNativeTests`). Gating on it would refuse to
 load extensions for applications that are perfectly capable of loading them.
 
+**Under `PublishTrimmed`:** the extension assembly itself is external to the application, so nothing
+trims it, and it loads normally. The platform members it *calls* are a different matter: the trimmer
+removes public API that the application never references, so an extension calling a platform method no
+statically referenced code uses can load and then fail with `MissingMethodException`. Rooting the
+whole extension-facing surface would defeat trimming for every application, so this is documented as a
+limitation rather than worked around: **do not combine `PublishTrimmed` with dynamic extensions unless
+the application also exercises the API those extensions use.**
+
 ### 6. Failure policy
 
 Every one of the following **fails the run** with a message naming the manifest file and the

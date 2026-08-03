@@ -43,11 +43,13 @@
         "id": {
           "type": "string",
           "minLength": 1,
-          "description": "Stable identifier used to de-duplicate the same extension declared by several manifests. Compared ordinally and case-insensitively. Defaults to the resolved assembly path combined with the type full name."
+          "pattern": "\\S",
+          "description": "Stable identifier used to de-duplicate the same extension declared by several manifests. Compared ordinally and case-insensitively. Defaults to the resolved assembly path combined with the type full name. A blank value is treated as omitted at run time, so give it a real value or leave it out."
         },
         "displayName": {
           "type": "string",
           "minLength": 1,
+          "pattern": "\\S",
           "description": "Human-readable name used in diagnostics. Defaults to the type full name."
         },
         "enabled": {

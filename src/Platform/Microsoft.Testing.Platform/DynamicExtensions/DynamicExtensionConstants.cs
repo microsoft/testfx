@@ -65,6 +65,15 @@ internal static class DynamicExtensionConstants
     /// How two file paths are compared. Windows paths are case-insensitive, other platforms' are not, and using
     /// a single comparison everywhere keeps de-duplication and the load-context cache in agreement.
     /// </summary>
+    /// <remarks>
+    /// This keys off the OS rather than the actual volume, which is an approximation: a default macOS volume is
+    /// case-insensitive, and a Linux or macOS volume can be either. The approximation is deliberately biased
+    /// toward the visible failure. Treating a case-insensitive volume as case-sensitive means two manifests that
+    /// spell the same file differently register it twice — which the run then lists on its output, so it can be
+    /// seen and fixed. The opposite bias would silently drop one of two genuinely distinct extensions, which is
+    /// the failure mode this design exists to avoid. Resolving it properly needs canonical file identity rather
+    /// than a path comparison, which is not worth a syscall per resolved assembly here.
+    /// </remarks>
     public static readonly StringComparison PathComparison =
         RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
 

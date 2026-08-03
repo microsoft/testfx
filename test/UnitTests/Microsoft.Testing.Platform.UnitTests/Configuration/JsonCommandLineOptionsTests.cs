@@ -370,6 +370,7 @@ public sealed class JsonCommandLineOptionsTests
     [DataRow(PlatformCommandLineProvider.DiagnosticOutputFilePrefixOptionKey)]
     [DataRow(PlatformCommandLineProvider.DiagnosticVerbosityOptionKey)]
     [DataRow(PlatformCommandLineProvider.DiagnosticFileLoggerSynchronousWriteOptionKey)]
+    [DataRow(PlatformCommandLineProvider.EnableDynamicExtensionsOptionKey)]
     public async Task Validator_JsonBootstrapOnlyOption_Fails(string optionName)
     {
         ICommandLineOptionsProvider provider = new TestProvider(

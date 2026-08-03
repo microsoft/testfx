@@ -94,7 +94,13 @@ internal sealed class DynamicExtensionLoader
             foreach (DynamicExtensionEntry entry in entriesToLoad)
             {
                 await LoadEntryAsync(builder, args, entry).ConfigureAwait(false);
+
+                // Record before any further work: the hook has run with full trust by this point, so nothing
+                // fallible (such as diagnostic logging, which can throw on a synchronous write) may come
+                // between invoking it and it becoming reportable.
                 loaded.Add(entry);
+
+                await LogDebugAsync($"Registered extension '{entry.DisplayName}' ('{entry.TypeFullName}') from '{entry.ResolvedAssemblyPath}'.").ConfigureAwait(false);
             }
         }
         finally
@@ -282,8 +288,8 @@ internal sealed class DynamicExtensionLoader
     private static string Describe(DynamicExtensionEntry entry)
         => $"{entry.TypeFullName} ({entry.ResolvedAssemblyPath})";
 
-    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' may break when trimming", Justification = "The hook type lives in the extension assembly, which is an external file that is not part of the trimmed application, so trimming cannot remove it.")]
-    [UnconditionalSuppressMessage("Trimming", "IL2075:'this' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to target method", Justification = "The hook type lives in the extension assembly, which is an external file that is not part of the trimmed application, so its AddExtensions method cannot be trimmed away.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' may break when trimming", Justification = "Reflecting over the extension assembly is the feature. Trimming cannot remove anything from that file, since it is external to the application. It can, however, remove platform members that only the extension calls, so a trimmed application may still see a MissingMethodException at run time -- a documented limitation of combining trimming with dynamic extensions rather than something this call site can fix (see docs/RFCs/023-Dynamic-Extension-Loading.md).")]
+    [UnconditionalSuppressMessage("Trimming", "IL2075:'this' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to target method", Justification = "The hook type lives in the extension assembly, which is external to the trimmed application, so its AddExtensions method cannot be trimmed away.")]
     private async Task LoadEntryAsync(ITestApplicationBuilder builder, string[] args, DynamicExtensionEntry entry)
     {
         if (!_fileSystem.ExistFile(entry.ResolvedAssemblyPath))
@@ -453,8 +459,6 @@ internal sealed class DynamicExtensionLoader
                     entry.ManifestPath),
                 (ex as TargetInvocationException)?.InnerException ?? ex);
         }
-
-        await LogDebugAsync($"Registered extension '{entry.DisplayName}' ('{entry.TypeFullName}') from '{entry.ResolvedAssemblyPath}'.").ConfigureAwait(false);
     }
 
     private Task LogDebugAsync(string message)
