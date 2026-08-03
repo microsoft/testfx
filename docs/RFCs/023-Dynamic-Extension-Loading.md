@@ -254,7 +254,10 @@ extension hook must therefore be safe to run once per process rather than once p
   rather than relying on what happens to sit next to the extension keeps identity independent of the
   deployment layout. If the host does not carry a shared assembly at all (an abstractions package the
   test application never referenced), the extension falls back to its own copy rather than failing to
-  load: an isolated copy is worse than a shared one, but far better than not running. Any future
+  load: an isolated copy is worse than a shared one, but far better than not running. Note that
+  "carried by the host" is not the same as "already loaded": because dynamic hooks run before static
+  ones (§4), a contract is often present in the application's dependency graph but untouched, so the
+  platform asks the default context to load it by simple name before giving up. Any future
   abstractions assembly whose types cross the boundary must be added to
   `DynamicExtensionConstants.SharedContractAssemblyNames`; implementation assemblies must not be.
 - If `AssemblyDependencyResolver` cannot resolve a reference (for example the extension was xcopied

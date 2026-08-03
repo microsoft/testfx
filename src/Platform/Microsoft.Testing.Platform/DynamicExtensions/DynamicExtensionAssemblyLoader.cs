@@ -106,7 +106,7 @@ internal sealed class DynamicExtensionAssemblyLoader : IDynamicExtensionAssembly
             // stronger than relying on the resolver, because it does not depend on whether the assembly
             // happens to be deployed next to the extension.
             if (IsSharedContractAssembly(assemblyName.Name)
-                && FindLoadedContractAssembly(assemblyName.Name) is { } shared)
+                && ResolveSharedContractAssembly(assemblyName.Name) is { } shared)
             {
                 return shared;
             }
@@ -122,20 +122,37 @@ internal sealed class DynamicExtensionAssemblyLoader : IDynamicExtensionAssembly
         }
 
         /// <summary>
-        /// Finds an assembly already loaded in the default context by simple name, deliberately ignoring the
-        /// requested version.
+        /// Resolves a shared contract assembly from the default context by simple name, deliberately ignoring
+        /// the version the extension was compiled against.
         /// </summary>
         /// <remarks>
+        /// <para>
+        /// An already-loaded copy is preferred first. Passing the extension's full <see cref="AssemblyName"/> to
         /// <see cref="AssemblyLoadContext.LoadFromAssemblyName(AssemblyName)"/> would apply version binding, so
         /// an extension compiled against a newer platform than the host would fail to bind, silently fall
         /// through to its own private copy, and end up with a different <c>ITestApplicationBuilder</c> identity
         /// — surfacing as a baffling "the type does not expose AddExtensions" error rather than the version
-        /// mismatch it really is. Sharing the contract means sharing it by name; if the versions are genuinely
-        /// incompatible, the resulting <see cref="MissingMethodException"/> is the honest failure, and the same
-        /// one a statically referenced extension would produce.
+        /// mismatch it really is. If the versions are genuinely incompatible, the resulting
+        /// <see cref="MissingMethodException"/> is the honest failure, and the same one a statically referenced
+        /// extension would produce.
+        /// </para>
+        /// <para>
+        /// Being loaded is not the same as being available, though. Dynamic hooks run before the statically
+        /// registered extensions (RFC section 4), so a contract such as
+        /// <c>Microsoft.Testing.Extensions.TrxReport.Abstractions</c> is frequently present in the application's
+        /// dependency graph but not yet touched. Settling for the extension's private copy in that window would
+        /// split the contract the moment the static extension loaded the real one, making a capability
+        /// implemented by the dynamic extension invisible to it. So when nothing is loaded yet, ask the default
+        /// context to load it — by simple name only, which cannot fail on version.
+        /// </para>
         /// </remarks>
-        private static Assembly? FindLoadedContractAssembly(string? simpleName)
+        private static Assembly? ResolveSharedContractAssembly(string? simpleName)
         {
+            if (RoslynString.IsNullOrEmpty(simpleName))
+            {
+                return null;
+            }
+
             foreach (Assembly loaded in Default.Assemblies)
             {
                 if (string.Equals(loaded.GetName().Name, simpleName, StringComparison.OrdinalIgnoreCase))
@@ -144,7 +161,15 @@ internal sealed class DynamicExtensionAssemblyLoader : IDynamicExtensionAssembly
                 }
             }
 
-            return null;
+            try
+            {
+                return Default.LoadFromAssemblyName(new AssemblyName(simpleName!));
+            }
+            catch (Exception)
+            {
+                // Genuinely absent from the host, so the extension's own copy is the only option.
+                return null;
+            }
         }
 
         private static bool IsSharedContractAssembly(string? simpleName)

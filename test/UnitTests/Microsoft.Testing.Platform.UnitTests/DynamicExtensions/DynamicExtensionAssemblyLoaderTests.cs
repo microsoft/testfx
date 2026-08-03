@@ -73,35 +73,50 @@ public sealed class DynamicExtensionAssemblyLoaderTests
 
 #if NETCOREAPP
     [TestMethod]
-    public void LoadAssembly_SharesTheContractByNameEvenWhenAHigherVersionIsRequested()
+    public void SharedContract_IsResolvedByNameEvenWhenAHigherVersionIsRequested()
     {
         // The extension may have been compiled against a newer Microsoft.Testing.Platform than the host.
-        // Resolving through LoadFromAssemblyName would apply version binding, fail to bind, and silently give
-        // the extension a private copy of the platform whose ITestApplicationBuilder is a different type --
-        // which then surfaces as a bogus "the hook does not exist". Matching by simple name avoids that.
+        // Resolving through the extension's full AssemblyName would apply version binding, fail to bind, and
+        // silently give the extension a private copy of the platform whose ITestApplicationBuilder is a
+        // different type -- which then surfaces as a bogus "the hook does not exist".
         Assembly platform = typeof(ITestApplicationBuilder).Assembly;
 
-        Assembly? resolved = InvokeFindLoadedContractAssembly(platform.GetName().Name);
+        Assembly? resolved = InvokeResolveSharedContractAssembly(platform.GetName().Name);
 
         Assert.AreSame(platform, resolved);
     }
 
     [TestMethod]
-    public void LoadAssembly_DoesNotShareAnAssemblyTheHostHasNotLoaded()
+    public void SharedContract_ThatIsNotLoadedYetIsStillResolvedFromTheApplication()
     {
-        Assembly? resolved = InvokeFindLoadedContractAssembly("Contoso.NotLoaded.Abstractions");
+        // Dynamic hooks run before static ones, so a contract can be in the application's dependency graph
+        // without having been loaded yet. Settling for the extension's private copy in that window would split
+        // the contract as soon as a static extension loaded the real one.
+        Assembly notYetNeeded = typeof(Moq.Mock).Assembly;
+        string simpleName = notYetNeeded.GetName().Name!;
 
-        // Falls through to the extension's own copy rather than failing, which is what lets an extension
-        // depending on an abstractions package the test application never referenced still load.
+        Assembly? resolved = InvokeResolveSharedContractAssembly(simpleName);
+
+        Assert.IsNotNull(resolved);
+        Assert.AreEqual(simpleName, resolved.GetName().Name);
+    }
+
+    [TestMethod]
+    public void SharedContract_ThatTheHostDoesNotCarryFallsBackToTheExtensionCopy()
+    {
+        Assembly? resolved = InvokeResolveSharedContractAssembly("Contoso.NotPresent.Abstractions");
+
+        // Returning null lets the caller use the extension's own copy rather than failing, which is what keeps
+        // an extension depending on an abstractions package the application never referenced working.
         Assert.IsNull(resolved);
     }
 
-    private static Assembly? InvokeFindLoadedContractAssembly(string? simpleName)
+    private static Assembly? InvokeResolveSharedContractAssembly(string? simpleName)
     {
         Type contextType = typeof(DynamicExtensionAssemblyLoader)
             .GetNestedType("DynamicExtensionLoadContext", BindingFlags.NonPublic)!;
         Assert.IsNotNull(contextType);
-        MethodInfo method = contextType.GetMethod("FindLoadedContractAssembly", BindingFlags.NonPublic | BindingFlags.Static)!;
+        MethodInfo method = contextType.GetMethod("ResolveSharedContractAssembly", BindingFlags.NonPublic | BindingFlags.Static)!;
         Assert.IsNotNull(method);
         return (Assembly?)method.Invoke(null, [simpleName]);
     }
