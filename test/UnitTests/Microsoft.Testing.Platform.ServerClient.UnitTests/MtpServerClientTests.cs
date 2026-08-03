@@ -234,6 +234,64 @@ public sealed class MtpServerClientTests
     }
 
     [TestMethod]
+    public async Task TestNodesUpdated_MultibyteDisplayName_SurvivesRoundTrip()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        // A UID and display name whose UTF-8 byte count exceeds their UTF-16 char count, including a
+        // surrogate-pair emoji. The transport declares Content-Length in UTF-8 *bytes*, so if either the
+        // server write or the client read miscounted using chars the framing would truncate or desynchronize
+        // and this exact round-trip would fail (or the read loop would hang and time out). ASCII-only payloads
+        // never exercise this, so this test guards the byte/char boundary the transport framing depends on.
+        // "Ns.Class.Tëst_日本語_✓_🧪_Метод" and "Tëst 日本語 ✓ 🧪 Метод".
+        const string uid = "Ns.Class.T\u00EBst_\u65E5\u672C\u8A9E_\u2713_\U0001F9EA_\u041C\u0435\u0442\u043E\u0434";
+        const string displayName = "T\u00EBst \u65E5\u672C\u8A9E \u2713 \U0001F9EA \u041C\u0435\u0442\u043E\u0434";
+
+        Task<MtpTestNodeUpdateEventArgs> updateTask = WaitForEventAsync<MtpTestNodeUpdateEventArgs>(h => client.TestNodesUpdated += h);
+        var runId = Guid.NewGuid();
+        await server.SendDiscoveredTestNodeAsync(runId, uid, displayName).ConfigureAwait(false);
+
+        MtpTestNodeUpdateEventArgs args = await WithTimeoutAsync(updateTask).ConfigureAwait(false);
+
+        Assert.AreEqual(runId, args.RunId);
+        MtpTestNodeUpdate update = args.Changes[0];
+        Assert.AreEqual(uid, update.Uid, "The multibyte UID must survive the transport byte-exact.");
+        Assert.AreEqual(displayName, update.DisplayName, "The multibyte display name must survive the transport byte-exact.");
+    }
+
+    [TestMethod]
+    public async Task TestNodesUpdated_LargeMultibytePayload_SurvivesRoundTrip()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        // A multi-KB standardOutput built from a multibyte unit ("日本語-✓-🧪-"). It is far larger than a single
+        // socket read, so the client's read loop must accumulate the exact UTF-8 byte count across multiple
+        // reads. A char-vs-byte length mistake anywhere on the read path corrupts or truncates the tail, so
+        // asserting the full string round-trips exactly guards the large-frame and the multibyte paths at once.
+        string unit = "\u65E5\u672C\u8A9E-\u2713-\U0001F9EA-";
+        string largeOutput = string.Concat(Enumerable.Repeat(unit, 5000));
+
+        Task<MtpTestNodeUpdateEventArgs> updateTask = WaitForEventAsync<MtpTestNodeUpdateEventArgs>(h => client.TestNodesUpdated += h);
+        await server.SendPassedTestNodeWithDetailsAsync(
+            Guid.NewGuid(),
+            "Ns.Class.TestLarge",
+            "Test Large",
+            standardOutput: largeOutput,
+            standardError: "stderr",
+            filePath: "/repo/src/Class.cs",
+            lineStart: 1,
+            lineEnd: 2).ConfigureAwait(false);
+
+        MtpTestNodeUpdateEventArgs args = await WithTimeoutAsync(updateTask).ConfigureAwait(false);
+
+        MtpTestNodeUpdate update = args.Changes[0];
+        Assert.AreEqual(largeOutput.Length, update.StandardOutput?.Length, "The large multibyte payload must not be truncated.");
+        Assert.AreEqual(largeOutput, update.StandardOutput, "The large multibyte payload must survive the transport byte-exact.");
+    }
+
+    [TestMethod]
     public async Task TestNodesUpdated_CompletionSentinel_IsSkipped()
     {
         using FakeMtpServer server = new();
