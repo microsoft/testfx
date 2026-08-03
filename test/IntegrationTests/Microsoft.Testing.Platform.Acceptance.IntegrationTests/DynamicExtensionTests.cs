@@ -8,10 +8,20 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 /// (see <c>docs/RFCs/023-Dynamic-Extension-Loading.md</c>).
 /// </summary>
 /// <remarks>
-/// The manifests point at the test application's own assembly. That is unusual for a real deployment, but it is
-/// the strongest possible check of the isolation contract: the hook runs from a *second*, isolated copy of that
-/// assembly, so the <c>ITestApplicationBuilder</c> it receives can only work if the platform assembly is shared
-/// with the default load context as designed.
+/// <para>
+/// The manifests point at the test application's own assembly. That is unusual for a real deployment, but it
+/// keeps the asset small while still covering discovery, manifest parsing, assembly loading, hook lookup and
+/// registration end to end on every target framework.
+/// </para>
+/// <para>
+/// What it proves differs by target framework, because isolation does. On .NET the assembly is loaded into a
+/// dedicated <c>AssemblyLoadContext</c>, so the hook runs from a *second* copy of that assembly and the
+/// <c>ITestApplicationBuilder</c> it receives can only work if the platform assembly is shared with the default
+/// context as designed. On .NET Framework the loader uses <c>Assembly.LoadFrom</c> and reports
+/// <c>IsIsolated == false</c>, so the net462 rows cover discovery and hook registration only, not isolation.
+/// Cross-context isolation with a genuinely separate extension assembly is covered by
+/// <see cref="DynamicExtensionIsolationTests"/>, which is .NET-only for the same reason.
+/// </para>
 /// </remarks>
 [TestClass]
 public sealed class DynamicExtensionTests : AcceptanceTestBase<DynamicExtensionTests.TestAssetFixture>

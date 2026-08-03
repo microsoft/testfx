@@ -398,6 +398,22 @@ public sealed class DynamicExtensionLoaderTests
     }
 
     [TestMethod]
+    public async Task LoadAsync_ADisabledEntryNeitherCollidesWithNorBlocksAnEnabledOneReusingItsId()
+    {
+        // 'enabled: false' is the per-extension escape hatch, so a switched-off declaration must not be able to
+        // hard-fail the run over an id it shares with something that does load. Nothing is silently dropped
+        // here: the author of the disabled entry explicitly asked for it not to be deployed.
+        SetupManifests(
+            ("a.testingplatformextensions.json", Wrap(ManifestEntryFor(typeof(SecondRecordingHook), id: "shared-id", enabled: false))),
+            ("b.testingplatformextensions.json", Wrap(ManifestEntryFor(typeof(RecordingHook), id: "shared-id"))));
+
+        await CreateLoader().LoadAsync(_builder.Object, Args);
+
+        Assert.AreEqual(1, RecordingHook.InvocationCount);
+        Assert.AreEqual(0, SecondRecordingHook.InvocationCount);
+    }
+
+    [TestMethod]
     public async Task LoadAsync_HookCannotRegisterATestFramework()
     {
         // Uses the real builder: the guard lives inside it, precisely so that hooks keep receiving the genuine

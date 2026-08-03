@@ -116,6 +116,12 @@ assembly path and type. Two *different* extensions sharing an `id` fails the run
 only the first would silently drop a policy somebody deliberately deployed. This mirrors how the
 MSBuild task rejects `TestingPlatformBuilderHook` items whose metadata conflicts.
 
+`id` consistency is only checked between declarations that are actually going to load. A declaration
+with `enabled: false` is skipped before its `id` is considered, so it can neither collide with nor
+block an enabled one. That is deliberate: nothing is silently dropped when the author has explicitly
+said not to deploy it, and the alternative would let a switched-off entry hard-fail the run, which
+would defeat the purpose of `enabled: false` as the per-extension escape hatch.
+
 De-duplication does **not** span static and dynamic registration: the platform cannot see the
 statically generated hook list at the point manifests are processed, so an extension delivered
 through both paths has its hook invoked twice. Ship an extension through one path or the other.
@@ -193,9 +199,20 @@ discovery) that are better answered with real usage data.
 
 ### 4. Ordering relative to static extensions
 
-Dynamic extensions are registered at the end of `TestApplication.CreateBuilderAsync`, therefore
-**before** the statically registered extensions that the generated entry point adds immediately
-afterwards.
+**Dynamic extensions register first, static ones second.**
+
+That is easiest to see from the generated entry point, where the two registration steps are separate
+calls:
+
+```csharp
+var builder = await TestApplication.CreateBuilderAsync(args);  // 1. dynamic extensions register in here
+builder.AddSelfRegisteredExtensions(args);                     // 2. static extensions register here
+using var app = await builder.BuildAsync();                    // 3.
+```
+
+The loading runs as the last thing inside `CreateBuilderAsync`, just before it hands the builder back
+— but that method returns *before* `AddSelfRegisteredExtensions` is called, so a manifest-declared
+extension is registered ahead of every statically referenced one.
 
 This is the only placement that behaves identically for the generated entry point and for a
 hand-written `Main`, because `CreateBuilderAsync` is the single point every host goes through. The

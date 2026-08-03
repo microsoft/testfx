@@ -116,8 +116,10 @@ public sealed class TestApplication : ITestApplication
         // All checks are fine, create the TestApplication.
         TestApplicationBuilder builder = new(loggingState, createBuilderStart, testApplicationOptions, s_unhandledExceptionHandler, args);
 
-        // Register dynamically declared extensions before returning, so that they are registered no matter
-        // whether the caller is the MSBuild-generated entry point or a hand-written Main. See
+        // Register dynamically declared extensions as the last thing before handing the builder back. Note this
+        // still puts them *ahead* of statically registered ones: the caller only invokes
+        // AddSelfRegisteredExtensions after this method returns. Doing it here rather than in BuildAsync is what
+        // makes the behaviour identical for the MSBuild-generated entry point and a hand-written Main. See
         // docs/RFCs/023-Dynamic-Extension-Loading.md.
         SystemFileSystem fileSystem = new();
         DynamicExtensionLoader dynamicExtensionLoader = new(
