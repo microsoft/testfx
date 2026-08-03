@@ -1,5 +1,26 @@
 <Project Sdk="Microsoft.NET.Sdk">
 <!--
+  ⚠️ INVESTIGATION / WORKAROUND ONLY — NOT PR-READY. ⚠️
+  This sample deliberately bypasses "Sdk=MSTest.Sdk" for internal research/verification purposes
+  only (see the blog-post publication gate this sample supports). It is NOT the form we intend to
+  ship or recommend to readers, and this commit should not be proposed as a PR until the revert
+  checklist below is satisfied.
+
+  Revert checklist (do this once a public MSTest.Sdk release ships the fixed AOT wiring —
+  see files/source-generation-sdk-gap.md for the tracking issue and acceptance criteria):
+    [ ] Switch back to <Project Sdk="MSTest.Sdk"> (the commented-out block at the bottom of this
+        file shows the exact target shape).
+    [ ] Remove the explicit MSTest.SourceGeneration / MSTest.TestAdapter / MSTest.TestFramework
+        PackageReferences below — MSTest.Sdk's PublishAot=true wiring should add them.
+    [ ] Remove the MSTestSourceGenerationVersion workaround property (and its comment) from
+        ../Directory.Build.props once MSTestAOTVersion/MSTestEngineVersion resolve the same
+        reflection-free generator through the SDK.
+    [ ] Re-verify: dotnet build (managed) AND a real `dotnet publish -r <rid> -p:PublishAot=true`
+        run of the resulting native binary, not just the managed test host.
+    [ ] Remove this banner and the "workaround" prose from the .csproj comments once the above is
+        confirmed; only then is this sample change appropriate to open as a PR.
+-->
+<!--
 This sample intentionally does NOT use "Sdk=MSTest.Sdk". As of MSTest.Sdk 4.3.3 (see ../global.json),
 MSTest.Sdk's PublishAot=true convenience wiring still resolves the deprecated, discontinued MSTest.Engine
 package and the old Engine-era MSTest.SourceGeneration build (MSTestEngineVersion in Directory.Build.props) -
