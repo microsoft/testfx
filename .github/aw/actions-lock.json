@@ -40,20 +40,20 @@
       "version": "v7.0.1",
       "sha": "043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"
     },
-    "github/codeql-action/upload-sarif@v4.37.3": {
+    "github/codeql-action/upload-sarif@v4.37.5": {
       "repo": "github/codeql-action/upload-sarif",
-      "version": "v4.37.3",
-      "sha": "e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81"
+      "version": "v4.37.5",
+      "sha": "d1ba80a13dd99fba24a470575428917156a28b43"
     },
-    "github/gh-aw-actions/setup-cli@v0.83.1": {
+    "github/gh-aw-actions/setup-cli@v0.83.4": {
       "repo": "github/gh-aw-actions/setup-cli",
-      "version": "v0.83.1",
-      "sha": "8bdba8075360648fe6802302a5b4e016361dc6ac"
+      "version": "v0.83.4",
+      "sha": "e89c65e17eb281bbd5ff2ff9e9199a03e96654c7"
     },
-    "github/gh-aw-actions/setup@v0.83.1": {
+    "github/gh-aw-actions/setup@v0.83.4": {
       "repo": "github/gh-aw-actions/setup",
-      "version": "v0.83.1",
-      "sha": "8bdba8075360648fe6802302a5b4e016361dc6ac"
+      "version": "v0.83.4",
+      "sha": "e89c65e17eb281bbd5ff2ff9e9199a03e96654c7"
     },
     "super-linter/super-linter@v8.7.0": {
       "repo": "super-linter/super-linter",
@@ -70,8 +70,8 @@
     },
     "mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-binlog-mcp-amd64": {
       "image": "mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-binlog-mcp-amd64",
-      "digest": "sha256:9f1e2c3e8281186eb1190f39918b23accefefb4dd086d0ac1bd3e4ea7d2ed0e0",
-      "pinned_image": "mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-binlog-mcp-amd64@sha256:9f1e2c3e8281186eb1190f39918b23accefefb4dd086d0ac1bd3e4ea7d2ed0e0"
+      "digest": "sha256:ee7b7e5c6e162f3f0061822aa7183260626f1a1e986d04ba9915ab197a37932c",
+      "pinned_image": "mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-binlog-mcp-amd64@sha256:ee7b7e5c6e162f3f0061822aa7183260626f1a1e986d04ba9915ab197a37932c"
     }
   }
 }
