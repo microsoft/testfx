@@ -298,6 +298,139 @@ public sealed class CurrentDirectoryMutationUnderParallelizationAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenTestInitializeSetsCurrentDirectoryViaDirectory_Diagnostic()
+    {
+        // [TestInitialize] is a class-scoped fixture included in GetFixtureAttributeSymbols, so a mutation inside it
+        // must be reported just like one inside a test method.
+        string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestInitialize]
+                public void Setup()
+                {
+                    {|#0:Directory.SetCurrentDirectory("/tmp")|};
+                }
+
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        // Discovery reads resource locks only from the test class and the test method, so a lock on the fixture method
+        // itself would be ignored. The fixer therefore annotates the enclosing test class, where the lock takes effect.
+        string fixedCode = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            [ResourceLock(WellKnownResources.CurrentDirectory)]
+            public class MyTestClass
+            {
+                [TestInitialize]
+                public void Setup()
+                {
+                    Directory.SetCurrentDirectory("/tmp");
+                }
+
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic(CurrentDirectoryMutationUnderParallelizationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Directory.SetCurrentDirectory"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssemblyInitializeSetsCurrentDirectoryViaDirectory_NoDiagnostic()
+    {
+        // [AssemblyInitialize] is deliberately excluded from GetFixtureAttributeSymbols: it is serialized and every
+        // worker awaits it before running any test, so a process-global mutation there cannot race a concurrent test.
+        // Flagging it would be a false positive.
+        string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [AssemblyInitialize]
+                public static void AssemblyInit(TestContext context)
+                {
+                    Directory.SetCurrentDirectory("/tmp");
+                }
+
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenGlobalTestInitializeSetsCurrentDirectoryViaDirectory_DiagnosticWithoutFix()
+    {
+        // [GlobalTestInitialize] runs around every test in the assembly, so the mutation genuinely races and is
+        // reported. But it is a global fixture, not a class-scoped one: it is in GetFixtureAttributeSymbols yet
+        // absent from GetClassScopedFixtureAttributeSymbols, so GetResourceLockFixScope returns null and the
+        // analyzer omits the fixer properties. This pins the third branch - report, but offer no fix - because a
+        // global fixture has no effective lock target: the enclosing class is not one, since locking it would
+        // serialize only that class's tests while the fixture kept racing the tests of every other class. (That
+        // is a different mechanism from the class-scoped case above, where the class lock *is* the effective
+        // target and it is a lock on the fixture method that discovery would ignore.) Asserting the code is
+        // unchanged is what catches a regression that started offering that do-nothing fix.
+        string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [GlobalTestInitialize]
+                public static void GlobalSetup(TestContext context)
+                {
+                    {|#0:Directory.SetCurrentDirectory("/tmp")|};
+                }
+
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic(CurrentDirectoryMutationUnderParallelizationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Directory.SetCurrentDirectory"),
+            code);
+    }
+
+    [TestMethod]
     public async Task WhenTestMethodSetsCurrentDirectory_VisualBasic_Diagnostic()
     {
         string code = """

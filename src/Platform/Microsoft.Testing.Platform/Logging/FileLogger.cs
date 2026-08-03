@@ -20,6 +20,29 @@ internal sealed class FileLogger : IDisposable
 #pragma warning restore SA1001 // Commas should be spaced correctly
 #endif
 {
+    /// <summary>
+    /// Number of attempts made to create the diagnostic log file before giving up. Every candidate after the first
+    /// carries the current process id and a process-wide counter, so candidates are unique across every logger in
+    /// this process and against any other process racing on the same log folder: a collision can therefore only ever
+    /// happen on the first attempt. Bounding by attempts rather than by elapsed wall-clock time keeps the loop
+    /// provably terminating and immune to a stalled or forward-jumping clock (<see cref="IClock.UtcNow"/> is wall
+    /// time, not monotonic). FileLoggerTests mirrors this value; keep the two in sync.
+    /// </summary>
+    private const int MaxLogFileCreationAttempts = 10;
+
+    /// <summary>
+    /// Cached because on .NET Framework reading it spawns a <see cref="Process"/> object. Obtained through
+    /// <see cref="SystemEnvironment"/> so the netstandard2.0 fallback lives in a single place.
+    /// </summary>
+    private static readonly int CurrentProcessId = new SystemEnvironment().ProcessId;
+
+    /// <summary>
+    /// Discriminates retry candidates process-wide. Nothing enforces a single <see cref="FileLogger"/> per process,
+    /// so two loggers created in the same clock tick would otherwise derive the identical ladder of candidate names
+    /// from timestamp + process id + attempt index and race each other through it.
+    /// </summary>
+    private static int s_retryCandidateCounter;
+
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private readonly FileLoggerOptions _options;
     private readonly LogLevel _logLevel;
@@ -142,24 +165,51 @@ internal sealed class FileLogger : IDisposable
             return fileStreamFactory.Create(fileName, FileMode.CreateNew, FileAccess.Write, FileShare.Read);
         }
 
-        DateTimeOffset firstTryTime = _clock.UtcNow;
-        while (true)
+        string timestamp = _clock.UtcNow.ToString("yyMMddHHmmssfff", CultureInfo.InvariantCulture);
+        string filePath = string.Empty;
+        IOException? lastFailure = null;
+
+        for (int attempt = 0; attempt < MaxLogFileCreationAttempts; attempt++)
         {
-            if (_clock.UtcNow - firstTryTime > TimeSpan.FromSeconds(3))
-            {
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.CannotCreateUniqueLogFileErrorMessage, fileName));
-            }
+            // Retry candidates carry the process id and a process-wide counter, so they are distinct across every
+            // logger in this process and against any other process racing on the same folder. Without that, every
+            // retry regenerated the very same name until the clock ticked (~15ms on Windows), and concurrent
+            // creations walked an identical ladder of candidates in lockstep, so each round could only ever let a
+            // single one of them through.
+            fileName = attempt == 0
+                ? $"{_options.LogPrefixName}_{timestamp}.diag"
+                : $"{_options.LogPrefixName}_{timestamp}_{CurrentProcessId}_{Interlocked.Increment(ref s_retryCandidateCounter)}.diag";
+            filePath = Path.Combine(_options.LogFolder, fileName);
 
             try
             {
-                fileName = $"{_options.LogPrefixName}_{_clock.UtcNow.ToString("yyMMddHHmmssfff", CultureInfo.InvariantCulture)}.diag";
-                return fileStreamFactory.Create(Path.Combine(_options.LogFolder, fileName), FileMode.CreateNew, FileAccess.Write, FileShare.Read);
+                return fileStreamFactory.Create(filePath, FileMode.CreateNew, FileAccess.Write, FileShare.Read);
             }
-            catch (IOException)
+            catch (IOException ex)
             {
-                // In case of file with the same name we retry with a new name.
+                lastFailure = ex;
             }
         }
+
+        // Retrying only ever recovers from a name collision. Every other IOException (disk full, log folder deleted,
+        // path too long, ...) fails the same way on each attempt, and swallowing it to report a bare 'cannot create a
+        // unique log file' hides the actual cause, which is what made the original CI failures undiagnosable. So we
+        // surface the last failure both in the message and as the inner exception. The exception type matches the one
+        // a single failed attempt would have thrown, so a caller can tolerate the whole operation with one filter.
+        //
+        // Only the last failure is reported, deliberately: the attempts differ solely by file name, so they share a
+        // root cause, and aggregating them would repeat it once per attempt, each with its own stack trace and a
+        // message that often embeds the differing path (so they would not reliably collapse) - precisely the wall of
+        // noise this method exists to replace, in the truncated CI log where it is read.
+        ApplicationStateGuard.Ensure(lastFailure is not null);
+        throw new IOException(
+            string.Format(
+                CultureInfo.InvariantCulture,
+                PlatformResources.CannotCreateUniqueLogFileErrorMessage,
+                filePath,
+                MaxLogFileCreationAttempts,
+                lastFailure.Message),
+            lastFailure);
     }
 
     public bool IsEnabled(LogLevel logLevel) => logLevel >= _logLevel;
