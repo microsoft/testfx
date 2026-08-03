@@ -850,4 +850,83 @@ public sealed class SharedFileSystemPathInTestAnalyzerTests
                 .WithLocation(0)
                 .WithArguments("setup.txt"));
     }
+
+    [DataRow("AppendAllText", "\"shared.log\", \"entry\"")]
+    [DataRow("AppendAllLines", "\"shared.log\", new[] { \"line\" }")]
+    [DataRow("WriteAllBytes", "\"shared.dat\", new byte[] { 1 }")]
+    [DataRow("WriteAllLines", "\"shared.txt\", new[] { \"line\" }")]
+    [DataRow("SetAttributes", "\"shared.txt\", System.IO.FileAttributes.ReadOnly")]
+    [DataRow("SetCreationTime", "\"shared.txt\", default(System.DateTime)")]
+    [DataRow("SetCreationTimeUtc", "\"shared.txt\", default(System.DateTime)")]
+    [DataRow("SetLastAccessTime", "\"shared.txt\", default(System.DateTime)")]
+    [DataRow("SetLastAccessTimeUtc", "\"shared.txt\", default(System.DateTime)")]
+    [DataRow("SetLastWriteTime", "\"shared.txt\", default(System.DateTime)")]
+    [DataRow("SetLastWriteTimeUtc", "\"shared.txt\", default(System.DateTime)")]
+    [DataRow("Encrypt", "\"shared.txt\"")]
+    [DataRow("Decrypt", "\"shared.txt\"")]
+    [TestMethod]
+    public async Task WhenTestMethodCallsVoidFileMutationMethodWithConstantPath_Diagnostic(string methodName, string args)
+    {
+        // Each of these void-returning File.* methods mutates the file named by its 'path' argument.
+        // When that argument is a compile-time constant and parallelization is active, the
+        // analyzer must fire so that concurrent tests do not collide on the same file.
+        // This test pins the IsMutatingFileSystemMethod allowlist: any method removed from
+        // that list stops being detected, and any new method not yet listed is missing here.
+        string code = $$"""
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    {|#0:File.{{methodName}}({{args}})|};
+                }
+            }
+            """;
+
+        string expectedPath = args.Split(',')[0].Trim().Trim('"');
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(SharedFileSystemPathInTestAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments(expectedPath));
+    }
+
+    [DataRow("AppendText", "\"shared.log\"")]
+    [DataRow("CreateText", "\"shared.txt\"")]
+    [DataRow("CreateSymbolicLink", "\"shared.lnk\", \"target\"")]
+    [TestMethod]
+    public async Task WhenTestMethodCallsNonVoidFileMutationMethodWithConstantPath_Diagnostic(string methodName, string args)
+    {
+        // AppendText, CreateText, and CreateSymbolicLink return a value; the test discards it with `_ =`
+        // so the snippet compiles without warnings while still exercising the diagnostic.
+        string code = $$"""
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    _ = {|#0:File.{{methodName}}({{args}})|};
+                }
+            }
+            """;
+
+        string expectedPath = args.Split(',')[0].Trim().Trim('"');
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(SharedFileSystemPathInTestAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments(expectedPath));
+    }
 }
