@@ -133,6 +133,17 @@ internal sealed record AzureDevOpsTestResultsPublisherOptions(
     {
     }
 
+    /// <summary>
+    /// Gets the longest the owner will hold a run open waiting for peers that are provably still running.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="CoordinationFinalizeTimeout"/> is the grace period for participants that cannot be
+    /// proven alive; this is the hard cap that also applies to live ones, so a leaked process cannot stall
+    /// a build indefinitely. Generous because it bounds a whole test project, not a single test: the cost
+    /// of stopping too early is that the peer's remaining results are rejected by Azure DevOps.
+    /// </remarks>
+    public TimeSpan CoordinationFinalizeMaxWaitTime { get; init; } = TimeSpan.FromMinutes(15);
+
     public static AzureDevOpsTestResultsPublisherOptions Default { get; } = new(100, TimeSpan.FromSeconds(5), 40, TimeSpan.FromMilliseconds(250), TimeSpan.FromSeconds(30), TimeSpan.FromHours(4), TimeSpan.FromMinutes(2));
 }
 

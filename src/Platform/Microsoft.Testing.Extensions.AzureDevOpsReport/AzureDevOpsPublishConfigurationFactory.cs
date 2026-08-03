@@ -1,32 +1,49 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
 using Microsoft.Testing.Extensions.Reporting;
 using Microsoft.Testing.Platform;
+using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
+using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 
-internal sealed partial class AzureDevOpsTestResultsPublisher
+/// <summary>
+/// Builds the Azure DevOps live-publishing configuration from the Azure Pipelines environment.
+/// </summary>
+/// <remarks>
+/// Shared by the test-host publisher and by <see cref="AzureDevOpsTestRunOrchestratorLifetime"/>, which
+/// runs in the orchestrator process and therefore has no test session to derive it from. Both must agree
+/// on the collection, project and build being targeted, so the derivation lives in one place.
+/// </remarks>
+internal static class AzureDevOpsPublishConfigurationFactory
 {
-    private bool TryCreatePublishConfiguration([NotNullWhen(true)] out AzureDevOpsPublishConfiguration? publishConfiguration, [NotNullWhen(false)] out string? warning)
+    public static bool TryCreate(
+        ICommandLineOptions commandLineOptions,
+        IConfiguration configuration,
+        IEnvironment environment,
+        ITestApplicationModuleInfo testApplicationModuleInfo,
+        [NotNullWhen(true)] out AzureDevOpsPublishConfiguration? publishConfiguration,
+        [NotNullWhen(false)] out string? warning)
     {
         publishConfiguration = null;
         warning = null;
 
         List<string> missingVariables = [];
 
-        bool isTfBuild = AzureDevOpsConstants.IsRunningInAzureDevOps(_environment);
+        bool isTfBuild = AzureDevOpsConstants.IsRunningInAzureDevOps(environment);
         if (!isTfBuild)
         {
             missingVariables.Add($"{AzureDevOpsConstants.TfBuildEnvironmentVariableName}={AzureDevOpsConstants.TfBuildEnabledValue}");
         }
 
-        string? collectionUri = GetRequiredEnvironmentVariable("SYSTEM_COLLECTIONURI", missingVariables);
-        string? project = GetRequiredEnvironmentVariable("SYSTEM_TEAMPROJECT", missingVariables);
-        string? accessToken = GetRequiredEnvironmentVariable("SYSTEM_ACCESSTOKEN", missingVariables);
-        string? buildIdText = GetRequiredEnvironmentVariable("BUILD_BUILDID", missingVariables);
+        string? collectionUri = GetRequiredEnvironmentVariable(environment, "SYSTEM_COLLECTIONURI", missingVariables);
+        string? project = GetRequiredEnvironmentVariable(environment, "SYSTEM_TEAMPROJECT", missingVariables);
+        string? accessToken = GetRequiredEnvironmentVariable(environment, "SYSTEM_ACCESSTOKEN", missingVariables);
+        string? buildIdText = GetRequiredEnvironmentVariable(environment, "BUILD_BUILDID", missingVariables);
 
         if (missingVariables.Count > 0)
         {
@@ -40,34 +57,37 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
             return false;
         }
 
-        string currentTestApplicationPath = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
-        string assemblyName = _testApplicationModuleInfo.TryGetAssemblyName() ?? Path.GetFileNameWithoutExtension(currentTestApplicationPath);
+        string currentTestApplicationPath = testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
+        string assemblyName = testApplicationModuleInfo.TryGetAssemblyName() ?? Path.GetFileNameWithoutExtension(currentTestApplicationPath);
         string automatedTestStorage = Path.GetFileNameWithoutExtension(currentTestApplicationPath);
         string targetFrameworkMoniker = TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform();
-        string agentName = _environment.GetEnvironmentVariable("AGENT_NAME") ?? _environment.MachineName;
-        string? stageName = _environment.GetEnvironmentVariable("SYSTEM_STAGENAME");
-        string? jobName = _environment.GetEnvironmentVariable("SYSTEM_JOBNAME");
+        string agentName = environment.GetEnvironmentVariable("AGENT_NAME") ?? environment.MachineName;
+        string? stageName = environment.GetEnvironmentVariable("SYSTEM_STAGENAME");
+        string? jobName = environment.GetEnvironmentVariable("SYSTEM_JOBNAME");
         string runName = GetRunName(assemblyName, targetFrameworkMoniker, agentName, stageName, jobName);
-        string resultsDirectory = _configuration.GetTestResultDirectory();
+        string resultsDirectory = configuration.GetTestResultDirectory();
 
-        if (_commandLineOptions.TryGetOptionArgumentList(AzureDevOpsCommandLineOptions.PublishAzureDevOpsRunNameOptionName, out string[]? arguments) && arguments is [string configuredRunName])
+        if (commandLineOptions.TryGetOptionArgumentList(AzureDevOpsCommandLineOptions.PublishAzureDevOpsRunNameOptionName, out string[]? arguments) && arguments is [string configuredRunName])
         {
             runName = configuredRunName;
         }
 
         publishConfiguration = new AzureDevOpsPublishConfiguration(collectionUri!, project!, accessToken!, buildId, runName, automatedTestStorage, resultsDirectory)
         {
-            PipelineReference = CreatePipelineReference(stageName, jobName),
+            PipelineReference = CreatePipelineReference(environment, stageName, jobName),
         };
         return true;
     }
 
-    private AzureDevOpsPipelineReference? CreatePipelineReference(string? stageName, string? jobName)
+    public static string BuildTestRunUrl(AzureDevOpsPublishConfiguration configuration, int runId)
+        => $"{configuration.CollectionUri.TrimEnd('/')}/{Uri.EscapeDataString(configuration.Project)}/_TestManagement/Runs?runId={runId}&_a=resultQuery";
+
+    private static AzureDevOpsPipelineReference? CreatePipelineReference(IEnvironment environment, string? stageName, string? jobName)
     {
-        string? phaseName = _environment.GetEnvironmentVariable("SYSTEM_PHASENAME");
-        int? stageAttempt = GetOptionalEnvironmentVariableAsInt32("SYSTEM_STAGEATTEMPT");
-        int? phaseAttempt = GetOptionalEnvironmentVariableAsInt32("SYSTEM_PHASEATTEMPT");
-        int? jobAttempt = GetOptionalEnvironmentVariableAsInt32("SYSTEM_JOBATTEMPT");
+        string? phaseName = environment.GetEnvironmentVariable("SYSTEM_PHASENAME");
+        int? stageAttempt = GetOptionalEnvironmentVariableAsInt32(environment, "SYSTEM_STAGEATTEMPT");
+        int? phaseAttempt = GetOptionalEnvironmentVariableAsInt32(environment, "SYSTEM_PHASEATTEMPT");
+        int? jobAttempt = GetOptionalEnvironmentVariableAsInt32(environment, "SYSTEM_JOBATTEMPT");
 
         // Azure DevOps rejects a reference that names nothing, and a run without any stage/job context is
         // better linked to the build alone than to an empty reference.
@@ -82,17 +102,17 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
                 jobAttempt);
     }
 
-    private int? GetOptionalEnvironmentVariableAsInt32(string variableName)
-        => int.TryParse(_environment.GetEnvironmentVariable(variableName), NumberStyles.Integer, CultureInfo.InvariantCulture, out int value)
+    private static int? GetOptionalEnvironmentVariableAsInt32(IEnvironment environment, string variableName)
+        => int.TryParse(environment.GetEnvironmentVariable(variableName), NumberStyles.Integer, CultureInfo.InvariantCulture, out int value)
             ? value
             : null;
 
     private static string? NullIfWhiteSpace(string? value)
         => RoslynString.IsNullOrWhiteSpace(value) ? null : value;
 
-    private string? GetRequiredEnvironmentVariable(string variableName, List<string> missingVariables)
+    private static string? GetRequiredEnvironmentVariable(IEnvironment environment, string variableName, List<string> missingVariables)
     {
-        string? value = _environment.GetEnvironmentVariable(variableName);
+        string? value = environment.GetEnvironmentVariable(variableName);
         if (RoslynString.IsNullOrWhiteSpace(value))
         {
             missingVariables.Add(variableName);
