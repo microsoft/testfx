@@ -39,7 +39,7 @@ tools:
     min-integrity: none # This workflow is allowed to examine any PR because it's invoked by a repo maintainer
 
 timeout-minutes: 15
-source: githubnext/agentics/workflows/q.md@1c6668b751c51af8571f01204ceffb19362e0f66
+source: githubnext/agentics/workflows/q.md@42c2ab5b4e4c9273534c39259b2e0df7f20f07e9
 ---
 
 # Q - Agentic Workflow Optimizer
