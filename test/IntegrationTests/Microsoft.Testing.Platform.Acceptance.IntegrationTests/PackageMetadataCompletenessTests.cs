@@ -140,7 +140,8 @@ public sealed class PackageMetadataCompletenessTests
             $"Ensure the solution was packed (build with '-pack') before running this test. Searched:{Environment.NewLine}" +
             $"  {Constants.ArtifactsPackagesShipping}{Environment.NewLine}  {Constants.ArtifactsPackagesNonShipping}");
 
-    // XML end-of-line normalization means the description reaches us with '\n' separators only.
+    // XDocument.Load applies XML end-of-line normalization, so however the nuspec encodes its line breaks the
+    // description reaches us with '\n' separators only.
     private static bool HasIndentedLine(string description)
         => description.Split('\n').Any(line => line.Length > 0 && char.IsWhiteSpace(line[0]) && line.Trim().Length > 0);
 

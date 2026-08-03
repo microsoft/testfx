@@ -20,13 +20,14 @@
     src/Directory.Build.props and src/Platform/Directory.Build.props) plus the package-specific
     $(PackageDescriptionDetail). This keeps the boilerplate first paragraph in one place instead of
     duplicating it in every packable project, and keeps the .csproj indentation out of the published
-    text. A project that needs full control can still set $(PackageDescription) directly.
-  -->
-  <PropertyGroup Condition=" '$(PackageDescriptionDetail)' != '' ">
-    <PackageDescription Condition=" '$(PackageDescriptionPreamble)' == '' ">$(PackageDescriptionDetail)</PackageDescription>
-    <PackageDescription Condition=" '$(PackageDescriptionPreamble)' != '' ">$(PackageDescriptionPreamble)
+    text. A project that needs full control can still set $(PackageDescription) directly, which wins.
 
-$(PackageDescriptionDetail)</PackageDescription>
+    %0A is MSBuild's escape for a newline, so the paragraph break does not depend on how this file
+    happens to be laid out or on the checkout's line endings.
+  -->
+  <PropertyGroup Condition=" '$(PackageDescriptionDetail)' != '' and '$(PackageDescription)' == '' ">
+    <PackageDescription Condition=" '$(PackageDescriptionPreamble)' == '' ">$(PackageDescriptionDetail)</PackageDescription>
+    <PackageDescription Condition=" '$(PackageDescriptionPreamble)' != '' ">$(PackageDescriptionPreamble)%0A%0A$(PackageDescriptionDetail)</PackageDescription>
   </PropertyGroup>
 
   <!--
@@ -35,12 +36,6 @@ $(PackageDescriptionDetail)</PackageDescription>
     literal. Record here, while the value is still exactly what the repository authored, whether a description
     was supplied at all, so that the guard below does not have to rely solely on recognizing that literal.
     $(Description) counts as authored because NuGet promotes it to $(PackageDescription).
-
-    This only observes values coming from a .props file, from the project itself, or from this file. A project
-    that assigns the description later - from a nested Directory.Build.targets (such as
-    src/Platform/Directory.Build.targets, which is inlined after this one) or from a target - would trip the
-    guard even though its description is fine. No project does that today; set the description in the project or
-    in a .props file.
   -->
   <PropertyGroup>
     <_HasAuthoredPackageDescription Condition=" '$(PackageDescription)' != '' or '$(Description)' != '' ">true</_HasAuthoredPackageDescription>
@@ -61,12 +56,30 @@ $(PackageDescriptionDetail)</PackageDescription>
     captured above before NuGet's default is applied, is the primary signal; the placeholder text is
     matched as well so the guard keeps working if that capture is ever defeated.
 
+    This runs only during pack, unlike the _ValidateBundledSdkFeatureVersions target below which also hooks
+    Build. Pack is where the metadata is consumed, the produced packages are checked again by
+    PackageMetadataCompletenessTests, and this way a plain build never breaks for someone mid-authoring a
+    package.
+
     Note this deliberately also covers IsShipping=false packages: Microsoft.Testing.Extensions.AzureFoundry
     is non-shipping and still reached nuget.org with the placeholder.
   -->
   <Target Name="_ValidatePackageMetadata"
           BeforeTargets="GenerateNuspec"
           Condition=" '$(IsPackable)' == 'true' ">
+    <PropertyGroup>
+      <!--
+        $(Description) is re-checked here rather than only at evaluation time because NuGet promotes it to
+        $(PackageDescription) in Pack.targets, which is imported after every Directory.Build.targets - so a
+        description supplied by a nested one still reaches nuget.org intact.
+
+        $(PackageDescriptionDetail) is deliberately NOT re-checked: the composition above runs in this file, so
+        a detail assigned later never gets composed and the package really would ship the placeholder.
+        $(PackageDescription) is useless here too - by now NuGet has always set it.
+      -->
+      <_HasAuthoredPackageDescription Condition=" '$(Description)' != '' ">true</_HasAuthoredPackageDescription>
+    </PropertyGroup>
+
     <Error Condition=" '$(_HasAuthoredPackageDescription)' != 'true' or '$(PackageDescription)' == 'Package Description' "
            Text="$(MSBuildProjectName) is packable but has no package description, so it would be published to nuget.org with NuGet's 'Package Description' placeholder. Set PackageDescriptionDetail (appended to the PackageDescriptionPreamble of the containing product area) or PackageDescription." />
     <Error Condition=" '$(PackageReadmeFile)' == '' "
