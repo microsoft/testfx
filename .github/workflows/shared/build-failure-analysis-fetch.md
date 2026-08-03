@@ -79,17 +79,26 @@ jobs:
       # cannot inject `ado-build-id` from outside — only a change to that file
       # can break this.)
       #
-      # Check `role_name` and `permission` together: `role_name` reports the
-      # precise role (so `maintain` and `triage` stay distinct) while
-      # `permission` is the coarse legacy field, and a custom org role reports a
-      # non-standard name in `role_name` while still showing its push access in
-      # `permission`. Accepting the union of the two covers every shape without
-      # depending on which field carries the role. On any API failure `gh` emits
-      # an error document that has neither field, so the check falls into the
-      # deny branch; failing closed is the safe direction for a pre-gate.
+      # Check the `.permission` field. The REST docs for this endpoint say it
+      # returns the legacy base roles admin|write|read|none, "where the maintain
+      # role is mapped to write and the triage role is mapped to read", so
+      # `admin|write` is exactly "has push access or better" — precisely the set
+      # `roles: [admin, maintainer, write]` describes, maintainers included.
+      # KEEP IN SYNC with that list.
+      #
+      # `.role_name` is deliberately NOT consulted. It reports "the name of the
+      # assigned role, including custom roles", and a custom organization role
+      # only has to avoid the base names read/triage/write/maintain/admin — so
+      # matching on it would let a role merely *named* like a privileged one
+      # (say a custom `maintainer` inheriting read) clear this gate with no push
+      # access at all.
+      #
+      # On any API failure the response carries no `.permission`, so the check
+      # falls into the deny branch; failing closed is the safe direction here.
       - name: Verify the commenter has write access
         id: perm
         if: github.event.check_run.details_url == '' && github.event.inputs['ado-build-id'] == ''
+        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           COMMENTER: ${{ github.event.comment.user.login || fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').actor }}
@@ -111,23 +120,19 @@ jobs:
             echo "::warning::No actor resolved from the slash-command event / aw_context; skipping the binlog download."
           else
             resp=$(gh api "repos/${GITHUB_REPOSITORY}/collaborators/${COMMENTER}/permission" 2>/dev/null)
-            role=$(printf '%s' "${resp}" | jq -r '.role_name // empty' 2>/dev/null)
+            # Extract with `jq` rather than `gh api --jq`: on a non-2xx response
+            # `gh` prints the error document to stdout, which `--jq` does not
+            # filter, so the raw JSON would land in `perm` and be echoed into
+            # the log. Reading the field ourselves yields "" for any error shape.
             perm=$(printf '%s' "${resp}" | jq -r '.permission // empty' 2>/dev/null)
-            for r in "${role}" "${perm}"; do
-              case "${r}" in
-                # `maintainer` is not a value GitHub returns in `role_name`
-                # (that spelling is `maintain`); it is listed because it is the
-                # spelling gh-aw uses in `GH_AW_REQUIRED_ROLES`, and keeping the
-                # two lists identical is what makes this an early-out for the
-                # same decision `pre_activation` makes later. Both spellings are
-                # accepted so neither source can drift into denying a maintainer.
-                admin|maintain|maintainer|write) authorized=true ;;
-              esac
-            done
+            case "${perm}" in
+              admin|write) authorized=true ;;
+              *)           authorized=false ;;
+            esac
             if [ "${authorized}" = "true" ]; then
-              echo "'${COMMENTER}' has '${role:-${perm}}' access to ${GITHUB_REPOSITORY}; proceeding."
+              echo "'${COMMENTER}' has '${perm}' access to ${GITHUB_REPOSITORY}; proceeding."
             else
-              echo "::warning::'${COMMENTER}' does not have write access to ${GITHUB_REPOSITORY} (resolved role '${role:-${perm:-none}}'); skipping the binlog download."
+              echo "::warning::'${COMMENTER}' does not have write access to ${GITHUB_REPOSITORY} (resolved permission '${perm:-none}'); skipping the binlog download."
             fi
           fi
           echo "authorized=${authorized}" >> "$GITHUB_OUTPUT"
@@ -139,6 +144,7 @@ jobs:
         # output is empty, so the first two clauses let those paths through
         # unchanged.
         if: github.event.check_run.details_url != '' || github.event.inputs['ado-build-id'] != '' || steps.perm.outputs.authorized == 'true'
+        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           GH_AW_REPO: ${{ github.repository }}
