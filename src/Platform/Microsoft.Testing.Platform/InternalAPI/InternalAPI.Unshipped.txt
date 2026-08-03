@@ -500,7 +500,6 @@ Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.ResolvedAssem
 Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.TypeFullName.get -> string!
 Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionJsonReader
 Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionLoader
-Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionLoader.DynamicExtensionLoader(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Helpers.IRuntimeFeature! runtimeFeature, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.DynamicExtensions.IDynamicExtensionAssemblyLoader! assemblyLoader, Microsoft.Testing.Platform.Logging.ILogger? logger) -> void
 Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionLoader.LoadAsync(Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder, string![]! args) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionManifest
 Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionManifest.DynamicExtensionManifest(string! manifestPath, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry!>! extensions, System.Collections.Generic.IReadOnlyList<string!>! unknownProperties) -> void
@@ -540,3 +539,4 @@ Microsoft.Testing.Platform.DynamicExtensions.IDynamicExtensionRegistrationGuard
 Microsoft.Testing.Platform.DynamicExtensions.IDynamicExtensionRegistrationGuard.EnterDynamicExtensionScope(string! displayName, string! manifestPath) -> System.IDisposable!
 static readonly Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants.PathComparer -> System.StringComparer!
 static readonly Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants.PathComparison -> System.StringComparison
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionLoader.DynamicExtensionLoader(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.DynamicExtensions.IDynamicExtensionAssemblyLoader! assemblyLoader, Microsoft.Testing.Platform.Logging.ILogger? logger) -> void

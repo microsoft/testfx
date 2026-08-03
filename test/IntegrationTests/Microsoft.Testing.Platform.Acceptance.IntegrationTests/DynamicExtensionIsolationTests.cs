@@ -9,11 +9,11 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 /// </summary>
 /// <remarks>
 /// The test application and the extension both depend on an assembly called <c>Contoso.Shared</c>, but on two
-/// *different and incompatible* builds of it — the application's exposes <c>Value</c> returning <c>"app"</c>,
-/// the extension's returns <c>"extension"</c>. Without isolation one of the two would silently win, which is
-/// precisely the VSTest failure mode this design exists to avoid. Asserting that each side reports its own
-/// value is therefore a direct check that the load contexts are separate, while the extension simultaneously
-/// registers a real extension through the shared platform contract.
+/// *different and incompatible* builds of it — the application's build exposes <c>Value</c> returning
+/// <c>"app"</c>, the extension's returns <c>"extension"</c>. Without isolation one of the two would silently
+/// win, which is precisely the VSTest failure mode this design exists to avoid. Asserting that each side
+/// reports its own value is therefore a direct check that the load contexts are separate, while the extension
+/// simultaneously registers a real extension through the shared platform contract.
 /// </remarks>
 [TestClass]
 public sealed class DynamicExtensionIsolationTests : AcceptanceTestBase<DynamicExtensionIsolationTests.TestAssetFixture>

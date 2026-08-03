@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Security;
+
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
@@ -21,7 +23,6 @@ internal sealed class DynamicExtensionLoader
 {
     private readonly IFileSystem _fileSystem;
     private readonly IEnvironment _environment;
-    private readonly IRuntimeFeature _runtimeFeature;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
     private readonly IDynamicExtensionAssemblyLoader _assemblyLoader;
     private readonly ILogger? _logger;
@@ -29,14 +30,12 @@ internal sealed class DynamicExtensionLoader
     public DynamicExtensionLoader(
         IFileSystem fileSystem,
         IEnvironment environment,
-        IRuntimeFeature runtimeFeature,
         ITestApplicationModuleInfo testApplicationModuleInfo,
         IDynamicExtensionAssemblyLoader assemblyLoader,
         ILogger? logger)
     {
         _fileSystem = fileSystem;
         _environment = environment;
-        _runtimeFeature = runtimeFeature;
         _testApplicationModuleInfo = testApplicationModuleInfo;
         _assemblyLoader = assemblyLoader;
         _logger = logger;
@@ -69,18 +68,6 @@ internal sealed class DynamicExtensionLoader
             return;
         }
 
-        if (!_runtimeFeature.IsDynamicCodeSupported)
-        {
-            // Silently skipping here would mean the policy the manifest encodes did not apply and nobody
-            // noticed, which is the failure mode this feature exists to avoid.
-            throw new InvalidOperationException(string.Format(
-                CultureInfo.InvariantCulture,
-                PlatformResources.DynamicExtensionsNotSupportedOnCurrentRuntimeErrorMessage,
-                entriesToLoad[0].ManifestPath,
-                DynamicExtensionConstants.EnabledPropertyName,
-                EnvironmentVariableConstants.TESTINGPLATFORM_NODYNAMICEXTENSIONS));
-        }
-
         foreach (DynamicExtensionEntry entry in entriesToLoad)
         {
             await LoadEntryAsync(builder, args, entry).ConfigureAwait(false);
@@ -97,7 +84,7 @@ internal sealed class DynamicExtensionLoader
     private IReadOnlyList<string> DiscoverManifests()
     {
         string directory = _testApplicationModuleInfo.GetCurrentTestApplicationDirectory();
-        if (RoslynString.IsNullOrEmpty(directory) || !_fileSystem.ExistDirectory(directory))
+        if (RoslynString.IsNullOrEmpty(directory))
         {
             return [];
         }
@@ -107,7 +94,14 @@ internal sealed class DynamicExtensionLoader
         {
             candidates = _fileSystem.GetFiles(directory, DynamicExtensionConstants.ManifestSearchPattern, SearchOption.TopDirectoryOnly);
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        catch (DirectoryNotFoundException)
+        {
+            // The directory genuinely does not exist, so nothing was declared. Note this is deliberately not
+            // pre-checked with Directory.Exists: that returns false for an unreadable directory too, which
+            // would silently turn "cannot tell" into "nothing declared".
+            return [];
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException)
         {
             // Continuing would mean the policy a manifest may encode did not apply and nobody noticed, which is
             // exactly the failure mode this feature exists to avoid: we cannot tell whether there was one.
@@ -242,6 +236,21 @@ internal sealed class DynamicExtensionLoader
         try
         {
             assembly = _assemblyLoader.LoadAssembly(entry.ResolvedAssemblyPath);
+        }
+        catch (PlatformNotSupportedException ex)
+        {
+            // The runtime genuinely cannot load an assembly from disk (native AOT). This is deliberately
+            // detected by attempting the load rather than by pre-checking RuntimeFeature.IsDynamicCodeSupported:
+            // that switch is also turned off by <PublishAot>true</PublishAot> on builds whose managed output
+            // still runs normally (see PublishAotNonNativeTests), and those can load extensions perfectly well.
+            throw new InvalidOperationException(
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    PlatformResources.DynamicExtensionsNotSupportedOnCurrentRuntimeErrorMessage,
+                    entry.ManifestPath,
+                    DynamicExtensionConstants.EnabledPropertyName,
+                    EnvironmentVariableConstants.TESTINGPLATFORM_NODYNAMICEXTENSIONS),
+                ex);
         }
         catch (Exception ex)
         {

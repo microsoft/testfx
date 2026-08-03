@@ -275,23 +275,34 @@ extension is loaded with `Assembly.LoadFrom`, which probes the extension's direc
 isolation. This is a documented limitation, not a silent one — the diagnostic log records that the
 extension was loaded without isolation.
 
-**Under NativeAOT / when dynamic code is not supported:** loading an assembly from disk is impossible.
-If any manifest declares an enabled extension, the platform fails with an explicit error rather than
-silently skipping, because silently skipping is precisely the "the infra policy did not apply and
-nobody noticed" failure this design exists to avoid. Teams publishing NativeAOT test apps must set
-`enabled: false`, remove the manifest, or use the kill switch.
+**Under NativeAOT:** loading an assembly from disk is impossible. If a manifest declares an enabled
+extension, the platform fails with an explicit error rather than silently skipping, because silently
+skipping is precisely the "the infra policy did not apply and nobody noticed" failure this design
+exists to avoid. Teams publishing NativeAOT test apps must set `enabled: false`, remove the manifest,
+or use the kill switch.
+
+This is detected by *attempting* the load and translating the resulting
+`PlatformNotSupportedException`, deliberately **not** by pre-checking
+`RuntimeFeature.IsDynamicCodeSupported`. That switch answers a different question — whether new code
+can be generated — and `<PublishAot>true</PublishAot>` turns it off even for builds whose managed
+output still runs normally on CoreCLR (see `PublishAotNonNativeTests`). Gating on it would refuse to
+load extensions for applications that are perfectly capable of loading them.
 
 ### 6. Failure policy
 
 Every one of the following **fails the run** with a message naming the manifest file and the
 extension:
 
-- the manifest is not valid JSON, or its root is not an object;
+- the manifest is not valid JSON, its root is not an object, or it carries content after the root
+  object (the netstandard2.0 parser stops at the root value, so this is checked explicitly to keep
+  both readers strict in the same way);
 - `extensions` is missing or is not an array, or an entry is not an object;
 - `assemblyPath` or `typeFullName` is missing or empty;
 - the same `id` names two different extensions;
 - the test application's directory cannot be searched for manifests, so the platform cannot even tell
-  whether an extension had to be loaded;
+  whether an extension had to be loaded (a directory that simply does not exist is *not* an error — it
+  declares nothing, and the two are distinguished rather than collapsed by a `Directory.Exists` check,
+  which returns false for both);
 - the assembly file does not exist, or cannot be loaded;
 - the type is not found in the assembly;
 - the type has no public static `AddExtensions(ITestApplicationBuilder, string[])`;

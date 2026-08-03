@@ -987,6 +987,10 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
     <value>The extension manifest '{0}' is not valid JSON. {1}</value>
     <comment>{0} is the manifest file path. {1} is the underlying JSON parser error message.</comment>
   </data>
+  <data name="DynamicExtensionManifestTrailingContentErrorMessage" xml:space="preserve">
+    <value>Unexpected content after the top-level JSON object.</value>
+    <comment>Used as the parser-error detail when a manifest contains text after its closing brace.</comment>
+  </data>
   <data name="DynamicExtensionManifestRootNotObjectErrorMessage" xml:space="preserve">
     <value>The extension manifest '{0}' is invalid: the top-level JSON element must be an object but '{1}' was found.</value>
     <comment>{0} is the manifest file path. {1} is the JSON value kind that was found.</comment>

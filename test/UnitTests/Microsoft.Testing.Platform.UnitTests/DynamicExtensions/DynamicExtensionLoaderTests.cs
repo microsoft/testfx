@@ -23,7 +23,6 @@ public sealed class DynamicExtensionLoaderTests
 
     private readonly Mock<IFileSystem> _fileSystem = new(MockBehavior.Strict);
     private readonly Mock<IEnvironment> _environment = new(MockBehavior.Strict);
-    private readonly Mock<IRuntimeFeature> _runtimeFeature = new(MockBehavior.Strict);
     private readonly Mock<ITestApplicationModuleInfo> _moduleInfo = new(MockBehavior.Strict);
     private readonly FakeAssemblyLoader _assemblyLoader = new();
     private readonly Mock<ITestApplicationBuilder> _builder = new();
@@ -38,9 +37,7 @@ public sealed class DynamicExtensionLoaderTests
         AsyncVoidHook.Reset();
 
         _environment.Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_NODYNAMICEXTENSIONS)).Returns((string?)null);
-        _runtimeFeature.SetupGet(x => x.IsDynamicCodeSupported).Returns(true);
         _moduleInfo.Setup(x => x.GetCurrentTestApplicationDirectory()).Returns(ApplicationDirectory);
-        _fileSystem.Setup(x => x.ExistDirectory(ApplicationDirectory)).Returns(true);
     }
 
     [TestMethod]
@@ -55,13 +52,17 @@ public sealed class DynamicExtensionLoaderTests
     }
 
     [TestMethod]
-    public async Task LoadAsync_WithoutManifest_DoesNotEnumerateWhenDirectoryIsMissing()
+    public async Task LoadAsync_WhenTheApplicationDirectoryIsMissing_TreatsItAsNothingDeclared()
     {
-        _fileSystem.Setup(x => x.ExistDirectory(ApplicationDirectory)).Returns(false);
+        // A genuinely absent directory declares nothing. This is distinguished from an *unreadable* one, which
+        // throws (below): Directory.Exists cannot tell those apart, which is why it is not used as a pre-check.
+        _fileSystem
+            .Setup(x => x.GetFiles(ApplicationDirectory, DynamicExtensionConstants.ManifestSearchPattern, SearchOption.TopDirectoryOnly))
+            .Throws(new DirectoryNotFoundException());
 
         await CreateLoader().LoadAsync(_builder.Object, Args);
 
-        _fileSystem.Verify(x => x.GetFiles(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<SearchOption>()), Times.Never);
+        Assert.AreEqual(0, RecordingHook.InvocationCount);
     }
 
     [TestMethod]
@@ -298,27 +299,31 @@ public sealed class DynamicExtensionLoaderTests
     }
 
     [TestMethod]
-    public async Task LoadAsync_WithoutDynamicCodeSupport_ThrowsBeforeLoadingAnything()
+    public async Task LoadAsync_WhenTheRuntimeCannotLoadAssemblies_ThrowsAnActionableError()
     {
-        _runtimeFeature.SetupGet(x => x.IsDynamicCodeSupported).Returns(false);
+        // Native AOT surfaces as PlatformNotSupportedException from the load itself. Detecting it that way
+        // rather than pre-checking RuntimeFeature.IsDynamicCodeSupported matters: <PublishAot>true</PublishAot>
+        // turns that switch off even for builds whose managed output runs normally and can load extensions.
         SetupManifest("a.testingplatformextensions.json", ManifestFor(typeof(RecordingHook)));
+        _assemblyLoader.ThrowOnLoad = new PlatformNotSupportedException("no dynamic loading");
 
         InvalidOperationException ex = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
             () => CreateLoader().LoadAsync(_builder.Object, Args));
 
         Assert.Contains(EnvironmentVariableConstants.TESTINGPLATFORM_NODYNAMICEXTENSIONS, ex.Message);
-        Assert.IsEmpty(_assemblyLoader.LoadedPaths);
+        Assert.Contains(DynamicExtensionConstants.EnabledPropertyName, ex.Message);
+        Assert.AreEqual(0, RecordingHook.InvocationCount);
     }
 
     [TestMethod]
-    public async Task LoadAsync_WithoutDynamicCodeSupportAndOnlyDisabledExtensions_DoesNotThrow()
+    public async Task LoadAsync_WithOnlyDisabledExtensions_NeverTouchesTheAssemblyLoader()
     {
-        _runtimeFeature.SetupGet(x => x.IsDynamicCodeSupported).Returns(false);
         SetupManifest("a.testingplatformextensions.json", ManifestFor(typeof(RecordingHook), enabled: false));
 
         await CreateLoader().LoadAsync(_builder.Object, Args);
 
         Assert.AreEqual(0, RecordingHook.InvocationCount);
+        Assert.IsEmpty(_assemblyLoader.LoadedPaths);
     }
 
     [TestMethod]
@@ -501,7 +506,7 @@ public sealed class DynamicExtensionLoaderTests
             Args);
 
     private DynamicExtensionLoader CreateLoader()
-        => new(_fileSystem.Object, _environment.Object, _runtimeFeature.Object, _moduleInfo.Object, _assemblyLoader, logger: null);
+        => new(_fileSystem.Object, _environment.Object, _moduleInfo.Object, _assemblyLoader, logger: null);
 
     private void SetupManifest(string fileName, string content, bool assemblyExists = true)
         => SetupManifests(assemblyExists, (fileName, content));

@@ -24,15 +24,35 @@ internal static class DynamicExtensionJsonReader
     public static RawExtensionManifest Read(string manifestPath, string content)
     {
         object? document;
+        CountingStringReader reader = new(content);
         try
         {
-            document = Json.Deserialize(content, Settings);
+            document = Json.Deserialize(reader, Settings);
         }
         catch (JsonException ex)
         {
             throw new InvalidOperationException(
                 string.Format(CultureInfo.InvariantCulture, PlatformResources.DynamicExtensionManifestInvalidJsonErrorMessage, manifestPath, ex.Message),
                 ex);
+        }
+
+        // Jsonite returns as soon as it has parsed the root value and never checks for end of input, so
+        // '{ ... } garbage' would be accepted here while System.Text.Json rejects it on the .NET asset. Left
+        // alone that would make a malformed manifest run on .NET Framework only, breaking the cross-target
+        // validation the two readers are supposed to share.
+        if (!reader.ReachedEnd)
+        {
+            // At most one character is held as lookahead, so anything from the previous position onwards is
+            // content the parser did not consume as part of the root value.
+            string trailing = content.Substring(reader.Position - 1);
+            if (trailing.Trim().Length > 0)
+            {
+                throw new InvalidOperationException(string.Format(
+                    CultureInfo.InvariantCulture,
+                    PlatformResources.DynamicExtensionManifestInvalidJsonErrorMessage,
+                    manifestPath,
+                    PlatformResources.DynamicExtensionManifestTrailingContentErrorMessage));
+            }
         }
 
         if (document is not JsonObject root)
@@ -126,6 +146,43 @@ internal static class DynamicExtensionJsonReader
             bool boolean => boolean ? "True" : "False",
             _ => "Number",
         };
+
+    /// <summary>
+    /// A <see cref="StringReader"/> replacement that reports how much of the input the parser consumed, which
+    /// is what lets <see cref="Read"/> detect content trailing the root value. Jsonite itself offers no way to
+    /// ask, and it keeps at most one character of lookahead.
+    /// </summary>
+    private sealed class CountingStringReader : TextReader
+    {
+        private readonly string _content;
+
+        public CountingStringReader(string content) => _content = content;
+
+        /// <summary>
+        /// Gets the number of characters handed to the parser.
+        /// </summary>
+        public int Position { get; private set; }
+
+        /// <summary>
+        /// Gets a value indicating whether the parser read past the end of the input, which means it consumed
+        /// the whole string rather than stopping on a lookahead character.
+        /// </summary>
+        public bool ReachedEnd { get; private set; }
+
+        public override int Peek()
+            => Position < _content.Length ? _content[Position] : -1;
+
+        public override int Read()
+        {
+            if (Position < _content.Length)
+            {
+                return _content[Position++];
+            }
+
+            ReachedEnd = true;
+            return -1;
+        }
+    }
 }
 
 #endif

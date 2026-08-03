@@ -189,6 +189,26 @@ public sealed class DynamicExtensionManifestParserTests
     }
 
     [TestMethod]
+    public void Parse_WithTrailingContentAfterTheRootObject_Throws()
+    {
+        // The netstandard2.0 reader is built on Jsonite, which stops as soon as it has the root value and never
+        // checks for end of input. Without an explicit check this would be accepted on .NET Framework and
+        // rejected on .NET, so the parity is asserted here rather than assumed.
+        InvalidOperationException ex = Assert.ThrowsExactly<InvalidOperationException>(
+            () => DynamicExtensionManifestParser.Parse(ManifestPath, """{ "extensions": [] } garbage"""));
+
+        Assert.Contains(ManifestPath, ex.Message);
+    }
+
+    [TestMethod]
+    public void Parse_WithTrailingWhitespaceAfterTheRootObject_Succeeds()
+    {
+        DynamicExtensionManifest manifest = DynamicExtensionManifestParser.Parse(ManifestPath, "{ \"extensions\": [] }  \r\n\t ");
+
+        Assert.IsEmpty(manifest.Extensions);
+    }
+
+    [TestMethod]
     public void Parse_WithMalformedJson_Throws()
     {
         InvalidOperationException ex = Assert.ThrowsExactly<InvalidOperationException>(

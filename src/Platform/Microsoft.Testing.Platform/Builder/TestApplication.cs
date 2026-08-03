@@ -125,7 +125,6 @@ public sealed class TestApplication : ITestApplication
         DynamicExtensionLoader dynamicExtensionLoader = new(
             fileSystem,
             systemEnvironment,
-            new SystemRuntimeFeature(),
             testApplicationModuleInfo,
             new DynamicExtensionAssemblyLoader(fileSystem),
             loggingState.FileLoggerProvider?.CreateLogger(typeof(DynamicExtensionLoader).ToString()));
