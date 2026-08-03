@@ -277,12 +277,14 @@ extension hook must therefore be safe to run once per process rather than once p
   *exchanged* between extensions — `ITrxReportCapability` is implemented by one extension and queried
   for by another — so a private copy would make the capability silently invisible. Matching by name
   rather than relying on what happens to sit next to the extension keeps identity independent of the
-  deployment layout. If the host does not carry a shared assembly at all (an abstractions package the
-  test application never referenced), the extension falls back to its own copy rather than failing to
-  load: an isolated copy is worse than a shared one, but far better than not running. Note that
-  "carried by the host" is not the same as "already loaded": because dynamic hooks run before static
-  ones (§4), a contract is often present in the application's dependency graph but untouched, so the
-  platform asks the default context to load it by simple name before giving up. Any future
+  deployment layout. If the host does not carry a shared assembly at all — the ordinary manifest-only
+  deployment, where the extension brings its own copy — that copy is **promoted into the default
+  context** rather than loaded privately, so it becomes the one canonical identity for every extension
+  that follows. Loading it into the extension's own context instead would give each extension its own
+  copy, and a capability implemented by one dynamic extension would be invisible to another. Note also
+  that "carried by the host" is not the same as "already loaded": because dynamic hooks run before
+  static ones (§4), a contract is often present in the application's dependency graph but untouched,
+  so the platform asks the default context to load it by simple name before falling back. Any future
   abstractions assembly whose types cross the boundary must be added to
   `DynamicExtensionConstants.SharedContractAssemblyNames`; implementation assemblies must not be.
 - If `AssemblyDependencyResolver` cannot resolve a reference (for example the extension was xcopied

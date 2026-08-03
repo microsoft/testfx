@@ -491,7 +491,6 @@ Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants
 Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry
 Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.AssemblyPath.get -> string!
 Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.DisplayName.get -> string!
-Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.DynamicExtensionEntry(string! manifestPath, int index, string! id, string! displayName, string! assemblyPath, string! resolvedAssemblyPath, string! typeFullName, bool isEnabled) -> void
 Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.Id.get -> string!
 Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.Index.get -> int
 Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.IsEnabled.get -> bool
@@ -541,3 +540,6 @@ static readonly Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionCon
 static readonly Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants.PathComparison -> System.StringComparison
 const Microsoft.Testing.Platform.CommandLine.PlatformCommandLineProvider.EnableDynamicExtensionsOptionKey = "enable-dynamic-extensions" -> string!
 Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionLoader.DynamicExtensionLoader(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.DynamicExtensions.IDynamicExtensionAssemblyLoader! assemblyLoader, Microsoft.Testing.Platform.Helpers.IConsole! console, Microsoft.Testing.Platform.CommandLine.CommandLineParseResult! commandLineParseResult, Microsoft.Testing.Platform.Logging.ILogger? logger) -> void
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.DynamicExtensionEntry(string! manifestPath, int index, string! id, bool hasExplicitId, string! displayName, string! assemblyPath, string! resolvedAssemblyPath, string! typeFullName, bool isEnabled) -> void
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.DeduplicationKey.get -> string!
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.HasExplicitId.get -> bool

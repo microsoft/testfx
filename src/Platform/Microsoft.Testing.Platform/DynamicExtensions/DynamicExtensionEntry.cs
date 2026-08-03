@@ -12,6 +12,7 @@ internal sealed class DynamicExtensionEntry
         string manifestPath,
         int index,
         string id,
+        bool hasExplicitId,
         string displayName,
         string assemblyPath,
         string resolvedAssemblyPath,
@@ -21,11 +22,20 @@ internal sealed class DynamicExtensionEntry
         ManifestPath = manifestPath;
         Index = index;
         Id = id;
+        HasExplicitId = hasExplicitId;
         DisplayName = displayName;
         AssemblyPath = assemblyPath;
         ResolvedAssemblyPath = resolvedAssemblyPath;
         TypeFullName = typeFullName;
         IsEnabled = isEnabled;
+
+        // Explicit ids are opaque and case-insensitive; generated ones carry a path whose case may be
+        // significant. Normalising both into one ordinal key keeps a single dictionary correct for both.
+        DeduplicationKey = hasExplicitId
+            ? "id:" + id.ToUpperInvariant()
+            : "identity:" + (DynamicExtensionConstants.PathComparison == StringComparison.OrdinalIgnoreCase
+                ? resolvedAssemblyPath.ToUpperInvariant()
+                : resolvedAssemblyPath) + "|" + typeFullName;
     }
 
     /// <summary>
@@ -44,6 +54,22 @@ internal sealed class DynamicExtensionEntry
     /// Defaults to the resolved assembly path combined with the type name when the manifest omits it.
     /// </summary>
     public string Id { get; }
+
+    /// <summary>
+    /// Gets the key used to de-duplicate this entry against others.
+    /// </summary>
+    /// <remarks>
+    /// An explicit <c>id</c> is an opaque token the author chose, so it is matched case-insensitively. A
+    /// generated identity is not: it embeds the resolved assembly path, and on a case-sensitive file system
+    /// <c>/app/Foo.dll</c> and <c>/app/foo.dll</c> are two different extensions that must not collide. Folding
+    /// both into one case-insensitive dictionary would report those as a conflicting duplicate id.
+    /// </remarks>
+    public string DeduplicationKey { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether the manifest declared an explicit <c>id</c>.
+    /// </summary>
+    public bool HasExplicitId { get; }
 
     /// <summary>
     /// Gets the human-readable name used in diagnostics. Defaults to the type full name.

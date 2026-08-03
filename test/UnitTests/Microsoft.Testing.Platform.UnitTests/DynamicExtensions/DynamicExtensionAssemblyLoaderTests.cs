@@ -1,6 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NETCOREAPP
+using System.Runtime.Loader;
+#endif
+
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.DynamicExtensions;
 using Microsoft.Testing.Platform.Helpers;
@@ -96,12 +100,20 @@ public sealed class DynamicExtensionAssemblyLoaderTests
         // Dynamic hooks run before static ones, so a contract can be in the application's dependency graph
         // without having been loaded yet. Settling for the extension's private copy in that window would split
         // the contract as soon as a static extension loaded the real one.
-        Assembly present = typeof(Moq.Mock).Assembly;
+        //
+        // The assembly must genuinely not be loaded, otherwise the already-loaded scan short-circuits and this
+        // never reaches Default.LoadFromAssemblyName. Naming a type (for example typeof(Moq.Mock)) would itself
+        // load it, so pick from framework assemblies that resolve but that a test process has no reason to have
+        // touched, and verify the precondition rather than assuming it.
+        string[] candidates = ["System.Net.Ping", "System.Formats.Tar", "System.Net.WebSockets", "System.IO.Pipes"];
+        string? notLoaded = candidates.FirstOrDefault(name =>
+            !AssemblyLoadContext.Default.Assemblies.Any(a => string.Equals(a.GetName().Name, name, StringComparison.OrdinalIgnoreCase)));
+        Assert.IsNotNull(notLoaded, "Every candidate was already loaded, so this test could not exercise the load-by-name path.");
 
-        Assembly? resolved = InvokeResolveSharedContractAssembly(new AssemblyName(present.GetName().Name!));
+        Assembly? resolved = InvokeResolveSharedContractAssembly(new AssemblyName(notLoaded));
 
         Assert.IsNotNull(resolved);
-        Assert.AreEqual(present.GetName().Name, resolved.GetName().Name);
+        Assert.AreEqual(notLoaded, resolved.GetName().Name);
     }
 
     [TestMethod]

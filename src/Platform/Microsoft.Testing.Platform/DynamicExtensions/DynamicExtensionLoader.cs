@@ -85,12 +85,22 @@ internal sealed class DynamicExtensionLoader
             return;
         }
 
-        foreach (DynamicExtensionEntry entry in entriesToLoad)
+        // Report what actually loaded even if a later extension fails: by then the earlier hooks have already
+        // run with full trust in this process, and leaving that unreported would break the "loading is never
+        // silent" guarantee precisely when something has gone wrong.
+        List<DynamicExtensionEntry> loaded = [];
+        try
         {
-            await LoadEntryAsync(builder, args, entry).ConfigureAwait(false);
+            foreach (DynamicExtensionEntry entry in entriesToLoad)
+            {
+                await LoadEntryAsync(builder, args, entry).ConfigureAwait(false);
+                loaded.Add(entry);
+            }
         }
-
-        ReportLoadedExtensions(entriesToLoad);
+        finally
+        {
+            ReportLoadedExtensions(loaded);
+        }
     }
 
     /// <summary>
@@ -99,6 +109,11 @@ internal sealed class DynamicExtensionLoader
     /// </summary>
     private void ReportLoadedExtensions(IReadOnlyList<DynamicExtensionEntry> loaded)
     {
+        if (loaded.Count == 0)
+        {
+            return;
+        }
+
         // Server mode owns stdout as a protocol channel, so writing to it there would corrupt the stream. The
         // diagnostic log still records everything in that case.
         if (_commandLineParseResult.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey))
@@ -198,7 +213,7 @@ internal sealed class DynamicExtensionLoader
             {
                 content = await _fileSystem.ReadAllTextAsync(manifestPath).ConfigureAwait(false);
             }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException)
             {
                 throw new InvalidOperationException(
                     string.Format(CultureInfo.InvariantCulture, PlatformResources.DynamicExtensionManifestReadFailedErrorMessage, manifestPath),
@@ -220,7 +235,7 @@ internal sealed class DynamicExtensionLoader
     private async Task<IReadOnlyList<DynamicExtensionEntry>> FilterEntriesAsync(IReadOnlyList<DynamicExtensionEntry> entries)
     {
         List<DynamicExtensionEntry> result = [];
-        Dictionary<string, DynamicExtensionEntry> seenIds = [with(StringComparer.OrdinalIgnoreCase)];
+        Dictionary<string, DynamicExtensionEntry> seen = [with(StringComparer.Ordinal)];
         foreach (DynamicExtensionEntry entry in entries)
         {
             if (!entry.IsEnabled)
@@ -229,12 +244,14 @@ internal sealed class DynamicExtensionLoader
                 continue;
             }
 
-            if (seenIds.TryGetValue(entry.Id, out DynamicExtensionEntry? previous))
+            if (seen.TryGetValue(entry.DeduplicationKey, out DynamicExtensionEntry? previous))
             {
                 // The same extension declared twice is the expected case and is silently de-duplicated. Two
                 // *different* extensions sharing an id is not: honouring only the first would silently drop a
                 // policy someone deliberately deployed, so it has to be reported. This mirrors how the MSBuild
-                // task rejects TestingPlatformBuilderHook items whose metadata conflicts.
+                // task rejects TestingPlatformBuilderHook items whose metadata conflicts. Only explicit ids can
+                // collide this way -- a generated key already encodes the path and type, so a match there means
+                // the declarations really are identical.
                 if (!IsSameDeclaration(previous, entry))
                 {
                     throw new InvalidOperationException(string.Format(
@@ -251,7 +268,7 @@ internal sealed class DynamicExtensionLoader
                 continue;
             }
 
-            seenIds.Add(entry.Id, entry);
+            seen.Add(entry.DeduplicationKey, entry);
             result.Add(entry);
         }
 

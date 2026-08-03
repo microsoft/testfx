@@ -101,14 +101,16 @@ internal static class DynamicExtensionManifestParser
         }
 
         string displayName = RoslynString.IsNullOrWhiteSpace(raw.DisplayName) ? typeFullName : raw.DisplayName!;
-        string id = RoslynString.IsNullOrWhiteSpace(raw.Id)
-            ? $"{resolvedAssemblyPath}|{typeFullName}"
-            : raw.Id!;
+        bool hasExplicitId = !RoslynString.IsNullOrWhiteSpace(raw.Id);
+        string id = hasExplicitId
+            ? raw.Id!
+            : $"{resolvedAssemblyPath}|{typeFullName}";
 
         return new DynamicExtensionEntry(
             manifestPath,
             index,
             id,
+            hasExplicitId,
             displayName,
             assemblyPath,
             resolvedAssemblyPath,

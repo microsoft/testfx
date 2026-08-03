@@ -585,6 +585,35 @@ public sealed class DynamicExtensionLoaderTests
         Assert.IsEmpty(_console.Output);
     }
 
+    [TestMethod]
+    public async Task LoadAsync_WhenALaterExtensionFails_StillReportsTheOnesThatAlreadyRan()
+    {
+        // By the time a later hook fails the earlier ones have already executed with full trust, so staying
+        // silent about them would break the guarantee exactly when something has gone wrong.
+        SetupManifest(
+            "a.testingplatformextensions.json",
+            Wrap(ManifestEntryFor(typeof(RecordingHook)) + "," + ManifestEntryFor(typeof(ThrowingHook))));
+
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => CreateLoader().LoadAsync(_builder.Object, Args));
+
+        Assert.AreEqual(1, RecordingHook.InvocationCount);
+        Assert.Contains(typeof(RecordingHook).FullName!, _console.Output);
+        Assert.Contains("do not trust", _console.Output, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(typeof(ThrowingHook).FullName!, _console.Output, StringComparison.Ordinal);
+    }
+
+    [TestMethod]
+    public async Task LoadAsync_WhenTheFirstExtensionFails_WritesNothingToTheConsole()
+    {
+        SetupManifest("a.testingplatformextensions.json", ManifestFor(typeof(ThrowingHook)));
+
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => CreateLoader().LoadAsync(_builder.Object, Args));
+
+        Assert.IsEmpty(_console.Output);
+    }
+
     private DynamicExtensionLoader CreateLoader()
         => new(_fileSystem.Object, _environment.Object, _moduleInfo.Object, _assemblyLoader, _console, _parseResult, logger: null);
 
