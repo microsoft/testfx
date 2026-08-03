@@ -337,6 +337,30 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
         compilationResult.AssertOutputContains("Error from UserDefinedTestTarget.targets");
     }
 
+    [TestMethod]
+    public async Task InvokeTestingPlatform_Target_Should_Pass_EnvironmentVariables_To_TestProcess()
+    {
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            SourceCode
+            .PatchCodeWithReplace("$PlatformTarget$", "<PlatformTarget>x64</PlatformTarget>")
+            .PatchCodeWithReplace("$TargetFrameworks$", $"<targetFramework>{TargetFrameworks.NetCurrent}</targetFramework>")
+            .PatchCodeWithReplace("$AssertValue$", "true")
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
+
+        // TestingPlatformCaptureOutput=False routes the test process stdout through the MSBuild log so the values the
+        // test process actually observed can be asserted on.
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
+            $"build -t:Test -p:TestingPlatformCaptureOutput=False -p:AddTestingPlatformEnvironmentVariableItem=true \"{testAsset.TargetAssetPath}\"",
+            workingDirectory: testAsset.TargetAssetPath,
+            cancellationToken: TestContext.CancellationToken);
+
+        compilationResult.AssertOutputContains("[env] MTP_ENV_SIMPLE=simple-value");
+
+        // The value is carried by item metadata, which MSBuild does not split on ';', so it must arrive intact.
+        compilationResult.AssertOutputContains("[env] MTP_ENV_WITH_SEMICOLON=first;second");
+    }
+
     private const string SourceCode = """
 #file MSBuild Tests.csproj
 <Project Sdk="Microsoft.NET.Sdk">
@@ -354,6 +378,12 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(AddTestingPlatformEnvironmentVariableItem)' == 'true'">
+        <TestingPlatformEnvironmentVariable Include="MTP_ENV_SIMPLE" Value="simple-value" />
+        <!-- The value intentionally contains a ';' to prove item metadata is not subject to MSBuild's ';' splitting. -->
+        <TestingPlatformEnvironmentVariable Include="MTP_ENV_WITH_SEMICOLON" Value="first;second" />
     </ItemGroup>
 
     <Import Project="UserDefinedTestTarget.targets" Condition="'$(ImportUserDefinedTestTarget)' == 'true'" />
@@ -387,6 +417,11 @@ public class Program
 {
     public static async Task<int> Main(string[] args)
     {
+        foreach (string name in new[] { "MTP_ENV_SIMPLE", "MTP_ENV_WITH_SEMICOLON" })
+        {
+            Console.WriteLine($"[env] {name}={Environment.GetEnvironmentVariable(name)}");
+        }
+
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
         MyExtension myExtension = new();
         builder.RegisterTestFramework(
