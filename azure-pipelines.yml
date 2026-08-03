@@ -648,7 +648,11 @@ stages:
                   exit $LASTEXITCODE
                 }
 
-                $coverageFiles = @(Get-ChildItem "$(Build.SourcesDirectory)\artifacts\TestResults\$(_BuildConfig)" -Filter *.coverage -File)
+                $testResultsDirectory = "$(Build.SourcesDirectory)\artifacts\TestResults\$(_BuildConfig)"
+                $coverageFiles = @()
+                if (Test-Path $testResultsDirectory) {
+                  $coverageFiles = @(Get-ChildItem $testResultsDirectory -Filter *.coverage -File)
+                }
                 if ($coverageFiles.Count -eq 0) {
                   Write-Host "##vso[task.logissue type=warning]No coverage files were produced; skipping the Cobertura artifact."
                   exit 0
