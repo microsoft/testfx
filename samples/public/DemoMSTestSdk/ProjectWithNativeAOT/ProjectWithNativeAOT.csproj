@@ -1,24 +1,14 @@
-<Project Sdk="MSTest.Sdk">
-<!--
-Alternatively, if you don't want to use the `global.json` file for versions, you can specify the version of the MSTest.Sdk package here.
-<Project Sdk="MSTest.Sdk/<version>">
--->
-
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-
-    <!-- When MSTest Sdk detects PublishAot=true, it references the required packages to ensure Native AOT support -->
-    <PublishAot>true</PublishAot>
-  </PropertyGroup>
-
-</Project>
-
-<!--
-Below is the equivalent project configuration when not using MSTest.Sdk
-
 <Project Sdk="Microsoft.NET.Sdk">
+<!--
+This sample intentionally does NOT use "Sdk=MSTest.Sdk". As of MSTest.Sdk 4.3.3 (see ../global.json),
+MSTest.Sdk's PublishAot=true convenience wiring still resolves the deprecated, discontinued MSTest.Engine
+package and the old Engine-era MSTest.SourceGeneration build (MSTestEngineVersion in Directory.Build.props) -
+NOT the current reflection-free source generator described in docs/source-generator/design.md. Until a
+newer MSTest.Sdk decouples its Native AOT wiring from MSTest.Engine, referencing MSTest.SourceGeneration
+directly (as below) is how to get today's actual reflection-free behavior: test classes/methods/attributes
+are materialized at compile time and registered with the MSTest adapter via ReflectionMetadataHook.Register,
+with no reflection scan and no separate test-framework engine.
+-->
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -26,8 +16,9 @@ Below is the equivalent project configuration when not using MSTest.Sdk
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
 
-    <OutputType>exe</OutputType>
+    <OutputType>Exe</OutputType>
     <PublishAot>true</PublishAot>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
   </PropertyGroup>
 
   <ItemGroup>
@@ -36,14 +27,34 @@ Below is the equivalent project configuration when not using MSTest.Sdk
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(TestingPlatformVersion)" />
     <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$(TestingPlatformVersion)" />
     <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)" />
-    <PackageReference Include="MSTest.SourceGeneration" Version="$(MSTestAOTVersion)" />
+    <!-- $(MSTestSourceGenerationVersion), not $(MSTestAOTVersion): see the comment above and in Directory.Build.props. -->
+    <PackageReference Include="MSTest.SourceGeneration" Version="$(MSTestSourceGenerationVersion)" />
     <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" />
     <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" />
   </ItemGroup>
 
   <ItemGroup>
-      <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
   </ItemGroup>
+
+</Project>
+
+<!--
+Below is the equivalent project configuration using MSTest.Sdk. It is simpler, but as explained above,
+currently (MSTest.Sdk 4.3.3) produces the deprecated Engine-era generator rather than the reflection-free
+one this sample is demonstrating. Once MSTest.Sdk ships an update that tracks MSTest.SourceGeneration
+independently of MSTest.Engine, this will become the recommended, simplest way to opt in.
+
+<Project Sdk="MSTest.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    ' When MSTest Sdk detects PublishAot=true, it references the required packages to ensure Native AOT support. '
+    <PublishAot>true</PublishAot>
+  </PropertyGroup>
 
 </Project>
 -->

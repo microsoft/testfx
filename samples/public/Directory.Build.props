@@ -5,18 +5,29 @@
     <CodeCoverageVersion>18.9.0</CodeCoverageVersion>
     <MSTestVersion>4.3.2</MSTestVersion>
     <!--
-      MSTestAOTVersion pins the experimental MSTest.Engine / MSTest.SourceGeneration packages used by the
-      non-SDK Native AOT runner sample (mstest-runner/NativeAotRunner). It is kept at the highest version
-      mirrored to the dotnet-public NuGet feed used by these samples. MSTestEngineVersion aliases it for the
-      same reason. Note: the SDK-style Native AOT sample (DemoMSTestSdk/ProjectWithNativeAOT) does not use
-      these properties; MSTest.Sdk 4.3.0 drives its source generator via its own independent
-      MSTestSourceGenerationVersion (an early-preview 2.0.0-alpha.* build, decoupled from the 4.x MSTestVersion).
-      The generated code calls runtime hooks (e.g. ReflectionMetadataHook) that only exist in a recent-enough
-      MSTest adapter, so MSTestVersion above must be new enough (4.2.2 was too old); it does not need to, and
-      cannot, match the source-generation package version.
+      MSTestAOTVersion pins the deprecated, discontinued MSTest.Engine package (last co-published build;
+      no newer version exists) used only by the legacy non-SDK Native AOT runner sample
+      (mstest-runner/NativeAotRunner). MSTestEngineVersion aliases it for the same reason. Do not bump this
+      for anything other than that one sample - MSTest.Engine is no longer built from this repo.
     -->
     <MSTestAOTVersion>2.0.0-alpha.26228.3</MSTestAOTVersion>
     <MSTestEngineVersion>$(MSTestAOTVersion)</MSTestEngineVersion>
+    <!--
+      MSTestSourceGenerationVersion pins the current, actively-developed MSTest.SourceGeneration package -
+      the reflection-free rewrite described in docs/source-generator/design.md, which materializes test
+      metadata and invokers at compile time and registers them with the MSTest adapter via
+      ReflectionMetadataHook.Register (no Microsoft.Testing.Framework/TestNode replacement, unlike the old
+      MSTest.Engine-era generator pinned by MSTestAOTVersion above).
+      IMPORTANT: as of MSTest.Sdk 4.3.3 (the version pinned in this folder's global.json, and the newest on
+      the public feed), MSTest.Sdk's own PublishAot=true convenience wiring still resolves MSTest.Engine +
+      MSTest.SourceGeneration at MSTestEngineVersion (the old generator above), NOT this version. To exercise
+      the current reflection-free generator today, DemoMSTestSdk/ProjectWithNativeAOT intentionally opts out
+      of MSTest.Sdk's Native AOT auto-wiring and references MSTest.SourceGeneration at this version directly,
+      alongside MSTest.TestAdapter/TestFramework at $(MSTestVersion) (confirmed compatible: the
+      ReflectionMetadataHook runtime hooks it calls exist in $(MSTestVersion)+). Revisit once a newer
+      MSTest.Sdk ships that decouples its own Native AOT wiring from MSTest.Engine.
+    -->
+    <MSTestSourceGenerationVersion>2.0.0-alpha.26358.12</MSTestSourceGenerationVersion>
     <PlaywrightVersion>1.61.0</PlaywrightVersion>
     <TestingPlatformVersion>2.3.2</TestingPlatformVersion>
     <!--
