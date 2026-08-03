@@ -42,4 +42,12 @@ public static class GlobalFixtures
     {
         // Per-test hook: e.g. reset a piece of ambient state so no test inherits another's leftovers.
     }
+
+    // Runs after EVERY test (assembly-wide [TestCleanup]). Same per-test cadence as the initialize
+    // hook - the place to tear down or reset per-test ambient state, NOT once-only suite teardown.
+    [GlobalTestCleanup]
+    public static void AfterEachTest(TestContext context)
+    {
+        // Per-test cleanup: e.g. clear any ambient state a test set so the next test starts clean.
+    }
 }

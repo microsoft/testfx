@@ -26,12 +26,10 @@ public sealed class CancellableWorkTests
     {
         CancellationToken token = TestContext.CancellationToken;
 
-        // A cooperative loop: it awaits (never blocks) and honors cancellation. If the timeout
-        // fires, the token is signaled and the loop exits promptly.
-        for (int i = 0; i < 3; i++)
-        {
-            await Task.Delay(10, token);
-        }
+        // The SAME cooperative loop the deterministic test exercises. It awaits (never blocks) and
+        // honors cancellation, so if the timeout fires the token is signaled and the loop exits
+        // promptly. Sharing one loop means the deterministic test below actually covers this path.
+        await RunCooperativeLoopAsync(token);
 
         Assert.IsFalse(token.IsCancellationRequested);
     }
@@ -39,6 +37,8 @@ public sealed class CancellableWorkTests
     // Deterministic proof that the cooperative loop actually STOPS on cancellation - no timing,
     // no waiting, no flakiness. We hand it an already-cancelled token and assert it throws the
     // exact OperationCanceledException that TestContext's token would raise when [Timeout] fires.
+    // It calls the SAME RunCooperativeLoopAsync the timeout test runs, so dropping cancellation
+    // from that loop would fail here rather than leaving both tests green.
     [TestMethod]
     public async Task PollingLoop_StopsWhenTokenAlreadyCancelled()
     {
@@ -49,12 +49,15 @@ public sealed class CancellableWorkTests
             () => RunCooperativeLoopAsync(cts.Token));
     }
 
+    // One cooperative loop, exercised by BOTH tests. It checks cancellation first (so an
+    // already-cancelled token throws exactly OperationCanceledException before any awaiting) and
+    // then performs a real, cancelable async wait - never a blocking Thread.Sleep.
     private static async Task RunCooperativeLoopAsync(CancellationToken token)
     {
         for (int i = 0; i < 3; i++)
         {
             token.ThrowIfCancellationRequested();
-            await Task.Yield();
+            await Task.Delay(10, token);
         }
     }
 }

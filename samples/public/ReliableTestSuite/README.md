@@ -14,7 +14,7 @@ shared-state bugs. Each file then demonstrates one rung of the reliability ladde
 | `PlatformSpecificTests.cs` | **Gate** — `[OSCondition]`, `[CICondition]`, `[ExecutableCondition]` | A test that silently early-returns on the wrong OS reports a false pass. Conditions report *not run* for the right reason. |
 | `CancellableWorkTests.cs` | **Bound time** — `[Timeout(CooperativeCancellation = true)]` + `TestContext.CancellationToken` | A test that can hang has no place in a reliable suite; cooperative cancellation stops the work cleanly. No `Thread.Sleep`. |
 | `FlakyDependencyTests.cs` | **Contain** — `[Retry]` | Retry makes a nondeterministic test pass more often; it does **not** make it deterministic. Last resort for residual, external flakiness only. |
-| `testconfig.json` | **Expose** — `randomizeTestOrder` + fixed seed | Random order surfaces hidden inter-test ordering dependencies; the reported seed makes any failure reproducible. |
+| `testconfig.json` | **Expose** — `randomizeTestOrder` + fixed seed | Random order surfaces hidden inter-test ordering dependencies; the reported seed makes an ordering-dependent failure reproducible (it pins the queue order, not the concurrent interleaving — see the caveat below). |
 | `GlobalFixtures.cs` | **Bootstrap** — `[AssemblyInitialize]`/`[AssemblyCleanup]` (once per run) vs `[GlobalTestInitialize]`/`[GlobalTestCleanup]` (before/after **every** test) | Suite-wide setup has two cadences and mixing them up is a classic scaling bug: once-only work (start a server, seed a DB) goes in `[AssemblyInitialize]`; per-test ambient reset goes in the global test hooks. |
 
 ## The thesis
