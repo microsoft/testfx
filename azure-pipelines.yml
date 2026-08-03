@@ -635,6 +635,44 @@ stages:
               # branch builds exercise it end-to-end.
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
+          # Publish a portable, compact report separately from the large TestResults artifact so external
+          # consumers such as GutterHub can retrieve it without downloading every test result and binary
+          # .coverage file. dotnet-coverage is pinned in .config/dotnet-tools.json.
+          - task: PowerShell@2
+            displayName: 'Merge coverage as Cobertura'
+            inputs:
+              targetType: 'inline'
+              script: |
+                dotnet tool restore
+                if ($LASTEXITCODE -ne 0) {
+                  exit $LASTEXITCODE
+                }
+
+                $coverageFiles = @(Get-ChildItem "$(Build.SourcesDirectory)\artifacts\TestResults\$(_BuildConfig)" -Filter *.coverage -File)
+                if ($coverageFiles.Count -eq 0) {
+                  Write-Host "##vso[task.logissue type=warning]No coverage files were produced; skipping the Cobertura artifact."
+                  exit 0
+                }
+
+                $coverageOutputDirectory = "$(Build.ArtifactStagingDirectory)\coverage"
+                New-Item -Path $coverageOutputDirectory -ItemType Directory -Force | Out-Null
+
+                $mergeArguments = @("coverage", "merge") + $coverageFiles.FullName + @("--output", "$coverageOutputDirectory\coverage.cobertura.xml", "--output-format", "cobertura")
+                & dotnet @mergeArguments
+                if ($LASTEXITCODE -ne 0) {
+                  exit $LASTEXITCODE
+                }
+
+                Write-Host "##vso[task.setvariable variable=CoverageReportReady]true"
+            condition: and(succeededOrFailed(), eq(variables._BuildConfig, 'Debug'))
+
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish Cobertura coverage report'
+            inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)/coverage'
+              ArtifactName: Coverage_Windows_Debug_Attempt$(System.JobAttempt)
+            condition: and(succeededOrFailed(), eq(variables['CoverageReportReady'], 'true'))
+
           - task: PublishBuildArtifacts@1
             displayName: 'Publish Test Results folders'
             inputs:
