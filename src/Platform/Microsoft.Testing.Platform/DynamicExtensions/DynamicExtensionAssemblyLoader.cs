@@ -102,18 +102,13 @@ internal sealed class DynamicExtensionAssemblyLoader : IDynamicExtensionAssembly
         {
             // The platform contract must have a single identity across the host and every extension, otherwise
             // the ITestApplicationBuilder the extension sees is a different type from the one we pass to it —
-            // and the same holds for the abstractions extensions exchange with each other. Matching by name is
-            // stronger than relying on the resolver, because it does not depend on whether the assembly
-            // happens to be deployed next to the extension.
-            if (IsSharedContractAssembly(assemblyName.Name)
-                && ResolveSharedContractAssembly(assemblyName.Name) is { } shared)
+            // and the same holds for the abstractions extensions exchange with each other. A listed contract is
+            // therefore never loaded into this context, even when only the extension carries it.
+            if (IsSharedContractAssembly(assemblyName.Name))
             {
-                return shared;
+                return ResolveSharedContractAssembly(assemblyName);
             }
 
-            // Not a contract assembly, or the host does not carry it (an abstractions package the test
-            // application never referenced). Fall through so the extension can still use its own copy: an
-            // isolated copy is worse than a shared one but far better than failing to load at all.
             string? resolvedPath = _resolver?.ResolveAssemblyToPath(assemblyName);
             resolvedPath ??= ProbeDirectory(assemblyName);
 
@@ -122,8 +117,8 @@ internal sealed class DynamicExtensionAssemblyLoader : IDynamicExtensionAssembly
         }
 
         /// <summary>
-        /// Resolves a shared contract assembly from the default context by simple name, deliberately ignoring
-        /// the version the extension was compiled against.
+        /// Resolves a shared contract assembly to the one copy every extension and the host must agree on,
+        /// deliberately ignoring the version the extension was compiled against.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -137,17 +132,26 @@ internal sealed class DynamicExtensionAssemblyLoader : IDynamicExtensionAssembly
         /// extension would produce.
         /// </para>
         /// <para>
-        /// Being loaded is not the same as being available, though. Dynamic hooks run before the statically
-        /// registered extensions (RFC section 4), so a contract such as
+        /// Being loaded is not the same as being available. Dynamic hooks run before the statically registered
+        /// extensions (RFC section 4), so a contract such as
         /// <c>Microsoft.Testing.Extensions.TrxReport.Abstractions</c> is frequently present in the application's
         /// dependency graph but not yet touched. Settling for the extension's private copy in that window would
-        /// split the contract the moment the static extension loaded the real one, making a capability
-        /// implemented by the dynamic extension invisible to it. So when nothing is loaded yet, ask the default
-        /// context to load it — by simple name only, which cannot fail on version.
+        /// split the contract the moment the static extension loaded the real one, so when nothing is loaded yet
+        /// the default context is asked to load it — by simple name only, which cannot fail on version.
+        /// </para>
+        /// <para>
+        /// Finally, the application may not carry the contract at all, which is the ordinary manifest-only
+        /// deployment: the extension brings its own copy. Loading that copy into *this* context would give every
+        /// extension its own identity, so a capability implemented by one dynamic extension would be invisible to
+        /// another — exactly the split the shared list exists to prevent. The first copy found is therefore
+        /// promoted into the default context, making it canonical for every extension that follows.
         /// </para>
         /// </remarks>
-        private static Assembly? ResolveSharedContractAssembly(string? simpleName)
+        [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' may break when trimming", Justification = "See DynamicExtensionAssemblyLoader.LoadAssembly.")]
+        [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "See DynamicExtensionAssemblyLoader.LoadAssembly.")]
+        private Assembly? ResolveSharedContractAssembly(AssemblyName assemblyName)
         {
+            string? simpleName = assemblyName.Name;
             if (RoslynString.IsNullOrEmpty(simpleName))
             {
                 return null;
@@ -165,11 +169,15 @@ internal sealed class DynamicExtensionAssemblyLoader : IDynamicExtensionAssembly
             {
                 return Default.LoadFromAssemblyName(new AssemblyName(simpleName!));
             }
-            catch (Exception)
+            catch (FileNotFoundException)
             {
-                // Genuinely absent from the host, so the extension's own copy is the only option.
-                return null;
+                // Genuinely absent from the host. Only this case falls through: a FileLoadException or
+                // BadImageFormatException means the host does carry the contract but something is wrong with it,
+                // and silently substituting a private copy would hide that behind a type-identity mismatch.
             }
+
+            string? resolvedPath = _resolver?.ResolveAssemblyToPath(assemblyName) ?? ProbeDirectory(assemblyName);
+            return resolvedPath is null ? null : Default.LoadFromAssemblyPath(resolvedPath);
         }
 
         private static bool IsSharedContractAssembly(string? simpleName)
