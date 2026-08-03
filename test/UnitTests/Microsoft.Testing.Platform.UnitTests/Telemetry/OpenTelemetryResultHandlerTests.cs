@@ -721,6 +721,29 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
     }
 
     private IEnumerable<KeyValuePair<string, object?>>? CaptureInProgressTags(TestMethodIdentifierProperty identifierProperty)
+        => CaptureInProgressTags(new PropertyBag(identifierProperty));
+
+    [TestMethod]
+    public void NotifyInProgress_WithDuplicateIdentifierProperty_Throws()
+    {
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(() => CaptureInProgressTags(new PropertyBag(
+            new TestMethodIdentifierProperty("MyAssembly", "My.Namespace", "MyClass", "MyMethod", 0, [], "void"),
+            new TestMethodIdentifierProperty("MyAssembly", "My.Namespace", "MyClass", "MyOtherMethod", 0, [], "void"))));
+
+        Assert.AreEqual($"Found multiple properties of type '{typeof(TestMethodIdentifierProperty)}'.", exception.Message);
+    }
+
+    [TestMethod]
+    public void NotifyInProgress_WithDuplicateFileLocationProperty_Throws()
+    {
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(() => CaptureInProgressTags(new PropertyBag(
+            new TestFileLocationProperty("first.cs", new LinePositionSpan(new LinePosition(1, 0), new LinePosition(2, 0))),
+            new TestFileLocationProperty("second.cs", new LinePositionSpan(new LinePosition(3, 0), new LinePosition(4, 0))))));
+
+        Assert.AreEqual($"Found multiple properties of type '{typeof(TestFileLocationProperty)}'.", exception.Message);
+    }
+
+    private IEnumerable<KeyValuePair<string, object?>>? CaptureInProgressTags(PropertyBag properties)
     {
         IEnumerable<KeyValuePair<string, object?>>? capturedTags = null;
         _otelService.Setup(s => s.StartActivity(
@@ -736,7 +759,7 @@ public sealed class OpenTelemetryResultHandlerTests : IDisposable
             {
                 Uid = new TestNodeUid("fqn"),
                 DisplayName = "Test",
-                Properties = new PropertyBag(identifierProperty),
+                Properties = properties,
             },
             null);
 

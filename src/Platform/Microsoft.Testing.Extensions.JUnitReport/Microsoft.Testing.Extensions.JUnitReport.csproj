@@ -11,11 +11,9 @@
 
   <!-- NuGet properties -->
   <PropertyGroup>
-    <PackageDescription>
-      <![CDATA[Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
+    <PackageDescription><![CDATA[This package extends Microsoft Testing Platform to produce JUnit XML test reports compatible with Jenkins, GitLab, Azure DevOps and other CI systems.
 
-This package extends Microsoft Testing Platform to produce JUnit XML test reports compatible with Jenkins, GitLab, Azure DevOps and other CI systems.]]>
-    </PackageDescription>
+$(CommonProductDescription)]]></PackageDescription>
   </PropertyGroup>
 
   <!-- NuGet package layout -->

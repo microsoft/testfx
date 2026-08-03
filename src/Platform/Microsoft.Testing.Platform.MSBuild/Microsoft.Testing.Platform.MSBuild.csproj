@@ -54,11 +54,9 @@
   <PropertyGroup>
     <BuildOutputTargetFolder>_MSBuildTasks</BuildOutputTargetFolder>
     <IncludeBuildOutput Condition="'$(TargetFramework)' != '' and '$(TargetFramework)' != 'netstandard2.0'">false</IncludeBuildOutput>
-    <PackageDescription>
-      <![CDATA[Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
+    <PackageDescription><![CDATA[This package provides MSBuild integration of the platform, its extensions and configuration files.
 
-This package provides MSBuild integration of the platform, its extensions and configuration files.]]>
-    </PackageDescription>
+$(CommonProductDescription)]]></PackageDescription>
   </PropertyGroup>
 
   <!-- Default to including all *.props and *.targets files from the project directory into the NuGet package root -->

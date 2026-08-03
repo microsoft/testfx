@@ -73,6 +73,15 @@ In addition to the rules enforced by `.editorconfig`, you SHOULD:
 
 You MUST minimize adding public API surface area but any newly added public API MUST be declared in the related `PublicAPI.Unshipped.txt` file.
 
+## NuGet package metadata guidelines
+
+Every packable project must carry the metadata that nuget.org renders on the package page. This is enforced at pack time by the `_ValidatePackageMetadata` target in the root [`Directory.Build.targets`](../Directory.Build.targets), which fails the build when a packable project is missing either piece — including packages that are `IsShipping=false`, because those still reach nuget.org.
+
+- Write `<PackageDescription>` so it **leads with what the package does**, and close it with `$(CommonProductDescription)` — the shared product sentence, defaulted per product area in [`src/Directory.Build.props`](../src/Directory.Build.props) (MSTest) and [`src/Platform/Directory.Build.props`](../src/Platform/Directory.Build.props) (Microsoft.Testing.Platform). nuget.org truncates the description in search results, so the package-specific sentence has to come first.
+- Wrap the value in `<![CDATA[ ... ]]>` and keep its continuation lines unindented. MSBuild trims a property value but not the indentation of its inner lines, so an indented multi-line description leaks the .csproj whitespace into the published text. Property references such as `$(CommonProductDescription)` are still expanded inside CDATA.
+- NEVER leave the description unset. NuGet's pack targets substitute the literal placeholder `Package Description` during evaluation, which is why Arcade's own "PackageDescription must be specified" check cannot catch it and why the repo-level guard exists.
+- Add a `PACKAGE.md` next to the project file. It is picked up automatically as `PackageReadmeFile` and packed into the root of the `.nupkg`.
+
 ## Localization Guidelines
 
 When making change to resource files, you MUST:

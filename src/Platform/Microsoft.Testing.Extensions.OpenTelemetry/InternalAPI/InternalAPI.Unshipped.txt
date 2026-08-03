@@ -31,3 +31,9 @@ Microsoft.Testing.Extensions.OpenTelemetry.OpenTelemetryPlatformService.HasCurre
 Microsoft.Testing.Extensions.OpenTelemetry.OpenTelemetryPlatformService.RootTraceState.get -> string?
 Microsoft.Testing.Extensions.OpenTelemetry.OpenTelemetryPlatformService.RootTraceState.set -> void
 Microsoft.Testing.Extensions.OpenTelemetry.OpenTelemetryPlatformService.StartNonAmbientActivity(string! name, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? tags = null, string? parentId = null) -> Microsoft.Testing.Platform.Telemetry.IPlatformActivity?
+Microsoft.Testing.Extensions.OpenTelemetry.MeasurementWrapper<TInstrument, TValue>
+Microsoft.Testing.Extensions.OpenTelemetry.MeasurementWrapper<TInstrument, TValue>.Emit(TValue value, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? tags) -> void
+Microsoft.Testing.Extensions.OpenTelemetry.MeasurementWrapper<TInstrument, TValue>.Instrument.get -> TInstrument!
+Microsoft.Testing.Extensions.OpenTelemetry.MeasurementWrapper<TInstrument, TValue>.MeasurementWrapper(TInstrument! instrument) -> void
+abstract Microsoft.Testing.Extensions.OpenTelemetry.MeasurementWrapper<TInstrument, TValue>.EmitCore(TValue value) -> void
+abstract Microsoft.Testing.Extensions.OpenTelemetry.MeasurementWrapper<TInstrument, TValue>.EmitCore(TValue value, System.Collections.Generic.KeyValuePair<string!, object?>[]! tags) -> void

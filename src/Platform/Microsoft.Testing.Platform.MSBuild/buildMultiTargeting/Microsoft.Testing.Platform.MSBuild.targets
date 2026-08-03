@@ -401,6 +401,15 @@
     <!-- until we implement https://github.com/microsoft/testfx/issues/5091 properly -->
     <!-- For now, we construct the correct "RunCommand" via these properties for a specific scenario that's known to be broken -->
     <CallTarget Targets="_TestRunStart" />
+
+    <!--
+      Environment variables applied on top of the environment the test process inherits from MSBuild:
+        <TestingPlatformEnvironmentVariable Include="DOTNET_ROOT" Value="$(DotNetRoot)" />
+
+      This is deliberately an item and not a property: item metadata is not subject to MSBuild's ';' splitting, so a
+      value containing a ';' reaches the test process exactly as authored. EnvironmentVariables is inherited from
+      ToolTask, which applies these on top of the environment inherited from the MSBuild process.
+    -->
     <InvokeTestingPlatformTask TargetPath="$(TargetPath)"
                                UseAppHost="$(UseAppHost)"
                                IsExecutable="$(_IsExecutable)"
@@ -413,6 +422,7 @@
                                ProjectFullPath="$(MSBuildProjectFullPath)"
                                TestingPlatformShowTestsFailure="$(TestingPlatformShowTestsFailure)"
                                TestingPlatformCommandLineArguments="$(TestingPlatformCommandLineArguments)"
+                               EnvironmentVariables="@(TestingPlatformEnvironmentVariable->'%(Identity)=%(Value)')"
                                VSTestCLIRunSettings="$(VSTestCLIRunSettings)"
                                TestingPlatformCaptureOutput="$(TestingPlatformCaptureOutput)"
                                DotnetHostPath="$(DOTNET_HOST_PATH)" />
