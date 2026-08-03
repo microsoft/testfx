@@ -33,23 +33,14 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 [TestClass]
 public sealed class PackageMetadataCompletenessTests
 {
-    /// <summary>
-    /// The description NuGet substitutes when a project forgets to set one.
-    /// </summary>
-    /// <remarks>
-    /// Kept in sync with the same literal in the <c>_ValidatePackageMetadata</c> target of the repository's
-    /// <c>Directory.Build.targets</c>.
-    /// </remarks>
-    private const string NuGetPlaceholderDescription = "Package Description";
-
     public TestContext TestContext { get; set; } = null!;
 
     /// <summary>
-    /// Every produced package must carry a real description: nuget.org renders it on the package page and uses
-    /// it for search, so shipping NuGet's placeholder makes the package effectively undocumented.
+    /// Every produced package must carry a real description and embed the README and icon that nuget.org renders
+    /// on the package page.
     /// </summary>
     [TestMethod]
-    public void ProducedPackages_HaveARealDescription()
+    public void ProducedPackages_HaveCompleteNugetOrgMetadata()
     {
         List<string> checkedPackages = [];
         List<string> violations = [];
@@ -57,79 +48,13 @@ public sealed class PackageMetadataCompletenessTests
         foreach (ProducedPackage package in EnumerateProducedPackages())
         {
             checkedPackages.Add(package.FileName);
-
-            string? description = GetMetadataValue(package.Nuspec, "description");
-            if (string.IsNullOrWhiteSpace(description))
-            {
-                violations.Add($"{package.FileName}: has no <description>.");
-            }
-            else if (description.Trim() == NuGetPlaceholderDescription)
-            {
-                violations.Add($"{package.FileName}: ships NuGet's '{NuGetPlaceholderDescription}' placeholder. Set PackageDescriptionDetail in the project.");
-            }
-            else if (HasIndentedLine(description))
-            {
-                // MSBuild trims a property value, but not the indentation of its inner lines, so a
-                // multi-line <PackageDescription> authored inline in a .csproj leaks that indentation into
-                // the published text.
-                violations.Add($"{package.FileName}: description contains lines indented with the .csproj whitespace. Author a multi-line description as a CDATA PackageDescriptionDetail so the project indentation does not leak into the published text.");
-            }
+            violations.AddRange(PackageMetadataInspector.InspectPackage(package.FileName, package.Nuspec, package.Entries));
         }
 
         AssertSomethingWasPacked(checkedPackages);
         Assert.IsEmpty(
             violations,
-            $"The following produced packages have an unusable nuget.org description:{Environment.NewLine}" +
-            string.Join(Environment.NewLine, violations));
-    }
-
-    /// <summary>
-    /// Every produced package must embed the README that nuget.org renders on the package page. The repository
-    /// wires this up centrally by packing a <c>PACKAGE.md</c> found next to the project file, so a missing
-    /// README means either the file was not added or the central wiring stopped working.
-    /// </summary>
-    [TestMethod]
-    public void ProducedPackages_EmbedTheirReadme()
-        => AssertPackagesEmbedMetadataFile("readme", "Add a PACKAGE.md next to the project file.");
-
-    /// <summary>
-    /// Every produced package must embed the icon that nuget.org shows next to the package name. Arcade supplies
-    /// it centrally, so a missing icon means that central wiring stopped working.
-    /// </summary>
-    [TestMethod]
-    public void ProducedPackages_EmbedTheirIcon()
-        => AssertPackagesEmbedMetadataFile("icon", "Arcade sets PackageIcon centrally for packable projects.");
-
-    private static void AssertPackagesEmbedMetadataFile(string metadataName, string hint)
-    {
-        List<string> checkedPackages = [];
-        List<string> violations = [];
-
-        foreach (ProducedPackage package in EnumerateProducedPackages())
-        {
-            checkedPackages.Add(package.FileName);
-
-            string? declaredPath = GetMetadataValue(package.Nuspec, metadataName);
-            if (string.IsNullOrWhiteSpace(declaredPath))
-            {
-                violations.Add($"{package.FileName}: has no <{metadataName}>. {hint}");
-                continue;
-            }
-
-            // Declaring the file in the nuspec is not enough: it also has to be inside the package. NuGet writes
-            // the packaged path, which uses the platform separator, while zip entries always use '/'.
-            string entryPath = declaredPath.Replace('\\', '/');
-            using ZipArchive archive = ZipFile.OpenRead(package.Path);
-            if (!archive.Entries.Any(e => string.Equals(e.FullName, entryPath, StringComparison.Ordinal)))
-            {
-                violations.Add($"{package.FileName}: declares <{metadataName}>{declaredPath}</{metadataName}> but does not contain that file.");
-            }
-        }
-
-        AssertSomethingWasPacked(checkedPackages);
-        Assert.IsEmpty(
-            violations,
-            $"The following produced packages do not embed the '{metadataName}' they declare:{Environment.NewLine}" +
+            $"The following produced packages have unusable nuget.org metadata:{Environment.NewLine}" +
             string.Join(Environment.NewLine, violations));
     }
 
@@ -139,18 +64,6 @@ public sealed class PackageMetadataCompletenessTests
             $"Expected the produced packages to be inspected, but none was found. " +
             $"Ensure the solution was packed (build with '-pack') before running this test. Searched:{Environment.NewLine}" +
             $"  {Constants.ArtifactsPackagesShipping}{Environment.NewLine}  {Constants.ArtifactsPackagesNonShipping}");
-
-    // XDocument.Load applies XML end-of-line normalization, so however the nuspec encodes its line breaks the
-    // description reaches us with '\n' separators only.
-    private static bool HasIndentedLine(string description)
-        => description.Split('\n').Any(line => line.Length > 0 && char.IsWhiteSpace(line[0]) && line.Trim().Length > 0);
-
-    /// <summary>
-    /// Reads a nuspec metadata element by local name, ignoring the nuspec XML namespace (which varies by schema
-    /// version).
-    /// </summary>
-    private static string? GetMetadataValue(XDocument nuspec, string name)
-        => nuspec.Descendants().FirstOrDefault(e => e.Name.LocalName == name)?.Value;
 
     /// <summary>
     /// Returns the most recently produced package for each package id found in the artifacts folders.
@@ -176,18 +89,18 @@ public sealed class PackageMetadataCompletenessTests
 
             foreach (string nupkg in Directory.EnumerateFiles(folder, "*.nupkg", SearchOption.TopDirectoryOnly))
             {
-                XDocument? nuspec = ReadNuspec(nupkg);
-                if (nuspec is null)
+                ProducedPackage? package = ReadPackage(nupkg);
+                if (package is null)
                 {
                     continue;
                 }
 
-                yield return new ProducedPackage(nupkg, GetMetadataValue(nuspec, "id") ?? Path.GetFileName(nupkg), nuspec);
+                yield return package;
             }
         }
     }
 
-    private static XDocument? ReadNuspec(string nupkgPath)
+    private static ProducedPackage? ReadPackage(string nupkgPath)
     {
         using ZipArchive archive = ZipFile.OpenRead(nupkgPath);
         ZipArchiveEntry? nuspecEntry = archive.Entries.FirstOrDefault(
@@ -198,11 +111,18 @@ public sealed class PackageMetadataCompletenessTests
         }
 
         // XDocument.Load reads the stream eagerly, so the document outlives the archive.
-        using Stream stream = nuspecEntry.Open();
-        return XDocument.Load(stream);
+        XDocument nuspec;
+        using (Stream stream = nuspecEntry.Open())
+        {
+            nuspec = XDocument.Load(stream);
+        }
+
+        IReadOnlySet<string> entries = archive.Entries.Select(e => e.FullName).ToHashSet(StringComparer.Ordinal);
+        string id = nuspec.Descendants().FirstOrDefault(e => e.Name.LocalName == "id")?.Value ?? Path.GetFileName(nupkgPath);
+        return new ProducedPackage(nupkgPath, id, nuspec, entries);
     }
 
-    private sealed record ProducedPackage(string Path, string Id, XDocument Nuspec)
+    private sealed record ProducedPackage(string Path, string Id, XDocument Nuspec, IReadOnlySet<string> Entries)
     {
         public string FileName => System.IO.Path.GetFileName(Path);
     }
