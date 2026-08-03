@@ -1,0 +1,19 @@
+<Project Sdk="MSTest.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <!--
+      Opt in to parallelization. MSTest does NOT run tests in parallel by default.
+      This MSBuild knob emits [assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+      for us (see MSTest.TestAdapter's Parallelize.targets), so every [TestMethod] in the
+      assembly becomes a candidate to run concurrently - which is exactly what turns latent
+      shared-state bugs into visible failures. The whole point of this sample is to make that
+      parallelism SAFE rather than to avoid it.
+    -->
+    <MSTestParallelizeScope>MethodLevel</MSTestParallelizeScope>
+  </PropertyGroup>
+
+</Project>
