@@ -1001,6 +1001,10 @@ Dynamically loaded extensions run with full trust inside the test process. Do no
     <value>  These extensions run with full trust inside the test process. Do not use this feature with code or directories you do not trust.</value>
     <comment>Displayed under the list of dynamically loaded extensions.</comment>
   </data>
+  <data name="DynamicExtensionsDisabledByEnvironment" xml:space="preserve">
+    <value>Dynamic test platform extensions were requested but are disabled by the '{0}' environment variable. No extension was loaded.</value>
+    <comment>{0} is the name of the environment variable that disabled the feature. {Locked="'{0}'"}</comment>
+  </data>
   <data name="DynamicExtensionManifestInvalidJsonErrorMessage" xml:space="preserve">
     <value>The extension manifest '{0}' is not valid JSON. {1}</value>
     <comment>{0} is the manifest file path. {1} is the underlying JSON parser error message.</comment>

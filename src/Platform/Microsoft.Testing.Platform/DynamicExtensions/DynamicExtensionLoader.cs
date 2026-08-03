@@ -67,8 +67,21 @@ internal sealed class DynamicExtensionLoader
         if (IsDisabledByEnvironment())
         {
             // The environment variable wins over the command line so that an operator who cannot edit the
-            // command line can still switch the feature off centrally during an incident.
-            await LogDebugAsync($"Dynamic extension loading was requested but is disabled by '{EnvironmentVariableConstants.TESTINGPLATFORM_NODYNAMICEXTENSIONS}'.").ConfigureAwait(false);
+            // command line can still switch the feature off centrally during an incident. Overriding an
+            // explicit request silently would be the worst of both worlds — the run would simply behave
+            // differently than asked with nothing to explain why — so it is announced on the same channel the
+            // loaded extensions are.
+            string message = string.Format(
+                CultureInfo.InvariantCulture,
+                PlatformResources.DynamicExtensionsDisabledByEnvironment,
+                EnvironmentVariableConstants.TESTINGPLATFORM_NODYNAMICEXTENSIONS);
+            await LogDebugAsync(message).ConfigureAwait(false);
+
+            if (!IsServerMode)
+            {
+                _console.WriteLine(message);
+            }
+
             return;
         }
 
@@ -122,7 +135,7 @@ internal sealed class DynamicExtensionLoader
 
         // Server mode owns stdout as a protocol channel, so writing to it there would corrupt the stream. The
         // diagnostic log still records everything in that case.
-        if (_commandLineParseResult.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey))
+        if (IsServerMode)
         {
             return;
         }
@@ -145,6 +158,8 @@ internal sealed class DynamicExtensionLoader
 
         _console.WriteLine(PlatformResources.DynamicExtensionsTrustWarning);
     }
+
+    private bool IsServerMode => _commandLineParseResult.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey);
 
     private bool IsDisabledByEnvironment()
     {

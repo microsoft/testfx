@@ -427,6 +427,11 @@
         <target state="new">The type '{0}' was not found in the assembly '{1}' declared in the extension manifest '{2}'.</target>
         <note>{0} is the full type name. {1} is the resolved assembly path. {2} is the manifest file path.</note>
       </trans-unit>
+      <trans-unit id="DynamicExtensionsDisabledByEnvironment">
+        <source>Dynamic test platform extensions were requested but are disabled by the '{0}' environment variable. No extension was loaded.</source>
+        <target state="new">Dynamic test platform extensions were requested but are disabled by the '{0}' environment variable. No extension was loaded.</target>
+        <note>{0} is the name of the environment variable that disabled the feature. {Locked="'{0}'"}</note>
+      </trans-unit>
       <trans-unit id="DynamicExtensionsLoadedEntry">
         <source>  {0} -&gt; {1} ({2}), declared in {3}</source>
         <target state="new">  {0} -&gt; {1} ({2}), declared in {3}</target>

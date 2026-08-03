@@ -373,6 +373,11 @@ This is a second line of defence, not the primary control — the feature is alr
 (§3). It also remains the first triage step when a run misbehaves: re-run with the variable set to
 establish whether a dynamically loaded extension is implicated.
 
+Because it overrides an explicit request, it announces itself: when the variable suppresses
+`--enable-dynamic-extensions`, the platform says so on standard output (§8), so a run that behaves
+differently than asked always explains why. It does **not** fail the run — during an incident the
+point is to keep runs working without the extensions, not to turn containment into an outage.
+
 The name follows the existing `TESTINGPLATFORM_NOBANNER` convention, and the accepted values match
 the platform's existing boolean environment-variable handling.
 
@@ -383,6 +388,10 @@ standard output the number loaded and, for each, its display name, the resolved 
 path, the hook type, and the manifest that declared it — followed by the trust warning. This is not
 gated on `--diagnostic`: running foreign code inside the test process is something the person reading
 the log should see without having opted into extra logging.
+
+**Not loading when asked to is not silent either.** If the kill switch (§7) suppresses an explicit
+`--enable-dynamic-extensions`, that is reported on the same channel rather than only in the
+diagnostic log.
 
 The only exception is server mode, where standard output is a protocol channel and writing to it
 would corrupt the stream. The diagnostic log still records everything there.

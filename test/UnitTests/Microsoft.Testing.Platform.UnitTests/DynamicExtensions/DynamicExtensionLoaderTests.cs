@@ -107,6 +107,43 @@ public sealed class DynamicExtensionLoaderTests
     }
 
     [TestMethod]
+    public async Task LoadAsync_WhenDisabledByEnvironmentVariable_SaysSoRatherThanSilentlyIgnoringTheRequest()
+    {
+        // The kill switch overrides something the user explicitly asked for. Doing that silently would leave a
+        // run behaving differently than requested with nothing to explain why -- the worst outcome for a
+        // security control, and the same reason testconfig.json is rejected as an opt-in channel.
+        _environment.Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_NODYNAMICEXTENSIONS)).Returns("1");
+
+        await CreateLoader().LoadAsync(_builder.Object, Args);
+
+        Assert.Contains(EnvironmentVariableConstants.TESTINGPLATFORM_NODYNAMICEXTENSIONS, _console.Output);
+    }
+
+    [TestMethod]
+    public async Task LoadAsync_WhenDisabledByEnvironmentVariableInServerMode_KeepsStandardOutputClean()
+    {
+        _environment.Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_NODYNAMICEXTENSIONS)).Returns("1");
+        _parseResult = CreateParseResult(enableDynamicExtensions: true, serverMode: true);
+
+        await CreateLoader().LoadAsync(_builder.Object, Args);
+
+        Assert.IsEmpty(_console.Output);
+    }
+
+    [TestMethod]
+    public async Task LoadAsync_WhenNotOptedIn_SaysNothingEvenIfTheKillSwitchIsSet()
+    {
+        // Nothing was requested, so nothing was overridden -- warning here would be noise on every run of a
+        // fleet that sets the variable as a matter of policy.
+        _environment.Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_NODYNAMICEXTENSIONS)).Returns("1");
+        _parseResult = CreateParseResult(enableDynamicExtensions: false);
+
+        await CreateLoader().LoadAsync(_builder.Object, Args);
+
+        Assert.IsEmpty(_console.Output);
+    }
+
+    [TestMethod]
     [DataRow("1")]
     [DataRow("true")]
     public async Task LoadAsync_KillSwitchAcceptsDocumentedValues(string value)
