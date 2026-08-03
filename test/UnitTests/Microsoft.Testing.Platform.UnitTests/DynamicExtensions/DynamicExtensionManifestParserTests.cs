@@ -8,7 +8,10 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class DynamicExtensionManifestParserTests
 {
-    private static readonly string ManifestPath = Path.Combine(Path.GetTempPath(), "contoso.testingplatformextensions.json");
+    // Deliberately digit-free: assertions below check that an entry *index* appears in error messages, which
+    // would be satisfied by accident if the path itself contained digits (a real temp path usually does).
+    private static readonly string ManifestPath =
+        Path.Combine($"{Path.DirectorySeparatorChar}manifests", "contoso.testingplatformextensions.json");
 
     [TestMethod]
     public void Parse_WithFullyPopulatedEntry_ReadsEveryProperty()
@@ -277,7 +280,9 @@ public sealed class DynamicExtensionManifestParserTests
         InvalidOperationException ex = Assert.ThrowsExactly<InvalidOperationException>(
             () => DynamicExtensionManifestParser.Parse(ManifestPath, Content));
 
+        // ManifestPath and the entry data are digit-free, so the only "1" that can appear is the entry index.
         Assert.Contains("1", ex.Message, "The message must point at the second entry.");
+        Assert.DoesNotContain("0", ex.Message, "The message must not point at the first entry.");
         Assert.Contains("typeFullName", ex.Message);
     }
 
