@@ -112,20 +112,32 @@ public partial class InvokeTestingPlatformTask
         return null;
     }
 
-    private bool IsCurrentProcessArchitectureCompatible() =>
+    private bool IsCurrentProcessArchitectureCompatible()
+        => IsCurrentProcessArchitectureCompatible(_currentProcessArchitecture);
+
+    private bool IsCurrentProcessArchitectureCompatible(Architecture currentProcessArchitecture) =>
 #if NETCOREAPP
-        _currentProcessArchitecture == Enum.Parse<Architecture>(TestArchitecture.ItemSpec, ignoreCase: true);
+        currentProcessArchitecture == Enum.Parse<Architecture>(TestArchitecture.ItemSpec, ignoreCase: true);
 #else
-        _currentProcessArchitecture == (Architecture)Enum.Parse(typeof(Architecture), TestArchitecture.ItemSpec, ignoreCase: true);
+        currentProcessArchitecture == (Architecture)Enum.Parse(typeof(Architecture), TestArchitecture.ItemSpec, ignoreCase: true);
 #endif
 
     internal void AddAppHostDotnetRootEnvironmentVariable()
+        => AddAppHostDotnetRootEnvironmentVariable(
+            _currentProcessArchitecture,
+            RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
+            Environment.Is64BitOperatingSystem);
+
+    internal void AddAppHostDotnetRootEnvironmentVariable(
+        Architecture currentProcessArchitecture,
+        bool isWindows,
+        bool is64BitOperatingSystem)
     {
         if (TestingPlatformDisableAppHostDotnetRoot
             || TryGetRunCommand() is null
             || DotnetHostPath is null
             || !File.Exists(DotnetHostPath.ItemSpec)
-            || !IsCurrentProcessArchitectureCompatible())
+            || !IsCurrentProcessArchitectureCompatible(currentProcessArchitecture))
         {
             return;
         }
@@ -136,18 +148,18 @@ public partial class InvokeTestingPlatformTask
             return;
         }
 
-        string variableName = $"DOTNET_ROOT_{_currentProcessArchitecture.ToString().ToUpperInvariant()}";
-        if (ContainsEnvironmentVariable(variableName))
+        string variableName = $"DOTNET_ROOT_{currentProcessArchitecture.ToString().ToUpperInvariant()}";
+        if (ContainsEnvironmentVariable(variableName, isWindows))
         {
             return;
         }
 
         bool isWindowsX86 = IsWindowsX86ProcessOn64BitOperatingSystem(
-            _currentProcessArchitecture,
-            RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
-            Environment.Is64BitOperatingSystem);
-        bool hasExplicitDotnetRoot = ContainsEnvironmentVariable("DOTNET_ROOT");
-        bool hasExplicitWindowsX86DotnetRoot = isWindowsX86 && ContainsEnvironmentVariable("DOTNET_ROOT(x86)");
+            currentProcessArchitecture,
+            isWindows,
+            is64BitOperatingSystem);
+        bool hasExplicitDotnetRoot = ContainsEnvironmentVariable("DOTNET_ROOT", isWindows);
+        bool hasExplicitWindowsX86DotnetRoot = isWindowsX86 && ContainsEnvironmentVariable("DOTNET_ROOT(x86)", isWindows);
         if (hasExplicitDotnetRoot || hasExplicitWindowsX86DotnetRoot)
         {
             EnvironmentVariables = hasExplicitDotnetRoot && isWindowsX86 && !hasExplicitWindowsX86DotnetRoot
@@ -163,14 +175,14 @@ public partial class InvokeTestingPlatformTask
     internal static bool IsWindowsX86ProcessOn64BitOperatingSystem(Architecture processArchitecture, bool isWindows, bool is64BitOperatingSystem)
         => processArchitecture == Architecture.X86 && isWindows && is64BitOperatingSystem;
 
-    private bool ContainsEnvironmentVariable(string variableName)
+    private bool ContainsEnvironmentVariable(string variableName, bool isWindows)
     {
         if (EnvironmentVariables is null)
         {
             return false;
         }
 
-        StringComparison comparison = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+        StringComparison comparison = isWindows
             ? StringComparison.OrdinalIgnoreCase
             : StringComparison.Ordinal;
 

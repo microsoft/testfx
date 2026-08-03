@@ -114,6 +114,39 @@ public sealed class InvokeTestingPlatformTaskTests
     }
 
     [TestMethod]
+    public void AddAppHostDotnetRootEnvironmentVariable_ExplicitDotnetRootInWindowsX86Process_ClearsBothArchitectureSpecificVariables()
+    {
+        using AppHostTaskFixture fixture = new();
+        TestableInvokeTestingPlatformTask task = fixture.CreateTask();
+        task.TestArchitecture = new TaskItem("X86");
+        task.EnvironmentVariables = ["DOTNET_ROOT=explicit"];
+
+        task.InvokeAddAppHostDotnetRootEnvironmentVariable(Architecture.X86, isWindows: true, is64BitOperatingSystem: true);
+
+        Assert.IsNotNull(task.EnvironmentVariables);
+        Assert.HasCount(3, task.EnvironmentVariables);
+        Assert.AreEqual("DOTNET_ROOT_X86=", task.EnvironmentVariables[0]);
+        Assert.AreEqual("DOTNET_ROOT(x86)=", task.EnvironmentVariables[1]);
+        Assert.AreEqual("DOTNET_ROOT=explicit", task.EnvironmentVariables[2]);
+    }
+
+    [TestMethod]
+    public void AddAppHostDotnetRootEnvironmentVariable_ExplicitWindowsX86DotnetRoot_ClearsOnlyArchitectureSpecificVariable()
+    {
+        using AppHostTaskFixture fixture = new();
+        TestableInvokeTestingPlatformTask task = fixture.CreateTask();
+        task.TestArchitecture = new TaskItem("X86");
+        task.EnvironmentVariables = ["DOTNET_ROOT(x86)=explicit"];
+
+        task.InvokeAddAppHostDotnetRootEnvironmentVariable(Architecture.X86, isWindows: true, is64BitOperatingSystem: true);
+
+        Assert.IsNotNull(task.EnvironmentVariables);
+        Assert.HasCount(2, task.EnvironmentVariables);
+        Assert.AreEqual("DOTNET_ROOT_X86=", task.EnvironmentVariables[0]);
+        Assert.AreEqual("DOTNET_ROOT(x86)=explicit", task.EnvironmentVariables[1]);
+    }
+
+    [TestMethod]
     public void AddAppHostDotnetRootEnvironmentVariable_DoesNothingWhenDisabled()
     {
         using AppHostTaskFixture fixture = new();
@@ -192,6 +225,12 @@ public sealed class InvokeTestingPlatformTaskTests
 
         public void InvokeAddAppHostDotnetRootEnvironmentVariable()
             => AddAppHostDotnetRootEnvironmentVariable();
+
+        public void InvokeAddAppHostDotnetRootEnvironmentVariable(
+            Architecture currentProcessArchitecture,
+            bool isWindows,
+            bool is64BitOperatingSystem)
+            => AddAppHostDotnetRootEnvironmentVariable(currentProcessArchitecture, isWindows, is64BitOperatingSystem);
     }
 
     private sealed class AppHostTaskFixture : IDisposable
