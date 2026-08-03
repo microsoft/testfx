@@ -19,9 +19,10 @@ namespace ReliableTestSuite;
 ///
 /// COMING IN MSTest 4.4 - the precise tool is [ResourceLock]. It names the exact resource that
 /// is shared, so the scheduler serializes only tests that declare the SAME key and lets
-/// everything else run concurrently:
+/// everything else run concurrently. The full migration is a one-for-one swap - you REMOVE
+/// [DoNotParallelize] and ADD [ResourceLock] (keeping both would just re-serialize the class):
 ///
-///     // [assembly-visible once MSTest 4.4 ships]
+///     // [compiles once MSTest 4.4 ships]
 ///     [TestClass]
 ///     [ResourceLock(WellKnownResources.EnvironmentVariables)]   // exclusive by default
 ///     public sealed class EnvironmentPricingTests { ... }
@@ -29,6 +30,14 @@ namespace ReliableTestSuite;
 /// A reader-only test could take the same key in shared mode with
 /// [ResourceLock(WellKnownResources.EnvironmentVariables, Mode = ResourceAccessMode.Read)],
 /// allowing concurrent readers while still excluding writers.
+///
+/// LIMITATIONS to be honest about:
+///   - The lock is COOPERATIVE: it only coordinates tests that opt in with the SAME key. A test
+///     that mutates the environment without declaring the lock is not held back by it.
+///   - Scope is the current TEST-HOST PROCESS. It serializes tests inside one run; it is NOT a
+///     cross-process, cross-assembly-in-separate-hosts, or distributed/cross-agent mutex.
+///   - WellKnownResources.EnvironmentVariables is a shared well-known key for process-wide
+///     environment state; any string can be used as a custom key for your own shared resource.
 ///
 /// The difference is determinism with throughput: [DoNotParallelize] trades all parallelism
 /// for safety; [ResourceLock] trades only the parallelism that is genuinely unsafe.

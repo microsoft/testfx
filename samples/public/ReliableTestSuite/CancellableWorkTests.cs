@@ -35,4 +35,26 @@ public sealed class CancellableWorkTests
 
         Assert.IsFalse(token.IsCancellationRequested);
     }
+
+    // Deterministic proof that the cooperative loop actually STOPS on cancellation - no timing,
+    // no waiting, no flakiness. We hand it an already-cancelled token and assert it throws the
+    // exact OperationCanceledException that TestContext's token would raise when [Timeout] fires.
+    [TestMethod]
+    public async Task PollingLoop_StopsWhenTokenAlreadyCancelled()
+    {
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        await Assert.ThrowsExactlyAsync<OperationCanceledException>(
+            () => RunCooperativeLoopAsync(cts.Token));
+    }
+
+    private static async Task RunCooperativeLoopAsync(CancellationToken token)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            token.ThrowIfCancellationRequested();
+            await Task.Yield();
+        }
+    }
 }

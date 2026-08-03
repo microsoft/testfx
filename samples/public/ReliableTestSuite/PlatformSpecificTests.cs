@@ -19,21 +19,23 @@ public sealed class PlatformSpecificTests
     // Runs only on Windows. On Linux/macOS this is reported as not-run, not as a hollow pass.
     [TestMethod]
     [OSCondition(OperatingSystems.Windows)]
-    public void UsesWindowsOnlyPath()
+    public void UsesWindowsPathSemantics()
     {
-        Assert.IsTrue(OperatingSystem.IsWindows());
+        // Stands in for genuinely Windows-specific behavior (rather than re-asserting the OS):
+        // the path separator is '\' and path comparison is case-insensitive.
+        Assert.AreEqual('\\', Path.DirectorySeparatorChar);
+        Assert.IsTrue(string.Equals(@"C:\Temp", @"c:\temp", StringComparison.OrdinalIgnoreCase));
     }
 
-    // Skips a timing-sensitive check when running under CI (ConditionMode.Exclude), where
-    // shared/throttled agents make it flaky - without pretending it passed locally.
+    // Excluded on CI (ConditionMode.Exclude) for a REAL environmental reason: this check needs an
+    // interactive desktop session that headless CI agents do not have. That is honest gating.
+    // Excluding a test merely because it is FLAKY on CI would be hiding the flake - the earlier
+    // rungs (isolate, coordinate, bound) are how you fix that instead of muting it.
     [TestMethod]
     [CICondition(ConditionMode.Exclude)]
-    public void TimingSensitiveCheck_NotOnCI()
+    public void InteractiveOnlyCheck_NotOnHeadlessCI()
     {
-        // A real check that would be timing-flaky on shared CI agents.
-        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-        stopwatch.Stop();
-        Assert.IsFalse(stopwatch.IsRunning);
+        Assert.IsTrue(Environment.UserInteractive);
     }
 
     // Runs only when 'dotnet' is resolvable on PATH. Gating on tool availability beats a

@@ -8,14 +8,17 @@ namespace ReliableTestSuite;
 ///
 /// [Retry] re-runs a failed test up to N times. Read that plainly: it makes a nondeterministic
 /// test PASS more often - it does not make it deterministic. Every previous step in this sample
-/// removes a source of nondeterminism (isolation, resource coordination, declarative gating,
-/// cooperative timeouts). Retry is the last resort for residual flakiness you have not yet been
-/// able to eliminate - for example a genuinely external dependency you do not control.
+/// addresses a source of nondeterminism at its root (isolation, resource coordination) or makes
+/// the failure honest and bounded (declarative gating, cooperative timeouts). Retry is the last
+/// resort for residual flakiness you have not yet been able to eliminate - for example a
+/// genuinely external dependency you do not control.
 ///
-/// Use it deliberately and visibly, never as the default. Under Microsoft.Testing.Platform each
-/// attempt is reported, so a retried test still shows up as "flaky" rather than a clean green -
-/// that visibility is the point. If you find yourself adding [Retry] to hide a race in your OWN
-/// code, stop and fix the race; the earlier steps are how.
+/// Use it deliberately and visibly, never as the default. On MSTest 4.4+ under
+/// Microsoft.Testing.Platform each attempt is reported, so a retried test surfaces as "flaky"
+/// rather than a clean green - that visibility is the point. (On 4.3.x a retried-then-passed
+/// test reports as an ordinary pass, so the retry is easier to forget it is there.) If you find
+/// yourself adding [Retry] to hide a race in your OWN code, stop and fix the race; the earlier
+/// steps are how.
 ///
 /// (Also distinct from the Microsoft.Testing.Extensions.Retry orchestrator's
 /// --retry-failed-tests, which re-runs failed tests in a fresh host process. If you combine
@@ -26,9 +29,10 @@ public sealed class FlakyDependencyTests
 {
     private static int s_attempts;
 
-    // Simulates a flaky *external* dependency (e.g. a remote service) that fails the first time
-    // and then succeeds. In real code the earlier steps cannot remove this - it is outside the
-    // process - so retry is the honest containment tool.
+    // A SCRIPTED teaching fixture, not real flakiness: a static counter makes attempt #1 "fail"
+    // and attempt #2 "succeed" so the sample deterministically exercises the retry path. It
+    // stands in for a flaky *external* dependency (e.g. a remote service) that the earlier steps
+    // cannot remove because it lives outside the process - which is when retry is the honest tool.
     private static bool CallExternalService()
         => Interlocked.Increment(ref s_attempts) >= 2;
 

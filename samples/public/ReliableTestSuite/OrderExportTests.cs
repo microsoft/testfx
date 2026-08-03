@@ -46,7 +46,9 @@ public sealed class OrderExportTests
         string[] lines = File.ReadAllLines(path);
         Assert.HasCount(2, lines);
         Assert.AreEqual("Id,Customer,Total", lines[0]);
-        Assert.Contains("Contoso", lines[1]);
+        // Assert the WHOLE row, not just a substring: a culture-dependent decimal (42,00) would
+        // change this shape and must fail the test rather than slip through.
+        Assert.AreEqual("1,Contoso,42.00", lines[1]);
     }
 
     [TestMethod]

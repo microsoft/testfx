@@ -15,7 +15,7 @@ shared-state bugs. Each file then demonstrates one rung of the reliability ladde
 | `CancellableWorkTests.cs` | **Bound time** — `[Timeout(CooperativeCancellation = true)]` + `TestContext.CancellationToken` | A test that can hang has no place in a reliable suite; cooperative cancellation stops the work cleanly. No `Thread.Sleep`. |
 | `FlakyDependencyTests.cs` | **Contain** — `[Retry]` | Retry makes a nondeterministic test pass more often; it does **not** make it deterministic. Last resort for residual, external flakiness only. |
 | `testconfig.json` | **Expose** — `randomizeTestOrder` + fixed seed | Random order surfaces hidden inter-test ordering dependencies; the reported seed makes any failure reproducible. |
-| `GlobalFixtures.cs` | **Bootstrap** — `[GlobalTestInitialize]` / `[GlobalTestCleanup]` | One obvious place for suite-wide setup/teardown, independent of any single class. |
+| `GlobalFixtures.cs` | **Bootstrap** — `[AssemblyInitialize]`/`[AssemblyCleanup]` (once per run) vs `[GlobalTestInitialize]`/`[GlobalTestCleanup]` (before/after **every** test) | Suite-wide setup has two cadences and mixing them up is a classic scaling bug: once-only work (start a server, seed a DB) goes in `[AssemblyInitialize]`; per-test ambient reset goes in the global test hooks. |
 
 ## The thesis
 
@@ -27,9 +27,29 @@ resource locks, and only then contain whatever residual nondeterminism you could
 ## `[ResourceLock]` note
 
 `[ResourceLock]` and `WellKnownResources` ship in **MSTest 4.4**. This sample pins the shipped
-`MSTest.Sdk` (see `../global.json`), so it demonstrates the coordination step with the
-shipped-today `[DoNotParallelize]` and shows the exact `[ResourceLock]` upgrade in the comments of
-`EnvironmentPricingTests.cs`.
+`MSTest.Sdk` **4.3.x** (see `../global.json` and `../Directory.Build.props`), so it demonstrates the
+coordination step with the shipped-today `[DoNotParallelize]` and shows the exact `[ResourceLock]`
+upgrade in the comments of `EnvironmentPricingTests.cs`. The migration is a one-for-one swap:
+**remove** `[DoNotParallelize]` and **add** `[ResourceLock(...)]` (keeping both would just
+re-serialize the class).
+
+`[ResourceLock]` limitations worth stating up front:
+
+- It is **cooperative** — it only coordinates tests that opt in with the **same** key. A test that
+  touches the resource without declaring the lock is not held back.
+- Its scope is the current **test-host process**. It serializes tests within one run; it is not a
+  cross-process or distributed/cross-agent mutex.
+
+## What to expect when you run it
+
+- **10 tests pass** locally on Windows. Some condition-gated tests report **not run** (rather than a
+  hollow pass) depending on your environment — e.g. `UsesWindowsPathSemantics` runs only on Windows,
+  and `InteractiveOnlyCheck_NotOnHeadlessCI` is excluded on CI.
+- The banner prints the worker count, parallel scope, and the **random-order seed**. To reproduce a
+  specific failing order, reuse the reported seed. In CI you should **rotate the seed** (or leave it
+  unset) so runs keep exploring new orderings instead of freezing on one.
+- On **MSTest 4.4+** a retried test surfaces as *flaky*; on the pinned 4.3.x a retried-then-passed
+  test reports as an ordinary pass.
 
 ## Run it
 
