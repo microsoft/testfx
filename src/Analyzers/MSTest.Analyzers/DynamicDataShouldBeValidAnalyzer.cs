@@ -179,20 +179,36 @@ public sealed class DynamicDataShouldBeValidAnalyzer : DiagnosticAnalyzer
                 return (null, false);
             }
 
-            ISymbol? potentialProperty = potentialMembers.FirstOrDefault(m => m.Kind == SymbolKind.Property);
-            if (potentialProperty is not null)
+            // Single pass over the members: a property always wins, otherwise the first method is used and
+            // more than one method is an error. Doing this with FirstOrDefault + Where().ToImmutableArray()
+            // scanned the members twice and allocated an array per [DynamicData] attribute per compilation.
+            ISymbol? firstMethod = null;
+            bool hasMultipleMethods = false;
+            foreach (ISymbol member in potentialMembers)
             {
-                return (potentialProperty, false);
+                switch (member.Kind)
+                {
+                    case SymbolKind.Property:
+                        return (member, false);
+
+                    case SymbolKind.Method:
+                        if (firstMethod is null)
+                        {
+                            firstMethod = member;
+                        }
+                        else
+                        {
+                            hasMultipleMethods = true;
+                        }
+
+                        break;
+                }
             }
 
-            var candidateMethods = potentialMembers.Where(m => m.Kind == SymbolKind.Method).ToImmutableArray();
-            if (candidateMethods.Length > 1)
-            {
-                // If there are multiple methods with the same name, report a diagnostic. This is not a supported scenario.
-                return (null, true);
-            }
-
-            return (candidateMethods.IsEmpty ? potentialMembers[0] : candidateMethods[0], false);
+            // If there are multiple methods with the same name, report a diagnostic. This is not a supported scenario.
+            return hasMultipleMethods
+                ? (null, true)
+                : (firstMethod ?? potentialMembers[0], false);
         }
     }
 
