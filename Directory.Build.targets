@@ -15,10 +15,58 @@
     <PackageReadmeFile Condition=" '$(PackageReadmeFile)' == '' and Exists('PACKAGE.md') ">PACKAGE.md</PackageReadmeFile>
   </PropertyGroup>
 
-  <!-- Add a package README file from. -->
+  <!--
+    NuGet's Pack.targets is imported after Microsoft.Common.targets, and therefore after this file. It fills an
+    unset $(PackageDescription) from $(Description) and, failing that, from its own "Package Description"
+    literal. Record here, while the value is still exactly what the repository authored, whether a description
+    was supplied at all, so that the guard below does not have to rely solely on recognizing that literal.
+    $(Description) counts as authored because NuGet promotes it to $(PackageDescription).
+  -->
+  <PropertyGroup>
+    <_HasAuthoredPackageDescription Condition=" '$(PackageDescription)' != '' or '$(Description)' != '' ">true</_HasAuthoredPackageDescription>
+  </PropertyGroup>
+
+  <!-- Pack the package README (PACKAGE.md by default, see above) into the root of the .nupkg. -->
   <ItemGroup Condition=" '$(PackageReadmeFile)' != '' ">
     <None Include="$(PackageReadmeFile)" Pack="true" PackagePath="\" />
   </ItemGroup>
+
+  <!--
+    Guard the nuget.org metadata that is easy to forget on a new package.
+
+    NuGet's Pack.targets defaults an unset $(PackageDescription) to the literal string
+    "Package Description" during evaluation, so Arcade's own "PackageDescription must be specified"
+    check (a target, and therefore evaluated later) can never fire and the placeholder ships. Three
+    packages reached nuget.org that way before this guard existed. $(_HasAuthoredPackageDescription),
+    captured above before NuGet's default is applied, is the primary signal; the placeholder text is
+    matched as well so the guard keeps working if that capture is ever defeated.
+
+    This runs only during pack, unlike the _ValidateBundledSdkFeatureVersions target below which also hooks
+    Build. Pack is where the metadata is consumed, the produced packages are checked again by
+    PackageMetadataCompletenessTests, and this way a plain build never breaks for someone mid-authoring a
+    package.
+
+    Note this deliberately also covers IsShipping=false packages: Microsoft.Testing.Extensions.AzureFoundry
+    is non-shipping and still reached nuget.org with the placeholder.
+  -->
+  <Target Name="_ValidatePackageMetadata"
+          BeforeTargets="GenerateNuspec"
+          Condition=" '$(IsPackable)' == 'true' ">
+    <PropertyGroup>
+      <!--
+        $(Description) is re-checked here rather than only at evaluation time because NuGet promotes it to
+        $(PackageDescription) in Pack.targets, which is imported after every Directory.Build.targets - so a
+        description supplied by a nested one still reaches nuget.org intact. $(PackageDescription) itself is
+        useless here: by now NuGet has always set it.
+      -->
+      <_HasAuthoredPackageDescription Condition=" '$(Description)' != '' ">true</_HasAuthoredPackageDescription>
+    </PropertyGroup>
+
+    <Error Condition=" '$(_HasAuthoredPackageDescription)' != 'true' or '$(PackageDescription)' == 'Package Description' "
+           Text="$(MSBuildProjectName) is packable but has no package description, so it would be published to nuget.org with NuGet's 'Package Description' placeholder. Set PackageDescription in the project; lead with what the package does and close with the shared CommonProductDescription property." />
+    <Error Condition=" '$(PackageReadmeFile)' == '' "
+           Text="$(MSBuildProjectName) is packable but has no package README, so its nuget.org page would show no rendered documentation. Add a PACKAGE.md next to the project file (it is picked up automatically) or set PackageReadmeFile." />
+  </Target>
 
   <ItemGroup Condition=" '$(GenerateBuildInfo)' == 'true' ">
     <PackageReference Include="Microsoft.DotNet.Build.Tasks.Templating" Version="$(MicrosoftDotNetBuildTasksTemplatingPackageVersion)" AllowExplicitReference="true" PrivateAssets="All" IsImplicitlyDefined="true" />

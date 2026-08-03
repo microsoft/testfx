@@ -11,11 +11,9 @@
 
   <!-- NuGet properties -->
   <PropertyGroup>
-    <PackageDescription>
-      <![CDATA[Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
+    <PackageDescription><![CDATA[This package extends Microsoft Testing Platform to record the screen while tests run (via an external ffmpeg process) and attach the captured videos to the test session as artifacts.
 
-This package extends Microsoft Testing Platform to record the screen while tests run (via an external ffmpeg process) and attach the captured videos to the test session as artifacts.]]>
-    </PackageDescription>
+$(CommonProductDescription)]]></PackageDescription>
   </PropertyGroup>
 
   <!-- NuGet package layout -->

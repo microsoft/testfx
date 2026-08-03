@@ -11,11 +11,9 @@
 
   <!-- NuGet properties -->
   <PropertyGroup>
-    <PackageDescription>
-      <![CDATA[Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
+    <PackageDescription><![CDATA[This package provides a Microsoft.Extensions.Logging bridge for the platform, allowing diagnostic log messages produced by Microsoft.Testing.Platform and its extensions to flow through any Microsoft.Extensions.Logging provider (Console, Debug, Serilog, OpenTelemetry, Application Insights, ...).
 
-This package provides a Microsoft.Extensions.Logging bridge for the platform, allowing diagnostic log messages produced by Microsoft.Testing.Platform and its extensions to flow through any Microsoft.Extensions.Logging provider (Console, Debug, Serilog, OpenTelemetry, Application Insights, ...).]]>
-    </PackageDescription>
+$(CommonProductDescription)]]></PackageDescription>
   </PropertyGroup>
 
   <ItemGroup>
