@@ -318,7 +318,35 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
             }
         }
 
-        if (testNode.Properties.SingleOrDefault<TestMethodIdentifierProperty>() is { } identifierProperty)
+        // Single pass over the property bag for the two singleton properties below: two separate
+        // SingleOrDefault<T>() calls walked the whole bag once each.
+        TestMethodIdentifierProperty? identifierProperty = null;
+        TestFileLocationProperty? testLocationProperty = null;
+        PropertyBag.PropertyBagEnumerator enumerator = testNode.Properties.GetStructEnumerator();
+        while (enumerator.MoveNext())
+        {
+            switch (enumerator.Current)
+            {
+                case TestMethodIdentifierProperty identifier:
+                    if (identifierProperty is not null)
+                    {
+                        throw new InvalidOperationException($"Found multiple properties of type '{typeof(TestMethodIdentifierProperty)}'.");
+                    }
+
+                    identifierProperty = identifier;
+                    break;
+                case TestFileLocationProperty location:
+                    if (testLocationProperty is not null)
+                    {
+                        throw new InvalidOperationException($"Found multiple properties of type '{typeof(TestFileLocationProperty)}'.");
+                    }
+
+                    testLocationProperty = location;
+                    break;
+            }
+        }
+
+        if (identifierProperty is not null)
         {
             // code.function.name is defined as the *fully qualified* name; there is no separate namespace
             // attribute (code.namespace is deprecated upstream).
@@ -335,7 +363,7 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
             }
         }
 
-        if (testNode.Properties.SingleOrDefault<TestFileLocationProperty>() is { } testLocationProperty)
+        if (testLocationProperty is not null)
         {
             yield return new(TestingPlatformSemanticConventions.Attributes.CodeFilePath, testLocationProperty.FilePath);
             yield return new(TestingPlatformSemanticConventions.Attributes.CodeLineNumber, testLocationProperty.LineSpan.Start.Line);
@@ -348,8 +376,16 @@ internal sealed class OpenTelemetryResultHandler : IDisposable
             }
         }
 
-        foreach (TestMetadataProperty metadata in testNode.Properties.OfType<TestMetadataProperty>())
+        // The metadata is yielded after the blocks above, so it needs its own pass. OfType<TestMetadataProperty>()
+        // would materialize a TProperty[] just to enumerate it once; the struct enumerator allocates nothing.
+        PropertyBag.PropertyBagEnumerator metadataEnumerator = testNode.Properties.GetStructEnumerator();
+        while (metadataEnumerator.MoveNext())
         {
+            if (metadataEnumerator.Current is not TestMetadataProperty metadata)
+            {
+                continue;
+            }
+
             yield return new KeyValuePair<string, object?>($"{TestingPlatformSemanticConventions.Attributes.TestMetadataPrefix}{metadata.Key}", metadata.Value);
             if (_options.EmitLegacyAttributes)
             {
