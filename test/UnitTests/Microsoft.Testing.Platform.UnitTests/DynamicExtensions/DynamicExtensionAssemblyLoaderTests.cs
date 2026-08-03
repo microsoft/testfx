@@ -4,6 +4,9 @@
 #if NETCOREAPP
 using System.Runtime.Loader;
 #endif
+#if NET9_0_OR_GREATER
+using System.Reflection.Emit;
+#endif
 
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.DynamicExtensions;
@@ -18,6 +21,10 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestClass]
 public sealed class DynamicExtensionAssemblyLoaderTests
 {
+#if NET9_0_OR_GREATER
+    private const string CarriedContractName = "Contoso.CarriedContract.Abstractions";
+#endif
+
     private static string ThisAssemblyPath => typeof(DynamicExtensionAssemblyLoaderTests).Assembly.Location;
 
     [TestMethod]
@@ -124,7 +131,72 @@ public sealed class DynamicExtensionAssemblyLoaderTests
         Assert.IsNull(resolved);
     }
 
-    private static Assembly? InvokeResolveSharedContractAssembly(AssemblyName assemblyName)
+#if NET9_0_OR_GREATER
+    [TestMethod]
+    public void SharedContract_CarriedOnlyByExtensions_IsPromotedSoEveryExtensionGetsTheSameCopy()
+    {
+        // The ordinary manifest-only deployment: the application does not carry the contract at all and every
+        // extension brings its own copy. Loading each copy into its own context would give a capability
+        // published by one dynamic extension a different identity from the one another extension consumes --
+        // exactly the split the shared list exists to prevent. The first copy found is promoted into the
+        // default context and must then be handed to every extension that follows.
+        string root = Path.Combine(Path.GetTempPath(), $"mtp-carried-contract-{Guid.NewGuid():N}");
+        string firstExtensionDirectory = Path.Combine(root, "first");
+        string secondExtensionDirectory = Path.Combine(root, "second");
+        Directory.CreateDirectory(firstExtensionDirectory);
+        Directory.CreateDirectory(secondExtensionDirectory);
+
+        try
+        {
+            // Deliberately different versions: if the second extension were handed its own copy back, the
+            // assertion below would still see the right simple name, so only the version can tell the promoted
+            // copy apart from a private one.
+            WriteCarriedContractAssembly(Path.Combine(firstExtensionDirectory, CarriedContractName + ".dll"), new Version(1, 0, 0, 0));
+            WriteCarriedContractAssembly(Path.Combine(secondExtensionDirectory, CarriedContractName + ".dll"), new Version(2, 0, 0, 0));
+
+            Assembly? alreadyLoaded = AssemblyLoadContext.Default.Assemblies
+                .FirstOrDefault(a => string.Equals(a.GetName().Name, CarriedContractName, StringComparison.OrdinalIgnoreCase));
+            Assert.IsNull(alreadyLoaded, "The contract must be absent from the application, otherwise this never reaches the promotion path.");
+
+            Assembly? fromFirstExtension = InvokeResolveSharedContractAssembly(
+                new AssemblyName(CarriedContractName) { Version = new Version(1, 0, 0, 0) },
+                Path.Combine(firstExtensionDirectory, "Contoso.First.Extension.dll"));
+            Assembly? fromSecondExtension = InvokeResolveSharedContractAssembly(
+                new AssemblyName(CarriedContractName) { Version = new Version(2, 0, 0, 0) },
+                Path.Combine(secondExtensionDirectory, "Contoso.Second.Extension.dll"));
+
+            Assert.IsNotNull(fromFirstExtension);
+            Assert.AreSame(fromFirstExtension, fromSecondExtension, "Both extensions must observe one contract identity.");
+            Assert.AreEqual(new Version(1, 0, 0, 0), fromFirstExtension.GetName().Version, "The copy promoted first must stay canonical, whatever version a later extension ships.");
+            Assert.Contains(fromFirstExtension, AssemblyLoadContext.Default.Assemblies, "The promoted copy must live in the default context so statically loaded code agrees with it too.");
+        }
+        finally
+        {
+            try
+            {
+                Directory.Delete(root, recursive: true);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // Promotion is by definition into the non-collectible default context, so the file stays
+                // mapped for the life of the process and cannot be deleted on Windows. Leaving it is the
+                // price of covering this path at all.
+            }
+        }
+    }
+
+    private static void WriteCarriedContractAssembly(string path, Version version)
+    {
+        // A real assembly on disk rather than a copy of an existing one: the resolver matches on the simple
+        // name recorded in the metadata, so a renamed file would take a different branch than the one under
+        // test and quietly turn this into a tautology.
+        PersistedAssemblyBuilder builder = new(new AssemblyName(CarriedContractName) { Version = version }, typeof(object).Assembly);
+        builder.DefineDynamicModule(CarriedContractName);
+        builder.Save(path);
+    }
+#endif
+
+    private static Assembly? InvokeResolveSharedContractAssembly(AssemblyName assemblyName, string? extensionAssemblyPath = null)
     {
         Type contextType = typeof(DynamicExtensionAssemblyLoader)
             .GetNestedType("DynamicExtensionLoadContext", BindingFlags.NonPublic)!;
@@ -134,7 +206,7 @@ public sealed class DynamicExtensionAssemblyLoaderTests
             contextType,
             BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             binder: null,
-            args: [ThisAssemblyPath, new SystemFileSystem()],
+            args: [extensionAssemblyPath ?? ThisAssemblyPath, new SystemFileSystem()],
             culture: null)!;
         Assert.IsNotNull(context);
 
