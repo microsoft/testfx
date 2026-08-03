@@ -54,7 +54,9 @@
   <PropertyGroup>
     <BuildOutputTargetFolder>_MSBuildTasks</BuildOutputTargetFolder>
     <IncludeBuildOutput Condition="'$(TargetFramework)' != '' and '$(TargetFramework)' != 'netstandard2.0'">false</IncludeBuildOutput>
-    <PackageDescriptionDetail>This package provides MSBuild integration of the platform, its extensions and configuration files.</PackageDescriptionDetail>
+    <PackageDescription><![CDATA[This package provides MSBuild integration of the platform, its extensions and configuration files.
+
+$(CommonProductDescription)]]></PackageDescription>
   </PropertyGroup>
 
   <!-- Default to including all *.props and *.targets files from the project directory into the NuGet package root -->

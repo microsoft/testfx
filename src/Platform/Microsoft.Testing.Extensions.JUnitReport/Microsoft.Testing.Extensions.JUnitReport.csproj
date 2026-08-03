@@ -11,7 +11,9 @@
 
   <!-- NuGet properties -->
   <PropertyGroup>
-    <PackageDescriptionDetail>This package extends Microsoft Testing Platform to produce JUnit XML test reports compatible with Jenkins, GitLab, Azure DevOps and other CI systems.</PackageDescriptionDetail>
+    <PackageDescription><![CDATA[This package extends Microsoft Testing Platform to produce JUnit XML test reports compatible with Jenkins, GitLab, Azure DevOps and other CI systems.
+
+$(CommonProductDescription)]]></PackageDescription>
   </PropertyGroup>
 
   <!-- NuGet package layout -->

@@ -43,7 +43,9 @@
 
   <!-- NuGet properties -->
   <PropertyGroup>
-    <PackageDescriptionDetail>This package extends Microsoft Testing Platform to provide TRX test reports.</PackageDescriptionDetail>
+    <PackageDescription><![CDATA[This package extends Microsoft Testing Platform to provide TRX test reports.
+
+$(CommonProductDescription)]]></PackageDescription>
   </PropertyGroup>
 
   <!-- NuGet package layout -->

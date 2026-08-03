@@ -16,21 +16,6 @@
   </PropertyGroup>
 
   <!--
-    Compose the nuget.org description from a shared preamble (set per product area in
-    src/Directory.Build.props and src/Platform/Directory.Build.props) plus the package-specific
-    $(PackageDescriptionDetail). This keeps the boilerplate first paragraph in one place instead of
-    duplicating it in every packable project, and keeps the .csproj indentation out of the published
-    text. A project that needs full control can still set $(PackageDescription) directly, which wins.
-
-    %0A is MSBuild's escape for a newline, so the paragraph break does not depend on how this file
-    happens to be laid out or on the checkout's line endings.
-  -->
-  <PropertyGroup Condition=" '$(PackageDescriptionDetail)' != '' and '$(PackageDescription)' == '' ">
-    <PackageDescription Condition=" '$(PackageDescriptionPreamble)' == '' ">$(PackageDescriptionDetail)</PackageDescription>
-    <PackageDescription Condition=" '$(PackageDescriptionPreamble)' != '' ">$(PackageDescriptionPreamble)%0A%0A$(PackageDescriptionDetail)</PackageDescription>
-  </PropertyGroup>
-
-  <!--
     NuGet's Pack.targets is imported after Microsoft.Common.targets, and therefore after this file. It fills an
     unset $(PackageDescription) from $(Description) and, failing that, from its own "Package Description"
     literal. Record here, while the value is still exactly what the repository authored, whether a description
@@ -71,17 +56,14 @@
       <!--
         $(Description) is re-checked here rather than only at evaluation time because NuGet promotes it to
         $(PackageDescription) in Pack.targets, which is imported after every Directory.Build.targets - so a
-        description supplied by a nested one still reaches nuget.org intact.
-
-        $(PackageDescriptionDetail) is deliberately NOT re-checked: the composition above runs in this file, so
-        a detail assigned later never gets composed and the package really would ship the placeholder.
-        $(PackageDescription) is useless here too - by now NuGet has always set it.
+        description supplied by a nested one still reaches nuget.org intact. $(PackageDescription) itself is
+        useless here: by now NuGet has always set it.
       -->
       <_HasAuthoredPackageDescription Condition=" '$(Description)' != '' ">true</_HasAuthoredPackageDescription>
     </PropertyGroup>
 
     <Error Condition=" '$(_HasAuthoredPackageDescription)' != 'true' or '$(PackageDescription)' == 'Package Description' "
-           Text="$(MSBuildProjectName) is packable but has no package description, so it would be published to nuget.org with NuGet's 'Package Description' placeholder. Set PackageDescriptionDetail (appended to the PackageDescriptionPreamble of the containing product area) or PackageDescription." />
+           Text="$(MSBuildProjectName) is packable but has no package description, so it would be published to nuget.org with NuGet's 'Package Description' placeholder. Set PackageDescription in the project; lead with what the package does and close with the shared CommonProductDescription property." />
     <Error Condition=" '$(PackageReadmeFile)' == '' "
            Text="$(MSBuildProjectName) is packable but has no package README, so its nuget.org page would show no rendered documentation. Add a PACKAGE.md next to the project file (it is picked up automatically) or set PackageReadmeFile." />
   </Target>

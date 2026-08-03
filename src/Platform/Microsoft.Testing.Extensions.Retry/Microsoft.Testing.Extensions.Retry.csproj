@@ -32,7 +32,9 @@
 
   <!-- NuGet properties -->
   <PropertyGroup>
-    <PackageDescriptionDetail>This package extends Microsoft Testing Platform to provide a retry policy system that allows to restart tests on failure.</PackageDescriptionDetail>
+    <PackageDescription><![CDATA[This package extends Microsoft Testing Platform to provide a retry policy system that allows to restart tests on failure.
+
+$(CommonProductDescription)]]></PackageDescription>
   </PropertyGroup>
 
   <ItemGroup>

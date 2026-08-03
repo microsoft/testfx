@@ -11,7 +11,9 @@
 
   <!-- NuGet properties -->
   <PropertyGroup>
-    <PackageDescriptionDetail>This package extends Microsoft Testing Platform to produce test reports in the Common Test Report Format (CTRF, https://ctrf.io).</PackageDescriptionDetail>
+    <PackageDescription><![CDATA[This package extends Microsoft Testing Platform to produce test reports in the Common Test Report Format (CTRF, https://ctrf.io).
+
+$(CommonProductDescription)]]></PackageDescription>
   </PropertyGroup>
 
   <!-- NuGet package layout -->

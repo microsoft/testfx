@@ -42,7 +42,9 @@
 
   <!-- NuGet properties -->
   <PropertyGroup>
-    <PackageDescriptionDetail>This package provides a bridge integration for test adapters wanting to target both VSTest and Microsoft.Testing.Platform test platforms.</PackageDescriptionDetail>
+    <PackageDescription><![CDATA[This package provides a bridge integration for test adapters wanting to target both VSTest and Microsoft.Testing.Platform test platforms.
+
+$(CommonProductDescription)]]></PackageDescription>
   </PropertyGroup>
 
   <ItemGroup>

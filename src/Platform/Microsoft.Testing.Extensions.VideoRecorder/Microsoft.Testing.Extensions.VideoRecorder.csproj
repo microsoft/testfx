@@ -11,7 +11,9 @@
 
   <!-- NuGet properties -->
   <PropertyGroup>
-    <PackageDescriptionDetail>This package extends Microsoft Testing Platform to record the screen while tests run (via an external ffmpeg process) and attach the captured videos to the test session as artifacts.</PackageDescriptionDetail>
+    <PackageDescription><![CDATA[This package extends Microsoft Testing Platform to record the screen while tests run (via an external ffmpeg process) and attach the captured videos to the test session as artifacts.
+
+$(CommonProductDescription)]]></PackageDescription>
   </PropertyGroup>
 
   <!-- NuGet package layout -->

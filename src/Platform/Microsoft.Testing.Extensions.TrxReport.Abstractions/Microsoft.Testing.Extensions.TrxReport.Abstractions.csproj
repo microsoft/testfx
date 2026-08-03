@@ -6,7 +6,9 @@
 
   <!-- NuGet properties -->
   <PropertyGroup>
-    <PackageDescriptionDetail>This package provides the abstractions used by extensions that contribute data to, or read data from, TRX test reports. Install Microsoft.Testing.Extensions.TrxReport to generate the reports themselves.</PackageDescriptionDetail>
+    <PackageDescription><![CDATA[This package provides the abstractions used by extensions that contribute data to, or read data from, TRX test reports. Install Microsoft.Testing.Extensions.TrxReport to generate the reports themselves.
+
+$(CommonProductDescription)]]></PackageDescription>
   </PropertyGroup>
 
   <ItemGroup>

@@ -10,7 +10,9 @@
 
   <!-- NuGet properties -->
   <PropertyGroup>
-    <PackageDescriptionDetail>This package extends Microsoft Testing Platform with an Azure AI Foundry (Azure OpenAI) chat client provider, supplying the AI capabilities that Microsoft.Testing.Platform.AI abstracts over.</PackageDescriptionDetail>
+    <PackageDescription><![CDATA[This package extends Microsoft Testing Platform with an Azure AI Foundry (Azure OpenAI) chat client provider, supplying the AI capabilities that Microsoft.Testing.Platform.AI abstracts over.
+
+$(CommonProductDescription)]]></PackageDescription>
   </PropertyGroup>
 
   <ItemGroup>

@@ -11,7 +11,9 @@
 
   <!-- NuGet properties -->
   <PropertyGroup>
-    <PackageDescriptionDetail>This package provides a Microsoft.Extensions.Logging bridge for the platform, allowing diagnostic log messages produced by Microsoft.Testing.Platform and its extensions to flow through any Microsoft.Extensions.Logging provider (Console, Debug, Serilog, OpenTelemetry, Application Insights, ...).</PackageDescriptionDetail>
+    <PackageDescription><![CDATA[This package provides a Microsoft.Extensions.Logging bridge for the platform, allowing diagnostic log messages produced by Microsoft.Testing.Platform and its extensions to flow through any Microsoft.Extensions.Logging provider (Console, Debug, Serilog, OpenTelemetry, Application Insights, ...).
+
+$(CommonProductDescription)]]></PackageDescription>
   </PropertyGroup>
 
   <ItemGroup>

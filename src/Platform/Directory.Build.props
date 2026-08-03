@@ -16,10 +16,10 @@
 
   <!-- Pack config -->
   <PropertyGroup>
-    <!-- Shared first paragraph of every Microsoft.Testing.Platform package description, replacing the
-         MSTest one from src/Directory.Build.props. Projects add their own $(PackageDescriptionDetail);
-         the two are joined in the root Directory.Build.targets. -->
-    <PackageDescriptionPreamble>Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.</PackageDescriptionPreamble>
+    <!-- Shared closing sentence of every Microsoft.Testing.Platform package description, replacing the MSTest
+         one from src/Directory.Build.props. Projects reference it inline, the way they reference
+         $(CommonPackageTags), so each project still shows its whole published description. -->
+    <CommonProductDescription>Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.</CommonProductDescription>
 
     <!-- Platform and extensions have their own changelog, distinct from MSTest's. The anchor uses the
          platform version so extension packages (which have their own VersionPrefix) still land on the

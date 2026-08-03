@@ -17,7 +17,9 @@
 
   <!-- NuGet properties -->
   <PropertyGroup>
-    <PackageDescriptionDetail>This package provides the core platform and the .NET implementation of the protocol.</PackageDescriptionDetail>
+    <PackageDescription><![CDATA[This package provides the core platform and the .NET implementation of the protocol.
+
+$(CommonProductDescription)]]></PackageDescription>
   </PropertyGroup>
 
   <!-- Exclude .NET Json api not available in netstandard2.0 -->

@@ -16,7 +16,9 @@
 
   <!-- NuGet properties -->
   <PropertyGroup>
-    <PackageDescriptionDetail>This package provides telemetry for the platform.</PackageDescriptionDetail>
+    <PackageDescription><![CDATA[This package provides telemetry for the platform.
+
+$(CommonProductDescription)]]></PackageDescription>
   </PropertyGroup>
 
   <ItemGroup>
