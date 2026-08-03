@@ -30,17 +30,20 @@ $(PackageDescriptionDetail)</PackageDescription>
   </PropertyGroup>
 
   <!--
-    NuGet's Pack.targets is imported after Microsoft.Common.targets, and therefore after this file, and
-    substitutes its "Package Description" default into an unset $(PackageDescription). Record here, while the
-    value is still exactly what the repository authored, whether a description was supplied at all, so that the
-    guard below does not have to rely solely on recognizing NuGet's placeholder text.
+    NuGet's Pack.targets is imported after Microsoft.Common.targets, and therefore after this file. It fills an
+    unset $(PackageDescription) from $(Description) and, failing that, from its own "Package Description"
+    literal. Record here, while the value is still exactly what the repository authored, whether a description
+    was supplied at all, so that the guard below does not have to rely solely on recognizing that literal.
+    $(Description) counts as authored because NuGet promotes it to $(PackageDescription).
 
-    This only observes values coming from a .props file, from the project itself, or from this file: a nested
-    Directory.Build.targets (such as src/Platform/Directory.Build.targets) is inlined after this one. No project
-    sets PackageDescription there, and the placeholder check below still covers that case anyway.
+    This only observes values coming from a .props file, from the project itself, or from this file. A project
+    that assigns the description later - from a nested Directory.Build.targets (such as
+    src/Platform/Directory.Build.targets, which is inlined after this one) or from a target - would trip the
+    guard even though its description is fine. No project does that today; set the description in the project or
+    in a .props file.
   -->
   <PropertyGroup>
-    <_HasAuthoredPackageDescription Condition=" '$(PackageDescription)' != '' ">true</_HasAuthoredPackageDescription>
+    <_HasAuthoredPackageDescription Condition=" '$(PackageDescription)' != '' or '$(Description)' != '' ">true</_HasAuthoredPackageDescription>
   </PropertyGroup>
 
   <!-- Pack the package README (PACKAGE.md by default, see above) into the root of the .nupkg. -->
