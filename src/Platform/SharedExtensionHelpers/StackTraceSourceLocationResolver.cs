@@ -100,28 +100,12 @@ internal static class StackTraceSourceLocationResolver
                 continue;
             }
 
-            string relativePath;
-            if (file.StartsWith(DeterministicBuildRoot, StringComparison.OrdinalIgnoreCase))
-            {
-                relativePath = file.Substring(DeterministicBuildRoot.Length);
-            }
-            else if (file.StartsWith(repoRoot!, StringComparison.OrdinalIgnoreCase))
-            {
-                relativePath = file.Substring(repoRoot!.Length);
-            }
-            else
+            string? relativeNormalizedPath = TryMakeWorkspaceRelative(file, repoRoot, fileSystem);
+            if (relativeNormalizedPath is null)
             {
                 continue;
             }
 
-            string fullPath = Path.Combine(repoRoot!, relativePath);
-            if (!fileSystem.ExistFile(fullPath))
-            {
-                continue;
-            }
-
-            // Annotations expect a workspace-relative path with forward slashes.
-            string relativeNormalizedPath = relativePath.Replace('\\', '/').TrimStart('/');
             if (logger.IsEnabled(LogLevel.Trace))
             {
                 logger.LogTrace($"Resolved source location '{relativeNormalizedPath}' (line {location.Value.LineNumber}).");
@@ -131,6 +115,47 @@ internal static class StackTraceSourceLocationResolver
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Turns an absolute (or deterministic-build) source file path into a workspace-relative, forward-slash
+    /// path suitable for a host annotation, or returns <see langword="null"/> when the file is outside
+    /// <paramref name="repoRoot"/> or does not exist on disk.
+    /// </summary>
+    /// <remarks>
+    /// Shared by the stack-trace walk above and by callers that resolve a location from test-node metadata
+    /// (e.g. <c>TestFileLocationProperty</c>) rather than from an exception, so both paths relativize and
+    /// validate identically.
+    /// </remarks>
+    /// <param name="filePath">The absolute or deterministic-build source file path, or <see langword="null"/>.</param>
+    /// <param name="repoRoot">The repository root used to relativize absolute paths (should end with a separator), or <see langword="null"/>.</param>
+    /// <param name="fileSystem">File system used to verify the candidate file exists on disk.</param>
+    public static string? TryMakeWorkspaceRelative(string? filePath, string? repoRoot, IFileSystem fileSystem)
+    {
+        if (RoslynString.IsNullOrWhiteSpace(filePath) || RoslynString.IsNullOrEmpty(repoRoot))
+        {
+            return null;
+        }
+
+        string relativePath;
+        if (filePath!.StartsWith(DeterministicBuildRoot, StringComparison.OrdinalIgnoreCase))
+        {
+            relativePath = filePath.Substring(DeterministicBuildRoot.Length);
+        }
+        else if (filePath.StartsWith(repoRoot!, StringComparison.OrdinalIgnoreCase))
+        {
+            relativePath = filePath.Substring(repoRoot!.Length);
+        }
+        else
+        {
+            return null;
+        }
+
+        string fullPath = Path.Combine(repoRoot!, relativePath);
+        return fileSystem.ExistFile(fullPath)
+            // Annotations expect a workspace-relative path with forward slashes.
+            ? relativePath.Replace('\\', '/').TrimStart('/')
+            : null;
     }
 
     private static bool IsAssertionImplementationFrame(string code)
