@@ -472,3 +472,71 @@ const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.Te
 const Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.TestResultStatus.Pass = "pass" -> string!
 static Microsoft.Testing.Platform.Telemetry.TestingPlatformSemanticConventions.TestResultStatus.ToLegacy(string! status) -> string!
 Microsoft.Testing.Platform.Telemetry.IPlatformOpenTelemetryService.StartNonAmbientActivity(string! name, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, object?>>? tags = null, string? parentId = null) -> Microsoft.Testing.Platform.Telemetry.IPlatformActivity?
+const Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants.AssemblyPathPropertyName = "assemblyPath" -> string!
+const Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants.DisplayNamePropertyName = "displayName" -> string!
+const Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants.EnabledPropertyName = "enabled" -> string!
+const Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants.ExtensionsPropertyName = "extensions" -> string!
+const Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants.HookMethodName = "AddExtensions" -> string!
+const Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants.IdPropertyName = "id" -> string!
+const Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants.ManifestFileSuffix = ".testingplatformextensions.json" -> string!
+const Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants.ManifestSearchPattern = "*.testingplatformextensions.json" -> string!
+const Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants.SharedPlatformAssemblyName = "Microsoft.Testing.Platform" -> string!
+const Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants.TypeFullNamePropertyName = "typeFullName" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_NODYNAMICEXTENSIONS = "TESTINGPLATFORM_NODYNAMICEXTENSIONS" -> string!
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionAssemblyLoader
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionAssemblyLoader.DynamicExtensionAssemblyLoader(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem) -> void
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionAssemblyLoader.IsIsolated.get -> bool
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionAssemblyLoader.LoadAssembly(string! assemblyPath) -> System.Reflection.Assembly!
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.AssemblyPath.get -> string!
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.DisplayName.get -> string!
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.DynamicExtensionEntry(string! manifestPath, int index, string! id, string! displayName, string! assemblyPath, string! resolvedAssemblyPath, string! typeFullName, bool isEnabled) -> void
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.Id.get -> string!
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.Index.get -> int
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.IsEnabled.get -> bool
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.ManifestPath.get -> string!
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.ResolvedAssemblyPath.get -> string!
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.TypeFullName.get -> string!
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionJsonReader
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionLoader
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionLoader.DynamicExtensionLoader(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Helpers.IRuntimeFeature! runtimeFeature, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.DynamicExtensions.IDynamicExtensionAssemblyLoader! assemblyLoader, Microsoft.Testing.Platform.Logging.ILogger? logger) -> void
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionLoader.LoadAsync(Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder, string![]! args) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionManifest
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionManifest.DynamicExtensionManifest(string! manifestPath, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry!>! extensions, System.Collections.Generic.IReadOnlyList<string!>! unknownProperties) -> void
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionManifest.Extensions.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry!>!
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionManifest.ManifestPath.get -> string!
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionManifest.UnknownProperties.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionManifestParser
+Microsoft.Testing.Platform.DynamicExtensions.IDynamicExtensionAssemblyLoader
+Microsoft.Testing.Platform.DynamicExtensions.IDynamicExtensionAssemblyLoader.IsIsolated.get -> bool
+Microsoft.Testing.Platform.DynamicExtensions.IDynamicExtensionAssemblyLoader.LoadAssembly(string! assemblyPath) -> System.Reflection.Assembly!
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionEntry
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionEntry.AssemblyPath.get -> string?
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionEntry.AssemblyPath.set -> void
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionEntry.DisplayName.get -> string?
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionEntry.DisplayName.set -> void
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionEntry.Enabled.get -> bool?
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionEntry.Enabled.set -> void
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionEntry.Id.get -> string?
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionEntry.Id.set -> void
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionEntry.InvalidProperties.get -> System.Collections.Generic.List<string!>!
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionEntry.TypeFullName.get -> string?
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionEntry.TypeFullName.set -> void
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionEntry.UnknownProperties.get -> System.Collections.Generic.List<string!>!
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionManifest
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionManifest.Entries.get -> System.Collections.Generic.List<Microsoft.Testing.Platform.DynamicExtensions.RawExtensionEntry?>!
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionManifest.HasExtensionsProperty.get -> bool
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionManifest.HasExtensionsProperty.set -> void
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionManifest.IsExtensionsPropertyAnArray.get -> bool
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionManifest.IsExtensionsPropertyAnArray.set -> void
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionManifest.UnknownProperties.get -> System.Collections.Generic.List<string!>!
+static Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionJsonReader.Read(string! manifestPath, string! content) -> Microsoft.Testing.Platform.DynamicExtensions.RawExtensionManifest!
+static Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionManifestParser.Parse(string! manifestPath, string! content) -> Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionManifest!
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionEntry.RawExtensionEntry() -> void
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionManifest.RawExtensionManifest() -> void
+static readonly Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants.SharedContractAssemblyNames -> string![]!
+Microsoft.Testing.Platform.DynamicExtensions.IDynamicExtensionRegistrationGuard
+Microsoft.Testing.Platform.DynamicExtensions.IDynamicExtensionRegistrationGuard.EnterDynamicExtensionScope(string! displayName, string! manifestPath) -> System.IDisposable!
+static readonly Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants.PathComparer -> System.StringComparer!
+static readonly Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants.PathComparison -> System.StringComparison

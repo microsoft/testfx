@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
+using Microsoft.Testing.Platform.DynamicExtensions;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
@@ -113,7 +114,38 @@ public sealed class TestApplication : ITestApplication
         }
 
         // All checks are fine, create the TestApplication.
-        return new TestApplicationBuilder(loggingState, createBuilderStart, testApplicationOptions, s_unhandledExceptionHandler, args);
+        TestApplicationBuilder builder = new(loggingState, createBuilderStart, testApplicationOptions, s_unhandledExceptionHandler, args);
+
+        // Register dynamically declared extensions before returning, so that they are registered no matter
+        // whether the caller is the MSBuild-generated entry point or a hand-written Main. See
+        // docs/RFCs/023-Dynamic-Extension-Loading.md.
+        SystemFileSystem fileSystem = new();
+        DynamicExtensionLoader dynamicExtensionLoader = new(
+            fileSystem,
+            systemEnvironment,
+            new SystemRuntimeFeature(),
+            testApplicationModuleInfo,
+            new DynamicExtensionAssemblyLoader(fileSystem),
+            loggingState.FileLoggerProvider?.CreateLogger(typeof(DynamicExtensionLoader).ToString()));
+
+        try
+        {
+            await dynamicExtensionLoader.LoadAsync(builder, args).ConfigureAwait(false);
+        }
+        catch (Exception)
+        {
+            // The failure escapes CreateBuilderAsync, so nothing downstream will ever flush the diagnostic log
+            // — and its trace of which manifests were read and which extension failed is the whole point of
+            // having written it. Flush it before the exception reaches the entry point.
+            if (loggingState.FileLoggerProvider is { } fileLoggerProvider)
+            {
+                await DisposeHelper.DisposeAsync(fileLoggerProvider).ConfigureAwait(false);
+            }
+
+            throw;
+        }
+
+        return builder;
     }
 
     private static async Task LogInformationAsync(

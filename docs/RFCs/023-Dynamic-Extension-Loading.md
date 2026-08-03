@@ -1,339 +1,357 @@
-# RFC 023 - Dynamically resolved MTP extensions
+# RFC 023 - Dynamically resolved extensions
 
 - [ ] Approved in principle
 - [x] Under discussion
-- [ ] Implementation
+- [x] Implementation
 - [ ] Shipped
 
 ## Summary
 
-Several internal infrastructure teams have asked for **dynamically resolved Microsoft.Testing.Platform
-(MTP) extensions**: the ability to change how a test application runs by having the platform load
-extension assemblies at run time, without the test project referencing those extensions at build time.
+Add a **dynamic (late-bound) extension registration** mechanism to Microsoft.Testing.Platform (MTP).
+A JSON **extension manifest** dropped next to a test application declares one or more extension
+assemblies; at start-up the platform discovers those manifests, loads each declared assembly into an
+isolated load context, and invokes a static hook whose signature is **identical to the existing
+MSBuild `TestingPlatformBuilderHook`**:
 
-Deliberate late binding of arbitrary in-process plugins is one of the pillars MTP set out to avoid,
-because it is the mechanism behind a large share of VSTest's historical failure modes (assembly/
-dependency conflicts, silent version drift, unversioned extension-point contracts). This RFC does
-**not** propose that we simply add a plugin loader. It:
+```csharp
+public static void AddExtensions(ITestApplicationBuilder builder, string[] args)
+```
 
-1. separates the *requests* we receive from the *solution* the requesters proposed;
-2. documents what already satisfies most of those requests today (and is being overlooked);
-3. records precisely why the naive form is unsafe, in terms of MTP's own architecture and promises;
-4. lays out the option space with trade-offs; and
-5. defines the non-negotiable constraints and prerequisites should we decide to build a narrow,
-   supported form of dynamic loading.
+This gives central infrastructure teams a way to change how tests run without modifying the build of
+every test project, while keeping exactly **one** extension-registration concept in the platform: a
+static `AddExtensions` hook. Only *how the hook is reached* differs — the compiler (static
+registration) or a manifest (dynamic registration).
+
+The feature is **opt-in by presence of a manifest**, **isolated by default**, and **fails loudly**
+rather than silently degrading.
 
 ## Motivation
 
-The recurring request, paraphrased: *"we want to change how tests run — add reporting, collect
-artifacts, publish to our internal systems, enforce policy — but we do not want to modify the build
-of every test project."*
+Internal infrastructure teams own the CI pipeline, not the hundreds of test projects that flow
+through it. They want to add reporting, artifact collection, policy enforcement, or diagnostics to
+every test run, and they cannot realistically coordinate a `PackageReference` change across every
+repository and project that produces a test application.
 
-This is a legitimate need. Central infrastructure teams own the CI pipeline, not the hundreds of test
-projects that flow through it. Asking every team to add a `PackageReference` is a coordination problem
-that they cannot solve, and the platform should have an answer.
+Today MTP has no answer for this beyond static registration. That is a real gap, and the absence of a
+supported mechanism pushes teams toward unsupportable workarounds (start-up hooks, profilers,
+hand-patched entry points, forked SDKs).
 
-The **proposed** solution — "let the platform load a DLL we point it at" — is what is contentious. The
-need and the proposed solution must be evaluated separately, because most of the need can be met
-without late binding at all.
+### Why this was not done before, and what changed
 
-## Terminology
+Arbitrary in-process plugin loading is the mechanism behind a large share of VSTest's historical
+failure modes, and MTP deliberately avoided it:
 
-- **Static registration** — extensions referenced by the test project (directly or transitively) and
-  wired into the generated `SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args)` at
-  compile time. This is the only mechanism that exists today.
-- **Dynamic / late-bound registration** — the platform resolves an assembly path and type name at run
-  time (from configuration, an environment variable, or a probing directory), loads it, and registers
-  the resulting extension.
-- **Contract assembly** — the assembly carrying the extension-point types (`IExtension`,
-  `IDataConsumer`, `ITestSessionLifetimeHandler`, …). Today that is `Microsoft.Testing.Platform`
-  itself.
+- **Dependency conflicts.** A plugin with its own dependency closure loaded into the test app's
+  process can conflict with the app's dependencies or another plugin's.
+- **Unversioned extension-point contracts.** Static registration lets the *compiler* verify that a
+  plugin matches the host. A loader has to answer that question at run time, and VSTest never did.
+- **Supportability.** With static registration the extension set is a function of the project file,
+  reproducible from source. Ambient plugin state makes every bug report start with "which plugins
+  were loaded, from where, built against what?"
 
-## What people are actually asking for
+What changed is not that these risks disappeared — it is that the design can address each one
+explicitly, which is what the rest of this RFC does:
 
-Nearly every request maps to one of four buckets. They differ enormously in risk, and conflating them
-is what makes this conversation hard.
+| Historical failure mode | How this design addresses it |
+| --- | --- |
+| Dependency conflicts | Every extension assembly is loaded into its own `AssemblyLoadContext`, resolving its dependencies from its own `.deps.json`. Only the platform assembly is shared with the host. |
+| Type-identity mismatches | The platform assembly is *always* resolved from the default load context, never from the extension's folder, so `ITestApplicationBuilder` is the same type on both sides. |
+| Silent degradation | Every failure — unparseable manifest, missing assembly, missing type, missing hook — fails the run. There is no "ignore and continue" path. |
+| Undiscoverable plugin sets | Manifests are explicit files with explicit paths; nothing is discovered by scanning for `*.dll`. Every load decision is written to the diagnostic log. |
+| No escape hatch during triage | A single environment variable disables the whole mechanism. |
 
-| Bucket | Typical ask | Needs in-process access to test code? | Risk |
-| --- | --- | --- | --- |
-| **A. Observe & report** | ship results to an internal dashboard, custom report format, flaky-test tracking, telemetry | No | Low |
-| **B. Shape the run** | retry policy, sharding, filtering, ordering, timeouts | No | Low |
-| **C. Environment & diagnostics around the host** | env vars, dumps, video, profilers, tracing | No — runs in the controller, not the test host | Medium |
-| **D. In-process interception** | per-test hooks, instrumenting user code, injecting services into the test framework | **Yes** | High |
+### Non-goals
 
-Buckets A and B are already fully served out-of-process (see below). Bucket C is served by the
-test host controller extension points. Only bucket D genuinely requires loading foreign code into the
-process that runs user tests — and that is exactly the bucket that caused VSTest's pain.
+- **Replacing static registration.** Static registration remains the recommended mechanism, and it
+  already solves a large share of requests: because `TestingPlatformBuilderHook` items flow
+  transitively through `buildTransitive/`, an infrastructure team can publish one internal package
+  and inject a single `PackageReference` from one central `Directory.Build.targets` (or a company
+  MSBuild SDK) without touching any individual test project. Dynamic registration exists for teams
+  who cannot influence the build graph at all.
+- **A sandbox.** A dynamically loaded extension runs with full trust in the test process. This is a
+  deployment/ownership mechanism, not a security boundary.
+- **A new extension-point surface.** Dynamic extensions use exactly the same `ITestApplicationBuilder`
+  API as static ones.
 
-**Action item:** before designing anything, we should classify the concrete requests we have received
-into this table. My expectation is that A/B/C covers the large majority, and that we are being asked
-for a plugin loader because the alternatives are undiscoverable, not because they are insufficient.
+## Design
 
-## What already works today (and is likely the answer for most requesters)
+### 1. The manifest file
 
-### 1. Central injection via MSBuild — "without modifying the build" is usually already true
+A manifest is a JSON file whose name ends with **`.testingplatformextensions.json`**.
 
-Extension packages register themselves through a `TestingPlatformBuilderHook` item declared in the
-package's MSBuild assets — for example
-`src/Platform/Microsoft.Testing.Extensions.CrashDump/buildMultiTargeting/Microsoft.Testing.Extensions.CrashDump.props`,
-which the sibling `build/` and `buildTransitive/` props simply forward to:
-
-```xml
-<ItemGroup>
-  <TestingPlatformBuilderHook Include="EC3971EE-91B7-4C77-B4E1-DF606F118FAB">
-    <DisplayName>Microsoft.Testing.Extensions.CrashDump</DisplayName>
-    <TypeFullName>Microsoft.Testing.Extensions.CrashDump.TestingPlatformBuilderHook</TypeFullName>
-  </TestingPlatformBuilderHook>
-</ItemGroup>
+```json
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/testfx/main/docs/testingplatformextensions.schema.json",
+  "extensions": [
+    {
+      "id": "8E680F4D-E423-415A-9566-855439363BC0",
+      "displayName": "Contoso.TestReporting",
+      "assemblyPath": "extensions/Contoso.TestReporting/Contoso.TestReporting.dll",
+      "typeFullName": "Contoso.TestReporting.TestingPlatformBuilderHook",
+      "enabled": true
+    }
+  ]
+}
 ```
 
-`TestingPlatformSelfRegisteredExtensions` then emits `SelfRegisteredExtensions.cs`, and the generated
-entry point calls it. Because the hook flows **transitively**, an infrastructure team can:
+#### Schema
 
-- publish one internal NuGet package containing their extension plus a `buildTransitive/*.props`
-  declaring a `TestingPlatformBuilderHook`; and
-- inject that single `PackageReference` from one central location they already own — a repo-root
-  `Directory.Build.targets`, `Directory.Packages.props`, a company MSBuild SDK, or
-  `CustomAfterMicrosoftCommonTargets`.
+| Property | Required | Type | Meaning |
+| --- | --- | --- | --- |
+| `extensions` | yes | array | The declared extensions. May be empty. |
+| `extensions[].assemblyPath` | yes | string | Path to the assembly containing the hook. Relative paths resolve against the **directory of the manifest file**. |
+| `extensions[].typeFullName` | yes | string | Full name of the type declaring the static `AddExtensions` hook. |
+| `extensions[].id` | no | string | Stable identifier used to de-duplicate the same extension declared by several manifests. Compared ordinally, case-insensitively. Defaults to the **resolved absolute** `assemblyPath` plus `typeFullName` when omitted. |
+| `extensions[].displayName` | no | string | Human-readable name used in diagnostics. Defaults to `typeFullName`. |
+| `extensions[].enabled` | no | bool | Defaults to `true`. `false` keeps the declaration in place but skips loading. |
 
-No individual test project changes. NuGet resolves the dependency graph, so there is no conflict
-problem. It works under NativeAOT and single-file. The types are checked at compile time.
+Unknown properties (including `$schema`) are ignored so manifests stay forward-compatible, but each
+one is written to the diagnostic log — at the root as `<name>` and inside an entry as
+`extensions[<index>].<name>` — so typos are still discoverable. This matters most for `enabled`: a
+misspelled `"enabeld": false` runs an extension its author believed was switched off, and the log
+line is the only trace of why.
 
-When a requester says "we don't want to modify the build", it is worth asking whether they mean *"we
-cannot touch N test projects"* (solved above) or *"we cannot touch any MSBuild file at all"* (much
-rarer, and usually means they only own the pipeline YAML — see the next option).
+The same `id` appearing twice is only de-duplicated when both declarations name the same resolved
+assembly path and type. Two *different* extensions sharing an `id` fails the run, because honouring
+only the first would silently drop a policy somebody deliberately deployed. This mirrors how the
+MSBuild task rejects `TestingPlatformBuilderHook` items whose metadata conflicts.
 
-**Gap to close:** this is essentially undocumented as a *scenario*. We should write it up as
-"injecting an MTP extension organisation-wide" and point requesters at it first.
+De-duplication does **not** span static and dynamic registration: the platform cannot see the
+statically generated hook list at the point manifests are processed, so an extension delivered
+through both paths has its hook invoked twice. Ship an extension through one path or the other.
 
-### 2. Out-of-process consumption — for buckets A and B
+The JSON schema for editor completion lives in
+[`docs/testingplatformextensions.schema.json`](../testingplatformextensions.schema.json).
 
-For anything that only needs to *observe* a run, the test application is already a well-behaved
-process with machine-readable output:
+#### Why these fields and not fewer
 
-- report extensions (`--report-trx`, CTRF, JUnit, HTML) write standard artifacts a pipeline step can
-  post-process, with zero in-process coupling;
-- server mode (`docs/mstest-runner-protocol/`) exposes a documented JSON-RPC protocol, which is a
-  *wire* contract — it has no assembly identity, no dependency graph, and no type-compat problem at
-  all;
-- `IArtifactPostProcessor` / the artifact post-processing dispatcher provides a defined post-run hook.
+`assemblyPath` and `typeFullName` are the irreducible minimum — they are exactly the information the
+MSBuild `TestingPlatformBuilderHook` item carries (`TypeFullName` plus, implicitly, the referenced
+assembly). The other three each pay for themselves:
 
-A pipeline-owned tool that launches the test app and consumes the protocol or the artifacts has none
-of the failure modes we are worried about. If a requester's scenario is "collect results and send them
-somewhere", this is strictly better than a plugin and we should say so.
+- **`id`** — the moment two infrastructure teams can each drop a manifest, the same extension can be
+  declared twice. Without a stable identity the platform would register it twice, which for a data
+  consumer means duplicated reports. `id` mirrors the stable GUID the MSBuild item already requires.
+- **`enabled`** — the realistic rollout story is "ship the manifest to every machine, turn it on for
+  some". Deleting and restoring files is a worse mechanism than a flag, and `enabled: false` is also
+  the per-extension escape hatch during an incident.
+- **`displayName`** — every error message and log line in this feature names an extension. Without it
+  the only handle is a fully-qualified type name, which is poor in a terminal error.
 
-### 3. Ship-always, enable-conditionally — for "we want it off by default"
+#### Why one file can declare several extensions
 
-`IExtension.IsEnabledAsync()` already lets a statically registered extension decide at run time
-whether to activate, based on `IConfiguration`, `testconfig.json`, an environment variable, or a
-command-line option. "Statically referenced, dynamically enabled" covers a surprising number of
-requests that get phrased as "dynamically loaded".
+A single infrastructure team usually ships a coherent set (a reporter plus a policy hook). Requiring
+one file per extension would multiply files without adding isolation, since ordering and failure
+semantics are per-entry either way.
 
-## Why the naive form is unsafe
+### 2. The hook contract
 
-These are not abstract concerns; each maps to something concrete in the current codebase.
-
-### The contract surface is not currently a supportable public contract
-
-`src/Platform/Microsoft.Testing.Platform/Microsoft.Testing.Platform.csproj` grants
-`InternalsVisibleTo` to **every first-party extension** — CrashDump, HangDump, TrxReport, Retry,
-Telemetry, VSTestBridge, AzureDevOpsReport, OpenTelemetry, and more. First-party extensions are
-therefore written against a surface a third party cannot use, and that surface is free to change in
-any release.
-
-This is already tracked as [#7739 (IVT story for MTP and extensions)](https://github.com/microsoft/testfx/issues/7739)
-and [#7708](https://github.com/microsoft/testfx/issues/7708). Shipping a *dynamic* plugin model on top
-of an internals-coupled surface would institutionalise a two-tier extension model — "real" extensions
-that use internals and plugin extensions that get a strict subset — and we would immediately owe
-binary compatibility on a surface we have not designed for it.
-
-**Nothing here can proceed until the extension contract is IVT-free and versioned.**
-
-### There is no API version to negotiate against
-
-`IExtension` exposes a `Version` string describing *the extension*, and `ICapabilities<T>` /
-`ICapability` provide feature negotiation between the framework and the platform. Neither answers the
-question a loader must answer: *"was this plugin compiled against a contract this host can satisfy?"*
-Static registration never needed it, because the compiler answered it. A loader needs an explicit,
-monotonic contract version and a documented compatibility policy.
-
-### Dependency conflicts are real, and the controller process does not save us
-
-The obvious hope is that test host controller extensions are safe because they run "in the other
-process". They do run in a different process from the test host — but `TestHostControllersTestHost`
-launches the child by re-running **the same executable**:
+Identical to static registration:
 
 ```csharp
-ProcessStartInfo processStartInfo = new(executableInfo.FilePath, arguments) { … };
+namespace Contoso.TestReporting;
+
+public static class TestingPlatformBuilderHook
+{
+    public static void AddExtensions(ITestApplicationBuilder builder, string[] args)
+        => builder.AddContosoReporting();
+}
 ```
 
-So the controller process is the test application, in controller mode, with the test application's
-`.deps.json` governing resolution. Loading a plugin with its own dependency closure into it has the
-same conflict surface as loading it into the test host. The process boundary only helps if we
-introduce a **dedicated extension host process** that is not the test app.
+The platform looks up `typeFullName` in the loaded assembly and requires a **public static** method
+named `AddExtensions` taking exactly `(ITestApplicationBuilder, string[])` and returning `void`.
+Inherited static hooks are found. The `void` requirement is deliberate and is enforced (§6): the hook
+is invoked synchronously, so an `async Task` hook would never be awaited.
 
-### Trimming, single-file and NativeAOT are first-class MTP scenarios
+The hook receives the **real** builder, not a wrapper. Several shipped helpers — `AddOpenTelemetryProvider`,
+`AddRunSettingsService`, MSTest's `AddMSTest` — reach through `ITestApplicationBuilder` to the concrete
+builder, so handing a hook anything else would make them throw or, worse, silently do nothing. The one
+restriction dynamic hooks are under (§4) is therefore enforced inside the builder for the duration of the
+call rather than by substituting the object.
 
-`MSTest.Sdk` ships a NativeAOT runner mode (`src/Package/MSTest.Sdk/Sdk/Runner/NativeAOT.targets`),
-with samples and acceptance tests (`test/IntegrationTests/*/NativeAotTests.cs`). Dynamic loading is
-fundamentally incompatible with NativeAOT and hostile to trimming and single-file.
+This is the single
+most important property of the design: an extension author writes **one** hook and it works whether
+the extension is referenced by the project or declared in a manifest, and an extension that is
+currently referenced statically can be moved to a manifest with no code change.
 
-This is the strongest structural argument: **dynamic extension loading can never be a pillar of MTP.**
-At best it is an opt-in mode that is mutually exclusive with AOT/single-file, which means every
-requester must be told their tests can no longer be published that way.
+`args` receives the same arguments that were passed to `TestApplication.CreateBuilderAsync`.
 
-### Half our target surface has no isolation primitive
+### 3. Discovery
 
-`Microsoft.Testing.Platform` targets `net8.0;net9.0;netstandard2.0`. The `netstandard2.0` asset is
-what .NET Framework consumers get, and it has no `AssemblyLoadContext`. Any isolation-based design is
-.NET (Core) only; the .NET Framework story would be `AppDomain` (which we will not do) or nothing.
+At start-up the platform enumerates `*.testingplatformextensions.json` in the **test application's own
+directory**, non-recursively. Non-recursive is deliberate: recursion would make the extension set
+depend on unrelated content of the output tree.
 
-### Supportability
+Manifests are ordered by file name (ordinal) and entries within a manifest keep declaration order, so
+the resulting registration order is deterministic and reproducible.
 
-Today, if a run misbehaves, the set of extensions is a function of the project file — reproducible
-from source. With machine- or pipeline-scoped dynamic loading, a run's behaviour depends on ambient
-state that is not in the repo. Every bug report becomes "which plugins were loaded, from where, built
-against what?" This is a large share of why VSTest issue triage was expensive, independent of the
-technical conflicts.
+A later revision may add an environment variable holding an explicit list of manifest paths, for
+teams that cannot write into the test application's directory. That is intentionally **not** part of
+this iteration: the file-based mechanism must prove itself first, and the environment-variable form
+raises additional questions (relative-path resolution, precedence, whether it replaces or augments
+discovery) that are better answered with real usage data.
 
-## Options
+### 4. Ordering relative to static extensions
 
-### Option 0 — Say no; invest in discoverability of what exists
+Dynamic extensions are registered at the end of `TestApplication.CreateBuilderAsync`, therefore
+**before** the statically registered extensions that the generated entry point adds immediately
+afterwards.
 
-Document organisation-wide static injection (§1), out-of-process consumption (§2), and conditional
-enablement (§3). Close requests by routing them to the right one.
+This is the only placement that behaves identically for the generated entry point and for a
+hand-written `Main`, because `CreateBuilderAsync` is the single point every host goes through. The
+alternative — registering during `BuildAsync` — would run after the test framework registration check
+and would behave differently depending on what the user's `Main` did in between.
 
-- **Pros:** no new surface, no new risk, keeps AOT/trim/single-file intact, zero compat burden.
-- **Cons:** does not serve the genuine bucket-D cases; risks teams forking or hacking around us
-  (start-up hooks, profilers, hand-patched entry points) in ways we cannot support either.
+The practical consequence is that a dynamic extension cannot take the "must be registered last"
+position that CrashDump and TrxReport occupy. That is acceptable: those extensions are last because
+of a build-time ordering guarantee that a manifest cannot participate in anyway.
 
-### Option 1 — Make static injection a first-class, documented, ergonomic scenario
+Running first has one consequence that must be closed explicitly: a dynamic extension would otherwise
+be able to call `RegisterTestFramework` before the test application does, claim the framework slot,
+and make the *application's* own registration fail. That would let a manifest silently decide which
+tests run and what results they report — exactly what this design must not allow. The builder
+therefore refuses `RegisterTestFramework` for the duration of a dynamic hook, with an error naming
+the extension and its manifest. Every other member behaves exactly as it does for a statically
+registered extension, because the hook holds the real builder (§2).
 
-Option 0 plus deliberate investment: a documented "org-wide extension injection" guide, a template or
-sample for an internal extension package, possibly a small MSBuild-side helper so an infra team can
-inject a hook without authoring a full package, and diagnostics (`--info`) that make it obvious which
-hooks were registered and from where.
+Because the platform re-executes the **same executable** as an out-of-process test host whenever a
+test host controller extension is active — and likewise for each attempt of the retry orchestrator —
+manifests are discovered again in every such process. That is the same behaviour statically
+registered extensions have, and it is what makes controller-side extensions work at all, but an
+extension hook must therefore be safe to run once per process rather than once per logical run.
 
-- **Pros:** solves the stated problem ("without modifying each test project") completely and safely.
-- **Cons:** still requires the ability to influence *one* MSBuild file, and requires a build of the
-  test project after the extension changes.
+### 5. Assembly loading and isolation
 
-### Option 2 — Out-of-process extension host
+**On .NET (`net8.0`+):** each distinct extension assembly path is loaded into its own
+`AssemblyLoadContext`:
 
-Introduce a dedicated extension-host process that loads plugins and communicates with the test host
-over the existing IPC/protocol. Plugins never share a process with test code or with the test app's
-dependency graph.
+- The context resolves the extension's dependencies with `AssemblyDependencyResolver` over the
+  extension's own `.deps.json`, so the extension gets the versions it was published with.
+- **The platform contract assemblies are shared with the default context**, matched by simple name:
+  `Microsoft.Testing.Platform` and `Microsoft.Testing.Extensions.TrxReport.Abstractions`. Without the
+  first, the extension would load a second copy of the platform and `ITestApplicationBuilder` would be
+  a different type, failing at the hook invocation. The second is there because its types are
+  *exchanged* between extensions — `ITrxReportCapability` is implemented by one extension and queried
+  for by another — so a private copy would make the capability silently invisible. Matching by name
+  rather than relying on what happens to sit next to the extension keeps identity independent of the
+  deployment layout. If the host does not carry a shared assembly at all (an abstractions package the
+  test application never referenced), the extension falls back to its own copy rather than failing to
+  load: an isolated copy is worse than a shared one, but far better than not running. Any future
+  abstractions assembly whose types cross the boundary must be added to
+  `DynamicExtensionConstants.SharedContractAssemblyNames`; implementation assemblies must not be.
+- If `AssemblyDependencyResolver` cannot resolve a reference (for example the extension was xcopied
+  without its `.deps.json`), the context falls back to probing the extension's own directory —
+  including the culture sub-directory for satellite assemblies — and only then to the default context.
+- Contexts are cached by resolved assembly path, so two manifests pointing at the same assembly share
+  one context instead of loading it twice.
+- Contexts are not collectible and extensions are never unloaded. An extension lives for the lifetime
+  of the process, exactly like a statically registered one.
 
-- **Pros:** eliminates the dependency-conflict class outright; contract becomes a wire protocol
-  (versionable, language-agnostic, already partially exists via server mode); a crashing plugin cannot
-  take down the run; compatible with an AOT test app, since only the *extension host* is dynamic.
-- **Cons:** significant new infrastructure; serialisation cost; only supports extension points whose
-  semantics survive a process boundary (fine for A/B/C, impossible for D); another process to ship,
-  version and diagnose.
+**Deploy extensions in their own directory.** Isolation is about assembly *identity*, not file
+layout: if an extension is dropped into the test application's own output folder, its `.deps.json`
+resolves to the very files the application also uses, so an isolated context is loaded from shared
+files. Giving each extension its own published folder is what makes the isolation meaningful.
 
-### Option 3 — Narrow, isolated, opt-in in-process loading
+**On .NET Framework (the `netstandard2.0` asset):** `AssemblyLoadContext` does not exist. The
+extension is loaded with `Assembly.LoadFrom`, which probes the extension's directory but provides no
+isolation. This is a documented limitation, not a silent one — the diagnostic log records that the
+extension was loaded without isolation.
 
-Load plugins in-process, but under strict constraints (see next section): explicit manifest only,
-`AssemblyLoadContext` isolation driven by the plugin's own `.deps.json`, a versioned IVT-free
-contract, a restricted set of extension points, .NET-only, incompatible with AOT/single-file, and
-marked experimental.
+**Under NativeAOT / when dynamic code is not supported:** loading an assembly from disk is impossible.
+If any manifest declares an enabled extension, the platform fails with an explicit error rather than
+silently skipping, because silently skipping is precisely the "the infra policy did not apply and
+nobody noticed" failure this design exists to avoid. Teams publishing NativeAOT test apps must set
+`enabled: false`, remove the manifest, or use the kill switch.
 
-- **Pros:** serves bucket D; smallest conceptual leap from today's model.
-- **Cons:** highest risk; reintroduces the failure class we designed against; permanent compat
-  obligation on the contract assembly; forces the AOT trade-off onto users.
+### 6. Failure policy
 
-### Option 4 — Unrestricted plugin directory probing
+Every one of the following **fails the run** with a message naming the manifest file and the
+extension:
 
-Scan a directory, `Assembly.LoadFrom` everything, register whatever implements a known interface.
+- the manifest is not valid JSON, or its root is not an object;
+- `extensions` is missing or is not an array, or an entry is not an object;
+- `assemblyPath` or `typeFullName` is missing or empty;
+- the same `id` names two different extensions;
+- the test application's directory cannot be searched for manifests, so the platform cannot even tell
+  whether an extension had to be loaded;
+- the assembly file does not exist, or cannot be loaded;
+- the type is not found in the assembly;
+- the type has no public static `AddExtensions(ITestApplicationBuilder, string[])`;
+- that method does not return `void` — the hook is invoked synchronously, so an `async Task` hook
+  would never be awaited, its registrations would race with `BuildAsync`, and its failures would be
+  swallowed;
+- the hook throws, or tries to register a test framework.
 
-**Explicitly rejected.** This is the VSTest model that motivated MTP. Recorded only so the RFC is
-unambiguous about it.
+Failing loudly is the deliberate choice. A manifest exists because someone decided that every run
+must be affected by it; a run that quietly ignores it produces results that look valid but are not
+the results that were asked for. This mirrors how the platform already treats a missing
+`--config-file`.
 
-## Recommendation (for discussion)
+Because these failures happen inside `CreateBuilderAsync`, before the platform owns the application,
+they surface as an exception out of the entry point rather than as formatted platform output. The
+diagnostic log is flushed before the exception propagates, so the trace of which manifests were read
+and which extension failed survives. Improving that first-run experience is left to a follow-up; the
+message itself always names the manifest and the extension.
 
-A tiered response rather than a single answer:
+The counterweight to a strict policy is a fast escape hatch, which is the next section.
 
-1. **Default response: Option 1.** Treat "change how tests run without touching each test project" as
-   a solved problem and close the discoverability gap. I expect this to absorb most requests.
-2. **For observe/report/orchestrate: Option 2's cheap half — out-of-process consumption of what we
-   already emit** (artifacts + server-mode protocol). No new platform work needed for many teams.
-3. **Only if concrete, classified bucket-D requests remain**, consider Option 3 under the constraints
-   below, gated behind the prerequisites, and shipped as `[TPEXP]`. Option 2's full form (dedicated
-   extension host) is the better long-term shape if the volume justifies the investment.
+### 7. Kill switch
 
-Crucially: we should not design this from paraphrased requests. The next step is to collect the actual
-scenarios and classify them.
+Setting `TESTINGPLATFORM_NODYNAMICEXTENSIONS` to `1` or `true` (case-insensitively) skips discovery
+entirely. This is the first triage step when a run misbehaves: re-run with the variable set to
+establish whether a dynamically loaded extension is implicated.
 
-## Non-negotiable constraints if we build in-process dynamic loading
+The name follows the existing `TESTINGPLATFORM_NOBANNER` convention, and the accepted values match
+the platform's existing boolean environment-variable handling.
 
-These are what would distinguish the design from VSTest's. If we cannot commit to all of them, we
-should not ship the feature.
+### 8. Diagnostics
 
-1. **Explicit manifest, never probing.** Extensions are declared by assembly path + type full name +
-   expected contract version, in `testconfig.json` and/or an explicit CLI option. No directory scan,
-   no "drop a DLL and it activates". A run's extension set must be reproducible from declared inputs.
-2. **Opt-in at two levels.** The test application must opt in to permitting dynamic extensions at all
-   (MSBuild property / config), and the run must name them. A test app that has not opted in ignores
-   the configuration entirely. Plus a `--no-dynamic-extensions` kill switch for triage.
-3. **Isolation is mandatory.** Load into a dedicated `AssemblyLoadContext` driven by
-   `AssemblyDependencyResolver` over the plugin's own `.deps.json`. `Assembly.LoadFrom` into the
-   default context is banned. This implies **plugins ship as published output, not loose DLLs** —
-   which should be stated as a requirement, not an implementation detail.
-4. **Exactly one shared contract.** Only the contract assembly (and the BCL) unify with the host; the
-   plugin ALC delegates those to the default context and resolves everything else itself. Anything a
-   plugin exchanges with the platform must live in the contract assembly.
-5. **A real, versioned, IVT-free contract.** Extract the extension-point surface into a contract that
-   third parties can implement without `InternalsVisibleTo`, give it a monotonic contract version,
-   and have the loader refuse plugins built against a newer version with a clear error. Resolves the
-   prerequisite in [#7739](https://github.com/microsoft/testfx/issues/7739).
-6. **A restricted extension-point set.** Start with observation-shaped points only — `IDataConsumer`,
-   `ITestSessionLifetimeHandler`, `ITestHostApplicationLifetime`, `ICommandLineOptionsProvider`,
-   `ITestHostEnvironmentVariableProvider`, `ITestHostProcessLifetimeHandler`, and (once it ships)
-   `IArtifactPostProcessor`. Explicitly **not** the test framework, execution filter
-   factories/providers, or orchestrators: nothing that can silently change which tests run or what
-   result they report.
-7. **Honest platform-support boundaries.** .NET only (no `netstandard2.0`/.NET Framework asset).
-   Mutually exclusive with NativeAOT and single-file, with a build-time error rather than a run-time
-   surprise.
-8. **Provenance everywhere.** Every dynamically loaded extension appears in `--info`, in diagnostic
-   logs, in the TRX/report metadata, and in crash artifacts, with its path, resolved version and
-   contract version. Triage must start from the artifact, not from asking the reporter.
-9. **A written support policy.** Loading a third-party plugin puts the run in a supported-with-caveats
-   state; the first triage step is re-running with `--no-dynamic-extensions`. Say this up front rather
-   than discovering it per-incident.
+With `--diagnostic` enabled, the diagnostic log records: every manifest read, every property the
+platform did not understand, every entry that was skipped (disabled or duplicate `id`) and why, the
+resolved absolute assembly path of every extension that is loaded, whether it was loaded with or
+without isolation, and the fact that its hook completed.
 
-## Prerequisites
+Extensions registered through a manifest are ordinary extensions, so they appear in `--info`
+alongside statically registered ones — a manifest-declared `ICommandLineOptionsProvider`, for
+instance, shows up under "Registered command line providers".
 
-Ordered; each is independently valuable even if we never ship dynamic loading:
+## Alternatives considered
 
-1. Classify the real requests against the bucket table above.
-2. Document organisation-wide static extension injection (Option 1). Cheapest, highest immediate value.
-3. Resolve the IVT story ([#7739](https://github.com/microsoft/testfx/issues/7739),
-   [#7708](https://github.com/microsoft/testfx/issues/7708)) — a third-party-authorable extension
-   surface is a hard prerequisite for any plugin model.
-4. Define a contract version and compatibility policy for that surface.
-5. Only then, prototype Option 2 or Option 3 behind `[TPEXP]`.
+- **Directory probing (`*.dll` scan).** Rejected. This is the VSTest model: a run's behaviour becomes
+  a function of whatever happens to be on disk, and there is no declaration to diff or review.
+- **A new dedicated interface (`IDynamicExtension`) instead of the existing hook shape.** Rejected:
+  it would create a second extension-registration concept, force authors to choose up front whether
+  an extension is static or dynamic, and prevent moving an existing extension to a manifest without a
+  code change.
+- **An out-of-process extension host.** Strictly safer — a wire protocol has no assembly identity and
+  no dependency graph — and it remains the right long-term shape if in-process extensions prove
+  problematic. It is much larger, requires an extension point to survive a process boundary, and does
+  not serve extensions that need to observe in-process state. Recorded as the fallback if this
+  iteration goes badly.
+- **Registering during `BuildAsync` instead of `CreateBuilderAsync`.** Discussed in §4; rejected
+  because behaviour would depend on what a hand-written `Main` did.
+- **Silently skipping bad manifests.** Rejected; see §6.
 
 ## Open questions
 
-- Which of the four buckets do our actual requests fall into? (Blocking.)
-- Do requesters control *any* central MSBuild file, or genuinely only the pipeline definition?
-- Is a rebuild of the test project acceptable after an infra-side extension change? If yes, Option 1
-  is sufficient and this RFC largely resolves to a documentation task.
-- If not, is the requirement "no rebuild" or "no source change"? Those have different answers.
-- Are requesters willing to give up NativeAOT/single-file publishing for their test apps?
-- Should the contract surface move to a separate `Microsoft.Testing.Platform.Extensions.Abstractions`
-  package, or stay in `Microsoft.Testing.Platform` with a documented contract version?
-- For Option 2, can the existing server-mode protocol carry extension traffic, or does an extension
-  host need its own channel?
+- Should the platform eventually require a declared contract version in the manifest, so it can
+  reject an extension built against a newer platform with a clear message instead of a
+  `MissingMethodException`? This depends on resolving the extension-surface `InternalsVisibleTo`
+  story ([#7739](https://github.com/microsoft/testfx/issues/7739)) first.
+- Should `--info` grow a dedicated section listing dynamically loaded extensions and their manifest
+  origin, rather than relying on them appearing among registered providers?
+- Startup failures currently escape `CreateBuilderAsync` as an unhandled exception rather than as
+  formatted platform output (§6). Should the generated entry point grow a controlled startup-error
+  path, which would also help the existing configuration-file failures?
+- Should de-duplication span static and dynamic registration, so an extension shipped through both
+  paths registers once? That needs a registration identity the generated `SelfRegisteredExtensions`
+  can also carry.
+- The environment-variable form of discovery (an explicit list of manifest paths, for teams that
+  cannot write into the test application's directory) is deferred; §3 lists the questions it raises.
 
 ## References
 
 - [#7739 — IVT story for MTP and extensions](https://github.com/microsoft/testfx/issues/7739)
-- [#7708 — MTP AppVersion shouldn't be used via IVT by extensions](https://github.com/microsoft/testfx/issues/7708)
-- [#7639 — MTP is generating a non-static SelfRegisteredExtensions class incompatible with extensions](https://github.com/microsoft/testfx/issues/7639)
 - [#3494 / #3525 — Platform.MSBuild should allow generating a helper for registration of extensions](https://github.com/microsoft/testfx/issues/3494)
-- [#6334 — MTP 2.0: Allow to register & resolve test framework dependencies](https://github.com/microsoft/testfx/issues/6334)
 - [RFC 017 — Custom test host launcher](./017-TestHost-Launcher.md)
-- [RFC 018 — Artifact post-processing](./018-Artifact-Post-Processing.md)
 - [MSTest runner protocol](../mstest-runner-protocol/001-protocol-intro.md)
