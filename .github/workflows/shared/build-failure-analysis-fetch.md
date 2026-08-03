@@ -71,6 +71,14 @@ jobs:
       # dispatcher performs no permission check of its own, so without this step
       # any commenter on any PR could trigger the full download.
       #
+      # INVARIANT: `build-failure-analysis-command.md` must never gain a
+      # `check_run` trigger or an `ado-build-id` dispatch input. Either one
+      # would make the command path indistinguishable from the automatic path,
+      # and this gate would silently stop running on it. (GitHub drops
+      # `workflow_dispatch` inputs a workflow does not declare, so an attacker
+      # cannot inject `ado-build-id` from outside — only a change to that file
+      # can break this.)
+      #
       # Check `role_name` and `permission` together: `role_name` reports the
       # precise role (so `maintain` and `triage` stay distinct) while
       # `permission` is the coarse legacy field, and a custom org role reports a
@@ -299,6 +307,13 @@ jobs:
           # head unchanged) GitHub recomputes that merge and merge_commit_sha
           # changes, so this catches base-advance staleness the head check misses.
           BUILD_MERGE_SHA=$(printf '%s' "${build_json}" | jq -r '.sourceVersion // empty')
+          # Re-read the PR rather than reusing the snapshot from the scope check:
+          # selecting the build costs an ADO round trip, and right after a
+          # force-push the newest-build query can still return the previous
+          # failed build. The point of this check is to skip BEFORE paying for
+          # the download, so it should compare against the freshest head
+          # available. A post-download re-read below independently catches a
+          # head that moves while the artifacts are being fetched.
           PR_JSON=$(gh api "repos/${GH_AW_REPO}/pulls/${PR_NUMBER}" 2>/dev/null)
           CURRENT_HEAD=$(printf '%s' "${PR_JSON}" | jq -r '.head.sha // empty')
           CURRENT_MERGE=$(printf '%s' "${PR_JSON}" | jq -r '.merge_commit_sha // empty')
