@@ -356,6 +356,31 @@ public sealed class TestFilterProviderShouldBeValidAnalyzerTests
                 .WithArguments("Outer<int>.NestedFilter"));
     }
 
+    [TestMethod]
+    public async Task WhenMultipleNonGenericProvidersAreRegistered_Diagnostic()
+    {
+        string code = Header + """
+            [assembly: {|#0:TestFilterProvider(typeof(MyFilter))|}]
+            [assembly: {|#1:TestFilterProvider(typeof(MyOtherFilter))|}]
+
+            public sealed class MyFilter : ITestFilter
+            {
+                public TestFilterResult Filter(TestFilterContext context) => TestFilterResult.Run;
+            }
+
+            public sealed class MyOtherFilter : ITestFilter
+            {
+                public TestFilterResult Filter(TestFilterContext context) => TestFilterResult.Run;
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(TestFilterProviderShouldBeValidAnalyzer.MultipleRule).WithLocation(0),
+            VerifyCS.Diagnostic(TestFilterProviderShouldBeValidAnalyzer.MultipleRule).WithLocation(1),
+            DiagnosticResult.CompilerError("CS0579").WithSpan(5, 12, 5, 30).WithArguments("TestFilterProvider"));
+    }
+
 #if NET
     // TestFilterProviderAttribute<TFilter> only exists in the .NET assets of MSTest.TestFramework, so these
     // cases cannot be compiled when this test project runs on .NET Framework.
@@ -468,6 +493,31 @@ public sealed class TestFilterProviderShouldBeValidAnalyzerTests
             VerifyCS.Diagnostic(TestFilterProviderShouldBeValidAnalyzer.GenericRule)
                 .WithLocation(0)
                 .WithArguments("GenericFilter<int>"));
+    }
+
+    [TestMethod]
+    public async Task WhenMultipleGenericProvidersAreRegistered_Diagnostic()
+    {
+        string code = Header + """
+            [assembly: {|#0:TestFilterProvider<MyFilter>|}]
+            [assembly: {|#1:TestFilterProvider<MyOtherFilter>|}]
+
+            public sealed class MyFilter : ITestFilter
+            {
+                public TestFilterResult Filter(TestFilterContext context) => TestFilterResult.Run;
+            }
+
+            public sealed class MyOtherFilter : ITestFilter
+            {
+                public TestFilterResult Filter(TestFilterContext context) => TestFilterResult.Run;
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(TestFilterProviderShouldBeValidAnalyzer.MultipleRule).WithLocation(0),
+            VerifyCS.Diagnostic(TestFilterProviderShouldBeValidAnalyzer.MultipleRule).WithLocation(1),
+            DiagnosticResult.CompilerError("CS0579").WithSpan(5, 12, 5, 45).WithArguments("TestFilterProvider<>"));
     }
 
     // The two attributes are distinct types, so the compiler's own duplicate-attribute check does not fire
