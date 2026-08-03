@@ -29,6 +29,20 @@
 $(PackageDescriptionDetail)</PackageDescription>
   </PropertyGroup>
 
+  <!--
+    NuGet's Pack.targets is imported after Microsoft.Common.targets, and therefore after this file, and
+    substitutes its "Package Description" default into an unset $(PackageDescription). Record here, while the
+    value is still exactly what the repository authored, whether a description was supplied at all, so that the
+    guard below does not have to rely solely on recognizing NuGet's placeholder text.
+
+    This only observes values coming from a .props file, from the project itself, or from this file: a nested
+    Directory.Build.targets (such as src/Platform/Directory.Build.targets) is inlined after this one. No project
+    sets PackageDescription there, and the placeholder check below still covers that case anyway.
+  -->
+  <PropertyGroup>
+    <_HasAuthoredPackageDescription Condition=" '$(PackageDescription)' != '' ">true</_HasAuthoredPackageDescription>
+  </PropertyGroup>
+
   <!-- Pack the package README (PACKAGE.md by default, see above) into the root of the .nupkg. -->
   <ItemGroup Condition=" '$(PackageReadmeFile)' != '' ">
     <None Include="$(PackageReadmeFile)" Pack="true" PackagePath="\" />
@@ -40,13 +54,17 @@ $(PackageDescriptionDetail)</PackageDescription>
     NuGet's Pack.targets defaults an unset $(PackageDescription) to the literal string
     "Package Description" during evaluation, so Arcade's own "PackageDescription must be specified"
     check (a target, and therefore evaluated later) can never fire and the placeholder ships. Three
-    packages reached nuget.org that way before this guard existed, so match the placeholder
-    explicitly rather than only the empty string.
+    packages reached nuget.org that way before this guard existed. $(_HasAuthoredPackageDescription),
+    captured above before NuGet's default is applied, is the primary signal; the placeholder text is
+    matched as well so the guard keeps working if that capture is ever defeated.
+
+    Note this deliberately also covers IsShipping=false packages: Microsoft.Testing.Extensions.AzureFoundry
+    is non-shipping and still reached nuget.org with the placeholder.
   -->
   <Target Name="_ValidatePackageMetadata"
           BeforeTargets="GenerateNuspec"
           Condition=" '$(IsPackable)' == 'true' ">
-    <Error Condition=" '$(PackageDescription)' == '' or '$(PackageDescription)' == 'Package Description' "
+    <Error Condition=" '$(_HasAuthoredPackageDescription)' != 'true' or '$(PackageDescription)' == 'Package Description' "
            Text="$(MSBuildProjectName) is packable but has no package description, so it would be published to nuget.org with NuGet's 'Package Description' placeholder. Set PackageDescriptionDetail (appended to the PackageDescriptionPreamble of the containing product area) or PackageDescription." />
     <Error Condition=" '$(PackageReadmeFile)' == '' "
            Text="$(MSBuildProjectName) is packable but has no package README, so its nuget.org page would show no rendered documentation. Add a PACKAGE.md next to the project file (it is picked up automatically) or set PackageReadmeFile." />
