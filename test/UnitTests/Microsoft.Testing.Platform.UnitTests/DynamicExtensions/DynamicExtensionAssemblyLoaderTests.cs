@@ -112,6 +112,12 @@ public sealed class DynamicExtensionAssemblyLoaderTests
         // never reaches Default.LoadFromAssemblyName. Naming a type (for example typeof(Moq.Mock)) would itself
         // load it, so pick from framework assemblies that resolve but that a test process has no reason to have
         // touched, and verify the precondition rather than assuming it.
+        //
+        // Which stage answered is not observable from here -- both return the same instance -- so a parallel
+        // test loading a candidate in the window between the check and the call would make this pass without
+        // covering the branch. Closing that would take a dedicated test process for one branch, which is not
+        // worth it: mutating Default.LoadFromAssemblyName away fails this test under the full parallel suite,
+        // and if every candidate ever becomes loaded the assertion below says exactly that.
         string[] candidates = ["System.Net.Ping", "System.Formats.Tar", "System.Net.WebSockets", "System.IO.Pipes"];
         string? notLoaded = candidates.FirstOrDefault(name =>
             !AssemblyLoadContext.Default.Assemblies.Any(a => string.Equals(a.GetName().Name, name, StringComparison.OrdinalIgnoreCase)));
