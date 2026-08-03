@@ -13,15 +13,15 @@
 ## Task Schedule (last run dates)
 - Task 1 (Discover Commands): 2026-07-30
 - Task 2 (Identify Opportunities): 2026-08-02
-- Task 3 (Implement): 2026-07-31 (no viable target found)
+- Task 3 (Implement): 2026-08-03 (no viable target found — codebase well-optimized)
 - Task 4 (Maintain PRs): 2026-08-02 (no open perf-improver PRs)
-- Task 5 (Comment Issues): 2026-07-27
+- Task 5 (Comment Issues): 2026-08-03 (no open performance issues found)
 - Task 6 (Infrastructure): 2026-07-28
-- Task 7 (Monthly Summary): 2026-08-02
+- Task 7 (Monthly Summary): 2026-08-03
 
 ## Monthly Activity Issue
 - Issue #9604 (July 2026, open) — close when possible
-- August 2026: created this run (no number yet — check repo)
+- August 2026 Monthly Activity: created last run (check repo for number)
 
 ## Work In Progress
 None
@@ -40,6 +40,8 @@ None
 - Static readonly fields in this codebase: PascalCase (SA1311); collection expression `[]` preferred (IDE0028)
 - MSTestTestNodeConverter: ParsedManagedName cached per TestMethod via ConditionalWeakTable; TestMethodIdentifierProperty cached in ParsedManagedName for parameterless case
 - HumanReadableDurationFormatter: has NET8+ fast path for common case (< 1 hour, no ms) using string.Create
+- TestNodeResultsState: caches formatted "N tests running" strings to avoid per-frame re-format
+- SingleConsumerUnboundedChannel: well-optimized lock-based channel with early-exit fast path
 - Backlog is now very slim — codebase is well-optimized for hot paths
 
 ## Completed Work (this month)
@@ -53,7 +55,7 @@ None
 - PR #10201 merged: eliminate per-test closure allocations in IPC deserializers
 - PR #10089 merged: replace Array.IndexOf state checks with direct type patterns
 ### August 2026
-- Created Monthly Activity issue for August 2026
+- 2026-08-03: Deep scan of hot paths; codebase continues to be well-optimized. No new opportunities identified.
 
 ## Checked-off by Maintainer (do not re-suggest)
 (none yet for August 2026)
