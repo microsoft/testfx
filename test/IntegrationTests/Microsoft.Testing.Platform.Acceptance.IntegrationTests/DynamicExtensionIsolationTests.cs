@@ -26,7 +26,7 @@ public sealed class DynamicExtensionIsolationTests : AcceptanceTestBase<DynamicE
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--enable-dynamic-extensions", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
         testHostResult.AssertOutputContains("APP_SEES=app");
@@ -39,7 +39,7 @@ public sealed class DynamicExtensionIsolationTests : AcceptanceTestBase<DynamicE
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--info", cancellationToken: TestContext.CancellationToken);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--enable-dynamic-extensions --info", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
 

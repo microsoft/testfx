@@ -427,10 +427,25 @@
         <target state="new">The type '{0}' was not found in the assembly '{1}' declared in the extension manifest '{2}'.</target>
         <note>{0} is the full type name. {1} is the resolved assembly path. {2} is the manifest file path.</note>
       </trans-unit>
+      <trans-unit id="DynamicExtensionsLoadedEntry">
+        <source>  {0} -&gt; {1} ({2}), declared in {3}</source>
+        <target state="new">  {0} -&gt; {1} ({2}), declared in {3}</target>
+        <note>{0} is the extension display name. {1} is the resolved assembly path. {2} is the full type name of the hook. {3} is the manifest file path.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionsLoadedHeader">
+        <source>Dynamically loaded test platform extensions ({0}):</source>
+        <target state="new">Dynamically loaded test platform extensions ({0}):</target>
+        <note>{0} is the number of extensions that were loaded.</note>
+      </trans-unit>
       <trans-unit id="DynamicExtensionsNotSupportedOnCurrentRuntimeErrorMessage">
         <source>The extension manifest '{0}' declares extensions to load, but the current runtime does not support loading assemblies dynamically (for example when published with native AOT). Set the '{1}' property of each extension to false, remove the manifest, or set the '{2}' environment variable to 1.</source>
         <target state="new">The extension manifest '{0}' declares extensions to load, but the current runtime does not support loading assemblies dynamically (for example when published with native AOT). Set the '{1}' property of each extension to false, remove the manifest, or set the '{2}' environment variable to 1.</target>
         <note>{0} is the manifest file path. {1} is the name of the JSON property that disables an extension. {2} is the name of the environment variable that disables the feature.</note>
+      </trans-unit>
+      <trans-unit id="DynamicExtensionsTrustWarning">
+        <source>  These extensions run with full trust inside the test process. Do not use this feature with code or directories you do not trust.</source>
+        <target state="new">  These extensions run with full trust inside the test process. Do not use this feature with code or directories you do not trust.</target>
+        <note>Displayed under the list of dynamically loaded extensions.</note>
       </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
         <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
@@ -795,6 +810,15 @@ Opcjonalnie akceptuje „text” (domyślne dane wyjściowe czytelne dla człowi
         <source>Selects the pre-launch transport for the dotnet test protocol.</source>
         <target state="translated">Wybiera transport używany przed uruchomieniem dla protokołu dotnet test.</target>
         <note>{Locked="dotnet test"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineEnableDynamicExtensionsOptionDescription">
+        <source>Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application.
+Disabled by default.
+Dynamically loaded extensions run with full trust inside the test process. Do not use this feature with code or directories you do not trust.</source>
+        <target state="new">Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application.
+Disabled by default.
+Dynamically loaded extensions run with full trust inside the test process. Do not use this feature with code or directories you do not trust.</target>
+        <note>{Locked="'*.testingplatformextensions.json'"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
         <source>Invalid PID '{0}'

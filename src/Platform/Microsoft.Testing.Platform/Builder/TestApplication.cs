@@ -127,6 +127,8 @@ public sealed class TestApplication : ITestApplication
             systemEnvironment,
             testApplicationModuleInfo,
             new DynamicExtensionAssemblyLoader(fileSystem),
+            systemConsole,
+            parseResult,
             loggingState.FileLoggerProvider?.CreateLogger(typeof(DynamicExtensionLoader).ToString()));
 
         try

@@ -34,7 +34,7 @@ public sealed class DynamicExtensionTests : AcceptanceTestBase<DynamicExtensionT
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--enable-dynamic-extensions", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
         testHostResult.AssertOutputContains(TestAssetFixture.EnabledHookMarker);
@@ -46,7 +46,7 @@ public sealed class DynamicExtensionTests : AcceptanceTestBase<DynamicExtensionT
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--enable-dynamic-extensions", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
         testHostResult.AssertOutputDoesNotContain(TestAssetFixture.DisabledHookMarker);
@@ -58,7 +58,7 @@ public sealed class DynamicExtensionTests : AcceptanceTestBase<DynamicExtensionT
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--info", cancellationToken: TestContext.CancellationToken);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--enable-dynamic-extensions --info", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
 
@@ -69,12 +69,43 @@ public sealed class DynamicExtensionTests : AcceptanceTestBase<DynamicExtensionT
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
+    public async Task WithoutTheOptIn_TheManifestIsIgnoredEntirely(string tfm)
+    {
+        // The security-critical default: a manifest sitting next to the application must not get code
+        // executed in the test process unless the run explicitly asked for it.
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
+        testHostResult.AssertOutputDoesNotContain(TestAssetFixture.EnabledHookMarker);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task LoadedExtensions_AreReportedOnTheOutput(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--enable-dynamic-extensions", cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
+
+        // Loading foreign code into the test process is never silent: the user sees what was loaded, from
+        // where, and that it is trusted code.
+        testHostResult.AssertOutputContains("Contoso policy");
+        testHostResult.AssertOutputContains(".testingplatformextensions.json");
+        testHostResult.AssertOutputContains("do not trust");
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task KillSwitch_SkipsDiscovery(string tfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
 
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            null,
+            "--enable-dynamic-extensions",
             new Dictionary<string, string?>
             {
                 { "TESTINGPLATFORM_NODYNAMICEXTENSIONS", "1" },

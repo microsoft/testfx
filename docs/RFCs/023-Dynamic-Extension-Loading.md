@@ -22,8 +22,12 @@ every test project, while keeping exactly **one** extension-registration concept
 static `AddExtensions` hook. Only *how the hook is reached* differs — the compiler (static
 registration) or a manifest (dynamic registration).
 
-The feature is **opt-in by presence of a manifest**, **isolated by default**, and **fails loudly**
-rather than silently degrading.
+The feature is **off by default** and must be turned on per run with `--enable-dynamic-extensions`;
+what it loads is then reported on the run's output, not just in the diagnostic log. It is **isolated
+by default**, and **fails loudly** rather than silently degrading.
+
+> Dynamically loaded extensions run with full trust inside the test process. Do not use this feature
+> with code or directories you do not trust.
 
 ## Motivation
 
@@ -57,7 +61,7 @@ explicitly, which is what the rest of this RFC does:
 | Dependency conflicts | Every extension assembly is loaded into its own `AssemblyLoadContext`, resolving its dependencies from its own `.deps.json`. Only the platform assembly is shared with the host. |
 | Type-identity mismatches | The platform assembly is *always* resolved from the default load context, never from the extension's folder, so `ITestApplicationBuilder` is the same type on both sides. |
 | Silent degradation | Every failure — unparseable manifest, missing assembly, missing type, missing hook — fails the run. There is no "ignore and continue" path. |
-| Undiscoverable plugin sets | Manifests are explicit files with explicit paths; nothing is discovered by scanning for `*.dll`. Every load decision is written to the diagnostic log. |
+| Undiscoverable plugin sets | The feature is off unless a run passes `--enable-dynamic-extensions`. Manifests are explicit files with explicit paths; nothing is discovered by scanning for `*.dll`, and everything loaded is echoed to the run's output. |
 | No escape hatch during triage | A single environment variable disables the whole mechanism. |
 
 ### Non-goals
@@ -183,20 +187,41 @@ currently referenced statically can be moved to a manifest with no code change.
 
 `args` receives the same arguments that were passed to `TestApplication.CreateBuilderAsync`.
 
-### 3. Discovery
+### 3. Opt-in and discovery
 
-At start-up the platform enumerates `*.testingplatformextensions.json` in the **test application's own
-directory**, non-recursively. Non-recursive is deliberate: recursion would make the extension set
+**The feature is off unless the run explicitly asks for it.** Nothing is discovered, parsed or loaded
+without `--enable-dynamic-extensions` on the command line. A dynamically loaded extension runs with
+full trust inside the test process, so merely dropping a file next to an application must never be
+enough to get code executed — the opt-in is what turns "someone can write to this directory" into a
+deliberate decision by whoever launches the run.
+
+A command-line option rather than an environment variable is deliberate. The switch belongs with the
+invocation that accepts the risk, where it is visible in the CI definition and in the process command
+line, rather than in ambient machine state that is easy to set once and forget.
+
+Once enabled, the platform enumerates `*.testingplatformextensions.json` in the **test application's
+own directory**, non-recursively. Non-recursive is deliberate: recursion would make the extension set
 depend on unrelated content of the output tree.
 
 Manifests are ordered by file name (ordinal) and entries within a manifest keep declaration order, so
 the resulting registration order is deterministic and reproducible.
 
-A later revision may add an environment variable holding an explicit list of manifest paths, for
-teams that cannot write into the test application's directory. That is intentionally **not** part of
-this iteration: the file-based mechanism must prove itself first, and the environment-variable form
-raises additional questions (relative-path resolution, precedence, whether it replaces or augments
-discovery) that are better answered with real usage data.
+A later revision may add a way to point at manifests outside that directory, for teams that cannot
+write into it. That is intentionally **not** part of this iteration: the file-based mechanism must
+prove itself first, and an explicit path list raises additional questions (relative-path resolution,
+precedence, whether it replaces or augments discovery) that are better answered with real usage data.
+
+#### Trust
+
+This is a deployment mechanism, not a sandbox. An extension loaded this way runs with the full
+privileges of the test process: it can read and write anything the test run can, and it is registered
+before the test application's own extensions. Isolation (§5) exists to stop extensions *colliding*
+with each other and with the application, not to contain what they are allowed to do.
+
+The documentation, the `--help` text and the run output all carry the same warning:
+
+> Dynamically loaded extensions run with full trust inside the test process. Do not use this feature
+> with code or directories you do not trust.
 
 ### 4. Ordering relative to static extensions
 
@@ -330,7 +355,12 @@ The counterweight to a strict policy is a fast escape hatch, which is the next s
 ### 7. Kill switch
 
 Setting `TESTINGPLATFORM_NODYNAMICEXTENSIONS` to `1` or `true` (case-insensitively) skips discovery
-entirely. This is the first triage step when a run misbehaves: re-run with the variable set to
+even when `--enable-dynamic-extensions` was passed. The environment variable therefore **wins over
+the command line**: an operator who cannot edit the invocation can still switch the feature off
+centrally during an incident, and a machine can be locked down regardless of what a pipeline asks for.
+
+This is a second line of defence, not the primary control — the feature is already off by default
+(§3). It also remains the first triage step when a run misbehaves: re-run with the variable set to
 establish whether a dynamically loaded extension is implicated.
 
 The name follows the existing `TESTINGPLATFORM_NOBANNER` convention, and the accepted values match
@@ -338,10 +368,19 @@ the platform's existing boolean environment-variable handling.
 
 ### 8. Diagnostics
 
-With `--diagnostic` enabled, the diagnostic log records: every manifest read, every property the
-platform did not understand, every entry that was skipped (disabled or duplicate `id`) and why, the
-resolved absolute assembly path of every extension that is loaded, whether it was loaded with or
-without isolation, and the fact that its hook completed.
+**Loading is never silent.** Whenever at least one extension is loaded, the platform writes to
+standard output the number loaded and, for each, its display name, the resolved absolute assembly
+path, the hook type, and the manifest that declared it — followed by the trust warning. This is not
+gated on `--diagnostic`: running foreign code inside the test process is something the person reading
+the log should see without having opted into extra logging.
+
+The only exception is server mode, where standard output is a protocol channel and writing to it
+would corrupt the stream. The diagnostic log still records everything there.
+
+With `--diagnostic` enabled, the diagnostic log additionally records: every manifest read, every
+property the platform did not understand, every entry that was skipped (disabled or duplicate `id`)
+and why, whether each extension was loaded with or without isolation, and the fact that its hook
+completed.
 
 Extensions registered through a manifest are ordinary extensions, so they appear in `--info`
 alongside statically registered ones — a manifest-declared `ICommandLineOptionsProvider`, for
@@ -366,20 +405,24 @@ instance, shows up under "Registered command line providers".
 
 ## Open questions
 
-- Should the platform eventually require a declared contract version in the manifest, so it can
-  reject an extension built against a newer platform with a clear message instead of a
-  `MissingMethodException`? This depends on resolving the extension-surface `InternalsVisibleTo`
-  story ([#7739](https://github.com/microsoft/testfx/issues/7739)) first.
-- Should `--info` grow a dedicated section listing dynamically loaded extensions and their manifest
-  origin, rather than relying on them appearing among registered providers?
 - Startup failures currently escape `CreateBuilderAsync` as an unhandled exception rather than as
   formatted platform output (§6). Should the generated entry point grow a controlled startup-error
   path, which would also help the existing configuration-file failures?
 - Should de-duplication span static and dynamic registration, so an extension shipped through both
   paths registers once? That needs a registration identity the generated `SelfRegisteredExtensions`
   can also carry.
-- The environment-variable form of discovery (an explicit list of manifest paths, for teams that
-  cannot write into the test application's directory) is deferred; §3 lists the questions it raises.
+- A way to point at manifests outside the test application's directory is deferred; §3 lists the
+  questions it raises.
+
+### Settled
+
+- **Version compatibility between an extension and the platform is the user's responsibility.** The
+  platform shares the contract assemblies by simple name and does not validate that the extension was
+  built against a compatible version. A genuine mismatch surfaces as the same `MissingMethodException`
+  a statically referenced extension would produce. Introducing a declared contract version was
+  considered and rejected for this iteration: it would need the extension-surface `InternalsVisibleTo`
+  story ([#7739](https://github.com/microsoft/testfx/issues/7739)) resolved first, and it is not worth
+  gating the feature on.
 
 ## References
 

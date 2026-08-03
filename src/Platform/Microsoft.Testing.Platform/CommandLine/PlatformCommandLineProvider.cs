@@ -37,6 +37,7 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
     public const string TestHostControllerPIDOptionKey = "internal-testhostcontroller-pid";
     public const string ExitOnProcessExitOptionKey = "exit-on-process-exit";
     public const string ConfigFileOptionKey = "config-file";
+    public const string EnableDynamicExtensionsOptionKey = "enable-dynamic-extensions";
     public const string FilterUidOptionKey = "filter-uid";
     public const string DebugAttachOptionKey = "debug";
 
@@ -90,7 +91,8 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
         new(DotNetTestHttpEndpointOptionKey, PlatformResources.PlatformCommandLineDotnetTestHttpEndpointOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
         new(DotNetTestHttpTokenOptionKey, PlatformResources.PlatformCommandLineDotnetTestHttpTokenOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
         new(DotNetTestPipeOptionKey, PlatformResources.PlatformCommandLineDotnetTestPipe, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
-        new(DotNetTestTransportOptionKey, PlatformResources.PlatformCommandLineDotnetTestTransportOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true)
+        new(DotNetTestTransportOptionKey, PlatformResources.PlatformCommandLineDotnetTestTransportOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
+        new(EnableDynamicExtensionsOptionKey, PlatformResources.PlatformCommandLineEnableDynamicExtensionsOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true)
     ];
 
     public PlatformCommandLineProvider()

@@ -4,6 +4,7 @@
 using System.Security;
 
 using Microsoft.Testing.Platform.Builder;
+using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Resources;
@@ -25,6 +26,8 @@ internal sealed class DynamicExtensionLoader
     private readonly IEnvironment _environment;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
     private readonly IDynamicExtensionAssemblyLoader _assemblyLoader;
+    private readonly IConsole _console;
+    private readonly CommandLineParseResult _commandLineParseResult;
     private readonly ILogger? _logger;
 
     public DynamicExtensionLoader(
@@ -32,26 +35,40 @@ internal sealed class DynamicExtensionLoader
         IEnvironment environment,
         ITestApplicationModuleInfo testApplicationModuleInfo,
         IDynamicExtensionAssemblyLoader assemblyLoader,
+        IConsole console,
+        CommandLineParseResult commandLineParseResult,
         ILogger? logger)
     {
         _fileSystem = fileSystem;
         _environment = environment;
         _testApplicationModuleInfo = testApplicationModuleInfo;
         _assemblyLoader = assemblyLoader;
+        _console = console;
+        _commandLineParseResult = commandLineParseResult;
         _logger = logger;
     }
 
     /// <summary>
-    /// Registers every enabled extension declared by the manifests found next to the test application.
+    /// Registers every enabled extension declared by the manifests found next to the test application, when the
+    /// user has explicitly opted in.
     /// </summary>
     /// <param name="builder">The builder handed to each extension hook.</param>
     /// <param name="args">The command line arguments handed to each extension hook.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     public async Task LoadAsync(ITestApplicationBuilder builder, string[] args)
     {
+        // Off unless asked for: a dynamically loaded extension runs with full trust in the test process, so
+        // merely dropping a file next to the application must never be enough to get code executed.
+        if (!_commandLineParseResult.IsOptionSet(PlatformCommandLineProvider.EnableDynamicExtensionsOptionKey))
+        {
+            return;
+        }
+
         if (IsDisabledByEnvironment())
         {
-            await LogDebugAsync($"Dynamic extension loading is disabled by '{EnvironmentVariableConstants.TESTINGPLATFORM_NODYNAMICEXTENSIONS}'.").ConfigureAwait(false);
+            // The environment variable wins over the command line so that an operator who cannot edit the
+            // command line can still switch the feature off centrally during an incident.
+            await LogDebugAsync($"Dynamic extension loading was requested but is disabled by '{EnvironmentVariableConstants.TESTINGPLATFORM_NODYNAMICEXTENSIONS}'.").ConfigureAwait(false);
             return;
         }
 
@@ -72,6 +89,40 @@ internal sealed class DynamicExtensionLoader
         {
             await LoadEntryAsync(builder, args, entry).ConfigureAwait(false);
         }
+
+        ReportLoadedExtensions(entriesToLoad);
+    }
+
+    /// <summary>
+    /// Writes what was loaded to standard output, not just to the diagnostic log. Running foreign code inside
+    /// the test process must never be silent, and the diagnostic log is opt-in.
+    /// </summary>
+    private void ReportLoadedExtensions(IReadOnlyList<DynamicExtensionEntry> loaded)
+    {
+        // Server mode owns stdout as a protocol channel, so writing to it there would corrupt the stream. The
+        // diagnostic log still records everything in that case.
+        if (_commandLineParseResult.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey))
+        {
+            return;
+        }
+
+        _console.WriteLine(string.Format(
+            CultureInfo.InvariantCulture,
+            PlatformResources.DynamicExtensionsLoadedHeader,
+            loaded.Count));
+
+        foreach (DynamicExtensionEntry entry in loaded)
+        {
+            _console.WriteLine(string.Format(
+                CultureInfo.InvariantCulture,
+                PlatformResources.DynamicExtensionsLoadedEntry,
+                entry.DisplayName,
+                entry.ResolvedAssemblyPath,
+                entry.TypeFullName,
+                entry.ManifestPath));
+        }
+
+        _console.WriteLine(PlatformResources.DynamicExtensionsTrustWarning);
     }
 
     private bool IsDisabledByEnvironment()

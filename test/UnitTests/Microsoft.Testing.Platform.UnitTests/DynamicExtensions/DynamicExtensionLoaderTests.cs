@@ -26,6 +26,24 @@ public sealed class DynamicExtensionLoaderTests
     private readonly Mock<ITestApplicationModuleInfo> _moduleInfo = new(MockBehavior.Strict);
     private readonly FakeAssemblyLoader _assemblyLoader = new();
     private readonly Mock<ITestApplicationBuilder> _builder = new();
+    private readonly RecordingConsole _console = new();
+    private CommandLineParseResult _parseResult = CreateParseResult(enableDynamicExtensions: true);
+
+    private static CommandLineParseResult CreateParseResult(bool enableDynamicExtensions, bool serverMode = false)
+    {
+        List<CommandLineParseOption> options = [];
+        if (enableDynamicExtensions)
+        {
+            options.Add(new CommandLineParseOption(PlatformCommandLineProvider.EnableDynamicExtensionsOptionKey, []));
+        }
+
+        if (serverMode)
+        {
+            options.Add(new CommandLineParseOption(PlatformCommandLineProvider.ServerOptionKey, []));
+        }
+
+        return new CommandLineParseResult(null, options, []);
+    }
 
     [TestInitialize]
     public void Initialize()
@@ -505,8 +523,70 @@ public sealed class DynamicExtensionLoaderTests
             new Mock<IUnhandledExceptionsHandler>().Object,
             Args);
 
+    [TestMethod]
+    public async Task LoadAsync_WithoutTheOptIn_DoesNothingAtAll()
+    {
+        // Default-off is the security posture: dropping a manifest next to the application must not be enough
+        // to get code executed in the test process.
+        _parseResult = CreateParseResult(enableDynamicExtensions: false);
+        SetupManifest("a.testingplatformextensions.json", ManifestFor(typeof(RecordingHook)));
+
+        await CreateLoader().LoadAsync(_builder.Object, Args);
+
+        Assert.AreEqual(0, RecordingHook.InvocationCount);
+        _fileSystem.Verify(x => x.GetFiles(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<SearchOption>()), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task LoadAsync_ReportsWhatItLoadedOnTheConsole()
+    {
+        SetupManifest("a.testingplatformextensions.json", ManifestFor(typeof(RecordingHook)));
+
+        await CreateLoader().LoadAsync(_builder.Object, Args);
+
+        string output = _console.Output;
+
+        // Running foreign code inside the test process must never be silent, and the diagnostic log is opt-in.
+        Assert.Contains(typeof(RecordingHook).FullName!, output);
+        Assert.Contains("a.testingplatformextensions.json", output);
+        Assert.Contains("TestExtension.dll", output);
+    }
+
+    [TestMethod]
+    public async Task LoadAsync_WarnsThatDynamicExtensionsAreTrusted()
+    {
+        SetupManifest("a.testingplatformextensions.json", ManifestFor(typeof(RecordingHook)));
+
+        await CreateLoader().LoadAsync(_builder.Object, Args);
+
+        Assert.Contains("do not trust", _console.Output, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [TestMethod]
+    public async Task LoadAsync_InServerMode_KeepsStandardOutputClean()
+    {
+        // Server mode owns stdout as a protocol channel; writing the notice there would corrupt the stream.
+        _parseResult = CreateParseResult(enableDynamicExtensions: true, serverMode: true);
+        SetupManifest("a.testingplatformextensions.json", ManifestFor(typeof(RecordingHook)));
+
+        await CreateLoader().LoadAsync(_builder.Object, Args);
+
+        Assert.AreEqual(1, RecordingHook.InvocationCount, "The extension must still load in server mode.");
+        Assert.IsEmpty(_console.Output);
+    }
+
+    [TestMethod]
+    public async Task LoadAsync_WhenNothingIsLoaded_WritesNothingToTheConsole()
+    {
+        SetupManifest("a.testingplatformextensions.json", ManifestFor(typeof(RecordingHook), enabled: false));
+
+        await CreateLoader().LoadAsync(_builder.Object, Args);
+
+        Assert.IsEmpty(_console.Output);
+    }
+
     private DynamicExtensionLoader CreateLoader()
-        => new(_fileSystem.Object, _environment.Object, _moduleInfo.Object, _assemblyLoader, logger: null);
+        => new(_fileSystem.Object, _environment.Object, _moduleInfo.Object, _assemblyLoader, _console, _parseResult, logger: null);
 
     private void SetupManifest(string fileName, string content, bool assemblyExists = true)
         => SetupManifests(assemblyExists, (fileName, content));
@@ -543,6 +623,49 @@ public sealed class DynamicExtensionLoaderTests
     }
 
     private static string Wrap(string entries) => $$"""{ "extensions": [ {{entries}} ] }""";
+
+    /// <summary>
+    /// Captures what the loader writes to standard output. <see cref="IConsole"/> is wide and only the
+    /// line-writing members matter here, so the rest are left unimplemented rather than mocked.
+    /// </summary>
+    private sealed class RecordingConsole : IConsole
+    {
+        private readonly StringBuilder _output = new();
+
+        public string Output => _output.ToString();
+
+        public void WriteLine() => _output.AppendLine();
+
+        public void WriteLine(string? value) => _output.AppendLine(value);
+
+        public void Write(string? value) => _output.Append(value);
+
+        public void Write(char value) => _output.Append(value);
+
+        public void Write(StringBuilder value) => _output.Append(value);
+
+        public int BufferHeight => throw new NotSupportedException();
+
+        public int BufferWidth => throw new NotSupportedException();
+
+        public int WindowHeight => throw new NotSupportedException();
+
+        public int WindowWidth => throw new NotSupportedException();
+
+        public bool IsOutputRedirected => throw new NotSupportedException();
+
+        public ConsoleColor GetForegroundColor() => throw new NotSupportedException();
+
+        public void SetForegroundColor(ConsoleColor color) => throw new NotSupportedException();
+
+        public void Clear() => throw new NotSupportedException();
+
+        public event ConsoleCancelEventHandler? CancelKeyPress
+        {
+            add => throw new NotSupportedException();
+            remove => throw new NotSupportedException();
+        }
+    }
 
     /// <summary>
     /// Returns the unit test assembly for every path, so the hook types declared below can be resolved.

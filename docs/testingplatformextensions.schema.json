@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://raw.githubusercontent.com/microsoft/testfx/main/docs/testingplatformextensions.schema.json",
   "title": "Microsoft.Testing.Platform extension manifest",
-  "description": "Declares extensions that Microsoft.Testing.Platform loads dynamically at start-up. The file name must end with '.testingplatformextensions.json' and the file must sit next to the test application. See https://github.com/microsoft/testfx/blob/main/docs/RFCs/023-Dynamic-Extension-Loading.md.",
+  "description": "Declares extensions that Microsoft.Testing.Platform loads dynamically at start-up. The file name must end with '.testingplatformextensions.json' and the file must sit next to the test application. Loading is off by default and must be enabled per run with the '--enable-dynamic-extensions' command line option. Dynamically loaded extensions run with full trust inside the test process: do not use this feature with code or directories you do not trust. See https://github.com/microsoft/testfx/blob/main/docs/RFCs/023-Dynamic-Extension-Loading.md.",
   "type": "object",
   "required": [
     "extensions"
