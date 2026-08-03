@@ -10,6 +10,16 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 /// <summary>
 /// Terminal test reporter that outputs test progress and is capable of writing ANSI or non-ANSI output via the given terminal.
 /// </summary>
+/// <remarks>
+/// The implementation is split across partials named for what they render or track: <c>Lifecycle</c> (run and
+/// assembly start/stop), <c>Messaging</c> (progress messages and in-progress tests), <c>TestCompletion</c> and
+/// <c>TestDiscovery</c> (per-test execution and discovery output), <c>Handshake</c> and <c>ErroredAssemblies</c>
+/// (orchestrator-only failure recaps, each owning its own record list), <c>Summary</c> (the post-run verdict and
+/// counter lines), <c>FlakyTests</c>, <c>SlowestTests</c> and <c>Coverage</c> (the sections appended below that
+/// summary), and <c>Formatting</c> plus <c>Formatting.ControlCharacters</c> (exceptions, stack traces, assembly
+/// links, durations and control-character escaping). This file holds the core shared state, the constants,
+/// construction and the collected artifacts.
+/// </remarks>
 [UnsupportedOSPlatform("browser")]
 [Embedded]
 internal sealed partial class TerminalTestReporter : IDisposable
