@@ -106,7 +106,7 @@ internal sealed class DynamicExtensionAssemblyLoader : IDynamicExtensionAssembly
             // stronger than relying on the resolver, because it does not depend on whether the assembly
             // happens to be deployed next to the extension.
             if (IsSharedContractAssembly(assemblyName.Name)
-                && TryLoadFromDefaultContext(assemblyName) is { } shared)
+                && FindLoadedContractAssembly(assemblyName.Name) is { } shared)
             {
                 return shared;
             }
@@ -121,16 +121,30 @@ internal sealed class DynamicExtensionAssemblyLoader : IDynamicExtensionAssembly
             return resolvedPath is null ? null : LoadFromAssemblyPath(resolvedPath);
         }
 
-        private static Assembly? TryLoadFromDefaultContext(AssemblyName assemblyName)
+        /// <summary>
+        /// Finds an assembly already loaded in the default context by simple name, deliberately ignoring the
+        /// requested version.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="AssemblyLoadContext.LoadFromAssemblyName(AssemblyName)"/> would apply version binding, so
+        /// an extension compiled against a newer platform than the host would fail to bind, silently fall
+        /// through to its own private copy, and end up with a different <c>ITestApplicationBuilder</c> identity
+        /// — surfacing as a baffling "the type does not expose AddExtensions" error rather than the version
+        /// mismatch it really is. Sharing the contract means sharing it by name; if the versions are genuinely
+        /// incompatible, the resulting <see cref="MissingMethodException"/> is the honest failure, and the same
+        /// one a statically referenced extension would produce.
+        /// </remarks>
+        private static Assembly? FindLoadedContractAssembly(string? simpleName)
         {
-            try
+            foreach (Assembly loaded in Default.Assemblies)
             {
-                return Default.LoadFromAssemblyName(assemblyName);
+                if (string.Equals(loaded.GetName().Name, simpleName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return loaded;
+                }
             }
-            catch (Exception)
-            {
-                return null;
-            }
+
+            return null;
         }
 
         private static bool IsSharedContractAssembly(string? simpleName)

@@ -31,11 +31,13 @@
         "assemblyPath": {
           "type": "string",
           "minLength": 1,
+          "pattern": "\\S",
           "description": "Path to the assembly containing the hook type. A relative path is resolved against the directory of this manifest."
         },
         "typeFullName": {
           "type": "string",
           "minLength": 1,
+          "pattern": "\\S",
           "description": "Full name of the type declaring the static 'AddExtensions(ITestApplicationBuilder, string[])' hook."
         },
         "id": {

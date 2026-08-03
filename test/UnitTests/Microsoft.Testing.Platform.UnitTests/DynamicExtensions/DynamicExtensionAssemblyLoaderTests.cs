@@ -71,6 +71,42 @@ public sealed class DynamicExtensionAssemblyLoaderTests
     }
 #endif
 
+#if NETCOREAPP
+    [TestMethod]
+    public void LoadAssembly_SharesTheContractByNameEvenWhenAHigherVersionIsRequested()
+    {
+        // The extension may have been compiled against a newer Microsoft.Testing.Platform than the host.
+        // Resolving through LoadFromAssemblyName would apply version binding, fail to bind, and silently give
+        // the extension a private copy of the platform whose ITestApplicationBuilder is a different type --
+        // which then surfaces as a bogus "the hook does not exist". Matching by simple name avoids that.
+        Assembly platform = typeof(ITestApplicationBuilder).Assembly;
+
+        Assembly? resolved = InvokeFindLoadedContractAssembly(platform.GetName().Name);
+
+        Assert.AreSame(platform, resolved);
+    }
+
+    [TestMethod]
+    public void LoadAssembly_DoesNotShareAnAssemblyTheHostHasNotLoaded()
+    {
+        Assembly? resolved = InvokeFindLoadedContractAssembly("Contoso.NotLoaded.Abstractions");
+
+        // Falls through to the extension's own copy rather than failing, which is what lets an extension
+        // depending on an abstractions package the test application never referenced still load.
+        Assert.IsNull(resolved);
+    }
+
+    private static Assembly? InvokeFindLoadedContractAssembly(string? simpleName)
+    {
+        Type contextType = typeof(DynamicExtensionAssemblyLoader)
+            .GetNestedType("DynamicExtensionLoadContext", BindingFlags.NonPublic)!;
+        Assert.IsNotNull(contextType);
+        MethodInfo method = contextType.GetMethod("FindLoadedContractAssembly", BindingFlags.NonPublic | BindingFlags.Static)!;
+        Assert.IsNotNull(method);
+        return (Assembly?)method.Invoke(null, [simpleName]);
+    }
+#endif
+
     [TestMethod]
     public void LoadAssembly_WithMissingFile_Throws()
     {
