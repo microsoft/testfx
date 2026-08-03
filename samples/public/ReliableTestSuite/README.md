@@ -37,17 +37,23 @@ re-serialize the class).
 
 - It is **cooperative** — it only coordinates tests that opt in with the **same** key. A test that
   touches the resource without declaring the lock is not held back.
-- Its scope is the current **test-host process**. It serializes tests within one run; it is not a
-  cross-process or distributed/cross-agent mutex.
+- Its scope is a single **test source (assembly)**. The adapter creates a separate lock manager per
+  source, so matching keys serialize only the parallel tests *within one assembly's* run — they do
+  **not** coordinate tests in a *different* assembly, even when both run in the same test-host
+  process. It is not a cross-assembly, cross-process, or distributed/cross-agent mutex, so don't rely
+  on it for global state shared across assemblies.
 
 ## What to expect when you run it
 
-- **10 tests pass** locally on Windows. Some condition-gated tests report **not run** (rather than a
+- **11 tests pass** locally on Windows. Some condition-gated tests report **not run** (rather than a
   hollow pass) depending on your environment — e.g. `UsesWindowsPathSemantics` runs only on Windows,
   and `InteractiveOnlyCheck_NotOnHeadlessCI` is excluded on CI.
-- The banner prints the worker count, parallel scope, and the **random-order seed**. To reproduce a
-  specific failing order, reuse the reported seed. In CI you should **rotate the seed** (or leave it
-  unset) so runs keep exploring new orderings instead of freezing on one.
+- The banner prints the worker count, parallel scope, and the **random-order seed**. The seed
+  reproduces the shuffled *queue order*, not the exact concurrent interleaving: with multiple workers
+  dequeuing and running tests in parallel, timing-dependent races can still vary run-to-run under the
+  same seed. To reproduce a race deterministically, reduce parallelism (or serialize the suspects)
+  first, then use the seed to pin the order. In CI you should **rotate the seed** (or leave it unset)
+  so runs keep exploring new orderings instead of freezing on one.
 - On **MSTest 4.4+** a retried test surfaces as *flaky*; on the pinned 4.3.x a retried-then-passed
   test reports as an ordinary pass.
 

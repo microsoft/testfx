@@ -34,8 +34,11 @@ namespace ReliableTestSuite;
 /// LIMITATIONS to be honest about:
 ///   - The lock is COOPERATIVE: it only coordinates tests that opt in with the SAME key. A test
 ///     that mutates the environment without declaring the lock is not held back by it.
-///   - Scope is the current TEST-HOST PROCESS. It serializes tests inside one run; it is NOT a
-///     cross-process, cross-assembly-in-separate-hosts, or distributed/cross-agent mutex.
+///   - Scope is a single TEST SOURCE (assembly). The adapter creates a separate lock manager per
+///     source, so matching keys serialize only the parallel tests WITHIN this assembly's run; they
+///     do NOT coordinate tests in a different assembly, even when both run in the same test-host
+///     process. It is not a cross-assembly, cross-process, or distributed/cross-agent mutex - don't
+///     rely on it for global state shared across assemblies.
 ///   - WellKnownResources.EnvironmentVariables is a shared well-known key for process-wide
 ///     environment state; any string can be used as a custom key for your own shared resource.
 ///
