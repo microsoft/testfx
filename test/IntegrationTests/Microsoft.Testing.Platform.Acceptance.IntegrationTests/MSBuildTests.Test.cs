@@ -372,6 +372,58 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
         compilationResult.AssertOutputContains("[env] MTP_ENV_INHERITED=inherited-value");
     }
 
+    [TestMethod]
+    public async Task InvokeTestingPlatform_Target_Should_Set_DotnetRoot_For_AppHost()
+    {
+        string architecture = RuntimeInformation.ProcessArchitecture.ToString();
+        string dotnetRootVariableName = $"DOTNET_ROOT_{architecture.ToUpperInvariant()}";
+        string dotnetRoot = Path.Combine(RootFinder.Find(), ".dotnet");
+
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            AssetName,
+            SourceCode
+            .PatchCodeWithReplace("$PlatformTarget$", $"<PlatformTarget>{architecture.ToLowerInvariant()}</PlatformTarget>")
+            .PatchCodeWithReplace("$TargetFrameworks$", $"<targetFramework>{TargetFrameworks.NetCurrent}</targetFramework>")
+            .PatchCodeWithReplace("$AssertValue$", "true")
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
+
+        Dictionary<string, string?> CreateEnvironmentVariables()
+            => new()
+            {
+                [dotnetRootVariableName] = null,
+            };
+
+        DotnetMuxerResult derivedResult = await DotnetCli.RunAsync(
+            $"build -t:Test -p:TestingPlatformCaptureOutput=False \"{testAsset.TargetAssetPath}\"",
+            workingDirectory: testAsset.TargetAssetPath,
+            environmentVariables: CreateEnvironmentVariables(),
+            cancellationToken: TestContext.CancellationToken);
+
+        derivedResult.AssertOutputContains($"[env] {dotnetRootVariableName}={dotnetRoot}");
+
+        DotnetMuxerResult explicitResult = await DotnetCli.RunAsync(
+            $"build -t:Test -p:TestingPlatformCaptureOutput=False -p:ExplicitDotnetRoot=\"{dotnetRoot}\" \"{testAsset.TargetAssetPath}\"",
+            workingDirectory: testAsset.TargetAssetPath,
+            environmentVariables: new Dictionary<string, string?>
+            {
+                // An inherited architecture-specific root has higher apphost precedence than DOTNET_ROOT. Use an
+                // existing directory without a dotnet installation to prove the explicit item clears this override.
+                [dotnetRootVariableName] = Path.GetTempPath(),
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        explicitResult.AssertOutputContains($"[env] DOTNET_ROOT={dotnetRoot}");
+        explicitResult.AssertOutputContains($"[env] {dotnetRootVariableName}=");
+
+        DotnetMuxerResult disabledResult = await DotnetCli.RunAsync(
+            $"build -t:Test -p:TestingPlatformCaptureOutput=False -p:TestingPlatformDisableAppHostDotnetRoot=true \"{testAsset.TargetAssetPath}\"",
+            workingDirectory: testAsset.TargetAssetPath,
+            environmentVariables: CreateEnvironmentVariables(),
+            cancellationToken: TestContext.CancellationToken);
+
+        disabledResult.AssertOutputContains($"[env] {dotnetRootVariableName}=");
+    }
+
     private const string SourceCode = """
 #file MSBuild Tests.csproj
 <Project Sdk="Microsoft.NET.Sdk">
@@ -395,6 +447,10 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
         <TestingPlatformEnvironmentVariable Include="MTP_ENV_SIMPLE" Value="simple-value" />
         <!-- The value intentionally contains a ';' to prove item metadata is not subject to MSBuild's ';' splitting. -->
         <TestingPlatformEnvironmentVariable Include="MTP_ENV_WITH_SEMICOLON" Value="first;second" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <TestingPlatformEnvironmentVariable Include="DOTNET_ROOT" Value="$(ExplicitDotnetRoot)" Condition="'$(ExplicitDotnetRoot)' != ''" />
     </ItemGroup>
 
     <Import Project="UserDefinedTestTarget.targets" Condition="'$(ImportUserDefinedTestTarget)' == 'true'" />
@@ -423,12 +479,14 @@ using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.MSBuild;
 using Microsoft.Testing.Platform.Services;
+using System.Runtime.InteropServices;
 
 public class Program
 {
     public static async Task<int> Main(string[] args)
     {
-        foreach (string name in new[] { "MTP_ENV_SIMPLE", "MTP_ENV_WITH_SEMICOLON", "MTP_ENV_INHERITED" })
+        string dotnetRootArchVariableName = $"DOTNET_ROOT_{RuntimeInformation.ProcessArchitecture.ToString().ToUpperInvariant()}";
+        foreach (string name in new[] { "MTP_ENV_SIMPLE", "MTP_ENV_WITH_SEMICOLON", "MTP_ENV_INHERITED", "DOTNET_ROOT", dotnetRootArchVariableName })
         {
             Console.WriteLine($"[env] {name}={Environment.GetEnvironmentVariable(name)}");
         }

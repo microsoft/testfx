@@ -389,6 +389,7 @@
     <_TestArchitecture Condition="'$(_TestArchitecture)' == '' or '$(_TestArchitecture)' == 'AnyCpu'">x64</_TestArchitecture>
     <TestingPlatformShowTestsFailure Condition=" '$(TestingPlatformShowTestsFailure)' == '' ">false</TestingPlatformShowTestsFailure>
     <TestingPlatformCaptureOutput Condition=" '$(TestingPlatformCaptureOutput)' == '' " >true</TestingPlatformCaptureOutput>
+    <TestingPlatformDisableAppHostDotnetRoot Condition=" '$(TestingPlatformDisableAppHostDotnetRoot)' == '' ">false</TestingPlatformDisableAppHostDotnetRoot>
   </PropertyGroup>
 
   <Target Name="InvokeTestingPlatform" >
@@ -425,6 +426,7 @@
                                EnvironmentVariables="@(TestingPlatformEnvironmentVariable->'%(Identity)=%(Value)')"
                                VSTestCLIRunSettings="$(VSTestCLIRunSettings)"
                                TestingPlatformCaptureOutput="$(TestingPlatformCaptureOutput)"
+                               TestingPlatformDisableAppHostDotnetRoot="$(TestingPlatformDisableAppHostDotnetRoot)"
                                DotnetHostPath="$(DOTNET_HOST_PATH)" />
   </Target>
 

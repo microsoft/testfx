@@ -23,6 +23,7 @@ See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4
 
 ### Fixed
 
+* Make the `InvokeTestingPlatform` MSBuild target set `DOTNET_ROOT_<ARCH>` from `DOTNET_HOST_PATH` when launching a compatible apphost, matching `dotnet test` runtime resolution. Set `TestingPlatformDisableAppHostDotnetRoot` to `true` to opt out; an explicit applicable `TestingPlatformEnvironmentVariable` remains authoritative in [#10408](https://github.com/microsoft/testfx/issues/10408)
 * Fix `--report-trx` crashing with `PlatformNotSupportedException` on single-threaded WebAssembly runtimes (`browser-wasm` / `wasi-wasm`): the TRX streaming store now serializes records inline instead of starting a dedicated writer thread and draining a `BlockingCollection<T>` in [#2196](https://github.com/microsoft/testfx/issues/2196)
 * Keep the Azure DevOps and GitHub Actions slow-test reporters dormant on single-threaded WebAssembly runtimes instead of attempting to start a background scan loop that cannot run there. `ITask.RunLongRunning` throws `PlatformNotSupportedException` on `browser-wasm` / `wasi-wasm`; the reporter caught and logged it to the diagnostic log, then stayed marked active with no scan loop, so the failure was invisible outside `--diagnostic` in [#2196](https://github.com/microsoft/testfx/issues/2196)
 * Report test and session file artifacts through the simplified console output used by `browser-wasm` and `wasi-wasm`, including each artifact's display name and virtual file-system path, in [#10311](https://github.com/microsoft/testfx/issues/10311)

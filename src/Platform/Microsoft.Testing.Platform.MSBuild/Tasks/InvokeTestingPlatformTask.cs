@@ -135,6 +135,11 @@ public partial class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisp
     public ITaskItem? DotnetHostPath { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether automatic DOTNET_ROOT_&lt;ARCH&gt; configuration is disabled for apphost launches.
+    /// </summary>
+    public bool TestingPlatformDisableAppHostDotnetRoot { get; set; }
+
+    /// <summary>
     /// Gets or sets the testing platform command line arguments.
     /// </summary>
     public ITaskItem? TestingPlatformCommandLineArguments { get; set; }

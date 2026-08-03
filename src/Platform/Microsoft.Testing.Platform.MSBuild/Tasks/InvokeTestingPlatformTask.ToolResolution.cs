@@ -119,6 +119,74 @@ public partial class InvokeTestingPlatformTask
         _currentProcessArchitecture == (Architecture)Enum.Parse(typeof(Architecture), TestArchitecture.ItemSpec, ignoreCase: true);
 #endif
 
+    internal void AddAppHostDotnetRootEnvironmentVariable()
+    {
+        if (TestingPlatformDisableAppHostDotnetRoot
+            || TryGetRunCommand() is null
+            || DotnetHostPath is null
+            || !File.Exists(DotnetHostPath.ItemSpec)
+            || !IsCurrentProcessArchitectureCompatible())
+        {
+            return;
+        }
+
+        string? dotnetRoot = Path.GetDirectoryName(DotnetHostPath.ItemSpec);
+        if (string.IsNullOrEmpty(dotnetRoot))
+        {
+            return;
+        }
+
+        string variableName = $"DOTNET_ROOT_{_currentProcessArchitecture.ToString().ToUpperInvariant()}";
+        if (ContainsEnvironmentVariable(variableName))
+        {
+            return;
+        }
+
+        bool isWindowsX86 = IsWindowsX86ProcessOn64BitOperatingSystem(
+            _currentProcessArchitecture,
+            RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
+            Environment.Is64BitOperatingSystem);
+        bool hasExplicitDotnetRoot = ContainsEnvironmentVariable("DOTNET_ROOT");
+        bool hasExplicitWindowsX86DotnetRoot = isWindowsX86 && ContainsEnvironmentVariable("DOTNET_ROOT(x86)");
+        if (hasExplicitDotnetRoot || hasExplicitWindowsX86DotnetRoot)
+        {
+            EnvironmentVariables = hasExplicitDotnetRoot && isWindowsX86 && !hasExplicitWindowsX86DotnetRoot
+                ? [$"{variableName}=", "DOTNET_ROOT(x86)=", .. EnvironmentVariables ?? []]
+                : [$"{variableName}=", .. EnvironmentVariables ?? []];
+            return;
+        }
+
+        EnvironmentVariables = [$"{variableName}={dotnetRoot}", .. EnvironmentVariables ?? []];
+        Log.LogMessage(MessageImportance.Low, $"Setting '{variableName}' to '{dotnetRoot}' for apphost runtime resolution.");
+    }
+
+    internal static bool IsWindowsX86ProcessOn64BitOperatingSystem(Architecture processArchitecture, bool isWindows, bool is64BitOperatingSystem)
+        => processArchitecture == Architecture.X86 && isWindows && is64BitOperatingSystem;
+
+    private bool ContainsEnvironmentVariable(string variableName)
+    {
+        if (EnvironmentVariables is null)
+        {
+            return false;
+        }
+
+        StringComparison comparison = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+
+        foreach (string environmentVariable in EnvironmentVariables)
+        {
+            int separatorIndex = environmentVariable.IndexOf('=');
+            if (separatorIndex > 0
+                && string.Equals(environmentVariable.Substring(0, separatorIndex), variableName, comparison))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private string? TryGetRunCommand()
     {
         // This condition specifically handles this part:
