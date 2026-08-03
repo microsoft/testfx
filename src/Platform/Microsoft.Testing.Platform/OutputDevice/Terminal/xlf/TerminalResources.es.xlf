@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="es" original="../TerminalResources.resx">
     <body>
@@ -59,7 +59,7 @@
       </trans-unit>
       <trans-unit id="CoverageMetricBlock">
         <source>Block</source>
-        <target state="translated">Bloquear</target>
+        <target state="new">Block</target>
         <note>Label for block code coverage in the coverage summary (e.g. 'Total - Block: 95.0%').</note>
       </trans-unit>
       <trans-unit id="CoverageMetricBranch">
@@ -109,7 +109,7 @@
       </trans-unit>
       <trans-unit id="CoverageMetricStatement">
         <source>Statement</source>
-        <target state="translated">Afirmación</target>
+        <target state="new">Statement</target>
         <note>Label for statement code coverage in the coverage summary (e.g. 'Total - Statement: 95.0%').</note>
       </trans-unit>
       <trans-unit id="CoverageMetricWithProducer">
@@ -154,7 +154,7 @@
       </trans-unit>
       <trans-unit id="CoverageThresholdFailed">
         <source>{0}% &lt; {1}% threshold</source>
-        <target state="translated">%{0}% &lt; {1}% umbral</target>
+        <target state="new">{0}% &lt; {1}% threshold</target>
         <note>Coverage threshold comparison shown when the threshold is not met. {0} is the actual coverage percentage, {1} is the threshold percentage.</note>
       </trans-unit>
       <trans-unit id="CoverageThresholdNoDataFailed">
