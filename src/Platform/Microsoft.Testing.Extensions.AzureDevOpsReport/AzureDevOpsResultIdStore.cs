@@ -294,6 +294,9 @@ internal sealed class AzureDevOpsResultIdStore
                 return;
             }
 
+            Dictionary<int, string> keyByResultId = [];
+            Dictionary<string, int> resultIdByKey = [];
+            HashSet<int> ambiguousResultIds = [];
             foreach (AzureDevOpsResultMapEntry? entry in map.Results)
             {
                 // Entries come from disk, so nothing about them is guaranteed however the record is
@@ -306,13 +309,33 @@ internal sealed class AzureDevOpsResultIdStore
                     && IsValidAttemptHistory(entry.Attempts))
                 {
                     string key = CreateKey(storage, name, title);
-                    if (_results.Remove(key))
+                    if (ambiguousResultIds.Contains(entry.Id) || _ambiguousKeys.Contains(key))
                     {
-                        _ambiguousKeys.Add(key);
+                        continue;
                     }
-                    else if (!_ambiguousKeys.Contains(key))
+
+                    if (keyByResultId.TryGetValue(entry.Id, out string? previousKey))
+                    {
+                        _results.Remove(previousKey);
+                        resultIdByKey.Remove(previousKey);
+                        _ambiguousKeys.Add(previousKey);
+                        _ambiguousKeys.Add(key);
+                        ambiguousResultIds.Add(entry.Id);
+                    }
+                    else if (resultIdByKey.TryGetValue(key, out int previousResultId))
+                    {
+                        _results.Remove(key);
+                        keyByResultId.Remove(previousResultId);
+                        resultIdByKey.Remove(key);
+                        _ambiguousKeys.Add(key);
+                        ambiguousResultIds.Add(previousResultId);
+                        ambiguousResultIds.Add(entry.Id);
+                    }
+                    else
                     {
                         _results[key] = new AzureDevOpsPublishedResult(storage, name, title, entry.Id, entry.Attempts);
+                        keyByResultId[entry.Id] = key;
+                        resultIdByKey[key] = entry.Id;
                     }
                 }
             }

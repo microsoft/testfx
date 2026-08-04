@@ -126,17 +126,39 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
                 // updates that result instead of adding a second one for the same test. Only an
                 // orchestrated run has a store, so an ordinary run takes the create path for everything.
                 List<AzureDevOpsTestCaseResultWithAttachments> creations = [];
-                List<(AzureDevOpsPublishedResult Published, AzureDevOpsTestCaseResultWithAttachments Attempt)> updates = [];
+                List<(AzureDevOpsPublishedResult Published, AzureDevOpsTestCaseResultWithAttachments Attempt)> updateCandidates = [];
                 List<(int ResultId, IReadOnlyList<AzureDevOpsTestResultAttachment> Attachments)> deferredAttachments = [];
                 foreach (AzureDevOpsTestCaseResultWithAttachments item in batch)
                 {
                     if (_resultIdStore?.TryGet(item.Result) is { } published)
                     {
-                        updates.Add((published, item));
+                        updateCandidates.Add((published, item));
                     }
                     else
                     {
                         creations.Add(item);
+                    }
+                }
+
+                // The store is unchanged while classifying a batch, so two current rows can resolve to the
+                // same persisted parent (for example when a formerly unique folded data row is duplicated).
+                // Never PATCH a guessed parent twice; ambiguous rows degrade to independent creates.
+                Dictionary<int, int> candidateCountsByResultId = [];
+                foreach ((AzureDevOpsPublishedResult published, AzureDevOpsTestCaseResultWithAttachments _) in updateCandidates)
+                {
+                    candidateCountsByResultId[published.Id] = candidateCountsByResultId.TryGetValue(published.Id, out int count) ? count + 1 : 1;
+                }
+
+                List<(AzureDevOpsPublishedResult Published, AzureDevOpsTestCaseResultWithAttachments Attempt)> updates = [];
+                foreach ((AzureDevOpsPublishedResult published, AzureDevOpsTestCaseResultWithAttachments attempt) in updateCandidates)
+                {
+                    if (candidateCountsByResultId[published.Id] == 1)
+                    {
+                        updates.Add((published, attempt));
+                    }
+                    else
+                    {
+                        creations.Add(attempt);
                     }
                 }
 
