@@ -40,14 +40,20 @@ internal sealed partial class AzureDevOpsRunIdCoordinator
                         }
                     }
                 }
-                catch (IOException)
+                catch (IOException ex)
                 {
+                    // The coordination file may be mid-write. Treat the failure as transient and retry.
+                    _ = ex;
                 }
-                catch (UnauthorizedAccessException)
+                catch (UnauthorizedAccessException ex)
                 {
+                    // Access can be temporarily blocked by another process. Retry within the existing budget.
+                    _ = ex;
                 }
-                catch (JsonException)
+                catch (JsonException ex)
                 {
+                    // Partially written JSON is transient while another process publishes the run id.
+                    _ = ex;
                 }
             }
 

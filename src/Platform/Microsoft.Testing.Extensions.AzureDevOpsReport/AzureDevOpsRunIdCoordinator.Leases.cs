@@ -98,15 +98,16 @@ internal sealed partial class AzureDevOpsRunIdCoordinator
         }
         catch (IOException)
         {
+            return new LeaseReadResult(LeaseFileStatus.TransientReadError, null);
         }
         catch (UnauthorizedAccessException)
         {
+            return new LeaseReadResult(LeaseFileStatus.TransientReadError, null);
         }
         catch (JsonException)
         {
+            return new LeaseReadResult(LeaseFileStatus.TransientReadError, null);
         }
-
-        return new LeaseReadResult(LeaseFileStatus.TransientReadError, null);
     }
 
     [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification = "The coordination payload type is internal, fixed, and controlled by this extension.")]
