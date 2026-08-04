@@ -107,6 +107,11 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <target state="translated">AssemblyInitialize-Methoden müssen über ein gültiges Layout verfügen.</target>
         <note>{Locked="AssemblyInitialize"}</note>
       </trans-unit>
+      <trans-unit id="AssertionArgsShouldAvoidConditionalAccessDescription">
+        <source>Conditional access adds an implicit null branch to an assertion, which can hide whether the object was unexpectedly null. A separate null assertion makes failures identify the violated condition.</source>
+        <target state="new">Conditional access adds an implicit null branch to an assertion, which can hide whether the object was unexpectedly null. A separate null assertion makes failures identify the violated condition.</target>
+        <note>{Locked="null"}</note>
+      </trans-unit>
       <trans-unit id="AssertionArgsShouldAvoidConditionalAccessMessageFormat">
         <source>Prefer adding an additional assertion that checks for null</source>
         <target state="translated">Lieber eine zusätzliche Assertion hinzufügen, die auf null überprüft</target>
@@ -161,6 +166,11 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <source>Don't use 'Assert.AreSame' or 'Assert.AreNotSame' with value types</source>
         <target state="translated">Verwenden Sie "Assert.AreSame" oder "Assert.AreNotSame" nicht mit Werttypen.</target>
         <note>{Locked="Assert.AreNotSame"}{Locked="Assert.AreSame"}</note>
+      </trans-unit>
+      <trans-unit id="AvoidExplicitDynamicDataSourceTypeDescription">
+        <source>Since MSTest 3.8, 'DynamicDataSourceType.AutoDetect' is the default and automatically identifies properties, methods, and fields, reducing verbosity and coupling to the member kind.</source>
+        <target state="new">Since MSTest 3.8, 'DynamicDataSourceType.AutoDetect' is the default and automatically identifies properties, methods, and fields, reducing verbosity and coupling to the member kind.</target>
+        <note>{Locked="MSTest 3.8"}{Locked="'DynamicDataSourceType.AutoDetect'"}</note>
       </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeMessageFormat">
         <source>Remove the 'DynamicDataSourceType' argument to use the default auto detect behavior</source>
@@ -301,6 +311,11 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <target state="translated">ClassInitialize-Methoden müssen über ein gültiges Layout verfügen.</target>
         <note>{Locked="ClassInitialize"}</note>
       </trans-unit>
+      <trans-unit id="CollectionAssertToAssertDescription">
+        <source>'CollectionAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</source>
+        <target state="new">'CollectionAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</target>
+        <note>{Locked="'CollectionAssert'"}{Locked="'Assert'"}{Locked="API"}</note>
+      </trans-unit>
       <trans-unit id="CollectionAssertToAssertMessageFormat">
         <source>Use 'Assert.{0}' instead of 'CollectionAssert.{1}'</source>
         <target state="translated">Verwenden Sie „Assert.{0}“ anstelle von „CollectionAssert.{1}“</target>
@@ -395,6 +410,16 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <source>'[DependsOn]' arguments should be valid</source>
         <target state="translated">[DependsOn]-Argumente müssen gültig sein.</target>
         <note>{Locked="[DependsOn]"}</note>
+      </trans-unit>
+      <trans-unit id="DoNotNegateBooleanAssertionDescription">
+        <source>Using the opposite assertion directly makes the test easier to read and produces clearer failure diagnostics.</source>
+        <target state="new">Using the opposite assertion directly makes the test easier to read and produces clearer failure diagnostics.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotStoreStaticTestContextAnalyzerDescription">
+        <source>The TestContext passed to assembly or class initialization is specific to that context and is not updated for each test execution. Reusing it in a 'static' member can expose stale context.</source>
+        <target state="new">The TestContext passed to assembly or class initialization is specific to that context and is not updated for each test execution. Reusing it in a 'static' member can expose stale context.</target>
+        <note>{Locked="TestContext"}{Locked="'static'"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidDescription">
         <source>The members referenced by a '[MemberCondition]' attribute must exist on the referenced type, be 'public static', return 'bool', and (for methods) be parameterless. The attribute throws at runtime when these rules are violated; this analyzer surfaces the same problems at build time so typos and refactors do not silently break test gating.</source>
@@ -722,6 +747,11 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <target state="translated">Rückgabewert von Zeichenfolgenmethoden nicht ignorieren</target>
         <note />
       </trans-unit>
+      <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsDescription">
+        <source>'Assert.Fail' makes an intentional failure explicit and allows the failure message to document why the test cannot continue.</source>
+        <target state="new">'Assert.Fail' makes an intentional failure explicit and allows the failure message to document why the test cannot continue.</target>
+        <note>{Locked="'Assert.Fail'"}</note>
+      </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
         <source>Use 'Assert.Fail' instead of an always-failing 'Assert.{0}' assert</source>
         <target state="translated">Verwenden Sie „Assert.Fail“ anstelle einer Assert-Anweisung „Assert.{0}“, bei der immer ein Fehler auftritt.</target>
@@ -762,6 +792,26 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <target state="translated">Bevorzugen Sie eine benannte Konstante für den „[ResourceLock]“-Ressourcenschlüssel.</target>
         <note>{Locked="[ResourceLock]"}</note>
       </trans-unit>
+      <trans-unit id="PreferConstructorOverTestInitializeDescription">
+        <source>Constructors allow initialization through 'readonly' fields and provide stronger compiler feedback, especially with nullable reference types. This opt-in style rule is mutually exclusive with MSTEST0019.</source>
+        <target state="new">Constructors allow initialization through 'readonly' fields and provide stronger compiler feedback, especially with nullable reference types. This opt-in style rule is mutually exclusive with MSTEST0019.</target>
+        <note>{Locked="'readonly'"}{Locked="MSTEST0019"}</note>
+      </trans-unit>
+      <trans-unit id="PreferDisposeOverTestCleanupDescription">
+        <source>'Dispose' and 'DisposeAsync' follow standard .NET lifetime patterns, making test cleanup consistent with production code. This opt-in style rule is mutually exclusive with MSTEST0022.</source>
+        <target state="new">'Dispose' and 'DisposeAsync' follow standard .NET lifetime patterns, making test cleanup consistent with production code. This opt-in style rule is mutually exclusive with MSTEST0022.</target>
+        <note>{Locked="'DisposeAsync'"}{Locked="'Dispose'"}{Locked=".NET"}{Locked="MSTEST0022"}</note>
+      </trans-unit>
+      <trans-unit id="PreferTestCleanupOverDisposeDescription">
+        <source>'[TestCleanup]' supports asynchronous cleanup on target frameworks where 'IAsyncDisposable' is unavailable. This opt-in style rule is mutually exclusive with MSTEST0021.</source>
+        <target state="new">'[TestCleanup]' supports asynchronous cleanup on target frameworks where 'IAsyncDisposable' is unavailable. This opt-in style rule is mutually exclusive with MSTEST0021.</target>
+        <note>{Locked="'[TestCleanup]'"}{Locked="'IAsyncDisposable'"}{Locked="MSTEST0021"}</note>
+      </trans-unit>
+      <trans-unit id="PreferTestInitializeOverConstructorDescription">
+        <source>'[TestInitialize]' supports both synchronous and asynchronous initialization, whereas constructors cannot be awaited. This opt-in style rule is mutually exclusive with MSTEST0020.</source>
+        <target state="new">'[TestInitialize]' supports both synchronous and asynchronous initialization, whereas constructors cannot be awaited. This opt-in style rule is mutually exclusive with MSTEST0020.</target>
+        <note>{Locked="'[TestInitialize]'"}{Locked="MSTEST0020"}</note>
+      </trans-unit>
       <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerDescription">
         <source>'DataTestMethodAttribute' is obsolete and provides no additional functionality over 'TestMethodAttribute'. Use 'TestMethodAttribute' for all test methods, including parameterized tests.</source>
         <target state="translated">„DataTestMethodAttribute“ ist veraltet und bietet keine zusätzliche Funktionalität im Vergleich zu „TestMethodAttribute“. Verwenden Sie „TestMethodAttribute“ für alle Testmethoden, einschließlich parametrisierter Tests.</target>
@@ -790,6 +840,11 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
       <trans-unit id="RedundantTestMethodDisplayNameTitle">
         <source>Test method should not specify a display name equal to its name</source>
         <target state="translated">Die Testmethode sollte keinen Anzeigenamen angeben, der dem Namen entspricht</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerDescription">
+        <source>An assertion that can never fail does not verify behavior and obscures the condition the test is intended to check.</source>
+        <target state="new">An assertion that can never fail does not verify behavior and obscures the condition the test is intended to check.</target>
         <note />
       </trans-unit>
       <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat">
@@ -887,6 +942,11 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <target state="translated">Vermeiden hartcodierter oder freigegebener Dateisystempfade in einem parallelisierten Test</target>
         <note />
       </trans-unit>
+      <trans-unit id="StringAssertToAssertDescription">
+        <source>'StringAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</source>
+        <target state="new">'StringAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</target>
+        <note>{Locked="'StringAssert'"}{Locked="'Assert'"}{Locked="API"}</note>
+      </trans-unit>
       <trans-unit id="StringAssertToAssertMessageFormat">
         <source>Use 'Assert.{0}' instead of 'StringAssert.{1}'</source>
         <target state="translated">Verwenden Sie „Assert.{0}“ anstelle von „StringAssert.{1}“.</target>
@@ -947,6 +1007,11 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <target state="translated">„[TestFilterProvider]“ sollte auf einen gültigen Testfiltertyp verweisen.</target>
         <note>{Locked="[TestFilterProvider]"}</note>
       </trans-unit>
+      <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationDescription">
+        <source>Propagating the source file and line number allows MSTest to report accurate diagnostics, test results, and Test Explorer navigation.</source>
+        <target state="new">Propagating the source file and line number allows MSTest to report accurate diagnostics, test results, and Test Explorer navigation.</target>
+        <note>{Locked="MSTest"}{Locked="Test Explorer"}</note>
+      </trans-unit>
       <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationMessageFormat">
         <source>TestMethodAttribute derived class '{0}' should add CallerFilePath and CallerLineNumber parameters to its constructor</source>
         <target state="translated">Die abgeleitete TestMethodAttribute-class „{0}“ sollte dem Konstruktor die Parameter „CallerFilePath“ und „CallerLineNumber“ hinzufügen.</target>
@@ -956,6 +1021,11 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <source>TestMethodAttribute derived class should propagate source information</source>
         <target state="translated">Die abgeleitete TestMethodAttribute-class sollte Quellinformationen weitergeben.</target>
         <note>{Locked="TestMethodAttribute"}{Locked="class"}</note>
+      </trans-unit>
+      <trans-unit id="TestMethodAttributeShouldSetDisplayNameCorrectlyDescription">
+        <source>In MSTest 4 and later, the string constructor argument represents the caller file path rather than the test display name.</source>
+        <target state="new">In MSTest 4 and later, the string constructor argument represents the caller file path rather than the test display name.</target>
+        <note>{Locked="MSTest 4"}</note>
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldSetDisplayNameCorrectlyMessageFormat">
         <source>Use the 'DisplayName' property instead of passing a string argument to TestMethodAttribute</source>
@@ -1001,6 +1071,11 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <source>Use '[ArchitectureCondition]' attribute instead of 'RuntimeInformation.ProcessArchitecture' checks with early return or 'Assert.Inconclusive'</source>
         <target state="translated">Verwenden Sie das Attribut „[ArchitectureCondition]“ anstelle von „RuntimeInformation.ProcessArchitecture“-Überprüfungen mit frühzeitiger Rückgabe oder „Assert.Inconclusive“.</target>
         <note>{Locked="RuntimeInformation.ProcessArchitecture"}{Locked="Assert.Inconclusive"}{Locked="[ArchitectureCondition]"}</note>
+      </trans-unit>
+      <trans-unit id="UseAttributeOnTestMethodAnalyzerDescription">
+        <source>MSTest ignores these attributes outside a test context.</source>
+        <target state="new">MSTest ignores these attributes outside a test context.</target>
+        <note>{Locked="MSTest"}</note>
       </trans-unit>
       <trans-unit id="UseCIConditionAttributeInsteadOfEnvironmentCheckDescription">
         <source>Test methods that null-check the 'CI' environment variable and then early return or call 'Assert.Inconclusive' should use the '[CICondition]' attribute instead. This attribute recognizes all the continuous integration providers MSTest knows about and parses their values, and it reports the test as skipped rather than passed, which an early return does not.</source>
@@ -1244,6 +1319,11 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <target state="translated">[{0}] kann nur für Methoden festgelegt werden, die mit [TestMethod] markiert sind.</target>
         <note>{0} is the attribute name without brackets. {Locked="[TestMethod]"}</note>
       </trans-unit>
+      <trans-unit id="UseConditionBaseWithTestClassDescription">
+        <source>When applied to a class, MSTest evaluates condition attributes only if the class is a test class, so applying them to a non-test class has no effect.</source>
+        <target state="new">When applied to a class, MSTest evaluates condition attributes only if the class is a test class, so applying them to a non-test class has no effect.</target>
+        <note>{Locked="MSTest"}</note>
+      </trans-unit>
       <trans-unit id="UseConditionBaseWithTestClassMessageFormat">
         <source>The attribute '{0}' which derives from 'ConditionBaseAttribute' should be used only on classes marked with `TestClassAttribute`</source>
         <target state="translated">Das Attribut '{0}', das von "ConditionBaseAttribute" abgeleitet wird, darf nur für Klassen verwendet werden, die mit "TestClassAttribute" markiert sind.</target>
@@ -1268,6 +1348,11 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <source>Use 'CooperativeCancellation = true' with '[Timeout]'</source>
         <target state="translated">Verwenden Sie „CooperativeCancellation = true“ mit „[Timeout]“.</target>
         <note>{Locked="CooperativeCancellation = true"}{Locked="[Timeout]"}{Locked="true"}</note>
+      </trans-unit>
+      <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassDescription">
+        <source>MSTest ignores '[DeploymentItem]' when it is applied outside a test class or test method.</source>
+        <target state="new">MSTest ignores '[DeploymentItem]' when it is applied outside a test class or test method.</target>
+        <note>{Locked="MSTest"}{Locked="'[DeploymentItem]'"}</note>
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
@@ -1294,6 +1379,11 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <target state="translated">Parallelisierung von Tests explizit aktivieren oder deaktivieren</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseProperAssertMethodsDescription">
+        <source>Specialized assertion methods improve readability and provide more precise failure diagnostics.</source>
+        <target state="new">Specialized assertion methods improve readability and provide more precise failure diagnostics.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseProperAssertMethodsMessageFormat">
         <source>Use 'Assert.{0}' instead of 'Assert.{1}'</source>
         <target state="translated">Verwenden Sie "Assert.{0}" anstelle von "Assert.{1}".</target>
@@ -1303,6 +1393,11 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <source>Use proper 'Assert' methods</source>
         <target state="translated">Geeignete Assert-Methoden verwenden</target>
         <note>{Locked="Assert"}</note>
+      </trans-unit>
+      <trans-unit id="UseRetryWithTestMethodDescription">
+        <source>Retry attributes have no effect on methods or classes that MSTest does not recognize as tests.</source>
+        <target state="new">Retry attributes have no effect on methods or classes that MSTest does not recognize as tests.</target>
+        <note>{Locked="MSTest"}</note>
       </trans-unit>
       <trans-unit id="UseRetryWithTestMethodMessageFormat">
         <source>An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method or a test class</source>

@@ -22,12 +22,13 @@ public sealed class DoNotStoreStaticTestContextAnalyzer : DiagnosticAnalyzer
 {
     private static readonly LocalizableResourceString Title = new(nameof(Resources.DoNotStoreStaticTestContextAnalyzerTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.DoNotStoreStaticTestContextAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString Description = new(nameof(Resources.DoNotStoreStaticTestContextAnalyzerDescription), Resources.ResourceManager, typeof(Resources));
 
     internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.DoNotStoreStaticTestContextAnalyzerRuleId,
         Title,
         MessageFormat,
-        null,
+        Description,
         Category.Usage,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);

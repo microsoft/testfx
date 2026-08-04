@@ -27,7 +27,7 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
             nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), OwnerAttributeShortName),
         messageFormat: new LocalizableResourceString(
             nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), OwnerAttributeShortName),
-        description: null,
+        description: new LocalizableResourceString(nameof(Resources.UseAttributeOnTestMethodAnalyzerDescription), Resources.ResourceManager, typeof(Resources)),
         Category.Usage,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
@@ -41,7 +41,7 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
             nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), PriorityAttributeShortName),
         messageFormat: new LocalizableResourceString(
             nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), PriorityAttributeShortName),
-        description: null,
+        description: new LocalizableResourceString(nameof(Resources.UseAttributeOnTestMethodAnalyzerDescription), Resources.ResourceManager, typeof(Resources)),
         Category.Usage,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
@@ -55,7 +55,7 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
             nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), DescriptionAttributeShortName),
         messageFormat: new LocalizableResourceString(
             nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), DescriptionAttributeShortName),
-        description: null,
+        description: new LocalizableResourceString(nameof(Resources.UseAttributeOnTestMethodAnalyzerDescription), Resources.ResourceManager, typeof(Resources)),
         Category.Usage,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
@@ -69,7 +69,7 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
             nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), TestPropertyAttributeShortName),
         messageFormat: new LocalizableResourceString(
             nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), TestPropertyAttributeShortName),
-        description: null,
+        description: new LocalizableResourceString(nameof(Resources.UseAttributeOnTestMethodAnalyzerDescription), Resources.ResourceManager, typeof(Resources)),
         Category.Usage,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
@@ -83,7 +83,7 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
             nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), WorkItemAttributeShortName),
         messageFormat: new LocalizableResourceString(
             nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), WorkItemAttributeShortName),
-        description: null,
+        description: new LocalizableResourceString(nameof(Resources.UseAttributeOnTestMethodAnalyzerDescription), Resources.ResourceManager, typeof(Resources)),
         Category.Usage,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
@@ -97,7 +97,7 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
             nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), ConditionBaseAttributeShortName),
         messageFormat: new LocalizableResourceString(
             nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), ConditionBaseAttributeShortName),
-        description: null,
+        description: new LocalizableResourceString(nameof(Resources.UseAttributeOnTestMethodAnalyzerDescription), Resources.ResourceManager, typeof(Resources)),
         Category.Usage,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);

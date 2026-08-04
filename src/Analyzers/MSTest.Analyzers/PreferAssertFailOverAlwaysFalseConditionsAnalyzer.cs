@@ -23,12 +23,13 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzer : Diagnost
 
     private static readonly LocalizableResourceString Title = new(nameof(Resources.PreferAssertFailOverAlwaysFalseConditionsTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.PreferAssertFailOverAlwaysFalseConditionsMessageFormat), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString Description = new(nameof(Resources.PreferAssertFailOverAlwaysFalseConditionsDescription), Resources.ResourceManager, typeof(Resources));
 
     internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.PreferAssertFailOverAlwaysFalseConditionsRuleId,
         Title,
         MessageFormat,
-        null,
+        Description,
         Category.Design,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);

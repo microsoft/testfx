@@ -20,12 +20,13 @@ public sealed class PreferTestCleanupOverDisposeAnalyzer : DiagnosticAnalyzer
 {
     private static readonly LocalizableResourceString Title = new(nameof(Resources.PreferTestCleanupOverDisposeTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.PreferTestCleanupOverDisposeMessageFormat), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString Description = new(nameof(Resources.PreferTestCleanupOverDisposeDescription), Resources.ResourceManager, typeof(Resources));
 
     internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.PreferTestCleanupOverDisposeRuleId,
         Title,
         MessageFormat,
-        null,
+        Description,
         Category.Design,
         DiagnosticSeverity.Info,
         isEnabledByDefault: false,

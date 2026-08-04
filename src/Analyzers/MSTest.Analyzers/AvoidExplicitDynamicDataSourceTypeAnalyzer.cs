@@ -20,12 +20,13 @@ public sealed class AvoidExplicitDynamicDataSourceTypeAnalyzer : DiagnosticAnaly
 {
     private static readonly LocalizableResourceString Title = new(nameof(Resources.AvoidExplicitDynamicDataSourceTypeTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.AvoidExplicitDynamicDataSourceTypeMessageFormat), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString Description = new(nameof(Resources.AvoidExplicitDynamicDataSourceTypeDescription), Resources.ResourceManager, typeof(Resources));
 
     internal static readonly DiagnosticDescriptor PreferAutoDetectRule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.AvoidExplicitDynamicDataSourceTypeRuleId,
         Title,
         MessageFormat,
-        null,
+        Description,
         Category.Usage,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
