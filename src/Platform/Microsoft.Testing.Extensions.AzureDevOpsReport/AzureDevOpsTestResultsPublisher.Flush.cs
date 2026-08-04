@@ -187,7 +187,15 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
                     {
                         RequeueUnsafe(updateFallbacks);
                         await UploadDeferredAttachmentsAsync(deferredAttachments, cancellationToken).ConfigureAwait(false);
-                        return;
+                        if (!force)
+                        {
+                            return;
+                        }
+
+                        // The claim is retained because the persisted map could not be invalidated. On the
+                        // next forced iteration it makes this item ambiguous, so it is reclassified as a
+                        // plain creation. A subsequent create failure returns through the normal branch.
+                        continue;
                     }
                 }
                 else if (updates.Count > 0 && !await TryUpdateResultsAsync(updates, deferredAttachments, cancellationToken).ConfigureAwait(false))

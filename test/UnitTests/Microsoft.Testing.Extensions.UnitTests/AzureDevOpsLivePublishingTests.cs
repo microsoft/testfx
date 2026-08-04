@@ -2841,8 +2841,15 @@ public sealed class AzureDevOpsLivePublishingTests
             environment,
             fileSystem: fileSystem);
         List<AzureDevOpsTestCaseResult> created = [];
+        int createAttempts = 0;
         secondClient.PublishTestResultsAsyncFunc = (_, _, results, _) =>
         {
+            createAttempts++;
+            if (createAttempts == 1)
+            {
+                return Task.FromException<IReadOnlyList<int>?>(new HttpRequestException("transient safe-create failure"));
+            }
+
             created.AddRange(results);
             return Task.FromResult<IReadOnlyList<int>?>([98]);
         };
