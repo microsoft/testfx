@@ -51,27 +51,30 @@ internal sealed class AzureDevOpsResultIdStore
     private readonly ILogger _logger;
     private readonly string _filePath;
     private readonly int _buildId;
+    private readonly int _runId;
 
     // Keyed by (storage, name) because automatedTestName is TestNode.Uid.Value, which is only unique
     // within a test application: two assemblies in one build can legitimately use the same uid.
     private readonly Dictionary<string, AzureDevOpsPublishedResult> _results = [];
 
     private bool _hasUnsavedChanges;
+    private bool _hasAdvancedExistingHistory;
 
-    private AzureDevOpsResultIdStore(IFileSystem fileSystem, ILogger logger, string filePath, int buildId)
+    private AzureDevOpsResultIdStore(IFileSystem fileSystem, ILogger logger, string filePath, int buildId, int runId)
     {
         _fileSystem = fileSystem;
         _logger = logger;
         _filePath = filePath;
         _buildId = buildId;
+        _runId = runId;
     }
 
     /// <summary>
     /// Opens the store at <paramref name="filePath"/>, reading any state earlier attempts left behind.
     /// </summary>
-    public static async Task<AzureDevOpsResultIdStore> OpenAsync(IFileSystem fileSystem, ILogger logger, string filePath, int buildId)
+    public static async Task<AzureDevOpsResultIdStore> OpenAsync(IFileSystem fileSystem, ILogger logger, string filePath, int buildId, int runId)
     {
-        AzureDevOpsResultIdStore store = new(fileSystem, logger, filePath, buildId);
+        AzureDevOpsResultIdStore store = new(fileSystem, logger, filePath, buildId, runId);
         await store.LoadAsync().ConfigureAwait(false);
         return store;
     }
@@ -124,6 +127,35 @@ internal sealed class AzureDevOpsResultIdStore
     {
         _results[CreateKey(published.Storage, published.Name)] = published with { Attempts = attempts };
         _hasUnsavedChanges = true;
+        _hasAdvancedExistingHistory = true;
+    }
+
+    /// <summary>
+    /// Removes the persisted map before an existing result is updated.
+    /// </summary>
+    /// <remarks>
+    /// PATCH changes server history in place. If the process dies after Azure DevOps accepts it but before
+    /// the updated map is saved, an old map would let the next attempt replace that history with stale data.
+    /// Deleting first closes that crash window. When deletion is impossible the caller must avoid PATCH and
+    /// create a separate result instead — duplicates are preferable to losing an accepted attempt.
+    /// </remarks>
+    public bool TryInvalidatePersistedMap()
+    {
+        if (!_fileSystem.ExistFile(_filePath))
+        {
+            return true;
+        }
+
+        try
+        {
+            _fileSystem.DeleteFile(_filePath);
+            return true;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingFailedToDeleteCoordinationFile} {_filePath}: {ex.Message}");
+            return false;
+        }
     }
 
     /// <summary>
@@ -162,7 +194,7 @@ internal sealed class AzureDevOpsResultIdStore
                 entries[index++] = new AzureDevOpsResultMapEntry(published.Storage, published.Name, published.Id, published.Attempts);
             }
 
-            string json = JsonSerializer.Serialize(new AzureDevOpsResultMapFile(_buildId, entries), JsonSerializerOptions);
+            string json = JsonSerializer.Serialize(new AzureDevOpsResultMapFile(_buildId, _runId, entries), JsonSerializerOptions);
 
             using (IFileStream stream = _fileSystem.NewFileStream(temporaryFilePath, FileMode.Create, FileAccess.Write, FileShare.None))
             using (StreamWriter writer = new(stream.Stream, Utf8EncodingWithoutBom, 1024, leaveOpen: true))
@@ -178,10 +210,21 @@ internal sealed class AzureDevOpsResultIdStore
 
             _fileSystem.MoveFile(temporaryFilePath, _filePath, overwrite: true);
             _hasUnsavedChanges = false;
+            _hasAdvancedExistingHistory = false;
         }
         catch (Exception ex)
         {
             TryDeleteFile(temporaryFilePath);
+
+            // TryInvalidatePersistedMap removes the old map before any PATCH, so this is normally absent.
+            // Keep a still-valid old map after create-only changes: the new results may be duplicated on
+            // the next attempt, but previously known results can still merge correctly. If an existing
+            // history somehow advanced without prior invalidation, remove it rather than risk data loss.
+            if (_hasAdvancedExistingHistory)
+            {
+                TryDeleteFile(_filePath);
+            }
+
             TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingFailedToWriteCoordinationFile} {_filePath}: {ex.Message}");
         }
     }
@@ -211,9 +254,10 @@ internal sealed class AzureDevOpsResultIdStore
             string content = await _fileSystem.ReadAllTextAsync(_filePath).ConfigureAwait(false);
             AzureDevOpsResultMapFile? map = JsonSerializer.Deserialize<AzureDevOpsResultMapFile>(content, JsonSerializerOptions);
 
-            // A map left behind by an unrelated build would send this build's updates at results that
-            // belong to somebody else's run, which Azure DevOps rejects. Start over instead.
-            if (map?.Results is null || map.BuildId != _buildId)
+            // Result ids are scoped by run, not only by build. A map left behind by another run would
+            // address unrelated results even when it belongs to the same build (for example after a
+            // crashed orchestration whose process id was later reused). Start over instead.
+            if (map?.Results is null || map.BuildId != _buildId || map.RunId != _runId)
             {
                 return;
             }
@@ -306,9 +350,11 @@ internal sealed record AzureDevOpsResultMapEntry(
 /// On-disk shape of the result map.
 /// </summary>
 /// <remarks>
-/// Unknown members are ignored on read, so a newer process can add fields without breaking an older one
-/// that takes part in the same build.
+/// Unknown members are ignored on read, so additive fields remain forward-compatible. The build and run
+/// ids are required discriminators: a map that predates either one is deliberately ignored, because result
+/// ids are only meaningful within the run that created them.
 /// </remarks>
 internal sealed record AzureDevOpsResultMapFile(
     [property: JsonPropertyName("buildId")] int BuildId,
+    [property: JsonPropertyName("runId")] int RunId,
     [property: JsonPropertyName("results")] IReadOnlyList<AzureDevOpsResultMapEntry>? Results);

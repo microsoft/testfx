@@ -163,7 +163,12 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
             // the same test. Absent (a run with no orchestrator) means every result is simply created.
             if (AzureDevOpsConstants.TryGetInheritedResultMapPath(_environment, publishConfiguration.BuildId) is { } resultMapPath)
             {
-                _resultIdStore = await AzureDevOpsResultIdStore.OpenAsync(_fileSystem, _logger, resultMapPath, publishConfiguration.BuildId).ConfigureAwait(false);
+                _resultIdStore = await AzureDevOpsResultIdStore.OpenAsync(
+                    _fileSystem,
+                    _logger,
+                    resultMapPath,
+                    publishConfiguration.BuildId,
+                    CurrentRunId.Value).ConfigureAwait(false);
             }
 
             // Results stream into the run as tests complete, but the build's Tests tab only lists the run

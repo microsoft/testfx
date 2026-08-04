@@ -94,13 +94,15 @@ Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.Storage
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.Storage.init -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapFile
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapFile.<Clone>$() -> Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapFile!
-Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapFile.AzureDevOpsResultMapFile(int BuildId, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry!>? Results) -> void
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapFile.AzureDevOpsResultMapFile(int BuildId, int RunId, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry!>? Results) -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapFile.BuildId.get -> int
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapFile.BuildId.init -> void
-Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapFile.Deconstruct(out int BuildId, out System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry!>? Results) -> void
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapFile.Deconstruct(out int BuildId, out int RunId, out System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry!>? Results) -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapFile.Equals(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapFile? other) -> bool
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapFile.Results.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry!>?
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapFile.Results.init -> void
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapFile.RunId.get -> int
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapFile.RunId.init -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCaseResult.Id.get -> int?
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCaseResult.Id.init -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCaseResult.ResultGroupType.get -> string?
@@ -147,7 +149,8 @@ static Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsConstants.Forma
 static Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsConstants.TryGetInheritedResultMapPath(Microsoft.Testing.Platform.Helpers.IEnvironment! environment, int buildId) -> string?
 static Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.operator !=(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult? left, Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult? right) -> bool
 static Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.operator ==(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult? left, Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult? right) -> bool
-static Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultIdStore.OpenAsync(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Logging.ILogger! logger, string! filePath, int buildId) -> System.Threading.Tasks.Task<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultIdStore!>!
+static Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultIdStore.OpenAsync(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Logging.ILogger! logger, string! filePath, int buildId, int runId) -> System.Threading.Tasks.Task<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultIdStore!>!
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultIdStore.TryInvalidatePersistedMap() -> bool
 static Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.operator !=(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry? left, Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry? right) -> bool
 static Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.operator ==(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry? left, Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry? right) -> bool
 static Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapFile.operator !=(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapFile? left, Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapFile? right) -> bool

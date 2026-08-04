@@ -147,7 +147,19 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
                     return;
                 }
 
-                if (updates.Count > 0 && !await TryUpdateResultsAsync(updates, cancellationToken).ConfigureAwait(false))
+                if (updates.Count > 0 && !_resultIdStore!.TryInvalidatePersistedMap())
+                {
+                    // The old map cannot be removed, so a successful PATCH followed by a crash could leave
+                    // stale history for the next attempt to replay. Create separate results instead: less
+                    // tidy, but every execution remains represented.
+                    List<AzureDevOpsTestCaseResultWithAttachments> updateFallbacks = [.. updates.Select(update => update.Attempt)];
+                    if (!await TryCreateResultsAsync(updateFallbacks, cancellationToken).ConfigureAwait(false))
+                    {
+                        RequeueUnsafe(updateFallbacks);
+                        return;
+                    }
+                }
+                else if (updates.Count > 0 && !await TryUpdateResultsAsync(updates, cancellationToken).ConfigureAwait(false))
                 {
                     RequeueUnsafe([.. updates.Select(update => update.Attempt)]);
                     return;
@@ -209,9 +221,16 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
             return true;
         }
 
+        // Record the whole accepted batch before any cancellable attachment upload. Azure DevOps accepted
+        // every result in one operation, so the map must describe all of them even if cancellation
+        // interrupts the best-effort attachment phase.
         for (int i = 0; i < batch.Count; i++)
         {
             _resultIdStore?.RecordCreated(batch[i].Result, resultIds[i]);
+        }
+
+        for (int i = 0; i < batch.Count; i++)
+        {
             await UploadAttachmentsForResultAsync(resultIds[i], batch[i].Attachments, cancellationToken).ConfigureAwait(false);
         }
 
@@ -265,9 +284,15 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
             return false;
         }
 
+        // The PATCH accepted the whole batch. Advance every history before an attachment upload can be
+        // canceled, otherwise only a prefix of the accepted updates would survive into the next attempt.
         for (int i = 0; i < updates.Count; i++)
         {
             _resultIdStore!.RecordAttempts(updates[i].Published, attemptHistories[i]);
+        }
+
+        for (int i = 0; i < updates.Count; i++)
+        {
             await UploadAttachmentsForResultAsync(
                 updates[i].Published.Id,
                 RenameForAttempt(updates[i].Attempt.Attachments, attemptHistories[i].Count),

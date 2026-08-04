@@ -158,11 +158,11 @@ internal sealed class AzureDevOpsTestRunOrchestratorLifetime : ITestHostOrchestr
 
             // Attempts publish into one run but run in separate processes with separate results
             // directories, so the mapping from test to result id needs a location they all agree on and
-            // that only they can see. Naming it after this process keeps two orchestrations of the same
-            // build apart, so neither merges the other's results into a rerun.
+            // that only they can see. A random orchestration id keeps two orchestrations of the same build
+            // apart even if an agent reuses a process id after a crash.
             _resultMapPath = Path.Combine(
                 publishConfiguration.ResultsDirectory,
-                $"azdo-results.{publishConfiguration.BuildId.ToString(CultureInfo.InvariantCulture)}.{_environment.ProcessId.ToString(CultureInfo.InvariantCulture)}.json");
+                $"azdo-results.{publishConfiguration.BuildId.ToString(CultureInfo.InvariantCulture)}.{Guid.NewGuid():N}.json");
             _environment.SetEnvironmentVariable(AzureDevOpsConstants.ResultMapPathEnvironmentVariableName, AzureDevOpsConstants.FormatResultMapPath(publishConfiguration.BuildId, _resultMapPath));
 
             // Only the process that created the run announces it; the others share the same id and would

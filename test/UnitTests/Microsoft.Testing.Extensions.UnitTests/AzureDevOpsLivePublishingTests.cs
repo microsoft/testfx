@@ -2144,7 +2144,7 @@ public sealed class AzureDevOpsLivePublishingTests
         await PublishSingleResultAsync(directory.Path, environment, "MyTest", new FailedTestNodeStateProperty(new InvalidOperationException("boom")), resultId: 71);
 
         string mapPath = AzureDevOpsConstants.TryGetInheritedResultMapPath(environment.Object, buildId: 123)!;
-        string mapAfterFirstAttempt = File.ReadAllText(mapPath);
+        Assert.IsTrue(File.Exists(mapPath));
 
         AzureDevOpsTestResultsPublisher secondAttempt = CreatePublisher(directory.Path, AzureDevOpsTestResultsPublisherOptions.Default, out FakeAzureDevOpsTestResultsClient client, out _, out _, environment);
         client.UpdateTestResultsAsyncFunc = (_, _, _, _) => Task.FromException(new HttpRequestException("transient"));
@@ -2159,12 +2159,10 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.HasCount(1, client.UpdateTestResultsCalls);
         Assert.HasCount(2, client.UpdateTestResultsCalls[0].Results.Single().SubResults!);
 
-        // Azure DevOps never accepted that update, so the map must still describe only the attempt that
-        // did land. Advancing it here would make a retry of the update list the same execution twice.
-        Assert.AreEqual(
-            mapAfterFirstAttempt,
-            File.ReadAllText(mapPath),
-            "A rejected update must leave the recorded attempt history untouched.");
+        // The map is invalidated before PATCH so a crash after an accepted update can never expose stale
+        // history. A rejected update therefore leaves no map; the next attempt safely creates a separate
+        // result rather than risking an incomplete replacement.
+        Assert.IsFalse(File.Exists(mapPath));
     }
 
     [TestMethod]
@@ -2225,6 +2223,196 @@ public sealed class AzureDevOpsLivePublishingTests
         await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
 
         Assert.IsFalse(File.Exists(mapPath), "An empty map only leaves a coordination file in the results directory for nobody to read.");
+    }
+
+    [TestMethod]
+    public async Task MapFromAnotherRunInTheSameBuild_IsIgnored()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out FakeAzureDevOpsTestResultsClient lifetimeClient, out _, environment);
+        lifetimeClient.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(4242);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+
+        await PublishSingleResultAsync(directory.Path, environment, "MyTest", new FailedTestNodeStateProperty(new InvalidOperationException("boom")), resultId: 81);
+
+        string mapPath = AzureDevOpsConstants.TryGetInheritedResultMapPath(environment.Object, buildId: 123)!;
+        string map = File.ReadAllText(mapPath);
+        string foreignRunMap = map.Replace("\"runId\":4242", "\"runId\":9999");
+        Assert.AreNotEqual(map, foreignRunMap, "The test expected the map to carry the run id.");
+        File.WriteAllText(mapPath, foreignRunMap);
+
+        AzureDevOpsTestResultsPublisher nextAttempt = CreatePublisher(directory.Path, AzureDevOpsTestResultsPublisherOptions.Default, out FakeAzureDevOpsTestResultsClient client, out _, out _, environment);
+        List<AzureDevOpsTestCaseResult> created = [];
+        client.PublishTestResultsAsyncFunc = (_, _, results, _) =>
+        {
+            created.AddRange(results);
+            return Task.FromResult<IReadOnlyList<int>?>([82]);
+        };
+
+        await StartPublisherAsync(nextAttempt);
+        await nextAttempt.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("MyTest", new PassedTestNodeStateProperty(), RetryTestStartTime)),
+            CancellationToken.None);
+        await nextAttempt.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.HasCount(1, created);
+        Assert.IsEmpty(client.UpdateTestResultsCalls, "Result ids from another run must never be PATCHed.");
+    }
+
+    [TestMethod]
+    public async Task OrchestrationsWithTheSameProcessId_UseDifferentMapPaths()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId(processId: 4321);
+
+        AzureDevOpsTestRunOrchestratorLifetime first = CreateOrchestratorLifetime(directory.Path, out FakeAzureDevOpsTestResultsClient firstClient, out _, environment);
+        firstClient.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(1001);
+        await first.BeforeRunAsync(CancellationToken.None);
+        string firstPath = AzureDevOpsConstants.TryGetInheritedResultMapPath(environment.Object, buildId: 123)!;
+        await first.AfterRunAsync(0, CancellationToken.None);
+
+        AzureDevOpsTestRunOrchestratorLifetime second = CreateOrchestratorLifetime(directory.Path, out FakeAzureDevOpsTestResultsClient secondClient, out _, environment);
+        secondClient.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(1002);
+        await second.BeforeRunAsync(CancellationToken.None);
+        string secondPath = AzureDevOpsConstants.TryGetInheritedResultMapPath(environment.Object, buildId: 123)!;
+        await second.AfterRunAsync(0, CancellationToken.None);
+
+        Assert.AreNotEqual(firstPath, secondPath, "A recycled process id must not revive a crashed orchestration's map.");
+    }
+
+    [TestMethod]
+    public async Task FailedMapSave_RemovesTheStaleMap()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        string mapPath = Path.Combine(directory.Path, "azdo-results.json");
+        CollectingLogger logger = new();
+        SystemFileSystem fileSystem = new();
+
+        AzureDevOpsResultIdStore initial = await AzureDevOpsResultIdStore.OpenAsync(fileSystem, logger, mapPath, buildId: 123, runId: 42);
+        AzureDevOpsTestCaseResult first = new("MyTest", "tests", "MyTest", AzureDevOpsLivePublishingConstants.FailedTestOutcome, 1, "first", null, null, null);
+        initial.RecordCreated(first, resultId: 91);
+        await initial.SaveAsync(CancellationToken.None);
+        Assert.IsTrue(File.Exists(mapPath));
+
+        UnwritableFileSystem failingFileSystem = new() { FailMoves = true };
+        AzureDevOpsResultIdStore updated = await AzureDevOpsResultIdStore.OpenAsync(failingFileSystem, logger, mapPath, buildId: 123, runId: 42);
+        AzureDevOpsPublishedResult published = updated.TryGet(first)!;
+        IReadOnlyList<AzureDevOpsTestSubResult> attempts = AzureDevOpsResultIdStore.BuildNextAttempts(
+            published,
+            first with { ErrorMessage = "second" });
+        updated.RecordAttempts(published, attempts);
+        await updated.SaveAsync(CancellationToken.None);
+
+        Assert.IsFalse(File.Exists(mapPath), "A stale map would let the next attempt erase accepted server history.");
+    }
+
+    [TestMethod]
+    public async Task CreateOnlySaveFailure_PreservesStillValidExistingEntries()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        string mapPath = Path.Combine(directory.Path, "azdo-results.json");
+        CollectingLogger logger = new();
+        SystemFileSystem fileSystem = new();
+
+        AzureDevOpsResultIdStore initial = await AzureDevOpsResultIdStore.OpenAsync(fileSystem, logger, mapPath, buildId: 123, runId: 42);
+        AzureDevOpsTestCaseResult existing = new("ExistingTest", "tests", "ExistingTest", AzureDevOpsLivePublishingConstants.FailedTestOutcome, 1, "first", null, null, null);
+        initial.RecordCreated(existing, resultId: 95);
+        await initial.SaveAsync(CancellationToken.None);
+
+        UnwritableFileSystem failingFileSystem = new() { FailMoves = true };
+        AzureDevOpsResultIdStore updated = await AzureDevOpsResultIdStore.OpenAsync(failingFileSystem, logger, mapPath, buildId: 123, runId: 42);
+        AzureDevOpsTestCaseResult newlyCreated = new("NewTest", "tests", "NewTest", AzureDevOpsLivePublishingConstants.PassedTestOutcome, 1, null, null, null, null);
+        updated.RecordCreated(newlyCreated, resultId: 96);
+        await updated.SaveAsync(CancellationToken.None);
+
+        Assert.IsTrue(File.Exists(mapPath), "A create-only failure does not make the already persisted entries stale.");
+        string survivingMap = File.ReadAllText(mapPath);
+        Assert.Contains("ExistingTest", survivingMap);
+        Assert.DoesNotContain("NewTest", survivingMap);
+    }
+
+    [TestMethod]
+    public async Task WhenTheExistingMapCannotBeInvalidated_RetryFallsBackToCreate()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out _, out _, environment);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+
+        UnwritableFileSystem fileSystem = new();
+        AzureDevOpsTestResultsPublisher firstAttempt = CreatePublisher(
+            directory.Path,
+            AzureDevOpsTestResultsPublisherOptions.Default,
+            out FakeAzureDevOpsTestResultsClient firstClient,
+            out _,
+            out _,
+            environment,
+            fileSystem: fileSystem);
+        firstClient.PublishTestResultsAsyncFunc = (_, _, _, _) => Task.FromResult<IReadOnlyList<int>?>([97]);
+        await StartPublisherAsync(firstAttempt);
+        await firstAttempt.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("MyTest", new FailedTestNodeStateProperty(new InvalidOperationException("boom")), RetryTestStartTime)),
+            CancellationToken.None);
+        await firstAttempt.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        fileSystem.FailDeletes = true;
+        AzureDevOpsTestResultsPublisher secondAttempt = CreatePublisher(
+            directory.Path,
+            AzureDevOpsTestResultsPublisherOptions.Default,
+            out FakeAzureDevOpsTestResultsClient secondClient,
+            out _,
+            out _,
+            environment,
+            fileSystem: fileSystem);
+        List<AzureDevOpsTestCaseResult> created = [];
+        secondClient.PublishTestResultsAsyncFunc = (_, _, results, _) =>
+        {
+            created.AddRange(results);
+            return Task.FromResult<IReadOnlyList<int>?>([98]);
+        };
+
+        await StartPublisherAsync(secondAttempt);
+        await secondAttempt.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("MyTest", new PassedTestNodeStateProperty(), RetryTestStartTime)),
+            CancellationToken.None);
+        await secondAttempt.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.HasCount(1, created, "The retry should degrade to a separate result when stale history cannot be invalidated.");
+        Assert.IsEmpty(secondClient.UpdateTestResultsCalls);
+    }
+
+    [TestMethod]
+    public async Task AttachmentCancellationAfterCreate_StillRecordsTheWholeAcceptedBatch()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out _, out _, environment);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+
+        AzureDevOpsTestResultsPublisherOptions options = new(2, TimeSpan.FromMinutes(1), 40, TimeSpan.FromMilliseconds(250));
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options, out FakeAzureDevOpsTestResultsClient client, out _, out _, environment);
+        client.PublishTestResultsAsyncFunc = (_, _, _, _) => Task.FromResult<IReadOnlyList<int>?>([101, 102]);
+        client.UploadTestResultAttachmentAsyncFunc = (_, _, _, _, _) => Task.FromException(new OperationCanceledException());
+        await StartPublisherAsync(publisher);
+
+        TestNode first = CreateNode("FirstTest", new FailedTestNodeStateProperty(new InvalidOperationException("first")), RetryTestStartTime);
+        first.Properties.Add(new StandardOutputProperty("first output"));
+        TestNode second = CreateNode("SecondTest", new FailedTestNodeStateProperty(new InvalidOperationException("second")), RetryTestStartTime);
+        second.Properties.Add(new StandardOutputProperty("second output"));
+
+        await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), CreateMessage(first), CancellationToken.None);
+        await Assert.ThrowsExactlyAsync<OperationCanceledException>(
+            () => publisher.ConsumeAsync(Mock.Of<IDataProducer>(), CreateMessage(second), CancellationToken.None));
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        string mapPath = AzureDevOpsConstants.TryGetInheritedResultMapPath(environment.Object, buildId: 123)!;
+        string map = File.ReadAllText(mapPath);
+        Assert.Contains("FirstTest", map);
+        Assert.Contains("SecondTest", map);
     }
 
     /// <summary>
@@ -2477,7 +2665,8 @@ public sealed class AzureDevOpsLivePublishingTests
         Mock<ITestApplicationModuleInfo>? testApplicationModuleInfo = null,
         ITask? task = null,
         Mock<ITestApplicationProcessExitCode>? processExitCode = null,
-        CollectingOutputDevice? outputDevice = null)
+        CollectingOutputDevice? outputDevice = null,
+        IFileSystem? fileSystem = null)
     {
         Mock<ICommandLineOptions> commandLineOptions = new();
         commandLineOptions.Setup(x => x.IsOptionSet(AzureDevOpsCommandLineOptions.PublishAzureDevOpsTestResultsOptionName)).Returns(true);
@@ -2513,7 +2702,7 @@ public sealed class AzureDevOpsLivePublishingTests
             commandLineOptions.Object,
             configuration.Object,
             environment.Object,
-            new SystemFileSystem(),
+            fileSystem ?? new SystemFileSystem(),
             outputDevice ?? new CollectingOutputDevice(),
             testApplicationModuleInfo.Object,
             processExitCode.Object,
@@ -2547,6 +2736,10 @@ public sealed class AzureDevOpsLivePublishingTests
 
         public bool FailRunIdFileWrites { get; set; }
 
+        public bool FailMoves { get; set; }
+
+        public bool FailDeletes { get; set; }
+
         public IFileStream NewFileStream(string path, FileMode mode, FileAccess access, FileShare share)
             => FailRunIdFileWrites && Path.GetFileName(path).EndsWith(".json", StringComparison.Ordinal) && !Path.GetFileName(path).Contains("participant")
                 ? throw new IOException($"The process cannot access the file '{path}' because it is being used by another process.")
@@ -2556,7 +2749,15 @@ public sealed class AzureDevOpsLivePublishingTests
 
         public string CreateDirectory(string path) => _inner.CreateDirectory(path);
 
-        public void DeleteFile(string path) => _inner.DeleteFile(path);
+        public void DeleteFile(string path)
+        {
+            if (FailDeletes)
+            {
+                throw new IOException($"The process cannot delete the file '{path}'.");
+            }
+
+            _inner.DeleteFile(path);
+        }
 
         public bool ExistDirectory(string? path) => _inner.ExistDirectory(path);
 
@@ -2564,7 +2765,15 @@ public sealed class AzureDevOpsLivePublishingTests
 
         public string[] GetFiles(string path, string searchPattern, SearchOption searchOption) => _inner.GetFiles(path, searchPattern, searchOption);
 
-        public void MoveFile(string sourceFileName, string destFileName, bool overwrite = false) => _inner.MoveFile(sourceFileName, destFileName, overwrite);
+        public void MoveFile(string sourceFileName, string destFileName, bool overwrite = false)
+        {
+            if (FailMoves)
+            {
+                throw new IOException($"The process cannot move the file '{sourceFileName}' to '{destFileName}'.");
+            }
+
+            _inner.MoveFile(sourceFileName, destFileName, overwrite);
+        }
 
         public IFileStream NewFileStream(string path, FileMode mode) => _inner.NewFileStream(path, mode);
 
