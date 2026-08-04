@@ -12,16 +12,15 @@
 
 ## Task Schedule (last run dates)
 - Task 1 (Discover Commands): 2026-07-30
-- Task 2 (Identify Opportunities): 2026-08-02
+- Task 2 (Identify Opportunities): 2026-08-04 (no new opportunities — ReflectHelper/TypeCache/StackTraceHelper already optimized)
 - Task 3 (Implement): 2026-08-03 (no viable target found — codebase well-optimized)
-- Task 4 (Maintain PRs): 2026-08-02 (no open perf-improver PRs)
-- Task 5 (Comment Issues): 2026-08-03 (no open performance issues found)
+- Task 4 (Maintain PRs): 2026-08-04 (no open perf-improver PRs)
+- Task 5 (Comment Issues): 2026-08-04 (no open performance issues found)
 - Task 6 (Infrastructure): 2026-07-28
-- Task 7 (Monthly Summary): 2026-08-03
+- Task 7 (Monthly Summary): 2026-08-04
 
 ## Monthly Activity Issue
-- Issue #9604 (July 2026, open) — close when possible
-- August 2026 Monthly Activity: created last run (check repo for number)
+- Issue #10381 (August 2026, open) — kept updated; no suggested actions pending
 
 ## Work In Progress
 None
@@ -43,6 +42,7 @@ None
 - TestNodeResultsState: caches formatted "N tests running" strings to avoid per-frame re-format
 - SingleConsumerUnboundedChannel: well-optimized lock-based channel with early-exit fast path
 - Backlog is now very slim — codebase is well-optimized for hot paths
+- 2026-08-04: Confirmed ReflectHelper/TypeCache attribute caching already centralized (ReflectionOperations._attributeCache); StackTraceHelper already uses [GeneratedRegex] with static cache fallback for non-source-gen targets. No fresh targets found.
 
 ## Completed Work (this month)
 ### July 2026
