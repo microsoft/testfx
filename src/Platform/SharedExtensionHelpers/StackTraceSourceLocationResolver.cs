@@ -153,11 +153,25 @@ internal static class StackTraceSourceLocationResolver
                 return null;
             }
         }
-        else if (!TryIsPathRooted(filePath, out bool isPathRooted)
-            || !isPathRooted
-            || !TryGetFullPath(filePath, out canonicalCandidate))
+        else
         {
-            return null;
+            if (!TryIsPathRooted(filePath, out bool isPathRooted))
+            {
+                return null;
+            }
+
+            // A test framework may report a path that is already workspace-relative: TestFileLocationProperty
+            // does not require an absolute path, and the VSTest bridge copies TestCase.CodeFilePath verbatim.
+            // Resolve such a path against the workspace root rather than dropping it; the containment and
+            // existence checks below still reject traversal segments and files that are not on disk.
+            bool resolved = isPathRooted
+                ? TryGetFullPath(filePath, out canonicalCandidate)
+                : TryGetFullPath(canonicalRepoRoot, filePath, out canonicalCandidate);
+
+            if (!resolved)
+            {
+                return null;
+            }
         }
 
         if (!IsUnderDirectory(canonicalCandidate, canonicalRepoRoot) || !fileSystem.ExistFile(canonicalCandidate))

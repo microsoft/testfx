@@ -62,6 +62,29 @@ public sealed class StackTraceSourceLocationResolverTests
         fileSystem.Verify(f => f.ExistFile(It.IsAny<string>()), Times.Never);
     }
 
+    [TestMethod]
+    public void TryMakeWorkspaceRelative_WorkspaceRelativeFile_ReturnsForwardSlashRelativePath()
+    {
+        // The VSTest bridge copies TestCase.CodeFilePath verbatim, so a bridged framework may report a path
+        // that is already workspace-relative rather than absolute.
+        Mock<IFileSystem> fileSystem = CreateFileSystemWhereEveryFileExists();
+
+        string? relativePath = StackTraceSourceLocationResolver.TryMakeWorkspaceRelative(Path.Combine("src", "Calc.cs"), CreateRepoRoot(), fileSystem.Object);
+
+        Assert.AreEqual("src/Calc.cs", relativePath);
+    }
+
+    [TestMethod]
+    public void TryMakeWorkspaceRelative_WorkspaceRelativeTraversal_ReturnsNull()
+    {
+        Mock<IFileSystem> fileSystem = CreateFileSystemWhereEveryFileExists();
+
+        string? relativePath = StackTraceSourceLocationResolver.TryMakeWorkspaceRelative(".." + Path.DirectorySeparatorChar + "outside.cs", CreateRepoRoot(), fileSystem.Object);
+
+        Assert.IsNull(relativePath);
+        fileSystem.Verify(f => f.ExistFile(It.IsAny<string>()), Times.Never);
+    }
+
     private static Mock<IFileSystem> CreateFileSystemWhereEveryFileExists()
     {
         var fileSystem = new Mock<IFileSystem>();
