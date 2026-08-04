@@ -77,7 +77,7 @@ internal sealed class DynamicExtensionLoader
                 EnvironmentVariableConstants.TESTINGPLATFORM_NODYNAMICEXTENSIONS);
             await LogDebugAsync(message).ConfigureAwait(false);
 
-            if (!IsServerMode)
+            if (!IsStandardOutputReserved)
             {
                 _console.WriteLine(message);
             }
@@ -133,9 +133,9 @@ internal sealed class DynamicExtensionLoader
             return;
         }
 
-        // Server mode owns stdout as a protocol channel, so writing to it there would corrupt the stream. The
-        // diagnostic log still records everything in that case.
-        if (IsServerMode)
+        // Some modes reserve standard output for a machine-readable stream; writing notices there would
+        // corrupt it. The diagnostic log still records everything in that case.
+        if (IsStandardOutputReserved)
         {
             return;
         }
@@ -159,7 +159,20 @@ internal sealed class DynamicExtensionLoader
         _console.WriteLine(PlatformResources.DynamicExtensionsTrustWarning);
     }
 
-    private bool IsServerMode => _commandLineParseResult.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey);
+    /// <summary>
+    /// Gets a value indicating whether standard output is reserved for a machine-readable stream that a
+    /// human-readable notice would corrupt: the server-mode protocol channel, or the single JSON document
+    /// <c>--list-tests json</c> produces. Both suppress even the platform banner, so the same rule applies
+    /// to these notices.
+    /// </summary>
+    private bool IsStandardOutputReserved
+        => _commandLineParseResult.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey)
+        || IsListTestsJsonOutput();
+
+    private bool IsListTestsJsonOutput()
+        => _commandLineParseResult.TryGetOptionArgumentList(PlatformCommandLineProvider.DiscoverTestsOptionKey, out string[]? arguments)
+        && arguments is { Length: 1 }
+        && PlatformCommandLineProvider.DiscoverTestsJsonArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase);
 
     private bool IsDisabledByEnvironment()
     {

@@ -29,7 +29,7 @@ public sealed class DynamicExtensionLoaderTests
     private readonly RecordingConsole _console = new();
     private CommandLineParseResult _parseResult = CreateParseResult(enableDynamicExtensions: true);
 
-    private static CommandLineParseResult CreateParseResult(bool enableDynamicExtensions, bool serverMode = false)
+    private static CommandLineParseResult CreateParseResult(bool enableDynamicExtensions, bool serverMode = false, string? listTests = null)
     {
         List<CommandLineParseOption> options = [];
         if (enableDynamicExtensions)
@@ -40,6 +40,11 @@ public sealed class DynamicExtensionLoaderTests
         if (serverMode)
         {
             options.Add(new CommandLineParseOption(PlatformCommandLineProvider.ServerOptionKey, []));
+        }
+
+        if (listTests is not null)
+        {
+            options.Add(new CommandLineParseOption(PlatformCommandLineProvider.DiscoverTestsOptionKey, [listTests]));
         }
 
         return new CommandLineParseResult(null, options, []);
@@ -609,6 +614,43 @@ public sealed class DynamicExtensionLoaderTests
         await CreateLoader().LoadAsync(_builder.Object, Args);
 
         Assert.AreEqual(1, RecordingHook.InvocationCount, "The extension must still load in server mode.");
+        Assert.IsEmpty(_console.Output);
+    }
+
+    [TestMethod]
+    public async Task LoadAsync_InListTestsJsonMode_KeepsStandardOutputClean()
+    {
+        // stdout is reserved for a single JSON document in this mode -- even the platform banner is
+        // suppressed -- so a notice here would produce output no JSON parser can read.
+        _parseResult = CreateParseResult(enableDynamicExtensions: true, listTests: PlatformCommandLineProvider.DiscoverTestsJsonArgument);
+        SetupManifest("a.testingplatformextensions.json", ManifestFor(typeof(RecordingHook)));
+
+        await CreateLoader().LoadAsync(_builder.Object, Args);
+
+        Assert.AreEqual(1, RecordingHook.InvocationCount, "The extension must still load when discovering tests.");
+        Assert.IsEmpty(_console.Output);
+    }
+
+    [TestMethod]
+    public async Task LoadAsync_InListTestsTextMode_StillReportsWhatItLoaded()
+    {
+        // Only the json argument reserves stdout; the human-readable listing must keep the notice.
+        _parseResult = CreateParseResult(enableDynamicExtensions: true, listTests: "text");
+        SetupManifest("a.testingplatformextensions.json", ManifestFor(typeof(RecordingHook)));
+
+        await CreateLoader().LoadAsync(_builder.Object, Args);
+
+        Assert.Contains(typeof(RecordingHook).FullName!, _console.Output);
+    }
+
+    [TestMethod]
+    public async Task LoadAsync_WhenDisabledByEnvironmentVariableInListTestsJsonMode_KeepsStandardOutputClean()
+    {
+        _environment.Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_NODYNAMICEXTENSIONS)).Returns("1");
+        _parseResult = CreateParseResult(enableDynamicExtensions: true, listTests: PlatformCommandLineProvider.DiscoverTestsJsonArgument);
+
+        await CreateLoader().LoadAsync(_builder.Object, Args);
+
         Assert.IsEmpty(_console.Output);
     }
 

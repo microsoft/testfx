@@ -399,8 +399,10 @@ the log should see without having opted into extra logging.
 `--enable-dynamic-extensions`, that is reported on the same channel rather than only in the
 diagnostic log.
 
-The only exception is server mode, where standard output is a protocol channel and writing to it
-would corrupt the stream. The diagnostic log still records everything there.
+The exception is any mode that reserves standard output for a machine-readable stream: server mode,
+where it is a protocol channel, and `--list-tests json`, where the JSON document must be the sole
+content of standard output. Both already suppress the platform banner for the same reason. The
+diagnostic log still records everything there.
 
 With `--diagnostic` enabled, the diagnostic log additionally records: every manifest read, every
 property the platform did not understand, every entry that was skipped (disabled or duplicate `id`)
