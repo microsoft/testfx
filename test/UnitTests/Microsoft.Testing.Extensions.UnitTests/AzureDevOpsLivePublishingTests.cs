@@ -1973,7 +1973,8 @@ public sealed class AzureDevOpsLivePublishingTests
         AzureDevOpsTestCaseResult parent = client.UpdateTestResultsCalls.Single().Results.Single();
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.FailedTestOutcome, parent.Outcome);
         Assert.AreEqual("second", parent.ErrorMessage, "The parent reports the attempt that decided the outcome.");
-        IReadOnlyList<AzureDevOpsTestSubResult> subResults = parent.SubResults!;
+        Assert.IsNotNull(parent.SubResults);
+        IReadOnlyList<AzureDevOpsTestSubResult> subResults = parent.SubResults;
         Assert.HasCount(2, subResults);
         Assert.AreEqual(1, subResults[0].SequenceId);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.FailedTestOutcome, subResults[0].Outcome);
