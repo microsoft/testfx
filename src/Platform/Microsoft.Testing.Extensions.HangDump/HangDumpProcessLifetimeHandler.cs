@@ -68,6 +68,16 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     /// </summary>
     private static readonly TimeSpan MaxTimerDueTime = TimeSpan.FromMilliseconds(uint.MaxValue - 1);
 
+    /// <summary>
+    /// Upper bound for the optional in-progress-test query before taking a dump. A connected but
+    /// wedged host never answers the request/reply, and the application token is not cancelled while
+    /// the run is still "in progress" (which is exactly when the deadline dump fires), so an unbounded
+    /// query would block the dump and kill indefinitely and consume the whole dump margin. Kept short
+    /// so it never eats a meaningful slice of the default 30s dump margin; the healthy path answers in
+    /// milliseconds.
+    /// </summary>
+    private static readonly TimeSpan InProgressTestsQueryTimeout = TimeSpan.FromSeconds(5);
+
     private int _dumpTaken;
     private Task? _waitConnectionTask;
     private Task? _activityIndicatorTask;
@@ -471,13 +481,17 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         // The consumer pipe is only usable once the test host connected back over it. A non-null
         // client is not enough: it is created when the host sends its pipe name but only connected
         // later, so a deadline dump firing in that window (or a host that wedged during startup)
-        // would hit an unconnected pipe. Treat the in-progress-test list as best-effort: any query
-        // failure is logged and swallowed so it can never block taking the dump and killing the tree.
+        // would hit an unconnected pipe. Treat the in-progress-test list as best-effort: the query is
+        // bounded by a short timeout (a connected-but-wedged host never replies and the app token is
+        // not cancelled mid-run) and any failure is logged and swallowed, so it can never block taking
+        // the dump and killing the tree.
         if (_namedPipeClient is not null)
         {
             try
             {
-                GetInProgressTestsResponse tests = await _namedPipeClient.RequestReplyAsync<GetInProgressTestsRequest, GetInProgressTestsResponse>(new GetInProgressTestsRequest(), cancellationToken).ConfigureAwait(false);
+                using var queryCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                queryCts.CancelAfter(InProgressTestsQueryTimeout);
+                GetInProgressTestsResponse tests = await _namedPipeClient.RequestReplyAsync<GetInProgressTestsRequest, GetInProgressTestsResponse>(new GetInProgressTestsRequest(), queryCts.Token).ConfigureAwait(false);
                 if (tests.Tests.Length > 0)
                 {
                     string hangTestsFileName = Path.ChangeExtension(finalDumpFileName, ".log");
@@ -497,7 +511,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             }
             catch (Exception ex)
             {
-                await _logger.LogDebugAsync($"Could not collect the in-progress tests before dumping (the consumer pipe may not be connected). Continuing with the dump. {ex}").ConfigureAwait(false);
+                await _logger.LogDebugAsync($"Could not collect the in-progress tests before dumping (the consumer pipe may not be connected, or the host did not reply within {InProgressTestsQueryTimeout}). Continuing with the dump. {ex}").ConfigureAwait(false);
             }
         }
 
