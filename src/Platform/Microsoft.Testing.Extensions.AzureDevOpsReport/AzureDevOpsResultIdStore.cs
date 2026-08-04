@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Security;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -207,7 +208,7 @@ internal sealed class AzureDevOpsResultIdStore
             _fileSystem.DeleteFile(_filePath);
             return true;
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException)
         {
             TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingFailedToDeleteCoordinationFile} {_filePath}: {ex.Message}");
             return false;
@@ -334,10 +335,20 @@ internal sealed class AzureDevOpsResultIdStore
                     && entry.Id > 0
                     && entry.Storage is { Length: > 0 } storage
                     && entry.Name is { Length: > 0 } name
-                    && entry.Title is { Length: > 0 } title
-                    && IsValidAttemptHistory(entry.Attempts))
+                    && entry.Title is { Length: > 0 } title)
                 {
                     string key = CreateKey(storage, name, title);
+                    keyCounts[key] = keyCounts.TryGetValue(key, out int keyCount) ? keyCount + 1 : 1;
+                    resultIdCounts[entry.Id] = resultIdCounts.TryGetValue(entry.Id, out int idCount) ? idCount + 1 : 1;
+
+                    // Count usable identities before validating payload fields. An invalid entry still
+                    // makes its key and result id ambiguous; accepting another entry that claims either
+                    // would guess ownership from untrusted data.
+                    if (!IsValidAttemptHistory(entry.Attempts))
+                    {
+                        continue;
+                    }
+
                     long? retainedDuration = SumDurations(entry.Attempts);
                     if (entry.TotalDurationInMs is < 0
                         || (entry.TotalDurationInMs is { } totalDuration && retainedDuration is { } retained && totalDuration < retained))
@@ -346,8 +357,6 @@ internal sealed class AzureDevOpsResultIdStore
                     }
 
                     candidates.Add((entry, key, retainedDuration));
-                    keyCounts[key] = keyCounts.TryGetValue(key, out int keyCount) ? keyCount + 1 : 1;
-                    resultIdCounts[entry.Id] = resultIdCounts.TryGetValue(entry.Id, out int idCount) ? idCount + 1 : 1;
                 }
             }
 
@@ -367,7 +376,7 @@ internal sealed class AzureDevOpsResultIdStore
                 };
             }
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or JsonException)
         {
             // Degrade to an empty map: every test looks unseen and is published as its own result, which
             // is the behaviour that predates reruns. Losing the merge is acceptable; losing results is not.
@@ -441,7 +450,7 @@ internal sealed class AzureDevOpsResultIdStore
                 _fileSystem.DeleteFile(path);
             }
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException)
         {
             // Leaving a temporary file behind is harmless; it is never read.
         }

@@ -2280,16 +2280,20 @@ public sealed class AzureDevOpsLivePublishingTests
               {"storage":"tests","name":"First","title":"First","id":431,"attempts":[{"sequenceId":1,"displayName":"First","outcome":"Failed","durationInMs":1}]},
               {"storage":"tests","name":"First","title":"First","id":432,"attempts":[{"sequenceId":1,"displayName":"First","outcome":"Failed","durationInMs":1}]},
               {"storage":"tests","name":"First","title":"First","id":433,"attempts":[{"sequenceId":1,"displayName":"First","outcome":"Failed","durationInMs":1}]},
-              {"storage":"tests","name":"Second","title":"Second","id":433,"attempts":[{"sequenceId":1,"displayName":"Second","outcome":"Failed","durationInMs":1}]}
+              {"storage":"tests","name":"Second","title":"Second","id":433,"attempts":[{"sequenceId":1,"displayName":"Second","outcome":"Failed","durationInMs":1}]},
+              {"storage":"tests","name":"Malformed","title":"Malformed","id":434,"attempts":null},
+              {"storage":"tests","name":"Third","title":"Third","id":434,"attempts":[{"sequenceId":1,"displayName":"Third","outcome":"Failed","durationInMs":1}]}
             ]}
             """);
 
         AzureDevOpsResultIdStore store = await AzureDevOpsResultIdStore.OpenAsync(new SystemFileSystem(), new CollectingLogger(), mapPath, buildId: 123, runId: 42);
         AzureDevOpsTestCaseResult first = new("First", "tests", "First", AzureDevOpsLivePublishingConstants.PassedTestOutcome, 1, null, null, null, null);
         AzureDevOpsTestCaseResult second = new("Second", "tests", "Second", AzureDevOpsLivePublishingConstants.PassedTestOutcome, 1, null, null, null, null);
+        AzureDevOpsTestCaseResult third = new("Third", "tests", "Third", AzureDevOpsLivePublishingConstants.PassedTestOutcome, 1, null, null, null, null);
 
         Assert.IsNull(store.TryGet(first));
         Assert.IsNull(store.TryGet(second));
+        Assert.IsNull(store.TryGet(third));
     }
 
     [TestMethod]
