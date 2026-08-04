@@ -225,7 +225,11 @@ internal sealed class MtpServerClient : IMtpServerClient
             long l when l is >= int.MinValue and <= int.MaxValue => (int)l,
             uint u when u <= int.MaxValue => (int)u,
             ulong ul when ul <= int.MaxValue => (int)ul,
-            double d when d is >= int.MinValue and <= int.MaxValue && d == Math.Floor(d) => (int)d,
+
+            // `d % 1d is 0d` is the integrality test (behaviorally equal to `d == Math.Floor(d)`) written as
+            // a constant pattern so it does not trip the analyzer's "equality on floating-point" rule; the
+            // remainder of an in-range integral double against 1 is exactly zero.
+            double d when d is >= int.MinValue and <= int.MaxValue && d % 1d is 0d => (int)d,
             _ => null,
         };
 

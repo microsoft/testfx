@@ -29,6 +29,11 @@ internal sealed class MtpServerProcess : IDisposable
     // caller (for example an acceptance test) deletes the application directory.
     private const int ProcessKillTimeoutMs = 5000;
 
+    // Upper bound on the retained standard-error text so a chatty or long-lived server process cannot grow
+    // this buffer without limit. The tail is what matters for diagnosing a failure near exit, so when the
+    // cap is exceeded the oldest text is dropped from the front and the most recent output is kept.
+    private const int MaxStandardErrorLength = 64 * 1024;
+
     // How often the connect wait re-checks whether the launched process has already exited, so a child
     // that dies on startup fails fast instead of blocking the full ConnectionTimeout.
     private static readonly TimeSpan ProcessExitPollInterval = TimeSpan.FromMilliseconds(100);
@@ -150,6 +155,10 @@ internal sealed class MtpServerProcess : IDisposable
                     lock (standardError)
                     {
                         standardError.AppendLine(e.Data);
+                        if (standardError.Length > MaxStandardErrorLength)
+                        {
+                            standardError.Remove(0, standardError.Length - MaxStandardErrorLength);
+                        }
                     }
                 }
             };

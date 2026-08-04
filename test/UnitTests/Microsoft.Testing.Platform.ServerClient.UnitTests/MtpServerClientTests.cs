@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
+
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.ServerMode.Client;
 
@@ -534,6 +536,37 @@ public sealed class MtpServerClientTests
         var result = (IDictionary<string, object?>)response.Result!;
         Assert.IsTrue((bool)result["success"]!, "Expected the boolean payload to survive the round trip.");
         Assert.AreEqual("attached", result["detail"], "Expected the string payload to survive the round trip.");
+    }
+
+    [TestMethod]
+    public async Task Dispose_CalledFromNotificationHandler_DoesNotSelfWaitOnTheReadLoop()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        // A consumer may dispose the client from inside a notification handler. That handler runs on the
+        // read loop's own execution flow, so the connection's Dispose must detect the re-entrancy and skip
+        // synchronously waiting on the read loop from within itself. If it does not, Dispose blocks for the
+        // full read-loop shutdown timeout (5s) because the loop cannot finish while it is parked in this
+        // handler. Asserting the handler-triggered Dispose returns well under that timeout guards the fix;
+        // before it, this elapsed jumps to ~5s.
+        var disposeElapsed = new TaskCompletionSource<TimeSpan>(TaskCreationOptions.RunContinuationsAsynchronously);
+        client.TestNodesUpdated += (_, _) =>
+        {
+            var stopwatch = Stopwatch.StartNew();
+            client.Dispose();
+            stopwatch.Stop();
+            disposeElapsed.TrySetResult(stopwatch.Elapsed);
+        };
+
+        await server.SendDiscoveredTestNodeAsync(Guid.NewGuid(), "Ns.Class.Test", "Test").ConfigureAwait(false);
+
+        TimeSpan elapsed = await WithTimeoutAsync(disposeElapsed.Task).ConfigureAwait(false);
+
+        Assert.IsLessThan(
+            TimeSpan.FromSeconds(2),
+            elapsed,
+            $"Dispose from a notification handler took {elapsed.TotalMilliseconds:F0} ms; it must not self-wait on the read loop.");
     }
 
     private static async Task<MtpServerClient> ConnectAndInitializeAsync(FakeMtpServer server)

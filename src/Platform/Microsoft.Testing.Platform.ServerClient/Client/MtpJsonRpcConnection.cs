@@ -23,6 +23,14 @@ internal sealed class MtpJsonRpcConnection : IDisposable
     private readonly SemaphoreSlim _writeLock = new(1, 1);
     private readonly CancellationTokenSource _readLoopCancellation = new();
 
+    // True within the read loop's async execution flow. Dispose reads this to detect a re-entrant call
+    // from a notification / server-request handler (both dispatched on the read-loop flow) and skip
+    // synchronously waiting on the read loop from within itself. This uses AsyncLocal rather than
+    // Task.CurrentId because the read loop is an async method: after its first await the continuation no
+    // longer reports the Task.Run task's id, so Task.CurrentId would spuriously not match and Dispose
+    // would self-wait for the full shutdown timeout. AsyncLocal rides the flow across every await.
+    private readonly AsyncLocal<bool> _onReadLoopFlow = new();
+
     // Bounded wait for the read loop to observe cancellation / socket close during Dispose.
     private static readonly TimeSpan ReadLoopShutdownTimeout = TimeSpan.FromSeconds(5);
 
@@ -140,6 +148,10 @@ internal sealed class MtpJsonRpcConnection : IDisposable
 
     private async Task ReadLoopAsync(CancellationToken cancellationToken)
     {
+        // Mark this async flow as the read loop so a handler that calls Dispose (which runs on this flow)
+        // is detected re-entrantly and does not synchronously wait on the loop from within it. Set before
+        // the first await so the marker flows across every await and into every synchronous Dispatch.
+        _onReadLoopFlow.Value = true;
         try
         {
             while (!cancellationToken.IsCancellationRequested)
@@ -314,9 +326,9 @@ internal sealed class MtpJsonRpcConnection : IDisposable
         // disposing them out from under an in-flight write or the read loop's ReadAsync, which would
         // surface spurious ObjectDisposedExceptions (one thrown out of the write lock's finally block).
         // Guard against waiting on ourselves in case Dispose runs from a notification / server-request
-        // handler executing on the read-loop thread.
+        // handler executing on the read-loop flow (see _onReadLoopFlow).
         Task? readLoop = _readLoop;
-        if (readLoop is not null && Task.CurrentId != readLoop.Id)
+        if (readLoop is not null && !_onReadLoopFlow.Value)
         {
             try
             {

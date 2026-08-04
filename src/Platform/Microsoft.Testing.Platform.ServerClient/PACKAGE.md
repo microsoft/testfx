@@ -25,8 +25,11 @@ Because the source is compiled into your assembly, your project must provide the
 shared source expects (the three first-party consumers — vstest, VSUnitTesting, C# Dev Kit — already
 do):
 
-- C# language version 12 or later (the shipped source uses collection expressions and other C# 12
-  features).
+- **C# language version**: the package's build targets set `LangVersion=latest` for you when your
+  project hasn't pinned one, so normally you need to do nothing. If you *do* pin `LangVersion`
+  explicitly, it must be new enough to parse the shipped source: on `net462` / `netstandard2.0` that
+  currently means **C# 14** (the down-level `OperatingSystem` polyfill uses the C# 14 extension-member
+  syntax); on .NET a lower version compiles. Using `latest` is the safe choice.
 - On `net462` / `netstandard2.0`: the package **ships the internal polyfills it needs itself**
   (nullable attributes, `IsExternalInit`, required-member/compiler-feature attributes, and a small set
   of runtime helpers), each `internal`, self-guarded (they no-op on modern .NET), and opt-out-able via
