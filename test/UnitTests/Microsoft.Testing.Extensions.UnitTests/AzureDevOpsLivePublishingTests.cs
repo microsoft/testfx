@@ -2934,6 +2934,53 @@ public sealed class AzureDevOpsLivePublishingTests
     }
 
     [TestMethod]
+    public async Task FailedDuplicateCreate_DoesNotReleaseEarlierSuccessfulClaim()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out _, out _, environment);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+        await PublishSingleResultAsync(
+            directory.Path,
+            environment,
+            "SharedUid",
+            new FailedTestNodeStateProperty(new InvalidOperationException("first")),
+            resultId: 461,
+            displayName: "Duplicate title");
+
+        AzureDevOpsTestResultsPublisherOptions options = new(1, TimeSpan.FromMinutes(1), 40, TimeSpan.FromMilliseconds(250));
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options, out FakeAzureDevOpsTestResultsClient client, out _, out _, environment);
+        int createAttempts = 0;
+        List<AzureDevOpsTestCaseResult> created = [];
+        client.PublishTestResultsAsyncFunc = (_, _, results, _) =>
+        {
+            createAttempts++;
+            if (createAttempts == 1)
+            {
+                return Task.FromException<IReadOnlyList<int>?>(new HttpRequestException("transient duplicate create failure"));
+            }
+
+            created.AddRange(results);
+            return Task.FromResult<IReadOnlyList<int>?>([462]);
+        };
+        await StartPublisherAsync(publisher);
+
+        await publisher.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("SharedUid", new PassedTestNodeStateProperty(), RetryTestStartTime, displayName: "Duplicate title")),
+            CancellationToken.None);
+        await publisher.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("SharedUid", new PassedTestNodeStateProperty(), RetryTestStartTime, displayName: "Duplicate title")),
+            CancellationToken.None);
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.HasCount(1, client.UpdateTestResultsCalls, "The persisted parent may be updated only once in this attempt.");
+        Assert.HasCount(1, created);
+        Assert.AreEqual("SharedUid", created[0].AutomatedTestName);
+    }
+
+    [TestMethod]
     public async Task FailedPatchInMixedBatch_DoesNotResaveStaleHistory()
     {
         using TestDirectory directory = CreateTestDirectory();

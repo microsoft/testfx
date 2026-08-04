@@ -168,7 +168,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
                     // Nothing in this batch reached Azure DevOps: the creations failed, and the updates were
                     // not attempted. Release every parent claimed while classifying this untouched batch,
                     // then requeue it as it was so the next flush can retry the intended update path.
-                    foreach ((AzureDevOpsPublishedResult published, AzureDevOpsTestCaseResultWithAttachments _) in updateCandidates)
+                    foreach ((AzureDevOpsPublishedResult published, AzureDevOpsTestCaseResultWithAttachments _) in updates)
                     {
                         _claimedResultIds.Remove(published.Id);
                     }
