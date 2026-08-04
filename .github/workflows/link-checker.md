@@ -1,5 +1,4 @@
 ---
-source: githubnext/agentics/workflows/link-checker.md@main
 description: Daily automated link checker that finds and fixes broken links in documentation files
 on:
   schedule: daily on weekdays
@@ -127,6 +126,7 @@ safe-outputs:
     if-no-changes: "warn"
   noop:
     report-as-issue: false
+source: githubnext/agentics/workflows/link-checker.md@main
 ---
 
 # Daily Link Checker & Fixer
