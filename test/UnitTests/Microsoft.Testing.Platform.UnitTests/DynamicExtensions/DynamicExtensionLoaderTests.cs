@@ -137,8 +137,8 @@ public sealed class DynamicExtensionLoaderTests
     public async Task LoadAsync_WhenDisabledByEnvironmentVariable_SaysSoRatherThanSilentlyIgnoringTheRequest()
     {
         // The kill switch overrides something the user explicitly asked for. Doing that silently would leave a
-        // run behaving differently than requested with nothing to explain why -- the worst outcome for a
-        // security control, and the same reason testconfig.json is rejected as an opt-in channel.
+        // run behaving differently than requested with nothing to explain why, which is the whole point of the
+        // switch being an operational escape hatch: it has to be obvious when it fired.
         _environment.Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_NODYNAMICEXTENSIONS)).Returns("1");
 
         await CreateLoader().LoadAsync(_builder.Object, Args);
@@ -590,8 +590,9 @@ public sealed class DynamicExtensionLoaderTests
     [TestMethod]
     public async Task LoadAsync_WithoutTheOptIn_DoesNothingAtAll()
     {
-        // Default-off is the security posture: dropping a manifest next to the application must not be enough
-        // to get code executed in the test process.
+        // Default-off is a predictability decision, not a security control (the application directory is
+        // already fully trusted): a manifest that happens to be in an output directory must not silently
+        // change how a run behaves. Nothing is read, parsed or loaded until the run asks for it.
         _parseResult = CreateParseResult(enableDynamicExtensions: false);
         SetupManifest("a.testingplatformextensions.json", ManifestFor(typeof(RecordingHook)));
 

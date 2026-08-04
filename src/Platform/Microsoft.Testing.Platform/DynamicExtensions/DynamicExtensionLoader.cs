@@ -57,8 +57,9 @@ internal sealed class DynamicExtensionLoader
     /// <returns>A task representing the asynchronous operation.</returns>
     public async Task LoadAsync(ITestApplicationBuilder builder, string[] args)
     {
-        // Off unless asked for: a dynamically loaded extension runs with full trust in the test process, so
-        // merely dropping a file next to the application must never be enough to get code executed.
+        // Off unless asked for: a manifest that happens to sit in an output directory must not silently
+        // change how a run behaves. This is a predictability decision, not a security control -- the
+        // application directory is already fully trusted (see the RFC's Trust section).
         if (!_commandLineParseResult.IsOptionSet(PlatformCommandLineProvider.EnableDynamicExtensionsOptionKey))
         {
             return;
@@ -99,7 +100,7 @@ internal sealed class DynamicExtensionLoader
         }
 
         // Report what actually loaded even if a later extension fails: by then the earlier hooks have already
-        // run with full trust in this process, and leaving that unreported would break the "loading is never
+        // run and changed the application, and leaving that unreported would break the "loading is never
         // silent" guarantee precisely when something has gone wrong.
         List<DynamicExtensionEntry> loaded = [];
         try
@@ -108,9 +109,9 @@ internal sealed class DynamicExtensionLoader
             {
                 await LoadEntryAsync(builder, args, entry).ConfigureAwait(false);
 
-                // Record before any further work: the hook has run with full trust by this point, so nothing
-                // fallible (such as diagnostic logging, which can throw on a synchronous write) may come
-                // between invoking it and it becoming reportable.
+                // Record before any further work: the hook has already run and changed the application by this
+                // point, so nothing fallible (such as diagnostic logging, which can throw on a synchronous
+                // write) may come between invoking it and it becoming reportable.
                 loaded.Add(entry);
 
                 await LogDebugAsync($"Registered extension '{entry.DisplayName}' ('{entry.TypeFullName}') from '{entry.ResolvedAssemblyPath}'.").ConfigureAwait(false);

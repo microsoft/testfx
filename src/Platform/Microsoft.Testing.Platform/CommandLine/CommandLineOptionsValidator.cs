@@ -27,7 +27,8 @@ internal static partial class CommandLineOptionsValidator
             PlatformCommandLineProvider.DiagnosticFileLoggerSynchronousWriteOptionKey,
 
             // Consumed during CreateBuilderAsync, before testconfig.json has been read, so a JSON entry would
-            // be silently ignored -- and for a security opt-in, silently ignored is the worst outcome.
+            // be accepted by validation and then silently ignored, leaving the author to conclude the feature
+            // is broken. Failing the run instead says which channel actually works.
             PlatformCommandLineProvider.EnableDynamicExtensionsOptionKey,
         ],
         StringComparer.OrdinalIgnoreCase);

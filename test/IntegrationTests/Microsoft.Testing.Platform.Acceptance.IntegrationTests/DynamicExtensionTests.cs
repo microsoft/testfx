@@ -71,8 +71,9 @@ public sealed class DynamicExtensionTests : AcceptanceTestBase<DynamicExtensionT
     [TestMethod]
     public async Task WithoutTheOptIn_TheManifestIsIgnoredEntirely(string tfm)
     {
-        // The security-critical default: a manifest sitting next to the application must not get code
-        // executed in the test process unless the run explicitly asked for it.
+        // Off by default is a predictability decision rather than a security control (see the RFC's Trust
+        // section): a manifest sitting in an output directory must not change how a run behaves unless the
+        // run asked for it.
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
 
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
