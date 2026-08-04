@@ -14,6 +14,18 @@
   -->
   <PropertyGroup>
     <!--
+      The injected source is authored against a modern C# language version (file-scoped namespaces,
+      relational/'and'/'or' patterns, records, switch expressions, ...). A consumer that leaves
+      LangVersion at the framework default compiles the injected source at that default - which is C#
+      7.3 for net462 / netstandard2.0 - and fails. Raise it to 'latest' (the newest STABLE version the
+      consumer's compiler supports, NOT 'preview') only when the consumer has not chosen a version, or
+      is still on the 7.3 default, so an explicit consumer choice is never overridden. 'latest' is used
+      rather than 'preview' because the injected source needs no preview-only features and forcing
+      preview on a consumer could pull in unstable behavior.
+    -->
+    <LangVersion Condition="'$(LangVersion)' == '' or '$(LangVersion)' == '7.3'">latest</LangVersion>
+
+    <!--
       Several linked platform files switch on IS_CORE_MTP (e.g. Helpers/ObjectPool.cs selects the
       Microsoft.Testing.Platform.Helpers namespace under IS_CORE_MTP, which Json.cs imports). The
       platform defines it while compiling; the injected source needs the same branch, so define it here.

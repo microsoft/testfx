@@ -23,9 +23,16 @@ internal sealed class MtpJsonRpcConnection : IDisposable
     private readonly SemaphoreSlim _writeLock = new(1, 1);
     private readonly CancellationTokenSource _readLoopCancellation = new();
 
+    // Bounded wait for the read loop to observe cancellation / socket close during Dispose.
+    private static readonly TimeSpan ReadLoopShutdownTimeout = TimeSpan.FromSeconds(5);
+
     private int _nextRequestId;
     private Task? _readLoop;
     private int _disposed;
+
+    // Latched once when the connection reaches a terminal state (read loop exited or Dispose ran). A
+    // non-null value means no read loop remains to complete a response, so new sends must fail fast.
+    private Exception? _closedReason;
 
     public MtpJsonRpcConnection(IMessageHandler handler, IMtpClientLogger? logger = null)
     {
@@ -38,6 +45,14 @@ internal sealed class MtpJsonRpcConnection : IDisposable
     /// params payload (an <c>IDictionary&lt;string, object?&gt;</c> or <see langword="null"/>); the client API
     /// layer decodes it based on the method.
     /// </summary>
+    /// <remarks>
+    /// Handlers run synchronously on the single read-loop thread that also drains the socket, so
+    /// notifications are delivered strictly in the order the server sent them (the ordering guarantee the
+    /// client API relies on). A handler MUST NOT block for a long time or synchronously wait on another
+    /// request to this client (for example <c>RunTestsAsync(...).GetAwaiter().GetResult()</c>): doing so
+    /// stalls the read loop and, for a re-entrant client call, deadlocks because the response can never be
+    /// read. Marshal to another thread if the handler needs to do slow work or call back into the client.
+    /// </remarks>
     public event Action<NotificationMessage>? NotificationReceived;
 
     /// <summary>
@@ -64,9 +79,27 @@ internal sealed class MtpJsonRpcConnection : IDisposable
     {
         cancellationToken.ThrowIfCancellationRequested();
 
+        // Fail fast if the connection has already reached a terminal state: no read loop remains to
+        // complete a response, so registering the request would hang forever (a TCP write after the peer's
+        // FIN can still land in the send buffer and succeed, so WriteMessageAsync would not surface the
+        // closure).
+        if (Volatile.Read(ref _closedReason) is { } closedBefore)
+        {
+            throw closedBefore;
+        }
+
         int id = Interlocked.Increment(ref _nextRequestId);
         var pending = new PendingRequest(method);
         _pendingRequests[id] = pending;
+
+        // Re-check after registering: the read loop may have latched a terminal reason and run
+        // FailAllPending between the check above and this insert, missing this entry. Observing the reason
+        // here guarantees the request is completed rather than left waiting.
+        if (Volatile.Read(ref _closedReason) is { } closedAfter)
+        {
+            _pendingRequests.TryRemove(id, out _);
+            throw closedAfter;
+        }
 
         using CancellationTokenRegistration registration = cancellationToken.Register(
             () => CancelPendingRequest(id, cancellationToken));
@@ -115,7 +148,7 @@ internal sealed class MtpJsonRpcConnection : IDisposable
                 if (message is null)
                 {
                     // Null signals a graceful or abrupt disconnect.
-                    FailAllPending(new MtpServerConnectionClosedException());
+                    Close(new MtpServerConnectionClosedException());
                     return;
                 }
 
@@ -128,9 +161,10 @@ internal sealed class MtpJsonRpcConnection : IDisposable
         }
         catch (Exception ex)
         {
-            // Fail pending requests FIRST: a caller awaiting a response must be released even if logging
-            // throws. SafeLog additionally guarantees the logger cannot fault this loop.
-            FailAllPending(new MtpServerClientException("The MTP client read loop failed.", ex));
+            // Fail pending requests FIRST (via Close, which also latches the terminal state): a caller
+            // awaiting a response must be released even if logging throws. SafeLog additionally guarantees
+            // the logger cannot fault this loop.
+            Close(new MtpServerClientException("The MTP client read loop failed.", ex));
             _logger.SafeLog(MtpClientLogLevel.Error, $"MTP client read loop failed: {ex}");
         }
     }
@@ -229,6 +263,18 @@ internal sealed class MtpJsonRpcConnection : IDisposable
         }
     }
 
+    private void Close(Exception reason)
+    {
+        // Latch the terminal reason exactly once, THEN fail every pending request. The ordering is the
+        // crux of the race fix with SendRequestAsync: a sender registers its pending request and then
+        // re-reads _closedReason, so either this FailAllPending observes that request, or the sender
+        // observes the latched reason — the request can never be left hanging with no one to complete it.
+        if (Interlocked.CompareExchange(ref _closedReason, reason, null) is null)
+        {
+            FailAllPending(reason);
+        }
+    }
+
     private void FailAllPending(Exception exception)
     {
         foreach (KeyValuePair<int, PendingRequest> entry in _pendingRequests)
@@ -247,9 +293,13 @@ internal sealed class MtpJsonRpcConnection : IDisposable
             return;
         }
 
-        _readLoopCancellation.Cancel();
-        FailAllPending(new ObjectDisposedException(nameof(MtpJsonRpcConnection)));
+        // Latch the terminal state and release anyone awaiting a response.
+        Close(new ObjectDisposedException(nameof(MtpJsonRpcConnection)));
 
+        _readLoopCancellation.Cancel();
+
+        // Disposing the handler closes the underlying socket/streams, which unblocks a read loop parked in
+        // a blocking ReadAsync that cancellation alone would not interrupt.
         try
         {
             (_handler as IDisposable)?.Dispose();
@@ -259,8 +309,24 @@ internal sealed class MtpJsonRpcConnection : IDisposable
             _logger.SafeLog(MtpClientLogLevel.Debug, $"Disposing the message handler threw: {ex}");
         }
 
-        _readLoopCancellation.Dispose();
-        _writeLock.Dispose();
+        // Wait (bounded) for the read loop to actually finish, then intentionally do NOT dispose
+        // _readLoopCancellation / _writeLock: leaking two lightweight primitives is strictly better than
+        // disposing them out from under an in-flight write or the read loop's ReadAsync, which would
+        // surface spurious ObjectDisposedExceptions (one thrown out of the write lock's finally block).
+        // Guard against waiting on ourselves in case Dispose runs from a notification / server-request
+        // handler executing on the read-loop thread.
+        Task? readLoop = _readLoop;
+        if (readLoop is not null && Task.CurrentId != readLoop.Id)
+        {
+            try
+            {
+                readLoop.Wait(ReadLoopShutdownTimeout);
+            }
+            catch (Exception ex)
+            {
+                _logger.SafeLog(MtpClientLogLevel.Debug, $"Waiting for the read loop to stop threw: {ex}");
+            }
+        }
     }
 
     private sealed class PendingRequest(string method)

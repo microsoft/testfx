@@ -27,7 +27,6 @@
       (ambient refs such as System.ValueTuple) is validated later during packaging / vstest adoption.
     -->
     <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
     <!-- Match the platform: several linked files (e.g. ObjectPool.cs namespace switch) key off this. -->
     <DefineConstants>$(DefineConstants);IS_CORE_MTP</DefineConstants>

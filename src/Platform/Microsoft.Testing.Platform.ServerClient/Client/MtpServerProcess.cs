@@ -25,6 +25,10 @@ internal sealed class MtpServerProcess : IDisposable
     private const string ClientPortArgument = "--client-port";
     private const string NoBannerArgument = "--no-banner";
 
+    // Bounded wait after killing the process so the OS releases the executable's file locks before a
+    // caller (for example an acceptance test) deletes the application directory.
+    private const int ProcessKillTimeoutMs = 5000;
+
     // How often the connect wait re-checks whether the launched process has already exited, so a child
     // that dies on startup fails fast instead of blocking the full ConnectionTimeout.
     private static readonly TimeSpan ProcessExitPollInterval = TimeSpan.FromMilliseconds(100);
@@ -102,54 +106,61 @@ internal sealed class MtpServerProcess : IDisposable
         SerializerUtilities.RegisterClientSerializers();
         IMessageFormatter formatter = FormatterUtilities.CreateFormatter();
 
-        var listener = new TcpListener(IPAddress.Loopback, 0);
-        listener.Start();
-        int port = ((IPEndPoint)listener.LocalEndpoint).Port;
-
-        LaunchCommand launch = BuildLaunch(source, port);
-        string fileName = launch.FileName;
-        string arguments = launch.Arguments;
-        string workingDirectory = launch.WorkingDirectory;
-        logger.SafeLog(MtpClientLogLevel.Debug, $"Launching MTP server '{fileName} {arguments}' (cwd '{workingDirectory}') listening on port {port}.");
-
-        var startInfo = new ProcessStartInfo
-        {
-            FileName = fileName,
-            Arguments = arguments,
-            WorkingDirectory = workingDirectory,
-            UseShellExecute = false,
-            RedirectStandardError = true,
-            RedirectStandardOutput = true,
-        };
-
-        foreach (KeyValuePair<string, string?> variable in options.EnvironmentVariables)
-        {
-            startInfo.Environment[variable.Key] = variable.Value;
-        }
-
-        var process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
-        var standardError = new StringBuilder();
-        process.ErrorDataReceived += (_, e) =>
-        {
-            if (e.Data is not null)
-            {
-                lock (standardError)
-                {
-                    standardError.AppendLine(e.Data);
-                }
-            }
-        };
-
+        TcpListener? listener = null;
+        Process? process = null;
         TcpClient? acceptedClient = null;
+        Task<TcpClient>? acceptTask = null;
+        var standardError = new StringBuilder();
         try
         {
+            // Everything that can throw (binding the listener, resolving the launch command, starting the
+            // process) lives inside the try so the catch can tear down whatever was already created. In
+            // particular, if listener.Start() fails to bind or the process fails to start, the listener is
+            // stopped rather than leaked.
+            listener = new TcpListener(IPAddress.Loopback, 0);
+            listener.Start();
+            int port = ((IPEndPoint)listener.LocalEndpoint).Port;
+
+            LaunchCommand launch = BuildLaunch(source, port);
+            string fileName = launch.FileName;
+            string arguments = launch.Arguments;
+            string workingDirectory = launch.WorkingDirectory;
+            logger.SafeLog(MtpClientLogLevel.Debug, $"Launching MTP server '{fileName} {arguments}' (cwd '{workingDirectory}') listening on port {port}.");
+
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = fileName,
+                Arguments = arguments,
+                WorkingDirectory = workingDirectory,
+                UseShellExecute = false,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true,
+            };
+
+            foreach (KeyValuePair<string, string?> variable in options.EnvironmentVariables)
+            {
+                startInfo.Environment[variable.Key] = variable.Value;
+            }
+
+            process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
+            process.ErrorDataReceived += (_, e) =>
+            {
+                if (e.Data is not null)
+                {
+                    lock (standardError)
+                    {
+                        standardError.AppendLine(e.Data);
+                    }
+                }
+            };
+
             process.Start();
             process.BeginErrorReadLine();
 
             // Drain stdout so the child never blocks on a full pipe (banner, diagnostics).
             process.BeginOutputReadLine();
 
-            Task<TcpClient> acceptTask = listener.AcceptTcpClientAsync();
+            acceptTask = listener.AcceptTcpClientAsync();
 
             // Wait for the app to dial back, but poll the process alongside the accept: if the child exits
             // early (bad arguments, startup crash) we fail fast with its exit code + captured stderr instead
@@ -186,10 +197,42 @@ internal sealed class MtpServerProcess : IDisposable
         }
         catch
         {
+            if (process is not null)
+            {
+                SafeKill(process, logger);
+                process.Dispose();
+            }
+
+            // If the accept has not produced a socket we own yet, guard against a late dial-back leaking a
+            // connected socket: hand the still-pending accept a continuation that disposes any socket it
+            // eventually yields (or observes its fault so the task is not left unobserved when SafeStop
+            // faults it). When acceptedClient is already set we own it and dispose it directly below.
+            if (acceptedClient is null && acceptTask is not null)
+            {
+                _ = acceptTask.ContinueWith(
+                    static t =>
+                    {
+                        if (t.Status == TaskStatus.RanToCompletion)
+                        {
+                            t.Result.Dispose();
+                        }
+                        else
+                        {
+                            _ = t.Exception;
+                        }
+                    },
+                    CancellationToken.None,
+                    TaskContinuationOptions.ExecuteSynchronously,
+                    TaskScheduler.Default);
+            }
+
             acceptedClient?.Dispose();
-            SafeStop(listener, logger);
-            SafeKill(process, logger);
-            process.Dispose();
+
+            if (listener is not null)
+            {
+                SafeStop(listener, logger);
+            }
+
             throw;
         }
     }
@@ -287,8 +330,14 @@ internal sealed class MtpServerProcess : IDisposable
 #if NETCOREAPP
                 process.Kill(entireProcessTree: true);
 #else
+                // .NET Framework's Process.Kill cannot kill the whole process tree; any child processes the
+                // server spawned are left to the OS. This is best-effort teardown on that platform.
                 process.Kill();
 #endif
+
+                // Block (bounded) for the OS to finish tearing the process down so a caller can immediately
+                // delete the application directory without racing a file lock on the still-exiting executable.
+                process.WaitForExit(ProcessKillTimeoutMs);
             }
         }
         catch (Exception ex) when (ex is InvalidOperationException or NotSupportedException or Win32Exception)

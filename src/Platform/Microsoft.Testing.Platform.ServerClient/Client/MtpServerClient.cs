@@ -106,7 +106,7 @@ internal sealed class MtpServerClient : IMtpServerClient
             new ClientCapabilities(_options.DebuggerProvider, _options.IsStateful));
 
         ResponseMessage response = await _connection.SendRequestAsync(JsonRpcMethods.Initialize, args, cancellationToken).ConfigureAwait(false);
-        MtpServerCapabilities capabilities = DecodeCapabilities(response.Result as IDictionary<string, object?>);
+        MtpServerCapabilities capabilities = DecodeCapabilities(AsResultDictionary(response.Result));
         Capabilities = capabilities;
         return capabilities;
     }
@@ -216,14 +216,34 @@ internal sealed class MtpServerClient : IMtpServerClient
         => value switch
         {
             int i => i,
-            long l => (int)l,
             short s => s,
             byte b => b,
+
+            // The JSON formatter may widen an integer to long/ulong/double depending on its magnitude, so
+            // accept those too but only when the value round-trips into an Int32 without loss. Anything out
+            // of range or non-integral is treated as absent (null) rather than silently truncated.
+            long l when l is >= int.MinValue and <= int.MaxValue => (int)l,
+            uint u when u <= int.MaxValue => (int)u,
+            ulong ul when ul <= int.MaxValue => (int)ul,
+            double d when d is >= int.MinValue and <= int.MaxValue && d == Math.Floor(d) => (int)d,
             _ => null,
         };
 
     private static bool AsBool(IDictionary<string, object?> dictionary, string key)
         => dictionary.TryGetValue(key, out object? value) && value is bool boolean && boolean;
+
+    // A null result is tolerated (the server answered with no payload -> decode defaults/empty). A non-null
+    // result that is not the expected IDictionary<string, object?> is a protocol violation, so surface it
+    // with the actual runtime type instead of silently discarding it via `as` (which would look like an
+    // empty/absent result and hide the mismatch).
+    private static IDictionary<string, object?>? AsResultDictionary(object? result)
+        => result switch
+        {
+            null => null,
+            IDictionary<string, object?> dictionary => dictionary,
+            _ => throw new MtpServerClientException(
+                $"Expected the server response result to be an IDictionary<string, object?> but it was '{result.GetType()}'."),
+        };
 
     private async Task DiscoverCoreAsync(ICollection<TestNode>? tests, string? graphFilter, CancellationToken cancellationToken)
     {
@@ -236,7 +256,7 @@ internal sealed class MtpServerClient : IMtpServerClient
         var args = new RunRequestArgs(Guid.NewGuid(), tests, graphFilter);
         ResponseMessage response = await _connection.SendRequestAsync(JsonRpcMethods.TestingRunTests, args, cancellationToken).ConfigureAwait(false);
 
-        IDictionary<string, object?> resultDict = response.Result as IDictionary<string, object?> ?? new Dictionary<string, object?>();
+        IDictionary<string, object?> resultDict = AsResultDictionary(response.Result) ?? new Dictionary<string, object?>();
         RunResponseArgs runResponse = SerializerUtilities.Deserialize<RunResponseArgs>(resultDict);
         MtpAttachment[] artifacts = runResponse.Artifacts
             .Select(artifact => new MtpAttachment(artifact.Uri, artifact.Producer, artifact.Type, artifact.DisplayName, artifact.Description))

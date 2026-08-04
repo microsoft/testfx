@@ -23,32 +23,20 @@ internal sealed partial class Json
             Dictionary<string, object?> items = [];
             foreach (JsonProperty kvp in jsonDocument.EnumerateObject())
             {
-                switch (kvp.Value.ValueKind)
+                // Indexer assignment (last value wins) rather than Add, so a duplicate JSON key in
+                // untrusted input does not throw and crash the read loop. This mirrors how Jsonite and
+                // System.Text.Json tolerate duplicate keys.
+                items[kvp.Name] = kvp.Value.ValueKind switch
                 {
-                    case JsonValueKind.String:
-                        items.Add(kvp.Name, kvp.Value.GetString());
-                        break;
-                    case JsonValueKind.Number:
-                        items.Add(kvp.Name, ReadNumber(kvp.Value));
-                        break;
-                    case JsonValueKind.True:
-                        items.Add(kvp.Name, true);
-                        break;
-                    case JsonValueKind.False:
-                        items.Add(kvp.Name, false);
-                        break;
-                    case JsonValueKind.Object:
-                        items.Add(kvp.Name, json.Bind<IDictionary<string, object?>>(kvp.Value));
-                        break;
-                    case JsonValueKind.Array:
-                        items.Add(kvp.Name, json.Bind<object[]>(kvp.Value));
-                        break;
-                    case JsonValueKind.Null:
-                        items.Add(kvp.Name, null);
-                        break;
-                    default:
-                        throw new InvalidOperationException($"key: {kvp.Name}, value: {kvp.Value}, type: {kvp.Value.ValueKind}");
-                }
+                    JsonValueKind.String => kvp.Value.GetString(),
+                    JsonValueKind.Number => ReadNumber(kvp.Value),
+                    JsonValueKind.True => true,
+                    JsonValueKind.False => false,
+                    JsonValueKind.Object => json.Bind<IDictionary<string, object?>>(kvp.Value),
+                    JsonValueKind.Array => json.Bind<object[]>(kvp.Value),
+                    JsonValueKind.Null => null,
+                    _ => throw new InvalidOperationException($"key: {kvp.Name}, value: {kvp.Value}, type: {kvp.Value.ValueKind}"),
+                };
             }
 
             return items;
@@ -130,7 +118,7 @@ internal sealed partial class Json
                                 : null,
                         };
                     }
-                    catch (Exception ex) when (ex is MessageFormatException or InvalidOperationException or JsonException)
+                    catch (Exception ex) when (ex is MessageFormatException or InvalidOperationException or JsonException or ArgumentException)
                     {
                         // If params can't be deserialized for a request, capture the failure so
                         // we can later send back a properly coded JSON-RPC error using the request id.
@@ -138,8 +126,8 @@ internal sealed partial class Json
                         // crashing the message-handling loop by swallowing into the sentinel.
                         // We catch the broader set of deserialization-related exceptions because the
                         // request payload is untrusted client input and the lower-level helpers
-                        // (e.g. JsonElement.GetString() on a non-string element) can throw types
-                        // other than MessageFormatException.
+                        // (e.g. JsonElement.GetString() on a non-string element, or an ArgumentException
+                        // from a nested typed binder) can throw types other than MessageFormatException.
                         @params = new InvalidRequestParamsArgs(ErrorCodes.InvalidParams, ex.Message);
                     }
                 }
