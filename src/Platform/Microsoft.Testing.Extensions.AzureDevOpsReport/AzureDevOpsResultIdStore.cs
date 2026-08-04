@@ -154,13 +154,11 @@ internal sealed class AzureDevOpsResultIdStore
     /// </remarks>
     public bool TryInvalidatePersistedMap()
     {
-        if (!_fileSystem.ExistFile(_filePath))
-        {
-            return true;
-        }
-
         try
         {
+            // DeleteFile is a no-op when the file is absent. Do not probe with ExistFile first: File.Exists
+            // also returns false for access and path errors, which would fail this safety gate open and
+            // allow PATCH to proceed while stale history may still be present.
             _fileSystem.DeleteFile(_filePath);
             return true;
         }

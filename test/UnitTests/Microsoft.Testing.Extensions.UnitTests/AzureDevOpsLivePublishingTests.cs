@@ -2021,7 +2021,7 @@ public sealed class AzureDevOpsLivePublishingTests
         AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out _, out _, environment);
         await lifetime.BeforeRunAsync(CancellationToken.None);
 
-        await PublishSingleResultAsync(directory.Path, environment, "MyTest", new PassedTestNodeStateProperty(), resultId: 31);
+        await PublishSingleResultAsync(directory.Path, environment, "MyTest", new FailedTestNodeStateProperty(new InvalidOperationException("boom")), resultId: 31);
 
         // Same test uid, different assembly. TestNode.Uid is only unique within a test application, so
         // keying on it alone would make the second assembly's test masquerade as a rerun of the first's.
@@ -2149,6 +2149,8 @@ public sealed class AzureDevOpsLivePublishingTests
 
         // Degraded to a separate result rather than to silence.
         Assert.HasCount(1, created);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, created[0].Outcome);
+        Assert.IsEmpty(client.UpdateTestResultsCalls, "An unreadable map must not merge into stale history.");
     }
 
     [TestMethod]
@@ -2233,7 +2235,7 @@ public sealed class AzureDevOpsLivePublishingTests
         {
             await publisher.ConsumeAsync(
                 Mock.Of<IDataProducer>(),
-                CreateMessage(CreateNode($"MyTest{i}", new PassedTestNodeStateProperty(), RetryTestStartTime)),
+                CreateMessage(CreateNode($"MyTest{i}", new FailedTestNodeStateProperty(new InvalidOperationException($"failure {i}")), RetryTestStartTime)),
                 CancellationToken.None);
 
             Assert.IsFalse(File.Exists(mapPath), "The map is only needed by the next attempt, so it must not be rewritten as results are published.");
@@ -2260,6 +2262,27 @@ public sealed class AzureDevOpsLivePublishingTests
         await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
 
         Assert.IsFalse(File.Exists(mapPath), "An empty map only leaves a coordination file in the results directory for nobody to read.");
+    }
+
+    [TestMethod]
+    public async Task WhenAllResultsPass_NoMapFileIsLeftBehind()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out _, out _, environment);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+
+        string mapPath = AzureDevOpsConstants.TryGetInheritedResultMapPath(environment.Object, buildId: 123)!;
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, AzureDevOpsTestResultsPublisherOptions.Default, out _, out _, out _, environment);
+
+        await StartPublisherAsync(publisher);
+        await publisher.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("PassingTest", new PassedTestNodeStateProperty(), RetryTestStartTime)),
+            CancellationToken.None);
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.IsFalse(File.Exists(mapPath), "Passing tests are not eligible for retry and must not grow the shared map.");
     }
 
     [TestMethod]
@@ -2549,7 +2572,7 @@ public sealed class AzureDevOpsLivePublishingTests
 
         await publisher.ConsumeAsync(
             Mock.Of<IDataProducer>(),
-            CreateMessage(CreateNode("NewTest", new PassedTestNodeStateProperty(), RetryTestStartTime)),
+            CreateMessage(CreateNode("NewTest", new FailedTestNodeStateProperty(new InvalidOperationException("new")), RetryTestStartTime)),
             CancellationToken.None);
         await publisher.ConsumeAsync(
             Mock.Of<IDataProducer>(),
