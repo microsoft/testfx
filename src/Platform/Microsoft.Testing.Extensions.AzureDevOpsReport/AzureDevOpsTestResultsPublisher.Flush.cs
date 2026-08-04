@@ -234,14 +234,9 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         // interrupts the best-effort attachment phase.
         for (int i = 0; i < batch.Count; i++)
         {
-            // The retry orchestrator only schedules failed/aborted tests again. Passed and skipped tests
-            // can never be looked up by a later attempt, so retaining them would make memory and map size
-            // grow with the whole suite even when no retry runs.
-            if (_resultIdStore is not null
-                && batch[i].Result.Outcome is AzureDevOpsLivePublishingConstants.FailedTestOutcome or AzureDevOpsLivePublishingConstants.AbortedTestOutcome)
-            {
-                _resultIdStore.RecordCreated(batch[i].Result, resultIds[i]);
-            }
+            // Folded data-driven rows share one uid. A failure in any row retries the whole uid, including
+            // rows that passed or were skipped, so every row must retain its own result id and history.
+            _resultIdStore?.RecordCreated(batch[i].Result, resultIds[i]);
 
             if (batch[i].Attachments.Count > 0)
             {

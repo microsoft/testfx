@@ -2093,7 +2093,7 @@ public sealed class AzureDevOpsLivePublishingTests
             Mock.Of<IDataProducer>(),
             CreateMessage(CreateNode(
                 "SharedUid",
-                new FailedTestNodeStateProperty(new InvalidOperationException("row one")),
+                new PassedTestNodeStateProperty(),
                 RetryTestStartTime,
                 displayName: "MyTest(1)")),
             CancellationToken.None);
@@ -2333,7 +2333,7 @@ public sealed class AzureDevOpsLivePublishingTests
         // A batch size of one forces a publish per result, so a per-batch save would rewrite the whole map
         // for every test — quadratic in the size of the suite, and paid even by runs that never retry.
         AzureDevOpsTestResultsPublisherOptions options = new(1, TimeSpan.FromSeconds(5), 40, TimeSpan.FromMilliseconds(250));
-        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options, out FakeAzureDevOpsTestResultsClient client, out _, out _, environment);
+        using AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options, out FakeAzureDevOpsTestResultsClient client, out _, out _, environment);
         int nextResultId = 100;
         client.PublishTestResultsAsyncFunc = (_, _, results, _) =>
         {
@@ -2380,27 +2380,6 @@ public sealed class AzureDevOpsLivePublishingTests
         await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
 
         Assert.IsFalse(File.Exists(mapPath), "An empty map only leaves a coordination file in the results directory for nobody to read.");
-    }
-
-    [TestMethod]
-    public async Task WhenAllResultsPass_NoMapFileIsLeftBehind()
-    {
-        using TestDirectory directory = CreateTestDirectory();
-        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
-        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out _, out _, environment);
-        await lifetime.BeforeRunAsync(CancellationToken.None);
-
-        string mapPath = AzureDevOpsConstants.TryGetInheritedResultMapPath(environment.Object, buildId: 123)!;
-        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, AzureDevOpsTestResultsPublisherOptions.Default, out _, out _, out _, environment);
-
-        await StartPublisherAsync(publisher);
-        await publisher.ConsumeAsync(
-            Mock.Of<IDataProducer>(),
-            CreateMessage(CreateNode("PassingTest", new PassedTestNodeStateProperty(), RetryTestStartTime)),
-            CancellationToken.None);
-        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
-
-        Assert.IsFalse(File.Exists(mapPath), "Passing tests are not eligible for retry and must not grow the shared map.");
     }
 
     [TestMethod]
@@ -2453,7 +2432,7 @@ public sealed class AzureDevOpsLivePublishingTests
         string mapPath = AzureDevOpsConstants.TryGetInheritedResultMapPath(environment.Object, buildId: 123)!;
         File.WriteAllText(
             mapPath,
-            """{"buildId":123,"runId":4242,"results":[{"storage":"MyTests","name":"MyTest","title":"MyTest","id":81,"attempts":null}]}""");
+            """{"buildId":123,"runId":4242,"results":[null,{"storage":"MyTests","name":"MyTest","title":"MyTest","id":81,"attempts":null}]}""");
 
         AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, AzureDevOpsTestResultsPublisherOptions.Default, out FakeAzureDevOpsTestResultsClient client, out _, out _, environment);
         List<AzureDevOpsTestCaseResult> created = [];
@@ -2609,7 +2588,7 @@ public sealed class AzureDevOpsLivePublishingTests
         await lifetime.BeforeRunAsync(CancellationToken.None);
 
         AzureDevOpsTestResultsPublisherOptions options = new(2, TimeSpan.FromMinutes(1), 40, TimeSpan.FromMilliseconds(250));
-        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options, out FakeAzureDevOpsTestResultsClient client, out _, out _, environment);
+        using AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options, out FakeAzureDevOpsTestResultsClient client, out _, out _, environment);
         client.PublishTestResultsAsyncFunc = (_, _, _, _) => Task.FromResult<IReadOnlyList<int>?>([101, 102]);
         client.UploadTestResultAttachmentAsyncFunc = (_, _, _, _, _) => Task.FromException(new OperationCanceledException());
         await StartPublisherAsync(publisher);
@@ -2647,7 +2626,7 @@ public sealed class AzureDevOpsLivePublishingTests
             resultId: 201);
 
         AzureDevOpsTestResultsPublisherOptions options = new(2, TimeSpan.FromMinutes(1), 40, TimeSpan.FromMilliseconds(250));
-        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options, out FakeAzureDevOpsTestResultsClient client, out _, out _, environment);
+        using AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options, out FakeAzureDevOpsTestResultsClient client, out _, out _, environment);
         List<AzureDevOpsTestCaseResult> created = [];
         client.PublishTestResultsAsyncFunc = (_, _, results, _) =>
         {
