@@ -159,6 +159,28 @@ public sealed class PreferConstantForResourceLockAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    [TestMethod]
+    public async Task WhenResourceKeyIsNameofExpression_NoDiagnostic()
+    {
+        // `nameof(...)` produces no double-quote token in its syntax, so it must be treated like any
+        // other constant reference (no diagnostic), even though it isn't a simple identifier/const field.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [ResourceLock(nameof(MyTestClass))]
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
     // The analyzer declares LanguageNames.VisualBasic and deliberately inspects syntax *token text* rather
     // than C#-specific syntax nodes, so it is language-neutral by construction. These tests pin that: without
     // them the VB path is advertised but never executed, and a future change to C#-specific nodes would
