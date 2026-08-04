@@ -3195,6 +3195,8 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.AreEqual(777, result.GetProperty("id").GetInt32());
         Assert.AreEqual("rerun", result.GetProperty("resultGroupType").GetString());
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, result.GetProperty("outcome").GetString());
+        Assert.AreEqual(JsonValueKind.Null, result.GetProperty("errorMessage").ValueKind);
+        Assert.AreEqual(JsonValueKind.Null, result.GetProperty("stackTrace").ValueKind);
 
         JsonElement subResults = result.GetProperty("subResults");
         Assert.AreEqual(2, subResults.GetArrayLength());
@@ -3239,6 +3241,8 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.IsFalse(created.TryGetProperty("id", out _));
         Assert.IsFalse(created.TryGetProperty("resultGroupType", out _));
         Assert.IsFalse(created.TryGetProperty("subResults", out _));
+        Assert.IsFalse(created.TryGetProperty("errorMessage", out _));
+        Assert.IsFalse(created.TryGetProperty("stackTrace", out _));
     }
 
     #endregion

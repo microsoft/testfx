@@ -33,6 +33,13 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     };
 
+    private static readonly JsonSerializerOptions UpdateJsonSerializerOptions = new()
+    {
+        // PATCH must send null outcome details explicitly so a passing retry clears the error and stack
+        // trace left by the prior failed attempt. Omitting them would leave those server fields unchanged.
+        DefaultIgnoreCondition = JsonIgnoreCondition.Never,
+    };
+
     private static readonly HttpClient SharedHttpClient = CreateHttpClient();
 
     private readonly HttpClient _httpClient;
@@ -145,7 +152,8 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
             PatchMethod,
             BuildResultsUri(configuration.CollectionUri, configuration.Project, runId),
             configuration.AccessToken,
-            results);
+            results,
+            UpdateJsonSerializerOptions);
 
         await SendAsync(request, cancellationToken).ConfigureAwait(false);
     }
@@ -304,10 +312,18 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
 
     [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification = "Payload types are internal, fixed, and controlled by this extension.")]
     [UnconditionalSuppressMessage("Aot", "IL3050", Justification = "Payload types are internal, fixed, and controlled by this extension.")]
-    private static HttpRequestMessage CreateRequest<TPayload>(HttpMethod method, Uri uri, string accessToken, TPayload payload)
+    private static HttpRequestMessage CreateRequest<TPayload>(
+        HttpMethod method,
+        Uri uri,
+        string accessToken,
+        TPayload payload,
+        JsonSerializerOptions? jsonSerializerOptions = null)
     {
         HttpRequestMessage request = CreateRequest(method, uri, accessToken);
-        request.Content = new StringContent(JsonSerializer.Serialize(payload, JsonSerializerOptions), Encoding.UTF8, "application/json");
+        request.Content = new StringContent(
+            JsonSerializer.Serialize(payload, jsonSerializerOptions ?? JsonSerializerOptions),
+            Encoding.UTF8,
+            "application/json");
         return request;
     }
 
