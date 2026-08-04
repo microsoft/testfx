@@ -331,15 +331,25 @@ internal sealed class AzureDevOpsResultIdStore
             {
                 // Entries come from disk, so nothing about them is guaranteed however the record is
                 // annotated: a truncated or hand-edited file can yield nulls and non-positive ids.
-                if (entry is not null
-                    && entry.Id > 0
+                if (entry is null)
+                {
+                    continue;
+                }
+
+                // A malformed key still makes a positive server result id ambiguous. Count IDs before
+                // validating any other field so a later well-formed entry cannot claim that same result.
+                if (entry.Id > 0)
+                {
+                    resultIdCounts[entry.Id] = resultIdCounts.TryGetValue(entry.Id, out int idCount) ? idCount + 1 : 1;
+                }
+
+                if (entry.Id > 0
                     && entry.Storage is { Length: > 0 } storage
                     && entry.Name is { Length: > 0 } name
                     && entry.Title is { Length: > 0 } title)
                 {
                     string key = CreateKey(storage, name, title);
                     keyCounts[key] = keyCounts.TryGetValue(key, out int keyCount) ? keyCount + 1 : 1;
-                    resultIdCounts[entry.Id] = resultIdCounts.TryGetValue(entry.Id, out int idCount) ? idCount + 1 : 1;
 
                     // Count usable identities before validating payload fields. An invalid entry still
                     // makes its key and result id ambiguous; accepting another entry that claims either

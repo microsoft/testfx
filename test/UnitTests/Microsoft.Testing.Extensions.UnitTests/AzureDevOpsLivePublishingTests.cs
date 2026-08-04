@@ -2319,7 +2319,9 @@ public sealed class AzureDevOpsLivePublishingTests
               {"storage":"tests","name":"First","title":"First","id":433,"attempts":[{"sequenceId":1,"displayName":"First","outcome":"Failed","durationInMs":1}]},
               {"storage":"tests","name":"Second","title":"Second","id":433,"attempts":[{"sequenceId":1,"displayName":"Second","outcome":"Failed","durationInMs":1}]},
               {"storage":"tests","name":"Malformed","title":"Malformed","id":434,"attempts":null},
-              {"storage":"tests","name":"Third","title":"Third","id":434,"attempts":[{"sequenceId":1,"displayName":"Third","outcome":"Failed","durationInMs":1}]}
+              {"storage":"tests","name":"Third","title":"Third","id":434,"attempts":[{"sequenceId":1,"displayName":"Third","outcome":"Failed","durationInMs":1}]},
+              {"storage":null,"name":"MalformedKey","title":"MalformedKey","id":435,"attempts":[{"sequenceId":1,"displayName":"MalformedKey","outcome":"Failed","durationInMs":1}]},
+              {"storage":"tests","name":"Fourth","title":"Fourth","id":435,"attempts":[{"sequenceId":1,"displayName":"Fourth","outcome":"Failed","durationInMs":1}]}
             ]}
             """);
 
@@ -2327,10 +2329,12 @@ public sealed class AzureDevOpsLivePublishingTests
         AzureDevOpsTestCaseResult first = new("First", "tests", "First", AzureDevOpsLivePublishingConstants.PassedTestOutcome, 1, null, null, null, null);
         AzureDevOpsTestCaseResult second = new("Second", "tests", "Second", AzureDevOpsLivePublishingConstants.PassedTestOutcome, 1, null, null, null, null);
         AzureDevOpsTestCaseResult third = new("Third", "tests", "Third", AzureDevOpsLivePublishingConstants.PassedTestOutcome, 1, null, null, null, null);
+        AzureDevOpsTestCaseResult fourth = new("Fourth", "tests", "Fourth", AzureDevOpsLivePublishingConstants.PassedTestOutcome, 1, null, null, null, null);
 
         Assert.IsNull(store.TryGet(first));
         Assert.IsNull(store.TryGet(second));
         Assert.IsNull(store.TryGet(third));
+        Assert.IsNull(store.TryGet(fourth));
     }
 
     [TestMethod]
