@@ -31,6 +31,9 @@ public sealed class AzureDevOpsLivePublishingTests
 {
     private const string TruncationMarker = "\n...[truncated]";
 
+    /// <summary>Fixed start time for the retry tests, whose assertions never depend on the clock.</summary>
+    private static readonly DateTimeOffset RetryTestStartTime = new(2025, 1, 1, 12, 0, 0, TimeSpan.Zero);
+
     private readonly List<string> _directoriesToDelete = [];
 
     [TestCleanup]
@@ -1575,6 +1578,29 @@ public sealed class AzureDevOpsLivePublishingTests
     }
 
     [TestMethod]
+    public async Task OrchestratorLifetime_ResultMapHandoffFailure_UsesSpecificDiagnostic()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        environment.Setup(x => x.SetEnvironmentVariable(AzureDevOpsConstants.ResultMapPathEnvironmentVariableName, It.IsAny<string>()))
+            .Throws(new SecurityException("result map handoff is locked down"));
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(
+            directory.Path,
+            out FakeAzureDevOpsTestResultsClient client,
+            out CollectingLogger logger,
+            environment);
+        client.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(4249);
+
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+        await lifetime.AfterRunAsync(0, CancellationToken.None);
+
+        Assert.HasCount(1, client.UpdateTestRunStateCalls);
+        Assert.Contains(
+            AzureDevOpsResources.AzureDevOpsLivePublishingResultMapHandoffFailed,
+            string.Join(Environment.NewLine, logger.Logs));
+    }
+
+    [TestMethod]
     public async Task OrchestratorLifetime_PeerOrchestratorsSharingAResultsDirectory_PublishIntoASingleRun()
     {
         // A multi-project 'dotnet test' runs one orchestrator process per test project, all sharing the
@@ -1881,6 +1907,1353 @@ public sealed class AzureDevOpsLivePublishingTests
 
     #endregion
 
+    #region Retry attempts as sub-results of one result (https://github.com/microsoft/testfx/issues/10400)
+
+    [TestMethod]
+    public async Task RetryAttempt_UpdatesTheResultTheEarlierAttemptCreatedInsteadOfAddingAnother()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+
+        // The orchestrator publishes where the map lives; without it the attempts cannot find each other.
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out FakeAzureDevOpsTestResultsClient _, out _, environment);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+
+        // Attempt 1: the test fails, and is created as a new result.
+        AzureDevOpsTestResultsPublisher firstAttempt = CreatePublisher(directory.Path, AzureDevOpsTestResultsPublisherOptions.Default, out FakeAzureDevOpsTestResultsClient firstClient, out _, out _, environment);
+        List<AzureDevOpsTestCaseResult> created = [];
+        firstClient.PublishTestResultsAsyncFunc = (_, _, results, _) =>
+        {
+            created.AddRange(results);
+            return Task.FromResult<IReadOnlyList<int>?>([777]);
+        };
+
+        await StartPublisherAsync(firstAttempt);
+        await firstAttempt.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("MyTest", new FailedTestNodeStateProperty(new InvalidOperationException("boom")), RetryTestStartTime)),
+            CancellationToken.None);
+        await firstAttempt.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.HasCount(1, created);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.FailedTestOutcome, created[0].Outcome);
+        Assert.IsNull(created[0].Id, "A test seen for the first time is created, not updated.");
+
+        // Attempt 2: the same test passes. It must land on the result attempt 1 created.
+        AzureDevOpsTestResultsPublisher secondAttempt = CreatePublisher(directory.Path, AzureDevOpsTestResultsPublisherOptions.Default, out FakeAzureDevOpsTestResultsClient secondClient, out _, out _, environment);
+        List<AzureDevOpsTestCaseResult> createdBySecondAttempt = [];
+        secondClient.PublishTestResultsAsyncFunc = (_, _, results, _) =>
+        {
+            createdBySecondAttempt.AddRange(results);
+            return Task.FromResult<IReadOnlyList<int>?>([888]);
+        };
+
+        await StartPublisherAsync(secondAttempt);
+        await secondAttempt.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("MyTest", new PassedTestNodeStateProperty(), RetryTestStartTime)),
+            CancellationToken.None);
+        await secondAttempt.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.IsEmpty(createdBySecondAttempt, "The retry attempt must not add a second result for the same test.");
+        Assert.HasCount(1, secondClient.UpdateTestResultsCalls);
+
+        AzureDevOpsTestCaseResult parent = secondClient.UpdateTestResultsCalls[0].Results.Single();
+        Assert.AreEqual(777, parent.Id, "The update has to address the result the first attempt created.");
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.RerunResultGroupType, parent.ResultGroupType);
+
+        // Latest attempt wins: the test ultimately passed, which is what the pipeline's exit code says too.
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, parent.Outcome);
+
+        // The failure is not erased, it becomes the first attempt — that is what makes the flakiness visible.
+        Assert.IsNotNull(parent.SubResults);
+        Assert.HasCount(2, parent.SubResults);
+        Assert.AreEqual(1, parent.SubResults[0].SequenceId);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.FailedTestOutcome, parent.SubResults[0].Outcome);
+        Assert.AreEqual("boom", parent.SubResults[0].ErrorMessage);
+        Assert.AreEqual(2, parent.SubResults[1].SequenceId);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, parent.SubResults[1].Outcome);
+    }
+
+    [TestMethod]
+    public async Task RetryAttempt_ThatFailsAgain_KeepsTheParentFailedAndRecordsBothAttempts()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out _, out _, environment);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+
+        await PublishSingleResultAsync(directory.Path, environment, "MyTest", new FailedTestNodeStateProperty(new InvalidOperationException("first")), resultId: 21);
+
+        AzureDevOpsTestResultsPublisher secondAttempt = CreatePublisher(directory.Path, AzureDevOpsTestResultsPublisherOptions.Default, out FakeAzureDevOpsTestResultsClient client, out _, out _, environment);
+        await StartPublisherAsync(secondAttempt);
+        await secondAttempt.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("MyTest", new FailedTestNodeStateProperty(new InvalidOperationException("second")), RetryTestStartTime)),
+            CancellationToken.None);
+        await secondAttempt.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        AzureDevOpsTestCaseResult parent = client.UpdateTestResultsCalls.Single().Results.Single();
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.FailedTestOutcome, parent.Outcome);
+        Assert.AreEqual("second", parent.ErrorMessage, "The parent reports the attempt that decided the outcome.");
+        Assert.IsNotNull(parent.SubResults);
+        IReadOnlyList<AzureDevOpsTestSubResult> subResults = parent.SubResults;
+        Assert.HasCount(2, subResults);
+        Assert.AreEqual(1, subResults[0].SequenceId);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.FailedTestOutcome, subResults[0].Outcome);
+        Assert.AreEqual("first", subResults[0].ErrorMessage);
+        Assert.AreEqual(2, subResults[1].SequenceId);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.FailedTestOutcome, subResults[1].Outcome);
+        Assert.AreEqual("second", subResults[1].ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task RetryAttempt_AttachmentNameIncludesAttemptAndPreservesExtension()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out _, out _, environment);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+
+        await PublishSingleResultAsync(
+            directory.Path,
+            environment,
+            "MyTest",
+            new FailedTestNodeStateProperty(new InvalidOperationException("first")),
+            resultId: 25);
+
+        AzureDevOpsTestResultsPublisher secondAttempt = CreatePublisher(
+            directory.Path,
+            AzureDevOpsTestResultsPublisherOptions.Default,
+            out FakeAzureDevOpsTestResultsClient client,
+            out _,
+            out _,
+            environment);
+        TestNode node = CreateNode(
+            "MyTest",
+            new FailedTestNodeStateProperty(new InvalidOperationException("second")),
+            RetryTestStartTime);
+        node.Properties.Add(new StandardOutputProperty("retry output"));
+
+        await StartPublisherAsync(secondAttempt);
+        await secondAttempt.ConsumeAsync(Mock.Of<IDataProducer>(), CreateMessage(node), CancellationToken.None);
+        await secondAttempt.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.HasCount(1, client.UploadTestResultAttachmentCalls);
+        Assert.AreEqual(25, client.UploadTestResultAttachmentCalls[0].TestCaseResultId);
+        Assert.AreEqual("stdout.attempt-2.log", client.UploadTestResultAttachmentCalls[0].Attachment.FileName);
+        Assert.HasCount(1, client.UpdateTestResultsCalls);
+        Assert.AreEqual(2, client.UpdateTestResultsCalls[0].Results.Single().SubResults![1].SequenceId);
+    }
+
+    [TestMethod]
+    public async Task FirstAttempt_AttachmentNameIncludesAttemptOne()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out _, out _, environment);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(
+            directory.Path,
+            AzureDevOpsTestResultsPublisherOptions.Default,
+            out FakeAzureDevOpsTestResultsClient client,
+            out _,
+            out _,
+            environment);
+        TestNode node = CreateNode(
+            "MyTest",
+            new FailedTestNodeStateProperty(new InvalidOperationException("first")),
+            RetryTestStartTime);
+        node.Properties.Add(new StandardOutputProperty("first output"));
+
+        await StartPublisherAsync(publisher);
+        await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), CreateMessage(node), CancellationToken.None);
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.HasCount(1, client.UploadTestResultAttachmentCalls);
+        Assert.AreEqual("stdout.attempt-1.log", client.UploadTestResultAttachmentCalls[0].Attachment.FileName);
+    }
+
+    [TestMethod]
+    public async Task RetryAttempt_ParentDurationIncludesAllAttempts()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out _, out _, environment);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+
+        TimingProperty firstTiming = new(new TimingInfo(
+            RetryTestStartTime,
+            RetryTestStartTime + TimeSpan.FromSeconds(30),
+            TimeSpan.FromSeconds(30)));
+        AzureDevOpsTestResultsPublisher firstAttempt = CreatePublisher(
+            directory.Path,
+            AzureDevOpsTestResultsPublisherOptions.Default,
+            out FakeAzureDevOpsTestResultsClient firstClient,
+            out _,
+            out _,
+            environment);
+        firstClient.PublishTestResultsAsyncFunc = (_, _, _, _) => Task.FromResult<IReadOnlyList<int>?>([26]);
+        await StartPublisherAsync(firstAttempt);
+        await firstAttempt.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode(
+                "MyTest",
+                new FailedTestNodeStateProperty(new InvalidOperationException("first")),
+                RetryTestStartTime,
+                firstTiming)),
+            CancellationToken.None);
+        await firstAttempt.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        TimingProperty secondTiming = new(new TimingInfo(
+            RetryTestStartTime + TimeSpan.FromSeconds(30),
+            RetryTestStartTime + TimeSpan.FromSeconds(31),
+            TimeSpan.FromSeconds(1)));
+        AzureDevOpsTestResultsPublisher secondAttempt = CreatePublisher(
+            directory.Path,
+            AzureDevOpsTestResultsPublisherOptions.Default,
+            out FakeAzureDevOpsTestResultsClient secondClient,
+            out _,
+            out _,
+            environment);
+        await StartPublisherAsync(secondAttempt);
+        await secondAttempt.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("MyTest", new PassedTestNodeStateProperty(), RetryTestStartTime, secondTiming)),
+            CancellationToken.None);
+        await secondAttempt.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        AzureDevOpsTestCaseResult parent = secondClient.UpdateTestResultsCalls.Single().Results.Single();
+        Assert.AreEqual(31_000, parent.DurationInMs);
+        Assert.AreEqual(RetryTestStartTime, parent.StartedDate);
+        Assert.AreEqual(RetryTestStartTime + TimeSpan.FromSeconds(31), parent.CompletedDate);
+        Assert.AreEqual(30_000, parent.SubResults![0].DurationInMs);
+        Assert.AreEqual(1_000, parent.SubResults[1].DurationInMs);
+    }
+
+    [TestMethod]
+    public async Task FoldedDataDrivenRows_SharingUidUpdateTheirOwnResults()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out _, out _, environment);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+
+        AzureDevOpsTestResultsPublisherOptions options = new(2, TimeSpan.FromMinutes(1), 40, TimeSpan.FromMilliseconds(250));
+        AzureDevOpsTestResultsPublisher firstAttempt = CreatePublisher(directory.Path, options, out FakeAzureDevOpsTestResultsClient firstClient, out _, out _, environment);
+        firstClient.PublishTestResultsAsyncFunc = (_, _, _, _) => Task.FromResult<IReadOnlyList<int>?>([401, 402]);
+        await StartPublisherAsync(firstAttempt);
+        await firstAttempt.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode(
+                "SharedUid",
+                new PassedTestNodeStateProperty(),
+                RetryTestStartTime,
+                displayName: "MyTest(1)")),
+            CancellationToken.None);
+        await firstAttempt.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode(
+                "SharedUid",
+                new FailedTestNodeStateProperty(new InvalidOperationException("row two")),
+                RetryTestStartTime,
+                displayName: "MyTest(2)")),
+            CancellationToken.None);
+        await firstAttempt.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        AzureDevOpsTestResultsPublisher secondAttempt = CreatePublisher(directory.Path, options, out FakeAzureDevOpsTestResultsClient secondClient, out _, out _, environment);
+        await StartPublisherAsync(secondAttempt);
+        await secondAttempt.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("SharedUid", new PassedTestNodeStateProperty(), RetryTestStartTime, displayName: "MyTest(1)")),
+            CancellationToken.None);
+        await secondAttempt.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("SharedUid", new PassedTestNodeStateProperty(), RetryTestStartTime, displayName: "MyTest(2)")),
+            CancellationToken.None);
+        await secondAttempt.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.HasCount(1, secondClient.UpdateTestResultsCalls);
+        IReadOnlyList<AzureDevOpsTestCaseResult> updated = secondClient.UpdateTestResultsCalls[0].Results;
+        Assert.HasCount(2, updated);
+        Assert.AreEqual(401, updated.Single(result => result.TestCaseTitle == "MyTest(1)").Id);
+        Assert.AreEqual(402, updated.Single(result => result.TestCaseTitle == "MyTest(2)").Id);
+    }
+
+    [TestMethod]
+    public async Task FoldedDataDrivenRows_SharingUidAndTitleFallBackToCreates()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out _, out _, environment);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+
+        AzureDevOpsTestResultsPublisherOptions options = new(2, TimeSpan.FromMinutes(1), 40, TimeSpan.FromMilliseconds(250));
+        AzureDevOpsTestResultsPublisher firstAttempt = CreatePublisher(directory.Path, options, out FakeAzureDevOpsTestResultsClient firstClient, out _, out _, environment);
+        firstClient.PublishTestResultsAsyncFunc = (_, _, _, _) => Task.FromResult<IReadOnlyList<int>?>([411, 412]);
+        await StartPublisherAsync(firstAttempt);
+        for (int i = 0; i < 2; i++)
+        {
+            await firstAttempt.ConsumeAsync(
+                Mock.Of<IDataProducer>(),
+                CreateMessage(CreateNode(
+                    "SharedUid",
+                    new FailedTestNodeStateProperty(new InvalidOperationException($"row {i}")),
+                    RetryTestStartTime,
+                    displayName: "Duplicate title")),
+                CancellationToken.None);
+        }
+
+        await firstAttempt.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        AzureDevOpsTestResultsPublisher secondAttempt = CreatePublisher(directory.Path, options, out FakeAzureDevOpsTestResultsClient secondClient, out _, out _, environment);
+        List<AzureDevOpsTestCaseResult> created = [];
+        secondClient.PublishTestResultsAsyncFunc = (_, _, results, _) =>
+        {
+            created.AddRange(results);
+            return Task.FromResult<IReadOnlyList<int>?>([413, 414]);
+        };
+        await StartPublisherAsync(secondAttempt);
+        for (int i = 0; i < 2; i++)
+        {
+            await secondAttempt.ConsumeAsync(
+                Mock.Of<IDataProducer>(),
+                CreateMessage(CreateNode("SharedUid", new PassedTestNodeStateProperty(), RetryTestStartTime, displayName: "Duplicate title")),
+                CancellationToken.None);
+        }
+
+        await secondAttempt.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.HasCount(2, created);
+        Assert.IsEmpty(secondClient.UpdateTestResultsCalls, "Ambiguous rows must never be PATCHed to a guessed parent.");
+    }
+
+    [TestMethod]
+    public async Task NewlyDuplicatedFoldedRow_FallsBackToCreates()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out _, out _, environment);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+
+        await PublishSingleResultAsync(
+            directory.Path,
+            environment,
+            "SharedUid",
+            new FailedTestNodeStateProperty(new InvalidOperationException("first")),
+            resultId: 421,
+            displayName: "Duplicate title");
+
+        AzureDevOpsTestResultsPublisherOptions options = new(2, TimeSpan.FromMinutes(1), 40, TimeSpan.FromMilliseconds(250));
+        AzureDevOpsTestResultsPublisher secondAttempt = CreatePublisher(directory.Path, options, out FakeAzureDevOpsTestResultsClient client, out _, out _, environment);
+        List<AzureDevOpsTestCaseResult> created = [];
+        client.PublishTestResultsAsyncFunc = (_, _, results, _) =>
+        {
+            created.AddRange(results);
+            return Task.FromResult<IReadOnlyList<int>?>([422, 423]);
+        };
+        await StartPublisherAsync(secondAttempt);
+        for (int i = 0; i < 2; i++)
+        {
+            await secondAttempt.ConsumeAsync(
+                Mock.Of<IDataProducer>(),
+                CreateMessage(CreateNode("SharedUid", new PassedTestNodeStateProperty(), RetryTestStartTime, displayName: "Duplicate title")),
+                CancellationToken.None);
+        }
+
+        await secondAttempt.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.HasCount(2, created);
+        Assert.IsEmpty(client.UpdateTestResultsCalls, "Repeated matches to one parent must never produce duplicate PATCH ids.");
+    }
+
+    [TestMethod]
+    public async Task NewlyCreatedDuplicateInLaterBatch_FallsBackToCreate()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out _, out _, environment);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+
+        AzureDevOpsTestResultsPublisherOptions options = new(1, TimeSpan.FromMinutes(1), 40, TimeSpan.FromMilliseconds(250));
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options, out FakeAzureDevOpsTestResultsClient client, out _, out _, environment);
+        List<AzureDevOpsTestCaseResult> created = [];
+        int nextId = 471;
+        client.PublishTestResultsAsyncFunc = (_, _, results, _) =>
+        {
+            created.AddRange(results);
+            return Task.FromResult<IReadOnlyList<int>?>([nextId++]);
+        };
+        await StartPublisherAsync(publisher);
+
+        await publisher.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode(
+                "SharedUid",
+                new FailedTestNodeStateProperty(new InvalidOperationException("first")),
+                RetryTestStartTime,
+                displayName: "Duplicate title")),
+            CancellationToken.None);
+        await publisher.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("SharedUid", new PassedTestNodeStateProperty(), RetryTestStartTime, displayName: "Duplicate title")),
+            CancellationToken.None);
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.HasCount(2, created);
+        Assert.IsEmpty(client.UpdateTestResultsCalls, "A parent created in this attempt must never be reused by another row.");
+    }
+
+    [TestMethod]
+    public async Task MapEntriesSharingResultId_AreIgnored()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        string mapPath = Path.Combine(directory.Path, "azdo-results.json");
+        File.WriteAllText(
+            mapPath,
+            """
+            {"buildId":123,"runId":42,"results":[
+              {"storage":"tests","name":"First","title":"First","id":431,"attempts":[{"sequenceId":1,"displayName":"First","outcome":"Failed","durationInMs":1}]},
+              {"storage":"tests","name":"First","title":"First","id":432,"attempts":[{"sequenceId":1,"displayName":"First","outcome":"Failed","durationInMs":1}]},
+              {"storage":"tests","name":"First","title":"First","id":433,"attempts":[{"sequenceId":1,"displayName":"First","outcome":"Failed","durationInMs":1}]},
+              {"storage":"tests","name":"Second","title":"Second","id":433,"attempts":[{"sequenceId":1,"displayName":"Second","outcome":"Failed","durationInMs":1}]},
+              {"storage":"tests","name":"Malformed","title":"Malformed","id":434,"attempts":null},
+              {"storage":"tests","name":"Third","title":"Third","id":434,"attempts":[{"sequenceId":1,"displayName":"Third","outcome":"Failed","durationInMs":1}]},
+              {"storage":null,"name":"MalformedKey","title":"MalformedKey","id":435,"attempts":[{"sequenceId":1,"displayName":"MalformedKey","outcome":"Failed","durationInMs":1}]},
+              {"storage":"tests","name":"Fourth","title":"Fourth","id":435,"attempts":[{"sequenceId":1,"displayName":"Fourth","outcome":"Failed","durationInMs":1}]}
+            ]}
+            """);
+
+        AzureDevOpsResultIdStore store = await AzureDevOpsResultIdStore.OpenAsync(new SystemFileSystem(), new CollectingLogger(), mapPath, buildId: 123, runId: 42);
+        AzureDevOpsTestCaseResult first = new("First", "tests", "First", AzureDevOpsLivePublishingConstants.PassedTestOutcome, 1, null, null, null, null);
+        AzureDevOpsTestCaseResult second = new("Second", "tests", "Second", AzureDevOpsLivePublishingConstants.PassedTestOutcome, 1, null, null, null, null);
+        AzureDevOpsTestCaseResult third = new("Third", "tests", "Third", AzureDevOpsLivePublishingConstants.PassedTestOutcome, 1, null, null, null, null);
+        AzureDevOpsTestCaseResult fourth = new("Fourth", "tests", "Fourth", AzureDevOpsLivePublishingConstants.PassedTestOutcome, 1, null, null, null, null);
+
+        Assert.IsNull(store.TryGet(first));
+        Assert.IsNull(store.TryGet(second));
+        Assert.IsNull(store.TryGet(third));
+        Assert.IsNull(store.TryGet(fourth));
+    }
+
+    [TestMethod]
+    public async Task MapEntryWithTerminalSequenceId_IsIgnored()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        string mapPath = Path.Combine(directory.Path, "azdo-results.json");
+        File.WriteAllText(
+            mapPath,
+            """
+            {"buildId":123,"runId":42,"results":[
+              {"storage":"tests","name":"MyTest","title":"MyTest","id":441,"attempts":[{"sequenceId":2147483647,"displayName":"MyTest","outcome":"Failed","durationInMs":1}]}
+            ]}
+            """);
+
+        AzureDevOpsResultIdStore store = await AzureDevOpsResultIdStore.OpenAsync(new SystemFileSystem(), new CollectingLogger(), mapPath, buildId: 123, runId: 42);
+        AzureDevOpsTestCaseResult result = new("MyTest", "tests", "MyTest", AzureDevOpsLivePublishingConstants.PassedTestOutcome, 1, null, null, null, null);
+
+        Assert.IsNull(store.TryGet(result));
+    }
+
+    [TestMethod]
+    public async Task SameTestNameInTwoAssemblies_IsNotTreatedAsARerun()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out _, out _, environment);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+
+        await PublishSingleResultAsync(directory.Path, environment, "MyTest", new FailedTestNodeStateProperty(new InvalidOperationException("boom")), resultId: 31);
+
+        // Same test uid, different assembly. TestNode.Uid is only unique within a test application, so
+        // keying on it alone would make the second assembly's test masquerade as a rerun of the first's.
+        Mock<ITestApplicationModuleInfo> otherAssembly = new();
+        otherAssembly.Setup(x => x.TryGetAssemblyName()).Returns("OtherTests");
+        otherAssembly.Setup(x => x.GetCurrentTestApplicationFullPath()).Returns(Path.Combine("artifacts", "OtherTests.dll"));
+
+        AzureDevOpsTestResultsPublisher otherPublisher = CreatePublisher(directory.Path, AzureDevOpsTestResultsPublisherOptions.Default, out FakeAzureDevOpsTestResultsClient client, out _, out _, environment, otherAssembly);
+        List<AzureDevOpsTestCaseResult> created = [];
+        client.PublishTestResultsAsyncFunc = (_, _, results, _) =>
+        {
+            created.AddRange(results);
+            return Task.FromResult<IReadOnlyList<int>?>([32]);
+        };
+
+        await StartPublisherAsync(otherPublisher);
+        await otherPublisher.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("MyTest", new PassedTestNodeStateProperty(), RetryTestStartTime)),
+            CancellationToken.None);
+        await otherPublisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.HasCount(1, created);
+        Assert.AreEqual("OtherTests", created[0].AutomatedTestStorage);
+        Assert.AreEqual("MyTest", created[0].AutomatedTestName);
+        Assert.IsEmpty(client.UpdateTestResultsCalls, "A different assembly is a different test, not another attempt.");
+    }
+
+    [TestMethod]
+    public async Task WithoutAnOrchestrator_ResultsAreAlwaysCreated()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+
+        // No orchestrator ran, so no map was published and there is nothing to merge into: this is the
+        // ordinary single-process run, whose behaviour must be exactly what it was before reruns existed.
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+
+        await PublishSingleResultAsync(directory.Path, environment, "MyTest", new FailedTestNodeStateProperty(new InvalidOperationException("boom")), resultId: 41);
+
+        AzureDevOpsTestResultsPublisher secondPublisher = CreatePublisher(directory.Path, AzureDevOpsTestResultsPublisherOptions.Default, out FakeAzureDevOpsTestResultsClient client, out _, out _, environment);
+        List<AzureDevOpsTestCaseResult> created = [];
+        client.PublishTestResultsAsyncFunc = (_, _, results, _) =>
+        {
+            created.AddRange(results);
+            return Task.FromResult<IReadOnlyList<int>?>([42]);
+        };
+
+        await StartPublisherAsync(secondPublisher);
+        await secondPublisher.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("MyTest", new PassedTestNodeStateProperty(), RetryTestStartTime)),
+            CancellationToken.None);
+        await secondPublisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.HasCount(1, created);
+        Assert.IsEmpty(client.UpdateTestResultsCalls);
+    }
+
+    [TestMethod]
+    public async Task ResultMapWithoutInheritedRun_IsIgnored()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        string staleMapPath = Path.Combine(directory.Path, "stale-map.json");
+        const string StaleMap = """{"buildId":123,"runId":999,"results":[]}""";
+        File.WriteAllText(staleMapPath, StaleMap);
+
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        environment
+            .Setup(x => x.GetEnvironmentVariable(AzureDevOpsConstants.ResultMapPathEnvironmentVariableName))
+            .Returns(AzureDevOpsConstants.FormatResultMapPath(123, staleMapPath));
+
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(
+            directory.Path,
+            AzureDevOpsTestResultsPublisherOptions.Default,
+            out FakeAzureDevOpsTestResultsClient client,
+            out _,
+            out _,
+            environment);
+        client.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(501);
+        List<AzureDevOpsTestCaseResult> created = [];
+        client.PublishTestResultsAsyncFunc = (_, _, results, _) =>
+        {
+            created.AddRange(results);
+            return Task.FromResult<IReadOnlyList<int>?>([502]);
+        };
+
+        await StartPublisherAsync(publisher);
+        await publisher.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("MyTest", new FailedTestNodeStateProperty(new InvalidOperationException("boom")), RetryTestStartTime)),
+            CancellationToken.None);
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.HasCount(1, created);
+        Assert.IsEmpty(client.UpdateTestResultsCalls);
+        Assert.AreEqual(StaleMap, File.ReadAllText(staleMapPath), "A self-owned run must not open or rewrite an inherited map path.");
+    }
+
+    [TestMethod]
+    public async Task WhenTheCreateResponseHasNoIds_TheNextAttemptCreatesItsOwnResultRatherThanLosingIt()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out _, out _, environment);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+
+        // Azure DevOps accepted the results but the response could not be parsed, so there is no id to
+        // address later. Publishing a second result is worse than a rerun, but far better than dropping it.
+        AzureDevOpsTestResultsPublisher firstAttempt = CreatePublisher(directory.Path, AzureDevOpsTestResultsPublisherOptions.Default, out FakeAzureDevOpsTestResultsClient firstClient, out _, out _, environment);
+        firstClient.PublishTestResultsAsyncFunc = (_, _, _, _) => Task.FromResult<IReadOnlyList<int>?>(null);
+
+        await StartPublisherAsync(firstAttempt);
+        await firstAttempt.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("MyTest", new FailedTestNodeStateProperty(new InvalidOperationException("boom")), RetryTestStartTime)),
+            CancellationToken.None);
+        await firstAttempt.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        AzureDevOpsTestResultsPublisher secondAttempt = CreatePublisher(directory.Path, AzureDevOpsTestResultsPublisherOptions.Default, out FakeAzureDevOpsTestResultsClient secondClient, out _, out _, environment);
+        List<AzureDevOpsTestCaseResult> created = [];
+        secondClient.PublishTestResultsAsyncFunc = (_, _, results, _) =>
+        {
+            created.AddRange(results);
+            return Task.FromResult<IReadOnlyList<int>?>([52]);
+        };
+
+        await StartPublisherAsync(secondAttempt);
+        await secondAttempt.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("MyTest", new PassedTestNodeStateProperty(), RetryTestStartTime)),
+            CancellationToken.None);
+        await secondAttempt.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.HasCount(1, created);
+        Assert.IsEmpty(secondClient.UpdateTestResultsCalls);
+    }
+
+    [TestMethod]
+    public async Task WhenTheMapIsUnreadable_TheAttemptStillPublishesItsResult()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out _, out _, environment);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+
+        await PublishSingleResultAsync(directory.Path, environment, "MyTest", new FailedTestNodeStateProperty(new InvalidOperationException("boom")), resultId: 61);
+
+        string mapPath = AzureDevOpsConstants.TryGetInheritedResultMapPath(environment.Object, buildId: 123)!;
+        Assert.IsTrue(File.Exists(mapPath), "The first attempt was supposed to leave the map behind for the next one.");
+        File.WriteAllText(mapPath, "{ this is not json");
+
+        AzureDevOpsTestResultsPublisher secondAttempt = CreatePublisher(directory.Path, AzureDevOpsTestResultsPublisherOptions.Default, out FakeAzureDevOpsTestResultsClient client, out _, out _, environment);
+        List<AzureDevOpsTestCaseResult> created = [];
+        client.PublishTestResultsAsyncFunc = (_, _, results, _) =>
+        {
+            created.AddRange(results);
+            return Task.FromResult<IReadOnlyList<int>?>([62]);
+        };
+
+        await StartPublisherAsync(secondAttempt);
+        await secondAttempt.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("MyTest", new PassedTestNodeStateProperty(), RetryTestStartTime)),
+            CancellationToken.None);
+        await secondAttempt.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        // Degraded to a separate result rather than to silence.
+        Assert.HasCount(1, created);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, created[0].Outcome);
+        Assert.IsEmpty(client.UpdateTestResultsCalls, "An unreadable map must not merge into stale history.");
+    }
+
+    [TestMethod]
+    public async Task ResultMapPathHandoff_IsScopedToTheBuildAndWithdrawnWhenTheRunCloses()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out _, out _, environment);
+
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+        string? inheritedMapPath = AzureDevOpsConstants.TryGetInheritedResultMapPath(environment.Object, buildId: 123);
+        Assert.IsNotNull(inheritedMapPath);
+        Assert.Contains(directory.Path, inheritedMapPath);
+
+        // A value inherited from an earlier build on a reused agent must not redirect this build's updates.
+        Assert.IsNull(AzureDevOpsConstants.TryGetInheritedResultMapPath(environment.Object, buildId: 999));
+
+        await lifetime.AfterRunAsync(0, CancellationToken.None);
+        Assert.IsNull(
+            AzureDevOpsConstants.TryGetInheritedResultMapPath(environment.Object, buildId: 123),
+            "A process started after the run closed must not try to update results in it.");
+    }
+
+    [TestMethod]
+    public async Task WhenAnUpdateFails_ForcedFlushRetriesAsCreate()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out _, out _, environment);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+
+        await PublishSingleResultAsync(directory.Path, environment, "MyTest", new FailedTestNodeStateProperty(new InvalidOperationException("boom")), resultId: 71);
+
+        string mapPath = AzureDevOpsConstants.TryGetInheritedResultMapPath(environment.Object, buildId: 123)!;
+        Assert.IsTrue(File.Exists(mapPath));
+
+        AzureDevOpsTestResultsPublisher secondAttempt = CreatePublisher(directory.Path, AzureDevOpsTestResultsPublisherOptions.Default, out FakeAzureDevOpsTestResultsClient client, out _, out _, environment);
+        List<AzureDevOpsTestCaseResult> created = [];
+        client.PublishTestResultsAsyncFunc = (_, _, results, _) =>
+        {
+            created.AddRange(results);
+            return Task.FromResult<IReadOnlyList<int>?>([72]);
+        };
+        client.UpdateTestResultsAsyncFunc = (_, _, _, _) => Task.FromException(new HttpRequestException("transient"));
+
+        await StartPublisherAsync(secondAttempt);
+        await secondAttempt.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("MyTest", new PassedTestNodeStateProperty(), RetryTestStartTime)),
+            CancellationToken.None);
+        await secondAttempt.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.HasCount(1, client.UpdateTestResultsCalls);
+        Assert.HasCount(2, client.UpdateTestResultsCalls[0].Results.Single().SubResults!);
+        Assert.HasCount(1, created);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, created[0].Outcome);
+
+        // The map is invalidated before PATCH so a crash after an accepted update can never expose stale
+        // history. The forced session-end flush immediately retries the forgotten attempt as a safe create.
+        Assert.IsTrue(File.Exists(mapPath));
+        Assert.DoesNotContain("\"id\":71", File.ReadAllText(mapPath));
+    }
+
+    [TestMethod]
+    public async Task TheMapIsWrittenOncePerSessionRatherThanOncePerBatch()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out _, out _, environment);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+
+        string mapPath = AzureDevOpsConstants.TryGetInheritedResultMapPath(environment.Object, buildId: 123)!;
+
+        // A batch size of one forces a publish per result, so a per-batch save would rewrite the whole map
+        // for every test — quadratic in the size of the suite, and paid even by runs that never retry.
+        AzureDevOpsTestResultsPublisherOptions options = new(1, TimeSpan.FromSeconds(5), 40, TimeSpan.FromMilliseconds(250));
+        using AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options, out FakeAzureDevOpsTestResultsClient client, out _, out _, environment);
+        int nextResultId = 100;
+        client.PublishTestResultsAsyncFunc = (_, _, results, _) =>
+        {
+            int[] ids = new int[results.Count];
+            for (int i = 0; i < results.Count; i++)
+            {
+                ids[i] = nextResultId++;
+            }
+
+            return Task.FromResult<IReadOnlyList<int>?>(ids);
+        };
+
+        await StartPublisherAsync(publisher);
+        for (int i = 0; i < 5; i++)
+        {
+            await publisher.ConsumeAsync(
+                Mock.Of<IDataProducer>(),
+                CreateMessage(CreateNode($"MyTest{i}", new FailedTestNodeStateProperty(new InvalidOperationException($"failure {i}")), RetryTestStartTime)),
+                CancellationToken.None);
+
+            Assert.IsFalse(File.Exists(mapPath), "The map is only needed by the next attempt, so it must not be rewritten as results are published.");
+        }
+
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.IsTrue(File.Exists(mapPath), "The next attempt still needs the map once the session ends.");
+        string map = File.ReadAllText(mapPath);
+        Assert.Contains("MyTest0", map);
+        Assert.Contains("MyTest4", map);
+    }
+
+    [TestMethod]
+    public async Task WhenNothingWasPublished_NoMapFileIsLeftBehind()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out _, out _, environment);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+
+        string mapPath = AzureDevOpsConstants.TryGetInheritedResultMapPath(environment.Object, buildId: 123)!;
+
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, AzureDevOpsTestResultsPublisherOptions.Default, out _, out _, out _, environment);
+        await StartPublisherAsync(publisher);
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.IsFalse(File.Exists(mapPath), "An empty map only leaves a coordination file in the results directory for nobody to read.");
+    }
+
+    [TestMethod]
+    public async Task MapFromAnotherRunInTheSameBuild_IsIgnored()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out FakeAzureDevOpsTestResultsClient lifetimeClient, out _, environment);
+        lifetimeClient.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(4242);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+
+        await PublishSingleResultAsync(directory.Path, environment, "MyTest", new FailedTestNodeStateProperty(new InvalidOperationException("boom")), resultId: 81);
+
+        string mapPath = AzureDevOpsConstants.TryGetInheritedResultMapPath(environment.Object, buildId: 123)!;
+        string map = File.ReadAllText(mapPath);
+        string foreignRunMap = map.Replace("\"runId\":4242", "\"runId\":9999");
+        Assert.AreNotEqual(map, foreignRunMap, "The test expected the map to carry the run id.");
+        File.WriteAllText(mapPath, foreignRunMap);
+
+        AzureDevOpsTestResultsPublisher nextAttempt = CreatePublisher(directory.Path, AzureDevOpsTestResultsPublisherOptions.Default, out FakeAzureDevOpsTestResultsClient client, out _, out _, environment);
+        List<AzureDevOpsTestCaseResult> created = [];
+        client.PublishTestResultsAsyncFunc = (_, _, results, _) =>
+        {
+            created.AddRange(results);
+            return Task.FromResult<IReadOnlyList<int>?>([82]);
+        };
+
+        await StartPublisherAsync(nextAttempt);
+        await nextAttempt.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("MyTest", new PassedTestNodeStateProperty(), RetryTestStartTime)),
+            CancellationToken.None);
+        await nextAttempt.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.HasCount(1, created);
+        Assert.IsNull(created[0].Id);
+        Assert.IsNull(created[0].SubResults);
+        Assert.IsEmpty(client.UpdateTestResultsCalls, "Result ids from another run must never be PATCHed.");
+        Assert.AreEqual(foreignRunMap, File.ReadAllText(mapPath), "A foreign map path must remain read-only.");
+    }
+
+    [TestMethod]
+    public async Task MapEntryWithoutAttemptHistory_IsIgnored()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out FakeAzureDevOpsTestResultsClient lifetimeClient, out _, environment);
+        lifetimeClient.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(4242);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+
+        string mapPath = AzureDevOpsConstants.TryGetInheritedResultMapPath(environment.Object, buildId: 123)!;
+        File.WriteAllText(
+            mapPath,
+            """{"buildId":123,"runId":4242,"results":[null,{"storage":"MyTests","name":"MyTest","title":"MyTest","id":81,"attempts":null}]}""");
+
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, AzureDevOpsTestResultsPublisherOptions.Default, out FakeAzureDevOpsTestResultsClient client, out _, out _, environment);
+        List<AzureDevOpsTestCaseResult> created = [];
+        client.PublishTestResultsAsyncFunc = (_, _, results, _) =>
+        {
+            created.AddRange(results);
+            return Task.FromResult<IReadOnlyList<int>?>([82]);
+        };
+
+        await StartPublisherAsync(publisher);
+        await publisher.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("MyTest", new PassedTestNodeStateProperty(), RetryTestStartTime)),
+            CancellationToken.None);
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.HasCount(1, created);
+        Assert.IsNull(created[0].Id);
+        Assert.IsNull(created[0].SubResults);
+        Assert.IsEmpty(client.UpdateTestResultsCalls, "An incomplete history must fall back to a safe create.");
+    }
+
+    [TestMethod]
+    public async Task OrchestrationsWithTheSameProcessId_UseDifferentMapPaths()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId(processId: 4321);
+
+        AzureDevOpsTestRunOrchestratorLifetime first = CreateOrchestratorLifetime(directory.Path, out FakeAzureDevOpsTestResultsClient firstClient, out _, environment);
+        firstClient.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(1001);
+        await first.BeforeRunAsync(CancellationToken.None);
+        string firstPath = AzureDevOpsConstants.TryGetInheritedResultMapPath(environment.Object, buildId: 123)!;
+        await first.AfterRunAsync(0, CancellationToken.None);
+
+        AzureDevOpsTestRunOrchestratorLifetime second = CreateOrchestratorLifetime(directory.Path, out FakeAzureDevOpsTestResultsClient secondClient, out _, environment);
+        secondClient.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(1002);
+        await second.BeforeRunAsync(CancellationToken.None);
+        string secondPath = AzureDevOpsConstants.TryGetInheritedResultMapPath(environment.Object, buildId: 123)!;
+        await second.AfterRunAsync(0, CancellationToken.None);
+
+        Assert.AreNotEqual(firstPath, secondPath, "A recycled process id must not revive a crashed orchestration's map.");
+    }
+
+    [TestMethod]
+    public async Task FailedMapSave_RemovesTheStaleMap()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        string mapPath = Path.Combine(directory.Path, "azdo-results.json");
+        CollectingLogger logger = new();
+        SystemFileSystem fileSystem = new();
+
+        AzureDevOpsResultIdStore initial = await AzureDevOpsResultIdStore.OpenAsync(fileSystem, logger, mapPath, buildId: 123, runId: 42);
+        AzureDevOpsTestCaseResult first = new("MyTest", "tests", "MyTest", AzureDevOpsLivePublishingConstants.FailedTestOutcome, 1, "first", null, null, null);
+        initial.RecordCreated(first, resultId: 91);
+        await initial.SaveAsync(CancellationToken.None);
+        Assert.IsTrue(File.Exists(mapPath));
+
+        UnwritableFileSystem failingFileSystem = new() { FailMoves = true };
+        AzureDevOpsResultIdStore updated = await AzureDevOpsResultIdStore.OpenAsync(failingFileSystem, logger, mapPath, buildId: 123, runId: 42);
+        AzureDevOpsPublishedResult published = updated.TryGet(first)!;
+        IReadOnlyList<AzureDevOpsTestSubResult> attempts = AzureDevOpsResultIdStore.BuildNextAttempts(
+            published,
+            first with { ErrorMessage = "second" });
+        updated.RecordAttempts(published, attempts, totalDurationInMs: 2, startedDate: null, completedDate: null);
+        await updated.SaveAsync(CancellationToken.None);
+
+        Assert.IsFalse(File.Exists(mapPath), "A stale map would let the next attempt erase accepted server history.");
+    }
+
+    [TestMethod]
+    public async Task CreateOnlySaveFailure_PreservesStillValidExistingEntries()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        string mapPath = Path.Combine(directory.Path, "azdo-results.json");
+        CollectingLogger logger = new();
+        SystemFileSystem fileSystem = new();
+
+        AzureDevOpsResultIdStore initial = await AzureDevOpsResultIdStore.OpenAsync(fileSystem, logger, mapPath, buildId: 123, runId: 42);
+        AzureDevOpsTestCaseResult existing = new("ExistingTest", "tests", "ExistingTest", AzureDevOpsLivePublishingConstants.FailedTestOutcome, 1, "first", null, null, null);
+        initial.RecordCreated(existing, resultId: 95);
+        await initial.SaveAsync(CancellationToken.None);
+
+        UnwritableFileSystem failingFileSystem = new() { FailMoves = true };
+        AzureDevOpsResultIdStore updated = await AzureDevOpsResultIdStore.OpenAsync(failingFileSystem, logger, mapPath, buildId: 123, runId: 42);
+        AzureDevOpsTestCaseResult newlyCreated = new("NewTest", "tests", "NewTest", AzureDevOpsLivePublishingConstants.PassedTestOutcome, 1, null, null, null, null);
+        updated.RecordCreated(newlyCreated, resultId: 96);
+        await updated.SaveAsync(CancellationToken.None);
+
+        Assert.IsTrue(File.Exists(mapPath), "A create-only failure does not make the already persisted entries stale.");
+        string survivingMap = File.ReadAllText(mapPath);
+        Assert.Contains("ExistingTest", survivingMap);
+        Assert.DoesNotContain("NewTest", survivingMap);
+    }
+
+    [TestMethod]
+    public async Task WhenTheExistingMapCannotBeInvalidated_RetryFallsBackToCreate()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out _, out _, environment);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+
+        UnwritableFileSystem fileSystem = new();
+        AzureDevOpsTestResultsPublisher firstAttempt = CreatePublisher(
+            directory.Path,
+            AzureDevOpsTestResultsPublisherOptions.Default,
+            out FakeAzureDevOpsTestResultsClient firstClient,
+            out _,
+            out _,
+            environment,
+            fileSystem: fileSystem);
+        firstClient.PublishTestResultsAsyncFunc = (_, _, _, _) => Task.FromResult<IReadOnlyList<int>?>([97]);
+        await StartPublisherAsync(firstAttempt);
+        await firstAttempt.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("MyTest", new FailedTestNodeStateProperty(new InvalidOperationException("boom")), RetryTestStartTime)),
+            CancellationToken.None);
+        await firstAttempt.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        fileSystem.FailDeletes = true;
+        AzureDevOpsTestResultsPublisher secondAttempt = CreatePublisher(
+            directory.Path,
+            AzureDevOpsTestResultsPublisherOptions.Default,
+            out FakeAzureDevOpsTestResultsClient secondClient,
+            out _,
+            out _,
+            environment,
+            fileSystem: fileSystem);
+        List<AzureDevOpsTestCaseResult> created = [];
+        int createAttempts = 0;
+        secondClient.PublishTestResultsAsyncFunc = (_, _, results, _) =>
+        {
+            createAttempts++;
+            if (createAttempts == 1)
+            {
+                return Task.FromException<IReadOnlyList<int>?>(new HttpRequestException("transient safe-create failure"));
+            }
+
+            created.AddRange(results);
+            return Task.FromResult<IReadOnlyList<int>?>([98]);
+        };
+
+        await StartPublisherAsync(secondAttempt);
+        await secondAttempt.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("MyTest", new PassedTestNodeStateProperty(), RetryTestStartTime)),
+            CancellationToken.None);
+        await secondAttempt.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.HasCount(1, created, "The retry should degrade to a separate result when stale history cannot be invalidated.");
+        Assert.IsEmpty(secondClient.UpdateTestResultsCalls);
+    }
+
+    [TestMethod]
+    public async Task AttachmentCancellationAfterCreate_StillRecordsTheWholeAcceptedBatch()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out _, out _, environment);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+
+        AzureDevOpsTestResultsPublisherOptions options = new(2, TimeSpan.FromMinutes(1), 40, TimeSpan.FromMilliseconds(250));
+        using AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options, out FakeAzureDevOpsTestResultsClient client, out _, out _, environment);
+        client.PublishTestResultsAsyncFunc = (_, _, _, _) => Task.FromResult<IReadOnlyList<int>?>([101, 102]);
+        client.UploadTestResultAttachmentAsyncFunc = (_, _, _, _, _) => Task.FromException(new OperationCanceledException());
+        await StartPublisherAsync(publisher);
+
+        TestNode first = CreateNode("FirstTest", new FailedTestNodeStateProperty(new InvalidOperationException("first")), RetryTestStartTime);
+        first.Properties.Add(new StandardOutputProperty("first output"));
+        TestNode second = CreateNode("SecondTest", new FailedTestNodeStateProperty(new InvalidOperationException("second")), RetryTestStartTime);
+        second.Properties.Add(new StandardOutputProperty("second output"));
+
+        await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), CreateMessage(first), CancellationToken.None);
+        await Assert.ThrowsExactlyAsync<OperationCanceledException>(
+            () => publisher.ConsumeAsync(Mock.Of<IDataProducer>(), CreateMessage(second), CancellationToken.None));
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        string mapPath = AzureDevOpsConstants.TryGetInheritedResultMapPath(environment.Object, buildId: 123)!;
+        string map = File.ReadAllText(mapPath);
+        Assert.Contains("\"id\":101", map);
+        Assert.Contains("\"id\":102", map);
+        Assert.Contains("FirstTest", map);
+        Assert.Contains("SecondTest", map);
+    }
+
+    [TestMethod]
+    public async Task AttachmentCancellationInMixedBatch_DoesNotSkipUpdates()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out _, out _, environment);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+        await PublishSingleResultAsync(
+            directory.Path,
+            environment,
+            "ExistingTest",
+            new FailedTestNodeStateProperty(new InvalidOperationException("first")),
+            resultId: 201);
+
+        AzureDevOpsTestResultsPublisherOptions options = new(2, TimeSpan.FromMinutes(1), 40, TimeSpan.FromMilliseconds(250));
+        using AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options, out FakeAzureDevOpsTestResultsClient client, out _, out _, environment);
+        List<AzureDevOpsTestCaseResult> created = [];
+        client.PublishTestResultsAsyncFunc = (_, _, results, _) =>
+        {
+            created.AddRange(results);
+            return Task.FromResult<IReadOnlyList<int>?>([202]);
+        };
+        client.UploadTestResultAttachmentAsyncFunc = (_, _, _, _, _) => Task.FromException(new OperationCanceledException());
+        await StartPublisherAsync(publisher);
+
+        TestNode newTest = CreateNode("NewTest", new FailedTestNodeStateProperty(new InvalidOperationException("new")), RetryTestStartTime);
+        newTest.Properties.Add(new StandardOutputProperty("new output"));
+
+        await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), CreateMessage(newTest), CancellationToken.None);
+        await Assert.ThrowsExactlyAsync<OperationCanceledException>(
+            () => publisher.ConsumeAsync(
+                Mock.Of<IDataProducer>(),
+                CreateMessage(CreateNode("ExistingTest", new PassedTestNodeStateProperty(), RetryTestStartTime)),
+                CancellationToken.None));
+
+        Assert.HasCount(1, client.UpdateTestResultsCalls, "The update must reach Azure DevOps before creation attachments are uploaded.");
+        Assert.AreEqual("ExistingTest", client.UpdateTestResultsCalls[0].Results.Single().AutomatedTestName);
+        Assert.HasCount(1, created);
+        Assert.AreEqual("NewTest", created[0].AutomatedTestName);
+    }
+
+    [TestMethod]
+    public async Task FailedCreationPost_DoesNotConsumeUnattemptedUpdateClaim()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out _, out _, environment);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+        await PublishSingleResultAsync(
+            directory.Path,
+            environment,
+            "ExistingTest",
+            new FailedTestNodeStateProperty(new InvalidOperationException("first")),
+            resultId: 451);
+
+        AzureDevOpsTestResultsPublisherOptions options = new(2, TimeSpan.FromMinutes(1), 40, TimeSpan.FromMilliseconds(250));
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options, out FakeAzureDevOpsTestResultsClient client, out _, out _, environment);
+        int createAttempts = 0;
+        List<AzureDevOpsTestCaseResult> created = [];
+        client.PublishTestResultsAsyncFunc = (_, _, results, _) =>
+        {
+            createAttempts++;
+            if (createAttempts == 1)
+            {
+                return Task.FromException<IReadOnlyList<int>?>(new HttpRequestException("transient create failure"));
+            }
+
+            created.AddRange(results);
+            return Task.FromResult<IReadOnlyList<int>?>([452]);
+        };
+        await StartPublisherAsync(publisher);
+
+        await publisher.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("NewTest", new FailedTestNodeStateProperty(new InvalidOperationException("new")), RetryTestStartTime)),
+            CancellationToken.None);
+        await publisher.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("ExistingTest", new PassedTestNodeStateProperty(), RetryTestStartTime)),
+            CancellationToken.None);
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.HasCount(1, created);
+        Assert.AreEqual("NewTest", created[0].AutomatedTestName);
+        Assert.HasCount(1, client.UpdateTestResultsCalls, "The untouched parent claim must be available on the forced retry.");
+        Assert.AreEqual(451, client.UpdateTestResultsCalls[0].Results.Single().Id);
+    }
+
+    [TestMethod]
+    public async Task FailedDuplicateCreate_DoesNotReleaseEarlierSuccessfulClaim()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out _, out _, environment);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+        await PublishSingleResultAsync(
+            directory.Path,
+            environment,
+            "SharedUid",
+            new FailedTestNodeStateProperty(new InvalidOperationException("first")),
+            resultId: 461,
+            displayName: "Duplicate title");
+
+        AzureDevOpsTestResultsPublisherOptions options = new(1, TimeSpan.FromMinutes(1), 40, TimeSpan.FromMilliseconds(250));
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options, out FakeAzureDevOpsTestResultsClient client, out _, out _, environment);
+        int createAttempts = 0;
+        List<AzureDevOpsTestCaseResult> created = [];
+        client.PublishTestResultsAsyncFunc = (_, _, results, _) =>
+        {
+            createAttempts++;
+            if (createAttempts == 1)
+            {
+                return Task.FromException<IReadOnlyList<int>?>(new HttpRequestException("transient duplicate create failure"));
+            }
+
+            created.AddRange(results);
+            return Task.FromResult<IReadOnlyList<int>?>([462]);
+        };
+        await StartPublisherAsync(publisher);
+
+        await publisher.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("SharedUid", new PassedTestNodeStateProperty(), RetryTestStartTime, displayName: "Duplicate title")),
+            CancellationToken.None);
+        await publisher.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("SharedUid", new PassedTestNodeStateProperty(), RetryTestStartTime, displayName: "Duplicate title")),
+            CancellationToken.None);
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.HasCount(1, client.UpdateTestResultsCalls, "The persisted parent may be updated only once in this attempt.");
+        Assert.HasCount(1, created);
+        Assert.AreEqual("SharedUid", created[0].AutomatedTestName);
+    }
+
+    [TestMethod]
+    public async Task FailedPatchInMixedBatch_DoesNotResaveStaleHistory()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out _, out _, environment);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+        await PublishSingleResultAsync(
+            directory.Path,
+            environment,
+            "ExistingTest",
+            new FailedTestNodeStateProperty(new InvalidOperationException("first")),
+            resultId: 211);
+
+        AzureDevOpsTestResultsPublisherOptions options = new(2, TimeSpan.FromMinutes(1), 40, TimeSpan.FromMilliseconds(250));
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options, out FakeAzureDevOpsTestResultsClient client, out _, out _, environment);
+        List<string> createdTests = [];
+        int nextResultId = 212;
+        client.PublishTestResultsAsyncFunc = (_, _, results, _) =>
+        {
+            createdTests.AddRange(results.Select(result => result.AutomatedTestName));
+            int[] ids = [.. Enumerable.Range(nextResultId, results.Count)];
+            nextResultId += results.Count;
+            return Task.FromResult<IReadOnlyList<int>?>(ids);
+        };
+        client.UpdateTestResultsAsyncFunc = (_, _, _, _) => Task.FromException(new HttpRequestException("ambiguous failure"));
+        await StartPublisherAsync(publisher);
+
+        await publisher.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("NewTest", new FailedTestNodeStateProperty(new InvalidOperationException("new")), RetryTestStartTime)),
+            CancellationToken.None);
+        await publisher.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("ExistingTest", new PassedTestNodeStateProperty(), RetryTestStartTime)),
+            CancellationToken.None);
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.Contains("NewTest", createdTests);
+        Assert.Contains("ExistingTest", createdTests, "The ambiguous PATCH must retry as a safe create.");
+        Assert.HasCount(2, createdTests);
+        Assert.AreEqual("NewTest", createdTests.Single(name => name == "NewTest"));
+        Assert.AreEqual("ExistingTest", createdTests.Single(name => name == "ExistingTest"));
+
+        string mapPath = AzureDevOpsConstants.TryGetInheritedResultMapPath(environment.Object, buildId: 123)!;
+        Assert.DoesNotContain("\"id\":211", File.ReadAllText(mapPath), "The pre-PATCH result id must not be resurrected.");
+    }
+
+    [TestMethod]
+    public void CappedAttemptHistory_ContinuesIncreasingSequenceIds()
+    {
+        var attempts = new AzureDevOpsTestSubResult[AzureDevOpsLivePublishingConstants.MaxSubResultsPerResult];
+        for (int i = 0; i < attempts.Length; i++)
+        {
+            attempts[i] = new AzureDevOpsTestSubResult(
+                i + 1,
+                "MyTest",
+                AzureDevOpsLivePublishingConstants.FailedTestOutcome,
+                1,
+                null,
+                null,
+                null,
+                null);
+        }
+
+        AzureDevOpsPublishedResult published = new("tests", "MyTest", "MyTest", 123, attempts)
+        {
+            TotalDurationInMs = 1000,
+        };
+        AzureDevOpsTestCaseResult nextResult = new(
+            "MyTest",
+            "tests",
+            "MyTest",
+            AzureDevOpsLivePublishingConstants.PassedTestOutcome,
+            1,
+            null,
+            null,
+            null,
+            null);
+
+        IReadOnlyList<AzureDevOpsTestSubResult> next = AzureDevOpsResultIdStore.BuildNextAttempts(published, nextResult);
+        long? nextTotalDuration = AzureDevOpsResultIdStore.BuildNextTotalDuration(published, nextResult);
+        IReadOnlyList<AzureDevOpsTestSubResult> afterNext = AzureDevOpsResultIdStore.BuildNextAttempts(
+            published with { Attempts = next },
+            nextResult);
+        long? afterNextTotalDuration = AzureDevOpsResultIdStore.BuildNextTotalDuration(
+            published with { Attempts = next, TotalDurationInMs = nextTotalDuration },
+            nextResult);
+
+        Assert.HasCount(AzureDevOpsLivePublishingConstants.MaxSubResultsPerResult, next);
+        Assert.AreEqual(2, next[0].SequenceId);
+        Assert.AreEqual(1001, next[^1].SequenceId);
+        Assert.AreEqual(1002, afterNext[^1].SequenceId);
+        Assert.AreEqual(1001, nextTotalDuration);
+        Assert.AreEqual(1002, afterNextTotalDuration);
+    }
+
+    /// <summary>
+    /// Runs one publisher to completion for a single test, so a following attempt has something to merge into.
+    /// </summary>
+    private async Task PublishSingleResultAsync(
+        string resultsDirectory,
+        Mock<IEnvironment> environment,
+        string uid,
+        IProperty state,
+        int resultId,
+        string? displayName = null)
+    {
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(resultsDirectory, AzureDevOpsTestResultsPublisherOptions.Default, out FakeAzureDevOpsTestResultsClient client, out _, out _, environment);
+        client.PublishTestResultsAsyncFunc = (_, _, _, _) => Task.FromResult<IReadOnlyList<int>?>([resultId]);
+
+        await StartPublisherAsync(publisher);
+        await publisher.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode(uid, state, RetryTestStartTime, displayName: displayName)),
+            CancellationToken.None);
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+    }
+
+    // The rerun shape is a contract with Azure DevOps rather than with our own code, so assert on the
+    // bytes actually sent: the verb, the results URI, and the camelCase resultGroupType the service
+    // expects (it rejects the PascalCase spelling used by the client SDK's enum).
+    [TestMethod]
+    public async Task AzureDevOpsTestResultsClient_UpdateTestResults_PatchesTheResultsUriWithARerunPayload()
+    {
+        FakeTask task = new();
+        FakeClock clock = new() { UtcNow = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero) };
+        string? capturedBody = null;
+        HttpMethod? capturedMethod = null;
+        Uri? capturedUri = null;
+        QueueHttpMessageHandler handler = new(
+            async (request, cancellationToken) =>
+            {
+                capturedMethod = request.Method;
+                capturedUri = request.RequestUri;
+                capturedBody = await ReadRequestBodyAsync(request, cancellationToken);
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("{\"count\":1,\"value\":[]}"),
+                };
+            });
+        using HttpClient httpClient = new(handler)
+        {
+            Timeout = Timeout.InfiniteTimeSpan,
+        };
+        AzureDevOpsTestResultsClient client = new(httpClient, task, clock);
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "tests.dll", "results");
+
+        AzureDevOpsTestCaseResult parent = new("MyTest", "tests", "MyTest", AzureDevOpsLivePublishingConstants.PassedTestOutcome, 5, null, null, null, null)
+        {
+            Id = 777,
+            ResultGroupType = AzureDevOpsLivePublishingConstants.RerunResultGroupType,
+            SubResults =
+            [
+                new AzureDevOpsTestSubResult(1, "MyTest", AzureDevOpsLivePublishingConstants.FailedTestOutcome, 3, "boom", "at Foo()", null, null),
+                new AzureDevOpsTestSubResult(2, "MyTest", AzureDevOpsLivePublishingConstants.PassedTestOutcome, 5, null, null, null, null),
+            ],
+        };
+
+        await client.UpdateTestResultsAsync(configuration, runId: 42, [parent], CancellationToken.None);
+
+        Assert.AreEqual("PATCH", capturedMethod!.Method);
+        Assert.AreEqual("https://dev.azure.com/org/project/_apis/test/runs/42/results?api-version=7.1", capturedUri!.ToString());
+        Assert.IsNotNull(capturedBody);
+
+        using var document = JsonDocument.Parse(capturedBody!);
+        JsonElement result = document.RootElement[0];
+        Assert.AreEqual(777, result.GetProperty("id").GetInt32());
+        Assert.AreEqual("rerun", result.GetProperty("resultGroupType").GetString());
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, result.GetProperty("outcome").GetString());
+        Assert.AreEqual(JsonValueKind.Null, result.GetProperty("errorMessage").ValueKind);
+        Assert.AreEqual(JsonValueKind.Null, result.GetProperty("stackTrace").ValueKind);
+
+        JsonElement subResults = result.GetProperty("subResults");
+        Assert.AreEqual(2, subResults.GetArrayLength());
+        Assert.AreEqual(1, subResults[0].GetProperty("sequenceId").GetInt32());
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.FailedTestOutcome, subResults[0].GetProperty("outcome").GetString());
+        Assert.AreEqual("boom", subResults[0].GetProperty("errorMessage").GetString());
+        Assert.AreEqual(2, subResults[1].GetProperty("sequenceId").GetInt32());
+    }
+
+    // A result being created must not carry any of the rerun fields: sending an explicit null id would
+    // make Azure DevOps treat the create as an update of result 0.
+    [TestMethod]
+    public async Task AzureDevOpsTestResultsClient_PublishTestResults_OmitsRerunFieldsForANewResult()
+    {
+        FakeTask task = new();
+        FakeClock clock = new() { UtcNow = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero) };
+        string? capturedBody = null;
+        QueueHttpMessageHandler handler = new(
+            async (request, cancellationToken) =>
+            {
+                capturedBody = await ReadRequestBodyAsync(request, cancellationToken);
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("{\"count\":1,\"value\":[{\"id\":5,\"automatedTestName\":\"MyTest\"}]}"),
+                };
+            });
+        using HttpClient httpClient = new(handler)
+        {
+            Timeout = Timeout.InfiniteTimeSpan,
+        };
+        AzureDevOpsTestResultsClient client = new(httpClient, task, clock);
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "tests.dll", "results");
+
+        AzureDevOpsTestCaseResult result = new("MyTest", "tests", "MyTest", AzureDevOpsLivePublishingConstants.PassedTestOutcome, 5, null, null, null, null);
+        IReadOnlyList<int>? ids = await client.PublishTestResultsAsync(configuration, runId: 42, [result], CancellationToken.None);
+
+        Assert.IsNotNull(ids);
+        Assert.AreEqual(5, ids![0]);
+
+        using var document = JsonDocument.Parse(capturedBody!);
+        JsonElement created = document.RootElement[0];
+        Assert.IsFalse(created.TryGetProperty("id", out _));
+        Assert.IsFalse(created.TryGetProperty("resultGroupType", out _));
+        Assert.IsFalse(created.TryGetProperty("subResults", out _));
+        Assert.IsFalse(created.TryGetProperty("errorMessage", out _));
+        Assert.IsFalse(created.TryGetProperty("stackTrace", out _));
+    }
+
+    #endregion
+
     private static AzureDevOpsTestRunOrchestratorLifetime CreateOrchestratorLifetime(
         string resultsDirectory,
         out FakeAzureDevOpsTestResultsClient client,
@@ -1936,6 +3309,13 @@ public sealed class AzureDevOpsLivePublishingTests
         environment.Setup(x => x.GetEnvironmentVariable(AzureDevOpsConstants.TestRunIdEnvironmentVariableName)).Returns(() => runId);
         environment.Setup(x => x.SetEnvironmentVariable(AzureDevOpsConstants.TestRunIdEnvironmentVariableName, It.IsAny<string>()))
             .Callback<string, string>((_, value) => runId = value);
+
+        // The result map path is handed down the same way, so the attempts of one orchestration can find
+        // the results the earlier ones created.
+        string? resultMapPath = null;
+        environment.Setup(x => x.GetEnvironmentVariable(AzureDevOpsConstants.ResultMapPathEnvironmentVariableName)).Returns(() => resultMapPath);
+        environment.Setup(x => x.SetEnvironmentVariable(AzureDevOpsConstants.ResultMapPathEnvironmentVariableName, It.IsAny<string>()))
+            .Callback<string, string>((_, value) => resultMapPath = value);
         return environment;
     }
 
@@ -2012,7 +3392,8 @@ public sealed class AzureDevOpsLivePublishingTests
         Mock<ITestApplicationModuleInfo>? testApplicationModuleInfo = null,
         ITask? task = null,
         Mock<ITestApplicationProcessExitCode>? processExitCode = null,
-        CollectingOutputDevice? outputDevice = null)
+        CollectingOutputDevice? outputDevice = null,
+        IFileSystem? fileSystem = null)
     {
         Mock<ICommandLineOptions> commandLineOptions = new();
         commandLineOptions.Setup(x => x.IsOptionSet(AzureDevOpsCommandLineOptions.PublishAzureDevOpsTestResultsOptionName)).Returns(true);
@@ -2024,9 +3405,14 @@ public sealed class AzureDevOpsLivePublishingTests
 
         environment ??= CreateEnvironmentMock(processId: GetAliveProcessId());
 
-        testApplicationModuleInfo ??= new Mock<ITestApplicationModuleInfo>();
-        testApplicationModuleInfo.Setup(x => x.TryGetAssemblyName()).Returns("MyTests");
-        testApplicationModuleInfo.Setup(x => x.GetCurrentTestApplicationFullPath()).Returns(Path.Combine("testfx-worktrees", "azdo-live", "artifacts", "MyTests.dll"));
+        // Only fill in defaults for a mock we created: a caller that supplies one is describing a
+        // different test application on purpose, and overwriting it would silently undo that.
+        if (testApplicationModuleInfo is null)
+        {
+            testApplicationModuleInfo = new Mock<ITestApplicationModuleInfo>();
+            testApplicationModuleInfo.Setup(x => x.TryGetAssemblyName()).Returns("MyTests");
+            testApplicationModuleInfo.Setup(x => x.GetCurrentTestApplicationFullPath()).Returns(Path.Combine("testfx-worktrees", "azdo-live", "artifacts", "MyTests.dll"));
+        }
 
         if (processExitCode is null)
         {
@@ -2043,7 +3429,7 @@ public sealed class AzureDevOpsLivePublishingTests
             commandLineOptions.Object,
             configuration.Object,
             environment.Object,
-            new SystemFileSystem(),
+            fileSystem ?? new SystemFileSystem(),
             outputDevice ?? new CollectingOutputDevice(),
             testApplicationModuleInfo.Object,
             processExitCode.Object,
@@ -2057,13 +3443,13 @@ public sealed class AzureDevOpsLivePublishingTests
     private static TestNodeUpdateMessage CreateMessage(TestNode node)
         => new(new SessionUid(Guid.NewGuid().ToString()), node);
 
-    private static TestNode CreateNode(string uid, IProperty state, DateTimeOffset startTime, TimingProperty? timing = null)
+    private static TestNode CreateNode(string uid, IProperty state, DateTimeOffset startTime, TimingProperty? timing = null, string? displayName = null)
     {
         PropertyBag properties = timing is null ? new PropertyBag(state) : new PropertyBag(state, timing);
         return new TestNode
         {
             Uid = new TestNodeUid(uid),
-            DisplayName = uid,
+            DisplayName = displayName ?? uid,
             Properties = properties,
         };
     }
@@ -2077,6 +3463,10 @@ public sealed class AzureDevOpsLivePublishingTests
 
         public bool FailRunIdFileWrites { get; set; }
 
+        public bool FailMoves { get; set; }
+
+        public bool FailDeletes { get; set; }
+
         public IFileStream NewFileStream(string path, FileMode mode, FileAccess access, FileShare share)
             => FailRunIdFileWrites && Path.GetFileName(path).EndsWith(".json", StringComparison.Ordinal) && !Path.GetFileName(path).Contains("participant")
                 ? throw new IOException($"The process cannot access the file '{path}' because it is being used by another process.")
@@ -2086,7 +3476,15 @@ public sealed class AzureDevOpsLivePublishingTests
 
         public string CreateDirectory(string path) => _inner.CreateDirectory(path);
 
-        public void DeleteFile(string path) => _inner.DeleteFile(path);
+        public void DeleteFile(string path)
+        {
+            if (FailDeletes)
+            {
+                throw new IOException($"The process cannot delete the file '{path}'.");
+            }
+
+            _inner.DeleteFile(path);
+        }
 
         public bool ExistDirectory(string? path) => _inner.ExistDirectory(path);
 
@@ -2094,7 +3492,25 @@ public sealed class AzureDevOpsLivePublishingTests
 
         public string[] GetFiles(string path, string searchPattern, SearchOption searchOption) => _inner.GetFiles(path, searchPattern, searchOption);
 
-        public void MoveFile(string sourceFileName, string destFileName, bool overwrite = false) => _inner.MoveFile(sourceFileName, destFileName, overwrite);
+        public void MoveFile(string sourceFileName, string destFileName, bool overwrite = false)
+        {
+            if (FailMoves)
+            {
+                throw new IOException($"The process cannot move the file '{sourceFileName}' to '{destFileName}'.");
+            }
+
+            _inner.MoveFile(sourceFileName, destFileName, overwrite);
+        }
+
+        public void ReplaceFile(string sourceFileName, string destFileName)
+        {
+            if (FailMoves)
+            {
+                throw new IOException($"The process cannot replace the file '{destFileName}'.");
+            }
+
+            _inner.ReplaceFile(sourceFileName, destFileName);
+        }
 
         public IFileStream NewFileStream(string path, FileMode mode) => _inner.NewFileStream(path, mode);
 
@@ -2136,6 +3552,8 @@ public sealed class AzureDevOpsLivePublishingTests
         public string[] GetFiles(string path, string searchPattern, SearchOption searchOption) => _inner.GetFiles(path, searchPattern, searchOption);
 
         public void MoveFile(string sourceFileName, string destFileName, bool overwrite = false) => _inner.MoveFile(sourceFileName, destFileName, overwrite);
+
+        public void ReplaceFile(string sourceFileName, string destFileName) => _inner.ReplaceFile(sourceFileName, destFileName);
 
         public IFileStream NewFileStream(string path, FileMode mode) => _inner.NewFileStream(path, mode);
 
@@ -2186,7 +3604,7 @@ public sealed class AzureDevOpsLivePublishingTests
 
     private sealed class FakeAzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClient
     {
-        public Func<AzureDevOpsPublishConfiguration, CancellationToken, Task<int>> CreateTestRunAsyncFunc { get; set; } = (_, _) => Task.FromResult(0);
+        public Func<AzureDevOpsPublishConfiguration, CancellationToken, Task<int>> CreateTestRunAsyncFunc { get; set; } = (_, _) => Task.FromResult(1);
 
         public Func<AzureDevOpsPublishConfiguration, int, IReadOnlyList<AzureDevOpsTestCaseResult>, CancellationToken, Task<IReadOnlyList<int>?>> PublishTestResultsAsyncFunc { get; set; } =
             (_, _, results, _) =>
@@ -2199,6 +3617,10 @@ public sealed class AzureDevOpsLivePublishingTests
 
                 return Task.FromResult<IReadOnlyList<int>?>(ids);
             };
+
+        public Func<AzureDevOpsPublishConfiguration, int, IReadOnlyList<AzureDevOpsTestCaseResult>, CancellationToken, Task> UpdateTestResultsAsyncFunc { get; set; } = (_, _, _, _) => Task.CompletedTask;
+
+        public List<(int RunId, IReadOnlyList<AzureDevOpsTestCaseResult> Results)> UpdateTestResultsCalls { get; } = [];
 
         public Func<AzureDevOpsPublishConfiguration, int, int, AzureDevOpsTestResultAttachment, CancellationToken, Task> UploadTestResultAttachmentAsyncFunc { get; set; } = (_, _, _, _, _) => Task.CompletedTask;
 
@@ -2222,6 +3644,12 @@ public sealed class AzureDevOpsLivePublishingTests
 
         public Task<IReadOnlyList<int>?> PublishTestResultsAsync(AzureDevOpsPublishConfiguration configuration, int runId, IReadOnlyList<AzureDevOpsTestCaseResult> results, CancellationToken cancellationToken)
             => PublishTestResultsAsyncFunc(configuration, runId, results, cancellationToken);
+
+        public Task UpdateTestResultsAsync(AzureDevOpsPublishConfiguration configuration, int runId, IReadOnlyList<AzureDevOpsTestCaseResult> results, CancellationToken cancellationToken)
+        {
+            UpdateTestResultsCalls.Add((runId, results));
+            return UpdateTestResultsAsyncFunc(configuration, runId, results, cancellationToken);
+        }
 
         public Task UpdateTestRunStateAsync(AzureDevOpsPublishConfiguration configuration, int runId, string state, CancellationToken cancellationToken)
         {

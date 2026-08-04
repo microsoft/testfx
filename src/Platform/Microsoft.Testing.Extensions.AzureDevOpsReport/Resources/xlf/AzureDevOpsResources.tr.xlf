@@ -62,6 +62,11 @@
         <target state="translated">Azure DevOps canlı yayımlama koordinasyon dosyasını silemedi</target>
         <note />
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingFailedToReadCoordinationFile">
+        <source>Azure DevOps live publishing failed to read coordination file</source>
+        <target state="new">Azure DevOps live publishing failed to read coordination file</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingFailedToWriteCoordinationFile">
         <source>Azure DevOps live publishing failed to write coordination file</source>
         <target state="new">Azure DevOps live publishing failed to write coordination file</target>
@@ -110,6 +115,11 @@
       <trans-unit id="AzureDevOpsLivePublishingResultIdParseFailedWarning">
         <source>Azure DevOps live publishing accepted a batch of test results but could not parse the assigned result IDs; result-level attachments for this batch will be skipped.</source>
         <target state="translated">Azure DevOps canlı yayımlama bir grup test sonucunu kabul etti ancak atanan sonuç kimliklerini ayrıştıramadı. Bu grup için sonuç düzeyi ekler atlanacak.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingResultMapHandoffFailed">
+        <source>Azure DevOps live publishing failed to update the result map handoff.</source>
+        <target state="new">Azure DevOps live publishing failed to update the result map handoff.</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingResultsDropped">
