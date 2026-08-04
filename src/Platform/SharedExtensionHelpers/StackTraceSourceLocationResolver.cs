@@ -19,6 +19,17 @@ internal static class StackTraceSourceLocationResolver
 
     private static readonly char[] NewlineCharacters = ['\r', '\n'];
 
+    // Path containment must follow the running platform's filesystem semantics. Windows paths compare
+    // case-insensitively, but elsewhere '/tmp/Repo' and '/tmp/repo' are distinct directories, so an
+    // ignore-case containment test would accept a case-distinct sibling as being inside the workspace.
+    // Mirrors the PathComparison helper in the Azure DevOps extension, which is not linked into this shared
+    // file. Runtime check on purpose: this ships as netstandard2.0, so a compile-time '#if' would not reflect
+    // the platform the assembly actually runs on.
+    private static readonly StringComparison PathComparison =
+        System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows)
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+
     // Fully-qualified type prefixes for MSTest assertion implementations. A stack frame whose 'code' starts
     // with any of these is treated as framework internals and skipped when looking for the user's call site to
     // annotate. Matching on the type name (rather than the source file name) is robust to partial-class splits
@@ -184,7 +195,7 @@ internal static class StackTraceSourceLocationResolver
     }
 
     private static bool IsUnderDirectory(string path, string directory)
-        => path.StartsWith(directory, StringComparison.OrdinalIgnoreCase);
+        => path.StartsWith(directory, PathComparison);
 
     private static string EnsureTrailingDirectorySeparator(string path)
     {

@@ -85,6 +85,28 @@ public sealed class StackTraceSourceLocationResolverTests
         fileSystem.Verify(f => f.ExistFile(It.IsAny<string>()), Times.Never);
     }
 
+    [TestMethod]
+    public void TryMakeWorkspaceRelative_CaseDistinctSiblingDirectory_FollowsPlatformPathSemantics()
+    {
+        // Path containment must match the filesystem. On Windows a case-distinct spelling of the workspace
+        // root names the same directory, so the file is genuinely inside the workspace and still resolves.
+        // Elsewhere it is a different directory and must be rejected rather than reported as workspace-relative.
+        Mock<IFileSystem> fileSystem = CreateFileSystemWhereEveryFileExists();
+        string repoRoot = CreateRepoRoot();
+        string caseDistinctSibling = Path.Combine(Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, "REPO")), "Calc.cs");
+
+        string? relativePath = StackTraceSourceLocationResolver.TryMakeWorkspaceRelative(caseDistinctSibling, repoRoot, fileSystem.Object);
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            Assert.AreEqual("Calc.cs", relativePath);
+        }
+        else
+        {
+            Assert.IsNull(relativePath);
+        }
+    }
+
     private static Mock<IFileSystem> CreateFileSystemWhereEveryFileExists()
     {
         var fileSystem = new Mock<IFileSystem>();
