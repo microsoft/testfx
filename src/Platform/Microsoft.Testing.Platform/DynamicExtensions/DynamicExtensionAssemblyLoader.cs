@@ -115,8 +115,9 @@ internal sealed class DynamicExtensionAssemblyLoader : IDynamicExtensionAssembly
             // Delegating to the default context is required, not merely convenient: the resolver returns no
             // path for framework assemblies, so an extension that could not fall back would fail on
             // System.Runtime. The cost is that a *missing* private dependency also falls through and can bind
-            // to an application assembly of the same name. The two are indistinguishable here — both simply
-            // did not resolve — so this is recorded as an open question in the RFC rather than guessed at.
+            // to an application assembly of the same name. That is a deployment mistake rather than a trust
+            // problem — both directories are fully trusted application folders — and the two cases are
+            // indistinguishable here, since neither resolved. See the RFC's open questions.
             return resolvedPath is null ? null : LoadFromAssemblyPath(resolvedPath);
         }
 
