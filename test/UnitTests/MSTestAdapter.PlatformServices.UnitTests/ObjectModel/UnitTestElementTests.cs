@@ -32,6 +32,105 @@ public class UnitTestElementTests : TestContainer
         action.Should().Throw<ArgumentNullException>();
     }
 
+    public void ResourceLocksShouldRoundTripThroughTestCaseProperty()
+    {
+        // The acceptance assets run on the native MSTest runner, so they never exercise this hidden VSTest
+        // TestProperty transport. Discovery and execution are separate phases (and may be separate AppDomains),
+        // so a regression here would silently drop or weaken locks without failing any other test.
+        var element = new UnitTestElement(new TestMethod("M", "C", "A", displayName: null))
+        {
+            ResourceLocks =
+            [
+                new ResourceLockInfo("exclusive-key", ResourceAccessMode.ReadWrite),
+                new ResourceLockInfo("shared-key", ResourceAccessMode.Read),
+            ],
+        };
+
+        UnitTestElement roundTripped = element.ToTestCase().ToUnitTestElementWithUpdatedSource("A");
+
+        roundTripped.ResourceLocks.Should().NotBeNull();
+        roundTripped.ResourceLocks!.Length.Should().Be(2);
+        roundTripped.ResourceLocks[0].Resource.Should().Be("exclusive-key");
+        roundTripped.ResourceLocks[0].Mode.Should().Be(ResourceAccessMode.ReadWrite);
+        roundTripped.ResourceLocks[1].Resource.Should().Be("shared-key");
+        roundTripped.ResourceLocks[1].Mode.Should().Be(ResourceAccessMode.Read);
+    }
+
+    public void ResourceLocksShouldRoundTripKeysContainingThePrefixCharacters()
+    {
+        // The encoding is a one-character prefix with no delimiter, so keys that themselves start with 'R' or
+        // 'W' are the case most likely to be mangled by an off-by-one in the decoder.
+        var element = new UnitTestElement(new TestMethod("M", "C", "A", displayName: null))
+        {
+            ResourceLocks = [new ResourceLockInfo("Registry", ResourceAccessMode.Read), new ResourceLockInfo("Windows", ResourceAccessMode.ReadWrite)],
+        };
+
+        UnitTestElement roundTripped = element.ToTestCase().ToUnitTestElementWithUpdatedSource("A");
+
+        roundTripped.ResourceLocks![0].Resource.Should().Be("Registry");
+        roundTripped.ResourceLocks[0].Mode.Should().Be(ResourceAccessMode.Read);
+        roundTripped.ResourceLocks[1].Resource.Should().Be("Windows");
+        roundTripped.ResourceLocks[1].Mode.Should().Be(ResourceAccessMode.ReadWrite);
+    }
+
+    public void ResourceLocksShouldRemainNullWhenNoneAreDeclared()
+    {
+        UnitTestElement roundTripped = _unitTestElement.ToTestCase().ToUnitTestElementWithUpdatedSource("A");
+
+        roundTripped.ResourceLocks.Should().BeNull();
+    }
+
+    public void DependenciesShouldRoundTripThroughTestCaseProperty()
+    {
+        // The acceptance assets run on the native MSTest runner, so nothing else exercises this hidden VSTest
+        // TestProperty transport; a registration or conversion regression would silently make [DependsOn]
+        // ineffective under VSTest while every other test still passed.
+        //
+        // LocalExtensionData is cleared deliberately. ToTestCase caches the element on the test case, and
+        // ToUnitTestElementWithUpdatedSource returns that cached instance when it is present - which is what
+        // happens in-process, and which would make this test pass without the encoded property being read at
+        // all. Clearing it reproduces the case the encoding exists for: a test case that crossed a process or
+        // AppDomain boundary, where only the serialized properties survive.
+        var element = new UnitTestElement(new TestMethod("M", "C", "A", displayName: null))
+        {
+            Dependencies =
+            [
+                new TestDependencyInfo("Ns.Other", "Prereq", proceedOnFailure: false),
+                new TestDependencyInfo("Ns.Whole", null, proceedOnFailure: true),
+                new TestDependencyInfo(null, "SameClassPrereq", proceedOnFailure: false),
+            ],
+        };
+
+        var testCase = element.ToTestCase();
+        testCase.LocalExtensionData = null;
+        UnitTestElement roundTripped = testCase.ToUnitTestElementWithUpdatedSource("A");
+
+        roundTripped.Dependencies.Should().NotBeNull();
+        roundTripped.Dependencies!.Length.Should().Be(3);
+
+        roundTripped.Dependencies[0].TargetClassFullName.Should().Be("Ns.Other");
+        roundTripped.Dependencies[0].TargetMethodName.Should().Be("Prereq");
+        roundTripped.Dependencies[0].ProceedOnFailure.Should().BeFalse();
+
+        // A whole-class target keeps its null method name, which is what distinguishes it from a named one.
+        roundTripped.Dependencies[1].TargetClassFullName.Should().Be("Ns.Whole");
+        roundTripped.Dependencies[1].TargetMethodName.Should().BeNull();
+        roundTripped.Dependencies[1].ProceedOnFailure.Should().BeTrue();
+
+        // A same-class target keeps its null class name, so it still resolves against the dependent's class.
+        roundTripped.Dependencies[2].TargetClassFullName.Should().BeNull();
+        roundTripped.Dependencies[2].TargetMethodName.Should().Be("SameClassPrereq");
+        roundTripped.Dependencies[2].ProceedOnFailure.Should().BeFalse();
+    }
+
+    public void DependenciesShouldRemainNullWhenNoneAreDeclared()
+    {
+        var testCase = _unitTestElement.ToTestCase();
+        testCase.LocalExtensionData = null;
+
+        testCase.ToUnitTestElementWithUpdatedSource("A").Dependencies.Should().BeNull();
+    }
+
     #endregion
 
     #region Source resolution / host test case tests
@@ -68,6 +167,23 @@ public class UnitTestElementTests : TestContainer
         // Subsequent calls (deployment, test-start, each reported result) reuse the same instance.
         _unitTestElement.GetOrCreateHostTestCase().Should().BeSameAs(materialized);
         _unitTestElement.HostRecordingHandle.Should().BeSameAs(materialized);
+    }
+
+    #endregion
+
+    #region TestMethod.FullyQualifiedName tests
+
+    public void FullyQualifiedNameShouldCombineFullClassNameAndMethodName()
+        => _testMethod.FullyQualifiedName.Should().Be("C.M");
+
+    public void FullyQualifiedNameShouldBeComputedOnceAndCached()
+    {
+        string first = _testMethod.FullyQualifiedName;
+        first.Should().Be("C.M");
+
+        // The string is built by interpolation, so a recomputed value would be a distinct (non-interned)
+        // instance. Reference identity is what proves the hot paths reuse a single allocation per test method.
+        _testMethod.FullyQualifiedName.Should().BeSameAs(first);
     }
 
     #endregion

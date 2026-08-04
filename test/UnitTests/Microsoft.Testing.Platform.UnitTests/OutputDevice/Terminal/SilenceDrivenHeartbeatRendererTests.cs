@@ -231,12 +231,12 @@ public sealed class SilenceDrivenHeartbeatRendererTests
         asm.NotifyHandshake("inst-1");
         for (int i = 0; i < failedTests; i++)
         {
-            asm.ReportFailedTest($"fail-{i}", "inst-1");
+            asm.ReportFailedTest($"fail-{i}", $"fail-{i}", "inst-1");
         }
 
         for (int i = 0; i < totalTests - failedTests; i++)
         {
-            asm.ReportPassingTest($"pass-{i}", "inst-1");
+            asm.ReportPassingTest($"pass-{i}", $"pass-{i}", "inst-1");
         }
 
         if (activeTestName is not null)

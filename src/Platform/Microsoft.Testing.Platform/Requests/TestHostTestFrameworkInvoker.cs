@@ -20,6 +20,9 @@ namespace Microsoft.Testing.Platform.Requests;
 [SuppressMessage("Performance", "CA1852: Seal internal types", Justification = "HotReload needs to inherit and override ExecuteRequestAsync")]
 internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : ITestFrameworkInvoker, IOutputDeviceDataProducer, IDataProducer
 {
+    private readonly PlatformOpenTelemetryOptions _openTelemetryOptions =
+        PlatformOpenTelemetryOptions.FromEnvironment(serviceProvider.GetEnvironment());
+
     protected IServiceProvider ServiceProvider { get; } = serviceProvider;
 
     public string Uid => nameof(TestHostTestFrameworkInvoker);
@@ -49,6 +52,8 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
 
     public async Task ExecuteAsync(ITestFramework testFramework, ClientInfo client, CancellationToken cancellationToken)
     {
+        ExtensionHelper.ConfigureOTelLegacyAttributes(_openTelemetryOptions);
+
         ILogger<TestHostTestFrameworkInvoker> logger = ServiceProvider.GetLoggerFactory().CreateLogger<TestHostTestFrameworkInvoker>();
         await logger.LogInformationAsync($"Test framework UID: '{testFramework.Uid}' Version: '{testFramework.Version}' DisplayName: '{testFramework.DisplayName}' Description: '{testFramework.Description}'").ConfigureAwait(false);
 
@@ -66,28 +71,30 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
         await logger.LogDebugAsync($"Test session UID: '{sessionId.Value}'").ConfigureAwait(false);
 
         IPlatformOpenTelemetryService? otelService = ServiceProvider.GetPlatformOTelService();
-        using (otelService?.StartActivity("CreateTestFrameworkSession", tags: [new("SessionUid", sessionId)]))
+        using (otelService?.StartActivity("CreateTestFrameworkSession", tags: GetSessionTags(sessionId)))
         {
             CreateTestSessionResult createTestSessionResult = await testFramework.CreateTestSessionAsync(new(sessionId, cancellationToken)).ConfigureAwait(false);
             await HandleTestSessionResultAsync(logger, "CreateTestSession", sessionId, createTestSessionResult.IsSuccess, createTestSessionResult.WarningMessage, createTestSessionResult.ErrorMessage, cancellationToken).ConfigureAwait(false);
         }
 
         TestExecutionRequest request;
-        using (otelService?.StartActivity("CreateTestRequest", tags: [new("SessionUid", sessionId)]))
+        using (otelService?.StartActivity("CreateTestRequest", tags: GetSessionTags(sessionId)))
         {
             ITestExecutionRequestFactory testExecutionRequestFactory = ServiceProvider.GetTestExecutionRequestFactory();
-            request = await testExecutionRequestFactory.CreateRequestAsync(new(sessionId)).ConfigureAwait(false);
+            request = await testExecutionRequestFactory.CreateRequestAsync(new(sessionId), cancellationToken).ConfigureAwait(false);
         }
 
         IMessageBus messageBus = ServiceProvider.GetMessageBus();
 
         // Execute the test request
-        using (otelService?.StartActivity("ExecuteTestRequest", tags: [new("SessionUid", sessionId), new("RequestType", request.GetType().Name)]))
+        using (otelService?.StartActivity(
+            "ExecuteTestRequest",
+            tags: GetExecuteTestRequestTags(sessionId, request)))
         {
             await ExecuteRequestAsync(testFramework, request, messageBus, cancellationToken).ConfigureAwait(false);
         }
 
-        using (otelService?.StartActivity("CloseTestFrameworkSession", tags: [new("SessionUid", sessionId)]))
+        using (otelService?.StartActivity("CloseTestFrameworkSession", tags: GetSessionTags(sessionId)))
         {
             CloseTestSessionResult closeTestSessionResult = await testFramework.CloseTestSessionAsync(new(sessionId, cancellationToken)).ConfigureAwait(false);
             await HandleTestSessionResultAsync(logger, "CloseTestSession", sessionId, closeTestSessionResult.IsSuccess, closeTestSessionResult.WarningMessage, closeTestSessionResult.ErrorMessage, cancellationToken).ConfigureAwait(false);
@@ -104,12 +111,46 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
 
     public virtual async Task ExecuteRequestAsync(ITestFramework testFramework, TestExecutionRequest request, IMessageBus messageBus, CancellationToken cancellationToken)
     {
+        ExtensionHelper.ConfigureOTelLegacyAttributes(_openTelemetryOptions);
+
         IPlatformOpenTelemetryService? otelService = ServiceProvider.GetPlatformOTelService();
-        using IPlatformActivity? testFrameworkActivity = otelService?.StartActivity("TestFramework", testFramework.ToOTelTags());
+        using IPlatformActivity? testFrameworkActivity = otelService?.StartActivity(
+            TestingPlatformSemanticConventions.Activities.TestFramework,
+            [
+                new(TestingPlatformSemanticConventions.Attributes.TestFrameworkName, testFramework.DisplayName),
+                new(TestingPlatformSemanticConventions.Attributes.TestFrameworkVersion, testFramework.Version),
+                .. testFramework.ToOTelTags(),
+            ]);
         otelService?.TestFrameworkActivity = testFrameworkActivity;
         using SemaphoreSlim requestSemaphore = new(0, 1);
         await testFramework.ExecuteRequestAsync(new(request, messageBus, new SemaphoreSlimRequestCompleteNotifier(requestSemaphore), cancellationToken)).ConfigureAwait(false);
         await requestSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    private KeyValuePair<string, object?>[] GetSessionTags(SessionUid sessionId)
+        => _openTelemetryOptions.EmitLegacyAttributes
+            ? [
+                new(TestingPlatformSemanticConventions.Attributes.TestSessionId, sessionId.Value),
+                new("SessionUid", sessionId),
+            ]
+            : [
+                new(TestingPlatformSemanticConventions.Attributes.TestSessionId, sessionId.Value),
+            ];
+
+    private KeyValuePair<string, object?>[] GetExecuteTestRequestTags(SessionUid sessionId, TestExecutionRequest request)
+    {
+        string requestType = request.GetType().Name;
+        return _openTelemetryOptions.EmitLegacyAttributes
+            ? [
+                new(TestingPlatformSemanticConventions.Attributes.TestSessionId, sessionId.Value),
+                new(TestingPlatformSemanticConventions.Attributes.TestRunRequestType, requestType),
+                new("SessionUid", sessionId),
+                new("RequestType", requestType),
+            ]
+            : [
+                new(TestingPlatformSemanticConventions.Attributes.TestSessionId, sessionId.Value),
+                new(TestingPlatformSemanticConventions.Attributes.TestRunRequestType, requestType),
+            ];
     }
 
     private async Task HandleTestSessionResultAsync(ILogger logger, string phase, SessionUid sessionId, bool isSuccess, string? warningMessage, string? errorMessage, CancellationToken cancellationToken)

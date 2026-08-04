@@ -83,6 +83,24 @@ internal sealed class TerminalTestReporterOptions
     /// Zero (the default) disables the section.
     /// </summary>
     public int SlowestTestsCount { get; init; }
+
+    /// <summary>
+    /// Gets a value indicating whether tests that failed at least once but eventually passed after a retry are
+    /// reported (the "flaky: N" summary line and the "Flaky tests" section). On by default; turned off by
+    /// <c>--show-flaky-tests off</c>. Has no effect on a run where nothing was retried.
+    /// </summary>
+    public bool ShowFlakyTests { get; init; } = true;
+
+    /// <summary>
+    /// Gets a value indicating whether the run-summary verdict and its counts are rendered. Turned off for the
+    /// <em>retry</em> attempts of the <c>--retry-failed-tests</c> orchestrator, meaning the second and later ones:
+    /// those re-run only the previously-failed tests, so their summary reports a shrinking, filtered subset
+    /// ("total: 1" for a four-test suite) that reads as the run's verdict but is not. The first attempt executes
+    /// the whole suite, so its summary is accurate and is kept. The orchestrator then prints one reconciled retry
+    /// summary at the end. Everything else — produced artifacts, the slowest-tests section and the error recaps —
+    /// is still rendered for every attempt, since none of it is restated by the orchestrator.
+    /// </summary>
+    public bool ShowRunSummary { get; init; } = true;
 }
 
 [Embedded]

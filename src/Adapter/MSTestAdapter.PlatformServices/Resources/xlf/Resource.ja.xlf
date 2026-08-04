@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" original="../Resource.resx" target-language="ja">
     <body>
@@ -102,6 +102,51 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">デバッグ トレース:</target>
         <note />
       </trans-unit>
+      <trans-unit id="DependencyConfigurationDependentNotFound">
+        <source>The 'mstest:execution:dependencies' configuration section declares dependencies for '{0}', which matches no test in this run. They are ignored.</source>
+        <target state="translated">'mstest:execution:dependencies' 構成セクションでは、'{0}' の依存関係が宣言されていますが、この実行では一致するテストがありません。これらは無視されます。</target>
+        <note>{0} is the declared test reference. {Locked="mstest:execution:dependencies"}</note>
+      </trans-unit>
+      <trans-unit id="DependencyConfigurationEmptyChain">
+        <source>The chain at index {0} of the 'mstest:execution:dependencies:chains' configuration section is empty and declares no dependency. Remove it: a chain needs at least two tests to express an order.</source>
+        <target state="translated">'mstest:execution:dependencies:chains' 構成セクションのインデックス {0} にあるチェーンは空で、依存関係が宣言されていません。削除してください。順序を表すには、チェーンには少なくとも 2 つのテストが必要です。</target>
+        <note>{0} is the zero-based index of the empty chain. {Locked="mstest:execution:dependencies:chains"}</note>
+      </trans-unit>
+      <trans-unit id="DependencyConfigurationInvalidReference">
+        <source>The test reference '{0}' in the 'mstest:execution:dependencies' configuration section is not valid. Use 'Namespace.Class.Method', or 'Namespace.Class.*' for every test of a class.</source>
+        <target state="translated">'mstest:execution:dependencies' 構成セクションのテスト参照 '{0}' は無効です。クラス内のすべてのテストには 'Namespace.Class.Method'、または 'Namespace.Class.*' を使用してください。</target>
+        <note>{0} is the invalid reference. {Locked="mstest:execution:dependencies"}</note>
+      </trans-unit>
+      <trans-unit id="DependencyConfigurationNodeWithoutPrerequisites">
+        <source>The 'mstest:execution:dependencies' configuration section declares a node for '{0}' with no 'dependsOn' entries, which has no effect.</source>
+        <target state="translated">'mstest:execution:dependencies' 構成セクションでは、'{0}' のノードが宣言されていますが、'dependsOn' エントリがないため、効果はありません。</target>
+        <note>{0} is the declared test reference. {Locked="mstest:execution:dependencies"}{Locked="dependsOn"}</note>
+      </trans-unit>
+      <trans-unit id="DependencyConfigurationNodeWithoutTest">
+        <source>The dependency node at index {0} of the 'mstest:execution:dependencies:nodes' configuration section has no 'test' value and is ignored.</source>
+        <target state="translated">'mstest:execution:dependencies:nodes' 構成セクションのインデックス {0} の依存関係ノードには 'test' 値がないため、無視されます。</target>
+        <note>{0} is the zero-based index of the node. {Locked="mstest:execution:dependencies:nodes"}{Locked="test"}</note>
+      </trans-unit>
+      <trans-unit id="DependsOnClassLevelCycle">
+        <source>Dependencies between the following test classes cannot be scheduled with class-level parallelization because the classes depend on each other: {0}. Their tests are run sequentially, in dependency order, so the declared order is still honored. Use &lt;Scope&gt;MethodLevel&lt;/Scope&gt; (or [Parallelize(Scope = ExecutionScope.MethodLevel)]) to schedule each test individually and run them in parallel again.</source>
+        <target state="translated">次のテスト クラス間の依存関係は、クラス レベルの並列実行ではスケジュールできません。これらのクラスが相互に依存しているためです: {0}。これらのテストは依存関係の順序に従って順次実行されるため、宣言した順序は引き続き維持されます。各テストを個別にスケジュールして再び並列実行するには、&lt;Scope&gt;MethodLevel&lt;/Scope&gt; (または [Parallelize(Scope = ExecutionScope.MethodLevel)]) を使用してください。</target>
+        <note>{0} is a comma-separated list of test class names. {Locked="MethodLevel"}{Locked="[Parallelize(Scope = ExecutionScope.MethodLevel)]"}{Locked="Scope"}</note>
+      </trans-unit>
+      <trans-unit id="DependsOnCycle">
+        <source>Dependency cycle detected between tests: {0}. The tests in the cycle cannot be ordered and are reported as failed. Remove one of the dependency declarations to break the cycle.</source>
+        <target state="translated">テスト間で依存関係の循環が検出されました: {0}。循環に含まれるテストは実行順序を決定できないため、失敗として報告されます。循環を解消するには、依存関係の宣言を 1 つ削除してください。</target>
+        <note>{0} is the cycle rendered as a path, for example 'A &gt; B &gt; A'.</note>
+      </trans-unit>
+      <trans-unit id="DependsOnPrerequisiteNotPassed">
+        <source>Test skipped because it depends on '{0}', which did not pass.</source>
+        <target state="translated">依存先のテスト '{0}' が成功しなかったため、このテストはスキップされました。</target>
+        <note>{0} is the fully qualified name of the test that did not pass.</note>
+      </trans-unit>
+      <trans-unit id="DependsOnTargetNotFound">
+        <source>Test '{0}' declares a dependency on '{1}', which matches no test in this test source. Dependencies are resolved within a single source, so a target in another test assembly is not supported. The dependency is ignored.</source>
+        <target state="translated">テスト '{0}' では、'{1}' への依存関係が宣言されていますが、このテスト ソース内に一致するテストがありません。依存関係は単一のソース内で解決されるため、別のテスト アセンブリ内にあるターゲットはサポートされません。依存関係は無視されます。</target>
+        <note>{0} is the fully qualified name of the test declaring the dependency. {1} is the declared target.</note>
+      </trans-unit>
       <trans-unit id="DeploymentDependencyLoadFailed">
         <source>Test Run deployment issue: Failed to load the assembly or module '{0}'. Reason: {1}</source>
         <target state="translated">テスト実行の展開に関する問題: アセンブリまたはモジュール '{0}' を読み込めませんでした。理由: {1}</target>
@@ -124,7 +169,7 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToCopyWithOverwrite">
         <source>Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3} (HResult: 0x{4:X8})</source>
-        <target state="new">Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3} (HResult: 0x{4:X8})</target>
+        <target state="translated">テスト実行の展開に関する問題: ファイル '{0}' を '{1}' にコピーできませんでした: {2}: {3} (HResult: 0x{4:X8})</target>
         <note>{0} is the source file path. {1} is the destination file path. {2} is the exception type. {3} is the exception message. {4} is the exception HResult.</note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToDeployDependencies">

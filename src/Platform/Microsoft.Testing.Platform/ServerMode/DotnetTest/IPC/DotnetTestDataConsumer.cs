@@ -10,7 +10,6 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.IPC;
 
-[UnsupportedOSPlatform("browser")]
 internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
 {
     private readonly DotnetTestConnection? _dotnetTestConnection;
@@ -230,7 +229,8 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
         string? actual = null;
         ExceptionMessage[]? exceptions = null;
         TestNodeStateProperty? nodeState = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
-        if (nodeState is null)
+        bool executionCompleted = testNodeUpdateMessage.TestNode.Properties.Any<TestNodeExecutionCompletedProperty>();
+        if (nodeState is null && !executionCompleted)
         {
             return null;
         }
@@ -243,6 +243,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
         TimingProperty? timingProperty = null;
         StandardOutputProperty? standardOutputProperty = null;
         StandardErrorProperty? standardErrorProperty = null;
+        AssertionFailureProperty? assertionFailureProperty = null;
 
         // Mirror PropertyBag.OfType<T>()'s "first + overflow list" pattern so the common case of
         // zero or one match doesn't allocate a List<T>.
@@ -263,6 +264,9 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                     break;
                 case StandardErrorProperty errorProperty:
                     standardErrorProperty = GetSingleOrDefaultValue(standardErrorProperty, errorProperty);
+                    break;
+                case AssertionFailureProperty assertionFailure:
+                    assertionFailureProperty = GetSingleOrDefaultValue(assertionFailureProperty, assertionFailure);
                     break;
                 case FileArtifactProperty artifact:
                     if (firstArtifact is null)
@@ -299,62 +303,73 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
         string? standardOutput = standardOutputProperty?.StandardOutput;
         string? standardError = standardErrorProperty?.StandardError;
 
-        switch (nodeState)
+        if (executionCompleted)
         {
-            case DiscoveredTestNodeStateProperty:
-                state = TestStates.Discovered;
-                break;
+            // The pipe protocol has no outcome-less terminal state. Return the test to discovered so
+            // clients clear in-progress state without recording a pass, failure, or skip.
+            state = TestStates.Discovered;
+        }
+        else
+        {
+            switch (nodeState)
+            {
+                case DiscoveredTestNodeStateProperty:
+                    state = TestStates.Discovered;
+                    break;
 
-            case PassedTestNodeStateProperty:
-                state = TestStates.Passed;
-                duration = timingProperty?.GlobalTiming.Duration.Ticks;
-                reason = nodeState.Explanation;
-                break;
+                case PassedTestNodeStateProperty:
+                    state = TestStates.Passed;
+                    duration = timingProperty?.GlobalTiming.Duration.Ticks;
+                    reason = nodeState.Explanation;
+                    break;
 
-            case SkippedTestNodeStateProperty:
-                state = TestStates.Skipped;
-                reason = nodeState.Explanation;
-                break;
+                case SkippedTestNodeStateProperty:
+                    state = TestStates.Skipped;
+                    reason = nodeState.Explanation;
+                    break;
 
-            case FailedTestNodeStateProperty failedTestNodeStateProperty:
-                state = TestStates.Failed;
-                duration = timingProperty?.GlobalTiming.Duration.Ticks;
-                reason = nodeState.Explanation;
-                exceptions = FlattenToExceptionMessages(reason, failedTestNodeStateProperty.Exception);
+                case FailedTestNodeStateProperty failedTestNodeStateProperty:
+                    state = TestStates.Failed;
+                    duration = timingProperty?.GlobalTiming.Duration.Ticks;
+                    reason = nodeState.Explanation;
+                    exceptions = FlattenToExceptionMessages(reason, failedTestNodeStateProperty.Exception);
 
-                // Mirror TerminalOutputDevice's single-assembly rendering: assertion libraries store the
-                // structured expected/actual values on Exception.Data so the reporter can show a diff.
-                // Only failed tests carry these (error/timeout/cancelled pass null, as in single-assembly).
-                expected = failedTestNodeStateProperty.Exception?.Data["assert.expected"] as string;
-                actual = failedTestNodeStateProperty.Exception?.Data["assert.actual"] as string;
-                break;
+                    // Mirror TerminalOutputDevice's single-assembly rendering so the SDK can show an
+                    // expected-vs-actual diff. AssertionFailureProperty is the supported channel;
+                    // Exception.Data is the legacy fallback for producers that have not been updated yet. The
+                    // choice is all-or-nothing so the two halves of a diff always come from the same producer.
+                    // Only failed tests carry these (error/timeout/cancelled pass null, as in single-assembly).
+                    expected = assertionFailureProperty is not null ? assertionFailureProperty.Expected : failedTestNodeStateProperty.Exception?.Data["assert.expected"] as string;
+                    actual = assertionFailureProperty is not null ? assertionFailureProperty.Actual : failedTestNodeStateProperty.Exception?.Data["assert.actual"] as string;
+                    break;
 
-            case ErrorTestNodeStateProperty errorTestNodeStateProperty:
-                state = TestStates.Error;
-                duration = timingProperty?.GlobalTiming.Duration.Ticks;
-                reason = nodeState.Explanation;
-                exceptions = FlattenToExceptionMessages(reason, errorTestNodeStateProperty.Exception);
-                break;
+                case ErrorTestNodeStateProperty errorTestNodeStateProperty:
+                    state = TestStates.Error;
+                    duration = timingProperty?.GlobalTiming.Duration.Ticks;
+                    reason = nodeState.Explanation;
+                    exceptions = FlattenToExceptionMessages(reason, errorTestNodeStateProperty.Exception);
+                    break;
 
-            case TimeoutTestNodeStateProperty timeoutTestNodeStateProperty:
-                state = TestStates.Timeout;
-                duration = timingProperty?.GlobalTiming.Duration.Ticks;
-                reason = nodeState.Explanation;
-                exceptions = FlattenToExceptionMessages(reason, timeoutTestNodeStateProperty.Exception);
-                break;
+                case TimeoutTestNodeStateProperty timeoutTestNodeStateProperty:
+                    state = TestStates.Timeout;
+                    duration = timingProperty?.GlobalTiming.Duration.Ticks;
+                    reason = nodeState.Explanation;
+                    exceptions = FlattenToExceptionMessages(reason, timeoutTestNodeStateProperty.Exception);
+                    break;
 
 #pragma warning disable CS0618, MTP0001 // Type or member is obsolete
-            case CancelledTestNodeStateProperty cancelledTestNodeStateProperty:
+                case CancelledTestNodeStateProperty cancelledTestNodeStateProperty:
 #pragma warning restore CS0618, MTP0001 // Type or member is obsolete
-                state = TestStates.Cancelled;
-                duration = timingProperty?.GlobalTiming.Duration.Ticks;
-                reason = nodeState.Explanation;
-                exceptions = FlattenToExceptionMessages(reason, cancelledTestNodeStateProperty.Exception);
-                break;
+                    state = TestStates.Cancelled;
+                    duration = timingProperty?.GlobalTiming.Duration.Ticks;
+                    reason = nodeState.Explanation;
+                    exceptions = FlattenToExceptionMessages(reason, cancelledTestNodeStateProperty.Exception);
+                    break;
 
-            case InProgressTestNodeStateProperty:
-                state = TestStates.InProgress;
-                break;
+                case InProgressTestNodeStateProperty:
+                    state = TestStates.InProgress;
+                    break;
+            }
         }
 
         return new TestNodeDetails(state, duration, reason, exceptions, standardOutput, standardError, artifacts, traits, expected, actual);

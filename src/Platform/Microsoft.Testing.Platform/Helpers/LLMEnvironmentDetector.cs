@@ -3,7 +3,7 @@
 
 namespace Microsoft.Testing.Platform.Helpers;
 
-// Adapted from https://github.com/dotnet/sdk/tree/bcafbe92a30b1866bd17789759c9941761bf6b49/src/Cli/dotnet/Telemetry/LLMEnvironmentDetectorForTelemetry.cs
+// Adapted from https://github.com/dotnet/sdk/blob/79e9664eb6918a0d6b78d1018e196a468901977f/src/Cli/dotnet/Telemetry/LLMEnvironmentDetectorForTelemetry.cs
 // Diverged from the upstream telemetry-only version so detection results can drive
 // user-facing platform defaults (ANSI mode, banner, --show-stdout/--show-stderr).
 // IMPORTANT: keep the environment-variable list below in sync with
@@ -25,6 +25,8 @@ internal sealed class LLMEnvironmentDetector
         // GitHub Copilot CLI (legacy gh extension: GITHUB_COPILOT_CLI_MODE; new Copilot CLI: GH_COPILOT_WORKING_DIRECTORY, COPILOT_CLI, COPILOT_MODEL, COPILOT_ALLOW_ALL, or COPILOT_GITHUB_TOKEN is set).
         new EnvironmentDetectionRuleWithResult<string>("copilot-cli", new AnyPresentEnvironmentRule(
             "GITHUB_COPILOT_CLI_MODE", "GH_COPILOT_WORKING_DIRECTORY", "COPILOT_CLI", "COPILOT_MODEL", "COPILOT_ALLOW_ALL", "COPILOT_GITHUB_TOKEN")),
+        // GitHub Copilot app (the desktop GitHub application running as an AI agent), which sets AI_AGENT=github_copilot_app_agent.
+        new EnvironmentDetectionRuleWithResult<string>("copilot-app", new EnvironmentVariableValueRule("AI_AGENT", "github_copilot_app_agent")),
         // GitHub Copilot agent mode in VS Code, which sets AI_AGENT=github_copilot_vscode_agent and COPILOT_AGENT=1 on the terminals it runs commands in.
         new EnvironmentDetectionRuleWithResult<string>("copilot-vscode", new AnyMatchEnvironmentRule(
             new EnvironmentVariableValueRule("AI_AGENT", "github_copilot_vscode_agent"),

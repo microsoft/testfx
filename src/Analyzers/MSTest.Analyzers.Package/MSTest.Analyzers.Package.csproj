@@ -10,11 +10,9 @@
     <IsPackable>true</IsPackable>
     <PackageId>MSTest.Analyzers</PackageId>
     <PackageTags>$(CommonPackageTags) MSTest Analyzers Roslyn TestFramework MSTestV2 Framework</PackageTags>
-    <PackageDescription>
-      MSTest is Microsoft supported Test Framework.
+    <PackageDescription><![CDATA[This package includes code analyzers and code fixes for MSTest.
 
-      This package includes code analyzers and code fixes for MSTest.
-    </PackageDescription>
+$(CommonProductDescription)]]></PackageDescription>
     <DevelopmentDependency>true</DevelopmentDependency>
     <NoPackageAnalysis>true</NoPackageAnalysis>
     <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddAnalyzersToOutput</TargetsForTfmSpecificContentInPackage>

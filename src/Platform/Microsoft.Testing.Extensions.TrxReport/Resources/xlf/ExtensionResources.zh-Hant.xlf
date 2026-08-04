@@ -3,9 +3,24 @@
   <file datatype="xml" source-language="en" target-language="zh-Hant" original="../ExtensionResources.resx">
     <body>
       <trans-unit id="InvalidTestApplicationBuilderType">
-        <source>TRX report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="translated">TRX 報表產生器只能與類型為 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder' 的建立器一起運作</target>
-        <note>Do not localize {Locked="Microsoft.Testing.Platform.Builder.TestApplicationBuilder"}.</note>
+        <source>TRX report generation and merge tools require a test application builder that supports artifact post-processing</source>
+        <target state="translated">TRX 報表產生和合併工具需要支援成品後處理的測試應用程式建置器</target>
+        <note>Do not localize format name {Locked="TRX"}.</note>
+      </trans-unit>
+      <trans-unit id="TrxArtifactPostProcessorDescription">
+        <source>Merges TRX reports produced by Microsoft.Testing.Extensions.TrxReport</source>
+        <target state="translated">合併由 Microsoft.Testing.Extensions.TrxReport 產生的 TRX 報表</target>
+        <note>Do not localize format name {Locked="TRX"} or assembly name {Locked="Microsoft.Testing.Extensions.TrxReport"}.</note>
+      </trans-unit>
+      <trans-unit id="TrxArtifactPostProcessorDisplayName">
+        <source>TRX report merger</source>
+        <target state="translated">TRX 報表合併</target>
+        <note>Do not localize format name {Locked="TRX"}.</note>
+      </trans-unit>
+      <trans-unit id="TrxAttachmentCopyFailed">
+        <source>Unable to copy attachment '{0}' into the TRX results directory. The attachment will be skipped. Reason: {1}.</source>
+        <target state="translated">無法將附件 '{0}' 複製到 TRX 結果目錄。將略過此附件。原因: {1}。</target>
+        <note>{0} is the full path of the attachment that could not be copied. {1} is the name of the exception type that was thrown, e.g. 'UnauthorizedAccessException'. {Locked="TRX"}</note>
       </trans-unit>
       <trans-unit id="TrxComparerToolBaselineFileOptionDescription">
         <source>The baseline TRX file</source>
@@ -41,6 +56,51 @@
         <source>Warning: Trx file '{0}' already exists and will be overwritten.</source>
         <target state="translated">警告： Trx 檔案 '{0}' 已經存在，而且將會被覆寫。</target>
         <note>{0} is the {Locked="TRX"} report file path.</note>
+      </trans-unit>
+      <trans-unit id="TrxMergeToolDescription">
+        <source>Merges multiple TRX files into one from the command line</source>
+        <target state="translated">從命令列將多個 TRX 檔案合併成一個</target>
+        <note>Do not localize format name {Locked="TRX"}.</note>
+      </trans-unit>
+      <trans-unit id="TrxMergeToolDisplayName">
+        <source>TRX report merge tool</source>
+        <target state="translated">TRX 報表合併工具</target>
+        <note>Do not localize format name {Locked="TRX"}.</note>
+      </trans-unit>
+      <trans-unit id="TrxMergeToolInputOptionDescription">
+        <source>Two or more input TRX file paths</source>
+        <target state="translated">兩個或多個輸入 TRX 檔案路徑</target>
+        <note>Do not localize option name {Locked="--input"} or format name {Locked="TRX"}.</note>
+      </trans-unit>
+      <trans-unit id="TrxMergeToolInvalidInputs">
+        <source>'--input' expects two or more existing TRX file paths</source>
+        <target state="translated">'--input' 預期有兩個或以上現有的 TRX 檔案路徑</target>
+        <note>Do not localize option name {Locked="--input"} or format name {Locked="TRX"}.</note>
+      </trans-unit>
+      <trans-unit id="TrxMergeToolInvalidOutput">
+        <source>'--output-trx' expects one TRX file path</source>
+        <target state="translated">'--output-trx' 預期有一個 TRX 檔案路徑</target>
+        <note>Do not localize option name {Locked="--output-trx"} or format name {Locked="TRX"}.</note>
+      </trans-unit>
+      <trans-unit id="TrxMergeToolOutputOptionDescription">
+        <source>The output TRX file path</source>
+        <target state="translated">輸出 TRX 檔案路徑</target>
+        <note>Do not localize option name {Locked="--output-trx"} or format name {Locked="TRX"}.</note>
+      </trans-unit>
+      <trans-unit id="TrxMergedArtifactDescription">
+        <source>{0} TRX files merged</source>
+        <target state="translated">{0} TRX 檔案合併</target>
+        <note>{0} is the number of merged files. Do not localize format name {Locked="TRX"}.</note>
+      </trans-unit>
+      <trans-unit id="TrxMergedArtifactDisplayName">
+        <source>TRX report (merged)</source>
+        <target state="translated">TRX 報表 (合併)</target>
+        <note>Do not localize format name {Locked="TRX"}.</note>
+      </trans-unit>
+      <trans-unit id="TrxMergedRunName">
+        <source>Merged TRX report</source>
+        <target state="translated">已合併的 TRX 報表</target>
+        <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportArtifactDescription">
         <source>Test session</source>

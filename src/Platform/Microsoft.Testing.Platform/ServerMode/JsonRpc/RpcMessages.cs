@@ -101,7 +101,10 @@ internal sealed record ServerTestingCapabilities(
     bool MultiRequestSupport,
     bool VSTestProviderSupport,
     bool SupportsAttachments,
-    bool MultiConnectionProvider);
+    bool MultiConnectionProvider)
+{
+    public static bool SupportsTestCoverageMessages => true;
+}
 
 internal sealed record TestNodeStateChangedEventArgs(Guid RunId, TestNodeUpdateMessage[]? Changes)
 {

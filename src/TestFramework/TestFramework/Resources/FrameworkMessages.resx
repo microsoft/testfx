@@ -493,6 +493,12 @@ Actual: {2}</value>
   <data name="InvalidGitHubUrl" xml:space="preserve">
     <value>Invalid GitHub ticket URL</value>
   </data>
+  <data name="InvalidDependsOnTestMethodName" xml:space="preserve">
+    <value>The test method name of a [DependsOn] must be a non-empty, non-whitespace string.</value>
+  </data>
+  <data name="InvalidResourceLockResource" xml:space="preserve">
+    <value>The resource key of a [ResourceLock] must be a non-empty, non-whitespace string. An empty key would silently serialize unrelated tests that also use an empty key.</value>
+  </data>
   <data name="DoesNotContainFail" xml:space="preserve">
     <value>String '{0}' does contain string '{1}'. {2}.</value>
     <comment>{0} is the string being checked. {1} is the substring that should not be present. {2} is the user-provided assertion message.</comment>

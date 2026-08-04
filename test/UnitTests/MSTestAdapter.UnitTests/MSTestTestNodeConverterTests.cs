@@ -91,6 +91,16 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
         node.Properties.Any<TestMethodIdentifierProperty>().Should().BeFalse();
     }
 
+    public void ToDiscoveredTestNode_DoesNotAddTestMethodIdentifier_WhenManagedTypeNameIsEmpty()
+    {
+        // ManagedTypeName is derived from FullClassName, so an empty class name leaves no usable type identity.
+        UnitTestElement element = CreateElement(fullClassName: string.Empty);
+
+        TestNode node = MSTestTestNodeConverter.ToDiscoveredTestNode(element, isTrxEnabled: false);
+
+        node.Properties.Any<TestMethodIdentifierProperty>().Should().BeFalse();
+    }
+
     public void ToDiscoveredTestNode_AddsFileLocation_WhenDeclaringFileKnown()
     {
         UnitTestElement element = CreateElement();
@@ -156,6 +166,51 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
         failed.Should().NotBeNull();
         failed!.Exception!.Message.Should().Be("boom");
         failed.Exception.StackTrace.Should().Be("at Some.Method()");
+    }
+
+    public void ToResultTestNode_AddsAssertionFailureProperty_WhenResultCarriesAssertionTexts()
+    {
+        var result = new FrameworkTestResult
+        {
+            Outcome = UnitTestOutcome.Failed,
+            ExceptionMessage = "Assert.AreEqual failed.",
+            ExceptionExpectedText = "5",
+            ExceptionActualText = "2",
+        };
+
+        TestNode node = MSTestTestNodeConverter.ToResultTestNode(CreateElement(), result, DateTimeOffset.Now, DateTimeOffset.Now, isTrxEnabled: false, new MSTestSettings());
+
+        AssertionFailureProperty? assertionFailure = node.Properties.SingleOrDefault<AssertionFailureProperty>();
+        assertionFailure.Should().NotBeNull();
+        assertionFailure!.Expected.Should().Be("5");
+        assertionFailure.Actual.Should().Be("2");
+    }
+
+    public void ToResultTestNode_AddsAssertionFailureProperty_WhenOnlyExpectedTextIsKnown()
+    {
+        // Some assertions (e.g. CollectionAssert.Contains) only have a natural expected value.
+        var result = new FrameworkTestResult
+        {
+            Outcome = UnitTestOutcome.Failed,
+            ExceptionMessage = "CollectionAssert.Contains failed.",
+            ExceptionExpectedText = "\"c\"",
+        };
+
+        TestNode node = MSTestTestNodeConverter.ToResultTestNode(CreateElement(), result, DateTimeOffset.Now, DateTimeOffset.Now, isTrxEnabled: false, new MSTestSettings());
+
+        AssertionFailureProperty? assertionFailure = node.Properties.SingleOrDefault<AssertionFailureProperty>();
+        assertionFailure.Should().NotBeNull();
+        assertionFailure!.Expected.Should().Be("\"c\"");
+        assertionFailure.Actual.Should().BeNull();
+    }
+
+    public void ToResultTestNode_DoesNotAddAssertionFailureProperty_WhenFailureIsNotAnAssertion()
+    {
+        var result = new FrameworkTestResult { Outcome = UnitTestOutcome.Failed, ExceptionMessage = "boom" };
+
+        TestNode node = MSTestTestNodeConverter.ToResultTestNode(CreateElement(), result, DateTimeOffset.Now, DateTimeOffset.Now, isTrxEnabled: false, new MSTestSettings());
+
+        node.Properties.Any<AssertionFailureProperty>().Should().BeFalse();
     }
 
     public void ToResultTestNode_MapsIgnoredOutcomeToSkipped()
@@ -275,6 +330,87 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
         node.Properties.Any<Testing.Extensions.TrxReport.Abstractions.TrxMessagesProperty>().Should().BeFalse();
     }
 
+    // --- TestMethodIdentifier caching -------------------------------------------------------------------------
+    public void ToResultTestNode_ReusesCachedManagedNameParse_FromInProgressNode()
+    {
+        // The managed-name parse is cached per TestMethod, so the in-progress node and every result node must
+        // still agree on every field of the identifier.
+        UnitTestElement element = CreateElement();
+
+        TestMethodIdentifierProperty inProgress = MSTestTestNodeConverter.ToInProgressTestNode(element, isTrxEnabled: false)
+            .Properties.Single<TestMethodIdentifierProperty>();
+        TestMethodIdentifierProperty result = MSTestTestNodeConverter.ToResultTestNode(element, new FrameworkTestResult { Outcome = UnitTestOutcome.Passed }, DateTimeOffset.Now, DateTimeOffset.Now, isTrxEnabled: false, new MSTestSettings())
+            .Properties.Single<TestMethodIdentifierProperty>();
+
+        result.Should().Be(inProgress);
+
+        // Namespace and TypeName are partial Substring results of ManagedTypeName, so re-running the parse would
+        // hand back fresh string instances. Reference equality is therefore what proves the cached parse was
+        // reused rather than redone - without the cache these assertions fail while the value equality above
+        // still passes.
+        result.Namespace.Should().BeSameAs(inProgress.Namespace);
+        result.TypeName.Should().BeSameAs(inProgress.TypeName);
+    }
+
+    public void ToResultTestNode_ReusesTestMethodIdentifierInstance_ForParameterlessTestMethod()
+    {
+        // A parameterless identifier is fully immutable (readonly strings plus an empty parameter array, which
+        // cannot be mutated), so the cached parse hands back the very same property instance instead of
+        // allocating a new one for every node built from the same test method.
+        UnitTestElement element = CreateElement();
+
+        TestMethodIdentifierProperty inProgress = MSTestTestNodeConverter.ToInProgressTestNode(element, isTrxEnabled: false)
+            .Properties.Single<TestMethodIdentifierProperty>();
+        TestMethodIdentifierProperty result = MSTestTestNodeConverter.ToResultTestNode(element, new FrameworkTestResult { Outcome = UnitTestOutcome.Passed }, DateTimeOffset.Now, DateTimeOffset.Now, isTrxEnabled: false, new MSTestSettings())
+            .Properties.Single<TestMethodIdentifierProperty>();
+
+        result.Should().BeSameAs(inProgress);
+    }
+
+    public void ToResultTestNode_DoesNotReuseTestMethodIdentifierInstance_ForParameterizedTestMethod()
+    {
+        // Parameterized identifiers expose a mutable array, so each node must keep getting its own property.
+        UnitTestElement element = CreateElement(managedMethodName: "MyMethod(System.String)");
+
+        TestMethodIdentifierProperty inProgress = MSTestTestNodeConverter.ToInProgressTestNode(element, isTrxEnabled: false)
+            .Properties.Single<TestMethodIdentifierProperty>();
+        TestMethodIdentifierProperty result = MSTestTestNodeConverter.ToResultTestNode(element, new FrameworkTestResult { Outcome = UnitTestOutcome.Passed }, DateTimeOffset.Now, DateTimeOffset.Now, isTrxEnabled: false, new MSTestSettings())
+            .Properties.Single<TestMethodIdentifierProperty>();
+
+        result.Should().NotBeSameAs(inProgress);
+    }
+
+    public void ToResultTestNode_DoesNotShareParameterTypeArray_WithInProgressNode()
+    {
+        // TestMethodIdentifierProperty exposes ParameterTypeFullNames publicly, so nodes must never alias one
+        // array: a consumer that writes to it would otherwise corrupt every other node of the same test method.
+        UnitTestElement element = CreateElement(managedMethodName: "MyMethod(System.String)");
+
+        TestMethodIdentifierProperty inProgress = MSTestTestNodeConverter.ToInProgressTestNode(element, isTrxEnabled: false)
+            .Properties.Single<TestMethodIdentifierProperty>();
+        TestMethodIdentifierProperty result = MSTestTestNodeConverter.ToResultTestNode(element, new FrameworkTestResult { Outcome = UnitTestOutcome.Passed }, DateTimeOffset.Now, DateTimeOffset.Now, isTrxEnabled: false, new MSTestSettings())
+            .Properties.Single<TestMethodIdentifierProperty>();
+
+        inProgress.ParameterTypeFullNames.Should().Equal("System.String");
+        result.ParameterTypeFullNames.Should().Equal("System.String");
+        result.ParameterTypeFullNames.Should().NotBeSameAs(inProgress.ParameterTypeFullNames);
+    }
+
+    public void ToDiscoveredTestNode_DoesNotShareTestMethodIdentifier_AcrossDistinctTestMethods()
+    {
+        // The cache is keyed on the TestMethod instance, so two different test methods must never be conflated.
+        TestMethodIdentifierProperty? first = MSTestTestNodeConverter.ToDiscoveredTestNode(CreateElement(managedMethodName: "MethodA", name: "MethodA"), isTrxEnabled: false)
+            .Properties.SingleOrDefault<TestMethodIdentifierProperty>();
+        TestMethodIdentifierProperty? second = MSTestTestNodeConverter.ToDiscoveredTestNode(CreateElement(managedMethodName: "MethodB", name: "MethodB"), isTrxEnabled: false)
+            .Properties.SingleOrDefault<TestMethodIdentifierProperty>();
+
+        first.Should().NotBeNull();
+        second.Should().NotBeNull();
+        second.Should().NotBeSameAs(first);
+        first!.MethodName.Should().Be("MethodA");
+        second!.MethodName.Should().Be("MethodB");
+    }
+
     // --- GetTestId caching ------------------------------------------------------------------------------------
     public void GetTestId_CachesComputedId_AndReturnsSameValueOnSubsequentCalls()
     {
@@ -367,14 +503,16 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
         message.TestNode.Properties.Any<InProgressTestNodeStateProperty>().Should().BeTrue();
     }
 
-    public async Task MtpTestResultRecorder_RecordEmptyResult_PublishesNothing()
+    public async Task MtpTestResultRecorder_RecordEmptyResult_PublishesExecutionCompletedNode()
     {
         var messageBus = new CapturingMessageBus();
         var recorder = new MtpTestResultRecorder(messageBus, new StubDataProducer(), new SessionUid("s"), isTrxEnabled: false, new MSTestSettings());
 
         await recorder.RecordEmptyResultAsync(CreateElement());
 
-        messageBus.Published.Should().BeEmpty();
+        var message = (TestNodeUpdateMessage)messageBus.Published.Single();
+        message.TestNode.Properties.Any<TestNodeExecutionCompletedProperty>().Should().BeTrue();
+        message.TestNode.Properties.Any<TestNodeStateProperty>().Should().BeFalse();
     }
 
     public async Task MtpTestResultRecorder_RecordResult_PublishesResultNodeAndReturnsFailedFlag()

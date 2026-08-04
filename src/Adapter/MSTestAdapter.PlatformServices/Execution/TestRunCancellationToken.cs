@@ -48,6 +48,16 @@ internal sealed class TestRunCancellationToken
 
     internal CancellationTokenRegistration Register(Action<object?> callback, object? state) => _cancellationTokenSource.Token.Register(callback, state);
 
+    /// <summary>
+    /// Gets the underlying CLR <see cref="System.Threading.CancellationToken"/> that reflects this test run's
+    /// cancellation. This is the token of the internally-owned source, which is a strict superset of the
+    /// original host-provided token: it is signaled both by <see cref="Cancel"/> and, via the registration
+    /// established in <c>MSTestEngine</c>, by the host token itself. The original token must not be used here,
+    /// because <see cref="Cancel"/> cannot signal it. Used by cancellation-aware waits such as the resource-lock
+    /// scheduler.
+    /// </summary>
+    internal CancellationToken CancellationToken => _cancellationTokenSource.Token;
+
     internal void ThrowIfCancellationRequested()
         // If ThrowIfCancellationRequested is called from the main AppDomain where we have the original
         // cancellation token, we should use that token.

@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.CommandLine;
+
 namespace Microsoft.Testing.Platform.Services;
 
 internal sealed class ExecutableInfo(string filePath, IEnumerable<string> arguments, string workspace)
@@ -12,5 +14,5 @@ internal sealed class ExecutableInfo(string filePath, IEnumerable<string> argume
     public string Workspace { get; } = workspace;
 
     public override string ToString()
-        => $"Process: {FilePath}, Arguments: {string.Join(" ", Arguments)}, Workspace: {Workspace}";
+        => $"Process: {FilePath}, Arguments: {CommandLineArgumentsRedactor.Redact([.. Arguments])}, Workspace: {Workspace}";
 }

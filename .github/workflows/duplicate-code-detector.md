@@ -1,5 +1,4 @@
 ---
-source: githubnext/agentics/workflows/duplicate-code-detector.md@main
 name: Duplicate Code Detector
 description: Identifies duplicate code patterns across the codebase and suggests refactoring opportunities
 max-ai-credits: 4000
@@ -28,6 +27,7 @@ safe-outputs:
     max: 3
 
 timeout-minutes: 15
+source: githubnext/agentics/workflows/duplicate-code-detector.md@main
 ---
 
 # Duplicate Code Detection

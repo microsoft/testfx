@@ -135,6 +135,10 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         //  - FlakyTest (retried)     → first attempt failed, retried successfully:
         //                              final status: "passed", retries: 1,
         //                              retryAttempts[].status: "failed", flaky: true
+        //
+        // The retry shape follows the model confirmed in ctrf-io/ctrf#58: `retryAttempts[]`
+        // holds attempts 1..N-1 (the final attempt's outcome IS the test object), so
+        // `retries` equals `retryAttempts.length` and the final attempt is `retries + 1`.
         string actual = File.ReadAllText(filePath);
         string normalized = NormalizeCtrfReport(actual);
 
@@ -143,6 +147,7 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
   "reportFormat": "CTRF",
   "specVersion": "0.0.0",
   "reportId": "<GUID>",
+  "runId": "<RUN_ID>",
   "timestamp": "<TIMESTAMP>",
   "generatedBy": "Microsoft.Testing.Extensions.CtrfReport@<VERSION>",
   "results": {
@@ -228,6 +233,7 @@ public class CtrfReportTests : AcceptanceTestBase<CtrfReportTests.TestAssetFixtu
         // anchored, but runtime-variable values are folded into stable tokens.
         string normalized = actual;
         normalized = Regex.Replace(normalized, @"""reportId"": ""[^""]+""", @"""reportId"": ""<GUID>""");
+        normalized = Regex.Replace(normalized, @"""runId"": ""[^""]+""", @"""runId"": ""<RUN_ID>""");
         normalized = Regex.Replace(normalized, @"""timestamp"": ""[^""]+""", @"""timestamp"": ""<TIMESTAMP>""");
         normalized = Regex.Replace(normalized, @"""generatedBy"": ""Microsoft\.Testing\.Extensions\.CtrfReport@[^""]+""", @"""generatedBy"": ""Microsoft.Testing.Extensions.CtrfReport@<VERSION>""");
         normalized = Regex.Replace(normalized, @"""start"": \d+", @"""start"": <EPOCH_MS>");

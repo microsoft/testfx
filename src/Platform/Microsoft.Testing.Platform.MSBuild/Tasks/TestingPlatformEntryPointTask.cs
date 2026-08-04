@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#pragma warning disable CS8618 // Properties below are set by MSBuild.
-
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
@@ -41,13 +39,13 @@ public sealed class TestingPlatformEntryPointTask : Build.Utilities.Task
     /// Gets or sets the path to the Testing Platform entry point source file.
     /// </summary>
     [Required]
-    public ITaskItem TestingPlatformEntryPointSourcePath { get; set; }
+    public required ITaskItem TestingPlatformEntryPointSourcePath { get; set; }
 
     /// <summary>
     /// Gets or sets the language of the project.
     /// </summary>
     [Required]
-    public ITaskItem Language { get; set; }
+    public required ITaskItem Language { get; set; }
 
     /// <summary>
     /// Gets or sets the root namespace of the project.
@@ -55,10 +53,11 @@ public sealed class TestingPlatformEntryPointTask : Build.Utilities.Task
     public string? RootNamespace { get; set; }
 
     /// <summary>
-    /// Gets or sets the path to the generated Testing Platform entry point file.
+    /// Gets or sets the path to the generated Testing Platform entry point file. It stays <see langword="null"/>
+    /// when the project language is not supported, in which case the task produces no output item.
     /// </summary>
     [Output]
-    public ITaskItem TestingPlatformEntryPointGeneratedFilePath { get; set; }
+    public ITaskItem? TestingPlatformEntryPointGeneratedFilePath { get; set; }
 
     /// <inheritdoc />
     public override bool Execute()
@@ -70,7 +69,7 @@ public sealed class TestingPlatformEntryPointTask : Build.Utilities.Task
             !Language.ItemSpec.Equals(VBLanguageSymbol, StringComparison.OrdinalIgnoreCase) &&
             !Language.ItemSpec.Equals(FSharpLanguageSymbol, StringComparison.OrdinalIgnoreCase))
         {
-            TestingPlatformEntryPointGeneratedFilePath = default!;
+            TestingPlatformEntryPointGeneratedFilePath = null;
             Log.LogError($"Language '{Language.ItemSpec}' is not supported.");
         }
         else

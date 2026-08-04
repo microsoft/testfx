@@ -17,6 +17,81 @@
         <target state="translated">Anulado</target>
         <note />
       </trans-unit>
+      <trans-unit id="ArtifactPostProcessingDispatcherCommandLineDescription">
+        <source>Internal command line for artifact post-processing.</source>
+        <target state="translated">Linha de comando interna para pós-processamento de artefato.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingDispatcherDescription">
+        <source>Dispatches artifact post-processing jobs selected by dotnet test.</source>
+        <target state="translated">Executa a expedição de trabalhos de pós-processamento de artefato selecionados pelo dotnet test.</target>
+        <note>Do not localize command name {Locked="dotnet test"}.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingDispatcherDisplayName">
+        <source>Artifact post-processing dispatcher</source>
+        <target state="translated">Dispatcher de pós-processamento de artefato</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingDispatcherInvalidProcessorOutput">
+        <source>The processed artifact must be an existing file under the output directory and cannot overwrite an input artifact.</source>
+        <target state="translated">O artefato processado deve ser um arquivo existente no diretório de saída e não pode substituir um artefato de entrada.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingDispatcherManifestNotFound">
+        <source>The artifact post-processing manifest does not exist.</source>
+        <target state="translated">O manifesto de pós-processamento de artefato não existe.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingDispatcherManifestOptionDescription">
+        <source>Path to the artifact post-processing manifest.</source>
+        <target state="translated">Caminho para o manifesto de pós-processamento do artefato.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingDispatcherProcessorConflict">
+        <source>Multiple artifact post-processors match '{0}'. The first registered processor, '{1}', will be used.</source>
+        <target state="translated">Vários pós-processadores de artefato correspondem a ''{0}''. O primeiro processador registrado, ''{1}'', será usado.</target>
+        <note>{0} is an artifact kind or file extension. {1} is an extension UID.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingDispatcherProcessorFailed">
+        <source>Artifact post-processor '{0}' failed: {1}</source>
+        <target state="translated">Falha no pós-processador de artefato ''{0}'': {1}</target>
+        <note>{0} is the processor UID. {1} is the exception message.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingDispatcherRequiresPipe">
+        <source>The artifact post-processing dispatcher requires a dotnet test pipe.</source>
+        <target state="translated">O dispatcher de pós-processamento de artefato requer um pipe dotnet test.</target>
+        <note>Do not localize command name {Locked="dotnet test"}.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingManifestInputMissingPath">
+        <source>Artifact post-processing manifest input {0} does not have a path.</source>
+        <target state="translated">A entrada do manifesto de pós-processamento de artefato {0} não tem um caminho.</target>
+        <note>{0} is the zero-based input index.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingManifestInputsMustBeArray">
+        <source>The artifact post-processing manifest inputs property must be an array.</source>
+        <target state="translated">A propriedade de inputs de manifesto de pós-processamento de artefato deve ser uma matriz.</target>
+        <note>Do not localize property name {Locked="inputs"}.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingManifestInvalid">
+        <source>The artifact post-processing manifest must have schemaVersion 1 and an outputDirectory.</source>
+        <target state="translated">O manifesto de pós-processamento de artefato deve ter schemaVersion 1 e um outputDirectory.</target>
+        <note>Do not localize property names {Locked="schemaVersion"}{Locked="outputDirectory"}.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessingManifestReadError">
+        <source>Cannot read the artifact post-processing manifest: {0}</source>
+        <target state="translated">Não é possível ler o manifesto de pós-processamento de artefato: {0}</target>
+        <note>{0} is the exception message.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessorCapabilityContainsSeparator">
+        <source>Artifact post-processor '{0}' declares capability '{1}', which cannot contain the semicolon separator.</source>
+        <target state="translated">O pós-processador de artefato ''{0}'' declara a funcionalidade ''{1}'', que não pode conter o separador de ponto e vírgula.</target>
+        <note>{0} is the processor UID. {1} is an artifact kind or file extension.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessorCapabilityInvalid">
+        <source>Artifact post-processor '{0}' declares invalid capability '{1}'. Kinds cannot be blank, and fallback extensions must be lowercase and start with a dot.</source>
+        <target state="translated">O ''{0}'' do pós-processador de artefatos declara a funcionalidade inválida ''{1}''. Os tipos não podem estar em branco, e as extensões de fallback devem estar em minúsculas e começar com um ponto.</target>
+        <note>{0} is the processor UID. {1} is an artifact kind or file extension.</note>
+      </trans-unit>
       <trans-unit id="CancellingTestSession">
         <source>Canceling the test session...</source>
         <target state="translated">Cancelamento da sessão de testes...</target>
@@ -33,9 +108,9 @@
         <note />
       </trans-unit>
       <trans-unit id="CannotCreateUniqueLogFileErrorMessage">
-        <source>Failed to create a unique log file after 3 seconds. Lastly tried file name is '{0}'.</source>
-        <target state="translated">Falha ao criar um arquivo de log exclusivo após 3 segundos. O nome do arquivo tentado pela última vez é '{0}'.</target>
-        <note>{0} is the last log file name that was tried.</note>
+        <source>Failed to create the diagnostic log file '{0}' after {1} attempts. Last error: {2}</source>
+        <target state="new">Failed to create the diagnostic log file '{0}' after {1} attempts. Last error: {2}</target>
+        <note>{0} is the full path of the last log file that was tried. {1} is the number of attempts that were made. {2} is the error message of the last failed attempt.</note>
       </trans-unit>
       <trans-unit id="CannotRemoveEnvironmentVariableAtThisStageErrorMessage">
         <source>Cannot remove environment variables at this stage</source>
@@ -181,6 +256,16 @@
         <source>The same instance of 'CompositeExtensionFactory' is already registered</source>
         <target state="translated">A mesma instância de 'CompositeExtensionFactory' já está registrada</target>
         <note>{Locked="CompositeExtensionFactory"}</note>
+      </trans-unit>
+      <trans-unit id="CompositeTestExecutionFilterCannotContainNull">
+        <source>A composite test execution filter cannot contain a null child filter.</source>
+        <target state="translated">Um filtro de execução de teste composto não pode conter um filtro filho nulo.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CompositeTestExecutionFilterRequiresTwoFilters">
+        <source>A composite test execution filter requires at least two child filters.</source>
+        <target state="translated">Um filtro de execução de teste composto requer pelo menos dois filtros filho.</target>
+        <note />
       </trans-unit>
       <trans-unit id="ConfigurationFileNotFound">
         <source>The configuration file '{0}' specified with '--config-file' could not be found.</source>
@@ -546,9 +631,59 @@ Opcionalmente, aceita 'text' (a saída legível por humanos padrão) ou 'json' p
         <target state="translated">''--server {0}'' requer que ''--{1}'' seja especificado.</target>
         <note>{0} is the server protocol value. {1} is the required option name without the leading dashes. {Locked="--server"}{Locked="dotnettestcli"}{Locked="dotnet-test-pipe"}</note>
       </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestCliRequiresTransport">
+        <source>'--server dotnettestcli' requires either '--dotnet-test-pipe' or '--dotnet-test-transport http'.</source>
+        <target state="translated">'--server dotnettestcli' requer '--dotnet-test-pipe' ou '--dotnet-test-transport http'.</target>
+        <note>{Locked="--server dotnettestcli"}{Locked="--dotnet-test-pipe"}{Locked="--dotnet-test-transport http"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestHttpEndpointInvalid">
+        <source>'--dotnet-test-http-endpoint' requires an absolute HTTPS URL, or an HTTP loopback URL, without user information, query, or fragment.</source>
+        <target state="translated">'--dotnet-test-http-endpoint' requer uma URL HTTPS absoluta ou uma URL de loopback HTTP, sem informações de usuário, consulta ou fragmento.</target>
+        <note>{Locked="--dotnet-test-http-endpoint"}{Locked="HTTP"}{Locked="HTTPS"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestHttpEndpointOptionDescription">
+        <source>Specifies the authenticated HTTP endpoint for the dotnet test protocol.</source>
+        <target state="translated">Especifica o ponto de extremidade HTTP autenticado para o protocolo dotnet test.</target>
+        <note>{Locked="HTTP"}{Locked="dotnet test"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestHttpOptionsRequireTransport">
+        <source>The dotnet test HTTP endpoint and token options require '--dotnet-test-transport http'.</source>
+        <target state="translated">As opções de ponto de extremidade HTTP e token do dotnet test exigem '--dotnet-test-transport http'.</target>
+        <note>{Locked="dotnet test"}{Locked="HTTP"}{Locked="--dotnet-test-transport http"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestHttpRequiresEndpointAndToken">
+        <source>'--dotnet-test-transport http' requires both '--dotnet-test-http-endpoint' and '--dotnet-test-http-token'.</source>
+        <target state="translated">'--dotnet-test-transport http' requer '--dotnet-test-http-endpoint' e '--dotnet-test-http-token'.</target>
+        <note>{Locked="--dotnet-test-transport http"}{Locked="--dotnet-test-http-endpoint"}{Locked="--dotnet-test-http-token"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestHttpTokenInvalid">
+        <source>'--dotnet-test-http-token' requires a non-empty valid bearer token without whitespace or control characters.</source>
+        <target state="translated">'--dotnet-test-http-token' requer um token de portador válido, não vazio, sem espaços em branco nem caracteres de controle.</target>
+        <note>{Locked="--dotnet-test-http-token"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestHttpTokenOptionDescription">
+        <source>Specifies the per-run HTTP bearer token for the dotnet test protocol.</source>
+        <target state="translated">Especifica o token de portador HTTP por execução para o protocolo dotnet test.</target>
+        <note>{Locked="HTTP"}{Locked="dotnet test"}</note>
+      </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
         <source>dotnet test pipe.</source>
         <target state="translated">pipe de dotnet test.</target>
+        <note>{Locked="dotnet test"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestTransportConflict">
+        <source>The dotnet test named-pipe and HTTP transports cannot be selected together.</source>
+        <target state="translated">Os transportes de pipe nomeado e HTTP do dotnet test não podem ser selecionados juntos.</target>
+        <note>{Locked="dotnet test"}{Locked="HTTP"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestTransportInvalid">
+        <source>'--dotnet-test-transport' received unexpected value '{0}'. Supported values are: {1}.</source>
+        <target state="translated">'--dotnet-test-transport' recebeu o valor inesperado '{0}'. Os valores com suporte são: {1}.</target>
+        <note>{0} is the unexpected transport value. {1} is the comma-separated list of supported transport values. {Locked="--dotnet-test-transport"}{Locked="pipe"}{Locked="http"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestTransportOptionDescription">
+        <source>Selects the pre-launch transport for the dotnet test protocol.</source>
+        <target state="translated">Seleciona o transporte de pré-inicialização para o protocolo de dotnet test.</target>
         <note>{Locked="dotnet test"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
@@ -621,6 +756,16 @@ Opcionalmente, aceita 'text' (a saída legível por humanos padrão) ou 'json' p
         <source>Do not display the startup banner, the copyright message or the telemetry banner.</source>
         <target state="translated">Não exiba a faixa de inicialização, a mensagem de direitos autorais ou a faixa de telemetria.</target>
         <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLinePipeTransportNotSupportedOnBrowser">
+        <source>The dotnet test named-pipe transport is not supported on browser-wasm. Use '--dotnet-test-transport http'.</source>
+        <target state="translated">Não há suporte para o transporte de pipe nomeado de dotnet test no browser-wasm. Use '--dotnet-test-transport http'.</target>
+        <note>{Locked="dotnet test"}{Locked="browser-wasm"}{Locked="--dotnet-test-transport http"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLinePipeTransportNotSupportedOnWasi">
+        <source>The dotnet test named-pipe transport is not supported on wasi-wasm. Use '--dotnet-test-transport http'.</source>
+        <target state="translated">Não há suporte para o transporte de pipe nomeado de dotnet test no wasi-wasm. Use '--dotnet-test-transport http'.</target>
+        <note>{Locked="dotnet test"}{Locked="wasi-wasm"}{Locked="--dotnet-test-transport http"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLinePortOptionDescription">
         <source>Specify the port of the server.</source>
@@ -900,6 +1045,11 @@ Leia mais sobre a telemetria da Plataforma de Testes da Microsoft: https://aka.m
         <target state="translated">Resumo da descoberta de teste: encontrado {0} teste(s) em {1} assemblies.</target>
         <note>{0} is the number of discovered tests. {1} is the count of assemblies.</note>
       </trans-unit>
+      <trans-unit id="TestExecutionFilterProviderNotSupportedForServer">
+        <source>Test execution filter provider '{0}' returned filter type '{1}' for a JSON-RPC server request. Provider constraints are not applied to server requests; return null when TestExecutionFilterContext.Origin is Server.</source>
+        <target state="translated">O provedor de filtro de execução de teste "{0}" retornou o tipo de filtro "{1}" para uma solicitação de servidor JSON-RPC. Restrições de provedor não são aplicadas a solicitações de servidor; retornará null quando TestExecutionFilterContext.Origin for Server.</target>
+        <note>{0} is the provider UID. {1} is the filter type. {Locked="JSON-RPC"}{Locked="null"}{Locked="TestExecutionFilterContext.Origin"}{Locked="Server"}</note>
+      </trans-unit>
       <trans-unit id="TestFrameworkProxyApiShouldNotBeCalled">
         <source>Method '{0}' should not have been called on this proxy object</source>
         <target state="translated">O método ''{0}'' não deve ter sido chamado neste objeto proxy</target>
@@ -996,6 +1146,26 @@ Leia mais sobre a telemetria da Plataforma de Testes da Microsoft: https://aka.m
         <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
         <target state="translated">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] exceção sem tratamento: {0}</target>
         <note>{0} is the exception that was unhandled/unobserved. {Locked="ServerTestHost.OnTaskSchedulerUnobservedTaskException"}</note>
+      </trans-unit>
+      <trans-unit id="UnsupportedProviderTestExecutionFilter">
+        <source>Test execution filter provider '{0}' returned unsupported filter type '{1}'. Providers can return only NopFilter, TestNodeUidListFilter, TreeNodeFilter, or an And CompositeTestExecutionFilter.</source>
+        <target state="translated">O provedor de filtro de execução de teste "{0}" retornou o tipo de filtro sem suporte "{1}". Os provedores podem retornar apenas NopFilter, TestNodeUidListFilter, TreeNodeFilter ou CompositeTestExecutionFilter And.</target>
+        <note>{0} is the provider UID. {1} is the unsupported filter type. {Locked="NopFilter"}{Locked="TestNodeUidListFilter"}{Locked="TreeNodeFilter"}{Locked="And"}{Locked="CompositeTestExecutionFilter"}</note>
+      </trans-unit>
+      <trans-unit id="UnsupportedRequestTestExecutionFilter">
+        <source>The request contains unsupported test execution filter type '{0}'.</source>
+        <target state="translated">A solicitação contém o tipo de filtro de execução de teste sem suporte "{0}".</target>
+        <note>{0} is the unsupported filter type.</note>
+      </trans-unit>
+      <trans-unit id="UnsupportedTestExecutionFilterOperator">
+        <source>Only the And test execution filter operator is supported.</source>
+        <target state="translated">Há suporte apenas para o operador And do filtro de execução de teste.</target>
+        <note>{Locked="And"}</note>
+      </trans-unit>
+      <trans-unit id="UnsupportedTestExecutionFilterOperatorValue">
+        <source>Test execution filter operator '{0}' is not supported. Only And is supported.</source>
+        <target state="translated">Não há suporte para o operador de filtro de execução de teste "{0}". Há suporte apenas para And.</target>
+        <note>{0} is the unsupported operator value. {Locked="And"}</note>
       </trans-unit>
       <trans-unit id="WaitDebuggerAttachNotSupportedInBrowserErrorMessage">
         <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported in browser environments.</source>

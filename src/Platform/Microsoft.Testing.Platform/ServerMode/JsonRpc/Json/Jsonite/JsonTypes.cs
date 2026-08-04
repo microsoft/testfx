@@ -167,6 +167,11 @@ namespace Jsonite
         public bool ParseValuesAsStrings { get; set; }
 
         /// <summary>
+        /// Gets or sets a value indicating whether to allow comments.
+        /// </summary>
+        public bool AllowComments { get; set; }
+
+        /// <summary>
         /// Gets or sets a value indicating whether to allow trailing commas in object and array declaration.
         /// </summary>
         public bool AllowTrailingCommas { get; set; }

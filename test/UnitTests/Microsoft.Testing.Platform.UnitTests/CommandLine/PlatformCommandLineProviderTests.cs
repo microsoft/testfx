@@ -331,6 +331,163 @@ public sealed class PlatformCommandLineProviderTests
     }
 
     [TestMethod]
+    public async Task IsValid_When_Server_DotnetTestCli_With_HttpTransport()
+    {
+        var provider = new PlatformCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            [PlatformCommandLineProvider.ServerOptionKey] = ["dotnettestcli"],
+            [PlatformCommandLineProvider.DotNetTestTransportOptionKey] = ["http"],
+            [PlatformCommandLineProvider.DotNetTestHttpEndpointOptionKey] = ["https://localhost:1234/dotnettest"],
+            [PlatformCommandLineProvider.DotNetTestHttpTokenOptionKey] = ["valid-token-value"],
+        };
+
+        ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsTrue(validateOptionsResult.IsValid);
+    }
+
+    [TestMethod]
+    [DataRow("pipe")]
+    [DataRow("http")]
+    [DataRow("HTTP")]
+    public async Task IsValid_When_DotnetTestTransport_HasAcceptedArgument(string argument)
+    {
+        var provider = new PlatformCommandLineProvider();
+        CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.DotNetTestTransportOptionKey);
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [argument]).ConfigureAwait(false);
+        Assert.IsTrue(result.IsValid);
+    }
+
+    [TestMethod]
+    public async Task IsInvalid_When_DotnetTestTransport_HasUnknownArgument()
+    {
+        var provider = new PlatformCommandLineProvider();
+        CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.DotNetTestTransportOptionKey);
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, ["websocket"]).ConfigureAwait(false);
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains("websocket", result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("https://gateway.example/dotnettest", true)]
+    [DataRow("http://localhost:1234/dotnettest", true)]
+    [DataRow("http://127.0.0.1:1234/dotnettest", true)]
+    [DataRow("http://gateway.example/dotnettest", false)]
+    [DataRow("https://user@gateway.example/dotnettest", false)]
+    [DataRow("https://gateway.example/dotnettest?token=secret", false)]
+    [DataRow("https://gateway.example/dotnettest#fragment", false)]
+    [DataRow("ws://localhost:1234/dotnettest", false)]
+    [DataRow("/dotnettest", false)]
+    public async Task DotnetTestHttpEndpoint_ValidatesSecurityRequirements(string endpoint, bool expectedValid)
+    {
+        var provider = new PlatformCommandLineProvider();
+        CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.DotNetTestHttpEndpointOptionKey);
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [endpoint]).ConfigureAwait(false);
+        Assert.AreEqual(expectedValid, result.IsValid);
+    }
+
+    [TestMethod]
+    [DataRow("valid-token", true)]
+    [DataRow("", false)]
+    [DataRow("   ", false)]
+    [DataRow("token with spaces", false)]
+    [DataRow("token\r\nheader", false)]
+    [DataRow("token,parameter", false)]
+    public async Task DotnetTestHttpToken_ValidatesBearerSyntax(string token, bool expectedValid)
+    {
+        var provider = new PlatformCommandLineProvider();
+        CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.DotNetTestHttpTokenOptionKey);
+
+        ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, [token]).ConfigureAwait(false);
+        Assert.AreEqual(expectedValid, result.IsValid);
+    }
+
+    [TestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    public async Task IsInvalid_When_HttpTransport_IsIncomplete(bool includeServer)
+    {
+        var provider = new PlatformCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            [PlatformCommandLineProvider.DotNetTestTransportOptionKey] = ["http"],
+            [PlatformCommandLineProvider.DotNetTestHttpEndpointOptionKey] = ["https://localhost:1234/dotnettest"],
+        };
+        if (includeServer)
+        {
+            options[PlatformCommandLineProvider.ServerOptionKey] = ["dotnettestcli"];
+        }
+
+        ValidationResult result = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(PlatformResources.PlatformCommandLineDotnetTestHttpRequiresEndpointAndToken, result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow(PlatformCommandLineProvider.DotNetTestHttpEndpointOptionKey, "https://localhost:1234/dotnettest")]
+    [DataRow(PlatformCommandLineProvider.DotNetTestHttpTokenOptionKey, "valid-token")]
+    public async Task IsInvalid_When_HttpOptionHasNoHttpTransport(string optionName, string optionValue)
+    {
+        var provider = new PlatformCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            [optionName] = [optionValue],
+        };
+
+        ValidationResult result = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(PlatformResources.PlatformCommandLineDotnetTestHttpOptionsRequireTransport, result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task IsInvalid_When_HttpAndPipeTransportsAreCombined()
+    {
+        var provider = new PlatformCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            [PlatformCommandLineProvider.ServerOptionKey] = ["dotnettestcli"],
+            [PlatformCommandLineProvider.DotNetTestPipeOptionKey] = ["pipe-name"],
+            [PlatformCommandLineProvider.DotNetTestTransportOptionKey] = ["http"],
+            [PlatformCommandLineProvider.DotNetTestHttpEndpointOptionKey] = ["https://localhost:1234/dotnettest"],
+            [PlatformCommandLineProvider.DotNetTestHttpTokenOptionKey] = ["valid-token"],
+        };
+
+        ValidationResult result = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(PlatformResources.PlatformCommandLineDotnetTestTransportConflict, result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow(null)]
+    [DataRow("dotnettestcli")]
+    [DataRow("jsonrpc")]
+    public async Task IsInvalid_When_ExplicitPipeTransportHasNoPipeName(string? serverProtocol)
+    {
+        var provider = new PlatformCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            [PlatformCommandLineProvider.DotNetTestTransportOptionKey] = ["pipe"],
+        };
+        if (serverProtocol is not null)
+        {
+            options[PlatformCommandLineProvider.ServerOptionKey] = [serverProtocol];
+        }
+
+        ValidationResult result = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual(
+            string.Format(
+                CultureInfo.InvariantCulture,
+                PlatformResources.PlatformCommandLineDotnetTestCliRequiresPipe,
+                "dotnettestcli",
+                PlatformCommandLineProvider.DotNetTestPipeOptionKey),
+            result.ErrorMessage);
+    }
+
+    [TestMethod]
     [DataRow("dotnettestcli")]
     [DataRow("DotnetTestCli")]
     public async Task IsInvalid_When_Server_DotnetTestCli_Without_DotnetTestPipe(string protocol)
@@ -343,13 +500,7 @@ public sealed class PlatformCommandLineProviderTests
 
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
         Assert.IsFalse(validateOptionsResult.IsValid);
-        Assert.AreEqual(
-            string.Format(
-                CultureInfo.InvariantCulture,
-                PlatformResources.PlatformCommandLineDotnetTestCliRequiresPipe,
-                PlatformCommandLineProvider.DotnetTestCliProtocolName,
-                PlatformCommandLineProvider.DotNetTestPipeOptionKey),
-            validateOptionsResult.ErrorMessage);
+        Assert.AreEqual(PlatformResources.PlatformCommandLineDotnetTestCliRequiresTransport, validateOptionsResult.ErrorMessage);
     }
 
     [TestMethod]

@@ -37,6 +37,10 @@ For technical reasoning and implementation details, you can refer to the list of
 - [DataSource Attribute Vs ITestDataSource](RFCs/007-DataSource-Attribute-VS-ITestDataSource.md)
 - [Test case timeout via runsettings](RFCs/008-TestCase-Timeout.md)
 
+## Guides
+
+- [Testing WinUI apps](winui-testing.md): packaged (MSIX) vs unpackaged WinUI, and how the test host is started for each.
+
 ## Design notes
 
 - [MSTest source generator — design](source-generator/design.md): scope, fallback categories, discovery limitations and trim/AOT story for the `MSTest.SourceGeneration` package.

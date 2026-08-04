@@ -57,6 +57,11 @@
         <target state="translated">Microsoft.Testing.Platform nepodporuje protokolovače Runsettings. Bude je proto ignorovat.</target>
         <note>Do not localize {Locked="Runsettings"} or {Locked="Microsoft.Testing.Platform"}.</note>
       </trans-unit>
+      <trans-unit id="UnsupportedTestExecutionFilter">
+        <source>Test execution filter type '{0}' is not supported by '{1}'. Supported filter types are NopFilter, TestNodeUidListFilter, and an And CompositeTestExecutionFilter.</source>
+        <target state="translated">Typ filtru spuštění testu {0} není podporován adaptérem {1}. Podporované typy filtrů jsou NopFilter, TestNodeUidListFilter a AndCompositeTestExecutionFilter.</target>
+        <note>{0} is the unsupported filter type. {1} is the adapter name. {Locked="NopFilter"}{Locked="TestNodeUidListFilter"}{Locked="And"}{Locked="CompositeTestExecutionFilter"}</note>
+      </trans-unit>
       <trans-unit id="VSTestBridgedTestFrameworkSessionAlreadyCreatedErrorMessage">
         <source>The bridged framework supports only one session at a time. A session with UID {0} is already open.</source>
         <target state="translated">Přemostěná architektura podporuje najednou pouze jednu relaci. Relace s UID {0} je už otevřená.</target>

@@ -26,4 +26,5 @@ internal enum ExitCode
     DependentProcessExited = 11,
     IncompatibleProtocolVersion = 12,
     TestExecutionStoppedForMaxFailedTests = 13,
+    CoverageThresholdFailed = 14,
 }

@@ -174,6 +174,9 @@
     <value>Test execution stopped after reaching the limit set by --maximum-failed-tests.</value>
     <comment>{Locked="--maximum-failed-tests"}</comment>
   </data>
+  <data name="ExitCodeReasonCoverageThresholdFailed" xml:space="preserve">
+    <value>One or more code coverage thresholds were not met.</value>
+  </data>
   <data name="ExitCodeReasonUnknown" xml:space="preserve">
     <value>The test run reported a non-success exit code.</value>
   </data>

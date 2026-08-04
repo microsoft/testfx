@@ -24,6 +24,7 @@ public sealed class ParallelExecutionTests : AcceptanceTestBase<ParallelExecutio
     private const string MethodParallelProjectName = "ParallelMethodsTestProject";
     private const string ClassParallelProjectName = "ParallelClassesTestProject";
     private const string DoNotParallelizeProjectName = "DoNotParallelizeTestProject";
+    private const string DoNotParallelizeOrderingProjectName = "DoNotParallelizeOrderingTestProject";
 
     public TestContext TestContext { get; set; } = default!;
 
@@ -77,6 +78,23 @@ public sealed class ParallelExecutionTests : AcceptanceTestBase<ParallelExecutio
         Assert.AreEqual(1, AssetFixture.ReadMaximumConcurrency(DoNotParallelizeProjectName, tfm));
     }
 
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task DoNotParallelizeTestRunsAfterAllParallelizableTests(string tfm)
+    {
+        // Pins the defer-to-end scheduling of [DoNotParallelize]: the parallelizable tests each
+        // increment a shared counter as they complete, and the single [DoNotParallelize] test
+        // asserts the counter already equals the parallelizable count when it runs. The scheduler
+        // awaits the whole parallelizable set before starting the non-parallelizable set, so this is
+        // deterministic and does not rely on any wall-clock timing.
+        TestHost testHost = AssetFixture.GetTestHost(DoNotParallelizeOrderingProjectName, tfm);
+
+        TestHostResult result = await testHost.ExecuteAsync("--output detailed", cancellationToken: TestContext.CancellationToken);
+
+        Assert.AreEqual(0, result.ExitCode, result.StandardOutput);
+        Assert.Contains("succeeded: 5", result.StandardOutput);
+    }
+
     public sealed class TestAssetFixture : ITestAssetFixture
     {
         private readonly TempDirectory _tempDirectory = new();
@@ -101,6 +119,7 @@ public sealed class ParallelExecutionTests : AcceptanceTestBase<ParallelExecutio
                 (MethodParallelProjectName, MethodParallelSourceCode),
                 (ClassParallelProjectName, ClassParallelSourceCode),
                 (DoNotParallelizeProjectName, DoNotParallelizeSourceCode),
+                (DoNotParallelizeOrderingProjectName, DoNotParallelizeOrderingSourceCode),
             })
             {
                 string patched = code
@@ -432,6 +451,59 @@ public class UnitTest2
     </Parallelize>
   </MSTest>
 </RunSettings>
+""";
+
+        private static readonly string DoNotParallelizeOrderingSourceCode = ProjectFile.Replace("$ProjectName$", DoNotParallelizeOrderingProjectName) + """
+
+#file Tests.cs
+using System.Threading;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[assembly: Parallelize(Workers = 3, Scope = ExecutionScope.MethodLevel)]
+
+namespace DoNotParallelizeOrderingTestProject;
+
+internal static class OrderTracker
+{
+    internal const int ParallelizableCount = 4;
+    private static int s_completedParallelizable;
+
+    internal static void MarkParallelizableCompleted()
+        => Interlocked.Increment(ref s_completedParallelizable);
+
+    internal static int CompletedParallelizable => Volatile.Read(ref s_completedParallelizable);
+}
+
+[TestClass]
+public class ParallelTests
+{
+    [TestMethod]
+    public void Parallel1() => OrderTracker.MarkParallelizableCompleted();
+
+    [TestMethod]
+    public void Parallel2() => OrderTracker.MarkParallelizableCompleted();
+
+    [TestMethod]
+    public void Parallel3() => OrderTracker.MarkParallelizableCompleted();
+
+    [TestMethod]
+    public void Parallel4() => OrderTracker.MarkParallelizableCompleted();
+}
+
+[TestClass]
+public class DeferredTests
+{
+    // Marked [DoNotParallelize], so this test is deferred to run after every parallelizable test in
+    // the source has completed; the shared counter must therefore already equal the full
+    // parallelizable count by the time it runs.
+    [TestMethod]
+    [DoNotParallelize]
+    public void DeferredRunsAfterAllParallelizableTests()
+        => Assert.AreEqual(
+            OrderTracker.ParallelizableCount,
+            OrderTracker.CompletedParallelizable,
+            "The [DoNotParallelize] test must run only after every parallelizable test has completed.");
+}
 """;
     }
 }

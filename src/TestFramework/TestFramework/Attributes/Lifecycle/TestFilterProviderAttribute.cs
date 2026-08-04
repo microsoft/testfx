@@ -16,9 +16,17 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// needed, compose them explicitly inside a single <see cref="ITestFilter"/> implementation.
 /// </para>
 /// <para>
-/// The filter type must be a non-generic class with a public parameterless constructor that
-/// implements <see cref="ITestFilter"/>. A single instance is created per test assembly per test
-/// run and reused for every test of that assembly.
+/// The filter type must be non-generic and instantiable — a concrete class or a struct, but not a
+/// <c>ref struct</c> — with a public parameterless constructor, and must implement
+/// <see cref="ITestFilter"/>. A single instance is created per test assembly per test run and reused
+/// for every test of that assembly.
+/// </para>
+/// <para>
+/// Because the filter type is passed as a <see cref="Type"/>, none of those requirements are
+/// checked by the compiler. The <c>MSTEST0081</c> analyzer validates them at build time. On .NET the
+/// generic <c>TestFilterProviderAttribute&lt;TFilter&gt;</c> variant additionally enforces the
+/// <see cref="ITestFilter"/> and public-parameterless-constructor requirements through its generic
+/// constraints; the remaining ones are still only reported by <c>MSTEST0081</c>.
 /// </para>
 /// <para>
 /// The filter runs <em>before</em> the test type is loaded, before <c>[AssemblyInitialize]</c>,
@@ -42,21 +50,23 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </example>
 [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false, Inherited = false)]
 [Experimental("MSTESTEXP", UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
-public sealed class TestFilterProviderAttribute : Attribute
+public sealed class TestFilterProviderAttribute : Attribute, ITestFilterProviderAttribute
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="TestFilterProviderAttribute"/> class.
     /// </summary>
     /// <param name="filterType">
     /// The <see cref="ITestFilter"/> implementation to instantiate and invoke for every test in
-    /// the consuming test assembly. Must be a non-generic class with a public parameterless
-    /// constructor.
+    /// the consuming test assembly. Must be a non-generic, instantiable type with a public
+    /// parameterless constructor.
     /// </param>
-    public TestFilterProviderAttribute(Type filterType)
+    public TestFilterProviderAttribute(
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] Type filterType)
         => FilterType = filterType ?? throw new ArgumentNullException(nameof(filterType));
 
     /// <summary>
     /// Gets the <see cref="ITestFilter"/> implementation registered by this attribute.
     /// </summary>
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
     public Type FilterType { get; }
 }

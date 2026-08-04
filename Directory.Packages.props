@@ -11,6 +11,15 @@
     <!-- It also needs to be added to nuspec manually (for projects that use nuspec) so that the new version flows to consumers -->
     <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(MSBuildCachePackageEnabled)' == 'true'" Label="Build dependencies">
+    <MSBuildCachePackageName Condition="'$(TF_BUILD)' != ''">Microsoft.MSBuildCache.AzurePipelines</MSBuildCachePackageName>
+    <MSBuildCachePackageName Condition="'$(MSBuildCachePackageName)' == ''">Microsoft.MSBuildCache.Local</MSBuildCachePackageName>
+    <MSBuildCachePackageVersion>0.1.328-preview</MSBuildCachePackageVersion>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(MSBuildCachePackageEnabled)' == 'true'" Label="Build dependencies">
+    <GlobalPackageReference Include="$(MSBuildCachePackageName)" Version="$(MSBuildCachePackageVersion)" />
+    <GlobalPackageReference Include="Microsoft.MSBuildCache.SharedCompilation" Version="$(MSBuildCachePackageVersion)" />
+  </ItemGroup>
   <PropertyGroup Label="Product dependencies">
     <!-- AspireHostingTestingVersion is consumed by the build and baked into the shipped MSTest.Sdk
          template. It MUST be kept in sync with the literal Aspire.Hosting.Testing PackageVersion
@@ -26,11 +35,13 @@
          On a 5.10.0-1.* (roslyn main) preview from the dnceng dotnet-tools feed to pick up the
          RS0017/RS0026/RS0036 fixes AND the [Embedded]-API exclusion added in dotnet/roslyn#84437
          (merged 2026-07-10 23:11 UTC), which lets internal [Embedded] types opt out of API tracking.
-         NOTE: 5.10.0-1.26360.111 was built 2026-07-10 22:25 UTC, ~46 min BEFORE that merge, so it does
-         NOT yet contain #84437. Re-pin to the first post-merge main build (5.10.0-1.26361.* or later)
-         once it ships to the dotnet-tools feed.
+         NOTE: roslyn main builds encode their date as yy*1000 + mm*50 + dd, so 5.10.0-1.26361.* is
+         2026-07-11 and anything from that build number upwards is post-merge and DOES contain #84437.
+         The pin below satisfies that, and Dependabot is free to keep moving it to newer main builds;
+         just never go back to 5.10.0-1.26360.* or earlier (built before the merge).
+         Promote to a stable Microsoft.CodeAnalysis.*Analyzers release once one ships with #84437.
          Tracking context: https://github.com/microsoft/testfx/issues/9091 (Task 5). -->
-    <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>5.10.0-1.26363.117</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
+    <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>5.10.0-1.26402.102</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
     <MicrosoftCodeAnalysisBannedApiAnalyzersVersion>$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)</MicrosoftCodeAnalysisBannedApiAnalyzersVersion>
     <!-- UWP and WinUI dependencies -->
     <MicrosoftNETCoreUniversalWindowsPlatformVersion>6.2.14</MicrosoftNETCoreUniversalWindowsPlatformVersion>
@@ -41,7 +52,7 @@
          PackageVersion declared near the bottom of this file (the one Dependabot updates). The
          _ValidateBundledSdkFeatureVersions target (in Directory.Build.targets) fails the build if
          the two drift apart. -->
-    <MicrosoftPlaywrightVersion>1.60.0</MicrosoftPlaywrightVersion>
+    <MicrosoftPlaywrightVersion>1.61.0</MicrosoftPlaywrightVersion>
     <MicrosoftTestingExtensionsFakesVersion>18.1.1</MicrosoftTestingExtensionsFakesVersion>
     <!-- Microsoft.Testing.Internal.Framework is an internal-only NuGet (consumed by tests that
          opt into UseInternalTestFramework via TestFramework.ForTestingMSTest); there is no public
@@ -90,6 +101,7 @@
     <PackageVersion Include="Microsoft.Win32.Registry" Version="5.0.0" />
     <PackageVersion Include="Microsoft.WindowsAppSDK" Version="1.8.251003001" />
     <PackageVersion Include="OpenTelemetry" Version="1.15.3" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.3" />
     <PackageVersion Include="System.Memory" Version="$(SystemMemoryVersion)" />
     <PackageVersion Include="System.Text.Json" Version="10.0.8" />
     <PackageVersion Include="System.Threading.Tasks.Extensions" Version="$(SystemThreadingTasksExtensionsVersion)" />
@@ -179,6 +191,6 @@
     -->
   <ItemGroup Label="Declared by MSTest.Sdk but not used directly">
     <PackageVersion Include="Aspire.Hosting.Testing" Version="13.4.6" />
-    <PackageVersion Include="Microsoft.Playwright.MSTest.v4" Version="1.60.0" />
+    <PackageVersion Include="Microsoft.Playwright.MSTest.v4" Version="1.61.0" />
   </ItemGroup>
 </Project>

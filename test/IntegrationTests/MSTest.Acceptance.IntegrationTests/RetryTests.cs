@@ -28,10 +28,27 @@ public sealed class RetryTests : AcceptanceTestBase<RetryTests.TestAssetFixture>
         testHostResult.AssertOutputContains("TestMethod4 executed 4 times.");
         testHostResult.AssertOutputContains("TestMethod5 executed 4 times.");
 
-        testHostResult.AssertOutputContains("failed TestMethod5");
         testHostResult.AssertOutputMatchesRegex(
             """Assertion failed\.[\r\n]+\s+Failing TestMethod4\. Attempts: 4 \(from TestContext: 4\)""");
+
+        // Every [Retry] attempt is now reported, annotated with the attempt it belongs to, so a test that
+        // failed and then passed is no longer indistinguishable from one that passed on the first try.
+        testHostResult.AssertOutputContains("failed (try 1) TestMethod2");
+        testHostResult.AssertOutputContains("failed (try 2) TestMethod3");
+        testHostResult.AssertOutputContains("failed (try 4) TestMethod5");
+
+        // A test that passed on its first attempt carries no attempt annotation at all.
+        testHostResult.AssertOutputDoesNotContain("(try 1) TestMethod1");
+
+        // 9 superseded failed attempts: 1 for TestMethod2, 2 for TestMethod3, 3 for TestMethod4 and 3 for
+        // TestMethod5 (whose 4th and final attempt is the one counted as failed). Rendered by the shared retry
+        // summary added in #10329, which in-process attempts now feed into as well.
         testHostResult.AssertOutputContainsSummary(failed: 1, passed: 4, skipped: 0);
+        testHostResult.AssertOutputContains("retried:");
+
+        // TestMethod2/3/4 failed at least once and eventually passed, so they are flaky. TestMethod5 never
+        // passed, so it is a plain failure rather than flaky.
+        testHostResult.AssertOutputContains("flaky: 3");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
@@ -172,7 +189,11 @@ public sealed class ClassLevelRetryTests : AcceptanceTestBase<ClassLevelRetryTes
                 cancellationToken: TestContext.CancellationToken);
 
             testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+
+            // ClassLevelOnly and MethodLevelOverride always fail, so nothing is flaky here - but both were
+            // retried, so the retry summary still reports the extra executions.
             testHostResult.AssertOutputContainsSummary(failed: 2, passed: 1, skipped: 0);
+            testHostResult.AssertOutputContains("retried:");
 
             string markerFile = Path.Combine(markerDirectory, TestAssetFixture.MarkerFileName);
             Assert.IsTrue(

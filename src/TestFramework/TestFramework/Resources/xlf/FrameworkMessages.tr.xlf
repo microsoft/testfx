@@ -537,9 +537,19 @@ Gerçekte olan: {2}</target>
         <target state="translated">'TestContext.{0}' özelliği, derleme veya sınıf sabitlemeleri sırasında mevcut testle ilişkili değildir.</target>
         <note>{0} is the {Locked="TestContext"} property name. Do not localize the API prefix {Locked="TestContext."}.</note>
       </trans-unit>
+      <trans-unit id="InvalidDependsOnTestMethodName">
+        <source>The test method name of a [DependsOn] must be a non-empty, non-whitespace string.</source>
+        <target state="translated">[DependsOn] öğesinin test metodu adı, boş olmayan ve boşluk içermeyen bir dize olmalıdır.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InvalidGitHubUrl">
         <source>Invalid GitHub ticket URL</source>
         <target state="translated">Geçersiz GitHub anahtar URL'si</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidResourceLockResource">
+        <source>The resource key of a [ResourceLock] must be a non-empty, non-whitespace string. An empty key would silently serialize unrelated tests that also use an empty key.</source>
+        <target state="translated">[ResourceLock] kaynak anahtarı boş olmayan, yalnızca boşluk içermeyen bir dize olmalıdır. Boş bir anahtar, boş anahtar kullanan ilgisiz testleri de sessizce seri hale getirir.</target>
         <note />
       </trans-unit>
       <trans-unit id="IsEmptyFailedSummary">

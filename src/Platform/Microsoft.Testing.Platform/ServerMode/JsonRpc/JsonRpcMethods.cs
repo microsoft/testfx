@@ -46,6 +46,7 @@ internal static class JsonRpcStrings
     public const string VSTestProviderSupport = "vstestProvider";
     public const string AttachmentsSupport = "attachmentsSupport";
     public const string MultiConnectionProvider = "multipleConnectionProvider";
+    public const string SupportsTestCoverageMessages = "supportsTestCoverageMessages";
 
     // Discovery and run
     public const string RunId = "runId";

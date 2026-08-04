@@ -3,7 +3,8 @@ name: "Grade Tests on PR (on open / sync)"
 description: >-
   Automatically grades new and modified test methods when a non-draft
   PR is opened, reopened, marked ready-for-review, or pushed to — but
-  only when the change touches files under `test/`.
+  only when the change touches files under `test/`. Posts a scorecard
+  comment plus inline `suggestion` comments for tests graded below A.
 
 # Triggers:
 # - pull_request `opened` / `reopened` / `ready_for_review` — initial

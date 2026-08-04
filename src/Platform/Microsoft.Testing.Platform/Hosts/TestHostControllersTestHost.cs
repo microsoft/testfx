@@ -41,6 +41,7 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
 
     // This is the exit code received from the test host process via IPC. It might not be the same as the actual exit code.
     private int? _testHostExitCodeReceived;
+    private int? _testHostUnfilteredExitCodeReceived;
 
     private int? _testHostPID;
 
@@ -142,6 +143,18 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
             };
 
             List<IDataConsumer> dataConsumersBuilder = [.. _testHostsInformation.DataConsumer];
+            if (ServiceProvider.GetService<TestCoverageCapabilities>() is { } coverageCapabilities)
+            {
+                coverageCapabilities.RegisterProducers(dataConsumersBuilder);
+            }
+
+            // Register the coverage result consumer so that coverage messages published by
+            // ITestHostProcessLifetimeHandler extensions in this (controller) process are tracked.
+            // This is the same instance later read by the coverage threshold exit code check.
+            if (ServiceProvider.GetService<TestCoverageResult>() is { } testCoverageResult)
+            {
+                dataConsumersBuilder.Add(testCoverageResult);
+            }
 
             // We add the IPlatformOutputDevice after all users extensions.
             IPlatformOutputDevice? display = ServiceProvider.GetServiceInternal<IPlatformOutputDevice>();
@@ -383,7 +396,7 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
             }
 
             // If we have a process in the middle between the test host controller and the test host process we need to keep it into account.
-            exitCode = testHostProcess.ExitCode;
+            exitCode = _testHostUnfilteredExitCodeReceived ?? testHostProcess.ExitCode;
             if (exitCode == (int)ExitCode.Success && cancellationToken.IsCancellationRequested)
             {
                 // In case of cancellation, only alter exit code if it was success.
@@ -406,6 +419,11 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
                 await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.TestProcessDidNotExitGracefullyErrorMessage, testHostProcess.ExitCode)), cancellationToken).ConfigureAwait(false);
                 exitCode = (int)ExitCode.TestHostProcessExitedNonGracefully;
             }
+
+            // Apply controller-only coverage thresholds to the child's pre-ignore verdict, then apply the
+            // ignore policy exactly once so ignoring a higher-priority child verdict cannot expose coverage 14.
+            exitCode = CoverageThresholdExitCodePolicy.Apply(exitCode, ServiceProvider);
+            exitCode = ExitCodeIgnorePolicy.Apply(exitCode, ServiceProvider.GetCommandLineOptions(), ServiceProvider.GetEnvironment());
 
             await _logger.LogInformationAsync($"TestHostControllersTestHost ended with exit code '{exitCode}' (real test host exit code '{testHostProcess.ExitCode}') in '{consoleRunStarted.Elapsed}'").ConfigureAwait(false);
             await DisposeHelper.DisposeAsync(testHostControllerIpc).ConfigureAwait(false);
@@ -458,19 +476,51 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
 
     private async Task DisposeServicesAsync()
     {
+        // A CompositeExtensionFactory builds one object that is reused for every role it was registered
+        // under, so the lifetime handlers and environment-variable providers disposed below can be the very
+        // same instances that the message bus holds as IDataConsumer. Because we dispose them here, before
+        // DisposeServiceProviderAsync gets a chance to close the handshake, we have to disable the bus first
+        // or a consumer can be disposed while its ConsumeAsync is still running. The in-run disable is not
+        // enough: it is gated on there being lifetime handlers, and it is skipped entirely on every early-out
+        // path (an invalid platform setup, or any failure between building the bus and reaching it).
+        object[] consumersStillRunning = [];
+        if (ServiceProvider.GetService<BaseMessageBus>() is { } messageBus)
+        {
+            await EnsureMessageBusDisabledAsync(messageBus, ServiceProvider).ConfigureAwait(false);
+
+            // Disabling is bounded on an aborted run, so it can return while a consumer that ignores the
+            // cancellation token is still inside ConsumeAsync. Those instances must be skipped here too, for
+            // exactly the reason above: a multi-role extension is reached by these manual loops.
+            consumersStillRunning = [.. messageBus.ConsumersStillRunning];
+        }
+
         ITestHostEnvironmentVariableProvider[] variableProviders = _testHostsInformation.EnvironmentVariableProviders;
         ITestHostProcessLifetimeHandler[] lifetimeHandlers = _testHostsInformation.LifetimeHandlers;
 
         List<object> alreadyDisposed = [with(lifetimeHandlers.Length + variableProviders.Length)];
 
+        // Recording them as already disposed is what keeps them from being disposed by the service-provider
+        // walk below either.
+        alreadyDisposed.AddRange(consumersStillRunning);
+
         foreach (ITestHostProcessLifetimeHandler service in lifetimeHandlers)
         {
+            if (alreadyDisposed.Contains(service))
+            {
+                continue;
+            }
+
             await DisposeHelper.DisposeAsync(service).ConfigureAwait(false);
             alreadyDisposed.Add(service);
         }
 
         foreach (ITestHostEnvironmentVariableProvider service in variableProviders)
         {
+            if (alreadyDisposed.Contains(service))
+            {
+                continue;
+            }
+
             await DisposeHelper.DisposeAsync(service).ConfigureAwait(false);
             alreadyDisposed.Add(service);
         }
@@ -487,6 +537,7 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
                 case TestHostCompletedRequest testHostCompletedRequest:
                     _testHostCompletedReceived = true;
                     _testHostExitCodeReceived = testHostCompletedRequest.ExitCode;
+                    _testHostUnfilteredExitCodeReceived = testHostCompletedRequest.UnfilteredExitCode;
                     return Task.FromResult<IResponse>(VoidResponse.CachedInstance);
 
                 case TestHostProcessPIDRequest testHostProcessPIDRequest:

@@ -121,8 +121,89 @@
     <value>Browser platform is only supported on .NET 7.0 or greater.</value>
     <comment>{Locked=".NET 7.0"}</comment>
   </data>
+  <data name="ArtifactPostProcessingDispatcherCommandLineDescription" xml:space="preserve">
+    <value>Internal command line for artifact post-processing.</value>
+  </data>
+  <data name="ArtifactPostProcessorCapabilityContainsSeparator" xml:space="preserve">
+    <value>Artifact post-processor '{0}' declares capability '{1}', which cannot contain the semicolon separator.</value>
+    <comment>{0} is the processor UID. {1} is an artifact kind or file extension.</comment>
+  </data>
+  <data name="ArtifactPostProcessorCapabilityInvalid" xml:space="preserve">
+    <value>Artifact post-processor '{0}' declares invalid capability '{1}'. Kinds cannot be blank, and fallback extensions must be lowercase and start with a dot.</value>
+    <comment>{0} is the processor UID. {1} is an artifact kind or file extension.</comment>
+  </data>
+  <data name="ArtifactPostProcessingDispatcherDescription" xml:space="preserve">
+    <value>Dispatches artifact post-processing jobs selected by dotnet test.</value>
+    <comment>Do not localize command name {Locked="dotnet test"}.</comment>
+  </data>
+  <data name="ArtifactPostProcessingDispatcherDisplayName" xml:space="preserve">
+    <value>Artifact post-processing dispatcher</value>
+  </data>
+  <data name="ArtifactPostProcessingDispatcherManifestOptionDescription" xml:space="preserve">
+    <value>Path to the artifact post-processing manifest.</value>
+  </data>
+  <data name="ArtifactPostProcessingDispatcherManifestNotFound" xml:space="preserve">
+    <value>The artifact post-processing manifest does not exist.</value>
+  </data>
+  <data name="ArtifactPostProcessingDispatcherInvalidProcessorOutput" xml:space="preserve">
+    <value>The processed artifact must be an existing file under the output directory and cannot overwrite an input artifact.</value>
+  </data>
+  <data name="ArtifactPostProcessingDispatcherProcessorConflict" xml:space="preserve">
+    <value>Multiple artifact post-processors match '{0}'. The first registered processor, '{1}', will be used.</value>
+    <comment>{0} is an artifact kind or file extension. {1} is an extension UID.</comment>
+  </data>
+  <data name="ArtifactPostProcessingDispatcherProcessorFailed" xml:space="preserve">
+    <value>Artifact post-processor '{0}' failed: {1}</value>
+    <comment>{0} is the processor UID. {1} is the exception message.</comment>
+  </data>
+  <data name="ArtifactPostProcessingDispatcherRequiresPipe" xml:space="preserve">
+    <value>The artifact post-processing dispatcher requires a dotnet test pipe.</value>
+    <comment>Do not localize command name {Locked="dotnet test"}.</comment>
+  </data>
+  <data name="ArtifactPostProcessingManifestInputMissingPath" xml:space="preserve">
+    <value>Artifact post-processing manifest input {0} does not have a path.</value>
+    <comment>{0} is the zero-based input index.</comment>
+  </data>
+  <data name="ArtifactPostProcessingManifestInputsMustBeArray" xml:space="preserve">
+    <value>The artifact post-processing manifest inputs property must be an array.</value>
+    <comment>Do not localize property name {Locked="inputs"}.</comment>
+  </data>
+  <data name="ArtifactPostProcessingManifestInvalid" xml:space="preserve">
+    <value>The artifact post-processing manifest must have schemaVersion 1 and an outputDirectory.</value>
+    <comment>Do not localize property names {Locked="schemaVersion"}{Locked="outputDirectory"}.</comment>
+  </data>
+  <data name="ArtifactPostProcessingManifestReadError" xml:space="preserve">
+    <value>Cannot read the artifact post-processing manifest: {0}</value>
+    <comment>{0} is the exception message.</comment>
+  </data>
   <data name="CannotCreateTestExecutionFilterErrorMessage" xml:space="preserve">
     <value>Failed to create a test execution filter</value>
+  </data>
+  <data name="CompositeTestExecutionFilterCannotContainNull" xml:space="preserve">
+    <value>A composite test execution filter cannot contain a null child filter.</value>
+  </data>
+  <data name="CompositeTestExecutionFilterRequiresTwoFilters" xml:space="preserve">
+    <value>A composite test execution filter requires at least two child filters.</value>
+  </data>
+  <data name="TestExecutionFilterProviderNotSupportedForServer" xml:space="preserve">
+    <value>Test execution filter provider '{0}' returned filter type '{1}' for a JSON-RPC server request. Provider constraints are not applied to server requests; return null when TestExecutionFilterContext.Origin is Server.</value>
+    <comment>{0} is the provider UID. {1} is the filter type. {Locked="JSON-RPC"}{Locked="null"}{Locked="TestExecutionFilterContext.Origin"}{Locked="Server"}</comment>
+  </data>
+  <data name="UnsupportedProviderTestExecutionFilter" xml:space="preserve">
+    <value>Test execution filter provider '{0}' returned unsupported filter type '{1}'. Providers can return only NopFilter, TestNodeUidListFilter, TreeNodeFilter, or an And CompositeTestExecutionFilter.</value>
+    <comment>{0} is the provider UID. {1} is the unsupported filter type. {Locked="NopFilter"}{Locked="TestNodeUidListFilter"}{Locked="TreeNodeFilter"}{Locked="And"}{Locked="CompositeTestExecutionFilter"}</comment>
+  </data>
+  <data name="UnsupportedRequestTestExecutionFilter" xml:space="preserve">
+    <value>The request contains unsupported test execution filter type '{0}'.</value>
+    <comment>{0} is the unsupported filter type.</comment>
+  </data>
+  <data name="UnsupportedTestExecutionFilterOperator" xml:space="preserve">
+    <value>Only the And test execution filter operator is supported.</value>
+    <comment>{Locked="And"}</comment>
+  </data>
+  <data name="UnsupportedTestExecutionFilterOperatorValue" xml:space="preserve">
+    <value>Test execution filter operator '{0}' is not supported. Only And is supported.</value>
+    <comment>{0} is the unsupported operator value. {Locked="And"}</comment>
   </data>
   <data name="CompositeServiceFactoryInstanceAlreadyRegistered" xml:space="preserve">
     <value>The same instance of 'CompositeExtensionFactory' is already registered</value>
@@ -323,8 +404,8 @@
     <comment>{0} is the process exit code.</comment>
   </data>
   <data name="CannotCreateUniqueLogFileErrorMessage" xml:space="preserve">
-    <value>Failed to create a unique log file after 3 seconds. Lastly tried file name is '{0}'.</value>
-    <comment>{0} is the last log file name that was tried.</comment>
+    <value>Failed to create the diagnostic log file '{0}' after {1} attempts. Last error: {2}</value>
+    <comment>{0} is the full path of the last log file that was tried. {1} is the number of attempts that were made. {2} is the error message of the last failed attempt.</comment>
   </data>
   <data name="FailedToWriteLogToChannelErrorMessage" xml:space="preserve">
     <value>Failed to write the log to the channel. Missed log content:
@@ -551,6 +632,54 @@ The default is TestResults in the directory that contains the test application.<
   <data name="PlatformCommandLineDotnetTestPipe" xml:space="preserve">
     <value>dotnet test pipe.</value>
     <comment>{Locked="dotnet test"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestTransportOptionDescription" xml:space="preserve">
+    <value>Selects the pre-launch transport for the dotnet test protocol.</value>
+    <comment>{Locked="dotnet test"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestHttpEndpointOptionDescription" xml:space="preserve">
+    <value>Specifies the authenticated HTTP endpoint for the dotnet test protocol.</value>
+    <comment>{Locked="HTTP"}{Locked="dotnet test"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestHttpTokenOptionDescription" xml:space="preserve">
+    <value>Specifies the per-run HTTP bearer token for the dotnet test protocol.</value>
+    <comment>{Locked="HTTP"}{Locked="dotnet test"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestTransportInvalid" xml:space="preserve">
+    <value>'--dotnet-test-transport' received unexpected value '{0}'. Supported values are: {1}.</value>
+    <comment>{0} is the unexpected transport value. {1} is the comma-separated list of supported transport values. {Locked="--dotnet-test-transport"}{Locked="pipe"}{Locked="http"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestHttpEndpointInvalid" xml:space="preserve">
+    <value>'--dotnet-test-http-endpoint' requires an absolute HTTPS URL, or an HTTP loopback URL, without user information, query, or fragment.</value>
+    <comment>{Locked="--dotnet-test-http-endpoint"}{Locked="HTTP"}{Locked="HTTPS"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestHttpTokenInvalid" xml:space="preserve">
+    <value>'--dotnet-test-http-token' requires a non-empty valid bearer token without whitespace or control characters.</value>
+    <comment>{Locked="--dotnet-test-http-token"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestTransportConflict" xml:space="preserve">
+    <value>The dotnet test named-pipe and HTTP transports cannot be selected together.</value>
+    <comment>{Locked="dotnet test"}{Locked="HTTP"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestHttpOptionsRequireTransport" xml:space="preserve">
+    <value>The dotnet test HTTP endpoint and token options require '--dotnet-test-transport http'.</value>
+    <comment>{Locked="dotnet test"}{Locked="HTTP"}{Locked="--dotnet-test-transport http"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestCliRequiresTransport" xml:space="preserve">
+    <value>'--server dotnettestcli' requires either '--dotnet-test-pipe' or '--dotnet-test-transport http'.</value>
+    <comment>{Locked="--server dotnettestcli"}{Locked="--dotnet-test-pipe"}{Locked="--dotnet-test-transport http"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestHttpRequiresEndpointAndToken" xml:space="preserve">
+    <value>'--dotnet-test-transport http' requires both '--dotnet-test-http-endpoint' and '--dotnet-test-http-token'.</value>
+    <comment>{Locked="--dotnet-test-transport http"}{Locked="--dotnet-test-http-endpoint"}{Locked="--dotnet-test-http-token"}</comment>
+  </data>
+  <data name="PlatformCommandLinePipeTransportNotSupportedOnBrowser" xml:space="preserve">
+    <value>The dotnet test named-pipe transport is not supported on browser-wasm. Use '--dotnet-test-transport http'.</value>
+    <comment>{Locked="dotnet test"}{Locked="browser-wasm"}{Locked="--dotnet-test-transport http"}</comment>
+  </data>
+  <data name="PlatformCommandLinePipeTransportNotSupportedOnWasi" xml:space="preserve">
+    <value>The dotnet test named-pipe transport is not supported on wasi-wasm. Use '--dotnet-test-transport http'.</value>
+    <comment>{Locked="dotnet test"}{Locked="wasi-wasm"}{Locked="--dotnet-test-transport http"}</comment>
   </data>
   <data name="TreeNodeFilterDescription" xml:space="preserve">
     <value>Use a tree filter to filter down the tests to execute</value>

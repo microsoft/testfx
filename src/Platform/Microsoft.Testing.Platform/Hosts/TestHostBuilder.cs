@@ -7,9 +7,11 @@ using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
+using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
 using Microsoft.Testing.Platform.TestHost;
@@ -39,17 +41,38 @@ internal sealed partial class TestHostBuilder(IFileSystem fileSystem, IRuntimeFe
 
     public ILoggingManager Logging { get; } = new LoggingManager();
 
-    public ICommandLineManager CommandLine { get; } = new CommandLineManager(runtimeFeature, testApplicationModuleInfo);
+    public ICommandLineManager CommandLine { get; } = CreateCommandLineManager(runtimeFeature, testApplicationModuleInfo);
 
     public ITelemetryManager Telemetry { get; } = new TelemetryManager();
 
     public ITestHostControllersManager TestHostControllers { get; } = new TestHostControllersManager();
 
-    public IToolsManager Tools { get; } = new ToolsManager();
+    public IToolsManager Tools { get; } = CreateToolsManager();
+
+    public IArtifactPostProcessingManager ArtifactPostProcessing { get; } = new ArtifactPostProcessingManager();
 
     private readonly TestHostOrchestratorManager _testHostOrchestratorManager = new Extensions.TestHostOrchestrator.TestHostOrchestratorManager();
 
     public ITestHostOrchestratorManager TestHostOrchestrator => _testHostOrchestratorManager;
+
+    private static CommandLineManager CreateCommandLineManager(IRuntimeFeature runtimeFeature, ITestApplicationModuleInfo testApplicationModuleInfo)
+    {
+        CommandLineManager manager = new(runtimeFeature, testApplicationModuleInfo);
+        manager.AddProvider(() => new ArtifactPostProcessingDispatcherToolCommandLine());
+        return manager;
+    }
+
+    private static ToolsManager CreateToolsManager()
+    {
+        ToolsManager manager = new();
+        manager.AddTool(serviceProvider => new ArtifactPostProcessingDispatcherTool(
+            serviceProvider.GetCommandLineOptions(),
+            [.. serviceProvider.GetServicesInternal<IArtifactPostProcessor>()],
+            serviceProvider.GetServiceInternal<IPushOnlyProtocol>(),
+            serviceProvider.GetEnvironment(),
+            serviceProvider.GetOutputDevice()));
+        return manager;
+    }
 
     public async Task<IHost> BuildAsync(
         ApplicationLoggingState loggingState,

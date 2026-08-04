@@ -138,6 +138,7 @@ internal sealed partial class TerminalOutputDevice
     {
         RoslynDebug.Assert(_terminalTestReporter is not null);
         cancellationToken.ThrowIfCancellationRequested();
+        TerminalTestReporter terminalTestReporter = _terminalTestReporter ?? throw ApplicationStateGuard.Unreachable();
 
         // Under --server (e.g. `dotnet test` with `--server dotnettestcli`) the terminal device does not
         // buffer or render anything: data flows to the SDK through the dotnet-test pipe instead, and the
@@ -170,6 +171,10 @@ internal sealed partial class TerminalOutputDevice
                 StandardOutputProperty? stdoutProp = null;
                 StandardErrorProperty? stderrProp = null;
                 TestNodeStateProperty? nodeState = null;
+                RetryAttemptProperty? retryAttempt = null;
+                AssertionFailureProperty? assertionFailure = null;
+                bool hasAssertionFailure = false;
+                bool executionCompleted = false;
                 PropertyBag.PropertyBagEnumerator enumerator = testNodeStateChanged.TestNode.Properties.GetStructEnumerator();
                 while (enumerator.MoveNext())
                 {
@@ -179,8 +184,18 @@ internal sealed partial class TerminalOutputDevice
                         case StandardOutputProperty so: stdoutProp = so; break;
                         case StandardErrorProperty se: stderrProp = se; break;
                         case TestNodeStateProperty s: nodeState = s; break;
+                        case RetryAttemptProperty ra: retryAttempt = ra; break;
+
+                        // Two competing pairs cannot both be rendered and neither carries a label, so a
+                        // duplicate suppresses the diff instead of picking an arbitrary one. This walk is
+                        // deliberately non-throwing (see above), so it drops the value rather than failing.
+                        case AssertionFailureProperty af:
+                            assertionFailure = hasAssertionFailure ? null : af;
+                            hasAssertionFailure = true;
+                            break;
+                        case TestNodeExecutionCompletedProperty: executionCompleted = true; break;
                         case FileArtifactProperty fa:
-                            _terminalTestReporter.ArtifactAdded(
+                            terminalTestReporter.ArtifactAdded(
                                 outOfProcess: _processRole != TestProcessRole.TestHost,
                                 assembly: _assemblyName,
                                 targetFramework: _targetFramework,
@@ -196,17 +211,25 @@ internal sealed partial class TerminalOutputDevice
                 string? standardOutput = stdoutProp?.StandardOutput;
                 string? standardError = stderrProp?.StandardError;
 
+                if (executionCompleted)
+                {
+                    terminalTestReporter.TestCompletedWithoutResult(
+                        InProcessExecutionId,
+                        testNodeStateChanged.TestNode.Uid.Value);
+                    break;
+                }
+
                 switch (nodeState)
                 {
                     case InProgressTestNodeStateProperty:
-                        _terminalTestReporter.TestInProgress(
+                        terminalTestReporter.TestInProgress(
                             InProcessExecutionId,
                             testNodeStateChanged.TestNode.Uid.Value,
                             testNodeStateChanged.TestNode.DisplayName);
                         break;
 
                     case ErrorTestNodeStateProperty errorState:
-                        _terminalTestReporter.TestCompleted(
+                        terminalTestReporter.TestCompleted(
                             InProcessExecutionId,
                             testNodeStateChanged.TestNode.Uid.Value,
                             testNodeStateChanged.TestNode.DisplayName,
@@ -218,11 +241,12 @@ internal sealed partial class TerminalOutputDevice
                             expected: null,
                             actual: null,
                             standardOutput,
-                            standardError);
+                            standardError,
+                            retryAttempt);
                         break;
 
                     case FailedTestNodeStateProperty failedState:
-                        _terminalTestReporter.TestCompleted(
+                        terminalTestReporter.TestCompleted(
                             InProcessExecutionId,
                             testNodeStateChanged.TestNode.Uid.Value,
                             testNodeStateChanged.TestNode.DisplayName,
@@ -231,14 +255,22 @@ internal sealed partial class TerminalOutputDevice
                             null,
                             failedState.Explanation,
                             failedState.Exception,
-                            expected: failedState.Exception?.Data["assert.expected"] as string,
-                            actual: failedState.Exception?.Data["assert.actual"] as string,
+
+                            // AssertionFailureProperty is the supported channel; Exception.Data is the legacy
+                            // fallback for producers that have not been updated yet. The choice is
+                            // all-or-nothing so the two halves of a diff always come from the same producer.
+                            // Gated on whether a property was seen at all, not on the resolved value: a
+                            // duplicate resolves to null to suppress the diff, and that suppression must not
+                            // fall through to the legacy values.
+                            expected: hasAssertionFailure ? assertionFailure?.Expected : failedState.Exception?.Data["assert.expected"] as string,
+                            actual: hasAssertionFailure ? assertionFailure?.Actual : failedState.Exception?.Data["assert.actual"] as string,
                             standardOutput,
-                            standardError);
+                            standardError,
+                            retryAttempt);
                         break;
 
                     case TimeoutTestNodeStateProperty timeoutState:
-                        _terminalTestReporter.TestCompleted(
+                        terminalTestReporter.TestCompleted(
                             InProcessExecutionId,
                             testNodeStateChanged.TestNode.Uid.Value,
                             testNodeStateChanged.TestNode.DisplayName,
@@ -250,13 +282,14 @@ internal sealed partial class TerminalOutputDevice
                             expected: null,
                             actual: null,
                             standardOutput,
-                            standardError);
+                            standardError,
+                            retryAttempt);
                         break;
 
 #pragma warning disable CS0618, MTP0001 // Type or member is obsolete
                     case CancelledTestNodeStateProperty cancelledState:
 #pragma warning restore CS0618, MTP0001 // Type or member is obsolete
-                        _terminalTestReporter.TestCompleted(
+                        terminalTestReporter.TestCompleted(
                             InProcessExecutionId,
                             testNodeStateChanged.TestNode.Uid.Value,
                             testNodeStateChanged.TestNode.DisplayName,
@@ -268,11 +301,12 @@ internal sealed partial class TerminalOutputDevice
                             expected: null,
                             actual: null,
                             standardOutput,
-                            standardError);
+                            standardError,
+                            retryAttempt);
                         break;
 
                     case PassedTestNodeStateProperty:
-                        _terminalTestReporter.TestCompleted(
+                        terminalTestReporter.TestCompleted(
                             InProcessExecutionId,
                             testNodeStateChanged.TestNode.Uid.Value,
                             testNodeStateChanged.TestNode.DisplayName,
@@ -284,11 +318,12 @@ internal sealed partial class TerminalOutputDevice
                             expected: null,
                             actual: null,
                             standardOutput,
-                            standardError);
+                            standardError,
+                            retryAttempt);
                         break;
 
                     case SkippedTestNodeStateProperty skippedState:
-                        _terminalTestReporter.TestCompleted(
+                        terminalTestReporter.TestCompleted(
                             InProcessExecutionId,
                             testNodeStateChanged.TestNode.Uid.Value,
                             testNodeStateChanged.TestNode.DisplayName,
@@ -300,11 +335,12 @@ internal sealed partial class TerminalOutputDevice
                             expected: null,
                             actual: null,
                             standardOutput,
-                            standardError);
+                            standardError,
+                            retryAttempt);
                         break;
 
                     case DiscoveredTestNodeStateProperty:
-                        _terminalTestReporter.TestDiscovered(InProcessExecutionId, testNodeStateChanged.TestNode.DisplayName);
+                        terminalTestReporter.TestDiscovered(InProcessExecutionId, testNodeStateChanged.TestNode.DisplayName);
                         break;
                 }
 
@@ -312,7 +348,7 @@ internal sealed partial class TerminalOutputDevice
 
             case SessionFileArtifact artifact:
                 {
-                    _terminalTestReporter.ArtifactAdded(
+                    terminalTestReporter.ArtifactAdded(
                         outOfProcess: _processRole != TestProcessRole.TestHost,
                         assembly: _assemblyName,
                         targetFramework: _targetFramework,
@@ -325,7 +361,7 @@ internal sealed partial class TerminalOutputDevice
                 break;
             case FileArtifact artifact:
                 {
-                    _terminalTestReporter.ArtifactAdded(
+                    terminalTestReporter.ArtifactAdded(
                         outOfProcess: _processRole != TestProcessRole.TestHost,
                         assembly: _assemblyName,
                         targetFramework: _targetFramework,

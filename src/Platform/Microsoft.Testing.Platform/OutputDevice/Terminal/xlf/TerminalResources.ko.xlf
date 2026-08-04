@@ -22,10 +22,160 @@
         <target state="translated">테스트 세션을 취소하는 중...</target>
         <note />
       </trans-unit>
+      <trans-unit id="CodeCoverageSummary">
+        <source>Code Coverage Summary:</source>
+        <target state="translated">코드 검사 요약:</target>
+        <note>Heading printed before the per-scope code coverage percentages in the run summary.</note>
+      </trans-unit>
       <trans-unit id="ConsoleIsAlreadyInBatchingMode">
         <source>Console is already in batching mode.</source>
         <target state="translated">콘솔이 이미 일괄 처리 모드에 있습니다.</target>
         <note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</note>
+      </trans-unit>
+      <trans-unit id="CoverageAggregationAverage">
+        <source>Average</source>
+        <target state="translated">평균</target>
+        <note>Label for the average-across-scopes statistic used in a coverage threshold comparison (e.g. 'Line (Average): ...').</note>
+      </trans-unit>
+      <trans-unit id="CoverageAggregationMaximum">
+        <source>Maximum</source>
+        <target state="translated">최대값</target>
+        <note>Label for the maximum-across-scopes statistic used in a coverage threshold comparison (e.g. 'Line (Maximum): ...').</note>
+      </trans-unit>
+      <trans-unit id="CoverageAggregationMinimum">
+        <source>Minimum</source>
+        <target state="translated">최소값</target>
+        <note>Label for the minimum-across-scopes statistic used in a coverage threshold comparison (e.g. 'Line (Minimum): ...').</note>
+      </trans-unit>
+      <trans-unit id="CoverageAggregationOver">
+        <source>{0} over {1}</source>
+        <target state="translated">{1} 이상의 {0}</target>
+        <note>Coverage threshold aggregation description. {0} is the aggregation label and {1} is the population scope level.</note>
+      </trans-unit>
+      <trans-unit id="CoverageAggregationTotal">
+        <source>Total</source>
+        <target state="translated">합계</target>
+        <note>Label for the total (aggregate) statistic used in a coverage threshold comparison (e.g. 'Line (Total): ...').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricBlock">
+        <source>Block</source>
+        <target state="translated">블록</target>
+        <note>Label for block code coverage in the coverage summary (e.g. 'Total - Block: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricBranch">
+        <source>Branch</source>
+        <target state="translated">분기</target>
+        <note>Label for branch code coverage in the coverage summary (e.g. 'Total - Branch: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricClass">
+        <source>Class</source>
+        <target state="translated">클래스</target>
+        <note>Label for class code coverage in the coverage summary (e.g. 'Total - Class: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricComplexity">
+        <source>Complexity</source>
+        <target state="translated">복잡성</target>
+        <note>Label for cyclomatic complexity in the coverage summary (e.g. 'Total - Complexity: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricCondition">
+        <source>Condition</source>
+        <target state="translated">조건</target>
+        <note>Label for condition code coverage in the coverage summary (e.g. 'Total - Condition: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricFunction">
+        <source>Function</source>
+        <target state="translated">함수</target>
+        <note>Label for function code coverage in the coverage summary (e.g. 'Total - Function: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricInstruction">
+        <source>Instruction</source>
+        <target state="translated">지침</target>
+        <note>Label for instruction code coverage in the coverage summary (e.g. 'Total - Instruction: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricLine">
+        <source>Line</source>
+        <target state="translated">선</target>
+        <note>Label for line code coverage in the coverage summary (e.g. 'Total - Line: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricMethod">
+        <source>Method</source>
+        <target state="translated">메서드</target>
+        <note>Label for method code coverage in the coverage summary (e.g. 'Total - Method: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricRegion">
+        <source>Region</source>
+        <target state="translated">지역</target>
+        <note>Label for region code coverage in the coverage summary (e.g. 'Total - Region: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricStatement">
+        <source>Statement</source>
+        <target state="translated">문</target>
+        <note>Label for statement code coverage in the coverage summary (e.g. 'Total - Statement: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageMetricWithProducer">
+        <source>{0} [{1}]</source>
+        <target state="translated">{0} [{1}]</target>
+        <note>Disambiguates duplicate coverage metric rows. {0} is the metric label and {1} is the coverage producer id.</note>
+      </trans-unit>
+      <trans-unit id="CoverageNoData">
+        <source>N/A</source>
+        <target state="translated">해당 없음</target>
+        <note>Placeholder shown instead of a percentage when a coverage metric has no coverable data.</note>
+      </trans-unit>
+      <trans-unit id="CoverageScopeAssembly">
+        <source>Assembly</source>
+        <target state="translated">어셈블리</target>
+        <note>Label for the assembly scope level in coverage threshold aggregation descriptions.</note>
+      </trans-unit>
+      <trans-unit id="CoverageScopeFile">
+        <source>File</source>
+        <target state="translated">파일</target>
+        <note>Label for the file scope level in coverage threshold aggregation descriptions.</note>
+      </trans-unit>
+      <trans-unit id="CoverageScopeModule">
+        <source>Module</source>
+        <target state="translated">모듈</target>
+        <note>Label for the module scope level in coverage threshold aggregation descriptions.</note>
+      </trans-unit>
+      <trans-unit id="CoverageScopeNamespace">
+        <source>Namespace</source>
+        <target state="translated">네임스페이스</target>
+        <note>Label for the namespace scope level in coverage threshold aggregation descriptions.</note>
+      </trans-unit>
+      <trans-unit id="CoverageScopeOverall">
+        <source>Total</source>
+        <target state="translated">합계</target>
+        <note>Label for the whole-run (overall) scope in the coverage summary (e.g. 'Total - Line: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageScopeType">
+        <source>Type</source>
+        <target state="translated">형식</target>
+        <note>Label for the type scope level in coverage threshold aggregation descriptions.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdFailed">
+        <source>{0}% &lt; {1}% threshold</source>
+        <target state="translated">{0}% &lt; {1}% 임계값</target>
+        <note>Coverage threshold comparison shown when the threshold is not met. {0} is the actual coverage percentage, {1} is the threshold percentage.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdNoDataFailed">
+        <source>No coverable data (failed by policy)</source>
+        <target state="translated">적용 가능한 데이터 없음(정책에 따라 실패)</target>
+        <note>Coverage threshold result shown when a scope has no coverable data and the configured policy treats that as a failure.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdNoDataPassed">
+        <source>No coverable data (passed by policy)</source>
+        <target state="translated">적용 가능한 데이터 없음(정책에 따라 통과)</target>
+        <note>Coverage threshold result shown when a scope has no coverable data and the configured policy treats that as a pass.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdPassed">
+        <source>{0}% &gt;= {1}% threshold</source>
+        <target state="translated">{0}% &gt;= {1}% 임계값</target>
+        <note>Coverage threshold comparison shown when the threshold is met. {0} is the actual coverage percentage, {1} is the threshold percentage.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdResults">
+        <source>Coverage Threshold Results:</source>
+        <target state="translated">적용 범위 임계값 결과:</target>
+        <note>Heading printed before the coverage threshold pass/fail comparisons in the run summary.</note>
       </trans-unit>
       <trans-unit id="DiscoveredTestsInAssembly">
         <source>Discovered {0} tests in assembly</source>
@@ -87,6 +237,26 @@
         <target state="translated">{0} 오류로 실패</target>
         <note>{0} is the number of errors in an assembly summary line</note>
       </trans-unit>
+      <trans-unit id="FlakyAttempts">
+        <source>{0} attempts</source>
+        <target state="translated">{0} 시도</target>
+        <note>{0} is the total number of times the test ran (first run plus retries), shown next to a flaky test's name.</note>
+      </trans-unit>
+      <trans-unit id="FlakyLowercase">
+        <source>flaky: {0} (passed after retry)</source>
+        <target state="translated">불안정: {0}(다시 시도 후 통과)</target>
+        <note>{0} is the number of tests that failed at least once but eventually passed. Rendered in the run summary after the 'skipped' line. The parenthetical is important: it states that these tests are already included in the 'succeeded' count rather than forming a fourth outcome category alongside failed/succeeded/skipped.</note>
+      </trans-unit>
+      <trans-unit id="FlakyTests">
+        <source>Flaky tests:</source>
+        <target state="translated">불안정한 테스트:</target>
+        <note>Header of the run summary section that lists tests which failed at least once but eventually passed after a retry.</note>
+      </trans-unit>
+      <trans-unit id="FlakyTransition">
+        <source>failed -&gt; passed</source>
+        <target state="translated">실패 -&gt; 통과</target>
+        <note>Describes the outcome change of a flaky test, shown next to its name in the 'Flaky tests:' section. The arrow reads left (first outcome) to right (final outcome).</note>
+      </trans-unit>
       <trans-unit id="ForTest">
         <source>For test</source>
         <target state="translated">테스트용</target>
@@ -140,7 +310,12 @@
       <trans-unit id="Retried">
         <source>retried</source>
         <target state="translated">다시 시도됨</target>
-        <note>Suffix appended to the total test count in the run summary to indicate how many failed tests were retried, e.g. 'total: 5 (+2 retried)'.</note>
+        <note>Label of the run summary line counting distinct tests that ran more than once because of a retry, e.g. 'retried: 2 tests, 4 extra runs'. Keep parallel to the 'failed'/'succeeded'/'skipped' labels.</note>
+      </trans-unit>
+      <trans-unit id="RetriedTestsAndRuns">
+        <source>{0} test(s), {1} extra run(s)</source>
+        <target state="translated">{0} 테스트, {1} 추가 실행</target>
+        <note>{0} is the number of distinct tests that were retried. {1} is the number of additional executions those retries caused. Rendered after the 'retried:' label. The '(s)' suffix follows the existing convention used elsewhere in the platform for counts that may be one.</note>
       </trans-unit>
       <trans-unit id="RunningTestsFrom">
         <source>Running tests from</source>
@@ -250,6 +425,20 @@ This option takes precedence over the deprecated --no-progress flag.</target>
         <source>[slow] still running after {0}: {1}</source>
         <target state="translated">[slow] {0} 이후에도 여전히 실행 중: {1}</target>
         <note>Line emitted on non-cursor terminals when a single test runs longer than the slow-test threshold. {0} is the elapsed duration, {1} is the test description. {Locked="[slow]"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowFlakyTestsOptionDescription">
+        <source>Control whether tests that failed at least once but eventually passed after a retry are listed in the run summary.
+Valid values are 'on' (the default, also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+Passing the option without a value turns it on.</source>
+        <target state="new">Control whether tests that failed at least once but eventually passed after a retry are listed in the run summary.
+Valid values are 'on' (the default, also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+Passing the option without a value turns it on.</target>
+        <note>Do not localize the values {Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}.</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowFlakyTestsOptionInvalidArgument">
+        <source>--show-flaky-tests expects no parameter, or a single 'on' or 'off' parameter.</source>
+        <target state="translated">--show-flaky-tests는 매개 변수를 받지 않거나 'on' 또는 'off' 매개 변수 중 하나만 사용할 수 있습니다.</target>
+        <note>{Locked="--show-flaky-tests"}{Locked="on"}{Locked="off"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowOutputOptionInvalidArgument">
         <source>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</source>

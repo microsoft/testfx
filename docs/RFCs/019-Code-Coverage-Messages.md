@@ -427,9 +427,10 @@ public sealed class TestCoverageThresholdMessage : DataWithSessionUid
             throw new ArgumentException("A non-aggregate evaluation must not specify a population.", nameof(aggregatedOver));
         }
 
-        if (aggregation is not CoverageAggregation.None && aggregatedOver is null)
+        if (aggregation is not CoverageAggregation.None
+            && aggregatedOver is null or CoverageScopeLevel.Overall)
         {
-            throw new ArgumentException("An aggregate evaluation must specify the aggregated population.", nameof(aggregatedOver));
+            throw new ArgumentException("An aggregate evaluation must specify a non-overall aggregated population.", nameof(aggregatedOver));
         }
 
         Scope = scope;
@@ -575,8 +576,8 @@ namespace Microsoft.Testing.Platform.Services;
 /// <summary>Correlated, session-scoped view of all coverage data for consumers.</summary>
 public interface ITestCoverageResult
 {
-    /// <summary>Overall (whole-run) summary, if reported.</summary>
-    CoverageScopeSummary? Overall { get; }
+    /// <summary>Overall (whole-run) summary for a session, if reported.</summary>
+    CoverageScopeSummary? GetOverall(SessionUid sessionUid);
 
     /// <summary>Per-scope summaries with all metrics correlated per scope.</summary>
     IReadOnlyList<CoverageScopeSummary> Scopes { get; }
@@ -591,16 +592,38 @@ public interface ITestCoverageResult
     bool HasThresholdFailure { get; }
 }
 
+/// <summary>
+/// Describes coverage-message support and the enabled producers in the current test application.
+/// </summary>
+public interface ITestCoverageCapabilities
+{
+    /// <summary>Whether this platform supports the first-class coverage message contract.</summary>
+    bool SupportsTestCoverageMessages { get; }
+
+    /// <summary>
+    /// UIDs of enabled data producers that declare at least one coverage message type. This is a
+    /// live application capability; query it from a session lifecycle callback after extensions
+    /// have been constructed, not from an extension factory or constructor.
+    /// </summary>
+    IReadOnlyCollection<string> EnabledProducerUids { get; }
+}
+
 public sealed class CoverageScopeSummary
 {
     // Public so third-party report generators can construct snapshots in their own unit tests
     // and build fakes of ITestCoverageResult without reflection. Get-only properties still
     // prevent mutation after construction.
-    public CoverageScopeSummary(CoverageScope scope, IReadOnlyList<CoverageMetricResult> metrics)
+    public CoverageScopeSummary(
+        SessionUid sessionUid,
+        CoverageScope scope,
+        IReadOnlyList<CoverageMetricResult> metrics)
     {
+        SessionUid = sessionUid;
         Scope = scope;
-        Metrics = metrics ?? throw new ArgumentNullException(nameof(metrics));
+        Metrics = Array.AsReadOnly((metrics ?? throw new ArgumentNullException(nameof(metrics))).ToArray());
     }
+
+    public SessionUid SessionUid { get; }
 
     public CoverageScope Scope { get; }
 
@@ -635,7 +658,10 @@ public sealed class CoverageScopeSummary
         }
     }
 
-    /// <summary>Looks up a custom (proprietary) metric by its name; null if absent.</summary>
+    /// <summary>
+    /// Looks up a custom metric by name. If multiple producers report the same name, returns the
+    /// first in stable first-seen order; use Metrics to disambiguate by ProducerId.
+    /// </summary>
     public CoverageMetricResult? GetCustom(string customMetricName)
     {
         foreach (CoverageMetricResult result in Metrics)
@@ -686,16 +712,20 @@ public sealed class CoverageMetricResult
 public sealed class CoverageReportReference
 {
     public CoverageReportReference(
+        SessionUid sessionUid,
         string path,
         CoverageReportFormat format,
         string producerId,
         string? customFormatName = null)
     {
+        SessionUid = sessionUid;
         Path = path;
         Format = format;
         ProducerId = producerId;
         CustomFormatName = customFormatName;
     }
+
+    public SessionUid SessionUid { get; }
 
     public string Path { get; }
 
@@ -759,29 +789,56 @@ internal sealed class HtmlCoverageReportGenerator(ITestCoverageResult coverage)
 ## Correlation key
 
 The read model correlates messages into `CoverageScopeSummary` / threshold / report entries
-using the **full** key, not just `(scope, metric)`:
+using the **full** key for each entry type:
 
 ```text
-(SessionUid, ProducerId, Scope, Metric, CustomMetricName when Metric == Custom)
+Measurement:
+(SessionUid, ProducerId, Scope.Level, Scope.Name, Metric, CustomMetricName when Metric == Custom)
+
+Threshold:
+(SessionUid, ProducerId, Scope.Level, Scope.Name, Metric, CustomMetricName when Metric == Custom,
+ Aggregation, AggregatedOver)
+
+Report:
+(SessionUid, ProducerId, Path)
 ```
 
 - **`SessionUid`** and **`ProducerId`** are included so a multi-session host and multiple
   concurrent collectors never collapse into each other.
+- **`Scope.Level`** and **`Scope.Name`** identify the measured or evaluated scope. Report
+  references use their artifact **`Path`** instead because they have no scope or metric.
 - **`CustomMetricName`** is part of the key whenever `Metric == Custom`. Without it, two
   producers each reporting a different proprietary metric (e.g. MC/DC vs. a vendor metric) would
   both key as `Custom` and overwrite one another.
+- Threshold keys additionally include **`Aggregation`** and **`AggregatedOver`**, so distinct
+  threshold evaluations for the same scope and metric do not overwrite one another.
+- The public `CoverageScopeSummary` and `CoverageReportReference` projections retain
+  `SessionUid`, so entries from different sessions remain attributable after correlation.
 - **Duplicate full keys:** if the same full key is published more than once in a session, the
   **last write wins** and the correlator logs a diagnostic. Collectors are expected to emit one
-  final measurement per key; re-emission is treated as a correction, not an aggregation.
+  final measurement, threshold evaluation, or report per key; re-emission is treated as a
+  correction, not an aggregation.
 
 ## Platform wiring
 
 - Register a single `TestCoverageResult : ITestCoverageResult, IDataConsumer` as a common
   service + consumer in both the framework and test-host-controller pipelines. It is the single
   source of truth; the terminal reads from it rather than maintaining its own coverage lists.
+- Register `ITestCoverageCapabilities` as a public service for extensions. It advertises protocol
+  support and snapshots the UIDs of enabled `IDataProducer` extensions whose
+  `DataTypesProduced` include a coverage measurement, threshold, or report message. A report
+  generator can query this during a session lifecycle callback and warn when no other producer is
+  enabled.
+- Remote negotiation advertises protocol support separately from producer availability:
+  - the JSON-RPC initialize response includes
+    `testing.supportsTestCoverageMessages`.
+  Producer UIDs are intentionally not negotiated because framework and per-session extensions may
+  not have been instantiated when the pipe handshake or JSON-RPC initialize request occurs.
 - `TerminalOutputDevice` consumes `ITestCoverageResult` at session end and renders via
   `TerminalTestReporter.AppendCoverageSummary`, using **localized** `TerminalResources` strings
-  and `CultureInfo.InvariantCulture` numeric formatting.
+  and `CultureInfo.InvariantCulture` numeric formatting. The terminal summary renders only
+  `Overall` and `Module` measurements to keep CI output bounded; detailed namespace/type/file
+  measurements remain available through `ITestCoverageResult`.
 - New exit code `CoverageThresholdFailed = 14`, returned from `ConsoleTestHost` and
   `TestHostControllersTestHost` when `HasThresholdFailure` is true and the run would otherwise
   succeed. The check is extracted into a shared helper to avoid the duplication present in the

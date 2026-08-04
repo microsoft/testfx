@@ -127,6 +127,90 @@ module MicrosoftTestingPlatformEntryPoint =
         |> Async.AwaitTask
         |> Async.RunSynchronously'", "Fsc");
 
+    [TestMethod]
+    public async Task GeneratedSourcesAreRegeneratedWhenMSBuildTaskChanges()
+    {
+        string sourceCode = CSharpSourceCode
+            .PatchCodeWithReplace("$TargetFrameworks$", TargetFrameworks.NetCurrent)
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion);
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(nameof(GeneratedSourcesAreRegeneratedWhenMSBuildTaskChanges), sourceCode);
+
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
+            $"build -c {BuildConfiguration.Debug} {testAsset.TargetAssetPath} -v:n -nr:false",
+            cancellationToken: TestContext.CancellationToken);
+        SL.Build binLog = SL.Serialization.Read(buildResult.BinlogPath!);
+        string taskAssembly = binLog.FindChildrenRecursive<SL.Task>()
+            .Single(t => t.Name == "TestingPlatformEntryPointTask")
+            .FromAssembly;
+
+        using TempDirectory taskDirectory = new();
+        taskDirectory.CopyDirectory(Path.GetDirectoryName(taskAssembly)!, taskDirectory.Path);
+        string copiedTaskAssembly = Path.Combine(taskDirectory.Path, Path.GetFileName(taskAssembly));
+        File.SetAttributes(copiedTaskAssembly, FileAttributes.Normal);
+        string taskFolderProperty = $"-p:MicrosoftTestingPlatformMSBuildTaskFolder={taskDirectory.Path}{Path.DirectorySeparatorChar}";
+
+        Directory.Delete(Path.Combine(testAsset.TargetAssetPath, "obj"), recursive: true);
+        buildResult = await DotnetCli.RunAsync(
+            $"build -c {BuildConfiguration.Debug} {taskFolderProperty} {testAsset.TargetAssetPath} -v:n -nr:false",
+            cancellationToken: TestContext.CancellationToken);
+        binLog = SL.Serialization.Read(buildResult.BinlogPath!);
+
+        Assert.HasCount(1, binLog.FindChildrenRecursive<SL.Task>().Where(t => t.Name == "TestingPlatformEntryPointTask"));
+        Assert.HasCount(1, binLog.FindChildrenRecursive<SL.Task>().Where(t => t.Name == "TestingPlatformSelfRegisteredExtensions"));
+
+        await using (FileStream stream = new(copiedTaskAssembly, FileMode.Append, FileAccess.Write, FileShare.None))
+        {
+            stream.WriteByte(0);
+        }
+
+        buildResult = await DotnetCli.RunAsync(
+            $"build -c {BuildConfiguration.Debug} {taskFolderProperty} {testAsset.TargetAssetPath} -v:n -nr:false",
+            cancellationToken: TestContext.CancellationToken);
+        binLog = SL.Serialization.Read(buildResult.BinlogPath!);
+
+        Assert.HasCount(1, binLog.FindChildrenRecursive<SL.Task>().Where(t => t.Name == "TestingPlatformEntryPointTask"));
+        Assert.HasCount(1, binLog.FindChildrenRecursive<SL.Task>().Where(t => t.Name == "TestingPlatformSelfRegisteredExtensions"));
+
+        buildResult = await DotnetCli.RunAsync(
+            $"build -c {BuildConfiguration.Debug} {taskFolderProperty} {testAsset.TargetAssetPath} -v:n -nr:false",
+            cancellationToken: TestContext.CancellationToken);
+        binLog = SL.Serialization.Read(buildResult.BinlogPath!);
+
+        Assert.IsEmpty(binLog.FindChildrenRecursive<SL.Task>().Where(t => t.Name == "TestingPlatformEntryPointTask"));
+        Assert.IsEmpty(binLog.FindChildrenRecursive<SL.Task>().Where(t => t.Name == "TestingPlatformSelfRegisteredExtensions"));
+        AssertTargetSkippedAsUpToDate(binLog, "_GenerateTestingPlatformEntryPoint");
+        AssertTargetSkippedAsUpToDate(binLog, "_GenerateSelfRegisteredExtensions");
+
+        Directory.Delete(Path.Combine(testAsset.TargetAssetPath, "obj"), recursive: true);
+        string selfRegistrationOnlyProperties = $"{taskFolderProperty} -p:GenerateTestingPlatformEntryPoint=false -p:OutputType=Library";
+        await DotnetCli.RunAsync(
+            $"build -c {BuildConfiguration.Debug} {selfRegistrationOnlyProperties} {testAsset.TargetAssetPath} -v:n -nr:false",
+            cancellationToken: TestContext.CancellationToken);
+
+        await using (FileStream stream = new(copiedTaskAssembly, FileMode.Append, FileAccess.Write, FileShare.None))
+        {
+            stream.WriteByte(0);
+        }
+
+        buildResult = await DotnetCli.RunAsync(
+            $"build -c {BuildConfiguration.Debug} {selfRegistrationOnlyProperties} {testAsset.TargetAssetPath} -v:n -nr:false",
+            cancellationToken: TestContext.CancellationToken);
+        binLog = SL.Serialization.Read(buildResult.BinlogPath!);
+
+        Assert.IsEmpty(binLog.FindChildrenRecursive<SL.Task>().Where(t => t.Name == "TestingPlatformEntryPointTask"));
+        Assert.HasCount(1, binLog.FindChildrenRecursive<SL.Task>().Where(t => t.Name == "TestingPlatformSelfRegisteredExtensions"));
+    }
+
+    private static void AssertTargetSkippedAsUpToDate(SL.Build binLog, string targetName)
+    {
+        SL.Target target = binLog.FindChildrenRecursive<SL.Target>().Single(t => t.Name == targetName && t.Children.Count > 0);
+        Assert.HasCount(
+            1,
+            target.FindChildrenRecursive<SL.Message>().Where(m => m.Text.Contains(
+                $"Skipping target \"{targetName}\" because all output files are up-to-date with respect to the input files.",
+                StringComparison.OrdinalIgnoreCase)));
+    }
+
     private async Task GenerateAndVerifyLanguageSpecificEntryPointAsync(string assetName, string sourceCode, string languageFileExtension, string tfm,
         BuildConfiguration compilationMode, Verb verb, string expectedEntryPoint, string cscProcessName)
     {

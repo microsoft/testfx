@@ -24,12 +24,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     IDisposable,
     IAsyncInitializableExtension
 {
-#pragma warning disable SA1310 // Field names should not contain underscore
-    // Opt-in knobs (env vars only) for the silence-driven heartbeat renderer used in non-cursor modes.
-    private const string MTP_PROGRESS_SILENCE_SECONDS = nameof(MTP_PROGRESS_SILENCE_SECONDS);
-    private const string MTP_PROGRESS_SLOW_TEST_SECONDS = nameof(MTP_PROGRESS_SLOW_TEST_SECONDS);
-#pragma warning restore SA1310 // Field names should not contain underscore
-
     private const char Dash = '-';
 
     // Guards the one-per-process deprecation warning emitted when the legacy --no-progress flag is used.
@@ -64,6 +58,11 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     private readonly List<TestNode> _discoveredTestsForJson = [];
     private readonly Dictionary<ProgressMessageIdentity, string> _jsonProgressMessages = [];
 
+    // The single accumulator for coverage data (shared with the exit-code checks in the hosts). The
+    // terminal device renders from this at session end instead of buffering its own copy, so the two
+    // consumers can't drift apart.
+    private readonly ITestCoverageResult _testCoverageResult;
+
     private TerminalTestReporter? _terminalTestReporter;
     private bool _bannerDisplayed;
     private bool _isListTests;
@@ -83,7 +82,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         ITestApplicationModuleInfo testApplicationModuleInfo, ITestHostControllerInfo testHostControllerInfo, IAsyncMonitor asyncMonitor,
         IRuntimeFeature runtimeFeature, IEnvironment environment, IPlatformInformation platformInformation,
         ICommandLineOptions commandLineOptions, IFileLoggerInformation? fileLoggerInformation, ILoggerFactory loggerFactory, IClock clock,
-        IStopPoliciesService policiesService, ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource)
+        IStopPoliciesService policiesService, ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource, ITestCoverageResult testCoverageResult)
     {
         _console = console;
         _testHostControllerInfo = testHostControllerInfo;
@@ -97,6 +96,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         _clock = clock;
         _policiesService = policiesService;
         _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
+        _testCoverageResult = testCoverageResult;
 
         if (_runtimeFeature.IsDynamicCodeSupported)
         {

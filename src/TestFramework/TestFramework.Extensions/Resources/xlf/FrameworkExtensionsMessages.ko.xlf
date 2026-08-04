@@ -12,6 +12,21 @@
         <target state="translated">UITestMethodAttribute.DispatcherQueue는 null이 아니어야 합니다. WinUI 데스크톱 앱 내에서 UITestMethodAttribute를 사용하려면 테스트 초기화 중에 정적 UITestMethodAttribute.DispatcherQueue를 설정해야 합니다.</target>
         <note>Do not localize API names {Locked="UITestMethodAttribute.DispatcherQueue"}{Locked="UITestMethodAttribute"}, the product name {Locked="WinUI"}, or the C# keyword {Locked="null"}.</note>
       </trans-unit>
+      <trans-unit id="WinUIApplicationFailedToStart">
+        <source>The WinUI application under test exited without initializing. When running unpackaged, this usually means the Windows App SDK runtime could not be resolved for the process.</source>
+        <target state="translated">테스트 중인 WinUI 애플리케이션이 초기화되지 않은 상태로 종료되었습니다. 패키지되지 않은 상태로 실행하는 경우 일반적으로 프로세스에서 Windows App SDK 런타임을 확인할 수 없음을 의미합니다.</target>
+        <note>Do not localize the product names {Locked="WinUI"}{Locked="Windows App SDK"}.</note>
+      </trans-unit>
+      <trans-unit id="WinUIApplicationInitializationAlreadyFailed">
+        <source>The WinUI application under test failed to initialize earlier in this run, and Application.Start cannot be retried in the same process. The original failure was: {0}</source>
+        <target state="translated">테스트 중인 WinUI 애플리케이션이 이 실행의 초반에 초기화하지 못했으며 동일한 프로세스에서 Application.Start를 다시 시도할 수 없습니다. 원래 실패 내용은 다음과 같습니다. {0}</target>
+        <note>Do not localize the product name {Locked="WinUI"} or the API name {Locked="Application.Start"}. {0} is the message of the original failure.</note>
+      </trans-unit>
+      <trans-unit id="WinUIApplicationStartupTimedOut">
+        <source>The WinUI application under test did not finish initializing within {0}. Application.Start was called but its initialization did not complete.</source>
+        <target state="translated">테스트 중인 WinUI 애플리케이션이 {0} 내에서 초기화를 완료하지 못했습니다. Application.Start가 호출되었지만 초기화가 완료되지 않았습니다.</target>
+        <note>Do not localize the product name {Locked="WinUI"} or the API name {Locked="Application.Start"}. {0} is a timeout duration.</note>
+      </trans-unit>
     </body>
   </file>
 </xliff>

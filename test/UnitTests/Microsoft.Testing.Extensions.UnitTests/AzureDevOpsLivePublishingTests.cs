@@ -1,9 +1,10 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
+using System.Security;
 using System.Text;
 using System.Text.Json;
 
@@ -14,8 +15,10 @@ using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
 
@@ -55,7 +58,8 @@ public sealed class AzureDevOpsLivePublishingTests
     public async Task OnTestSessionStartingAsync_JsonExceptionLogsWarningAndDoesNotThrow()
     {
         using TestDirectory directory = CreateTestDirectory();
-        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(2, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out _, out CollectingLogger logger);
+        CollectingOutputDevice outputDevice = new();
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(2, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out _, out CollectingLogger logger, outputDevice: outputDevice);
         client.CreateTestRunAsyncFunc = (_, _) => Task.FromException<int>(new JsonException("broken payload"));
 
         Assert.IsTrue(await publisher.IsEnabledAsync());
@@ -63,6 +67,108 @@ public sealed class AzureDevOpsLivePublishingTests
 
         Assert.IsNull(publisher.RunId);
         Assert.Contains(AzureDevOpsResources.AzureDevOpsLivePublishingCreateRunFailed, string.Join(Environment.NewLine, logger.Logs));
+        Assert.Contains(AzureDevOpsResources.AzureDevOpsLivePublishingCreateRunFailed, string.Join(Environment.NewLine, outputDevice.Lines));
+    }
+
+    // Regression test for https://github.com/microsoft/testfx/issues/10191: the platform disposes an
+    // extension more than once during teardown, and a non-idempotent Dispose crashed the test host
+    // with ObjectDisposedException after all tests had passed.
+    [TestMethod]
+    public async Task Dispose_CalledTwiceAfterSession_DoesNotThrow()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(2, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out _, out _);
+        client.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(77);
+
+        await StartPublisherAsync(publisher);
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        publisher.Dispose();
+        publisher.Dispose();
+    }
+
+    [TestMethod]
+    public async Task OnTestSessionStartingAsync_MissingConfiguration_StaysEnabledAndWarnsOnOutputDevice()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMock(processId: GetAliveProcessId());
+        environment.Setup(x => x.GetEnvironmentVariable("SYSTEM_ACCESSTOKEN")).Returns((string?)null);
+        CollectingOutputDevice outputDevice = new();
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: AzureDevOpsTestResultsPublisherOptions.Default, out FakeAzureDevOpsTestResultsClient client, out _, out CollectingLogger logger, environment: environment, outputDevice: outputDevice);
+
+        Assert.IsTrue(await publisher.IsEnabledAsync());
+        await publisher.OnTestSessionStartingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.IsNull(publisher.RunId);
+        Assert.IsEmpty(client.CreateTestRunCalls);
+        Assert.HasCount(1, outputDevice.Lines);
+        Assert.Contains("SYSTEM_ACCESSTOKEN", outputDevice.Lines[0]);
+        Assert.Contains("SYSTEM_ACCESSTOKEN", string.Join(Environment.NewLine, logger.Logs));
+    }
+
+    // Because IsEnabledAsync now stays true regardless of configuration, the platform registers the
+    // publisher as a data consumer and lifetime handler even when it is inert. Those entry points must
+    // therefore be safe no-ops, which they were never exercised for before.
+    [TestMethod]
+    public async Task MissingConfiguration_ConsumeFinishAndDispose_AreSafeNoOps()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMock(processId: GetAliveProcessId());
+        environment.Setup(x => x.GetEnvironmentVariable("SYSTEM_ACCESSTOKEN")).Returns((string?)null);
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: AzureDevOpsTestResultsPublisherOptions.Default, out FakeAzureDevOpsTestResultsClient client, out FakeClock clock, out _, environment: environment);
+
+        Assert.IsTrue(await publisher.IsEnabledAsync());
+        await publisher.OnTestSessionStartingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        TestNode node = CreateNode("test-1", new PassedTestNodeStateProperty(), clock.UtcNow);
+        await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), CreateMessage(node), CancellationToken.None);
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        publisher.Dispose();
+        publisher.Dispose();
+
+        Assert.IsNull(publisher.RunId);
+        Assert.IsEmpty(client.CreateTestRunCalls);
+        Assert.IsEmpty(client.UpdateTestRunStateCalls);
+        Assert.IsEmpty(client.UploadTestResultAttachmentCalls);
+    }
+
+    // A run left in "InProgress" does not show up in the Azure DevOps Tests tab, so a finalization
+    // failure must be reported on the output device rather than only in the diagnostic log.
+    [TestMethod]
+    public async Task OnTestSessionFinishingAsync_FinalizeFailure_WarnsRunMayNotAppearOnOutputDevice()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        CollectingOutputDevice outputDevice = new();
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(2, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out _, out _, outputDevice: outputDevice);
+        client.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(91);
+        client.UpdateTestRunStateAsyncFunc = (_, _, _, _) => throw new HttpRequestException("boom");
+
+        await StartPublisherAsync(publisher);
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        string output = string.Join(Environment.NewLine, outputDevice.Lines);
+        Assert.Contains(AzureDevOpsResources.AzureDevOpsLivePublishingCompleteRunFailed, output);
+        Assert.Contains(AzureDevOpsResources.AzureDevOpsLivePublishingRunLeftInProgress, output);
+    }
+
+    // Nothing drains the retry queue after the session-end flush, so unpublished results are lost for
+    // good and the user must be told how many are missing from the Azure DevOps run.
+    [TestMethod]
+    public async Task OnTestSessionFinishingAsync_ResultsCouldNotBePublished_WarnsWithCountOnOutputDevice()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        CollectingOutputDevice outputDevice = new();
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(2, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out FakeClock clock, out _, outputDevice: outputDevice);
+        client.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(92);
+        client.PublishTestResultsAsyncFunc = (_, _, _, _) => throw new HttpRequestException("publish rejected");
+
+        await StartPublisherAsync(publisher);
+        await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), CreateMessage(CreateNode("test-1", new PassedTestNodeStateProperty(), clock.UtcNow)), CancellationToken.None);
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        string expected = string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingResultsDropped, 1);
+        Assert.Contains(expected, string.Join(Environment.NewLine, outputDevice.Lines));
     }
 
     [TestMethod]
@@ -269,6 +375,217 @@ public sealed class AzureDevOpsLivePublishingTests
     }
 
     [TestMethod]
+    public async Task CreatePublisher_PopulatesPipelineReferenceFromPipelineVariables()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMock(
+            processId: GetAliveProcessId(),
+            stageName: "Build",
+            jobName: "Test_Linux",
+            phaseName: "RunTests",
+            stageAttempt: "2",
+            phaseAttempt: "3",
+            jobAttempt: "4");
+        AzureDevOpsPublishConfiguration? capturedConfiguration = null;
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(2, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out _, out _, environment: environment);
+        client.CreateTestRunAsyncFunc = (configuration, _) =>
+        {
+            capturedConfiguration = configuration;
+            return Task.FromResult(56);
+        };
+
+        await StartPublisherAsync(publisher);
+
+        Assert.IsNotNull(capturedConfiguration);
+        AzureDevOpsPipelineReference? pipelineReference = capturedConfiguration!.PipelineReference;
+        Assert.IsNotNull(pipelineReference);
+        Assert.AreEqual("Build", pipelineReference!.StageName);
+        Assert.AreEqual(2, pipelineReference.StageAttempt);
+        Assert.AreEqual("RunTests", pipelineReference.PhaseName);
+        Assert.AreEqual(3, pipelineReference.PhaseAttempt);
+        Assert.AreEqual("Test_Linux", pipelineReference.JobName);
+        Assert.AreEqual(4, pipelineReference.JobAttempt);
+    }
+
+    [TestMethod]
+    public async Task CreatePublisher_MissingStagePhaseAndJob_LeavesPipelineReferenceNull()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMock(processId: GetAliveProcessId(), stageName: null, jobName: null);
+        AzureDevOpsPublishConfiguration? capturedConfiguration = null;
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(2, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out _, out _, environment: environment);
+        client.CreateTestRunAsyncFunc = (configuration, _) =>
+        {
+            capturedConfiguration = configuration;
+            return Task.FromResult(57);
+        };
+
+        await StartPublisherAsync(publisher);
+
+        Assert.IsNotNull(capturedConfiguration);
+        Assert.IsNull(capturedConfiguration!.PipelineReference);
+    }
+
+    [TestMethod]
+    public async Task CreatePublisher_NonNumericAttempts_LeavesAttemptsNull()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMock(
+            processId: GetAliveProcessId(),
+            stageAttempt: "not-a-number",
+            phaseAttempt: "1.5",
+            jobAttempt: string.Empty);
+        AzureDevOpsPublishConfiguration? capturedConfiguration = null;
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(2, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out _, out _, environment: environment);
+        client.CreateTestRunAsyncFunc = (configuration, _) =>
+        {
+            capturedConfiguration = configuration;
+            return Task.FromResult(58);
+        };
+
+        await StartPublisherAsync(publisher);
+
+        Assert.IsNotNull(capturedConfiguration);
+        Assert.IsNotNull(capturedConfiguration!.PipelineReference);
+
+        // One assertion per attempt so every parse of an unusable value is pinned, and the run is still
+        // published rather than being failed by an attempt number the agent did not set sensibly.
+        Assert.IsNull(capturedConfiguration.PipelineReference!.StageAttempt);
+        Assert.IsNull(capturedConfiguration.PipelineReference.PhaseAttempt);
+        Assert.IsNull(capturedConfiguration.PipelineReference.JobAttempt);
+        Assert.IsNull(capturedConfiguration.PipelineReference.PhaseName);
+    }
+
+    [TestMethod]
+    public async Task OnTestSessionStartingAsync_DisplaysTestRunUrlSoResultsCanBeFollowedLive()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        CollectingOutputDevice outputDevice = new();
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(2, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out _, out _, outputDevice: outputDevice);
+        client.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(4242);
+
+        await StartPublisherAsync(publisher);
+
+        // Must be a session message, not plain informational text: the dotnet test pipe discards the
+        // latter, and dotnet test is how this extension usually runs in a pipeline.
+        Assert.ContainsSingle(outputDevice.SessionMessages);
+        Assert.Contains("https://dev.azure.com/org/project/_TestManagement/Runs?runId=4242&_a=resultQuery", outputDevice.SessionMessages[0]);
+        Assert.IsEmpty(outputDevice.Warnings);
+    }
+
+    [TestMethod]
+    public async Task AzureDevOpsTestResultsClient_CreateTestRun_SendsStartedDateAndPipelineReference()
+    {
+        FakeTask task = new();
+        FakeClock clock = new() { UtcNow = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero) };
+        string? capturedBody = null;
+        QueueHttpMessageHandler handler = new(
+            async (request, cancellationToken) =>
+            {
+                capturedBody = await ReadRequestBodyAsync(request, cancellationToken);
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("{\"id\":9}"),
+                };
+            });
+        using HttpClient httpClient = new(handler)
+        {
+            Timeout = Timeout.InfiniteTimeSpan,
+        };
+        AzureDevOpsTestResultsClient client = new(httpClient, task, clock);
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "tests.dll", "results")
+        {
+            PipelineReference = new AzureDevOpsPipelineReference("Build", 2, "RunTests", 3, "Test_Linux", 4),
+        };
+
+        int runId = await client.CreateTestRunAsync(configuration, CancellationToken.None);
+
+        Assert.AreEqual(9, runId);
+        Assert.IsNotNull(capturedBody);
+        using var document = JsonDocument.Parse(capturedBody!);
+        JsonElement root = document.RootElement;
+        Assert.AreEqual("2025-01-01T00:00:00+00:00", root.GetProperty("startedDate").GetString());
+
+        JsonElement pipelineReference = root.GetProperty("pipelineReference");
+
+        // Azure DevOps requires pipelineId to match build.id.
+        Assert.AreEqual(123, pipelineReference.GetProperty("pipelineId").GetInt32());
+        Assert.AreEqual(root.GetProperty("build").GetProperty("id").GetInt32(), pipelineReference.GetProperty("pipelineId").GetInt32());
+        Assert.AreEqual("Build", pipelineReference.GetProperty("stageReference").GetProperty("stageName").GetString());
+        Assert.AreEqual(2, pipelineReference.GetProperty("stageReference").GetProperty("attempt").GetInt32());
+        Assert.AreEqual("RunTests", pipelineReference.GetProperty("phaseReference").GetProperty("phaseName").GetString());
+        Assert.AreEqual(3, pipelineReference.GetProperty("phaseReference").GetProperty("attempt").GetInt32());
+        Assert.AreEqual("Test_Linux", pipelineReference.GetProperty("jobReference").GetProperty("jobName").GetString());
+        Assert.AreEqual(4, pipelineReference.GetProperty("jobReference").GetProperty("attempt").GetInt32());
+    }
+
+    [TestMethod]
+    public async Task AzureDevOpsTestResultsClient_CreateTestRun_OmitsPipelineReferenceWhenUnavailable()
+    {
+        FakeTask task = new();
+        FakeClock clock = new() { UtcNow = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero) };
+        string? capturedBody = null;
+        QueueHttpMessageHandler handler = new(
+            async (request, cancellationToken) =>
+            {
+                capturedBody = await ReadRequestBodyAsync(request, cancellationToken);
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("{\"id\":10}"),
+                };
+            });
+        using HttpClient httpClient = new(handler)
+        {
+            Timeout = Timeout.InfiniteTimeSpan,
+        };
+        AzureDevOpsTestResultsClient client = new(httpClient, task, clock);
+
+        int runId = await client.CreateTestRunAsync(new AzureDevOpsPublishConfiguration("https://dev.azure.com/org/", "project", "token", 123, "run", "tests.dll", "results"), CancellationToken.None);
+
+        Assert.AreEqual(10, runId);
+        Assert.IsNotNull(capturedBody);
+        using var document = JsonDocument.Parse(capturedBody!);
+        Assert.IsFalse(document.RootElement.TryGetProperty("pipelineReference", out _));
+    }
+
+    [TestMethod]
+    public async Task AzureDevOpsTestResultsClient_CreateTestRun_OmitsStageAndPhaseWhenOnlyJobIsKnown()
+    {
+        FakeTask task = new();
+        FakeClock clock = new() { UtcNow = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero) };
+        string? capturedBody = null;
+        QueueHttpMessageHandler handler = new(
+            async (request, cancellationToken) =>
+            {
+                capturedBody = await ReadRequestBodyAsync(request, cancellationToken);
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("{\"id\":11}"),
+                };
+            });
+        using HttpClient httpClient = new(handler)
+        {
+            Timeout = Timeout.InfiniteTimeSpan,
+        };
+        AzureDevOpsTestResultsClient client = new(httpClient, task, clock);
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "tests.dll", "results")
+        {
+            PipelineReference = new AzureDevOpsPipelineReference(StageName: null, StageAttempt: null, PhaseName: null, PhaseAttempt: null, JobName: "Test_Linux", JobAttempt: null),
+        };
+
+        int runId = await client.CreateTestRunAsync(configuration, CancellationToken.None);
+
+        Assert.AreEqual(11, runId);
+        Assert.IsNotNull(capturedBody);
+        using var document = JsonDocument.Parse(capturedBody!);
+        JsonElement pipelineReference = document.RootElement.GetProperty("pipelineReference");
+        Assert.IsFalse(pipelineReference.TryGetProperty("stageReference", out _));
+        Assert.IsFalse(pipelineReference.TryGetProperty("phaseReference", out _));
+        Assert.AreEqual("Test_Linux", pipelineReference.GetProperty("jobReference").GetProperty("jobName").GetString());
+        Assert.IsFalse(pipelineReference.GetProperty("jobReference").TryGetProperty("attempt", out _));
+    }
+
+    [TestMethod]
     public async Task AzureDevOpsTestResultsClient_HonorsRetryAfterOn429()
     {
         var events = new List<string>();
@@ -449,7 +766,8 @@ public sealed class AzureDevOpsLivePublishingTests
         using TestDirectory directory = CreateTestDirectory();
         string dumpPath = Path.Combine(directory.Path, "dump.txt");
         File.WriteAllText(dumpPath, "dump content");
-        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(1, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out FakeClock clock, out CollectingLogger logger);
+        CollectingOutputDevice outputDevice = new();
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(1, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out FakeClock clock, out CollectingLogger logger, outputDevice: outputDevice);
         client.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(202);
 
         int publishCalls = 0;
@@ -470,6 +788,11 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.AreEqual(1, publishCalls);
         Assert.HasCount(1, client.UploadTestResultAttachmentCalls);
         Assert.Contains(AzureDevOpsResources.AzureDevOpsLivePublishingResultAttachmentFailed, string.Join(Environment.NewLine, logger.Logs));
+
+        // The per-attachment failure is swallowed so the flush can continue; the user still has to be
+        // told at the end of the session that the attachment is missing from the run.
+        string expectedSummary = string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingAttachmentsDropped, 1);
+        Assert.Contains(expectedSummary, string.Join(Environment.NewLine, outputDevice.Lines));
     }
 
     [TestMethod]
@@ -748,7 +1071,11 @@ public sealed class AzureDevOpsLivePublishingTests
 
         File.WriteAllText(ownerFilePath, JsonSerializer.Serialize(new AzureDevOpsLeaseFile(aliveProcessId, 123, clock.UtcNow.AddHours(1))));
         File.WriteAllText(runIdFilePath, JsonSerializer.Serialize(new AzureDevOpsRunIdFile(5, 123, "https://dev.azure.com/org/", "project", clock.UtcNow.AddHours(1))));
-        File.WriteAllText(Path.Combine(directory.Path, $"azdo-runid.123.participant.{aliveProcessId}.json"), JsonSerializer.Serialize(new AzureDevOpsLeaseFile(aliveProcessId, 123, clock.UtcNow.AddHours(1))));
+
+        // A participant that cannot be vouched for: its lease is unreadable and the process in its file
+        // name is not running. Those get only the short grace period — unlike a peer whose process is
+        // provably alive, which the owner keeps waiting for because it is still publishing.
+        File.WriteAllText(Path.Combine(directory.Path, $"azdo-runid.123.participant.{int.MaxValue - 1}.json"), "not-json");
 
         int finalizeCalls = 0;
         await coordinator.FinalizeRunAsync(new AzureDevOpsCoordinatedRun(5, true, 123, directory.Path, runIdFilePath, ownerFilePath, participantFilePath), _ =>
@@ -873,10 +1200,743 @@ public sealed class AzureDevOpsLivePublishingTests
         return client.UploadTestResultAttachmentCalls[0].Attachment;
     }
 
+    // Attachment failures are swallowed per attachment so one bad file cannot abort the drain; without
+    // a summary the user loses coverage files/dumps with no explanation.
+    [TestMethod]
+    public async Task OnTestSessionFinishingAsync_AttachmentUploadFailure_WarnsWithCountOnOutputDevice()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        CollectingOutputDevice outputDevice = new();
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(2, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out _, out _, outputDevice: outputDevice);
+        client.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(93);
+        client.UploadTestRunAttachmentAsyncFunc = (_, _, _, _) => throw new HttpRequestException("attachment rejected");
+
+        await StartPublisherAsync(publisher);
+        string coveragePath = Path.Combine(directory.Path, "results.cobertura.xml");
+        File.WriteAllText(coveragePath, "<coverage/>");
+        await publisher.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            new SessionFileArtifact(new SessionUid(Guid.NewGuid().ToString()), new FileInfo(coveragePath), "cobertura"),
+            CancellationToken.None);
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        string expected = string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingAttachmentsDropped, 1);
+        Assert.Contains(expected, string.Join(Environment.NewLine, outputDevice.Lines));
+    }
+
+    // Regression tests for the two teardown escape hatches: WarnAsync must survive a failing log
+    // provider, and finalization must not let its own cleanup-timeout cancellation fail the run.
+    [TestMethod]
+    public async Task OnTestSessionStartingAsync_LogProviderThrows_DoesNotFailTheRun()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMock(processId: GetAliveProcessId());
+        environment.Setup(x => x.GetEnvironmentVariable("SYSTEM_ACCESSTOKEN")).Returns((string?)null);
+        CollectingOutputDevice outputDevice = new();
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: AzureDevOpsTestResultsPublisherOptions.Default, out _, out _, out CollectingLogger logger, environment: environment, outputDevice: outputDevice);
+        logger.ThrowOnLog = true;
+
+        Assert.IsTrue(await publisher.IsEnabledAsync());
+        await publisher.OnTestSessionStartingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        // The console copy still gets through, with the right message, even though the diagnostic
+        // logger is broken.
+        Assert.HasCount(1, outputDevice.Lines);
+        Assert.Contains("SYSTEM_ACCESSTOKEN", outputDevice.Lines[0]);
+    }
+
+    // OnTestSessionFinishingAsync is a lifetime handler and the platform does not guard those, so a
+    // throwing log provider anywhere on the teardown path would fail an otherwise successful run.
+    [TestMethod]
+    public async Task OnTestSessionFinishingAsync_PublishFailsAndLogProviderThrows_DoesNotFailTheRun()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        CollectingOutputDevice outputDevice = new();
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(2, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out FakeClock clock, out CollectingLogger logger, outputDevice: outputDevice);
+        client.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(95);
+        client.PublishTestResultsAsyncFunc = (_, _, _, _) => throw new HttpRequestException("publish rejected");
+
+        await StartPublisherAsync(publisher);
+        await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), CreateMessage(CreateNode("test-1", new PassedTestNodeStateProperty(), clock.UtcNow)), CancellationToken.None);
+
+        // The diagnostic logger starts failing right before teardown drives its recovery-path logging.
+        logger.ThrowOnLog = true;
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        // The console summary still reports the lost result even though the log provider is broken.
+        string expected = string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingResultsDropped, 1);
+        Assert.Contains(expected, string.Join(Environment.NewLine, outputDevice.Lines));
+    }
+
+    [TestMethod]
+    public async Task OnTestSessionFinishingAsync_FinalizeCanceled_DoesNotFailTheRun()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        CollectingOutputDevice outputDevice = new();
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(2, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out _, out _, outputDevice: outputDevice);
+        client.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(94);
+
+        // HttpClient surfaces a timeout as TaskCanceledException, which derives from OperationCanceledException.
+        client.UpdateTestRunStateAsyncFunc = (_, _, _, _) => throw new TaskCanceledException("finalization timed out");
+
+        await StartPublisherAsync(publisher);
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        string output = string.Join(Environment.NewLine, outputDevice.Lines);
+        Assert.Contains(AzureDevOpsResources.AzureDevOpsLivePublishingCompleteRunFailed, output);
+        Assert.Contains(AzureDevOpsResources.AzureDevOpsLivePublishingRunLeftInProgress, output);
+    }
+
+    // A throwing log provider used to abort the attachment drain after the first failure, leaving the
+    // rest of the queue unattempted and absent from the end-of-session count.
+    [TestMethod]
+    public async Task OnTestSessionFinishingAsync_AttachmentFailsAndLogProviderThrows_CountsEveryAttachment()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        CollectingOutputDevice outputDevice = new();
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(2, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out _, out CollectingLogger logger, outputDevice: outputDevice);
+        client.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(96);
+        client.UploadTestRunAttachmentAsyncFunc = (_, _, _, _) => throw new HttpRequestException("attachment rejected");
+
+        await StartPublisherAsync(publisher);
+        SessionUid sessionUid = new(Guid.NewGuid().ToString());
+        foreach (string name in new[] { "first.cobertura.xml", "second.cobertura.xml" })
+        {
+            string path = Path.Combine(directory.Path, name);
+            File.WriteAllText(path, "<coverage/>");
+            await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), new SessionFileArtifact(sessionUid, new FileInfo(path), "cobertura"), CancellationToken.None);
+        }
+
+        logger.ThrowOnLog = true;
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        // Both attachments must be attempted and counted, not just the one before the logger blew up.
+        Assert.HasCount(2, client.UploadTestRunAttachmentCalls);
+        string expected = string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingAttachmentsDropped, 2);
+        Assert.Contains(expected, string.Join(Environment.NewLine, outputDevice.Lines));
+    }
+
     private static async Task StartPublisherAsync(AzureDevOpsTestResultsPublisher publisher)
     {
         Assert.IsTrue(await publisher.IsEnabledAsync());
         await publisher.OnTestSessionStartingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+    }
+
+    #region Run lifetime across orchestrated processes (https://github.com/microsoft/testfx/issues/10360)
+
+    [TestMethod]
+    public async Task OrchestratorLifetime_BeforeRun_CreatesRunOnceAndPublishesItToOrchestratedProcesses()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out FakeAzureDevOpsTestResultsClient client, out _, environment);
+        client.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(4242);
+
+        Assert.IsTrue(await lifetime.IsEnabledAsync());
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+
+        Assert.HasCount(1, client.CreateTestRunCalls);
+        Assert.AreEqual(4242, lifetime.RunId);
+        Assert.AreEqual(4242, AzureDevOpsConstants.TryGetInheritedTestRunId(environment.Object, buildId: 123));
+    }
+
+    [TestMethod]
+    public async Task OrchestratorLifetime_AfterRun_CompletesTheRunItCreated()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out FakeAzureDevOpsTestResultsClient client, out _, CreateEnvironmentMockWithSettableRunId());
+        client.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(4243);
+
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+        await lifetime.AfterRunAsync(2 /* ExitCode.AtLeastOneTestFailed */, CancellationToken.None);
+
+        Assert.HasCount(1, client.UpdateTestRunStateCalls);
+        Assert.AreEqual(4243, client.UpdateTestRunStateCalls[0].RunId);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, client.UpdateTestRunStateCalls[0].State);
+    }
+
+    [TestMethod]
+    public async Task OrchestratorLifetime_AfterRun_NonTestResultExitCodeAbortsTheRun()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out FakeAzureDevOpsTestResultsClient client, out _, CreateEnvironmentMockWithSettableRunId());
+        client.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(4244);
+
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+        await lifetime.AfterRunAsync(3 /* ExitCode.TestSessionAborted */, CancellationToken.None);
+
+        Assert.HasCount(1, client.UpdateTestRunStateCalls);
+        Assert.AreEqual(4244, client.UpdateTestRunStateCalls[0].RunId);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.AbortedTestRunState, client.UpdateTestRunStateCalls[0].State);
+    }
+
+    [TestMethod]
+    public async Task OrchestratorLifetime_AfterRun_StopsHandingOutTheRunIdSoLaterProcessesDoNotPublishIntoAClosedRun()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out FakeAzureDevOpsTestResultsClient client, out _, environment);
+        client.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(4245);
+
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+        await lifetime.AfterRunAsync(0 /* ExitCode.Success */, CancellationToken.None);
+
+        Assert.IsNull(AzureDevOpsConstants.TryGetInheritedTestRunId(environment.Object, buildId: 123));
+    }
+
+    [TestMethod]
+    public async Task OrchestratorLifetime_BeforeRun_RunIdAlreadyInEnvironment_LeavesTheAncestorRunAlone()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out FakeAzureDevOpsTestResultsClient client, out _, CreateEnvironmentMockWithSettableRunId("123:777"));
+
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+        await lifetime.AfterRunAsync(0 /* ExitCode.Success */, CancellationToken.None);
+
+        Assert.IsEmpty(client.CreateTestRunCalls);
+        Assert.IsEmpty(client.UpdateTestRunStateCalls);
+    }
+
+    [TestMethod]
+    public async Task OrchestratorLifetime_BeforeRun_CreateRunFails_DoesNotPublishARunIdAndDoesNotThrow()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        CollectingOutputDevice outputDevice = new();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out FakeAzureDevOpsTestResultsClient client, out CollectingLogger logger, environment, outputDevice);
+        client.CreateTestRunAsyncFunc = (_, _) => throw new HttpRequestException("boom");
+
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+        await lifetime.AfterRunAsync(0 /* ExitCode.Success */, CancellationToken.None);
+
+        Assert.IsNull(lifetime.RunId);
+        Assert.IsNull(AzureDevOpsConstants.TryGetInheritedTestRunId(environment.Object, buildId: 123));
+        Assert.IsEmpty(client.UpdateTestRunStateCalls);
+        Assert.Contains(AzureDevOpsResources.AzureDevOpsLivePublishingCreateRunFailed, string.Join(Environment.NewLine, outputDevice.Warnings));
+        Assert.Contains(AzureDevOpsResources.AzureDevOpsLivePublishingCreateRunFailed, string.Join(Environment.NewLine, logger.Logs));
+    }
+
+    [TestMethod]
+    public async Task Publisher_RunIdInEnvironment_JoinsTheRunInsteadOfCreatingItsOwn()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId("123:909");
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(10, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out _, out _, environment: environment);
+
+        await StartPublisherAsync(publisher);
+
+        Assert.AreEqual(909, publisher.RunId);
+        Assert.IsEmpty(client.CreateTestRunCalls);
+    }
+
+    [TestMethod]
+    public async Task Publisher_RunIdInEnvironment_DoesNotCompleteTheRunSoLaterAttemptsCanStillPublish()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId("123:910");
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(10, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out _, out _, environment: environment);
+
+        await StartPublisherAsync(publisher);
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.IsEmpty(client.UpdateTestRunStateCalls);
+    }
+
+    [TestMethod]
+    public async Task Publisher_RunIdInEnvironment_StillPublishesResultsIntoTheInheritedRun()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId("123:911");
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(1, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out _, out _, environment: environment);
+        List<int> publishedToRunIds = [];
+        client.PublishTestResultsAsyncFunc = (_, runId, results, _) =>
+        {
+            publishedToRunIds.Add(runId);
+            return Task.FromResult<IReadOnlyList<int>?>([.. Enumerable.Range(1, results.Count)]);
+        };
+
+        await StartPublisherAsync(publisher);
+        await publisher.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("Test1", new PassedTestNodeStateProperty(), DateTimeOffset.UtcNow)),
+            CancellationToken.None);
+
+        Assert.HasCount(1, publishedToRunIds);
+        Assert.AreEqual(911, publishedToRunIds[0]);
+    }
+
+    [TestMethod]
+    public async Task Publisher_RunIdInEnvironment_WritesNoCoordinationFilesBecauseTheAncestorOwnsTheRun()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId("123:912");
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(10, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out _, out _, out _, environment: environment);
+
+        await StartPublisherAsync(publisher);
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.IsEmpty(Directory.GetFiles(directory.Path, "azdo-runid.*", SearchOption.AllDirectories));
+    }
+
+    [TestMethod]
+    [DataRow("")]
+    [DataRow("not-a-number")]
+    [DataRow("0")]
+    [DataRow("-1")]
+    [DataRow("123:0")]
+    [DataRow("123:-1")]
+    [DataRow("123:not-a-number")]
+    [DataRow(":42")]
+    [DataRow("999:42")]
+    public async Task Publisher_UnusableRunIdInEnvironment_FallsBackToCreatingItsOwnRun(string environmentValue)
+    {
+        // "999:42" is the important row: a handoff left behind by a different build must never redirect
+        // this build's results into that build's (probably already completed) run.
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId(environmentValue);
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options: new(10, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)), out FakeAzureDevOpsTestResultsClient client, out _, out _, environment: environment);
+        client.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(913);
+
+        await StartPublisherAsync(publisher);
+
+        Assert.AreEqual(913, publisher.RunId);
+        Assert.HasCount(1, client.CreateTestRunCalls);
+    }
+
+    [TestMethod]
+    public async Task OrchestratorLifetime_AfterRun_CanceledToken_StillClosesTheRunAsAborted()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out FakeAzureDevOpsTestResultsClient client, out _);
+        client.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(4246);
+
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+
+        using CancellationTokenSource canceled = new();
+#pragma warning disable VSTHRD103 // CancelAsync is only available on .NET 8+; this project also targets .NET Framework.
+        canceled.Cancel();
+#pragma warning restore VSTHRD103
+        await lifetime.AfterRunAsync(3 /* ExitCode.TestSessionAborted */, canceled.Token);
+
+        // A run left "InProgress" never appears in the build's Tests tab, so cancellation must still close it.
+        Assert.HasCount(1, client.UpdateTestRunStateCalls);
+        Assert.AreEqual(4246, client.UpdateTestRunStateCalls[0].RunId);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.AbortedTestRunState, client.UpdateTestRunStateCalls[0].State);
+    }
+
+    [TestMethod]
+    public async Task OrchestratorLifetime_AfterRun_CalledTwice_FinalizesTheRunOnlyOnce()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out FakeAzureDevOpsTestResultsClient client, out _);
+        client.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(4247);
+
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+        await lifetime.AfterRunAsync(0 /* ExitCode.Success */, CancellationToken.None);
+        await lifetime.AfterRunAsync(0 /* ExitCode.Success */, CancellationToken.None);
+
+        Assert.HasCount(1, client.UpdateTestRunStateCalls);
+        Assert.AreEqual(4247, client.UpdateTestRunStateCalls[0].RunId);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, client.UpdateTestRunStateCalls[0].State);
+    }
+
+    [TestMethod]
+    public async Task OrchestratorLifetime_AfterRun_WithoutBeforeRun_IsANoOp()
+    {
+        // The host calls AfterRunAsync on every lifetime once BeforeRunAsync has been attempted, including
+        // ones whose BeforeRunAsync never ran because an earlier lifetime faulted.
+        using TestDirectory directory = CreateTestDirectory();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out FakeAzureDevOpsTestResultsClient client, out _);
+
+        await lifetime.AfterRunAsync(0 /* ExitCode.Success */, CancellationToken.None);
+
+        Assert.IsEmpty(client.UpdateTestRunStateCalls);
+    }
+
+    [TestMethod]
+    public async Task OrchestratorLifetime_HandoffFailsAfterRunCreated_StillClosesTheRun()
+    {
+        // Anything failing between run creation and the handoff must not discard the run: this process is
+        // the only one that can close it, so losing that state would strand it in "InProgress".
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        environment.Setup(x => x.SetEnvironmentVariable(AzureDevOpsConstants.TestRunIdEnvironmentVariableName, It.IsAny<string>()))
+            .Throws(new SecurityException("environment is locked down"));
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out FakeAzureDevOpsTestResultsClient client, out CollectingLogger logger, environment);
+        client.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(4248);
+
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+        await lifetime.AfterRunAsync(0 /* ExitCode.Success */, CancellationToken.None);
+
+        Assert.HasCount(1, client.UpdateTestRunStateCalls);
+        Assert.AreEqual(4248, client.UpdateTestRunStateCalls[0].RunId);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, client.UpdateTestRunStateCalls[0].State);
+        Assert.Contains(AzureDevOpsResources.AzureDevOpsLivePublishingRunIdHandoffFailed, string.Join(Environment.NewLine, logger.Logs));
+    }
+
+    [TestMethod]
+    public async Task OrchestratorLifetime_PeerOrchestratorsSharingAResultsDirectory_PublishIntoASingleRun()
+    {
+        // A multi-project 'dotnet test' runs one orchestrator process per test project, all sharing the
+        // user's results directory. They must consolidate into one run for the build, exactly as
+        // non-orchestrated test hosts already do. The peers are given distinct process ids so that each
+        // registers its own participant lease — with a shared id they would silently overwrite one
+        // another's and this test would pass even if joiners never registered at all.
+        using TestDirectory directory = CreateTestDirectory();
+        AzureDevOpsTestRunOrchestratorLifetime first = CreateOrchestratorLifetime(directory.Path, out FakeAzureDevOpsTestResultsClient firstClient, out _, CreateEnvironmentMockWithSettableRunId(processId: GetAliveProcessId()));
+        AzureDevOpsTestRunOrchestratorLifetime second = CreateOrchestratorLifetime(directory.Path, out FakeAzureDevOpsTestResultsClient secondClient, out _, CreateEnvironmentMockWithSettableRunId(processId: GetAliveProcessId() + 1));
+        firstClient.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(4249);
+        secondClient.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(-1);
+
+        await first.BeforeRunAsync(CancellationToken.None);
+        await second.BeforeRunAsync(CancellationToken.None);
+
+        // One run for the build, and the peer joined it rather than creating its own.
+        Assert.HasCount(1, firstClient.CreateTestRunCalls);
+        Assert.IsEmpty(secondClient.CreateTestRunCalls);
+        Assert.AreEqual(4249, first.RunId);
+        Assert.AreEqual(4249, second.RunId);
+
+        // Both peers are registered participants, so the owner knows it must wait for the peer.
+        Assert.HasCount(2, Directory.GetFiles(directory.Path, "azdo-runid.*.participant.*.json", SearchOption.TopDirectoryOnly));
+
+        // The joiner must not close a run it does not own.
+        await second.AfterRunAsync(0 /* ExitCode.Success */, CancellationToken.None);
+        Assert.IsEmpty(secondClient.UpdateTestRunStateCalls);
+        Assert.HasCount(1, Directory.GetFiles(directory.Path, "azdo-runid.*.participant.*.json", SearchOption.TopDirectoryOnly));
+
+        // Only once every participant is gone does the owner complete the run, exactly once.
+        await first.AfterRunAsync(0 /* ExitCode.Success */, CancellationToken.None);
+        Assert.HasCount(1, firstClient.UpdateTestRunStateCalls);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.CompletedTestRunState, firstClient.UpdateTestRunStateCalls[0].State);
+    }
+
+    [TestMethod]
+    public async Task RunIdCoordinator_OwnerLeaseExpiredButOwnerProcessAlive_PeerJoinsInsteadOfCreatingASecondRun()
+    {
+        // An owner that never renews its lease (a run orchestrator holds one for the whole orchestration)
+        // still owns the run. Taking over from it once the wall-clock expiry passes would create a second
+        // Azure DevOps run for the same build and orphan the first.
+        using TestDirectory directory = CreateTestDirectory();
+        FakeClock clock = new() { UtcNow = new DateTimeOffset(2025, 1, 1, 12, 0, 0, TimeSpan.Zero) };
+        AzureDevOpsTestResultsPublisherOptions options = new(10, TimeSpan.FromMinutes(1), 2, TimeSpan.FromMilliseconds(1), TimeSpan.FromSeconds(30), TimeSpan.FromHours(4));
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "storage", directory.Path);
+
+        AzureDevOpsRunIdCoordinator owner = new(new SystemFileSystem(), new FakeTask(), clock, CreateEnvironmentMock(processId: GetAliveProcessId()).Object, new CollectingLogger(), options);
+        AzureDevOpsCoordinatedRun ownedRun = await owner.AcquireRunAsync(configuration, _ => Task.FromResult(900), CancellationToken.None);
+        Assert.IsTrue(ownedRun.IsOwner);
+
+        // Move past the lease expiry without the owner ever renewing, then let a peer try to acquire.
+        clock.UtcNow += TimeSpan.FromHours(5);
+        AzureDevOpsRunIdCoordinator peer = new(new SystemFileSystem(), new FakeTask(), clock, CreateEnvironmentMock(processId: GetAliveProcessId() + 1).Object, new CollectingLogger(), options);
+        AzureDevOpsCoordinatedRun peerRun = await peer.AcquireRunAsync(configuration, _ => Task.FromResult(-1), CancellationToken.None);
+
+        Assert.IsFalse(peerRun.IsOwner);
+        Assert.AreEqual(900, peerRun.RunId);
+    }
+
+    [TestMethod]
+    public async Task RunIdCoordinator_FinalizeRunAsync_DoesNotCloseTheRunWhileAPeerProcessIsStillAlive()
+    {
+        // Consolidating several projects into one run is only safe if the owner does not close it while a
+        // peer is still publishing: Azure DevOps rejects everything sent to a completed run, so results
+        // that previously reached a separate run would simply be lost.
+        using TestDirectory directory = CreateTestDirectory();
+        FakeClock clock = new() { UtcNow = new DateTimeOffset(2025, 1, 1, 12, 0, 0, TimeSpan.Zero) };
+        AzureDevOpsTestResultsPublisherOptions options = new(10, TimeSpan.FromMinutes(1), 2, TimeSpan.FromMilliseconds(1), TimeSpan.FromSeconds(30), TimeSpan.FromHours(4));
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "storage", directory.Path);
+
+        // A peer participant whose lease names a process that is genuinely running, under a file name that
+        // cannot collide with the owner's own participant file. The owner reports a different process id so
+        // the peer is a genuine third party rather than the owner's own lease.
+        int ownerProcessId = GetAliveProcessId() + 1;
+        string peerParticipantPath = Path.Combine(directory.Path, "azdo-runid.123.participant.999999.json");
+        Directory.CreateDirectory(directory.Path);
+        File.WriteAllText(peerParticipantPath, $"{{\"processId\":{GetAliveProcessId()},\"buildId\":123,\"expiresAt\":\"{clock.UtcNow.AddHours(4):O}\"}}");
+
+        int delayCount = 0;
+        FakeTask ownerTask = new(_ =>
+        {
+            delayCount++;
+
+            // Each poll costs 20s of wall clock, so the 30s grace period lapses on the second one. The
+            // peer only leaves much later; a coordinator that stops waiting for live peers would have
+            // completed the run long before that.
+            clock.UtcNow += TimeSpan.FromSeconds(20);
+            if (delayCount == 5)
+            {
+                File.Delete(peerParticipantPath);
+            }
+        });
+
+        AzureDevOpsRunIdCoordinator owner = new(new SystemFileSystem(), ownerTask, clock, CreateEnvironmentMock(processId: ownerProcessId).Object, new CollectingLogger(), options);
+        AzureDevOpsCoordinatedRun ownedRun = await owner.AcquireRunAsync(configuration, _ => Task.FromResult(950), CancellationToken.None);
+        Assert.IsTrue(ownedRun.IsOwner);
+
+        int finalizeCalls = 0;
+        bool peerStillRegisteredWhenRunWasClosed = false;
+        await owner.FinalizeRunAsync(
+            ownedRun,
+            _ =>
+            {
+                peerStillRegisteredWhenRunWasClosed = File.Exists(peerParticipantPath);
+                finalizeCalls++;
+                return Task.CompletedTask;
+            },
+            CancellationToken.None);
+
+        Assert.IsFalse(peerStillRegisteredWhenRunWasClosed, "The run was completed while a live peer was still registered as a participant.");
+        Assert.AreEqual(1, finalizeCalls);
+        Assert.IsGreaterThanOrEqualTo(5, delayCount);
+    }
+
+    [TestMethod]
+    public async Task RunIdCoordinator_FinalizeRunAsync_OwnParticipantLeaseSurvivingDeletion_DoesNotWaitOnItself()
+    {
+        // Removing the owner's own lease is best-effort (an antivirus or indexer holding the handle makes
+        // it fail, which TryDeleteFile deliberately tolerates). The owner trivially passes every liveness
+        // check, so it must not treat its own leftover file as a peer that is still publishing — that
+        // would hold the run open for the whole hard cap for no reason.
+        using TestDirectory directory = CreateTestDirectory();
+        FakeClock clock = new() { UtcNow = new DateTimeOffset(2025, 1, 1, 12, 0, 0, TimeSpan.Zero) };
+        int delayCount = 0;
+        FakeTask task = new(_ =>
+        {
+            delayCount++;
+            clock.UtcNow += TimeSpan.FromSeconds(20);
+        });
+        AzureDevOpsTestResultsPublisherOptions options = new(10, TimeSpan.FromMinutes(1), 2, TimeSpan.FromMilliseconds(1), TimeSpan.FromSeconds(30), TimeSpan.FromHours(4));
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "storage", directory.Path);
+
+        UndeletableFileSystem fileSystem = new();
+        AzureDevOpsRunIdCoordinator owner = new(fileSystem, task, clock, CreateEnvironmentMock(processId: GetAliveProcessId()).Object, new CollectingLogger(), options);
+        AzureDevOpsCoordinatedRun ownedRun = await owner.AcquireRunAsync(configuration, _ => Task.FromResult(960), CancellationToken.None);
+
+        // From here every delete fails, so the owner's own participant lease stays on disk.
+        fileSystem.FailDeletes = true;
+
+        int finalizeCalls = 0;
+        await owner.FinalizeRunAsync(
+            ownedRun,
+            _ =>
+            {
+                finalizeCalls++;
+                return Task.CompletedTask;
+            },
+            CancellationToken.None);
+
+        Assert.IsTrue(File.Exists(ownedRun.ParticipantFilePath), "The test did not actually reproduce a surviving lease.");
+        Assert.AreEqual(1, finalizeCalls);
+        Assert.AreEqual(0, delayCount, "The owner polled instead of completing immediately, so it was waiting on its own lease.");
+    }
+
+    [TestMethod]
+    public async Task RunIdCoordinator_AcquireRunAsync_RunIdFileWriteFailsUnderCancellation_StillReturnsTheCreatedRun()
+    {
+        // Once the run exists in Azure DevOps this process is the only one that can close it. If anything
+        // escapes the run-id file write - including cancellation, or a log provider throwing while
+        // reporting the write failure - AcquireRunAsync's cleanup deletes the leases and never hands the
+        // run back, leaving it "InProgress" forever.
+        using TestDirectory directory = CreateTestDirectory();
+        using CancellationTokenSource canceled = new();
+        FakeClock clock = new() { UtcNow = new DateTimeOffset(2025, 1, 1, 12, 0, 0, TimeSpan.Zero) };
+        AzureDevOpsTestResultsPublisherOptions options = new(10, TimeSpan.FromMinutes(1), 2, TimeSpan.FromMilliseconds(1));
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "storage", directory.Path);
+
+        UnwritableFileSystem fileSystem = new();
+        CollectingLogger logger = new();
+        AzureDevOpsRunIdCoordinator coordinator = new(fileSystem, new FakeTask(), clock, CreateEnvironmentMock(processId: GetAliveProcessId()).Object, logger, options);
+
+        AzureDevOpsCoordinatedRun run = await coordinator.AcquireRunAsync(
+            configuration,
+            _ =>
+            {
+                // The run now exists remotely. Everything after this point must preserve ownership.
+                fileSystem.FailRunIdFileWrites = true;
+                logger.ThrowOnLog = true;
+#pragma warning disable VSTHRD103 // CancelAsync is only available on .NET 8+; this project also targets .NET Framework.
+                canceled.Cancel();
+#pragma warning restore VSTHRD103
+                return Task.FromResult(970);
+            },
+            canceled.Token);
+
+        Assert.AreEqual(970, run.RunId);
+        Assert.IsTrue(run.IsOwner);
+    }
+
+    [TestMethod]
+    public async Task RunIdCoordinator_OwnerLeaseWithoutBuildContext_CanStillBeTakenOverEvenWhenThatPidIsAlive()
+    {
+        // A lease carrying the sentinel build id has no build context to vouch for it - that is how
+        // ReadLease reports the legacy plain-pid format, which it deliberately marks replaceable. A pid
+        // that has since been reused must not be mistaken for a live owner, or takeover is blocked forever.
+        using TestDirectory directory = CreateTestDirectory();
+        FakeClock clock = new() { UtcNow = new DateTimeOffset(2025, 1, 1, 12, 0, 0, TimeSpan.Zero) };
+
+        // Advance the clock on every poll so that if takeover ever regresses the joiner wait reaches its
+        // deadline and the test fails, instead of spinning forever against a frozen clock.
+        FakeTask task = new(_ => clock.UtcNow += TimeSpan.FromSeconds(10));
+        AzureDevOpsTestResultsPublisherOptions options = new(10, TimeSpan.FromMinutes(1), 2, TimeSpan.FromMilliseconds(1));
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "storage", directory.Path);
+
+        Directory.CreateDirectory(directory.Path);
+        File.WriteAllText(
+            Path.Combine(directory.Path, "azdo-runid.123.owner"),
+            JsonSerializer.Serialize(new AzureDevOpsLeaseFile(GetAliveProcessId(), 0, clock.UtcNow.AddHours(-1))));
+
+        AzureDevOpsRunIdCoordinator coordinator = new(new SystemFileSystem(), task, clock, CreateEnvironmentMock(processId: GetAliveProcessId() + 1).Object, new CollectingLogger(), options);
+        AzureDevOpsCoordinatedRun run = await coordinator.AcquireRunAsync(configuration, _ => Task.FromResult(980), CancellationToken.None);
+
+        Assert.IsTrue(run.IsOwner, "A lease with no build context should never block takeover, whatever its pid is doing now.");
+        Assert.AreEqual(980, run.RunId);
+    }
+
+    [TestMethod]
+    public async Task RunIdCoordinator_FinalizeRunAsync_TimeoutWarningThrows_StillClosesTheRun()
+    {
+        // The drain timeout warning sits directly in front of the call that completes the run. A log
+        // provider throwing there would skip it and leave the run "InProgress", which is exactly what the
+        // warning is reporting on.
+        using TestDirectory directory = CreateTestDirectory();
+        FakeClock clock = new() { UtcNow = new DateTimeOffset(2025, 1, 1, 12, 0, 0, TimeSpan.Zero) };
+        CollectingLogger logger = new();
+        FakeTask task = new(timeSpan => clock.UtcNow += timeSpan);
+        AzureDevOpsTestResultsPublisherOptions options = new(10, TimeSpan.FromSeconds(5), 5, TimeSpan.FromMilliseconds(10), TimeSpan.FromMilliseconds(30), TimeSpan.FromHours(4));
+        int aliveProcessId = GetAliveProcessId();
+        AzureDevOpsRunIdCoordinator coordinator = new(new SystemFileSystem(), task, clock, CreateEnvironmentMock(processId: aliveProcessId).Object, logger, options);
+
+        string ownerFilePath = Path.Combine(directory.Path, "azdo-runid.123.owner");
+        string runIdFilePath = Path.Combine(directory.Path, "azdo-runid.123.json");
+        string participantFilePath = Path.Combine(directory.Path, $"azdo-runid.123.participant.{aliveProcessId}.json");
+        File.WriteAllText(ownerFilePath, JsonSerializer.Serialize(new AzureDevOpsLeaseFile(aliveProcessId, 123, clock.UtcNow.AddHours(1))));
+        File.WriteAllText(runIdFilePath, JsonSerializer.Serialize(new AzureDevOpsRunIdFile(5, 123, "https://dev.azure.com/org/", "project", clock.UtcNow.AddHours(1))));
+
+        // A participant that cannot be vouched for, so the short grace period lapses and the warning fires.
+        File.WriteAllText(Path.Combine(directory.Path, $"azdo-runid.123.participant.{int.MaxValue - 1}.json"), "not-json");
+        logger.ThrowOnLog = true;
+
+        int finalizeCalls = 0;
+        await coordinator.FinalizeRunAsync(
+            new AzureDevOpsCoordinatedRun(5, true, 123, directory.Path, runIdFilePath, ownerFilePath, participantFilePath),
+            _ =>
+            {
+                finalizeCalls++;
+                return Task.CompletedTask;
+            },
+            CancellationToken.None);
+
+        Assert.AreEqual(1, finalizeCalls);
+    }
+
+    [TestMethod]
+    public async Task RunIdCoordinator_FinalizeRunAsync_LivePeerThatNeverLeaves_StillFinalizesAtTheHardCap()
+    {
+        // The hard cap is what stops a leaked but still-running process from holding a run open forever.
+        // Without it the owner would keep renewing the grace period against a live peer indefinitely.
+        using TestDirectory directory = CreateTestDirectory();
+        FakeClock clock = new() { UtcNow = new DateTimeOffset(2025, 1, 1, 12, 0, 0, TimeSpan.Zero) };
+        AzureDevOpsTestResultsPublisherOptions options = new(10, TimeSpan.FromMinutes(1), 2, TimeSpan.FromMilliseconds(1), TimeSpan.FromSeconds(30), TimeSpan.FromHours(4));
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "storage", directory.Path);
+
+        // A peer that stays registered for the whole test and whose lease names a live process.
+        int ownerProcessId = GetAliveProcessId() + 1;
+        string peerParticipantPath = Path.Combine(directory.Path, "azdo-runid.123.participant.999998.json");
+        Directory.CreateDirectory(directory.Path);
+        File.WriteAllText(peerParticipantPath, $"{{\"processId\":{GetAliveProcessId()},\"buildId\":123,\"expiresAt\":\"{clock.UtcNow.AddHours(4):O}\"}}");
+
+        int delayCount = 0;
+        int maxPolls = (int)(options.CoordinationFinalizeMaxWaitTime.TotalSeconds / 20) + 10;
+        FakeTask task = new(_ =>
+        {
+            delayCount++;
+
+            // Fail loudly rather than spinning forever if the hard cap ever stops bounding the wait: a
+            // hung suite is far harder to diagnose than a failed assertion.
+            Assert.IsLessThanOrEqualTo(maxPolls, delayCount, "The owner never stopped waiting for a live peer, so the hard cap is not bounding the drain loop.");
+            clock.UtcNow += TimeSpan.FromSeconds(20);
+        });
+
+        AzureDevOpsRunIdCoordinator owner = new(new SystemFileSystem(), task, clock, CreateEnvironmentMock(processId: ownerProcessId).Object, new CollectingLogger(), options);
+        AzureDevOpsCoordinatedRun ownedRun = await owner.AcquireRunAsync(configuration, _ => Task.FromResult(990), CancellationToken.None);
+
+        int finalizeCalls = 0;
+        await owner.FinalizeRunAsync(
+            ownedRun,
+            _ =>
+            {
+                finalizeCalls++;
+                return Task.CompletedTask;
+            },
+            CancellationToken.None);
+
+        Assert.AreEqual(1, finalizeCalls);
+        Assert.IsTrue(File.Exists(peerParticipantPath), "The peer was supposed to outlive the wait, so the hard cap is what released it.");
+
+        // It waited well past the short grace period rather than giving up on a live peer immediately,
+        // and still stopped rather than waiting forever.
+        Assert.IsGreaterThan((int)(options.CoordinationFinalizeTimeout.TotalSeconds / 20), delayCount);
+        Assert.IsLessThanOrEqualTo((int)(options.CoordinationFinalizeMaxWaitTime.TotalSeconds / 20) + 2, delayCount);
+    }
+
+    #endregion
+
+    private static AzureDevOpsTestRunOrchestratorLifetime CreateOrchestratorLifetime(
+        string resultsDirectory,
+        out FakeAzureDevOpsTestResultsClient client,
+        out CollectingLogger logger,
+        Mock<IEnvironment>? environment = null,
+        CollectingOutputDevice? outputDevice = null)
+    {
+        Mock<ICommandLineOptions> commandLineOptions = new();
+        commandLineOptions.Setup(x => x.IsOptionSet(AzureDevOpsCommandLineOptions.PublishAzureDevOpsTestResultsOptionName)).Returns(true);
+        string[]? runNameArguments = null;
+        commandLineOptions.Setup(x => x.TryGetOptionArgumentList(AzureDevOpsCommandLineOptions.PublishAzureDevOpsRunNameOptionName, out runNameArguments)).Returns(false);
+
+        Mock<IConfiguration> configuration = new();
+        configuration.Setup(x => x[PlatformConfigurationConstants.PlatformResultDirectory]).Returns(resultsDirectory);
+
+        environment ??= CreateEnvironmentMockWithSettableRunId();
+
+        Mock<ITestApplicationModuleInfo> testApplicationModuleInfo = new();
+        testApplicationModuleInfo.Setup(x => x.TryGetAssemblyName()).Returns("MyTests");
+        testApplicationModuleInfo.Setup(x => x.GetCurrentTestApplicationFullPath()).Returns(Path.Combine("testfx-worktrees", "azdo-live", "artifacts", "MyTests.dll"));
+
+        client = new FakeAzureDevOpsTestResultsClient();
+        logger = new CollectingLogger();
+
+        // The fake clock advances on every poll so any coordination wait reaches its bound instead of
+        // spinning forever: FakeTask.Delay returns immediately, so a frozen clock would turn a future
+        // regression into a hung suite rather than a failing test.
+        FakeClock clock = new() { UtcNow = new DateTimeOffset(2025, 1, 1, 12, 0, 0, TimeSpan.Zero) };
+        FakeTask task = new(_ => clock.UtcNow += TimeSpan.FromSeconds(30));
+
+        return new AzureDevOpsTestRunOrchestratorLifetime(
+            commandLineOptions.Object,
+            configuration.Object,
+            environment.Object,
+            new SystemFileSystem(),
+            outputDevice ?? new CollectingOutputDevice(),
+            testApplicationModuleInfo.Object,
+            client,
+            task,
+            clock,
+            logger,
+            new AzureDevOpsTestResultsPublisherOptions(10, TimeSpan.FromMinutes(1), 4, TimeSpan.FromMilliseconds(1)));
+    }
+
+    /// <summary>
+    /// Makes the environment mock behave like a real process environment for the run-id handoff, so a value
+    /// written by the orchestrator lifetime is observable by everything that reads it afterwards.
+    /// </summary>
+    private static Mock<IEnvironment> CreateEnvironmentMockWithSettableRunId(string? initialRunId = null, int? processId = null)
+    {
+        Mock<IEnvironment> environment = CreateEnvironmentMock(processId: processId ?? GetAliveProcessId());
+        string? runId = initialRunId;
+        environment.Setup(x => x.GetEnvironmentVariable(AzureDevOpsConstants.TestRunIdEnvironmentVariableName)).Returns(() => runId);
+        environment.Setup(x => x.SetEnvironmentVariable(AzureDevOpsConstants.TestRunIdEnvironmentVariableName, It.IsAny<string>()))
+            .Callback<string, string>((_, value) => runId = value);
+        return environment;
     }
 
     private TestDirectory CreateTestDirectory() => new(_directoriesToDelete);
@@ -886,6 +1946,16 @@ public sealed class AzureDevOpsLivePublishingTests
         => Environment.ProcessId;
 #else
         => Process.GetCurrentProcess().Id;
+#endif
+
+    private static async Task<string> ReadRequestBodyAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+#if NET
+        => await request.Content!.ReadAsStringAsync(cancellationToken);
+#else
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return await request.Content!.ReadAsStringAsync();
+    }
 #endif
 
     private static void TryDeleteDirectory(string path)
@@ -905,7 +1975,14 @@ public sealed class AzureDevOpsLivePublishingTests
         }
     }
 
-    private static Mock<IEnvironment> CreateEnvironmentMock(int processId, string? stageName = "stage", string? jobName = "job")
+    private static Mock<IEnvironment> CreateEnvironmentMock(
+        int processId,
+        string? stageName = "stage",
+        string? jobName = "job",
+        string? phaseName = null,
+        string? stageAttempt = null,
+        string? phaseAttempt = null,
+        string? jobAttempt = null)
     {
         Mock<IEnvironment> environment = new();
         environment.SetupGet(x => x.ProcessId).Returns(processId);
@@ -918,6 +1995,10 @@ public sealed class AzureDevOpsLivePublishingTests
         environment.Setup(x => x.GetEnvironmentVariable("AGENT_NAME")).Returns("agent-name");
         environment.Setup(x => x.GetEnvironmentVariable("SYSTEM_STAGENAME")).Returns(stageName);
         environment.Setup(x => x.GetEnvironmentVariable("SYSTEM_JOBNAME")).Returns(jobName);
+        environment.Setup(x => x.GetEnvironmentVariable("SYSTEM_PHASENAME")).Returns(phaseName);
+        environment.Setup(x => x.GetEnvironmentVariable("SYSTEM_STAGEATTEMPT")).Returns(stageAttempt);
+        environment.Setup(x => x.GetEnvironmentVariable("SYSTEM_PHASEATTEMPT")).Returns(phaseAttempt);
+        environment.Setup(x => x.GetEnvironmentVariable("SYSTEM_JOBATTEMPT")).Returns(jobAttempt);
         return environment;
     }
 
@@ -930,7 +2011,8 @@ public sealed class AzureDevOpsLivePublishingTests
         Mock<IEnvironment>? environment = null,
         Mock<ITestApplicationModuleInfo>? testApplicationModuleInfo = null,
         ITask? task = null,
-        Mock<ITestApplicationProcessExitCode>? processExitCode = null)
+        Mock<ITestApplicationProcessExitCode>? processExitCode = null,
+        CollectingOutputDevice? outputDevice = null)
     {
         Mock<ICommandLineOptions> commandLineOptions = new();
         commandLineOptions.Setup(x => x.IsOptionSet(AzureDevOpsCommandLineOptions.PublishAzureDevOpsTestResultsOptionName)).Returns(true);
@@ -962,6 +2044,7 @@ public sealed class AzureDevOpsLivePublishingTests
             configuration.Object,
             environment.Object,
             new SystemFileSystem(),
+            outputDevice ?? new CollectingOutputDevice(),
             testApplicationModuleInfo.Object,
             processExitCode.Object,
             client,
@@ -985,9 +2068,120 @@ public sealed class AzureDevOpsLivePublishingTests
         };
     }
 
+    /// <summary>
+    /// A real file system whose run-id coordination file writes fail on demand.
+    /// </summary>
+    private sealed class UnwritableFileSystem : IFileSystem
+    {
+        private readonly SystemFileSystem _inner = new();
+
+        public bool FailRunIdFileWrites { get; set; }
+
+        public IFileStream NewFileStream(string path, FileMode mode, FileAccess access, FileShare share)
+            => FailRunIdFileWrites && Path.GetFileName(path).EndsWith(".json", StringComparison.Ordinal) && !Path.GetFileName(path).Contains("participant")
+                ? throw new IOException($"The process cannot access the file '{path}' because it is being used by another process.")
+                : _inner.NewFileStream(path, mode, access, share);
+
+        public void CopyFile(string sourceFileName, string destFileName, bool overwrite = false) => _inner.CopyFile(sourceFileName, destFileName, overwrite);
+
+        public string CreateDirectory(string path) => _inner.CreateDirectory(path);
+
+        public void DeleteFile(string path) => _inner.DeleteFile(path);
+
+        public bool ExistDirectory(string? path) => _inner.ExistDirectory(path);
+
+        public bool ExistFile(string path) => _inner.ExistFile(path);
+
+        public string[] GetFiles(string path, string searchPattern, SearchOption searchOption) => _inner.GetFiles(path, searchPattern, searchOption);
+
+        public void MoveFile(string sourceFileName, string destFileName, bool overwrite = false) => _inner.MoveFile(sourceFileName, destFileName, overwrite);
+
+        public IFileStream NewFileStream(string path, FileMode mode) => _inner.NewFileStream(path, mode);
+
+        public IFileStream NewFileStream(string path, FileMode mode, FileAccess access) => _inner.NewFileStream(path, mode, access);
+
+        public string ReadAllText(string path) => _inner.ReadAllText(path);
+
+        public Task<string> ReadAllTextAsync(string path) => _inner.ReadAllTextAsync(path);
+    }
+
+    /// <summary>
+    /// A real file system whose deletes fail, emulating a handle held by an antivirus or search indexer -
+    /// the situation the coordinator's best-effort deletes exist to tolerate.
+    /// </summary>
+    private sealed class UndeletableFileSystem : IFileSystem
+    {
+        private readonly SystemFileSystem _inner = new();
+
+        public bool FailDeletes { get; set; }
+
+        public void DeleteFile(string path)
+        {
+            if (FailDeletes)
+            {
+                throw new IOException($"The process cannot access the file '{path}' because it is being used by another process.");
+            }
+
+            _inner.DeleteFile(path);
+        }
+
+        public void CopyFile(string sourceFileName, string destFileName, bool overwrite = false) => _inner.CopyFile(sourceFileName, destFileName, overwrite);
+
+        public string CreateDirectory(string path) => _inner.CreateDirectory(path);
+
+        public bool ExistDirectory(string? path) => _inner.ExistDirectory(path);
+
+        public bool ExistFile(string path) => _inner.ExistFile(path);
+
+        public string[] GetFiles(string path, string searchPattern, SearchOption searchOption) => _inner.GetFiles(path, searchPattern, searchOption);
+
+        public void MoveFile(string sourceFileName, string destFileName, bool overwrite = false) => _inner.MoveFile(sourceFileName, destFileName, overwrite);
+
+        public IFileStream NewFileStream(string path, FileMode mode) => _inner.NewFileStream(path, mode);
+
+        public IFileStream NewFileStream(string path, FileMode mode, FileAccess access) => _inner.NewFileStream(path, mode, access);
+
+        public IFileStream NewFileStream(string path, FileMode mode, FileAccess access, FileShare share) => _inner.NewFileStream(path, mode, access, share);
+
+        public string ReadAllText(string path) => _inner.ReadAllText(path);
+
+        public Task<string> ReadAllTextAsync(string path) => _inner.ReadAllTextAsync(path);
+    }
+
     private sealed class FakeClock : IClock
     {
         public DateTimeOffset UtcNow { get; set; }
+    }
+
+    private sealed class CollectingOutputDevice : IOutputDevice
+    {
+        public List<string> Lines { get; } = [];
+
+        public List<string> Warnings { get; } = [];
+
+        public List<string> SessionMessages { get; } = [];
+
+        public Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken)
+        {
+            switch (data)
+            {
+                case WarningMessageOutputDeviceData warning:
+                    Warnings.Add(warning.Message);
+                    Lines.Add(warning.Message);
+                    break;
+
+                case SessionMessageOutputDeviceData sessionMessage:
+                    SessionMessages.Add(sessionMessage.Message);
+                    Lines.Add(sessionMessage.Message);
+                    break;
+
+                default:
+                    Assert.Fail($"Unexpected output device data type '{data.GetType()}'.");
+                    break;
+            }
+
+            return Task.CompletedTask;
+        }
     }
 
     private sealed class FakeAzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClient
@@ -1010,14 +2204,21 @@ public sealed class AzureDevOpsLivePublishingTests
 
         public Func<AzureDevOpsPublishConfiguration, int, AzureDevOpsTestResultAttachment, CancellationToken, Task> UploadTestRunAttachmentAsyncFunc { get; set; } = (_, _, _, _) => Task.CompletedTask;
 
+        public Func<AzureDevOpsPublishConfiguration, int, string, CancellationToken, Task> UpdateTestRunStateAsyncFunc { get; set; } = (_, _, _, _) => Task.CompletedTask;
+
         public List<(AzureDevOpsPublishConfiguration Configuration, int RunId, string State)> UpdateTestRunStateCalls { get; } = [];
 
         public List<(int RunId, int TestCaseResultId, AzureDevOpsTestResultAttachment Attachment)> UploadTestResultAttachmentCalls { get; } = [];
 
         public List<(int RunId, AzureDevOpsTestResultAttachment Attachment)> UploadTestRunAttachmentCalls { get; } = [];
 
+        public List<AzureDevOpsPublishConfiguration> CreateTestRunCalls { get; } = [];
+
         public Task<int> CreateTestRunAsync(AzureDevOpsPublishConfiguration configuration, CancellationToken cancellationToken)
-            => CreateTestRunAsyncFunc(configuration, cancellationToken);
+        {
+            CreateTestRunCalls.Add(configuration);
+            return CreateTestRunAsyncFunc(configuration, cancellationToken);
+        }
 
         public Task<IReadOnlyList<int>?> PublishTestResultsAsync(AzureDevOpsPublishConfiguration configuration, int runId, IReadOnlyList<AzureDevOpsTestCaseResult> results, CancellationToken cancellationToken)
             => PublishTestResultsAsyncFunc(configuration, runId, results, cancellationToken);
@@ -1025,7 +2226,7 @@ public sealed class AzureDevOpsLivePublishingTests
         public Task UpdateTestRunStateAsync(AzureDevOpsPublishConfiguration configuration, int runId, string state, CancellationToken cancellationToken)
         {
             UpdateTestRunStateCalls.Add((configuration, runId, state));
-            return Task.CompletedTask;
+            return UpdateTestRunStateAsyncFunc(configuration, runId, state, cancellationToken);
         }
 
         public Task UploadTestResultAttachmentAsync(AzureDevOpsPublishConfiguration configuration, int runId, int testCaseResultId, AzureDevOpsTestResultAttachment attachment, CancellationToken cancellationToken)
@@ -1081,13 +2282,28 @@ public sealed class AzureDevOpsLivePublishingTests
     {
         public List<string> Logs { get; } = [];
 
+        /// <summary>Gets or sets a value indicating whether logging throws, emulating a failing log provider.</summary>
+        public bool ThrowOnLog { get; set; }
+
         public bool IsEnabled(LogLevel logLevel) => true;
 
         public void Log<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
-            => Logs.Add($"{logLevel}: {formatter(state, exception)}");
+        {
+            if (ThrowOnLog)
+            {
+                throw new IOException("simulated log provider failure");
+            }
+
+            Logs.Add($"{logLevel}: {formatter(state, exception)}");
+        }
 
         public Task LogAsync<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
         {
+            if (ThrowOnLog)
+            {
+                throw new IOException("simulated log provider failure");
+            }
+
             Logs.Add($"{logLevel}: {formatter(state, exception)}");
             return Task.CompletedTask;
         }

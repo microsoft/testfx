@@ -445,11 +445,7 @@ namespace Jsonite
                     } while (IsDigit(c));
                 }
 
-                // Skip any whitespaces after a value
-                while (IsWhiteSpace(c))
-                {
-                    NextChar();
-                }
+                SkipWhitespacesAndComments();
 
                 // If we are expecting to parse only things into strings, early exit here
                 if (settings.ParseValuesAsStrings)
@@ -604,10 +600,58 @@ namespace Jsonite
 
             private void NextCharSkipWhitespaces()
             {
-                do
+                NextChar();
+                SkipWhitespacesAndComments();
+            }
+
+            private void SkipWhitespacesAndComments()
+            {
+                while (true)
                 {
-                    NextChar();
-                } while (IsWhiteSpace(c));
+                    while (IsWhiteSpace(c))
+                    {
+                        NextChar();
+                    }
+
+                    if (!settings.AllowComments || c != '/')
+                    {
+                        return;
+                    }
+
+                    switch (Reader.Peek())
+                    {
+                        case '/':
+                            do
+                            {
+                                NextChar();
+                            }
+                            while (!isEof && c is not ('\r' or '\n'));
+                            break;
+
+                        case '*':
+                            NextChar();
+                            while (true)
+                            {
+                                NextChar();
+                                if (isEof)
+                                {
+                                    RaiseUnexpected("while parsing a comment. Expecting the end of a comment '*/'");
+                                }
+
+                                if (c == '*' && Reader.Peek() == '/')
+                                {
+                                    NextChar();
+                                    NextChar();
+                                    break;
+                                }
+                            }
+
+                            break;
+
+                        default:
+                            return;
+                    }
+                }
             }
 
             [MethodImpl((MethodImplOptions)256)]

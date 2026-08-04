@@ -88,6 +88,13 @@ internal static class HandshakeMessagePropertyNames
     // reports "1". This is an additive, capability-style property: consumers that do not understand it ignore it,
     // so it is not gated on the negotiated protocol version.
     internal const byte AttemptNumber = 13;
+
+    // Semicolon-separated reverse-DNS artifact kinds supported by the post-processors registered in this app.
+    // Missing means the app does not advertise artifact post-processing.
+    internal const byte SupportedPostProcessorKinds = 14;
+
+    // Semicolon-separated lowercase file extensions used as a compatibility fallback for untagged artifacts.
+    internal const byte SupportedPostProcessorExtensionsLegacy = 15;
 }
 
 [Embedded]
@@ -114,6 +121,9 @@ internal static class HandshakeMessageHostTypes
     // A test host orchestrator process (e.g. the retry orchestrator) that drives
     // one or more test host executions.
     internal const string TestHostOrchestrator = "TestHostOrchestrator";
+
+    // A tool host relaunched by dotnet test to run artifact post-processors.
+    internal const string ArtifactPostProcessor = "ArtifactPostProcessor";
 }
 
 [Embedded]
@@ -127,6 +137,9 @@ internal static class HandshakeMessageExecutionModes
 
     // The host is going to discover tests (e.g. --list-tests).
     internal const string Discover = "discover";
+
+    // Artifact post-processing or another non-test tool.
+    internal const string Tool = "tool";
 }
 
 [Embedded]

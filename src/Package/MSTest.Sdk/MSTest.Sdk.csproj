@@ -8,11 +8,9 @@
     <IsPackable>true</IsPackable>
     <PackageId>MSTest.Sdk</PackageId>
     <PackageTags>$(CommonPackageTags) MSTest TestFramework TestAdapter VisualStudio MSTestV2 SDK MSBuild</PackageTags>
-    <PackageDescription>
-      MSTest is Microsoft supported Test Framework.
+    <PackageDescription><![CDATA[This package contains the MSTest MSBuild project SDK.
 
-      This package contains the MSTest MSBuild project SDK.
-    </PackageDescription>
+$(CommonProductDescription)]]></PackageDescription>
     <!-- This package only ships MSBuild SDK props/targets: no lib and no dependencies. -->
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>

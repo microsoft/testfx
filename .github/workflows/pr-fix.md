@@ -1,5 +1,4 @@
 ---
-source: githubnext/agentics/workflows/pr-fix.md@main
 description: |
   This workflow makes fixes to pull requests on-demand by the '/pr-fix' command.
   Analyzes failing CI checks, identifies root causes from error logs, implements fixes,
@@ -52,6 +51,7 @@ safe-outputs:
 
 timeout-minutes: 20
 
+source: githubnext/agentics/workflows/pr-fix.md@main
 ---
 
 # PR Fix

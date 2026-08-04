@@ -22,7 +22,6 @@ namespace MSTest.Acceptance.IntegrationTests;
 public sealed class LegacyDeploymentBehaviorTests : AcceptanceTestBase<LegacyDeploymentBehaviorTests.TestAssetFixture>
 {
     [TestMethod]
-    [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task TestSourceDependencies_WithCopyToOutputNever_OnlyDeclaredItemsAreDeployed(string tfm)
     {
@@ -38,7 +37,6 @@ public sealed class LegacyDeploymentBehaviorTests : AcceptanceTestBase<LegacyDep
     }
 
     [TestMethod]
-    [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task DeployTestSourceDependenciesFalse_UsesSourceOutputLocation(string tfm)
     {
@@ -57,7 +55,6 @@ public sealed class LegacyDeploymentBehaviorTests : AcceptanceTestBase<LegacyDep
     }
 
     [TestMethod]
-    [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task DirectoryDeployment_AcceptsForwardAndBackSlashes(string tfm)
     {
@@ -75,7 +72,6 @@ public sealed class LegacyDeploymentBehaviorTests : AcceptanceTestBase<LegacyDep
     }
 
     [TestMethod]
-    [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task FileDeployment_AcceptsForwardAndBackSlashes(string tfm)
     {
@@ -165,7 +161,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace LegacyDeploymentBehavior;
 
-[DeploymentItem(@"..\..\..\NeverDeclared.txt")]
+[DeploymentItem("../../../NeverDeclared.txt")]
 [TestClass]
 public class SourceDependencyTests
 {
@@ -222,7 +218,7 @@ public class FileDeploymentTests
         => Assert.IsTrue(File.Exists("forward.txt"));
 
     [TestMethod]
-    [DeploymentItem(@"BackDirectory\back.txt")]
+    [DeploymentItem("BackDirectory/back.txt")]
     public void FileWithBackSlash()
         => Assert.IsTrue(File.Exists("back.txt"));
 }

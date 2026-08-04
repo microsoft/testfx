@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
@@ -16,6 +16,17 @@ internal sealed partial class TrxReportEngine
         byte[] hash = TestFx.Hashing.XxHash128.Hash(Encoding.Unicode.GetBytes(data));
         return new Guid(hash);
     }
+
+    internal static Guid CreateMergeRunId(IReadOnlyList<string> inputPaths)
+        => GuidFromString(string.Join("\0", inputPaths.Select(Path.GetFullPath).OrderBy(path => path, StringComparer.Ordinal)));
+
+    internal static Guid CreateMergeRunId(IReadOnlyList<string> inputPaths, IReadOnlyList<string?> executionIds)
+        => inputPaths.Count == executionIds.Count
+            ? GuidFromString(string.Join(
+                "\0",
+                inputPaths.Select((path, index) => $"{Path.GetFullPath(path)}\0{executionIds[index]}")
+                    .OrderBy(value => value, StringComparer.Ordinal)))
+            : throw new ArgumentException("Input paths and execution IDs must have the same count.", nameof(executionIds));
 
     // From xml spec (http://www.w3.org/TR/xml/#charsets) valid chars:
     // #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]

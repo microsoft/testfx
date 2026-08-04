@@ -37,7 +37,33 @@ internal sealed record AzureDevOpsPublishConfiguration(
     int BuildId,
     string RunName,
     string AutomatedTestStorage,
-    string ResultsDirectory);
+    string ResultsDirectory)
+{
+    /// <summary>
+    /// Gets the stage/phase/job the test run belongs to, when running in a pipeline that exposes it.
+    /// </summary>
+    /// <remarks>
+    /// Declared as a property rather than a positional parameter so that adding it does not change the
+    /// record's constructor and deconstructor signatures.
+    /// </remarks>
+    public AzureDevOpsPipelineReference? PipelineReference { get; init; }
+}
+
+/// <summary>
+/// Identifies the pipeline stage, phase and job that produced a test run.
+/// </summary>
+/// <remarks>
+/// Azure DevOps uses this to attribute the run to the right stage/job of a multi-stage pipeline. Without
+/// it, the run is only linked to the build as a whole, so per-stage test reporting is unavailable.
+/// Every part is optional because the corresponding pipeline variables are not always defined.
+/// </remarks>
+internal sealed record AzureDevOpsPipelineReference(
+    string? StageName,
+    int? StageAttempt,
+    string? PhaseName,
+    int? PhaseAttempt,
+    string? JobName,
+    int? JobAttempt);
 
 internal sealed record AzureDevOpsTestCaseResult(
     [property: JsonPropertyName("automatedTestName")] string AutomatedTestName,
@@ -106,6 +132,17 @@ internal sealed record AzureDevOpsTestResultsPublisherOptions(
         : this(batchSize, flushInterval, coordinationReadRetryCount, coordinationReadRetryDelay, coordinationFinalizeTimeout, coordinationFileExpiration, TimeSpan.FromMinutes(2))
     {
     }
+
+    /// <summary>
+    /// Gets the longest the owner will hold a run open waiting for peers that are provably still running.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="CoordinationFinalizeTimeout"/> is the grace period for participants that cannot be
+    /// proven alive; this is the hard cap that also applies to live ones, so a leaked process cannot stall
+    /// a build indefinitely. Generous because it bounds a whole test project, not a single test: the cost
+    /// of stopping too early is that the peer's remaining results are rejected by Azure DevOps.
+    /// </remarks>
+    public TimeSpan CoordinationFinalizeMaxWaitTime { get; init; } = TimeSpan.FromMinutes(15);
 
     public static AzureDevOpsTestResultsPublisherOptions Default { get; } = new(100, TimeSpan.FromSeconds(5), 40, TimeSpan.FromMilliseconds(250), TimeSpan.FromSeconds(30), TimeSpan.FromHours(4), TimeSpan.FromMinutes(2));
 }

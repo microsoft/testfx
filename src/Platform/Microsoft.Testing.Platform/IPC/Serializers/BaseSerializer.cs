@@ -25,37 +25,86 @@ internal abstract class BaseSerializer
 
     protected static string ReadString(Stream stream)
     {
-        byte[] len = new byte[sizeof(int)];
-        ReadExactly(stream, len, 0, len.Length);
-        int length = BitConverter.ToInt32(len, 0);
-        byte[] bytes = new byte[length];
-        ReadExactly(stream, bytes, 0, length);
-        return Encoding.UTF8.GetString(bytes, 0, length);
+        int length = ReadInt(stream);
+        return ReadStringValue(stream, length);
     }
 
     protected static string ReadStringValue(Stream stream, int size)
     {
+#if NETCOREAPP
+        byte[] rentedBytes = System.Buffers.ArrayPool<byte>.Shared.Rent(size);
+        try
+        {
+            ReadExactly(stream, rentedBytes, 0, size);
+            return Encoding.UTF8.GetString(rentedBytes, 0, size);
+        }
+        finally
+        {
+            System.Buffers.ArrayPool<byte>.Shared.Return(rentedBytes);
+        }
+#else
         byte[] bytes = new byte[size];
         ReadExactly(stream, bytes, 0, size);
         return Encoding.UTF8.GetString(bytes, 0, size);
+#endif
     }
 
     protected static void WriteString(Stream stream, string str)
     {
+#if NETCOREAPP
+        int byteCount = Encoding.UTF8.GetByteCount(str);
+        byte[] rentedBytes = System.Buffers.ArrayPool<byte>.Shared.Rent(byteCount);
+        try
+        {
+            Encoding.UTF8.GetBytes(str, rentedBytes);
+            WriteInt(stream, byteCount);
+            stream.Write(rentedBytes, 0, byteCount);
+        }
+        finally
+        {
+            System.Buffers.ArrayPool<byte>.Shared.Return(rentedBytes);
+        }
+#else
         byte[] bytes = Encoding.UTF8.GetBytes(str);
-        byte[] len = BitConverter.GetBytes(bytes.Length);
-        stream.Write(len, 0, len.Length);
+        WriteInt(stream, bytes.Length);
         stream.Write(bytes, 0, bytes.Length);
+#endif
     }
 
     protected static void WriteSize<T>(Stream stream)
         where T : struct
+        => WriteInt(stream, GetSize<T>());
+
+#if NETCOREAPP
+    protected static void WriteInt(Stream stream, int value) => WritePrimitive(stream, value);
+
+    protected static int ReadInt(Stream stream) => ReadPrimitive<int>(stream);
+
+    protected static void WriteLong(Stream stream, long value) => WritePrimitive(stream, value);
+
+    protected static long ReadLong(Stream stream) => ReadPrimitive<long>(stream);
+
+    protected static void WriteUShort(Stream stream, ushort value) => WritePrimitive(stream, value);
+
+    protected static ushort ReadUShort(Stream stream) => ReadPrimitive<ushort>(stream);
+
+    private static void WritePrimitive<T>(Stream stream, T value)
+        where T : unmanaged
     {
-        int sizeInBytes = GetSize<T>();
-        byte[] len = BitConverter.GetBytes(sizeInBytes);
-        stream.Write(len, 0, len.Length);
+        int size = GetSize<T>();
+        Span<byte> bytes = stackalloc byte[size];
+        System.Runtime.InteropServices.MemoryMarshal.Write(bytes, in value);
+        stream.Write(bytes);
     }
 
+    private static T ReadPrimitive<T>(Stream stream)
+        where T : unmanaged
+    {
+        Span<byte> bytes = stackalloc byte[GetSize<T>()];
+        stream.ReadExactly(bytes);
+        return System.Runtime.InteropServices.MemoryMarshal.Read<T>(bytes);
+    }
+#else
     protected static void WriteInt(Stream stream, int value)
     {
         byte[] bytes = BitConverter.GetBytes(value);
@@ -94,19 +143,18 @@ internal abstract class BaseSerializer
         ReadExactly(stream, bytes, 0, bytes.Length);
         return BitConverter.ToUInt16(bytes, 0);
     }
+#endif
 
     protected static void WriteBool(Stream stream, bool value)
-    {
-        byte[] bytes = BitConverter.GetBytes(value);
-        stream.Write(bytes, 0, bytes.Length);
-    }
+        => stream.WriteByte(value ? (byte)1 : (byte)0);
 
     protected static bool ReadBool(Stream stream)
-    {
-        byte[] bytes = new byte[sizeof(bool)];
-        ReadExactly(stream, bytes, 0, bytes.Length);
-        return BitConverter.ToBoolean(bytes, 0);
-    }
+        => stream.ReadByte() switch
+        {
+            -1 => throw new EndOfStreamException(),
+            0 => false,
+            _ => true,
+        };
 
     // Reads exactly 'count' bytes into 'buffer' starting at 'offset', looping until the request is
     // satisfied or the end of the stream is reached. This centralizes the previously duplicated
@@ -285,9 +333,8 @@ internal abstract class BaseSerializer
     /// Matches the two leading collection-envelope fields (<c>ExecutionId</c> id 1 / <c>InstanceId</c> id 2) shared by
     /// the four 'dotnet test' list-carrying messages payloads, assigning the value into <paramref name="executionId"/>
     /// or <paramref name="instanceId"/> and returning <see langword="true"/> when the field is one of them. The caller
-    /// invokes this from its own single <see cref="ReadFields"/> callback and handles its type-specific message-list
-    /// field ids when this returns <see langword="false"/>. Kept as a <see langword="ref"/>-based matcher (rather than a
-    /// wrapping callback) so it adds no closure/delegate allocation on the hot per-test IPC read path.
+    /// handles its type-specific message-list field ids when this returns <see langword="false"/>. Kept as a
+    /// <see langword="ref"/>-based matcher so it adds no allocation on the hot per-test IPC read path.
     /// </summary>
     protected static bool TryReadExecutionScopedField(Stream stream, ushort fieldId, int fieldSize, ref string? executionId, ref string? instanceId)
     {
