@@ -403,6 +403,7 @@ internal sealed class AzureDevOpsResultIdStore
         {
             if (attempt is null
                 || attempt.SequenceId <= previousSequenceId
+                || attempt.SequenceId == int.MaxValue
                 || attempt.DisplayName is null
                 || attempt.DurationInMs is < 0
                 || attempt.Outcome is not (

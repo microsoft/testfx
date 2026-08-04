@@ -117,6 +117,11 @@
         <target state="translated">Publikowanie na żywo w Azure DevOps zaakceptowało partię wyników testów, ale nie mogło przeanalizować przypisanych identyfikatorów wyników; załączniki na poziomie wyniku dla tej partii zostaną pominięte.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingResultMapHandoffFailed">
+        <source>Azure DevOps live publishing failed to update the result map handoff.</source>
+        <target state="new">Azure DevOps live publishing failed to update the result map handoff.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingResultsDropped">
         <source>Azure DevOps live publishing could not publish {0} test result(s); they will be missing from the Azure DevOps test run.</source>
         <target state="translated">Publikowanie na żywo w usłudze Azure DevOps nie może opublikować {0} wyników testu. Nie będzie ich w przebiegu testu usługi Azure DevOps.</target>

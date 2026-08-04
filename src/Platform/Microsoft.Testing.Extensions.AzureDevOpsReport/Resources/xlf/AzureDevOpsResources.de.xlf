@@ -117,6 +117,11 @@
         <target state="translated">Azure DevOps Liveveröffentlichung hat einen Batch von Testergebnissen akzeptiert, die zugewiesenen Ergebnis-IDs konnten jedoch nicht analysiert werden. Anlagen auf Ergebnisebene für diesen Batch werden übersprungen.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingResultMapHandoffFailed">
+        <source>Azure DevOps live publishing failed to update the result map handoff.</source>
+        <target state="new">Azure DevOps live publishing failed to update the result map handoff.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingResultsDropped">
         <source>Azure DevOps live publishing could not publish {0} test result(s); they will be missing from the Azure DevOps test run.</source>
         <target state="translated">Azure DevOps Liveveröffentlichung konnte(n) {0} Testergebnissen nicht veröffentlicht werden. sie fehlen im Azure DevOps Testlauf.</target>

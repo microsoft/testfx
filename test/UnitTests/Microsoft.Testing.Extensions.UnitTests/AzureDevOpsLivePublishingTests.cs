@@ -1578,6 +1578,29 @@ public sealed class AzureDevOpsLivePublishingTests
     }
 
     [TestMethod]
+    public async Task OrchestratorLifetime_ResultMapHandoffFailure_UsesSpecificDiagnostic()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        environment.Setup(x => x.SetEnvironmentVariable(AzureDevOpsConstants.ResultMapPathEnvironmentVariableName, It.IsAny<string>()))
+            .Throws(new SecurityException("result map handoff is locked down"));
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(
+            directory.Path,
+            out FakeAzureDevOpsTestResultsClient client,
+            out CollectingLogger logger,
+            environment);
+        client.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(4249);
+
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+        await lifetime.AfterRunAsync(0, CancellationToken.None);
+
+        Assert.HasCount(1, client.UpdateTestRunStateCalls);
+        Assert.Contains(
+            AzureDevOpsResources.AzureDevOpsLivePublishingResultMapHandoffFailed,
+            string.Join(Environment.NewLine, logger.Logs));
+    }
+
+    [TestMethod]
     public async Task OrchestratorLifetime_PeerOrchestratorsSharingAResultsDirectory_PublishIntoASingleRun()
     {
         // A multi-project 'dotnet test' runs one orchestrator process per test project, all sharing the
@@ -2239,6 +2262,25 @@ public sealed class AzureDevOpsLivePublishingTests
     }
 
     [TestMethod]
+    public async Task MapEntryWithTerminalSequenceId_IsIgnored()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        string mapPath = Path.Combine(directory.Path, "azdo-results.json");
+        File.WriteAllText(
+            mapPath,
+            """
+            {"buildId":123,"runId":42,"results":[
+              {"storage":"tests","name":"MyTest","title":"MyTest","id":441,"attempts":[{"sequenceId":2147483647,"displayName":"MyTest","outcome":"Failed","durationInMs":1}]}
+            ]}
+            """);
+
+        AzureDevOpsResultIdStore store = await AzureDevOpsResultIdStore.OpenAsync(new SystemFileSystem(), new CollectingLogger(), mapPath, buildId: 123, runId: 42);
+        AzureDevOpsTestCaseResult result = new("MyTest", "tests", "MyTest", AzureDevOpsLivePublishingConstants.PassedTestOutcome, 1, null, null, null, null);
+
+        Assert.IsNull(store.TryGet(result));
+    }
+
+    [TestMethod]
     public async Task SameTestNameInTwoAssemblies_IsNotTreatedAsARerun()
     {
         using TestDirectory directory = CreateTestDirectory();
@@ -2810,6 +2852,53 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.AreEqual("ExistingTest", client.UpdateTestResultsCalls[0].Results.Single().AutomatedTestName);
         Assert.HasCount(1, created);
         Assert.AreEqual("NewTest", created[0].AutomatedTestName);
+    }
+
+    [TestMethod]
+    public async Task FailedCreationPost_DoesNotConsumeUnattemptedUpdateClaim()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out _, out _, environment);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+        await PublishSingleResultAsync(
+            directory.Path,
+            environment,
+            "ExistingTest",
+            new FailedTestNodeStateProperty(new InvalidOperationException("first")),
+            resultId: 451);
+
+        AzureDevOpsTestResultsPublisherOptions options = new(2, TimeSpan.FromMinutes(1), 40, TimeSpan.FromMilliseconds(250));
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options, out FakeAzureDevOpsTestResultsClient client, out _, out _, environment);
+        int createAttempts = 0;
+        List<AzureDevOpsTestCaseResult> created = [];
+        client.PublishTestResultsAsyncFunc = (_, _, results, _) =>
+        {
+            createAttempts++;
+            if (createAttempts == 1)
+            {
+                return Task.FromException<IReadOnlyList<int>?>(new HttpRequestException("transient create failure"));
+            }
+
+            created.AddRange(results);
+            return Task.FromResult<IReadOnlyList<int>?>([452]);
+        };
+        await StartPublisherAsync(publisher);
+
+        await publisher.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("NewTest", new FailedTestNodeStateProperty(new InvalidOperationException("new")), RetryTestStartTime)),
+            CancellationToken.None);
+        await publisher.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("ExistingTest", new PassedTestNodeStateProperty(), RetryTestStartTime)),
+            CancellationToken.None);
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.HasCount(1, created);
+        Assert.AreEqual("NewTest", created[0].AutomatedTestName);
+        Assert.HasCount(1, client.UpdateTestResultsCalls, "The untouched parent claim must be available on the forced retry.");
+        Assert.AreEqual(451, client.UpdateTestResultsCalls[0].Results.Single().Id);
     }
 
     [TestMethod]

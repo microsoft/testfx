@@ -166,7 +166,13 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
                 if (creations.Count > 0 && !await TryCreateResultsAsync(creations, deferredAttachments, cancellationToken).ConfigureAwait(false))
                 {
                     // Nothing in this batch reached Azure DevOps: the creations failed, and the updates were
-                    // not attempted. Requeue the batch as it was, so the next flush retries it in order.
+                    // not attempted. Release every parent claimed while classifying this untouched batch,
+                    // then requeue it as it was so the next flush can retry the intended update path.
+                    foreach ((AzureDevOpsPublishedResult published, AzureDevOpsTestCaseResultWithAttachments _) in updateCandidates)
+                    {
+                        _claimedResultIds.Remove(published.Id);
+                    }
+
                     RequeueUnsafe(batch);
                     return;
                 }

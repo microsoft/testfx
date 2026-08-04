@@ -163,7 +163,15 @@ internal sealed class AzureDevOpsTestRunOrchestratorLifetime : ITestHostOrchestr
             _resultMapPath = Path.Combine(
                 publishConfiguration.ResultsDirectory,
                 $"azdo-results.{publishConfiguration.BuildId.ToString(CultureInfo.InvariantCulture)}.{Guid.NewGuid():N}.json");
-            _environment.SetEnvironmentVariable(AzureDevOpsConstants.ResultMapPathEnvironmentVariableName, AzureDevOpsConstants.FormatResultMapPath(publishConfiguration.BuildId, _resultMapPath));
+            try
+            {
+                _environment.SetEnvironmentVariable(AzureDevOpsConstants.ResultMapPathEnvironmentVariableName, AzureDevOpsConstants.FormatResultMapPath(publishConfiguration.BuildId, _resultMapPath));
+            }
+            catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+            {
+                _resultMapPath = null;
+                TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingResultMapHandoffFailed} {ex.Message}");
+            }
 
             // Only the process that created the run announces it; the others share the same id and would
             // just repeat the same line.
@@ -207,8 +215,14 @@ internal sealed class AzureDevOpsTestRunOrchestratorLifetime : ITestHostOrchestr
 
         // Stop handing the run id to any process started later: the run is about to be closed, and a
         // straggler publishing into a completed run would be rejected by Azure DevOps.
-        TrySetEnvironmentVariable(AzureDevOpsConstants.TestRunIdEnvironmentVariableName, null);
-        TrySetEnvironmentVariable(AzureDevOpsConstants.ResultMapPathEnvironmentVariableName, null);
+        TrySetEnvironmentVariable(
+            AzureDevOpsConstants.TestRunIdEnvironmentVariableName,
+            null,
+            AzureDevOpsResources.AzureDevOpsLivePublishingRunIdHandoffFailed);
+        TrySetEnvironmentVariable(
+            AzureDevOpsConstants.ResultMapPathEnvironmentVariableName,
+            null,
+            AzureDevOpsResources.AzureDevOpsLivePublishingResultMapHandoffFailed);
 
         // The map only has meaning for the run being closed, and it lives in the results directory, which
         // is published as a build artifact. Removing it keeps an internal coordination file out of the
@@ -277,7 +291,7 @@ internal sealed class AzureDevOpsTestRunOrchestratorLifetime : ITestHostOrchestr
     /// Called from teardown, where the host may refuse the write (a <c>SecurityException</c> on
     /// .NET Framework). Failing to withdraw the handoff is far less harmful than failing the run.
     /// </remarks>
-    private void TrySetEnvironmentVariable(string name, string? value)
+    private void TrySetEnvironmentVariable(string name, string? value, string failureMessage)
     {
         try
         {
@@ -285,7 +299,7 @@ internal sealed class AzureDevOpsTestRunOrchestratorLifetime : ITestHostOrchestr
         }
         catch (Exception ex)
         {
-            TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingRunIdHandoffFailed} {ex.Message}");
+            TryLogWarning($"{failureMessage} {ex.Message}");
         }
     }
 

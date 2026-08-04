@@ -117,6 +117,11 @@
         <target state="translated">La publication en direct Azure DevOps a accepté un lot de résultats de test, mais n’a pas pu analyser les ID de résultat attribués. Les pièces jointes au niveau du résultat pour ce lot sont ignorées.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingResultMapHandoffFailed">
+        <source>Azure DevOps live publishing failed to update the result map handoff.</source>
+        <target state="new">Azure DevOps live publishing failed to update the result map handoff.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingResultsDropped">
         <source>Azure DevOps live publishing could not publish {0} test result(s); they will be missing from the Azure DevOps test run.</source>
         <target state="translated">La publication en direct Azure DevOps n’a pas pu charger {0} résultat(s) de test. Elles seront absentes de l’exécution de test Azure DevOps.</target>

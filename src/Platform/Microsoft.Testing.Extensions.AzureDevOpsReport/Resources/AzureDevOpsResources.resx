@@ -201,6 +201,9 @@
   <data name="AzureDevOpsLivePublishingResultIdParseFailedWarning" xml:space="preserve">
     <value>Azure DevOps live publishing accepted a batch of test results but could not parse the assigned result IDs; result-level attachments for this batch will be skipped.</value>
   </data>
+  <data name="AzureDevOpsLivePublishingResultMapHandoffFailed" xml:space="preserve">
+    <value>Azure DevOps live publishing failed to update the result map handoff.</value>
+  </data>
   <data name="AzureDevOpsLivePublishingResultsDropped" xml:space="preserve">
     <value>Azure DevOps live publishing could not publish {0} test result(s); they will be missing from the Azure DevOps test run.</value>
     <comment>{0} is the number of test results that could not be published.</comment>
