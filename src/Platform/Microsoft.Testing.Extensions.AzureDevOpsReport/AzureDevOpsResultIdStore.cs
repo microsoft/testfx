@@ -56,6 +56,7 @@ internal sealed class AzureDevOpsResultIdStore
     // Keyed by (storage, name, title): automatedTestName is TestNode.Uid.Value, which can be shared by
     // several folded data-driven rows. The title carries the row identity within that test application.
     private readonly Dictionary<string, AzureDevOpsPublishedResult> _results = [];
+    private readonly HashSet<string> _ambiguousKeys = [];
 
     private bool _hasUnsavedChanges;
     private bool _hasAdvancedExistingHistory;
@@ -92,8 +93,28 @@ internal sealed class AzureDevOpsResultIdStore
     /// </summary>
     public void RecordCreated(AzureDevOpsTestCaseResult result, int resultId)
     {
-        _results[CreateKey(result.AutomatedTestStorage, result.AutomatedTestName, result.TestCaseTitle)] =
-            new AzureDevOpsPublishedResult(result.AutomatedTestStorage, result.AutomatedTestName, result.TestCaseTitle, resultId, [ToSubResult(result, sequenceId: 1)]);
+        string key = CreateKey(result.AutomatedTestStorage, result.AutomatedTestName, result.TestCaseTitle);
+        if (_ambiguousKeys.Contains(key))
+        {
+            return;
+        }
+
+        if (_results.Remove(key))
+        {
+            // A folded data-driven test may legally give two rows the same display name. The platform does
+            // not expose a stable row id that survives the next process, and matching by completion order
+            // could attach history to the wrong row. Forget both mappings so later attempts use safe POSTs.
+            _ambiguousKeys.Add(key);
+            _hasUnsavedChanges = true;
+            return;
+        }
+
+        _results[key] = new AzureDevOpsPublishedResult(
+            result.AutomatedTestStorage,
+            result.AutomatedTestName,
+            result.TestCaseTitle,
+            resultId,
+            [ToSubResult(result, sequenceId: 1)]);
         _hasUnsavedChanges = true;
     }
 
@@ -284,7 +305,15 @@ internal sealed class AzureDevOpsResultIdStore
                     && entry.Title is { Length: > 0 } title
                     && IsValidAttemptHistory(entry.Attempts))
                 {
-                    _results[CreateKey(storage, name, title)] = new AzureDevOpsPublishedResult(storage, name, title, entry.Id, entry.Attempts);
+                    string key = CreateKey(storage, name, title);
+                    if (_results.Remove(key))
+                    {
+                        _ambiguousKeys.Add(key);
+                    }
+                    else if (!_ambiguousKeys.Contains(key))
+                    {
+                        _results[key] = new AzureDevOpsPublishedResult(storage, name, title, entry.Id, entry.Attempts);
+                    }
                 }
             }
         }

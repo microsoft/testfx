@@ -2127,6 +2127,54 @@ public sealed class AzureDevOpsLivePublishingTests
     }
 
     [TestMethod]
+    public async Task FoldedDataDrivenRows_SharingUidAndTitleFallBackToCreates()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out _, out _, environment);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+
+        AzureDevOpsTestResultsPublisherOptions options = new(2, TimeSpan.FromMinutes(1), 40, TimeSpan.FromMilliseconds(250));
+        AzureDevOpsTestResultsPublisher firstAttempt = CreatePublisher(directory.Path, options, out FakeAzureDevOpsTestResultsClient firstClient, out _, out _, environment);
+        firstClient.PublishTestResultsAsyncFunc = (_, _, _, _) => Task.FromResult<IReadOnlyList<int>?>([411, 412]);
+        await StartPublisherAsync(firstAttempt);
+        for (int i = 0; i < 2; i++)
+        {
+            await firstAttempt.ConsumeAsync(
+                Mock.Of<IDataProducer>(),
+                CreateMessage(CreateNode(
+                    "SharedUid",
+                    new FailedTestNodeStateProperty(new InvalidOperationException($"row {i}")),
+                    RetryTestStartTime,
+                    displayName: "Duplicate title")),
+                CancellationToken.None);
+        }
+
+        await firstAttempt.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        AzureDevOpsTestResultsPublisher secondAttempt = CreatePublisher(directory.Path, options, out FakeAzureDevOpsTestResultsClient secondClient, out _, out _, environment);
+        List<AzureDevOpsTestCaseResult> created = [];
+        secondClient.PublishTestResultsAsyncFunc = (_, _, results, _) =>
+        {
+            created.AddRange(results);
+            return Task.FromResult<IReadOnlyList<int>?>([413, 414]);
+        };
+        await StartPublisherAsync(secondAttempt);
+        for (int i = 0; i < 2; i++)
+        {
+            await secondAttempt.ConsumeAsync(
+                Mock.Of<IDataProducer>(),
+                CreateMessage(CreateNode("SharedUid", new PassedTestNodeStateProperty(), RetryTestStartTime, displayName: "Duplicate title")),
+                CancellationToken.None);
+        }
+
+        await secondAttempt.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.HasCount(2, created);
+        Assert.IsEmpty(secondClient.UpdateTestResultsCalls, "Ambiguous rows must never be PATCHed to a guessed parent.");
+    }
+
+    [TestMethod]
     public async Task SameTestNameInTwoAssemblies_IsNotTreatedAsARerun()
     {
         using TestDirectory directory = CreateTestDirectory();
