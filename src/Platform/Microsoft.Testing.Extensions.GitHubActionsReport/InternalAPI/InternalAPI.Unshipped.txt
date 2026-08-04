@@ -24,3 +24,14 @@ static Microsoft.Testing.Extensions.TestNodeIdentity.GetDisplayLabel(Microsoft.T
 *REMOVED*static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.BuildMarkdown(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.TestRecord>! records, string! assemblyName, string! targetFrameworkMoniker) -> string!
 Microsoft.Testing.Platform.Helpers.ExitCode.CoverageThresholdFailed = 14 -> Microsoft.Testing.Platform.Helpers.ExitCode
 Microsoft.Testing.Platform.Helpers.ExitCode.TestExecutionStoppedAtDeadline = 15 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSourceLocation
+Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSourceLocation.GitHubActionsSourceLocation() -> void
+Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSourceLocation.GitHubActionsSourceLocation(string! relativeNormalizedPath, int lineNumber) -> void
+Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSourceLocation.LineNumber.get -> int
+Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSourceLocation.RelativeNormalizedPath.get -> string!
+static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsAnnotationReporter.GetErrorAnnotation(string! testName, string? explanation, System.Exception? exception, string? repoRoot, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Logging.ILogger! logger, bool skipAssertionFrames, Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSourceLocation? declaredLocation = null) -> string!
+static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsAnnotationReporter.GetSkippedAnnotation(string! testName, string? explanation, Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSourceLocation? declaredLocation = null) -> string!
+static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsAnnotationReporter.TryResolveDeclaredLocation(Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode, string? repoRoot, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem) -> Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSourceLocation?
+static Microsoft.Testing.Extensions.StackTraceSourceLocationResolver.TryMakeWorkspaceRelative(string? filePath, string? repoRoot, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem) -> string?
+*REMOVED*static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsAnnotationReporter.GetErrorAnnotation(string! testName, string? explanation, System.Exception? exception, string? repoRoot, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Logging.ILogger! logger, bool skipAssertionFrames) -> string!
+*REMOVED*static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsAnnotationReporter.GetSkippedAnnotation(string! testName, string? explanation) -> string!
