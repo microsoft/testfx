@@ -66,8 +66,8 @@ Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.<Clone>$() -> Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult!
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.Attempts.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult!>!
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.Attempts.init -> void
-Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.AzureDevOpsPublishedResult(string! Storage, string! Name, int Id, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult!>! Attempts) -> void
-Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.Deconstruct(out string! Storage, out string! Name, out int Id, out System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult!>! Attempts) -> void
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.AzureDevOpsPublishedResult(string! Storage, string! Name, string! Title, int Id, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult!>! Attempts) -> void
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.Deconstruct(out string! Storage, out string! Name, out string! Title, out int Id, out System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult!>! Attempts) -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.Equals(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult? other) -> bool
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.Id.get -> int
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.Id.init -> void
@@ -75,6 +75,8 @@ Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.Name.g
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.Name.init -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.Storage.get -> string!
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.Storage.init -> void
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.Title.get -> string!
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.Title.init -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultIdStore
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultIdStore.RecordCreated(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCaseResult! result, int resultId) -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultIdStore.Forget(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult! published) -> void
@@ -84,8 +86,8 @@ Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.<Clone>$() -> Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry!
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.Attempts.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult!>?
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.Attempts.init -> void
-Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.AzureDevOpsResultMapEntry(string? Storage, string? Name, int Id, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult!>? Attempts) -> void
-Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.Deconstruct(out string? Storage, out string? Name, out int Id, out System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult!>? Attempts) -> void
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.AzureDevOpsResultMapEntry(string? Storage, string? Name, string? Title, int Id, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult!>? Attempts) -> void
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.Deconstruct(out string? Storage, out string? Name, out string? Title, out int Id, out System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult!>? Attempts) -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.Equals(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry? other) -> bool
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.Id.get -> int
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.Id.init -> void
@@ -93,6 +95,8 @@ Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.Name.ge
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.Name.init -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.Storage.get -> string?
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.Storage.init -> void
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.Title.get -> string?
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.Title.init -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapFile
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapFile.<Clone>$() -> Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapFile!
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapFile.AzureDevOpsResultMapFile(int BuildId, int RunId, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry!>? Results) -> void

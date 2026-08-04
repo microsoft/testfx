@@ -280,6 +280,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
                 Id = updates[i].Published.Id,
                 ResultGroupType = AzureDevOpsLivePublishingConstants.RerunResultGroupType,
                 SubResults = attemptHistories[i],
+                DurationInMs = SumDurations(attemptHistories[i]),
             };
         }
 
@@ -365,6 +366,24 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         }
 
         return renamed;
+    }
+
+    private static long? SumDurations(IReadOnlyList<AzureDevOpsTestSubResult> attempts)
+    {
+        long total = 0;
+        bool hasDuration = false;
+        foreach (AzureDevOpsTestSubResult attempt in attempts)
+        {
+            if (attempt.DurationInMs is not { } duration)
+            {
+                continue;
+            }
+
+            hasDuration = true;
+            total = duration > long.MaxValue - total ? long.MaxValue : total + duration;
+        }
+
+        return hasDuration ? total : null;
     }
 
     private async Task UploadAttachmentsForResultAsync(int testCaseResultId, IReadOnlyList<AzureDevOpsTestResultAttachment> attachments, CancellationToken cancellationToken)

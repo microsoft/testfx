@@ -53,8 +53,8 @@ internal sealed class AzureDevOpsResultIdStore
     private readonly int _buildId;
     private readonly int _runId;
 
-    // Keyed by (storage, name) because automatedTestName is TestNode.Uid.Value, which is only unique
-    // within a test application: two assemblies in one build can legitimately use the same uid.
+    // Keyed by (storage, name, title): automatedTestName is TestNode.Uid.Value, which can be shared by
+    // several folded data-driven rows. The title carries the row identity within that test application.
     private readonly Dictionary<string, AzureDevOpsPublishedResult> _results = [];
 
     private bool _hasUnsavedChanges;
@@ -83,7 +83,7 @@ internal sealed class AzureDevOpsResultIdStore
     /// Returns what is already published for a test, or <see langword="null"/> when this build has not seen it.
     /// </summary>
     public AzureDevOpsPublishedResult? TryGet(AzureDevOpsTestCaseResult result)
-        => _results.TryGetValue(CreateKey(result.AutomatedTestStorage, result.AutomatedTestName), out AzureDevOpsPublishedResult? published)
+        => _results.TryGetValue(CreateKey(result.AutomatedTestStorage, result.AutomatedTestName, result.TestCaseTitle), out AzureDevOpsPublishedResult? published)
             ? published
             : null;
 
@@ -92,8 +92,8 @@ internal sealed class AzureDevOpsResultIdStore
     /// </summary>
     public void RecordCreated(AzureDevOpsTestCaseResult result, int resultId)
     {
-        _results[CreateKey(result.AutomatedTestStorage, result.AutomatedTestName)] =
-            new AzureDevOpsPublishedResult(result.AutomatedTestStorage, result.AutomatedTestName, resultId, [ToSubResult(result, sequenceId: 1)]);
+        _results[CreateKey(result.AutomatedTestStorage, result.AutomatedTestName, result.TestCaseTitle)] =
+            new AzureDevOpsPublishedResult(result.AutomatedTestStorage, result.AutomatedTestName, result.TestCaseTitle, resultId, [ToSubResult(result, sequenceId: 1)]);
         _hasUnsavedChanges = true;
     }
 
@@ -126,7 +126,7 @@ internal sealed class AzureDevOpsResultIdStore
     /// </summary>
     public void RecordAttempts(AzureDevOpsPublishedResult published, IReadOnlyList<AzureDevOpsTestSubResult> attempts)
     {
-        _results[CreateKey(published.Storage, published.Name)] = published with { Attempts = attempts };
+        _results[CreateKey(published.Storage, published.Name, published.Title)] = published with { Attempts = attempts };
         _hasUnsavedChanges = true;
         _hasAdvancedExistingHistory = true;
     }
@@ -141,7 +141,7 @@ internal sealed class AzureDevOpsResultIdStore
     /// a separate POST instead.
     /// </remarks>
     public void Forget(AzureDevOpsPublishedResult published)
-        => _results.Remove(CreateKey(published.Storage, published.Name));
+        => _results.Remove(CreateKey(published.Storage, published.Name, published.Title));
 
     /// <summary>
     /// Removes the persisted map before an existing result is updated.
@@ -202,7 +202,7 @@ internal sealed class AzureDevOpsResultIdStore
             int index = 0;
             foreach (AzureDevOpsPublishedResult published in _results.Values)
             {
-                entries[index++] = new AzureDevOpsResultMapEntry(published.Storage, published.Name, published.Id, published.Attempts);
+                entries[index++] = new AzureDevOpsResultMapEntry(published.Storage, published.Name, published.Title, published.Id, published.Attempts);
             }
 
             string json = JsonSerializer.Serialize(new AzureDevOpsResultMapFile(_buildId, _runId, entries), JsonSerializerOptions);
@@ -277,10 +277,13 @@ internal sealed class AzureDevOpsResultIdStore
             {
                 // Entries come from disk, so nothing about them is guaranteed however the record is
                 // annotated: a truncated or hand-edited file can yield nulls and non-positive ids.
-                if (entry is { Id: > 0, Storage: { Length: > 0 } storage, Name: { Length: > 0 } name }
+                if (entry.Id > 0
+                    && entry.Storage is { Length: > 0 } storage
+                    && entry.Name is { Length: > 0 } name
+                    && entry.Title is { Length: > 0 } title
                     && IsValidAttemptHistory(entry.Attempts))
                 {
-                    _results[CreateKey(storage, name)] = new AzureDevOpsPublishedResult(storage, name, entry.Id, entry.Attempts);
+                    _results[CreateKey(storage, name, title)] = new AzureDevOpsPublishedResult(storage, name, title, entry.Id, entry.Attempts);
                 }
             }
         }
@@ -308,6 +311,7 @@ internal sealed class AzureDevOpsResultIdStore
             if (attempt is null
                 || attempt.SequenceId <= previousSequenceId
                 || attempt.DisplayName is null
+                || attempt.DurationInMs is < 0
                 || attempt.Outcome is not (
                     AzureDevOpsLivePublishingConstants.PassedTestOutcome
                     or AzureDevOpsLivePublishingConstants.FailedTestOutcome
@@ -363,14 +367,15 @@ internal sealed class AzureDevOpsResultIdStore
     /// character, including whatever separator we might otherwise pick, and two different tests must never
     /// produce the same key or one would be published as a rerun of the other.
     /// </remarks>
-    private static string CreateKey(string storage, string name)
-        => $"{storage.Length.ToString(CultureInfo.InvariantCulture)}:{storage.ToLowerInvariant()}:{name}";
+    private static string CreateKey(string storage, string name, string title)
+        => $"{storage.Length.ToString(CultureInfo.InvariantCulture)}:{storage.ToLowerInvariant()}:{name.Length.ToString(CultureInfo.InvariantCulture)}:{name}:{title}";
 }
 
 /// <summary>A test already published to the run, with every attempt seen so far.</summary>
 internal sealed record AzureDevOpsPublishedResult(
     string Storage,
     string Name,
+    string Title,
     int Id,
     IReadOnlyList<AzureDevOpsTestSubResult> Attempts);
 
@@ -385,6 +390,7 @@ internal sealed record AzureDevOpsPublishedResult(
 internal sealed record AzureDevOpsResultMapEntry(
     [property: JsonPropertyName("storage")] string? Storage,
     [property: JsonPropertyName("name")] string? Name,
+    [property: JsonPropertyName("title")] string? Title,
     [property: JsonPropertyName("id")] int Id,
     [property: JsonPropertyName("attempts")] IReadOnlyList<AzureDevOpsTestSubResult>? Attempts);
 

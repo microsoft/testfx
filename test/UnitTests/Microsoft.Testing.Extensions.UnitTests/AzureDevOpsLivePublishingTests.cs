@@ -2014,6 +2014,110 @@ public sealed class AzureDevOpsLivePublishingTests
     }
 
     [TestMethod]
+    public async Task RetryAttempt_ParentDurationIncludesAllAttempts()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out _, out _, environment);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+
+        TimingProperty firstTiming = new(new TimingInfo(
+            RetryTestStartTime,
+            RetryTestStartTime + TimeSpan.FromSeconds(30),
+            TimeSpan.FromSeconds(30)));
+        AzureDevOpsTestResultsPublisher firstAttempt = CreatePublisher(
+            directory.Path,
+            AzureDevOpsTestResultsPublisherOptions.Default,
+            out FakeAzureDevOpsTestResultsClient firstClient,
+            out _,
+            out _,
+            environment);
+        firstClient.PublishTestResultsAsyncFunc = (_, _, _, _) => Task.FromResult<IReadOnlyList<int>?>([26]);
+        await StartPublisherAsync(firstAttempt);
+        await firstAttempt.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode(
+                "MyTest",
+                new FailedTestNodeStateProperty(new InvalidOperationException("first")),
+                RetryTestStartTime,
+                firstTiming)),
+            CancellationToken.None);
+        await firstAttempt.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        TimingProperty secondTiming = new(new TimingInfo(
+            RetryTestStartTime + TimeSpan.FromSeconds(30),
+            RetryTestStartTime + TimeSpan.FromSeconds(31),
+            TimeSpan.FromSeconds(1)));
+        AzureDevOpsTestResultsPublisher secondAttempt = CreatePublisher(
+            directory.Path,
+            AzureDevOpsTestResultsPublisherOptions.Default,
+            out FakeAzureDevOpsTestResultsClient secondClient,
+            out _,
+            out _,
+            environment);
+        await StartPublisherAsync(secondAttempt);
+        await secondAttempt.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("MyTest", new PassedTestNodeStateProperty(), RetryTestStartTime, secondTiming)),
+            CancellationToken.None);
+        await secondAttempt.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        AzureDevOpsTestCaseResult parent = secondClient.UpdateTestResultsCalls.Single().Results.Single();
+        Assert.AreEqual(31_000, parent.DurationInMs);
+        Assert.AreEqual(30_000, parent.SubResults![0].DurationInMs);
+        Assert.AreEqual(1_000, parent.SubResults[1].DurationInMs);
+    }
+
+    [TestMethod]
+    public async Task FoldedDataDrivenRows_SharingUidUpdateTheirOwnResults()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out _, out _, environment);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+
+        AzureDevOpsTestResultsPublisherOptions options = new(2, TimeSpan.FromMinutes(1), 40, TimeSpan.FromMilliseconds(250));
+        AzureDevOpsTestResultsPublisher firstAttempt = CreatePublisher(directory.Path, options, out FakeAzureDevOpsTestResultsClient firstClient, out _, out _, environment);
+        firstClient.PublishTestResultsAsyncFunc = (_, _, _, _) => Task.FromResult<IReadOnlyList<int>?>([401, 402]);
+        await StartPublisherAsync(firstAttempt);
+        await firstAttempt.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode(
+                "SharedUid",
+                new FailedTestNodeStateProperty(new InvalidOperationException("row one")),
+                RetryTestStartTime,
+                displayName: "MyTest(1)")),
+            CancellationToken.None);
+        await firstAttempt.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode(
+                "SharedUid",
+                new FailedTestNodeStateProperty(new InvalidOperationException("row two")),
+                RetryTestStartTime,
+                displayName: "MyTest(2)")),
+            CancellationToken.None);
+        await firstAttempt.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        AzureDevOpsTestResultsPublisher secondAttempt = CreatePublisher(directory.Path, options, out FakeAzureDevOpsTestResultsClient secondClient, out _, out _, environment);
+        await StartPublisherAsync(secondAttempt);
+        await secondAttempt.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("SharedUid", new PassedTestNodeStateProperty(), RetryTestStartTime, displayName: "MyTest(1)")),
+            CancellationToken.None);
+        await secondAttempt.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("SharedUid", new PassedTestNodeStateProperty(), RetryTestStartTime, displayName: "MyTest(2)")),
+            CancellationToken.None);
+        await secondAttempt.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.HasCount(1, secondClient.UpdateTestResultsCalls);
+        IReadOnlyList<AzureDevOpsTestCaseResult> updated = secondClient.UpdateTestResultsCalls[0].Results;
+        Assert.HasCount(2, updated);
+        Assert.AreEqual(401, updated.Single(result => result.TestCaseTitle == "MyTest(1)").Id);
+        Assert.AreEqual(402, updated.Single(result => result.TestCaseTitle == "MyTest(2)").Id);
+    }
+
+    [TestMethod]
     public async Task SameTestNameInTwoAssemblies_IsNotTreatedAsARerun()
     {
         using TestDirectory directory = CreateTestDirectory();
@@ -2333,7 +2437,7 @@ public sealed class AzureDevOpsLivePublishingTests
         string mapPath = AzureDevOpsConstants.TryGetInheritedResultMapPath(environment.Object, buildId: 123)!;
         File.WriteAllText(
             mapPath,
-            """{"buildId":123,"runId":4242,"results":[{"storage":"MyTests","name":"MyTest","id":81,"attempts":null}]}""");
+            """{"buildId":123,"runId":4242,"results":[{"storage":"MyTests","name":"MyTest","title":"MyTest","id":81,"attempts":null}]}""");
 
         AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, AzureDevOpsTestResultsPublisherOptions.Default, out FakeAzureDevOpsTestResultsClient client, out _, out _, environment);
         List<AzureDevOpsTestCaseResult> created = [];
@@ -2604,7 +2708,7 @@ public sealed class AzureDevOpsLivePublishingTests
                 null);
         }
 
-        AzureDevOpsPublishedResult published = new("tests", "MyTest", 123, attempts);
+        AzureDevOpsPublishedResult published = new("tests", "MyTest", "MyTest", 123, attempts);
         AzureDevOpsTestCaseResult nextResult = new(
             "MyTest",
             "tests",
@@ -2928,13 +3032,13 @@ public sealed class AzureDevOpsLivePublishingTests
     private static TestNodeUpdateMessage CreateMessage(TestNode node)
         => new(new SessionUid(Guid.NewGuid().ToString()), node);
 
-    private static TestNode CreateNode(string uid, IProperty state, DateTimeOffset startTime, TimingProperty? timing = null)
+    private static TestNode CreateNode(string uid, IProperty state, DateTimeOffset startTime, TimingProperty? timing = null, string? displayName = null)
     {
         PropertyBag properties = timing is null ? new PropertyBag(state) : new PropertyBag(state, timing);
         return new TestNode
         {
             Uid = new TestNodeUid(uid),
-            DisplayName = uid,
+            DisplayName = displayName ?? uid,
             Properties = properties,
         };
     }
