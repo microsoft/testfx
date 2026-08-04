@@ -107,7 +107,7 @@ A manifest is a JSON file whose name ends with **`.testingplatformextensions.jso
 | `extensions[].assemblyPath` | yes | string | Path to the assembly containing the hook. Relative paths resolve against the **directory of the manifest file**. |
 | `extensions[].typeFullName` | yes | string | Full name of the type declaring the static `AddExtensions` hook. |
 | `extensions[].id` | no | string | Stable identifier used to de-duplicate the same extension declared by several manifests. Compared ordinally, case-insensitively. Defaults to the **resolved absolute** `assemblyPath` plus `typeFullName` when omitted. |
-| `extensions[].displayName` | no | string | Human-readable name used in diagnostics. Defaults to `typeFullName`. |
+| `extensions[].displayName` | no | string | Human-readable name for the extension. Used in the loaded-extensions report, the diagnostic log, and assembly-level errors. Defaults to `typeFullName`. |
 | `extensions[].enabled` | no | bool | Defaults to `true`. `false` keeps the declaration in place but skips loading. |
 
 Unknown properties (including `$schema`) are ignored so manifests stay forward-compatible, but each
@@ -146,8 +146,12 @@ assembly). The other three each pay for themselves:
 - **`enabled`** — the realistic rollout story is "ship the manifest to every machine, turn it on for
   some". Deleting and restoring files is a worse mechanism than a flag, and `enabled: false` is also
   the per-extension escape hatch during an incident.
-- **`displayName`** — every error message and log line in this feature names an extension. Without it
-  the only handle is a fully-qualified type name, which is poor in a terminal error.
+- **`displayName`** — gives an extension a handle that is not a fully-qualified type name. It identifies
+  the extension in the loaded-extensions report, in the diagnostic log, and in the errors that do not
+  already name the type (a missing or unloadable assembly). Errors that are *about* the type already
+  print `typeFullName`, along with the assembly and the declaring manifest, so they identify the
+  extension without it — and since `displayName` defaults to `typeFullName`, adding it there would
+  usually just print the same string twice.
 
 #### Why one file can declare several extensions
 

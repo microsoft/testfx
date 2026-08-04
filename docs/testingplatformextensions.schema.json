@@ -50,7 +50,7 @@
           "type": "string",
           "minLength": 1,
           "pattern": "\\S",
-          "description": "Human-readable name used in diagnostics. Defaults to the type full name."
+          "description": "Human-readable name for the extension. Used in the loaded-extensions report, the diagnostic log, and assembly-level errors. Defaults to the type full name."
         },
         "enabled": {
           "type": "boolean",
