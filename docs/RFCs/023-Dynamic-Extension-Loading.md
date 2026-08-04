@@ -438,6 +438,19 @@ instance, shows up under "Registered command line providers".
   can also carry.
 - A way to point at manifests outside the test application's directory is deferred; §3 lists the
   questions it raises.
+- **Should an unresolvable non-shared dependency fail, rather than fall back to the application?**
+  When an extension's `AssemblyLoadContext` cannot resolve a reference, it delegates to the default
+  context — the standard `AssemblyDependencyResolver` pattern, and mandatory for framework assemblies,
+  which the resolver never returns a path for. The same fallback also means a *missing* private
+  dependency binds to the application's copy of that name if it has one, which is the cross-binding
+  this design otherwise avoids. The two cases are not distinguishable where the decision is made:
+  `System.Runtime` and a missing `Contoso.Shared` both simply fail to resolve, so "fall back only for
+  framework assemblies" has nothing to test against. A heuristic exists — treat a name the application
+  directory carries but the extension could not resolve as an error — but it changes the contract, by
+  forbidding an extension from relying on a library the host happens to ship. That is a design
+  decision, not an implementation detail: either extensions must be fully self-contained apart from
+  the shared list (§5), or host-provided libraries are a supported convenience. This iteration takes
+  the permissive option because it is the standard pattern and the reversible one.
 
 ### Settled
 

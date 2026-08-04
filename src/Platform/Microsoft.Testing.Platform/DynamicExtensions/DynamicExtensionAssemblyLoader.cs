@@ -112,7 +112,11 @@ internal sealed class DynamicExtensionAssemblyLoader : IDynamicExtensionAssembly
             string? resolvedPath = _resolver?.ResolveAssemblyToPath(assemblyName);
             resolvedPath ??= ProbeDirectory(assemblyName);
 
-            // Returning null delegates to the default context, which is what we want for framework assemblies.
+            // Delegating to the default context is required, not merely convenient: the resolver returns no
+            // path for framework assemblies, so an extension that could not fall back would fail on
+            // System.Runtime. The cost is that a *missing* private dependency also falls through and can bind
+            // to an application assembly of the same name. The two are indistinguishable here — both simply
+            // did not resolve — so this is recorded as an open question in the RFC rather than guessed at.
             return resolvedPath is null ? null : LoadFromAssemblyPath(resolvedPath);
         }
 
