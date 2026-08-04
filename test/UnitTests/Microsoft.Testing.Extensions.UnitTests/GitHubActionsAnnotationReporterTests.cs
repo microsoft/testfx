@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 extern alias ghactions;
@@ -176,8 +176,9 @@ public sealed class GitHubActionsAnnotationReporterTests
         GitHubActionsSourceLocation? location = GitHubActionsAnnotationReporter.TryResolveDeclaredLocation(testNode, "/repo/", CreateFileSystemWhereEveryFileExists());
 
         Assert.IsNotNull(location);
-        Assert.AreEqual("src/MyTests.cs", location.Value.RelativeNormalizedPath);
-        Assert.AreEqual(21, location.Value.LineNumber);
+        GitHubActionsSourceLocation resolvedLocation = location!.Value;
+        Assert.AreEqual("src/MyTests.cs", resolvedLocation.RelativeNormalizedPath);
+        Assert.AreEqual(21, resolvedLocation.LineNumber);
     }
 
     [TestMethod]
@@ -191,7 +192,8 @@ public sealed class GitHubActionsAnnotationReporterTests
         GitHubActionsSourceLocation? location = GitHubActionsAnnotationReporter.TryResolveDeclaredLocation(testNode, "/repo/", CreateFileSystemWhereEveryFileExists());
 
         Assert.IsNotNull(location);
-        Assert.AreEqual(0, location.Value.LineNumber);
+        GitHubActionsSourceLocation resolvedLocation = location!.Value;
+        Assert.AreEqual(0, resolvedLocation.LineNumber);
     }
 
     [TestMethod]

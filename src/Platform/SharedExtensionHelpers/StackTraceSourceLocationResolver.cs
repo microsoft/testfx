@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform;
@@ -137,25 +137,98 @@ internal static class StackTraceSourceLocationResolver
             return null;
         }
 
-        string relativePath;
-        if (filePath!.StartsWith(DeterministicBuildRoot, StringComparison.OrdinalIgnoreCase))
-        {
-            relativePath = filePath.Substring(DeterministicBuildRoot.Length);
-        }
-        else if (filePath.StartsWith(repoRoot!, StringComparison.OrdinalIgnoreCase))
-        {
-            relativePath = filePath.Substring(repoRoot!.Length);
-        }
-        else
+        if (!TryGetFullPath(repoRoot!, out string canonicalRepoRoot))
         {
             return null;
         }
 
-        string fullPath = Path.Combine(repoRoot!, relativePath);
-        return fileSystem.ExistFile(fullPath)
-            // Annotations expect a workspace-relative path with forward slashes.
-            ? relativePath.Replace('\\', '/').TrimStart('/')
-            : null;
+        canonicalRepoRoot = EnsureTrailingDirectorySeparator(canonicalRepoRoot);
+
+        string canonicalCandidate;
+        if (filePath!.StartsWith(DeterministicBuildRoot, StringComparison.OrdinalIgnoreCase))
+        {
+            string relativePath = filePath.Substring(DeterministicBuildRoot.Length);
+            if (!TryGetFullPath(canonicalRepoRoot, relativePath, out canonicalCandidate))
+            {
+                return null;
+            }
+        }
+        else if (!TryIsPathRooted(filePath, out bool isPathRooted)
+            || !isPathRooted
+            || !TryGetFullPath(filePath, out canonicalCandidate))
+        {
+            return null;
+        }
+
+        if (!IsUnderDirectory(canonicalCandidate, canonicalRepoRoot) || !fileSystem.ExistFile(canonicalCandidate))
+        {
+            return null;
+        }
+
+        // Annotations expect a workspace-relative path with forward slashes.
+        return canonicalCandidate.Substring(canonicalRepoRoot.Length).Replace('\\', '/').TrimStart('/');
+    }
+
+    private static bool IsUnderDirectory(string path, string directory)
+        => path.StartsWith(directory, StringComparison.OrdinalIgnoreCase);
+
+    private static string EnsureTrailingDirectorySeparator(string path)
+    {
+        char lastChar = path[path.Length - 1];
+        return lastChar == Path.DirectorySeparatorChar || lastChar == Path.AltDirectorySeparatorChar
+            ? path
+            : path + Path.DirectorySeparatorChar;
+    }
+
+    private static bool TryIsPathRooted(string path, out bool isPathRooted)
+    {
+        try
+        {
+            isPathRooted = Path.IsPathRooted(path);
+            return true;
+        }
+        catch (Exception ex) when (ex is ArgumentException
+            or NotSupportedException
+            or PathTooLongException
+            or System.Security.SecurityException)
+        {
+            isPathRooted = false;
+            return false;
+        }
+    }
+
+    private static bool TryGetFullPath(string path, out string fullPath)
+    {
+        try
+        {
+            fullPath = Path.GetFullPath(path);
+            return true;
+        }
+        catch (Exception ex) when (ex is ArgumentException
+            or NotSupportedException
+            or PathTooLongException
+            or System.Security.SecurityException)
+        {
+            fullPath = string.Empty;
+            return false;
+        }
+    }
+
+    private static bool TryGetFullPath(string basePath, string relativePath, out string fullPath)
+    {
+        try
+        {
+            fullPath = Path.GetFullPath(Path.Combine(basePath, relativePath));
+            return true;
+        }
+        catch (Exception ex) when (ex is ArgumentException
+            or NotSupportedException
+            or PathTooLongException
+            or System.Security.SecurityException)
+        {
+            fullPath = string.Empty;
+            return false;
+        }
     }
 
     private static bool IsAssertionImplementationFrame(string code)
