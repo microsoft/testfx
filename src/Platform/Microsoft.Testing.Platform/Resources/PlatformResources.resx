@@ -1024,7 +1024,7 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
     <comment>{0} is the manifest file path. {1} is the zero-based index of the element. {2} is the name of the JSON array property.</comment>
   </data>
   <data name="DynamicExtensionManifestEntryMissingPropertyErrorMessage" xml:space="preserve">
-    <value>The extension manifest '{0}' is invalid: the extension at index {1} is missing the required '{2}' property.</value>
+    <value>The extension manifest '{0}' is invalid: the extension at index {1} is missing the required '{2}' property, or its value is empty.</value>
     <comment>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the missing JSON property.</comment>
   </data>
   <data name="DynamicExtensionManifestEntryPropertyNotStringErrorMessage" xml:space="preserve">

@@ -58,8 +58,8 @@ explicitly, which is what the rest of this RFC does:
 
 | Historical failure mode | How this design addresses it |
 | --- | --- |
-| Dependency conflicts | Every extension assembly is loaded into its own `AssemblyLoadContext`, resolving its dependencies from its own `.deps.json`. Only the platform assembly is shared with the host. |
-| Type-identity mismatches | The platform assembly is *always* resolved from the default load context, never from the extension's folder, so `ITestApplicationBuilder` is the same type on both sides. |
+| Dependency conflicts | Every extension assembly is loaded into its own `AssemblyLoadContext`, resolving its dependencies from its own `.deps.json`. Only an explicit list of contract assemblies is shared with the host: `Microsoft.Testing.Platform` and `Microsoft.Testing.Extensions.TrxReport.Abstractions` (§5). |
+| Type-identity mismatches | Those shared contracts are *always* resolved from the default load context, never from the extension's folder, so `ITestApplicationBuilder` is the same type on both sides. |
 | Silent degradation | Every failure — unparseable manifest, missing assembly, missing type, missing hook — fails the run. There is no "ignore and continue" path. |
 | Undiscoverable plugin sets | The feature is off unless a run passes `--enable-dynamic-extensions`. Manifests are explicit files with explicit paths; nothing is discovered by scanning for `*.dll`, and everything loaded is echoed to the run's output. |
 | No escape hatch during triage | A single environment variable disables the whole mechanism. |
