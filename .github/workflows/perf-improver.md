@@ -1,5 +1,4 @@
 ---
-source: githubnext/agentics/workflows/perf-improver.md@main
 description: |
   A performance-focused repository assistant that runs regularly (daily by default) to identify and implement performance improvements.
   Can also be triggered on-demand via '/perf-assist <instructions>' to perform specific tasks.
@@ -108,6 +107,7 @@ tools:
   bash: true
   repo-memory: true
 
+source: githubnext/agentics/workflows/perf-improver.md@main
 ---
 
 # Perf Improver

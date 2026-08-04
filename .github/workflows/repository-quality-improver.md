@@ -1,5 +1,4 @@
 ---
-source: githubnext/agentics/workflows/repository-quality-improver.md@main
 name: Repository Quality Improver
 description: Daily analysis of repository quality focusing on a different software development lifecycle area each run
 on:
@@ -32,6 +31,7 @@ safe-outputs:
     max: 1
 
 timeout-minutes: 20
+source: githubnext/agentics/workflows/repository-quality-improver.md@main
 ---
 
 # Repository Quality Improvement Agent
