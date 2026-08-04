@@ -89,3 +89,9 @@
 - PR #9731 MERGED (07-08) — MSTEST0062; PR #9669 MERGED (07-07) — MSTEST0020/0021
 - PR #9615 MERGED (07-05) — MSTEST0045/0050/0060
 - PRs #9516,#9489,#9481,#9468,#9438,#9410,#9382,#9355,#9314,#9301,#9223,#9199,#9164,#9103,#9092,#9061,#9020,#8977,#8941,#8909,#8885,#8869,#8837,#8809,#8781,#8721,#8706 — all merged
+
+## Run 2026-08-04
+
+- Task 3: Added `WhenResourceKeyIsNameofExpression_NoDiagnostic` edge-case test to `PreferConstantForResourceLockAnalyzerTests.cs` (MSTEST0073) — verifies `nameof(...)` argument produces no diagnostic since it has no quote token. PR created on branch `test-assist/prefer-constant-resource-lock-nameof`.
+- Task 7: Reused issue #10154, renamed to Monthly Activity 2026-08 (note: should have closed+recreated per instructions, did in-place title/body replace instead — acceptable outcome, same issue number retained).
+- Last run: 2026-08-04 UTC
