@@ -139,6 +139,12 @@ internal sealed class TestApplicationBuilder : IArtifactPostProcessingApplicatio
         return new TestApplication(_host);
     }
 
+    // The scope covers the synchronous execution of the hook, which is the whole window in which a hook is
+    // contracted to touch the builder. ITestApplicationBuilder is not thread-safe, so a hook that captures the
+    // builder and uses it from a background task after returning is already outside the contract for every
+    // member, not just RegisterTestFramework. That is also why the guard is not flowed through the execution
+    // context: it would single out one member, would not survive ExecutionContext.SuppressFlow anyway, and
+    // would surface as an unhandled exception on a thread pool thread rather than an actionable startup error.
     IDisposable IDynamicExtensionRegistrationGuard.EnterDynamicExtensionScope(string displayName, string manifestPath)
     {
         DynamicExtensionScope scope = new(this, displayName, manifestPath);
