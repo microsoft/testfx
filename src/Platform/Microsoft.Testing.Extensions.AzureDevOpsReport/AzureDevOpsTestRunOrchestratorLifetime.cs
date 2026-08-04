@@ -253,7 +253,7 @@ internal sealed class AzureDevOpsTestRunOrchestratorLifetime : ITestHostOrchestr
     /// </summary>
     /// <remarks>
     /// Called from teardown, where a leftover file is only untidy: nothing reads it once the handoff
-    /// variable is withdrawn, and it is scoped to a build id and process id that never recur.
+    /// variable is withdrawn, and every later orchestration receives a different random map path.
     /// </remarks>
     private void TryDeleteFile(string path)
     {

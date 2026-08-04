@@ -108,7 +108,8 @@ internal sealed class AzureDevOpsResultIdStore
     /// </remarks>
     public static IReadOnlyList<AzureDevOpsTestSubResult> BuildNextAttempts(AzureDevOpsPublishedResult published, AzureDevOpsTestCaseResult result)
     {
-        List<AzureDevOpsTestSubResult> attempts = [.. published.Attempts, ToSubResult(result, published.Attempts.Count + 1)];
+        int nextSequenceId = published.Attempts.Count == 0 ? 1 : published.Attempts[^1].SequenceId + 1;
+        List<AzureDevOpsTestSubResult> attempts = [.. published.Attempts, ToSubResult(result, nextSequenceId)];
 
         // Azure DevOps caps sub-results per result; keep the most recent attempts because they are the ones
         // that explain the parent outcome. A retry sequence never gets close to this.

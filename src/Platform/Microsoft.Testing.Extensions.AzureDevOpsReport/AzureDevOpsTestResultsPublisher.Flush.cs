@@ -295,7 +295,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         {
             await UploadAttachmentsForResultAsync(
                 updates[i].Published.Id,
-                RenameForAttempt(updates[i].Attempt.Attachments, attemptHistories[i].Count),
+                RenameForAttempt(updates[i].Attempt.Attachments, attemptHistories[i][^1].SequenceId),
                 cancellationToken).ConfigureAwait(false);
         }
 

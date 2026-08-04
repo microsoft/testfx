@@ -2415,6 +2415,46 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.Contains("SecondTest", map);
     }
 
+    [TestMethod]
+    public void CappedAttemptHistory_ContinuesIncreasingSequenceIds()
+    {
+        var attempts = new AzureDevOpsTestSubResult[AzureDevOpsLivePublishingConstants.MaxSubResultsPerResult];
+        for (int i = 0; i < attempts.Length; i++)
+        {
+            attempts[i] = new AzureDevOpsTestSubResult(
+                i + 1,
+                "MyTest",
+                AzureDevOpsLivePublishingConstants.FailedTestOutcome,
+                1,
+                null,
+                null,
+                null,
+                null);
+        }
+
+        AzureDevOpsPublishedResult published = new("tests", "MyTest", 123, attempts);
+        AzureDevOpsTestCaseResult nextResult = new(
+            "MyTest",
+            "tests",
+            "MyTest",
+            AzureDevOpsLivePublishingConstants.PassedTestOutcome,
+            1,
+            null,
+            null,
+            null,
+            null);
+
+        IReadOnlyList<AzureDevOpsTestSubResult> next = AzureDevOpsResultIdStore.BuildNextAttempts(published, nextResult);
+        IReadOnlyList<AzureDevOpsTestSubResult> afterNext = AzureDevOpsResultIdStore.BuildNextAttempts(
+            published with { Attempts = next },
+            nextResult);
+
+        Assert.HasCount(AzureDevOpsLivePublishingConstants.MaxSubResultsPerResult, next);
+        Assert.AreEqual(2, next[0].SequenceId);
+        Assert.AreEqual(1001, next[^1].SequenceId);
+        Assert.AreEqual(1002, afterNext[^1].SequenceId);
+    }
+
     /// <summary>
     /// Runs one publisher to completion for a single test, so a following attempt has something to merge into.
     /// </summary>
