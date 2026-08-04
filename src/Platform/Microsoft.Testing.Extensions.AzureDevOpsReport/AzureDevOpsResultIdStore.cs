@@ -60,6 +60,7 @@ internal sealed class AzureDevOpsResultIdStore
 
     private bool _hasUnsavedChanges;
     private bool _hasAdvancedExistingHistory;
+    private bool _canPersist = true;
 
     private AzureDevOpsResultIdStore(IFileSystem fileSystem, ILogger logger, string filePath, int buildId, int runId)
     {
@@ -232,7 +233,7 @@ internal sealed class AzureDevOpsResultIdStore
     {
         // Nothing was published, so there is nothing for the next attempt to merge into. Writing an empty
         // map would only leave a file behind in the results directory.
-        if (!_hasUnsavedChanges)
+        if (!_hasUnsavedChanges || !_canPersist)
         {
             return;
         }
@@ -314,17 +315,17 @@ internal sealed class AzureDevOpsResultIdStore
             string content = await _fileSystem.ReadAllTextAsync(_filePath).ConfigureAwait(false);
             AzureDevOpsResultMapFile? map = JsonSerializer.Deserialize<AzureDevOpsResultMapFile>(content, JsonSerializerOptions);
 
-            // Result ids are scoped by run, not only by build. A map left behind by another run would
-            // address unrelated results even when it belongs to the same build (for example after a
-            // crashed orchestration whose process id was later reused). Start over instead.
+            // Result ids are scoped by run, not only by build. A map left behind by another run is foreign
+            // state: ignore it and never overwrite its path when this session later creates results.
             if (map?.Results is null || map.BuildId != _buildId || map.RunId != _runId)
             {
+                _canPersist = false;
                 return;
             }
 
-            Dictionary<int, string> keyByResultId = [];
-            Dictionary<string, int> resultIdByKey = [];
-            HashSet<int> ambiguousResultIds = [];
+            var candidates = new List<(AzureDevOpsResultMapEntry Entry, string Key, long? RetainedDuration)>();
+            Dictionary<string, int> keyCounts = [];
+            Dictionary<int, int> resultIdCounts = [];
             foreach (AzureDevOpsResultMapEntry? entry in map.Results)
             {
                 // Entries come from disk, so nothing about them is guaranteed however the record is
@@ -337,47 +338,33 @@ internal sealed class AzureDevOpsResultIdStore
                     && IsValidAttemptHistory(entry.Attempts))
                 {
                     string key = CreateKey(storage, name, title);
-                    if (ambiguousResultIds.Contains(entry.Id) || _ambiguousKeys.Contains(key))
+                    long? retainedDuration = SumDurations(entry.Attempts);
+                    if (entry.TotalDurationInMs is < 0
+                        || (entry.TotalDurationInMs is { } totalDuration && retainedDuration is { } retained && totalDuration < retained))
                     {
                         continue;
                     }
 
-                    if (keyByResultId.TryGetValue(entry.Id, out string? previousKey))
-                    {
-                        _results.Remove(previousKey);
-                        resultIdByKey.Remove(previousKey);
-                        _ambiguousKeys.Add(previousKey);
-                        _ambiguousKeys.Add(key);
-                        ambiguousResultIds.Add(entry.Id);
-                    }
-                    else if (resultIdByKey.TryGetValue(key, out int previousResultId))
-                    {
-                        _results.Remove(key);
-                        keyByResultId.Remove(previousResultId);
-                        resultIdByKey.Remove(key);
-                        _ambiguousKeys.Add(key);
-                        ambiguousResultIds.Add(previousResultId);
-                        ambiguousResultIds.Add(entry.Id);
-                    }
-                    else
-                    {
-                        long? retainedDuration = SumDurations(entry.Attempts);
-                        if (entry.TotalDurationInMs is < 0
-                            || (entry.TotalDurationInMs is { } totalDuration && retainedDuration is { } retained && totalDuration < retained))
-                        {
-                            continue;
-                        }
-
-                        _results[key] = new AzureDevOpsPublishedResult(storage, name, title, entry.Id, entry.Attempts)
-                        {
-                            TotalDurationInMs = entry.TotalDurationInMs ?? retainedDuration,
-                            StartedDate = entry.StartedDate ?? GetEarliestStartedDate(entry.Attempts),
-                            CompletedDate = entry.CompletedDate ?? GetLatestCompletedDate(entry.Attempts),
-                        };
-                        keyByResultId[entry.Id] = key;
-                        resultIdByKey[key] = entry.Id;
-                    }
+                    candidates.Add((entry, key, retainedDuration));
+                    keyCounts[key] = keyCounts.TryGetValue(key, out int keyCount) ? keyCount + 1 : 1;
+                    resultIdCounts[entry.Id] = resultIdCounts.TryGetValue(entry.Id, out int idCount) ? idCount + 1 : 1;
                 }
+            }
+
+            foreach ((AzureDevOpsResultMapEntry entry, string key, long? retainedDuration) in candidates)
+            {
+                if (keyCounts[key] != 1 || resultIdCounts[entry.Id] != 1)
+                {
+                    _ambiguousKeys.Add(key);
+                    continue;
+                }
+
+                _results[key] = new AzureDevOpsPublishedResult(entry.Storage!, entry.Name!, entry.Title!, entry.Id, entry.Attempts!)
+                {
+                    TotalDurationInMs = entry.TotalDurationInMs ?? retainedDuration,
+                    StartedDate = entry.StartedDate ?? GetEarliestStartedDate(entry.Attempts!),
+                    CompletedDate = entry.CompletedDate ?? GetLatestCompletedDate(entry.Attempts!),
+                };
             }
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)

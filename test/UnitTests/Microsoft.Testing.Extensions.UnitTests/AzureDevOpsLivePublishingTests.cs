@@ -2047,6 +2047,35 @@ public sealed class AzureDevOpsLivePublishingTests
     }
 
     [TestMethod]
+    public async Task FirstAttempt_AttachmentNameIncludesAttemptOne()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out _, out _, environment);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(
+            directory.Path,
+            AzureDevOpsTestResultsPublisherOptions.Default,
+            out FakeAzureDevOpsTestResultsClient client,
+            out _,
+            out _,
+            environment);
+        TestNode node = CreateNode(
+            "MyTest",
+            new FailedTestNodeStateProperty(new InvalidOperationException("first")),
+            RetryTestStartTime);
+        node.Properties.Add(new StandardOutputProperty("first output"));
+
+        await StartPublisherAsync(publisher);
+        await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), CreateMessage(node), CancellationToken.None);
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.HasCount(1, client.UploadTestResultAttachmentCalls);
+        Assert.AreEqual("stdout.attempt-1.log", client.UploadTestResultAttachmentCalls[0].Attachment.FileName);
+    }
+
+    [TestMethod]
     public async Task RetryAttempt_ParentDurationIncludesAllAttempts()
     {
         using TestDirectory directory = CreateTestDirectory();
@@ -2249,7 +2278,9 @@ public sealed class AzureDevOpsLivePublishingTests
             """
             {"buildId":123,"runId":42,"results":[
               {"storage":"tests","name":"First","title":"First","id":431,"attempts":[{"sequenceId":1,"displayName":"First","outcome":"Failed","durationInMs":1}]},
-              {"storage":"tests","name":"Second","title":"Second","id":431,"attempts":[{"sequenceId":1,"displayName":"Second","outcome":"Failed","durationInMs":1}]}
+              {"storage":"tests","name":"First","title":"First","id":432,"attempts":[{"sequenceId":1,"displayName":"First","outcome":"Failed","durationInMs":1}]},
+              {"storage":"tests","name":"First","title":"First","id":433,"attempts":[{"sequenceId":1,"displayName":"First","outcome":"Failed","durationInMs":1}]},
+              {"storage":"tests","name":"Second","title":"Second","id":433,"attempts":[{"sequenceId":1,"displayName":"Second","outcome":"Failed","durationInMs":1}]}
             ]}
             """);
 
@@ -2620,6 +2651,7 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.IsNull(created[0].Id);
         Assert.IsNull(created[0].SubResults);
         Assert.IsEmpty(client.UpdateTestResultsCalls, "Result ids from another run must never be PATCHed.");
+        Assert.AreEqual(foreignRunMap, File.ReadAllText(mapPath), "A foreign map path must remain read-only.");
     }
 
     [TestMethod]

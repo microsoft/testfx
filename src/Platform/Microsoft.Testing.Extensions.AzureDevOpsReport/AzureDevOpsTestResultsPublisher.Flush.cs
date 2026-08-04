@@ -277,7 +277,9 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
 
             if (batch[i].Attachments.Count > 0)
             {
-                deferredAttachments.Add((resultIds[i], batch[i].Attachments));
+                deferredAttachments.Add((
+                    resultIds[i],
+                    _resultIdStore is null ? batch[i].Attachments : RenameForAttempt(batch[i].Attachments, attemptNumber: 1)));
             }
         }
 
