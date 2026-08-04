@@ -320,6 +320,8 @@ Microsoft.Testing.Platform.Extensions.AbortAtDeadlineExtension.Description.get -
 Microsoft.Testing.Platform.Extensions.AbortAtDeadlineExtension.DisplayName.get -> string!
 Microsoft.Testing.Platform.Extensions.AbortAtDeadlineExtension.Dispose() -> void
 Microsoft.Testing.Platform.Extensions.AbortAtDeadlineExtension.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Platform.Extensions.AbortAtDeadlineExtension.OnTestSessionFinishingAsync(Microsoft.Testing.Platform.Services.ITestSessionContext! testSessionContext) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.Extensions.AbortAtDeadlineExtension.OnTestSessionStartingAsync(Microsoft.Testing.Platform.Services.ITestSessionContext! testSessionContext) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Platform.Extensions.AbortAtDeadlineExtension.Uid.get -> string!
 Microsoft.Testing.Platform.Extensions.AbortAtDeadlineExtension.Version.get -> string!
 Microsoft.Testing.Platform.DotnetTestConnection.DotnetTestConnection(Microsoft.Testing.Platform.CommandLine.CommandLineHandler! commandLineHandler, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.Services.ITestApplicationCancellationTokenSource! cancellationTokenSource, Microsoft.Testing.Platform.Logging.ILogger! logger) -> void

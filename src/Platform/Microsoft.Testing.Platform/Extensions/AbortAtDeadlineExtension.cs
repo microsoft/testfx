@@ -4,6 +4,7 @@
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
+using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
@@ -20,11 +21,14 @@ namespace Microsoft.Testing.Platform.Extensions;
 /// </summary>
 /// <remarks>
 /// This is a prototype. It is timer-driven (the deadline is an absolute instant, so the timer is
-/// armed at construction). It implements <see cref="IDataConsumer"/> only so the message bus keeps
-/// a live reference to it for the duration of the run (which also keeps its timer alive). It
-/// consumes no message types, so the bus keeps that reference without routing any message to it.
+/// armed at construction). It implements <see cref="IDataConsumer"/> so the message bus keeps a live
+/// reference to it for the duration of the run (which also keeps its timer alive); it consumes no
+/// message types, so the bus keeps that reference without routing any message to it. It also implements
+/// <see cref="ITestSessionLifetimeHandler"/> so it can disarm the deadline once test execution
+/// completes: a timer that fired while the reporters finalize an already-finished run would otherwise
+/// wrongly mark the run as deadline-truncated.
 /// </remarks>
-internal sealed class AbortAtDeadlineExtension : IDataConsumer, IOutputDeviceDataProducer, IDisposable
+internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLifetimeHandler, IOutputDeviceDataProducer, IDisposable
 #if NETCOREAPP
 #pragma warning disable SA1001 // Commas should be spaced correctly
     , IAsyncDisposable
@@ -48,6 +52,11 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, IOutputDeviceDat
 #endif
     private int _handled;
     private volatile bool _disposed;
+
+    // Set once test execution has completed (OnTestSessionFinishingAsync). After this the deadline must not
+    // fire: the run already finished, so marking it deadline-truncated would be wrong. Written under _lock and
+    // read on the timer callback's fast-path, so it is volatile.
+    private volatile bool _executionCompleted;
     private Task? _handleDeadlineTask;
 
     /// <summary>
@@ -173,11 +182,36 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, IOutputDeviceDat
     public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
         => Task.CompletedTask;
 
+    /// <inheritdoc />
+    public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
+        => Task.CompletedTask;
+
+    /// <inheritdoc />
+    public Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
+    {
+        // Test execution has completed (this runs right after the test framework invoker returns, before the
+        // reporters render their summary). Disarm the deadline so a timer that fires from now on -- while the
+        // reporters finalize an already-finished run -- is ignored instead of marking the run as
+        // deadline-truncated. Without this, a fully-completed run whose reporting overlaps the stop instant
+        // would wrongly exit with ExitCode.TestExecutionStoppedAtDeadline (15) and report that tests stopped
+        // early. Set the flag under the same lock OnDeadlineReached/Dispose use, so a timer firing right now is
+        // gated rather than half-applied. This never un-marks a real truncation: if the timer already fired
+        // during execution, IsDeadlineTriggered is already set and setting this flag now is harmless. The timer
+        // itself is left to be disposed at host teardown; the flag is what makes any late fire a no-op.
+        lock (_lock)
+        {
+            _executionCompleted = true;
+        }
+
+        return Task.CompletedTask;
+    }
+
     private void OnDeadlineReached()
     {
-        // Do not start deadline handling once we are tearing down (cheap fast-path; re-checked under
-        // the lock below to actually close the race with Dispose).
-        if (_disposed)
+        // Do not start deadline handling once we are tearing down, or once test execution has already
+        // completed (cheap fast-path; both are re-checked under the lock below to actually close the race
+        // with Dispose and OnTestSessionFinishingAsync).
+        if (_disposed || _executionCompleted)
         {
             return;
         }
@@ -196,7 +230,11 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, IOutputDeviceDat
         // nothing), and only then would the handler start -- after disposal already returned.
         lock (_lock)
         {
-            if (_disposed)
+            // Bail if disposal started, or if test execution finished between the fast-path check above and
+            // acquiring the lock (the timer fired while the reporters are finalizing a fully-completed run). In
+            // either case there is nothing left to stop, and marking the run deadline-truncated would wrongly
+            // force exit code 15 on a run that actually completed.
+            if (_disposed || _executionCompleted)
             {
                 return;
             }

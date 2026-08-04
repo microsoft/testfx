@@ -90,8 +90,6 @@ internal sealed partial class TestHostBuilder
             testSessionLifetimeHandlers.Add(pushOnlyProtocolDataConsumer);
         }
 
-        serviceProvider.AddService(new TestSessionLifetimeHandlersContainer(testSessionLifetimeHandlers));
-
         ITestApplicationProcessExitCode testApplicationResult = serviceProvider.GetRequiredService<ITestApplicationProcessExitCode>();
         await RegisterAsServiceOrConsumerOrBothAsync(testApplicationResult, serviceProvider, dataConsumersBuilder).ConfigureAwait(false);
 
@@ -131,8 +129,19 @@ internal sealed partial class TestHostBuilder
             if (await abortAtDeadlineExtension.IsEnabledAsync().ConfigureAwait(false))
             {
                 dataConsumersBuilder.Add(abortAtDeadlineExtension);
+
+                // Also register it as a session-lifetime handler so it is told when test execution completes.
+                // On that signal it disarms the deadline, so a timer firing while the reporters finalize an
+                // already-finished run cannot wrongly mark the run as deadline-truncated (exit code 15).
+                testSessionLifetimeHandlers.Add(abortAtDeadlineExtension);
             }
         }
+
+        // Registered after the deadline extension is (conditionally) added above so the container clearly
+        // includes it as a lifetime handler. The container captures the list by reference (so a later Add would
+        // still be observed), but populating the list fully before registering keeps this order-independent and
+        // free of that subtlety. Lifetime handlers are enumerated later, during NotifyTestSessionEndAsync.
+        serviceProvider.AddService(new TestSessionLifetimeHandlersContainer(testSessionLifetimeHandlers));
 
         AsynchronousMessageBus concreteMessageBusService = new(
             [.. dataConsumersBuilder],
