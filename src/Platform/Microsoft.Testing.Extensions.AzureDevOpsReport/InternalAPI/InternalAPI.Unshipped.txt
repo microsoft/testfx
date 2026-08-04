@@ -66,6 +66,8 @@ Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.<Clone>$() -> Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult!
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.Attempts.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult!>!
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.Attempts.init -> void
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.CompletedDate.get -> System.DateTimeOffset?
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.CompletedDate.init -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.AzureDevOpsPublishedResult(string! Storage, string! Name, string! Title, int Id, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult!>! Attempts) -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.Deconstruct(out string! Storage, out string! Name, out string! Title, out int Id, out System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult!>! Attempts) -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.Equals(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult? other) -> bool
@@ -75,6 +77,8 @@ Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.Name.g
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.Name.init -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.Storage.get -> string!
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.Storage.init -> void
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.StartedDate.get -> System.DateTimeOffset?
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.StartedDate.init -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.Title.get -> string!
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.Title.init -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.TotalDurationInMs.get -> long?
@@ -88,6 +92,8 @@ Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.<Clone>$() -> Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry!
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.Attempts.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult!>?
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.Attempts.init -> void
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.CompletedDate.get -> System.DateTimeOffset?
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.CompletedDate.init -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.AzureDevOpsResultMapEntry(string? Storage, string? Name, string? Title, int Id, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult!>? Attempts) -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.Deconstruct(out string? Storage, out string? Name, out string? Title, out int Id, out System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult!>? Attempts) -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.Equals(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry? other) -> bool
@@ -97,6 +103,8 @@ Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.Name.ge
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.Name.init -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.Storage.get -> string?
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.Storage.init -> void
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.StartedDate.get -> System.DateTimeOffset?
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.StartedDate.init -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.Title.get -> string?
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.Title.init -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry.TotalDurationInMs.get -> long?
@@ -166,6 +174,6 @@ static Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapFile.o
 static Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapFile.operator ==(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapFile? left, Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapFile? right) -> bool
 static Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult.operator !=(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult? left, Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult? right) -> bool
 static Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult.operator ==(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult? left, Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult? right) -> bool
-Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultIdStore.RecordAttempts(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult! published, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult!>! attempts, long? totalDurationInMs) -> void
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultIdStore.RecordAttempts(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult! published, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult!>! attempts, long? totalDurationInMs, System.DateTimeOffset? startedDate, System.DateTimeOffset? completedDate) -> void
 static Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultIdStore.BuildNextAttempts(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult! published, Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCaseResult! result) -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestSubResult!>!
 static Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultIdStore.BuildNextTotalDuration(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult! published, Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCaseResult! result) -> long?

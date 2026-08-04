@@ -117,6 +117,8 @@ internal sealed class AzureDevOpsResultIdStore
             [ToSubResult(result, sequenceId: 1)])
         {
             TotalDurationInMs = result.DurationInMs,
+            StartedDate = result.StartedDate,
+            CompletedDate = result.CompletedDate,
         };
         _hasUnsavedChanges = true;
     }
@@ -158,12 +160,16 @@ internal sealed class AzureDevOpsResultIdStore
     public void RecordAttempts(
         AzureDevOpsPublishedResult published,
         IReadOnlyList<AzureDevOpsTestSubResult> attempts,
-        long? totalDurationInMs)
+        long? totalDurationInMs,
+        DateTimeOffset? startedDate,
+        DateTimeOffset? completedDate)
     {
         _results[CreateKey(published.Storage, published.Name, published.Title)] = published with
         {
             Attempts = attempts,
             TotalDurationInMs = totalDurationInMs,
+            StartedDate = startedDate,
+            CompletedDate = completedDate,
         };
         _hasUnsavedChanges = true;
         _hasAdvancedExistingHistory = true;
@@ -243,6 +249,8 @@ internal sealed class AzureDevOpsResultIdStore
                 entries[index++] = new AzureDevOpsResultMapEntry(published.Storage, published.Name, published.Title, published.Id, published.Attempts)
                 {
                     TotalDurationInMs = published.TotalDurationInMs,
+                    StartedDate = published.StartedDate,
+                    CompletedDate = published.CompletedDate,
                 };
             }
 
@@ -363,6 +371,8 @@ internal sealed class AzureDevOpsResultIdStore
                         _results[key] = new AzureDevOpsPublishedResult(storage, name, title, entry.Id, entry.Attempts)
                         {
                             TotalDurationInMs = entry.TotalDurationInMs ?? retainedDuration,
+                            StartedDate = entry.StartedDate ?? GetEarliestStartedDate(entry.Attempts),
+                            CompletedDate = entry.CompletedDate ?? GetLatestCompletedDate(entry.Attempts),
                         };
                         keyByResultId[entry.Id] = key;
                         resultIdByKey[key] = entry.Id;
@@ -428,6 +438,12 @@ internal sealed class AzureDevOpsResultIdStore
                 ? left
                 : right.Value > long.MaxValue - left.Value ? long.MaxValue : left.Value + right.Value;
 
+    private static DateTimeOffset? GetEarliestStartedDate(IReadOnlyList<AzureDevOpsTestSubResult> attempts)
+        => attempts.Where(attempt => attempt.StartedDate is not null).Min(attempt => attempt.StartedDate);
+
+    private static DateTimeOffset? GetLatestCompletedDate(IReadOnlyList<AzureDevOpsTestSubResult> attempts)
+        => attempts.Where(attempt => attempt.CompletedDate is not null).Max(attempt => attempt.CompletedDate);
+
     private void TryDeleteFile(string path)
     {
         try
@@ -481,6 +497,10 @@ internal sealed record AzureDevOpsPublishedResult(
     IReadOnlyList<AzureDevOpsTestSubResult> Attempts)
 {
     public long? TotalDurationInMs { get; init; }
+
+    public DateTimeOffset? StartedDate { get; init; }
+
+    public DateTimeOffset? CompletedDate { get; init; }
 }
 
 /// <summary>
@@ -500,6 +520,12 @@ internal sealed record AzureDevOpsResultMapEntry(
 {
     [JsonPropertyName("totalDurationInMs")]
     public long? TotalDurationInMs { get; init; }
+
+    [JsonPropertyName("startedDate")]
+    public DateTimeOffset? StartedDate { get; init; }
+
+    [JsonPropertyName("completedDate")]
+    public DateTimeOffset? CompletedDate { get; init; }
 }
 
 /// <summary>

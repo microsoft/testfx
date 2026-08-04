@@ -153,8 +153,9 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
             // must span every attempt. When that happened, join the existing run: this process neither
             // created it nor can tell whether it is the last one to publish into it, so it must not
             // complete it either. See AzureDevOpsTestRunOrchestratorLifetime.
-            _coordinatedRun = AzureDevOpsConstants.TryGetInheritedTestRunId(_environment, publishConfiguration.BuildId) is { } inheritedRunId
-                ? AzureDevOpsRunIdCoordinator.CreateInheritedRun(inheritedRunId, publishConfiguration)
+            int? inheritedRunId = AzureDevOpsConstants.TryGetInheritedTestRunId(_environment, publishConfiguration.BuildId);
+            _coordinatedRun = inheritedRunId is { } inheritedId
+                ? AzureDevOpsRunIdCoordinator.CreateInheritedRun(inheritedId, publishConfiguration)
                 : await _runIdCoordinator.AcquireRunAsync(
                     publishConfiguration,
                     cancellationToken => _client.CreateTestRunAsync(publishConfiguration, cancellationToken),
@@ -164,7 +165,8 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
             // An orchestrator also hands down where the result map lives, which is what lets a retry
             // attempt update the result an earlier attempt created rather than publish a second one for
             // the same test. Absent (a run with no orchestrator) means every result is simply created.
-            if (AzureDevOpsConstants.TryGetInheritedResultMapPath(_environment, publishConfiguration.BuildId) is { } resultMapPath)
+            if (inheritedRunId is not null
+                && AzureDevOpsConstants.TryGetInheritedResultMapPath(_environment, publishConfiguration.BuildId) is { } resultMapPath)
             {
                 _resultIdStore = await AzureDevOpsResultIdStore.OpenAsync(
                     _fileSystem,

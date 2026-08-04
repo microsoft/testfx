@@ -2073,6 +2073,8 @@ public sealed class AzureDevOpsLivePublishingTests
 
         AzureDevOpsTestCaseResult parent = secondClient.UpdateTestResultsCalls.Single().Results.Single();
         Assert.AreEqual(31_000, parent.DurationInMs);
+        Assert.AreEqual(RetryTestStartTime, parent.StartedDate);
+        Assert.AreEqual(RetryTestStartTime + TimeSpan.FromSeconds(31), parent.CompletedDate);
         Assert.AreEqual(30_000, parent.SubResults![0].DurationInMs);
         Assert.AreEqual(1_000, parent.SubResults[1].DurationInMs);
     }
@@ -2300,6 +2302,46 @@ public sealed class AzureDevOpsLivePublishingTests
 
         Assert.HasCount(1, created);
         Assert.IsEmpty(client.UpdateTestResultsCalls);
+    }
+
+    [TestMethod]
+    public async Task ResultMapWithoutInheritedRun_IsIgnored()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        string staleMapPath = Path.Combine(directory.Path, "stale-map.json");
+        const string StaleMap = """{"buildId":123,"runId":999,"results":[]}""";
+        File.WriteAllText(staleMapPath, StaleMap);
+
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        environment
+            .Setup(x => x.GetEnvironmentVariable(AzureDevOpsConstants.ResultMapPathEnvironmentVariableName))
+            .Returns(AzureDevOpsConstants.FormatResultMapPath(123, staleMapPath));
+
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(
+            directory.Path,
+            AzureDevOpsTestResultsPublisherOptions.Default,
+            out FakeAzureDevOpsTestResultsClient client,
+            out _,
+            out _,
+            environment);
+        client.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(501);
+        List<AzureDevOpsTestCaseResult> created = [];
+        client.PublishTestResultsAsyncFunc = (_, _, results, _) =>
+        {
+            created.AddRange(results);
+            return Task.FromResult<IReadOnlyList<int>?>([502]);
+        };
+
+        await StartPublisherAsync(publisher);
+        await publisher.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("MyTest", new FailedTestNodeStateProperty(new InvalidOperationException("boom")), RetryTestStartTime)),
+            CancellationToken.None);
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.HasCount(1, created);
+        Assert.IsEmpty(client.UpdateTestResultsCalls);
+        Assert.AreEqual(StaleMap, File.ReadAllText(staleMapPath), "A self-owned run must not open or rewrite an inherited map path.");
     }
 
     [TestMethod]
@@ -2613,7 +2655,7 @@ public sealed class AzureDevOpsLivePublishingTests
         IReadOnlyList<AzureDevOpsTestSubResult> attempts = AzureDevOpsResultIdStore.BuildNextAttempts(
             published,
             first with { ErrorMessage = "second" });
-        updated.RecordAttempts(published, attempts, totalDurationInMs: 2);
+        updated.RecordAttempts(published, attempts, totalDurationInMs: 2, startedDate: null, completedDate: null);
         await updated.SaveAsync(CancellationToken.None);
 
         Assert.IsFalse(File.Exists(mapPath), "A stale map would let the next attempt erase accepted server history.");
@@ -3337,7 +3379,7 @@ public sealed class AzureDevOpsLivePublishingTests
 
     private sealed class FakeAzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClient
     {
-        public Func<AzureDevOpsPublishConfiguration, CancellationToken, Task<int>> CreateTestRunAsyncFunc { get; set; } = (_, _) => Task.FromResult(0);
+        public Func<AzureDevOpsPublishConfiguration, CancellationToken, Task<int>> CreateTestRunAsyncFunc { get; set; } = (_, _) => Task.FromResult(1);
 
         public Func<AzureDevOpsPublishConfiguration, int, IReadOnlyList<AzureDevOpsTestCaseResult>, CancellationToken, Task<IReadOnlyList<int>?>> PublishTestResultsAsyncFunc { get; set; } =
             (_, _, results, _) =>

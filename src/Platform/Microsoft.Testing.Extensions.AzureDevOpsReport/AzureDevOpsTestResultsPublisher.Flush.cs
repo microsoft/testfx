@@ -297,18 +297,24 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         var parents = new AzureDevOpsTestCaseResult[updates.Count];
         var attemptHistories = new IReadOnlyList<AzureDevOpsTestSubResult>[updates.Count];
         long?[] totalDurations = new long?[updates.Count];
+        var startedDates = new DateTimeOffset?[updates.Count];
+        var completedDates = new DateTimeOffset?[updates.Count];
         for (int i = 0; i < updates.Count; i++)
         {
             // Built but not recorded yet: the map may only advance once Azure DevOps has accepted the
             // update, otherwise retrying a failed update would list the same execution twice.
             attemptHistories[i] = AzureDevOpsResultIdStore.BuildNextAttempts(updates[i].Published, updates[i].Attempt.Result);
             totalDurations[i] = AzureDevOpsResultIdStore.BuildNextTotalDuration(updates[i].Published, updates[i].Attempt.Result);
+            startedDates[i] = Min(updates[i].Published.StartedDate, updates[i].Attempt.Result.StartedDate);
+            completedDates[i] = Max(updates[i].Published.CompletedDate, updates[i].Attempt.Result.CompletedDate);
             parents[i] = updates[i].Attempt.Result with
             {
                 Id = updates[i].Published.Id,
                 ResultGroupType = AzureDevOpsLivePublishingConstants.RerunResultGroupType,
                 SubResults = attemptHistories[i],
                 DurationInMs = totalDurations[i],
+                StartedDate = startedDates[i],
+                CompletedDate = completedDates[i],
             };
         }
 
@@ -343,7 +349,12 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         // canceled, otherwise only a prefix of the accepted updates would survive into the next attempt.
         for (int i = 0; i < updates.Count; i++)
         {
-            _resultIdStore!.RecordAttempts(updates[i].Published, attemptHistories[i], totalDurations[i]);
+            _resultIdStore!.RecordAttempts(
+                updates[i].Published,
+                attemptHistories[i],
+                totalDurations[i],
+                startedDates[i],
+                completedDates[i]);
         }
 
         for (int i = 0; i < updates.Count; i++)
@@ -395,6 +406,12 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
 
         return renamed;
     }
+
+    private static DateTimeOffset? Min(DateTimeOffset? left, DateTimeOffset? right)
+        => left is null ? right : right is null || left <= right ? left : right;
+
+    private static DateTimeOffset? Max(DateTimeOffset? left, DateTimeOffset? right)
+        => left is null ? right : right is null || left >= right ? left : right;
 
     private async Task UploadAttachmentsForResultAsync(int testCaseResultId, IReadOnlyList<AzureDevOpsTestResultAttachment> attachments, CancellationToken cancellationToken)
     {
