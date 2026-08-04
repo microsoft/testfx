@@ -239,16 +239,30 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
                 return;
             }
 
-            // The timer callback runs on a runtime that may be single-threaded (browser/WASI), where
-            // Task.Run can queue work that never executes. Invoke the async method directly; it is
-            // already asynchronous, so it yields at the first await without blocking the timer thread
-            // (so holding the lock here does not block either -- we only capture the returned task).
+            // Start the handler and capture its task while holding the lock so it cannot interleave with
+            // Dispose. HandleDeadlineAsync yields immediately (await Task.Yield()), so none of its work runs
+            // while the lock is held: it returns an incomplete task here, we store it, and the lock is
+            // released before the handler body executes. That keeps the lock's scope to just publishing the
+            // task and avoids running the graceful-stop callback synchronously under the lock -- which could
+            // deadlock if the stop waits on session finishing/disposal (both of which take this lock).
             _handleDeadlineTask = HandleDeadlineAsync();
         }
     }
 
     private async Task HandleDeadlineAsync()
     {
+        // This method is started synchronously inside _lock (see OnDeadlineReached), which also publishes
+        // the returned task into _handleDeadlineTask. An async method does NOT necessarily yield at its
+        // first await: the logger, output device, the empty deadline-callback queue and the framework's
+        // graceful-stop capability can all return already-completed tasks, which would run this whole
+        // handler synchronously while _lock is held. If the graceful stop then synchronously waited on
+        // session finishing or disposal (both take _lock), that would deadlock. Yield first so control
+        // returns to the caller, _handleDeadlineTask is observed, and _lock is released before any handler
+        // work runs. Task.Yield posts the continuation back to the current context, so it is cooperative
+        // and safe even on a single-threaded runtime (browser/WASI) -- unlike Task.Run, which needs another
+        // thread to pick the work up.
+        await Task.Yield();
+
         if (_capability is not { } capability)
         {
             return;
