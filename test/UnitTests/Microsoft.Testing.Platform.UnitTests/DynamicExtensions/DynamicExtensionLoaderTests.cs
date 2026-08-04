@@ -89,6 +89,28 @@ public sealed class DynamicExtensionLoaderTests
     }
 
     [TestMethod]
+    public async Task DiscoverManifests_LooksInTheApplicationDirectoryNotTheWorkingDirectory()
+    {
+        // The single security-relevant property of this feature. The application directory is a fully trusted
+        // application folder, but the working directory is where users keep data rather than code, so
+        // discovering there would silently treat data as instructions -- see the .NET baseline security
+        // assumptions, sections 2.1 and 3.1. A manifest placed in the working directory must be ignored, and
+        // one in the application directory must be found, even when the two differ.
+        string workingDirectory = Directory.GetCurrentDirectory();
+        Assert.AreNotEqual(ApplicationDirectory, workingDirectory, StringComparer.OrdinalIgnoreCase, "The test is meaningless unless the two directories differ.");
+
+        _fileSystem
+            .Setup(x => x.GetFiles(workingDirectory, It.IsAny<string>(), It.IsAny<SearchOption>()))
+            .Throws(new InvalidOperationException("Discovery must never read the working directory."));
+        SetupManifest("a.testingplatformextensions.json", ManifestFor(typeof(RecordingHook)));
+
+        await CreateLoader().LoadAsync(_builder.Object, Args);
+
+        Assert.AreEqual(1, RecordingHook.InvocationCount);
+        _fileSystem.Verify(x => x.GetFiles(ApplicationDirectory, DynamicExtensionConstants.ManifestSearchPattern, SearchOption.TopDirectoryOnly), Times.Once);
+    }
+
+    [TestMethod]
     public async Task LoadAsync_WithEnabledExtension_InvokesTheHookWithTheBuilderAndArgs()
     {
         SetupManifest("a.testingplatformextensions.json", ManifestFor(typeof(RecordingHook)));
@@ -595,16 +617,6 @@ public sealed class DynamicExtensionLoaderTests
     }
 
     [TestMethod]
-    public async Task LoadAsync_WarnsThatDynamicExtensionsAreTrusted()
-    {
-        SetupManifest("a.testingplatformextensions.json", ManifestFor(typeof(RecordingHook)));
-
-        await CreateLoader().LoadAsync(_builder.Object, Args);
-
-        Assert.Contains("do not trust", _console.Output, StringComparison.OrdinalIgnoreCase);
-    }
-
-    [TestMethod]
     public async Task LoadAsync_InServerMode_KeepsStandardOutputClean()
     {
         // Server mode owns stdout as a protocol channel; writing the notice there would corrupt the stream.
@@ -667,8 +679,8 @@ public sealed class DynamicExtensionLoaderTests
     [TestMethod]
     public async Task LoadAsync_WhenALaterExtensionFails_StillReportsTheOnesThatAlreadyRan()
     {
-        // By the time a later hook fails the earlier ones have already executed with full trust, so staying
-        // silent about them would break the guarantee exactly when something has gone wrong.
+        // By the time a later hook fails the earlier ones have already run and changed the application, so
+        // staying silent about them would hide that exactly when something has gone wrong.
         SetupManifest(
             "a.testingplatformextensions.json",
             Wrap(ManifestEntryFor(typeof(RecordingHook)) + "," + ManifestEntryFor(typeof(ThrowingHook))));
@@ -678,7 +690,6 @@ public sealed class DynamicExtensionLoaderTests
 
         Assert.AreEqual(1, RecordingHook.InvocationCount);
         Assert.Contains(typeof(RecordingHook).FullName!, _console.Output);
-        Assert.Contains("do not trust", _console.Output, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain(typeof(ThrowingHook).FullName!, _console.Output, StringComparison.Ordinal);
     }
 

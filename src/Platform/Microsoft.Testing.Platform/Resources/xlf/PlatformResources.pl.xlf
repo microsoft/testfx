@@ -447,11 +447,6 @@
         <target state="new">The extension manifest '{0}' declares extensions to load, but the current runtime does not support loading assemblies dynamically (for example when published with native AOT). Set the '{1}' property of each extension to 'false', remove the manifest, or set the '{2}' environment variable to 1.</target>
         <note>{0} is the manifest file path. {1} is the name of the JSON property that disables an extension. {2} is the name of the environment variable that disables the feature. {Locked="'false'"}</note>
       </trans-unit>
-      <trans-unit id="DynamicExtensionsTrustWarning">
-        <source>  These extensions run with full trust inside the test process. Do not use this feature with code or directories you do not trust.</source>
-        <target state="new">  These extensions run with full trust inside the test process. Do not use this feature with code or directories you do not trust.</target>
-        <note>Displayed under the list of dynamically loaded extensions.</note>
-      </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
         <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
         <target state="translated">Dostawca „{0}” (UID:{1}) nie powiódł się z powodu błędu: {2}</target>
@@ -817,12 +812,8 @@ Opcjonalnie akceptuje „text” (domyślne dane wyjściowe czytelne dla człowi
         <note>{Locked="dotnet test"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineEnableDynamicExtensionsOptionDescription">
-        <source>Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application.
-Disabled by default.
-Dynamically loaded extensions run with full trust inside the test process. Do not use this feature with code or directories you do not trust.</source>
-        <target state="new">Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application.
-Disabled by default.
-Dynamically loaded extensions run with full trust inside the test process. Do not use this feature with code or directories you do not trust.</target>
+        <source>Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.</source>
+        <target state="new">Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.</target>
         <note>{Locked="'*.testingplatformextensions.json'"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">

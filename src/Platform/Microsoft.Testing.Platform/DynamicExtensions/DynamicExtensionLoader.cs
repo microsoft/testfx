@@ -123,8 +123,9 @@ internal sealed class DynamicExtensionLoader
     }
 
     /// <summary>
-    /// Writes what was loaded to standard output, not just to the diagnostic log. Running foreign code inside
-    /// the test process must never be silent, and the diagnostic log is opt-in.
+    /// Writes what was loaded to standard output, not just to the diagnostic log. This is a supportability
+    /// measure rather than a safety one: an extension the invocation did not name has changed how the run
+    /// behaves, so "what was loaded" must be answerable from ordinary output.
     /// </summary>
     private void ReportLoadedExtensions(IReadOnlyList<DynamicExtensionEntry> loaded)
     {
@@ -155,8 +156,6 @@ internal sealed class DynamicExtensionLoader
                 entry.TypeFullName,
                 entry.ManifestPath));
         }
-
-        _console.WriteLine(PlatformResources.DynamicExtensionsTrustWarning);
     }
 
     /// <summary>
@@ -183,6 +182,12 @@ internal sealed class DynamicExtensionLoader
 
     private IReadOnlyList<string> DiscoverManifests()
     {
+        // The application directory, never the current working directory. This is the one property of this
+        // feature that carries security weight: the application directory is a fully trusted application
+        // folder, whereas the working directory is where a user expects to keep data rather than code, so
+        // discovering there would silently widen what the run treats as instructions. See
+        // https://github.com/dotnet/core/blob/main/Documentation/security-foundations/baseline-security-assumptions.md
+        // sections 2.1 and 3.1. Pinned by DiscoverManifests_LooksInTheApplicationDirectoryNotTheWorkingDirectory.
         string directory = _testApplicationModuleInfo.GetCurrentTestApplicationDirectory();
         if (RoslynString.IsNullOrEmpty(directory))
         {

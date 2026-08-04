@@ -91,11 +91,10 @@ public sealed class DynamicExtensionTests : AcceptanceTestBase<DynamicExtensionT
 
         testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
 
-        // Loading foreign code into the test process is never silent: the user sees what was loaded, from
-        // where, and that it is trusted code.
+        // Loading is never silent: the user sees what was loaded and from where, without having to turn on
+        // diagnostic logging to find out.
         testHostResult.AssertOutputContains("Contoso policy");
         testHostResult.AssertOutputContains(".testingplatformextensions.json");
-        testHostResult.AssertOutputContains("do not trust");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]

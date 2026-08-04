@@ -984,9 +984,7 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
     <comment>{Locked="TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1"}{Locked="wasi"}</comment>
   </data>
   <data name="PlatformCommandLineEnableDynamicExtensionsOptionDescription" xml:space="preserve">
-    <value>Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application.
-Disabled by default.
-Dynamically loaded extensions run with full trust inside the test process. Do not use this feature with code or directories you do not trust.</value>
+<value>Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.</value>
     <comment>{Locked="'*.testingplatformextensions.json'"}</comment>
   </data>
   <data name="DynamicExtensionsLoadedHeader" xml:space="preserve">
@@ -996,10 +994,6 @@ Dynamically loaded extensions run with full trust inside the test process. Do no
   <data name="DynamicExtensionsLoadedEntry" xml:space="preserve">
     <value>  {0} -&gt; {1} ({2}), declared in {3}</value>
     <comment>{0} is the extension display name. {1} is the resolved assembly path. {2} is the full type name of the hook. {3} is the manifest file path.</comment>
-  </data>
-  <data name="DynamicExtensionsTrustWarning" xml:space="preserve">
-    <value>  These extensions run with full trust inside the test process. Do not use this feature with code or directories you do not trust.</value>
-    <comment>Displayed under the list of dynamically loaded extensions.</comment>
   </data>
   <data name="DynamicExtensionsDisabledByEnvironment" xml:space="preserve">
     <value>Dynamic test platform extensions were requested but are disabled by the '{0}' environment variable. No extension was loaded.</value>

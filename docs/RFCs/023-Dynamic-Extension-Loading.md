@@ -26,8 +26,8 @@ The feature is **off by default** and must be turned on per run with `--enable-d
 what it loads is then reported on the run's output, not just in the diagnostic log. It is **isolated
 by default**, and **fails loudly** rather than silently degrading.
 
-> Dynamically loaded extensions run with full trust inside the test process. Do not use this feature
-> with code or directories you do not trust.
+Manifests are read from the **test application's own directory** — never the working directory. That
+is the only security-relevant property of this design; see [Trust](#trust).
 
 ## Motivation
 
@@ -72,8 +72,9 @@ explicitly, which is what the rest of this RFC does:
   and inject a single `PackageReference` from one central `Directory.Build.targets` (or a company
   MSBuild SDK) without touching any individual test project. Dynamic registration exists for teams
   who cannot influence the build graph at all.
-- **A sandbox.** A dynamically loaded extension runs with full trust in the test process. This is a
-  deployment/ownership mechanism, not a security boundary.
+- **A sandbox.** A dynamically loaded extension runs with full trust in the test process, as does
+  every statically referenced one. This is a deployment/ownership mechanism; .NET has no
+  intra-process security boundary to offer here (see [Trust](#trust)).
 - **A new extension-point surface.** Dynamic extensions use exactly the same `ITestApplicationBuilder`
   API as static ones.
 
@@ -190,14 +191,15 @@ currently referenced statically can be moved to a manifest with no code change.
 ### 3. Opt-in and discovery
 
 **The feature is off unless the run explicitly asks for it.** Nothing is discovered, parsed or loaded
-without `--enable-dynamic-extensions` on the command line. A dynamically loaded extension runs with
-full trust inside the test process, so merely dropping a file next to an application must never be
-enough to get code executed — the opt-in is what turns "someone can write to this directory" into a
-deliberate decision by whoever launches the run.
+without `--enable-dynamic-extensions` on the command line.
 
-A command-line option rather than an environment variable is deliberate. The switch belongs with the
-invocation that accepts the risk, where it is visible in the CI definition and in the process command
-line, rather than in ambient machine state that is easy to set once and forget.
+This is a **product decision, not a security control** — see [Trust](#trust) for why it cannot be one.
+It is made for predictability and supportability: a manifest that happens to be in an output
+directory should not silently change how a run behaves, and a run that did load extensions should be
+identifiable from the invocation itself rather than by inspecting the output tree afterwards. A
+command-line switch serves that better than an environment variable, because it lives in the CI
+definition next to the rest of the invocation instead of in ambient machine state. Neither is more
+trustworthy than the other; both are fully trusted control-plane inputs.
 
 Once enabled, the platform enumerates `*.testingplatformextensions.json` in the **test application's
 own directory**, non-recursively. Non-recursive is deliberate: recursion would make the extension set
@@ -213,15 +215,33 @@ precedence, whether it replaces or augments discovery) that are better answered 
 
 #### Trust
 
-This is a deployment mechanism, not a sandbox. An extension loaded this way runs with the full
-privileges of the test process: it can read and write anything the test run can, and it is registered
-before the test application's own extensions. Isolation (§5) exists to stop extensions *colliding*
-with each other and with the application, not to contain what they are allowed to do.
+This design is analysed against the [.NET baseline security
+assumptions][baseline], which apply by default and are not restated here.
 
-The documentation, the `--help` text and the run output all carry the same warning:
+**The only security-relevant property of this feature is where manifests are read from.** They are
+read from the directory containing the test application executable, which is a fully trusted
+application folder (baseline §2.1) whose contents can already influence execution flow. Anyone able
+to write a manifest there could equally replace an assembly the application already loads, so
+discovery adds no authority that the location did not already confer.
 
-> Dynamically loaded extensions run with full trust inside the test process. Do not use this feature
-> with code or directories you do not trust.
+Discovery deliberately never uses the **current working directory**, which the baseline explicitly
+excludes from that guarantee: users expect the working directory to hold data rather than
+instructions, so reading manifests from it would widen what a run treats as code. This rule is the
+one behaviour here that a future change must not break, and it is pinned by a unit test.
+
+Everything else follows from the baseline rather than from anything this design does:
+
+- Extensions run with the full privileges of the test process. In-process composition is not a
+  security boundary and .NET has no intra-process sandbox (baseline §3.3), so this is true of a
+  statically referenced extension and of any NuGet package the test project consumes. It is not a
+  property peculiar to dynamic loading.
+- Isolation (§5) exists to stop extensions *colliding* with each other and with the application. It
+  is a compatibility mechanism and provides no containment.
+- The opt-in (§3) and the kill switch (§7) are product decisions. **Neither is a security control**,
+  and neither should be described as one: an actor who can write to the application directory is
+  already fully trusted, so gating on a flag does not restrict them.
+
+[baseline]: https://github.com/dotnet/core/blob/main/Documentation/security-foundations/baseline-security-assumptions.md
 
 ### 4. Ordering relative to static extensions
 
@@ -373,16 +393,18 @@ The counterweight to a strict policy is a fast escape hatch, which is the next s
 Setting `TESTINGPLATFORM_NODYNAMICEXTENSIONS` to `1` or `true` (case-insensitively) skips discovery
 even when `--enable-dynamic-extensions` was passed. The environment variable therefore **wins over
 the command line**: an operator who cannot edit the invocation can still switch the feature off
-centrally during an incident, and a machine can be locked down regardless of what a pipeline asks for.
+across a fleet in one place.
 
-This is a second line of defence, not the primary control — the feature is already off by default
-(§3). It also remains the first triage step when a run misbehaves: re-run with the variable set to
-establish whether a dynamically loaded extension is implicated.
+Like the opt-in, this is an **operational convenience, not a security control** (see
+[Trust](#trust)). Its purpose is break-glass and triage: when a bad extension is affecting many
+pipelines, one agent-image variable stops it faster than editing each pipeline, and re-running with
+the variable set is the quickest way to establish whether a dynamically loaded extension is
+implicated in a failure.
 
 Because it overrides an explicit request, it announces itself: when the variable suppresses
 `--enable-dynamic-extensions`, the platform says so on standard output (§8), so a run that behaves
 differently than asked always explains why. It does **not** fail the run — during an incident the
-point is to keep runs working without the extensions, not to turn containment into an outage.
+point is to keep runs working without the extensions rather than to add an outage to the problem.
 
 The name follows the existing `TESTINGPLATFORM_NOBANNER` convention, and the accepted values match
 the platform's existing boolean environment-variable handling.
@@ -391,7 +413,7 @@ the platform's existing boolean environment-variable handling.
 
 **Loading is never silent.** Whenever at least one extension is loaded, the platform writes to
 standard output the number loaded and, for each, its display name, the resolved absolute assembly
-path, the hook type, and the manifest that declared it — followed by the trust warning. This is not
+path, the hook type, and the manifest that declared it. This is not
 gated on `--diagnostic`: running foreign code inside the test process is something the person reading
 the log should see without having opted into extra logging.
 
