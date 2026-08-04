@@ -2262,6 +2262,39 @@ public sealed class AzureDevOpsLivePublishingTests
     }
 
     [TestMethod]
+    public async Task MapEntryWithoutAttemptHistory_IsIgnored()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out FakeAzureDevOpsTestResultsClient lifetimeClient, out _, environment);
+        lifetimeClient.CreateTestRunAsyncFunc = (_, _) => Task.FromResult(4242);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+
+        string mapPath = AzureDevOpsConstants.TryGetInheritedResultMapPath(environment.Object, buildId: 123)!;
+        File.WriteAllText(
+            mapPath,
+            """{"buildId":123,"runId":4242,"results":[{"storage":"MyTests","name":"MyTest","id":81,"attempts":null}]}""");
+
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, AzureDevOpsTestResultsPublisherOptions.Default, out FakeAzureDevOpsTestResultsClient client, out _, out _, environment);
+        List<AzureDevOpsTestCaseResult> created = [];
+        client.PublishTestResultsAsyncFunc = (_, _, results, _) =>
+        {
+            created.AddRange(results);
+            return Task.FromResult<IReadOnlyList<int>?>([82]);
+        };
+
+        await StartPublisherAsync(publisher);
+        await publisher.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("MyTest", new PassedTestNodeStateProperty(), RetryTestStartTime)),
+            CancellationToken.None);
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.HasCount(1, created);
+        Assert.IsEmpty(client.UpdateTestResultsCalls, "An incomplete history must fall back to a safe create.");
+    }
+
+    [TestMethod]
     public async Task OrchestrationsWithTheSameProcessId_UseDifferentMapPaths()
     {
         using TestDirectory directory = CreateTestDirectory();

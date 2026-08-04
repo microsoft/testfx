@@ -267,9 +267,10 @@ internal sealed class AzureDevOpsResultIdStore
             {
                 // Entries come from disk, so nothing about them is guaranteed however the record is
                 // annotated: a truncated or hand-edited file can yield nulls and non-positive ids.
-                if (entry is { Id: > 0, Storage: { Length: > 0 } storage, Name: { Length: > 0 } name })
+                if (entry is { Id: > 0, Storage: { Length: > 0 } storage, Name: { Length: > 0 } name }
+                    && IsValidAttemptHistory(entry.Attempts))
                 {
-                    _results[CreateKey(storage, name)] = new AzureDevOpsPublishedResult(storage, name, entry.Id, entry.Attempts ?? []);
+                    _results[CreateKey(storage, name)] = new AzureDevOpsPublishedResult(storage, name, entry.Id, entry.Attempts);
                 }
             }
         }
@@ -280,6 +281,36 @@ internal sealed class AzureDevOpsResultIdStore
             _results.Clear();
             TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingFailedToReadCoordinationFile} {_filePath}: {ex.Message}");
         }
+    }
+
+    private static bool IsValidAttemptHistory([NotNullWhen(true)] IReadOnlyList<AzureDevOpsTestSubResult>? attempts)
+    {
+        if (attempts is null
+            || attempts.Count == 0
+            || attempts.Count > AzureDevOpsLivePublishingConstants.MaxSubResultsPerResult)
+        {
+            return false;
+        }
+
+        int previousSequenceId = 0;
+        foreach (AzureDevOpsTestSubResult attempt in attempts)
+        {
+            if (attempt is null
+                || attempt.SequenceId <= previousSequenceId
+                || attempt.DisplayName is null
+                || attempt.Outcome is not (
+                    AzureDevOpsLivePublishingConstants.PassedTestOutcome
+                    or AzureDevOpsLivePublishingConstants.FailedTestOutcome
+                    or AzureDevOpsLivePublishingConstants.NotExecutedTestOutcome
+                    or AzureDevOpsLivePublishingConstants.AbortedTestOutcome))
+            {
+                return false;
+            }
+
+            previousSequenceId = attempt.SequenceId;
+        }
+
+        return true;
     }
 
     private void TryDeleteFile(string path)
