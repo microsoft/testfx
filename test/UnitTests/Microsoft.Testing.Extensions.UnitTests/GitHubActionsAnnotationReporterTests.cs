@@ -1,10 +1,11 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 extern alias ghactions;
 
 using ghactions::Microsoft.Testing.Extensions.GitHubActionsReport;
 
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 
@@ -88,11 +89,134 @@ public sealed class GitHubActionsAnnotationReporterTests
     }
 
     [TestMethod]
+    public void GetErrorAnnotation_FallsBackToDeclaredLocation_WhenStackTraceHasNoUsableFrame()
+    {
+        // No exception at all (a framework that reports a failure without one), but the test node carried a
+        // declared location: the annotation must still be pinned to the test's declaration.
+        string text = GitHubActionsAnnotationReporter.GetErrorAnnotation(
+            "Contoso.MyTests.TheTest",
+            "boom",
+            exception: null,
+            repoRoot: "/repo/",
+            CreateFileSystemWhereEveryFileExists(),
+            new NoopLogger(),
+            skipAssertionFrames: true,
+            new GitHubActionsSourceLocation("src/MyTests.cs", 42));
+
+        Assert.AreEqual("::error file=src/MyTests.cs,line=42,col=1,title=Test failed%3A Contoso.MyTests.TheTest::boom", text);
+    }
+
+    [TestMethod]
+    public void GetErrorAnnotation_PrefersStackTraceOverDeclaredLocation()
+    {
+        // The stack frame points at the failing statement, which is more precise than the test declaration.
+        var exception = new StackTraceException("   at Contoso.MyTests.TheTest() in /_/src/MyTests.cs:line 7");
+
+        string text = GitHubActionsAnnotationReporter.GetErrorAnnotation(
+            "Contoso.MyTests.TheTest",
+            "nope",
+            exception,
+            repoRoot: "/repo/",
+            CreateFileSystemWhereEveryFileExists(),
+            new NoopLogger(),
+            skipAssertionFrames: true,
+            new GitHubActionsSourceLocation("src/MyTests.cs", 1));
+
+        Assert.AreEqual("::error file=src/MyTests.cs,line=7,col=1,title=Test failed%3A Contoso.MyTests.TheTest::nope", text);
+    }
+
+    [TestMethod]
+    public void GetErrorAnnotation_OmitsLine_WhenDeclaredLocationHasNoLine()
+    {
+        string text = GitHubActionsAnnotationReporter.GetErrorAnnotation(
+            "Contoso.MyTests.TheTest",
+            "boom",
+            exception: null,
+            repoRoot: "/repo/",
+            CreateFileSystemWhereEveryFileExists(),
+            new NoopLogger(),
+            skipAssertionFrames: true,
+            new GitHubActionsSourceLocation("src/MyTests.cs", 0));
+
+        Assert.AreEqual("::error file=src/MyTests.cs,title=Test failed%3A Contoso.MyTests.TheTest::boom", text);
+    }
+
+    [TestMethod]
     public void GetSkippedAnnotation_EmitsTitleOnlyWarningWithReasonAndEscaping()
     {
         string text = GitHubActionsAnnotationReporter.GetSkippedAnnotation("MyNamespace.MyTest", "not today\nmaybe\rlater");
 
         Assert.AreEqual("::warning title=Test skipped%3A MyNamespace.MyTest::not today%0Amaybe%0Dlater", text);
+    }
+
+    [TestMethod]
+    public void GetSkippedAnnotation_PinsWarningToDeclaredLocation_WhenAvailable()
+    {
+        string text = GitHubActionsAnnotationReporter.GetSkippedAnnotation(
+            "Contoso.MyTests.TheTest", "not today", new GitHubActionsSourceLocation("src/MyTests.cs", 12));
+
+        Assert.AreEqual("::warning file=src/MyTests.cs,line=12,col=1,title=Test skipped%3A Contoso.MyTests.TheTest::not today", text);
+    }
+
+    [TestMethod]
+    public void TryResolveDeclaredLocation_ReturnsNull_WhenTestNodeHasNoFileLocation()
+    {
+        var testNode = new TestNode { Uid = "uid", DisplayName = "TheTest" };
+
+        Assert.IsNull(GitHubActionsAnnotationReporter.TryResolveDeclaredLocation(testNode, "/repo/", CreateFileSystemWhereEveryFileExists()));
+    }
+
+    [TestMethod]
+    public void TryResolveDeclaredLocation_ReturnsWorkspaceRelativePathAndLine()
+    {
+        var testNode = new TestNode { Uid = "uid", DisplayName = "TheTest" };
+        var position = new LinePosition(21, -1);
+        testNode.Properties.Add(new TestFileLocationProperty("/repo/src/MyTests.cs", new LinePositionSpan(position, position)));
+
+        GitHubActionsSourceLocation? location = GitHubActionsAnnotationReporter.TryResolveDeclaredLocation(testNode, "/repo/", CreateFileSystemWhereEveryFileExists());
+
+        Assert.IsNotNull(location);
+        GitHubActionsSourceLocation resolvedLocation = location!.Value;
+        Assert.AreEqual("src/MyTests.cs", resolvedLocation.RelativeNormalizedPath);
+        Assert.AreEqual(21, resolvedLocation.LineNumber);
+    }
+
+    [TestMethod]
+    public void TryResolveDeclaredLocation_NormalizesUnknownLineToZero()
+    {
+        // Both the MSTest adapter and the VSTest bridge use -1 as the "line unknown" sentinel.
+        var testNode = new TestNode { Uid = "uid", DisplayName = "TheTest" };
+        var position = new LinePosition(-1, -1);
+        testNode.Properties.Add(new TestFileLocationProperty("/repo/src/MyTests.cs", new LinePositionSpan(position, position)));
+
+        GitHubActionsSourceLocation? location = GitHubActionsAnnotationReporter.TryResolveDeclaredLocation(testNode, "/repo/", CreateFileSystemWhereEveryFileExists());
+
+        Assert.IsNotNull(location);
+        GitHubActionsSourceLocation resolvedLocation = location!.Value;
+        Assert.AreEqual(0, resolvedLocation.LineNumber);
+    }
+
+    [TestMethod]
+    public void TryResolveDeclaredLocation_ReturnsNull_WhenFileIsOutsideTheWorkspace()
+    {
+        var testNode = new TestNode { Uid = "uid", DisplayName = "TheTest" };
+        var position = new LinePosition(21, -1);
+        testNode.Properties.Add(new TestFileLocationProperty("/elsewhere/src/MyTests.cs", new LinePositionSpan(position, position)));
+
+        Assert.IsNull(GitHubActionsAnnotationReporter.TryResolveDeclaredLocation(testNode, "/repo/", CreateFileSystemWhereEveryFileExists()));
+    }
+
+    [TestMethod]
+    public void TryResolveDeclaredLocation_ReturnsNull_WhenFileDoesNotExistOnDisk()
+    {
+        var testNode = new TestNode { Uid = "uid", DisplayName = "TheTest" };
+        var position = new LinePosition(21, -1);
+        testNode.Properties.Add(new TestFileLocationProperty("/repo/src/MyTests.cs", new LinePositionSpan(position, position)));
+
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(f => f.ExistFile(It.IsAny<string>())).Returns(false);
+
+        Assert.IsNull(GitHubActionsAnnotationReporter.TryResolveDeclaredLocation(testNode, "/repo/", fileSystem.Object));
     }
 
     [TestMethod]

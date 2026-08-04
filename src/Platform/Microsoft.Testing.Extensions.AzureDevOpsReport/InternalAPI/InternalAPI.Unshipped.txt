@@ -58,3 +58,4 @@ Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestResultsPublisherOp
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestResultsPublisherOptions.CoordinationFinalizeMaxWaitTime.init -> void
 static Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsConstants.FormatInheritedTestRunId(int buildId, int runId) -> string!
 static Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsConstants.TryGetInheritedTestRunId(Microsoft.Testing.Platform.Helpers.IEnvironment! environment, int buildId) -> int?
+static Microsoft.Testing.Extensions.StackTraceSourceLocationResolver.TryMakeWorkspaceRelative(string? filePath, string? repoRoot, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem) -> string?
