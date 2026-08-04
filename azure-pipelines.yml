@@ -19,8 +19,8 @@ trigger:
       - azure-pipelines-official.yml
       - azure-pipelines-codeql.yml
 
-# The main-branch CI trigger below keeps the project cache aligned with every product merge. The nightly run still
-# exercises the full authoritative pipeline and consumes the cache read-only.
+# The main-branch CI trigger below keeps the project cache aligned with every product merge and runs the Windows
+# Debug tests to publish coverage. The nightly run still exercises the full authoritative pipeline.
 schedules:
   - cron: 0 3 * * *
     displayName: Nightly full validation
@@ -127,15 +127,17 @@ variables:
 stages:
 
 - stage: msbuild_cache_seed
-  displayName: Seed MSBuildCache
+  displayName: Seed MSBuildCache and publish coverage
   condition: and(succeeded(), in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
   jobs:
   - job: Windows
     displayName: Windows $(_BuildConfig)
-    timeoutInMinutes: 30
+    timeoutInMinutes: 90
     pool:
       name: NetCore-Public
       demands: ImageOverride -equals windows.vs2026preview.scout.amd64.open
+    variables:
+      - template: /eng/pipelines/variables/test-env-vars.yml
     strategy:
       matrix:
         Release:
@@ -178,6 +180,28 @@ stages:
         # NUGET_PACKAGES to $(RepoRoot).packages when -ci is passed), but the consuming build in the `build`
         # stage cannot use -ci, so pin the value explicitly on both sides instead of relying on that default.
         NUGET_PACKAGES: $(Build.SourcesDirectory)\.packages\
+
+    - ${{ if eq(parameters.SkipTests, False) }}:
+      # The Debug cache seed already produced the compiled solution outputs. Run the remaining Arcade phases that
+      # sign and pack those outputs so acceptance tests consume the same packages as PR validation.
+      - pwsh: |
+          & ./eng/common/build.ps1 `
+            -ci `
+            -disablePipelineSetResult `
+            -configuration $(_BuildConfig) `
+            -restore `
+            -sign `
+            -pack `
+            -prepareMachine `
+            /p:ContinuousIntegrationBuild=true `
+            /p:FastAcceptanceTest=true `
+            /p:MSBuildCachePackageEnabled=true `
+            /p:MSBuildCacheEnabled=false
+          exit $LASTEXITCODE
+        displayName: Prepare and pack Debug build outputs
+        condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'))
+
+      - template: /eng/pipelines/steps/test-windows-debug-coverage.yml
 
 - stage: build
   displayName: Build
@@ -270,7 +294,9 @@ stages:
       jobs:
       - job: Windows
         dependsOn: DetectChanges
-        condition: and(succeededOrFailed(), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))
+        # Debug always runs so every public PR computes and publishes coverage. Release remains skippable for
+        # samples-only PRs, preserving the changed-path optimization where it does not affect coverage.
+        condition: and(succeededOrFailed(), or(eq(variables._BuildConfig, 'Debug'), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false')))
         timeoutInMinutes: 90
         pool:
           name: NetCore-Public
@@ -582,26 +608,7 @@ stages:
 
         - ${{ if eq(parameters.SkipTests, False) }}:
 
-          # Because the build step is using -ci flag, restore is done in a local .packages directory.
-          # We need to pass NUGET_PACKAGES so that when dotnet test is doing evaluation phase on the projects, it can resolve .props/.targets from packages and import them.
-          # Otherwise, props/targets are not imported. It's important that they are imported so that IsTestingPlatformApplication ends up being set.
-          #
-          # -p:TestingPlatformCaptureOutput=false streams each test exe's stdout to the AzDO console at
-          # MessageImportance.High. Required so the silence-driven heartbeat (and per-test progress) emitted
-          # by Microsoft.Testing.Platform actually reaches the live build log; with the default (true), the
-          # output is buffered into a per-module .log file and only surfaced on failure, so no live progress
-          # is visible during long-running test sessions.
-          - script: dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false
-            name: Test
-            displayName: Test
-            condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'))
-            env:
-              # Expose the build's OAuth token so the report-azdo history options (slow-test-history /
-              # flaky-history injected by test/Directory.Build.targets) can query this pipeline's own
-              # test-result history. Secret variables are not auto-exposed to scripts, so the explicit mapping
-              # is required. Fork PR builds don't receive the secret, so the history service simply no-ops
-              # there; trusted branch builds exercise it end-to-end.
-              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+          - template: /eng/pipelines/steps/test-windows-debug-coverage.yml
 
           # Integration tests are redundant in Release—they spawn child processes that already cover
           # both Debug and Release configurations. Use --test-modules to run only unit tests.
@@ -635,48 +642,6 @@ stages:
               # branch builds exercise it end-to-end.
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
-          # Publish a portable, compact report separately from the large TestResults artifact so external
-          # consumers such as GutterHub can retrieve it without downloading every test result and binary
-          # .coverage file. dotnet-coverage is pinned in .config/dotnet-tools.json.
-          - task: PowerShell@2
-            displayName: 'Merge coverage as Cobertura'
-            inputs:
-              targetType: 'inline'
-              script: |
-                dotnet tool restore
-                if ($LASTEXITCODE -ne 0) {
-                  exit $LASTEXITCODE
-                }
-
-                $testResultsDirectory = "$(Build.SourcesDirectory)\artifacts\TestResults\$(_BuildConfig)"
-                $coverageFiles = @()
-                if (Test-Path $testResultsDirectory) {
-                  $coverageFiles = @(Get-ChildItem $testResultsDirectory -Filter *.coverage -File)
-                }
-                if ($coverageFiles.Count -eq 0) {
-                  Write-Host "##vso[task.logissue type=warning]No coverage files were produced; skipping the Cobertura artifact."
-                  exit 0
-                }
-
-                $coverageOutputDirectory = "$(Build.ArtifactStagingDirectory)\coverage"
-                New-Item -Path $coverageOutputDirectory -ItemType Directory -Force | Out-Null
-
-                $mergeArguments = @("coverage", "merge") + $coverageFiles.FullName + @("--output", "$coverageOutputDirectory\coverage.cobertura.xml", "--output-format", "cobertura")
-                & dotnet @mergeArguments
-                if ($LASTEXITCODE -ne 0) {
-                  exit $LASTEXITCODE
-                }
-
-                Write-Host "##vso[task.setvariable variable=CoverageReportReady]true"
-            condition: and(succeededOrFailed(), eq(variables._BuildConfig, 'Debug'))
-
-          - task: PublishBuildArtifacts@1
-            displayName: 'Publish Cobertura coverage report'
-            inputs:
-              PathtoPublish: '$(Build.ArtifactStagingDirectory)/coverage'
-              ArtifactName: Coverage_Windows_Debug_Attempt$(System.JobAttempt)
-            condition: and(succeededOrFailed(), eq(variables['CoverageReportReady'], 'true'))
-
           - task: PublishBuildArtifacts@1
             displayName: 'Publish Test Results folders'
             inputs:
@@ -699,20 +664,6 @@ stages:
               PathtoPublish: '$(Build.ArtifactStagingDirectory)/binlogs'
               ArtifactName: Integration_Tests_Windows_Binlogs_$(_BuildConfig)
             condition: and(always(), eq(variables._BuildConfig, 'Debug'))
-
-          # Publish coverage to Azure DevOps. PublishCodeCoverageResults@2 accepts the binary
-          # .coverage format Microsoft Code Coverage emits natively (per
-          # https://learn.microsoft.com/azure/devops/pipelines/tasks/reference/publish-code-coverage-results-v2:
-          # "The task supports all kinds of coverage formats such as: .coverage, .covx, .covb,
-          # .cjson, .xml, .lcov, pycov, etc."), and merges multiple files via the minimatch glob.
-          # Coverage shows up in the build's "Code Coverage" tab and on the build summary, one
-          # click from the GitHub PR status check (we used to upload to codecov.io here).
-          - task: PublishCodeCoverageResults@2
-            displayName: 'Publish coverage to Azure DevOps'
-            inputs:
-              summaryFileLocation: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)/*.coverage'
-              pathToSources: '$(Build.SourcesDirectory)/src'
-            condition: and(succeededOrFailed(), eq(variables._BuildConfig, 'Debug'))
 
           - task: PublishBuildArtifacts@1
             displayName: 'Publish local dumps'
