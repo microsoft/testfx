@@ -1062,12 +1062,12 @@ Dynamically loaded extensions run with full trust inside the test process. Do no
     <comment>{0} is the full type name. {1} is the resolved assembly path. {2} is the manifest file path.</comment>
   </data>
   <data name="DynamicExtensionHookNotFoundErrorMessage" xml:space="preserve">
-    <value>The type '{0}' in the assembly '{1}' declared in the extension manifest '{2}' does not expose a public static void '{3}' method taking an 'ITestApplicationBuilder' and a 'string[]'.</value>
-    <comment>{0} is the full type name. {1} is the resolved assembly path. {2} is the manifest file path. {3} is the expected method name. {Locked="'ITestApplicationBuilder'"}{Locked="'string[]'"}</comment>
+    <value>The type '{0}' in the assembly '{1}' declared in the extension manifest '{2}' does not expose a 'public static void' method named '{3}' taking an 'ITestApplicationBuilder' and a 'string[]'.</value>
+    <comment>{0} is the full type name. {1} is the resolved assembly path. {2} is the manifest file path. {3} is the expected method name. {Locked="'public static void'"}{Locked="'ITestApplicationBuilder'"}{Locked="'string[]'"}</comment>
   </data>
   <data name="DynamicExtensionHookMustReturnVoidErrorMessage" xml:space="preserve">
-    <value>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' returns '{4}' but must return void. The platform invokes the hook synchronously, so a return value is never observed; a returned task in particular would never be awaited, and its registrations and failures would be lost.</value>
-    <comment>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {4} is the actual return type name.</comment>
+    <value>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' returns '{4}' but must return 'void'. The platform invokes the hook synchronously, so a return value is never observed; a returned task in particular would never be awaited, and its registrations and failures would be lost.</value>
+    <comment>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {4} is the actual return type name. {Locked="'void'"}</comment>
   </data>
   <data name="DynamicExtensionDuplicateIdConflictErrorMessage" xml:space="preserve">
     <value>The extension id '{0}' is declared twice with different content: '{1}' in the extension manifest '{2}' and '{3}' in the extension manifest '{4}'. Ids must identify the same extension, otherwise one declaration would silently replace the other.</value>
@@ -1090,7 +1090,7 @@ Dynamically loaded extensions run with full trust inside the test process. Do no
     <comment>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {Locked="'async void'"}</comment>
   </data>
   <data name="DynamicExtensionsNotSupportedOnCurrentRuntimeErrorMessage" xml:space="preserve">
-    <value>The extension manifest '{0}' declares extensions to load, but the current runtime does not support loading assemblies dynamically (for example when published with native AOT). Set the '{1}' property of each extension to false, remove the manifest, or set the '{2}' environment variable to 1.</value>
-    <comment>{0} is the manifest file path. {1} is the name of the JSON property that disables an extension. {2} is the name of the environment variable that disables the feature.</comment>
+    <value>The extension manifest '{0}' declares extensions to load, but the current runtime does not support loading assemblies dynamically (for example when published with native AOT). Set the '{1}' property of each extension to 'false', remove the manifest, or set the '{2}' environment variable to 1.</value>
+    <comment>{0} is the manifest file path. {1} is the name of the JSON property that disables an extension. {2} is the name of the environment variable that disables the feature. {Locked="'false'"}</comment>
   </data>
 </root>
