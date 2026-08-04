@@ -132,6 +132,18 @@ internal sealed class AzureDevOpsResultIdStore
     }
 
     /// <summary>
+    /// Removes history that can no longer be safely persisted after an ambiguous PATCH failure.
+    /// </summary>
+    /// <remarks>
+    /// The persisted map was deleted before PATCH. If the request then fails after reaching Azure DevOps,
+    /// retaining the pre-PATCH history would let a later save resurrect stale state and overwrite an
+    /// accepted attempt. The result remains in Azure DevOps; forgetting it here makes the next publish use
+    /// a separate POST instead.
+    /// </remarks>
+    public void Forget(AzureDevOpsPublishedResult published)
+        => _results.Remove(CreateKey(published.Storage, published.Name));
+
+    /// <summary>
     /// Removes the persisted map before an existing result is updated.
     /// </summary>
     /// <remarks>

@@ -285,8 +285,18 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
             await _client.UpdateTestResultsAsync(_publishConfiguration!, CurrentRunId!.Value, parents, cancellationToken).ConfigureAwait(false);
             _lastFlushTime = _clock.UtcNow;
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (Exception ex)
         {
+            foreach ((AzureDevOpsPublishedResult published, AzureDevOpsTestCaseResultWithAttachments _) in updates)
+            {
+                _resultIdStore!.Forget(published);
+            }
+
+            if (ex is OperationCanceledException)
+            {
+                throw;
+            }
+
             _lastFlushTime = _clock.UtcNow;
             TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
             return false;

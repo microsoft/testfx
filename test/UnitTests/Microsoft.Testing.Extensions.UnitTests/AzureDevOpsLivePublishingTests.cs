@@ -2483,6 +2483,51 @@ public sealed class AzureDevOpsLivePublishingTests
     }
 
     [TestMethod]
+    public async Task FailedPatchInMixedBatch_DoesNotResaveStaleHistory()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out _, out _, environment);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+        await PublishSingleResultAsync(
+            directory.Path,
+            environment,
+            "ExistingTest",
+            new FailedTestNodeStateProperty(new InvalidOperationException("first")),
+            resultId: 211);
+
+        AzureDevOpsTestResultsPublisherOptions options = new(2, TimeSpan.FromMinutes(1), 40, TimeSpan.FromMilliseconds(250));
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options, out FakeAzureDevOpsTestResultsClient client, out _, out _, environment);
+        List<string> createdTests = [];
+        int nextResultId = 212;
+        client.PublishTestResultsAsyncFunc = (_, _, results, _) =>
+        {
+            createdTests.AddRange(results.Select(result => result.AutomatedTestName));
+            int[] ids = [.. Enumerable.Range(nextResultId, results.Count)];
+            nextResultId += results.Count;
+            return Task.FromResult<IReadOnlyList<int>?>(ids);
+        };
+        client.UpdateTestResultsAsyncFunc = (_, _, _, _) => Task.FromException(new HttpRequestException("ambiguous failure"));
+        await StartPublisherAsync(publisher);
+
+        await publisher.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("NewTest", new PassedTestNodeStateProperty(), RetryTestStartTime)),
+            CancellationToken.None);
+        await publisher.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateMessage(CreateNode("ExistingTest", new PassedTestNodeStateProperty(), RetryTestStartTime)),
+            CancellationToken.None);
+        await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.Contains("NewTest", createdTests);
+        Assert.Contains("ExistingTest", createdTests, "The ambiguous PATCH must retry as a safe create.");
+
+        string mapPath = AzureDevOpsConstants.TryGetInheritedResultMapPath(environment.Object, buildId: 123)!;
+        Assert.DoesNotContain("\"id\":211", File.ReadAllText(mapPath), "The pre-PATCH result id must not be resurrected.");
+    }
+
+    [TestMethod]
     public void CappedAttemptHistory_ContinuesIncreasingSequenceIds()
     {
         var attempts = new AzureDevOpsTestSubResult[AzureDevOpsLivePublishingConstants.MaxSubResultsPerResult];

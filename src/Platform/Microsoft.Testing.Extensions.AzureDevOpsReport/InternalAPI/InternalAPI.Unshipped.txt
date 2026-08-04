@@ -77,6 +77,7 @@ Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.Storag
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult.Storage.init -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultIdStore
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultIdStore.RecordCreated(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCaseResult! result, int resultId) -> void
+Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultIdStore.Forget(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult! published) -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultIdStore.SaveAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultIdStore.TryGet(Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsTestCaseResult! result) -> Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsPublishedResult?
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsResultMapEntry
