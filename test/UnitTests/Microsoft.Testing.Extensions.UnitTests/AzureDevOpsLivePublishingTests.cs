@@ -1977,6 +1977,43 @@ public sealed class AzureDevOpsLivePublishingTests
     }
 
     [TestMethod]
+    public async Task RetryAttempt_AttachmentNameIncludesAttemptAndPreservesExtension()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out _, out _, environment);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+
+        await PublishSingleResultAsync(
+            directory.Path,
+            environment,
+            "MyTest",
+            new FailedTestNodeStateProperty(new InvalidOperationException("first")),
+            resultId: 25);
+
+        AzureDevOpsTestResultsPublisher secondAttempt = CreatePublisher(
+            directory.Path,
+            AzureDevOpsTestResultsPublisherOptions.Default,
+            out FakeAzureDevOpsTestResultsClient client,
+            out _,
+            out _,
+            environment);
+        TestNode node = CreateNode(
+            "MyTest",
+            new FailedTestNodeStateProperty(new InvalidOperationException("second")),
+            RetryTestStartTime);
+        node.Properties.Add(new StandardOutputProperty("retry output"));
+
+        await StartPublisherAsync(secondAttempt);
+        await secondAttempt.ConsumeAsync(Mock.Of<IDataProducer>(), CreateMessage(node), CancellationToken.None);
+        await secondAttempt.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+
+        Assert.HasCount(1, client.UploadTestResultAttachmentCalls);
+        Assert.AreEqual(25, client.UploadTestResultAttachmentCalls[0].TestCaseResultId);
+        Assert.AreEqual("stdout.attempt-2.log", client.UploadTestResultAttachmentCalls[0].Attachment.FileName);
+    }
+
+    [TestMethod]
     public async Task SameTestNameInTwoAssemblies_IsNotTreatedAsARerun()
     {
         using TestDirectory directory = CreateTestDirectory();
