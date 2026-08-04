@@ -47,7 +47,7 @@ internal sealed class DynamicExtensionAssemblyLoader : IDynamicExtensionAssembly
     public bool IsIsolated => false;
 #endif
 
-    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' may break when trimming", Justification = "The extension assembly is an external file that is not part of the trimmed application, so trimming cannot remove anything it needs. Runtimes that cannot load assemblies dynamically are rejected earlier by DynamicExtensionLoader.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' may break when trimming", Justification = "Loading an external assembly is the feature, and trimming cannot remove anything from that file since it is not part of the application. It can remove anything the *application* did not reference, including BCL members, so an extension calling one of those can load and then fail at run time -- a documented limitation of combining trimming with dynamic extensions (see docs/RFCs/023-Dynamic-Extension-Loading.md) rather than something this call site can fix. Runtimes that cannot load assemblies dynamically are rejected earlier by DynamicExtensionLoader.")]
     [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Loading an assembly from a file is unsupported on some platforms (for example browser). The resulting PlatformNotSupportedException is wrapped by DynamicExtensionLoader into an actionable error naming the manifest and the extension.")]
     public Assembly LoadAssembly(string assemblyPath)
     {

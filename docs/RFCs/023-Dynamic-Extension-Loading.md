@@ -319,12 +319,18 @@ output still runs normally on CoreCLR (see `PublishAotNonNativeTests`). Gating o
 load extensions for applications that are perfectly capable of loading them.
 
 **Under `PublishTrimmed`:** the extension assembly itself is external to the application, so nothing
-trims it, and it loads normally. The platform members it *calls* are a different matter: the trimmer
-removes public API that the application never references, so an extension calling a platform method no
-statically referenced code uses can load and then fail with `MissingMethodException`. Rooting the
-whole extension-facing surface would defeat trimming for every application, so this is documented as a
-limitation rather than worked around: **do not combine `PublishTrimmed` with dynamic extensions unless
-the application also exercises the API those extensions use.**
+trims it, and it loads normally. What it *calls* is a different matter. The trimmer removes any code
+the application does not reference — not just platform API, but BCL types and members too — so an
+extension that calls something no statically referenced code uses can load and then fail at run time
+with `MissingMethodException` or `TypeLoadException`. An extension does not have to be exotic to hit
+this: any BCL member the host application happens not to use is a candidate.
+
+Rooting the whole extension-facing surface is not an option — that surface is unbounded, since it
+includes the BCL, so rooting it would defeat trimming entirely. Nor can this be detected at load
+time: the extension's IL is not inspected, and the member is only missing once it is called. It is
+therefore documented as a limitation rather than worked around: **do not combine `PublishTrimmed`
+with dynamic extensions.** The two features want opposite things — trimming removes what is not
+statically reachable, and dynamic extensions are by definition not statically reachable.
 
 ### 6. Failure policy
 
