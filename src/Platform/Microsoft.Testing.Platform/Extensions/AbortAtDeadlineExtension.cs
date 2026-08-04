@@ -38,6 +38,14 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, IOutputDeviceDat
     private readonly ILogger _logger;
     private readonly DateTimeOffset? _stopAt;
     private readonly Timer? _timer;
+
+    // Serializes publishing _handleDeadlineTask against Dispose reading it, so the timer callback and
+    // disposal cannot interleave in a way that starts the handler after Dispose has already returned.
+#if NET9_0_OR_GREATER
+    private readonly Lock _lock = new();
+#else
+    private readonly object _lock = new();
+#endif
     private int _handled;
     private volatile bool _disposed;
     private Task? _handleDeadlineTask;
@@ -167,7 +175,8 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, IOutputDeviceDat
 
     private void OnDeadlineReached()
     {
-        // Do not start deadline handling once we are tearing down.
+        // Do not start deadline handling once we are tearing down (cheap fast-path; re-checked under
+        // the lock below to actually close the race with Dispose).
         if (_disposed)
         {
             return;
@@ -179,11 +188,25 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, IOutputDeviceDat
             return;
         }
 
-        // The timer callback runs on a runtime that may be single-threaded (browser/WASI), where
-        // Task.Run can queue work that never executes. Invoke the async method directly; it is
-        // already asynchronous, so it yields at the first await without blocking the timer thread.
-        // Store the task so disposal can drain it instead of racing teardown.
-        _handleDeadlineTask = HandleDeadlineAsync();
+        // Publish the handler task under the same lock Dispose uses so the two cannot interleave:
+        // either we set _handleDeadlineTask before Dispose captures it (Dispose then drains it), or
+        // Dispose sets _disposed first and we observe it here and never start the handler against
+        // torn-down services. Without this, the timer callback could pass the _disposed check above,
+        // Dispose could run to completion (seeing _handleDeadlineTask still null, so draining
+        // nothing), and only then would the handler start -- after disposal already returned.
+        lock (_lock)
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            // The timer callback runs on a runtime that may be single-threaded (browser/WASI), where
+            // Task.Run can queue work that never executes. Invoke the async method directly; it is
+            // already asynchronous, so it yields at the first await without blocking the timer thread
+            // (so holding the lock here does not block either -- we only capture the returned task).
+            _handleDeadlineTask = HandleDeadlineAsync();
+        }
     }
 
     private async Task HandleDeadlineAsync()
@@ -247,7 +270,16 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, IOutputDeviceDat
 
     public void Dispose()
     {
-        _disposed = true;
+        // Capture the in-flight handler task under the lock so we either observe the task the timer
+        // callback published (and drain it below) or set _disposed first (so the callback never
+        // starts the handler). See OnDeadlineReached.
+        Task? handleDeadlineTask;
+        lock (_lock)
+        {
+            _disposed = true;
+            handleDeadlineTask = _handleDeadlineTask;
+        }
+
         _timer?.Dispose();
 #if !NETCOREAPP
         // netstandard2.0 has no ValueTask/IAsyncDisposable, so there is no async drain path (see
@@ -257,7 +289,7 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, IOutputDeviceDat
         // never observes a fault.
         try
         {
-            _handleDeadlineTask?.Wait(DisposeDrainTimeout);
+            handleDeadlineTask?.Wait(DisposeDrainTimeout);
         }
         catch (Exception)
         {
@@ -269,13 +301,21 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, IOutputDeviceDat
 #if NETCOREAPP
     public async ValueTask DisposeAsync()
     {
-        _disposed = true;
+        // Capture the in-flight handler task under the lock so we either observe the task the timer
+        // callback published (and drain it below) or set _disposed first (so the callback never
+        // starts the handler). See OnDeadlineReached.
+        Task? handleTask;
+        lock (_lock)
+        {
+            _disposed = true;
+            handleTask = _handleDeadlineTask;
+        }
+
         _timer?.Dispose();
 
         // Drain an in-flight deadline handler so its reporting can finish before the host tears down,
         // but bound the wait so a wedged graceful stop cannot hang disposal. HandleDeadlineAsync
         // swallows its own failures, so awaiting the completed task here never throws.
-        Task? handleTask = _handleDeadlineTask;
         if (handleTask is not null)
         {
             Task completed = await Task.WhenAny(handleTask, Task.Delay(DisposeDrainTimeout)).ConfigureAwait(false);
