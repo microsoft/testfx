@@ -1,13 +1,19 @@
 # Efficiency Improver — Persistent Memory for microsoft/testfx
 
 ## Last Updated
-2026-08-01 UTC
+2026-08-04 UTC
 
 ## Round-Robin Schedule
 
-Tasks run this session: **2 (scan), 4 (PR maintenance), 7 (monthly summary)**
-Last run before this: Tasks 2/4/7 (2026-07-31)
-Next run should prioritise: Tasks 5 (issue comments), 6 (infra), 7 (always)
+Tasks run this session: **1 (validate), 2 (scan), 5 (issue check), 7 (monthly summary)**
+Last run before this: Tasks 2/7 (2026-08-03, run 30856871010) and 2/7 (2026-08-02, run 30769014001)
+Next run should prioritise: Task 3 (implementation — backlog is empty, need fresh scan first), Task 6 (infra), 7 (always)
+
+## Known Process Issue (IMPORTANT)
+
+- **Duplicate monthly issues**: On 2026-08-01 through 2026-08-03, THREE separate `[efficiency-improver] Monthly Activity 2026-08` issues were created by different runs on the same days instead of updating the existing one: #10377 (closed as duplicate by maintainer), #10382 (the canonical one — kept updated), #10419 (duplicate, created 2026-08-03 22:05, needs manual closure by maintainer — flagged in Suggested Actions).
+- **ALWAYS search for `is:issue is:open in:title "Monthly Activity"` with label `area/performance` BEFORE creating a new one.** Only create when none exists for the current month, or when the existing one is for a previous month (then close old, open new).
+- **Malformed labels**: maintainer found 13 junk labels applied as literal bracket/string artifacts (e.g. `[efficiency]`, `[[efficiency]]`, `[area/performance`, `type/automation]`) from a labels *string* being passed instead of a list somewhere in tooling. Maintainer cleaned the 4 tracking issues; label definitions still need deletion (maintainer's call, not ours). If using labels via CLI/API in future, pass as a proper array, not a bracketed string.
 
 ## Build / Test / Benchmark Commands
 
@@ -101,6 +107,13 @@ Notes:
 
 ## Backlog Cursor
 
-- Code scan cursor: All July+Aug 2026 new code reviewed. Comprehensive scan complete through August 1.
-- Issue comments cursor: #8824 ✅, #9712 ✅ — next: scan for new efficiency issues
-- Next code scan area: Any new PRs after August 1 (esp. OTel, retry, assertion tooling areas)
+- Code scan cursor: All code through 2026-08-04 reviewed (commits up to ff9bca1). Backlog is EMPTY as of maintainer's 2026-08-03 consolidation comment on #10382 (fixed via #10397; rest won't-fix or needs-maintainer-decision).
+- Issue comments cursor: #8824 ✅ (no new comments since 2026-07-14), #9712 ✅ — no new efficiency-labeled issues found as of 2026-08-04.
+- Next code scan area: repo has been very active (dozens of commits/day from maintainer + Copilot coding agent) — re-scan diffs since ff9bca1 (2026-08-04) next run for new hot-path code.
+
+
+## 2026-08-04 Run Notes
+
+- Verified #10382 is the canonical August summary issue (has maintainer's consolidation comment). Updated it in place rather than creating a new issue — avoided repeating the duplicate-issue mistake from earlier runs.
+- Reviewed recent commit history (2026-08-01 to 2026-08-04): all routine (dependency bumps, localization check-ins, coverage/CI infra, analyzer test coverage additions, AzDO reporter refinements). No new efficiency-relevant hot-path code changes spotted requiring action this run.
+- Energy efficiency backlog is currently empty per maintainer disposition — next run should do a fresh Task 2 scan across newly merged features (AzureFoundry extension, JUnitReport, GitHubActionsReport) for any un-reviewed hot paths, and prioritise Task 3 (implementation) since backlog needs repopulating with concrete measurable items.
