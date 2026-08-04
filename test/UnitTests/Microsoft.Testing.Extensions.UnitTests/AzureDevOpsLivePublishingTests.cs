@@ -2449,6 +2449,40 @@ public sealed class AzureDevOpsLivePublishingTests
     }
 
     [TestMethod]
+    public async Task AttachmentCancellationInMixedBatch_DoesNotSkipUpdates()
+    {
+        using TestDirectory directory = CreateTestDirectory();
+        Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
+        AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out _, out _, environment);
+        await lifetime.BeforeRunAsync(CancellationToken.None);
+        await PublishSingleResultAsync(
+            directory.Path,
+            environment,
+            "ExistingTest",
+            new FailedTestNodeStateProperty(new InvalidOperationException("first")),
+            resultId: 201);
+
+        AzureDevOpsTestResultsPublisherOptions options = new(2, TimeSpan.FromMinutes(1), 40, TimeSpan.FromMilliseconds(250));
+        AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options, out FakeAzureDevOpsTestResultsClient client, out _, out _, environment);
+        client.PublishTestResultsAsyncFunc = (_, _, _, _) => Task.FromResult<IReadOnlyList<int>?>([202]);
+        client.UploadTestResultAttachmentAsyncFunc = (_, _, _, _, _) => Task.FromException(new OperationCanceledException());
+        await StartPublisherAsync(publisher);
+
+        TestNode newTest = CreateNode("NewTest", new FailedTestNodeStateProperty(new InvalidOperationException("new")), RetryTestStartTime);
+        newTest.Properties.Add(new StandardOutputProperty("new output"));
+
+        await publisher.ConsumeAsync(Mock.Of<IDataProducer>(), CreateMessage(newTest), CancellationToken.None);
+        await Assert.ThrowsExactlyAsync<OperationCanceledException>(
+            () => publisher.ConsumeAsync(
+                Mock.Of<IDataProducer>(),
+                CreateMessage(CreateNode("ExistingTest", new PassedTestNodeStateProperty(), RetryTestStartTime)),
+                CancellationToken.None));
+
+        Assert.HasCount(1, client.UpdateTestResultsCalls, "The update must reach Azure DevOps before creation attachments are uploaded.");
+        Assert.AreEqual("ExistingTest", client.UpdateTestResultsCalls[0].Results.Single().AutomatedTestName);
+    }
+
+    [TestMethod]
     public void CappedAttemptHistory_ContinuesIncreasingSequenceIds()
     {
         var attempts = new AzureDevOpsTestSubResult[AzureDevOpsLivePublishingConstants.MaxSubResultsPerResult];
@@ -2848,6 +2882,16 @@ public sealed class AzureDevOpsLivePublishingTests
             _inner.MoveFile(sourceFileName, destFileName, overwrite);
         }
 
+        public void ReplaceFile(string sourceFileName, string destFileName)
+        {
+            if (FailMoves)
+            {
+                throw new IOException($"The process cannot replace the file '{destFileName}'.");
+            }
+
+            _inner.ReplaceFile(sourceFileName, destFileName);
+        }
+
         public IFileStream NewFileStream(string path, FileMode mode) => _inner.NewFileStream(path, mode);
 
         public IFileStream NewFileStream(string path, FileMode mode, FileAccess access) => _inner.NewFileStream(path, mode, access);
@@ -2888,6 +2932,8 @@ public sealed class AzureDevOpsLivePublishingTests
         public string[] GetFiles(string path, string searchPattern, SearchOption searchOption) => _inner.GetFiles(path, searchPattern, searchOption);
 
         public void MoveFile(string sourceFileName, string destFileName, bool overwrite = false) => _inner.MoveFile(sourceFileName, destFileName, overwrite);
+
+        public void ReplaceFile(string sourceFileName, string destFileName) => _inner.ReplaceFile(sourceFileName, destFileName);
 
         public IFileStream NewFileStream(string path, FileMode mode) => _inner.NewFileStream(path, mode);
 

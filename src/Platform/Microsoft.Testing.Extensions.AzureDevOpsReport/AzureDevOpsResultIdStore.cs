@@ -209,7 +209,7 @@ internal sealed class AzureDevOpsResultIdStore
 #endif
             }
 
-            _fileSystem.MoveFile(temporaryFilePath, _filePath, overwrite: true);
+            _fileSystem.ReplaceFile(temporaryFilePath, _filePath);
             _hasUnsavedChanges = false;
             _hasAdvancedExistingHistory = false;
         }

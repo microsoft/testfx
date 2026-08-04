@@ -221,6 +221,8 @@ public sealed class TrxResultStreamingStoreTests
 
         public void MoveFile(string sourceFileName, string destFileName, bool overwrite = false) => throw new NotSupportedException();
 
+        public void ReplaceFile(string sourceFileName, string destFileName) => throw new NotSupportedException();
+
         public string ReadAllText(string path) => File.ReadAllText(path);
 
         public Task<string> ReadAllTextAsync(string path) => Task.FromResult(File.ReadAllText(path));
