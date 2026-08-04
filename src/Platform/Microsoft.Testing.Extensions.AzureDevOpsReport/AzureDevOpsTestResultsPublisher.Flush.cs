@@ -273,7 +273,11 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         {
             // Folded data-driven rows share one uid. A failure in any row retries the whole uid, including
             // rows that passed or were skipped, so every row must retain its own result id and history.
-            _resultIdStore?.RecordCreated(batch[i].Result, resultIds[i]);
+            if (_resultIdStore is not null)
+            {
+                _resultIdStore.RecordCreated(batch[i].Result, resultIds[i]);
+                _claimedResultIds.Add(resultIds[i]);
+            }
 
             if (batch[i].Attachments.Count > 0)
             {
