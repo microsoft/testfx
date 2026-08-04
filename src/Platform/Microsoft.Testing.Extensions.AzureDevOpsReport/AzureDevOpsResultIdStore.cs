@@ -114,7 +114,10 @@ internal sealed class AzureDevOpsResultIdStore
             result.AutomatedTestName,
             result.TestCaseTitle,
             resultId,
-            [ToSubResult(result, sequenceId: 1)]);
+            [ToSubResult(result, sequenceId: 1)])
+        {
+            TotalDurationInMs = result.DurationInMs,
+        };
         _hasUnsavedChanges = true;
     }
 
@@ -143,11 +146,25 @@ internal sealed class AzureDevOpsResultIdStore
     }
 
     /// <summary>
+    /// Returns the total duration after <paramref name="result"/> is added, including attempts no longer
+    /// retained in the capped sub-result list.
+    /// </summary>
+    public static long? BuildNextTotalDuration(AzureDevOpsPublishedResult published, AzureDevOpsTestCaseResult result)
+        => AddDurations(published.TotalDurationInMs ?? SumDurations(published.Attempts), result.DurationInMs);
+
+    /// <summary>
     /// Records an attempt history that Azure DevOps has accepted.
     /// </summary>
-    public void RecordAttempts(AzureDevOpsPublishedResult published, IReadOnlyList<AzureDevOpsTestSubResult> attempts)
+    public void RecordAttempts(
+        AzureDevOpsPublishedResult published,
+        IReadOnlyList<AzureDevOpsTestSubResult> attempts,
+        long? totalDurationInMs)
     {
-        _results[CreateKey(published.Storage, published.Name, published.Title)] = published with { Attempts = attempts };
+        _results[CreateKey(published.Storage, published.Name, published.Title)] = published with
+        {
+            Attempts = attempts,
+            TotalDurationInMs = totalDurationInMs,
+        };
         _hasUnsavedChanges = true;
         _hasAdvancedExistingHistory = true;
     }
@@ -223,7 +240,10 @@ internal sealed class AzureDevOpsResultIdStore
             int index = 0;
             foreach (AzureDevOpsPublishedResult published in _results.Values)
             {
-                entries[index++] = new AzureDevOpsResultMapEntry(published.Storage, published.Name, published.Title, published.Id, published.Attempts);
+                entries[index++] = new AzureDevOpsResultMapEntry(published.Storage, published.Name, published.Title, published.Id, published.Attempts)
+                {
+                    TotalDurationInMs = published.TotalDurationInMs,
+                };
             }
 
             string json = JsonSerializer.Serialize(new AzureDevOpsResultMapFile(_buildId, _runId, entries), JsonSerializerOptions);
@@ -333,7 +353,17 @@ internal sealed class AzureDevOpsResultIdStore
                     }
                     else
                     {
-                        _results[key] = new AzureDevOpsPublishedResult(storage, name, title, entry.Id, entry.Attempts);
+                        long? retainedDuration = SumDurations(entry.Attempts);
+                        if (entry.TotalDurationInMs is < 0
+                            || (entry.TotalDurationInMs is { } totalDuration && retainedDuration is { } retained && totalDuration < retained))
+                        {
+                            continue;
+                        }
+
+                        _results[key] = new AzureDevOpsPublishedResult(storage, name, title, entry.Id, entry.Attempts)
+                        {
+                            TotalDurationInMs = entry.TotalDurationInMs ?? retainedDuration,
+                        };
                         keyByResultId[entry.Id] = key;
                         resultIdByKey[key] = entry.Id;
                     }
@@ -379,6 +409,24 @@ internal sealed class AzureDevOpsResultIdStore
 
         return true;
     }
+
+    private static long? SumDurations(IReadOnlyList<AzureDevOpsTestSubResult> attempts)
+    {
+        long? total = null;
+        foreach (AzureDevOpsTestSubResult attempt in attempts)
+        {
+            total = AddDurations(total, attempt.DurationInMs);
+        }
+
+        return total;
+    }
+
+    private static long? AddDurations(long? left, long? right)
+        => left is null
+            ? right
+            : right is null
+                ? left
+                : right.Value > long.MaxValue - left.Value ? long.MaxValue : left.Value + right.Value;
 
     private void TryDeleteFile(string path)
     {
@@ -430,7 +478,10 @@ internal sealed record AzureDevOpsPublishedResult(
     string Name,
     string Title,
     int Id,
-    IReadOnlyList<AzureDevOpsTestSubResult> Attempts);
+    IReadOnlyList<AzureDevOpsTestSubResult> Attempts)
+{
+    public long? TotalDurationInMs { get; init; }
+}
 
 /// <summary>
 /// On-disk shape of one map entry.
@@ -445,7 +496,11 @@ internal sealed record AzureDevOpsResultMapEntry(
     [property: JsonPropertyName("name")] string? Name,
     [property: JsonPropertyName("title")] string? Title,
     [property: JsonPropertyName("id")] int Id,
-    [property: JsonPropertyName("attempts")] IReadOnlyList<AzureDevOpsTestSubResult>? Attempts);
+    [property: JsonPropertyName("attempts")] IReadOnlyList<AzureDevOpsTestSubResult>? Attempts)
+{
+    [JsonPropertyName("totalDurationInMs")]
+    public long? TotalDurationInMs { get; init; }
+}
 
 /// <summary>
 /// On-disk shape of the result map.

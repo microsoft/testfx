@@ -152,12 +152,13 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
                 List<(AzureDevOpsPublishedResult Published, AzureDevOpsTestCaseResultWithAttachments Attempt)> updates = [];
                 foreach ((AzureDevOpsPublishedResult published, AzureDevOpsTestCaseResultWithAttachments attempt) in updateCandidates)
                 {
-                    if (candidateCountsByResultId[published.Id] == 1)
+                    if (candidateCountsByResultId[published.Id] == 1 && _claimedResultIds.Add(published.Id))
                     {
                         updates.Add((published, attempt));
                     }
                     else
                     {
+                        _claimedResultIds.Add(published.Id);
                         creations.Add(attempt);
                     }
                 }
@@ -295,17 +296,19 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
     {
         var parents = new AzureDevOpsTestCaseResult[updates.Count];
         var attemptHistories = new IReadOnlyList<AzureDevOpsTestSubResult>[updates.Count];
+        long?[] totalDurations = new long?[updates.Count];
         for (int i = 0; i < updates.Count; i++)
         {
             // Built but not recorded yet: the map may only advance once Azure DevOps has accepted the
             // update, otherwise retrying a failed update would list the same execution twice.
             attemptHistories[i] = AzureDevOpsResultIdStore.BuildNextAttempts(updates[i].Published, updates[i].Attempt.Result);
+            totalDurations[i] = AzureDevOpsResultIdStore.BuildNextTotalDuration(updates[i].Published, updates[i].Attempt.Result);
             parents[i] = updates[i].Attempt.Result with
             {
                 Id = updates[i].Published.Id,
                 ResultGroupType = AzureDevOpsLivePublishingConstants.RerunResultGroupType,
                 SubResults = attemptHistories[i],
-                DurationInMs = SumDurations(attemptHistories[i]),
+                DurationInMs = totalDurations[i],
             };
         }
 
@@ -340,7 +343,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         // canceled, otherwise only a prefix of the accepted updates would survive into the next attempt.
         for (int i = 0; i < updates.Count; i++)
         {
-            _resultIdStore!.RecordAttempts(updates[i].Published, attemptHistories[i]);
+            _resultIdStore!.RecordAttempts(updates[i].Published, attemptHistories[i], totalDurations[i]);
         }
 
         for (int i = 0; i < updates.Count; i++)
@@ -391,24 +394,6 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         }
 
         return renamed;
-    }
-
-    private static long? SumDurations(IReadOnlyList<AzureDevOpsTestSubResult> attempts)
-    {
-        long total = 0;
-        bool hasDuration = false;
-        foreach (AzureDevOpsTestSubResult attempt in attempts)
-        {
-            if (attempt.DurationInMs is not { } duration)
-            {
-                continue;
-            }
-
-            hasDuration = true;
-            total = duration > long.MaxValue - total ? long.MaxValue : total + duration;
-        }
-
-        return hasDuration ? total : null;
     }
 
     private async Task UploadAttachmentsForResultAsync(int testCaseResultId, IReadOnlyList<AzureDevOpsTestResultAttachment> attachments, CancellationToken cancellationToken)

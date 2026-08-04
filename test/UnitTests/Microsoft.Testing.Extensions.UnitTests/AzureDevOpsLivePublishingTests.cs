@@ -2613,7 +2613,7 @@ public sealed class AzureDevOpsLivePublishingTests
         IReadOnlyList<AzureDevOpsTestSubResult> attempts = AzureDevOpsResultIdStore.BuildNextAttempts(
             published,
             first with { ErrorMessage = "second" });
-        updated.RecordAttempts(published, attempts);
+        updated.RecordAttempts(published, attempts, totalDurationInMs: 2);
         await updated.SaveAsync(CancellationToken.None);
 
         Assert.IsFalse(File.Exists(mapPath), "A stale map would let the next attempt erase accepted server history.");
@@ -2834,7 +2834,10 @@ public sealed class AzureDevOpsLivePublishingTests
                 null);
         }
 
-        AzureDevOpsPublishedResult published = new("tests", "MyTest", "MyTest", 123, attempts);
+        AzureDevOpsPublishedResult published = new("tests", "MyTest", "MyTest", 123, attempts)
+        {
+            TotalDurationInMs = 1000,
+        };
         AzureDevOpsTestCaseResult nextResult = new(
             "MyTest",
             "tests",
@@ -2847,14 +2850,20 @@ public sealed class AzureDevOpsLivePublishingTests
             null);
 
         IReadOnlyList<AzureDevOpsTestSubResult> next = AzureDevOpsResultIdStore.BuildNextAttempts(published, nextResult);
+        long? nextTotalDuration = AzureDevOpsResultIdStore.BuildNextTotalDuration(published, nextResult);
         IReadOnlyList<AzureDevOpsTestSubResult> afterNext = AzureDevOpsResultIdStore.BuildNextAttempts(
             published with { Attempts = next },
+            nextResult);
+        long? afterNextTotalDuration = AzureDevOpsResultIdStore.BuildNextTotalDuration(
+            published with { Attempts = next, TotalDurationInMs = nextTotalDuration },
             nextResult);
 
         Assert.HasCount(AzureDevOpsLivePublishingConstants.MaxSubResultsPerResult, next);
         Assert.AreEqual(2, next[0].SequenceId);
         Assert.AreEqual(1001, next[^1].SequenceId);
         Assert.AreEqual(1002, afterNext[^1].SequenceId);
+        Assert.AreEqual(1001, nextTotalDuration);
+        Assert.AreEqual(1002, afterNextTotalDuration);
     }
 
     /// <summary>

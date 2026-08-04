@@ -35,6 +35,9 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
     private readonly ConcurrentQueue<AzureDevOpsTestCaseResultWithAttachments> _pendingResults = new();
     private readonly ConcurrentQueue<AzureDevOpsTestResultAttachment> _pendingRunAttachments = new();
     private readonly SemaphoreSlim _flushSemaphore = new(1, 1);
+    // Mutate only while holding _flushSemaphore. One persisted parent may be updated at most once per
+    // test-host attempt; a later duplicate is ambiguous and falls back to a separate create.
+    private readonly HashSet<int> _claimedResultIds = [];
 
     private AzureDevOpsPublishConfiguration? _publishConfiguration;
     private AzureDevOpsRunIdCoordinator? _runIdCoordinator;
