@@ -1973,7 +1973,14 @@ public sealed class AzureDevOpsLivePublishingTests
         AzureDevOpsTestCaseResult parent = client.UpdateTestResultsCalls.Single().Results.Single();
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.FailedTestOutcome, parent.Outcome);
         Assert.AreEqual("second", parent.ErrorMessage, "The parent reports the attempt that decided the outcome.");
-        Assert.HasCount(2, parent.SubResults!);
+        IReadOnlyList<AzureDevOpsTestSubResult> subResults = parent.SubResults!;
+        Assert.HasCount(2, subResults);
+        Assert.AreEqual(1, subResults[0].SequenceId);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.FailedTestOutcome, subResults[0].Outcome);
+        Assert.AreEqual("first", subResults[0].ErrorMessage);
+        Assert.AreEqual(2, subResults[1].SequenceId);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.FailedTestOutcome, subResults[1].Outcome);
+        Assert.AreEqual("second", subResults[1].ErrorMessage);
     }
 
     [TestMethod]
@@ -2011,6 +2018,8 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.HasCount(1, client.UploadTestResultAttachmentCalls);
         Assert.AreEqual(25, client.UploadTestResultAttachmentCalls[0].TestCaseResultId);
         Assert.AreEqual("stdout.attempt-2.log", client.UploadTestResultAttachmentCalls[0].Attachment.FileName);
+        Assert.HasCount(1, client.UpdateTestResultsCalls);
+        Assert.AreEqual(2, client.UpdateTestResultsCalls[0].Results.Single().SubResults![1].SequenceId);
     }
 
     [TestMethod]
@@ -2150,6 +2159,7 @@ public sealed class AzureDevOpsLivePublishingTests
 
         Assert.HasCount(1, created);
         Assert.AreEqual("OtherTests", created[0].AutomatedTestStorage);
+        Assert.AreEqual("MyTest", created[0].AutomatedTestName);
         Assert.IsEmpty(client.UpdateTestResultsCalls, "A different assembly is a different test, not another attempt.");
     }
 
@@ -2265,7 +2275,9 @@ public sealed class AzureDevOpsLivePublishingTests
         AzureDevOpsTestRunOrchestratorLifetime lifetime = CreateOrchestratorLifetime(directory.Path, out _, out _, environment);
 
         await lifetime.BeforeRunAsync(CancellationToken.None);
-        Assert.IsNotNull(AzureDevOpsConstants.TryGetInheritedResultMapPath(environment.Object, buildId: 123));
+        string? inheritedMapPath = AzureDevOpsConstants.TryGetInheritedResultMapPath(environment.Object, buildId: 123);
+        Assert.IsNotNull(inheritedMapPath);
+        Assert.Contains(directory.Path, inheritedMapPath);
 
         // A value inherited from an earlier build on a reused agent must not redirect this build's updates.
         Assert.IsNull(AzureDevOpsConstants.TryGetInheritedResultMapPath(environment.Object, buildId: 999));
@@ -2348,7 +2360,9 @@ public sealed class AzureDevOpsLivePublishingTests
         await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
 
         Assert.IsTrue(File.Exists(mapPath), "The next attempt still needs the map once the session ends.");
-        Assert.Contains("MyTest4", File.ReadAllText(mapPath));
+        string map = File.ReadAllText(mapPath);
+        Assert.Contains("MyTest0", map);
+        Assert.Contains("MyTest4", map);
     }
 
     [TestMethod]
@@ -2422,6 +2436,8 @@ public sealed class AzureDevOpsLivePublishingTests
         await nextAttempt.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
 
         Assert.HasCount(1, created);
+        Assert.IsNull(created[0].Id);
+        Assert.IsNull(created[0].SubResults);
         Assert.IsEmpty(client.UpdateTestResultsCalls, "Result ids from another run must never be PATCHed.");
     }
 
@@ -2455,6 +2471,8 @@ public sealed class AzureDevOpsLivePublishingTests
         await publisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
 
         Assert.HasCount(1, created);
+        Assert.IsNull(created[0].Id);
+        Assert.IsNull(created[0].SubResults);
         Assert.IsEmpty(client.UpdateTestResultsCalls, "An incomplete history must fall back to a safe create.");
     }
 
@@ -2608,6 +2626,8 @@ public sealed class AzureDevOpsLivePublishingTests
 
         string mapPath = AzureDevOpsConstants.TryGetInheritedResultMapPath(environment.Object, buildId: 123)!;
         string map = File.ReadAllText(mapPath);
+        Assert.Contains("\"id\":101", map);
+        Assert.Contains("\"id\":102", map);
         Assert.Contains("FirstTest", map);
         Assert.Contains("SecondTest", map);
     }
@@ -2628,7 +2648,12 @@ public sealed class AzureDevOpsLivePublishingTests
 
         AzureDevOpsTestResultsPublisherOptions options = new(2, TimeSpan.FromMinutes(1), 40, TimeSpan.FromMilliseconds(250));
         AzureDevOpsTestResultsPublisher publisher = CreatePublisher(directory.Path, options, out FakeAzureDevOpsTestResultsClient client, out _, out _, environment);
-        client.PublishTestResultsAsyncFunc = (_, _, _, _) => Task.FromResult<IReadOnlyList<int>?>([202]);
+        List<AzureDevOpsTestCaseResult> created = [];
+        client.PublishTestResultsAsyncFunc = (_, _, results, _) =>
+        {
+            created.AddRange(results);
+            return Task.FromResult<IReadOnlyList<int>?>([202]);
+        };
         client.UploadTestResultAttachmentAsyncFunc = (_, _, _, _, _) => Task.FromException(new OperationCanceledException());
         await StartPublisherAsync(publisher);
 
@@ -2644,6 +2669,8 @@ public sealed class AzureDevOpsLivePublishingTests
 
         Assert.HasCount(1, client.UpdateTestResultsCalls, "The update must reach Azure DevOps before creation attachments are uploaded.");
         Assert.AreEqual("ExistingTest", client.UpdateTestResultsCalls[0].Results.Single().AutomatedTestName);
+        Assert.HasCount(1, created);
+        Assert.AreEqual("NewTest", created[0].AutomatedTestName);
     }
 
     [TestMethod]
@@ -2686,6 +2713,9 @@ public sealed class AzureDevOpsLivePublishingTests
 
         Assert.Contains("NewTest", createdTests);
         Assert.Contains("ExistingTest", createdTests, "The ambiguous PATCH must retry as a safe create.");
+        Assert.HasCount(2, createdTests);
+        Assert.AreEqual("NewTest", createdTests.Single(name => name == "NewTest"));
+        Assert.AreEqual("ExistingTest", createdTests.Single(name => name == "ExistingTest"));
 
         string mapPath = AzureDevOpsConstants.TryGetInheritedResultMapPath(environment.Object, buildId: 123)!;
         Assert.DoesNotContain("\"id\":211", File.ReadAllText(mapPath), "The pre-PATCH result id must not be resurrected.");
