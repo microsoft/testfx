@@ -187,7 +187,15 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
                 {
                     RequeueUnsafe([.. updates.Select(update => update.Attempt)]);
                     await UploadDeferredAttachmentsAsync(deferredAttachments, cancellationToken).ConfigureAwait(false);
-                    return;
+                    if (!force)
+                    {
+                        return;
+                    }
+
+                    // TryUpdateResultsAsync forgot the ambiguous mappings before requeueing. A forced
+                    // session-end flush has no later opportunity, so immediately loop and reclassify these
+                    // attempts as safe creates. Background flushes return to preserve the retry backoff.
+                    continue;
                 }
 
                 await UploadDeferredAttachmentsAsync(deferredAttachments, cancellationToken).ConfigureAwait(false);

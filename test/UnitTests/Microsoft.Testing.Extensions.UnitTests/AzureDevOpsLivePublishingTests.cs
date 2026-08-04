@@ -2398,7 +2398,7 @@ public sealed class AzureDevOpsLivePublishingTests
     }
 
     [TestMethod]
-    public async Task WhenAnUpdateFails_TheAttemptHistoryDoesNotAdvance()
+    public async Task WhenAnUpdateFails_ForcedFlushRetriesAsCreate()
     {
         using TestDirectory directory = CreateTestDirectory();
         Mock<IEnvironment> environment = CreateEnvironmentMockWithSettableRunId();
@@ -2411,6 +2411,12 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.IsTrue(File.Exists(mapPath));
 
         AzureDevOpsTestResultsPublisher secondAttempt = CreatePublisher(directory.Path, AzureDevOpsTestResultsPublisherOptions.Default, out FakeAzureDevOpsTestResultsClient client, out _, out _, environment);
+        List<AzureDevOpsTestCaseResult> created = [];
+        client.PublishTestResultsAsyncFunc = (_, _, results, _) =>
+        {
+            created.AddRange(results);
+            return Task.FromResult<IReadOnlyList<int>?>([72]);
+        };
         client.UpdateTestResultsAsyncFunc = (_, _, _, _) => Task.FromException(new HttpRequestException("transient"));
 
         await StartPublisherAsync(secondAttempt);
@@ -2422,11 +2428,13 @@ public sealed class AzureDevOpsLivePublishingTests
 
         Assert.HasCount(1, client.UpdateTestResultsCalls);
         Assert.HasCount(2, client.UpdateTestResultsCalls[0].Results.Single().SubResults!);
+        Assert.HasCount(1, created);
+        Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, created[0].Outcome);
 
         // The map is invalidated before PATCH so a crash after an accepted update can never expose stale
-        // history. A rejected update therefore leaves no map; the next attempt safely creates a separate
-        // result rather than risking an incomplete replacement.
-        Assert.IsFalse(File.Exists(mapPath));
+        // history. The forced session-end flush immediately retries the forgotten attempt as a safe create.
+        Assert.IsTrue(File.Exists(mapPath));
+        Assert.DoesNotContain("\"id\":71", File.ReadAllText(mapPath));
     }
 
     [TestMethod]
