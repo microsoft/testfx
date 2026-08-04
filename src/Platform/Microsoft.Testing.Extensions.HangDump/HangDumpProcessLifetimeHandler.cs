@@ -232,22 +232,36 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
                 TimeSpan.FromMilliseconds(-1));
         }
 
-        await _logger.LogDebugAsync($"Wait for test host connection to the server pipe '{_singleConnectionNamedPipeServer.PipeName.Name}'").ConfigureAwait(false);
-        await _waitConnectionTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false);
-        using CancellationTokenSource timeout = new(TimeoutHelper.DefaultHangTimeSpanTimeout);
-        using var linkedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeout.Token);
-        _waitConsumerPipeName.Wait(linkedCancellationToken.Token);
-        ApplicationStateGuard.Ensure(_namedPipeClient is not null);
-        await _namedPipeClient.ConnectAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false);
-        await _logger.LogDebugAsync($"Connected to the test host server pipe '{_namedPipeClient.PipeName}'").ConfigureAwait(false);
+        // Once the absolute deadline timer has fired and started taking a dump, the test host is being
+        // dumped and killed out from under this handshake, so the pipe waits below will throw
+        // (cancellation, timeout, or a torn-down pipe). Let Started return normally in that case so the
+        // lifetime handler still receives OnTestHostProcessExitedAsync, which is where the dump files
+        // are published; otherwise a deadline dump would be taken but never surfaced as an artifact.
+        try
+        {
+            await _logger.LogDebugAsync($"Wait for test host connection to the server pipe '{_singleConnectionNamedPipeServer.PipeName.Name}'").ConfigureAwait(false);
+            await _waitConnectionTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false);
+            using CancellationTokenSource timeout = new(TimeoutHelper.DefaultHangTimeSpanTimeout);
+            using var linkedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeout.Token);
+            _waitConsumerPipeName.Wait(linkedCancellationToken.Token);
+            ApplicationStateGuard.Ensure(_namedPipeClient is not null);
+            await _namedPipeClient.ConnectAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false);
+            await _logger.LogDebugAsync($"Connected to the test host server pipe '{_namedPipeClient.PipeName}'").ConfigureAwait(false);
 
-        // The inactivity timer only makes sense once the host has connected and can send activity
-        // signals; before that there is nothing to reset it. The deadline timer above is independent.
-        _activityTimer = new Timer(
-            _ => TriggerDumpOnce(cancellationToken, triggeredByDeadline: false),
-            null,
-            _activityTimerValue!.Value,
-            TimeSpan.FromMilliseconds(-1));
+            // The inactivity timer only makes sense once the host has connected and can send activity
+            // signals; before that there is nothing to reset it. The deadline timer above is independent.
+            _activityTimer = new Timer(
+                _ => TriggerDumpOnce(cancellationToken, triggeredByDeadline: false),
+                null,
+                _activityTimerValue!.Value,
+                TimeSpan.FromMilliseconds(-1));
+        }
+        catch (Exception ex) when (Volatile.Read(ref _dumpTaken) != 0)
+        {
+            // A deadline dump is already in progress; the failed handshake is expected. Return normally
+            // so OnTestHostProcessExitedAsync runs and publishes the dump that is being taken.
+            await _logger.LogDebugAsync($"Test host handshake failed after the deadline dump started; continuing so the dump can be published. {ex}").ConfigureAwait(false);
+        }
     }
 
     private static string GetDiskInfo()
@@ -326,6 +340,13 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
     private async Task TakeDumpOfTreeAsync(CancellationToken cancellationToken, bool triggeredByDeadline)
     {
+        // This method is started synchronously inside the _dumpLock (see TriggerDumpOnce), which also
+        // publishes the returned task into _activityIndicatorTask. Yield immediately so none of the
+        // dump work runs while the lock is held: control returns to the caller, the task field is
+        // observed, and the lock is released before the (potentially slow) dump proceeds. HangDump runs
+        // out-of-process on a full runtime, so yielding to the thread pool here is safe.
+        await Task.Yield();
+
         ApplicationStateGuard.Ensure(_testHostProcessInformation is not null);
 
         string dumpReason = triggeredByDeadline
@@ -556,6 +577,13 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
     public void Dispose()
     {
+        // Stop the deadline and inactivity timers so no callback can start a new dump while we tear
+        // down the pipes. The happy path disposes them in OnTestHostProcessExitedAsync, but that runs
+        // only on a clean exit; Ctrl+C or an exception skips it, so dispose here too (Timer.Dispose is
+        // idempotent, so disposing twice is safe).
+        _deadlineTimer?.Dispose();
+        _activityTimer?.Dispose();
+
         Task? activityIndicatorTask;
         lock (_dumpLock)
         {
@@ -592,6 +620,13 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 #if NETCOREAPP
     public async ValueTask DisposeAsync()
     {
+        // Stop the deadline and inactivity timers so no callback can start a new dump while we tear
+        // down the pipes. The happy path disposes them in OnTestHostProcessExitedAsync, but that runs
+        // only on a clean exit; Ctrl+C or an exception skips it, so dispose here too (Timer.Dispose is
+        // idempotent, so disposing twice is safe).
+        _deadlineTimer?.Dispose();
+        _activityTimer?.Dispose();
+
         Task? activityIndicatorTask;
         lock (_dumpLock)
         {

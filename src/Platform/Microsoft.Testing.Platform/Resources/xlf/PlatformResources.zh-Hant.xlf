@@ -2,6 +2,16 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="zh-Hant" original="../PlatformResources.resx">
     <body>
+      <trans-unit id="AbortAtDeadlineDescription">
+        <source>Extension that gracefully stops the test run shortly before a CI-imposed deadline so reports can be finalized.</source>
+        <target state="new">Extension that gracefully stops the test run shortly before a CI-imposed deadline so reports can be finalized.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AbortAtDeadlineMessage">
+        <source>Deadline approaching: gracefully stopping the test run so reports can be finalized before the CI hard-cancel.</source>
+        <target state="new">Deadline approaching: gracefully stopping the test run so reports can be finalized before the CI hard-cancel.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AbortForMaxFailedTestsCapabilityNotAvailable">
         <source>The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.</source>
         <target state="translated">目前的測試架構未實作 '--maximum-failed-tests' 功能所需的 'IGracefulStopTestExecutionCapability'。</target>

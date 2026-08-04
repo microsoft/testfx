@@ -72,9 +72,11 @@ internal static class DeadlineHelper
     private static TimeSpan GetMargin(IEnvironment environment, string variableName, TimeSpan defaultValue)
     {
         string? raw = environment.GetEnvironmentVariable(variableName);
+
+        // TimeSpanParser only matches non-negative numbers (its regex has no sign), so a parsed
+        // value is always >= zero; no extra sign check is needed here.
         return !RoslynString.IsNullOrWhiteSpace(raw)
             && TimeSpanParser.TryParse(raw, TimeSpanDefaultUnit.Seconds, out TimeSpan parsed)
-            && parsed >= TimeSpan.Zero
                 ? parsed
                 : defaultValue;
     }

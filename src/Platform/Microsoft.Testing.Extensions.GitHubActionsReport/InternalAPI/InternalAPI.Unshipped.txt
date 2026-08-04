@@ -23,3 +23,4 @@ static Microsoft.Testing.Extensions.TestNodeIdentity.GetDisplayLabel(Microsoft.T
 *REMOVED*static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSlowTestReporter.BuildNoticeLine(string! testName, System.TimeSpan elapsed) -> string!
 *REMOVED*static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.BuildMarkdown(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.TestRecord>! records, string! assemblyName, string! targetFrameworkMoniker) -> string!
 Microsoft.Testing.Platform.Helpers.ExitCode.CoverageThresholdFailed = 14 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.TestExecutionStoppedAtDeadline = 15 -> Microsoft.Testing.Platform.Helpers.ExitCode

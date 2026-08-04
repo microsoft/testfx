@@ -27,4 +27,5 @@ internal enum ExitCode
     IncompatibleProtocolVersion = 12,
     TestExecutionStoppedForMaxFailedTests = 13,
     CoverageThresholdFailed = 14,
+    TestExecutionStoppedAtDeadline = 15,
 }

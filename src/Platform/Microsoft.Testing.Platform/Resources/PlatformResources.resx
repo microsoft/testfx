@@ -941,6 +941,12 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
     <value>Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</value>
     <comment>{Locked="--maximum-failed-tests"}</comment>
   </data>
+  <data name="AbortAtDeadlineDescription" xml:space="preserve">
+    <value>Extension that gracefully stops the test run shortly before a CI-imposed deadline so reports can be finalized.</value>
+  </data>
+  <data name="AbortAtDeadlineMessage" xml:space="preserve">
+    <value>Deadline approaching: gracefully stopping the test run so reports can be finalized before the CI hard-cancel.</value>
+  </data>
   <data name="ReachedMaxFailedTestsMessage" xml:space="preserve">
     <value>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</value>
     <comment>{0} is the number of max failed tests. {Locked="--maximum-failed-tests"}</comment>

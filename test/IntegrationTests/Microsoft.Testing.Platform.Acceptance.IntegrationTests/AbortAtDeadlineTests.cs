@@ -25,7 +25,9 @@ public sealed class AbortAtDeadlineTests : AcceptanceTestBase<AbortAtDeadlineTes
             },
             cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        // A deadline-truncated run reports its own exit code so CI/tooling can tell it apart from a
+        // clean pass, even though the in-flight test finished and the summary shows it as passed.
+        testHostResult.AssertExitCodeIs(ExitCode.TestExecutionStoppedAtDeadline);
         testHostResult.AssertOutputContains(StopMessage);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
@@ -46,7 +48,7 @@ public sealed class AbortAtDeadlineTests : AcceptanceTestBase<AbortAtDeadlineTes
             },
             cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.TestExecutionStoppedAtDeadline);
         testHostResult.AssertOutputContains(StopMessage);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
@@ -66,7 +68,7 @@ public sealed class AbortAtDeadlineTests : AcceptanceTestBase<AbortAtDeadlineTes
             },
             cancellationToken: TestContext.CancellationToken);
 
-        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        testHostResult.AssertExitCodeIs(ExitCode.TestExecutionStoppedAtDeadline);
         testHostResult.AssertOutputContains(StopMessage);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
@@ -166,10 +168,12 @@ internal class DummyTestFramework : ITestFramework, IDataProducer
             new TestNode() { Uid = "1", DisplayName = "Test1", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
 
         // When asked to, block until the deadline-driven graceful stop is requested. This mimics a
-        // long-running suite whose remaining tests are cut short by the approaching CI deadline.
+        // long-running suite whose remaining tests are cut short by the approaching CI deadline. Cap
+        // the wait so a broken stop path fails the assertions fast instead of hanging until the harness
+        // times out; the StopMessage and exit-code assertions still catch a stop that never happened.
         if (Environment.GetEnvironmentVariable("WAIT_FOR_STOP") == "1")
         {
-            await GracefulStop.Instance.TCS.Task;
+            await Task.WhenAny(GracefulStop.Instance.TCS.Task, Task.Delay(TimeSpan.FromMinutes(2)));
         }
 
         context.Complete();

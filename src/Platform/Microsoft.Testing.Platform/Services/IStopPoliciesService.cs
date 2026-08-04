@@ -9,11 +9,17 @@ internal interface IStopPoliciesService
 
     bool IsAbortTriggered { get; }
 
+    bool IsDeadlineTriggered { get; }
+
     Task RegisterOnMaxFailedTestsCallbackAsync(Func<int, CancellationToken, Task> callback);
 
     Task RegisterOnAbortCallbackAsync(Func<Task> callback);
 
+    Task RegisterOnDeadlineCallbackAsync(Func<Task> callback);
+
     Task ExecuteMaxFailedTestsCallbacksAsync(int maxFailedTests, CancellationToken cancellationToken);
 
     Task ExecuteAbortCallbacksAsync();
+
+    Task ExecuteDeadlineCallbacksAsync();
 }

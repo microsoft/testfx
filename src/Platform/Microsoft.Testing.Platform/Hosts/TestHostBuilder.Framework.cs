@@ -114,17 +114,24 @@ internal sealed partial class TestHostBuilder
             dataConsumersBuilder.Add(abortForMaxFailedTestsExtension);
         }
 
-        var abortAtDeadlineExtension = new AbortAtDeadlineExtension(
-            serviceProvider.GetEnvironment(),
-            serviceProvider.GetSystemClock(),
-            serviceProvider.GetTestFrameworkCapabilities().GetCapability<IGracefulStopTestExecutionCapability>(),
-            serviceProvider.GetTestApplicationCancellationTokenSource(),
-            serviceProvider.GetOutputDevice(),
-            serviceProvider.GetLoggerFactory());
-
-        if (await abortAtDeadlineExtension.IsEnabledAsync().ConfigureAwait(false))
+        // Deadline-aware graceful stop only makes sense for a console execution run. Skip it for
+        // server mode (BuildTestFrameworkAsync runs per request, which would re-arm the timer against
+        // an already-past deadline and fire on every request) and for discovery-only requests.
+        if (pushOnlyProtocol?.IsServerMode != true && !testFrameworkBuilderData.IsForDiscoveryRequest)
         {
-            dataConsumersBuilder.Add(abortAtDeadlineExtension);
+            var abortAtDeadlineExtension = new AbortAtDeadlineExtension(
+                serviceProvider.GetEnvironment(),
+                serviceProvider.GetSystemClock(),
+                serviceProvider.GetTestFrameworkCapabilities().GetCapability<IGracefulStopTestExecutionCapability>(),
+                serviceProvider.GetRequiredService<IStopPoliciesService>(),
+                serviceProvider.GetTestApplicationCancellationTokenSource(),
+                serviceProvider.GetOutputDevice(),
+                serviceProvider.GetLoggerFactory());
+
+            if (await abortAtDeadlineExtension.IsEnabledAsync().ConfigureAwait(false))
+            {
+                dataConsumersBuilder.Add(abortAtDeadlineExtension);
+            }
         }
 
         AsynchronousMessageBus concreteMessageBusService = new(
