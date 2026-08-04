@@ -50,6 +50,7 @@ internal sealed class AzureDevOpsTestRunOrchestratorLifetime : ITestHostOrchestr
     private AzureDevOpsPublishConfiguration? _publishConfiguration;
     private AzureDevOpsRunIdCoordinator? _runIdCoordinator;
     private AzureDevOpsCoordinatedRun? _coordinatedRun;
+    private string? _resultMapPath;
 
     public AzureDevOpsTestRunOrchestratorLifetime(
         ICommandLineOptions commandLineOptions,
@@ -155,6 +156,15 @@ internal sealed class AzureDevOpsTestRunOrchestratorLifetime : ITestHostOrchestr
             // Published before any test host is launched so that every orchestrated process inherits it.
             _environment.SetEnvironmentVariable(AzureDevOpsConstants.TestRunIdEnvironmentVariableName, AzureDevOpsConstants.FormatInheritedTestRunId(publishConfiguration.BuildId, _coordinatedRun.RunId));
 
+            // Attempts publish into one run but run in separate processes with separate results
+            // directories, so the mapping from test to result id needs a location they all agree on and
+            // that only they can see. Naming it after this process keeps two orchestrations of the same
+            // build apart, so neither merges the other's results into a rerun.
+            _resultMapPath = Path.Combine(
+                publishConfiguration.ResultsDirectory,
+                $"azdo-results.{publishConfiguration.BuildId.ToString(CultureInfo.InvariantCulture)}.{_environment.ProcessId.ToString(CultureInfo.InvariantCulture)}.json");
+            _environment.SetEnvironmentVariable(AzureDevOpsConstants.ResultMapPathEnvironmentVariableName, AzureDevOpsConstants.FormatResultMapPath(publishConfiguration.BuildId, _resultMapPath));
+
             // Only the process that created the run announces it; the others share the same id and would
             // just repeat the same line.
             if (_coordinatedRun.IsOwner)
@@ -184,9 +194,11 @@ internal sealed class AzureDevOpsTestRunOrchestratorLifetime : ITestHostOrchestr
         AzureDevOpsCoordinatedRun? coordinatedRun = _coordinatedRun;
         AzureDevOpsRunIdCoordinator? coordinator = _runIdCoordinator;
         AzureDevOpsPublishConfiguration? publishConfiguration = _publishConfiguration;
+        string? resultMapPath = _resultMapPath;
         _coordinatedRun = null;
         _runIdCoordinator = null;
         _publishConfiguration = null;
+        _resultMapPath = null;
 
         if (coordinatedRun is null || coordinator is null || publishConfiguration is null)
         {
@@ -196,6 +208,15 @@ internal sealed class AzureDevOpsTestRunOrchestratorLifetime : ITestHostOrchestr
         // Stop handing the run id to any process started later: the run is about to be closed, and a
         // straggler publishing into a completed run would be rejected by Azure DevOps.
         TrySetEnvironmentVariable(AzureDevOpsConstants.TestRunIdEnvironmentVariableName, null);
+        TrySetEnvironmentVariable(AzureDevOpsConstants.ResultMapPathEnvironmentVariableName, null);
+
+        // The map only has meaning for the run being closed, and it lives in the results directory, which
+        // is published as a build artifact. Removing it keeps an internal coordination file out of the
+        // artifacts without affecting anything already in Azure DevOps.
+        if (resultMapPath is not null)
+        {
+            TryDeleteFile(resultMapPath);
+        }
 
         // Azure DevOps uses "Aborted" for cancellation and session-level infrastructure failures.
         // Individual failing tests must still complete the run, so only exit codes that are not a test
@@ -224,6 +245,28 @@ internal sealed class AzureDevOpsTestRunOrchestratorLifetime : ITestHostOrchestr
             await WarnAsync(
                 $"{AzureDevOpsResources.AzureDevOpsLivePublishingCompleteRunFailed} {ex.Message} {AzureDevOpsResources.AzureDevOpsLivePublishingRunLeftInProgress}",
                 CancellationToken.None).ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    /// Deletes a coordination file, swallowing any failure.
+    /// </summary>
+    /// <remarks>
+    /// Called from teardown, where a leftover file is only untidy: nothing reads it once the handoff
+    /// variable is withdrawn, and it is scoped to a build id and process id that never recur.
+    /// </remarks>
+    private void TryDeleteFile(string path)
+    {
+        try
+        {
+            if (_fileSystem.ExistFile(path))
+            {
+                _fileSystem.DeleteFile(path);
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingFailedToDeleteCoordinationFile} {path}: {ex.Message}");
         }
     }
 

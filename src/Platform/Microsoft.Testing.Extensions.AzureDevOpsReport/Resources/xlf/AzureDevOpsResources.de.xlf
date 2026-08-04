@@ -62,6 +62,11 @@
         <target state="translated">Die Azure DevOps Liveveröffentlichung konnte die Koordinierungsdatei nicht löschen.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingFailedToReadCoordinationFile">
+        <source>Azure DevOps live publishing failed to read coordination file</source>
+        <target state="new">Azure DevOps live publishing failed to read coordination file</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingFailedToWriteCoordinationFile">
         <source>Azure DevOps live publishing failed to write coordination file</source>
         <target state="new">Azure DevOps live publishing failed to write coordination file</target>

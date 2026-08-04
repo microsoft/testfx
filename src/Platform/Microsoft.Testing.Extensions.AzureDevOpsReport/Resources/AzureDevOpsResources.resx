@@ -162,6 +162,9 @@
   <data name="AzureDevOpsLivePublishingFailedToDeleteCoordinationFile" xml:space="preserve">
     <value>Azure DevOps live publishing failed to delete coordination file</value>
   </data>
+  <data name="AzureDevOpsLivePublishingFailedToReadCoordinationFile" xml:space="preserve">
+    <value>Azure DevOps live publishing failed to read coordination file</value>
+  </data>
   <data name="AzureDevOpsLivePublishingFailedToWriteCoordinationFile" xml:space="preserve">
     <value>Azure DevOps live publishing failed to write coordination file</value>
   </data>

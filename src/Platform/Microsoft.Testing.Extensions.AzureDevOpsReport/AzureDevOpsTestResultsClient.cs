@@ -130,6 +130,26 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
         }
     }
 
+    /// <summary>
+    /// Updates results that were already published to the run, folding a further attempt of the same test
+    /// into the result that represents it.
+    /// </summary>
+    /// <remarks>
+    /// Deliberately does not surface the response body. Azure DevOps returns the updated results, but the
+    /// caller already knows the ids it sent (that is how it addressed them), and the sub-result ids in the
+    /// response are not needed: attachments for every attempt are uploaded against the parent result.
+    /// </remarks>
+    public async Task UpdateTestResultsAsync(AzureDevOpsPublishConfiguration configuration, int runId, IReadOnlyList<AzureDevOpsTestCaseResult> results, CancellationToken cancellationToken)
+    {
+        using HttpRequestMessage request = CreateRequest(
+            PatchMethod,
+            BuildResultsUri(configuration.CollectionUri, configuration.Project, runId),
+            configuration.AccessToken,
+            results);
+
+        await SendAsync(request, cancellationToken).ConfigureAwait(false);
+    }
+
     public async Task UploadTestResultAttachmentAsync(AzureDevOpsPublishConfiguration configuration, int runId, int testCaseResultId, AzureDevOpsTestResultAttachment attachment, CancellationToken cancellationToken)
     {
         AttachmentRequest? payload = TryBuildAttachmentRequest(attachment);
