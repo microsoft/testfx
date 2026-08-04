@@ -9,12 +9,17 @@ internal sealed partial class Json
 {
     private static (string Name, object? Value)[] BuildTestNodeProperties(TestNode message)
     {
-        List<(string Name, object? Value)> properties =
-        [
-            with(capacity: 16),
+        // IDE0028 would rewrite this to a collection expression [with(capacity: 16), ...], but the
+        // 'with(...)' collection-expression-argument is a C# *preview* feature. The source-package
+        // consumer compiles this file with LangVersion=latest (supplied by build/*.targets), where
+        // preview features are unsupported, so keep the explicit capacity-ctor + initializer form.
+#pragma warning disable IDE0028 // Collection initialization can be simplified
+        List<(string Name, object? Value)> properties = new(capacity: 16)
+        {
             (JsonRpcStrings.Uid, message.Uid.Value),
-            (JsonRpcStrings.DisplayName, message.DisplayName)
-        ];
+            (JsonRpcStrings.DisplayName, message.DisplayName),
+        };
+#pragma warning restore IDE0028 // Collection initialization can be simplified
 
         List<KeyValuePair<string, string>>? traits = null;
         bool hasActionNodeType = false;

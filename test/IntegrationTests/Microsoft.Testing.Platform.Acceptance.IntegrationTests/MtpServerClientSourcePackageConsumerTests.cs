@@ -40,9 +40,11 @@ public sealed class MtpServerClientSourcePackageConsumerTests : AcceptanceTestBa
             <ImplicitUsings>disable</ImplicitUsings>
             <Nullable>enable</Nullable>
             <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-            <!-- The injected source uses modern C# (records, file-scoped namespaces). The down-level TFMs
-                 would otherwise default to an old LangVersion; a real adopter (vstest) already builds latest. -->
-            <LangVersion>preview</LangVersion>
+            <!-- Deliberately NO <LangVersion> here. The injected source uses modern C# (records,
+                 file-scoped namespaces, relational/'or' patterns) that the net462 / netstandard2.0
+                 default (C# 7.3) cannot compile. The package's own build/*.targets must raise it to
+                 'latest'. Setting LangVersion here would hide whether the package is self-sufficient,
+                 which is the whole point of this oracle. -->
           </PropertyGroup>
           <ItemGroup>
             <PackageReference Include="Microsoft.Testing.Platform.ServerClient.Source" Version="$ServerClientSourceVersion$" />
