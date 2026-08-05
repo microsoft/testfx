@@ -124,7 +124,6 @@ public sealed class TestApplication : ITestApplication
         SystemFileSystem fileSystem = new();
         DynamicExtensionLoader dynamicExtensionLoader = new(
             fileSystem,
-            systemEnvironment,
             testApplicationModuleInfo,
             new DynamicExtensionAssemblyLoader(fileSystem),
             systemConsole,

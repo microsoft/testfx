@@ -42,11 +42,6 @@ internal static class EnvironmentVariableConstants
     public const string TESTINGPLATFORM_NOBANNER = nameof(TESTINGPLATFORM_NOBANNER);
     public const string TESTINGPLATFORM_EXITCODE_IGNORE = nameof(TESTINGPLATFORM_EXITCODE_IGNORE);
 
-    // Kill switch for dynamically resolved extensions (see docs/RFCs/023-Dynamic-Extension-Loading.md).
-    // Set to "1" or "true" to skip extension manifest discovery entirely. This is the first triage step when a
-    // run misbehaves and a dynamically loaded extension may be implicated.
-    public const string TESTINGPLATFORM_NODYNAMICEXTENSIONS = nameof(TESTINGPLATFORM_NODYNAMICEXTENSIONS);
-
     // Telemetry
     public const string TESTINGPLATFORM_TELEMETRY_OPTOUT = nameof(TESTINGPLATFORM_TELEMETRY_OPTOUT);
     public const string DOTNET_CLI_TELEMETRY_OPTOUT = nameof(DOTNET_CLI_TELEMETRY_OPTOUT);

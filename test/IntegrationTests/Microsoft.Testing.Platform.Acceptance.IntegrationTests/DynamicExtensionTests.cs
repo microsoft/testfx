@@ -98,24 +98,6 @@ public sealed class DynamicExtensionTests : AcceptanceTestBase<DynamicExtensionT
         testHostResult.AssertOutputContains(".testingplatformextensions.json");
     }
 
-    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    [TestMethod]
-    public async Task KillSwitch_SkipsDiscovery(string tfm)
-    {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
-
-        TestHostResult testHostResult = await testHost.ExecuteAsync(
-            "--enable-dynamic-extensions",
-            new Dictionary<string, string?>
-            {
-                { "TESTINGPLATFORM_NODYNAMICEXTENSIONS", "1" },
-            },
-            cancellationToken: TestContext.CancellationToken);
-
-        testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
-        testHostResult.AssertOutputDoesNotContain(TestAssetFixture.EnabledHookMarker);
-    }
-
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         public const string EnabledHookMarker = "CONTOSO_DYNAMIC_HOOK_RAN";

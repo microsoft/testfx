@@ -482,7 +482,6 @@ const Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants.Man
 const Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants.ManifestSearchPattern = "*.testingplatformextensions.json" -> string!
 const Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants.SharedPlatformAssemblyName = "Microsoft.Testing.Platform" -> string!
 const Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants.TypeFullNamePropertyName = "typeFullName" -> string!
-const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_NODYNAMICEXTENSIONS = "TESTINGPLATFORM_NODYNAMICEXTENSIONS" -> string!
 Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionAssemblyLoader
 Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionAssemblyLoader.DynamicExtensionAssemblyLoader(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem) -> void
 Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionAssemblyLoader.IsIsolated.get -> bool
@@ -539,7 +538,7 @@ Microsoft.Testing.Platform.DynamicExtensions.IDynamicExtensionRegistrationGuard.
 static readonly Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants.PathComparer -> System.StringComparer!
 static readonly Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionConstants.PathComparison -> System.StringComparison
 const Microsoft.Testing.Platform.CommandLine.PlatformCommandLineProvider.EnableDynamicExtensionsOptionKey = "enable-dynamic-extensions" -> string!
-Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionLoader.DynamicExtensionLoader(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.DynamicExtensions.IDynamicExtensionAssemblyLoader! assemblyLoader, Microsoft.Testing.Platform.Helpers.IConsole! console, Microsoft.Testing.Platform.CommandLine.CommandLineParseResult! commandLineParseResult, Microsoft.Testing.Platform.Logging.ILogger? logger) -> void
+Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionLoader.DynamicExtensionLoader(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.DynamicExtensions.IDynamicExtensionAssemblyLoader! assemblyLoader, Microsoft.Testing.Platform.Helpers.IConsole! console, Microsoft.Testing.Platform.CommandLine.CommandLineParseResult! commandLineParseResult, Microsoft.Testing.Platform.Logging.ILogger? logger) -> void
 Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.DynamicExtensionEntry(string! manifestPath, int index, string! id, bool hasExplicitId, string! displayName, string! assemblyPath, string! resolvedAssemblyPath, string! typeFullName, bool isEnabled) -> void
 Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.DeduplicationKey.get -> string!
 Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.HasExplicitId.get -> bool

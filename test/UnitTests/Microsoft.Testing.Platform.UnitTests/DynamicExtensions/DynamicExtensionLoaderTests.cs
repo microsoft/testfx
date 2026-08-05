@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Builder;
@@ -22,7 +22,6 @@ public sealed class DynamicExtensionLoaderTests
     private static readonly string[] Args = ["--some-option"];
 
     private readonly Mock<IFileSystem> _fileSystem = new(MockBehavior.Strict);
-    private readonly Mock<IEnvironment> _environment = new(MockBehavior.Strict);
     private readonly Mock<ITestApplicationModuleInfo> _moduleInfo = new(MockBehavior.Strict);
     private readonly FakeAssemblyLoader _assemblyLoader = new();
     private readonly Mock<ITestApplicationBuilder> _builder = new();
@@ -58,8 +57,6 @@ public sealed class DynamicExtensionLoaderTests
         ThrowingHook.Reset();
         BaseHook.Reset();
         AsyncVoidHook.Reset();
-
-        _environment.Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_NODYNAMICEXTENSIONS)).Returns((string?)null);
         _moduleInfo.Setup(x => x.GetCurrentTestApplicationDirectory()).Returns(ApplicationDirectory);
     }
 
@@ -120,80 +117,6 @@ public sealed class DynamicExtensionLoaderTests
         Assert.AreEqual(1, RecordingHook.InvocationCount);
         Assert.AreSame(_builder.Object, RecordingHook.LastBuilder);
         Assert.AreSame(Args, RecordingHook.LastArgs);
-    }
-
-    [TestMethod]
-    public async Task LoadAsync_WhenDisabledByEnvironmentVariable_SkipsDiscoveryEntirely()
-    {
-        _environment.Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_NODYNAMICEXTENSIONS)).Returns("1");
-
-        await CreateLoader().LoadAsync(_builder.Object, Args);
-
-        Assert.AreEqual(0, RecordingHook.InvocationCount);
-        _fileSystem.Verify(x => x.GetFiles(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<SearchOption>()), Times.Never);
-    }
-
-    [TestMethod]
-    public async Task LoadAsync_WhenDisabledByEnvironmentVariable_SaysSoRatherThanSilentlyIgnoringTheRequest()
-    {
-        // The kill switch overrides something the user explicitly asked for. Doing that silently would leave a
-        // run behaving differently than requested with nothing to explain why, which is the whole point of the
-        // switch being an operational escape hatch: it has to be obvious when it fired.
-        _environment.Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_NODYNAMICEXTENSIONS)).Returns("1");
-
-        await CreateLoader().LoadAsync(_builder.Object, Args);
-
-        Assert.Contains(EnvironmentVariableConstants.TESTINGPLATFORM_NODYNAMICEXTENSIONS, _console.Output);
-    }
-
-    [TestMethod]
-    public async Task LoadAsync_WhenDisabledByEnvironmentVariableInServerMode_KeepsStandardOutputClean()
-    {
-        _environment.Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_NODYNAMICEXTENSIONS)).Returns("1");
-        _parseResult = CreateParseResult(enableDynamicExtensions: true, serverMode: true);
-
-        await CreateLoader().LoadAsync(_builder.Object, Args);
-
-        Assert.IsEmpty(_console.Output);
-    }
-
-    [TestMethod]
-    public async Task LoadAsync_WhenNotOptedIn_SaysNothingEvenIfTheKillSwitchIsSet()
-    {
-        // Nothing was requested, so nothing was overridden -- warning here would be noise on every run of a
-        // fleet that sets the variable as a matter of policy.
-        _environment.Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_NODYNAMICEXTENSIONS)).Returns("1");
-        _parseResult = CreateParseResult(enableDynamicExtensions: false);
-
-        await CreateLoader().LoadAsync(_builder.Object, Args);
-
-        Assert.IsEmpty(_console.Output);
-    }
-
-    [TestMethod]
-    [DataRow("1")]
-    [DataRow("true")]
-    public async Task LoadAsync_KillSwitchAcceptsDocumentedValues(string value)
-    {
-        _environment.Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_NODYNAMICEXTENSIONS)).Returns(value);
-
-        await CreateLoader().LoadAsync(_builder.Object, Args);
-
-        _fileSystem.Verify(x => x.GetFiles(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<SearchOption>()), Times.Never);
-    }
-
-    [TestMethod]
-    [DataRow("0")]
-    [DataRow("false")]
-    [DataRow("")]
-    public async Task LoadAsync_KillSwitchIgnoresOtherValues(string value)
-    {
-        _environment.Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_NODYNAMICEXTENSIONS)).Returns(value);
-        SetupManifest("a.testingplatformextensions.json", ManifestFor(typeof(RecordingHook)));
-
-        await CreateLoader().LoadAsync(_builder.Object, Args);
-
-        Assert.AreEqual(1, RecordingHook.InvocationCount);
     }
 
     [TestMethod]
@@ -392,7 +315,7 @@ public sealed class DynamicExtensionLoaderTests
         InvalidOperationException ex = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
             () => CreateLoader().LoadAsync(_builder.Object, Args));
 
-        Assert.Contains(EnvironmentVariableConstants.TESTINGPLATFORM_NODYNAMICEXTENSIONS, ex.Message);
+        Assert.Contains(PlatformCommandLineProvider.EnableDynamicExtensionsOptionKey, ex.Message);
         Assert.Contains(DynamicExtensionConstants.EnabledPropertyName, ex.Message);
         Assert.AreEqual(0, RecordingHook.InvocationCount);
     }
@@ -576,7 +499,7 @@ public sealed class DynamicExtensionLoaderTests
             () => CreateLoader().LoadAsync(_builder.Object, Args));
 
         Assert.Contains(ApplicationDirectory, ex.Message);
-        Assert.Contains(EnvironmentVariableConstants.TESTINGPLATFORM_NODYNAMICEXTENSIONS, ex.Message);
+        Assert.Contains(PlatformCommandLineProvider.EnableDynamicExtensionsOptionKey, ex.Message);
     }
 
     private static TestApplicationBuilder CreateRealBuilder()
@@ -657,17 +580,6 @@ public sealed class DynamicExtensionLoaderTests
     }
 
     [TestMethod]
-    public async Task LoadAsync_WhenDisabledByEnvironmentVariableInListTestsJsonMode_KeepsStandardOutputClean()
-    {
-        _environment.Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_NODYNAMICEXTENSIONS)).Returns("1");
-        _parseResult = CreateParseResult(enableDynamicExtensions: true, listTests: PlatformCommandLineProvider.DiscoverTestsJsonArgument);
-
-        await CreateLoader().LoadAsync(_builder.Object, Args);
-
-        Assert.IsEmpty(_console.Output);
-    }
-
-    [TestMethod]
     public async Task LoadAsync_WhenNothingIsLoaded_WritesNothingToTheConsole()
     {
         SetupManifest("a.testingplatformextensions.json", ManifestFor(typeof(RecordingHook), enabled: false));
@@ -706,7 +618,7 @@ public sealed class DynamicExtensionLoaderTests
     }
 
     private DynamicExtensionLoader CreateLoader()
-        => new(_fileSystem.Object, _environment.Object, _moduleInfo.Object, _assemblyLoader, _console, _parseResult, logger: null);
+        => new(_fileSystem.Object, _moduleInfo.Object, _assemblyLoader, _console, _parseResult, logger: null);
 
     private void SetupManifest(string fileName, string content, bool assemblyExists = true)
         => SetupManifests(assemblyExists, (fileName, content));

@@ -995,10 +995,6 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
     <value>  {0} -&gt; {1} ({2}), declared in {3}</value>
     <comment>{0} is the extension display name. {1} is the resolved assembly path. {2} is the full type name of the hook. {3} is the manifest file path.</comment>
   </data>
-  <data name="DynamicExtensionsDisabledByEnvironment" xml:space="preserve">
-    <value>Dynamic test platform extensions were requested but are disabled by the '{0}' environment variable. No extension was loaded.</value>
-    <comment>{0} is the name of the environment variable that disabled the feature. {Locked="'{0}'"}</comment>
-  </data>
   <data name="DynamicExtensionManifestInvalidJsonErrorMessage" xml:space="preserve">
     <value>The extension manifest '{0}' is not valid JSON. {1}</value>
     <comment>{0} is the manifest file path. {1} is the underlying JSON parser error message.</comment>
@@ -1068,8 +1064,8 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
     <comment>{0} is the extension id. {1} and {3} are 'assembly path' plus 'type full name' descriptions of the conflicting declarations. {2} and {4} are manifest file paths.</comment>
   </data>
   <data name="DynamicExtensionManifestDirectoryNotReadableErrorMessage" xml:space="preserve">
-    <value>The directory '{0}' could not be searched for extension manifests, so the platform cannot tell whether any extension had to be loaded. Set the '{1}' environment variable to 1 to skip extension manifest discovery.</value>
-    <comment>{0} is the directory path. {1} is the name of the environment variable that disables the feature.</comment>
+    <value>The directory '{0}' could not be searched for extension manifests, so the platform cannot tell whether any extension had to be loaded. Remove '{1}' from the command line to skip extension manifest discovery.</value>
+    <comment>{0} is the directory path. {1} is the command line option that enables the feature.</comment>
   </data>
   <data name="DynamicExtensionCannotRegisterTestFrameworkErrorMessage" xml:space="preserve">
     <value>The extension '{0}' declared in the extension manifest '{1}' tried to register a test framework. Dynamically loaded extensions must not replace the test framework, because that would silently change which tests run and what results they report.</value>
@@ -1084,7 +1080,7 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
     <comment>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {Locked="'async void'"}</comment>
   </data>
   <data name="DynamicExtensionsNotSupportedOnCurrentRuntimeErrorMessage" xml:space="preserve">
-    <value>The extension manifest '{0}' declares extensions to load, but the current runtime does not support loading assemblies dynamically (for example when published with native AOT). Set the '{1}' property of each extension to 'false', remove the manifest, or set the '{2}' environment variable to 1.</value>
-    <comment>{0} is the manifest file path. {1} is the name of the JSON property that disables an extension. {2} is the name of the environment variable that disables the feature. {Locked="'false'"}</comment>
+    <value>The extension manifest '{0}' declares extensions to load, but the current runtime does not support loading assemblies dynamically (for example when published with native AOT). Set the '{1}' property of each extension to 'false', remove the manifest, or remove '{2}' from the command line.</value>
+    <comment>{0} is the manifest file path. {1} is the name of the JSON property that disables an extension. {2} is the command line option that enables the feature. {Locked="'false'"}</comment>
   </data>
 </root>

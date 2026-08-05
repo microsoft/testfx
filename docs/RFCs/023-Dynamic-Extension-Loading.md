@@ -62,7 +62,7 @@ explicitly, which is what the rest of this RFC does:
 | Type-identity mismatches | Those shared contracts are *always* resolved from the default load context, never from the extension's folder, so `ITestApplicationBuilder` is the same type on both sides. |
 | Silent degradation | Every failure — unparseable manifest, missing assembly, missing type, missing hook — fails the run. There is no "ignore and continue" path. |
 | Undiscoverable plugin sets | The feature is off unless a run passes `--enable-dynamic-extensions`. Manifests are explicit files with explicit paths; nothing is discovered by scanning for `*.dll`, and everything loaded is echoed to the run's output. |
-| No escape hatch during triage | A single environment variable disables the whole mechanism. |
+| No escape hatch during triage | Removing `--enable-dynamic-extensions` from the invocation disables the whole mechanism, and `enabled: false` disables one extension without deleting its manifest. |
 
 ### Non-goals
 
@@ -241,9 +241,9 @@ Everything else follows from the baseline rather than from anything this design 
   property peculiar to dynamic loading.
 - Isolation (§5) exists to stop extensions *colliding* with each other and with the application. It
   is a compatibility mechanism and provides no containment.
-- The opt-in (§3) and the kill switch (§7) are product decisions. **Neither is a security control**,
-  and neither should be described as one: an actor who can write to the application directory is
-  already fully trusted, so gating on a flag does not restrict them.
+- The opt-in (§3) is a product decision. **It is not a security control** and should not be described
+  as one: an actor who can write to the application directory is already fully trusted, so gating on
+  a flag does not restrict them.
 
 [baseline]: https://github.com/dotnet/core/blob/main/Documentation/security-foundations/baseline-security-assumptions.md
 
@@ -333,7 +333,7 @@ extension was loaded without isolation.
 extension, the platform fails with an explicit error rather than silently skipping, because silently
 skipping is precisely the "the infra policy did not apply and nobody noticed" failure this design
 exists to avoid. Teams publishing NativeAOT test apps must set `enabled: false`, remove the manifest,
-or use the kill switch.
+or stop passing `--enable-dynamic-extensions`.
 
 This is detected by *attempting* the load and translating the resulting
 `PlatformNotSupportedException`, deliberately **not** by pre-checking
@@ -390,40 +390,16 @@ diagnostic log is flushed before the exception propagates, so the trace of which
 and which extension failed survives. Improving that first-run experience is left to a follow-up; the
 message itself always names the manifest and the extension.
 
-The counterweight to a strict policy is a fast escape hatch, which is the next section.
+The counterweight to a strict policy is that turning the feature off is always one flag away: every
+error names `--enable-dynamic-extensions` as the way to skip discovery entirely.
 
-### 7. Kill switch
-
-Setting `TESTINGPLATFORM_NODYNAMICEXTENSIONS` to `1` or `true` (case-insensitively) skips discovery
-even when `--enable-dynamic-extensions` was passed. The environment variable therefore **wins over
-the command line**: an operator who cannot edit the invocation can still switch the feature off
-across a fleet in one place.
-
-Like the opt-in, this is an **operational convenience, not a security control** (see
-[Trust](#trust)). Its purpose is break-glass and triage: when a bad extension is affecting many
-pipelines, one agent-image variable stops it faster than editing each pipeline, and re-running with
-the variable set is the quickest way to establish whether a dynamically loaded extension is
-implicated in a failure.
-
-Because it overrides an explicit request, it announces itself: when the variable suppresses
-`--enable-dynamic-extensions`, the platform says so on standard output (§8), so a run that behaves
-differently than asked always explains why. It does **not** fail the run — during an incident the
-point is to keep runs working without the extensions rather than to add an outage to the problem.
-
-The name follows the existing `TESTINGPLATFORM_NOBANNER` convention, and the accepted values match
-the platform's existing boolean environment-variable handling.
-
-### 8. Diagnostics
+### 7. Diagnostics
 
 **Loading is never silent.** Whenever at least one extension is loaded, the platform writes to
 standard output the number loaded and, for each, its display name, the resolved absolute assembly
 path, the hook type, and the manifest that declared it. This is not
 gated on `--diagnostic`: running foreign code inside the test process is something the person reading
 the log should see without having opted into extra logging.
-
-**Not loading when asked to is not silent either.** If the kill switch (§7) suppresses an explicit
-`--enable-dynamic-extensions`, that is reported on the same channel rather than only in the
-diagnostic log.
 
 The exception is any mode that reserves standard output for a machine-readable stream: server mode,
 where it is a protocol channel, and `--list-tests json`, where the JSON document must be the sole

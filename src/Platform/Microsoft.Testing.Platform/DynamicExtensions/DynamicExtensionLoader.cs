@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Security;
@@ -23,7 +23,6 @@ namespace Microsoft.Testing.Platform.DynamicExtensions;
 internal sealed class DynamicExtensionLoader
 {
     private readonly IFileSystem _fileSystem;
-    private readonly IEnvironment _environment;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
     private readonly IDynamicExtensionAssemblyLoader _assemblyLoader;
     private readonly IConsole _console;
@@ -32,7 +31,6 @@ internal sealed class DynamicExtensionLoader
 
     public DynamicExtensionLoader(
         IFileSystem fileSystem,
-        IEnvironment environment,
         ITestApplicationModuleInfo testApplicationModuleInfo,
         IDynamicExtensionAssemblyLoader assemblyLoader,
         IConsole console,
@@ -40,7 +38,6 @@ internal sealed class DynamicExtensionLoader
         ILogger? logger)
     {
         _fileSystem = fileSystem;
-        _environment = environment;
         _testApplicationModuleInfo = testApplicationModuleInfo;
         _assemblyLoader = assemblyLoader;
         _console = console;
@@ -62,27 +59,6 @@ internal sealed class DynamicExtensionLoader
         // application directory is already fully trusted (see the RFC's Trust section).
         if (!_commandLineParseResult.IsOptionSet(PlatformCommandLineProvider.EnableDynamicExtensionsOptionKey))
         {
-            return;
-        }
-
-        if (IsDisabledByEnvironment())
-        {
-            // The environment variable wins over the command line so that an operator who cannot edit the
-            // command line can still switch the feature off centrally during an incident. Overriding an
-            // explicit request silently would be the worst of both worlds — the run would simply behave
-            // differently than asked with nothing to explain why — so it is announced on the same channel the
-            // loaded extensions are.
-            string message = string.Format(
-                CultureInfo.InvariantCulture,
-                PlatformResources.DynamicExtensionsDisabledByEnvironment,
-                EnvironmentVariableConstants.TESTINGPLATFORM_NODYNAMICEXTENSIONS);
-            await LogDebugAsync(message).ConfigureAwait(false);
-
-            if (!IsStandardOutputReserved)
-            {
-                _console.WriteLine(message);
-            }
-
             return;
         }
 
@@ -174,13 +150,6 @@ internal sealed class DynamicExtensionLoader
         && arguments is { Length: 1 }
         && PlatformCommandLineProvider.DiscoverTestsJsonArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase);
 
-    private bool IsDisabledByEnvironment()
-    {
-        string? value = _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_NODYNAMICEXTENSIONS);
-        return string.Equals(value, "1", StringComparison.Ordinal)
-            || string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
-    }
-
     private IReadOnlyList<string> DiscoverManifests()
     {
         // The application directory, never the current working directory. This is the one property of this
@@ -216,7 +185,7 @@ internal sealed class DynamicExtensionLoader
                     CultureInfo.InvariantCulture,
                     PlatformResources.DynamicExtensionManifestDirectoryNotReadableErrorMessage,
                     directory,
-                    EnvironmentVariableConstants.TESTINGPLATFORM_NODYNAMICEXTENSIONS),
+                    $"--{PlatformCommandLineProvider.EnableDynamicExtensionsOptionKey}"),
                 ex);
         }
 
@@ -357,7 +326,7 @@ internal sealed class DynamicExtensionLoader
                     PlatformResources.DynamicExtensionsNotSupportedOnCurrentRuntimeErrorMessage,
                     entry.ManifestPath,
                     DynamicExtensionConstants.EnabledPropertyName,
-                    EnvironmentVariableConstants.TESTINGPLATFORM_NODYNAMICEXTENSIONS),
+                    $"--{PlatformCommandLineProvider.EnableDynamicExtensionsOptionKey}"),
                 ex);
         }
         catch (Exception ex)
