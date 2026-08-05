@@ -98,6 +98,9 @@ public static class AcceptanceSourceGen
         string sourceGenModeArg = metadataMode == MetadataMode.AotSourceGeneration
             ? " -p:MSTestSourceGenMode=ReflectionFree"
             : " -p:MSTestSourceGenMode=Rooting";
+        string warningsAsErrorsArg = metadataMode == MetadataMode.AotSourceGeneration
+            ? " -p:MSBuildTreatWarningsAsErrors=true -p:TreatWarningsAsErrors=true"
+            : string.Empty;
 
         // - CustomBeforeMicrosoftCommonProps injects the source-generator PackageReference early
         //   enough for restore to see it, without clobbering any Directory.Build.props.
@@ -107,11 +110,15 @@ public static class AcceptanceSourceGen
         //   escape the quote on Windows and corrupt the argument. MSBuild accepts forward slashes on
         //   all platforms.
         // - The version property feeds the resolved package version into the injected props.
+        // - ReflectionFree warnings are errors so AOTSG diagnostics for unsupported shapes cannot
+        //   silently drop tests from the generated registry. MSBuild warnings remain errors as well,
+        //   preserving the warning-clean build guarantee documented in the injected props.
         return $"-p:CustomBeforeMicrosoftCommonProps=\"{propsPath}\" "
             + $"-p:BaseOutputPath=\"bin/{outputSubFolder}/\" "
             + $"-p:BaseIntermediateOutputPath=\"obj/{outputSubFolder}/\" "
             + $"-p:{versionProperty}={version}"
-            + sourceGenModeArg;
+            + sourceGenModeArg
+            + warningsAsErrorsArg;
     }
 
     private static string BuildPropsContent(string packageId, string versionProperty) =>
