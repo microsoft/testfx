@@ -8,7 +8,7 @@ namespace Microsoft.Testing.Platform.Helpers;
 /// <summary>
 /// We use positive exit codes for failure because POSIX/BASH exit codes are unsigned 8-bit integers.
 /// On POSIX systems the standard exit code is 0 for success and any number from 1 to 255 for anything else.
-/// See the <see href="https://github.com/microsoft/testfx/blob/main/docs/glossary.md#exit-codes">exit-code reference</see> for user-facing guidance.
+/// See the <see href="https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes">exit-code reference</see> for user-facing guidance.
 /// </summary>
 [Embedded]
 internal enum ExitCode
