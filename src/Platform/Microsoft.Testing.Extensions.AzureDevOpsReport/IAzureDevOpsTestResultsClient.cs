@@ -17,6 +17,15 @@ internal interface IAzureDevOpsTestResultsClient
     Task<IReadOnlyList<int>?> PublishTestResultsAsync(AzureDevOpsPublishConfiguration configuration, int runId, IReadOnlyList<AzureDevOpsTestCaseResult> results, CancellationToken cancellationToken);
 
     /// <summary>
+    /// Updates results that were already published to the run, identified by
+    /// <see cref="AzureDevOpsTestCaseResult.Id"/>. Used to turn a previously published result into a rerun
+    /// carrying every attempt as a sub-result, instead of appending a second result for the same test.
+    /// Throws on transport/HTTP failures, which the caller may retry: unlike a create, replaying an update
+    /// is idempotent.
+    /// </summary>
+    Task UpdateTestResultsAsync(AzureDevOpsPublishConfiguration configuration, int runId, IReadOnlyList<AzureDevOpsTestCaseResult> results, CancellationToken cancellationToken);
+
+    /// <summary>
     /// Uploads an attachment to a specific test case result within a test run.
     /// </summary>
     Task UploadTestResultAttachmentAsync(AzureDevOpsPublishConfiguration configuration, int runId, int testCaseResultId, AzureDevOpsTestResultAttachment attachment, CancellationToken cancellationToken);

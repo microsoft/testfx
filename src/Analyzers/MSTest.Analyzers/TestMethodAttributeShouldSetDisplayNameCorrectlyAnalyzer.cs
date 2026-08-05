@@ -23,7 +23,7 @@ public sealed class TestMethodAttributeShouldSetDisplayNameCorrectlyAnalyzer : D
         DiagnosticIds.TestMethodAttributeShouldSetDisplayNameCorrectlyRuleId,
         title: new LocalizableResourceString(nameof(Resources.TestMethodAttributeShouldSetDisplayNameCorrectlyTitle), Resources.ResourceManager, typeof(Resources)),
         messageFormat: new LocalizableResourceString(nameof(Resources.TestMethodAttributeShouldSetDisplayNameCorrectlyMessageFormat), Resources.ResourceManager, typeof(Resources)),
-        description: null,
+        description: new LocalizableResourceString(nameof(Resources.TestMethodAttributeShouldSetDisplayNameCorrectlyDescription), Resources.ResourceManager, typeof(Resources)),
         Category.Usage,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);

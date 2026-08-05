@@ -463,6 +463,83 @@ public sealed class SharedFileSystemPathInTestAnalyzerTests
     }
 
     [TestMethod]
+    [DataRow("AppendAllText", "\"shared.txt\", \"entry\"")]
+    [DataRow("AppendAllLines", "\"shared.txt\", new[] { \"line\" }")]
+    [DataRow("WriteAllBytes", "\"shared.txt\", new byte[] { 1 }")]
+    [DataRow("WriteAllLines", "\"shared.txt\", new[] { \"line\" }")]
+    [DataRow("Create", "\"shared.txt\"")]
+    [DataRow("SetAttributes", "\"shared.txt\", FileAttributes.ReadOnly")]
+    [DataRow("SetUnixFileMode", "\"shared.txt\", UnixFileMode.UserRead")]
+    [DataRow("SetCreationTime", "\"shared.txt\", default")]
+    [DataRow("SetCreationTimeUtc", "\"shared.txt\", default")]
+    [DataRow("SetLastAccessTime", "\"shared.txt\", default")]
+    [DataRow("SetLastAccessTimeUtc", "\"shared.txt\", default")]
+    [DataRow("SetLastWriteTime", "\"shared.txt\", default")]
+    [DataRow("SetLastWriteTimeUtc", "\"shared.txt\", default")]
+    [DataRow("Encrypt", "\"shared.txt\"")]
+    [DataRow("Decrypt", "\"shared.txt\"")]
+    [DataRow("AppendText", "\"shared.txt\"")]
+    [DataRow("CreateText", "\"shared.txt\"")]
+    [DataRow("CreateSymbolicLink", "\"shared.txt\", \"target.txt\"")]
+    public async Task WhenTestMethodCallsMutatingFileMethodWithConstantPath_Diagnostic(string methodName, string arguments)
+    {
+        string code = $$"""
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    {|#0:File.{{methodName}}({{arguments}})|};
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(SharedFileSystemPathInTestAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("shared.txt"));
+    }
+
+    [TestMethod]
+    [DataRow("AppendAllTextAsync", "\"shared.txt\", \"entry\"")]
+    [DataRow("AppendAllLinesAsync", "\"shared.txt\", new[] { \"line\" }")]
+    [DataRow("WriteAllBytesAsync", "\"shared.txt\", new byte[] { 1 }")]
+    [DataRow("WriteAllLinesAsync", "\"shared.txt\", new[] { \"line\" }")]
+    [DataRow("WriteAllTextAsync", "\"shared.txt\", \"content\"")]
+    public async Task WhenTestMethodCallsAsyncMutatingFileMethodWithConstantPath_Diagnostic(string methodName, string arguments)
+    {
+        string code = $$"""
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    _ = {|#0:File.{{methodName}}({{arguments}})|};
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(SharedFileSystemPathInTestAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("shared.txt"));
+    }
+
+    [TestMethod]
     public async Task WhenTestInitializeWritesConstantPath_Diagnostic()
     {
         // [TestInitialize] is a class-scoped fixture that runs before each test method.  Under method-level

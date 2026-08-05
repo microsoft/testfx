@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Text.Json.Serialization;
@@ -15,6 +15,24 @@ internal static class AzureDevOpsLivePublishingConstants
     public const int MaxRunNameLength = 256;
     public const string NotExecutedTestOutcome = "NotExecuted";
     public const string PassedTestOutcome = "Passed";
+
+    /// <summary>
+    /// Value of <c>resultGroupType</c> that tells Azure DevOps a result is the parent of several attempts
+    /// of the same test rather than a leaf result.
+    /// </summary>
+    /// <remarks>
+    /// Azure DevOps serializes <c>ResultGroupType</c> in camelCase on the wire, so the literal is
+    /// <c>rerun</c> and not <c>Rerun</c>.
+    /// </remarks>
+    public const string RerunResultGroupType = "rerun";
+
+    /// <summary>Maximum number of sub-results Azure DevOps accepts under a single result.</summary>
+    /// <remarks>
+    /// Matches the limit the Azure Pipelines agent enforces client-side before publishing, where exceeding
+    /// it truncates rather than fails. A retry sequence never approaches this, so the cap only guards
+    /// against an unbounded attempt history.
+    /// </remarks>
+    public const int MaxSubResultsPerResult = 1000;
 
     /// <summary>Maximum size (in bytes) of a single attachment uploaded to Azure DevOps. Files larger than this are skipped.</summary>
     public const long MaxAttachmentSizeBytes = 16L * 1024 * 1024;
@@ -74,6 +92,48 @@ internal sealed record AzureDevOpsTestCaseResult(
     [property: JsonPropertyName("errorMessage")] string? ErrorMessage,
     [property: JsonPropertyName("stackTrace")] string? StackTrace,
     [property: JsonPropertyName("startedDate")] DateTimeOffset? StartedDate,
+    [property: JsonPropertyName("completedDate")] DateTimeOffset? CompletedDate)
+{
+    /// <summary>
+    /// Gets the id Azure DevOps assigned to this result, set only when updating an already published result.
+    /// </summary>
+    /// <remarks>
+    /// Declared as properties rather than positional parameters so that adding them does not change the
+    /// record's constructor and deconstructor signatures. All three are absent from a freshly created
+    /// result and are only populated when a retry attempt turns an existing result into a rerun.
+    /// </remarks>
+    [JsonPropertyName("id")]
+    public int? Id { get; init; }
+
+    /// <summary>
+    /// Gets the hierarchy type of the result; <see cref="AzureDevOpsLivePublishingConstants.RerunResultGroupType"/>
+    /// marks it as the parent of several attempts.
+    /// </summary>
+    [JsonPropertyName("resultGroupType")]
+    public string? ResultGroupType { get; init; }
+
+    /// <summary>Gets the individual attempts of this test, oldest first.</summary>
+    [JsonPropertyName("subResults")]
+    public IReadOnlyList<AzureDevOpsTestSubResult>? SubResults { get; init; }
+}
+
+/// <summary>
+/// One attempt of a test that ran more than once, published under the parent result rather than as a
+/// result of its own.
+/// </summary>
+/// <remarks>
+/// <see cref="SequenceId"/> is the attempt ordinal. Azure DevOps documents it only as an "index number",
+/// with no stated requirement to be 1-based or contiguous, but the agent's own publisher emits it that way
+/// and the Tests tab orders attempts by it, so this extension does the same.
+/// </remarks>
+internal sealed record AzureDevOpsTestSubResult(
+    [property: JsonPropertyName("sequenceId")] int SequenceId,
+    [property: JsonPropertyName("displayName")] string DisplayName,
+    [property: JsonPropertyName("outcome")] string Outcome,
+    [property: JsonPropertyName("durationInMs")] long? DurationInMs,
+    [property: JsonPropertyName("errorMessage")] string? ErrorMessage,
+    [property: JsonPropertyName("stackTrace")] string? StackTrace,
+    [property: JsonPropertyName("startedDate")] DateTimeOffset? StartedDate,
     [property: JsonPropertyName("completedDate")] DateTimeOffset? CompletedDate);
 
 /// <summary>A test case result bundled with optional attachments to upload after the result is published.</summary>
@@ -112,6 +172,18 @@ internal sealed class AzureDevOpsTestResultAttachment
 
     public static AzureDevOpsTestResultAttachment FromString(string content, string fileName, string attachmentType, string? comment = null)
         => new(fileName, attachmentType, comment, filePath: null, inlineContent: content);
+
+    /// <summary>
+    /// Returns a copy of this attachment published under a different file name.
+    /// </summary>
+    /// <remarks>
+    /// Every attempt of a rerun uploads its attachments against the same parent result, where Azure DevOps
+    /// accumulates rather than replaces them. Two attempts would therefore both contribute a
+    /// <c>stdout.log</c>, leaving no way to tell which attempt produced which. Renaming per attempt keeps
+    /// them distinguishable without needing a sub-result id we cannot reliably obtain.
+    /// </remarks>
+    public AzureDevOpsTestResultAttachment WithFileName(string fileName)
+        => new(fileName, AttachmentType, Comment, FilePath, InlineContent);
 }
 
 internal sealed record AzureDevOpsTestResultsPublisherOptions(

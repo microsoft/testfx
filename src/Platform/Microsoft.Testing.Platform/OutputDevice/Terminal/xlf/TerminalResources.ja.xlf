@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="ja" original="../TerminalResources.resx">
     <body>
@@ -49,7 +49,7 @@
       </trans-unit>
       <trans-unit id="CoverageAggregationOver">
         <source>{0} over {1}</source>
-        <target state="new">{0} over {1}</target>
+        <target state="translated">{1} が {0} を超えています</target>
         <note>Coverage threshold aggregation description. {0} is the aggregation label and {1} is the population scope level.</note>
       </trans-unit>
       <trans-unit id="CoverageAggregationTotal">
@@ -314,7 +314,7 @@
       </trans-unit>
       <trans-unit id="RetriedTestsAndRuns">
         <source>{0} test(s), {1} extra run(s)</source>
-        <target state="translated">{0} 件のテスト、{1} 回の追加実行</target>
+        <target state="translated">{0} 回のテスト、{1} 回の追加実行</target>
         <note>{0} is the number of distinct tests that were retried. {1} is the number of additional executions those retries caused. Rendered after the 'retried:' label. The '(s)' suffix follows the existing convention used elsewhere in the platform for counts that may be one.</note>
       </trans-unit>
       <trans-unit id="RunningTestsFrom">
