@@ -69,7 +69,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingFailedToWriteCoordinationFile">
         <source>Azure DevOps live publishing failed to write coordination file</source>
-        <target state="new">Azure DevOps live publishing failed to write coordination file</target>
+        <target state="translated">Publikowanie na żywo w usłudze Azure DevOps nie może zapisać pliku koordynacji</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingFinalizeWaitTimedOut">
@@ -144,7 +144,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingRunIdHandoffFailed">
         <source>Azure DevOps live publishing failed to update the test run id handoff.</source>
-        <target state="new">Azure DevOps live publishing failed to update the test run id handoff.</target>
+        <target state="translated">Publikowanie na żywo w usłudze Azure DevOps nie może aktualizować identyfikatora przekazania przebiegu testu.</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingRunLeftInProgress">
