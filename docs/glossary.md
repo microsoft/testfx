@@ -145,7 +145,7 @@ Microsoft.Testing.Platform (MTP) uses the following process exit codes. A CI pip
 | 4 | `InvalidPlatformSetup` | The test platform setup is invalid. Review the reported configuration or extension validation error. |
 | 5 | `InvalidCommandLine` | The command-line arguments are invalid. Correct the arguments using the `--help` output. |
 | 6 | _Reserved_ | This retired value must not be reused. |
-| 7 | `TestHostProcessExitedNonGracefully` | The test host process exited without completing its shutdown protocol. Review crash output and diagnostic logs. |
+| 7 | `TestHostProcessExitedNonGracefully` | The test host process exited without completing its shutdown protocol, or its IPC-reported exit code differed from its OS exit code. Review crash output and diagnostic logs. |
 | 8 | `ZeroTests` | No tests counted as executed under the active [zero-tests policy](https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-cli-options#platform-options). This includes an all-skipped run when the policy is `strict`. Check discovery, filters, skip conditions, and the configured policy. |
 | 9 | `MinimumExpectedTestsPolicyViolation` | Fewer tests ran than required by `--minimum-expected-tests`. Check discovery, filters, and the configured minimum. |
 | 10 | `TestAdapterTestSessionFailure` | The test adapter reported a test-session failure. Review the adapter's error and diagnostic logs. |

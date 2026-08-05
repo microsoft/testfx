@@ -46,7 +46,7 @@ internal enum ExitCode
     // Value 6 is reserved for the retired FeatureNotImplemented code and must not be reused.
 
     /// <summary>
-    /// The test host process exited without completing its shutdown protocol.
+    /// The test host process exited without completing its shutdown protocol, or its IPC-reported exit code differed from its OS exit code.
     /// </summary>
     TestHostProcessExitedNonGracefully = 7,
 
