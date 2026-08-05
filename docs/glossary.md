@@ -130,6 +130,30 @@ A public enum in the `Microsoft.VisualStudio.TestTools.UnitTesting` namespace th
 
 An MSTest attribute (`[DynamicData]`) for data-driven tests where test data is sourced from a static property, method, or field rather than inline `[DataRow]` values. The data source name is passed as a constructor argument; `DynamicDataSourceType` controls how the source is located (`Property`, `Method`, `Field`, or `AutoDetect`). Unlike `[DataRow]`, a single `[DynamicData]` source can be shared across multiple test methods and can produce any number of test cases at runtime. See `docs/RFCs/006-DynamicData-Attribute.md` for the original design.
 
+## E
+
+### Exit Codes
+
+Microsoft.Testing.Platform (MTP) uses the following process exit codes. A CI pipeline or script can use [`--ignore-exit-code`](https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#ignore-specific-exit-codes) to convert selected non-success exit codes to `0`; only ignore a code when the corresponding condition is acceptable for that workflow.
+
+| Code | Name | Meaning and suggested action |
+| ---: | --- | --- |
+| 0 | `Success` | The test run succeeded. |
+| 1 | `GenericFailure` | The test run failed for a reason not represented by a more specific code. Review the preceding error output and diagnostic logs. |
+| 2 | `AtLeastOneTestFailed` | At least one test failed. Review the reported test failures. |
+| 3 | `TestSessionAborted` | The test session was aborted, for example by cancellation. Determine what stopped the run and retry if appropriate. |
+| 4 | `InvalidPlatformSetup` | The test platform setup is invalid. Review the reported configuration or extension validation error. |
+| 5 | `InvalidCommandLine` | The command-line arguments are invalid. Correct the arguments using the `--help` output. |
+| 6 | _Reserved_ | This retired value must not be reused. |
+| 7 | `TestHostProcessExitedNonGracefully` | The test host process exited without completing its shutdown protocol. Review crash output and diagnostic logs. |
+| 8 | `ZeroTests` | No tests counted as executed under the active [zero-tests policy](https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-cli-options#platform-options). This includes an all-skipped run when the policy is `strict`. Check discovery, filters, skip conditions, and the configured policy. |
+| 9 | `MinimumExpectedTestsPolicyViolation` | Fewer tests ran than required by `--minimum-expected-tests`. Check discovery, filters, and the configured minimum. |
+| 10 | `TestAdapterTestSessionFailure` | The test adapter reported a test-session failure. Review the adapter's error and diagnostic logs. |
+| 11 | `DependentProcessExited` | A process monitored through `--exit-on-process-exit` exited. Review that process and its lifetime relative to the test run. |
+| 12 | `IncompatibleProtocolVersion` | The communicating test-platform processes negotiated incompatible protocol versions. Use compatible platform components. |
+| 13 | `TestExecutionStoppedForMaxFailedTests` | Test execution stopped after reaching the `--maximum-failed-tests` limit. Review the failures or adjust the limit. |
+| 14 | `CoverageThresholdFailed` | One or more [code-coverage thresholds](#testcoveragethresholdmessage) were not met. Review the reported coverage results or threshold configuration. |
+
 ## F
 
 ### FQN (Fully Qualified Name)
@@ -475,7 +499,7 @@ A public sealed class in `Microsoft.Testing.Platform.Extensions.Messages` (exten
 
 ### TestCoverageThresholdMessage
 
-A public sealed class in `Microsoft.Testing.Platform.Extensions.Messages` (extends `DataWithSessionUid`) published by a coverage collector to report the result of a coverage threshold evaluation. Carries the same metric identification as [TestCoverageMessage](#testcoveragemessage) plus: `Aggregation` ([CoverageAggregation](#coverageaggregation)), `AggregatedOver` (optional [CoverageScopeLevel](#coveragescopelevel)), `ActualPercentage`, `RequiredPercentage`, `HasCoverableData`, `TreatNoDataAsFailure`, and `Passed` (derived: a threshold with no coverable data passes unless `TreatNoDataAsFailure` is set). When any threshold message has `Passed == false`, `ITestCoverageResult.HasThresholdFailure` returns `true`; an otherwise-successful run then exits with `ExitCode.CoverageThresholdFailed` (14), while an existing non-success exit code retains precedence. Introduced in [PR #9896](https://github.com/microsoft/testfx/pull/9896). See also [TestCoverageMessage](#testcoveragemessage), [ITestCoverageResult](#itestcoverageresult).
+A public sealed class in `Microsoft.Testing.Platform.Extensions.Messages` (extends `DataWithSessionUid`) published by a coverage collector to report the result of a coverage threshold evaluation. Carries the same metric identification as [TestCoverageMessage](#testcoveragemessage) plus: `Aggregation` ([CoverageAggregation](#coverageaggregation)), `AggregatedOver` (optional [CoverageScopeLevel](#coveragescopelevel)), `ActualPercentage`, `RequiredPercentage`, `HasCoverableData`, `TreatNoDataAsFailure`, and `Passed` (derived: a threshold with no coverable data passes unless `TreatNoDataAsFailure` is set). When any threshold message has `Passed == false`, `ITestCoverageResult.HasThresholdFailure` returns `true`; an otherwise-successful run then exits with [`CoverageThresholdFailed`](#exit-codes), while an existing non-success exit code retains precedence. Introduced in [PR #9896](https://github.com/microsoft/testfx/pull/9896). See also [TestCoverageMessage](#testcoveragemessage), [ITestCoverageResult](#itestcoverageresult).
 
 ### TestFilterContext
 

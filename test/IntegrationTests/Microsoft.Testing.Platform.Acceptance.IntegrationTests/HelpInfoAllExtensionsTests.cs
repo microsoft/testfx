@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -51,8 +51,9 @@ Options:
     --help
         Show the command line help.
     --ignore-exit-code
-        Do not report non successful exit value for specific exit codes
-        (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)
+        Do not report a non-successful exit value for the specified exit codes.
+        For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
+        For the full list, see https://github.com/microsoft/testfx/blob/main/docs/glossary.md#exit-codes.
     --info
         Display .NET test application information.
     --list-tests
@@ -348,8 +349,9 @@ Built-in command line providers:
       --ignore-exit-code
         Arity: 1
         Hidden: False
-        Description: Do not report non successful exit value for specific exit codes
-        (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)
+        Description: Do not report a non-successful exit value for the specified exit codes.
+        For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
+        For the full list, see https://github.com/microsoft/testfx/blob/main/docs/glossary.md#exit-codes.
       --info
         Arity: 0
         Hidden: False
