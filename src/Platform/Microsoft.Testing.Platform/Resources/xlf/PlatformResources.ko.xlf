@@ -109,7 +109,7 @@
       </trans-unit>
       <trans-unit id="CannotCreateUniqueLogFileErrorMessage">
         <source>Failed to create the diagnostic log file '{0}' after {1} attempts. Last error: {2}</source>
-        <target state="new">Failed to create the diagnostic log file '{0}' after {1} attempts. Last error: {2}</target>
+        <target state="translated">진단 로그 파일 '{0}'을(를) {1}번 시도한 후에도 만들지 못했습니다. 마지막 오류: {2}</target>
         <note>{0} is the full path of the last log file that was tried. {1} is the number of attempts that were made. {2} is the error message of the last failed attempt.</note>
       </trans-unit>
       <trans-unit id="CannotRemoveEnvironmentVariableAtThisStageErrorMessage">

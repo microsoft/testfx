@@ -69,7 +69,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingFailedToWriteCoordinationFile">
         <source>Azure DevOps live publishing failed to write coordination file</source>
-        <target state="new">Azure DevOps live publishing failed to write coordination file</target>
+        <target state="translated">Azure DevOps 라이브 게시에서 조정 파일을 쓰지 못함</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingFinalizeWaitTimedOut">
@@ -144,7 +144,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingRunIdHandoffFailed">
         <source>Azure DevOps live publishing failed to update the test run id handoff.</source>
-        <target state="new">Azure DevOps live publishing failed to update the test run id handoff.</target>
+        <target state="translated">Azure DevOps 라이브 게시에서 테스트 실행 ID 핸드오프를 업데이트하지 못했습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingRunLeftInProgress">
