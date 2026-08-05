@@ -284,6 +284,46 @@ public sealed class UndeclaredProcessGlobalStateMutationAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenTestMethodSetsEnvironmentVariableInGlobalTestInitialize_DiagnosticWithoutFix()
+    {
+        // [GlobalTestInitialize] runs around every test in the assembly, so - just like [ClassInitialize] above -
+        // the mutation genuinely races and must be reported. But unlike [ClassInitialize] and [TestInitialize], a
+        // global fixture is in GetFixtureAttributeSymbols yet absent from GetClassScopedFixtureAttributeSymbols, so
+        // GetResourceLockFixScope returns null and the analyzer omits the fixer properties: a global fixture has no
+        // effective lock target, since locking the enclosing class would only serialize that class's tests while
+        // the fixture kept racing every other class's tests. This pins the third branch - report, but offer no fix -
+        // which none of the pre-existing tests in this file exercised.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [GlobalTestInitialize]
+                public static void GlobalSetup(TestContext context)
+                {
+                    {|#0:Environment.SetEnvironmentVariable("MY_VAR", "value")|};
+                }
+
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic(UndeclaredProcessGlobalStateMutationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Environment.SetEnvironmentVariable", "EnvironmentVariables"),
+            code);
+    }
+
+    [TestMethod]
     public async Task WhenParallelizeNotDeclared_NoDiagnostic()
     {
         // Firing gate: without [assembly: Parallelize] (and without the editorconfig opt-in) the rule stays silent.

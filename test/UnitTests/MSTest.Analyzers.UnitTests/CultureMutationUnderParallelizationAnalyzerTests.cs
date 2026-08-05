@@ -356,4 +356,40 @@ public sealed class CultureMutationUnderParallelizationAnalyzerTests
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
+
+    [TestMethod]
+    public async Task WhenGlobalTestInitializeSetsDefaultThreadCurrentCulture_Diagnostic()
+    {
+        // [GlobalTestInitialize] runs around every test in the assembly - unlike [AssemblyInitialize], it is not
+        // serialized behind a semaphore, so a concurrent test can genuinely observe the mutated culture while the
+        // fixture races it. GetFixtureAttributeSymbols includes global fixtures, so this must still be reported;
+        // none of the pre-existing tests in this file exercised the global-fixture branch.
+        string code = """
+            using System.Globalization;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [GlobalTestInitialize]
+                public static void GlobalSetup(TestContext context)
+                {
+                    {|#0:CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture|};
+                }
+
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(CultureMutationUnderParallelizationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("CultureInfo.DefaultThreadCurrentCulture"));
+    }
 }
