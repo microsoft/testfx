@@ -69,7 +69,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingFailedToWriteCoordinationFile">
         <source>Azure DevOps live publishing failed to write coordination file</source>
-        <target state="new">Azure DevOps live publishing failed to write coordination file</target>
+        <target state="translated">Živému publikování Azure DevOps se nepodařilo zapsat koordinační soubor</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingFinalizeWaitTimedOut">
@@ -144,7 +144,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingRunIdHandoffFailed">
         <source>Azure DevOps live publishing failed to update the test run id handoff.</source>
-        <target state="new">Azure DevOps live publishing failed to update the test run id handoff.</target>
+        <target state="translated">Živému publikování Azure DevOps se nepodařilo aktualizovat předání ID testovacího běhu.</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingRunLeftInProgress">
