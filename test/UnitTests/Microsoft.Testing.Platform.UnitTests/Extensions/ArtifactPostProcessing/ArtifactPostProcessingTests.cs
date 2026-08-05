@@ -19,13 +19,17 @@ public sealed class ArtifactPostProcessingTests
         IArtifactPostProcessor[] processors =
         [
             new StubProcessor("first", ["z.kind", "a.kind"], [".TRX"]),
-            new StubProcessor("second", ["a.kind"], [".trx", ".xml"]),
+            new StubProcessor("second", ["a.kind"], [".trx", ".xml"], supportsTruncatedRuns: true),
         ];
 
         IReadOnlyDictionary<byte, string> properties = ArtifactPostProcessingHandshakeProperties.Create(processors)!;
 
         Assert.AreEqual("a.kind;z.kind", properties[HandshakeMessagePropertyNames.SupportedPostProcessorKinds]);
         Assert.AreEqual(".trx;.xml", properties[HandshakeMessagePropertyNames.SupportedPostProcessorExtensionsLegacy]);
+        Assert.AreEqual("a.kind", properties[HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorKinds]);
+        Assert.AreEqual(
+            ".trx;.xml",
+            properties[HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorExtensionsLegacy]);
     }
 
     [TestMethod]
@@ -208,10 +212,37 @@ public sealed class ArtifactPostProcessingTests
             Assert.AreEqual("A.dll", manifest.Inputs[0].ProducingTestModule);
             Assert.AreEqual("null", manifest.Inputs[0].ExecutionId);
             Assert.IsNull(manifest.Inputs[1].Kind);
+            Assert.IsFalse(manifest.Context.IsTruncated);
+            Assert.AreEqual(ArtifactPostProcessingTruncationReason.None, manifest.Context.TruncationReason);
         }
         finally
         {
             Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [DataRow("maximumFailedTests", ArtifactPostProcessingTruncationReason.MaximumFailedTests)]
+    [DataRow("timeout", ArtifactPostProcessingTruncationReason.Timeout)]
+    [TestMethod]
+    public void Manifest_WithTruncationReason_LoadsTruncatedContext(
+        string value,
+        ArtifactPostProcessingTruncationReason expected)
+    {
+        string manifestPath = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(
+                manifestPath,
+                $$"""{ "schemaVersion": 1, "outputDirectory": "out", "truncationReason": "{{value}}", "inputs": [] }""");
+
+            var manifest = ArtifactPostProcessingManifest.Load(manifestPath);
+
+            Assert.IsTrue(manifest.Context.IsTruncated);
+            Assert.AreEqual(expected, manifest.Context.TruncationReason);
+        }
+        finally
+        {
+            File.Delete(manifestPath);
         }
     }
 
@@ -239,6 +270,9 @@ public sealed class ArtifactPostProcessingTests
     [DataRow("""{ "schemaVersion": 1, "outputDirectory": "out", "inputs": [{ "path": "a.trx", "kind": 123 }] }""")]
     [DataRow("""{ "schemaVersion": 1, "outputDirectory": "out", "inputs": [{ "path": "a.trx", "kind": {} }] }""")]
     [DataRow("""{ "schemaVersion": 1, "outputDirectory": "out", "inputs": [{ "path": "a.trx", "executionId": [] }] }""")]
+    [DataRow("""{ "schemaVersion": 1, "outputDirectory": "out", "truncationReason": null, "inputs": [] }""")]
+    [DataRow("""{ "schemaVersion": 1, "outputDirectory": "out", "truncationReason": 1, "inputs": [] }""")]
+    [DataRow("""{ "schemaVersion": 1, "outputDirectory": "out", "truncationReason": "unknown", "inputs": [] }""")]
     [TestMethod]
     public void Manifest_WithInvalidValueType_ThrowsFormatException(string json)
     {
@@ -347,6 +381,7 @@ public sealed class ArtifactPostProcessingTests
         string uid,
         IReadOnlyList<string> supportedKinds,
         IReadOnlyList<string> supportedExtensions,
+        bool supportsTruncatedRuns = false,
         bool isEnabled = true) : IArtifactPostProcessor
     {
         public string Uid { get; } = uid;
@@ -357,6 +392,8 @@ public sealed class ArtifactPostProcessingTests
 
         public string Description => Uid;
 
+        public bool SupportsTruncatedRuns { get; } = supportsTruncatedRuns;
+
         public IReadOnlyList<string> SupportedKinds { get; } = supportedKinds;
 
         public IReadOnlyList<string> SupportedFileExtensionsFallback { get; } = supportedExtensions;
@@ -366,6 +403,7 @@ public sealed class ArtifactPostProcessingTests
         public Task<ProcessedArtifact?> ProcessAsync(
             IReadOnlyList<InputArtifact> inputs,
             string outputDirectory,
+            ArtifactPostProcessingContext context,
             CancellationToken cancellationToken)
             => Task.FromResult<ProcessedArtifact?>(null);
     }

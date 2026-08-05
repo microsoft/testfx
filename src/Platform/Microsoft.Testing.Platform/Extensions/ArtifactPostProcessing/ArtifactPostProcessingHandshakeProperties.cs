@@ -22,6 +22,21 @@ internal static class ArtifactPostProcessingHandshakeProperties
                 .Select(extension => extension.ToLowerInvariant())
                 .Distinct(StringComparer.Ordinal)
                 .OrderBy(extension => extension, StringComparer.Ordinal));
+        string truncatedRunKinds = string.Join(
+            ";",
+            processors.Where(processor => processor.SupportsTruncatedRuns)
+                .SelectMany(processor => processor.SupportedKinds)
+                .Where(kind => !RoslynString.IsNullOrWhiteSpace(kind))
+                .Distinct(StringComparer.Ordinal)
+                .OrderBy(kind => kind, StringComparer.Ordinal));
+        string truncatedRunExtensions = string.Join(
+            ";",
+            processors.Where(processor => processor.SupportsTruncatedRuns)
+                .SelectMany(processor => processor.SupportedFileExtensionsFallback)
+                .Where(extension => !RoslynString.IsNullOrWhiteSpace(extension))
+                .Select(extension => extension.ToLowerInvariant())
+                .Distinct(StringComparer.Ordinal)
+                .OrderBy(extension => extension, StringComparer.Ordinal));
 
         if (kinds.Length == 0 && extensions.Length == 0)
         {
@@ -37,6 +52,16 @@ internal static class ArtifactPostProcessingHandshakeProperties
         if (extensions.Length > 0)
         {
             properties[HandshakeMessagePropertyNames.SupportedPostProcessorExtensionsLegacy] = extensions;
+        }
+
+        if (truncatedRunKinds.Length > 0)
+        {
+            properties[HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorKinds] = truncatedRunKinds;
+        }
+
+        if (truncatedRunExtensions.Length > 0)
+        {
+            properties[HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorExtensionsLegacy] = truncatedRunExtensions;
         }
 
         return properties;

@@ -150,9 +150,18 @@ Microsoft.Testing.Platform.Services.CoverageReportReference.SessionUid.get -> Mi
 [TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessingManager
 [TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessingManager.AddArtifactPostProcessor(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor!>! factory) -> void
 [TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor.SupportsTruncatedRuns.get -> bool
 [TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor.SupportedKinds.get -> System.Collections.Generic.IReadOnlyList<string!>!
 [TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor.SupportedFileExtensionsFallback.get -> System.Collections.Generic.IReadOnlyList<string!>!
-[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor.ProcessAsync(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>! inputs, string! outputDirectory, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact?>!
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor.ProcessAsync(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>! inputs, string! outputDirectory, Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact?>!
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingContext
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingContext.ArtifactPostProcessingContext(Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingTruncationReason truncationReason) -> void
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingContext.IsTruncated.get -> bool
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingContext.TruncationReason.get -> Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingTruncationReason
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingTruncationReason
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingTruncationReason.None = 0 -> Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingTruncationReason
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingTruncationReason.MaximumFailedTests = 1 -> Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingTruncationReason
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingTruncationReason.Timeout = 2 -> Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingTruncationReason
 [TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact
 [TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact.InputArtifact(string! path, string? kind, string? producingTestModule, string? targetFramework, string? architecture, string? executionId) -> void
 [TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact.Path.get -> string!

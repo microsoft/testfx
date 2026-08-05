@@ -95,6 +95,12 @@ internal static class HandshakeMessagePropertyNames
 
     // Semicolon-separated lowercase file extensions used as a compatibility fallback for untagged artifacts.
     internal const byte SupportedPostProcessorExtensionsLegacy = 15;
+
+    // Subset of SupportedPostProcessorKinds that can process artifacts observed before a run was truncated.
+    internal const byte SupportedTruncatedRunPostProcessorKinds = 16;
+
+    // Subset of SupportedPostProcessorExtensionsLegacy that can process artifacts observed before a run was truncated.
+    internal const byte SupportedTruncatedRunPostProcessorExtensionsLegacy = 17;
 }
 
 [Embedded]
