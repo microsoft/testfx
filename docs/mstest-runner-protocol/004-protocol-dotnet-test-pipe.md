@@ -434,6 +434,8 @@ Property IDs (`HandshakeMessagePropertyNames`):
 | 13 | `AttemptNumber` | test host only | Positive, 1-based retry attempt. Multiple Instance IDs may share one attempt. |
 | 14 | `SupportedPostProcessorKinds` | test host, server test host, test host controller, or artifact post-processor | Semicolon-separated reverse-DNS artifact kinds supported by registered post-processors. |
 | 15 | `SupportedPostProcessorExtensionsLegacy` | test host, server test host, test host controller, or artifact post-processor | Semicolon-separated lowercase file extensions used as a fallback for untagged artifacts. |
+| 16 | `SupportedTruncatedRunPostProcessorKinds` | test host, server test host, test host controller, or artifact post-processor | Subset of ID 14 whose processors can consume artifacts observed before a policy-truncated run stopped. |
+| 17 | `SupportedTruncatedRunPostProcessorExtensionsLegacy` | test host, server test host, test host controller, or artifact post-processor | Subset of ID 15 whose processors can consume artifacts observed before a policy-truncated run stopped. |
 
 ### 8.2 SDK → host: `HandshakeMessage` (reply)
 

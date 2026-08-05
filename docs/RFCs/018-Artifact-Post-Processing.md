@@ -145,6 +145,12 @@ public interface IArtifactPostProcessor : IExtension
     // Inherited from IExtension: Uid, Version, DisplayName, Description, Task<bool> IsEnabledAsync().
 
     /// <summary>
+    /// Whether this processor can consume the incomplete set of complete artifacts observed
+    /// before --maximum-failed-tests or --timeout truncated a run.
+    /// </summary>
+    bool SupportsTruncatedRuns { get; }
+
+    /// <summary>
     /// Reverse-DNS identifiers of the artifact kinds this processor can consume.
     /// Open vocabulary; recommended convention matches MTP extension Uids
     /// (e.g. "microsoft.testing.trx", "microsoft.codecoverage", "coverlet.cobertura").
@@ -169,7 +175,22 @@ public interface IArtifactPostProcessor : IExtension
     Task<ProcessedArtifact?> ProcessAsync(
         IReadOnlyList<InputArtifact> inputs,
         string outputDirectory,
+        ArtifactPostProcessingContext context,
         CancellationToken cancellationToken);
+}
+
+public sealed class ArtifactPostProcessingContext
+{
+    public ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason truncationReason);
+    public bool IsTruncated { get; }
+    public ArtifactPostProcessingTruncationReason TruncationReason { get; }
+}
+
+public enum ArtifactPostProcessingTruncationReason
+{
+    None,
+    MaximumFailedTests,
+    Timeout,
 }
 
 public sealed record InputArtifact(
@@ -202,6 +223,7 @@ public sealed record ProcessedArtifact(
 - **Open vocabulary, namespaced.** No central registry. Convention: reverse-DNS strings owned by the producing component (e.g. `microsoft.testing.trx`, `microsoft.codecoverage`, `coverlet.cobertura`, `playwright.trace`). Same hygiene rule as extension `Uid`s.
 - **Returning `null`** means "I looked but there's nothing to do" (e.g. < 2 inputs). The orchestrator then leaves the originals visible.
 - **Idempotent / deterministic.** The contract is intentionally pure-functional from `inputs` -> `output`. Implementations must not stash state across calls.
+- **Truncated runs are fail-closed.** A processor must explicitly return `true` from `SupportsTruncatedRuns` before the SDK or dispatcher offers it artifacts from a run truncated by `--maximum-failed-tests` or `--timeout`. Opting in means the processor accepts an incomplete *set* of artifacts and will clearly represent that state in its output; it does not mean partially written or malformed files are valid inputs.
 - **`IExtension` base** gives us `Uid`, `Version`, `DisplayName`, `Description`, and `IsEnabledAsync()` for free, plus integration with the existing extension manifest tooling. (`IsEnabledAsync()` is therefore *not* a bespoke member of this contract; the sketch in Appendix A.1 implements the inherited member.)
 
 #### The producer/post-processor co-location invariant
@@ -243,11 +265,19 @@ Concretely, the `FileArtifactMessage` IPC record gains a `Kind` field (a new fie
 Each test app advertises the kinds (and legacy file extensions) it can post-process so the orchestrator can elect. `HandshakeMessage` is already a `Dictionary<byte, string>` whose values are frequently semicolon-joined lists (e.g. `SupportedProtocolVersions` = `"1.0.0;1.1.0;1.2.0;1.3.0"`), so this is additive and cheap:
 
 ```text
-SupportedPostProcessorKinds:            "microsoft.testing.trx;microsoft.codecoverage"
-SupportedPostProcessorExtensionsLegacy: ".trx;.coverage"
+SupportedPostProcessorKinds:                              "microsoft.testing.trx;github.actions.summary"
+SupportedPostProcessorExtensionsLegacy:                   ".trx;.summary"
+SupportedTruncatedRunPostProcessorKinds:                  "github.actions.summary"
+SupportedTruncatedRunPostProcessorExtensionsLegacy:       ".summary"
 ```
 
-Two new optional handshake properties. Reverse-DNS kinds never contain `;`, so the separator is safe. Missing fields = empty sets = "this app has no post-processors"; the orchestrator handles that gracefully. This is preferred over a new dedicated message because it piggybacks on the handshake that already arrives first and avoids an extra round-trip.
+Four optional handshake properties. The truncated-run properties are subsets of the corresponding general properties, computed from processors whose `SupportsTruncatedRuns` property is `true`. Advertising the capability per kind/extension rather than once per app is necessary because one app can contain both a summary processor that accepts truncation and an authoritative merger such as TRX that does not. Reverse-DNS kinds never contain `;`, so the separator is safe. Missing fields = empty sets; an older host therefore retains the complete-run-only behavior. This is preferred over a new dedicated message because it piggybacks on the handshake that already arrives first and avoids an extra round-trip.
+
+#### Policy-truncated runs
+
+The SDK normally plans every group with at least two inputs. If `--maximum-failed-tests` or the global `--timeout` truncates execution, it instead plans only groups advertised through the truncated-run capability properties. Those groups may contain a single observed input: a run can stop before a second module reports its summary fragment, and the opted-in processor is responsible for labeling that output as partial. Zero-input processing remains out of scope because artifact routing has no kind to dispatch; a processor that must run with no inputs is a run finalizer, not an artifact post-processor.
+
+Help, discovery, explicit `--no-artifact-post-processing`, and Ctrl+C remain unconditional skips. Ctrl+C is user cancellation rather than policy truncation, and relaunching more processes after it would violate the user's request to stop.
 
 ### 7.5 Election is computed in-memory (no collection phase)
 
@@ -273,8 +303,10 @@ untagged = [a for a in artifacts if a.kind == null]
 for ext in unique(Path.GetExtension(a.path) for a in untagged):
     groups.append(("ext", ext, [a for a in untagged if Path.GetExtension(a.path) == ext]))
 
-# 3. Only groups with >= 2 inputs are worth merging.
-groups = [g for g in groups if len(g.items) >= 2]
+# 3. Complete runs require >= 2 inputs. Policy-truncated runs additionally keep
+#    groups with >= 1 input when a candidate advertises truncated-run support.
+groups = [g for g in groups if len(g.items) >= 2
+    or (run.truncated and len(g.items) >= 1 and has_truncated_candidate(g))]
 
 # 4. Candidate apps per group (must advertise the key AND be arch-compatible
 #    for binary kinds -- see section 7.12).
@@ -316,6 +348,8 @@ Worked example:
 
 - **No app advertises a group's Kind (and no extension fallback matches)** -> no-op for that group; originals listed as today.
 - **Group has only 1 input** -> not planned (the `>= 2` filter). Original listed as today; no relaunch.
+- **Policy-truncated run has only 1 input for an opted-in group** -> planned so the processor can emit an explicitly partial summary.
+- **Policy-truncated run has inputs only for complete-run processors** -> no relaunch for those groups; originals remain listed.
 - **Two processors in the same app advertise the same Kind** -> first-wins inside the dispatcher with a warning surfaced to the SDK. (Packaging bug for the user to fix.)
 - **Election succeeds but the relaunch fails** -> warning; originals listed; run exit code unchanged.
 - **Same file matches both a Kind and a fallback extension** -> Kind wins; an artifact is never double-routed.
@@ -358,9 +392,10 @@ The relaunched host runs a **platform-owned dispatcher `ITool`** (`internal-merg
 
 1. Skips discovery and test execution (it is a tool host, not a test host).
 2. Resolves all registered `IArtifactPostProcessor` instances exactly as any extension.
-3. Reads the manifest and routes inputs to processors **by Kind first, then by file-extension fallback** for untagged inputs. An input is never routed to more than one processor.
-4. Calls each matched processor's `ProcessAsync` once.
-5. Reports each merged `ProcessedArtifact` back over the connected `dotnet-test` pipe as a `FileArtifactMessage`, and surfaces per-processor errors, then exits.
+3. Reads the manifest and filters out processors that did not opt into its truncation state.
+4. Routes inputs to eligible processors **by Kind first, then by file-extension fallback** for untagged inputs. An input is never routed to more than one processor.
+5. Calls each matched processor's `ProcessAsync` once with the run context.
+6. Reports each merged `ProcessedArtifact` back over the connected `dotnet-test` pipe as a `FileArtifactMessage`, and surfaces per-processor errors, then exits.
 
 The dispatcher tool is marked **internal** (a flag mirroring command-line `IsHidden`) so it is not listed under "Registered tools:" by `--info`. A user would never type `--tool internal-merge-artifacts --manifest ...`; the non-hidden manual value comes entirely from the per-extension user tools in §7.2, which ship regardless of this decision.
 
@@ -376,6 +411,7 @@ Manifest (orchestrator -> dispatcher):
 {
   "schemaVersion": 1,
   "outputDirectory": "C:/path/to/TestResults",
+  "truncationReason": "maximumFailedTests", // optional; absent means complete, or "timeout"
   "inputs": [
     {
       "path": "C:/.../A/TestResults/A_net10.0_...trx",
@@ -396,6 +432,8 @@ Manifest (orchestrator -> dispatcher):
   ]
 }
 ```
+
+`truncationReason` is an additive schema-1 field because the existing parser ignores unknown fields. An old dispatcher reading a new manifest therefore continues to fail closed at election time: an SDK must elect a host through the new truncated-run capability before it writes this field. A new dispatcher reading an old manifest treats the run as complete.
 
 **Preferred result path: over the pipe.** In the recommended design the dispatcher reports each merged artifact back as a `FileArtifactMessage`, so there is no separate result file and no SDK-side result-JSON parsing. The SDK correlates the incoming merged artifact to the job it dispatched (it knows which inputs it sent) and collapses the originals.
 
@@ -424,6 +462,8 @@ Dispatcher exit codes (final values to be finalized so they don't overlap existi
 | Post-process child times out / crashes | Warning printed; originals listed; run exit code preserved. |
 | Binary `.coverage`, elected app arch-incompatible | Group not planned for that app; see §7.12. |
 | User runs `--tool merge-trx` manually | Works standalone; identical output to the automated path (shared engine). |
+| `--maximum-failed-tests` or global `--timeout` truncates the run | Only opted-in processors run, receive the reason, and may summarize the observed artifacts. Authoritative mergers such as TRX stay skipped. |
+| Ctrl+C cancels the run | No post-processing is started. |
 
 ### 7.9 Failure handling
 
@@ -431,6 +471,7 @@ Dispatcher exit codes (final values to be finalized so they don't overlap existi
 - **Child startup failure (non-zero exit, no merged artifact / no result)** -> orchestrator surfaces stderr tail as warning; originals stay listed.
 - **Result parse failure (transitional path)** -> warning; originals stay listed.
 - **Processor exception** -> surfaced as a warning; other processors still run.
+- **Policy truncation** (`--maximum-failed-tests` / global `--timeout`) -> invoke only processors that advertise truncated-run support and pass the reason in the manifest/context.
 - **Cancellation** (`Ctrl+C`) during post-processing -> propagate `CancellationToken`; child honors it; orchestrator stops without merging.
 - **Disk full / permission denied on output** -> warning; originals stay listed.
 
@@ -569,6 +610,8 @@ One might avoid a relaunch by keeping an elected host process alive at end-of-ru
 ```csharp
 internal sealed class TrxArtifactPostProcessor : IArtifactPostProcessor
 {
+    public bool SupportsTruncatedRuns => false;
+
     public string Uid => "Microsoft.Testing.Extensions.TrxReport.PostProcessor";
     public string DisplayName => "TRX report merger";
     public string Description => "Merges TRX reports produced by Microsoft.Testing.Extensions.TrxReport.";
@@ -583,6 +626,7 @@ internal sealed class TrxArtifactPostProcessor : IArtifactPostProcessor
     public async Task<ProcessedArtifact?> ProcessAsync(
         IReadOnlyList<InputArtifact> inputs,
         string outputDirectory,
+        ArtifactPostProcessingContext context,
         CancellationToken cancellationToken)
     {
         if (inputs.Count < 2)

@@ -25,6 +25,8 @@ internal sealed class TrxArtifactPostProcessor : IArtifactPostProcessor
 
     public string Description => ExtensionResources.TrxArtifactPostProcessorDescription;
 
+    public bool SupportsTruncatedRuns => false;
+
     public IReadOnlyList<string> SupportedKinds => SupportedArtifactKinds;
 
     public IReadOnlyList<string> SupportedFileExtensionsFallback => SupportedExtensions;
@@ -34,6 +36,7 @@ internal sealed class TrxArtifactPostProcessor : IArtifactPostProcessor
     public async Task<ProcessedArtifact?> ProcessAsync(
         IReadOnlyList<InputArtifact> inputs,
         string outputDirectory,
+        ArtifactPostProcessingContext context,
         CancellationToken cancellationToken)
     {
         if (inputs.Count < 2)

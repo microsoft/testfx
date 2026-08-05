@@ -55,8 +55,11 @@ public sealed class DotnetTestPipeArtifactPostProcessingTests
                 "ArtifactPostProcessor",
                 result.ReceivedHandshake[DotnetTestPipeProtocol.HandshakeProperties.HostType]);
             Assert.AreEqual(
-                "microsoft.testing.trx",
+                "microsoft.testing.trx;test.summary",
                 result.ReceivedHandshake[DotnetTestPipeProtocol.HandshakeProperties.SupportedPostProcessorKinds]);
+            Assert.AreEqual(
+                "test.summary",
+                result.ReceivedHandshake[DotnetTestPipeProtocol.HandshakeProperties.SupportedTruncatedRunPostProcessorKinds]);
 
             RawMessage[] artifactFrames = [.. result.MessagesWithSerializerId(DotnetTestPipeProtocol.SerializerIds.FileArtifactMessages)];
             Assert.HasCount(1, artifactFrames);
@@ -65,6 +68,65 @@ public sealed class DotnetTestPipeArtifactPostProcessingTests
             Assert.AreEqual("microsoft.testing.trx", artifacts[0].Kind);
             Assert.IsNotNull(artifacts[0].FullPath);
             Assert.IsTrue(File.Exists(artifacts[0].FullPath));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task Dispatcher_TruncatedRunInvokesOnlySupportingProcessor()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"artifact-dispatcher-truncated-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            string summaryPath = Path.Combine(directory, "summary.fragment");
+            string firstTrxPath = Path.Combine(directory, "first.trx");
+            string secondTrxPath = Path.Combine(directory, "second.trx");
+            File.WriteAllText(summaryPath, "summary");
+            WriteMinimalReport(firstTrxPath, "first");
+            WriteMinimalReport(secondTrxPath, "second");
+            string manifestPath = Path.Combine(directory, "manifest.json");
+            File.WriteAllText(
+                manifestPath,
+                JsonSerializer.Serialize(new
+                {
+                    schemaVersion = 1,
+                    outputDirectory = directory,
+                    truncationReason = "maximumFailedTests",
+                    inputs = new[]
+                    {
+                        new { path = summaryPath, kind = "test.summary", executionId = "execution-1" },
+                        new { path = firstTrxPath, kind = "microsoft.testing.trx", executionId = "execution-1" },
+                        new { path = secondTrxPath, kind = "microsoft.testing.trx", executionId = "execution-2" },
+                    },
+                }));
+
+            var testHost = TestInfrastructure.TestHost.LocateFrom(
+                AssetFixture.TargetAssetPath,
+                AssetName,
+                TargetFrameworks.NetCurrent);
+            FakeDotnetTestSdkResult result = await FakeDotnetTestSdk.RunAsync(
+                testHost,
+                extraArguments: $"--manifest \"{manifestPath}\"",
+                supportedProtocolVersions: "1.4.0",
+                toolName: "internal-merge-artifacts",
+                cancellationToken: TestContext.CancellationToken);
+
+            result.TestHostResult.AssertExitCodeIs(ExitCode.Success);
+            RawMessage[] artifactFrames = [.. result.MessagesWithSerializerId(DotnetTestPipeProtocol.SerializerIds.FileArtifactMessages)];
+            Assert.HasCount(1, artifactFrames);
+            IReadOnlyList<FileArtifact> artifacts = DotnetTestPipeProtocol.DecodeFileArtifacts(artifactFrames[0].Body);
+            Assert.HasCount(1, artifacts);
+            Assert.AreEqual("test.summary.processed", artifacts[0].Kind);
+            string? outputPath = artifacts[0].FullPath;
+            Assert.IsNotNull(outputPath);
+            Assert.AreEqual(
+                "True|MaximumFailedTests|1",
+                File.ReadAllText(outputPath));
+            Assert.IsFalse(Directory.Exists(Path.Combine(directory, "merged")));
         }
         finally
         {
@@ -235,6 +297,7 @@ public sealed class DotnetTestPipeArtifactPostProcessingTests
             using Microsoft.Testing.Extensions;
             using Microsoft.Testing.Platform.Builder;
             using Microsoft.Testing.Platform.Capabilities.TestFramework;
+            using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
             using Microsoft.Testing.Platform.Extensions.TestFramework;
 
             public static class Program
@@ -243,6 +306,8 @@ public sealed class DotnetTestPipeArtifactPostProcessingTests
                 {
                     ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
                     builder.AddTrxReportProvider();
+                    ((IArtifactPostProcessingApplicationBuilder)builder).ArtifactPostProcessing
+                        .AddArtifactPostProcessor(_ => new SummaryArtifactPostProcessor());
                     builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, _) => new DummyTestFramework());
                     using ITestApplication app = await builder.BuildAsync();
                     return await app.RunAsync();
@@ -264,6 +329,36 @@ public sealed class DotnetTestPipeArtifactPostProcessingTests
                 {
                     context.Complete();
                     return Task.CompletedTask;
+                }
+            }
+
+            public sealed class SummaryArtifactPostProcessor : IArtifactPostProcessor
+            {
+                public string Uid => nameof(SummaryArtifactPostProcessor);
+                public string Version => "1.0.0";
+                public string DisplayName => nameof(SummaryArtifactPostProcessor);
+                public string Description => nameof(SummaryArtifactPostProcessor);
+                public bool SupportsTruncatedRuns => true;
+                public IReadOnlyList<string> SupportedKinds => ["test.summary"];
+                public IReadOnlyList<string> SupportedFileExtensionsFallback => [];
+                public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+                public async Task<ProcessedArtifact?> ProcessAsync(
+                    IReadOnlyList<InputArtifact> inputs,
+                    string outputDirectory,
+                    ArtifactPostProcessingContext context,
+                    CancellationToken cancellationToken)
+                {
+                    string outputPath = Path.Combine(outputDirectory, "partial-summary.txt");
+                    await File.WriteAllTextAsync(
+                        outputPath,
+                        $"{context.IsTruncated}|{context.TruncationReason}|{inputs.Count}",
+                        cancellationToken);
+                    return new ProcessedArtifact(
+                        outputPath,
+                        "test.summary.processed",
+                        "Partial summary",
+                        null);
                 }
             }
             """;
