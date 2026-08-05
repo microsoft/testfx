@@ -29,6 +29,16 @@ internal sealed class RawExtensionManifest
     /// Gets the root-level property names the platform does not understand.
     /// </summary>
     public List<string> UnknownProperties { get; } = [];
+
+    /// <summary>
+    /// Gets the recognized root-level property names that appeared more than once.
+    /// </summary>
+    /// <remarks>
+    /// Only ever populated by the <c>System.Text.Json</c> reader. Jsonite, used on the netstandard2.0 asset,
+    /// materializes objects into a dictionary with indexer assignment, so a repeated key has already been
+    /// collapsed before the reader sees it. See the remarks on <see cref="DynamicExtensionJsonReader"/>.
+    /// </remarks>
+    public List<string> DuplicateProperties { get; } = [];
 }
 
 /// <summary>
@@ -56,4 +66,10 @@ internal sealed class RawExtensionEntry
     /// Gets the entry-level property names the platform does not understand.
     /// </summary>
     public List<string> UnknownProperties { get; } = [];
+
+    /// <summary>
+    /// Gets the recognized entry-level property names that appeared more than once. See the remarks on
+    /// <see cref="RawExtensionManifest.DuplicateProperties"/> for why this is only populated on .NET.
+    /// </summary>
+    public List<string> DuplicateProperties { get; } = [];
 }

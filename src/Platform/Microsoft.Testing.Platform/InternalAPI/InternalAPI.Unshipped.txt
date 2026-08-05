@@ -542,3 +542,5 @@ Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionLoader.DynamicExten
 Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.DynamicExtensionEntry(string! manifestPath, int index, string! id, bool hasExplicitId, string! displayName, string! assemblyPath, string! resolvedAssemblyPath, string! typeFullName, bool isEnabled) -> void
 Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.DeduplicationKey.get -> string!
 Microsoft.Testing.Platform.DynamicExtensions.DynamicExtensionEntry.HasExplicitId.get -> bool
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionEntry.DuplicateProperties.get -> System.Collections.Generic.List<string!>!
+Microsoft.Testing.Platform.DynamicExtensions.RawExtensionManifest.DuplicateProperties.get -> System.Collections.Generic.List<string!>!

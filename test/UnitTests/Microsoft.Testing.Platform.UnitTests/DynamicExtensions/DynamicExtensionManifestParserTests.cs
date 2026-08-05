@@ -153,6 +153,63 @@ public sealed class DynamicExtensionManifestParserTests
         Assert.AreSequenceEqual(["extensions[0].futureOption"], manifest.UnknownProperties.ToArray());
     }
 
+#if NETCOREAPP
+    [TestMethod]
+    public void Parse_WithDuplicateExtensionsProperty_Throws()
+    {
+        // Last-wins would drop policyA entirely, which is the silent degradation this feature exists to
+        // prevent: the author deployed two blocks and would get one, with nothing said about it.
+        const string Content = """
+            {
+              "extensions": [ { "assemblyPath": "A.dll", "typeFullName": "Contoso.A" } ],
+              "extensions": [ { "assemblyPath": "B.dll", "typeFullName": "Contoso.B" } ]
+            }
+            """;
+
+        InvalidOperationException ex = Assert.ThrowsExactly<InvalidOperationException>(
+            () => DynamicExtensionManifestParser.Parse(ManifestPath, Content));
+
+        Assert.Contains(DynamicExtensionConstants.ExtensionsPropertyName, ex.Message);
+    }
+
+    [TestMethod]
+    public void Parse_WithDuplicateEntryProperty_Throws()
+    {
+        // Same reasoning one level down: silently taking B.dll over A.dll would load an extension the author
+        // did not think they were declaring.
+        const string Content = """
+            {
+              "extensions": [
+                { "assemblyPath": "A.dll", "assemblyPath": "B.dll", "typeFullName": "Contoso.Hook" }
+              ]
+            }
+            """;
+
+        InvalidOperationException ex = Assert.ThrowsExactly<InvalidOperationException>(
+            () => DynamicExtensionManifestParser.Parse(ManifestPath, Content));
+
+        Assert.Contains(DynamicExtensionConstants.AssemblyPathPropertyName, ex.Message);
+    }
+
+    [TestMethod]
+    public void Parse_WithDuplicateUnknownEntryProperty_DoesNotThrow()
+    {
+        // Only recognized properties are rejected. A repeated unknown property cannot change what the platform
+        // loads, so failing on it would punish forward-compatible manifests for no benefit.
+        const string Content = """
+            {
+              "extensions": [
+                { "assemblyPath": "A.dll", "typeFullName": "Contoso.Hook", "futureOption": 1, "futureOption": 2 }
+              ]
+            }
+            """;
+
+        DynamicExtensionManifest manifest = DynamicExtensionManifestParser.Parse(ManifestPath, Content);
+
+        Assert.HasCount(1, manifest.Extensions);
+    }
+#endif
+
     [TestMethod]
     public void Parse_WithMisspelledEnabledProperty_ReportsItSoTheTypoIsDiscoverable()
     {

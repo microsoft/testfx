@@ -365,6 +365,8 @@ extension:
   object (the netstandard2.0 parser stops at the root value, so this is checked explicitly to keep
   both readers strict in the same way);
 - `extensions` is missing or is not an array, or an entry is not an object;
+- a recognized property is declared twice, at the root or inside an entry, so one declaration would be
+  discarded (**.NET only** — see below);
 - `assemblyPath` or `typeFullName` is missing or empty;
 - the same `id` names two different extensions;
 - the test application's directory cannot be searched for manifests, so the platform cannot even tell
@@ -383,6 +385,16 @@ Failing loudly is the deliberate choice. A manifest exists because someone decid
 must be affected by it; a run that quietly ignores it produces results that look valid but are not
 the results that were asked for. This mirrors how the platform already treats a missing
 `--config-file`.
+
+**Duplicate keys are the one rule the two readers do not share.** JSON permits a repeated key and
+most parsers resolve it last-wins, which here would discard extensions somebody deliberately
+declared. `System.Text.Json` exposes every occurrence, so the .NET reader rejects the manifest. The
+netstandard2.0 reader cannot: Jsonite fills a dictionary by indexer assignment, so the earlier value
+is already gone before the reader runs, and detecting it would mean forking a vendored parser that
+the server-mode JSON-RPC stack also uses. Matching that limitation on .NET was considered and
+rejected — parity is not worth keeping quiet on the platform that *can* see the problem. Unknown
+properties are exempt on both: repeating one cannot change what gets loaded, so rejecting it would
+only punish forward-compatible manifests.
 
 Because these failures happen inside `CreateBuilderAsync`, before the platform owns the application,
 they surface as an exception out of the entry point rather than as formatted platform output. The

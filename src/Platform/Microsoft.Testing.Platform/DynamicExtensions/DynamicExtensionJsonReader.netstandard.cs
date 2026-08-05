@@ -13,6 +13,13 @@ namespace Microsoft.Testing.Platform.DynamicExtensions;
 /// Reads an extension manifest into the target-framework-neutral <see cref="RawExtensionManifest"/> shape using
 /// the bundled Jsonite parser, because <c>System.Text.Json</c> is not available on the netstandard2.0 asset.
 /// </summary>
+/// <remarks>
+/// Unlike the .NET reader, this one cannot detect duplicate keys: Jsonite fills a
+/// <see cref="Dictionary{TKey, TValue}"/> using indexer assignment, so a repeated key has already overwritten
+/// the earlier one by the time <see cref="Read"/> enumerates it. Making it detectable would mean forking the
+/// vendored parser that the server-mode JSON-RPC stack also depends on, which is not worth it for a
+/// pathological manifest. <see cref="RawExtensionManifest.DuplicateProperties"/> therefore stays empty here.
+/// </remarks>
 internal static class DynamicExtensionJsonReader
 {
     private static readonly JsonSettings Settings = new()

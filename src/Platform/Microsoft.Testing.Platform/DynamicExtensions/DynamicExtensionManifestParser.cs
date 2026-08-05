@@ -29,6 +29,17 @@ internal static class DynamicExtensionManifestParser
                 DynamicExtensionConstants.ExtensionsPropertyName));
         }
 
+        if (raw.DuplicateProperties.Count > 0)
+        {
+            // Keeping one of the two would drop extensions somebody deliberately declared, which is the silent
+            // degradation this feature exists to avoid. Report the first offender, as elsewhere.
+            throw new InvalidOperationException(string.Format(
+                CultureInfo.InvariantCulture,
+                PlatformResources.DynamicExtensionManifestDuplicatePropertyErrorMessage,
+                manifestPath,
+                raw.DuplicateProperties[0]));
+        }
+
         if (!raw.IsExtensionsPropertyAnArray)
         {
             throw new InvalidOperationException(string.Format(
@@ -67,6 +78,16 @@ internal static class DynamicExtensionManifestParser
                 manifestPath,
                 index,
                 DynamicExtensionConstants.ExtensionsPropertyName));
+        }
+
+        if (raw.DuplicateProperties.Count > 0)
+        {
+            throw new InvalidOperationException(string.Format(
+                CultureInfo.InvariantCulture,
+                PlatformResources.DynamicExtensionManifestEntryDuplicatePropertyErrorMessage,
+                manifestPath,
+                index,
+                raw.DuplicateProperties[0]));
         }
 
         if (raw.InvalidProperties.Count > 0)

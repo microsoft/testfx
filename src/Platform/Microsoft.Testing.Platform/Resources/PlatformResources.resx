@@ -1011,6 +1011,14 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
     <value>The extension manifest '{0}' is invalid: the required '{1}' property is missing.</value>
     <comment>{0} is the manifest file path. {1} is the name of the missing JSON property.</comment>
   </data>
+  <data name="DynamicExtensionManifestDuplicatePropertyErrorMessage" xml:space="preserve">
+    <value>The extension manifest '{0}' is invalid: the '{1}' property is declared more than once, so one of the declarations would be discarded.</value>
+    <comment>{0} is the manifest file path. {1} is the name of the duplicated JSON property.</comment>
+  </data>
+  <data name="DynamicExtensionManifestEntryDuplicatePropertyErrorMessage" xml:space="preserve">
+    <value>The extension manifest '{0}' is invalid: the extension at index {1} declares the '{2}' property more than once, so one of the declarations would be discarded.</value>
+    <comment>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the duplicated JSON property.</comment>
+  </data>
   <data name="DynamicExtensionManifestExtensionsPropertyNotArrayErrorMessage" xml:space="preserve">
     <value>The extension manifest '{0}' is invalid: the '{1}' property must be a JSON array.</value>
     <comment>{0} is the manifest file path. {1} is the name of the JSON property that has the wrong type.</comment>

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETCOREAPP
@@ -13,6 +13,14 @@ namespace Microsoft.Testing.Platform.DynamicExtensions;
 /// Reads an extension manifest into the target-framework-neutral <see cref="RawExtensionManifest"/> shape using
 /// <c>System.Text.Json</c>. The netstandard2.0 asset uses the Jsonite-based reader instead.
 /// </summary>
+/// <remarks>
+/// This reader rejects duplicate recognized properties. The netstandard2.0 reader cannot: Jsonite materializes
+/// objects into a dictionary using indexer assignment, so a repeated key is already collapsed before the reader
+/// runs, and detecting it would mean forking the vendored parser that the server-mode JSON-RPC stack also uses.
+/// A manifest with duplicate keys is therefore rejected on .NET and silently last-wins on .NET Framework. That
+/// asymmetry is deliberate: it is better for the platform that can detect the problem to say so than for both
+/// to stay quiet for the sake of matching.
+/// </remarks>
 internal static class DynamicExtensionJsonReader
 {
     private static readonly JsonDocumentOptions DocumentOptions = new()
@@ -55,12 +63,20 @@ internal static class DynamicExtensionJsonReader
                     continue;
                 }
 
-                // JsonDocument surfaces every occurrence of a duplicated key, whereas the Jsonite-based reader
-                // used on netstandard2.0 keeps only the last. Reset here so both readers are last-wins and a
-                // pathological manifest cannot behave differently per target framework.
+                // JsonDocument surfaces every occurrence of a duplicated key. Recording it lets the parser
+                // reject the manifest rather than quietly keeping one of the two, which would drop extensions
+                // somebody deliberately deployed -- the exact failure this feature exists to prevent.
+                if (manifest.HasExtensionsProperty)
+                {
+                    if (!manifest.DuplicateProperties.Contains(property.Name))
+                    {
+                        manifest.DuplicateProperties.Add(property.Name);
+                    }
+
+                    continue;
+                }
+
                 manifest.HasExtensionsProperty = true;
-                manifest.IsExtensionsPropertyAnArray = false;
-                manifest.Entries.Clear();
 
                 if (property.Value.ValueKind != JsonValueKind.Array)
                 {
@@ -82,11 +98,20 @@ internal static class DynamicExtensionJsonReader
     private static RawExtensionEntry ReadEntry(JsonElement element)
     {
         RawExtensionEntry entry = new();
+        HashSet<string> seen = [with(StringComparer.Ordinal)];
         foreach (JsonProperty property in element.EnumerateObject())
         {
-            // See the duplicate-key note above: a repeated property must end up last-wins on both readers, so
-            // any earlier "wrong type" verdict for the same name is discarded first.
-            entry.InvalidProperties.Remove(property.Name);
+            // See the duplicate-key note above. A repeated recognized property is recorded and skipped so the
+            // parser can reject it, rather than silently substituting one value for the other.
+            if (!seen.Add(property.Name))
+            {
+                if (IsRecognized(property.Name) && !entry.DuplicateProperties.Contains(property.Name))
+                {
+                    entry.DuplicateProperties.Add(property.Name);
+                }
+
+                continue;
+            }
 
             switch (property.Name)
             {
@@ -127,6 +152,13 @@ internal static class DynamicExtensionJsonReader
 
         return entry;
     }
+
+    private static bool IsRecognized(string propertyName)
+        => propertyName is DynamicExtensionConstants.IdPropertyName
+            or DynamicExtensionConstants.DisplayNamePropertyName
+            or DynamicExtensionConstants.AssemblyPathPropertyName
+            or DynamicExtensionConstants.TypeFullNamePropertyName
+            or DynamicExtensionConstants.EnabledPropertyName;
 
     private static string? ReadString(RawExtensionEntry entry, JsonProperty property)
         => property.Value.ValueKind == JsonValueKind.String
