@@ -856,7 +856,7 @@ Opcionalmente, aceita 'text' (a saída legível por humanos padrão) ou 'json' p
       <trans-unit id="PlatformCommandLineIgnoreExitCodeOptionDescription">
         <source>Do not report a non-successful exit value for the specified exit codes.
 For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
-For the full list, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</source>
+For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</source>
         <target state="needs-review-translation">Não relatar valor de saída não bem-sucedido para códigos de saída específicos
 (por exemplo, '--ignore-exit-code 8;9' ignora o código de saída 8 e 9 e retornará 0 nesses casos)</target>
         <note>{Locked="'--ignore-exit-code 8;9'"} {Locked="https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes"}</note>
