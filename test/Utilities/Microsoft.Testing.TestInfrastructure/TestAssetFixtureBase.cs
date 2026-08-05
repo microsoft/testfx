@@ -80,6 +80,9 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
                 DotnetMuxerResult sourceGenResult = await DotnetCli.RunAsync(
                     $"build {testAsset.TargetAssetPath} -c Release {sourceGenArgs}",
                     failIfReturnValueIsNotZero: false,
+                    // ReflectionFree carries its own warning promotion in sourceGenArgs. Disable the
+                    // shared default here so acceptance runs verify that mode-specific contract.
+                    warnAsError: mode != MetadataMode.AotSourceGeneration,
                     callerMemberName: $"{assetName}_{AcceptanceSourceGen.GetOutputSubFolder(mode)}",
                     cancellationToken: cancellationToken);
 
