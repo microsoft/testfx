@@ -139,9 +139,19 @@ public sealed class TestApplication : ITestApplication
             // The failure escapes CreateBuilderAsync, so nothing downstream will ever flush the diagnostic log
             // — and its trace of which manifests were read and which extension failed is the whole point of
             // having written it. Flush it before the exception reaches the entry point.
+            //
+            // Flushing is best-effort: DisposeAsync performs fallible stream work, and letting that failure
+            // escape would replace the manifest-aware error we are trying to preserve with one about the log
+            // file. Losing the log is bad; losing the reason the run failed is worse.
             if (loggingState.FileLoggerProvider is { } fileLoggerProvider)
             {
-                await DisposeHelper.DisposeAsync(fileLoggerProvider).ConfigureAwait(false);
+                try
+                {
+                    await DisposeHelper.DisposeAsync(fileLoggerProvider).ConfigureAwait(false);
+                }
+                catch (Exception)
+                {
+                }
             }
 
             throw;

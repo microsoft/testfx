@@ -617,6 +617,36 @@ public sealed class DynamicExtensionLoaderTests
         Assert.IsEmpty(_console.Output);
     }
 
+    [TestMethod]
+    public async Task LoadAsync_WhenReportingAlsoFailsDuringAFailure_KeepsTheActionableError()
+    {
+        // Reporting runs while unwinding a load failure. It only writes when something did load, so the case
+        // that matters is a partial load: one hook succeeded, a later one threw, and stdout is broken too (a
+        // closed pipe, say). The console exception must not replace the InvalidOperationException naming the
+        // manifest and the extension -- that message is the only part the user can act on.
+        SetupManifest(
+            "a.testingplatformextensions.json",
+            Wrap(ManifestEntryFor(typeof(RecordingHook)) + "," + ManifestEntryFor(typeof(ThrowingHook))));
+        _console.ThrowOnWrite = new IOException("stdout is closed");
+
+        InvalidOperationException ex = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => CreateLoader().LoadAsync(_builder.Object, Args));
+
+        Assert.Contains("a.testingplatformextensions.json", ex.Message);
+    }
+
+    [TestMethod]
+    public async Task LoadAsync_WhenReportingFailsOnTheSuccessPath_Throws()
+    {
+        // Nothing else is going wrong here, so swallowing the failure would leave extensions loaded with no
+        // notice at all, which is exactly what the reporting exists to prevent.
+        SetupManifest("a.testingplatformextensions.json", ManifestFor(typeof(RecordingHook)));
+        _console.ThrowOnWrite = new IOException("stdout is closed");
+
+        await Assert.ThrowsExactlyAsync<IOException>(
+            () => CreateLoader().LoadAsync(_builder.Object, Args));
+    }
+
     private DynamicExtensionLoader CreateLoader()
         => new(_fileSystem.Object, _moduleInfo.Object, _assemblyLoader, _console, _parseResult, logger: null);
 
@@ -664,11 +694,24 @@ public sealed class DynamicExtensionLoaderTests
     {
         private readonly StringBuilder _output = new();
 
+        /// <summary>
+        /// Simulates a console whose underlying stream has failed, for example a closed stdout pipe.
+        /// </summary>
+        public Exception? ThrowOnWrite { get; set; }
+
         public string Output => _output.ToString();
 
         public void WriteLine() => _output.AppendLine();
 
-        public void WriteLine(string? value) => _output.AppendLine(value);
+        public void WriteLine(string? value)
+        {
+            if (ThrowOnWrite is { } ex)
+            {
+                throw ex;
+            }
+
+            _output.AppendLine(value);
+        }
 
         public void Write(string? value) => _output.Append(value);
 

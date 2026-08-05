@@ -93,10 +93,26 @@ internal sealed class DynamicExtensionLoader
                 await LogDebugAsync($"Registered extension '{entry.DisplayName}' ('{entry.TypeFullName}') from '{entry.ResolvedAssemblyPath}'.").ConfigureAwait(false);
             }
         }
-        finally
+        catch (Exception)
         {
-            ReportLoadedExtensions(loaded);
+            // Reporting is best-effort while unwinding. The load failure names the manifest and the extension,
+            // which is the only actionable part of the error; letting a console write failure (a closed stdout
+            // pipe, say) replace it would trade a fixable message for an unfixable one. The run still fails
+            // loudly either way.
+            try
+            {
+                ReportLoadedExtensions(loaded);
+            }
+            catch (Exception)
+            {
+            }
+
+            throw;
         }
+
+        // On the success path a reporting failure is worth surfacing: nothing else is going wrong, and
+        // silently skipping the notice would break the "loading is never silent" guarantee.
+        ReportLoadedExtensions(loaded);
     }
 
     /// <summary>
