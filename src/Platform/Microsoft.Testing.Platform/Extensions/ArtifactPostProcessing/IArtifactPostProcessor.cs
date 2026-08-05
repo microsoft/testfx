@@ -36,9 +36,16 @@ public interface IArtifactPostProcessor : IExtension
     /// <param name="outputDirectory">The directory under which the processed artifact must be written.</param>
     /// <param name="context">The context describing the test run that produced the artifacts.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>The processed artifact, or <see langword="null"/> when no processing is needed.</returns>
+    /// <returns>
+    /// The processed artifact representing all <paramref name="inputs"/>, or <see langword="null"/> when no
+    /// processing is needed.
+    /// </returns>
     /// <remarks>
     /// Implementations must be deterministic and idempotent because orchestrators may retry transient failures.
+    /// A non-<see langword="null"/> result must represent every supplied input. Implementations that cannot produce
+    /// one artifact representing the complete input set must return <see langword="null"/> or throw.
+    /// When a processor declares both kinds and legacy file extensions, <paramref name="inputs"/> can contain the
+    /// union of producer-kind matches and untagged extension-fallback matches.
     /// </remarks>
     Task<ProcessedArtifact?> ProcessAsync(
         IReadOnlyList<InputArtifact> inputs,

@@ -376,8 +376,9 @@ foreach (PostProcessingJob job in plan.Jobs)
         manifestPath: job.WriteManifest(),
         onMergedArtifact: merged =>
         {
-            // Re-enters the normal reporter path; collapse the consumed originals.
-            output.RemoveArtifacts(job.InputsFor(merged.Kind));
+            // Re-enters the normal reporter path; collapse only the inputs that
+            // the dispatcher reports as represented by this output.
+            output.RemoveArtifacts(job.Inputs.IntersectByPath(merged.InputArtifactPaths));
             output.ArtifactAdded(outOfProcess: true, path: merged.Path, /* ... */);
         },
         onError: err => output.Warning($"Post-processing of {err.ProcessorUid}: {err.Message}"),
@@ -395,7 +396,16 @@ The relaunched host runs a **platform-owned dispatcher `ITool`** (`internal-merg
 3. Reads the manifest and filters out processors that did not opt into its truncation state.
 4. Routes inputs to eligible processors **by Kind first, then by file-extension fallback** for untagged inputs. An input is never routed to more than one processor.
 5. Calls each matched processor's `ProcessAsync` once with the run context.
-6. Reports each merged `ProcessedArtifact` back over the connected `dotnet-test` pipe as a `FileArtifactMessage`, and surfaces per-processor errors, then exits.
+6. Reports each merged `ProcessedArtifact` back over the connected `dotnet-test` pipe as a
+   `FileArtifactMessage`. Its `InputArtifactPaths` field contains the original manifest path strings for
+   every input supplied to that processor invocation, copied verbatim, and the SDK removes exactly those
+   job inputs from the summary. The dispatcher surfaces per-processor errors, then exits.
+
+A non-null `ProcessedArtifact` represents every input supplied to that processor invocation. A processor
+that cannot produce one artifact representing the complete input set returns `null` or throws. This
+all-or-nothing rule makes `InputArtifactPaths` authoritative without changing the processor API. A
+processor that advertises both kinds and legacy extensions can receive the union of producer-kind matches
+and untagged extension-fallback matches, so it must be able to represent that complete union.
 
 The dispatcher tool is marked **internal** (a flag mirroring command-line `IsHidden`) so it is not listed under "Registered tools:" by `--info`. A user would never type `--tool internal-merge-artifacts --manifest ...`; the non-hidden manual value comes entirely from the per-extension user tools in §7.2, which ship regardless of this decision.
 
@@ -435,7 +445,13 @@ Manifest (orchestrator -> dispatcher):
 
 `truncationReason` is an additive schema-1 field because the existing parser ignores unknown fields. An old dispatcher reading a new manifest therefore continues to fail closed at election time: an SDK must elect a host through the new truncated-run capability before it writes this field. A new dispatcher reading an old manifest treats the run as complete.
 
-**Preferred result path: over the pipe.** In the recommended design the dispatcher reports each merged artifact back as a `FileArtifactMessage`, so there is no separate result file and no SDK-side result-JSON parsing. The SDK correlates the incoming merged artifact to the job it dispatched (it knows which inputs it sent) and collapses the originals.
+**Preferred result path: over the pipe.** In the recommended design the dispatcher reports each merged
+artifact back as a `FileArtifactMessage`, so there is no separate result file and no SDK-side result-JSON
+parsing. Each dispatcher output includes the additive `InputArtifactPaths` field (field ID 8), containing
+the original manifest path strings copied verbatim. The SDK intersects those strings with the job manifest
+and collapses exactly the matching originals. Older readers skip the unknown field; newer readers treat its
+absence as an old-host response and use a conservative fallback. No protocol-version bump or handshake
+capability is required.
 
 **Transitional result path: result JSON.** If the pipe-composition task in §7.6 is deferred, the dispatcher writes a result JSON (path supplied in the manifest) and the SDK performs the swap. This keeps the same typed contract and the same manifest; only the *return channel* changes. Keeping the manifest/result schema `schemaVersion`-versioned means the return channel can switch from files to the pipe without touching `IArtifactPostProcessor`.
 
@@ -456,6 +472,7 @@ Dispatcher exit codes (final values to be finalized so they don't overlap existi
 | 5 modules, 5 TRX, all tag `microsoft.testing.trx` | 1 relaunch, 1 merged TRX, 5 originals on disk, 1 summary line. |
 | 5 modules, mixed TRX + coverage, one app covers both | 1 relaunch (set-cover), 1 merged TRX + 1 merged coverage. |
 | `.xml` artifacts: 3 JUnit (kind `junit.report`) + 2 NUnit3 (kind `nunit.report`) | Two distinct groups, two merges, no cross-contamination (would have collided under pure extension matching). |
+| Tagged JUnit and untagged NUnit3 `.xml` artifacts route to different processors in one app | Per-output dispatcher provenance collapses each processor's inputs independently; if the fallback processor returns `null`, those legacy inputs remain listed. |
 | Module lacks a processor for `playwright.trace` | Those files listed individually (today's behavior). |
 | Older testfx with no `IArtifactPostProcessor` | No advertisements -> no relaunch -> today's behavior end-to-end. |
 | New SDK + new platform + producer not tagging Kind yet | Orchestrator falls back to file extension; merge still happens. |
