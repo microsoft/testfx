@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 // Suppress CS0618 for the entire file: we intentionally exercise the deprecated legacy
@@ -14,6 +14,20 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 public class DiagnosticTests : AcceptanceTestBase<DiagnosticTests.TestAssetFixture>
 {
     private const string AssetName = "DiagnosticTest";
+
+    [DataRow("")]
+    [DataRow("_1236_1")]
+    [TestMethod]
+    public void BuildDefaultDiagnosticFilePathPattern_MatchesFileLoggerFileName(string collisionSuffix)
+    {
+        const string Tfm = "net10.0";
+        string arch = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
+        string diagPath = Path.Combine("artifacts", AggregatedConfiguration.DefaultTestResultFolderName);
+        string filePath = Path.Combine(diagPath, $"{AssetName}_{Tfm}_{arch}_260805150845821{collisionSuffix}.diag");
+        string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, AssetName, Tfm);
+
+        Assert.IsTrue(Regex.IsMatch(filePath, $"^{diagPathPattern}$"), $"'{filePath}' did not match '{diagPathPattern}'.");
+    }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]

@@ -40,7 +40,7 @@ public abstract class AcceptanceTestBase
         string arch = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
         const string FileNamePlaceholder = "__DIAG_FILENAME__";
         string combinedPath = Path.Combine(diagPath, FileNamePlaceholder).Replace(@"\", @"\\");
-        return combinedPath.Replace(FileNamePlaceholder, $@"{assetName}_{Regex.Escape(tfm)}_{arch}_\d{{15}}\.diag");
+        return combinedPath.Replace(FileNamePlaceholder, $@"{assetName}_{Regex.Escape(tfm)}_{arch}_\d{{15}}(?:_\d+_\d+)?\.diag");
     }
 
     protected static string GetTestExecutablePath(Microsoft.Testing.TestInfrastructure.TestHost testHost)
