@@ -146,15 +146,16 @@ public sealed class DotnetTestProtocolSerializerTests
     }
 
     [TestMethod]
-    public void FileArtifactMessageFieldIds_Kind_IsStable()
+    public void FileArtifactMessageFieldIds_AreStable()
     {
-        // Kind is an externally shared wire id (the SDK decodes it with its own vendored copy of the same
-        // number), so renumbering it would silently break cross-process decoding without failing the
+        // These are externally shared wire ids (the SDK decodes them with its own vendored copy of the same
+        // numbers), so renumbering them would silently break cross-process decoding without failing the
         // round-trip tests (which use the same constant on both writer and reader). Pin the literal here.
         // The declared value is read via reflection (a runtime read, not a compile-time constant) so that
         // renumbering the constant is actually caught rather than folded away by the compiler.
         Assert.AreEqual((ushort)6, GetConstantValue(nameof(FileArtifactMessageFieldsId.SessionUid)));
         Assert.AreEqual((ushort)7, GetConstantValue(nameof(FileArtifactMessageFieldsId.Kind)));
+        Assert.AreEqual((ushort)8, GetConstantValue(nameof(FileArtifactMessageFieldsId.InputArtifactPaths)));
 
         static ushort GetConstantValue(string fieldName)
             => (ushort)typeof(FileArtifactMessageFieldsId).GetField(fieldName)!.GetRawConstantValue()!;
@@ -243,8 +244,24 @@ public sealed class DotnetTestProtocolSerializerTests
             "executionId",
             "instanceId",
             [
-                new FileArtifactMessage("full/path.txt", "artifact", "desc", "testUid", "testDisplay", "sessionUid", "microsoft.testing.trx"),
-                new FileArtifactMessage("other.txt", "other", null, null, null, null, null),
+                new FileArtifactMessage(
+                    "full/path.txt",
+                    "artifact",
+                    "desc",
+                    "testUid",
+                    "testDisplay",
+                    "sessionUid",
+                    "microsoft.testing.trx",
+                    ["input/first.txt", "input/second.txt"]),
+                new FileArtifactMessage(
+                    "other.txt",
+                    "other",
+                    null,
+                    null,
+                    null,
+                    null,
+                    "microsoft.testing.coverage",
+                    ["input/coverage.txt"]),
             ]);
 
         FileArtifactMessages actual = RoundTrip(new FileArtifactMessagesSerializer(), message);
@@ -254,9 +271,13 @@ public sealed class DotnetTestProtocolSerializerTests
         Assert.AreEqual("full/path.txt", actual.FileArtifacts[0].FullPath);
         Assert.AreEqual("sessionUid", actual.FileArtifacts[0].SessionUid);
         Assert.AreEqual("microsoft.testing.trx", actual.FileArtifacts[0].Kind);
+        Assert.AreSequenceEqual(
+            ["input/first.txt", "input/second.txt"],
+            actual.FileArtifacts[0].InputArtifactPaths);
         Assert.AreEqual("other.txt", actual.FileArtifacts[1].FullPath);
         Assert.IsNull(actual.FileArtifacts[1].Description);
-        Assert.IsNull(actual.FileArtifacts[1].Kind);
+        Assert.AreEqual("microsoft.testing.coverage", actual.FileArtifacts[1].Kind);
+        Assert.AreSequenceEqual(["input/coverage.txt"], actual.FileArtifacts[1].InputArtifactPaths);
     }
 
     [TestMethod]

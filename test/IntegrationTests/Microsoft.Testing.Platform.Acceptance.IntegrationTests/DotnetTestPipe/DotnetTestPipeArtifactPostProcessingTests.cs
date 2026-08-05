@@ -55,7 +55,7 @@ public sealed class DotnetTestPipeArtifactPostProcessingTests
                 "ArtifactPostProcessor",
                 result.ReceivedHandshake[DotnetTestPipeProtocol.HandshakeProperties.HostType]);
             Assert.AreEqual(
-                "microsoft.testing.trx;test.summary",
+                "microsoft.testing.trx;test.summary;test.xml",
                 result.ReceivedHandshake[DotnetTestPipeProtocol.HandshakeProperties.SupportedPostProcessorKinds]);
             Assert.AreEqual(
                 "test.summary",
@@ -68,6 +68,135 @@ public sealed class DotnetTestPipeArtifactPostProcessingTests
             Assert.AreEqual("microsoft.testing.trx", artifacts[0].Kind);
             Assert.IsNotNull(artifacts[0].FullPath);
             Assert.IsTrue(File.Exists(artifacts[0].FullPath));
+            Assert.IsNotNull(artifacts[0].InputArtifactPaths);
+            Assert.AreSequenceEqual(
+                [Path.GetFullPath(firstPath), Path.GetFullPath(secondPath)],
+                artifacts[0].InputArtifactPaths);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task Dispatcher_ReportsOnlyInputsRepresentedByEachOutput()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"artifact-dispatcher-provenance-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            string firstPath = Path.Combine(directory, "first.xml");
+            string secondPath = Path.Combine(directory, "second.xml");
+            string unrelatedPath = Path.Combine(directory, "unrelated.xml");
+            string firstManifestPath = firstPath.Replace('\\', '/');
+            File.WriteAllText(firstPath, "first");
+            File.WriteAllText(secondPath, "second");
+            File.WriteAllText(unrelatedPath, "unrelated");
+            string manifestPath = Path.Combine(directory, "manifest.json");
+            File.WriteAllText(
+                manifestPath,
+                JsonSerializer.Serialize(new
+                {
+                    schemaVersion = 1,
+                    outputDirectory = directory,
+                    inputs = new[]
+                    {
+                        new { path = firstManifestPath, kind = (string?)"test.xml" },
+                        new { path = secondPath, kind = (string?)"test.xml" },
+                        new { path = unrelatedPath, kind = (string?)null },
+                    },
+                }));
+
+            var testHost = TestInfrastructure.TestHost.LocateFrom(
+                AssetFixture.TargetAssetPath,
+                AssetName,
+                TargetFrameworks.NetCurrent);
+            FakeDotnetTestSdkResult result = await FakeDotnetTestSdk.RunAsync(
+                testHost,
+                extraArguments: $"--manifest \"{manifestPath}\"",
+                supportedProtocolVersions: "1.4.0",
+                toolName: "internal-merge-artifacts",
+                cancellationToken: TestContext.CancellationToken);
+
+            result.TestHostResult.AssertExitCodeIs(ExitCode.Success);
+            RawMessage[] artifactFrames = [.. result.MessagesWithSerializerId(DotnetTestPipeProtocol.SerializerIds.FileArtifactMessages)];
+            Assert.HasCount(1, artifactFrames);
+            IReadOnlyList<FileArtifact> artifacts = DotnetTestPipeProtocol.DecodeFileArtifacts(artifactFrames[0].Body);
+            Assert.HasCount(1, artifacts);
+            Assert.AreEqual("test.xml.processed", artifacts[0].Kind);
+            Assert.IsNotNull(artifacts[0].InputArtifactPaths);
+            Assert.AreSequenceEqual(
+                [firstManifestPath, secondPath],
+                artifacts[0].InputArtifactPaths);
+            Assert.DoesNotContain(unrelatedPath, artifacts[0].InputArtifactPaths);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task Dispatcher_ReportsDisjointInputsForMultipleOutputsAndLegacyReaderSkipsProvenance()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"artifact-dispatcher-multiple-provenance-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            string firstTaggedPath = Path.Combine(directory, "first-tagged.xml");
+            string secondTaggedPath = Path.Combine(directory, "second-tagged.xml");
+            string firstLegacyPath = Path.Combine(directory, "first-legacy.xml");
+            string secondLegacyPath = Path.Combine(directory, "second-legacy.xml");
+            File.WriteAllText(firstTaggedPath, "first tagged");
+            File.WriteAllText(secondTaggedPath, "second tagged");
+            File.WriteAllText(firstLegacyPath, "first legacy");
+            File.WriteAllText(secondLegacyPath, "second legacy");
+            string manifestPath = Path.Combine(directory, "manifest.json");
+            File.WriteAllText(
+                manifestPath,
+                JsonSerializer.Serialize(new
+                {
+                    schemaVersion = 1,
+                    outputDirectory = directory,
+                    inputs = new[]
+                    {
+                        new { path = firstTaggedPath, kind = (string?)"test.xml" },
+                        new { path = secondTaggedPath, kind = (string?)"test.xml" },
+                        new { path = firstLegacyPath, kind = (string?)null },
+                        new { path = secondLegacyPath, kind = (string?)null },
+                    },
+                }));
+
+            var testHost = TestInfrastructure.TestHost.LocateFrom(
+                AssetFixture.TargetAssetPath,
+                AssetName,
+                TargetFrameworks.NetCurrent);
+            FakeDotnetTestSdkResult result = await FakeDotnetTestSdk.RunAsync(
+                testHost,
+                extraArguments: $"--manifest \"{manifestPath}\"",
+                supportedProtocolVersions: "1.4.0",
+                toolName: "internal-merge-artifacts",
+                cancellationToken: TestContext.CancellationToken);
+
+            result.TestHostResult.AssertExitCodeIs(ExitCode.Success);
+            RawMessage artifactFrame = Assert.ContainsSingle(
+                result.MessagesWithSerializerId(DotnetTestPipeProtocol.SerializerIds.FileArtifactMessages));
+
+            IReadOnlyList<FileArtifact> artifacts = DotnetTestPipeProtocol.DecodeFileArtifacts(artifactFrame.Body);
+            Assert.HasCount(2, artifacts);
+            Assert.AreEqual("test.xml.processed", artifacts[0].Kind);
+            Assert.AreSequenceEqual([firstTaggedPath, secondTaggedPath], artifacts[0].InputArtifactPaths);
+            Assert.AreEqual("legacy.xml.processed", artifacts[1].Kind);
+            Assert.AreSequenceEqual([firstLegacyPath, secondLegacyPath], artifacts[1].InputArtifactPaths);
+
+            IReadOnlyList<FileArtifact> legacyReaderArtifacts =
+                DotnetTestPipeProtocol.DecodeFileArtifacts(artifactFrame.Body, readInputArtifactPaths: false);
+            Assert.HasCount(2, legacyReaderArtifacts);
+            Assert.AreEqual("test.xml.processed", legacyReaderArtifacts[0].Kind);
+            Assert.AreEqual("legacy.xml.processed", legacyReaderArtifacts[1].Kind);
+            Assert.IsNull(legacyReaderArtifacts[0].InputArtifactPaths);
+            Assert.IsNull(legacyReaderArtifacts[1].InputArtifactPaths);
         }
         finally
         {
@@ -308,6 +437,10 @@ public sealed class DotnetTestPipeArtifactPostProcessingTests
                     builder.AddTrxReportProvider();
                     ((IArtifactPostProcessingApplicationBuilder)builder).ArtifactPostProcessing
                         .AddArtifactPostProcessor(_ => new SummaryArtifactPostProcessor());
+                    ((IArtifactPostProcessingApplicationBuilder)builder).ArtifactPostProcessing
+                        .AddArtifactPostProcessor(_ => new XmlArtifactPostProcessor());
+                    ((IArtifactPostProcessingApplicationBuilder)builder).ArtifactPostProcessing
+                        .AddArtifactPostProcessor(_ => new LegacyXmlArtifactPostProcessor());
                     builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, _) => new DummyTestFramework());
                     using ITestApplication app = await builder.BuildAsync();
                     return await app.RunAsync();
@@ -359,6 +492,63 @@ public sealed class DotnetTestPipeArtifactPostProcessingTests
                         "test.summary.processed",
                         "Partial summary",
                         null);
+                }
+            }
+
+            public sealed class XmlArtifactPostProcessor : IArtifactPostProcessor
+            {
+                public string Uid => nameof(XmlArtifactPostProcessor);
+                public string Version => "1.0.0";
+                public string DisplayName => nameof(XmlArtifactPostProcessor);
+                public string Description => nameof(XmlArtifactPostProcessor);
+                public bool SupportsTruncatedRuns => false;
+                public IReadOnlyList<string> SupportedKinds => ["test.xml"];
+                public IReadOnlyList<string> SupportedFileExtensionsFallback => [];
+                public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+                public async Task<ProcessedArtifact?> ProcessAsync(
+                    IReadOnlyList<InputArtifact> inputs,
+                    string outputDirectory,
+                    ArtifactPostProcessingContext context,
+                    CancellationToken cancellationToken)
+                {
+                    string outputPath = Path.Combine(outputDirectory, "merged.xml");
+                    await File.WriteAllTextAsync(
+                        outputPath,
+                        string.Join("|", inputs.Select(input => File.ReadAllText(input.Path))),
+                        cancellationToken);
+                    return new ProcessedArtifact(outputPath, "test.xml.processed", "Merged XML", null);
+                }
+            }
+
+            public sealed class LegacyXmlArtifactPostProcessor : IArtifactPostProcessor
+            {
+                public string Uid => nameof(LegacyXmlArtifactPostProcessor);
+                public string Version => "1.0.0";
+                public string DisplayName => nameof(LegacyXmlArtifactPostProcessor);
+                public string Description => nameof(LegacyXmlArtifactPostProcessor);
+                public bool SupportsTruncatedRuns => false;
+                public IReadOnlyList<string> SupportedKinds => [];
+                public IReadOnlyList<string> SupportedFileExtensionsFallback => [".xml"];
+                public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+                public async Task<ProcessedArtifact?> ProcessAsync(
+                    IReadOnlyList<InputArtifact> inputs,
+                    string outputDirectory,
+                    ArtifactPostProcessingContext context,
+                    CancellationToken cancellationToken)
+                {
+                    if (inputs.Count < 2)
+                    {
+                        return null;
+                    }
+
+                    string outputPath = Path.Combine(outputDirectory, "legacy-merged.xml");
+                    await File.WriteAllTextAsync(
+                        outputPath,
+                        string.Join("|", inputs.Select(input => File.ReadAllText(input.Path))),
+                        cancellationToken);
+                    return new ProcessedArtifact(outputPath, "legacy.xml.processed", "Merged legacy XML", null);
                 }
             }
             """;

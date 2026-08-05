@@ -212,6 +212,28 @@ public sealed class ProtocolEdgeCaseTests
         Assert.IsNull(actual.FileArtifacts[1].Kind);
         Assert.AreEqual("session2", actual.FileArtifacts[2].SessionUid);
         Assert.IsNull(actual.FileArtifacts[2].DisplayName);
+        Assert.IsNull(actual.FileArtifacts[2].InputArtifactPaths);
+    }
+
+    [TestMethod]
+    public void FileArtifactMessages_WhenUnknownFieldsPrecedeKnownFields_DeserializesRemainingFields()
+    {
+        byte[] fileArtifact = WriteFields(
+            (ushort.MaxValue, [0xAA, 0xBB]),
+            (FileArtifactMessageFieldsId.FullPath, WriteString("/a/b.trx")),
+            (FileArtifactMessageFieldsId.Kind, WriteString("microsoft.testing.trx")));
+        byte[] payload = WriteFields(
+            (ushort.MaxValue, [0xCC]),
+            (FileArtifactMessagesFieldsId.InstanceId, WriteString("instance")),
+            (FileArtifactMessagesFieldsId.FileArtifactMessageList, WriteList(fileArtifact)));
+
+        FileArtifactMessages actual = DeserializePayload<FileArtifactMessages>(new FileArtifactMessagesSerializer(), payload);
+
+        Assert.AreEqual("instance", actual.InstanceId);
+        Assert.HasCount(1, actual.FileArtifacts);
+        Assert.AreEqual("/a/b.trx", actual.FileArtifacts[0].FullPath);
+        Assert.AreEqual("microsoft.testing.trx", actual.FileArtifacts[0].Kind);
+        Assert.IsNull(actual.FileArtifacts[0].InputArtifactPaths);
     }
 
     [TestMethod]
