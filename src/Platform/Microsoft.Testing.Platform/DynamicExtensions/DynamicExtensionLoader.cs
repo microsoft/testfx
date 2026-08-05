@@ -103,8 +103,19 @@ internal sealed class DynamicExtensionLoader
             {
                 ReportLoadedExtensions(loaded);
             }
-            catch (Exception)
+            catch (Exception reportingException)
             {
+                // The console is the thing that failed, so the diagnostic log is the one sink still worth
+                // trying. It is guarded in turn: nothing here may displace the load failure being rethrown.
+                try
+                {
+                    await LogDebugAsync($"Reporting the loaded extensions failed: {reportingException}").ConfigureAwait(false);
+                }
+                catch (Exception)
+                {
+                    // Both sinks are unavailable. The load failure below is still reported to the caller, which
+                    // is what the user needs; there is nowhere left to record that this note was lost.
+                }
             }
 
             throw;

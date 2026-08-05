@@ -151,6 +151,11 @@ public sealed class TestApplication : ITestApplication
                 }
                 catch (Exception)
                 {
+                    // Intentionally empty: there is no sink left to report this to. The file logger is the
+                    // thing that just failed, and standard output cannot be used here because it is a
+                    // protocol channel under --server and holds a single JSON document under
+                    // --list-tests json, so writing would corrupt a machine-readable stream. The original
+                    // failure is rethrown below, which is what the user actually needs.
                 }
             }
 
