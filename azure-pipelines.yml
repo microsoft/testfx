@@ -153,6 +153,9 @@ stages:
     # Seed from every trusted main merge. PR merge refs are read-only consumers, so the cache must be updated as
     # soon as main changes to avoid forcing the entire 204-node graph to miss.
     - pwsh: |
+        $binlogDirectory = "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)"
+        New-Item $binlogDirectory -ItemType Directory -Force | Out-Null
+
         & ./eng/common/msbuild.ps1 -ci -prepareMachine -warnAsError:$false ./TestFx.slnx `
           /restore `
           /graph `
@@ -161,6 +164,7 @@ stages:
           /nr:false `
           /t:Build `
           /v:minimal `
+          "/bl:$binlogDirectory\MSBuildCache.binlog" `
           /p:Configuration=$(_BuildConfig) `
           /p:FastAcceptanceTest=true `
           /p:Publish=false `
@@ -189,6 +193,7 @@ stages:
             -ci `
             -disablePipelineSetResult `
             -configuration $(_BuildConfig) `
+            -binaryLogName "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\SignPack.binlog" `
             -restore `
             -sign `
             -pack `
@@ -202,6 +207,14 @@ stages:
         condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'))
 
       - template: /eng/pipelines/steps/test-windows-debug-coverage.yml
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish cache seed build binlogs'
+      inputs:
+        PathtoPublish: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
+        ArtifactName: Build_Binlogs_MSBuildCacheSeed_$(_BuildConfig)_Attempt$(System.JobAttempt)
+      condition: always()
+      continueOnError: true
 
 - stage: build
   displayName: Build
@@ -339,6 +352,9 @@ stages:
             }
 
             $pwsh = Join-Path $PSHOME "pwsh.exe"
+            $binlogDirectory = "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)"
+            New-Item $binlogDirectory -ItemType Directory -Force | Out-Null
+
             # Azure Pipeline cache entries are immutable. The batched main-merge stage is the only remote publisher;
             # keeping this canary read-only prevents manual or scheduled runs from racing with it.
             $arguments = @(
@@ -355,6 +371,7 @@ stages:
               "/nr:false",
               "/t:Build",
               "/v:minimal",
+              "/bl:$binlogDirectory\MSBuildCache.binlog",
               "/p:Configuration=$(_BuildConfig)",
               "/p:ContinuousIntegrationBuild=true",
               "/p:FastAcceptanceTest=true",
@@ -488,6 +505,7 @@ stages:
               "-ci",
               "-disablePipelineSetResult",
               "-configuration", "$(_BuildConfig)",
+              "-binaryLogName", "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\SignPack.binlog",
               "-restore",
               "-sign",
               "-pack",
