@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -44,6 +44,8 @@ Options:
     --diagnostic-verbosity
         Define the level of the verbosity for the --diagnostic.
         The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.
+    --enable-dynamic-extensions
+        Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.
     --exit-on-process-exit
         Exit the test process if dependent process exits. PID must be provided.
     --filter-uid
@@ -333,6 +335,10 @@ Built-in command line providers:
         Arity: 1
         Hidden: True
         Description: Selects the pre-launch transport for the dotnet test protocol.
+      --enable-dynamic-extensions
+        Arity: 0
+        Hidden: False
+        Description: Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.
       --exit-on-process-exit
         Arity: 1
         Hidden: False

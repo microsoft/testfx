@@ -983,4 +983,112 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
     <value>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</value>
     <comment>{Locked="TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1"}{Locked="wasi"}</comment>
   </data>
+  <data name="PlatformCommandLineEnableDynamicExtensionsOptionDescription" xml:space="preserve">
+<value>Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.</value>
+    <comment>{Locked="'*.testingplatformextensions.json'"}</comment>
+  </data>
+  <data name="DynamicExtensionsLoadedHeader" xml:space="preserve">
+    <value>Dynamically loaded test platform extensions ({0}):</value>
+    <comment>{0} is the number of extensions that were loaded.</comment>
+  </data>
+  <data name="DynamicExtensionsLoadedEntry" xml:space="preserve">
+    <value>  {0} -&gt; {1} ({2}), declared in {3}</value>
+    <comment>{0} is the extension display name. {1} is the resolved assembly path. {2} is the full type name of the hook. {3} is the manifest file path.</comment>
+  </data>
+  <data name="DynamicExtensionManifestInvalidJsonErrorMessage" xml:space="preserve">
+    <value>The extension manifest '{0}' is not valid JSON. {1}</value>
+    <comment>{0} is the manifest file path. {1} is the underlying JSON parser error message.</comment>
+  </data>
+  <data name="DynamicExtensionManifestTrailingContentErrorMessage" xml:space="preserve">
+    <value>Unexpected content after the top-level JSON object.</value>
+    <comment>Used as the parser-error detail when a manifest contains text after its closing brace.</comment>
+  </data>
+  <data name="DynamicExtensionManifestRootNotObjectErrorMessage" xml:space="preserve">
+    <value>The extension manifest '{0}' is invalid: the top-level JSON element must be an object but '{1}' was found.</value>
+    <comment>{0} is the manifest file path. {1} is the JSON value kind that was found.</comment>
+  </data>
+  <data name="DynamicExtensionManifestMissingExtensionsPropertyErrorMessage" xml:space="preserve">
+    <value>The extension manifest '{0}' is invalid: the required '{1}' property is missing.</value>
+    <comment>{0} is the manifest file path. {1} is the name of the missing JSON property.</comment>
+  </data>
+  <data name="DynamicExtensionManifestDuplicatePropertyErrorMessage" xml:space="preserve">
+    <value>The extension manifest '{0}' is invalid: the '{1}' property is declared more than once, so one of the declarations would be discarded.</value>
+    <comment>{0} is the manifest file path. {1} is the name of the duplicated JSON property.</comment>
+  </data>
+  <data name="DynamicExtensionManifestEntryDuplicatePropertyErrorMessage" xml:space="preserve">
+    <value>The extension manifest '{0}' is invalid: the extension at index {1} declares the '{2}' property more than once, so one of the declarations would be discarded.</value>
+    <comment>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the duplicated JSON property.</comment>
+  </data>
+  <data name="DynamicExtensionManifestExtensionsPropertyNotArrayErrorMessage" xml:space="preserve">
+    <value>The extension manifest '{0}' is invalid: the '{1}' property must be a JSON array.</value>
+    <comment>{0} is the manifest file path. {1} is the name of the JSON property that has the wrong type.</comment>
+  </data>
+  <data name="DynamicExtensionManifestEntryNotObjectErrorMessage" xml:space="preserve">
+    <value>The extension manifest '{0}' is invalid: the element at index {1} of '{2}' must be a JSON object.</value>
+    <comment>{0} is the manifest file path. {1} is the zero-based index of the element. {2} is the name of the JSON array property.</comment>
+  </data>
+  <data name="DynamicExtensionManifestEntryMissingPropertyErrorMessage" xml:space="preserve">
+    <value>The extension manifest '{0}' is invalid: the extension at index {1} is missing the required '{2}' property, or its value is empty.</value>
+    <comment>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the missing JSON property.</comment>
+  </data>
+  <data name="DynamicExtensionManifestEntryPropertyNotStringErrorMessage" xml:space="preserve">
+    <value>The extension manifest '{0}' is invalid: the '{2}' property of the extension at index {1} must be a JSON string.</value>
+    <comment>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the JSON property.</comment>
+  </data>
+  <data name="DynamicExtensionManifestEntryPropertyNotBooleanErrorMessage" xml:space="preserve">
+    <value>The extension manifest '{0}' is invalid: the '{2}' property of the extension at index {1} must be a JSON boolean.</value>
+    <comment>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the JSON property.</comment>
+  </data>
+  <data name="DynamicExtensionManifestEntryInvalidAssemblyPathErrorMessage" xml:space="preserve">
+    <value>The extension manifest '{0}' is invalid: the assembly path '{2}' of the extension at index {1} is not a valid path.</value>
+    <comment>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the invalid assembly path.</comment>
+  </data>
+  <data name="DynamicExtensionManifestReadFailedErrorMessage" xml:space="preserve">
+    <value>The extension manifest '{0}' could not be read.</value>
+    <comment>{0} is the manifest file path.</comment>
+  </data>
+  <data name="DynamicExtensionAssemblyNotFoundErrorMessage" xml:space="preserve">
+    <value>The assembly '{0}' of the extension '{1}' declared in the extension manifest '{2}' was not found.</value>
+    <comment>{0} is the resolved assembly path. {1} is the extension display name. {2} is the manifest file path.</comment>
+  </data>
+  <data name="DynamicExtensionAssemblyLoadFailedErrorMessage" xml:space="preserve">
+    <value>The assembly '{0}' of the extension '{1}' declared in the extension manifest '{2}' could not be loaded.</value>
+    <comment>{0} is the resolved assembly path. {1} is the extension display name. {2} is the manifest file path.</comment>
+  </data>
+  <data name="DynamicExtensionTypeNotFoundErrorMessage" xml:space="preserve">
+    <value>The type '{0}' was not found in the assembly '{1}' declared in the extension manifest '{2}'.</value>
+    <comment>{0} is the full type name. {1} is the resolved assembly path. {2} is the manifest file path.</comment>
+  </data>
+  <data name="DynamicExtensionHookNotFoundErrorMessage" xml:space="preserve">
+    <value>The type '{0}' in the assembly '{1}' declared in the extension manifest '{2}' does not expose a 'public static void' method named '{3}' taking an 'ITestApplicationBuilder' and a 'string[]'.</value>
+    <comment>{0} is the full type name. {1} is the resolved assembly path. {2} is the manifest file path. {3} is the expected method name. {Locked="'public static void'"}{Locked="'ITestApplicationBuilder'"}{Locked="'string[]'"}</comment>
+  </data>
+  <data name="DynamicExtensionHookMustReturnVoidErrorMessage" xml:space="preserve">
+    <value>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' returns '{4}' but must return 'void'. The platform invokes the hook synchronously, so a return value is never observed; a returned task in particular would never be awaited, and its registrations and failures would be lost.</value>
+    <comment>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {4} is the actual return type name. {Locked="'void'"}</comment>
+  </data>
+  <data name="DynamicExtensionDuplicateIdConflictErrorMessage" xml:space="preserve">
+    <value>The extension id '{0}' is declared twice with different content: '{1}' in the extension manifest '{2}' and '{3}' in the extension manifest '{4}'. Ids must identify the same extension, otherwise one declaration would silently replace the other.</value>
+    <comment>{0} is the extension id. {1} and {3} are 'assembly path' plus 'type full name' descriptions of the conflicting declarations. {2} and {4} are manifest file paths.</comment>
+  </data>
+  <data name="DynamicExtensionManifestDirectoryNotReadableErrorMessage" xml:space="preserve">
+    <value>The directory '{0}' could not be searched for extension manifests, so the platform cannot tell whether any extension had to be loaded. Remove '{1}' from the command line to skip extension manifest discovery.</value>
+    <comment>{0} is the directory path. {1} is the command line option that enables the feature.</comment>
+  </data>
+  <data name="DynamicExtensionCannotRegisterTestFrameworkErrorMessage" xml:space="preserve">
+    <value>The extension '{0}' declared in the extension manifest '{1}' tried to register a test framework. Dynamically loaded extensions must not replace the test framework, because that would silently change which tests run and what results they report.</value>
+    <comment>{0} is the extension display name. {1} is the manifest file path.</comment>
+  </data>
+  <data name="DynamicExtensionHookFailedErrorMessage" xml:space="preserve">
+    <value>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' failed.</value>
+    <comment>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path.</comment>
+  </data>
+  <data name="DynamicExtensionHookMustNotBeAsyncVoidErrorMessage" xml:space="preserve">
+    <value>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' is declared 'async void'. The platform invokes the hook synchronously, so it would return at its first await: anything it registers after that point would race the test application's own setup, and any failure would be lost. Make the hook synchronous.</value>
+    <comment>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {Locked="'async void'"}</comment>
+  </data>
+  <data name="DynamicExtensionsNotSupportedOnCurrentRuntimeErrorMessage" xml:space="preserve">
+    <value>The extension manifest '{0}' declares extensions to load, but the current runtime does not support loading assemblies dynamically (for example when published with native AOT). Set the '{1}' property of each extension to 'false', remove the manifest, or remove '{2}' from the command line.</value>
+    <comment>{0} is the manifest file path. {1} is the name of the JSON property that disables an extension. {2} is the command line option that enables the feature. {Locked="'false'"}</comment>
+  </data>
 </root>
