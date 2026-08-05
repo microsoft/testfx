@@ -61,7 +61,7 @@ Options:
     --ignore-exit-code
         Do not report a non-successful exit value for the specified exit codes.
         For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
-        For the full list, see https://github.com/microsoft/testfx/blob/main/docs/glossary.md#exit-codes.
+        For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.
     --info
         Display .NET test application information.
     --list-tests
