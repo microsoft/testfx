@@ -857,8 +857,9 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
         <source>Do not report a non-successful exit value for the specified exit codes.
 For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
 For the full list, see https://github.com/microsoft/testfx/blob/main/docs/glossary.md#exit-codes.</source>
-        <target state="needs-review-translation">특정 종료 코드에 대해 실패한 종료 값을 보고하지 마세요.
-(예: '--ignore-exit-code 8;9'는 종료 코드 8 및 9를 무시하고 이 경우 0을 반환합니다.)</target>
+        <target state="new">Do not report a non-successful exit value for the specified exit codes.
+For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
+For the full list, see https://github.com/microsoft/testfx/blob/main/docs/glossary.md#exit-codes.</target>
         <note>{Locked="'--ignore-exit-code 8;9'"} {Locked="https://github.com/microsoft/testfx/blob/main/docs/glossary.md#exit-codes"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
