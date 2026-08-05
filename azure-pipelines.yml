@@ -131,7 +131,7 @@ stages:
   condition: and(succeeded(), in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
   jobs:
   - job: Windows
-    displayName: Windows $(_BuildConfig)
+    displayName: Windows
     timeoutInMinutes: 90
     pool:
       name: NetCore-Public
