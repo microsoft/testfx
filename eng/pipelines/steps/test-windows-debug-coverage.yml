@@ -9,7 +9,9 @@ steps:
 #
 # -p:TestingPlatformCaptureOutput=false streams each test executable's output to the AzDO console instead of
 # buffering it until failure, preserving live progress during long-running test sessions.
-- script: dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false
+- script: |
+    echo ##vso[task.setvariable variable=TestStepRan]true
+    dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false
   name: Test
   displayName: Test
   condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'))
@@ -50,7 +52,7 @@ steps:
       }
 
       Write-Host "##vso[task.setvariable variable=CoverageReportReady]true"
-  condition: and(succeededOrFailed(), eq(variables._BuildConfig, 'Debug'))
+  condition: and(succeededOrFailed(), eq(variables._BuildConfig, 'Debug'), eq(variables['TestStepRan'], 'true'))
 
 - task: PublishBuildArtifacts@1
   displayName: 'Publish Cobertura coverage report'
