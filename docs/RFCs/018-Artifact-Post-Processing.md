@@ -397,9 +397,9 @@ The relaunched host runs a **platform-owned dispatcher `ITool`** (`internal-merg
 4. Routes inputs to eligible processors **by Kind first, then by file-extension fallback** for untagged inputs. An input is never routed to more than one processor.
 5. Calls each matched processor's `ProcessAsync` once with the run context.
 6. Reports each merged `ProcessedArtifact` back over the connected `dotnet-test` pipe as a
-   `FileArtifactMessage`. Its `InputArtifactPaths` field contains the fully qualified paths of every input
-   supplied to that processor invocation, and the SDK removes exactly those job inputs from the summary.
-   The dispatcher surfaces per-processor errors, then exits.
+   `FileArtifactMessage`. Its `InputArtifactPaths` field contains the original manifest path strings for
+   every input supplied to that processor invocation, copied verbatim, and the SDK removes exactly those
+   job inputs from the summary. The dispatcher surfaces per-processor errors, then exits.
 
 A non-null `ProcessedArtifact` represents every input supplied to that processor invocation. A processor
 that cannot produce one artifact representing the complete input set returns `null` or throws. This
@@ -447,10 +447,11 @@ Manifest (orchestrator -> dispatcher):
 
 **Preferred result path: over the pipe.** In the recommended design the dispatcher reports each merged
 artifact back as a `FileArtifactMessage`, so there is no separate result file and no SDK-side result-JSON
-parsing. Each dispatcher output includes the additive `InputArtifactPaths` field (field ID 8). The SDK
-intersects those paths with the job manifest and collapses exactly the matching originals. Older readers
-skip the unknown field; newer readers treat its absence as an old-host response and use a conservative
-fallback. No protocol-version bump or handshake capability is required.
+parsing. Each dispatcher output includes the additive `InputArtifactPaths` field (field ID 8), containing
+the original manifest path strings copied verbatim. The SDK intersects those strings with the job manifest
+and collapses exactly the matching originals. Older readers skip the unknown field; newer readers treat its
+absence as an old-host response and use a conservative fallback. No protocol-version bump or handshake
+capability is required.
 
 **Transitional result path: result JSON.** If the pipe-composition task in §7.6 is deferred, the dispatcher writes a result JSON (path supplied in the manifest) and the SDK performs the swap. This keeps the same typed contract and the same manifest; only the *return channel* changes. Keeping the manifest/result schema `schemaVersion`-versioned means the return channel can switch from files to the pipe without touching `IArtifactPostProcessor`.
 
