@@ -96,15 +96,7 @@ internal sealed partial class AzureDevOpsRunIdCoordinator
             // surface this as a transient read error so the caller doesn't race the writer.
             return new LeaseReadResult(LeaseFileStatus.TransientReadError, null);
         }
-        catch (IOException)
-        {
-            return new LeaseReadResult(LeaseFileStatus.TransientReadError, null);
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return new LeaseReadResult(LeaseFileStatus.TransientReadError, null);
-        }
-        catch (JsonException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
         {
             return new LeaseReadResult(LeaseFileStatus.TransientReadError, null);
         }
@@ -124,11 +116,7 @@ internal sealed partial class AzureDevOpsRunIdCoordinator
             await WriteLeaseFileAsync(path, payload, overwrite, cancellationToken).ConfigureAwait(false);
             return true;
         }
-        catch (IOException)
-        {
-            return false;
-        }
-        catch (UnauthorizedAccessException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             return false;
         }

@@ -82,11 +82,7 @@ internal sealed partial class AzureDevOpsRunIdCoordinator
             using var process = Process.GetProcessById(processId);
             return !process.HasExited;
         }
-        catch (ArgumentException)
-        {
-            return false;
-        }
-        catch (InvalidOperationException)
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
         {
             return false;
         }
