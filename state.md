@@ -12,12 +12,12 @@
 
 ## Task Schedule (last run dates)
 - Task 1 (Discover Commands): 2026-07-30
-- Task 2 (Identify Opportunities): 2026-08-04 (no new opportunities — ReflectHelper/TypeCache/StackTraceHelper already optimized)
+- Task 2 (Identify Opportunities): 2026-08-05 (no new opportunities — scanned VSTest adapter discovery, IPC serializers, JsonRpc, TcmTestPropertiesProvider; all clean)
 - Task 3 (Implement): 2026-08-03 (no viable target found — codebase well-optimized)
 - Task 4 (Maintain PRs): 2026-08-04 (no open perf-improver PRs)
 - Task 5 (Comment Issues): 2026-08-04 (no open performance issues found)
-- Task 6 (Infrastructure): 2026-07-28
-- Task 7 (Monthly Summary): 2026-08-04
+- Task 6 (Infrastructure): 2026-08-05 (reviewed perf-timing-nightly.yml + MSTest.Performance.Runner; infra already solid — PlainProcess timing, cross-platform)
+- Task 7 (Monthly Summary): 2026-08-05
 
 ## Monthly Activity Issue
 - Issue #10381 (August 2026, open) — kept updated; no suggested actions pending
@@ -43,6 +43,7 @@ None
 - SingleConsumerUnboundedChannel: well-optimized lock-based channel with early-exit fast path
 - Backlog is now very slim — codebase is well-optimized for hot paths
 - 2026-08-04: Confirmed ReflectHelper/TypeCache attribute caching already centralized (ReflectionOperations._attributeCache); StackTraceHelper already uses [GeneratedRegex] with static cache fallback for non-source-gen targets. No fresh targets found.
+- 2026-08-05: Scanned VSTest discovery pipeline (UnitTestDiscoverer, MSTestDiscovererHelpers) — no LINQ/List allocation hot spots found. TcmTestPropertiesProvider Dictionary pre-sized (capacity:15) already. JsonRpc SerializerUtilities.Select().ToArray() on ev.Attachments is per-event-with-attachments (rare path, not hot). No open perf-labeled issues or perf-improver PRs found this run. Reviewed nightly perf-timing workflow (PlainProcess scenario, Windows+Linux) — solid, no gaps identified.
 
 ## Completed Work (this month)
 ### July 2026
