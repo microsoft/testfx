@@ -412,47 +412,14 @@ What it does *not* fix (be honest with prioritisation):
   reflection is still the only answer.
 - Custom `TestMethodAttribute` subclasses via inheritance — same FAWMN limitation.
 
-## Sunset plan for the current generator + `MSTest.Engine`
+## Packaging and lifecycle
 
-The reflection-free registry is now wired to the adapter provider. A separate future
-decision could integrate its packaging more deeply into `MSTest.TestAdapter`; only then
-would the open-source `MSTest.SourceGeneration` package + closed-source `MSTest.Engine`
-split potentially become redundant. Any sunset plan must be evaluated independently of
-the runtime wiring described here:
+`MSTest.SourceGeneration` is a supported MSTest package and follows the standard MSTest
+version. `MSTest.Sdk` references the matching source-generator version for NativeAOT
+projects so the generator and its adapter runtime hooks remain aligned.
 
-1. **Do not gate the existing source-gen path behind a feature flag.** A conditional
-   "old vs new" code path doubles the maintenance surface (every refactor in
-   `SourceGeneratedReflectionOperations`, every fix to inheritance walking, every base-
-   type rooting tweak has to be validated against both paths) and the two paths will
-   drift. The recently added base-type `[DynamicDependency]` chain becomes obsolete
-   under the delegate approach (the delegate body roots inherited members
-   transitively); keeping both maintains rooting math that no one uses.
-2. **Delete the source-gen path from `main` in a single PR.** The old code is preserved
-   in git history; a release tag (e.g. `mstest-aot-rewrite-base`) makes
-   re-introduction a `git restore` away if a regression surfaces. This is how
-   `dotnet/runtime` retires experimental APIs — git, not gated dead code, is the
-   archive.
-3. **Sunset the published packages gracefully.**
-   - Ship one final `2.0.0-alpha.<date>` of `MSTest.SourceGeneration` containing an
-     info-severity analyzer diagnostic (`MSTEST0NNN`) that reads
-     *"`MSTest.SourceGeneration` is being replaced by integrated AOT support in
-     `MSTest.TestAdapter` X.Y; see &lt;link&gt;"*. Then stop publishing.
-   - Stop publishing `MSTest.Engine` from its (closed-source) repo on the same
-     cadence. Users on the alpha packages pin the last version if they cannot move.
-4. **Preserve the public API surface even after deleting the implementation.** Keep
-   `ReflectionMetadataHook.Register` and `SourceGeneratedReflectionDataProvider` as
-   public types. The *data* they hold changes (delegates instead of `MethodInfo` lookups),
-   but third-party adapters / extension authors may already depend on these types and
-   deserve a migration window. This is API stewardship, not feature-gating two parallel
-   implementations.
-
-The justification, condensed:
-
-- Both packages are still `1.0.0-alpha.*` / `2.0.0-alpha.*` — users on alpha already
-  opted into "things may change". Download counts confirm the blast radius is small.
-- The new approach is strictly better, not "different tradeoffs": delegate emission
-  handles every case the current approach handles (and adds support for several it
-  silently skips today) while eliminating the rooting math entirely. There is no
-  partial-rollback story that makes engineering sense.
-- Conditional gating in code is not a substitute for version control. Git tags preserve
-  the option; gated code only preserves the maintenance burden.
+A future decision could integrate the generator more deeply into `MSTest.TestAdapter`,
+but that packaging change must be evaluated independently of the runtime wiring described
+here. Any such consolidation must avoid maintaining parallel source-generation paths and
+must preserve compatibility for the public `ReflectionMetadataHook.Register` and
+`SourceGeneratedReflectionDataProvider` APIs through an explicit migration plan.
