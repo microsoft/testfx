@@ -14,7 +14,7 @@ internal sealed class MtpServerClientOptions
     /// Gets or sets the client name reported to the server in the initialize handshake
     /// (<c>clientInfo.name</c>). Defaults to the package's own identity.
     /// </summary>
-    public string ClientName { get; set; } = "Microsoft.Testing.Platform.ServerClient";
+    public string ClientName { get; set; } = "Microsoft.Testing.Platform.ServerMode.Client";
 
     /// <summary>
     /// Gets or sets the client protocol/tool version reported to the server (<c>clientInfo.version</c>).

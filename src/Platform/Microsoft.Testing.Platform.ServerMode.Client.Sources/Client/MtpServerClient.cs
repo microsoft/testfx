@@ -15,8 +15,8 @@ namespace Microsoft.Testing.Platform.ServerMode.Client;
 /// <item>The <see cref="MtpServerClient(MtpJsonRpcConnection, MtpServerClientOptions?)"/> constructor wraps an
 /// already-connected transport (used by tests over a paired in-memory stream).</item>
 /// </list>
-/// The constructor attaches the notification and server-request handlers and only then starts the
-/// connection read loop, so no server-to-client message can slip past before the handlers are wired.
+/// The constructor attaches the notification and server-request handlers. The connection read loop starts
+/// lazily on the first client operation, giving callers time to subscribe to events first.
 /// </remarks>
 internal sealed class MtpServerClient : IMtpServerClient
 {
@@ -24,12 +24,13 @@ internal sealed class MtpServerClient : IMtpServerClient
     private readonly MtpServerClientOptions _options;
     private readonly MtpServerProcess? _process;
 
+    private Func<string, IDictionary<string, object?>?, CancellationToken, Task<IDictionary<string, object?>?>>? _serverRequestHandler;
     private int _disposed;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MtpServerClient"/> class over an existing connection.
     /// </summary>
-    /// <param name="connection">The transport connection. Its read loop is started by this constructor.</param>
+    /// <param name="connection">The transport connection. Its read loop starts on the first client operation.</param>
     /// <param name="options">Client options (name, capabilities, logger). Defaults are used when omitted.</param>
     /// <remarks>
     /// Precondition: the connection's formatter must have been created with the client serializers already
@@ -44,7 +45,6 @@ internal sealed class MtpServerClient : IMtpServerClient
 
         _connection.NotificationReceived += OnNotificationReceived;
         _connection.ServerRequestHandler = OnServerRequestAsync;
-        _connection.Start();
     }
 
     private MtpServerClient(MtpServerProcess process, MtpServerClientOptions options)
@@ -64,7 +64,11 @@ internal sealed class MtpServerClient : IMtpServerClient
     public event EventHandler<MtpAttachmentsEventArgs>? AttachmentsReceived;
 
     /// <inheritdoc />
-    public Func<string, IDictionary<string, object?>?, CancellationToken, Task<IDictionary<string, object?>?>>? ServerRequestHandler { get; set; }
+    public Func<string, IDictionary<string, object?>?, CancellationToken, Task<IDictionary<string, object?>?>>? ServerRequestHandler
+    {
+        get => Volatile.Read(ref _serverRequestHandler);
+        set => Volatile.Write(ref _serverRequestHandler, value);
+    }
 
     /// <inheritdoc />
     public int ProcessId => _process?.ProcessId ?? 0;
@@ -78,6 +82,19 @@ internal sealed class MtpServerClient : IMtpServerClient
     /// <param name="source">Path to the test application (managed <c>.dll</c> or native <c>.exe</c>).</param>
     /// <param name="options">Client options (name, capabilities, connection timeout, environment, logger).</param>
     public static MtpServerClient Launch(string source, MtpServerClientOptions? options = null)
+        => LaunchAsync(source, options, CancellationToken.None).GetAwaiter().GetResult();
+
+    /// <summary>
+    /// Launches the MTP application at <paramref name="source"/> in server mode and asynchronously waits for
+    /// it to connect.
+    /// </summary>
+    /// <param name="source">Path to the test application (managed <c>.dll</c> or native <c>.exe</c>).</param>
+    /// <param name="options">Client options (name, capabilities, connection timeout, environment, logger).</param>
+    /// <param name="cancellationToken">Cancels the launch and connection wait.</param>
+    public static async Task<MtpServerClient> LaunchAsync(
+        string source,
+        MtpServerClientOptions? options = null,
+        CancellationToken cancellationToken = default)
     {
         if (source is null)
         {
@@ -85,7 +102,7 @@ internal sealed class MtpServerClient : IMtpServerClient
         }
 
         options ??= new MtpServerClientOptions();
-        var process = MtpServerProcess.Start(source, options);
+        MtpServerProcess process = await MtpServerProcess.StartAsync(source, options, cancellationToken).ConfigureAwait(false);
         try
         {
             return new MtpServerClient(process, options);
@@ -100,6 +117,7 @@ internal sealed class MtpServerClient : IMtpServerClient
     /// <inheritdoc />
     public async Task<MtpServerCapabilities> InitializeAsync(CancellationToken cancellationToken = default)
     {
+        EnsureStarted();
         var args = new InitializeRequestArgs(
             GetCurrentProcessId(),
             new ClientInfo(_options.ClientName, _options.ClientVersion),
@@ -137,7 +155,10 @@ internal sealed class MtpServerClient : IMtpServerClient
 
     /// <inheritdoc />
     public Task ExitAsync(CancellationToken cancellationToken = default)
-        => _connection.SendNotificationAsync(JsonRpcMethods.Exit, null, cancellationToken);
+    {
+        EnsureStarted();
+        return _connection.SendNotificationAsync(JsonRpcMethods.Exit, null, cancellationToken);
+    }
 
     /// <inheritdoc />
     public void Dispose()
@@ -251,12 +272,14 @@ internal sealed class MtpServerClient : IMtpServerClient
 
     private async Task DiscoverCoreAsync(ICollection<TestNode>? tests, string? graphFilter, CancellationToken cancellationToken)
     {
+        EnsureStarted();
         var args = new DiscoverRequestArgs(Guid.NewGuid(), tests, graphFilter);
         await _connection.SendRequestAsync(JsonRpcMethods.TestingDiscoverTests, args, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task<MtpRunResult> RunCoreAsync(ICollection<TestNode>? tests, string? graphFilter, CancellationToken cancellationToken)
     {
+        EnsureStarted();
         var args = new RunRequestArgs(Guid.NewGuid(), tests, graphFilter);
         ResponseMessage response = await _connection.SendRequestAsync(JsonRpcMethods.TestingRunTests, args, cancellationToken).ConfigureAwait(false);
 
@@ -271,7 +294,8 @@ internal sealed class MtpServerClient : IMtpServerClient
 
     private async Task<object?> OnServerRequestAsync(RequestMessage request, CancellationToken cancellationToken)
     {
-        Func<string, IDictionary<string, object?>?, CancellationToken, Task<IDictionary<string, object?>?>>? handler = ServerRequestHandler;
+        Func<string, IDictionary<string, object?>?, CancellationToken, Task<IDictionary<string, object?>?>>? handler =
+            Volatile.Read(ref _serverRequestHandler);
         if (handler is null)
         {
             return null;
@@ -291,6 +315,9 @@ internal sealed class MtpServerClient : IMtpServerClient
         var normalized = new Dictionary<string, object?>(result);
         return normalized;
     }
+
+    private void EnsureStarted()
+        => _connection.Start();
 
     private void OnNotificationReceived(NotificationMessage notification)
     {

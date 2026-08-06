@@ -28,7 +28,7 @@ using TestFileLocationProperty = serverclient::Microsoft.Testing.Platform.Extens
 using TestNode = serverclient::Microsoft.Testing.Platform.Extensions.Messages.TestNode;
 using TestNodeUpdateMessage = serverclient::Microsoft.Testing.Platform.Extensions.Messages.TestNodeUpdateMessage;
 
-namespace Microsoft.Testing.Platform.ServerClient.UnitTests;
+namespace Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests;
 
 /// <summary>
 /// A minimal in-process MTP server that speaks the real server-mode wire protocol over a loopback TCP

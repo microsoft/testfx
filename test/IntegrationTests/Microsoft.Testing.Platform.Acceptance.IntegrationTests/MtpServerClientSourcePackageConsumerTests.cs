@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 /// <summary>
-/// The compile oracle for the source-only <c>Microsoft.Testing.Platform.ServerClient.Source</c> package.
+/// The compile oracle for the source-only <c>Microsoft.Testing.Platform.ServerMode.Client.Sources</c> package.
 /// The anti-drift <see cref="MtpServerClientSourcePackageTests"/> inspects the <c>.nupkg</c> textually; this
 /// test does the one thing text inspection cannot: it restores the packed package into a real, deliberately
 /// hostile consumer and compiles it. The consumer mirrors the strictest real adopter (vstest):
@@ -28,7 +28,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 public sealed class MtpServerClientSourcePackageConsumerTests : AcceptanceTestBase<NopAssetFixture>
 {
     private const string AssetName = "MtpServerClientSourceConsumer";
-    private const string PackageId = "Microsoft.Testing.Platform.ServerClient.Source";
+    private const string PackageId = "Microsoft.Testing.Platform.ServerMode.Client.Sources";
 
     private const string Sources = """
         #file HostileConsumer/HostileConsumer.csproj
@@ -40,14 +40,15 @@ public sealed class MtpServerClientSourcePackageConsumerTests : AcceptanceTestBa
             <ImplicitUsings>disable</ImplicitUsings>
             <Nullable>enable</Nullable>
             <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-            <!-- Deliberately NO <LangVersion> here. The injected source uses modern C# (records,
-                 file-scoped namespaces, relational/'or' patterns) that the net462 / netstandard2.0
-                 default (C# 7.3) cannot compile. The package's own build/*.targets must raise it to
-                 'latest'. Setting LangVersion here would hide whether the package is self-sufficient,
-                 which is the whole point of this oracle. -->
+            <CheckEolTargetFramework>false</CheckEolTargetFramework>
+            <!-- C# 12 is the documented minimum. Pinning it proves the package does not accidentally
+                 require a newer compiler feature. -->
+            <LangVersion>12.0</LangVersion>
+            <DefineConstants>$(DefineConstants);MTP_CLIENT_EXCLUDE_IS_EXTERNAL_INIT</DefineConstants>
           </PropertyGroup>
           <ItemGroup>
-            <PackageReference Include="Microsoft.Testing.Platform.ServerClient.Source" Version="$ServerClientSourceVersion$" />
+            <PackageReference Include="Microsoft.Testing.Platform.ServerMode.Client.Sources" Version="$ServerClientSourceVersion$" />
+            <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
           </ItemGroup>
         </Project>
 
@@ -56,6 +57,8 @@ public sealed class MtpServerClientSourcePackageConsumerTests : AcceptanceTestBa
         using System.Collections.Generic;
         using System.Threading;
         using System.Threading.Tasks;
+        using Microsoft.Testing.Platform.Extensions.Messages;
+        using Microsoft.Testing.Platform.Requests;
         using Microsoft.Testing.Platform.ServerMode.Client;
 
         namespace HostileConsumer;
@@ -81,7 +84,7 @@ public sealed class MtpServerClientSourcePackageConsumerTests : AcceptanceTestBa
                 };
                 options.EnvironmentVariables["EXAMPLE"] = "1";
 
-                using IMtpServerClient client = MtpServerClient.Launch(source, options);
+                using IMtpServerClient client = await MtpServerClient.LaunchAsync(source, options, cancellationToken);
 
                 client.TestNodesUpdated += OnTestNodesUpdated;
                 client.LogReceived += (object? sender, MtpLogEventArgs e) => Console.WriteLine(e.Level + ": " + e.Message);
@@ -108,6 +111,10 @@ public sealed class MtpServerClientSourcePackageConsumerTests : AcceptanceTestBa
                 await client.RunTestsAsync(new[] { "uid" }, cancellationToken);
                 await client.RunTestsWithFilterAsync("/*/*/*/*", cancellationToken);
                 await client.ExitAsync(cancellationToken);
+
+                // Referencing the platform assembly alongside the source package must bind these two public
+                // types to the same assembly. Injected protocol types live in a package-private namespace.
+                _ = new TestNodeUidListFilter(new[] { new TestNodeUid("uid") });
             }
 
             private static void OnTestNodesUpdated(object? sender, MtpTestNodeUpdateEventArgs e)
@@ -126,6 +133,12 @@ public sealed class MtpServerClientSourcePackageConsumerTests : AcceptanceTestBa
                 }
             }
         }
+
+        #file HostileConsumer/ExistingPolyfills.cs
+        namespace System.Runtime.CompilerServices
+        {
+            internal static class IsExternalInit;
+        }
         """;
 
     public TestContext TestContext { get; set; } = null!;
@@ -136,12 +149,13 @@ public sealed class MtpServerClientSourcePackageConsumerTests : AcceptanceTestBa
         // net462 only builds on Windows; the down-level packed source is identical to what a netstandard2.0
         // consumer compiles, so netstandard2.0 covers the Jsonite/polyfill path on non-Windows too.
         string targetFrameworks = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? "net462;netstandard2.0;net8.0"
-            : "netstandard2.0;net8.0";
+            ? "net462;netstandard2.0;net5.0;net6.0;net7.0;net8.0"
+            : "netstandard2.0;net5.0;net6.0;net7.0;net8.0";
 
         string patchedSources = Sources
             .PatchCodeWithReplace("$TargetFrameworks$", targetFrameworks)
-            .PatchCodeWithReplace("$ServerClientSourceVersion$", ResolveServerClientSourceVersion());
+            .PatchCodeWithReplace("$ServerClientSourceVersion$", ResolveServerClientSourceVersion())
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion);
 
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(AssetName, patchedSources);
 

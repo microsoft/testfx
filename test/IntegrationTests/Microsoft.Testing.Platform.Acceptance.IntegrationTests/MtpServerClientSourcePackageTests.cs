@@ -6,7 +6,7 @@ using System.IO.Compression;
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 /// <summary>
-/// Anti-drift guard for the source-only <c>Microsoft.Testing.Platform.ServerClient.Source</c> package.
+/// Anti-drift guard for the source-only <c>Microsoft.Testing.Platform.ServerMode.Client.Sources</c> package.
 /// The package ships the MTP server-mode client as <c>contentFiles</c> (compiled into each consumer),
 /// reusing the exact protocol + serialization source the platform server compiles. These tests inspect
 /// the produced <c>.nupkg</c> and assert the properties that make it a correct source-only client:
@@ -29,7 +29,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 [TestClass]
 public sealed class MtpServerClientSourcePackageTests
 {
-    private const string PackageId = "Microsoft.Testing.Platform.ServerClient.Source";
+    private const string PackageId = "Microsoft.Testing.Platform.ServerMode.Client.Sources";
 
     // The two target frameworks the package project multi-targets. netstandard2.0 covers net462 consumers
     // (Jsonite JSON path); net8.0 covers modern .NET consumers (in-box System.Text.Json JSON path).
@@ -145,14 +145,16 @@ public sealed class MtpServerClientSourcePackageTests
             stjOnlyOnNet,
             "Expected net8.0 to add System.Text.Json engine files that netstandard2.0 does not carry, but found none.");
 
-        // net8.0 is a superset of netstandard2.0: the STJ path is additive, it never drops the shared source.
+        // net8.0 is a superset of the netstandard2.0 protocol/client source. Down-level BCL polyfills are
+        // intentionally omitted because their types are already in-box.
         var missingOnNet = Package.PackedCsByTfm[NetStandard]
+            .Where(logical => !logical.StartsWith("Polyfills/", StringComparison.Ordinal))
             .Where(logical => !Package.PackedCsByTfm[Net].Contains(logical))
             .ToList();
 
         Assert.IsEmpty(
             missingOnNet,
-            $"net8.0 must ship every source file netstandard2.0 ships (plus the STJ engine), but these are missing on net8.0:{Environment.NewLine}" +
+            $"net8.0 must ship every non-polyfill source file netstandard2.0 ships (plus the STJ engine), but these are missing on net8.0:{Environment.NewLine}" +
             string.Join(Environment.NewLine, missingOnNet));
     }
 
@@ -175,7 +177,7 @@ public sealed class MtpServerClientSourcePackageTests
         // Every client source file on disk must be packed for every target framework. This is the direct
         // guard against adding a Client/*.cs to the project and forgetting to ship it (or vice versa).
         string clientDir = Path.Combine(
-            Constants.Root, "src", "Platform", "Microsoft.Testing.Platform.ServerClient", "Client");
+            Constants.Root, "src", "Platform", "Microsoft.Testing.Platform.ServerMode.Client.Sources", "Client");
         Assert.IsTrue(Directory.Exists(clientDir), $"Expected the client source folder to exist at '{clientDir}'.");
 
         List<string> ownedButNotPacked = [];
@@ -247,23 +249,28 @@ public sealed class MtpServerClientSourcePackageTests
     [TestMethod]
     public void SourcePackage_ShipsPolyfills_AndDoesNotLeakBuildGeneratedSource()
     {
-        // The package SHIPS the platform polyfills: a hostile net462 / netstandard2.0 consumer with no
-        // down-level polyfills of its own needs init/required, Index/Range, EmbeddedAttribute,
-        // ExperimentalAttribute, UnreachableException, the OperatingSystem shim (OperatingSystem.IsBrowser),
-        // and helpers like Ensure. They go through the same pack-time transform as the linked source (so they
-        // gain the self-contained BCL using preamble; they are already internal + auto-generated). Ensure and
-        // the OperatingSystem shim are required for every target framework.
-        foreach (string tfm in Package.TargetFrameworks)
+        // The package ships the platform polyfills a hostile net462 / netstandard2.0 consumer needs. They go
+        // through the same pack-time transform as the linked source so they gain the self-contained BCL using
+        // preamble. The C# 14 OperatingSystem polyfill is deliberately replaced by a C# 11 client helper.
+        foreach (string tfm in Package.TargetFrameworks.Where(tfm => tfm != "net5.0"))
         {
             Assert.Contains(
                 "Polyfills/Ensure.cs",
                 Package.PackedCsByTfm[tfm],
                 $"Expected the package to ship the platform polyfills for '{tfm}' (Polyfills/Ensure.cs).");
-            Assert.Contains(
+            Assert.DoesNotContain(
                 "Polyfills/OperatingSystem.cs",
                 Package.PackedCsByTfm[tfm],
-                $"Expected the OperatingSystem polyfill (OperatingSystem.IsBrowser shim) to ship for '{tfm}'.");
+                $"The C# 14 OperatingSystem polyfill must not ship for '{tfm}'.");
         }
+
+        var net5Polyfills = Package.PackedCsByTfm["net5.0"]
+            .Where(logical => logical.StartsWith("Polyfills/", StringComparison.Ordinal))
+            .ToList();
+        Assert.AreSequenceEqual(
+            ["Polyfills/Ensure.cs"],
+            net5Polyfills,
+            "The net5.0 compatibility slice must carry only the shared Ensure helper; its targeted BCL shims live under Client/.");
 
         // But it must NOT leak build-generated source (GlobalUsings.g.cs, *.AssemblyInfo.cs, …) — each
         // consumer generates its own.
@@ -295,9 +302,13 @@ public sealed class MtpServerClientSourcePackageTests
     public void SourcePackage_ShipsBuildTargets_AndNet462SafetyGuardsSurviveTransform()
     {
         // The package ships a build/*.targets that customizes the consumer's compilation of the injected
-        // source (defines IS_CORE_MTP and NoWarns the benign down-level polyfill collision CS0436). Without
-        // it a .NET Framework / netstandard2.0 consumer would not compile the source clean.
-        const string TargetsEntry = "build/Microsoft.Testing.Platform.ServerClient.Source.targets";
+        // source (defines the package compilation constants and language floor).
+        const string PropsEntry = "build/Microsoft.Testing.Platform.ServerMode.Client.Sources.props";
+        const string TargetsEntry = "build/Microsoft.Testing.Platform.ServerMode.Client.Sources.targets";
+        Assert.Contains(
+            PropsEntry,
+            Package.AllEntries,
+            $"Expected the package to ship '{PropsEntry}' so consumers get the default language version.");
         Assert.Contains(
             TargetsEntry,
             Package.AllEntries,
@@ -305,11 +316,10 @@ public sealed class MtpServerClientSourcePackageTests
 
         // net462-safety regression guard: the injected source is authored for netstandard2.0, but a net462
         // consumer compiles it WITHOUT System.Runtime.InteropServices.RuntimeInformation / OSPlatform (those
-        // do not exist on net462 and no facade forwards them). The two source sites that used them are guarded
-        // with #if NETFRAMEWORK. If the guard is ever dropped, net462 consumers (e.g. vstest CrossPlatEngine)
-        // break with CS0103 — assert the guard survives the pack transform on the netstandard2.0 (net462) leg.
+        // do not exist on net462 and no facade forwards them). The two client source sites that use them are
+        // guarded with #if NETFRAMEWORK.
         var missingGuard = new List<string>();
-        foreach (string guarded in new[] { "Polyfills/OperatingSystem.cs", "Client/MtpServerProcess.cs" })
+        foreach (string guarded in new[] { "Client/MtpClientOperatingSystem.cs", "Client/MtpServerProcess.cs" })
         {
             if (!Package.PackedTextByTfm[NetStandard].TryGetValue(guarded, out string? text))
             {
@@ -331,13 +341,14 @@ public sealed class MtpServerClientSourcePackageTests
     public void SourcePackage_JsoniteNamespace_IsPackageQualified_NotTopLevel()
     {
         // The pack-time transform rewrites the vendored top-level `namespace Jsonite` to the
-        // package-qualified `Microsoft.Testing.Platform.ServerMode.JsonRpc.Json.Jsonite`. This is the
+        // package-private `Microsoft.Testing.Platform.ServerMode.Client.Protocol.ServerMode.JsonRpc.Json.Jsonite`.
+        // This is the
         // regression guard for the collision that broke vstest: two `namespace Jsonite` type sets compiled
         // into one assembly (the package's + vstest CrossPlatEngine's own vendored Jsonite) collide with
         // CS0436 on net462/netstandard2.0. If anyone drops the pack-time rename (or the platform is packed
         // raw), this fails. Namespaces have no wire effect, so the "Jsonite" formatter Id literal (wire
         // identity) must be preserved untouched — asserted below.
-        const string QualifiedNs = "namespace Microsoft.Testing.Platform.ServerMode.JsonRpc.Json.Jsonite";
+        const string QualifiedNs = "namespace Microsoft.Testing.Platform.ServerMode.Client.Protocol.ServerMode.JsonRpc.Json.Jsonite";
         Regex topLevelNamespace = new(@"^namespace Jsonite\s*$", RegexOptions.Multiline);
         Regex bareUsing = new(@"^using Jsonite;\s*$", RegexOptions.Multiline);
 
@@ -386,6 +397,34 @@ public sealed class MtpServerClientSourcePackageTests
             sawWireIdLiteral,
             "Expected the packed formatter to preserve the \"Jsonite\" Id literal (wire identity). " +
             "The namespace rewrite must not touch the quoted token.");
+    }
+
+    [TestMethod]
+    public void SourcePackage_LinkedPlatformTypes_ArePackagePrivate()
+    {
+        const string OriginalNamespace = "namespace Microsoft.Testing.Platform.Extensions.Messages";
+        const string PrivateNamespace = "namespace Microsoft.Testing.Platform.ServerMode.Client.Protocol.Extensions.Messages";
+
+        List<string> leaks = [];
+        bool sawPrivateNamespace = false;
+        foreach (string tfm in Package.TargetFrameworks)
+        {
+            foreach (KeyValuePair<string, string> file in Package.PackedTextByTfm[tfm])
+            {
+                if (file.Value.Contains(OriginalNamespace, StringComparison.Ordinal))
+                {
+                    leaks.Add($"{tfm}: {file.Key}");
+                }
+
+                sawPrivateNamespace |= file.Value.Contains(PrivateNamespace, StringComparison.Ordinal);
+            }
+        }
+
+        Assert.IsEmpty(
+            leaks,
+            $"Linked platform types must not retain namespaces that collide with Microsoft.Testing.Platform.dll:{Environment.NewLine}" +
+            string.Join(Environment.NewLine, leaks));
+        Assert.IsTrue(sawPrivateNamespace, $"Expected packed message types under '{PrivateNamespace}'.");
     }
 
     private static bool IsJsonEngineFile(string logical)

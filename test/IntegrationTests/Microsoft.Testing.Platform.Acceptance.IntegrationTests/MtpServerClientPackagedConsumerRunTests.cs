@@ -4,7 +4,7 @@
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 /// <summary>
-/// The durable ship gate for the source-only <c>Microsoft.Testing.Platform.ServerClient.Source</c> package: it
+/// The durable ship gate for the source-only <c>Microsoft.Testing.Platform.ServerMode.Client.Sources</c> package: it
 /// proves that a real adopter can consume the <em>packed</em> package and actually drive an MTP app end to end.
 /// <para>
 /// The other tests each cover one half of that promise but not the whole: <see cref="MtpServerClientSourcePackageTests"/>
@@ -30,7 +30,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 public sealed class MtpServerClientPackagedConsumerRunTests : AcceptanceTestBase<NopAssetFixture>
 {
     private const string AssetName = "MtpServerClientPackagedRun";
-    private const string PackageId = "Microsoft.Testing.Platform.ServerClient.Source";
+    private const string PackageId = "Microsoft.Testing.Platform.ServerMode.Client.Sources";
     private const string ExpectedTestDisplayName = "TestMethod1";
 
     // The System.Text.Json axis vstest's .NET runner consumes. P4 already proves the net462-Jsonite-server <->
@@ -49,10 +49,10 @@ public sealed class MtpServerClientPackagedConsumerRunTests : AcceptanceTestBase
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <LangVersion>preview</LangVersion>
+    <LangVersion>12.0</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Testing.Platform.ServerClient.Source" Version="$ServerClientSourceVersion$" />
+    <PackageReference Include="Microsoft.Testing.Platform.ServerMode.Client.Sources" Version="$ServerClientSourceVersion$" />
   </ItemGroup>
 </Project>
 
@@ -114,7 +114,7 @@ internal static class Program
     {
         List<MtpTestNodeUpdate> discovered = new();
         object gate = new();
-        using var client = MtpServerClient.Launch(source, CreateOptions());
+        using MtpServerClient client = await MtpServerClient.LaunchAsync(source, CreateOptions(), cancellationToken);
         client.TestNodesUpdated += (_, e) =>
         {
             lock (gate)
@@ -154,7 +154,7 @@ internal static class Program
     {
         List<MtpTestNodeUpdate> executed = new();
         object gate = new();
-        using var client = MtpServerClient.Launch(source, CreateOptions());
+        using MtpServerClient client = await MtpServerClient.LaunchAsync(source, CreateOptions(), cancellationToken);
         client.TestNodesUpdated += (_, e) =>
         {
             lock (gate)

@@ -296,10 +296,10 @@ internal sealed partial class Json
     /// <remarks>
     /// A plain <c>GetInt32()</c> throws <see cref="System.FormatException"/> on the non-Int32 numbers real MTP
     /// notifications carry (durations as doubles, timestamps / counts as longs). We therefore widen exactly the
-    /// way Jsonite does: an integer becomes <see cref="int"/>, then <see cref="long"/>, then <see cref="ulong"/>;
-    /// a value with a fractional part or exponent (for which the integer <c>TryGet*</c> methods all return
-    /// <see langword="false"/>) becomes <see cref="double"/>. This is a pure superset of the old behavior — every
-    /// value that used to decode as <see cref="int"/> still does, only the ones that used to throw now widen.
+    /// way Jsonite does: an integer becomes <see cref="int"/>, then <see cref="long"/>, <see cref="ulong"/>, or
+    /// <see cref="decimal"/>; a value with a fractional part or exponent becomes <see cref="double"/>. This is a
+    /// pure superset of the old behavior — every value that used to decode as <see cref="int"/> still does, only
+    /// the ones that used to throw now widen.
     /// </remarks>
     // IDE0046 (prefer conditional expression) is suppressed on purpose: collapsing these guarded returns into
     // a single ?: chain that ends in double gives the whole expression the static type double, so every integer
@@ -321,6 +321,15 @@ internal sealed partial class Json
         if (element.TryGetUInt64(out ulong ulongValue))
         {
             return ulongValue;
+        }
+
+        string rawValue = element.GetRawText();
+        if (rawValue.IndexOf('.') is -1
+            && rawValue.IndexOf('e') is -1
+            && rawValue.IndexOf('E') is -1
+            && element.TryGetDecimal(out decimal decimalValue))
+        {
+            return decimalValue;
         }
 
         return element.GetDouble();

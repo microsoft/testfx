@@ -89,12 +89,25 @@ internal sealed class MtpServerProcess : IDisposable
     /// </param>
     /// <param name="options">Client options (name, connection timeout, environment, logger).</param>
     public static MtpServerProcess Start(string source, MtpServerClientOptions? options = null)
+        => StartAsync(source, options, CancellationToken.None).GetAwaiter().GetResult();
+
+    /// <summary>
+    /// Launches the MTP application at <paramref name="source"/> and asynchronously waits for it to connect back.
+    /// </summary>
+    /// <param name="source">Path to the managed test application or native executable.</param>
+    /// <param name="options">Client options (name, connection timeout, environment, logger).</param>
+    /// <param name="cancellationToken">Cancels the launch and connection wait.</param>
+    public static async Task<MtpServerProcess> StartAsync(
+        string source,
+        MtpServerClientOptions? options = null,
+        CancellationToken cancellationToken = default)
     {
         if (source is null)
         {
             throw new ArgumentNullException(nameof(source));
         }
 
+        cancellationToken.ThrowIfCancellationRequested();
         options ??= new MtpServerClientOptions();
         IMtpClientLogger logger = options.Logger ?? NullMtpClientLogger.Instance;
 
@@ -169,7 +182,11 @@ internal sealed class MtpServerProcess : IDisposable
             // Drain stdout so the child never blocks on a full pipe (banner, diagnostics).
             process.BeginOutputReadLine();
 
+#if NET8_0_OR_GREATER
+            acceptTask = listener.AcceptTcpClientAsync(cancellationToken).AsTask();
+#else
             acceptTask = listener.AcceptTcpClientAsync();
+#endif
 
             // Wait for the app to dial back, but poll the process alongside the accept: if the child exits
             // early (bad arguments, startup crash) we fail fast with its exit code + captured stderr instead
@@ -177,8 +194,10 @@ internal sealed class MtpServerProcess : IDisposable
             // process.HasExited (rather than racing the accept against Process.Exited) keeps this free of a
             // TaskCompletionSource ordering race.
             var connectStopwatch = Stopwatch.StartNew();
-            while (!acceptTask.Wait(ProcessExitPollInterval))
+            while (!acceptTask.IsCompleted)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 if (process.HasExited)
                 {
                     throw new MtpServerConnectionClosedException(
@@ -190,9 +209,13 @@ internal sealed class MtpServerProcess : IDisposable
                     throw new MtpServerConnectionClosedException(
                         $"The Microsoft.Testing.Platform application '{source}' did not connect back within {options.ConnectionTimeout.TotalSeconds:N0}s. {GetStandardError(standardError)}");
                 }
+
+                var delayTask = Task.Delay(ProcessExitPollInterval, cancellationToken);
+                _ = await Task.WhenAny(acceptTask, delayTask).ConfigureAwait(false);
             }
 
-            acceptedClient = acceptTask.GetAwaiter().GetResult();
+            cancellationToken.ThrowIfCancellationRequested();
+            acceptedClient = await acceptTask.ConfigureAwait(false);
             acceptedClient.NoDelay = true;
             NetworkStream stream = acceptedClient.GetStream();
 

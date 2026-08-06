@@ -21,22 +21,36 @@ internal interface IMtpServerClient : IDisposable
     /// <see cref="DiscoverTestsAsync(CancellationToken)"/> / <see cref="RunTestsAsync(CancellationToken)"/>
     /// task completes. Consumers therefore do not need a settle delay or completion sentinel — awaiting the
     /// call is sufficient to have collected every node update.
+    /// Event handlers run synchronously on that read loop. They must not perform long-running work or
+    /// synchronously wait on another operation from this client; dispatch such work to another thread.
     /// </remarks>
     event EventHandler<MtpTestNodeUpdateEventArgs>? TestNodesUpdated;
 
     /// <summary>
     /// Raised when the server sends a log message (<c>client/log</c>).
     /// </summary>
+    /// <remarks>
+    /// Handlers run synchronously on the ordered read loop and must not block or synchronously call back
+    /// into this client.
+    /// </remarks>
     event EventHandler<MtpLogEventArgs>? LogReceived;
 
     /// <summary>
     /// Raised when the server sends a telemetry update (<c>telemetry/update</c>).
     /// </summary>
+    /// <remarks>
+    /// Handlers run synchronously on the ordered read loop and must not block or synchronously call back
+    /// into this client.
+    /// </remarks>
     event EventHandler<MtpTelemetryEventArgs>? TelemetryReceived;
 
     /// <summary>
     /// Raised when the server reports run attachments (<c>testing/testUpdates/attachments</c>).
     /// </summary>
+    /// <remarks>
+    /// Handlers run synchronously on the ordered read loop and must not block or synchronously call back
+    /// into this client.
+    /// </remarks>
     event EventHandler<MtpAttachmentsEventArgs>? AttachmentsReceived;
 
     /// <summary>

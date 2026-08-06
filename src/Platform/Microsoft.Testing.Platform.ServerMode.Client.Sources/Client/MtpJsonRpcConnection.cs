@@ -22,6 +22,7 @@ internal sealed class MtpJsonRpcConnection : IDisposable
     private readonly ConcurrentDictionary<int, PendingRequest> _pendingRequests = new();
     private readonly SemaphoreSlim _writeLock = new(1, 1);
     private readonly CancellationTokenSource _readLoopCancellation = new();
+    private readonly object _startLock = new();
 
     // True within the read loop's async execution flow. Dispose reads this to detect a re-entrant call
     // from a notification / server-request handler (both dispatched on the read-loop flow) and skip
@@ -36,6 +37,7 @@ internal sealed class MtpJsonRpcConnection : IDisposable
 
     private int _nextRequestId;
     private Task? _readLoop;
+    private Func<RequestMessage, CancellationToken, Task<object?>>? _serverRequestHandler;
     private int _disposed;
 
     // Latched once when the connection reaches a terminal state (read loop exited or Dispose ran). A
@@ -69,14 +71,28 @@ internal sealed class MtpJsonRpcConnection : IDisposable
     /// answers with a null result. The connection ALWAYS sends a response so the server never blocks — if no
     /// handler is set, or the handler throws, a null-result response is sent.
     /// </summary>
-    public Func<RequestMessage, CancellationToken, Task<object?>>? ServerRequestHandler { get; set; }
+    public Func<RequestMessage, CancellationToken, Task<object?>>? ServerRequestHandler
+    {
+        get => Volatile.Read(ref _serverRequestHandler);
+        set => Volatile.Write(ref _serverRequestHandler, value);
+    }
 
     /// <summary>
     /// Starts the background read loop. Call once, after wiring <see cref="NotificationReceived"/> and
     /// <see cref="ServerRequestHandler"/>.
     /// </summary>
     public void Start()
-        => _readLoop ??= Task.Run(() => ReadLoopAsync(_readLoopCancellation.Token));
+    {
+        lock (_startLock)
+        {
+            if (Volatile.Read(ref _disposed) != 0)
+            {
+                throw new ObjectDisposedException(nameof(MtpJsonRpcConnection));
+            }
+
+            _readLoop ??= Task.Run(() => ReadLoopAsync(_readLoopCancellation.Token));
+        }
+    }
 
     /// <summary>
     /// Sends a request and awaits its correlated response. If <paramref name="cancellationToken"/> fires
@@ -228,7 +244,7 @@ internal sealed class MtpJsonRpcConnection : IDisposable
         object? result = null;
         try
         {
-            Func<RequestMessage, CancellationToken, Task<object?>>? handler = ServerRequestHandler;
+            Func<RequestMessage, CancellationToken, Task<object?>>? handler = Volatile.Read(ref _serverRequestHandler);
             if (handler is not null)
             {
                 result = await handler(request, cancellationToken).ConfigureAwait(false);
@@ -300,9 +316,15 @@ internal sealed class MtpJsonRpcConnection : IDisposable
 
     public void Dispose()
     {
-        if (Interlocked.Exchange(ref _disposed, 1) == 1)
+        Task? readLoop;
+        lock (_startLock)
         {
-            return;
+            if (Interlocked.Exchange(ref _disposed, 1) == 1)
+            {
+                return;
+            }
+
+            readLoop = _readLoop;
         }
 
         // Latch the terminal state and release anyone awaiting a response.
@@ -327,7 +349,6 @@ internal sealed class MtpJsonRpcConnection : IDisposable
         // surface spurious ObjectDisposedExceptions (one thrown out of the write lock's finally block).
         // Guard against waiting on ourselves in case Dispose runs from a notification / server-request
         // handler executing on the read-loop flow (see _onReadLoopFlow).
-        Task? readLoop = _readLoop;
         if (readLoop is not null && !_onReadLoopFlow.Value)
         {
             try

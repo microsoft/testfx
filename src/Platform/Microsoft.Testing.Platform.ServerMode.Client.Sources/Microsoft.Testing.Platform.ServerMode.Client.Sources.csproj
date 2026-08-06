@@ -1,15 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    Microsoft.Testing.Platform.ServerClient
-    =======================================
+    Microsoft.Testing.Platform.ServerMode.Client.Sources
+    ====================================================
     A client for the Microsoft.Testing.Platform (MTP) server-mode JSON-RPC protocol.
 
     This project links the *same* protocol + serialization source files that the platform (server)
     compiles from ..\Microsoft.Testing.Platform\, guaranteeing wire compatibility by construction
     (single source of truth). On top of that it adds the client-only transport + API.
 
-    PACKAGING: this ships as a source-only NuGet package (Microsoft.Testing.Platform.ServerClient.Source).
+    PACKAGING: this ships as a source-only NuGet package (Microsoft.Testing.Platform.ServerMode.Client.Sources).
     Consumers compile the linked client + server-protocol source directly into their own assembly (as
     internal types); no DLL and no runtime dependency ship. The pack target at the bottom projects the
     final @(Compile) set into contentFiles/cs/<tfm>/**, so "packed == compiled" holds by construction and
@@ -30,6 +30,7 @@
 
     <!-- Match the platform: several linked files (e.g. ObjectPool.cs namespace switch) key off this. -->
     <DefineConstants>$(DefineConstants);IS_CORE_MTP</DefineConstants>
+    <DefineConstants>$(DefineConstants);IS_MTP_SERVER_MODE_CLIENT</DefineConstants>
     <!-- Guard analogous to vstest's Filter.Source IS_VSTEST_REPO: defined while testfx compiles the
          client in-repo, absent when a consumer compiles the injected source. Lets shared source gate
          repo-only bits if ever needed. -->
@@ -54,14 +55,8 @@
 
   <!-- NuGet metadata. -->
   <PropertyGroup>
-    <!-- The .Source suffix marks a source-only (contentFiles) package, matching vstest's
-         Microsoft.TestPlatform.Filter.Source convention. The assembly stays ...ServerClient. -->
-    <PackageId>Microsoft.Testing.Platform.ServerClient.Source</PackageId>
-    <PackageDescription>
-      <![CDATA[Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
-
-This is a source-only package: it injects (as internal source) a client for the Microsoft Testing Platform (MTP) server-mode JSON-RPC protocol, sharing the exact protocol and serialization source the platform server compiles. It has no runtime dependency and is native-AOT friendly (Jsonite on .NET Framework / netstandard2.0, in-box System.Text.Json on .NET).]]>
-    </PackageDescription>
+    <PackageId>Microsoft.Testing.Platform.ServerMode.Client.Sources</PackageId>
+    <PackageDescription><![CDATA[Injects an internal, source-only client for the Microsoft Testing Platform server-mode JSON-RPC protocol, with no runtime dependency and Native AOT-compatible serialization. $(CommonProductDescription)]]></PackageDescription>
   </PropertyGroup>
 
   <!-- Root of the platform (server) project whose source files we link. -->
@@ -69,10 +64,9 @@ This is a source-only package: it injects (as internal source) a client for the 
     <MTPDir>$(MSBuildThisFileDirectory)..\Microsoft.Testing.Platform\</MTPDir>
   </PropertyGroup>
 
-  <!-- Polyfills (same set the platform uses) so the linked files compile on netstandard2.0/net462.
-       SHIPPED in the package (a consumer on net462 / netstandard2.0 with no down-level polyfills of its
-       own needs init/required, Index/Range, EmbeddedAttribute, ExperimentalAttribute, UnreachableException,
-       the OperatingSystem shim for OperatingSystem.IsBrowser, and helpers like Ensure).
+  <!-- Curated polyfills so the linked files compile on netstandard2.0/net462.
+       SHIPPED in the package only when the linked source needs them. Avoid globbing the repository-wide
+       polyfill folder: unrelated polyfills add collision risk and unnecessary type forwarders to consumers.
 
        These files go through the SAME pack-time transform as the linked/client source (preamble prepend +
        public->internal flip). The flip is a no-op (they are already internal), but the preamble matters:
@@ -84,26 +78,30 @@ This is a source-only package: it injects (as internal source) a client for the 
        self-guards (they compile to nothing on .NET) + internal, with opt-out constants (e.g.
        EXCLUDE_OS_POLYFILL) for a consumer that already ships its own. -->
   <ItemGroup>
-    <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
-    <!-- Index.cs / Range.cs implement the C# range operator (x[a..b]) and from-end index (x[^1]) for
-         down-level TFMs. Range.GetOffsetAndLength returns a value tuple, and System.ValueTuple is not
-         in-framework on net462 (added in 4.7), so these polyfills cannot compile in a bare net462
-         consumer. The client's own code and every linked file it packs avoid the range operator on the
-         down-level path (TcpMessageHandler uses Substring; the only other range use is a Span slice in
-         the .NET-only Json.cs), so nothing here needs Index/Range. .NET consumers have them in-box.
-         Dropping both keeps the package dependency-free without a ValueTuple polyfill. -->
-    <Compile Remove="$(RepoRoot)src/Polyfills/Index.cs" />
-    <Compile Remove="$(RepoRoot)src/Polyfills/Range.cs" />
+    <!-- Ensure is a helper (not a BCL polyfill) used by TestNodeUid on every TFM. -->
+    <Compile Include="$(RepoRoot)src/Polyfills/Ensure.cs" Link="Polyfills\Ensure.cs" />
+    <!-- In-repo linked sources use [Embedded]. The pack transform strips that source-only marker and
+         excludes this declaration so it cannot collide with a consumer's conventional polyfill. -->
+    <Compile Include="$(RepoRoot)src/Polyfills/EmbeddedAttribute.cs" Link="Polyfills\EmbeddedAttribute.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETCoreApp'">
+    <Compile Include="$(RepoRoot)src/Polyfills/CallerArgumentExpressionAttribute.cs" Link="Polyfills\CallerArgumentExpressionAttribute.cs" />
+    <Compile Include="$(RepoRoot)src/Polyfills/CompilerFeatureRequiredAttribute.cs" Link="Polyfills\CompilerFeatureRequiredAttribute.cs" />
+    <Compile Include="$(RepoRoot)src/Polyfills/ExperimentalAttribute.cs" Link="Polyfills\ExperimentalAttribute.cs" />
+    <Compile Include="$(RepoRoot)src/Polyfills/IsExternalInit.cs" Link="Polyfills\IsExternalInit.cs" />
+    <Compile Include="$(RepoRoot)src/Polyfills/NullableAttribtues.cs" Link="Polyfills\NullableAttribtues.cs" />
+    <Compile Include="$(RepoRoot)src/Polyfills/RequiredMemberAttribute.cs" Link="Polyfills\RequiredMemberAttribute.cs" />
+    <Compile Include="$(RepoRoot)src/Polyfills/UnreachableException.cs" Link="Polyfills\UnreachableException.cs" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Polyfills" />
   </ItemGroup>
 
   <!-- Consumer build customization packed at build/ (applies to the direct consumer that compiles the
-       injected source): defines IS_CORE_MTP and suppresses the benign down-level CS0436 polyfill
-       collision. See the file header for the full rationale. -->
+       injected source): defines the compilation constants and C# language floor. -->
   <ItemGroup>
-    <None Include="build\Microsoft.Testing.Platform.ServerClient.Source.targets" Pack="true" PackagePath="build\" />
+    <None Include="build\Microsoft.Testing.Platform.ServerMode.Client.Sources.props" Pack="true" PackagePath="build\" />
+    <None Include="build\Microsoft.Testing.Platform.ServerMode.Client.Sources.targets" Pack="true" PackagePath="build\" />
   </ItemGroup>
 
   <!-- Protocol + JSON-RPC serialization (all TFMs). Curated subset of ServerMode\JsonRpc\. -->
@@ -195,7 +193,7 @@ This is a source-only package: it injects (as internal source) a client for the 
 
   <!-- The client types are internal (they compile into each consumer). Grant the unit tests access. -->
   <ItemGroup>
-    <InternalsVisibleTo Include="Microsoft.Testing.Platform.ServerClient.UnitTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests" Key="$(VsPublicKey)" />
     <!-- The MSTest acceptance project drives the client against a real packed MTP app (P4). It references
          this project via a non-global `serverclient` extern alias to avoid TestNode name clashes. -->
     <InternalsVisibleTo Include="MSTest.Acceptance.IntegrationTests" Key="$(VsPublicKey)" />
@@ -221,7 +219,10 @@ This is a source-only package: it injects (as internal source) a client for the 
       2. flips every column-0 `public <type>` to `internal` (all linked files are file-scoped-namespace,
          so top-level types sit at column 0) — the injected source must add NO public API to the consumer;
          and
-      3. rewrites the vendored top-level `namespace Jsonite` (+ `using Jsonite;` + qualified `Jsonite.`)
+      3. moves all linked platform types under a package-private protocol namespace, preventing source
+         types such as TestNodeUid from colliding with the public types in Microsoft.Testing.Platform.dll;
+         and
+      4. rewrites the vendored top-level `namespace Jsonite` (+ `using Jsonite;` + qualified `Jsonite.`)
          to the package-qualified `Microsoft.Testing.Platform.ServerMode.JsonRpc.Json.Jsonite`, so the
          packed copy cannot collide (CS0436) with a consumer that vendors its OWN top-level
          `namespace Jsonite` (vstest's CrossPlatEngine does, on net462/netstandard2.0). The platform keeps
@@ -272,7 +273,8 @@ This is a source-only package: it injects (as internal source) a client for the 
             "System.Linq", "System.Reflection", "System.Runtime.CompilerServices",
             "System.Runtime.InteropServices", "System.Runtime.Versioning", "System.Text",
             "System.Text.RegularExpressions", "System.Threading", "System.Threading.Tasks",
-            "System.Xml", "System.Xml.Linq", "System.Xml.XPath", "Polyfills",
+            "System.Xml", "System.Xml.Linq", "System.Xml.XPath",
+            "Microsoft.Testing.Platform.ServerMode.Client.Protocol.Polyfills",
         };
         Regex usingRx = new Regex(@"^\s*using\s+(?:static\s+)?([^;=]+);", RegexOptions.Multiline);
         Regex typeRx = new Regex(@"^public(\s+(?:(?:sealed|abstract|static|partial|unsafe|readonly|ref|file|new)\s+)*(?:class|struct|interface|enum|record|delegate)\b)", RegexOptions.Multiline);
@@ -288,14 +290,42 @@ This is a source-only package: it injects (as internal source) a client for the 
                 existing.Add(m.Groups[1].Value.Trim());
             }
 
+            string logical = item.GetMetadata("Logical");
+            Dictionary<string, string> polyfillOptOuts = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "Polyfills/CallerArgumentExpressionAttribute.cs", "MTP_CLIENT_EXCLUDE_CALLER_ARGUMENT_EXPRESSION_ATTRIBUTE" },
+                { "Polyfills/CompilerFeatureRequiredAttribute.cs", "MTP_CLIENT_EXCLUDE_COMPILER_FEATURE_REQUIRED_ATTRIBUTE" },
+                { "Polyfills/ExperimentalAttribute.cs", "MTP_CLIENT_EXCLUDE_EXPERIMENTAL_ATTRIBUTE" },
+                { "Polyfills/IsExternalInit.cs", "MTP_CLIENT_EXCLUDE_IS_EXTERNAL_INIT" },
+                { "Polyfills/NullableAttribtues.cs", "MTP_CLIENT_EXCLUDE_NULLABLE_ATTRIBUTES" },
+                { "Polyfills/RequiredMemberAttribute.cs", "MTP_CLIENT_EXCLUDE_REQUIRED_MEMBER_ATTRIBUTE" },
+                { "Polyfills/UnreachableException.cs", "MTP_CLIENT_EXCLUDE_UNREACHABLE_EXCEPTION" },
+            };
+            string polyfillOptOut;
+            polyfillOptOuts.TryGetValue(logical, out polyfillOptOut);
             StringBuilder sb = new StringBuilder();
             sb.Append("// <auto-generated/>\n#nullable enable\n");
+            if (!string.IsNullOrEmpty(polyfillOptOut))
+            {
+                sb.Append("#if !").Append(polyfillOptOut).Append("\n");
+            }
+            if (logical.StartsWith("Polyfills/", StringComparison.OrdinalIgnoreCase))
+            {
+                // Scope benign marker-polyfill collisions to generated package files instead of muting
+                // CS0436 across the consumer's entire project.
+                sb.Append("#pragma warning disable CS0436\n");
+            }
             foreach (string ns in preamble)
             {
                 if (!existing.Contains(ns))
                 {
                     sb.Append("using ").Append(ns).Append(";\n");
                 }
+            }
+            if (logical.StartsWith("Client/", StringComparison.OrdinalIgnoreCase)
+                && !logical.EndsWith("SerializerUtilities.ClientSerializers.cs", StringComparison.OrdinalIgnoreCase))
+            {
+                sb.Append("using Microsoft.Testing.Platform.ServerMode.Client.Protocol.ServerMode;\n");
             }
 
             // Rewrite the vendored top-level `Jsonite` namespace (its `namespace Jsonite` declaration,
@@ -312,7 +342,36 @@ This is a source-only package: it injects (as internal source) a client for the 
             text = Regex.Replace(text, @"^using Jsonite;", "using " + jsoniteNs + ";", RegexOptions.Multiline);
             text = Regex.Replace(text, @"\bJsonite\.", jsoniteNs + ".");
 
+            // A source-package consumer may also reference Microsoft.Testing.Platform.dll. Keep the
+            // consumer-facing client namespace stable, but relocate every linked platform namespace so
+            // injected protocol types never shadow the assembly's public types.
+            const string platformRootNs = "Microsoft.Testing.Platform";
+            const string protocolRootNs = "Microsoft.Testing.Platform.ServerMode.Client.Protocol";
+            const string rewrittenClientNs = "Microsoft.Testing.Platform.ServerMode.Client.Protocol.ServerMode.Client";
+            const string clientNs = "Microsoft.Testing.Platform.ServerMode.Client";
+            text = text.Replace(platformRootNs, protocolRootNs).Replace(rewrittenClientNs, clientNs);
+            text = Regex.Replace(
+                text,
+                @"^namespace Polyfills\b",
+                "namespace Microsoft.Testing.Platform.ServerMode.Client.Protocol.Polyfills",
+                RegexOptions.Multiline);
+
+            // EmbeddedAttribute is a source-generation marker, not part of the runtime protocol. Removing
+            // the marker and its using avoids injecting Microsoft.CodeAnalysis.EmbeddedAttribute into a
+            // consumer that may already define the conventional compiler-services polyfill.
+            text = Regex.Replace(text, @"^\s*using Microsoft\.CodeAnalysis;\s*\r?\n", string.Empty, RegexOptions.Multiline);
+            text = Regex.Replace(text, @"^\s*\[Embedded\]\s*\r?\n", string.Empty, RegexOptions.Multiline);
+
+            // Packed source uses a package-specific modern-runtime symbol instead of NETCOREAPP. This lets
+            // net5.0-net7.0 consumers select the netstandard/Jsonite implementation even though their SDK
+            // defines NETCOREAPP, while net8.0+ consumers keep the System.Text.Json implementation.
+            text = Regex.Replace(text, @"\bNETCOREAPP\b", "MTP_CLIENT_USE_MODERN_DOTNET");
+
             sb.Append(typeRx.Replace(text, delegate(Match m) { return "internal" + m.Groups[1].Value; }));
+            if (!string.IsNullOrEmpty(polyfillOptOut))
+            {
+                sb.Append("\n#endif\n");
+            }
 
             string dir = Path.GetDirectoryName(dest);
             if (!Directory.Exists(dir))
@@ -340,7 +399,8 @@ This is a source-only package: it injects (as internal source) a client for the 
            Logical = the package-relative path (forward slashes so it is valid on Linux packing too):
            the Link-relative folder for linked files, or the project-relative Identity for client files. -->
       <_MtpClientToTransform Include="@(Compile)"
-                             Condition="!$([System.String]::new('%(Compile.FullPath)').StartsWith('$(_MtpClientIntermediateFullPath)', System.StringComparison.OrdinalIgnoreCase))">
+                             Condition="!$([System.String]::new('%(Compile.FullPath)').StartsWith('$(_MtpClientIntermediateFullPath)', System.StringComparison.OrdinalIgnoreCase))
+                               and '%(Compile.Filename)' != 'EmbeddedAttribute'">
         <Logical Condition="'%(Compile.Link)' != ''">$([System.String]::Copy('%(Compile.Link)').Replace('\','/'))</Logical>
         <Logical Condition="'%(Compile.Link)' == ''">$([System.String]::Copy('%(Compile.Identity)').Replace('\','/'))</Logical>
         <SourceFullPath>%(Compile.FullPath)</SourceFullPath>
@@ -357,6 +417,16 @@ This is a source-only package: it injects (as internal source) a client for the 
     <ItemGroup>
       <TfmSpecificPackageFile Include="@(_MtpClientTransformed)">
         <PackagePath>contentFiles/cs/$(TargetFramework)/%(_MtpClientTransformed.Logical)</PackagePath>
+        <BuildAction>Compile</BuildAction>
+      </TfmSpecificPackageFile>
+      <!-- NuGet selects net5.0 content for net5.0, net6.0, and net7.0 consumers. Use the
+           netstandard/Jsonite slice because the modern System.Text.Json sources call newer BCL APIs. Shared
+           down-level polyfills are excluded except Ensure; targeted net5-net7 shims live under Client/. -->
+      <TfmSpecificPackageFile Include="@(_MtpClientTransformed)"
+                              Condition="'$(TargetFramework)' == 'netstandard2.0'
+                                and (!$([System.String]::Copy('%(_MtpClientTransformed.Logical)').StartsWith('Polyfills/', System.StringComparison.OrdinalIgnoreCase))
+                                  or '%(_MtpClientTransformed.Logical)' == 'Polyfills/Ensure.cs')">
+        <PackagePath>contentFiles/cs/net5.0/%(_MtpClientTransformed.Logical)</PackagePath>
         <BuildAction>Compile</BuildAction>
       </TfmSpecificPackageFile>
     </ItemGroup>

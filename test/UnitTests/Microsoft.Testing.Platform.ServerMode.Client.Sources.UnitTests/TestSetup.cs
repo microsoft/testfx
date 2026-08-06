@@ -3,7 +3,7 @@
 
 using Microsoft.Testing.Platform.ServerMode;
 
-namespace Microsoft.Testing.Platform.ServerClient.UnitTests;
+namespace Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests;
 
 /// <summary>
 /// Assembly-level setup for the ServerClient unit tests.

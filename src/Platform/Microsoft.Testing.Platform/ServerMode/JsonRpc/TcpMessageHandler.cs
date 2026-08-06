@@ -380,7 +380,11 @@ internal sealed class TcpMessageHandler(
             // The stream writer is currently in use by a previous write operation.
         }
 
+#if IS_MTP_SERVER_MODE_CLIENT
+        if (!Microsoft.Testing.Platform.ServerMode.Client.MtpClientOperatingSystem.IsBrowser())
+#else
         if (!OperatingSystem.IsBrowser())
+#endif
         {
             _client.Dispose();
         }

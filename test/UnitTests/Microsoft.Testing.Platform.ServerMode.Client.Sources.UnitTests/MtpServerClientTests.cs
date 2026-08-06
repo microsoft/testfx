@@ -6,7 +6,7 @@ using System.Diagnostics;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.ServerMode.Client;
 
-namespace Microsoft.Testing.Platform.ServerClient.UnitTests;
+namespace Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests;
 
 /// <summary>
 /// End-to-end tests for <see cref="MtpServerClient"/> driven against <see cref="FakeMtpServer"/> over a real

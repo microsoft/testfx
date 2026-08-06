@@ -11,7 +11,7 @@ namespace MSTest.Acceptance.IntegrationTests;
 
 /// <summary>
 /// End-to-end acceptance test for the source-only MTP server-mode client
-/// (<c>Microsoft.Testing.Platform.ServerClient</c>). It launches a real, generated
+/// (<c>Microsoft.Testing.Platform.ServerMode.Client.Sources</c>). It launches a real, generated
 /// Microsoft.Testing.Platform application in server mode through the package's own
 /// <see cref="MtpServerClient"/> and asserts the discovered and executed test nodes that come back
 /// over the wire. This proves the client against the actual server (not the in-memory fake used by the
