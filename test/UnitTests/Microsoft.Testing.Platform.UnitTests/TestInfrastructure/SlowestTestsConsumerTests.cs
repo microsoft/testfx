@@ -26,6 +26,25 @@ public sealed class SlowestTestsConsumerTests
         Assert.AreEqual($"  {1.25d:F5}s FasterTest", lines[2]);
     }
 
+    [TestMethod]
+    public async Task OnTestSessionFinishingAsync_WritesOnlyTenSlowestEntries()
+    {
+        List<string> lines = [];
+        var consumer = new SlowestTestsConsumer(lines.Add);
+
+        for (int i = 0; i < 11; i++)
+        {
+            await consumer.ConsumeAsync(null!, CreatePassedTestNodeUpdate($"Test{i}", TimeSpan.FromSeconds(i + 1)), CancellationToken.None);
+        }
+
+        await consumer.OnTestSessionFinishingAsync(null!);
+
+        Assert.HasCount(11, lines);
+        Assert.AreEqual($"  {11d:F5}s Test10", lines[1]);
+        Assert.AreEqual($"  {2d:F5}s Test1", lines[10]);
+        Assert.DoesNotContain(static line => line.EndsWith(" Test0", StringComparison.Ordinal), lines);
+    }
+
     private static TestNodeUpdateMessage CreatePassedTestNodeUpdate(string displayName, TimeSpan duration)
     {
         DateTimeOffset startTime = new(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
