@@ -27,6 +27,7 @@
                          and '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' != '.NETStandard' ">
     <PackageReference Include="MSTest.SourceGeneration" Sdk="MSTest">
       <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MSTestVersion)</Version>
+      <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageVersion Include="MSTest.SourceGeneration" Version="$(MSTestVersion)"
                     Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />

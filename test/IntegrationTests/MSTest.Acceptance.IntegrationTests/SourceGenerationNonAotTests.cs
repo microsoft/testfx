@@ -1,6 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.IO.Compression;
+using System.Xml.Linq;
+
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
@@ -276,6 +279,47 @@ public class UnitTest1
             ? Directory.GetFiles(objGenerated, "*MSTestReflectionMetadata*.g.cs", SearchOption.AllDirectories)
             : [];
         Assert.IsNotEmpty(generatedFiles, $"the VSTest source-generation opt-in should have emitted metadata under '{objGenerated}'");
+    }
+
+    [TestMethod]
+    public async Task MSTestSdk_SourceGenerationOptIn_DoesNotFlowTransitively()
+    {
+        string tfm = TargetFrameworks.NetCurrent;
+        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+            $"{SdkAssetName}_Pack",
+            SdkSourceCode
+            .PatchCodeWithReplace("$TargetFramework$", tfm)
+            .PatchCodeWithReplace("$IsTestApplication$", "false")
+            .PatchCodeWithReplace("$PublishAot$", "false")
+            .PatchCodeWithReplace("$UseVSTest$", "false")
+            .PatchCodeWithReplace("$EnableMicrosoftTestingPlatformProperty$", string.Empty)
+            .PatchCodeWithReplace(
+                "$EnableMSTestSourceGenerationProperty$",
+                "<EnableMSTestSourceGeneration>true</EnableMSTestSourceGeneration>")
+            .PatchCodeWithReplace("$ExtraItems$", string.Empty)
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion),
+            addPublicFeeds: true);
+
+        string packageDirectory = Path.Combine(generator.TargetAssetPath, "packages");
+        DotnetMuxerResult packResult = await DotnetCli.RunAsync(
+            $"pack {generator.TargetAssetPath} -c {BuildConfiguration.Release} -p:IsPackable=true -p:PackageVersion=1.0.0-test -o \"{packageDirectory}\"",
+            cancellationToken: TestContext.CancellationToken);
+        packResult.AssertExitCodeIs(0);
+
+        string package = Directory.GetFiles(packageDirectory, "*.nupkg").Single();
+        using ZipArchive archive = ZipFile.OpenRead(package);
+        ZipArchiveEntry nuspecEntry = archive.Entries.Single(entry => entry.FullName.EndsWith(".nuspec", StringComparison.Ordinal));
+        using Stream nuspecStream = nuspecEntry.Open();
+        var nuspec = XDocument.Load(nuspecStream);
+        string[] dependencyIds = nuspec
+            .Descendants()
+            .Where(element => element.Name.LocalName == "dependency")
+            .Select(element => element.Attribute("id")?.Value)
+            .OfType<string>()
+            .ToArray();
+
+        CollectionAssert.Contains(dependencyIds, "MSTest.TestAdapter");
+        CollectionAssert.DoesNotContain(dependencyIds, "MSTest.SourceGeneration");
     }
 
     [TestMethod]
