@@ -13,6 +13,29 @@ namespace Microsoft.Testing.Extensions;
 public static class PackagedAppExtensions
 {
     /// <summary>
+    /// Restores the platform-prepared argument array delivered to an AppContainer test host through
+    /// <c>LaunchActivatedEventArgs.Arguments</c>.
+    /// </summary>
+    /// <remarks>
+    /// Call this method from the application's <c>OnLaunched</c> override before
+    /// <see cref="TestApplication.CreateBuilderAsync(string[], TestApplicationOptions?)"/>. It also
+    /// restores the transient controller connect-back environment that AUMID activation does not
+    /// inherit. Packaged full-trust desktop apps should continue to use their normal process arguments.
+    /// </remarks>
+    /// <param name="activationArguments">The opaque activation string supplied by Windows.</param>
+    /// <returns>The exact logical argument array prepared by Microsoft Testing Platform.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="activationArguments"/> is <see langword="null"/>.</exception>
+    /// <exception cref="FormatException">The activation string is not a valid Microsoft Testing Platform payload.</exception>
+    public static string[] GetTestApplicationArguments(string activationArguments)
+    {
+        string[] arguments = PackagedAppActivationArguments.Read(
+            activationArguments,
+            PackagedAppConnectBackReader.TryGetPackageLocalStateDirectory());
+        PackagedAppConnectBackReader.TryApplyConnectBackEnvironment(arguments);
+        return arguments;
+    }
+
+    /// <summary>
     /// Registers a test host launcher for Windows test applications. Packaged, full-trust MSIX desktop
     /// hosts are registered with the OS and activated by Application User Model ID in the Windows build
     /// of this extension (see https://github.com/microsoft/testfx/issues/9933); the plain build rejects

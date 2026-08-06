@@ -29,14 +29,15 @@ namespace Microsoft.Testing.Extensions.PackagedApp;
 /// Because an AUMID-activated process is created by the Windows activation/PLM infrastructure rather
 /// than by the controller, it does not inherit the controller-to-host connect-back environment
 /// variables the platform prepared. The launcher hands those off out-of-band through the package's own
-/// writable data folder (see <see cref="PackagedAppConnectBackHandshake"/>) and forwards the
-/// platform-prepared command line as the activation arguments, which a packaged full-trust desktop app
-/// receives as <c>argv</c>.
+/// writable data folder (see <see cref="PackagedAppConnectBackHandshake"/>). A packaged full-trust
+/// desktop app receives the platform-prepared command line as <c>argv</c>; an AppContainer app receives
+/// a versioned activation payload that its <c>OnLaunched</c> bootstrap restores to the same logical
+/// argument array.
 /// </para>
 /// <para>
-/// This connect-back transport therefore targets <em>full-trust</em> packaged (MSIX) desktop hosts. A
-/// true UWP/AppContainer host is not supported: activation arguments are not delivered as <c>argv</c>
-/// there, and the controller pipe is not granted the package SID. The full register-and-activate path
+/// Both full-trust and AppContainer activation arguments are supported. End-to-end AppContainer
+/// execution additionally requires the controller pipe to grant the package SID access; that separate
+/// transport dependency is tracked by https://github.com/microsoft/testfx/issues/10486. The full register-and-activate path
 /// ships only in the Windows build of this extension (<c>net*-windows10.0.19041.0</c>), where the
 /// <c>PackageManager</c> WinRT projection is available. The plain <c>net8.0</c>/<c>net9.0</c> build
 /// still deploys and launches an opted-in non-packaged loose layout, but rejects a packaged layout with
@@ -207,25 +208,43 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher
             PackagedAppConnectBackHandshake.Write(handshakePath, GetConnectBackEnvironment(context));
         }
 
-        // Register the loose layout in place and activate it, forwarding the platform-prepared command
-        // line (which a packaged full-trust desktop app receives as argv). Activation returns the real
-        // process id, so the handle can monitor and terminate the actual activated process.
-        var commandLineBuilder = new StringBuilder();
-        foreach (string argument in context.Arguments)
+        string activationArguments;
+        string? activationPayloadPath = null;
+        if (application.IsAppContainer)
         {
-            PasteArguments.AppendArgument(commandLineBuilder, argument);
+            // AppContainer activation exposes one opaque string through OnLaunched rather than argv.
+            // Inline the compact versioned payload when it fits the documented launch-argument envelope;
+            // otherwise spill only authenticated ciphertext to LocalState and carry its one-shot key in
+            // the activation string. User filters/runsettings are therefore never persisted in plaintext.
+            PackagedAppActivationData activationData = PackagedAppActivationArguments.Create(
+                context.Arguments,
+                PackagedAppConnectBackHandshake.GetHandshakeDirectory(manifestInfo.PackageFamilyName));
+            activationArguments = activationData.Arguments;
+            activationPayloadPath = activationData.PayloadPath;
+        }
+        else
+        {
+            // A packaged full-trust desktop app receives activation arguments as process argv. Preserve
+            // the existing Windows command-line quoting exactly for that path.
+            var commandLineBuilder = new StringBuilder();
+            foreach (string argument in context.Arguments)
+            {
+                PasteArguments.AppendArgument(commandLineBuilder, argument);
+            }
+
+            activationArguments = commandLineBuilder.ToString();
         }
 
         try
         {
             uint processId = await PackageDeployer
-                .RegisterAndActivateAsync(manifestPath, application.AppUserModelId, commandLineBuilder.ToString(), cancellationToken)
+                .RegisterAndActivateAsync(manifestPath, application.AppUserModelId, activationArguments, cancellationToken)
                 .ConfigureAwait(false);
 
             // The handle owns deleting the hand-off from now on: the activated host normally consumes and
             // deletes it, but if that host exits before reading it the handle still removes it on dispose,
             // so connect-back data is never left behind.
-            return new ActivatedAppTestHostHandle(processId, handshakePath);
+            return new ActivatedAppTestHostHandle(processId, handshakePath, activationPayloadPath);
         }
         catch
         {
@@ -237,6 +256,7 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher
                 PackagedAppConnectBackHandshake.TryDelete(handshakePath);
             }
 
+            PackagedAppActivationArguments.TryDeletePayload(activationPayloadPath);
             throw;
         }
     }

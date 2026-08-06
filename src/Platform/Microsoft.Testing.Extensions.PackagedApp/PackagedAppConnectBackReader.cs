@@ -80,7 +80,7 @@ internal static class PackagedAppConnectBackReader
     // when the process has no package identity. Only the Windows build can resolve this through the WinRT
     // ApplicationData projection; other builds fall back to the family-name-derived path.
 #if PACKAGEDAPP_WINRT
-    private static string? TryGetPackageLocalStateDirectory()
+    internal static string? TryGetPackageLocalStateDirectory()
     {
         try
         {
@@ -93,6 +93,6 @@ internal static class PackagedAppConnectBackReader
         }
     }
 #else
-    private static string? TryGetPackageLocalStateDirectory() => null;
+    internal static string? TryGetPackageLocalStateDirectory() => null;
 #endif
 }

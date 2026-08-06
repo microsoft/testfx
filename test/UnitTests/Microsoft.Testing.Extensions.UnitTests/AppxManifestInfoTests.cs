@@ -109,6 +109,79 @@ public sealed class AppxManifestInfoTests
     }
 
     [TestMethod]
+    public void ReadFromManifest_LegacyUwpApplication_IsAppContainer()
+    {
+        const string ManifestXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10">
+              <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="App" Executable="MyTestApp.exe" EntryPoint="Contoso.MyTestApp.App" />
+              </Applications>
+            </Package>
+            """;
+
+        Assert.IsTrue(Assert.ContainsSingle(ReadManifest(ManifestXml).Applications).IsAppContainer);
+    }
+
+    [TestMethod]
+    public void ReadFromManifest_ExplicitAppContainerTrustLevel_IsAppContainer()
+    {
+        const string ManifestXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package
+                xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+                xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10">
+              <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="App" Executable="MyTestApp.exe" uap10:TrustLevel="appContainer" />
+              </Applications>
+            </Package>
+            """;
+
+        Assert.IsTrue(Assert.ContainsSingle(ReadManifest(ManifestXml).Applications).IsAppContainer);
+    }
+
+    [TestMethod]
+    public void ReadFromManifest_PackagedDesktopApplication_IsNotAppContainer()
+    {
+        const string ManifestXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package
+                xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+                xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities">
+              <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="App" Executable="MyTestApp.exe" EntryPoint="Contoso.MyTestApp.App" />
+              </Applications>
+              <Capabilities>
+                <rescap:Capability Name="runFullTrust" />
+              </Capabilities>
+            </Package>
+            """;
+
+        Assert.IsFalse(Assert.ContainsSingle(ReadManifest(ManifestXml).Applications).IsAppContainer);
+    }
+
+    [TestMethod]
+    public void ReadFromManifest_ExplicitMediumIntegrityApplication_IsNotAppContainer()
+    {
+        const string ManifestXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package
+                xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+                xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10">
+              <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="App" Executable="MyTestApp.exe" uap10:RuntimeBehavior="packagedClassicApp" uap10:TrustLevel="mediumIL" />
+              </Applications>
+            </Package>
+            """;
+
+        Assert.IsFalse(Assert.ContainsSingle(ReadManifest(ManifestXml).Applications).IsAppContainer);
+    }
+
+    [TestMethod]
     public void ResolveApplication_WithSingleApplication_ReturnsItRegardlessOfExecutable()
     {
         AppxManifestInfo info = ReadManifest(
