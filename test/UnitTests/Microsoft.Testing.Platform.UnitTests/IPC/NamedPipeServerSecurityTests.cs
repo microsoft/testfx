@@ -10,6 +10,7 @@ using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.IPC.Serializers;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Win32.SafeHandles;
 
 using Moq;
 
@@ -325,6 +326,94 @@ public sealed class NamedPipeServerSecurityTests
         Assert.IsNotNull(response);
     }
 
+    /// <summary>
+    /// The acceptance criterion of the feature, exercised against a real AppContainer identity: a live
+    /// AppContainer process's token is duplicated and impersonated, and that restricted token is used to
+    /// open three pipes — one that authorizes its package, one that authorizes a different package, and one
+    /// that authorizes nothing. Only the first may succeed.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This is a genuine restricted-token access check, which is what makes it meaningful: the same DACL a
+    /// normal token is admitted by is rejected for an AppContainer unless its package SID is named.
+    /// </para>
+    /// <para>
+    /// Candidates are filtered to the shape a real test host has. An AppContainer at <em>untrusted</em>
+    /// integrity (<c>S-1-16-0</c>, which is what Chromium's hardened renderers use) is denied by Mandatory
+    /// Integrity Control before the DACL is consulted and can never connect; an ordinary UWP/WinUI app runs
+    /// at <em>low</em> integrity (<c>S-1-16-4096</c>) and connects with no mandatory label on the pipe. The
+    /// test then picks the first candidate that can actually reach an authorizing pipe and asserts the
+    /// denials against that validated token, so the outcome does not depend on which processes happen to be
+    /// running. It self-skips when the machine exposes no usable AppContainer at all.
+    /// </para>
+    /// </remarks>
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    [SupportedOSPlatform("windows")]
+    public void CreateServerStream_AnAppContainerConnectsOnlyWhenItsOwnPackageIsAuthorized()
+    {
+        List<(SafeHandle Token, string Sid)> candidates = WindowsSecurity.EnumerateAppContainerTokens();
+        try
+        {
+            foreach ((SafeHandle token, string sid) in candidates)
+            {
+                Assert.IsTrue(
+                    NamedPipeServerSecurity.IsAuthorizableAppContainerSid(sid),
+                    $"A live AppContainer SID must satisfy the platform's authorization policy, but '{sid}' did not.");
+
+                if (!TryConnectAsAppContainer(token, [sid]))
+                {
+                    // This container cannot reach even an authorizing pipe (a nested container, or one
+                    // restricted further than a test host would be); it cannot prove anything either way.
+                    continue;
+                }
+
+                Assert.IsFalse(
+                    TryConnectAsAppContainer(token, [OtherPackageSid]),
+                    "An AppContainer must not reach a pipe that authorizes a different package.");
+                Assert.IsFalse(
+                    TryConnectAsAppContainer(token, []),
+                    "An AppContainer must not reach a pipe that authorizes no package at all.");
+                return;
+            }
+
+            Assert.Inconclusive("This machine exposes no AppContainer process whose token can be duplicated and used to connect.");
+        }
+        finally
+        {
+            foreach ((SafeHandle token, _) in candidates)
+            {
+                token.Dispose();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Creates a controller pipe authorizing <paramref name="authorizedSids"/> and reports whether the
+    /// AppContainer behind <paramref name="impersonationToken"/> can open it.
+    /// </summary>
+    [SupportedOSPlatform("windows")]
+    private static bool TryConnectAsAppContainer(SafeHandle impersonationToken, string[] authorizedSids)
+    {
+        string pipeName = $"testingplatform.pipe.test.{Guid.NewGuid():N}";
+        string ownerSid = NamedPipeServerSecurity.GetCurrentProcessOwnerSid();
+        using NamedPipeServerStream server = NamedPipeServerSecurity.CreateServerStream(
+            pipeName,
+            maxNumberOfServerInstances: 1,
+            NamedPipeServerSecurity.BuildSecurityDescriptor(ownerSid, authorizedSids));
+
+        // Only the client open is impersonated; the server keeps running as the test.
+        Task waitForConnection = server.WaitForConnectionAsync(CancellationToken.None);
+
+        bool connected = WindowsSecurity.TryOpenPipeAs(impersonationToken, pipeName, NamedPipeServerSecurity.PipeAccessRightsReadWriteSynchronize);
+        if (connected)
+        {
+            waitForConnection.Wait(TimeSpan.FromSeconds(10));
+        }
+
+        return connected;
+    }
+
     private static int CountAces(string sddl)
         => sddl.Count(static c => c == '(');
 
@@ -342,6 +431,19 @@ public sealed class NamedPipeServerSecurityTests
         private const uint SddlRevision1 = 1;
         private const uint AuthzRmFlagNoAudit = 1;
         private const uint AuthzSkipTokenGroups = 2;
+
+        private const uint ProcessQueryLimitedInformation = 0x1000;
+        private const uint TokenQuery = 0x0008;
+        private const uint TokenDuplicate = 0x0002;
+        private const uint TokenImpersonate = 0x0004;
+        private const int SecurityImpersonation = 2;
+        private const int TokenImpersonationType = 2;
+        private const int TokenIsAppContainerClass = 29;
+        private const int TokenAppContainerSidClass = 31;
+        private const int TokenIntegrityLevelClass = 25;
+        private const string UntrustedIntegritySid = "S-1-16-0";
+        private const uint OpenExisting = 3;
+        private const int ErrorAccessDenied = 5;
 
         private const int SecurityInformation = OwnerSecurityInformation | GroupSecurityInformation | DaclSecurityInformation | LabelSecurityInformation;
 
@@ -484,7 +586,174 @@ public sealed class NamedPipeServerSecurityTests
         public static bool TryImpersonateAnonymous() => ImpersonateAnonymousToken(GetCurrentThread());
 
         [SupportedOSPlatform("windows")]
+        public static bool TryImpersonate(SafeHandle impersonationToken) => ImpersonateLoggedOnUser(impersonationToken);
+
+        [SupportedOSPlatform("windows")]
         public static void RevertToSelf() => RevertToSelfCore();
+
+        /// <summary>
+        /// Duplicates the token of every live AppContainer process whose token can be opened, skipping
+        /// untrusted-integrity containers (Chromium-style hardened sandboxes), which Mandatory Integrity
+        /// Control denies before any DACL is consulted and which therefore cannot model a test host.
+        /// </summary>
+        [SupportedOSPlatform("windows")]
+        public static List<(SafeHandle Token, string Sid)> EnumerateAppContainerTokens()
+        {
+            List<(SafeHandle, string)> tokens = [];
+
+            foreach (Process process in Process.GetProcesses())
+            {
+                try
+                {
+                    IntPtr processHandle = OpenProcess(ProcessQueryLimitedInformation, bInheritHandle: false, process.Id);
+                    if (processHandle == IntPtr.Zero)
+                    {
+                        continue;
+                    }
+
+                    try
+                    {
+                        if (!OpenProcessToken(processHandle, TokenQuery | TokenDuplicate, out IntPtr token))
+                        {
+                            continue;
+                        }
+
+                        try
+                        {
+                            if (!IsAppContainerToken(token)
+                                || GetSidTokenInformation(token, TokenIntegrityLevelClass) == UntrustedIntegritySid
+                                || GetSidTokenInformation(token, TokenAppContainerSidClass) is not { } appContainerSid)
+                            {
+                                continue;
+                            }
+
+                            if (DuplicateTokenEx(token, TokenQuery | TokenDuplicate | TokenImpersonate, IntPtr.Zero, SecurityImpersonation, TokenImpersonationType, out IntPtr duplicated))
+                            {
+                                tokens.Add((new SafeTokenHandle(duplicated), appContainerSid));
+                            }
+                        }
+                        finally
+                        {
+                            CloseHandle(token);
+                        }
+                    }
+                    finally
+                    {
+                        CloseHandle(processHandle);
+                    }
+                }
+                catch (Exception ex) when (ex is InvalidOperationException or Win32Exception or NotSupportedException)
+                {
+                    // The process went away or is not inspectable; keep looking.
+                }
+                finally
+                {
+                    process.Dispose();
+                }
+            }
+
+            return tokens;
+        }
+
+        /// <summary>
+        /// Opens the pipe while impersonating <paramref name="impersonationToken"/> and reports whether
+        /// Windows granted the access. The open goes through <c>CreateFileW</c> on the impersonating thread
+        /// so the result is the kernel's access check on the pipe, with no managed client behavior in
+        /// between.
+        /// </summary>
+        [SupportedOSPlatform("windows")]
+        public static bool TryOpenPipeAs(SafeHandle impersonationToken, string pipeName, int desiredAccess)
+        {
+            if (!ImpersonateLoggedOnUser(impersonationToken))
+            {
+                throw new Win32Exception(Marshal.GetLastWin32Error());
+            }
+
+            try
+            {
+                IntPtr handle = CreateFile($@"\\.\pipe\{pipeName}", (uint)desiredAccess, 0, IntPtr.Zero, OpenExisting, 0, IntPtr.Zero);
+                if (handle == new IntPtr(-1))
+                {
+                    int error = Marshal.GetLastWin32Error();
+                    return error == ErrorAccessDenied
+                        ? false
+                        : throw new Win32Exception(error, $"Unexpected failure opening '{pipeName}' as an AppContainer.");
+                }
+
+                CloseHandle(handle);
+                return true;
+            }
+            finally
+            {
+                RevertToSelfCore();
+            }
+        }
+
+        [SupportedOSPlatform("windows")]
+        private static bool IsAppContainerToken(IntPtr token)
+        {
+            IntPtr buffer = Marshal.AllocHGlobal(sizeof(uint));
+            try
+            {
+                return GetTokenInformation(token, TokenIsAppContainerClass, buffer, sizeof(uint), out _)
+                    && Marshal.ReadInt32(buffer) != 0;
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(buffer);
+            }
+        }
+
+        /// <summary>
+        /// Reads a token information class whose payload starts with a single <c>PSID</c> — which is the
+        /// layout of both <c>TOKEN_APPCONTAINER_INFORMATION</c> and <c>TOKEN_MANDATORY_LABEL</c>.
+        /// </summary>
+        [SupportedOSPlatform("windows")]
+        private static string? GetSidTokenInformation(IntPtr token, int tokenInformationClass)
+        {
+            GetTokenInformation(token, tokenInformationClass, IntPtr.Zero, 0, out int length);
+            if (length <= 0)
+            {
+                return null;
+            }
+
+            IntPtr buffer = Marshal.AllocHGlobal(length);
+            try
+            {
+                if (!GetTokenInformation(token, tokenInformationClass, buffer, length, out _))
+                {
+                    return null;
+                }
+
+                IntPtr sid = Marshal.ReadIntPtr(buffer);
+                if (sid == IntPtr.Zero || !ConvertSidToStringSidCore(sid, out IntPtr stringSid))
+                {
+                    return null;
+                }
+
+                try
+                {
+                    return Marshal.PtrToStringUni(stringSid);
+                }
+                finally
+                {
+                    LocalFree(stringSid);
+                }
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(buffer);
+            }
+        }
+
+        private sealed class SafeTokenHandle : SafeHandleZeroOrMinusOneIsInvalid
+        {
+            public SafeTokenHandle(IntPtr handle)
+                : base(ownsHandle: true)
+                => SetHandle(handle);
+
+            protected override bool ReleaseHandle() => CloseHandle(handle);
+        }
 
         [StructLayout(LayoutKind.Sequential)]
         private struct AuthzAccessRequest
@@ -544,6 +813,10 @@ public sealed class NamedPipeServerSecurityTests
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool ConvertStringSidToSid(string stringSid, out IntPtr sid);
 
+        [DllImport("advapi32.dll", EntryPoint = "ConvertSidToStringSidW", CharSet = CharSet.Unicode, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool ConvertSidToStringSidCore(IntPtr sid, out IntPtr stringSid);
+
         [DllImport("authz.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool AuthzInitializeResourceManager(
@@ -589,6 +862,50 @@ public sealed class NamedPipeServerSecurityTests
         [DllImport("advapi32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool ImpersonateAnonymousToken(IntPtr thread);
+
+        [DllImport("advapi32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool ImpersonateLoggedOnUser(SafeHandle token);
+
+        [DllImport("advapi32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool OpenProcessToken(IntPtr processHandle, uint desiredAccess, out IntPtr tokenHandle);
+
+        [DllImport("advapi32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool GetTokenInformation(
+            IntPtr tokenHandle,
+            int tokenInformationClass,
+            IntPtr tokenInformation,
+            int tokenInformationLength,
+            out int returnLength);
+
+        [DllImport("advapi32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool DuplicateTokenEx(
+            IntPtr existingToken,
+            uint desiredAccess,
+            IntPtr tokenAttributes,
+            int impersonationLevel,
+            int tokenType,
+            out IntPtr newToken);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern IntPtr OpenProcess(uint desiredAccess, [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, int processId);
+
+        [DllImport("kernel32.dll", EntryPoint = "CreateFileW", CharSet = CharSet.Unicode, SetLastError = true)]
+        private static extern IntPtr CreateFile(
+            string fileName,
+            uint desiredAccess,
+            uint shareMode,
+            IntPtr securityAttributes,
+            uint creationDisposition,
+            uint flagsAndAttributes,
+            IntPtr templateFile);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool CloseHandle(IntPtr handle);
 
         [DllImport("advapi32.dll", EntryPoint = "RevertToSelf", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
