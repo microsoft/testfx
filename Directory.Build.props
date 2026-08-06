@@ -106,10 +106,6 @@
 
   <!-- Versioning -->
   <PropertyGroup>
-    <!-- MSTest.SourceGeneration versions independently but follows MSTest's release maturity. -->
-    <MSTestSourceGenerationPreReleaseVersionLabel>$(PreReleaseVersionLabel)</MSTestSourceGenerationPreReleaseVersionLabel>
-    <MSTestSourceGenerationVersionPrefix>2.0.0</MSTestSourceGenerationVersionPrefix>
-
     <MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel>alpha</MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel>
 
     <!--

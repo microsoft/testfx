@@ -49,7 +49,6 @@
     <MicrosoftTestingExtensionsFakesVersion Condition=" '$(MicrosoftTestingExtensionsFakesVersion)' == '' " >${MicrosoftTestingExtensionsFakesVersion}</MicrosoftTestingExtensionsFakesVersion>
     <MicrosoftTestingExtensionsJUnitReportVersion Condition=" '$(MicrosoftTestingExtensionsJUnitReportVersion)' == '' " >${MicrosoftTestingExtensionsJUnitReportVersion}</MicrosoftTestingExtensionsJUnitReportVersion>
     <MicrosoftTestingPlatformVersion Condition=" '$(MicrosoftTestingPlatformVersion)' == '' " >${MicrosoftTestingPlatformVersion}</MicrosoftTestingPlatformVersion>
-    <MSTestSourceGenerationVersion Condition=" '$(MSTestSourceGenerationVersion)' == '' ">${MSTestSourceGenerationVersion}</MSTestSourceGenerationVersion>
     <MSTestVersion Condition=" '$(MSTestVersion)' == '' ">${MSTestVersion}</MSTestVersion>
   </PropertyGroup>
 
