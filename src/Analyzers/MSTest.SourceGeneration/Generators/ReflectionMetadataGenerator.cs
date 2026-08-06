@@ -155,7 +155,7 @@ public sealed class ReflectionMetadataGenerator : IIncrementalGenerator
                 // for by-ref parameters `ParameterType` is `T&` (i.e. `MakeByRefType()`), so a
                 // naive `typeof(T)` match always fails and ResolveMethod would throw inside the
                 // module initializer — aborting test discovery for the whole assembly. The
-                // experimental source-gen path doesn't model by-ref signatures yet, so skip.
+                // source-generated reflection path doesn't model by-ref signatures yet, so skip.
                 if (HasByRefParameter(method))
                 {
                     continue;
