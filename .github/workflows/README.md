@@ -142,7 +142,7 @@ See the upstream reference: <https://github.com/github/gh-aw/blob/main/docs/src/
 Historically the four local workflows that read issues/PRs
 ([`add-tests.md`](./add-tests.md), [`weekly-issue-activity.md`](./weekly-issue-activity.md),
 [`shared/address-review-shared.md`](./shared/address-review-shared.md), and
-[`shared/grade-tests-shared.md`](./shared/grade-tests-shared.md)) set `lockdown: true` on the
+[`shared/test-reviewer-shared.md`](./shared/test-reviewer-shared.md)) set `lockdown: true` on the
 GitHub MCP tool. Lockdown mode **rejected the default `GITHUB_TOKEN`** and forced a custom PAT
 (`GH_AW_GITHUB_MCP_SERVER_TOKEN || GH_AW_GITHUB_TOKEN || GITHUB_TOKEN`), so a single
 missing/expired PAT failed *all* of them at activation.
@@ -173,7 +173,7 @@ a workflow needs elevated access (then use the GitHub App above).
 
 **Symptom.** The `agent` job succeeds, the `detection` job fails on its `Install GitHub Copilot CLI`
 step, and `safe_outputs` is **skipped** — so only the workflow's configured safe outputs (in the
-observed run of `grade-tests-on-pr`, the grading comment) are suppressed. The `[aw] Detection Runs`
+observed run of `test-reviewer-on-pr`, the review comment) are suppressed. The `[aw] Detection Runs`
 tracker issue still records the run as `warning | parse_error`, because the threat-detection result
 file was never written. The step log shows repeated
 `curl: (22) The requested URL returned error: 504` while fetching `SHA256SUMS.txt` from
@@ -294,8 +294,8 @@ would run every agentic workflow on an unsupported CLI.
 | [`build-failure-analysis.md`](./build-failure-analysis.md) | Azure Pipelines `microsoft.testfx` check `completed` (failure) on a PR to `main` or `rel/*` | Downloads the binary logs the failed Azure DevOps build already produced (all build legs — it does **not** rebuild), and the `build-failure-analyst` agent queries them via `binlog-mcp`, posts a summary comment, and attaches inline `suggestion` blocks. Advisory only — not a gating check. |
 | [`build-failure-analysis-command.md`](./build-failure-analysis-command.md) | `/analyze-build-failure` on a PR | Re-runs the analysis on demand: inspects the PR's latest `microsoft.testfx` build and, only when it failed, downloads its binlogs and analyzes them (no rebuild). |
 | [`add-tests.md`](./add-tests.md) | `/add-tests` on a PR | Generates unit tests for code introduced in a pull request. |
-| [`grade-tests-on-pr.agent.md`](./grade-tests-on-pr.agent.md) | PR opened/reopened/synchronize/ready_for_review touching `test/**` | Automatically grades new and modified test methods and posts a single PR scorecard comment via the `grade-tests` skill. |
-| [`grade-tests.agent.md`](./grade-tests.agent.md) | `/grade-tests` on a PR | Re-runs the test-quality grading on demand. |
+| [`test-reviewer-on-pr.agent.md`](./test-reviewer-on-pr.agent.md) | PR opened/reopened/synchronize/ready_for_review touching `test/**` | Expert-reviews new and modified test methods for correctness, effectiveness, reliability, maintainability, and repository conventions; posts a scorecard and apply-ready suggestions. |
+| [`test-reviewer.agent.md`](./test-reviewer.agent.md) | `/review-tests` on a PR | Re-runs the expert test review on demand. |
 | [`parallel-safety-audit.md`](./parallel-safety-audit.md) | PR opened/reopened/synchronize/ready_for_review touching `test/**`, or the repo-root `Directory.Build.props` / `Directory.Build.targets` / `Directory.Packages.props` | Audits the changed MSTest tests for parallel-safety (process-global state, shared filesystem paths, `[ResourceLock]`/`[DoNotParallelize]` reconciliation, over-serialization) and posts a ranked, scope-aware readiness report. Complements analyzer MSTEST0073 (and the forthcoming MSTEST0074–0077). |
 | [`parallel-safety-audit-command.md`](./parallel-safety-audit-command.md) | `/parallel-audit` on a PR | Re-runs the parallel-safety audit on demand. |
 
@@ -351,7 +351,7 @@ Reusable agentic-workflow snippets imported via `imports:` in workflow frontmatt
 | [`shared/build-failure-analysis-shared.md`](./shared/build-failure-analysis-shared.md) | `build-failure-analysis.md`, `build-failure-analysis-command.md` |
 | [`shared/formatting.md`](./shared/formatting.md) | Quality improver workflows (output formatting conventions) |
 | [`shared/msbuild-review-shared.md`](./shared/msbuild-review-shared.md) | `msbuild-quality-review.md` |
-| [`shared/grade-tests-shared.md`](./shared/grade-tests-shared.md) | `grade-tests-on-pr.agent.md`, `grade-tests.agent.md` |
+| [`shared/test-reviewer-shared.md`](./shared/test-reviewer-shared.md) | `test-reviewer-on-pr.agent.md`, `test-reviewer.agent.md` |
 | [`shared/parallel-safety-audit-shared.md`](./shared/parallel-safety-audit-shared.md) | `parallel-safety-audit.md`, `parallel-safety-audit-command.md` |
 | [`shared/repo-build-setup.md`](./shared/repo-build-setup.md) | Workflows that need to restore + build the repo before the agent runs |
 | [`shared/reporting.md`](./shared/reporting.md) | Quality improver workflows (issue/PR body templates) |
