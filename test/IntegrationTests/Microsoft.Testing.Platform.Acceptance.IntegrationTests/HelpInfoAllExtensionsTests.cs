@@ -161,7 +161,7 @@ Extension options:
     --report-azdo-flaky-history
         Query Azure DevOps test result history for the past N days (1-90) and annotate reported failures with flakiness context.
     --report-azdo-groups
-        Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.
+        Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'off'. Requires '--report-azdo'.
     --report-azdo-quarantine-file
         Path to a text file that lists quarantined test fully qualified names or glob patterns. Matching failures are reported as warnings.
     --report-azdo-severity
@@ -488,7 +488,7 @@ Registered command line providers:
       --report-azdo-groups
         Arity: 1
         Hidden: False
-        Description: Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.
+        Description: Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'off'. Requires '--report-azdo'.
       --report-azdo-quarantine-file
         Arity: 1
         Hidden: False
