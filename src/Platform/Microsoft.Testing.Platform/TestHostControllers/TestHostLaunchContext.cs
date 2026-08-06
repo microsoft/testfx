@@ -7,6 +7,7 @@ namespace Microsoft.Testing.Platform.Extensions.TestHostControllers;
 /// Carries the fully prepared information the platform would have used to start the test host,
 /// passed to an <see cref="ITestHostLauncher"/>.
 /// </summary>
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public sealed class TestHostLaunchContext
 {
     /// <summary>

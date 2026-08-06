@@ -16,6 +16,7 @@ namespace Microsoft.Testing.Platform.Extensions.TestHostControllers;
 /// host on a remote machine, as long as it returns an <see cref="ITestHostHandle"/> the platform
 /// can monitor.
 /// </remarks>
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public interface ITestHostLauncher : ITestHostControllersExtension
 {
     /// <summary>

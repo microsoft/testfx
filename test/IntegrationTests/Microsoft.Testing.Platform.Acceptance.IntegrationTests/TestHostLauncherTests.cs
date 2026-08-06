@@ -36,6 +36,8 @@ public sealed class TestHostLauncherTests : AcceptanceTestBase<TestHostLauncherT
     <UseAppHost>true</UseAppHost>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
+    <!-- The test host launcher extension point remains experimental. -->
+    <NoWarn>$(NoWarn);TPEXP</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
