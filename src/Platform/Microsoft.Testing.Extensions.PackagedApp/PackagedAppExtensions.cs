@@ -10,7 +10,6 @@ namespace Microsoft.Testing.Extensions;
 /// Provides extension methods for adding Windows test host launch support (packaged, full-trust MSIX
 /// desktop apps, and — when opted in — non-packaged loose layouts) to the test application builder.
 /// </summary>
-[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public static class PackagedAppExtensions
 {
     /// <summary>

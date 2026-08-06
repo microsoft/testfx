@@ -14,12 +14,8 @@
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <GenerateBuildInfo>true</GenerateBuildInfo>
     <BuildInfoTemplateFile>$(RepoRoot)src\Platform\SharedExtensionHelpers\BuildInfo.cs.template</BuildInfoTemplateFile>
-    <!-- This extension consumes the experimental ITestHostLauncher extension point. -->
+    <!-- This stable package consumes the still-experimental ITestHostLauncher extension point. -->
     <NoWarn>$(NoWarn);TPEXP</NoWarn>
-    <!-- Early preview/experimental package: keep an experimental (alpha) version even in official builds. -->
-    <VersionPrefix>$(MicrosoftTestingExtensionsPackagedAppVersionPrefix)</VersionPrefix>
-    <PreReleaseVersionLabel>$(MicrosoftTestingExtensionsPackagedAppPreReleaseVersionLabel)</PreReleaseVersionLabel>
-    <SuppressFinalPackageVersion>true</SuppressFinalPackageVersion>
   </PropertyGroup>
 
   <!-- The register-and-activate path (PackageManager + IApplicationActivationManager) only compiles for
