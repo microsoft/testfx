@@ -17,7 +17,7 @@
   <!-- Import VSTest.targets -->
   <Import Project="$(MSBuildThisFileDirectory)VSTest/VSTest.targets" Condition=" '$(UseVSTest)' == 'true' " />
 
-  <Target Name="_MSTestSDKValidateWindowsApplicationModel" BeforeTargets="Build">
+  <Target Name="_MSTestSDKValidateWindowsApplicationModel" BeforeTargets="PrepareForBuild">
     <Error Condition=" '$(UseWinUI)' == 'true' AND ('$(UseUwp)' == 'true' OR '$(UseUwpTools)' == 'true') "
            Text="A test project cannot use both WinUI and UWP application models." />
     <Error Condition=" '$(IsTestApplication)' == 'true' AND ('$(UseUwp)' == 'true' OR '$(UseUwpTools)' == 'true') AND '$(UseVSTest)' != 'true' "
