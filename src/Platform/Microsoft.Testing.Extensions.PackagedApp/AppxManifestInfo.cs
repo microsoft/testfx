@@ -225,12 +225,11 @@ internal sealed class AppxManifestInfo
 
         string packageFamilyName = $"{name}_{ComputePublisherId(publisher)}";
 
-        bool canRunFullTrust = root?
-            .Descendants()
+        bool canRunFullTrust = root is not null
+            && root.Descendants()
             .Any(static element =>
                 element.Name.LocalName == "Capability"
-                && string.Equals(element.Attribute("Name")?.Value, "runFullTrust", StringComparison.OrdinalIgnoreCase))
-            == true;
+                && string.Equals(element.Attribute("Name")?.Value, "runFullTrust", StringComparison.OrdinalIgnoreCase));
 
         // A package may declare several applications, each with its own id (and AUMID). Capture them
         // all so the launcher can resolve the one matching the executable it was asked to launch,
