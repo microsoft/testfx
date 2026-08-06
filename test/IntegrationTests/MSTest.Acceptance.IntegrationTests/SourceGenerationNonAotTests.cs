@@ -18,6 +18,7 @@ namespace MSTest.Acceptance.IntegrationTests;
 public class SourceGenerationNonAotTests : AcceptanceTestBase<NopAssetFixture>
 {
     private const string AssetName = "MSTestSourceGenNonAot";
+    private const string SdkAssetName = "MSTestSourceGenSdkNonAot";
 
     // Source code for a non-AOT, non-trimmed test project that references MSTest.SourceGeneration.
     // EmitCompilerGeneratedFiles is enabled so we can statically assert the generator ran and
@@ -75,6 +76,43 @@ public class UnitTest1
 }
 """;
 
+    private const string CentralPackageManagementSourceCode = """
+
+#file Directory.Packages.props
+<Project>
+    <PropertyGroup>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+        <CentralPackageVersionOverrideEnabled>false</CentralPackageVersionOverrideEnabled>
+    </PropertyGroup>
+</Project>
+""";
+
+    private const string SdkSourceCode = """
+#file MSTestSourceGenSdkNonAot.csproj
+<Project Sdk="MSTest.Sdk/$MSTestVersion$">
+    <PropertyGroup>
+        <TargetFramework>$TargetFramework$</TargetFramework>
+        <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
+        <EnableMSTestSourceGeneration>true</EnableMSTestSourceGeneration>
+        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    </PropertyGroup>
+</Project>
+
+#file TestClass1.cs
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace MyTests;
+
+[TestClass]
+public class UnitTest1
+{
+    [TestMethod]
+    public void TestMethod1()
+    {
+    }
+}
+""";
+
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
     public async Task SourceGenerationNonAot_BuildsAndRunsTests_WithExitCodeZero(string tfm)
@@ -119,6 +157,36 @@ public class UnitTest1
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: BuildConfiguration.Release);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 4, skipped: 0);
+        testHostResult.AssertExitCodeIs(0);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task MSTestSdk_SourceGenerationOptIn_BuildsAndRunsTests(bool useCentralPackageManagement)
+    {
+        string tfm = TargetFrameworks.NetCurrent;
+        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+            $"{SdkAssetName}_{useCentralPackageManagement}",
+            (useCentralPackageManagement ? SdkSourceCode + CentralPackageManagementSourceCode : SdkSourceCode)
+            .PatchCodeWithReplace("$TargetFramework$", tfm)
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion),
+            addPublicFeeds: true);
+
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
+            $"build {generator.TargetAssetPath} -c {BuildConfiguration.Release} -f {tfm}",
+            cancellationToken: TestContext.CancellationToken);
+        buildResult.AssertExitCodeIs(0);
+
+        string objGenerated = Path.Combine(generator.TargetAssetPath, "obj", "Release", tfm, "generated");
+        string[] generatedFiles = Directory.Exists(objGenerated)
+            ? Directory.GetFiles(objGenerated, "*MSTestReflectionMetadata*.g.cs", SearchOption.AllDirectories)
+            : [];
+        Assert.IsNotEmpty(generatedFiles, $"the MSTest.Sdk source-generation opt-in should have emitted metadata under '{objGenerated}'");
+
+        var testHost = TestHost.LocateFrom(generator.TargetAssetPath, SdkAssetName, tfm, buildConfiguration: BuildConfiguration.Release);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
         testHostResult.AssertExitCodeIs(0);
     }
 

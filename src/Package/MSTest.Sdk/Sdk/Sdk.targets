@@ -13,6 +13,15 @@
   <!-- Import VSTest.targets -->
   <Import Project="$(MSBuildThisFileDirectory)VSTest/VSTest.targets" Condition=" '$(UseVSTest)' == 'true' " />
 
+  <!-- Source generation is automatic for NativeAOT and opt-in for all other configurations. -->
+  <ItemGroup Condition=" '$(PublishAot)' != 'true' and '$(EnableMSTestSourceGeneration)' == 'true' ">
+    <PackageReference Include="MSTest.SourceGeneration" Sdk="MSTest">
+      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MSTestVersion)</Version>
+    </PackageReference>
+    <PackageVersion Include="MSTest.SourceGeneration" Version="$(MSTestVersion)"
+                    Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
+  </ItemGroup>
+
   <!--
     Implicit bottom import.
 

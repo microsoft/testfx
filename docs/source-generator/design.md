@@ -11,8 +11,8 @@ that adding new code paths does not silently change the contract.
    `PublishAot=true` or `PublishTrimmed=true`, MSTest must continue to discover and run
    tests without surfacing IL2026 / IL3050 warnings to the user and without runtime
    `MissingMethodException` failures caused by the trimmer removing test members.
-2. **No user-visible API change.** Opting in is a single NuGet reference. Existing test
-   code keeps working.
+2. **No user-visible API change.** Opting in is a single NuGet reference or MSTest.Sdk
+   property. Existing test code keeps working.
 3. **Reduced reflection cost.** Move the per-assembly `Assembly.GetTypes()` and per-class
    `Type.GetMethods()` scans from startup to compile time.
 
@@ -245,9 +245,11 @@ benefit of `IIncrementalGenerator`. Not pursued.
 
 For **most** AOT/trimmed test scenarios, the recommended sequence is:
 
-1. Reference `MSTest.SourceGeneration` — this gives you the registry hand-off (skips
-   `Assembly.GetTypes()` at startup), fine-grained rooting, and cross-assembly base-type
-   preservation.
+1. Enable source generation. MSTest.Sdk includes it automatically for NativeAOT projects;
+   set `<EnableMSTestSourceGeneration>true</EnableMSTestSourceGeneration>` for other
+   configurations. Without MSTest.Sdk, reference `MSTest.SourceGeneration` directly.
+   This gives you the registry hand-off (skips `Assembly.GetTypes()` at startup),
+   fine-grained rooting, and cross-assembly base-type preservation.
 2. If a test shape is not yet supported by the generator (inherited `[TestClass]`, open
    generics, etc.), add `<TrimmerRootAssembly Include="$(AssemblyName)" />` as a
    backstop. The reflection fallback paths in `SourceGeneratedReflectionOperations` will
