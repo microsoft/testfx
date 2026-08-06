@@ -1,18 +1,19 @@
 ---
-name: "Grade Tests on PR (command)"
+name: "Test Reviewer on PR (command)"
 description: >-
-  Re-grades the new and modified test methods of a pull request when a
-  maintainer comments `/grade-tests`. Posts a scorecard comment plus
-  inline `suggestion` comments for tests graded below A.
+  Re-reviews the new and modified test methods of a pull request when a
+  maintainer comments `/review-tests`. Reviews correctness, effectiveness,
+  reliability, maintainability, and repository conventions; posts a compact
+  scorecard plus complete, apply-ready inline suggestions.
 
 # The automatic on-open / on-synchronize variant lives in
-# `grade-tests-on-pr.agent.md`. They must remain separate workflows
+# `test-reviewer-on-pr.agent.md`. They must remain separate workflows
 # because mixing `slash_command` with other triggers makes gh-aw's
 # activation gate always require a command position match, silently
 # skipping the agent on every non-comment event.
 on:
   slash_command:
-    name: grade-tests
+    name: review-tests
     events: [pull_request_comment]
     strategy: centralized
   roles: [admin, maintainer, write]
@@ -24,7 +25,7 @@ permissions:
   copilot-requests: write
 
 imports:
-  - shared/grade-tests-shared.md
+  - shared/test-reviewer-shared.md
 
 safe-outputs:
   messages:
@@ -33,10 +34,10 @@ safe-outputs:
     report-as-issue: false
 
 concurrency:
-  group: grade-tests-${{ github.event.issue.number }}
+  group: test-reviewer-${{ github.event.issue.number }}
   cancel-in-progress: true
 
 timeout-minutes: 20
 ---
 
-<!-- Body provided by shared/grade-tests-shared.md -->
+<!-- Body provided by shared/test-reviewer-shared.md -->

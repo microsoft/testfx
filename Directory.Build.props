@@ -106,13 +106,6 @@
 
   <!-- Versioning -->
   <PropertyGroup>
-    <MSTestSourceGenerationPreReleaseVersionLabel>alpha</MSTestSourceGenerationPreReleaseVersionLabel>
-
-    <!--
-      This is a early preview package, keep 2.0.0-alpha or similar suffix even in official builds.
-    -->
-    <MSTestSourceGenerationVersionPrefix>2.0.0</MSTestSourceGenerationVersionPrefix>
-
     <MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel>alpha</MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel>
 
     <!--
@@ -126,27 +119,6 @@
     This is an early preview package, keep 1.0.0-alpha or similar suffix even in official builds.
     -->
     <MicrosoftTestingExtensionsJUnitReportVersionPrefix>1.0.0</MicrosoftTestingExtensionsJUnitReportVersionPrefix>
-
-    <MicrosoftTestingExtensionsGitHubActionsReportPreReleaseVersionLabel>alpha</MicrosoftTestingExtensionsGitHubActionsReportPreReleaseVersionLabel>
-
-    <!--
-    This is an early preview package, keep 1.0.0-alpha or similar suffix even in official builds.
-    -->
-    <MicrosoftTestingExtensionsGitHubActionsReportVersionPrefix>1.0.0</MicrosoftTestingExtensionsGitHubActionsReportVersionPrefix>
-
-    <MicrosoftTestingExtensionsOpenTelemetryPreReleaseVersionLabel>alpha</MicrosoftTestingExtensionsOpenTelemetryPreReleaseVersionLabel>
-
-    <!--
-    This is an early preview package, keep 1.0.0-alpha or similar suffix even in official builds.
-    -->
-    <MicrosoftTestingExtensionsOpenTelemetryVersionPrefix>1.0.0</MicrosoftTestingExtensionsOpenTelemetryVersionPrefix>
-
-    <MicrosoftTestingExtensionsPackagedAppPreReleaseVersionLabel>alpha</MicrosoftTestingExtensionsPackagedAppPreReleaseVersionLabel>
-
-    <!--
-    This is an early preview package, keep 1.0.0-alpha or similar suffix even in official builds.
-    -->
-    <MicrosoftTestingExtensionsPackagedAppVersionPrefix>1.0.0</MicrosoftTestingExtensionsPackagedAppVersionPrefix>
 
     <MicrosoftTestingExtensionsVideoRecorderPreReleaseVersionLabel>alpha</MicrosoftTestingExtensionsVideoRecorderPreReleaseVersionLabel>
 

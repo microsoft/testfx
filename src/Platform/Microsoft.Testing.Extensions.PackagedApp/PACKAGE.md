@@ -1,8 +1,5 @@
 # Microsoft.Testing.Extensions.PackagedApp
 
-> [!IMPORTANT]
-> This package is experimental and consumes the experimental `ITestHostLauncher` extension point of [Microsoft.Testing.Platform](https://www.nuget.org/packages/Microsoft.Testing.Platform). The API may change or be removed in a future update.
-
 `Microsoft.Testing.Extensions.PackagedApp` is an extension for [Microsoft.Testing.Platform](https://www.nuget.org/packages/Microsoft.Testing.Platform) that starts Windows test hosts which cannot simply be `Process.Start`ed. In its Windows build (`net*-windows`) a packaged, full-trust MSIX desktop host is registered with the OS and activated by Application User Model ID (AUMID); a non-packaged (loose-layout) host can optionally be deployed into an isolated directory and launched from there.
 
 It is the consumer of the platform's `ITestHostLauncher` extension point for Windows test hosts. Packaged Windows apps require package identity and ship as MSIX; VSTest exposes a single `UwpTestHostRuntimeProvider` for the equivalent scenario, built on Visual-Studio-internal deployment components, whereas this extension uses only public, redistributable Windows APIs:

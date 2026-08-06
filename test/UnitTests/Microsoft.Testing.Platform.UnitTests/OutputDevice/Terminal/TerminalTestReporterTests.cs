@@ -384,8 +384,8 @@ public sealed class TerminalTestReporterTests
             ␛[m  total: 5
             ␛[31m  failed: 3
             ␛[m  succeeded: 1
-              skipped: 1
-              duration: 3652058d 23h 59m 59s 999ms
+            ␛[33m  skipped: 1
+            ␛[m  duration: 3652058d 23h 59m 59s 999ms
 
             """;
 
@@ -481,12 +481,39 @@ public sealed class TerminalTestReporterTests
             ␛[m  total: 5
             ␛[31m  failed: 3
             ␛[m  succeeded: 1
-              skipped: 1
-              duration: 3652058d 23h 59m 59s 999ms
+            ␛[33m  skipped: 1
+            ␛[m  duration: 3652058d 23h 59m 59s 999ms
 
             """;
 
         Assert.AreEqual(expected, ShowEscape(output));
+    }
+
+    [TestMethod]
+    public void AnsiTerminal_PassingRunWithSkippedTests_ColorsSkippedSummaryYellow()
+    {
+        const string Assembly = "assembly.dll";
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
+        {
+            ShowPassedTests = () => true,
+            AnsiMode = AnsiMode.ForceAnsi,
+            ShowProgress = () => false,
+        });
+
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, 1, isDiscovery: false, isHelp: false, isRetry: false);
+        terminalReporter.AssemblyRunStarted(Assembly, "net8.0", "x64", "0", "0");
+        terminalReporter.TestCompleted("0", testNodeUid: "PassedTest", "PassedTest", TestOutcome.Passed, TimeSpan.Zero,
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+        terminalReporter.TestCompleted("0", testNodeUid: "SkippedTest", "SkippedTest", TestOutcome.Skipped, TimeSpan.Zero,
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+        terminalReporter.AssemblyRunCompleted("0");
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: null);
+
+        string escapedOutput = ShowEscape(stringBuilderConsole.Output)!;
+        string expectedSummaryLines =
+            $"\x241b[32m  succeeded: 1{Environment.NewLine}\x241b[m\x241b[33m  skipped: 1{Environment.NewLine}\x241b[m  duration:";
+        Assert.Contains(expectedSummaryLines, escapedOutput);
     }
 
     [TestMethod]

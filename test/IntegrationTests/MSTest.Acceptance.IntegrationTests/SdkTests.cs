@@ -876,6 +876,23 @@ namespace MSTestWebTest
     }
 
     [TestMethod]
+    public async Task MSTestSdk_UnpackagedWinUI_RejectsVSTest()
+    {
+        DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(
+            "UnpackagedWinUIVSTestSdk",
+            """
+            <UseWinUI>true</UseWinUI>
+            <WindowsPackageType>None</WindowsPackageType>
+            <UseVSTest>true</UseVSTest>
+            """,
+            failIfReturnValueIsNotZero: false,
+            target: "Build");
+
+        Assert.AreNotEqual(0, result.ExitCode);
+        result.AssertOutputContains("VSTest does not support unpackaged WinUI test applications.");
+    }
+
+    [TestMethod]
     public async Task MSTestSdk_PackagedWinUI_DefaultsToMtpWithPackagedAppLauncher()
     {
         DotnetMuxerResult result = await EvaluateWindowsApplicationModelAsync(

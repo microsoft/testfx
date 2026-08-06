@@ -37,6 +37,7 @@
     <MicrosoftTestingExtensionsTrxReportVersion Condition=" '$(MicrosoftTestingExtensionsTrxReportVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsTrxReportVersion>
 
     <!-- Packaged WinUI applications must be registered and activated by AUMID. -->
+    <MicrosoftTestingExtensionsPackagedAppVersion Condition=" '$(MicrosoftTestingExtensionsPackagedAppVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsPackagedAppVersion>
     <EnableMicrosoftTestingExtensionsPackagedApp
       Condition=" '$(EnableMicrosoftTestingExtensionsPackagedApp)' == '' AND '$(IsTestApplication)' == 'true' AND '$(UseWinUI)' == 'true' AND '$(WindowsPackageType)' != 'None' ">true</EnableMicrosoftTestingExtensionsPackagedApp>
     <EnableMicrosoftTestingExtensionsPackagedApp Condition=" '$(EnableMicrosoftTestingExtensionsPackagedApp)' == '' ">false</EnableMicrosoftTestingExtensionsPackagedApp>
