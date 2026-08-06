@@ -34,7 +34,7 @@ public sealed class DotnetTestPipeAzureDevOpsForwardingTests : AcceptanceTestBas
 
         FakeDotnetTestSdkResult result = await FakeDotnetTestSdk.RunAsync(
             testHost,
-            extraArguments: "--report-azdo",
+            extraArguments: "--report-azdo --report-azdo-groups on",
             environmentVariables: new Dictionary<string, string?> { ["TF_BUILD"] = "true" },
             supportedProtocolVersions: HostAdvertisedProtocolVersions,
             cancellationToken: TestContext.CancellationToken);
@@ -78,7 +78,7 @@ public sealed class DotnetTestPipeAzureDevOpsForwardingTests : AcceptanceTestBas
         // An older SDK that does not understand AzureDevOpsLogMessage advertises only up to 1.1.0.
         FakeDotnetTestSdkResult result = await FakeDotnetTestSdk.RunAsync(
             testHost,
-            extraArguments: "--report-azdo",
+            extraArguments: "--report-azdo --report-azdo-groups on",
             environmentVariables: new Dictionary<string, string?> { ["TF_BUILD"] = "true" },
             supportedProtocolVersions: "1.0.0;1.1.0",
             cancellationToken: TestContext.CancellationToken);
@@ -106,7 +106,7 @@ public sealed class DotnetTestPipeAzureDevOpsForwardingTests : AcceptanceTestBas
         // exercise.
         FakeDotnetTestSdkResult result = await FakeDotnetTestSdk.RunAsync(
             testHost,
-            extraArguments: "--report-azdo",
+            extraArguments: "--report-azdo --report-azdo-groups on",
             environmentVariables: new Dictionary<string, string?> { ["TF_BUILD"] = "false" },
             supportedProtocolVersions: HostAdvertisedProtocolVersions,
             cancellationToken: TestContext.CancellationToken);
