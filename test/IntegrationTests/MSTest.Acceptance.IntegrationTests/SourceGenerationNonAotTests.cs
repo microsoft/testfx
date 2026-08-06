@@ -94,8 +94,9 @@ public class UnitTest1
         <TargetFramework>$TargetFramework$</TargetFramework>
         <IsTestApplication>$IsTestApplication$</IsTestApplication>
         <PublishAot>$PublishAot$</PublishAot>
-        <EnableMicrosoftTestingPlatform>$IsTestApplication$</EnableMicrosoftTestingPlatform>
-        <EnableMSTestSourceGeneration>true</EnableMSTestSourceGeneration>
+        <UseVSTest>$UseVSTest$</UseVSTest>
+        $EnableMicrosoftTestingPlatformProperty$
+        $EnableMSTestSourceGenerationProperty$
         <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
     </PropertyGroup>
     $ExtraItems$
@@ -183,6 +184,13 @@ public class UnitTest1
             .PatchCodeWithReplace("$TargetFramework$", tfm)
             .PatchCodeWithReplace("$IsTestApplication$", isTestApplication.ToString().ToLowerInvariant())
             .PatchCodeWithReplace("$PublishAot$", "false")
+            .PatchCodeWithReplace("$UseVSTest$", "false")
+            .PatchCodeWithReplace(
+                "$EnableMicrosoftTestingPlatformProperty$",
+                isTestApplication ? "<EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>" : string.Empty)
+            .PatchCodeWithReplace(
+                "$EnableMSTestSourceGenerationProperty$",
+                "<EnableMSTestSourceGeneration>true</EnableMSTestSourceGeneration>")
             .PatchCodeWithReplace("$ExtraItems$", string.Empty)
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion),
             addPublicFeeds: true);
@@ -219,6 +227,9 @@ public class UnitTest1
             .PatchCodeWithReplace("$TargetFramework$", tfm)
             .PatchCodeWithReplace("$IsTestApplication$", "false")
             .PatchCodeWithReplace("$PublishAot$", "true")
+            .PatchCodeWithReplace("$UseVSTest$", "false")
+            .PatchCodeWithReplace("$EnableMicrosoftTestingPlatformProperty$", string.Empty)
+            .PatchCodeWithReplace("$EnableMSTestSourceGenerationProperty$", string.Empty)
             .PatchCodeWithReplace("$ExtraItems$", TestingPlatformPackageReference)
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion),
@@ -237,6 +248,37 @@ public class UnitTest1
     }
 
     [TestMethod]
+    public async Task MSTestSdk_SourceGenerationOptIn_VSTestTakesPrecedenceOverNativeAot()
+    {
+        string tfm = TargetFrameworks.NetCurrent;
+        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+            $"{SdkAssetName}_VSTestNativeAot",
+            SdkSourceCode
+            .PatchCodeWithReplace("$TargetFramework$", tfm)
+            .PatchCodeWithReplace("$IsTestApplication$", "true")
+            .PatchCodeWithReplace("$PublishAot$", "true")
+            .PatchCodeWithReplace("$UseVSTest$", "true")
+            .PatchCodeWithReplace("$EnableMicrosoftTestingPlatformProperty$", string.Empty)
+            .PatchCodeWithReplace(
+                "$EnableMSTestSourceGenerationProperty$",
+                "<EnableMSTestSourceGeneration>true</EnableMSTestSourceGeneration>")
+            .PatchCodeWithReplace("$ExtraItems$", string.Empty)
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion),
+            addPublicFeeds: true);
+
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
+            $"build {generator.TargetAssetPath} -c {BuildConfiguration.Release}",
+            cancellationToken: TestContext.CancellationToken);
+        buildResult.AssertExitCodeIs(0);
+
+        string objGenerated = Path.Combine(generator.TargetAssetPath, "obj", "Release", tfm, "generated");
+        string[] generatedFiles = Directory.Exists(objGenerated)
+            ? Directory.GetFiles(objGenerated, "*MSTestReflectionMetadata*.g.cs", SearchOption.AllDirectories)
+            : [];
+        Assert.IsNotEmpty(generatedFiles, $"the VSTest source-generation opt-in should have emitted metadata under '{objGenerated}'");
+    }
+
+    [TestMethod]
     public async Task MSTestSdk_SourceGenerationOptIn_RejectsNetStandardTestLibrary()
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
@@ -245,6 +287,11 @@ public class UnitTest1
             .PatchCodeWithReplace("$TargetFramework$", "netstandard2.0")
             .PatchCodeWithReplace("$IsTestApplication$", "false")
             .PatchCodeWithReplace("$PublishAot$", "false")
+            .PatchCodeWithReplace("$UseVSTest$", "false")
+            .PatchCodeWithReplace("$EnableMicrosoftTestingPlatformProperty$", string.Empty)
+            .PatchCodeWithReplace(
+                "$EnableMSTestSourceGenerationProperty$",
+                "<EnableMSTestSourceGeneration>true</EnableMSTestSourceGeneration>")
             .PatchCodeWithReplace("$ExtraItems$", string.Empty)
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion),
             addPublicFeeds: true);
@@ -255,7 +302,7 @@ public class UnitTest1
             cancellationToken: TestContext.CancellationToken);
         buildResult.AssertExitCodeIs(1);
         buildResult.AssertOutputContains(
-            "'EnableMSTestSourceGeneration' is not supported for .NET Standard target frameworks because the required MSTest.TestAdapter runtime hooks are unavailable.");
+            "MSTest source generation is not supported for .NET Standard target frameworks because the required MSTest.TestAdapter runtime hooks are unavailable.");
     }
 
     public TestContext TestContext { get; set; } = null!;

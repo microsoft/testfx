@@ -15,13 +15,15 @@
 
   <Target Name="_MSTestSDKValidateSourceGeneration"
           BeforeTargets="PrepareForBuild"
-          Condition=" '$(EnableMSTestSourceGeneration)' == 'true' and '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' == '.NETStandard' ">
-    <Error Text="'EnableMSTestSourceGeneration' is not supported for .NET Standard target frameworks because the required MSTest.TestAdapter runtime hooks are unavailable." />
+          Condition=" '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' == '.NETStandard'
+                      and ( '$(EnableMSTestSourceGeneration)' == 'true'
+                            or ( '$(UseVSTest)' == 'false' and '$(PublishAot)' == 'true' ) ) ">
+    <Error Text="MSTest source generation is not supported for .NET Standard target frameworks because the required MSTest.TestAdapter runtime hooks are unavailable." />
   </Target>
 
   <!-- Source generation is automatic for NativeAOT and opt-in for all other configurations. -->
-  <ItemGroup Condition=" '$(PublishAot)' != 'true'
-                         and '$(EnableMSTestSourceGeneration)' == 'true'
+  <ItemGroup Condition=" '$(EnableMSTestSourceGeneration)' == 'true'
+                         and ( '$(UseVSTest)' == 'true' or '$(PublishAot)' != 'true' )
                          and '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' != '.NETStandard' ">
     <PackageReference Include="MSTest.SourceGeneration" Sdk="MSTest">
       <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MSTestVersion)</Version>
@@ -30,9 +32,10 @@
                     Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(EnableMSTestSourceGeneration)' == 'true'
-                         and '$(IsTestApplication)' != 'true'
-                         and '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' != '.NETStandard' ">
+  <ItemGroup Condition=" '$(IsTestApplication)' != 'true'
+                         and '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' != '.NETStandard'
+                         and ( '$(EnableMSTestSourceGeneration)' == 'true'
+                               or ( '$(UseVSTest)' == 'false' and '$(PublishAot)' == 'true' ) ) ">
     <!-- Test libraries do not otherwise reference the adapter assembly that contains the generated code's runtime hooks. -->
     <PackageReference Include="MSTest.TestAdapter" Sdk="MSTest">
       <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MSTestVersion)</Version>
