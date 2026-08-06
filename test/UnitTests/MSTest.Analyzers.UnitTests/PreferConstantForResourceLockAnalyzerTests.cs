@@ -99,6 +99,26 @@ public sealed class PreferConstantForResourceLockAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenResourceKeyIsNameofExpression_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [ResourceLock(nameof(MyTestClass))]
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
     public async Task WhenResourceKeyIsLiteralConcatenation_Diagnostic()
     {
         string code = """
