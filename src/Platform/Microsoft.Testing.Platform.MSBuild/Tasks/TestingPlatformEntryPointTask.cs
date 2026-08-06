@@ -53,6 +53,12 @@ public sealed class TestingPlatformEntryPointTask : Build.Utilities.Task
     public string? RootNamespace { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether the generated source should include a process entry point.
+    /// The reusable testing-platform application helper is always generated.
+    /// </summary>
+    public bool GenerateEntryPoint { get; set; } = true;
+
+    /// <summary>
     /// Gets or sets the path to the generated Testing Platform entry point file. It stays <see langword="null"/>
     /// when the project language is not supported, in which case the task produces no output item.
     /// </summary>
@@ -74,21 +80,21 @@ public sealed class TestingPlatformEntryPointTask : Build.Utilities.Task
         }
         else
         {
-            GenerateEntryPoint(Language.ItemSpec, RootNamespace, TestingPlatformEntryPointSourcePath, _fileSystem, Log);
+            GenerateSource(Language.ItemSpec, RootNamespace, GenerateEntryPoint, TestingPlatformEntryPointSourcePath, _fileSystem, Log);
             TestingPlatformEntryPointGeneratedFilePath = TestingPlatformEntryPointSourcePath;
         }
 
         return !Log.HasLoggedErrors;
     }
 
-    private static void GenerateEntryPoint(string language, string? rootNamespace, ITaskItem testingPlatformEntryPointSourcePath, IFileSystem fileSystem, TaskLoggingHelper taskLoggingHelper)
+    private static void GenerateSource(string language, string? rootNamespace, bool generateEntryPoint, ITaskItem testingPlatformEntryPointSourcePath, IFileSystem fileSystem, TaskLoggingHelper taskLoggingHelper)
     {
-        string entryPointSource = GetEntryPointSourceCode(language, rootNamespace);
+        string entryPointSource = GetEntryPointSourceCode(language, rootNamespace, generateEntryPoint);
         taskLoggingHelper.LogMessage(MessageImportance.Normal, $"Entrypoint source:\n'{entryPointSource}'");
         fileSystem.WriteAllText(testingPlatformEntryPointSourcePath.ItemSpec, entryPointSource);
     }
 
-    private static string GetEntryPointSourceCode(string language, string? rootNamespace)
+    private static string GetEntryPointSourceCode(string language, string? rootNamespace, bool generateEntryPoint)
     {
         if (language != VBLanguageSymbol && !RoslynString.IsNullOrEmpty(rootNamespace))
         {
@@ -106,9 +112,9 @@ public sealed class TestingPlatformEntryPointTask : Build.Utilities.Task
 //------------------------------------------------------------------------------
 
 [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-internal sealed class MicrosoftTestingPlatformEntryPoint
+internal static class MicrosoftTestingPlatformApplication
 {
-    public static async global::System.Threading.Tasks.Task<int> Main(string[] args)
+    public static async global::System.Threading.Tasks.Task<int> RunAsync(string[] args)
     {
         global::Microsoft.Testing.Platform.Builder.ITestApplicationBuilder builder = await global::Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(args);
         global::SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args);
@@ -118,6 +124,15 @@ internal sealed class MicrosoftTestingPlatformEntryPoint
         }
     }
 }
+{{(generateEntryPoint ? """
+
+[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+internal sealed class MicrosoftTestingPlatformEntryPoint
+{
+    public static global::System.Threading.Tasks.Task<int> Main(string[] args)
+        => MicrosoftTestingPlatformApplication.RunAsync(args);
+}
+""" : string.Empty)}}
 """
                 : $$"""
 //------------------------------------------------------------------------------
@@ -129,9 +144,9 @@ internal sealed class MicrosoftTestingPlatformEntryPoint
 namespace {{rootNamespace}}
 {
     [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-    internal sealed class MicrosoftTestingPlatformEntryPoint
+    internal static class MicrosoftTestingPlatformApplication
     {
-        public static async global::System.Threading.Tasks.Task<int> Main(string[] args)
+        public static async global::System.Threading.Tasks.Task<int> RunAsync(string[] args)
         {
             global::Microsoft.Testing.Platform.Builder.ITestApplicationBuilder builder = await global::Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(args);
             global::{{rootNamespace}}.SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args);
@@ -141,6 +156,15 @@ namespace {{rootNamespace}}
             }
         }
     }
+{{(generateEntryPoint ? """
+
+    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+    internal sealed class MicrosoftTestingPlatformEntryPoint
+    {
+        public static global::System.Threading.Tasks.Task<int> Main(string[] args)
+            => MicrosoftTestingPlatformApplication.RunAsync(args);
+    }
+""" : string.Empty)}}
 }
 """;
         }
@@ -157,13 +181,8 @@ namespace {{rootNamespace}}
 '------------------------------------------------------------------------------
 
 <System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>
-Module MicrosoftTestingPlatformEntryPoint
-
-    Function Main(args As String()) As Integer
-        Return MainAsync(args).GetAwaiter().GetResult()
-    End Function
-
-    Public Async Function MainAsync(args As String()) As Global.System.Threading.Tasks.Task(Of Integer)
+Friend Module MicrosoftTestingPlatformApplication
+    Public Async Function RunAsync(args As String()) As Global.System.Threading.Tasks.Task(Of Integer)
         Dim builder = Await Global.Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(args)
         SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args)
         Using testApplication = Await builder.BuildAsync()
@@ -172,6 +191,19 @@ Module MicrosoftTestingPlatformEntryPoint
     End Function
 
 End Module
+{{(generateEntryPoint ? """
+
+<System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>
+Module MicrosoftTestingPlatformEntryPoint
+    Function Main(args As String()) As Integer
+        Return MicrosoftTestingPlatformApplication.RunAsync(args).GetAwaiter().GetResult()
+    End Function
+
+    Public Function MainAsync(args As String()) As Global.System.Threading.Tasks.Task(Of Integer)
+        Return MicrosoftTestingPlatformApplication.RunAsync(args)
+    End Function
+End Module
+""" : string.Empty)}}
 """;
         }
         else if (language == FSharpLanguageSymbol)
@@ -184,19 +216,28 @@ End Module
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-module MicrosoftTestingPlatformEntryPoint =
+{{(generateEntryPoint ? string.Empty : "namespace Microsoft.TestingPlatform")}}
 
-    [<System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>]
-    [<EntryPoint>]
-    let main args =
+module internal MicrosoftTestingPlatformApplication =
+
+    let runAsync args =
         task {
             let! builder = Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync args
             Microsoft.TestingPlatform.Extensions.SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args)
             use! app = builder.BuildAsync()
             return! app.RunAsync()
         }
+{{(generateEntryPoint ? """
+
+module MicrosoftTestingPlatformEntryPoint =
+
+    [<System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>]
+    [<EntryPoint>]
+    let main args =
+        MicrosoftTestingPlatformApplication.runAsync args
         |> Async.AwaitTask
         |> Async.RunSynchronously
+""" : string.Empty)}}
 """
                 : $$"""
 //------------------------------------------------------------------------------
@@ -207,19 +248,26 @@ module MicrosoftTestingPlatformEntryPoint =
 
 namespace {{rootNamespace}}
 
-module MicrosoftTestingPlatformEntryPoint =
+module internal MicrosoftTestingPlatformApplication =
 
-    [<System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>]
-    [<EntryPoint>]
-    let main args =
+    let runAsync args =
         task {
             let! builder = Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync args
             SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args)
             use! app = builder.BuildAsync()
             return! app.RunAsync()
         }
+{{(generateEntryPoint ? """
+
+module MicrosoftTestingPlatformEntryPoint =
+
+    [<System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>]
+    [<EntryPoint>]
+    let main args =
+        MicrosoftTestingPlatformApplication.runAsync args
         |> Async.AwaitTask
         |> Async.RunSynchronously
+""" : string.Empty)}}
 """;
         }
 

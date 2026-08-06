@@ -114,7 +114,7 @@
   <Target Name="_GetTestingPlatformMSBuildTaskFileHashForEntryPoint"
           DependsOnTargets="_CalculateGenerateTestingPlatformEntryPoint">
     <GetFileHash Files="$(MicrosoftTestingPlatformMSBuildTaskFolder)Microsoft.Testing.Platform.MSBuild.dll"
-                 Condition=" '$(GenerateTestingPlatformEntryPoint)' == 'true' And '@(_TestingPlatformMSBuildTaskFileWithHash)' == '' ">
+                 Condition=" '$(GenerateTestingPlatformApplicationHelper)' == 'true' And '@(_TestingPlatformMSBuildTaskFileWithHash)' == '' ">
       <Output TaskParameter="Items" ItemName="_TestingPlatformMSBuildTaskFileWithHash" />
     </GetFileHash>
   </Target>
@@ -133,6 +133,7 @@
       <!-- For example, MSTest.TestAdapter.targets is imported *after* Microsoft.Testing.Platform.MSBuild.targets -->
       <!-- We want to allow MSTest.TestAdapter.targets to set IsTestingPlatformApplication to false if EnableMSTestRunner is not set to true. -->
       <GenerateTestingPlatformEntryPoint Condition=" '$(GenerateTestingPlatformEntryPoint)' == '' " >$(IsTestingPlatformApplication)</GenerateTestingPlatformEntryPoint>
+      <GenerateTestingPlatformApplicationHelper Condition=" '$(GenerateTestingPlatformApplicationHelper)' == '' ">$(GenerateTestingPlatformEntryPoint)</GenerateTestingPlatformApplicationHelper>
     </PropertyGroup>
   </Target>
 
@@ -147,6 +148,7 @@
       <_GenerateTestingPlatformEntryPointInputsCacheToHash Include="@(TestingPlatformBuilderHook)"/>
       <_GenerateTestingPlatformEntryPointInputsCacheToHash Include="$(RootNamespace)"/>
       <_GenerateTestingPlatformEntryPointInputsCacheToHash Include="$(GenerateTestingPlatformEntryPoint)" />
+      <_GenerateTestingPlatformEntryPointInputsCacheToHash Include="$(GenerateTestingPlatformApplicationHelper)" />
       <_GenerateTestingPlatformEntryPointInputsCacheToHash Include="@(_TestingPlatformMSBuildTaskFileWithHash->'%(FileHash)')" />
 
       <!-- Export the items name for the _GenerateTestingPlatformInjectEntryPoint task-->
@@ -174,9 +176,12 @@
   </PropertyGroup>
   <Target Name="_GenerateTestingPlatformEntryPoint"
           Inputs="@(GenerateTestingPlatformEntryPointInputsCacheFilePath)" Outputs="$(_TestingPlatformEntryPointSourcePath)"
-          Condition=" '$(GenerateTestingPlatformEntryPoint)' == 'true' " >
+          Condition=" '$(GenerateTestingPlatformApplicationHelper)' == 'true' " >
+    <Error Condition=" '$(Language)' == 'F#' AND '$(GenerateTestingPlatformEntryPoint)' != 'true' "
+           Text="Generating the testing platform application helper without its entry point is not supported for F# because generated files cannot be ordered between self-registration and a user-authored entry point." />
     <TestingPlatformEntryPointTask TestingPlatformEntryPointSourcePath="$(_TestingPlatformEntryPointSourcePath)"
                                    RootNamespace="$(RootNamespace)"
+                                   GenerateEntryPoint="$(GenerateTestingPlatformEntryPoint)"
                                    Language="$(Language)" >
       <Output TaskParameter="TestingPlatformEntryPointGeneratedFilePath" PropertyName ="TestingPlatformEntryPointGeneratedFilePath" />
     </TestingPlatformEntryPointTask>
@@ -188,7 +193,7 @@
   <Target Name="_IncludeGenerateTestingPlatformEntryPointIntoCompilation" BeforeTargets="BeforeCompile;XamlPreCompile"
           DependsOnTargets="_CalculateGenerateTestingPlatformEntryPoint;_GenerateTestingPlatformEntryPointFileInputCache;_GenerateTestingPlatformEntryPoint">
 
-    <ItemGroup Condition=" '$(GenerateTestingPlatformEntryPoint)' == 'true' ">
+    <ItemGroup Condition=" '$(GenerateTestingPlatformApplicationHelper)' == 'true' ">
       <!-- Order of files matter in F#. Make sure to include the entry-point last. -->
       <!-- See https://github.com/dotnet/fsharp/blob/27db996c58a511386ad754e34f4b57877aa1d99e/src/FSharp.Build/Microsoft.FSharp.Targets#L258-L277 -->
       <!-- IMPORTANT: We use CompileAfter and not CompileLast as CompileLast is quite recent: https://github.com/dotnet/fsharp/pull/17103 -->
