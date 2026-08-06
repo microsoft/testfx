@@ -13,8 +13,16 @@
   <!-- Import VSTest.targets -->
   <Import Project="$(MSBuildThisFileDirectory)VSTest/VSTest.targets" Condition=" '$(UseVSTest)' == 'true' " />
 
+  <Target Name="_MSTestSDKValidateSourceGeneration"
+          BeforeTargets="PrepareForBuild"
+          Condition=" '$(EnableMSTestSourceGeneration)' == 'true' and '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' == '.NETStandard' ">
+    <Error Text="'EnableMSTestSourceGeneration' is not supported for .NET Standard target frameworks because the required MSTest.TestAdapter runtime hooks are unavailable." />
+  </Target>
+
   <!-- Source generation is automatic for NativeAOT and opt-in for all other configurations. -->
-  <ItemGroup Condition=" '$(PublishAot)' != 'true' and '$(EnableMSTestSourceGeneration)' == 'true' ">
+  <ItemGroup Condition=" '$(PublishAot)' != 'true'
+                         and '$(EnableMSTestSourceGeneration)' == 'true'
+                         and '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' != '.NETStandard' ">
     <PackageReference Include="MSTest.SourceGeneration" Sdk="MSTest">
       <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MSTestVersion)</Version>
     </PackageReference>

@@ -199,6 +199,26 @@ public class UnitTest1
         testHostResult.AssertExitCodeIs(0);
     }
 
+    [TestMethod]
+    public async Task MSTestSdk_SourceGenerationOptIn_RejectsNetStandardTestLibrary()
+    {
+        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+            $"{SdkAssetName}_NetStandard",
+            SdkSourceCode
+            .PatchCodeWithReplace("$TargetFramework$", "netstandard2.0")
+            .PatchCodeWithReplace("$IsTestApplication$", "false")
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion),
+            addPublicFeeds: true);
+
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
+            $"build {generator.TargetAssetPath} -c {BuildConfiguration.Release}",
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+        buildResult.AssertExitCodeIs(1);
+        buildResult.AssertOutputContains(
+            "'EnableMSTestSourceGeneration' is not supported for .NET Standard target frameworks because the required MSTest.TestAdapter runtime hooks are unavailable.");
+    }
+
     public TestContext TestContext { get; set; } = null!;
 
     private const string MetadataSourceCode = """
