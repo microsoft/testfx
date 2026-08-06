@@ -268,9 +268,21 @@ public Task<ITestHostHandle> LaunchTestHostAsync(
     //    string. Full-trust desktop apps need Windows argv quoting; AppContainer apps need a versioned
     //    opaque payload that Application.OnLaunched restores before CreateBuilderAsync.
     var aam = (IApplicationActivationManager)new ApplicationActivationManager();
-    string activationArguments = manifest.IsAppContainer
-        ? PackagedAppActivationArguments.Create(context.Arguments)
-        : PasteArguments(context.Arguments);
+    string activationArguments;
+    string? activationPayloadPath = null;
+    if (manifest.IsAppContainer)
+    {
+        PackagedAppActivationData activationData = PackagedAppActivationArguments.Create(
+            context.Arguments,
+            manifest.LocalStateDirectory);
+        activationArguments = activationData.Arguments;
+        activationPayloadPath = activationData.PayloadPath;
+    }
+    else
+    {
+        activationArguments = PasteArguments(context.Arguments);
+    }
+
     aam.ActivateApplication(aumid, activationArguments, ACTIVATEOPTIONS.AO_NONE, out uint pid);
 
     // 3. Wrap the activated app. AUMID activation cannot set per-launch environment variables, so the
@@ -278,7 +290,7 @@ public Task<ITestHostHandle> LaunchTestHostAsync(
     //    MONITORTOHOST pipe name, correlation id, etc.) another way — e.g. activation arguments or a
     //    broker process the activated app reads on startup. The handle surfaces the activated PID as
     //    its (diagnostic-only) Identifier.
-    return Task.FromResult<ITestHostHandle>(new ActivatedAppHandle(pid));
+    return Task.FromResult<ITestHostHandle>(new ActivatedAppHandle(pid, activationPayloadPath));
 }
 ```
 
