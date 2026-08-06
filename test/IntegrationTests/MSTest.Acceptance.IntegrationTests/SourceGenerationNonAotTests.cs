@@ -174,23 +174,19 @@ public class UnitTest1
     }
 
     [TestMethod]
-    [DataRow(false, false)]
-    [DataRow(false, true)]
-    [DataRow(true, false)]
-    [DataRow(true, true)]
-    public async Task MSTestSdk_SourceGenerationOptIn_BuildsAndRunsTests(bool isTestApplication, bool useCentralPackageManagement)
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task MSTestSdk_SourceGenerationOptIn_LibraryBuilds(bool useCentralPackageManagement)
     {
         string tfm = TargetFrameworks.NetCurrent;
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
-            $"{SdkAssetName}_{isTestApplication}_{useCentralPackageManagement}",
+            $"{SdkAssetName}_Library_{useCentralPackageManagement}",
             (useCentralPackageManagement ? SdkSourceCode + CentralPackageManagementSourceCode : SdkSourceCode)
             .PatchCodeWithReplace("$TargetFramework$", tfm)
-            .PatchCodeWithReplace("$IsTestApplication$", isTestApplication.ToString().ToLowerInvariant())
+            .PatchCodeWithReplace("$IsTestApplication$", "false")
             .PatchCodeWithReplace("$PublishAot$", "false")
             .PatchCodeWithReplace("$UseVSTest$", "false")
-            .PatchCodeWithReplace(
-                "$EnableMicrosoftTestingPlatformProperty$",
-                isTestApplication ? "<EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>" : string.Empty)
+            .PatchCodeWithReplace("$EnableMicrosoftTestingPlatformProperty$", string.Empty)
             .PatchCodeWithReplace(
                 "$EnableMSTestSourceGenerationProperty$",
                 "<EnableMSTestSourceGeneration>true</EnableMSTestSourceGeneration>")
@@ -208,11 +204,41 @@ public class UnitTest1
             ? Directory.GetFiles(objGenerated, "*MSTestReflectionMetadata*.g.cs", SearchOption.AllDirectories)
             : [];
         Assert.IsNotEmpty(generatedFiles, $"the MSTest.Sdk source-generation opt-in should have emitted metadata under '{objGenerated}'");
+    }
 
-        if (!isTestApplication)
-        {
-            return;
-        }
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task MSTestSdk_SourceGenerationOptIn_ApplicationBuildsAndRuns(bool useCentralPackageManagement)
+    {
+        string tfm = TargetFrameworks.NetCurrent;
+        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+            $"{SdkAssetName}_Application_{useCentralPackageManagement}",
+            (useCentralPackageManagement ? SdkSourceCode + CentralPackageManagementSourceCode : SdkSourceCode)
+            .PatchCodeWithReplace("$TargetFramework$", tfm)
+            .PatchCodeWithReplace("$IsTestApplication$", "true")
+            .PatchCodeWithReplace("$PublishAot$", "false")
+            .PatchCodeWithReplace("$UseVSTest$", "false")
+            .PatchCodeWithReplace(
+                "$EnableMicrosoftTestingPlatformProperty$",
+                "<EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>")
+            .PatchCodeWithReplace(
+                "$EnableMSTestSourceGenerationProperty$",
+                "<EnableMSTestSourceGeneration>true</EnableMSTestSourceGeneration>")
+            .PatchCodeWithReplace("$ExtraItems$", string.Empty)
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion),
+            addPublicFeeds: true);
+
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
+            $"build {generator.TargetAssetPath} -c {BuildConfiguration.Release} -f {tfm}",
+            cancellationToken: TestContext.CancellationToken);
+        buildResult.AssertExitCodeIs(0);
+
+        string objGenerated = Path.Combine(generator.TargetAssetPath, "obj", "Release", tfm, "generated");
+        string[] generatedFiles = Directory.Exists(objGenerated)
+            ? Directory.GetFiles(objGenerated, "*MSTestReflectionMetadata*.g.cs", SearchOption.AllDirectories)
+            : [];
+        Assert.IsNotEmpty(generatedFiles, $"the MSTest.Sdk source-generation opt-in should have emitted metadata under '{objGenerated}'");
 
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, SdkAssetName, tfm, buildConfiguration: BuildConfiguration.Release);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
