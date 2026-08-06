@@ -40,10 +40,10 @@ public sealed class SlowestTestsConsumer : IDataConsumer, ITestSessionLifetimeHa
 
     public Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
     {
-        Console.WriteLine("Slowest 10 tests");
+        Console.WriteLine("Slowest 10 tests:");
         foreach ((_, string displayName, double milliseconds) in _testPerf.OrderByDescending(x => x.Milliseconds).Take(10))
         {
-            Console.WriteLine($"{displayName} {TimeSpan.FromMilliseconds(milliseconds).TotalSeconds:F5}s");
+            Console.WriteLine($"  {TimeSpan.FromMilliseconds(milliseconds).TotalSeconds:F5}s {displayName}");
         }
 
         return Task.CompletedTask;
