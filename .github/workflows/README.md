@@ -173,7 +173,7 @@ a workflow needs elevated access (then use the GitHub App above).
 
 **Symptom.** The `agent` job succeeds, the `detection` job fails on its `Install GitHub Copilot CLI`
 step, and `safe_outputs` is **skipped** — so only the workflow's configured safe outputs (in the
-observed run of `grade-tests-on-pr`, the grading comment) are suppressed. The `[aw] Detection Runs`
+observed run of `test-reviewer-on-pr`, the review comment) are suppressed. The `[aw] Detection Runs`
 tracker issue still records the run as `warning | parse_error`, because the threat-detection result
 file was never written. The step log shows repeated
 `curl: (22) The requested URL returned error: 504` while fetching `SHA256SUMS.txt` from
