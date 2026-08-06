@@ -28,14 +28,17 @@
     </PackageReference>
     <PackageVersion Include="MSTest.SourceGeneration" Version="$(MSTestVersion)"
                     Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
+  </ItemGroup>
 
+  <ItemGroup Condition=" '$(EnableMSTestSourceGeneration)' == 'true'
+                         and '$(IsTestApplication)' != 'true'
+                         and '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' != '.NETStandard' ">
     <!-- Test libraries do not otherwise reference the adapter assembly that contains the generated code's runtime hooks. -->
-    <PackageReference Include="MSTest.TestAdapter" Sdk="MSTest"
-                      Condition=" '$(IsTestApplication)' != 'true' ">
+    <PackageReference Include="MSTest.TestAdapter" Sdk="MSTest">
       <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MSTestVersion)</Version>
     </PackageReference>
     <PackageVersion Include="MSTest.TestAdapter" Version="$(MSTestVersion)"
-                    Condition=" '$(IsTestApplication)' != 'true' and '$(ManagePackageVersionsCentrally)' == 'true' " />
+                    Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
   </ItemGroup>
 
   <!--

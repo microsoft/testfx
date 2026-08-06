@@ -93,10 +93,12 @@ public class UnitTest1
     <PropertyGroup>
         <TargetFramework>$TargetFramework$</TargetFramework>
         <IsTestApplication>$IsTestApplication$</IsTestApplication>
-        <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
+        <PublishAot>$PublishAot$</PublishAot>
+        <EnableMicrosoftTestingPlatform>$IsTestApplication$</EnableMicrosoftTestingPlatform>
         <EnableMSTestSourceGeneration>true</EnableMSTestSourceGeneration>
         <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
     </PropertyGroup>
+    $ExtraItems$
 </Project>
 
 #file TestClass1.cs
@@ -112,6 +114,12 @@ public class UnitTest1
     {
     }
 }
+""";
+
+    private const string TestingPlatformPackageReference = """
+<ItemGroup>
+    <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+</ItemGroup>
 """;
 
     [TestMethod]
@@ -174,6 +182,8 @@ public class UnitTest1
             (useCentralPackageManagement ? SdkSourceCode + CentralPackageManagementSourceCode : SdkSourceCode)
             .PatchCodeWithReplace("$TargetFramework$", tfm)
             .PatchCodeWithReplace("$IsTestApplication$", isTestApplication.ToString().ToLowerInvariant())
+            .PatchCodeWithReplace("$PublishAot$", "false")
+            .PatchCodeWithReplace("$ExtraItems$", string.Empty)
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion),
             addPublicFeeds: true);
 
@@ -200,6 +210,33 @@ public class UnitTest1
     }
 
     [TestMethod]
+    public async Task MSTestSdk_SourceGenerationOptIn_NativeAotLibraryBuilds()
+    {
+        string tfm = TargetFrameworks.NetCurrent;
+        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+            $"{SdkAssetName}_NativeAotLibrary",
+            SdkSourceCode
+            .PatchCodeWithReplace("$TargetFramework$", tfm)
+            .PatchCodeWithReplace("$IsTestApplication$", "false")
+            .PatchCodeWithReplace("$PublishAot$", "true")
+            .PatchCodeWithReplace("$ExtraItems$", TestingPlatformPackageReference)
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion),
+            addPublicFeeds: true);
+
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
+            $"build {generator.TargetAssetPath} -c {BuildConfiguration.Release}",
+            cancellationToken: TestContext.CancellationToken);
+        buildResult.AssertExitCodeIs(0);
+
+        string objGenerated = Path.Combine(generator.TargetAssetPath, "obj", "Release", tfm, "generated");
+        string[] generatedFiles = Directory.Exists(objGenerated)
+            ? Directory.GetFiles(objGenerated, "*MSTestReflectionMetadata*.g.cs", SearchOption.AllDirectories)
+            : [];
+        Assert.IsNotEmpty(generatedFiles, $"the NativeAOT library source generator should have emitted metadata under '{objGenerated}'");
+    }
+
+    [TestMethod]
     public async Task MSTestSdk_SourceGenerationOptIn_RejectsNetStandardTestLibrary()
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
@@ -207,6 +244,8 @@ public class UnitTest1
             SdkSourceCode
             .PatchCodeWithReplace("$TargetFramework$", "netstandard2.0")
             .PatchCodeWithReplace("$IsTestApplication$", "false")
+            .PatchCodeWithReplace("$PublishAot$", "false")
+            .PatchCodeWithReplace("$ExtraItems$", string.Empty)
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion),
             addPublicFeeds: true);
 
