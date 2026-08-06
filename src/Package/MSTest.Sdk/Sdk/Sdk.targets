@@ -20,6 +20,14 @@
     </PackageReference>
     <PackageVersion Include="MSTest.SourceGeneration" Version="$(MSTestVersion)"
                     Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
+
+    <!-- Test libraries do not otherwise reference the adapter assembly that contains the generated code's runtime hooks. -->
+    <PackageReference Include="MSTest.TestAdapter" Sdk="MSTest"
+                      Condition=" '$(IsTestApplication)' != 'true' ">
+      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MSTestVersion)</Version>
+    </PackageReference>
+    <PackageVersion Include="MSTest.TestAdapter" Version="$(MSTestVersion)"
+                    Condition=" '$(IsTestApplication)' != 'true' and '$(ManagePackageVersionsCentrally)' == 'true' " />
   </ItemGroup>
 
   <!--
