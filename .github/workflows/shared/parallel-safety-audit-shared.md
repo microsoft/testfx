@@ -15,7 +15,7 @@
 # Splitting the workflow was necessary because mixing `slash_command` with any
 # other trigger in a single gh-aw workflow makes the activation gate require a
 # command-position match on *every* event, which silently skips the agent on
-# every `pull_request` invocation (see grade-tests-on-pr.agent.md for the same
+# every `pull_request` invocation (see test-reviewer-on-pr.agent.md for the same
 # constraint).
 #
 # UPSTREAM NOTE: the prompt body below (everything after the frontmatter) is
