@@ -6,10 +6,31 @@
 | --- | --- | --- |
 | Legacy UWP (`uap10.0`) | Existing non-SDK project with `MSTest.TestAdapter` and `MSTest.TestFramework` | VSTest AppContainer |
 | Modern UWP (.NET 9+, `UseUwp`) | `MSTest.Sdk` | VSTest AppContainer, selected automatically |
-| Packaged WinUI 3 (`UseWinUI`) | `MSTest.Sdk` | MTP with automatic package registration and AUMID activation |
+| Packaged full-trust WinUI 3 (`UseWinUI`) | `MSTest.Sdk` | MTP with automatic package registration and AUMID activation |
 | Unpackaged WinUI 3 (`UseWinUI`, `WindowsPackageType=None`) | `MSTest.Sdk` | MTP direct executable launch |
+| AppContainer-configured WinUI 3 | VSTest | MTP is not currently supported |
 
 True UWP/AppContainer test hosts cannot use MTP. `MSTest.Sdk` therefore selects VSTest when `UseUwp=true` and reports a build error if a project explicitly selects MTP for that application model. Legacy `uap10.0` projects remain on their existing package-based setup because they do not use the SDK-style project system.
+
+### Packaging and sandboxing are separate choices
+
+Two independent settings describe a Windows app:
+
+- **Packaging** determines whether the app has MSIX package identity and must be registered and activated by AUMID. Both UWP and WinUI apps can be packaged.
+- **Trust level** determines whether the process is a normal full-trust desktop process or runs in the restricted AppContainer sandbox.
+
+A packaged WinUI 3 desktop app is full trust by default. Packaging gives it identity and MSIX file/registry virtualization, but does not put it in AppContainer. A WinUI 3 app can be explicitly configured for AppContainer with `uap10:TrustLevel="appContainer"` in its package manifest; it then has the same MTP communication restrictions as UWP.
+
+`Microsoft.Testing.Extensions.PackagedApp` currently supports packaged **full-trust** desktop hosts. It can register and activate an AppContainer layout, but the activated host cannot receive MTP's command line through `argv` or access the controller pipe with its package SID, so the test run cannot connect.
+
+#### Why MTP cannot communicate with AppContainer yet
+
+MTP's controller must give the new test host its command-line options and then establish a two-way named-pipe connection. AppContainer changes both mechanisms:
+
+1. **Activation arguments are not process arguments.** For a packaged full-trust desktop app, AUMID activation starts an ordinary Win32 process and the activation string becomes its command line, which .NET exposes through `Environment.GetCommandLineArgs()`. A true UWP/AppContainer app instead receives one opaque string through [`LaunchActivatedEventArgs.Arguments`](https://learn.microsoft.com/uwp/api/windows.applicationmodel.activation.launchactivatedeventargs.arguments) in `Application.OnLaunched`. An AppContainer MTP host would need to read that value and parse it back into the `string[]` expected by the platform.
+2. **The controller pipe does not authorize the app identity.** MTP creates its named pipe with [`PipeOptions.CurrentUserOnly`](https://learn.microsoft.com/dotnet/api/system.io.pipes.pipeoptions), granting the controller user's SID access. An AppContainer token is additionally restricted by its package SID, and Windows grants access only when both the normal and restricted identity checks succeed. The pipe would therefore need an explicit access rule for the exact package SID (preferred) or the broader `ALL APPLICATION PACKAGES` SID.
+
+The packaged-app handshake already transfers the controller pipe name and related environment values through the package's `LocalState`, but knowing the pipe name does not grant permission to open it. Both argument delivery and pipe authorization must be solved for true UWP/AppContainer support.
 
 For modern UWP, the test-related part of the project is reduced to the SDK declaration:
 
@@ -27,7 +48,7 @@ The UWP XAML, MSIX, architecture, and Native AOT settings remain application con
 
 ## WinUI 3
 
-WinUI 3 test apps come in two flavors, and which one you use decides how the test host is started:
+For the normal full-trust WinUI 3 model, test apps come in two packaging flavors, and that choice decides how the test host is started:
 
 | Flavor | `WindowsPackageType` | Has an `AppxManifest.xml` in the build output | How the test host starts |
 | --- | --- | --- | --- |
@@ -111,7 +132,7 @@ If you hit that, either build from Visual Studio (or with its `MSBuild.exe`) or 
 
 ## Packaged (MSIX) WinUI
 
-A packaged app keeps the default `WindowsPackageType` and ships a `Package.appxmanifest`. Because it cannot be started with `Process.Start`, the test host has to be registered and activated by AUMID. For `UseWinUI` projects, `MSTest.Sdk` references [`Microsoft.Testing.Extensions.PackagedApp`](https://www.nuget.org/packages/Microsoft.Testing.Extensions.PackagedApp) automatically and its generated runner helper registers the launcher.
+A packaged full-trust app keeps the default `WindowsPackageType` and ships a `Package.appxmanifest`. Because it cannot be started with `Process.Start`, the test host has to be registered and activated by AUMID. For `UseWinUI` projects, `MSTest.Sdk` references [`Microsoft.Testing.Extensions.PackagedApp`](https://www.nuget.org/packages/Microsoft.Testing.Extensions.PackagedApp) automatically and its generated runner helper registers the launcher.
 
 Set `<EnableMicrosoftTestingExtensionsPackagedApp>false</EnableMicrosoftTestingExtensionsPackagedApp>` only when a custom launcher owns packaged activation. Do **not** also call `builder.AddPackagedAppDeployment()`, because at most one test host launcher may be registered per run.
 
@@ -132,7 +153,8 @@ The launcher therefore decides for itself, per run:
 | Situation | Launcher enabled? | Effect |
 | --- | --- | --- |
 | Not Windows | no | Nothing changes. Packaged Windows apps are a Windows-only concept. |
-| Packaged layout (an `AppxManifest.xml` that describes this app — see below) | yes | The layout is registered and activated by AUMID. |
+| Supported packaged full-trust layout (an `AppxManifest.xml` that describes this app — see below) | yes | The layout is registered and activated by AUMID. |
+| True UWP/AppContainer packaged layout | yes, but unsupported | Registration and activation may succeed, but the host cannot receive the MTP arguments or connect to the controller pipe. |
 | Any other layout — including unpackaged WinUI and ordinary console test apps | no | The platform keeps its default in-process / `Process.Start` path. |
 
 So an **unpackaged** WinUI app that references `Microsoft.Testing.Extensions.PackagedApp` (directly, or transitively through a shared `Directory.Packages.props`) pays nothing for it: no extra process, and no copy of the build output into a deployment directory.
