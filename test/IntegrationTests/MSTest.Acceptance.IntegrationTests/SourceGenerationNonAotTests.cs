@@ -1,6 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.IO.Compression;
+using System.Xml.Linq;
+
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
@@ -18,6 +21,7 @@ namespace MSTest.Acceptance.IntegrationTests;
 public class SourceGenerationNonAotTests : AcceptanceTestBase<NopAssetFixture>
 {
     private const string AssetName = "MSTestSourceGenNonAot";
+    private const string SdkAssetName = "MSTestSourceGenSdkNonAot";
 
     // Source code for a non-AOT, non-trimmed test project that references MSTest.SourceGeneration.
     // EmitCompilerGeneratedFiles is enabled so we can statically assert the generator ran and
@@ -75,6 +79,53 @@ public class UnitTest1
 }
 """;
 
+    private const string CentralPackageManagementSourceCode = """
+
+#file Directory.Packages.props
+<Project>
+    <PropertyGroup>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+        <CentralPackageVersionOverrideEnabled>false</CentralPackageVersionOverrideEnabled>
+    </PropertyGroup>
+</Project>
+""";
+
+    private const string SdkSourceCode = """
+#file MSTestSourceGenSdkNonAot.csproj
+<Project Sdk="MSTest.Sdk/$MSTestVersion$">
+    <PropertyGroup>
+        <TargetFramework>$TargetFramework$</TargetFramework>
+        <IsTestApplication>$IsTestApplication$</IsTestApplication>
+        <PublishAot>$PublishAot$</PublishAot>
+        <UseVSTest>$UseVSTest$</UseVSTest>
+        $EnableMicrosoftTestingPlatformProperty$
+        $EnableMSTestSourceGenerationProperty$
+        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    </PropertyGroup>
+    $ExtraItems$
+</Project>
+
+#file TestClass1.cs
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace MyTests;
+
+[TestClass]
+public class UnitTest1
+{
+    [TestMethod]
+    public void TestMethod1()
+    {
+    }
+}
+""";
+
+    private const string TestingPlatformPackageReference = """
+<ItemGroup>
+    <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+</ItemGroup>
+""";
+
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
     public async Task SourceGenerationNonAot_BuildsAndRunsTests_WithExitCodeZero(string tfm)
@@ -120,6 +171,208 @@ public class UnitTest1
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 4, skipped: 0);
         testHostResult.AssertExitCodeIs(0);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task MSTestSdk_SourceGenerationOptIn_LibraryBuilds(bool useCentralPackageManagement)
+    {
+        string tfm = TargetFrameworks.NetCurrent;
+        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+            $"{SdkAssetName}_Library_{useCentralPackageManagement}",
+            (useCentralPackageManagement ? SdkSourceCode + CentralPackageManagementSourceCode : SdkSourceCode)
+            .PatchCodeWithReplace("$TargetFramework$", tfm)
+            .PatchCodeWithReplace("$IsTestApplication$", "false")
+            .PatchCodeWithReplace("$PublishAot$", "false")
+            .PatchCodeWithReplace("$UseVSTest$", "false")
+            .PatchCodeWithReplace("$EnableMicrosoftTestingPlatformProperty$", string.Empty)
+            .PatchCodeWithReplace(
+                "$EnableMSTestSourceGenerationProperty$",
+                "<EnableMSTestSourceGeneration>true</EnableMSTestSourceGeneration>")
+            .PatchCodeWithReplace("$ExtraItems$", string.Empty)
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion),
+            addPublicFeeds: true);
+
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
+            $"build {generator.TargetAssetPath} -c {BuildConfiguration.Release} -f {tfm}",
+            cancellationToken: TestContext.CancellationToken);
+        buildResult.AssertExitCodeIs(0);
+
+        string objGenerated = Path.Combine(generator.TargetAssetPath, "obj", "Release", tfm, "generated");
+        string[] generatedFiles = Directory.Exists(objGenerated)
+            ? Directory.GetFiles(objGenerated, "*MSTestReflectionMetadata*.g.cs", SearchOption.AllDirectories)
+            : [];
+        Assert.HasCount(3, generatedFiles, $"the MSTest.Sdk source-generation opt-in should have emitted exactly three metadata files under '{objGenerated}'");
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task MSTestSdk_SourceGenerationOptIn_ApplicationBuildsAndRuns(bool useCentralPackageManagement)
+    {
+        string tfm = TargetFrameworks.NetCurrent;
+        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+            $"{SdkAssetName}_Application_{useCentralPackageManagement}",
+            (useCentralPackageManagement ? SdkSourceCode + CentralPackageManagementSourceCode : SdkSourceCode)
+            .PatchCodeWithReplace("$TargetFramework$", tfm)
+            .PatchCodeWithReplace("$IsTestApplication$", "true")
+            .PatchCodeWithReplace("$PublishAot$", "false")
+            .PatchCodeWithReplace("$UseVSTest$", "false")
+            .PatchCodeWithReplace(
+                "$EnableMicrosoftTestingPlatformProperty$",
+                "<EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>")
+            .PatchCodeWithReplace(
+                "$EnableMSTestSourceGenerationProperty$",
+                "<EnableMSTestSourceGeneration>true</EnableMSTestSourceGeneration>")
+            .PatchCodeWithReplace("$ExtraItems$", string.Empty)
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion),
+            addPublicFeeds: true);
+
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
+            $"build {generator.TargetAssetPath} -c {BuildConfiguration.Release} -f {tfm}",
+            cancellationToken: TestContext.CancellationToken);
+        buildResult.AssertExitCodeIs(0);
+
+        string objGenerated = Path.Combine(generator.TargetAssetPath, "obj", "Release", tfm, "generated");
+        string[] generatedFiles = Directory.Exists(objGenerated)
+            ? Directory.GetFiles(objGenerated, "*MSTestReflectionMetadata*.g.cs", SearchOption.AllDirectories)
+            : [];
+        Assert.HasCount(3, generatedFiles, $"the MSTest.Sdk source-generation opt-in should have emitted exactly three metadata files under '{objGenerated}'");
+
+        var testHost = TestHost.LocateFrom(generator.TargetAssetPath, SdkAssetName, tfm, buildConfiguration: BuildConfiguration.Release);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+        testHostResult.AssertExitCodeIs(0);
+    }
+
+    [TestMethod]
+    public async Task MSTestSdk_SourceGenerationOptIn_NativeAotLibraryBuilds()
+    {
+        string tfm = TargetFrameworks.NetCurrent;
+        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+            $"{SdkAssetName}_NativeAotLibrary",
+            SdkSourceCode
+            .PatchCodeWithReplace("$TargetFramework$", tfm)
+            .PatchCodeWithReplace("$IsTestApplication$", "false")
+            .PatchCodeWithReplace("$PublishAot$", "true")
+            .PatchCodeWithReplace("$UseVSTest$", "false")
+            .PatchCodeWithReplace("$EnableMicrosoftTestingPlatformProperty$", string.Empty)
+            .PatchCodeWithReplace("$EnableMSTestSourceGenerationProperty$", string.Empty)
+            .PatchCodeWithReplace("$ExtraItems$", TestingPlatformPackageReference)
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion),
+            addPublicFeeds: true);
+
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
+            $"build {generator.TargetAssetPath} -c {BuildConfiguration.Release}",
+            cancellationToken: TestContext.CancellationToken);
+        buildResult.AssertExitCodeIs(0);
+
+        string objGenerated = Path.Combine(generator.TargetAssetPath, "obj", "Release", tfm, "generated");
+        string[] generatedFiles = Directory.Exists(objGenerated)
+            ? Directory.GetFiles(objGenerated, "*MSTestReflectionMetadata*.g.cs", SearchOption.AllDirectories)
+            : [];
+        Assert.HasCount(3, generatedFiles, $"the NativeAOT library source generator should have emitted exactly three metadata files under '{objGenerated}'");
+    }
+
+    [TestMethod]
+    public async Task MSTestSdk_SourceGenerationOptIn_VSTestTakesPrecedenceOverNativeAot()
+    {
+        string tfm = TargetFrameworks.NetCurrent;
+        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+            $"{SdkAssetName}_VSTestNativeAot",
+            SdkSourceCode
+            .PatchCodeWithReplace("$TargetFramework$", tfm)
+            .PatchCodeWithReplace("$IsTestApplication$", "true")
+            .PatchCodeWithReplace("$PublishAot$", "true")
+            .PatchCodeWithReplace("$UseVSTest$", "true")
+            .PatchCodeWithReplace("$EnableMicrosoftTestingPlatformProperty$", string.Empty)
+            .PatchCodeWithReplace(
+                "$EnableMSTestSourceGenerationProperty$",
+                "<EnableMSTestSourceGeneration>true</EnableMSTestSourceGeneration>")
+            .PatchCodeWithReplace("$ExtraItems$", string.Empty)
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion),
+            addPublicFeeds: true);
+
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
+            $"build {generator.TargetAssetPath} -c {BuildConfiguration.Release}",
+            cancellationToken: TestContext.CancellationToken);
+        buildResult.AssertExitCodeIs(0);
+
+        string objGenerated = Path.Combine(generator.TargetAssetPath, "obj", "Release", tfm, "generated");
+        string[] generatedFiles = Directory.Exists(objGenerated)
+            ? Directory.GetFiles(objGenerated, "*MSTestReflectionMetadata*.g.cs", SearchOption.AllDirectories)
+            : [];
+        Assert.HasCount(3, generatedFiles, $"the VSTest source-generation opt-in should have emitted exactly three metadata files under '{objGenerated}'");
+    }
+
+    [TestMethod]
+    public async Task MSTestSdk_SourceGenerationOptIn_DoesNotFlowTransitively()
+    {
+        string tfm = TargetFrameworks.NetCurrent;
+        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+            $"{SdkAssetName}_Pack",
+            SdkSourceCode
+            .PatchCodeWithReplace("$TargetFramework$", tfm)
+            .PatchCodeWithReplace("$IsTestApplication$", "false")
+            .PatchCodeWithReplace("$PublishAot$", "false")
+            .PatchCodeWithReplace("$UseVSTest$", "false")
+            .PatchCodeWithReplace("$EnableMicrosoftTestingPlatformProperty$", string.Empty)
+            .PatchCodeWithReplace(
+                "$EnableMSTestSourceGenerationProperty$",
+                "<EnableMSTestSourceGeneration>true</EnableMSTestSourceGeneration>")
+            .PatchCodeWithReplace("$ExtraItems$", string.Empty)
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion),
+            addPublicFeeds: true);
+
+        string packageDirectory = Path.Combine(generator.TargetAssetPath, "packages");
+        DotnetMuxerResult packResult = await DotnetCli.RunAsync(
+            $"pack {generator.TargetAssetPath} -c {BuildConfiguration.Release} -p:IsPackable=true -p:PackageVersion=1.0.0-test -o \"{packageDirectory}\"",
+            cancellationToken: TestContext.CancellationToken);
+        packResult.AssertExitCodeIs(0);
+
+        string package = Directory.GetFiles(packageDirectory, "*.nupkg").Single();
+        using ZipArchive archive = ZipFile.OpenRead(package);
+        ZipArchiveEntry nuspecEntry = archive.Entries.Single(entry => entry.FullName.EndsWith(".nuspec", StringComparison.Ordinal));
+        using Stream nuspecStream = nuspecEntry.Open();
+        var nuspec = XDocument.Load(nuspecStream);
+        string[] dependencyIds = nuspec
+            .Descendants()
+            .Where(element => element.Name.LocalName == "dependency")
+            .Select(element => element.Attribute("id")?.Value)
+            .OfType<string>()
+            .ToArray();
+
+        CollectionAssert.Contains(dependencyIds, "MSTest.TestAdapter");
+        CollectionAssert.DoesNotContain(dependencyIds, "MSTest.SourceGeneration");
+    }
+
+    [TestMethod]
+    public async Task MSTestSdk_SourceGenerationOptIn_RejectsNetStandardTestLibrary()
+    {
+        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+            $"{SdkAssetName}_NetStandard",
+            SdkSourceCode
+            .PatchCodeWithReplace("$TargetFramework$", "netstandard2.0")
+            .PatchCodeWithReplace("$IsTestApplication$", "false")
+            .PatchCodeWithReplace("$PublishAot$", "false")
+            .PatchCodeWithReplace("$UseVSTest$", "false")
+            .PatchCodeWithReplace("$EnableMicrosoftTestingPlatformProperty$", string.Empty)
+            .PatchCodeWithReplace(
+                "$EnableMSTestSourceGenerationProperty$",
+                "<EnableMSTestSourceGeneration>true</EnableMSTestSourceGeneration>")
+            .PatchCodeWithReplace("$ExtraItems$", string.Empty)
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion),
+            addPublicFeeds: true);
+
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
+            $"build {generator.TargetAssetPath} -c {BuildConfiguration.Release}",
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+        buildResult.AssertExitCodeIs(1);
+        buildResult.AssertOutputContains(
+            "MSTest source generation is not supported for .NET Standard target frameworks because the required MSTest.TestAdapter runtime hooks are unavailable.");
     }
 
     public TestContext TestContext { get; set; } = null!;
