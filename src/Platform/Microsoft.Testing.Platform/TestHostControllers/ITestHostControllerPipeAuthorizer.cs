@@ -29,8 +29,9 @@ namespace Microsoft.Testing.Platform.Extensions.TestHostControllers;
 /// rejects anything else — user SIDs, group SIDs, <c>Everyone</c>, and in particular the catch-all
 /// <c>ALL APPLICATION PACKAGES</c> (<c>S-1-15-2-1</c>) and <c>ALL RESTRICTED APPLICATION PACKAGES</c>
 /// (<c>S-1-15-2-2</c>) SIDs — and fails the run with an actionable error. The current-user and elevation
-/// protection of the pipe is always preserved. Returning an empty collection keeps the default pipe
-/// exactly as it is today.
+/// protection of the pipe is always preserved, and no mandatory integrity label is lowered, so Mandatory
+/// Integrity Control stays a second gate behind the DACL. Returning an empty collection keeps the default
+/// pipe exactly as it is today.
 /// </para>
 /// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]

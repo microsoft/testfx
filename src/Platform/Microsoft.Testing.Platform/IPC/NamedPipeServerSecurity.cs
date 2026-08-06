@@ -54,6 +54,11 @@ namespace Microsoft.Testing.Platform.IPC;
 ///     The pipe additionally rejects remote clients (<c>PIPE_REJECT_REMOTE_CLIENTS</c>), which the default
 ///     .NET pipe does not do.
 ///   </item>
+///   <item>
+///     No mandatory integrity label is emitted, so the pipe keeps the controller's own integrity level and
+///     Mandatory Integrity Control remains a second gate behind the DACL. An AppContainer client is
+///     admitted by its package-SID ACE alone.
+///   </item>
 /// </list>
 /// <para>
 /// The implementation goes through <c>CreateNamedPipeW</c> rather than <c>PipeSecurity</c> because the
@@ -216,6 +221,10 @@ internal static class NamedPipeServerSecurity
             builder.Append(CultureInfo.InvariantCulture, $"(A;;0x{PipeAccessRightsReadWriteSynchronize:x};;;{Normalize(sid)})");
         }
 
+        // No mandatory label is emitted: the pipe keeps the implicit (medium) integrity level of the
+        // controller, so Mandatory Integrity Control stays a second gate behind the DACL. An AppContainer
+        // client is admitted by its package-SID ACE alone — a lowbox token's access check is satisfied by
+        // that ACE and is not blocked by the object's medium label.
         return builder.ToString();
     }
 

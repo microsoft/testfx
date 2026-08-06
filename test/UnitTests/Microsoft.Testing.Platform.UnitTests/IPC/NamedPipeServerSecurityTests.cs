@@ -7,6 +7,8 @@ using System.Runtime.InteropServices;
 
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
+using Microsoft.Testing.Platform.IPC.Models;
+using Microsoft.Testing.Platform.IPC.Serializers;
 using Microsoft.Testing.Platform.Logging;
 
 using Moq;
@@ -157,7 +159,7 @@ public sealed class NamedPipeServerSecurityTests
         string sddl = WindowsSecurity.GetSecurityDescriptorSddl(stream.SafePipeHandle);
 
         // Exactly two ACEs: the owner and the one authorized package.
-        Assert.AreEqual(2, CountAces(sddl), $"Unexpected DACL '{sddl}'.");
+        Assert.AreEqual(2, CountAces(sddl), $"Unexpected security descriptor '{sddl}'.");
         Assert.Contains($"(A;;0x12019b;;;{PackageSid})", sddl);
         Assert.Contains("D:P", sddl, "The DACL must be protected so no inherited ACE can widen it.");
 
@@ -166,6 +168,32 @@ public sealed class NamedPipeServerSecurityTests
         Assert.IsFalse(sddl.Contains($";;;{NamedPipeServerSecurity.AllApplicationPackagesSid})", StringComparison.OrdinalIgnoreCase));
         Assert.IsFalse(sddl.Contains(";;;AC)", StringComparison.OrdinalIgnoreCase));
         Assert.IsFalse(sddl.Contains(OtherPackageSid, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// Authorizing a package must not relax Mandatory Integrity Control, which is a second gate behind the
+    /// DACL: a lowbox token is admitted by its package-SID ACE, so lowering the pipe's integrity label would
+    /// buy nothing and would only widen what a low-integrity process may attempt. The security descriptor is
+    /// read back with <c>LABEL_SECURITY_INFORMATION</c> so the absence of a label is actually observed on the
+    /// live object rather than merely assumed.
+    /// </summary>
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    [SupportedOSPlatform("windows")]
+    [DataRow(true, DisplayName = "with an authorized package")]
+    [DataRow(false, DisplayName = "without an authorized package")]
+    public void CreateServerStream_NeverLowersTheIntegrityLabel(bool authorizePackage)
+    {
+        string pipeName = $"testingplatform.pipe.test.{Guid.NewGuid():N}";
+        string ownerSid = NamedPipeServerSecurity.GetCurrentProcessOwnerSid();
+        using NamedPipeServerStream stream = NamedPipeServerSecurity.CreateServerStream(
+            pipeName,
+            maxNumberOfServerInstances: 1,
+            NamedPipeServerSecurity.BuildSecurityDescriptor(ownerSid, authorizePackage ? [PackageSid] : []));
+
+        string sddl = WindowsSecurity.GetSecurityDescriptorSddl(stream.SafePipeHandle);
+
+        Assert.IsFalse(sddl.Contains("(ML;", StringComparison.OrdinalIgnoreCase), $"Unexpected mandatory label in '{sddl}'.");
     }
 
     /// <summary>
@@ -258,6 +286,45 @@ public sealed class NamedPipeServerSecurityTests
         }
     }
 
+    /// <summary>
+    /// End-to-end through <see cref="NamedPipeServer"/> itself: the hardened pipe is created from a raw
+    /// handle rather than by the <see cref="NamedPipeServerStream"/> name constructor, so the whole
+    /// connect / request / reply / dispose cycle has to keep working on it.
+    /// </summary>
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    [SupportedOSPlatform("windows")]
+    public async Task NamedPipeServer_WithAuthorizedPackage_StillCompletesARequestReplyRoundTrip()
+    {
+        PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
+
+        using var server = new NamedPipeServer(
+            pipeNameDescription,
+            static _ => Task.FromResult<IResponse>(VoidResponse.CachedInstance),
+            new SystemEnvironment(),
+            new Mock<ILogger>().Object,
+            new SystemTask(),
+            maxNumberOfServerInstances: 1,
+            [PackageSid],
+            CancellationToken.None);
+        server.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
+        server.RegisterSerializer(new TestHostCompletedRequestSerializer(), typeof(TestHostCompletedRequest));
+
+        using var client = new NamedPipeClient(pipeNameDescription.Name);
+        client.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
+        client.RegisterSerializer(new TestHostCompletedRequestSerializer(), typeof(TestHostCompletedRequest));
+
+        Task waitConnection = server.WaitConnectionAsync(CancellationToken.None);
+        await client.ConnectAsync(CancellationToken.None);
+        await waitConnection;
+
+        VoidResponse response = await client.RequestReplyAsync<TestHostCompletedRequest, VoidResponse>(
+            new TestHostCompletedRequest(returnCode: 0),
+            CancellationToken.None);
+
+        Assert.IsNotNull(response);
+    }
+
     private static int CountAces(string sddl)
         => sddl.Count(static c => c == '(');
 
@@ -271,9 +338,12 @@ public sealed class NamedPipeServerSecurityTests
         private const int OwnerSecurityInformation = 1;
         private const int GroupSecurityInformation = 2;
         private const int DaclSecurityInformation = 4;
+        private const int LabelSecurityInformation = 0x10;
         private const uint SddlRevision1 = 1;
         private const uint AuthzRmFlagNoAudit = 1;
         private const uint AuthzSkipTokenGroups = 2;
+
+        private const int SecurityInformation = OwnerSecurityInformation | GroupSecurityInformation | DaclSecurityInformation | LabelSecurityInformation;
 
         [SupportedOSPlatform("windows")]
         public static string GetSecurityDescriptorSddl(SafeHandle handle)
@@ -281,7 +351,7 @@ public sealed class NamedPipeServerSecurityTests
             uint error = GetSecurityInfo(
                 handle,
                 SeKernelObject,
-                OwnerSecurityInformation | GroupSecurityInformation | DaclSecurityInformation,
+                SecurityInformation,
                 out _,
                 out _,
                 out _,
@@ -298,7 +368,7 @@ public sealed class NamedPipeServerSecurityTests
                 if (!ConvertSecurityDescriptorToStringSecurityDescriptor(
                         securityDescriptor,
                         SddlRevision1,
-                        OwnerSecurityInformation | GroupSecurityInformation | DaclSecurityInformation,
+                        SecurityInformation,
                         out IntPtr sddl,
                         out _))
                 {
