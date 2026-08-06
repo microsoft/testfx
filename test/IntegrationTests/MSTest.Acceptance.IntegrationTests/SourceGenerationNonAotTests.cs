@@ -203,7 +203,7 @@ public class UnitTest1
         string[] generatedFiles = Directory.Exists(objGenerated)
             ? Directory.GetFiles(objGenerated, "*MSTestReflectionMetadata*.g.cs", SearchOption.AllDirectories)
             : [];
-        Assert.IsNotEmpty(generatedFiles, $"the MSTest.Sdk source-generation opt-in should have emitted metadata under '{objGenerated}'");
+        Assert.HasCount(3, generatedFiles, $"the MSTest.Sdk source-generation opt-in should have emitted exactly three metadata files under '{objGenerated}'");
     }
 
     [TestMethod]
@@ -238,7 +238,7 @@ public class UnitTest1
         string[] generatedFiles = Directory.Exists(objGenerated)
             ? Directory.GetFiles(objGenerated, "*MSTestReflectionMetadata*.g.cs", SearchOption.AllDirectories)
             : [];
-        Assert.IsNotEmpty(generatedFiles, $"the MSTest.Sdk source-generation opt-in should have emitted metadata under '{objGenerated}'");
+        Assert.HasCount(3, generatedFiles, $"the MSTest.Sdk source-generation opt-in should have emitted exactly three metadata files under '{objGenerated}'");
 
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, SdkAssetName, tfm, buildConfiguration: BuildConfiguration.Release);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
@@ -273,7 +273,7 @@ public class UnitTest1
         string[] generatedFiles = Directory.Exists(objGenerated)
             ? Directory.GetFiles(objGenerated, "*MSTestReflectionMetadata*.g.cs", SearchOption.AllDirectories)
             : [];
-        Assert.IsNotEmpty(generatedFiles, $"the NativeAOT library source generator should have emitted metadata under '{objGenerated}'");
+        Assert.HasCount(3, generatedFiles, $"the NativeAOT library source generator should have emitted exactly three metadata files under '{objGenerated}'");
     }
 
     [TestMethod]
@@ -304,7 +304,7 @@ public class UnitTest1
         string[] generatedFiles = Directory.Exists(objGenerated)
             ? Directory.GetFiles(objGenerated, "*MSTestReflectionMetadata*.g.cs", SearchOption.AllDirectories)
             : [];
-        Assert.IsNotEmpty(generatedFiles, $"the VSTest source-generation opt-in should have emitted metadata under '{objGenerated}'");
+        Assert.HasCount(3, generatedFiles, $"the VSTest source-generation opt-in should have emitted exactly three metadata files under '{objGenerated}'");
     }
 
     [TestMethod]
