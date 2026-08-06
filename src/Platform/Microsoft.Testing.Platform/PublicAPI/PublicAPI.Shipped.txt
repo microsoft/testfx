@@ -34,20 +34,20 @@
 [TPEXP]Microsoft.Testing.Platform.Configurations.IConfigurationSource.Order.get -> int
 [TPEXP]Microsoft.Testing.Platform.Extensions.IBlockingDataConsumer
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestFramework.ExecuteRequestContext.ExecuteRequestContext(Microsoft.Testing.Platform.Requests.IRequest! request, Microsoft.Testing.Platform.Messages.IMessageBus! messageBus, Microsoft.Testing.Platform.Requests.IExecuteRequestCompletionNotifier! executeRequestCompletionNotifier, System.Threading.CancellationToken cancellationToken) -> void
-[TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandle
-[TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandle.ExitCode.get -> int
-[TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandle.HasExited.get -> bool
-[TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandle.Identifier.get -> string?
-[TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandle.Terminate() -> void
-[TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandle.WaitForExitAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
-[TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostLauncher
-[TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostLauncher.LaunchTestHostAsync(Microsoft.Testing.Platform.Extensions.TestHostControllers.TestHostLaunchContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandle!>!
-[TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.TestHostLaunchContext
-[TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.TestHostLaunchContext.Arguments.get -> System.Collections.Generic.IReadOnlyList<string!>!
-[TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.TestHostLaunchContext.EnvironmentVariables.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string?>!
-[TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.TestHostLaunchContext.FileName.get -> string!
-[TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.TestHostLaunchContext.TestHostLaunchContext(string! fileName, System.Collections.Generic.IReadOnlyList<string!>! arguments, System.Collections.Generic.IReadOnlyDictionary<string!, string?>! environmentVariables, string? workingDirectory) -> void
-[TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.TestHostLaunchContext.WorkingDirectory.get -> string?
+Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandle
+Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandle.ExitCode.get -> int
+Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandle.HasExited.get -> bool
+Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandle.Identifier.get -> string?
+Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandle.Terminate() -> void
+Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandle.WaitForExitAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostLauncher
+Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostLauncher.LaunchTestHostAsync(Microsoft.Testing.Platform.Extensions.TestHostControllers.TestHostLaunchContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandle!>!
+Microsoft.Testing.Platform.Extensions.TestHostControllers.TestHostLaunchContext
+Microsoft.Testing.Platform.Extensions.TestHostControllers.TestHostLaunchContext.Arguments.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Microsoft.Testing.Platform.Extensions.TestHostControllers.TestHostLaunchContext.EnvironmentVariables.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string?>!
+Microsoft.Testing.Platform.Extensions.TestHostControllers.TestHostLaunchContext.FileName.get -> string!
+Microsoft.Testing.Platform.Extensions.TestHostControllers.TestHostLaunchContext.TestHostLaunchContext(string! fileName, System.Collections.Generic.IReadOnlyList<string!>! arguments, System.Collections.Generic.IReadOnlyDictionary<string!, string?>! environmentVariables, string? workingDirectory) -> void
+Microsoft.Testing.Platform.Extensions.TestHostControllers.TestHostLaunchContext.WorkingDirectory.get -> string?
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostExecutionOrchestrator
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostExecutionOrchestrator.OrchestrateTestHostExecutionAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<int>!
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostOrchestratorApplicationLifetime
@@ -72,8 +72,8 @@
 [TPEXP]Microsoft.Testing.Platform.Services.IPlatformInformation.CommitHash.get -> string?
 [TPEXP]Microsoft.Testing.Platform.Services.IPlatformInformation.Name.get -> string!
 [TPEXP]Microsoft.Testing.Platform.Services.IPlatformInformation.Version.get -> string?
-[TPEXP]Microsoft.Testing.Platform.TestHostControllers.ITestHostControllersManager.AddTestHostLauncher(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostLauncher!>! testHostLauncherFactory) -> void
-[TPEXP]Microsoft.Testing.Platform.TestHostControllers.ITestHostControllersManager.AddTestHostLauncher<T>(Microsoft.Testing.Platform.Extensions.CompositeExtensionFactory<T!>! compositeServiceFactory) -> void
+Microsoft.Testing.Platform.TestHostControllers.ITestHostControllersManager.AddTestHostLauncher(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostLauncher!>! testHostLauncherFactory) -> void
+Microsoft.Testing.Platform.TestHostControllers.ITestHostControllersManager.AddTestHostLauncher<T>(Microsoft.Testing.Platform.Extensions.CompositeExtensionFactory<T!>! compositeServiceFactory) -> void
 [TPEXP]Microsoft.Testing.Platform.TestHostOrchestrator.ITestHostOrchestratorManager
 [TPEXP]Microsoft.Testing.Platform.TestHostOrchestrator.ITestHostOrchestratorManager.AddTestHostOrchestrator(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostExecutionOrchestrator!>! factory) -> void
 [TPEXP]Microsoft.Testing.Platform.TestHostOrchestrator.ITestHostOrchestratorManager.AddTestHostOrchestratorApplicationLifetime(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.TestHostOrchestrator.ITestHostOrchestratorApplicationLifetime!>! testHostOrchestratorApplicationLifetimeFactory) -> void

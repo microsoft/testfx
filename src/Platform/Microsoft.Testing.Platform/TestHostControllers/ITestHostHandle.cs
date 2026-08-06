@@ -15,7 +15,6 @@ namespace Microsoft.Testing.Platform.Extensions.TestHostControllers;
 /// exited, so implementations should release any OS resources they hold (process objects, sockets,
 /// container clients, …) in <see cref="IDisposable.Dispose"/>.
 /// </remarks>
-[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public interface ITestHostHandle : IDisposable
 {
     /// <summary>
