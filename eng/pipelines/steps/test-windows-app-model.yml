@@ -48,6 +48,10 @@ steps:
     failOnStderr: true
     showWarnings: true
 
+- pwsh: New-Item '$(Build.ArtifactStagingDirectory)/windows-app-model' -ItemType Directory -Force | Out-Null
+  displayName: 'Ensure app-model diagnostics directory exists'
+  condition: always()
+
 - task: CopyFiles@2
   displayName: 'Collect app-model diagnostics'
   condition: always()

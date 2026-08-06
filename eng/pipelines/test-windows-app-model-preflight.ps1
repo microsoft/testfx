@@ -293,10 +293,33 @@ foreach ($setting in $developerModeSettings) {
     }
 }
 if (-not $packageRegistrationEnabled) {
-    Add-PreflightFailure (
-        'Developer Mode or trusted-app sideloading is not enabled. Enable AllowDevelopmentWithoutDevLicense or ' +
-        'AllowAllTrustedApps through Windows Developer settings or machine policy. The preflight does not mutate machine policy.'
-    )
+    if (-not $isAdministrator) {
+        Add-PreflightFailure (
+            'Developer Mode or trusted-app sideloading is not enabled, and the agent is not elevated. Enable ' +
+            'AllowDevelopmentWithoutDevLicense or AllowAllTrustedApps before running the application-model tests.'
+        )
+    }
+    else {
+        $appModelUnlockPath = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock'
+        try {
+            New-Item -Path $appModelUnlockPath -Force | Out-Null
+            New-ItemProperty `
+                -Path $appModelUnlockPath `
+                -Name 'AllowDevelopmentWithoutDevLicense' `
+                -PropertyType DWord `
+                -Value 1 `
+                -Force | Out-Null
+            $packageRegistrationEnabled =
+                (Get-RegistryValueDisplay -Path $appModelUnlockPath -Name 'AllowDevelopmentWithoutDevLicense') -eq '1'
+            Write-Host "  Enabled Developer Mode for this elevated, ephemeral test agent: $packageRegistrationEnabled"
+        }
+        catch {
+            Add-PreflightFailure "Failed to enable Developer Mode for the test agent: $($_.Exception.Message)"
+        }
+    }
+}
+if (-not $packageRegistrationEnabled) {
+    Add-PreflightFailure 'Developer Mode or trusted-app sideloading is required for loose package registration.'
 }
 
 $uacPolicyPath = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System'
@@ -312,11 +335,13 @@ if (-not [Environment]::UserInteractive) {
 if ($currentProcess.SessionId -le 0) {
     Add-PreflightFailure "The agent runs in session $($currentProcess.SessionId). AUMID activation requires a logged-on user session greater than zero."
 }
-if ([string]::IsNullOrWhiteSpace($env:SESSIONNAME) -or $env:SESSIONNAME -eq 'Services') {
+if ($env:SESSIONNAME -eq 'Services') {
     Add-PreflightFailure (
-        "SESSIONNAME is '$(if ($env:SESSIONNAME) { $env:SESSIONNAME } else { '<missing>' })'. " +
-        'AUMID activation requires a Console/RDP interactive user desktop, not the Services session.'
+        "SESSIONNAME is 'Services'. AUMID activation requires a Console/RDP interactive user desktop, not the Services session."
     )
+}
+elseif ([string]::IsNullOrWhiteSpace($env:SESSIONNAME)) {
+    Write-Host '  SESSIONNAME is unavailable; UserInteractive, SessionId, Explorer, HKCU, and desktop bounds remain authoritative.'
 }
 if (-not (Test-Path -LiteralPath 'HKCU:\Software')) {
     Add-PreflightFailure "The current user's registry hive is not loaded. Per-user package registration and AUMID activation require an HKCU profile."

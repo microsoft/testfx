@@ -11,6 +11,7 @@ namespace MSTest.Acceptance.IntegrationTests;
 /// Verifies the physical Windows application-model assets in the configuration-matched MSTest packages.
 /// </summary>
 [TestClass]
+[OSCondition(OperatingSystems.Windows, IgnoreMessage = "Windows application-model package assets are produced only by Windows packs.")]
 public sealed class WindowsApplicationModelPackageTests
 {
     private static readonly string[] RequiredTestAdapterEntries =
