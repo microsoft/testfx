@@ -21,6 +21,21 @@ A manifest in the app's own directory is taken as the app's layout. A manifest i
 
 So referencing this package from an unpackaged app costs nothing: no extra process, and no copy of the build output.
 
+## Controller pipe access for AppContainer hosts
+
+The platform's test host controller talks to the test host over a named pipe created with the equivalent of `PipeOptions.CurrentUserOnly`: it is owned by the creating token's owner SID and its DACL grants only that SID, which is what keeps another user — or a differently-elevated process of the same user — out of the run.
+
+A **UWP or AppContainer-configured WinUI** host cannot connect to such a pipe. An AppContainer runs with a *restricted* token and Windows grants access only when the normal access check **and** the restricted-SID check both succeed; the restricting SIDs contain the app's package SID, so a DACL naming only the user denies the host even though it belongs to the same signed-in user.
+
+When the layout is a packaged app that declares an AppContainer application — the same manifest classification that decides whether the host is activated with an activation payload or with plain `argv` — this extension derives that package's own AppContainer SID from its package family name and asks the platform to authorize it on the pipe before the pipe is created. The grant is minimal and scoped:
+
+- only **that** package SID is added — `ALL APPLICATION PACKAGES` (`S-1-15-2-1`) is never granted, and the platform rejects any request for a user, a group or `Everyone`;
+- it receives read, write, read-security and synchronize rights only, so it can never create another instance of the pipe, change its DACL, or delete it;
+- the DACL stays protected and the pipe rejects remote clients;
+- a packaged full-trust host, an unpackaged app, and every non-Windows run keep the existing pipe unchanged.
+
+Set `TESTINGPLATFORM_PACKAGEDAPP_PIPEAUTHORIZATION` to `never` to disable the grant entirely, or to `always` to request it for any packaged layout; `auto` (the default) probes the manifest.
+
 Set `TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER` to override that decision — `always` opts a non-packaged layout into deploy-and-launch, `never` keeps the launcher out of the way entirely, and `auto` (the default) probes the layout.
 
 ## Launch-activation bootstrap

@@ -108,7 +108,9 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
                 HandleRequestAsync,
                 _environment,
                 _loggerFactory.CreateLogger<NamedPipeServer>(),
-                ServiceProvider.GetTask(), cancellationToken);
+                ServiceProvider.GetTask(),
+                await GetAuthorizedAppContainerSecurityIdentifiersAsync(_testHostsInformation.TestHostLauncher, cancellationToken).ConfigureAwait(false),
+                cancellationToken);
             testHostControllerIpc.RegisterAllSerializers();
 
 #if NET8_0_OR_GREATER
@@ -472,6 +474,65 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
         ITestHostHandle handle = await testHostLauncher.LaunchTestHostAsync(context, cancellationToken).ConfigureAwait(false);
         await _logger.LogDebugAsync($"Test host launched by '{testHostLauncher.Uid}' (Identifier: '{handle.Identifier ?? "<none>"}')").ConfigureAwait(false);
         return new TestHostHandleToProcessAdapter(handle);
+    }
+
+    /// <summary>
+    /// Asks the registered launcher, when it implements <see cref="ITestHostControllerPipeAuthorizer"/>, for
+    /// the AppContainer package SIDs that must additionally be authorized on the controller-to-host pipe.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This runs before the pipe is created, which is the only point where the DACL can still be composed:
+    /// the pipe has to be listening before the host is launched, so the launcher cannot contribute this from
+    /// <see cref="ITestHostLauncher.LaunchTestHostAsync"/>.
+    /// </para>
+    /// <para>
+    /// Every returned value is validated against the platform's least-privilege policy: only a specific
+    /// AppContainer SID may be authorized, never a user, a group, <c>Everyone</c>, or the catch-all
+    /// <c>ALL APPLICATION PACKAGES</c> / <c>ALL RESTRICTED APPLICATION PACKAGES</c> SIDs. An extension that
+    /// asks for anything else fails the run instead of silently getting a weaker pipe, so a mistake cannot
+    /// degrade into an over-permissive ACL.
+    /// </para>
+    /// </remarks>
+    private async Task<IReadOnlyList<string>?> GetAuthorizedAppContainerSecurityIdentifiersAsync(
+        ITestHostLauncher? testHostLauncher,
+        CancellationToken cancellationToken)
+    {
+        if (testHostLauncher is not ITestHostControllerPipeAuthorizer pipeAuthorizer)
+        {
+            return null;
+        }
+
+        IReadOnlyList<string> securityIdentifiers = await pipeAuthorizer.GetAuthorizedAppContainerSecurityIdentifiersAsync(cancellationToken).ConfigureAwait(false);
+        if (securityIdentifiers is null || securityIdentifiers.Count == 0)
+        {
+            return null;
+        }
+
+        if (!NamedPipeServerSecurity.IsSupported)
+        {
+            // AppContainers, SIDs and pipe DACLs are Windows concepts. Anywhere else the request is
+            // meaningless, so it is ignored rather than failing an otherwise valid run.
+            await _logger.LogDebugAsync($"'{testHostLauncher.Uid}' requested {securityIdentifiers.Count} AppContainer pipe authorization(s), ignored on this operating system.").ConfigureAwait(false);
+            return null;
+        }
+
+        foreach (string securityIdentifier in securityIdentifiers)
+        {
+            if (!NamedPipeServerSecurity.IsAuthorizableAppContainerSid(securityIdentifier))
+            {
+                throw new InvalidOperationException(string.Format(
+                    CultureInfo.InvariantCulture,
+                    PlatformResources.TestHostControllerPipeInvalidAuthorizedSecurityIdentifierErrorMessage,
+                    testHostLauncher.DisplayName,
+                    testHostLauncher.Uid,
+                    securityIdentifier ?? "<null>",
+                    NamedPipeServerSecurity.AllApplicationPackagesSid));
+            }
+        }
+
+        await _logger.LogDebugAsync($"'{testHostLauncher.Uid}' authorized the following AppContainer SID(s) on the test host controller pipe: {string.Join(", ", securityIdentifiers)}").ConfigureAwait(false);
+        return securityIdentifiers;
     }
 
     private async Task DisposeServicesAsync()

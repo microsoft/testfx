@@ -47,3 +47,7 @@ static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackReader.Try
 Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostLauncher.PackagedAppTestHostLauncher(string! testApplicationDirectory, System.Func<string!, string?>! getEnvironmentVariable) -> void
 const Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostLauncher.LauncherModeEnvironmentVariable = "TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER" -> string!
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostLauncher.CreateActivationArguments(Microsoft.Testing.Extensions.PackagedApp.AppxApplicationInfo! application, System.Collections.Generic.IReadOnlyList<string!>! arguments, string! localStateDirectory) -> Microsoft.Testing.Extensions.PackagedApp.PackagedAppActivationData!
+Microsoft.Testing.Extensions.PackagedApp.AppContainerSecurityIdentifier
+static Microsoft.Testing.Extensions.PackagedApp.AppContainerSecurityIdentifier.TryDerive(string? packageFamilyName) -> string?
+Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostLauncher.GetAuthorizedAppContainerSecurityIdentifiersAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<string!>!>!
+const Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostLauncher.PipeAuthorizationModeEnvironmentVariable = "TESTINGPLATFORM_PACKAGEDAPP_PIPEAUTHORIZATION" -> string!

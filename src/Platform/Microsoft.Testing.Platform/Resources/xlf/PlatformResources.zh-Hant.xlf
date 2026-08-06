@@ -1197,6 +1197,11 @@ Microsoft 測試平台會收集使用量資料，以協助我們改善您的體�
         <target state="translated">測試配接器測試工作階段失敗</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestHostControllerPipeInvalidAuthorizedSecurityIdentifierErrorMessage">
+        <source>The test host launcher '{0}' (UID: {1}) asked to authorize the security identifier '{2}' on the test host controller pipe, but only a specific AppContainer package SID (of the form 'S-1-15-2-...') can be authorized. Users, groups and the catch-all '{3}' security identifier are never granted access.</source>
+        <target state="new">The test host launcher '{0}' (UID: {1}) asked to authorize the security identifier '{2}' on the test host controller pipe, but only a specific AppContainer package SID (of the form 'S-1-15-2-...') can be authorized. Users, groups and the catch-all '{3}' security identifier are never granted access.</target>
+        <note>{0} is the launcher display name, {1} is the launcher unique identifier, {2} is the rejected security identifier, {3} is the well-known 'ALL APPLICATION PACKAGES' security identifier. {Locked="'S-1-15-2-...'"} {Locked="AppContainer"}</note>
+      </trans-unit>
       <trans-unit id="TestHostControllerProcessRestartNotSupportedOnWebAssembly">
         <source>Test host controller extensions that require process restart are not supported on browser/WebAssembly platforms.</source>
         <target state="translated">需要重新啟動程序的測試主機控制器擴充功能不支援瀏覽器/WebAssembly 平台。</target>

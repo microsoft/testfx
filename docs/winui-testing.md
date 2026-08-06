@@ -142,7 +142,7 @@ Requirements and limitations:
 - Registering an unsigned build-output layout requires **Developer Mode** (or sideloading) to be enabled on the machine.
 - `packagedClassicApp`/`win32App` hosts receive MTP arguments as normal process `argv`, including classic hosts whose trust level is `appContainer`.
 - `windowsApp`/UWP hosts receive one opaque string through `LaunchActivatedEventArgs.Arguments`. Restore the platform argument array with `PackagedAppExtensions.GetTestApplicationArguments(args.Arguments)` before `TestApplication.CreateBuilderAsync`; see [Launch activation](#launch-activation).
-- End-to-end UWP/AppContainer execution remains dependent on granting the exact package SID access to the controller named pipe, tracked separately by [#10486](https://github.com/microsoft/testfx/issues/10486). Argument delivery from [#10485](https://github.com/microsoft/testfx/issues/10485) does not weaken that pipe ACL.
+- The controller named pipe additionally authorizes the exact package SID of an AppContainer host, which a restricted AppContainer token needs in order to connect at all; see [Controller pipe access for AppContainer hosts](#controller-pipe-access-for-appcontainer-hosts).
 
 See [#9933](https://github.com/microsoft/testfx/issues/9933) for the implementation of this path.
 
@@ -164,7 +164,39 @@ protected override async void OnLaunched(LaunchActivatedEventArgs args)
 
 The launcher and bootstrap share a versioned, length-prefixed format that preserves empty values, whitespace, quotes, backslashes, Unicode, repeated options, and ordering. Arguments that fit the documented 2,048-character Windows launch envelope remain only in the activation string. Larger arrays use a one-shot `LocalState` payload encrypted with a random per-launch key carried in the activation string; the host consumes and deletes it before MTP starts, and the launcher handle removes it if startup fails. Runsettings, filters, and other user input are therefore never persisted in plaintext.
 
-This bootstrap also restores the existing controller connect-back environment handoff before MTP reads it. It cannot by itself authorize the AppContainer token on that pipe; [#10486](https://github.com/microsoft/testfx/issues/10486) is the remaining end-to-end dependency.
+This bootstrap also restores the existing controller connect-back environment handoff before MTP reads it.
+
+## Controller pipe access for AppContainer hosts
+
+Microsoft.Testing.Platform starts an out-of-process test host under a *test host controller* and the two talk over a named pipe. That pipe is created with the equivalent of `PipeOptions.CurrentUserOnly`: it is owned by the creating token's owner SID and its DACL grants only that SID. This is what keeps another user — and, thanks to the owner (rather than user) SID, a differently-elevated process of the same user — out of your test run.
+
+A **UWP or AppContainer-configured WinUI** host cannot connect to such a pipe. An AppContainer runs with a *restricted* token, and Windows only grants access when the normal access check **and** the restricted-SID check both succeed. The restricting SIDs of an AppContainer contain the app's package SID, so a DACL that names only the user denies the host even though it belongs to the same signed-in user. Knowing the pipe name — or restoring the activation arguments — does not help.
+
+`Microsoft.Testing.Extensions.PackagedApp` closes that gap: when the layout is a packaged app that declares an AppContainer application, the launcher derives that package's own AppContainer SID from its package family name and asks the platform to add it to the pipe DACL before the pipe is created. This is the same manifest classification that decides whether the host is activated with an activation payload or with plain `argv`.
+
+What the resulting pipe grants:
+
+| Principal | Rights |
+| --- | --- |
+| The current user (the pipe's owner, as before) | full control |
+| The one authorized package SID | read, write, read-security and synchronize only |
+
+Notable properties:
+
+- The grant is scoped to **your** package. `ALL APPLICATION PACKAGES` (`S-1-15-2-1`) is never granted, and the platform rejects any request for it — or for a user, a group, or `Everyone` — with an error rather than widening the pipe.
+- The package cannot create another instance of the pipe (`FILE_CREATE_PIPE_INSTANCE` is not granted), change its DACL, or delete it.
+- The DACL is protected, and the pipe rejects remote clients.
+- The pipe keeps the controller's own integrity level — no mandatory label is lowered — so Mandatory Integrity Control stays a second gate behind the DACL.
+- Nothing changes for a packaged **full-trust** desktop host, an unpackaged app, an ordinary console test app, or any non-Windows run: the pipe is created exactly as it was before.
+- No loopback exemption (`CheckNetIsolation LoopbackExempt`) is used or needed — that applies to network sockets, not named pipes.
+
+Set `TESTINGPLATFORM_PACKAGEDAPP_PIPEAUTHORIZATION` to override the decision. Values are compared case-insensitively; anything unrecognized falls back to `auto`.
+
+| Value | Behavior |
+| --- | --- |
+| unset, or `auto` | Authorize the package SID only when the manifest declares an AppContainer application. |
+| `always` | Authorize the package SID for any packaged layout. Use this if the manifest classification misreads your app. |
+| `never` | Never authorize anything; the pipe keeps its current-user-only DACL. |
 
 ## When does the PackagedApp launcher take over?
 
