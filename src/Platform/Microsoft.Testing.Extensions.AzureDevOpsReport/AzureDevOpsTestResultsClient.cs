@@ -11,6 +11,10 @@ using System.Text.Json.Serialization;
 using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
 using Microsoft.Testing.Platform.Helpers;
 
+#if !NETCOREAPP
+using Polyfills;
+#endif
+
 namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 
 internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClient
@@ -27,6 +31,13 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    };
+
+    private static readonly JsonSerializerOptions UpdateJsonSerializerOptions = new()
+    {
+        // PATCH must send null outcome details explicitly so a passing retry clears the error and stack
+        // trace left by the prior failed attempt. Omitting them would leave those server fields unchanged.
+        DefaultIgnoreCondition = JsonIgnoreCondition.Never,
     };
 
     private static readonly HttpClient SharedHttpClient = CreateHttpClient();
@@ -53,13 +64,32 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
             HttpMethod.Post,
             BuildRunsUri(configuration.CollectionUri, configuration.Project),
             configuration.AccessToken,
-            new CreateTestRunRequest(configuration.RunName, true, new BuildReference(configuration.BuildId), AzureDevOpsLivePublishingConstants.InProgressTestRunState));
+            new CreateTestRunRequest(
+                configuration.RunName,
+                true,
+                new BuildReference(configuration.BuildId),
+                AzureDevOpsLivePublishingConstants.InProgressTestRunState,
+                _clock.UtcNow,
+                BuildPipelineReference(configuration)));
 
         CreateTestRunResponse response = await SendAsync<CreateTestRunResponse>(request, cancellationToken).ConfigureAwait(false);
         return response.Id > 0
             ? response.Id
             : throw new InvalidOperationException(AzureDevOpsResources.AzureDevOpsLivePublishingInvalidResponse);
     }
+
+    /// <remarks>
+    /// Azure DevOps requires <c>pipelineReference.pipelineId</c> to match <c>build.id</c>; without the
+    /// stage/phase/job references the run cannot be attributed to a stage of a multi-stage pipeline.
+    /// </remarks>
+    private static PipelineReference? BuildPipelineReference(AzureDevOpsPublishConfiguration configuration)
+        => configuration.PipelineReference is not { } pipelineReference
+            ? null
+            : new PipelineReference(
+                configuration.BuildId,
+                pipelineReference.StageName is null ? null : new StageReference(pipelineReference.StageName, pipelineReference.StageAttempt),
+                pipelineReference.PhaseName is null ? null : new PhaseReference(pipelineReference.PhaseName, pipelineReference.PhaseAttempt),
+                pipelineReference.JobName is null ? null : new JobReference(pipelineReference.JobName, pipelineReference.JobAttempt));
 
     [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification = "Response types are internal, fixed, and controlled by this extension.")]
     [UnconditionalSuppressMessage("Aot", "IL3050", Justification = "Response types are internal, fixed, and controlled by this extension.")]
@@ -105,6 +135,27 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
         {
             return null;
         }
+    }
+
+    /// <summary>
+    /// Updates results that were already published to the run, folding a further attempt of the same test
+    /// into the result that represents it.
+    /// </summary>
+    /// <remarks>
+    /// Deliberately does not surface the response body. Azure DevOps returns the updated results, but the
+    /// caller already knows the ids it sent (that is how it addressed them), and the sub-result ids in the
+    /// response are not needed: attachments for every attempt are uploaded against the parent result.
+    /// </remarks>
+    public async Task UpdateTestResultsAsync(AzureDevOpsPublishConfiguration configuration, int runId, IReadOnlyList<AzureDevOpsTestCaseResult> results, CancellationToken cancellationToken)
+    {
+        using HttpRequestMessage request = CreateRequest(
+            PatchMethod,
+            BuildResultsUri(configuration.CollectionUri, configuration.Project, runId),
+            configuration.AccessToken,
+            results,
+            UpdateJsonSerializerOptions);
+
+        await SendAsync(request, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task UploadTestResultAttachmentAsync(AzureDevOpsPublishConfiguration configuration, int runId, int testCaseResultId, AzureDevOpsTestResultAttachment attachment, CancellationToken cancellationToken)
@@ -153,17 +204,42 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
     }
 
     private static HttpClient CreateHttpClient()
-    {
-        HttpClientHandler handler = new()
-        {
-            AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip,
-        };
-
-        return new HttpClient(handler, disposeHandler: false)
+        => new(CreateHttpClientHandler(), disposeHandler: false)
         {
             Timeout = Timeout.InfiniteTimeSpan,
         };
+
+    /// <summary>
+    /// Creates the handler backing the shared <see cref="HttpClient"/>, opting into transparent
+    /// response decompression only where the platform supports it.
+    /// </summary>
+    /// <remarks>
+    /// The <c>browser</c> and <c>wasi</c> handlers delegate to <c>fetch</c> / <c>wasi:http</c>, which
+    /// decode <c>gzip</c>/<c>deflate</c> responses themselves, and their
+    /// <see cref="HttpClientHandler.AutomaticDecompression"/> setter throws
+    /// <see cref="PlatformNotSupportedException"/>. Skipping the opt-in there is therefore not a
+    /// behavior change. See <see href="https://github.com/microsoft/testfx/issues/10313"/>.
+    /// </remarks>
+    internal static HttpClientHandler CreateHttpClientHandler()
+    {
+        HttpClientHandler handler = new();
+        if (ShouldOptInToAutomaticDecompression(handler))
+        {
+            handler.AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip;
+        }
+
+        return handler;
     }
+
+    /// <summary>
+    /// Determines whether <see cref="HttpClientHandler.AutomaticDecompression"/> can be set on
+    /// <paramref name="handler"/>. The <c>OperatingSystem.IsBrowser()</c> check is what the
+    /// platform-compatibility annotation on the property requires; the
+    /// <see cref="HttpClientHandler.SupportsAutomaticDecompression"/> probe additionally covers the
+    /// other handlers (for example <c>wasi</c>) that do not implement it.
+    /// </summary>
+    internal static bool ShouldOptInToAutomaticDecompression(HttpClientHandler handler)
+        => !OperatingSystem.IsBrowser() && handler.SupportsAutomaticDecompression;
 
     private static Uri BuildRunsUri(string collectionUri, string project)
         => new(new Uri(collectionUri, UriKind.Absolute), $"{Uri.EscapeDataString(project)}/_apis/test/runs?api-version={ApiVersion}");
@@ -236,10 +312,18 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
 
     [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification = "Payload types are internal, fixed, and controlled by this extension.")]
     [UnconditionalSuppressMessage("Aot", "IL3050", Justification = "Payload types are internal, fixed, and controlled by this extension.")]
-    private static HttpRequestMessage CreateRequest<TPayload>(HttpMethod method, Uri uri, string accessToken, TPayload payload)
+    private static HttpRequestMessage CreateRequest<TPayload>(
+        HttpMethod method,
+        Uri uri,
+        string accessToken,
+        TPayload payload,
+        JsonSerializerOptions? jsonSerializerOptions = null)
     {
         HttpRequestMessage request = CreateRequest(method, uri, accessToken);
-        request.Content = new StringContent(JsonSerializer.Serialize(payload, JsonSerializerOptions), Encoding.UTF8, "application/json");
+        request.Content = new StringContent(
+            JsonSerializer.Serialize(payload, jsonSerializerOptions ?? JsonSerializerOptions),
+            Encoding.UTF8,
+            "application/json");
         return request;
     }
 
@@ -415,9 +499,29 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
         [property: JsonPropertyName("name")] string Name,
         [property: JsonPropertyName("automated")] bool Automated,
         [property: JsonPropertyName("build")] BuildReference Build,
-        [property: JsonPropertyName("state")] string State);
+        [property: JsonPropertyName("state")] string State,
+        [property: JsonPropertyName("startedDate")] DateTimeOffset StartedDate,
+        [property: JsonPropertyName("pipelineReference")] PipelineReference? PipelineReference);
 
     private sealed record BuildReference([property: JsonPropertyName("id")] int Id);
+
+    private sealed record PipelineReference(
+        [property: JsonPropertyName("pipelineId")] int PipelineId,
+        [property: JsonPropertyName("stageReference")] StageReference? StageReference,
+        [property: JsonPropertyName("phaseReference")] PhaseReference? PhaseReference,
+        [property: JsonPropertyName("jobReference")] JobReference? JobReference);
+
+    private sealed record StageReference(
+        [property: JsonPropertyName("stageName")] string StageName,
+        [property: JsonPropertyName("attempt")] int? Attempt);
+
+    private sealed record PhaseReference(
+        [property: JsonPropertyName("phaseName")] string PhaseName,
+        [property: JsonPropertyName("attempt")] int? Attempt);
+
+    private sealed record JobReference(
+        [property: JsonPropertyName("jobName")] string JobName,
+        [property: JsonPropertyName("attempt")] int? Attempt);
 
     private sealed record CreateTestRunResponse([property: JsonPropertyName("id")] int Id);
 

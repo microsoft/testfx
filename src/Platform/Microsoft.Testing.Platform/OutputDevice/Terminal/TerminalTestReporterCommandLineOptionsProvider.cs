@@ -25,6 +25,7 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : CommandLi
     public const string ShowOutputFailedArgument = "failed";
     public const string ShowOutputNoneArgument = "none";
     public const string ShowSlowestTestsOption = "show-slowest-tests";
+    public const string ShowFlakyTestsOption = FlakyTestsReportingOptions.ShowFlakyTestsOptionName;
 
     public TerminalTestReporterCommandLineOptionsProvider()
         : base(
@@ -42,6 +43,7 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : CommandLi
                 new(ShowStdoutOption, TerminalResources.TerminalShowStdoutOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
                 new(ShowStderrOption, TerminalResources.TerminalShowStderrOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
                 new(ShowSlowestTestsOption, TerminalResources.TerminalShowSlowestTestsOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
+                new(ShowFlakyTestsOption, TerminalResources.TerminalShowFlakyTestsOptionDescription, ArgumentArity.ZeroOrOne, isHidden: false, isBuiltIn: true),
             ])
     {
     }
@@ -67,8 +69,25 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : CommandLi
                 && int.TryParse(arguments[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out int count) && count >= 1
                 ? ValidationResult.ValidTask
                 : ValidationResult.InvalidTask(TerminalResources.TerminalShowSlowestTestsOptionInvalidArgument),
+            // Bare '--show-flaky-tests' means "on", so zero arguments is valid; a single argument must be one of the
+            // usual on/off spellings.
+            ShowFlakyTestsOption => arguments.Length == 0 || (arguments.Length == 1 && CommandLineOptionArgumentValidator.IsValidBooleanArgument(arguments[0]))
+                ? ValidationResult.ValidTask
+                : ValidationResult.InvalidTask(TerminalResources.TerminalShowFlakyTestsOptionInvalidArgument),
             _ => throw ApplicationStateGuard.Unreachable(),
         };
+
+    internal static bool IsProgressEnabled(ICommandLineOptions commandLineOptions)
+        => commandLineOptions.TryGetOptionArgumentList(ProgressOption, out string[]? arguments)
+            && arguments is { Length: > 0 }
+                ? !CommandLineOptionArgumentValidator.IsOffValue(arguments[0])
+                : !commandLineOptions.IsOptionSet(NoProgressOption);
+
+    /// <summary>
+    /// Resolves <c>--show-flaky-tests</c>. See <see cref="FlakyTestsReportingOptions.IsEnabled"/>.
+    /// </summary>
+    internal static bool IsFlakyTestsReportingEnabled(ICommandLineOptions commandLineOptions)
+        => FlakyTestsReportingOptions.IsEnabled(commandLineOptions);
 
     private static bool IsValidShowOutputArgument(string argument)
         => ShowOutputAllArgument.Equals(argument, StringComparison.OrdinalIgnoreCase)

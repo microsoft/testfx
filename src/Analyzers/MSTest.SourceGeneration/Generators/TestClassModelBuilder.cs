@@ -123,6 +123,11 @@ internal static class TestClassModelBuilder
             }
         }
 
+        AttributeMaterializationHelper.AttributeMaterializationResult classAttributes =
+            AttributeMaterializationHelper.BuildAttributesWithCompleteness(
+                AttributeMaterializationHelper.CollectInheritedAttributes(typeSymbol),
+                consumingAssembly);
+
         return new TestClassModel(
             FullyQualifiedTypeName: leafFqn,
             ContainingNamespace: typeSymbol.ContainingNamespace.IsGlobalNamespace
@@ -134,7 +139,8 @@ internal static class TestClassModelBuilder
             Constructors: new EquatableArray<TestConstructorModel>(ctors.ToImmutable()),
             Methods: new EquatableArray<TestMethodModel>(methods.ToImmutable()),
             Properties: new EquatableArray<TestPropertyModel>(properties.ToImmutable()),
-            Attributes: AttributeMaterializationHelper.BuildAttributes(typeSymbol.GetAttributes(), consumingAssembly),
+            Attributes: classAttributes.Attributes,
+            AreAttributesComplete: classAttributes.IsComplete,
             BaseTypeFullyQualifiedNames: new EquatableArray<string>(baseTypes.ToImmutable()));
     }
 
@@ -152,6 +158,8 @@ internal static class TestClassModelBuilder
         bool returnsVoid = returnType.SpecialType == SpecialType.System_Void;
 
         ImmutableArray<AttributeData> inheritedAttributes = AttributeMaterializationHelper.CollectInheritedAttributes(method);
+        AttributeMaterializationHelper.AttributeMaterializationResult methodAttributes =
+            AttributeMaterializationHelper.BuildAttributesWithCompleteness(inheritedAttributes, consumingAssembly);
 
         return new TestMethodModel(
             Name: method.Name,
@@ -162,7 +170,11 @@ internal static class TestClassModelBuilder
             ReturnsVoid: returnsVoid,
             IsTestMethod: TestMemberValidationHelper.IsTestMethodAttributePresent(method),
             Parameters: BuildParameters(method),
-            Attributes: AttributeMaterializationHelper.BuildAttributes(inheritedAttributes, consumingAssembly),
+            Attributes: methodAttributes.Attributes,
+            // AsyncStateMachineAttribute is synthesized during lowering and is not returned by
+            // IMethodSymbol.GetAttributes(). Keep async entries non-authoritative so runtime
+            // reflection can observe it, including when rejecting async-void test methods.
+            AreAttributesComplete: methodAttributes.IsComplete && !method.IsAsync,
             DataRows: DataRowBuilder.BuildDataRows(inheritedAttributes),
             DynamicDataSources: DynamicDataSourceBuilder.BuildDynamicDataSources(inheritedAttributes, method, consumingAssembly));
     }

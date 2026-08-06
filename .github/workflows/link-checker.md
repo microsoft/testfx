@@ -1,5 +1,4 @@
 ---
-source: githubnext/agentics/workflows/link-checker.md@main
 description: Daily automated link checker that finds and fixes broken links in documentation files
 on:
   schedule: daily on weekdays
@@ -28,7 +27,7 @@ network:
     - github
 steps:
   - name: Checkout repository
-    uses: actions/checkout@v7.0.0
+    uses: actions/checkout@v7.0.1
     with:
       fetch-depth: 0
       persist-credentials: false
@@ -127,6 +126,7 @@ safe-outputs:
     if-no-changes: "warn"
   noop:
     report-as-issue: false
+source: githubnext/agentics/workflows/link-checker.md@main
 ---
 
 # Daily Link Checker & Fixer

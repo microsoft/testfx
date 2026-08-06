@@ -7,15 +7,20 @@
         <target state="translated">Manifest zabalené aplikace deklaruje více aplikací a žádná jednoznačně neodpovídá spustitelnému souboru '{0}'. Kandidátní ID modelu uživatele aplikace: {1}.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AppxManifestApplicationExecutableMismatch">
+        <source>The packaged app manifest declares no application for the executable '{0}', so it describes a different application and activating it would target the wrong Application User Model ID. Declared application executables: {1}.</source>
+        <target state="translated">Manifest zabalené aplikace nedeklaruje žádnou aplikaci pro spustitelný soubor {0}, takže popisuje jinou aplikaci a její aktivace by zacílila na nesprávné Application User Model ID. Deklarované spustitelné soubory aplikace: {1}.</target>
+        <note>Do not localize the technology name {Locked="Application User Model ID"}. {0} is an executable path. {1} is a comma-separated list of executable paths.</note>
+      </trans-unit>
       <trans-unit id="InvalidAppxManifestMissingIdentity">
         <source>The packaged app manifest does not declare a valid &lt;Identity Name="..." Publisher="..." /&gt; element.</source>
         <target state="translated">Manifest zabalené aplikace nedeklaruje platný prvek &lt;Identity Name="..." Publisher="..." /&gt;.</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDescription">
-        <source>Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there, and — in the Windows build — registers a packaged, full-trust MSIX desktop test host and activates it by Application User Model ID. True UWP/AppContainer hosts are not supported. See https://github.com/microsoft/testfx/issues/9933.</source>
-        <target state="new">Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there, and — in the Windows build — registers a packaged, full-trust MSIX desktop test host and activates it by Application User Model ID. True UWP/AppContainer hosts are not supported. See https://github.com/microsoft/testfx/issues/9933.</target>
-        <note />
+        <source>Registers a packaged, full-trust MSIX desktop test host and activates it by Application User Model ID (Windows build), and — when opted in through TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=always — deploys a non-packaged (loose-layout) Windows test host to an isolated directory and launches it from there. Enabled only for a packaged layout by default, so an unpackaged app is left on the default launch path. True UWP/AppContainer hosts are not supported. See https://github.com/microsoft/testfx/issues/9933.</source>
+        <target state="translated">Registruje zabalený, plně důvěryhodný desktopový testovací host MSIX a aktivuje ho pomocí Application User Model ID (Windows sestavení) – a když je povolen prostřednictvím TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=always, nasadí nezabalený (loose-layout) testovací host Windows do izolovaného adresáře a spustí ho odtud. Ve výchozím nastavení je povolené jenom pro zabalené rozložení, takže na výchozí cestě spuštění zůstane nezabalené aplikace. Skuteční hostitelé UWP/AppContainer nejsou podporováni. Viz https://github.com/microsoft/testfx/issues/9933.</target>
+        <note>Do not localize the environment variable name or its value {Locked="TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER"}{Locked="always"}, nor the technology names {Locked="MSIX"}{Locked="Application User Model ID"}{Locked="Windows"}{Locked="UWP"}{Locked="AppContainer"}.</note>
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDisplayName">
         <source>Packaged app test host launcher</source>

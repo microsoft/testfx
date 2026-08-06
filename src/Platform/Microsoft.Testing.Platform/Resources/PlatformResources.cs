@@ -53,6 +53,24 @@ internal static partial class PlatformResources
 
     internal static string @PlatformCommandLineDotnetTestCliRequiresPipe => GetResourceString("PlatformCommandLineDotnetTestCliRequiresPipe");
 
+    internal static string @PlatformCommandLineDotnetTestTransportInvalid => GetResourceString("PlatformCommandLineDotnetTestTransportInvalid");
+
+    internal static string @PlatformCommandLineDotnetTestHttpEndpointInvalid => GetResourceString("PlatformCommandLineDotnetTestHttpEndpointInvalid");
+
+    internal static string @PlatformCommandLineDotnetTestHttpTokenInvalid => GetResourceString("PlatformCommandLineDotnetTestHttpTokenInvalid");
+
+    internal static string @PlatformCommandLineDotnetTestTransportConflict => GetResourceString("PlatformCommandLineDotnetTestTransportConflict");
+
+    internal static string @PlatformCommandLineDotnetTestHttpOptionsRequireTransport => GetResourceString("PlatformCommandLineDotnetTestHttpOptionsRequireTransport");
+
+    internal static string @PlatformCommandLineDotnetTestCliRequiresTransport => GetResourceString("PlatformCommandLineDotnetTestCliRequiresTransport");
+
+    internal static string @PlatformCommandLineDotnetTestHttpRequiresEndpointAndToken => GetResourceString("PlatformCommandLineDotnetTestHttpRequiresEndpointAndToken");
+
+    internal static string @PlatformCommandLinePipeTransportNotSupportedOnBrowser => GetResourceString("PlatformCommandLinePipeTransportNotSupportedOnBrowser");
+
+    internal static string @PlatformCommandLinePipeTransportNotSupportedOnWasi => GetResourceString("PlatformCommandLinePipeTransportNotSupportedOnWasi");
+
     internal static string @PlatformCommandLineExitOnProcessExitSingleArgument => GetResourceString("PlatformCommandLineExitOnProcessExitSingleArgument");
 
     internal static string @PlatformCommandLineDiagnosticOptionIsMissing => GetResourceString("PlatformCommandLineDiagnosticOptionIsMissing");

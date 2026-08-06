@@ -68,15 +68,43 @@ internal sealed partial class TypeCache
     {
         // Cheap metadata-only probe first: avoid loading the filter's Type unless the attribute is
         // actually present. Mirrors the AssemblyFixtureProvider probe pattern.
-        if (!HasTestFilterProviderMarker(testAssembly))
+        if (!HasTestFilterProviderMarker(testAssembly, out bool hasGenericMarker))
         {
             return null;
         }
 
-        object[] markers;
+        object[] nonGenericMarkers = GetTestFilterProviderAttributes(testAssembly, typeof(TestFilterProviderAttribute));
+        object[] genericMarkers = hasGenericMarker
+            ? GetGenericTestFilterProviderAttributes(testAssembly)
+            : [];
+
+        int markerCount = nonGenericMarkers.Length + genericMarkers.Length;
+        if (markerCount == 0)
+        {
+            return null;
+        }
+
+        if (markerCount > 1)
+        {
+            string message = string.Format(
+                CultureInfo.CurrentCulture,
+                Resource.UTA_TestFilterProviderMultipleDeclared,
+                SafeGetAssemblyName(testAssembly) ?? "<unknown>");
+            throw new TypeInspectionException(message);
+        }
+
+        return nonGenericMarkers.Length == 1
+            ? nonGenericMarkers[0] is TestFilterProviderAttribute { FilterType: { } filterType }
+                ? InstantiateTestFilter(filterType)
+                : null
+            : InstantiateTestFilterFromGenericProvider(genericMarkers[0]);
+    }
+
+    private static object[] GetTestFilterProviderAttributes(Assembly testAssembly, Type attributeType)
+    {
         try
         {
-            markers = PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(testAssembly, typeof(TestFilterProviderAttribute));
+            return PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(testAssembly, attributeType);
         }
         catch (Exception ex)
         {
@@ -92,27 +120,38 @@ internal sealed partial class TypeCache
                 ex.Message);
             throw new TypeInspectionException(message, ex);
         }
-
-        if (markers is null || markers.Length == 0)
-        {
-            return null;
-        }
-
-        if (markers.Length > 1)
-        {
-            string message = string.Format(
-                CultureInfo.CurrentCulture,
-                Resource.UTA_TestFilterProviderMultipleDeclared,
-                SafeGetAssemblyName(testAssembly) ?? "<unknown>");
-            throw new TypeInspectionException(message);
-        }
-
-        return markers[0] is TestFilterProviderAttribute { FilterType: { } filterType }
-            ? InstantiateTestFilter(filterType)
-            : null;
     }
 
-    internal static ITestFilter InstantiateTestFilter(Type filterType)
+    /// <summary>
+    /// Resolves the generic <c>TestFilterProviderAttribute&lt;TFilter&gt;</c> markers through the internal
+    /// <see cref="ITestFilterProviderAttribute"/> contract.
+    /// </summary>
+    /// <remarks>
+    /// Kept out of <see cref="DiscoverTestFilterFromProvider"/>, and explicitly not inlined, so that the
+    /// reference to <see cref="ITestFilterProviderAttribute"/> is only resolved once a generic marker has
+    /// actually been seen in metadata. A newer adapter running against an older MSTest.TestFramework — where
+    /// neither this contract nor the generic attribute exists — must never have to load the type, otherwise
+    /// discovery of the shipped non-generic attribute would fail with UTA073.
+    /// </remarks>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static object[] GetGenericTestFilterProviderAttributes(Assembly testAssembly)
+    {
+        // The lookup matches by assignability, so it also returns the non-generic attribute; keep only the
+        // generic shape here, since the non-generic one is resolved through its own concrete type.
+        object[] markers = GetTestFilterProviderAttributes(testAssembly, typeof(ITestFilterProviderAttribute));
+
+        return [.. markers.Where(marker => IsTestFilterProviderMarkerType(marker.GetType(), out bool isGeneric) && isGeneric)];
+    }
+
+    /// <inheritdoc cref="GetGenericTestFilterProviderAttributes"/>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static ITestFilter? InstantiateTestFilterFromGenericProvider(object marker)
+        => marker is ITestFilterProviderAttribute { FilterType: { } filterType }
+            ? InstantiateTestFilter(filterType)
+            : null;
+
+    internal static ITestFilter InstantiateTestFilter(
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] Type filterType)
     {
         if (filterType.IsGenericType)
         {
@@ -143,20 +182,74 @@ internal sealed partial class TypeCache
         }
     }
 
-    private static bool HasTestFilterProviderMarker(Assembly assembly)
+    private static bool HasTestFilterProviderMarker(Assembly assembly, out bool hasGenericMarker)
     {
-        // Compare on the attribute type's FullName so we don't trigger attribute construction,
-        // mirroring the AssemblyFixtureProvider probe.
-        string markerFullName = typeof(TestFilterProviderAttribute).FullName!;
+        bool hasMarker = false;
+        hasGenericMarker = false;
+
         foreach (CustomAttributeData data in assembly.GetCustomAttributesData())
         {
-            if (string.Equals(data.AttributeType.FullName, markerFullName, StringComparison.Ordinal))
+            if (IsTestFilterProviderMarkerType(data.AttributeType, out bool isGeneric))
             {
-                return true;
+                hasMarker = true;
+                hasGenericMarker |= isGeneric;
             }
         }
 
-        return false;
+        return hasMarker;
+    }
+
+    /// <summary>
+    /// Whether <paramref name="attributeType"/> is one of the two attribute shapes that register an
+    /// <see cref="ITestFilter"/>: <see cref="TestFilterProviderAttribute"/> or
+    /// <c>TestFilterProviderAttribute&lt;TFilter&gt;</c>.
+    /// </summary>
+    /// <remarks>
+    /// Comparing type names keeps this a metadata-only probe: it never constructs the attribute, so it
+    /// cannot trip on a <c>typeof(...)</c> argument whose target assembly fails to resolve — which is the
+    /// whole point of probing metadata before the real lookup.
+    /// <para>
+    /// Matching exact names is only safe because both attributes are <see langword="sealed"/> and the
+    /// contract they share (<c>ITestFilterProviderAttribute</c>) is internal, so this list cannot grow
+    /// behind our back. Were the attributes user-derivable, the guarded assignability-based
+    /// <c>GetCustomAttributes</c> lookup would return subclasses this probe rejects, silently dropping the
+    /// user's filter.
+    /// </para>
+    /// </remarks>
+    internal static bool IsTestFilterProviderMarkerType(Type? attributeType)
+        => IsTestFilterProviderMarkerType(attributeType, out _);
+
+    private static bool IsTestFilterProviderMarkerType(Type? attributeType, out bool isGeneric)
+    {
+        isGeneric = false;
+
+        if (attributeType is null)
+        {
+            return false;
+        }
+
+        // A constructed generic type's FullName embeds the type argument, so compare the generic type
+        // definition to recognize TestFilterProviderAttribute<TFilter>.
+        Type attributeDefinition = attributeType.IsGenericType
+            ? attributeType.GetGenericTypeDefinition()
+            : attributeType;
+
+        string markerFullName = typeof(TestFilterProviderAttribute).FullName!;
+
+        if (string.Equals(attributeDefinition.FullName, markerFullName, StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        // The generic marker additionally has to come from the same assembly as the non-generic one.
+        // Name matching alone would let an unrelated assembly that happens to declare this namespace and
+        // name flip the flag, and the only thing the flag gates is the ITestFilterProviderAttribute
+        // lookup -- which is precisely the type an older MSTest.TestFramework does not have. That would
+        // turn a squatted name into UTA073 on a framework that is otherwise fine.
+        isGeneric = string.Equals(attributeDefinition.FullName, markerFullName + "`1", StringComparison.Ordinal)
+            && attributeDefinition.Assembly == typeof(TestFilterProviderAttribute).Assembly;
+
+        return isGeneric;
     }
 
     // Tiny holder so the cache can distinguish "not computed yet" (missing key) from

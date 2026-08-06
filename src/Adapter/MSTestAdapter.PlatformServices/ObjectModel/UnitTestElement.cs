@@ -57,6 +57,21 @@ internal sealed class UnitTestElement
     /// </summary>
     public bool DoNotParallelize { get; set; }
 
+    /// <summary>
+    /// Gets or sets the resource locks declared on this test (via <c>[ResourceLock]</c> on the method and/or its
+    /// class), used by the parallel scheduler to serialize only the tests that contend on the same resource key.
+    /// The array is distinct by key and ordinally sorted by resource. <see langword="null"/> when none are declared.
+    /// </summary>
+    public ResourceLockInfo[]? ResourceLocks { get; set; }
+
+    /// <summary>
+    /// Gets or sets the dependencies declared for this test (via <c>[DependsOn]</c> on the method and/or its
+    /// class, and/or the <c>mstest:execution:dependencies</c> section of <c>testconfig.json</c>), used by the
+    /// scheduler to run this test after its prerequisites and to skip it when they do not pass.
+    /// <see langword="null"/> when none are declared.
+    /// </summary>
+    public TestDependencyInfo[]? Dependencies { get; set; }
+
 #if !WINDOWS_UWP && !WIN_UI
     /// <summary>
     /// Gets or sets the deployment items for the test method.

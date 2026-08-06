@@ -45,6 +45,204 @@ public sealed class CommandLineHandlerTests
     }
 
     [TestMethod]
+    public async Task ParseAndValidateAsync_InvalidCommandLineRedactsHttpTransportSecrets()
+    {
+        string[] args =
+        [
+            "--server", "dotnettestcli",
+            "--dotnet-test-transport", "http",
+            "--dotnet-test-http-endpoint", "https://gateway.example/private/run-id",
+            "--dotnet-test-http-token", "secret-token",
+            "--unknown-option",
+        ];
+        CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            parseResult,
+            _systemCommandLineOptionsProviders,
+            _extensionCommandLineOptionsProviders,
+            new Mock<ICommandLineOptions>().Object);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains("***REDACTED***", result.ErrorMessage);
+        Assert.Contains("https://gateway.example", result.ErrorMessage);
+        Assert.DoesNotContain("secret-token", result.ErrorMessage);
+        Assert.DoesNotContain("/private/run-id", result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("--dotnet-test-http-token", "'secret'token'", "secret")]
+    [DataRow("--dotnet-test-http-endpoint", "'https://gateway.example/private'run'", "/private")]
+    public async Task ParseAndValidateAsync_ParserErrorsRedactHttpTransportSecrets(
+        string option,
+        string value,
+        string sensitiveFragment)
+    {
+        CommandLineParseResult parseResult = CommandLineParser.Parse([option, value], new SystemEnvironment());
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            parseResult,
+            _systemCommandLineOptionsProviders,
+            _extensionCommandLineOptionsProviders,
+            new Mock<ICommandLineOptions>().Object);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains("***REDACTED***", result.ErrorMessage);
+        Assert.DoesNotContain(sensitiveFragment, result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("---dotnet-test-http-token=secret-token", "secret-token", "***REDACTED***")]
+    [DataRow("---dotnet-test-http-endpoint=https://gateway.example/private/run", "/private/run", "https://gateway.example")]
+    public async Task ParseAndValidateAsync_MalformedSensitiveOptionPrefixIsRedacted(
+        string argument,
+        string sensitiveFragment,
+        string expectedSafeFragment)
+    {
+        CommandLineParseResult parseResult = CommandLineParser.Parse([argument], new SystemEnvironment());
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            parseResult,
+            _systemCommandLineOptionsProviders,
+            _extensionCommandLineOptionsProviders,
+            new Mock<ICommandLineOptions>().Object);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains(expectedSafeFragment, result.ErrorMessage);
+        Assert.DoesNotContain(sensitiveFragment, result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("---dotnet-test-http-token", "secret-token", "secret-token", "***REDACTED***")]
+    [DataRow("---dotnet-test-http-endpoint", "https://gateway.example/private/run", "/private/run", "https://gateway.example")]
+    public async Task ParseAndValidateAsync_SeparatedMalformedSensitiveOptionValueIsRedacted(
+        string option,
+        string value,
+        string sensitiveFragment,
+        string expectedSafeFragment)
+    {
+        CommandLineParseResult parseResult = CommandLineParser.Parse([option, value], new SystemEnvironment());
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            parseResult,
+            _systemCommandLineOptionsProviders,
+            _extensionCommandLineOptionsProviders,
+            new Mock<ICommandLineOptions>().Object);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains(expectedSafeFragment, result.ErrorMessage);
+        Assert.DoesNotContain(sensitiveFragment, result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow(" --dotnet-test-http-token", "secret-token", "secret-token", "***REDACTED***")]
+    [DataRow(" --dotnet-test-http-endpoint", "https://gateway.example/private/run", "/private/run", "https://gateway.example")]
+    public async Task ParseAndValidateAsync_LeadingWhitespaceSensitiveOptionIsRedacted(
+        string option,
+        string value,
+        string sensitiveFragment,
+        string expectedSafeFragment)
+    {
+        CommandLineParseResult parseResult = CommandLineParser.Parse([option, value], new SystemEnvironment());
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            parseResult,
+            _systemCommandLineOptionsProviders,
+            _extensionCommandLineOptionsProviders,
+            new Mock<ICommandLineOptions>().Object);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains(expectedSafeFragment, result.ErrorMessage);
+        Assert.DoesNotContain(sensitiveFragment, result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("---dotnet-test-http-token secret-token", "secret-token", "***REDACTED***")]
+    [DataRow("---dotnet-test-http-endpoint https://gateway.example/private/run", "/private/run", "https://gateway.example")]
+    public async Task ParseAndValidateAsync_ResponseFileParserErrorsRedactExpandedSensitiveValues(
+        string responseFileContent,
+        string sensitiveFragment,
+        string expectedSafeFragment)
+    {
+        string responseFilePath = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(responseFilePath, responseFileContent);
+            CommandLineParseResult parseResult = CommandLineParser.Parse([$"@{responseFilePath}"], new SystemEnvironment());
+
+            ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+                parseResult,
+                _systemCommandLineOptionsProviders,
+                _extensionCommandLineOptionsProviders,
+                new Mock<ICommandLineOptions>().Object);
+
+            Assert.IsFalse(result.IsValid);
+            Assert.Contains(expectedSafeFragment, result.ErrorMessage);
+            Assert.DoesNotContain(sensitiveFragment, result.ErrorMessage);
+        }
+        finally
+        {
+            File.Delete(responseFilePath);
+        }
+    }
+
+    [TestMethod]
+    [DataRow("--dotnet-test-http-token", "@secret-token", "secret-token")]
+    [DataRow("--dotnet-test-http-endpoint", "@private/run-id", "private/run-id")]
+    [DataRow("---dotnet-test-http-token", "@secret-token", "secret-token")]
+    [DataRow("---dotnet-test-http-endpoint", "@private/run-id", "private/run-id")]
+    [DataRow(" --dotnet-test-http-token", "@secret-token", "secret-token")]
+    [DataRow(" --dotnet-test-http-endpoint", "@private/run-id", "private/run-id")]
+    public async Task ParseAndValidateAsync_ResponseFileErrorsRedactSensitivePath(
+        string option,
+        string responseFileArgument,
+        string sensitiveFragment)
+    {
+        CommandLineParseResult parseResult = CommandLineParser.Parse(
+            [option, responseFileArgument],
+            new SystemEnvironment());
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            parseResult,
+            _systemCommandLineOptionsProviders,
+            _extensionCommandLineOptionsProviders,
+            new Mock<ICommandLineOptions>().Object);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains("***REDACTED***", result.ErrorMessage);
+        Assert.DoesNotContain(sensitiveFragment, result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("--dotnet-test-http-token")]
+    [DataRow("--dotnet-test-http-endpoint")]
+    public async Task ParseAndValidateAsync_ResponseFileAccessErrorsRedactSensitivePath(string option)
+    {
+        string directoryPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directoryPath);
+        try
+        {
+            CommandLineParseResult parseResult = CommandLineParser.Parse(
+                [option, $"@{directoryPath}"],
+                new SystemEnvironment());
+
+            ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+                parseResult,
+                _systemCommandLineOptionsProviders,
+                _extensionCommandLineOptionsProviders,
+                new Mock<ICommandLineOptions>().Object);
+
+            Assert.IsFalse(result.IsValid);
+            Assert.Contains("***REDACTED***", result.ErrorMessage);
+            Assert.DoesNotContain(directoryPath, result.ErrorMessage);
+        }
+        finally
+        {
+            Directory.Delete(directoryPath);
+        }
+    }
+
+    [TestMethod]
     public async Task ParseAndValidateAsync_ValidArgumentWithColonFollowedByValidArgumentWithoutColon_ReturnsTrue()
     {
         string[] args = ["--results-directory", "TestResults", "--timeout:60m", "--ignore-exit-code", "8"];

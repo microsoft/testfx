@@ -2,7 +2,8 @@
 name: "Grade Tests on PR (command)"
 description: >-
   Re-grades the new and modified test methods of a pull request when a
-  maintainer comments `/grade-tests`.
+  maintainer comments `/grade-tests`. Posts a scorecard comment plus
+  inline `suggestion` comments for tests graded below A.
 
 # The automatic on-open / on-synchronize variant lives in
 # `grade-tests-on-pr.agent.md`. They must remain separate workflows

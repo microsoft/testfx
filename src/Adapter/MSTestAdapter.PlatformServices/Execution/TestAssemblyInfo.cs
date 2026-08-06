@@ -186,6 +186,16 @@ internal sealed class TestAssemblyInfo
                 // Perform a check again.
                 if (!IsAssemblyInitializeExecuted)
                 {
+                    // Assembly initialize can dominate the wall-clock time of a run (spinning up a database,
+                    // a browser, ...). Giving it its own span is what lets you tell "the test is slow" apart
+                    // from "the assembly fixture is slow".
+                    using IMSTestActivity? activity = MSTestInstrumentation.IsEnabled
+                        ? MSTestInstrumentation.StartFixtureActivity(
+                            MSTestInstrumentation.ActivityNames.AssemblyInitialize,
+                            "assembly_initialize",
+                            AssemblyInitializeMethod.DeclaringType?.FullName,
+                            Assembly.GetName().Name)
+                        : null;
                     try
                     {
                         AssemblyInitializationException = await FixtureMethodRunner.RunWithTimeoutAndCancellationAsync(
@@ -223,6 +233,13 @@ internal sealed class TestAssemblyInfo
                     }
                     finally
                     {
+                        // RunWithTimeoutAndCancellationAsync *returns* (rather than throws) the failure for the
+                        // timeout and cancellation paths, so the catch above is not enough to mark the span failed.
+                        if (AssemblyInitializationException is not null)
+                        {
+                            activity?.RecordException(AssemblyInitializationException);
+                        }
+
                         IsAssemblyInitializeExecuted = true;
                     }
                 }
@@ -273,6 +290,13 @@ internal sealed class TestAssemblyInfo
         try
         {
             await _assemblyInfoExecuteSyncSemaphore.WaitAsync().ConfigureAwait(false);
+            using IMSTestActivity? activity = MSTestInstrumentation.IsEnabled
+                ? MSTestInstrumentation.StartFixtureActivity(
+                    MSTestInstrumentation.ActivityNames.AssemblyCleanup,
+                    "assembly_cleanup",
+                    AssemblyCleanupMethod.DeclaringType?.FullName,
+                    Assembly.GetName().Name)
+                : null;
             AssemblyCleanupException = await FixtureMethodRunner.RunWithTimeoutAndCancellationAsync(
                  () => AssemblyCleanupMethod.InvokeAsFixtureMethodAsync(
                      testContext,
@@ -283,6 +307,13 @@ internal sealed class TestAssemblyInfo
                  ExecutionContext,
                  Resource.AssemblyCleanupWasCancelled,
                  Resource.AssemblyCleanupTimedOut).ConfigureAwait(false);
+
+            // RunWithTimeoutAndCancellationAsync returns (rather than throws) the failure for the timeout and
+            // cancellation paths, so record it here while the span is still open.
+            if (AssemblyCleanupException is not null)
+            {
+                activity?.RecordException(AssemblyCleanupException);
+            }
         }
         catch (Exception ex)
         {

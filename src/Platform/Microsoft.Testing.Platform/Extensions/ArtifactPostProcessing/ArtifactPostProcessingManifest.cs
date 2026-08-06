@@ -12,11 +12,16 @@ using Jsonite;
 
 namespace Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 
-internal sealed class ArtifactPostProcessingManifest(string outputDirectory, IReadOnlyList<InputArtifact> inputs)
+internal sealed class ArtifactPostProcessingManifest(
+    string outputDirectory,
+    IReadOnlyList<InputArtifact> inputs,
+    ArtifactPostProcessingContext context)
 {
     public string OutputDirectory { get; } = outputDirectory;
 
     public IReadOnlyList<InputArtifact> Inputs { get; } = inputs;
+
+    public ArtifactPostProcessingContext Context { get; } = context;
 
     public static ArtifactPostProcessingManifest Load(string path)
     {
@@ -82,7 +87,26 @@ internal sealed class ArtifactPostProcessingManifest(string outputDirectory, IRe
                 GetValue(values, propertiesWithChildren, prefix + "executionId")));
         }
 
-        return new ArtifactPostProcessingManifest(outputDirectory, inputs);
+        string? truncationReasonValue = null;
+        if (propertiesWithChildren.ContainsKey("truncationReason"))
+        {
+            truncationReasonValue = GetValue(values, propertiesWithChildren, "truncationReason")
+                ?? throw new FormatException(PlatformResources.ArtifactPostProcessingManifestInvalid);
+        }
+
+        ArtifactPostProcessingTruncationReason truncationReason =
+            truncationReasonValue switch
+            {
+                null => ArtifactPostProcessingTruncationReason.None,
+                "maximumFailedTests" => ArtifactPostProcessingTruncationReason.MaximumFailedTests,
+                "timeout" => ArtifactPostProcessingTruncationReason.Timeout,
+                _ => throw new FormatException(PlatformResources.ArtifactPostProcessingManifestInvalid),
+            };
+
+        return new ArtifactPostProcessingManifest(
+            outputDirectory,
+            inputs,
+            new ArtifactPostProcessingContext(truncationReason));
     }
 
     private static string? GetValue(

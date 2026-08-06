@@ -8,6 +8,13 @@
     <SuppressFinalPackageVersion>true</SuppressFinalPackageVersion>
   </PropertyGroup>
 
+  <!-- NuGet properties -->
+  <PropertyGroup>
+    <PackageDescription><![CDATA[This package extends Microsoft Testing Platform with an Azure AI Foundry (Azure OpenAI) chat client provider, supplying the AI capabilities that Microsoft.Testing.Platform.AI abstracts over.
+
+$(CommonProductDescription)]]></PackageDescription>
+  </PropertyGroup>
+
   <ItemGroup>
     <!-- Embedded helpers from Microsoft.Testing.Platform -->
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\RoslynString.cs" Link="Helpers\RoslynString.cs" />

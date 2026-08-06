@@ -44,6 +44,8 @@ Options:
     --diagnostic-verbosity
         Define the level of the verbosity for the --diagnostic.
         The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.
+    --enable-dynamic-extensions
+        Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.
     --exit-on-process-exit
         Exit the test process if dependent process exits. PID must be provided.
     --filter-uid
@@ -51,8 +53,9 @@ Options:
     --help
         Show the command line help.
     --ignore-exit-code
-        Do not report non successful exit value for specific exit codes
-        (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)
+        Do not report a non-successful exit value for the specified exit codes.
+        For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
+        For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.
     --info
         Display .NET test application information.
     --list-tests
@@ -76,6 +79,10 @@ Options:
         The directory where the test results are going to be placed.
         If the specified directory doesn't exist, it's created.
         The default is TestResults in the directory that contains the test application.
+    --show-flaky-tests
+        Control whether tests that failed at least once but eventually passed after a retry are listed in the run summary.
+        Valid values are 'on' (the default, also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+        Passing the option without a value turns it on.
     --show-slowest-tests
         Show the specified number of slowest tests (by reported execution duration) in the run summary. Expects a positive integer.
     --show-stderr
@@ -207,10 +214,26 @@ Built-in command line providers:
         Hidden: False
         Description: Define the level of the verbosity for the --diagnostic\.
         The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'
+      --dotnet-test-http-endpoint
+        Arity: 1
+        Hidden: True
+        Description: Specifies the authenticated HTTP endpoint for the dotnet test protocol\.
+      --dotnet-test-http-token
+        Arity: 1
+        Hidden: True
+        Description: Specifies the per-run HTTP bearer token for the dotnet test protocol\.
       --dotnet-test-pipe
         Arity: 1
         Hidden: True
         Description: dotnet test pipe\.
+      --dotnet-test-transport
+        Arity: 1
+        Hidden: True
+        Description: Selects the pre-launch transport for the dotnet test protocol\.
+      --enable-dynamic-extensions
+        Arity: 0
+        Hidden: False
+        Description: Enable loading test platform extensions declared by '\*\.testingplatformextensions\.json' manifests found next to the test application\. Disabled by default\.
       --exit-on-process-exit
         Arity: 1
         Hidden: False
@@ -226,8 +249,9 @@ Built-in command line providers:
       --ignore-exit-code
         Arity: 1
         Hidden: False
-        Description: Do not report non successful exit value for specific exit codes
-        \(e\.g\. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case\)
+        Description: Do not report a non-successful exit value for the specified exit codes\.
+        For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases\.
+        For more information about exit codes, see https://learn\.microsoft\.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes\.
       --info
         Arity: 0
         Hidden: False
@@ -305,6 +329,12 @@ Built-in command line providers:
         Valid values are 'auto' \(default\), 'on' \(also accepts 'true', 'enable', '1'\) or 'off' \(also accepts 'false', 'disable', '0'\).
         'auto' shows progress unless the terminal cannot update in place \(for example with --no-ansi or in CI\).
         This option takes precedence over the deprecated --no-progress flag.
+      --show-flaky-tests
+        Arity: 0..1
+        Hidden: False
+        Description: Control whether tests that failed at least once but eventually passed after a retry are listed in the run summary.
+        Valid values are 'on' \(the default, also accepts 'true', 'enable', '1'\) or 'off' \(also accepts 'false', 'disable', '0'\).
+        Passing the option without a value turns it on.
       --show-slowest-tests
         Arity: 1
         Hidden: False

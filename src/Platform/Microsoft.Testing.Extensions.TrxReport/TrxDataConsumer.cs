@@ -122,6 +122,15 @@ internal sealed class TrxReportGenerator :
                     return;
                 }
 
+                // A test framework that retries a test in-process reports every attempt under the same test node
+                // uid. TRX has one <TestDefinition> per test id, so keeping the superseded attempts would emit
+                // several <UnitTestResult> rows pointing at the same definition and inflate the run summary. Only
+                // the final attempt - the test's actual outcome - is recorded.
+                if (nodeChangedMessage.TestNode.IsSupersededRetryAttempt())
+                {
+                    return;
+                }
+
                 await EnsureStreamingStoreCreatedAsync(cancellationToken).ConfigureAwait(false);
                 (TrxTestResult extracted, bool wasTruncated) = TrxTestResultExtractor.Extract(nodeChangedMessage);
                 if (wasTruncated)
@@ -224,6 +233,13 @@ shouldUseOutOfProcessTrxGeneration: {shouldUseOutOfProcessTrxGeneration}
         if (warning is not null)
         {
             await _outputDisplay.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), testSessionContext.CancellationToken).ConfigureAwait(false);
+        }
+
+        // An attachment that could not be copied is silently missing from the TRX otherwise: the run
+        // still succeeds and the only record is a RunInfo inside the report nobody reads until later.
+        foreach (string attachmentWarning in trxReportGeneratorEngine.AttachmentWarnings)
+        {
+            await _outputDisplay.DisplayAsync(this, new WarningMessageOutputDeviceData(attachmentWarning), testSessionContext.CancellationToken).ConfigureAwait(false);
         }
 
         if (_crashRecoveryUnavailable)

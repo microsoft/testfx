@@ -123,4 +123,103 @@ public class UnitTest1
     }
 
     public TestContext TestContext { get; set; } = null!;
+
+    private const string MetadataSourceCode = """
+#file MSTestSourceGenNonAotMetadata.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>$TargetFramework$</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <OutputType>Exe</OutputType>
+        <LangVersion>preview</LangVersion>
+        <EnableMSTestRunner>true</EnableMSTestRunner>
+        <MSTestSourceGenMode>ReflectionFree</MSTestSourceGenMode>
+        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="MSTest.SourceGeneration" Version="$MSTestSourceGenerationVersion$" />
+        <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
+        <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+    </ItemGroup>
+</Project>
+
+#file MetadataTests.cs
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace MyTests;
+
+[TestClass]
+public sealed class MethodMetadataTests
+{
+    [TestMethod]
+    [TestCategory("GeneratedMetadata")]
+    public void CategorizedTest()
+    {
+    }
+
+    [TestMethod]
+    [Ignore("generated method ignore")]
+    public void IgnoredMethod()
+        => Assert.Fail("The generated method-level IgnoreAttribute was not honored.");
+}
+
+[TestCategory("InheritedTypeMetadata")]
+public abstract class CategorizedBase
+{
+}
+
+[TestClass]
+public sealed class InheritedCategorizedTests : CategorizedBase
+{
+    [TestMethod]
+    public void CategorizedThroughBaseClass()
+    {
+    }
+}
+""";
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    public async Task SourceGenerationNonAot_HonorsGeneratedInheritedTypeAndMethodMetadata(string tfm)
+    {
+        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+            $"{AssetName}Metadata_{tfm}",
+            MetadataSourceCode
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+            .PatchCodeWithReplace("$TargetFramework$", tfm)
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$MSTestSourceGenerationVersion$", MSTestSourceGenerationVersion),
+            addPublicFeeds: true);
+
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
+            $"build {generator.TargetAssetPath} -c {BuildConfiguration.Release} -f {tfm}",
+            cancellationToken: TestContext.CancellationToken);
+        buildResult.AssertExitCodeIs(0);
+
+        string objGenerated = Path.Combine(generator.TargetAssetPath, "obj", "Release", tfm, "generated");
+        string[] generatedFiles = Directory.Exists(objGenerated)
+            ? Directory.GetFiles(objGenerated, "*MSTestReflectionMetadata*.g.cs", SearchOption.AllDirectories)
+            : [];
+        Assert.IsNotEmpty(generatedFiles, $"the reflection-free source generator should have emitted metadata under '{objGenerated}'");
+
+        var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "MSTestSourceGenNonAotMetadata", tfm, buildConfiguration: BuildConfiguration.Release);
+
+        TestHostResult fullRun = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        fullRun.AssertOutputContainsSummary(failed: 0, passed: 2, skipped: 1);
+        fullRun.AssertExitCodeIs(0);
+
+        TestHostResult categoryRun = await testHost.ExecuteAsync(
+            "--filter TestCategory=GeneratedMetadata",
+            cancellationToken: TestContext.CancellationToken);
+        categoryRun.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+        categoryRun.AssertExitCodeIs(0);
+
+        TestHostResult inheritedCategoryRun = await testHost.ExecuteAsync(
+            "--filter TestCategory=InheritedTypeMetadata",
+            cancellationToken: TestContext.CancellationToken);
+        inheritedCategoryRun.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+        inheritedCategoryRun.AssertExitCodeIs(0);
+    }
 }

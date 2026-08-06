@@ -7,15 +7,20 @@
         <target state="translated">打包应用部件清单声明了多个应用程序，而没有一个与可执行文件 '{0}' 唯一匹配。候选应用程序用户模型 ID: {1}。</target>
         <note />
       </trans-unit>
+      <trans-unit id="AppxManifestApplicationExecutableMismatch">
+        <source>The packaged app manifest declares no application for the executable '{0}', so it describes a different application and activating it would target the wrong Application User Model ID. Declared application executables: {1}.</source>
+        <target state="translated">打包的应用清单未为可执行文件“{0}”声明任何应用程序，因此它描述的是另一个应用程序，激活它将针对错误的 Application User Model ID。已声明的应用程序可执行文件: {1}。</target>
+        <note>Do not localize the technology name {Locked="Application User Model ID"}. {0} is an executable path. {1} is a comma-separated list of executable paths.</note>
+      </trans-unit>
       <trans-unit id="InvalidAppxManifestMissingIdentity">
         <source>The packaged app manifest does not declare a valid &lt;Identity Name="..." Publisher="..." /&gt; element.</source>
         <target state="translated">打包应用部件清单未声明有效的 &lt;Identity Name="..." Publisher="..." /&gt; 元素。</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDescription">
-        <source>Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there, and — in the Windows build — registers a packaged, full-trust MSIX desktop test host and activates it by Application User Model ID. True UWP/AppContainer hosts are not supported. See https://github.com/microsoft/testfx/issues/9933.</source>
-        <target state="translated">将非打包(松散布局)的 Windows 测试主机(例如，未打包的 WinUI)部署到隔离目录，并从该目录启动它；在 Windows 构建中，还会注册一个打包、完全信任的 MSIX 桌面测试主机，并通过应用程序用户模型 ID 激活它。不支持真正的 UWP/AppContainer 主机。请参阅 https://github.com/microsoft/testfx/issues/9933。</target>
-        <note />
+        <source>Registers a packaged, full-trust MSIX desktop test host and activates it by Application User Model ID (Windows build), and — when opted in through TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=always — deploys a non-packaged (loose-layout) Windows test host to an isolated directory and launches it from there. Enabled only for a packaged layout by default, so an unpackaged app is left on the default launch path. True UWP/AppContainer hosts are not supported. See https://github.com/microsoft/testfx/issues/9933.</source>
+        <target state="translated">注册已打包的完全信任 MSIX 桌面测试主机，并通过 Application User Model ID 激活它(Windows 版本)，并且(当通过 TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=always 选择加入时)将非打包(松散布局) Windows 测试主机部署到隔离目录并从该目录启动它。默认情况下仅对打包布局启用，因此未打包的应用保留在默认启动路径上。不支持真正的 UWP/AppContainer 主机。请参阅 https://github.com/microsoft/testfx/issues/9933。</target>
+        <note>Do not localize the environment variable name or its value {Locked="TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER"}{Locked="always"}, nor the technology names {Locked="MSIX"}{Locked="Application User Model ID"}{Locked="Windows"}{Locked="UWP"}{Locked="AppContainer"}.</note>
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDisplayName">
         <source>Packaged app test host launcher</source>

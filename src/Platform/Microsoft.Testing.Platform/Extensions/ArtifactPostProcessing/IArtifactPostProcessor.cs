@@ -10,6 +10,15 @@ namespace Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 public interface IArtifactPostProcessor : IExtension
 {
     /// <summary>
+    /// Gets a value indicating whether this processor can process artifacts observed before a run was truncated.
+    /// </summary>
+    /// <remarks>
+    /// This capability only indicates support for an incomplete set of complete artifacts. It does not indicate
+    /// that the processor can consume malformed or partially written files.
+    /// </remarks>
+    bool SupportsTruncatedRuns { get; }
+
+    /// <summary>
     /// Gets the producer-asserted artifact kinds supported by this processor.
     /// </summary>
     IReadOnlyList<string> SupportedKinds { get; }
@@ -25,15 +34,70 @@ public interface IArtifactPostProcessor : IExtension
     /// </summary>
     /// <param name="inputs">The input artifacts. Implementations must treat them as read-only.</param>
     /// <param name="outputDirectory">The directory under which the processed artifact must be written.</param>
+    /// <param name="context">The context describing the test run that produced the artifacts.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>The processed artifact, or <see langword="null"/> when no processing is needed.</returns>
+    /// <returns>
+    /// The processed artifact representing all <paramref name="inputs"/>, or <see langword="null"/> when no
+    /// processing is needed.
+    /// </returns>
     /// <remarks>
     /// Implementations must be deterministic and idempotent because orchestrators may retry transient failures.
+    /// A non-<see langword="null"/> result must represent every supplied input. Implementations that cannot produce
+    /// one artifact representing the complete input set must return <see langword="null"/> or throw.
+    /// When a processor declares both kinds and legacy file extensions, <paramref name="inputs"/> can contain the
+    /// union of producer-kind matches and untagged extension-fallback matches.
     /// </remarks>
     Task<ProcessedArtifact?> ProcessAsync(
         IReadOnlyList<InputArtifact> inputs,
         string outputDirectory,
+        ArtifactPostProcessingContext context,
         CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// Describes the test run that produced artifacts supplied to an <see cref="IArtifactPostProcessor"/>.
+/// </summary>
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+public sealed class ArtifactPostProcessingContext
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ArtifactPostProcessingContext"/> class.
+    /// </summary>
+    /// <param name="truncationReason">The reason the run was truncated, or <see cref="ArtifactPostProcessingTruncationReason.None"/> for a complete run.</param>
+    public ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason truncationReason)
+        => TruncationReason = truncationReason;
+
+    /// <summary>
+    /// Gets a value indicating whether the test run was truncated.
+    /// </summary>
+    public bool IsTruncated => TruncationReason != ArtifactPostProcessingTruncationReason.None;
+
+    /// <summary>
+    /// Gets the reason the test run was truncated.
+    /// </summary>
+    public ArtifactPostProcessingTruncationReason TruncationReason { get; }
+}
+
+/// <summary>
+/// Specifies why a test run was truncated before every scheduled test module completed.
+/// </summary>
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+public enum ArtifactPostProcessingTruncationReason
+{
+    /// <summary>
+    /// The test run completed without policy-driven truncation.
+    /// </summary>
+    None,
+
+    /// <summary>
+    /// The test run reached the configured maximum number of failed tests.
+    /// </summary>
+    MaximumFailedTests,
+
+    /// <summary>
+    /// The test run reached its configured timeout.
+    /// </summary>
+    Timeout,
 }
 
 /// <summary>

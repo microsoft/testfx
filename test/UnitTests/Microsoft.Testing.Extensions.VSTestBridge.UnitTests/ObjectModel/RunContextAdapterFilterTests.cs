@@ -59,15 +59,15 @@ public sealed class RunContextAdapterFilterTests
     }
 
     [TestMethod]
-    public void GetTestCaseFilter_WithEmptyNodeList_ThrowsOnEmptyGroup()
+    public void GetTestCaseFilter_WithEmptyNodeList_BuildsMatchNoneFilter()
     {
-        // An empty UID list is constructible and builds the empty group "()", which the VSTest filter
-        // parser rejects, so GetTestCaseFilter surfaces a format error. Pinning this guards the edge
-        // case now that this suite owns the filter-building coverage.
         RunContextAdapter adapter = CreateAdapter(EmptyRunSettings, CreateUidFilter());
 
-        TestPlatformFormatException exception = Assert.ThrowsExactly<TestPlatformFormatException>(() => adapter.GetTestCaseFilter(null, _ => null));
-        Assert.AreEqual("()", exception.FilterValue);
+        Assert.AreEqual(
+            "(FullyQualifiedName=__MTP_EMPTY_UID_FILTER__&FullyQualifiedName!=__MTP_EMPTY_UID_FILTER__)",
+            GetFilterValue(adapter));
+        Assert.IsFalse(MatchesFullyQualifiedName(adapter, "__MTP_EMPTY_UID_FILTER__"));
+        Assert.IsFalse(MatchesFullyQualifiedName(adapter, "A.B.Test"));
     }
 
     [TestMethod]
@@ -166,6 +166,62 @@ public sealed class RunContextAdapterFilterTests
         RunContextAdapter adapter = CreateAdapter(runSettings, CreateUidFilter("A.B.Test"));
 
         Assert.AreEqual("(Category=Fast) & (FullyQualifiedName=A.B.Test)", GetFilterValue(adapter));
+    }
+
+    [TestMethod]
+    public void GetTestCaseFilter_WithAndComposite_TranslatesChildrenRecursively()
+    {
+        CompositeTestExecutionFilter filter = new(
+            TestExecutionFilterOperator.And,
+            CreateUidFilter("A.B.Test1", "A.B.Test2"),
+            CreateUidFilter("A.B.Test2", "A.B.Test3"));
+
+        RunContextAdapter adapter = CreateAdapter(EmptyRunSettings, filter);
+
+        Assert.AreEqual(
+            "(FullyQualifiedName=A.B.Test1|FullyQualifiedName=A.B.Test2) & (FullyQualifiedName=A.B.Test2|FullyQualifiedName=A.B.Test3)",
+            GetFilterValue(adapter));
+    }
+
+    [TestMethod]
+    public void GetTestCaseFilter_WithRunSettingsAndComposite_PreservesAndSemantics()
+    {
+        string runSettings =
+        """
+        <RunSettings>
+            <RunConfiguration>
+                <TestCaseFilter>Category=Fast</TestCaseFilter>
+            </RunConfiguration>
+        </RunSettings>
+        """;
+        CompositeTestExecutionFilter filter = new(
+            TestExecutionFilterOperator.And,
+            new NopFilter(),
+            CreateUidFilter("A.B.Test"));
+
+        RunContextAdapter adapter = CreateAdapter(runSettings, filter);
+
+        Assert.AreEqual("(Category=Fast) & (FullyQualifiedName=A.B.Test)", GetFilterValue(adapter));
+    }
+
+    [TestMethod]
+    public void Constructor_WithTreeNodeFilter_ThrowsActionableError()
+    {
+        NotSupportedException exception = Assert.ThrowsExactly<NotSupportedException>(
+            () => CreateAdapter(EmptyRunSettings, new TreeNodeFilter("/Tests/**")));
+
+        Assert.Contains(nameof(TreeNodeFilter), exception.Message);
+        Assert.Contains("VSTestBridge", exception.Message);
+    }
+
+    [TestMethod]
+    public void Constructor_WithCustomFilter_ThrowsActionableError()
+    {
+        NotSupportedException exception = Assert.ThrowsExactly<NotSupportedException>(
+            () => CreateAdapter(EmptyRunSettings, new CustomFilter()));
+
+        Assert.Contains(nameof(CustomFilter), exception.Message);
+        Assert.Contains("VSTestBridge", exception.Message);
     }
 
     [TestMethod]
@@ -304,4 +360,6 @@ public sealed class RunContextAdapterFilterTests
 
         return new RunContextAdapter(commandLineOptions.Object, runSettings.Object, filter, useFullyQualifiedNameAsUid);
     }
+
+    private sealed class CustomFilter : ITestExecutionFilter;
 }

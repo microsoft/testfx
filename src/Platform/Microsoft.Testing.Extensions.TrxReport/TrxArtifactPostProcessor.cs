@@ -8,6 +8,12 @@ namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
 internal sealed class TrxArtifactPostProcessor : IArtifactPostProcessor
 {
+    /// <summary>
+    /// Subdirectory of the orchestrator-provided output directory that receives the merged report and the
+    /// attachment deployment root written beside it.
+    /// </summary>
+    private const string MergedReportDirectoryName = "merged";
+
     private static readonly string[] SupportedArtifactKinds = [TrxReportEngine.TrxArtifactKind];
     private static readonly string[] SupportedExtensions = [".trx"];
 
@@ -19,6 +25,8 @@ internal sealed class TrxArtifactPostProcessor : IArtifactPostProcessor
 
     public string Description => ExtensionResources.TrxArtifactPostProcessorDescription;
 
+    public bool SupportsTruncatedRuns => false;
+
     public IReadOnlyList<string> SupportedKinds => SupportedArtifactKinds;
 
     public IReadOnlyList<string> SupportedFileExtensionsFallback => SupportedExtensions;
@@ -28,6 +36,7 @@ internal sealed class TrxArtifactPostProcessor : IArtifactPostProcessor
     public async Task<ProcessedArtifact?> ProcessAsync(
         IReadOnlyList<InputArtifact> inputs,
         string outputDirectory,
+        ArtifactPostProcessingContext context,
         CancellationToken cancellationToken)
     {
         if (inputs.Count < 2)
@@ -43,7 +52,29 @@ internal sealed class TrxArtifactPostProcessor : IArtifactPostProcessor
         ];
         string[] inputPaths = [.. orderedInputs.Select(input => input.Path)];
         Guid runId = TrxReportEngine.CreateMergeRunId(inputPaths, [.. orderedInputs.Select(input => input.ExecutionId)]);
-        string outputPath = Path.Combine(outputDirectory, $"merged-{runId:N}.trx");
+        // Nest the merged report in its own subdirectory instead of writing it as a sibling of the inputs.
+        // Orchestrators point outputDirectory at the run's results directory, which already holds the
+        // per-module reports, and those are commonly collected with a non-recursive '*.trx' glob (Arcade's
+        // "Publish TRX Test Results" step configures exactly that). A sibling merged report would be picked
+        // up alongside its own inputs and double-count every test. Nesting keeps it out of such globs by
+        // construction, and because MergeToFileAsync derives the attachment deployment root from this path,
+        // the attachment tree follows the report into the subdirectory and the relative runDeploymentRoot
+        // recorded in the TRX keeps resolving.
+        string mergedDirectory = Path.Combine(outputDirectory, MergedReportDirectoryName);
+
+        // MergeToFileAsync confines its writes to Path.GetDirectoryName(outputPath), which is now this
+        // fixed, predictably-named child. A pre-existing symlink/junction at that name would therefore
+        // become the confinement base itself and silently redirect both the report and its attachment tree
+        // outside the supplied output directory (Directory.CreateDirectory succeeds on an existing link).
+        // Materialize the directory here and refuse to merge through a reparse point instead. Returning
+        // null leaves the per-module reports untouched, matching the never-fail-the-run invariant.
+        Directory.CreateDirectory(mergedDirectory);
+        if (IsReparsePoint(mergedDirectory))
+        {
+            return null;
+        }
+
+        string outputPath = Path.Combine(mergedDirectory, $"merged-{runId:N}.trx");
         await TrxReportEngine.MergeToFileAsync(
             inputPaths,
             outputPath,
@@ -56,5 +87,23 @@ internal sealed class TrxArtifactPostProcessor : IArtifactPostProcessor
             TrxReportEngine.TrxArtifactKind,
             ExtensionResources.TrxMergedArtifactDisplayName,
             string.Format(CultureInfo.CurrentCulture, ExtensionResources.TrxMergedArtifactDescription, inputs.Count));
+    }
+
+    /// <summary>
+    /// Returns <see langword="true"/> when <paramref name="path"/> is a symlink/junction, or when its
+    /// attributes cannot be read. An unreadable directory is treated as unsafe because we cannot prove it
+    /// is not a redirect, and the merged report is optional output that must never write outside the
+    /// orchestrator-supplied directory.
+    /// </summary>
+    private static bool IsReparsePoint(string path)
+    {
+        try
+        {
+            return (File.GetAttributes(path) & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return true;
+        }
     }
 }

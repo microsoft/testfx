@@ -3,7 +3,8 @@ name: grade-tests
 description: >
   Grades a specified set of test methods individually and produces a concise
   table mapping each test (fully-qualified name) to a letter grade (A–F), a
-  score band, and a one-line note — designed to be posted as a PR comment.
+  score band, pseudo-mutation resilience, a one-line note, and a concrete
+  improvement for every grade below A — designed to be posted as a PR comment.
   Use when the caller wants per-test feedback on a curated list of methods
   (for example, the new or modified tests in a pull request), not a
   suite-wide audit. Polyglot: .NET (MSTest/xUnit/NUnit/TUnit), Python
@@ -21,10 +22,11 @@ license: MIT
 # Grade Tests
 
 Grade a curated list of test methods and produce a compact, PR-comment-friendly
-report: one row per test method with a letter grade, a score band, and a
-one-line note explaining the grade. The skill **does not discover tests on its
-own** — the caller (typically a PR automation workflow or a human reviewer
-holding a specific list) provides the test methods to grade.
+report: one row per test method with a letter grade, a score band,
+pseudo-mutation resilience, a one-line note explaining the grade, and a
+concrete improvement for every grade below A. The skill **does not discover
+tests on its own** — the caller (typically a PR automation workflow or a human
+reviewer holding a specific list) provides the test methods to grade.
 
 > **Language-specific guidance**: Call the `test-analysis-extensions` skill
 > to discover available extension files, then read the file matching the
@@ -71,7 +73,7 @@ that question with a one-row-per-test verdict that fits in a comment table.
 |-------|----------|-------------|
 | Test methods | Yes | A scope to grade. Provide one of: (a) an explicit list of test method names (fully-qualified, e.g. `Namespace.ClassName.TestMethodName`); (b) one or more file paths plus an explicit instruction to grade every test declared in those files; or (c) a diff hunk / PR identifier whose changed tests should be graded. File paths are recommended but optional when method names are unambiguous in the workspace. Ambiguous requests like *"grade my tests"* with no scope are rejected up-front (see Step 0); this skill is for curated input and does not auto-grade an entire workspace. |
 | Test bodies / spans | Recommended | The exact source lines for each test method. If omitted, read them from the listed files. |
-| Production code | No | The code under test, for judging whether assertions cover the meaningful behaviors. When unavailable, mark relevant findings as "Unverified" rather than guessing. |
+| Production code | Recommended | The code under test, used to judge meaningful assertions and perform pseudo-mutation analysis. Resolve it from the workspace when possible. When unavailable, render mutation resilience as `N/A`, explain that production code was unavailable in Notes, exclude that sub-grade from the weighted score, and do not guess. |
 | Diff context | No | When grading PR changes, the unified diff for each test method helps focus on what actually changed. |
 
 ### Step 0: Validate the input
@@ -113,6 +115,12 @@ For each entry in the input list:
    / decorators / fixtures and any helper code that the test calls.
 3. If a method cannot be found, record it as `N/A — method not found` and
    continue. Never invent a body to grade.
+4. Trace the production entry point called by the test, including every helper
+   and branch relevant to the behavior claimed by the test, even when its
+   current input does not reach that branch. If the production code is not
+   supplied, resolve it from the workspace using symbol references and call
+   sites. Record production code as unavailable only after a reasonable lookup
+   fails.
 
 ### Step 3: Score each test
 
@@ -122,9 +130,10 @@ for hypothetical concerns (e.g., "could have more negative assertions")
 unless the production code clearly demands them and the production code is
 available.
 
-#### Three sub-dimensions
+#### Four sub-dimensions
 
-Compute three sub-grades (each A–F) that together drive the overall grade.
+Compute four sub-grades (each A–F) that together drive the overall grade.
+Pseudo-mutation may be `N/A` only when the production code cannot be resolved.
 
 ##### A. Assertion strength
 
@@ -191,6 +200,9 @@ Examples (Critical/High and Medium counts → Anti-pattern sub-grade):
 - Always-true literal assertions (`Assert.IsTrue(true)`, `assert True`,
   `expect(true).toBe(true)`) → **F** (verifies nothing; also drives
   Assertion sub-grade to F)
+- All async assertions are neither awaited nor returned (for example,
+  an `Assert.ThrowsAsync` task or `expect(promise).resolves` chain whose result
+  is silently discarded) → F
 - Self-referential / tautological assertions on bound values
   (`Assert.AreEqual(x, x)`, `assert dto.name == dto.name`) → D
 - Commented-out assertions → D
@@ -234,39 +246,99 @@ Examples (Critical/High and Medium counts → Anti-pattern sub-grade):
   `dbg!`, `Write-Host`, `std::cout`); inconsistent naming versus siblings;
   leftover TODO comments. Mention in the note column but do not deduct.
 
+##### D. Pseudo-mutation resilience
+
+Evaluate whether **this individual test** would detect plausible defects in
+the production behavior it claims to verify. Do not give a test credit because
+another test kills the mutation.
+
+Call the `test-gap-analysis` skill to load its canonical mutation catalog and
+calibration rules, then apply them at this skill's per-test scope:
+
+1. Identify meaningful mutation points on every production path relevant to
+   the behavior claimed by the test, including paths its current input does
+   not exercise:
+   - boundary changes (`<` ↔ `<=`, index or loop off-by-one);
+   - Boolean and logic flips (`&&` ↔ `||`, negated conditions);
+   - changed return values (`null`/`None`/`nil`, empty, zero, opposite Boolean);
+   - removed exceptions, guards, or error propagation;
+   - arithmetic changes (`+` ↔ `-`, sign or increment flips);
+   - removed null/None/nil checks or coalescing.
+2. Classify each point against this test:
+   - **Killed** — this test's inputs reach the point and its assertions would fail.
+   - **Survived** — this test reaches the point but its assertions would still pass.
+   - **No coverage** — the mutation is part of the behavior named by this test,
+     but the test's inputs do not reach it.
+   - **Equivalent** — the mutation cannot change observable behavior; exclude it.
+3. Judge only the behavior promised by the test name and setup. Do not penalize
+   a focused test for unrelated branches that belong in separate tests.
+4. Skip trivial code such as simple getters, auto-properties, generated code,
+   and boilerplate. Prefer risk-significant logic over mutation count.
+
+Score the non-equivalent mutation points:
+
+| Sub-grade | Pattern |
+|-----------|---------|
+| **A** | All meaningful mutation points for the claimed behavior are killed, or the claimed behavior contains no meaningful mutation point. |
+| **B** | The primary contract is protected; only one low-risk mutation survives. |
+| **C** | The central outcome is protected, but one or more meaningful secondary mutations survive or lack coverage. |
+| **D** | A high-risk mutation in the claimed behavior survives or lacks coverage, such as a boundary flip, removed validation, or wrong calculation. |
+| **F** | At least one meaningful mutation point exists, and the test would kill none of them. |
+| **N/A** | Production code cannot be resolved. Report as unverified and do not deduct. |
+
+For the report, render mutation resilience as `killed/total killed` (for
+example, `3/4 killed`), `0/0 (no meaningful points)`, or `N/A`. Exclude
+Equivalent mutations from the total.
+
 #### Combining sub-grades
 
 Convert sub-grades to numeric points: A=4, B=3, C=2, D=1, F=0.
 - **Overall score band** = weighted average:
-  `0.45 × Assertion + 0.30 × Anti-pattern + 0.25 × Structure`
+  `0.35 × Assertion + 0.30 × Pseudo-mutation + 0.20 × Anti-pattern + 0.15 × Structure`
+- If Pseudo-mutation is `N/A`, omit it and renormalize the remaining weights
+  to total 1. Do not lower a grade because production context is unavailable.
 - Map to letter:
   - ≥ 3.5 → **A** (band 90–100)
   - ≥ 2.8 → **B** (band 80–89)
   - ≥ 2.0 → **C** (band 70–79)
   - ≥ 1.2 → **D** (band 60–69)
   - < 1.2 → **F** (band 0–59)
-- The overall grade is **capped at the worst sub-grade** — if any sub-grade
-  is **F**, the overall grade is **F**; if the worst sub-grade is **D**,
-  the overall grade is at most **D**; and so on. A test that fails on any
-  one dimension cannot earn a higher overall grade than that dimension.
+- Apply an overall ceiling only when the Anti-pattern catalog classifies an
+  observed finding as **Critical**: a Critical finding labeled F forces the
+  overall grade to F, and one labeled D caps it at D. Do not otherwise cap the
+  weighted result at the worst sub-grade; the weights must remain meaningful.
 
 Report the **letter grade** and the **score band** (not a single 0–100
 number). False precision invites bikeshedding; bands keep the conversation
 focused on the rubric.
 
-### Step 4: Build the note
+### Step 4: Build the note and improvement
 
 The note column is one short sentence (target ≤ 120 characters). State the
 single most important reason for the grade. Examples:
 
 - A (90–100): `Clear AAA structure; equality + exception assertions on the public contract.`
-- B (80–89): `Good assertion variety, mildly long body — consider splitting into per-condition tests.`
+- B (80–89): `Primary contract is protected, but the upper-bound mutation survives.`
 - C (70–79): `Only checks IsNotNull on the result; no value verification.`
 - D (60–69): `Self-referential assertion: round-trip identity verifies plumbing, not transformation.`
 - F (0–59): `No assertions — test executes the method but never verifies anything.`
 
 If a test gets A with no notable issues, the note may simply be
 `No issues found.` — do not invent weaknesses to justify the grade.
+
+For every test below A, add a **How to improve** sentence (target ≤ 120
+characters) describing the smallest concrete change that addresses the
+grade-limiting issue:
+
+- Name the assertion to add or strengthen and the observable value to check.
+- For a survived mutation, give the input and expected outcome that would kill
+  it, such as `Add max+1 input and assert ArgumentOutOfRangeException.`
+- For structure or hygiene findings, name the specific extraction, split, or
+  deterministic replacement to make.
+- Do not use vague advice such as `Add more assertions`, `Improve coverage`,
+  or `Write better tests`.
+- Do not recommend unrelated scenarios merely to make a focused test broader.
+- For A-grade tests, render `—`; no improvement is required.
 
 ### Step 5: Report
 
@@ -275,17 +347,23 @@ Produce two sections.
 #### 1. Summary
 
 A short paragraph (2–4 sentences) covering: total tests graded, grade
-distribution, most common issue, and the single most important
-recommendation.
+distribution, the most common issue, and the single highest-leverage
+recommendation. Include the most important survived or uncovered mutation
+only when one exists. Otherwise state the applicable result without inventing
+a gap: all meaningful mutations were killed, no meaningful mutation points
+were found (`0/0`), or production code could not be resolved (`N/A`). In the
+latter two cases, lead with the dominant assertion, hygiene, or structure
+signal.
 
 #### 2. Per-test table
 
 ```markdown
-| Test | Grade | Band | Notes |
-|------|-------|------|-------|
-| `Namespace.ClassName.Test_Method_Condition_Expected` | A | 90–100 | Clear AAA; equality + exception assertions. |
-| `Namespace.ClassName.Test_Other` | C | 70–79 | Only `IsNotNull` — no value verification. |
-| `Namespace.ClassName.Test_Old` | F | 0–59 | No assertions. |
+| Test | Grade | Band | Mutation | Notes | How to improve |
+|------|-------|------|----------|-------|----------------|
+| `Namespace.ClassName.Test_Method_Condition_Expected` | A | 90–100 | 4/4 killed | Clear AAA; assertions protect the public contract. | — |
+| `Namespace.ClassName.Test_UpperBound` | B | 80–89 | 2/3 killed | The inclusive upper-bound mutation survives. | Add `max + 1` input and assert rejection. |
+| `Namespace.ClassName.Test_Other` | C | 70–79 | 1/3 killed | Only `IsNotNull`; default-return mutations survive. | Assert the expected value and collection contents. |
+| `Namespace.ClassName.Test_Old` | F | 0–59 | 0/2 killed | No assertions; every mutation survives. | Assert the exact result produced by the arranged input. |
 ```
 
 **Caps and ordering**:
@@ -306,6 +384,14 @@ prefix each section with the language name and framework.
       `N/A — method not found`).
 - [ ] Every grade is justified by at least one observable signal in the
       captured body — no speculative deductions.
+- [ ] Production code was resolved where possible; unavailable code is
+      reported as mutation `N/A` and omitted from scoring.
+- [ ] Every meaningful mutation point in the behavior claimed by each test is
+      classified Killed / Survived / No coverage / Equivalent.
+- [ ] Equivalent mutations and unrelated production branches do not affect
+      the mutation sub-grade.
+- [ ] Mutation resilience is evaluated per test; a mutation killed only by a
+      different test does not receive credit.
 - [ ] Trivial-assertion tests are flagged only when the **only** assertion
       is trivial (a null check before a meaningful assertion is not trivial).
 - [ ] Exception-only tests are not penalized for low assertion count.
@@ -320,6 +406,8 @@ prefix each section with the language name and framework.
       JS/TS `expect(mock).toHaveBeenCalledWith(...)`.
 - [ ] Async test pitfalls (un-awaited `resolves`/`rejects`/`ThrowsAsync`,
       pytest-asyncio without `await`) drop the Assertion sub-grade to F.
+- [ ] Every test below A has one concrete, grade-targeted improvement; every
+      A test uses `—`.
 - [ ] The summary leads with the highest-leverage observation, not a recap
       of the table.
 
@@ -335,6 +423,10 @@ prefix each section with the language name and framework.
 | Flagging Go/Rust table-driven loops as conditional logic | They are idiomatic; do not deduct. |
 | Treating pytest bare `assert` or Go `if got != want { t.Error… }` as missing-framework | Both are canonical; count in the correct assertion category. |
 | Penalizing tests when production code is unavailable | Mark concerns about uncovered behaviors as `Unverified` and do not deduct. |
+| Giving mutation credit from another test | Evaluate whether the current test independently kills each relevant mutation. |
+| Penalizing a focused test for unrelated branches | Analyze only mutation points in the behavior promised by the test name and setup. |
+| Treating equivalent or trivial mutations as gaps | Exclude equivalent mutations, getters, generated code, and boilerplate. |
+| Giving vague improvement advice | Name the exact input, assertion, expected value, split, or deterministic replacement needed. |
 | Using a fake-precise score (e.g., 87/100) | Use the score band only — 90–100, 80–89, 70–79, 60–69, 0–59. |
 | Spilling a 500-row table into a PR comment | Apply the row cap from Step 5; collapse extras into `<details>`. |
 | Re-reporting an existing finding three times under different categories | Pick the most fitting category and report once. |

@@ -77,4 +77,13 @@ internal static class DiagnosticIds
     public const string MemberConditionShouldBeValidRuleId = "MSTEST0070";
     public const string RedundantTestMethodDisplayNameRuleId = "MSTEST0071";
     public const string AssemblyFixtureProviderNotSupportedWithNativeAotRuleId = "MSTEST0072";
+    public const string PreferConstantForResourceLockRuleId = "MSTEST0073";
+    public const string UndeclaredProcessGlobalStateMutationRuleId = "MSTEST0074";
+    public const string CurrentDirectoryMutationUnderParallelizationRuleId = "MSTEST0075";
+    public const string CultureMutationUnderParallelizationRuleId = "MSTEST0076";
+    public const string SharedFileSystemPathInTestRuleId = "MSTEST0077";
+    public const string DependsOnShouldBeValidRuleId = "MSTEST0078";
+    public const string UseArchitectureConditionAttributeInsteadOfRuntimeCheckRuleId = "MSTEST0079";
+    public const string UseCIConditionAttributeInsteadOfEnvironmentCheckRuleId = "MSTEST0080";
+    public const string TestFilterProviderShouldBeValidRuleId = "MSTEST0081";
 }

@@ -18,6 +18,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Sou
 /// </summary>
 internal static class AttributeMaterializationHelper
 {
+    internal readonly record struct AttributeMaterializationResult(
+        EquatableArray<AttributeApplicationModel> Attributes,
+        bool IsComplete);
+
     // Mirror the runtime behavior of MemberInfo.GetCustomAttributes(inherit: true): walk the
     // overridden-member chain, honor AttributeUsageAttribute.Inherited, and keep only the
     // most-derived application for attributes that do not allow multiple instances.
@@ -54,6 +58,27 @@ internal static class AttributeMaterializationHelper
         for (IPropertySymbol? baseProperty = property.OverriddenProperty; baseProperty is not null; baseProperty = baseProperty.OverriddenProperty)
         {
             AppendAttributes(builder, seen, baseProperty.GetAttributes(), inheritedOnly: true);
+        }
+
+        return builder.ToImmutable();
+    }
+
+    internal static ImmutableArray<AttributeData> CollectInheritedAttributes(INamedTypeSymbol type)
+    {
+        ImmutableArray<AttributeData> own = type.GetAttributes();
+        if (type.BaseType is null || type.BaseType.SpecialType == SpecialType.System_Object)
+        {
+            return own;
+        }
+
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        ImmutableArray<AttributeData>.Builder builder = ImmutableArray.CreateBuilder<AttributeData>();
+        AppendAttributes(builder, seen, own, inheritedOnly: false);
+        for (INamedTypeSymbol? baseType = type.BaseType;
+             baseType is not null && baseType.SpecialType != SpecialType.System_Object;
+             baseType = baseType.BaseType)
+        {
+            AppendAttributes(builder, seen, baseType.GetAttributes(), inheritedOnly: true);
         }
 
         return builder.ToImmutable();
@@ -152,12 +177,33 @@ internal static class AttributeMaterializationHelper
     public static EquatableArray<AttributeApplicationModel> BuildAttributes(
         ImmutableArray<AttributeData> attributes,
         IAssemblySymbol consumingAssembly)
-        => attributes.IsDefaultOrEmpty
-            ? EquatableArray<AttributeApplicationModel>.Empty
-            : attributes
-                .Select(attribute => BuildAttribute(attribute, consumingAssembly))
-                .WhereNotNull()
-                .ToEquatableArray();
+        => BuildAttributesWithCompleteness(attributes, consumingAssembly).Attributes;
+
+    internal static AttributeMaterializationResult BuildAttributesWithCompleteness(
+        ImmutableArray<AttributeData> attributes,
+        IAssemblySymbol consumingAssembly)
+    {
+        if (attributes.IsDefaultOrEmpty)
+        {
+            return new(EquatableArray<AttributeApplicationModel>.Empty, IsComplete: true);
+        }
+
+        ImmutableArray<AttributeApplicationModel>.Builder materialized = ImmutableArray.CreateBuilder<AttributeApplicationModel>();
+        bool isComplete = true;
+        foreach (AttributeData attribute in attributes)
+        {
+            if (BuildAttribute(attribute, consumingAssembly) is { } application)
+            {
+                materialized.Add(application);
+            }
+            else
+            {
+                isComplete = false;
+            }
+        }
+
+        return new(new EquatableArray<AttributeApplicationModel>(materialized.ToImmutable()), isComplete);
+    }
 
     private static AttributeApplicationModel? BuildAttribute(AttributeData attribute, IAssemblySymbol consumingAssembly)
     {

@@ -1619,4 +1619,129 @@ public class MSTestSettingsTests : TestContainer
     }
 
     #endregion
+
+    #region Dependency declaration configuration tests
+
+    /// <summary>
+    /// Parses a flattened key/value configuration - the shape the JSON provider produces - through the real
+    /// settings parser, so these tests exercise the same indexer-only surface it sees at run time.
+    /// </summary>
+    private MSTestSettings ParseDependencies(Dictionary<string, string> values)
+    {
+        var mockConfig = new Mock<IConfiguration>();
+        mockConfig.Setup(config => config[It.IsAny<string>()])
+            .Returns((string key) => values.TryGetValue(key, out string? value) ? value : null);
+
+        var settings = new MSTestSettings();
+        MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), settings);
+        return settings;
+    }
+
+    public void DependencyConfig_ChainsProduceAnEdgePerAdjacentPair()
+    {
+        MSTestSettings settings = ParseDependencies(new()
+        {
+            { "mstest:execution:dependencies:chains:0:0", "Ns.C.First" },
+            { "mstest:execution:dependencies:chains:0:1", "Ns.C.Second" },
+            { "mstest:execution:dependencies:chains:0:2", "Ns.C.Third" },
+        });
+
+        settings.DeclaredDependencies.Should().NotBeNull();
+        settings.DeclaredDependencies!.Length.Should().Be(2);
+        settings.DeclaredDependencies[0].Dependent.Should().Be("Ns.C.Second");
+        settings.DeclaredDependencies[0].Prerequisite.Should().Be("Ns.C.First");
+        settings.DeclaredDependencies[1].Dependent.Should().Be("Ns.C.Third");
+        settings.DeclaredDependencies[1].Prerequisite.Should().Be("Ns.C.Second");
+    }
+
+    public void DependencyConfig_AChainOfOneDeclaresNoEdge()
+    {
+        MSTestSettings settings = ParseDependencies(new()
+        {
+            { "mstest:execution:dependencies:chains:0:0", "Ns.C.Only" },
+        });
+
+        settings.DeclaredDependencies.Should().BeNull();
+    }
+
+    public void DependencyConfig_AnEmptyChainIsWarnedAboutAndDoesNotTruncateTheRest()
+    {
+        // An empty element stores nothing under its index, which through the indexer is indistinguishable
+        // from the end of the array - so without the lookahead every later chain would silently vanish.
+        MSTestSettings settings = ParseDependencies(new()
+        {
+            { "mstest:execution:dependencies:chains:1:0", "Ns.C.First" },
+            { "mstest:execution:dependencies:chains:1:1", "Ns.C.Second" },
+        });
+
+        settings.DeclaredDependencies.Should().ContainSingle();
+        settings.DeclaredDependencies![0].Dependent.Should().Be("Ns.C.Second");
+        _mockMessageLogger.Verify(
+            lm => lm.SendMessage(TestMessageLevel.Warning, It.Is<string>(m => m.Contains("chain at index 0"))),
+            Times.Once);
+    }
+
+    public void DependencyConfig_NodesCarryEveryPrerequisiteAndProceedOnFailure()
+    {
+        MSTestSettings settings = ParseDependencies(new()
+        {
+            { "mstest:execution:dependencies:nodes:0:test", "Ns.C.Audit" },
+            { "mstest:execution:dependencies:nodes:0:dependsOn:0", "Ns.C.One" },
+            { "mstest:execution:dependencies:nodes:0:dependsOn:1", "Ns.C.Two" },
+            { "mstest:execution:dependencies:nodes:0:proceedOnFailure", "true" },
+        });
+
+        settings.DeclaredDependencies!.Length.Should().Be(2);
+        settings.DeclaredDependencies.Should().OnlyContain(d => d.Dependent == "Ns.C.Audit" && d.ProceedOnFailure);
+    }
+
+    public void DependencyConfig_ProceedOnFailureDefaultsToFalseAndWarnsWhenNotABoolean()
+    {
+        MSTestSettings settings = ParseDependencies(new()
+        {
+            { "mstest:execution:dependencies:nodes:0:test", "Ns.C.Dependent" },
+            { "mstest:execution:dependencies:nodes:0:dependsOn:0", "Ns.C.Prereq" },
+            { "mstest:execution:dependencies:nodes:0:proceedOnFailure", "maybe" },
+        });
+
+        // Fails closed: an unparseable value must not become "run anyway".
+        settings.DeclaredDependencies!.Single().ProceedOnFailure.Should().BeFalse();
+        _mockMessageLogger.Verify(
+            lm => lm.SendMessage(TestMessageLevel.Warning, It.Is<string>(m => m.Contains("maybe"))),
+            Times.Once);
+    }
+
+    public void DependencyConfig_ANodeWithoutPrerequisitesIsWarnedAbout()
+    {
+        MSTestSettings settings = ParseDependencies(new()
+        {
+            { "mstest:execution:dependencies:nodes:0:test", "Ns.C.Lonely" },
+        });
+
+        settings.DeclaredDependencies.Should().BeNull();
+        _mockMessageLogger.Verify(
+            lm => lm.SendMessage(TestMessageLevel.Warning, It.Is<string>(m => m.Contains("Ns.C.Lonely"))),
+            Times.Once);
+    }
+
+    public void DependencyConfig_ANodeMissingItsTestIsWarnedAboutAndDoesNotTruncateTheRest()
+    {
+        MSTestSettings settings = ParseDependencies(new()
+        {
+            { "mstest:execution:dependencies:nodes:1:test", "Ns.C.Dependent" },
+            { "mstest:execution:dependencies:nodes:1:dependsOn:0", "Ns.C.Prereq" },
+        });
+
+        settings.DeclaredDependencies.Should().ContainSingle();
+        settings.DeclaredDependencies![0].Dependent.Should().Be("Ns.C.Dependent");
+        _mockMessageLogger.Verify(
+            lm => lm.SendMessage(TestMessageLevel.Warning, It.Is<string>(m => m.Contains("node at index 0"))),
+            Times.Once);
+    }
+
+    public void DependencyConfig_WhenNoDependenciesAreDeclaredNothingIsSet()
+        => ParseDependencies(new() { { "mstest:execution:randomizeTestOrder", "true" } })
+            .DeclaredDependencies.Should().BeNull();
+
+    #endregion
 }

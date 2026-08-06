@@ -9,7 +9,7 @@
       </trans-unit>
       <trans-unit id="RunSettingsEnvironmentVariablesNotSupportedOnBrowser">
         <source>The runsettings 'EnvironmentVariables' section is not supported on browser/WebAssembly platforms, because applying it requires restarting the test host process. Remove the section to run on browser-wasm.</source>
-        <target state="new">The runsettings 'EnvironmentVariables' section is not supported on browser/WebAssembly platforms, because applying it requires restarting the test host process. Remove the section to run on browser-wasm.</target>
+        <target state="translated">runsettings 'EnvironmentVariables' 섹션은 브라우저/WebAssembly 플랫폼에서 지원되지 않습니다. 이 섹션을 적용하려면 테스트 호스트 프로세스를 다시 시작해야 하기 때문입니다. browser-wasm에서 실행할 섹션을 제거합니다.</target>
         <note>{Locked="runsettings"}{Locked="EnvironmentVariables"}{Locked="browser-wasm"}</note>
       </trans-unit>
       <trans-unit id="RunSettingsOptionDescription">
@@ -56,6 +56,11 @@
         <source>Runsettings loggers are not supported by Microsoft.Testing.Platform and will be ignored</source>
         <target state="translated">Runsettings 로거는 Microsoft.Testing.Platform에서 지원되지 않으며 무시됩니다.</target>
         <note>Do not localize {Locked="Runsettings"} or {Locked="Microsoft.Testing.Platform"}.</note>
+      </trans-unit>
+      <trans-unit id="UnsupportedTestExecutionFilter">
+        <source>Test execution filter type '{0}' is not supported by '{1}'. Supported filter types are NopFilter, TestNodeUidListFilter, and an And CompositeTestExecutionFilter.</source>
+        <target state="translated">테스트 실행 필터 유형 '{0}'은(는) '{1}'에서 지원되지 않습니다. 지원되는 필터 유형은 NopFilter, TestNodeUidListFilter, 그리고 And CompositeTestExecutionFilter입니다.</target>
+        <note>{0} is the unsupported filter type. {1} is the adapter name. {Locked="NopFilter"}{Locked="TestNodeUidListFilter"}{Locked="And"}{Locked="CompositeTestExecutionFilter"}</note>
       </trans-unit>
       <trans-unit id="VSTestBridgedTestFrameworkSessionAlreadyCreatedErrorMessage">
         <source>The bridged framework supports only one session at a time. A session with UID {0} is already open.</source>

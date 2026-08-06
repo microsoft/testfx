@@ -74,16 +74,23 @@ public sealed class TaskExtensionsTests
     public async Task CancellationAsync_ObserveException_Succeeds()
     {
         ManualResetEvent waitException = new(false);
-        CancellationToken token = new CancellationTokenSource(TimeSpan.FromSeconds(1)).Token;
-        OperationCanceledException ex = await Assert.ThrowsAsync<OperationCanceledException>(async ()
-            => await Task.Run(
-                async () =>
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(5), TestContext.CancellationToken);
-                    waitException.Set();
-                    throw new InvalidOperationException();
-                }, TestContext.CancellationToken).WithCancellationAsync(token));
+        TaskCompletionSource<bool> throwException = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        using CancellationTokenSource cancellationTokenSource = new();
+        CancellationToken token = cancellationTokenSource.Token;
+        Task task = Task.Run(
+            async () =>
+            {
+                await throwException.Task;
+                waitException.Set();
+                throw new InvalidOperationException();
+            }, TestContext.CancellationToken).WithCancellationAsync(token);
+
+#pragma warning disable VSTHRD103 // Call async methods when in an async method
+        cancellationTokenSource.Cancel();
+#pragma warning restore VSTHRD103 // Call async methods when in an async method
+        OperationCanceledException ex = await Assert.ThrowsAsync<OperationCanceledException>(async () => await task);
         Assert.AreEqual(token, ex.CancellationToken);
+        throwException.SetResult(true);
         Assert.IsTrue(
             waitException.WaitOne(TimeSpan.FromSeconds(30)),
             "Inner task did not reach the exception-throw point within the allotted time.");

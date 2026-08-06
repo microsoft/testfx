@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.VSTestBridge.CommandLine;
+using Microsoft.Testing.Extensions.VSTestBridge.Resources;
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
@@ -14,6 +15,8 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 
 internal abstract class ContextAdapterBase
 {
+    private const string EmptyUidFilterExpression = "FullyQualifiedName=__MTP_EMPTY_UID_FILTER__&FullyQualifiedName!=__MTP_EMPTY_UID_FILTER__";
+
     protected ContextAdapterBase(ICommandLineOptions commandLineOptions, IRunSettings runSettings, ITestExecutionFilter filter)
         : this(commandLineOptions, runSettings, filter, useFullyQualifiedNameAsUid: false)
     {
@@ -96,11 +99,38 @@ internal abstract class ContextAdapterBase
         AppendFilter(filterFromRunsettings, filterBuilder);
         AppendFilter(filterFromCommandLineOption, filterBuilder);
 
-        if (filter is TestNodeUidListFilter testNodeUidListFilter)
+        if (filter is not null)
         {
-            StartFilter(filterBuilder);
-            BuildFilter(testNodeUidListFilter.TestNodeUids, filterBuilder, useFullyQualifiedNameAsUid);
-            EndFilter(filterBuilder);
+            foreach (ITestExecutionFilter leafFilter in TestExecutionFilterComposer.GetLeafFilters(filter))
+            {
+                switch (leafFilter)
+                {
+                    case NopFilter:
+                        break;
+
+                    case TestNodeUidListFilter testNodeUidListFilter:
+                        StartFilter(filterBuilder);
+                        if (testNodeUidListFilter.TestNodeUids.Length == 0)
+                        {
+                            filterBuilder.Append(EmptyUidFilterExpression);
+                        }
+                        else
+                        {
+                            BuildFilter(testNodeUidListFilter.TestNodeUids, filterBuilder, useFullyQualifiedNameAsUid);
+                        }
+
+                        EndFilter(filterBuilder);
+                        break;
+
+                    default:
+                        throw new NotSupportedException(
+                            string.Format(
+                                CultureInfo.InvariantCulture,
+                                ExtensionResources.UnsupportedTestExecutionFilter,
+                                leafFilter.GetType().FullName,
+                                "VSTestBridge"));
+                }
+            }
         }
 
         if (filterBuilder.Length > 0)

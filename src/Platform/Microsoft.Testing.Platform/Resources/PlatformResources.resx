@@ -179,6 +179,32 @@
   <data name="CannotCreateTestExecutionFilterErrorMessage" xml:space="preserve">
     <value>Failed to create a test execution filter</value>
   </data>
+  <data name="CompositeTestExecutionFilterCannotContainNull" xml:space="preserve">
+    <value>A composite test execution filter cannot contain a null child filter.</value>
+  </data>
+  <data name="CompositeTestExecutionFilterRequiresTwoFilters" xml:space="preserve">
+    <value>A composite test execution filter requires at least two child filters.</value>
+  </data>
+  <data name="TestExecutionFilterProviderNotSupportedForServer" xml:space="preserve">
+    <value>Test execution filter provider '{0}' returned filter type '{1}' for a JSON-RPC server request. Provider constraints are not applied to server requests; return null when TestExecutionFilterContext.Origin is Server.</value>
+    <comment>{0} is the provider UID. {1} is the filter type. {Locked="JSON-RPC"}{Locked="null"}{Locked="TestExecutionFilterContext.Origin"}{Locked="Server"}</comment>
+  </data>
+  <data name="UnsupportedProviderTestExecutionFilter" xml:space="preserve">
+    <value>Test execution filter provider '{0}' returned unsupported filter type '{1}'. Providers can return only NopFilter, TestNodeUidListFilter, TreeNodeFilter, or an And CompositeTestExecutionFilter.</value>
+    <comment>{0} is the provider UID. {1} is the unsupported filter type. {Locked="NopFilter"}{Locked="TestNodeUidListFilter"}{Locked="TreeNodeFilter"}{Locked="And"}{Locked="CompositeTestExecutionFilter"}</comment>
+  </data>
+  <data name="UnsupportedRequestTestExecutionFilter" xml:space="preserve">
+    <value>The request contains unsupported test execution filter type '{0}'.</value>
+    <comment>{0} is the unsupported filter type.</comment>
+  </data>
+  <data name="UnsupportedTestExecutionFilterOperator" xml:space="preserve">
+    <value>Only the And test execution filter operator is supported.</value>
+    <comment>{Locked="And"}</comment>
+  </data>
+  <data name="UnsupportedTestExecutionFilterOperatorValue" xml:space="preserve">
+    <value>Test execution filter operator '{0}' is not supported. Only And is supported.</value>
+    <comment>{0} is the unsupported operator value. {Locked="And"}</comment>
+  </data>
   <data name="CompositeServiceFactoryInstanceAlreadyRegistered" xml:space="preserve">
     <value>The same instance of 'CompositeExtensionFactory' is already registered</value>
     <comment>{Locked="CompositeExtensionFactory"}</comment>
@@ -378,8 +404,8 @@
     <comment>{0} is the process exit code.</comment>
   </data>
   <data name="CannotCreateUniqueLogFileErrorMessage" xml:space="preserve">
-    <value>Failed to create a unique log file after 3 seconds. Lastly tried file name is '{0}'.</value>
-    <comment>{0} is the last log file name that was tried.</comment>
+    <value>Failed to create the diagnostic log file '{0}' after {1} attempts. Last error: {2}</value>
+    <comment>{0} is the full path of the last log file that was tried. {1} is the number of attempts that were made. {2} is the error message of the last failed attempt.</comment>
   </data>
   <data name="FailedToWriteLogToChannelErrorMessage" xml:space="preserve">
     <value>Failed to write the log to the channel. Missed log content:
@@ -607,6 +633,54 @@ The default is TestResults in the directory that contains the test application.<
     <value>dotnet test pipe.</value>
     <comment>{Locked="dotnet test"}</comment>
   </data>
+  <data name="PlatformCommandLineDotnetTestTransportOptionDescription" xml:space="preserve">
+    <value>Selects the pre-launch transport for the dotnet test protocol.</value>
+    <comment>{Locked="dotnet test"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestHttpEndpointOptionDescription" xml:space="preserve">
+    <value>Specifies the authenticated HTTP endpoint for the dotnet test protocol.</value>
+    <comment>{Locked="HTTP"}{Locked="dotnet test"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestHttpTokenOptionDescription" xml:space="preserve">
+    <value>Specifies the per-run HTTP bearer token for the dotnet test protocol.</value>
+    <comment>{Locked="HTTP"}{Locked="dotnet test"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestTransportInvalid" xml:space="preserve">
+    <value>'--dotnet-test-transport' received unexpected value '{0}'. Supported values are: {1}.</value>
+    <comment>{0} is the unexpected transport value. {1} is the comma-separated list of supported transport values. {Locked="--dotnet-test-transport"}{Locked="pipe"}{Locked="http"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestHttpEndpointInvalid" xml:space="preserve">
+    <value>'--dotnet-test-http-endpoint' requires an absolute HTTPS URL, or an HTTP loopback URL, without user information, query, or fragment.</value>
+    <comment>{Locked="--dotnet-test-http-endpoint"}{Locked="HTTP"}{Locked="HTTPS"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestHttpTokenInvalid" xml:space="preserve">
+    <value>'--dotnet-test-http-token' requires a non-empty valid bearer token without whitespace or control characters.</value>
+    <comment>{Locked="--dotnet-test-http-token"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestTransportConflict" xml:space="preserve">
+    <value>The dotnet test named-pipe and HTTP transports cannot be selected together.</value>
+    <comment>{Locked="dotnet test"}{Locked="HTTP"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestHttpOptionsRequireTransport" xml:space="preserve">
+    <value>The dotnet test HTTP endpoint and token options require '--dotnet-test-transport http'.</value>
+    <comment>{Locked="dotnet test"}{Locked="HTTP"}{Locked="--dotnet-test-transport http"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestCliRequiresTransport" xml:space="preserve">
+    <value>'--server dotnettestcli' requires either '--dotnet-test-pipe' or '--dotnet-test-transport http'.</value>
+    <comment>{Locked="--server dotnettestcli"}{Locked="--dotnet-test-pipe"}{Locked="--dotnet-test-transport http"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestHttpRequiresEndpointAndToken" xml:space="preserve">
+    <value>'--dotnet-test-transport http' requires both '--dotnet-test-http-endpoint' and '--dotnet-test-http-token'.</value>
+    <comment>{Locked="--dotnet-test-transport http"}{Locked="--dotnet-test-http-endpoint"}{Locked="--dotnet-test-http-token"}</comment>
+  </data>
+  <data name="PlatformCommandLinePipeTransportNotSupportedOnBrowser" xml:space="preserve">
+    <value>The dotnet test named-pipe transport is not supported on browser-wasm. Use '--dotnet-test-transport http'.</value>
+    <comment>{Locked="dotnet test"}{Locked="browser-wasm"}{Locked="--dotnet-test-transport http"}</comment>
+  </data>
+  <data name="PlatformCommandLinePipeTransportNotSupportedOnWasi" xml:space="preserve">
+    <value>The dotnet test named-pipe transport is not supported on wasi-wasm. Use '--dotnet-test-transport http'.</value>
+    <comment>{Locked="dotnet test"}{Locked="wasi-wasm"}{Locked="--dotnet-test-transport http"}</comment>
+  </data>
   <data name="TreeNodeFilterDescription" xml:space="preserve">
     <value>Use a tree filter to filter down the tests to execute</value>
   </data>
@@ -654,9 +728,10 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
     <comment>{0} is the directory path, {1} is the underlying error message, {2} is the environment variable name. Do not translate the environment variable name.</comment>
   </data>
   <data name="PlatformCommandLineIgnoreExitCodeOptionDescription" xml:space="preserve">
-    <value>Do not report non successful exit value for specific exit codes
-(e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</value>
-    <comment>{Locked="--ignore-exit-code 8;9"}</comment>
+    <value>Do not report a non-successful exit value for the specified exit codes.
+For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
+For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</value>
+    <comment>{Locked="'--ignore-exit-code 8;9'"} {Locked="https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes"}</comment>
   </data>
   <data name="PlatformCommandLineExitOnProcessExitOptionDescription" xml:space="preserve">
     <value>Exit the test process if dependent process exits. PID must be provided.</value>
@@ -908,5 +983,113 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
   <data name="WaitDebuggerAttachNotSupportedInWasiErrorMessage" xml:space="preserve">
     <value>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</value>
     <comment>{Locked="TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1"}{Locked="wasi"}</comment>
+  </data>
+  <data name="PlatformCommandLineEnableDynamicExtensionsOptionDescription" xml:space="preserve">
+<value>Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.</value>
+    <comment>{Locked="'*.testingplatformextensions.json'"}</comment>
+  </data>
+  <data name="DynamicExtensionsLoadedHeader" xml:space="preserve">
+    <value>Dynamically loaded test platform extensions ({0}):</value>
+    <comment>{0} is the number of extensions that were loaded.</comment>
+  </data>
+  <data name="DynamicExtensionsLoadedEntry" xml:space="preserve">
+    <value>  {0} -&gt; {1} ({2}), declared in {3}</value>
+    <comment>{0} is the extension display name. {1} is the resolved assembly path. {2} is the full type name of the hook. {3} is the manifest file path.</comment>
+  </data>
+  <data name="DynamicExtensionManifestInvalidJsonErrorMessage" xml:space="preserve">
+    <value>The extension manifest '{0}' is not valid JSON. {1}</value>
+    <comment>{0} is the manifest file path. {1} is the underlying JSON parser error message.</comment>
+  </data>
+  <data name="DynamicExtensionManifestTrailingContentErrorMessage" xml:space="preserve">
+    <value>Unexpected content after the top-level JSON object.</value>
+    <comment>Used as the parser-error detail when a manifest contains text after its closing brace.</comment>
+  </data>
+  <data name="DynamicExtensionManifestRootNotObjectErrorMessage" xml:space="preserve">
+    <value>The extension manifest '{0}' is invalid: the top-level JSON element must be an object but '{1}' was found.</value>
+    <comment>{0} is the manifest file path. {1} is the JSON value kind that was found.</comment>
+  </data>
+  <data name="DynamicExtensionManifestMissingExtensionsPropertyErrorMessage" xml:space="preserve">
+    <value>The extension manifest '{0}' is invalid: the required '{1}' property is missing.</value>
+    <comment>{0} is the manifest file path. {1} is the name of the missing JSON property.</comment>
+  </data>
+  <data name="DynamicExtensionManifestDuplicatePropertyErrorMessage" xml:space="preserve">
+    <value>The extension manifest '{0}' is invalid: the '{1}' property is declared more than once, so one of the declarations would be discarded.</value>
+    <comment>{0} is the manifest file path. {1} is the name of the duplicated JSON property.</comment>
+  </data>
+  <data name="DynamicExtensionManifestEntryDuplicatePropertyErrorMessage" xml:space="preserve">
+    <value>The extension manifest '{0}' is invalid: the extension at index {1} declares the '{2}' property more than once, so one of the declarations would be discarded.</value>
+    <comment>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the duplicated JSON property.</comment>
+  </data>
+  <data name="DynamicExtensionManifestExtensionsPropertyNotArrayErrorMessage" xml:space="preserve">
+    <value>The extension manifest '{0}' is invalid: the '{1}' property must be a JSON array.</value>
+    <comment>{0} is the manifest file path. {1} is the name of the JSON property that has the wrong type.</comment>
+  </data>
+  <data name="DynamicExtensionManifestEntryNotObjectErrorMessage" xml:space="preserve">
+    <value>The extension manifest '{0}' is invalid: the element at index {1} of '{2}' must be a JSON object.</value>
+    <comment>{0} is the manifest file path. {1} is the zero-based index of the element. {2} is the name of the JSON array property.</comment>
+  </data>
+  <data name="DynamicExtensionManifestEntryMissingPropertyErrorMessage" xml:space="preserve">
+    <value>The extension manifest '{0}' is invalid: the extension at index {1} is missing the required '{2}' property, or its value is empty.</value>
+    <comment>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the missing JSON property.</comment>
+  </data>
+  <data name="DynamicExtensionManifestEntryPropertyNotStringErrorMessage" xml:space="preserve">
+    <value>The extension manifest '{0}' is invalid: the '{2}' property of the extension at index {1} must be a JSON string.</value>
+    <comment>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the JSON property.</comment>
+  </data>
+  <data name="DynamicExtensionManifestEntryPropertyNotBooleanErrorMessage" xml:space="preserve">
+    <value>The extension manifest '{0}' is invalid: the '{2}' property of the extension at index {1} must be a JSON boolean.</value>
+    <comment>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the JSON property.</comment>
+  </data>
+  <data name="DynamicExtensionManifestEntryInvalidAssemblyPathErrorMessage" xml:space="preserve">
+    <value>The extension manifest '{0}' is invalid: the assembly path '{2}' of the extension at index {1} is not a valid path.</value>
+    <comment>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the invalid assembly path.</comment>
+  </data>
+  <data name="DynamicExtensionManifestReadFailedErrorMessage" xml:space="preserve">
+    <value>The extension manifest '{0}' could not be read.</value>
+    <comment>{0} is the manifest file path.</comment>
+  </data>
+  <data name="DynamicExtensionAssemblyNotFoundErrorMessage" xml:space="preserve">
+    <value>The assembly '{0}' of the extension '{1}' declared in the extension manifest '{2}' was not found.</value>
+    <comment>{0} is the resolved assembly path. {1} is the extension display name. {2} is the manifest file path.</comment>
+  </data>
+  <data name="DynamicExtensionAssemblyLoadFailedErrorMessage" xml:space="preserve">
+    <value>The assembly '{0}' of the extension '{1}' declared in the extension manifest '{2}' could not be loaded.</value>
+    <comment>{0} is the resolved assembly path. {1} is the extension display name. {2} is the manifest file path.</comment>
+  </data>
+  <data name="DynamicExtensionTypeNotFoundErrorMessage" xml:space="preserve">
+    <value>The type '{0}' was not found in the assembly '{1}' declared in the extension manifest '{2}'.</value>
+    <comment>{0} is the full type name. {1} is the resolved assembly path. {2} is the manifest file path.</comment>
+  </data>
+  <data name="DynamicExtensionHookNotFoundErrorMessage" xml:space="preserve">
+    <value>The type '{0}' in the assembly '{1}' declared in the extension manifest '{2}' does not expose a 'public static void' method named '{3}' taking an 'ITestApplicationBuilder' and a 'string[]'.</value>
+    <comment>{0} is the full type name. {1} is the resolved assembly path. {2} is the manifest file path. {3} is the expected method name. {Locked="'public static void'"}{Locked="'ITestApplicationBuilder'"}{Locked="'string[]'"}</comment>
+  </data>
+  <data name="DynamicExtensionHookMustReturnVoidErrorMessage" xml:space="preserve">
+    <value>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' returns '{4}' but must return 'void'. The platform invokes the hook synchronously, so a return value is never observed; a returned task in particular would never be awaited, and its registrations and failures would be lost.</value>
+    <comment>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {4} is the actual return type name. {Locked="'void'"}</comment>
+  </data>
+  <data name="DynamicExtensionDuplicateIdConflictErrorMessage" xml:space="preserve">
+    <value>The extension id '{0}' is declared twice with different content: '{1}' in the extension manifest '{2}' and '{3}' in the extension manifest '{4}'. Ids must identify the same extension, otherwise one declaration would silently replace the other.</value>
+    <comment>{0} is the extension id. {1} and {3} are 'assembly path' plus 'type full name' descriptions of the conflicting declarations. {2} and {4} are manifest file paths.</comment>
+  </data>
+  <data name="DynamicExtensionManifestDirectoryNotReadableErrorMessage" xml:space="preserve">
+    <value>The directory '{0}' could not be searched for extension manifests, so the platform cannot tell whether any extension had to be loaded. Remove '{1}' from the command line to skip extension manifest discovery.</value>
+    <comment>{0} is the directory path. {1} is the command line option that enables the feature.</comment>
+  </data>
+  <data name="DynamicExtensionCannotRegisterTestFrameworkErrorMessage" xml:space="preserve">
+    <value>The extension '{0}' declared in the extension manifest '{1}' tried to register a test framework. Dynamically loaded extensions must not replace the test framework, because that would silently change which tests run and what results they report.</value>
+    <comment>{0} is the extension display name. {1} is the manifest file path.</comment>
+  </data>
+  <data name="DynamicExtensionHookFailedErrorMessage" xml:space="preserve">
+    <value>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' failed.</value>
+    <comment>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path.</comment>
+  </data>
+  <data name="DynamicExtensionHookMustNotBeAsyncVoidErrorMessage" xml:space="preserve">
+    <value>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' is declared 'async void'. The platform invokes the hook synchronously, so it would return at its first await: anything it registers after that point would race the test application's own setup, and any failure would be lost. Make the hook synchronous.</value>
+    <comment>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {Locked="'async void'"}</comment>
+  </data>
+  <data name="DynamicExtensionsNotSupportedOnCurrentRuntimeErrorMessage" xml:space="preserve">
+    <value>The extension manifest '{0}' declares extensions to load, but the current runtime does not support loading assemblies dynamically (for example when published with native AOT). Set the '{1}' property of each extension to 'false', remove the manifest, or remove '{2}' from the command line.</value>
+    <comment>{0} is the manifest file path. {1} is the name of the JSON property that disables an extension. {2} is the command line option that enables the feature. {Locked="'false'"}</comment>
   </data>
 </root>

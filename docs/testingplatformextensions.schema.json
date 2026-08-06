@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/microsoft/testfx/main/docs/testingplatformextensions.schema.json",
+  "title": "Microsoft.Testing.Platform extension manifest",
+  "description": "Declares extensions that Microsoft.Testing.Platform loads dynamically at start-up. The file name must end with '.testingplatformextensions.json' and the file must sit next to the test application. Loading is off by default and must be enabled per run with the '--enable-dynamic-extensions' command line option. Dynamically loaded extensions run with full trust inside the test process: do not use this feature with code or directories you do not trust. See https://github.com/microsoft/testfx/blob/main/docs/RFCs/023-Dynamic-Extension-Loading.md.",
+  "type": "object",
+  "required": [
+    "extensions"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "The URI of this JSON schema."
+    },
+    "extensions": {
+      "type": "array",
+      "description": "The extensions to load, in the order in which their hooks are invoked.",
+      "items": {
+        "$ref": "#/definitions/extension"
+      }
+    }
+  },
+  "definitions": {
+    "extension": {
+      "type": "object",
+      "required": [
+        "assemblyPath",
+        "typeFullName"
+      ],
+      "properties": {
+        "assemblyPath": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S",
+          "description": "Path to the assembly containing the hook type. A relative path is resolved against the directory of this manifest."
+        },
+        "typeFullName": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S",
+          "description": "Full name of the type declaring the static 'AddExtensions(ITestApplicationBuilder, string[])' hook."
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S",
+          "description": "Stable identifier used to de-duplicate the same extension declared by several manifests. Compared ordinally and case-insensitively. Defaults to the resolved assembly path combined with the type full name. A blank value is treated as omitted at run time, so give it a real value or leave it out."
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S",
+          "description": "Human-readable name for the extension. Used in the loaded-extensions report, the diagnostic log, and assembly-level errors. Defaults to the type full name."
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether the extension is loaded. Set to false to keep the declaration in place without loading it."
+        }
+      }
+    }
+  }
+}

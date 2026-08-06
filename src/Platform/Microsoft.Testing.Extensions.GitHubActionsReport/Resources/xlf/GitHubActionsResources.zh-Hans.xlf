@@ -37,6 +37,11 @@
         <target state="translated">至少有一个测试失败。</target>
         <note />
       </trans-unit>
+      <trans-unit id="ExitCodeReasonCoverageThresholdFailed">
+        <source>One or more code coverage thresholds were not met.</source>
+        <target state="translated">未达到一个或多个代码覆盖率阈值。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ExitCodeReasonDependentProcessExited">
         <source>A dependent process exited unexpectedly.</source>
         <target state="translated">依赖进程意外退出。</target>

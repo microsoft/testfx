@@ -225,22 +225,34 @@ public sealed class AppxManifestInfoTests
     }
 
     [TestMethod]
-    public void FindManifestPath_WhenManifestIsInAnAncestorDirectory_ReturnsTheNearestManifest()
+    public void FindManifestPath_WhenManifestIsInAnAncestorDirectoryAndDeclaresExecutable_ReturnsTheNearestManifest()
     {
         // Model a valid MSIX layout where the manifest sits at the package root but the executable
         // lives in a subdirectory (Application/@Executable = "bin\host.exe").
         string root = Path.Combine(Path.GetTempPath(), "AppxManifestInfoTests", Guid.NewGuid().ToString("N"));
         string executableDirectory = Path.Combine(root, "bin");
+        string executablePath = Path.Combine(executableDirectory, "host.exe");
         Directory.CreateDirectory(executableDirectory);
         try
         {
             string manifestPath = Path.Combine(root, AppxManifestInfo.AppxManifestFileName);
-            File.WriteAllText(manifestPath, "not xml");
+            File.WriteAllText(
+                manifestPath,
+                """
+                <?xml version="1.0" encoding="utf-8"?>
+                <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10">
+                  <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+                  <Applications>
+                    <Application Id="App" Executable="bin\host.exe" />
+                  </Applications>
+                </Package>
+                """);
 
             // GetManifestPath only probes the executable's own directory and must miss the ancestor
             // manifest, whereas FindManifestPath walks up and locates it.
             Assert.IsNull(AppxManifestInfo.GetManifestPath(executableDirectory));
             Assert.AreEqual(manifestPath, AppxManifestInfo.FindManifestPath(executableDirectory));
+            Assert.AreEqual(manifestPath, AppxManifestInfo.FindManifestPath(executableDirectory, executablePath));
         }
         finally
         {
@@ -260,6 +272,192 @@ public sealed class AppxManifestInfoTests
         finally
         {
             Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    // The launch path is handed the exact executable it must start, so a manifest that declares a
+    // *different* application next to it must not be attributed: ResolveApplication would then pick that
+    // sole entry and the launcher would activate the wrong Application User Model ID. Enablement has no
+    // executable to match, so it still attributes on the directory.
+    // Two applications declaring the same executable is genuinely ambiguous rather than a mismatch, so
+    // the error must name the candidate AUMIDs instead of claiming that nothing declares the executable.
+    [TestMethod]
+    public void ResolveApplication_WithSeveralApplicationsDeclaringTheSameExecutable_ReportsTheCandidates()
+    {
+        const string ManifestXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10">
+              <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="First" Executable="Host.exe" />
+                <Application Id="Second" Executable="Host.exe" />
+              </Applications>
+            </Package>
+            """;
+
+        AppxManifestInfo info = ReadManifest(ManifestXml);
+        string manifestDirectory = Path.Combine(Path.GetTempPath(), "AppxManifestInfoTests", Guid.NewGuid().ToString("N"));
+
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(
+            () => info.ResolveApplication(manifestDirectory, Path.Combine(manifestDirectory, "Host.exe")));
+
+        Assert.Contains($"{info.PackageFamilyName}!First", exception.Message);
+        Assert.Contains($"{info.PackageFamilyName}!Second", exception.Message);
+    }
+
+    // The manifest beside the app is accepted without parsing (the common-case fast path), so resolution
+    // is the only thing standing between a mismatched manifest and the wrong AUMID: a layout holding
+    // Host.exe next to a manifest whose sole application declares Other.exe must not activate Other.
+    [TestMethod]
+    public void ResolveApplication_WithSameDirectoryManifestDeclaringADifferentExecutable_Throws()
+    {
+        const string ManifestXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10">
+              <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="Other" Executable="Other.exe" />
+              </Applications>
+            </Package>
+            """;
+
+        AppxManifestInfo info = ReadManifest(ManifestXml);
+        string manifestDirectory = Path.Combine(Path.GetTempPath(), "AppxManifestInfoTests", Guid.NewGuid().ToString("N"));
+
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(
+            () => info.ResolveApplication(manifestDirectory, Path.Combine(manifestDirectory, "Host.exe")));
+
+        // Naming both the executable that was asked for and the one the manifest declares is what makes
+        // this failure actionable, so it is asserted rather than just the exception type.
+        Assert.Contains("Host.exe", exception.Message);
+        Assert.Contains("Other.exe", exception.Message);
+    }
+
+    // A manifest that declares no executable at all cannot be validated, so the lenient behavior stays:
+    // this is the minimal manifest shape the packaged acceptance assets and most fixtures use.
+    [TestMethod]
+    public void ResolveApplication_WithoutDeclaredExecutable_FallsBackToTheSoleApplication()
+    {
+        AppxManifestInfo info = ReadManifest(
+            name: "Contoso.MyTestApp",
+            publisher: MicrosoftStorePublisher,
+            applicationId: "App");
+        string manifestDirectory = Path.Combine(Path.GetTempPath(), "AppxManifestInfoTests", Guid.NewGuid().ToString("N"));
+
+        AppxApplicationInfo? application = info.ResolveApplication(manifestDirectory, Path.Combine(manifestDirectory, "Host.exe"));
+
+        Assert.IsNotNull(application);
+        Assert.AreEqual("App", application.Id);
+    }
+
+    // A package may legally declare two applications whose executables share a file name in different
+    // subdirectories. The file name alone cannot tell them apart, so resolving by it would report an
+    // ambiguity and refuse to activate; the full path the launcher already validated does distinguish them.
+    [TestMethod]
+    public void ResolveApplication_WithSameFileNameInDifferentDirectories_ResolvesByFullPath()
+    {
+        const string ManifestXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10">
+              <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="First" Executable="bin1\host.exe" />
+                <Application Id="Second" Executable="bin2\host.exe" />
+              </Applications>
+            </Package>
+            """;
+
+        AppxManifestInfo info = ReadManifest(ManifestXml);
+        string manifestDirectory = Path.Combine(Path.GetTempPath(), "AppxManifestInfoTests", Guid.NewGuid().ToString("N"));
+
+        AppxApplicationInfo? application = info.ResolveApplication(manifestDirectory, Path.Combine(manifestDirectory, "bin2", "host.exe"));
+
+        Assert.IsNotNull(application);
+        Assert.AreEqual("Second", application.Id);
+
+        // The file-name-only overload cannot disambiguate these, which is why the full path is carried through.
+        Assert.ThrowsExactly<InvalidOperationException>(() => info.ResolveApplication("host.exe"));
+    }
+
+    [TestMethod]
+    public void FindManifestPath_WhenAncestorManifestDeclaresADifferentExecutableInTheAppDirectory_MatchesOnlyForEnablement()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "AppxManifestInfoTests", Guid.NewGuid().ToString("N"));
+        string executableDirectory = Path.Combine(root, "bin");
+        Directory.CreateDirectory(executableDirectory);
+        try
+        {
+            string manifestPath = Path.Combine(root, AppxManifestInfo.AppxManifestFileName);
+            File.WriteAllText(
+                manifestPath,
+                """
+                <?xml version="1.0" encoding="utf-8"?>
+                <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10">
+                  <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+                  <Applications>
+                    <Application Id="App" Executable="bin\other.exe" />
+                  </Applications>
+                </Package>
+                """);
+
+            // Enablement only knows the directory, and the manifest does place an application there.
+            Assert.AreEqual(manifestPath, AppxManifestInfo.FindManifestPath(executableDirectory));
+
+            // The launch path knows it was asked for host.exe, which this manifest does not declare.
+            Assert.IsNull(AppxManifestInfo.FindManifestPath(executableDirectory, Path.Combine(executableDirectory, "host.exe")));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void FindManifestPath_WhenAncestorManifestDoesNotMatchExecutable_ReturnsNull()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "AppxManifestInfoTests", Guid.NewGuid().ToString("N"));
+        string executableDirectory = Path.Combine(root, "bin");
+        Directory.CreateDirectory(executableDirectory);
+        try
+        {
+            string manifestPath = Path.Combine(root, AppxManifestInfo.AppxManifestFileName);
+            File.WriteAllText(
+                manifestPath,
+                """
+                <?xml version="1.0" encoding="utf-8"?>
+                <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10">
+                  <Identity Name="Contoso.MyOtherApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+                  <Applications>
+                    <Application Id="App" Executable="other\host.exe" />
+                  </Applications>
+                </Package>
+                """);
+
+            Assert.IsNull(AppxManifestInfo.FindManifestPath(executableDirectory));
+            Assert.IsNull(AppxManifestInfo.FindManifestPath(executableDirectory, Path.Combine(executableDirectory, "host.exe")));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void FindManifestPath_WhenAncestorManifestIsMalformed_ReturnsNull()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "AppxManifestInfoTests", Guid.NewGuid().ToString("N"));
+        string executableDirectory = Path.Combine(root, "bin");
+        Directory.CreateDirectory(executableDirectory);
+        try
+        {
+            File.WriteAllText(Path.Combine(root, AppxManifestInfo.AppxManifestFileName), "not xml");
+
+            Assert.IsNull(AppxManifestInfo.FindManifestPath(executableDirectory));
+            Assert.IsNull(AppxManifestInfo.FindManifestPath(executableDirectory, Path.Combine(executableDirectory, "host.exe")));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
         }
     }
 

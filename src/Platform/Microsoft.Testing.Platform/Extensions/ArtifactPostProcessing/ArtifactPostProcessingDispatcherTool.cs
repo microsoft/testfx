@@ -65,12 +65,16 @@ internal sealed class ArtifactPostProcessingDispatcherTool(
             return (int)ExitCode.InvalidCommandLine;
         }
 
-        await WarnAboutProcessorConflictsAsync(cancellationToken).ConfigureAwait(false);
+        IArtifactPostProcessor[] eligibleProcessors =
+        [
+            .. _processors.Where(processor => !manifest.Context.IsTruncated || processor.SupportsTruncatedRuns),
+        ];
+        await WarnAboutProcessorConflictsAsync(eligibleProcessors, cancellationToken).ConfigureAwait(false);
 
         List<InputArtifact> unmatchedInputs = [.. manifest.Inputs];
-        List<ProcessedArtifact> outputs = [];
+        List<FileArtifactMessage> outputs = [];
         bool failed = false;
-        foreach (IArtifactPostProcessor processor in _processors)
+        foreach (IArtifactPostProcessor processor in eligibleProcessors)
         {
             InputArtifact[] matchingInputs = [.. unmatchedInputs.Where(input => Matches(processor, input))];
             if (matchingInputs.Length == 0)
@@ -81,9 +85,22 @@ internal sealed class ArtifactPostProcessingDispatcherTool(
             unmatchedInputs.RemoveAll(input => matchingInputs.Contains(input));
             try
             {
-                if (await processor.ProcessAsync(matchingInputs, manifest.OutputDirectory, cancellationToken).ConfigureAwait(false) is { } output)
+                if (await processor.ProcessAsync(
+                    matchingInputs,
+                    manifest.OutputDirectory,
+                    manifest.Context,
+                    cancellationToken).ConfigureAwait(false) is { } output)
                 {
-                    outputs.Add(ValidateProcessedArtifact(output, manifest.OutputDirectory, matchingInputs));
+                    ProcessedArtifact validatedOutput = ValidateProcessedArtifact(output, manifest.OutputDirectory, matchingInputs);
+                    outputs.Add(new FileArtifactMessage(
+                        validatedOutput.Path,
+                        validatedOutput.DisplayName,
+                        validatedOutput.Description,
+                        TestUid: null,
+                        TestDisplayName: null,
+                        SessionUid: null,
+                        validatedOutput.Kind,
+                        [.. matchingInputs.Select(input => input.Path)]));
                 }
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -101,18 +118,10 @@ internal sealed class ArtifactPostProcessingDispatcherTool(
 
         if (outputs.Count > 0)
         {
-            FileArtifactMessage[] messages = [.. outputs.Select(output => new FileArtifactMessage(
-                output.Path,
-                output.DisplayName,
-                output.Description,
-                TestUid: null,
-                TestDisplayName: null,
-                SessionUid: null,
-                output.Kind))];
             await _protocol.SendMessageAsync(new FileArtifactMessages(
                 _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID),
                 _protocol.InstanceId,
-                messages)).ConfigureAwait(false);
+                [.. outputs])).ConfigureAwait(false);
         }
 
         return failed ? (int)ExitCode.GenericFailure : (int)ExitCode.Success;
@@ -149,9 +158,11 @@ internal sealed class ArtifactPostProcessingDispatcherTool(
     private Task DisplayWarningAsync(string message, CancellationToken cancellationToken)
         => _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(message), cancellationToken);
 
-    private async Task WarnAboutProcessorConflictsAsync(CancellationToken cancellationToken)
+    private async Task WarnAboutProcessorConflictsAsync(
+        IReadOnlyList<IArtifactPostProcessor> processors,
+        CancellationToken cancellationToken)
     {
-        foreach (KeyValuePair<string, string> conflict in FindProcessorConflicts(_processors))
+        foreach (KeyValuePair<string, string> conflict in FindProcessorConflicts(processors))
         {
             await _outputDevice.DisplayAsync(
                 this,

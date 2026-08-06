@@ -37,6 +37,11 @@
         <target state="translated">Almeno un test non è riuscito.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ExitCodeReasonCoverageThresholdFailed">
+        <source>One or more code coverage thresholds were not met.</source>
+        <target state="translated">Una o più soglie di copertura del codice non sono state raggiunte.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ExitCodeReasonDependentProcessExited">
         <source>A dependent process exited unexpectedly.</source>
         <target state="translated">Un processo dipendente è stato chiuso in modo imprevisto.</target>

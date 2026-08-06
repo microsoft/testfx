@@ -123,7 +123,20 @@ internal sealed partial class TestHostBuilder
         if (((TelemetryManager)Telemetry).BuildOTelProvider(serviceProvider) is { } otelService)
         {
             serviceProvider.AddService(otelService);
-            context.BuilderActivity = serviceProvider.GetServiceInternal<IPlatformOpenTelemetryService>()?.StartActivity("TestHostBuilder", startTime: buildBuilderStart);
+
+            // Nest the whole run under the trace context of whoever started this process (a CI pipeline step,
+            // `dotnet test`, an IDE, or the test host controller) so the run is not an orphan trace.
+            IPlatformOpenTelemetryService? platformOTelService = serviceProvider.GetServiceInternal<IPlatformOpenTelemetryService>();
+            if (platformOTelService is not null)
+            {
+                // Set before creating any span so every span picks it up, including the ones created with an
+                // explicit parent id (which do not inherit tracestate).
+                platformOTelService.RootTraceState = EnvironmentTraceContext.TryGetTraceState(systemEnvironment);
+                context.BuilderActivity = platformOTelService.StartActivity(
+                    TestingPlatformSemanticConventions.Activities.TestHostBuilder,
+                    parentId: EnvironmentTraceContext.TryGetParentId(systemEnvironment),
+                    startTime: buildBuilderStart);
+            }
         }
 
         _ = bool.TryParse(context.Configuration[PlatformConfigurationConstants.PlatformExitProcessOnUnhandledException], out bool isFileConfiguredToFailFast);
@@ -173,6 +186,11 @@ internal sealed partial class TestHostBuilder
 
         // Reuse the shared helper so the pipe-protocol detection stays in one place.
         bool isPipeProtocol = context.CommandLineHandler.HasDotnetTestServerOption();
+
+        // Register the single coverage accumulator before the output device is built so the terminal
+        // output device can read from it (rather than buffering its own copy of the coverage messages).
+        serviceProvider.AddService(new TestCoverageCapabilities());
+        serviceProvider.AddService(new TestCoverageResult(loggerFactoryProxy));
 
         context.ProxyOutputDevice = await _outputDisplay.BuildAsync(serviceProvider, context.IsJsonRpcProtocol, isPipeProtocol).ConfigureAwait(false);
 
@@ -326,7 +344,8 @@ internal sealed partial class TestHostBuilder
             serviceProvider.GetCommandLineOptions(),
             serviceProvider.GetEnvironment(),
             context.PoliciesService,
-            serviceProvider.GetPlatformOTelService()));
+            serviceProvider.GetPlatformOTelService(),
+            serviceProvider.GetRequiredService<ITestCoverageResult>()));
 
         ChatClientManager.BuildChatClients(serviceProvider);
 

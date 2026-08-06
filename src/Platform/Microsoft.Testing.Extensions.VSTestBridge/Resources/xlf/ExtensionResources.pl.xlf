@@ -57,6 +57,11 @@
         <target state="translated">Rejestratory Runsettings nie są obsługiwane przez element Microsoft.Testing.Platform i będą ignorowane.</target>
         <note>Do not localize {Locked="Runsettings"} or {Locked="Microsoft.Testing.Platform"}.</note>
       </trans-unit>
+      <trans-unit id="UnsupportedTestExecutionFilter">
+        <source>Test execution filter type '{0}' is not supported by '{1}'. Supported filter types are NopFilter, TestNodeUidListFilter, and an And CompositeTestExecutionFilter.</source>
+        <target state="translated">Typ filtru wykonywania testu „{0}” nie jest obsługiwany przez „{1}”. Obsługiwane typy filtrów to NopFilter, TestNodeUidListFilter oraz złożony filtr wykonania testu And CompositeTestExecutionFilter.</target>
+        <note>{0} is the unsupported filter type. {1} is the adapter name. {Locked="NopFilter"}{Locked="TestNodeUidListFilter"}{Locked="And"}{Locked="CompositeTestExecutionFilter"}</note>
+      </trans-unit>
       <trans-unit id="VSTestBridgedTestFrameworkSessionAlreadyCreatedErrorMessage">
         <source>The bridged framework supports only one session at a time. A session with UID {0} is already open.</source>
         <target state="translated">Platforma mostkowania obsługuje tylko jedną sesję naraz. Sesja z identyfikatorem UID {0} jest już otwarta.</target>

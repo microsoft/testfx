@@ -33,6 +33,41 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 internal static class MSTestTestNodeConverter
 {
     /// <summary>
+    /// Caches the parsed pieces of a <see cref="TestMethod"/>'s managed name.
+    /// </summary>
+    /// <remarks>
+    /// The parse is a pure function of <see cref="TestMethod.ManagedTypeName"/> and
+    /// <see cref="TestMethod.ManagedMethodName"/>, both immutable for the lifetime of the instance, and it scans the
+    /// managed method signature and allocates the namespace/type substrings. The same <see cref="TestMethod"/> is
+    /// converted several times per executed test (the in-progress node, then one result node per data row), so the
+    /// parse is paid once per test method rather than once per node.
+    /// <para>
+    /// The resulting <see cref="TestMethodIdentifierProperty"/> is cached alongside the parse only for
+    /// parameterless test methods. That type publicly exposes its
+    /// <see cref="TestMethodIdentifierProperty.ParameterTypeFullNames"/> array, so sharing one instance is safe
+    /// exactly when that array is empty and therefore cannot be mutated; every other field is an immutable string
+    /// or int. A parameterized method must keep getting a fresh property carrying a fresh array copy, otherwise a
+    /// consumer that writes to the array would corrupt every other node built from the same test method (see
+    /// <see cref="ParsedManagedName.ToProperty"/>).
+    /// </para>
+    /// <para>
+    /// The cache lives here rather than as a lazy property on <see cref="TestMethod"/> (the way
+    /// <see cref="TestMethod.ManagedTypeName"/> caches itself) because <see cref="TestMethodIdentifierProperty"/>
+    /// is a Microsoft.Testing.Platform type, and MSTestAdapter.PlatformServices - where <see cref="TestMethod"/>
+    /// lives - does not reference the platform at all. Even within this assembly the platform is only reachable
+    /// from this folder, through the file-level RS0030 suppression above (see this project's BannedSymbols.txt).
+    /// </para>
+    /// <para>
+    /// The table holds only weak references to its keys, so entries disappear as soon as the
+    /// <see cref="TestMethod"/> becomes unreachable. <c>GetValue</c> is thread-safe: concurrent misses may each run
+    /// the factory, but a single value is published to every caller.
+    /// </para>
+    /// </remarks>
+#pragma warning disable IDE0028 // ConditionalWeakTable is not collection-expression-constructible on .NET Framework (CS9174).
+    private static readonly ConditionalWeakTable<TestMethod, ParsedManagedName> ParsedManagedNameCache = new();
+#pragma warning restore IDE0028
+
+    /// <summary>
     /// Builds a discovered-state <see cref="TestNode"/> for a discovered test.
     /// </summary>
     public static TestNode ToDiscoveredTestNode(UnitTestElement element, bool isTrxEnabled)
@@ -53,6 +88,16 @@ internal static class MSTestTestNodeConverter
     }
 
     /// <summary>
+    /// Builds a state-neutral node update that signals execution completed without producing a result.
+    /// </summary>
+    public static TestNode ToEmptyResultTestNode(UnitTestElement element, bool isTrxEnabled)
+    {
+        TestNode testNode = CreateBaseTestNode(element, isTrxEnabled, displayNameOverride: null, out _);
+        testNode.Properties.Add(TestNodeExecutionCompletedProperty.CachedInstance);
+        return testNode;
+    }
+
+    /// <summary>
     /// Builds a completed <see cref="TestNode"/> carrying the outcome, timing, output and (optionally) TRX
     /// properties for a single executed test result.
     /// </summary>
@@ -68,6 +113,15 @@ internal static class MSTestTestNodeConverter
 
         AddOutcome(testNode, outcome, errorMessage, errorStackTrace);
 
+        // Surface the structured assertion values so consumers can render an expected-vs-actual diff. They
+        // cannot be read back from the reported exception: AddOutcome reports a synthetic
+        // MSTestTestNodeException built from the message and stack trace strings, not the original
+        // AssertFailedException.
+        if (result.ExceptionExpectedText is not null || result.ExceptionActualText is not null)
+        {
+            testNode.Properties.Add(new AssertionFailureProperty(result.ExceptionExpectedText, result.ExceptionActualText));
+        }
+
         if (isTrxEnabled)
         {
             AddTrxResultProperties(testNode, element, errorMessage, errorStackTrace, testMethodIdentifier);
@@ -76,6 +130,14 @@ internal static class MSTestTestNodeConverter
         AddMessagesAndOutput(testNode, result, isTrxEnabled);
 
         testNode.Properties.Add(new TimingProperty(new(startTime, endTime, result.Duration), []));
+
+        // Surface an in-process retry (MSTest's [Retry]) so the platform can tell the attempts of one test apart
+        // instead of seeing repeated results for the same uid. Only added when a retry actually happened, so a
+        // regular test node is byte-identical to before.
+        if (result.RetryAttemptNumber > 1 || result.IsSupersededRetryAttempt)
+        {
+            testNode.Properties.Add(new RetryAttemptProperty(result.RetryAttemptNumber, result.IsSupersededRetryAttempt));
+        }
 
         AddAttachments(testNode, result);
 
@@ -136,30 +198,84 @@ internal static class MSTestTestNodeConverter
     {
         // NOTE: ManagedMethodName, in case of MSTest, carries the parameter types, so we prefer it to display the
         // parameter types in Test Explorer. This mirrors what the VSTest bridge did in AddAdditionalProperties.
-        if (!testMethod.HasManagedMethodAndTypeProperties)
+        if (!testMethod.HasManagedMethodAndTypeProperties || StringEx.IsNullOrEmpty(testMethod.ManagedTypeName))
         {
             return null;
         }
 
-        string? managedType = testMethod.ManagedTypeName;
-        string? managedMethod = testMethod.ManagedMethodName;
-        if (StringEx.IsNullOrEmpty(managedType) || StringEx.IsNullOrEmpty(managedMethod))
-        {
-            return null;
-        }
-
-        ManagedNameParser.ParseManagedMethodName(managedMethod, out string methodName, out int arity, out string[]? parameterTypes);
-        parameterTypes ??= [];
-
-        int lastIndexOfDot = managedType.LastIndexOf('.');
-        string @namespace = lastIndexOfDot == -1 ? string.Empty : managedType[..lastIndexOfDot];
-        string typeName = lastIndexOfDot == -1 ? managedType : managedType[(lastIndexOfDot + 1)..];
-
-        // AssemblyFullName and ReturnTypeFullName are not carried by the neutral model today; kept empty to match
-        // the current (bridge) behavior. Populating them is a follow-up enabled by this native path.
-        var testMethodIdentifier = new TestMethodIdentifierProperty(assemblyFullName: string.Empty, @namespace, typeName, methodName, arity, parameterTypes, returnTypeFullName: string.Empty);
+        // The method group conversion is cached by the compiler, so the lookup does not allocate a delegate.
+        TestMethodIdentifierProperty testMethodIdentifier = ParsedManagedNameCache.GetValue(testMethod, ParsedManagedName.Parse).ToProperty();
         testNode.Properties.Add(testMethodIdentifier);
         return testMethodIdentifier;
+    }
+
+    /// <summary>
+    /// The parsed pieces of a <see cref="TestMethod"/>'s managed type and method names, cached by
+    /// <see cref="ParsedManagedNameCache"/>.
+    /// </summary>
+    private sealed class ParsedManagedName
+    {
+        private readonly string _namespace;
+        private readonly string _typeName;
+        private readonly string _methodName;
+        private readonly int _arity;
+        private readonly string[] _parameterTypeFullNames;
+
+        // Non-null exactly for parameterless methods, where the property is fully immutable and can therefore be
+        // handed to every node. Built eagerly so the field can stay readonly: ToProperty() is called immediately
+        // after every parse, so nothing is built that would not have been built anyway, and a lazy `??=` would
+        // make the shared instance depend on call ordering. See ToProperty().
+        private readonly TestMethodIdentifierProperty? _parameterlessProperty;
+
+        private ParsedManagedName(string @namespace, string typeName, string methodName, int arity, string[] parameterTypeFullNames)
+        {
+            _namespace = @namespace;
+            _typeName = typeName;
+            _methodName = methodName;
+            _arity = arity;
+            _parameterTypeFullNames = parameterTypeFullNames;
+
+            // AssemblyFullName and ReturnTypeFullName are not carried by the neutral model today; kept empty to
+            // match the current (bridge) behavior. Populating them is a follow-up enabled by this native path.
+            if (parameterTypeFullNames.Length == 0)
+            {
+                _parameterlessProperty = new TestMethodIdentifierProperty(
+                    assemblyFullName: string.Empty, @namespace, typeName, methodName, arity, parameterTypeFullNames, returnTypeFullName: string.Empty);
+            }
+        }
+
+        public static ParsedManagedName Parse(TestMethod testMethod)
+        {
+            // AddTestMethodIdentifier is the only caller and has already validated both managed names.
+            string managedType = testMethod.ManagedTypeName!;
+            string managedMethod = testMethod.ManagedMethodName!;
+
+            ManagedNameParser.ParseManagedMethodName(managedMethod, out string methodName, out int arity, out string[]? parameterTypes);
+
+            int lastIndexOfDot = managedType.LastIndexOf('.');
+            string @namespace = lastIndexOfDot == -1 ? string.Empty : managedType[..lastIndexOfDot];
+            string typeName = lastIndexOfDot == -1 ? managedType : managedType[(lastIndexOfDot + 1)..];
+
+            return new ParsedManagedName(@namespace, typeName, methodName, arity, parameterTypes ?? []);
+        }
+
+        public TestMethodIdentifierProperty ToProperty()
+        {
+            // A parameterless property is fully immutable - every field is a string or int, and the empty array
+            // cannot be mutated - so the same instance is handed to every node. This is the common case, and the
+            // ParsedManagedName is cached per TestMethod, so the several nodes one executed test produces (the
+            // in-progress node, then one result node per data row and per in-process retry attempt) share it.
+            if (_parameterlessProperty is not null)
+            {
+                return _parameterlessProperty;
+            }
+
+            // A parameterized method must keep getting its own parameter array. TestMethodIdentifierProperty
+            // exposes it publicly, so aliasing one array across nodes would let a consumer that writes to it
+            // corrupt every other node built from the same test method.
+            return new TestMethodIdentifierProperty(
+                assemblyFullName: string.Empty, _namespace, _typeName, _methodName, _arity, [.. _parameterTypeFullNames], returnTypeFullName: string.Empty);
+        }
     }
 
     private static void AddOutcome(TestNode testNode, TestOutcome outcome, string? errorMessage, string? errorStackTrace)

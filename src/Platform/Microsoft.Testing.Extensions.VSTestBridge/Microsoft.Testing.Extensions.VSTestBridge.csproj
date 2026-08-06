@@ -42,11 +42,9 @@
 
   <!-- NuGet properties -->
   <PropertyGroup>
-    <PackageDescription>
-      <![CDATA[Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
+    <PackageDescription><![CDATA[This package provides a bridge integration for test adapters wanting to target both VSTest and Microsoft.Testing.Platform test platforms.
 
-This package provides a bridge integration for test adapters wanting to target both VSTest and Microsoft.Testing.Platform test platforms.]]>
-    </PackageDescription>
+$(CommonProductDescription)]]></PackageDescription>
   </PropertyGroup>
 
   <ItemGroup>

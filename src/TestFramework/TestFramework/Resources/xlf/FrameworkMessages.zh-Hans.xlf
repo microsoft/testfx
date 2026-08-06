@@ -537,9 +537,19 @@ Actual: {2}</source>
         <target state="translated">属性‘TestContext.{0}’与当前测试相关，在程序集或类固定例程期间不可用。</target>
         <note>{0} is the {Locked="TestContext"} property name. Do not localize the API prefix {Locked="TestContext."}.</note>
       </trans-unit>
+      <trans-unit id="InvalidDependsOnTestMethodName">
+        <source>The test method name of a [DependsOn] must be a non-empty, non-whitespace string.</source>
+        <target state="translated">[DependsOn] 的测试方法名称必须是非空、非空白字符串。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InvalidGitHubUrl">
         <source>Invalid GitHub ticket URL</source>
         <target state="translated">GitHub 票证 URL 无效</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidResourceLockResource">
+        <source>The resource key of a [ResourceLock] must be a non-empty, non-whitespace string. An empty key would silently serialize unrelated tests that also use an empty key.</source>
+        <target state="translated">[ResourceLock] 的资源键必须是非空、非空白字符串。空键会静默序列化同样使用空键的不相关测试。</target>
         <note />
       </trans-unit>
       <trans-unit id="IsEmptyFailedSummary">

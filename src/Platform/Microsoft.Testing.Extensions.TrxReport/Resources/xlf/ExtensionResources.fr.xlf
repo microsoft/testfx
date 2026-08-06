@@ -4,18 +4,23 @@
     <body>
       <trans-unit id="InvalidTestApplicationBuilderType">
         <source>TRX report generation and merge tools require a test application builder that supports artifact post-processing</source>
-        <target state="new">TRX report generation and merge tools require a test application builder that supports artifact post-processing</target>
+        <target state="translated">Les outils de génération et de fusion de rapports TRX nécessitent un générateur d’application de test qui prend en charge le traitement ultérieurs des artefacts</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxArtifactPostProcessorDescription">
         <source>Merges TRX reports produced by Microsoft.Testing.Extensions.TrxReport</source>
-        <target state="new">Merges TRX reports produced by Microsoft.Testing.Extensions.TrxReport</target>
+        <target state="translated">Permet de fusionner les rapports TRX produits par Microsoft.Testing.Extensions.TrxReport</target>
         <note>Do not localize format name {Locked="TRX"} or assembly name {Locked="Microsoft.Testing.Extensions.TrxReport"}.</note>
       </trans-unit>
       <trans-unit id="TrxArtifactPostProcessorDisplayName">
         <source>TRX report merger</source>
-        <target state="new">TRX report merger</target>
+        <target state="translated">Fusion du rapport TRX</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
+      </trans-unit>
+      <trans-unit id="TrxAttachmentCopyFailed">
+        <source>Unable to copy attachment '{0}' into the TRX results directory. The attachment will be skipped. Reason: {1}.</source>
+        <target state="translated">Impossible de copier la pièce jointe «{0}» dans le répertoire des résultats TRX. La pièce jointe sera ignorée. Raison : {1}.</target>
+        <note>{0} is the full path of the attachment that could not be copied. {1} is the name of the exception type that was thrown, e.g. 'UnauthorizedAccessException'. {Locked="TRX"}</note>
       </trans-unit>
       <trans-unit id="TrxComparerToolBaselineFileOptionDescription">
         <source>The baseline TRX file</source>
@@ -54,47 +59,47 @@
       </trans-unit>
       <trans-unit id="TrxMergeToolDescription">
         <source>Merges multiple TRX files into one from the command line</source>
-        <target state="new">Merges multiple TRX files into one from the command line</target>
+        <target state="translated">Permet de fusionner plusieurs fichiers TRX en un seul depuis la ligne de commande</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolDisplayName">
         <source>TRX report merge tool</source>
-        <target state="new">TRX report merge tool</target>
+        <target state="translated">Outil de fusion du rapport TRX</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolInputOptionDescription">
         <source>Two or more input TRX file paths</source>
-        <target state="new">Two or more input TRX file paths</target>
+        <target state="translated">Deux chemins d’accès ou plus vers des fichiers TRX d’entrée</target>
         <note>Do not localize option name {Locked="--input"} or format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolInvalidInputs">
         <source>'--input' expects two or more existing TRX file paths</source>
-        <target state="new">'--input' expects two or more existing TRX file paths</target>
+        <target state="translated">« --input » attend deux chemins d’accès ou plus vers des fichiers TRX existants</target>
         <note>Do not localize option name {Locked="--input"} or format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolInvalidOutput">
         <source>'--output-trx' expects one TRX file path</source>
-        <target state="new">'--output-trx' expects one TRX file path</target>
+        <target state="translated">« --output-trx » attend un chemin d’accès à un fichier TRX</target>
         <note>Do not localize option name {Locked="--output-trx"} or format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolOutputOptionDescription">
         <source>The output TRX file path</source>
-        <target state="new">The output TRX file path</target>
+        <target state="translated">Le chemin d’accès vers le fichier TRX de sortie</target>
         <note>Do not localize option name {Locked="--output-trx"} or format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergedArtifactDescription">
         <source>{0} TRX files merged</source>
-        <target state="new">{0} TRX files merged</target>
+        <target state="translated">{0} fichiers TRX fusionnés</target>
         <note>{0} is the number of merged files. Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergedArtifactDisplayName">
         <source>TRX report (merged)</source>
-        <target state="new">TRX report (merged)</target>
+        <target state="translated">Rapport TRX (fusionné)</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergedRunName">
         <source>Merged TRX report</source>
-        <target state="new">Merged TRX report</target>
+        <target state="translated">Rapport TRX fusionné</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportArtifactDescription">

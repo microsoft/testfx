@@ -164,24 +164,27 @@ internal sealed class CrashDumpSequenceLogger : IDataConsumer, ITestSessionLifet
         }
 
         TestNodeStateProperty? state = update.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
-        if (state is null)
+        bool executionCompleted = update.TestNode.Properties.Any<TestNodeExecutionCompletedProperty>();
+        if (state is null && !executionCompleted)
         {
             return;
         }
 
-        string? line = state switch
-        {
-            InProgressTestNodeStateProperty => FormatLine(StartedEvent, _clock.UtcNow, update.TestNode.Uid, update.TestNode.DisplayName),
+        string? line = executionCompleted
+            ? FormatLine(EndedEvent, _clock.UtcNow, update.TestNode.Uid, "Completed")
+            : state switch
+            {
+                InProgressTestNodeStateProperty => FormatLine(StartedEvent, _clock.UtcNow, update.TestNode.Uid, update.TestNode.DisplayName),
 #pragma warning disable CS0618, MTP0001 // Type or member is obsolete - keep parity with HangDumpActivityIndicator's terminal-state set.
-            PassedTestNodeStateProperty => FormatLine(EndedEvent, _clock.UtcNow, update.TestNode.Uid, "Passed"),
-            FailedTestNodeStateProperty => FormatLine(EndedEvent, _clock.UtcNow, update.TestNode.Uid, "Failed"),
-            ErrorTestNodeStateProperty => FormatLine(EndedEvent, _clock.UtcNow, update.TestNode.Uid, "Error"),
-            SkippedTestNodeStateProperty => FormatLine(EndedEvent, _clock.UtcNow, update.TestNode.Uid, "Skipped"),
-            CancelledTestNodeStateProperty => FormatLine(EndedEvent, _clock.UtcNow, update.TestNode.Uid, "Cancelled"),
-            TimeoutTestNodeStateProperty => FormatLine(EndedEvent, _clock.UtcNow, update.TestNode.Uid, "Timeout"),
+                PassedTestNodeStateProperty => FormatLine(EndedEvent, _clock.UtcNow, update.TestNode.Uid, "Passed"),
+                FailedTestNodeStateProperty => FormatLine(EndedEvent, _clock.UtcNow, update.TestNode.Uid, "Failed"),
+                ErrorTestNodeStateProperty => FormatLine(EndedEvent, _clock.UtcNow, update.TestNode.Uid, "Error"),
+                SkippedTestNodeStateProperty => FormatLine(EndedEvent, _clock.UtcNow, update.TestNode.Uid, "Skipped"),
+                CancelledTestNodeStateProperty => FormatLine(EndedEvent, _clock.UtcNow, update.TestNode.Uid, "Cancelled"),
+                TimeoutTestNodeStateProperty => FormatLine(EndedEvent, _clock.UtcNow, update.TestNode.Uid, "Timeout"),
 #pragma warning restore CS0618, MTP0001
-            _ => null,
-        };
+                _ => null,
+            };
 
         if (line is null)
         {

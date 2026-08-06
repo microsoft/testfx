@@ -1,5 +1,4 @@
 ---
-source: githubnext/agentics/workflows/malicious-code-scan.md@main
 description: Automated security scan that reviews code changes from the last 3 days for suspicious patterns indicating malicious or agentic threats
 
 on:
@@ -29,6 +28,7 @@ safe-outputs:
   threat-detection:
     continue-on-error: true
 
+source: githubnext/agentics/workflows/malicious-code-scan.md@main
 ---
 
 # Malicious Code Scan Agent

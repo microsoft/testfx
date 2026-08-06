@@ -75,7 +75,8 @@ internal sealed partial class Json
                 (JsonRpcStrings.MultiRequestSupport, capabilities.MultiRequestSupport),
                 (JsonRpcStrings.VSTestProviderSupport, capabilities.VSTestProviderSupport),
                 (JsonRpcStrings.AttachmentsSupport, capabilities.SupportsAttachments),
-                (JsonRpcStrings.MultiConnectionProvider, capabilities.MultiConnectionProvider)
+                (JsonRpcStrings.MultiConnectionProvider, capabilities.MultiConnectionProvider),
+                (JsonRpcStrings.SupportsTestCoverageMessages, ServerTestingCapabilities.SupportsTestCoverageMessages)
         ]);
 
         serializers[typeof(Artifact)] = new JsonObjectSerializer<Artifact>(artifact =>

@@ -6,14 +6,16 @@ using Microsoft.Testing.Platform.Builder;
 namespace Microsoft.Testing.Extensions.PackagedApp;
 
 /// <summary>
-/// This class is used by Microsoft.Testing.Platform.MSBuild to hook into the Testing Platform Builder to add Windows test host deployment support (non-packaged loose layouts such as unpackaged WinUI, and packaged, full-trust MSIX desktop apps launched by AUMID activation).
+/// This class is used by Microsoft.Testing.Platform.MSBuild to hook into the Testing Platform Builder to add Windows test host launch support (packaged, full-trust MSIX desktop apps activated by AUMID, and — when opted in — non-packaged loose layouts deployed to an isolated directory).
 /// </summary>
 public static class TestingPlatformBuilderHook
 {
     /// <summary>
-    /// Adds Windows test host deployment support to the Testing Platform Builder: it deploys and
-    /// launches non-packaged (loose-layout) hosts, and — in the Windows build — registers and activates
-    /// packaged, full-trust MSIX desktop hosts by Application User Model ID (see https://github.com/microsoft/testfx/issues/9933).
+    /// Adds Windows test host launch support to the Testing Platform Builder: it registers and activates
+    /// packaged, full-trust MSIX desktop hosts by Application User Model ID in the Windows build (see
+    /// https://github.com/microsoft/testfx/issues/9933), and deploys and launches an opted-in
+    /// non-packaged (loose-layout) host. Because this hook runs for anyone who merely references the
+    /// package, the launcher stays disabled unless the test application is a packaged layout.
     /// </summary>
     /// <param name="testApplicationBuilder">The test application builder.</param>
     /// <param name="_">The command line arguments.</param>

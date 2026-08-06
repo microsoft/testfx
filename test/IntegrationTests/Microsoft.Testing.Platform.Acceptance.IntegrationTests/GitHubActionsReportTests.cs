@@ -78,19 +78,59 @@ public sealed class GitHubActionsReportTests : AcceptanceTestBase<GitHubActionsR
         Assert.Contains("MinimumExpectedTestsPolicyViolation", summary);
     }
 
-    private async Task<(TestHostResult Result, string Summary)> RunAsync(string tfm, string testMode, string extraArgs = "")
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task WhenTestNodesCarryAFileLocation_AnnotationsArePinnedToTheDeclaredSource(string tfm)
+    {
+        // Neither node carries an exception, so there is no stack trace to resolve: the annotations can only be
+        // pinned by falling back to the location the test framework reported for the test itself.
+        string workspace = Path.Combine(TestContext.TestRunDirectory!, $"gh-workspace-{Guid.NewGuid():N}");
+        string sourceFile = Path.Combine(workspace, "src", "MyTests.cs");
+        Directory.CreateDirectory(Path.GetDirectoryName(sourceFile)!);
+        File.WriteAllText(sourceFile, "// test source");
+
+        (TestHostResult result, _) = await RunAsync(
+            tfm,
+            testMode: "location",
+            extraEnvironmentVariables: new Dictionary<string, string?>
+            {
+                ["GITHUB_WORKSPACE"] = workspace,
+                ["GH_TEST_FILE"] = sourceFile,
+            });
+
+        result.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+
+        result.AssertOutputContains("::error file=src/MyTests.cs,line=7,col=1,title=Test failed%3A FailingTest::Expected 1 but got 2");
+        result.AssertOutputContains("::warning file=src/MyTests.cs,line=9,col=1,title=Test skipped%3A SkippedTest::Not today");
+    }
+
+    private async Task<(TestHostResult Result, string Summary)> RunAsync(
+        string tfm,
+        string testMode,
+        string extraArgs = "",
+        Dictionary<string, string?>? extraEnvironmentVariables = null)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         string stepSummaryPath = Path.Combine(TestContext.TestRunDirectory!, $"gh-step-summary-{Guid.NewGuid():N}.md");
 
+        var environmentVariables = new Dictionary<string, string?>
+        {
+            ["GITHUB_ACTIONS"] = "true",
+            ["GITHUB_STEP_SUMMARY"] = stepSummaryPath,
+            ["GH_TEST_MODE"] = testMode,
+        };
+
+        if (extraEnvironmentVariables is not null)
+        {
+            foreach (KeyValuePair<string, string?> variable in extraEnvironmentVariables)
+            {
+                environmentVariables[variable.Key] = variable.Value;
+            }
+        }
+
         TestHostResult result = await testHost.ExecuteAsync(
             $"--report-gh {extraArgs}".Trim(),
-            environmentVariables: new Dictionary<string, string?>
-            {
-                ["GITHUB_ACTIONS"] = "true",
-                ["GITHUB_STEP_SUMMARY"] = stepSummaryPath,
-                ["GH_TEST_MODE"] = testMode,
-            },
+            environmentVariables: environmentVariables,
             cancellationToken: TestContext.CancellationToken);
 
         string summary = File.Exists(stepSummaryPath) ? File.ReadAllText(stepSummaryPath) : string.Empty;
@@ -156,9 +196,11 @@ public class DummyTestFramework : ITestFramework, IDataProducer
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
         // The behavior under test is selected by the GH_TEST_MODE environment variable set by the acceptance test:
-        //   "zero" -> publish no tests (exit code ZeroTests)
-        //   "fail" -> publish a single failing test (exit code AtLeastOneTestFailed)
-        //   "pass" -> publish a single passing test (exit code Success, unless --minimum-expected-tests forces a violation)
+        //   "zero"     -> publish no tests (exit code ZeroTests)
+        //   "fail"     -> publish a single failing test (exit code AtLeastOneTestFailed)
+        //   "pass"     -> publish a single passing test (exit code Success, unless --minimum-expected-tests forces a violation)
+        //   "location" -> publish a failing and a skipped test, both carrying a TestFileLocationProperty and no
+        //                 exception, so the annotations can only be pinned through the declared-location fallback
         string mode = Environment.GetEnvironmentVariable("GH_TEST_MODE") ?? "pass";
 
         if (mode == "fail")
@@ -170,6 +212,32 @@ public class DummyTestFramework : ITestFramework, IDataProducer
                     Uid = "test-1",
                     DisplayName = "FailingTest",
                     Properties = new PropertyBag(new FailedTestNodeStateProperty("Expected 1 but got 2")),
+                }));
+        }
+        else if (mode == "location")
+        {
+            string file = Environment.GetEnvironmentVariable("GH_TEST_FILE")!;
+
+            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(
+                context.Request.Session.SessionUid,
+                new TestNode()
+                {
+                    Uid = "test-1",
+                    DisplayName = "FailingTest",
+                    Properties = new PropertyBag(
+                        new FailedTestNodeStateProperty("Expected 1 but got 2"),
+                        new TestFileLocationProperty(file, new LinePositionSpan(new LinePosition(7, -1), new LinePosition(7, -1)))),
+                }));
+
+            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(
+                context.Request.Session.SessionUid,
+                new TestNode()
+                {
+                    Uid = "test-2",
+                    DisplayName = "SkippedTest",
+                    Properties = new PropertyBag(
+                        new SkippedTestNodeStateProperty("Not today"),
+                        new TestFileLocationProperty(file, new LinePositionSpan(new LinePosition(9, -1), new LinePosition(9, -1)))),
                 }));
         }
         else if (mode == "pass")

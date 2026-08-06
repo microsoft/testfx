@@ -13,6 +13,9 @@ internal sealed class MessageBusProxy : BaseMessageBus, IMessageBus
     public override IDataConsumer[] DataConsumerServices
         => _messageBus is null ? [] : _messageBus.DataConsumerServices;
 
+    public override IEnumerable<IDataConsumer> ConsumersStillRunning
+        => _messageBus is null ? [] : _messageBus.ConsumersStillRunning;
+
     public override async Task InitAsync()
     {
         EnsureMessageBusAvailable();
@@ -34,9 +37,17 @@ internal sealed class MessageBusProxy : BaseMessageBus, IMessageBus
         await _messageBus.DrainDataAsync().ConfigureAwait(false);
     }
 
+    // Unlike the other members we don't require the concrete bus to be available here. Disabling is part of the
+    // shutdown handshake the host performs unconditionally (including when the run was canceled or failed before
+    // the bus was ever built), and an unbuilt bus has nothing to disable. This mirrors Dispose and
+    // DataConsumerServices, which are already tolerant of a null bus.
     public override async Task DisableAsync()
     {
-        EnsureMessageBusAvailable();
+        if (_messageBus is null)
+        {
+            return;
+        }
+
         await _messageBus.DisableAsync().ConfigureAwait(false);
     }
 

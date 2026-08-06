@@ -19,6 +19,15 @@ public interface ITestHostOrchestratorApplicationLifetime : ITestHostOrchestrato
     /// <summary>
     /// Executes after the orchestrator runs.
     /// </summary>
+    /// <remarks>
+    /// Also invoked when the orchestration was canceled or failed, so that whatever
+    /// <see cref="BeforeRunAsync(CancellationToken)"/> acquired can still be released. Implementations
+    /// must therefore tolerate being called when their <see cref="BeforeRunAsync(CancellationToken)"/>
+    /// never ran or did not complete, must be safe to call once per run regardless of outcome, and should
+    /// not assume <paramref name="cancellationToken"/> is still usable — it may already be canceled.
+    /// Implementations should not throw from this method. When the orchestration was canceled or failed,
+    /// exceptions thrown from this method are logged and suppressed so they cannot mask the original outcome.
+    /// </remarks>
     /// <param name="exitCode">The exit code of the orchestrator.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A task representing the asynchronous operation.</returns>

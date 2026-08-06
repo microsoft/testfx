@@ -57,6 +57,11 @@
         <target state="translated">Runsettings günlükçüleri Microsoft.Testing.Platform tarafından desteklenmiyor ve yoksayılacak</target>
         <note>Do not localize {Locked="Runsettings"} or {Locked="Microsoft.Testing.Platform"}.</note>
       </trans-unit>
+      <trans-unit id="UnsupportedTestExecutionFilter">
+        <source>Test execution filter type '{0}' is not supported by '{1}'. Supported filter types are NopFilter, TestNodeUidListFilter, and an And CompositeTestExecutionFilter.</source>
+        <target state="translated">‘{0}’ test yürütme filtresi türü, ‘{1}’ tarafından desteklenmemektedir. Desteklenen filtre türleri şunlardır: NopFilter, TestNodeUidListFilter ve bir And CompositeTestExecutionFilter.</target>
+        <note>{0} is the unsupported filter type. {1} is the adapter name. {Locked="NopFilter"}{Locked="TestNodeUidListFilter"}{Locked="And"}{Locked="CompositeTestExecutionFilter"}</note>
+      </trans-unit>
       <trans-unit id="VSTestBridgedTestFrameworkSessionAlreadyCreatedErrorMessage">
         <source>The bridged framework supports only one session at a time. A session with UID {0} is already open.</source>
         <target state="translated">Köprülü çerçeve aynı anda yalnızca bir oturumu destekler. UID'si {0} olan bir oturum zaten açık.</target>

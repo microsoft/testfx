@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#pragma warning disable CS8618 // Properties below are set by MSBuild.
-
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.Testing.Platform.Helpers;
@@ -53,19 +51,19 @@ public sealed class TestingPlatformSelfRegisteredExtensions : Build.Utilities.Ta
     /// Gets or sets the path to the source file.
     /// </summary>
     [Required]
-    public ITaskItem SelfRegisteredExtensionsSourcePath { get; set; }
+    public required ITaskItem SelfRegisteredExtensionsSourcePath { get; set; }
 
     /// <summary>
     /// Gets or sets the language of the source file.
     /// </summary>
     [Required]
-    public ITaskItem Language { get; set; }
+    public required ITaskItem Language { get; set; }
 
     /// <summary>
     /// Gets or sets the builder hooks.
     /// </summary>
     [Required]
-    public ITaskItem[] SelfRegisteredExtensionsBuilderHook { get; set; }
+    public required ITaskItem[] SelfRegisteredExtensionsBuilderHook { get; set; }
 
     /// <summary>
     /// Gets or sets the root namespace.
@@ -73,10 +71,11 @@ public sealed class TestingPlatformSelfRegisteredExtensions : Build.Utilities.Ta
     public string? RootNamespace { get; set; }
 
     /// <summary>
-    /// Gets or sets the path to the generated file.
+    /// Gets or sets the path to the generated file. It stays <see langword="null"/> when the project language is
+    /// not supported, in which case the task produces no output item.
     /// </summary>
     [Output]
-    public ITaskItem SelfRegisteredExtensionsGeneratedFilePath { get; set; }
+    public ITaskItem? SelfRegisteredExtensionsGeneratedFilePath { get; set; }
 
     private readonly string _expectedItemSpec = """
 Expected item spec:
@@ -130,7 +129,7 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
                 !Language.ItemSpec.Equals(VBLanguageSymbol, StringComparison.OrdinalIgnoreCase) &&
                 !Language.ItemSpec.Equals(FSharpLanguageSymbol, StringComparison.OrdinalIgnoreCase))
             {
-                SelfRegisteredExtensionsGeneratedFilePath = default!;
+                SelfRegisteredExtensionsGeneratedFilePath = null;
                 Log.LogError($"Language '{Language.ItemSpec}' is not supported.");
             }
             else

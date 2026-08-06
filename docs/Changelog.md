@@ -6,19 +6,45 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## <a name="4.4.0" />[4.4.0] - UNRELEASED
 
-See full log [of v4.3.2...v4.4.0](https://github.com/microsoft/testfx/compare/v4.3.2...v4.4.0)
+See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4.3.3...v4.4.0)
 
 ### Added
 
+* Add `[DependsOn]` and equivalent `testconfig.json` declarations (`mstest:execution:dependencies`, with `chains` for straight sequences and `nodes` for fan-in/fan-out) to declare that a test runs after one or more other tests. Declarations form a directed acyclic graph rather than a flat order, so tests that share a prerequisite still run in parallel with each other; a test whose prerequisite does not pass is skipped (transitively) unless it sets `ProceedOnFailure`, and dependency cycles are reported before the run starts. The attribute works on both hosts; the `testconfig.json` declarations are Microsoft.Testing.Platform only. See [RFC 022](RFCs/022-Test-Dependencies.md)
 * Add dedicated timeout configuration for `[GlobalTestInitialize]` / `[GlobalTestCleanup]` fixtures via the `timeout:globalTestInitialize` / `timeout:globalTestCleanup` `testconfig.json` keys (RunSettings XML: `GlobalTestInitializeTimeout` / `GlobalTestCleanupTimeout`). These fall back to the per-test `testInitialize` / `testCleanup` timeouts when unset, and global fixture timeout/cancellation diagnostics now use dedicated messages ("Global test initialize/cleanup method ...") in [#9985](https://github.com/microsoft/testfx/issues/9985)
+* Add a code fix for MSTEST0041 that adds `[TestClass]` to a type decorated with a `ConditionBaseAttribute`-derived attribute in [#10283](https://github.com/microsoft/testfx/pull/10283)
+* Add MSTEST0079, which suggests replacing a `RuntimeInformation.ProcessArchitecture` guard at the top of a test method (early `return` or `Assert.Inconclusive`) with `[ArchitectureCondition]`, along with a code fix in [#10271](https://github.com/microsoft/testfx/issues/10271)
+* Add MSTEST0080, which suggests replacing a null check on the `CI` environment variable at the top of a test method (early `return` or `Assert.Inconclusive`) with `[CICondition]`, along with a code fix in [#10271](https://github.com/microsoft/testfx/issues/10271)
+* Add the experimental generic `[assembly: TestFilterProvider<TFilter>]` attribute, a type-safe alternative to `[assembly: TestFilterProvider(typeof(TFilter))]` whose `ITestFilter, new()` constraints let the compiler enforce the filter contract. It is only available when targeting .NET, because .NET Framework reflection cannot materialize a generic custom attribute; multi-targeted projects can select the shape with `#if NET`. Also add MSTEST0081, which validates the filter type passed to the non-generic attribute (non-generic, instantiable, implements `ITestFilter`, has a public parameterless constructor, and at most one provider per assembly) at build time instead of failing the run with `UTA073`-`UTA077` and `UTA079` in [#10318](https://github.com/microsoft/testfx/pull/10318)
 
 ### Changed
 
+* Report every `[Retry]` attempt to the test host instead of discarding all but the last one. A retried test now shows its attempts in the terminal (`failed (try 1) MyTest`), is reconciled in the run summary's `flaky:` / `retried:` lines and listed by name under `Flaky tests:`, and is finally detected as `flaky` (with `retries` / `retryAttempts[]`) by the CTRF report. Superseded attempts do not affect the process exit code and are filtered out of the TRX and JUnit reports, so those keep one row per test in [#10292](https://github.com/microsoft/testfx/issues/10292)
 * Make MSTest's Microsoft.Testing.Platform path native-only: `MSTest.TestAdapter` no longer depends on `Microsoft.Testing.Extensions.VSTestBridge` and now references `Microsoft.Testing.Extensions.TrxReport.Abstractions`, `Microsoft.Testing.Extensions.Telemetry`, and `Microsoft.TestPlatform.ObjectModel` directly by @Evangelink in [#9755](https://github.com/microsoft/testfx/pull/9755)
 
 ### Fixed
 
 * Fix `CloneWithUpdatedSource` mutating `this` instead of the clone by @Evangelink in [#9581](https://github.com/microsoft/testfx/pull/9581)
+* Fix MSTEST0024 not reporting coalesce (`s_testContext ??= tc`) and deconstruction (`(s_testContext, _) = (tc, 0)`) assignments of a `TestContext` parameter to a static member. Projects treating warnings as errors may see new MSTEST0024 diagnostics on code that previously went unreported by @Evangelink in [#10244](https://github.com/microsoft/testfx/pull/10244)
+
+## <a name="4.3.3" />[4.3.3] - 2026-07-28
+
+See full log [of v4.3.2...v4.3.3](https://github.com/microsoft/testfx/compare/v4.3.2...v4.3.3)
+
+### Changed
+
+* Produce portable PDBs for official builds so symbols can be published to symbol servers by @Evangelink in [#10006](https://github.com/microsoft/testfx/pull/10006)
+
+### Fixed
+
+* Restore compatibility between Microsoft.Testing.Platform and the deprecated MSTest.Engine used by source-generated test projects by @Evangelink in [#9938](https://github.com/microsoft/testfx/pull/9938)
+* Fix MSTEST0037 incorrectly rewriting non-generic `IDictionary.Contains` calls by @Evangelink in [#9968](https://github.com/microsoft/testfx/pull/9968)
+* Fix MSTEST0065 incorrectly reporting on collection types that declare their own equality by @Evangelink in [#9978](https://github.com/microsoft/testfx/pull/9978)
+* Fix self-comparison analyzers incorrectly reporting `Assert.AreEqual` calls that use user-defined equality by @Evangelink in [#10008](https://github.com/microsoft/testfx/pull/10008)
+* Regenerate MSTest.Sdk source-generated entry points and extension registrations after the MSBuild task assembly is updated by @Evangelink in [#10082](https://github.com/microsoft/testfx/pull/10082)
+* Fix MSTEST0063 failing to validate constructors on classes using derived `[TestClass]` attributes, including `[STATestClass]` by @Evangelink in [#9851](https://github.com/microsoft/testfx/pull/9851)
+* Keep `[TestProperty]`, test categories and host-provided properties scoped to the individual test lifecycle by @Evangelink in [#10080](https://github.com/microsoft/testfx/pull/10080)
+* Restore bounded string difference indicators in `Assert.AreEqual` failure messages by @Evangelink in [#10145](https://github.com/microsoft/testfx/pull/10145)
 
 ## <a name="4.3.2" />[4.3.2] - 2026-07-13
 

@@ -6,13 +6,55 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## <a name="2.4.0" />[2.4.0] - UNRELEASED
 
-See full log [of v4.3.2...v4.4.0](https://github.com/microsoft/testfx/compare/v4.3.2...v4.4.0)
+See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4.3.3...v4.4.0)
 
 ### Added
 
 * Add `--report-azdo-groups <on|off>` and `--report-azdo-annotations <on|off>` toggles to Azure DevOps report extension by @Evangelink in [#9542](https://github.com/microsoft/testfx/pull/9542)
 * Re-print errored assemblies in dotnet test end-of-run recap by @Evangelink in [#9545](https://github.com/microsoft/testfx/pull/9545)
 * Add server-initiated session cancellation to the dotnet test IPC protocol by @Evangelink in [#9549](https://github.com/microsoft/testfx/pull/9549)
+* Add `RetryAttemptProperty`, a `TestNode` property that lets a test framework report several in-process attempts of the same test under one test node uid (`AttemptNumber` plus `IsSuperseded`). The terminal reporter annotates the attempts (`failed (try 1) MyTest`) and counts the test once, the process exit code and the TRX / JUnit / Azure DevOps reports ignore superseded attempts, and the CTRF report collapses them into `retries` / `retryAttempts[]` / `flaky` in [#10292](https://github.com/microsoft/testfx/issues/10292)
+* Report the Azure DevOps test run URL when `--publish-azdo-test-results` creates the run, so results can be followed while the tests are still running, and clarify that the build's Tests tab only lists the run once it completes in [#10191](https://github.com/microsoft/testfx/issues/10191)
+* Allow setting environment variables on the test process launched by the `InvokeTestingPlatform` MSBuild target (`/t:Test`) through the `TestingPlatformEnvironmentVariable` item: `<TestingPlatformEnvironmentVariable Include="DOTNET_ROOT" Value="$(DotNetRoot)" />`. The value is carried by item metadata, which is not subject to MSBuild's `;` splitting, so values containing a `;` reach the test process as authored. The variables are applied on top of the environment inherited from MSBuild, so declaring none keeps the previous behavior in [#10342](https://github.com/microsoft/testfx/issues/10342)
+* Pin `Microsoft.Testing.Extensions.GitHubActionsReport` annotations to the test's declared source location (`TestFileLocationProperty`) when the failure's stack trace yields no frame inside the workspace, and use it to place skipped-test `::warning` annotations on the pull request diff gutter instead of emitting them title-only. The property is populated by the MSTest adapter and by the VSTest bridge, so xUnit, NUnit and other bridged frameworks are covered too in [#9003](https://github.com/microsoft/testfx/issues/9003)
+
+### Changed
+
+* Send `pipelineReference` (stage, phase and job, with their attempt numbers) and `startedDate` when `--publish-azdo-test-results` creates an Azure DevOps test run, so the run is attributed to the stage and job that produced it in multi-stage pipelines instead of only to the build
+
+### Fixed
+
+* Make the `InvokeTestingPlatform` MSBuild target set `DOTNET_ROOT_<ARCH>` from `DOTNET_HOST_PATH` when launching a compatible apphost, matching `dotnet test` runtime resolution. Set `TestingPlatformDisableAppHostDotnetRoot` to `true` to opt out; an explicit applicable `TestingPlatformEnvironmentVariable` remains authoritative in [#10408](https://github.com/microsoft/testfx/issues/10408)
+* Fix `--report-trx` crashing with `PlatformNotSupportedException` on single-threaded WebAssembly runtimes (`browser-wasm` / `wasi-wasm`): the TRX streaming store now serializes records inline instead of starting a dedicated writer thread and draining a `BlockingCollection<T>` in [#2196](https://github.com/microsoft/testfx/issues/2196)
+* Keep the Azure DevOps and GitHub Actions slow-test reporters dormant on single-threaded WebAssembly runtimes instead of attempting to start a background scan loop that cannot run there. `ITask.RunLongRunning` throws `PlatformNotSupportedException` on `browser-wasm` / `wasi-wasm`; the reporter caught and logged it to the diagnostic log, then stayed marked active with no scan loop, so the failure was invisible outside `--diagnostic` in [#2196](https://github.com/microsoft/testfx/issues/2196)
+* Report test and session file artifacts through the simplified console output used by `browser-wasm` and `wasi-wasm`, including each artifact's display name and virtual file-system path, in [#10311](https://github.com/microsoft/testfx/issues/10311)
+* Fix `Microsoft.Testing.Extensions.AzureDevOpsReport` crashing with `ObjectDisposedException` during teardown, after results were already published, when the platform disposes the live test-results publisher more than once in [#10191](https://github.com/microsoft/testfx/issues/10191)
+* Report Azure DevOps live-publishing failures (missing configuration, test run creation, unpublished results, attachment uploads and run finalization) on the output device instead of only in the opt-in diagnostic log, so `--publish-azdo-test-results` no longer fails silently in [#10191](https://github.com/microsoft/testfx/issues/10191)
+* Fix `Microsoft.Testing.Extensions.AzureDevOpsReport` throwing `PlatformNotSupportedException` on `browser-wasm` (and `wasi-wasm`): the shared `HttpClient` now only opts into `HttpClientHandler.AutomaticDecompression` where the handler supports it, since `fetch` and `wasi:http` already decode `gzip`/`deflate` responses themselves in [#10313](https://github.com/microsoft/testfx/issues/10313)
+* Fix `--report-azdo` faulting the test run with `Could not find solution root, .git not found in ... or any parent directory.` when annotating a failing test from an application that does not run inside a git checkout (a published app, a container, or `browser-wasm`, whose virtual filesystem has no `.git`); the reporter now degrades to a message-only annotation, matching the GitHub Actions reporter in [#10313](https://github.com/microsoft/testfx/issues/10313)
+* Fix TRX attachments being silently dropped on .NET Framework when the destination path exceeds the Windows `MAX_PATH` limit. Both per-test `ResultFile` entries and session-level `CollectorDataEntries` attachments (crash dumps, hang dumps and other extension artifacts) could disappear from the report while the run still reported success in [#10312](https://github.com/microsoft/testfx/issues/10312)
+* Report attachments that could not be copied into the TRX results directory on the output device instead of only in the `RunInfos` section of the generated TRX in [#10312](https://github.com/microsoft/testfx/issues/10312)
+* Fix `--publish-azdo-test-results` creating and completing one Azure DevOps test run per `--retry-failed-tests` attempt instead of one run for the build, which recorded a test rescued by a retry as failed forever in the earlier run. The run's lifetime now belongs to the retry orchestrator process, which outlives every attempt: it creates the run once, hands its id to the attempts through the inherited `TESTINGPLATFORM_AZUREDEVOPS_TESTRUNID` variable, and completes it once. Orchestrator processes take part in the existing per-build coordination too, so several test projects sharing a results directory still publish into a single run. Note that a retried test still contributes one result per attempt inside that single run (`Failed` and then `Passed`); collapsing those into one result carrying the final outcome is tracked separately in [#10360](https://github.com/microsoft/testfx/issues/10360)
+* Keep an Azure DevOps test run open while a peer test project that is still running has yet to publish into it. The owner previously gave up after a fixed 30 second grace period, so in a multi-project build a project that finished early could complete the run and make every result the remaining projects sent afterwards be rejected. Participants whose process is provably alive are now waited for, bounded by a hard cap so a leaked process cannot stall a build in [#10360](https://github.com/microsoft/testfx/issues/10360)
+* Release what an `ITestHostOrchestratorApplicationLifetime` acquired in `BeforeRunAsync` when the orchestration is canceled or fails. `AfterRunAsync` was only invoked when the orchestrator completed normally, so an Azure DevOps test run created before a cancellation — or before `--retry-failed-tests` rejected server mode or hot reload — was left `InProgress` and never appeared in the build's Tests tab in [#10360](https://github.com/microsoft/testfx/issues/10360)
+
+## <a name="2.3.3" />[2.3.3] - 2026-07-28
+
+See full log [of v4.3.2...v4.3.3](https://github.com/microsoft/testfx/compare/v4.3.2...v4.3.3)
+
+### Changed
+
+* Produce portable PDBs for official builds so symbols can be published to symbol servers by @Evangelink in [#10006](https://github.com/microsoft/testfx/pull/10006)
+
+### Fixed
+
+* Restore compatibility with the deprecated MSTest.Engine used by source-generated test projects by @Evangelink in [#9938](https://github.com/microsoft/testfx/pull/9938)
+* Regenerate source-generated entry points and extension registrations after the Microsoft.Testing.Platform.MSBuild task assembly is updated by @Evangelink in [#10082](https://github.com/microsoft/testfx/pull/10082)
+* Fix VSTestBridge throwing `IndexOutOfRangeException` when a UID after the first starts with a filter operator by @azat-msft in [#9771](https://github.com/microsoft/testfx/pull/9771)
+* Prevent diagnostic file-logger shutdown from crashing an otherwise successful test run under thread-pool starvation by @Evangelink in [#9802](https://github.com/microsoft/testfx/pull/9802)
+* Fix VSTestBridge interpreting a GUID-shaped fully-qualified test name as a test ID by @Evangelink in [#9794](https://github.com/microsoft/testfx/pull/9794)
+* Support comments in `testconfig.json` on .NET Framework by @Evangelink in [#10144](https://github.com/microsoft/testfx/pull/10144)
+* Fix `Microsoft.Testing.Extensions.AzureDevOpsReport` crashing during teardown from duplicate data-consumer disposal after a successful test run by @Evangelink in [#10195](https://github.com/microsoft/testfx/pull/10195)
 
 ## <a name="2.3.2" />[2.3.2] - 2026-07-13
 
