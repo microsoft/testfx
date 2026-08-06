@@ -773,6 +773,30 @@ stages:
               ArtifactName: TestResults_Windows_$(_BuildConfig)
             condition: failed()
 
+      # Real UWP and packaged WinUI activation require more than a Windows image label. Keep this as a
+      # separate blocking job: its strict preflight verifies the VS/UWP SDKs and interactive machine state
+      # before packing and running the application-model acceptance tests. If this image stops satisfying
+      # those requirements, move the job to a purpose-built pool rather than weakening or skipping tests.
+      - job: WindowsAppModel
+        displayName: Windows application-model acceptance
+        dependsOn: DetectChanges
+        condition: and(succeeded(), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))
+        timeoutInMinutes: 120
+        pool:
+          name: NetCore-Public
+          demands: ImageOverride -equals windows.vs2026preview.scout.amd64.open
+        variables:
+          - template: /eng/pipelines/variables/test-env-vars.yml
+          - name: _BuildConfig
+            value: Debug
+        steps:
+        - checkout: self
+          clean: true
+
+        - template: /eng/pipelines/steps/install-windows-prereqs.yml
+
+        - template: /eng/pipelines/steps/test-windows-app-model.yml
+
       - job: Linux
         dependsOn: DetectChanges
         condition: and(succeededOrFailed(), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))
