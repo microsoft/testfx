@@ -2,7 +2,7 @@
 
 - [ ] Approved in principle
 - [x] Under discussion
-- [ ] Implementation
+- [x] Implementation
 - [ ] Shipped
 
 > **Renumber note.** This design was originally drafted as "RFC 017" in [microsoft/testfx#9187](https://github.com/microsoft/testfx/pull/9187). `017` has since been taken by `017-TestHost-Launcher.md` (merged in [#9349](https://github.com/microsoft/testfx/pull/9349)), so this document is renumbered to **018**.
