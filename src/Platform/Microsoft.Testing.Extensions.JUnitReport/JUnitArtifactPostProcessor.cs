@@ -44,12 +44,7 @@ internal sealed class JUnitArtifactPostProcessor : IArtifactPostProcessor
 
         InputArtifact[] orderedInputs =
         [
-            .. inputs
-                .OrderBy(input => Path.GetFullPath(input.Path), StringComparer.Ordinal)
-                .ThenBy(input => input.ProducingTestModule, StringComparer.Ordinal)
-                .ThenBy(input => input.TargetFramework, StringComparer.Ordinal)
-                .ThenBy(input => input.Architecture, StringComparer.Ordinal)
-                .ThenBy(input => input.ExecutionId, StringComparer.Ordinal),
+            .. OrderInputs(inputs),
         ];
 
         string mergedDirectory = Path.Combine(outputDirectory, MergedReportDirectoryName);
@@ -59,7 +54,7 @@ internal sealed class JUnitArtifactPostProcessor : IArtifactPostProcessor
             return null;
         }
 
-        string mergeId = CreateMergeId(orderedInputs);
+        string mergeId = CreateMergeIdFromOrderedInputs(orderedInputs);
         string outputPath = Path.Combine(mergedDirectory, $"merged-{mergeId}.xml");
         await JUnitReportMerger.MergeToFileAsync(
             [.. orderedInputs.Select(input => input.Path)],
@@ -75,14 +70,12 @@ internal sealed class JUnitArtifactPostProcessor : IArtifactPostProcessor
     }
 
     internal static string CreateMergeId(IReadOnlyList<InputArtifact> inputs)
+        => CreateMergeIdFromOrderedInputs(OrderInputs(inputs));
+
+    private static string CreateMergeIdFromOrderedInputs(IEnumerable<InputArtifact> orderedInputs)
     {
         var identity = new StringBuilder();
-        foreach (InputArtifact input in inputs
-            .OrderBy(input => Path.GetFullPath(input.Path), StringComparer.Ordinal)
-            .ThenBy(input => input.ProducingTestModule, StringComparer.Ordinal)
-            .ThenBy(input => input.TargetFramework, StringComparer.Ordinal)
-            .ThenBy(input => input.Architecture, StringComparer.Ordinal)
-            .ThenBy(input => input.ExecutionId, StringComparer.Ordinal))
+        foreach (InputArtifact input in orderedInputs)
         {
             AppendIdentityPart(identity, Path.GetFullPath(input.Path));
             AppendIdentityPart(identity, input.ProducingTestModule);
@@ -101,6 +94,13 @@ internal sealed class JUnitArtifactPostProcessor : IArtifactPostProcessor
 
         return result.ToString();
     }
+
+    private static IOrderedEnumerable<InputArtifact> OrderInputs(IEnumerable<InputArtifact> inputs)
+        => inputs.OrderBy(input => Path.GetFullPath(input.Path), StringComparer.Ordinal)
+            .ThenBy(input => input.ProducingTestModule, StringComparer.Ordinal)
+            .ThenBy(input => input.TargetFramework, StringComparer.Ordinal)
+            .ThenBy(input => input.Architecture, StringComparer.Ordinal)
+            .ThenBy(input => input.ExecutionId, StringComparer.Ordinal);
 
     private static void AppendIdentityPart(StringBuilder builder, string? value)
     {

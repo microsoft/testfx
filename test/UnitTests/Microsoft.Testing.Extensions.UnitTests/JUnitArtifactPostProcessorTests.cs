@@ -47,6 +47,31 @@ public sealed class JUnitArtifactPostProcessorTests
     }
 
     [TestMethod]
+    public void AddJUnitReportProvider_RequiresArtifactPostProcessingBuilder()
+    {
+        ITestApplicationBuilder builder = new Mock<ITestApplicationBuilder>().Object;
+
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(
+            () => builder.AddJUnitReportProvider());
+
+        Assert.AreEqual(
+            "JUnit report generation requires a test application builder that supports artifact post-processing.",
+            exception.Message);
+    }
+
+    [TestMethod]
+    public void AddJUnitReportProvider_RequiresTestApplicationBuilder()
+    {
+        Mock<ITestApplicationBuilder> builder = new();
+        builder.As<IArtifactPostProcessingApplicationBuilder>();
+
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(
+            () => builder.Object.AddJUnitReportProvider());
+
+        Assert.AreEqual("Invalid test application builder type. Expected 'TestApplicationBuilder'.", exception.Message);
+    }
+
+    [TestMethod]
     public async Task ProcessAsync_WithFewerThanTwoInputs_ReturnsNull()
     {
         JUnitArtifactPostProcessor processor = new();

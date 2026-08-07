@@ -3,9 +3,9 @@
   <file datatype="xml" source-language="en" target-language="pl" original="../ExtensionResources.resx">
     <body>
       <trans-unit id="InvalidTestApplicationBuilderType">
-        <source>JUnit report generation requires a test application builder that supports artifact post-processing.</source>
+        <source>Invalid test application builder type. Expected 'TestApplicationBuilder'.</source>
         <target state="needs-review-translation">Nieprawidłowy typ konstruktora aplikacji testowej. Oczekiwano „TestApplicationBuilder”.</target>
-        <note>Do not localize format name {Locked="JUnit"}.</note>
+        <note>Do not localize {Locked="TestApplicationBuilder"}.</note>
       </trans-unit>
       <trans-unit id="JUnitArtifactPostProcessorDescription">
         <source>Merges JUnit XML reports produced by Microsoft.Testing.Extensions.JUnitReport</source>
@@ -95,6 +95,11 @@ Przykład: MyReport_{tfm}.xml</target>
         <source>Enable generating a JUnit XML report</source>
         <target state="translated">Włącz generowanie raportu XML JUnit</target>
         <note>Do not localize option name {Locked="--report-junit"} or format names {Locked="JUnit"}{Locked="XML"}.</note>
+      </trans-unit>
+      <trans-unit id="JUnitReportRequiresArtifactPostProcessing">
+        <source>JUnit report generation requires a test application builder that supports artifact post-processing.</source>
+        <target state="new">JUnit report generation requires a test application builder that supports artifact post-processing.</target>
+        <note>Do not localize format name {Locked="JUnit"}.</note>
       </trans-unit>
     </body>
   </file>

@@ -21,7 +21,7 @@ public static class JUnitReportExtensions
     {
         if (builder is not IArtifactPostProcessingApplicationBuilder artifactPostProcessingBuilder)
         {
-            throw new InvalidOperationException(ExtensionResources.InvalidTestApplicationBuilderType);
+            throw new InvalidOperationException(ExtensionResources.JUnitReportRequiresArtifactPostProcessing);
         }
 
         ReportProviderRegistration.AddReportProvider(
