@@ -59,7 +59,9 @@ public sealed class PackagedAppActivationArgumentsTests
 
             Assert.IsNotNull(activation.PayloadPath);
             Assert.IsTrue(File.Exists(activation.PayloadPath));
-            Assert.DoesNotContain(secret, Encoding.Unicode.GetString(File.ReadAllBytes(activation.PayloadPath)));
+            byte[] encryptedPayload = File.ReadAllBytes(activation.PayloadPath);
+            byte[] plaintextSecret = Encoding.Unicode.GetBytes(secret);
+            Assert.AreEqual(-1, encryptedPayload.AsSpan().IndexOf(plaintextSecret), "The LocalState payload must not contain the plaintext secret.");
 
             string[] actual = PackagedAppActivationArguments.Read(activation.Arguments, directory);
 
