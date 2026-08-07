@@ -30,10 +30,12 @@ internal static class PackagedAppActivationArguments
         byte[] serialized = Serialize(arguments);
         try
         {
-            string inlineArguments = InlinePrefix + Convert.ToBase64String(serialized);
-            if (inlineArguments.Length <= MaximumInlineLength)
+            long inlineLength = InlinePrefix.Length + ((((long)serialized.Length + 2) / 3) * 4);
+            if (inlineLength <= MaximumInlineLength)
             {
-                return new PackagedAppActivationData(inlineArguments, payloadPath: null);
+                return new PackagedAppActivationData(
+                    InlinePrefix + Convert.ToBase64String(serialized),
+                    payloadPath: null);
             }
 
             Directory.CreateDirectory(localStateDirectory);
