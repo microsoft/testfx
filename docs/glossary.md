@@ -457,7 +457,7 @@ Request for Comments document in the `docs/RFCs/` folder. RFCs describe design d
 
 ### Server Mode
 
-An MTP execution mode in which a test runner executable remains available as a server and communicates with a client (such as an IDE, CLI, or CI tool) over the [JSON-RPC Protocol](#json-rpc-protocol). The client can initialize the server, request test discovery or execution, receive test updates, and stop the server when finished.
+An MTP execution mode in which the test host process runs as a server and communicates with a client (such as an IDE, CLI, or CI tool) over the [JSON-RPC Protocol](#json-rpc-protocol). The client can initialize the server, request test discovery or execution, receive test updates, and stop the server when finished.
 
 ### SequenceOrder
 
