@@ -46,13 +46,14 @@
 
 1. **MSTest.Engine internal class coverage** — `TestArgumentsManager`, `TestFixtureManager`, `ThreadPoolTestNodeRunner` are internal (~135+ LOC each). Would need `InternalsVisibleTo` or integration tests.
 2. **More Assert method coverage** — Any remaining gaps in newer Assert overloads.
-3. **Analyzer edge cases (ongoing)** — Continue systematic coverage of untested paths in MSTest.Analyzers. MSTEST0074/0075/0076/0077 fixture-branch gaps now all closed (2026-08-06). Next candidates: check other parallel-safety/resource-lock analyzers for the same missing-fixture-branch pattern (search for analyzers using ParallelSafetyHelper.GetFixtureAttributeSymbols with sparse test coverage).
-4. **Correction**: the "nameof() edge-case test for PreferConstantForResourceLockAnalyzer" PR referenced in 2026-08-04 memory entry could NOT be found as an open PR on 2026-08-05, and `PreferConstantForResourceLockAnalyzerTests.cs` does not contain a nameof test. Either it was closed without merging or memory was inaccurate — do NOT assume this work is done; re-verify before crediting it as complete.
+3. **DependsOnShouldBeValidAnalyzer / TestFilterProviderShouldBeValidAnalyzer (MSTEST0078/0081)** — large analyzers (971/265 LOC) with sizable test files (1346/588 lines). Internal-target-class gap now closed (2026-08-07); worth another pass to check for remaining branch gaps (e.g. TestFilterProviderShouldBeValidAnalyzer accessibility/return-type edge cases not yet checked).
+4. **Analyzer edge cases (ongoing)** — Continue systematic coverage of untested paths in MSTest.Analyzers. MSTEST0074/0075/0076/0077 fixture-branch gaps all closed.
 
 ## Tasks Run History (summarized)
 
 | Date | Tasks |
 |------|-------|
+| 2026-08-07 | Task 3 (DependsOnShouldBeValidAnalyzer MSTEST0078: internal target class HasValidAccessibility edge cases), Task 7 |
 | 2026-08-06 | Task 3 (MSTEST0077 SharedFileSystemPathInTestAnalyzer: AssemblyInitialize no-diagnostic + GlobalTestInitialize diagnostic edge cases), Task 7 |
 | 2026-08-05 | Task 3 (MSTEST0074 + MSTEST0076: GlobalTestInitialize "diagnostic without fix" branch tests), Task 7 |
 | 2026-08-02 | Task 3 (MSTEST0054 + MSTEST0044 edge-case tests), Task 7 |
@@ -73,9 +74,11 @@
 
 ## Last Run
 
-2026-08-06 UTC
+2026-08-07 UTC
 
 ## Completed Work (recent, summarized)
+
+- PR (2026-08-07) — DependsOnShouldBeValidAnalyzer (MSTEST0078): added `WhenReferencedTypeIsInternalWithoutDiscoverInternals_NotATestClass` and `WhenReferencedTypeIsInternalWithDiscoverInternals_Cycle`, covering the `HasValidAccessibility` branch for internal *target classes* (previously only internal target *methods* were covered). Full MSTest.Analyzers.UnitTests suite: 1723/1723 passed.
 
 - PR (2026-08-06) — MSTEST0077 SharedFileSystemPathInTestAnalyzer: added `WhenAssemblyInitializeWritesConstantPath_NoDiagnostic` and `WhenGlobalTestInitializeWritesConstantPath_Diagnostic`, closing the last remaining fixture-branch gap among the 4 parallel-safety analyzers (0074/0075/0076/0077). Full MSTest.Analyzers.UnitTests suite: 1721/1721 passed.
 - PR (2026-08-05) — MSTEST0074 (UndeclaredProcessGlobalStateMutationAnalyzer) + MSTEST0076 (CultureMutationUnderParallelizationAnalyzer): added `WhenTestMethodSetsEnvironmentVariableInGlobalTestInitialize_DiagnosticWithoutFix` and `WhenGlobalTestInitializeSetsDefaultThreadCurrentCulture_Diagnostic` — fills the "global fixture: diagnostic fires but no fix offered" branch gap, mirroring PR #10383's pattern for MSTEST0075. Locally built + ran full MSTest.Analyzers.UnitTests suite (1718 tests, all passed) before submitting.
