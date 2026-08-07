@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.PackagedApp.Resources;
@@ -199,24 +199,26 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
     /// directory is that layout.
     /// </para>
     /// <para>
-    /// The grant is deliberately narrow. Nothing is requested unless the layout is a packaged (MSIX) app
-    /// <em>and</em> at least one of its declared applications runs inside an AppContainer, as classified by
+    /// The grant is deliberately narrow. Nothing is requested unless the selected test host application is
+    /// packaged (MSIX) and runs inside an AppContainer, as classified by
     /// <see cref="AppxApplicationInfo.RunsInAppContainer"/>. A packaged
     /// full-trust desktop host already reaches the pipe with the platform's normal current-user protection
-    /// and gets nothing extra. The value returned is the SID of this very package, derived from its own
-    /// family name, so it cannot authorize any other application. The platform independently re-validates it
-    /// and rejects anything that is not a specific AppContainer SID.
+    /// and gets nothing extra — even when an AppContainer sibling shares its package. The value returned is
+    /// the SID of this very package, derived from its own family name, so it cannot authorize any other
+    /// package. The platform independently re-validates it and rejects anything that is not a specific
+    /// AppContainer SID.
     /// </para>
     /// </remarks>
+    /// <param name="testHostFileName">The executable path of the test host application being launched.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The AppContainer SIDs to authorize, which is at most this package's own SID.</returns>
-    public Task<IReadOnlyList<string>> GetAuthorizedSecurityIdentitiesAsync(CancellationToken cancellationToken)
+    public Task<IReadOnlyList<string>> GetAuthorizedSecurityIdentitiesAsync(string testHostFileName, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(GetAuthorizedAppContainerSecurityIdentifiers());
+        return Task.FromResult(GetAuthorizedAppContainerSecurityIdentifiers(testHostFileName));
     }
 
-    private IReadOnlyList<string> GetAuthorizedAppContainerSecurityIdentifiers()
+    private IReadOnlyList<string> GetAuthorizedAppContainerSecurityIdentifiers(string testHostFileName)
     {
         // AppContainers, package SIDs and named-pipe DACLs are Windows concepts.
         if (!OperatingSystem.IsWindows())
@@ -230,17 +232,22 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
             return [];
         }
 
-        // Only a packaged layout has a package identity to authorize. A loose layout deployed by this
-        // launcher is an ordinary process and is already covered by the platform's current-user protection.
-        if (AppxManifestInfo.FindManifestPath(_testApplicationDirectory) is not { } manifestPath)
+        // Only a packaged layout has a package identity to authorize. Resolve the manifest against the
+        // selected executable, not merely the controller's base directory: one package can declare a
+        // full-trust test host alongside an AppContainer sibling, and the sibling must not widen that run.
+        string? sourceDirectory = Path.GetDirectoryName(testHostFileName);
+        if (sourceDirectory is null
+            || AppxManifestInfo.FindManifestPath(sourceDirectory, testHostFileName) is not { } manifestPath)
         {
             return [];
         }
 
         AppxManifestInfo manifestInfo;
+        AppxApplicationInfo? application;
         try
         {
             manifestInfo = AppxManifestInfo.ReadFromManifest(manifestPath);
+            application = manifestInfo.ResolveApplication(Path.GetDirectoryName(manifestPath)!, testHostFileName);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or XmlException)
         {
@@ -250,15 +257,10 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
             return [];
         }
 
-        // The pipe is created before the platform tells the launcher which executable it wants, so the
-        // specific application cannot be resolved yet. That does not weaken anything: the SID is the
-        // package's, shared by every application it declares, so "this package contains an AppContainer
-        // application" is exactly the right predicate for authorizing it.
-        //
         // Note this asks RunsInAppContainer, not UsesLaunchActivationArguments: a packagedClassicApp whose
         // TrustLevel is appContainer receives ordinary argv but is still sandboxed, so it needs the grant.
         bool alwaysAuthorize = string.Equals(mode, AlwaysMode, StringComparison.OrdinalIgnoreCase);
-        return !alwaysAuthorize && !manifestInfo.Applications.Any(static application => application.RunsInAppContainer)
+        return !alwaysAuthorize && application?.RunsInAppContainer != true
             ? []
             : AppContainerSecurityIdentifier.TryDerive(manifestInfo.PackageFamilyName) is { } securityIdentifier
                 ? [securityIdentifier]

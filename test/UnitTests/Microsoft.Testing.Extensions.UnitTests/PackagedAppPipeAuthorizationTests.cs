@@ -78,6 +78,24 @@ public sealed class PackagedAppPipeAuthorizationTests
             mode: null,
             expected: []);
 
+    [TestMethod]
+    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "AppContainers are a Windows-only concept.")]
+    public Task WithMixedPackageAndFullTrustHostSelected_AuthorizesNothing()
+        => AssertAuthorizedSecurityIdentifiersAsync(
+            BuildMixedTrustManifestXml(),
+            mode: null,
+            expected: [],
+            testHostFileName: "DesktopTests.exe");
+
+    [TestMethod]
+    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "AppContainers are a Windows-only concept.")]
+    public Task WithMixedPackageAndAppContainerHostSelected_AuthorizesThePackage()
+        => AssertAuthorizedSecurityIdentifiersAsync(
+            BuildMixedTrustManifestXml(),
+            mode: null,
+            expected: [ContosoPackageSid],
+            testHostFileName: "UwpTests.exe");
+
     // A loose (non-packaged) layout has no package identity at all; it is launched as an ordinary process.
     [TestMethod]
     [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "AppContainers are a Windows-only concept; the launcher unconditionally authorizes nothing elsewhere, which OnNonWindows_AuthorizesNothingEvenWithAlwaysMode covers.")]
@@ -139,11 +157,17 @@ public sealed class PackagedAppPipeAuthorizationTests
 
 #pragma warning disable TPEXP // ITestHostControllerConnectionAuthorizer is experimental.
                 await Assert.ThrowsExactlyAsync<OperationCanceledException>(
-                    () => launcher.GetAuthorizedSecurityIdentitiesAsync(cancellationTokenSource.Token));
+                    () => launcher.GetAuthorizedSecurityIdentitiesAsync(
+                        Path.Combine(appDirectory, "MyTestApp.exe"),
+                        cancellationTokenSource.Token));
 #pragma warning restore TPEXP
             });
 
-    private static Task AssertAuthorizedSecurityIdentifiersAsync(string? manifestXml, string? mode, string[] expected)
+    private static Task AssertAuthorizedSecurityIdentifiersAsync(
+        string? manifestXml,
+        string? mode,
+        string[] expected,
+        string testHostFileName = "MyTestApp.exe")
         => RunInTemporaryLayoutAsync(manifestXml, async appDirectory =>
         {
             var launcher = new PackagedAppTestHostLauncher(
@@ -151,7 +175,9 @@ public sealed class PackagedAppPipeAuthorizationTests
                 name => name == PackagedAppTestHostLauncher.PipeAuthorizationModeEnvironmentVariable ? mode : null);
 
 #pragma warning disable TPEXP // ITestHostControllerConnectionAuthorizer is experimental.
-            IReadOnlyList<string> actual = await launcher.GetAuthorizedSecurityIdentitiesAsync(CancellationToken.None);
+            IReadOnlyList<string> actual = await launcher.GetAuthorizedSecurityIdentitiesAsync(
+                Path.Combine(appDirectory, testHostFileName),
+                CancellationToken.None);
 #pragma warning restore TPEXP
 
             Assert.AreSequenceEqual(expected, actual);
@@ -205,6 +231,18 @@ public sealed class PackagedAppPipeAuthorizationTests
             </Package>
             """;
     }
+
+    private static string BuildMixedTrustManifestXml()
+        => $"""
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10">
+              <Identity Name="Contoso.MyTestApp" Publisher="{MicrosoftStorePublisher}" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="Desktop" Executable="DesktopTests.exe" EntryPoint="Windows.FullTrustApplication" />
+                <Application Id="Uwp" Executable="UwpTests.exe" uap10:RuntimeBehavior="windowsApp" uap10:TrustLevel="appContainer" />
+              </Applications>
+            </Package>
+            """;
 }
 
 #endif

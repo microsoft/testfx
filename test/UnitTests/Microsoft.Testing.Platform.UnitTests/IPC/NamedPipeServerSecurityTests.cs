@@ -514,7 +514,7 @@ public sealed class NamedPipeServerSecurityTests
                     NamedPipeServerSecurity.IsAuthorizableSandboxedApplicationIdentity(sid),
                     $"A live AppContainer SID must satisfy the platform's authorization policy, but '{sid}' did not.");
 
-                if (!TryConnectAsAppContainer(token, [sid]))
+                if (!TryConnectAsAppContainer(token, [sid], useManagedProductClient: true))
                 {
                     // This container cannot reach even an authorizing pipe (a nested container, or one
                     // restricted further than a test host would be); it cannot prove anything either way.
@@ -546,7 +546,10 @@ public sealed class NamedPipeServerSecurityTests
     /// AppContainer behind <paramref name="impersonationToken"/> can open it.
     /// </summary>
     [SupportedOSPlatform("windows")]
-    private static bool TryConnectAsAppContainer(SafeHandle impersonationToken, string[] authorizedSids)
+    private static bool TryConnectAsAppContainer(
+        SafeHandle impersonationToken,
+        string[] authorizedSids,
+        bool useManagedProductClient = false)
     {
         string pipeName = $"testingplatform.pipe.test.{Guid.NewGuid():N}";
         string ownerSid = NamedPipeServerSecurity.GetCurrentProcessOwnerSid();
@@ -558,7 +561,9 @@ public sealed class NamedPipeServerSecurityTests
         // Only the client open is impersonated; the server keeps running as the test.
         Task waitForConnection = server.WaitForConnectionAsync(CancellationToken.None);
 
-        bool connected = WindowsSecurity.TryOpenPipeAs(impersonationToken, pipeName, NamedPipeServerSecurity.PipeAccessRightsReadWriteSynchronize);
+        bool connected = useManagedProductClient
+            ? WindowsSecurity.TryConnectManagedClientAs(impersonationToken, pipeName)
+            : WindowsSecurity.TryOpenPipeAs(impersonationToken, pipeName, NamedPipeServerSecurity.PipeAccessRightsReadWriteSynchronize);
         if (connected)
         {
             waitForConnection.Wait(TimeSpan.FromSeconds(10));
@@ -867,6 +872,48 @@ public sealed class NamedPipeServerSecurityTests
 
                 CloseHandle(handle);
                 return true;
+            }
+            finally
+            {
+                RevertToSelfCore();
+            }
+        }
+
+        /// <summary>
+        /// Connects while impersonating <paramref name="impersonationToken"/> through the same managed
+        /// <see cref="NamedPipeClientStream"/> options the product uses. This proves the explicit package
+        /// ACE admits the generic read/write open and, on modern .NET, the client-side
+        /// <see cref="PipeOptions.CurrentUserOnly"/> owner validation.
+        /// </summary>
+        [SupportedOSPlatform("windows")]
+        public static bool TryConnectManagedClientAs(SafeHandle impersonationToken, string pipeName)
+        {
+            if (!ImpersonateLoggedOnUser(impersonationToken))
+            {
+                throw new Win32Exception(Marshal.GetLastWin32Error());
+            }
+
+            try
+            {
+                using var client = new NamedPipeClientStream(
+                    ".",
+                    pipeName,
+                    PipeDirection.InOut,
+                    PipeOptions.Asynchronous
+#if NET
+                    | PipeOptions.CurrentUserOnly
+#endif
+                    );
+
+                try
+                {
+                    client.Connect(timeout: 10_000);
+                    return true;
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    return false;
+                }
             }
             finally
             {

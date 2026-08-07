@@ -243,6 +243,7 @@ public interface ITestHostControllerConnectionAuthorizer
     /// controller-to-host connection in addition to the current user.
     /// </summary>
     Task<IReadOnlyList<string>> GetAuthorizedSecurityIdentitiesAsync(
+        string testHostFileName,
         CancellationToken cancellationToken);
 }
 ```

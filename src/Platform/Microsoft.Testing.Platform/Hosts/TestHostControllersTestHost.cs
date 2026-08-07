@@ -109,7 +109,7 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
                 _environment,
                 _loggerFactory.CreateLogger<NamedPipeServer>(),
                 ServiceProvider.GetTask(),
-                await GetAuthorizedSecurityIdentitiesAsync(_testHostsInformation.TestHostLauncher, cancellationToken).ConfigureAwait(false),
+                await GetAuthorizedSecurityIdentitiesAsync(_testHostsInformation.TestHostLauncher, executableInfo.FilePath, cancellationToken).ConfigureAwait(false),
                 cancellationToken);
             testHostControllerIpc.RegisterAllSerializers();
 
@@ -497,6 +497,7 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
     /// </remarks>
     private async Task<IReadOnlyList<string>?> GetAuthorizedSecurityIdentitiesAsync(
         ITestHostLauncher? testHostLauncher,
+        string testHostFileName,
         CancellationToken cancellationToken)
     {
         if (testHostLauncher is not ITestHostControllerConnectionAuthorizer connectionAuthorizer)
@@ -504,7 +505,7 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
             return null;
         }
 
-        IReadOnlyList<string> extensionResult = await connectionAuthorizer.GetAuthorizedSecurityIdentitiesAsync(cancellationToken).ConfigureAwait(false);
+        IReadOnlyList<string> extensionResult = await connectionAuthorizer.GetAuthorizedSecurityIdentitiesAsync(testHostFileName, cancellationToken).ConfigureAwait(false);
         if (extensionResult is null || extensionResult.Count == 0)
         {
             return null;

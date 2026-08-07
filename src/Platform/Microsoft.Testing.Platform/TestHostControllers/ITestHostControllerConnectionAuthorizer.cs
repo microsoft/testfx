@@ -53,7 +53,12 @@ public interface ITestHostControllerConnectionAuthorizer
     /// needed, which is the case for every host started as an ordinary child process and on every operating
     /// system that cannot express such an identity.
     /// </remarks>
+    /// <param name="testHostFileName">
+    /// The executable path of the test host the platform is about to launch. A package or sandbox can
+    /// contain several applications with different trust models; implementations should authorize the
+    /// identity of this selected host, not a sibling application.
+    /// </param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The security identities to authorize.</returns>
-    Task<IReadOnlyList<string>> GetAuthorizedSecurityIdentitiesAsync(CancellationToken cancellationToken);
+    Task<IReadOnlyList<string>> GetAuthorizedSecurityIdentitiesAsync(string testHostFileName, CancellationToken cancellationToken);
 }
