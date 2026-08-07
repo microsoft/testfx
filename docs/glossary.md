@@ -455,13 +455,13 @@ Request for Comments document in the `docs/RFCs/` folder. RFCs describe design d
 
 ## S
 
-### Server Mode
-
-An MTP execution mode in which the test host process runs as a server and communicates with a client (such as an IDE, CLI, or CI tool) over the [JSON-RPC Protocol](#json-rpc-protocol). The client can initialize the server, request test discovery or execution, receive test updates, and stop the server when finished.
-
 ### SequenceOrder
 
 A public enum in `Microsoft.VisualStudio.TestTools.UnitTesting` that controls whether elements must appear in the same position when comparing sequences with `Assert.AreSequenceEqual` and `Assert.AreNotSequenceEqual`. Values: `InOrder` (0, default) — elements must appear in the same order in both sequences (LINQ `SequenceEqual` semantics); `InAnyOrder` (1) — elements may appear in any order, but each element must appear the same number of times in both sequences (multiset equality). Introduced in [PR #8334](https://github.com/microsoft/testfx/pull/8334).
+
+### Server Mode
+
+An MTP execution mode in which the test host process runs as a server and communicates with a client (such as an IDE, CLI, or CI tool) over the [JSON-RPC Protocol](#json-rpc-protocol). The client can initialize the server, request test discovery or execution, receive test updates, and stop the server when finished.
 
 ## T
 
