@@ -260,7 +260,59 @@ internal static class WindowsApplicationModelTestTools
         }
     }
 
-    public static async Task RemoveAndVerifyPackageRegistrationAsync(string packageIdentityName)
+    public static async Task ExecuteWithPackageCleanupAsync(
+        TestAsset testAsset,
+        string packageIdentityName,
+        Func<Task> testAction)
+    {
+        Exception? testFailure = null;
+        Exception? cleanupFailure = null;
+
+        try
+        {
+            await testAction();
+        }
+        catch (Exception ex)
+        {
+            testFailure = ex;
+        }
+
+        try
+        {
+            await RemoveAndVerifyPackageRegistrationAsync(packageIdentityName);
+        }
+        catch (Exception ex)
+        {
+            cleanupFailure = ex;
+        }
+
+        if (cleanupFailure is null)
+        {
+            testAsset.Dispose();
+        }
+
+        if (testFailure is not null && cleanupFailure is not null)
+        {
+            throw new AggregateException(
+                $"The UWP acceptance test failed and cleanup also failed for identity '{packageIdentityName}'. The package layout was retained.",
+                testFailure,
+                cleanupFailure);
+        }
+
+        if (cleanupFailure is not null)
+        {
+            throw new AggregateException(
+                $"Cleanup failed for UWP identity '{packageIdentityName}'. The package layout was retained.",
+                cleanupFailure);
+        }
+
+        if (testFailure is not null)
+        {
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(testFailure).Throw();
+        }
+    }
+
+    private static async Task RemoveAndVerifyPackageRegistrationAsync(string packageIdentityName)
     {
         string escapedIdentity = packageIdentityName.Replace("'", "''", StringComparison.Ordinal);
         string script =

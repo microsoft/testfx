@@ -30,55 +30,54 @@ public sealed class ModernUwpTests : AcceptanceTestBase
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
             .PatchCodeWithReplace("$TestPlatformVersion$", MicrosoftNETTestSdkVersion);
 
-        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(assetName, sourceCode);
-        try
-        {
-            WindowsApplicationModelTestTools.CopySampleAssets(testAsset.TargetAssetPath);
-            await EnsureGeneratedCSharpFilesHaveUtf8BomAsync(testAsset.TargetAssetPath, TestContext.CancellationToken);
+        TestAsset testAsset = await TestAsset.GenerateAssetAsync(assetName, sourceCode);
+        await WindowsApplicationModelTestTools.ExecuteWithPackageCleanupAsync(
+            testAsset,
+            packageIdentityName,
+            async () =>
+            {
+                WindowsApplicationModelTestTools.CopySampleAssets(testAsset.TargetAssetPath);
+                await EnsureGeneratedCSharpFilesHaveUtf8BomAsync(testAsset.TargetAssetPath, TestContext.CancellationToken);
 
-            VisualStudioTestTools tools = await WindowsApplicationModelTestTools.LocateModernUwpVisualStudioToolsAsync(TestContext.CancellationToken);
-            UwpBuildResult build = await WindowsApplicationModelTestTools.BuildUwpAssetAsync(
-                tools,
-                testAsset,
-                $"{assetName}.csproj",
-                TestContext.CancellationToken);
+                VisualStudioTestTools tools = await WindowsApplicationModelTestTools.LocateModernUwpVisualStudioToolsAsync(TestContext.CancellationToken);
+                UwpBuildResult build = await WindowsApplicationModelTestTools.BuildUwpAssetAsync(
+                    tools,
+                    testAsset,
+                    $"{assetName}.csproj",
+                    TestContext.CancellationToken);
 
-            string resolvedAssetsReport = Path.Combine(testAsset.TargetAssetPath, "resolved-mstest-assets.txt");
-            WindowsApplicationModelTestTools.AssertResolvedMSTestAssets(
-                resolvedAssetsReport,
-                WindowsApplicationModelAssetKind.ModernUwp);
-            Assert.IsTrue(
-                Directory.Exists(build.PackageLayoutPath),
-                $"The Modern UWP package layout '{build.PackageLayoutPath}' does not exist. Binlog: '{build.BinlogPath}'.");
+                string resolvedAssetsReport = Path.Combine(testAsset.TargetAssetPath, "resolved-mstest-assets.txt");
+                WindowsApplicationModelTestTools.AssertResolvedMSTestAssets(
+                    resolvedAssetsReport,
+                    WindowsApplicationModelAssetKind.ModernUwp);
+                Assert.IsTrue(
+                    Directory.Exists(build.PackageLayoutPath),
+                    $"The Modern UWP package layout '{build.PackageLayoutPath}' does not exist. Binlog: '{build.BinlogPath}'.");
 
-            string resultsDirectory = Path.Combine(testAsset.TargetAssetPath, "TestResults");
-            UwpRunResult run = await WindowsApplicationModelTestTools.RunUwpRecipeAsync(
-                tools,
-                build.RecipePath,
-                resultsDirectory,
-                TestContext.CancellationToken);
+                string resultsDirectory = Path.Combine(testAsset.TargetAssetPath, "TestResults");
+                UwpRunResult run = await WindowsApplicationModelTestTools.RunUwpRecipeAsync(
+                    tools,
+                    build.RecipePath,
+                    resultsDirectory,
+                    TestContext.CancellationToken);
 
-            Assert.AreEqual(
-                0,
-                run.ExitCode,
-                $"VSTest failed to execute the real Modern UWP recipe '{build.RecipePath}'. TRX: '{run.TrxPath}'. " +
-                $"Binlog: '{build.BinlogPath}'.{Environment.NewLine}Standard output:{Environment.NewLine}{run.StandardOutput}" +
-                $"{Environment.NewLine}Standard error:{Environment.NewLine}{run.ErrorOutput}");
-            Assert.DoesNotContain(
-                "No test is available",
-                run.StandardOutput,
-                $"VSTest reported no discovered tests for '{build.RecipePath}'.");
-            Assert.DoesNotContain(
-                "Total tests: 0",
-                run.StandardOutput,
-                $"VSTest reported zero discovered tests for '{build.RecipePath}'.");
+                Assert.AreEqual(
+                    0,
+                    run.ExitCode,
+                    $"VSTest failed to execute the real Modern UWP recipe '{build.RecipePath}'. TRX: '{run.TrxPath}'. " +
+                    $"Binlog: '{build.BinlogPath}'.{Environment.NewLine}Standard output:{Environment.NewLine}{run.StandardOutput}" +
+                    $"{Environment.NewLine}Standard error:{Environment.NewLine}{run.ErrorOutput}");
+                Assert.DoesNotContain(
+                    "No test is available",
+                    run.StandardOutput,
+                    $"VSTest reported no discovered tests for '{build.RecipePath}'.");
+                Assert.DoesNotContain(
+                    "Total tests: 0",
+                    run.StandardOutput,
+                    $"VSTest reported zero discovered tests for '{build.RecipePath}'.");
 
-            AssertModernUwpTrx(run.TrxPath, build);
-        }
-        finally
-        {
-            await WindowsApplicationModelTestTools.RemoveAndVerifyPackageRegistrationAsync(packageIdentityName);
-        }
+                AssertModernUwpTrx(run.TrxPath, build);
+            });
     }
 
     public TestContext TestContext { get; set; } = default!;
