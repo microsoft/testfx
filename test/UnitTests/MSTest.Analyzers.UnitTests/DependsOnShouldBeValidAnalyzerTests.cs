@@ -336,6 +336,74 @@ public sealed class DependsOnShouldBeValidAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenReferencedTypeIsInternalWithoutDiscoverInternals_NotATestClass()
+    {
+        // Without '[assembly: DiscoverInternals]' an internal '[TestClass]' is skipped by discovery, so the
+        // reference matches nothing even though the attribute is present.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            internal class SetupTests
+            {
+                [TestMethod]
+                public void CreateCart() { }
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [{|#0:DependsOn(typeof(SetupTests))|}]
+                public void AddItem() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(DependsOnShouldBeValidAnalyzer.NotATestClassRule)
+                .WithLocation(0)
+                .WithArguments("SetupTests"));
+    }
+
+    [TestMethod]
+    public async Task WhenReferencedTypeIsInternalWithDiscoverInternals_Cycle()
+    {
+        // With '[assembly: DiscoverInternals]' an internal '[TestClass]' is discovered like a public one, so
+        // the reference resolves and can take part in a cycle just like any other target.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: DiscoverInternals]
+
+            [TestClass]
+            internal class SetupTests
+            {
+                [TestMethod]
+                [{|#0:DependsOn(typeof(MyTestClass), nameof(MyTestClass.AddItem))|}]
+                public void CreateCart() { }
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [{|#1:DependsOn(typeof(SetupTests), nameof(SetupTests.CreateCart))|}]
+                public void AddItem() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(DependsOnShouldBeValidAnalyzer.CycleRule)
+                .WithLocation(0)
+                .WithArguments("SetupTests.CreateCart > MyTestClass.AddItem > SetupTests.CreateCart"),
+            VerifyCS.Diagnostic(DependsOnShouldBeValidAnalyzer.CycleRule)
+                .WithLocation(1)
+                .WithArguments("MyTestClass.AddItem > SetupTests.CreateCart > MyTestClass.AddItem"));
+    }
+
+    [TestMethod]
     public async Task WhenOverrideDropsTheBaseDependency_NoDiagnostic()
     {
         // '[DependsOn]' is not inherited across an override chain, so at run time 'Run' carries no
