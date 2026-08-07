@@ -29,12 +29,6 @@ foreach ($path in @(
     }
 }
 
-$minimumAffectedTestsSdk = [System.Management.Automation.SemanticVersion]"11.0.100-rc.1.26406.108"
-$configuredSdk = [System.Management.Automation.SemanticVersion]$configuration.sdk.version
-if ($configuredSdk -lt $minimumAffectedTestsSdk) {
-    throw "global.json must pin SDK $minimumAffectedTestsSdk or newer for affected-test command support."
-}
-
 $globalJsonText = Get-Content -LiteralPath $globalJsonPath -Raw
 if ($globalJsonText -match '(?i)"[^"]*(token|secret|password|connectionString|sas)[^"]*"\s*:') {
     throw "global.json must not contain affected-test credentials or secret-bearing settings."
@@ -54,6 +48,13 @@ if (-not $collectCall.Success -or -not $runCall.Success) {
 $affectedTestsEnabled =
     $collectCall.Groups["enabled"].Value -eq "true" -or
     $runCall.Groups["enabled"].Value -eq "true"
+
+$lastUnsupportedAffectedTestsSdk = [System.Management.Automation.SemanticVersion]"11.0.100-rc.1.26406.108"
+$configuredSdk = [System.Management.Automation.SemanticVersion]$configuration.sdk.version
+if ($affectedTestsEnabled -and $configuredSdk -le $lastUnsupportedAffectedTestsSdk) {
+    throw "Affected-test execution requires an SDK newer than $lastUnsupportedAffectedTestsSdk with dotnet/sdk#55595."
+}
+
 if ($affectedTestsEnabled -and $null -eq $affectedTests.storage) {
     throw "Affected-test pipeline execution requires test.affectedTests.storage."
 }

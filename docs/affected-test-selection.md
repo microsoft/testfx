@@ -5,9 +5,11 @@ This repository is prepared to adopt the experimental affected-test workflow fro
 builds on the composable filter-provider support from
 [testfx#10235](https://github.com/microsoft/testfx/pull/10235).
 
-The rollout is intentionally disabled. SDK `11.0.100-rc.1.26406.108` contains the affected-test commands, but the
-affected-test extension package and its public local-filesystem storage contract are not available yet. Ordinary test
-commands therefore remain unchanged.
+The rollout is intentionally disabled. SDK `11.0.100-rc.1.26406.108` contains the affected-test commands but fails
+`dotnet tool restore` on clean agents because it predates
+[dotnet/sdk#55595](https://github.com/dotnet/sdk/pull/55595). The repository remains on the stable SDK until a fixed
+daily is published. The affected-test extension package and its public local-filesystem storage contract are also not
+available yet. Ordinary test commands therefore remain unchanged.
 
 ## Prepared layout
 
@@ -50,14 +52,16 @@ cannot be validated.
 
 ## Activation checklist
 
-1. Add the publicly available affected-test extension package through `Directory.Packages.props` and the test project
+1. Update `global.json` to an SDK newer than `11.0.100-rc.1.26406.108` that contains dotnet/sdk#55595, then validate
+   `dotnet tool restore` on a clean agent.
+2. Add the publicly available affected-test extension package through `Directory.Packages.props` and the test project
    infrastructure, following the repository's normal dependency-flow and package-source policy.
-2. Add `test.affectedTests.storage` using the package's published local-filesystem schema and point it at the Pipeline
+3. Add `test.affectedTests.storage` using the package's published local-filesystem schema and point it at the Pipeline
    Cache directory.
-3. Update `affectedTestsCacheVersion` whenever the persisted map format or its compatibility dimensions change.
-4. Enable `collect` in the main-branch cache-seed call site and publish non-secret diagnostics as an Azure DevOps
+4. Update `affectedTestsCacheVersion` whenever the persisted map format or its compatibility dimensions change.
+5. Enable `collect` in the main-branch cache-seed call site and publish non-secret diagnostics as an Azure DevOps
    artifact.
-5. After a compatible map exists, enable `run` in the PR call site. Keep the full test command available as an explicit
+6. After a compatible map exists, enable `run` in the PR call site. Keep the full test command available as an explicit
    rollback by setting `enableAffectedTests` back to `false`.
-6. Validate a documentation-only change, a product change with a narrow affected set, a force-all change, a missing or
+7. Validate a documentation-only change, a product change with a narrow affected set, a force-all change, a missing or
    incompatible map, a fork PR without secrets, and a collection failure before making selection required.
