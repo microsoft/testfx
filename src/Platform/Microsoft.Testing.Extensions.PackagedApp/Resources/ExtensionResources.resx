@@ -143,4 +143,48 @@
   <data name="PackagedAppRegistrationFailed" xml:space="preserve">
     <value>Failed to register the packaged Windows app layout '{0}'. Registering an unsigned build-output layout requires Developer Mode (or sideloading) to be enabled. Error: {1}</value>
   </data>
+  <data name="ActivationArgumentsInvalidArgumentCount" xml:space="preserve">
+    <value>The Microsoft Testing Platform activation-argument payload has an invalid argument count.</value>
+    <comment>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</comment>
+  </data>
+  <data name="ActivationArgumentsInvalidArgumentLength" xml:space="preserve">
+    <value>The Microsoft Testing Platform activation-argument payload has an invalid argument length.</value>
+    <comment>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</comment>
+  </data>
+  <data name="ActivationArgumentsInvalidFileKey" xml:space="preserve">
+    <value>The Microsoft Testing Platform activation arguments contain an invalid file payload key.</value>
+    <comment>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</comment>
+  </data>
+  <data name="ActivationArgumentsInvalidFileReference" xml:space="preserve">
+    <value>The Microsoft Testing Platform activation arguments contain an invalid file payload reference.</value>
+    <comment>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</comment>
+  </data>
+  <data name="ActivationArgumentsInvalidInlinePayload" xml:space="preserve">
+    <value>The Microsoft Testing Platform activation arguments contain an invalid inline payload.</value>
+    <comment>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</comment>
+  </data>
+  <data name="ActivationArgumentsMissingPayload" xml:space="preserve">
+    <value>The launch activation does not contain Microsoft Testing Platform arguments.</value>
+    <comment>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</comment>
+  </data>
+  <data name="ActivationArgumentsPayloadAuthenticationFailed" xml:space="preserve">
+    <value>The Microsoft Testing Platform activation-argument payload failed authentication.</value>
+    <comment>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</comment>
+  </data>
+  <data name="ActivationArgumentsPayloadReadFailed" xml:space="preserve">
+    <value>The Microsoft Testing Platform activation-argument payload could not be read.</value>
+    <comment>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</comment>
+  </data>
+  <data name="ActivationArgumentsPayloadTooLarge" xml:space="preserve">
+    <value>The Microsoft Testing Platform activation-argument payload is too large.</value>
+    <comment>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</comment>
+  </data>
+  <data name="ActivationArgumentsPayloadTruncated" xml:space="preserve">
+    <value>The Microsoft Testing Platform activation-argument payload is truncated.</value>
+    <comment>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</comment>
+  </data>
+  <data name="ActivationArgumentsTrailingData" xml:space="preserve">
+    <value>The Microsoft Testing Platform activation-argument payload contains trailing data.</value>
+    <comment>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</comment>
+  </data>
 </root>

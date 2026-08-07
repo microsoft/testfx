@@ -3,6 +3,8 @@
 
 using System.Security.Cryptography;
 
+using Microsoft.Testing.Extensions.PackagedApp.Resources;
+
 namespace Microsoft.Testing.Extensions.PackagedApp;
 
 /// <summary>
@@ -104,7 +106,7 @@ internal static class PackagedAppActivationArguments
             }
             catch (FormatException ex)
             {
-                throw new FormatException("The Microsoft Testing Platform activation arguments contain an invalid inline payload.", ex);
+                throw new FormatException(ExtensionResources.ActivationArgumentsInvalidInlinePayload, ex);
             }
 
             try
@@ -119,7 +121,7 @@ internal static class PackagedAppActivationArguments
 
         return activationArguments.StartsWith(FilePrefix, StringComparison.Ordinal)
             ? ReadEncryptedPayload(activationArguments[FilePrefix.Length..], localStateDirectory)
-            : throw new FormatException("The launch activation does not contain Microsoft Testing Platform arguments.");
+            : throw new FormatException(ExtensionResources.ActivationArgumentsMissingPayload);
     }
 
     public static void TryDeletePayload(string? payloadPath)
@@ -179,7 +181,7 @@ internal static class PackagedAppActivationArguments
             || !Guid.TryParseExact(reference[..separator], "N", out Guid tokenValue)
             || localStateDirectory is null)
         {
-            throw new FormatException("The Microsoft Testing Platform activation arguments contain an invalid file payload reference.");
+            throw new FormatException(ExtensionResources.ActivationArgumentsInvalidFileReference);
         }
 
         byte[] key;
@@ -189,13 +191,13 @@ internal static class PackagedAppActivationArguments
         }
         catch (FormatException ex)
         {
-            throw new FormatException("The Microsoft Testing Platform activation arguments contain an invalid file payload key.", ex);
+            throw new FormatException(ExtensionResources.ActivationArgumentsInvalidFileKey, ex);
         }
 
         if (key.Length != KeySize)
         {
             CryptographicOperations.ZeroMemory(key);
-            throw new FormatException("The Microsoft Testing Platform activation arguments contain an invalid file payload key.");
+            throw new FormatException(ExtensionResources.ActivationArgumentsInvalidFileKey);
         }
 
         try
@@ -217,7 +219,7 @@ internal static class PackagedAppActivationArguments
                     FileOptions.DeleteOnClose);
                 if (payloadStream.Length > int.MaxValue)
                 {
-                    throw new FormatException("The Microsoft Testing Platform activation-argument payload is too large.");
+                    throw new FormatException(ExtensionResources.ActivationArgumentsPayloadTooLarge);
                 }
 
                 encryptedPayload = new byte[(int)payloadStream.Length];
@@ -229,12 +231,12 @@ internal static class PackagedAppActivationArguments
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                throw new FormatException("The Microsoft Testing Platform activation-argument payload could not be read.", ex);
+                throw new FormatException(ExtensionResources.ActivationArgumentsPayloadReadFailed, ex);
             }
 
             if (encryptedPayload.Length < NonceSize + TagSize)
             {
-                throw new FormatException("The Microsoft Testing Platform activation-argument payload is truncated.");
+                throw new FormatException(ExtensionResources.ActivationArgumentsPayloadTruncated);
             }
 
             ReadOnlySpan<byte> nonce = encryptedPayload.AsSpan(0, NonceSize);
@@ -252,7 +254,7 @@ internal static class PackagedAppActivationArguments
             }
             catch (AuthenticationTagMismatchException ex)
             {
-                throw new FormatException("The Microsoft Testing Platform activation-argument payload failed authentication.", ex);
+                throw new FormatException(ExtensionResources.ActivationArgumentsPayloadAuthenticationFailed, ex);
             }
             finally
             {
@@ -276,7 +278,7 @@ internal static class PackagedAppActivationArguments
 
         if (byteCount > int.MaxValue)
         {
-            throw new ArgumentException("The argument payload is too large.", nameof(arguments));
+            throw new ArgumentException(ExtensionResources.ActivationArgumentsPayloadTooLarge, nameof(arguments));
         }
 
         byte[] payload = new byte[(int)byteCount];
@@ -302,13 +304,13 @@ internal static class PackagedAppActivationArguments
     {
         if (payload.Length < sizeof(int))
         {
-            throw new FormatException("The Microsoft Testing Platform activation-argument payload is truncated.");
+            throw new FormatException(ExtensionResources.ActivationArgumentsPayloadTruncated);
         }
 
         int count = ReadInt32(payload);
         if (count < 0 || count > (payload.Length - sizeof(int)) / sizeof(int))
         {
-            throw new FormatException("The Microsoft Testing Platform activation-argument payload has an invalid argument count.");
+            throw new FormatException(ExtensionResources.ActivationArgumentsInvalidArgumentCount);
         }
 
         string[] arguments = new string[count];
@@ -317,14 +319,14 @@ internal static class PackagedAppActivationArguments
         {
             if (payload.Length - offset < sizeof(int))
             {
-                throw new FormatException("The Microsoft Testing Platform activation-argument payload is truncated.");
+                throw new FormatException(ExtensionResources.ActivationArgumentsPayloadTruncated);
             }
 
             int charCount = ReadInt32(payload[offset..]);
             offset += sizeof(int);
             if (charCount < 0 || charCount > (payload.Length - offset) / sizeof(char))
             {
-                throw new FormatException("The Microsoft Testing Platform activation-argument payload has an invalid argument length.");
+                throw new FormatException(ExtensionResources.ActivationArgumentsInvalidArgumentLength);
             }
 
             char[] chars = new char[charCount];
@@ -340,7 +342,7 @@ internal static class PackagedAppActivationArguments
 
         return offset == payload.Length
             ? arguments
-            : throw new FormatException("The Microsoft Testing Platform activation-argument payload contains trailing data.");
+            : throw new FormatException(ExtensionResources.ActivationArgumentsTrailingData);
     }
 
     private static byte[] GetAssociatedData(string token) => Encoding.ASCII.GetBytes($"{FilePrefix}{token}");
