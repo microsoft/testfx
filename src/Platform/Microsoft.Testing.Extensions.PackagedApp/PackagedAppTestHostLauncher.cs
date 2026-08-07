@@ -246,6 +246,7 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher
             string activationArguments = activationData.Arguments;
             activationPayloadPath = activationData.PayloadPath;
 
+            cancellationToken.ThrowIfCancellationRequested();
             uint processId = PackageDeployer.Activate(application.AppUserModelId, activationArguments);
 
             // The handle owns deleting the hand-off from now on: the activated host normally consumes and

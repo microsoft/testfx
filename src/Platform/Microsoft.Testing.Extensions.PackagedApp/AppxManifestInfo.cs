@@ -287,6 +287,11 @@ internal sealed class AppxManifestInfo
             return false;
         }
 
+        if (string.Equals(runtimeBehavior, "windowsApp", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
         if (string.Equals(trustLevel, "appContainer", StringComparison.OrdinalIgnoreCase))
         {
             return true;
@@ -295,11 +300,6 @@ internal sealed class AppxManifestInfo
         if (string.Equals(trustLevel, "mediumIL", StringComparison.OrdinalIgnoreCase))
         {
             return false;
-        }
-
-        if (string.Equals(runtimeBehavior, "windowsApp", StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
         }
 
         // Legacy UWP manifests express AppContainer by omission. A package-wide runFullTrust capability
