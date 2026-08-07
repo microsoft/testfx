@@ -190,6 +190,8 @@ Notable properties:
 - Nothing changes for a packaged **full-trust** desktop host, an unpackaged app, an ordinary console test app, or any non-Windows run: the pipe is created exactly as it was before.
 - No loopback exemption (`CheckNetIsolation LoopbackExempt`) is used or needed — that applies to network sockets, not named pipes.
 
+> **Elevated controllers are out of scope.** The pipe is owned by the creating token's *owner* SID, which for an elevated controller is `BUILTIN\Administrators`. An AppContainer can never be elevated, so its own owner SID is the user — and the client-side `PipeOptions.CurrentUserOnly` check then rejects the connection as "not owned by the current user" even though the DACL admits it. Run AppContainer test hosts from a non-elevated controller.
+
 Set `TESTINGPLATFORM_PACKAGEDAPP_PIPEAUTHORIZATION` to override the decision. Values are compared case-insensitively; anything unrecognized falls back to `auto`.
 
 | Value | Behavior |

@@ -51,3 +51,5 @@ Microsoft.Testing.Extensions.PackagedApp.AppContainerSecurityIdentifier
 static Microsoft.Testing.Extensions.PackagedApp.AppContainerSecurityIdentifier.TryDerive(string? packageFamilyName) -> string?
 Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostLauncher.GetAuthorizedSecurityIdentitiesAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<string!>!>!
 const Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostLauncher.PipeAuthorizationModeEnvironmentVariable = "TESTINGPLATFORM_PACKAGEDAPP_PIPEAUTHORIZATION" -> string!
+Microsoft.Testing.Extensions.PackagedApp.AppxApplicationInfo.AppxApplicationInfo(string! id, string? executable, string! appUserModelId, bool usesLaunchActivationArguments, bool runsInAppContainer) -> void
+Microsoft.Testing.Extensions.PackagedApp.AppxApplicationInfo.RunsInAppContainer.get -> bool

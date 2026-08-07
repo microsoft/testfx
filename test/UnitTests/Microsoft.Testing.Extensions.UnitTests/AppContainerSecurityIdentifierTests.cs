@@ -82,6 +82,7 @@ public sealed class AppContainerSecurityIdentifierTests
         if (mappings is null)
         {
             Assert.Inconclusive("This machine has no AppContainer mappings to cross-check against.");
+            return;
         }
 
         int verified = 0;

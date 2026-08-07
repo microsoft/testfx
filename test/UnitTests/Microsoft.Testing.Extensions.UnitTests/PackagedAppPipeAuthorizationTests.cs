@@ -50,6 +50,21 @@ public sealed class PackagedAppPipeAuthorizationTests
             mode: null,
             expected: []);
 
+    /// <summary>
+    /// A <c>packagedClassicApp</c> whose <c>TrustLevel</c> is <c>appContainer</c> receives its arguments as
+    /// ordinary process <c>argv</c> — so it needs no activation bootstrap — but it still runs sandboxed, so
+    /// its restricted token cannot reach the controller connection without the package SID being authorized.
+    /// Conflating "receives launch-activation arguments" with "runs in an AppContainer" would leave exactly
+    /// this shape unable to connect.
+    /// </summary>
+    [TestMethod]
+    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "AppContainers are a Windows-only concept.")]
+    public Task WithClassicAppInAnAppContainer_StillAuthorizesThePackage()
+        => AssertAuthorizedSecurityIdentifiersAsync(
+            BuildManifestXml(runFullTrust: false, entryPoint: null, trustLevel: "appContainer", runtimeBehavior: "packagedClassicApp"),
+            mode: null,
+            expected: [ContosoPackageSid]);
+
     // A loose (non-packaged) layout has no package identity at all; it is launched as an ordinary process.
     [TestMethod]
     [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "AppContainers are a Windows-only concept; the launcher unconditionally authorizes nothing elsewhere, which OnNonWindows_AuthorizesNothingEvenWithAlwaysMode covers.")]
@@ -149,10 +164,15 @@ public sealed class PackagedAppPipeAuthorizationTests
     }
 
     private static string BuildManifestXml(bool runFullTrust, string? entryPoint)
+        => BuildManifestXml(runFullTrust, entryPoint, trustLevel: null, runtimeBehavior: null);
+
+    private static string BuildManifestXml(bool runFullTrust, string? entryPoint, string? trustLevel, string? runtimeBehavior)
     {
         // The AppContainer classification lives in AppxManifestInfo (shared with activation-argument
         // delivery), so these manifests exercise the same signals it reads.
         string entryPointAttribute = entryPoint is null ? string.Empty : $" EntryPoint=\"{entryPoint}\"";
+        string trustLevelAttribute = trustLevel is null ? string.Empty : $" uap10:TrustLevel=\"{trustLevel}\"";
+        string runtimeBehaviorAttribute = runtimeBehavior is null ? string.Empty : $" uap10:RuntimeBehavior=\"{runtimeBehavior}\"";
         string capabilities = runFullTrust
             ? """
                 <Capabilities>
@@ -163,10 +183,10 @@ public sealed class PackagedAppPipeAuthorizationTests
 
         return $"""
             <?xml version="1.0" encoding="utf-8"?>
-            <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities">
+            <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities" xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10">
               <Identity Name="Contoso.MyTestApp" Publisher="{MicrosoftStorePublisher}" Version="1.0.0.0" />
               <Applications>
-                <Application Id="App" Executable="MyTestApp.exe"{entryPointAttribute} />
+                <Application Id="App" Executable="MyTestApp.exe"{entryPointAttribute}{trustLevelAttribute}{runtimeBehaviorAttribute} />
               </Applications>
             {capabilities}
             </Package>

@@ -270,19 +270,24 @@ internal static class NamedPipeServerSecurity
     /// <returns>An asynchronous, not-yet-connected server stream.</returns>
     [SupportedOSPlatform("windows")]
     internal static NamedPipeServerStream CreateServerStream(string pipeName, int maxNumberOfServerInstances, IReadOnlyList<string> authorizedSecurityIdentities)
-        => CreateServerStream(pipeName, maxNumberOfServerInstances, BuildSecurityDescriptor(GetCurrentProcessOwnerSid(), authorizedSecurityIdentities));
+        => CreateServerStreamWithExplicitSecurityDescriptor(pipeName, maxNumberOfServerInstances, BuildSecurityDescriptor(GetCurrentProcessOwnerSid(), authorizedSecurityIdentities));
 
     /// <summary>
-    /// Creates a named pipe server stream protected by an explicit SDDL security descriptor. Split out from
-    /// <see cref="CreateServerStream(string, int, IReadOnlyList{string})"/> so tests can exercise arbitrary
-    /// descriptors.
+    /// Creates a named pipe server stream protected by a caller-supplied SDDL security descriptor.
     /// </summary>
+    /// <remarks>
+    /// <strong>This overload performs no validation</strong> — the descriptor is passed to Windows verbatim.
+    /// It exists so tests can exercise arbitrary descriptors, including deliberately malformed ones. Product
+    /// code must use <see cref="CreateServerStream(string, int, IReadOnlyList{string})"/>, which validates
+    /// every identity at the point it is composed. The name is deliberately unlike the validating overload
+    /// so this one can never be selected by overload-resolution accident.
+    /// </remarks>
     /// <param name="pipeName">The pipe name, without the <c>\\.\pipe\</c> prefix.</param>
     /// <param name="maxNumberOfServerInstances">The maximum number of concurrent server instances.</param>
     /// <param name="securityDescriptorSddl">The security descriptor in SDDL form.</param>
     /// <returns>An asynchronous, not-yet-connected server stream.</returns>
     [SupportedOSPlatform("windows")]
-    internal static NamedPipeServerStream CreateServerStream(string pipeName, int maxNumberOfServerInstances, string securityDescriptorSddl)
+    internal static NamedPipeServerStream CreateServerStreamWithExplicitSecurityDescriptor(string pipeName, int maxNumberOfServerInstances, string securityDescriptorSddl)
     {
         if (!ConvertStringSecurityDescriptorToSecurityDescriptor(securityDescriptorSddl, SddlRevision1, out IntPtr securityDescriptor, IntPtr.Zero))
         {
@@ -416,6 +421,7 @@ internal static class NamedPipeServerSecurity
         public int InheritHandle;
     }
 
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [DllImport("advapi32.dll", EntryPoint = "ConvertStringSecurityDescriptorToSecurityDescriptorW", CharSet = CharSet.Unicode, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool ConvertStringSecurityDescriptorToSecurityDescriptor(
@@ -424,14 +430,17 @@ internal static class NamedPipeServerSecurity
         out IntPtr securityDescriptor,
         IntPtr securityDescriptorSize);
 
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [DllImport("advapi32.dll", EntryPoint = "ConvertSidToStringSidW", CharSet = CharSet.Unicode, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool ConvertSidToStringSid(IntPtr sid, out IntPtr stringSid);
 
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [DllImport("advapi32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool OpenProcessToken(IntPtr processHandle, uint desiredAccess, out IntPtr tokenHandle);
 
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [DllImport("advapi32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool GetTokenInformation(
@@ -441,6 +450,7 @@ internal static class NamedPipeServerSecurity
         int tokenInformationLength,
         out int returnLength);
 
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [DllImport("kernel32.dll", EntryPoint = "CreateNamedPipeW", CharSet = CharSet.Unicode, SetLastError = true)]
     private static extern IntPtr CreateNamedPipe(
         string name,
@@ -452,13 +462,16 @@ internal static class NamedPipeServerSecurity
         uint nDefaultTimeOut,
         ref SecurityAttributes securityAttributes);
 
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [DllImport("kernel32.dll")]
     private static extern IntPtr GetCurrentProcess();
 
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [DllImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool CloseHandle(IntPtr handle);
 
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     [DllImport("kernel32.dll", SetLastError = true)]
     private static extern IntPtr LocalFree(IntPtr memory);
 }

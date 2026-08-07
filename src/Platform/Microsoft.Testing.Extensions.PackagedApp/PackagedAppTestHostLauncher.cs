@@ -201,8 +201,7 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
     /// <para>
     /// The grant is deliberately narrow. Nothing is requested unless the layout is a packaged (MSIX) app
     /// <em>and</em> at least one of its declared applications runs inside an AppContainer, as classified by
-    /// <see cref="AppxApplicationInfo.IsAppContainer"/> — the very same manifest classification that decides
-    /// whether the host is activated with an activation payload or with plain <c>argv</c>. A packaged
+    /// <see cref="AppxApplicationInfo.RunsInAppContainer"/>. A packaged
     /// full-trust desktop host already reaches the pipe with the platform's normal current-user protection
     /// and gets nothing extra. The value returned is the SID of this very package, derived from its own
     /// family name, so it cannot authorize any other application. The platform independently re-validates it
@@ -255,8 +254,11 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
         // specific application cannot be resolved yet. That does not weaken anything: the SID is the
         // package's, shared by every application it declares, so "this package contains an AppContainer
         // application" is exactly the right predicate for authorizing it.
+        //
+        // Note this asks RunsInAppContainer, not UsesLaunchActivationArguments: a packagedClassicApp whose
+        // TrustLevel is appContainer receives ordinary argv but is still sandboxed, so it needs the grant.
         bool alwaysAuthorize = string.Equals(mode, AlwaysMode, StringComparison.OrdinalIgnoreCase);
-        return !alwaysAuthorize && !manifestInfo.Applications.Any(static application => application.IsAppContainer)
+        return !alwaysAuthorize && !manifestInfo.Applications.Any(static application => application.RunsInAppContainer)
             ? []
             : AppContainerSecurityIdentifier.TryDerive(manifestInfo.PackageFamilyName) is { } securityIdentifier
                 ? [securityIdentifier]

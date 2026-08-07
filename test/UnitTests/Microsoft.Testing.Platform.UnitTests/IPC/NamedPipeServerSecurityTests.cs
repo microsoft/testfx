@@ -340,7 +340,7 @@ public sealed class NamedPipeServerSecurityTests
     {
         string pipeName = $"testingplatform.pipe.test.{Guid.NewGuid():N}";
         string ownerSid = NamedPipeServerSecurity.GetCurrentProcessOwnerSid();
-        using NamedPipeServerStream stream = NamedPipeServerSecurity.CreateServerStream(
+        using NamedPipeServerStream stream = NamedPipeServerSecurity.CreateServerStreamWithExplicitSecurityDescriptor(
             pipeName,
             maxNumberOfServerInstances: 1,
             NamedPipeServerSecurity.BuildSecurityDescriptor(ownerSid, authorizePackage ? [PackageSid] : []));
@@ -550,7 +550,7 @@ public sealed class NamedPipeServerSecurityTests
     {
         string pipeName = $"testingplatform.pipe.test.{Guid.NewGuid():N}";
         string ownerSid = NamedPipeServerSecurity.GetCurrentProcessOwnerSid();
-        using NamedPipeServerStream server = NamedPipeServerSecurity.CreateServerStream(
+        using NamedPipeServerStream server = NamedPipeServerSecurity.CreateServerStreamWithExplicitSecurityDescriptor(
             pipeName,
             maxNumberOfServerInstances: 1,
             NamedPipeServerSecurity.BuildSecurityDescriptor(ownerSid, authorizedSids));
