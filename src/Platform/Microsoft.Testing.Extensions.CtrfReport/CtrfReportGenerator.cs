@@ -8,6 +8,8 @@ namespace Microsoft.Testing.Extensions.CtrfReport;
 
 internal sealed class CtrfReportGenerator : ReportGeneratorBase<CtrfReportGenerator, CapturedTestResult>
 {
+    internal const string CtrfArtifactKind = "microsoft.testing.ctrf";
+
     public CtrfReportGenerator(IServiceProvider serviceProvider)
         : base(serviceProvider, CtrfReportGeneratorCommandLine.CtrfReportOptionName)
     {
@@ -24,7 +26,7 @@ internal sealed class CtrfReportGenerator : ReportGeneratorBase<CtrfReportGenera
 
     protected override string ArtifactDisplayName => ExtensionResources.CtrfReportArtifactDisplayName;
 
-    protected override string? ArtifactKind => "microsoft.testing.ctrf";
+    protected override string? ArtifactKind => CtrfArtifactKind;
 
     protected override string ArtifactDescription => ExtensionResources.CtrfReportArtifactDescription;
 

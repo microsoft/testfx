@@ -49,6 +49,9 @@ internal static partial class CtrfReportMerger
         => Merge(inputReports, CtrfMergeMode.Concatenate);
 
     internal static string Merge(IReadOnlyList<string> inputReports, CtrfMergeMode mode)
+        => Merge(inputReports, mode, requireAllReports: false);
+
+    private static string Merge(IReadOnlyList<string> inputReports, CtrfMergeMode mode, bool requireAllReports)
     {
         if (inputReports is null)
         {
@@ -176,6 +179,11 @@ internal static partial class CtrfReportMerger
                     latestStop = Max(latestStop, stop);
                 }
             }
+        }
+
+        if (requireAllReports && reportCount != inputReports.Count)
+        {
+            throw new ArgumentException("Every input must be a valid CTRF report.", nameof(inputReports));
         }
 
         if (first is null)

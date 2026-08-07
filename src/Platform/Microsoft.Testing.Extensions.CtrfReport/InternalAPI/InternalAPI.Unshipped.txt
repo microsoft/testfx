@@ -1,9 +1,22 @@
 #nullable enable
+const Microsoft.Testing.Extensions.CtrfReport.CtrfReportGenerator.CtrfArtifactKind = "microsoft.testing.ctrf" -> string!
 virtual Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.ArtifactKind.get -> string?
+Microsoft.Testing.Extensions.CtrfReport.CtrfArtifactPostProcessor
+Microsoft.Testing.Extensions.CtrfReport.CtrfArtifactPostProcessor.CtrfArtifactPostProcessor() -> void
+Microsoft.Testing.Extensions.CtrfReport.CtrfArtifactPostProcessor.Description.get -> string!
+Microsoft.Testing.Extensions.CtrfReport.CtrfArtifactPostProcessor.DisplayName.get -> string!
+Microsoft.Testing.Extensions.CtrfReport.CtrfArtifactPostProcessor.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Extensions.CtrfReport.CtrfArtifactPostProcessor.ProcessAsync(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>! inputs, string! outputDirectory, Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact?>!
+Microsoft.Testing.Extensions.CtrfReport.CtrfArtifactPostProcessor.SupportsTruncatedRuns.get -> bool
+Microsoft.Testing.Extensions.CtrfReport.CtrfArtifactPostProcessor.SupportedFileExtensionsFallback.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Microsoft.Testing.Extensions.CtrfReport.CtrfArtifactPostProcessor.SupportedKinds.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Microsoft.Testing.Extensions.CtrfReport.CtrfArtifactPostProcessor.Uid.get -> string!
+Microsoft.Testing.Extensions.CtrfReport.CtrfArtifactPostProcessor.Version.get -> string!
 Microsoft.Testing.Extensions.CtrfReport.CtrfMergeMode
 Microsoft.Testing.Extensions.CtrfReport.CtrfMergeMode.CollapseRetryAttempts = 1 -> Microsoft.Testing.Extensions.CtrfReport.CtrfMergeMode
 Microsoft.Testing.Extensions.CtrfReport.CtrfMergeMode.Concatenate = 0 -> Microsoft.Testing.Extensions.CtrfReport.CtrfMergeMode
 Microsoft.Testing.Extensions.CtrfReport.CtrfReportMerger
+static Microsoft.Testing.Extensions.CtrfReport.CtrfReportMerger.MergeAllToFileAsync(System.Collections.Generic.IReadOnlyList<string!>! inputPaths, string! outputPath, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 static Microsoft.Testing.Extensions.CtrfReport.CtrfReportMerger.Merge(System.Collections.Generic.IReadOnlyList<string!>! inputReports) -> string!
 static Microsoft.Testing.Extensions.CtrfReport.CtrfReportMerger.Merge(System.Collections.Generic.IReadOnlyList<string!>! inputReports, Microsoft.Testing.Extensions.CtrfReport.CtrfMergeMode mode) -> string!
 static Microsoft.Testing.Extensions.CtrfReport.CtrfReportMerger.MergeToFileAsync(System.Collections.Generic.IReadOnlyList<string!>! inputPaths, string! outputPath, Microsoft.Testing.Extensions.CtrfReport.CtrfMergeMode mode, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
