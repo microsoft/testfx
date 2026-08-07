@@ -1,23 +1,71 @@
-# Testing WinUI apps with MSTest and Microsoft.Testing.Platform
+# Testing UWP and WinUI apps with MSTest
 
-WinUI 3 test apps come in two flavors, and which one you use decides how the test host is started:
+## Application model matrix
+
+| Application model | Recommended test configuration | Test host |
+| --- | --- | --- |
+| Legacy UWP (`uap10.0`) | Existing non-SDK project with `MSTest.TestAdapter` and `MSTest.TestFramework` | VSTest AppContainer |
+| Modern UWP (.NET 9+, `UseUwp`) | `MSTest.Sdk` | VSTest AppContainer, selected automatically |
+| Packaged full-trust WinUI 3 (`UseWinUI`) | `MSTest.Sdk` | MTP with automatic package registration and AUMID activation |
+| Unpackaged WinUI 3 (`UseWinUI`, `WindowsPackageType=None`) | `MSTest.Sdk` | MTP direct executable launch |
+| AppContainer-configured WinUI 3 | VSTest | MTP is not currently supported |
+
+True UWP/AppContainer test hosts cannot use MTP. `MSTest.Sdk` therefore selects VSTest when `UseUwp=true` and reports a build error if a project explicitly selects MTP for that application model. Legacy `uap10.0` projects remain on their existing package-based setup because they do not use the SDK-style project system.
+
+### Packaging and sandboxing are separate choices
+
+Two independent settings describe a Windows app:
+
+- **Packaging** determines whether the app has MSIX package identity and must be registered and activated by AUMID. Both UWP and WinUI apps can be packaged.
+- **Trust level** determines whether the process is a normal full-trust desktop process or runs in the restricted AppContainer sandbox.
+
+A packaged WinUI 3 desktop app is full trust by default. Packaging gives it identity and MSIX file/registry virtualization, but does not put it in AppContainer. A WinUI 3 app can be explicitly configured for AppContainer with `uap10:TrustLevel="appContainer"` in its package manifest; it then has the same MTP communication restrictions as UWP.
+
+`Microsoft.Testing.Extensions.PackagedApp` currently supports packaged **full-trust** desktop hosts. It can register and activate an AppContainer layout, but the activated host cannot receive MTP's command line through `argv` or access the controller pipe with its package SID, so the test run cannot connect.
+
+#### Why MTP cannot communicate with AppContainer yet
+
+MTP's controller must give the new test host its command-line options and then establish a two-way named-pipe connection. AppContainer changes both mechanisms:
+
+1. **Activation arguments are not process arguments.** For a packaged full-trust desktop app, AUMID activation starts an ordinary Win32 process and the activation string becomes its command line, which .NET exposes through `Environment.GetCommandLineArgs()`. A true UWP/AppContainer app instead receives one opaque string through [`LaunchActivatedEventArgs.Arguments`](https://learn.microsoft.com/uwp/api/windows.applicationmodel.activation.launchactivatedeventargs.arguments) in `Application.OnLaunched`. An AppContainer MTP host would need to read that value and parse it back into the `string[]` expected by the platform.
+2. **The controller pipe does not authorize the app identity.** MTP creates its named pipe with [`PipeOptions.CurrentUserOnly`](https://learn.microsoft.com/dotnet/api/system.io.pipes.pipeoptions), granting the controller user's SID access. An AppContainer token is additionally restricted by its package SID, and Windows grants access only when both the normal and restricted identity checks succeed. The pipe would therefore need an explicit access rule for the exact package SID (preferred) or the broader `ALL APPLICATION PACKAGES` SID.
+
+The packaged-app handshake already transfers the controller pipe name and related environment values through the package's `LocalState`, but knowing the pipe name does not grant permission to open it. Both argument delivery and pipe authorization must be solved for true UWP/AppContainer support.
+
+For modern UWP, the test-related part of the project is reduced to the SDK declaration:
+
+```xml
+<Project Sdk="MSTest.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0-windows10.0.26100.0</TargetFramework>
+    <UseUwp>true</UseUwp>
+    <PublishAot>true</PublishAot>
+  </PropertyGroup>
+</Project>
+```
+
+The UWP XAML, MSIX, architecture, and Native AOT settings remain application concerns. Modern UWP builds also continue to require the Visual Studio MSBuild toolchain.
+
+## WinUI 3
+
+For the normal full-trust WinUI 3 model, test apps come in two packaging flavors, and that choice decides how the test host is started:
 
 | Flavor | `WindowsPackageType` | Has an `AppxManifest.xml` in the build output | How the test host starts |
 | --- | --- | --- | --- |
 | **Packaged** (MSIX) | unset (the default) | yes | The app must be registered with the OS and activated by Application User Model ID (AUMID). `Process.Start` cannot start it. |
 | **Unpackaged** | `None` | no | It is an ordinary Windows executable. `Process.Start` is all that is needed. |
 
-Both flavors are supported when you run on [Microsoft.Testing.Platform](https://learn.microsoft.com/dotnet/core/testing/unit-testing-platform-intro) (MTP), which you enable with `<EnableMSTestRunner>true</EnableMSTestRunner>`. Under MTP the WinUI app **is** the test host: it hosts the platform in-process, so VSTest's appx runtime provider is never involved. A packaged app still needs the [`Microsoft.Testing.Extensions.PackagedApp`](#packaged-msix-winui) launcher to register and AUMID-activate that host, because a packaged app cannot be started with `Process.Start`; an unpackaged app needs nothing extra.
+Both flavors are supported when you use `MSTest.Sdk`, whose default runner is [Microsoft.Testing.Platform](https://learn.microsoft.com/dotnet/core/testing/unit-testing-platform-intro) (MTP). Under MTP the WinUI app **is** the test host: it hosts the platform in-process, so VSTest's appx runtime provider is never involved. `MSTest.Sdk` adds the packaged-app launcher automatically for a packaged WinUI project; an unpackaged app stays on the direct executable launch path.
 
 > [!NOTE]
 > Unpackaged WinUI is not supported under VSTest. VSTest routes every `UseWinUI` project through its `UwpTestHostRuntimeProvider`, which unconditionally reads an `AppxManifest.xml` from the build output and fails with `FileNotFoundException` when there is none. That provider ships in Visual Studio, not in this repository. See [#2784](https://github.com/microsoft/testfx/issues/2784).
 
 ## Unpackaged WinUI
 
-Set `WindowsPackageType` to `None` and enable the MSTest runner:
+Set `WindowsPackageType` to `None`:
 
 ```xml
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="MSTest.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -28,11 +76,9 @@ Set `WindowsPackageType` to `None` and enable the MSTest runner:
     <!-- Run unpackaged: no MSIX identity, no AppxManifest.xml, no package logos. -->
     <WindowsPackageType>None</WindowsPackageType>
 
-    <EnableMSTestRunner>true</EnableMSTestRunner>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MSTest" Version="..." />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="..." />
   </ItemGroup>
 
@@ -41,15 +87,7 @@ Set `WindowsPackageType` to `None` and enable the MSTest runner:
 
 Point `[UITestMethod]` at a dispatcher queue so UI tests run on the UI thread. Which mechanism you use depends on whether the test app is itself the WinUI app:
 
-**Self-hosted (the app is the test host).** A WinUI app already generates its own entry point from its `ApplicationDefinition`, so tell the platform not to generate a competing one, and host the platform yourself from `OnLaunched`:
-
-```xml
-<PropertyGroup>
-  <EnableMSTestRunner>true</EnableMSTestRunner>
-  <!-- The WinUI app owns its entry point; without this the platform generates a second one. -->
-  <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
-</PropertyGroup>
-```
+**Self-hosted (the app is the test host).** A WinUI app already generates its own entry point from its `ApplicationDefinition`. `MSTest.Sdk` detects that item and suppresses the competing MTP `Main`, while still generating a reusable `MicrosoftTestingPlatformApplication.RunAsync` helper. Host the platform from `OnLaunched`:
 
 The process has already called `Application.Start`, so publish that dispatcher directly rather than letting the attribute start another application:
 
@@ -60,13 +98,9 @@ protected override async void OnLaunched(LaunchActivatedEventArgs args)
     _window.Activate();
     UITestMethodAttribute.DispatcherQueue = _window.DispatcherQueue;
 
-    string[] cliArgs = Environment.GetCommandLineArgs().Skip(1).ToArray();
-    ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(cliArgs);
-    builder.AddSelfRegisteredExtensions(cliArgs);
-    using ITestApplication app = await builder.BuildAsync();
-
     // The WinUI-generated entry point is 'void', so publish the exit code yourself.
-    Environment.ExitCode = await app.RunAsync();
+    Environment.ExitCode = await MicrosoftTestingPlatformApplication.RunAsync(
+        Environment.GetCommandLineArgs()[1..]);
     _window.Close();
     Exit();
 }
@@ -75,7 +109,7 @@ protected override async void OnLaunched(LaunchActivatedEventArgs args)
 > [!IMPORTANT]
 > Do **not** use `[assembly: WinUITestTarget(...)]` in a self-hosted app. That attribute makes `UITestMethodAttribute` start an application itself, which would be a second `Application.Start` in the same process and fails.
 
-**Separate host.** When the test host is an ordinary executable and no `Application` has been started yet, let the attribute start one:
+**Separate host.** When the test host is an ordinary executable with no `ApplicationDefinition` and no `Application` has been started yet, `MSTest.Sdk` keeps the generated MTP entry point and the attribute starts the application:
 
 ```csharp
 [assembly: WinUITestTarget(typeof(MyApp.App))]
@@ -98,13 +132,9 @@ If you hit that, either build from Visual Studio (or with its `MSBuild.exe`) or 
 
 ## Packaged (MSIX) WinUI
 
-A packaged app keeps the default `WindowsPackageType` and ships a `Package.appxmanifest`. Because it cannot be started with `Process.Start`, the test host has to be registered and activated by AUMID. Add the [`Microsoft.Testing.Extensions.PackagedApp`](https://www.nuget.org/packages/Microsoft.Testing.Extensions.PackagedApp) package, which does exactly that through the platform's `ITestHostLauncher` extension point:
+A packaged full-trust app keeps the default `WindowsPackageType` and ships a `Package.appxmanifest`. Because it cannot be started with `Process.Start`, the test host has to be registered and activated by AUMID. For `UseWinUI` projects, `MSTest.Sdk` references [`Microsoft.Testing.Extensions.PackagedApp`](https://www.nuget.org/packages/Microsoft.Testing.Extensions.PackagedApp) automatically and its generated runner helper registers the launcher.
 
-```xml
-<PackageReference Include="Microsoft.Testing.Extensions.PackagedApp" Version="..." />
-```
-
-Referencing the package is enough — its MSBuild props register the launcher. Do **not** also call `builder.AddPackagedAppDeployment()` when you already use `AddSelfRegisteredExtensions`, because at most one test host launcher may be registered per run.
+Set `<EnableMicrosoftTestingExtensionsPackagedApp>false</EnableMicrosoftTestingExtensionsPackagedApp>` only when a custom launcher owns packaged activation. Do **not** also call `builder.AddPackagedAppDeployment()`, because at most one test host launcher may be registered per run.
 
 Requirements and limitations:
 
@@ -123,7 +153,8 @@ The launcher therefore decides for itself, per run:
 | Situation | Launcher enabled? | Effect |
 | --- | --- | --- |
 | Not Windows | no | Nothing changes. Packaged Windows apps are a Windows-only concept. |
-| Packaged layout (an `AppxManifest.xml` that describes this app — see below) | yes | The layout is registered and activated by AUMID. |
+| Supported packaged full-trust layout (an `AppxManifest.xml` that describes this app — see below) | yes | The layout is registered and activated by AUMID. |
+| True UWP/AppContainer packaged layout | yes, but unsupported | Registration and activation may succeed, but the host cannot receive the MTP arguments or connect to the controller pipe. |
 | Any other layout — including unpackaged WinUI and ordinary console test apps | no | The platform keeps its default in-process / `Process.Start` path. |
 
 So an **unpackaged** WinUI app that references `Microsoft.Testing.Extensions.PackagedApp` (directly, or transitively through a shared `Directory.Packages.props`) pays nothing for it: no extra process, and no copy of the build output into a deployment directory.
@@ -149,7 +180,7 @@ Set the `TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER` environment variable to override 
 ## Behavior notes
 
 - **The app must be able to exit.** `Application.Start` pumps a message loop that never returns, so `UITestMethodAttribute` runs it on a background thread. Otherwise the process would stay alive after the run and hang when the test app is itself the test host — which is exactly the unpackaged MTP case. See [#9904](https://github.com/microsoft/testfx/pull/9904).
-- **Publish the exit code yourself.** The WinUI-generated entry point is `void`, so a self-hosted test app must assign `Environment.ExitCode = await app.RunAsync();` and then call `Exit()`. Without it the process always exits `0` and failing tests never fail the build.
+- **Publish the exit code yourself.** The WinUI-generated entry point is `void`, so a self-hosted test app must assign the result of `MicrosoftTestingPlatformApplication.RunAsync(args)` to `Environment.ExitCode` and then call `Exit()`. Without it the process always exits `0` and failing tests never fail the build.
 - **MrtCore warns about MSTest's satellite assemblies.** A WinUI build indexes resources with MrtCore, which reports `PRI257`/`PRI263` because MSTest ships localized satellite assemblies that carry no `en-US` default. It is benign — the warning is about resource *lookup* fallback, not about your tests. Note it cannot be silenced with `NoWarn` or `MSBuildWarningsAsMessages`, because MrtCore puts the `PRI…` code in the message text rather than in the MSBuild warning code; if you build with warnings as errors, exclude this project from that setting.
 - **Avoid `dotnet exec`.** WinUI resolves its PRI resources relative to the *process* path, so running the test app under `dotnet.exe` breaks resource loading. `Microsoft.Testing.Platform.MSBuild` already prefers launching the apphost directly when one is available.
 - **Startup failures surface as test failures.** If the application cannot be brought up on the `WinUITestTarget` path — a throwing `Application` constructor, or in an unpackaged app a Windows App SDK runtime that cannot be resolved (`COMException` / `REGDB_E_CLASSNOTREG`) — the failure is now reported on the test. Earlier versions swallowed it and the run hung with no diagnostic at all.
