@@ -372,7 +372,7 @@ internal static class WindowsApplicationModelTestTools
             .Cast<Version>()
             .OrderDescending()
             .ToArray();
-        Version selectedSdkVersion = installedSdkVersions.FirstOrDefault(version =>
+        _ = installedSdkVersions.FirstOrDefault(version =>
             version >= MinimumModernUwpWindowsSdkVersion
             && GetMissingModernUwpSdkFiles(windowsKitsRoot, sdkBinRoot, version).Length == 0)
             ?? throw new InvalidOperationException(
