@@ -348,6 +348,98 @@ public sealed class CtrfReportMergerTests
         }
     }
 
+    [TestMethod]
+    public async Task MergeAllToFileAsync_WithInvalidInput_ThrowsWithoutWritingOutput()
+    {
+        string tempDirectory = Path.Combine(Path.GetTempPath(), $"ctrf-merge-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDirectory);
+        try
+        {
+            string valid = Path.Combine(tempDirectory, "valid.json");
+            string invalid = Path.Combine(tempDirectory, "invalid.json");
+            string output = Path.Combine(tempDirectory, "out", "merged.json");
+            File.WriteAllText(valid, BuildReport());
+            File.WriteAllText(invalid, """{"not":"ctrf"}""");
+
+            await Assert.ThrowsExactlyAsync<ArgumentException>(
+                () => CtrfReportMerger.MergeAllToFileAsync([valid, invalid], output, CancellationToken.None));
+
+            Assert.IsFalse(File.Exists(output));
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task MergeAllToFileAsync_WithAllInputsInvalid_ThrowsWithoutWritingOutput()
+    {
+        string tempDirectory = Path.Combine(Path.GetTempPath(), $"ctrf-merge-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDirectory);
+        try
+        {
+            string first = Path.Combine(tempDirectory, "first.json");
+            string second = Path.Combine(tempDirectory, "second.json");
+            string output = Path.Combine(tempDirectory, "out", "merged.json");
+            File.WriteAllText(first, """{"not":"ctrf"}""");
+            File.WriteAllText(second, "[]");
+
+            ArgumentException exception = await Assert.ThrowsExactlyAsync<ArgumentException>(
+                () => CtrfReportMerger.MergeAllToFileAsync([first, second], output, CancellationToken.None));
+
+            Assert.AreEqual("inputReports", exception.ParamName);
+            Assert.Contains("Every input must be a valid CTRF report.", exception.Message);
+            Assert.IsFalse(File.Exists(output));
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task MergeAllToFileAsync_WithUnrepresentableTests_ThrowsWithoutWritingOutput()
+    {
+        string tempDirectory = Path.Combine(Path.GetTempPath(), $"ctrf-merge-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDirectory);
+        try
+        {
+            string valid = Path.Combine(tempDirectory, "valid.json");
+            string invalid = Path.Combine(tempDirectory, "invalid.json");
+            File.WriteAllText(valid, BuildReport());
+            string[] invalidReports =
+            [
+                """{"reportFormat":"CTRF","results":{}}""",
+                """{"reportFormat":"CTRF","results":{"tests":["not-a-test"]}}""",
+            ];
+
+            for (int i = 0; i < invalidReports.Length; i++)
+            {
+                string output = Path.Combine(tempDirectory, "out", $"merged-{i}.json");
+                File.WriteAllText(invalid, invalidReports[i]);
+
+                await Assert.ThrowsExactlyAsync<ArgumentException>(
+                    () => CtrfReportMerger.MergeAllToFileAsync([valid, invalid], output, CancellationToken.None));
+
+                Assert.IsFalse(File.Exists(output));
+            }
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void CreateDeterministicId_IsStableAndSensitiveToInputValues()
+    {
+        Guid first = CtrfReportMerger.CreateDeterministicId(["a\0execution-1", "b\0execution-2"]);
+
+        Assert.AreEqual(first, CtrfReportMerger.CreateDeterministicId(["a\0execution-1", "b\0execution-2"]));
+        Assert.AreNotEqual(first, CtrfReportMerger.CreateDeterministicId(["a\0execution-3", "b\0execution-2"]));
+    }
+
 #if NETCOREAPP
     [TestMethod]
     public async Task MergeToFileAsync_WhenOutputAliasesInputViaSymlinkedParent_ThrowsAndPreservesInput()

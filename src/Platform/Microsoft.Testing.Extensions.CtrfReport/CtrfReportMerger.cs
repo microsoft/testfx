@@ -113,6 +113,17 @@ internal static partial class CtrfReportMerger
                 continue;
             }
 
+            // The permissive manual merger drops non-object test entries and tolerates a missing tests array.
+            // Artifact post-processing cannot do that because its output must represent every supplied input,
+            // so strict mode rejects precisely the shapes the merger could not carry through. Test objects
+            // themselves remain pass-through data under the validity contract documented above.
+            if (requireAllReports
+                && (root["results"]?["tests"] is not JsonArray strictTests
+                    || strictTests.Any(test => test is not JsonObject)))
+            {
+                throw new ArgumentException("Every input must be a valid CTRF report.", nameof(inputReports));
+            }
+
             first ??= root;
             reportCount++;
             acceptedReports.Add(reportJson);

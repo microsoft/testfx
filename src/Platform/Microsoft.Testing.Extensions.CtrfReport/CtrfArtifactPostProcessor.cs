@@ -49,7 +49,11 @@ internal sealed class CtrfArtifactPostProcessor : IArtifactPostProcessor
                 .ThenBy(input => input.ExecutionId, StringComparer.Ordinal),
         ];
         string[] inputPaths = [.. orderedInputs.Select(input => input.Path)];
-        Guid artifactId = CreateArtifactId(orderedInputs);
+        string[] identityInputs =
+        [
+            .. orderedInputs.Select(input => $"{Path.GetFullPath(input.Path)}\0{input.ExecutionId}"),
+        ];
+        Guid artifactId = CtrfReportMerger.CreateDeterministicId(identityInputs);
         string mergedDirectory = Path.Combine(outputDirectory, MergedReportDirectoryName);
         Directory.CreateDirectory(mergedDirectory);
         if (IsReparsePoint(mergedDirectory))
@@ -65,35 +69,6 @@ internal sealed class CtrfArtifactPostProcessor : IArtifactPostProcessor
             CtrfReportGenerator.CtrfArtifactKind,
             ExtensionResources.CtrfMergedArtifactDisplayName,
             string.Format(CultureInfo.CurrentCulture, ExtensionResources.CtrfMergedArtifactDescription, inputs.Count));
-    }
-
-    private static Guid CreateArtifactId(IReadOnlyList<InputArtifact> inputs)
-    {
-        const ulong fnvPrime = 1099511628211UL;
-        ulong hashLow = 14695981039346656037UL;
-        ulong hashHigh = 0x9E3779B97F4A7C15UL;
-
-        foreach (InputArtifact input in inputs)
-        {
-            string value = $"{Path.GetFullPath(input.Path)}\0{input.ExecutionId}";
-            foreach (char c in value)
-            {
-                hashLow = (hashLow ^ c) * fnvPrime;
-                hashHigh = (hashHigh ^ c) * fnvPrime;
-            }
-
-            hashLow = (hashLow ^ (ulong)value.Length) * fnvPrime;
-            hashHigh = (hashHigh ^ ((ulong)value.Length + 1UL)) * fnvPrime;
-        }
-
-        byte[] bytes = new byte[16];
-        for (int i = 0; i < 8; i++)
-        {
-            bytes[i] = (byte)(hashLow >> (i * 8));
-            bytes[i + 8] = (byte)(hashHigh >> (i * 8));
-        }
-
-        return new Guid(bytes);
     }
 
     private static bool IsReparsePoint(string path)
