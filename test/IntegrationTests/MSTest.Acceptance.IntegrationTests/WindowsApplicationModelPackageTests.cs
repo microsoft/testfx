@@ -83,13 +83,6 @@ public sealed class WindowsApplicationModelPackageTests
             GetExactCurrentPackagePath("MSTest.TestFramework"),
             RequiredTestFrameworkEntries);
 
-    [TestMethod]
-    public void PackedWindowsApplicationModelAssets_AreFromCurrentPack()
-    {
-        _ = GetExactCurrentPackagePath("MSTest.TestAdapter");
-        _ = GetExactCurrentPackagePath("MSTest.TestFramework");
-    }
-
     private static string GetExactCurrentPackagePath(string packageId)
     {
         string expectedVersion = AcceptanceTestBase.MSTestVersion;
