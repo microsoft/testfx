@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="InvalidTestApplicationBuilderType">
         <source>Invalid test application builder type. Expected 'TestApplicationBuilder'.</source>
-        <target state="needs-review-translation">잘못된 테스트 애플리케이션 빌더 형식입니다. 'TestApplicationBuilder'가 필요합니다.</target>
+        <target state="translated">잘못된 테스트 애플리케이션 빌더 형식입니다. 'TestApplicationBuilder'가 필요합니다.</target>
         <note>Do not localize {Locked="TestApplicationBuilder"}.</note>
       </trans-unit>
       <trans-unit id="JUnitArtifactPostProcessorDescription">

@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="InvalidTestApplicationBuilderType">
         <source>Invalid test application builder type. Expected 'TestApplicationBuilder'.</source>
-        <target state="needs-review-translation">無效的測試應用程式建立器類型。必須是 'TestApplicationBuilder'。</target>
+        <target state="translated">無效的測試應用程式建立器類型。必須是 'TestApplicationBuilder'。</target>
         <note>Do not localize {Locked="TestApplicationBuilder"}.</note>
       </trans-unit>
       <trans-unit id="JUnitArtifactPostProcessorDescription">
