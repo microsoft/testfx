@@ -162,6 +162,35 @@ public sealed class PackagedAppActivationArgumentsTests
     }
 
     [TestMethod]
+    public void TryDeleteStalePayloads_RemovesOnlyExpiredActivationPayloads()
+    {
+        string directory = CreateTemporaryDirectory();
+        try
+        {
+            DateTime utcNow = new(2026, 8, 7, 1, 0, 0, DateTimeKind.Utc);
+            string stalePayload = Path.Combine(directory, "mtp-activation-stale.payload");
+            string freshPayload = Path.Combine(directory, "mtp-activation-fresh.payload");
+            string unrelatedFile = Path.Combine(directory, "unrelated.payload");
+            File.WriteAllText(stalePayload, "stale");
+            File.WriteAllText(freshPayload, "fresh");
+            File.WriteAllText(unrelatedFile, "unrelated");
+            File.SetLastWriteTimeUtc(stalePayload, utcNow - TimeSpan.FromDays(2));
+            File.SetLastWriteTimeUtc(freshPayload, utcNow);
+            File.SetLastWriteTimeUtc(unrelatedFile, utcNow - TimeSpan.FromDays(2));
+
+            PackagedAppActivationArguments.TryDeleteStalePayloads(directory, utcNow);
+
+            Assert.IsFalse(File.Exists(stalePayload));
+            Assert.IsTrue(File.Exists(freshPayload));
+            Assert.IsTrue(File.Exists(unrelatedFile));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
     public void GetTestApplicationArguments_ProvidesTheReusableOnLaunchedBootstrap()
     {
         string directory = CreateTemporaryDirectory();

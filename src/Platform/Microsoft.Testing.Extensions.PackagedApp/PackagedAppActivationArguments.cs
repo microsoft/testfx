@@ -21,6 +21,7 @@ internal static class PackagedAppActivationArguments
     private const int KeySize = 32;
     private const int NonceSize = 12;
     private const int TagSize = 16;
+    private static readonly TimeSpan StalePayloadAge = TimeSpan.FromDays(1);
 
     public static PackagedAppActivationData Create(IReadOnlyList<string> arguments, string localStateDirectory)
     {
@@ -39,6 +40,7 @@ internal static class PackagedAppActivationArguments
             }
 
             Directory.CreateDirectory(localStateDirectory);
+            TryDeleteStalePayloads(localStateDirectory, TimeProvider.System.GetUtcNow().UtcDateTime);
 
             string token = Guid.NewGuid().ToString("N");
             string payloadPath = GetPayloadPath(localStateDirectory, token);
@@ -133,6 +135,36 @@ internal static class PackagedAppActivationArguments
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             Debug.WriteLine($"Best-effort delete of activation-argument payload file '{payloadPath}' failed: {ex}");
+        }
+    }
+
+    public static void TryDeleteStalePayloads(string localStateDirectory, DateTime utcNow)
+    {
+        string[] payloadPaths;
+        try
+        {
+            payloadPaths = Directory.GetFiles(localStateDirectory, "mtp-activation-*.payload", SearchOption.TopDirectoryOnly);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Debug.WriteLine($"Best-effort enumeration of stale activation-argument payloads in '{localStateDirectory}' failed: {ex}");
+            return;
+        }
+
+        DateTime staleBefore = utcNow - StalePayloadAge;
+        foreach (string payloadPath in payloadPaths)
+        {
+            try
+            {
+                if (File.GetLastWriteTimeUtc(payloadPath) <= staleBefore)
+                {
+                    TryDeletePayload(payloadPath);
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                Debug.WriteLine($"Best-effort inspection of activation-argument payload file '{payloadPath}' failed: {ex}");
+            }
         }
     }
 

@@ -31,6 +31,7 @@ Microsoft.Testing.Extensions.PackagedApp.PackagedAppActivationData.PayloadPath.g
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppActivationArguments.Create(System.Collections.Generic.IReadOnlyList<string!>! arguments, string! localStateDirectory) -> Microsoft.Testing.Extensions.PackagedApp.PackagedAppActivationData!
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppActivationArguments.Read(string! activationArguments, string? localStateDirectory) -> string![]!
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppActivationArguments.TryDeletePayload(string? payloadPath) -> void
+static Microsoft.Testing.Extensions.PackagedApp.PackagedAppActivationArguments.TryDeleteStalePayloads(string! localStateDirectory, System.DateTime utcNow) -> void
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.GetHandshakeDirectory(string! packageFamilyName) -> string!
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.GetHandshakeFileName(string! testHostControllerPid) -> string!
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.GetHandshakeFilePath(string! packageFamilyName, string! testHostControllerPid) -> string!
