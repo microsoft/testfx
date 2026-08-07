@@ -272,6 +272,24 @@ public sealed class AppxManifestInfoTests
     }
 
     [TestMethod]
+    public void ReadFromManifest_PackagedClassicAppContainer_UsesProcessArguments()
+    {
+        const string ManifestXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package
+                xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+                xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10">
+              <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="App" Executable="MyTestApp.exe" uap10:RuntimeBehavior="packagedClassicApp" uap10:TrustLevel="appContainer" />
+              </Applications>
+            </Package>
+            """;
+
+        Assert.IsFalse(Assert.ContainsSingle(ReadManifest(ManifestXml).Applications).IsAppContainer);
+    }
+
+    [TestMethod]
     public void ResolveApplication_WithSingleApplication_ReturnsItRegardlessOfExecutable()
     {
         AppxManifestInfo info = ReadManifest(

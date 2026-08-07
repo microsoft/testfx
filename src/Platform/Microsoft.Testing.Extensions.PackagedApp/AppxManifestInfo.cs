@@ -278,15 +278,21 @@ internal sealed class AppxManifestInfo
         string? runtimeBehavior,
         bool canUsePackageFullTrustFallback)
     {
+        // RuntimeBehavior determines the activation model. A packaged classic or Win32 application
+        // receives process argv even when its sandbox TrustLevel is appContainer.
+        if (string.Equals(runtimeBehavior, "packagedClassicApp", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(runtimeBehavior, "win32App", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(entryPoint, "Windows.FullTrustApplication", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
         if (string.Equals(trustLevel, "appContainer", StringComparison.OrdinalIgnoreCase))
         {
             return true;
         }
 
-        if (string.Equals(trustLevel, "mediumIL", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(runtimeBehavior, "packagedClassicApp", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(runtimeBehavior, "win32App", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(entryPoint, "Windows.FullTrustApplication", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(trustLevel, "mediumIL", StringComparison.OrdinalIgnoreCase))
         {
             return false;
         }

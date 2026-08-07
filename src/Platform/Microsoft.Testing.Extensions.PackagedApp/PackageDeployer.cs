@@ -21,18 +21,12 @@ internal static class PackageDeployer
 {
     /// <summary>
     /// Registers the loose layout described by <paramref name="manifestPath"/> in place (no copy) and
-    /// then activates <paramref name="appUserModelId"/>, forwarding <paramref name="activationArguments"/>
-    /// as the activated app's command line.
+    /// prepares its package-owned storage before any activation handoffs are written.
     /// </summary>
     /// <param name="manifestPath">The full path to the layout's <c>AppxManifest.xml</c>.</param>
-    /// <param name="appUserModelId">The AUMID to activate once registered.</param>
-    /// <param name="activationArguments">The command line to deliver to the activated app.</param>
     /// <param name="cancellationToken">A token to observe while registering.</param>
-    /// <returns>The process id of the activated app instance.</returns>
-    public static async Task<uint> RegisterAndActivateAsync(
+    public static async Task RegisterAsync(
         string manifestPath,
-        string appUserModelId,
-        string? activationArguments,
         CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -79,9 +73,11 @@ internal static class PackageDeployer
         }
 
         cancellationToken.ThrowIfCancellationRequested();
-
-        return ApplicationActivationManager.ActivateApplication(appUserModelId, activationArguments);
     }
+
+    /// <summary>Activates a registered packaged app and returns its process id.</summary>
+    public static uint Activate(string appUserModelId, string? activationArguments)
+        => ApplicationActivationManager.ActivateApplication(appUserModelId, activationArguments);
 }
 
 #endif

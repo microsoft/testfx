@@ -214,6 +214,11 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher
                     manifestInfo.PackageFamilyName,
                     manifestPath));
 
+        // Registration provisions the package-owned LocalState directory and its AppContainer ACL.
+        // Handoffs must be written only after this completes; creating the directory from the unpackaged
+        // controller first would give it the controller's ACL and make it unreadable by the activated app.
+        await PackageDeployer.RegisterAsync(manifestPath, cancellationToken).ConfigureAwait(false);
+
         // Hand off the controller-to-host connect-back environment variables through the package's
         // LocalState, keyed by the test host controller PID so concurrent runs of the same package do not
         // collide. An AUMID-activated process is created by the Windows activation infrastructure and does
@@ -241,9 +246,7 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher
             string activationArguments = activationData.Arguments;
             activationPayloadPath = activationData.PayloadPath;
 
-            uint processId = await PackageDeployer
-                .RegisterAndActivateAsync(manifestPath, application.AppUserModelId, activationArguments, cancellationToken)
-                .ConfigureAwait(false);
+            uint processId = PackageDeployer.Activate(application.AppUserModelId, activationArguments);
 
             // The handle owns deleting the hand-off from now on: the activated host normally consumes and
             // deletes it, but if that host exits before reading it the handle still removes it on dispose,
