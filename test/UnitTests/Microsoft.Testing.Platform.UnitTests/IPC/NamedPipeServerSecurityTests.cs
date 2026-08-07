@@ -605,7 +605,7 @@ public sealed class NamedPipeServerSecurityTests
         private const int TokenIsAppContainerClass = 29;
         private const int TokenAppContainerSidClass = 31;
         private const int TokenIntegrityLevelClass = 25;
-        private const string UntrustedIntegritySid = "S-1-16-0";
+        private const string LowIntegritySid = "S-1-16-4096";
         private const uint OpenExisting = 3;
         private const int ErrorAccessDenied = 5;
 
@@ -786,9 +786,10 @@ public sealed class NamedPipeServerSecurityTests
         public static void RevertToSelf() => RevertToSelfCore();
 
         /// <summary>
-        /// Duplicates the token of every live AppContainer process whose token can be opened, skipping
-        /// untrusted-integrity containers (Chromium-style hardened sandboxes), which Mandatory Integrity
-        /// Control denies before any DACL is consulted and which therefore cannot model a test host.
+        /// Duplicates the token of every live <em>low-integrity</em> AppContainer process whose token can be
+        /// opened. Requiring <c>S-1-16-4096</c> keeps the test on the exact integrity level of an ordinary
+        /// UWP/WinUI host: a medium-integrity container could hide a MIC regression, while an untrusted
+        /// Chromium-style renderer is intentionally more restricted than this product scenario.
         /// </summary>
         [SupportedOSPlatform("windows")]
         public static List<(SafeHandle Token, string Sid)> EnumerateAppContainerTokens()
@@ -815,7 +816,7 @@ public sealed class NamedPipeServerSecurityTests
                         try
                         {
                             if (!IsAppContainerToken(token)
-                                || GetSidTokenInformation(token, TokenIntegrityLevelClass) == UntrustedIntegritySid
+                                || GetSidTokenInformation(token, TokenIntegrityLevelClass) != LowIntegritySid
                                 || GetSidTokenInformation(token, TokenAppContainerSidClass) is not { } appContainerSid)
                             {
                                 continue;

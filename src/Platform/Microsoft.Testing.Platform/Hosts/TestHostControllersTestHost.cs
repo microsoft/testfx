@@ -84,6 +84,7 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
         string? extensionInformation = null;
         var outputDevice = (ProxyOutputDevice)ServiceProvider.GetOutputDevice();
         IConfiguration configuration = ServiceProvider.GetConfiguration();
+        NamedPipeServer? testHostControllerIpc = null;
         try
         {
             int currentPid = environment.ProcessId;
@@ -103,7 +104,7 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
             string processCorrelationId = Guid.NewGuid().ToString("N");
             await _logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID}_{currentPid} '{processCorrelationId}'").ConfigureAwait(false);
 
-            NamedPipeServer testHostControllerIpc = new(
+            testHostControllerIpc = new(
                 $"MONITORTOHOST_{Guid.NewGuid():N}",
                 HandleRequestAsync,
                 _environment,
@@ -428,11 +429,21 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
             exitCode = ExitCodeIgnorePolicy.Apply(exitCode, ServiceProvider.GetCommandLineOptions(), ServiceProvider.GetEnvironment());
 
             await _logger.LogInformationAsync($"TestHostControllersTestHost ended with exit code '{exitCode}' (real test host exit code '{testHostProcess.ExitCode}') in '{consoleRunStarted.Elapsed}'").ConfigureAwait(false);
-            await DisposeHelper.DisposeAsync(testHostControllerIpc).ConfigureAwait(false);
         }
         finally
         {
-            await DisposeServicesAsync().ConfigureAwait(false);
+            try
+            {
+                if (testHostControllerIpc is not null)
+                {
+                    await DisposeHelper.DisposeAsync(testHostControllerIpc).ConfigureAwait(false);
+                }
+            }
+            finally
+            {
+                // Service disposal must still run if closing the connection reports a failure.
+                await DisposeServicesAsync().ConfigureAwait(false);
+            }
         }
 
         if (telemetryInformation.IsEnabled)
