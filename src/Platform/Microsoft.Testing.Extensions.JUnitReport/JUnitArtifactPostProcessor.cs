@@ -22,7 +22,7 @@ internal sealed class JUnitArtifactPostProcessor : IArtifactPostProcessor
 
     public string Description => ExtensionResources.JUnitArtifactPostProcessorDescription;
 
-    public bool SupportsTruncatedRuns => true;
+    public bool SupportsTruncatedRuns => false;
 
     public IReadOnlyList<string> SupportedKinds => SupportedArtifactKinds;
 

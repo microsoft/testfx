@@ -25,7 +25,7 @@ public sealed class JUnitArtifactPostProcessorTests
 
         Assert.AreSequenceEqual(new[] { JUnitReportGenerator.JUnitArtifactKind }, processor.SupportedKinds);
         Assert.IsEmpty(processor.SupportedFileExtensionsFallback);
-        Assert.IsTrue(processor.SupportsTruncatedRuns);
+        Assert.IsFalse(processor.SupportsTruncatedRuns);
     }
 
     [TestMethod]
