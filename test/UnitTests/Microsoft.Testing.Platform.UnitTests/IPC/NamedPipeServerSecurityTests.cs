@@ -514,13 +514,19 @@ public sealed class NamedPipeServerSecurityTests
                     NamedPipeServerSecurity.IsAuthorizableSandboxedApplicationIdentity(sid),
                     $"A live AppContainer SID must satisfy the platform's authorization policy, but '{sid}' did not.");
 
-                if (!TryConnectAsAppContainer(token, [sid], useManagedProductClient: true))
+                // Establish that this token is a viable low-integrity AppContainer with the granular
+                // kernel open first. The managed-client assertion below is the behavior under test and must
+                // fail — not make the candidate look unusable — if its generic open cannot use this ACE.
+                if (!TryConnectAsAppContainer(token, [sid]))
                 {
                     // This container cannot reach even an authorizing pipe (a nested container, or one
                     // restricted further than a test host would be); it cannot prove anything either way.
                     continue;
                 }
 
+                Assert.IsTrue(
+                    TryConnectAsAppContainer(token, [sid], useManagedProductClient: true),
+                    "The actual MTP NamedPipeClientStream options must connect when this package SID is authorized.");
                 Assert.IsFalse(
                     TryConnectAsAppContainer(token, [OtherPackageSid]),
                     "An AppContainer must not reach a pipe that authorizes a different package.");
