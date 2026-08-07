@@ -76,18 +76,16 @@ internal sealed partial class TestHostControllersTestHost
             return null;
         }
 
-        foreach (string securityIdentity in securityIdentities)
+        foreach (string securityIdentity in securityIdentities.Where(static securityIdentity =>
+            !NamedPipeServerSecurity.IsAuthorizableSandboxedApplicationIdentity(securityIdentity)))
         {
-            if (!NamedPipeServerSecurity.IsAuthorizableSandboxedApplicationIdentity(securityIdentity))
-            {
-                throw new InvalidOperationException(string.Format(
-                    CultureInfo.InvariantCulture,
-                    PlatformResources.TestHostControllerConnectionInvalidAuthorizedSecurityIdentityErrorMessage,
-                    testHostLauncher.DisplayName,
-                    testHostLauncher.Uid,
-                    securityIdentity ?? "<null>",
-                    NamedPipeServerSecurity.AllApplicationPackagesSid));
-            }
+            throw new InvalidOperationException(string.Format(
+                CultureInfo.InvariantCulture,
+                PlatformResources.TestHostControllerConnectionInvalidAuthorizedSecurityIdentityErrorMessage,
+                testHostLauncher.DisplayName,
+                testHostLauncher.Uid,
+                securityIdentity ?? "<null>",
+                NamedPipeServerSecurity.AllApplicationPackagesSid));
         }
 
         await _logger.LogDebugAsync($"'{testHostLauncher.Uid}' authorized the following security identity/identities on the test host controller connection: {string.Join(", ", securityIdentities)}").ConfigureAwait(false);
