@@ -277,7 +277,6 @@ stages:
             -disablePipelineSetResult `
             -configuration $(_BuildConfig) `
             -binaryLogName "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\SignPack.binlog" `
-            -restore `
             -sign `
             -pack `
             -prepareMachine `
@@ -592,7 +591,6 @@ stages:
               "-disablePipelineSetResult",
               "-configuration", "$(_BuildConfig)",
               "-binaryLogName", "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\SignPack.binlog",
-              "-restore",
               "-sign",
               "-pack",
               "-prepareMachine",
