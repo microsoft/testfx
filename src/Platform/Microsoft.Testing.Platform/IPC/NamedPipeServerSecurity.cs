@@ -45,7 +45,7 @@ namespace Microsoft.Testing.Platform.IPC;
 ///     never create another instance of the pipe and impersonate the controller.
 ///   </item>
 ///   <item>
-///     Only genuine AppContainer SIDs may be authorized (see <see cref="IsAuthorizableAppContainerSid"/>).
+///     Only genuine AppContainer SIDs may be authorized (see <see cref="IsAuthorizableSandboxedApplicationIdentity"/>).
 ///     The catch-all <c>ALL APPLICATION PACKAGES</c> / <c>ALL RESTRICTED APPLICATION PACKAGES</c> SIDs,
 ///     user SIDs, group SIDs and <c>Everyone</c> are rejected by construction, so the extension point that
 ///     feeds this type can only ever widen access to one specific packaged application.
@@ -137,19 +137,21 @@ internal static class NamedPipeServerSecurity
 #endif
 
     /// <summary>
-    /// Returns <see langword="true"/> when <paramref name="securityIdentifier"/> is a specific AppContainer
-    /// (package or child-AppContainer) SID that may be authorized on the controller pipe.
+    /// Returns <see langword="true"/> when <paramref name="securityIdentifier"/> identifies a
+    /// <em>single sandboxed application</em> and may therefore be authorized on the controller pipe. On
+    /// Windows that is an AppContainer SID — a package SID or a child-AppContainer SID.
     /// </summary>
     /// <remarks>
     /// This is the platform-side least-privilege guard: it is applied to whatever an extension asks for, so
     /// a buggy or hostile extension cannot turn the extension point into a way of granting access to
     /// <c>Everyone</c>, <c>Authenticated Users</c>, another user, or every packaged application on the
-    /// machine. The check is purely syntactic on purpose — it is a policy filter, not a proof that the SID
-    /// exists.
+    /// machine. It is an allow-list rather than a deny-list precisely so that an identity nobody thought
+    /// about is refused by default. The check is purely syntactic on purpose — it is a policy filter, not a
+    /// proof that the SID exists.
     /// </remarks>
     /// <param name="securityIdentifier">The SID in SDDL string form (<c>S-1-15-2-…</c>).</param>
     /// <returns><see langword="true"/> when the SID may be added to the pipe DACL.</returns>
-    internal static bool IsAuthorizableAppContainerSid([NotNullWhen(true)] string? securityIdentifier)
+    internal static bool IsAuthorizableSandboxedApplicationIdentity([NotNullWhen(true)] string? securityIdentifier)
     {
         if (RoslynString.IsNullOrWhiteSpace(securityIdentifier))
         {
@@ -202,7 +204,7 @@ internal static class NamedPipeServerSecurity
     /// <param name="ownerSid">The current token's owner SID, which owns the pipe and gets full control.</param>
     /// <param name="authorizedAppContainerSids">
     /// The AppContainer SIDs that additionally get the minimum connect/exchange rights. Callers must have
-    /// filtered them through <see cref="IsAuthorizableAppContainerSid"/> first.
+    /// filtered them through <see cref="IsAuthorizableSandboxedApplicationIdentity"/> first.
     /// </param>
     /// <returns>The SDDL string.</returns>
     internal static string BuildSecurityDescriptor(string ownerSid, IEnumerable<string> authorizedAppContainerSids)

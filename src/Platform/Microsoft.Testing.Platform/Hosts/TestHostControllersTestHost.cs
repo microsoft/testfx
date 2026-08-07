@@ -109,7 +109,7 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
                 _environment,
                 _loggerFactory.CreateLogger<NamedPipeServer>(),
                 ServiceProvider.GetTask(),
-                await GetAuthorizedAppContainerSecurityIdentifiersAsync(_testHostsInformation.TestHostLauncher, cancellationToken).ConfigureAwait(false),
+                await GetAuthorizedSecurityIdentitiesAsync(_testHostsInformation.TestHostLauncher, cancellationToken).ConfigureAwait(false),
                 cancellationToken);
             testHostControllerIpc.RegisterAllSerializers();
 
@@ -477,62 +477,64 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
     }
 
     /// <summary>
-    /// Asks the registered launcher, when it implements <see cref="ITestHostControllerPipeAuthorizer"/>, for
-    /// the AppContainer package SIDs that must additionally be authorized on the controller-to-host pipe.
+    /// Asks the registered launcher, when it implements
+    /// <see cref="ITestHostControllerConnectionAuthorizer"/>, for the security identities that must
+    /// additionally be authorized on the controller-to-host connection.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// This runs before the pipe is created, which is the only point where the DACL can still be composed:
-    /// the pipe has to be listening before the host is launched, so the launcher cannot contribute this from
-    /// <see cref="ITestHostLauncher.LaunchTestHostAsync"/>.
+    /// This runs before the connection is created, which is the only point where its access control can
+    /// still be composed: it has to be listening before the host is launched, so the launcher cannot
+    /// contribute this from <see cref="ITestHostLauncher.LaunchTestHostAsync"/>.
     /// </para>
     /// <para>
-    /// Every returned value is validated against the platform's least-privilege policy: only a specific
-    /// AppContainer SID may be authorized, never a user, a group, <c>Everyone</c>, or the catch-all
-    /// <c>ALL APPLICATION PACKAGES</c> / <c>ALL RESTRICTED APPLICATION PACKAGES</c> SIDs. An extension that
-    /// asks for anything else fails the run instead of silently getting a weaker pipe, so a mistake cannot
-    /// degrade into an over-permissive ACL.
+    /// Every returned value is validated against the platform's least-privilege policy: only the identity of
+    /// a single sandboxed application may be authorized, never a user, a group, <c>Everyone</c>, or an
+    /// identity shared by every sandboxed application on the machine. An extension that asks for anything
+    /// else fails the run instead of silently getting a weaker connection, so a mistake in an extension
+    /// cannot degrade into an over-permissive access control list.
     /// </para>
     /// </remarks>
-    private async Task<IReadOnlyList<string>?> GetAuthorizedAppContainerSecurityIdentifiersAsync(
+    private async Task<IReadOnlyList<string>?> GetAuthorizedSecurityIdentitiesAsync(
         ITestHostLauncher? testHostLauncher,
         CancellationToken cancellationToken)
     {
-        if (testHostLauncher is not ITestHostControllerPipeAuthorizer pipeAuthorizer)
+        if (testHostLauncher is not ITestHostControllerConnectionAuthorizer connectionAuthorizer)
         {
             return null;
         }
 
-        IReadOnlyList<string> securityIdentifiers = await pipeAuthorizer.GetAuthorizedAppContainerSecurityIdentifiersAsync(cancellationToken).ConfigureAwait(false);
-        if (securityIdentifiers is null || securityIdentifiers.Count == 0)
+        IReadOnlyList<string> securityIdentities = await connectionAuthorizer.GetAuthorizedSecurityIdentitiesAsync(cancellationToken).ConfigureAwait(false);
+        if (securityIdentities is null || securityIdentities.Count == 0)
         {
             return null;
         }
 
         if (!NamedPipeServerSecurity.IsSupported)
         {
-            // AppContainers, SIDs and pipe DACLs are Windows concepts. Anywhere else the request is
-            // meaningless, so it is ignored rather than failing an otherwise valid run.
-            await _logger.LogDebugAsync($"'{testHostLauncher.Uid}' requested {securityIdentifiers.Count} AppContainer pipe authorization(s), ignored on this operating system.").ConfigureAwait(false);
+            // Sandboxed-application identities and connection access control lists are expressible only on
+            // Windows. Anywhere else the request is meaningless, so it is ignored rather than failing an
+            // otherwise valid run.
+            await _logger.LogDebugAsync($"'{testHostLauncher.Uid}' requested {securityIdentities.Count} connection authorization(s), ignored on this operating system.").ConfigureAwait(false);
             return null;
         }
 
-        foreach (string securityIdentifier in securityIdentifiers)
+        foreach (string securityIdentity in securityIdentities)
         {
-            if (!NamedPipeServerSecurity.IsAuthorizableAppContainerSid(securityIdentifier))
+            if (!NamedPipeServerSecurity.IsAuthorizableSandboxedApplicationIdentity(securityIdentity))
             {
                 throw new InvalidOperationException(string.Format(
                     CultureInfo.InvariantCulture,
-                    PlatformResources.TestHostControllerPipeInvalidAuthorizedSecurityIdentifierErrorMessage,
+                    PlatformResources.TestHostControllerConnectionInvalidAuthorizedSecurityIdentityErrorMessage,
                     testHostLauncher.DisplayName,
                     testHostLauncher.Uid,
-                    securityIdentifier ?? "<null>",
+                    securityIdentity ?? "<null>",
                     NamedPipeServerSecurity.AllApplicationPackagesSid));
             }
         }
 
-        await _logger.LogDebugAsync($"'{testHostLauncher.Uid}' authorized the following AppContainer SID(s) on the test host controller pipe: {string.Join(", ", securityIdentifiers)}").ConfigureAwait(false);
-        return securityIdentifiers;
+        await _logger.LogDebugAsync($"'{testHostLauncher.Uid}' authorized the following security identity/identities on the test host controller connection: {string.Join(", ", securityIdentities)}").ConfigureAwait(false);
+        return securityIdentities;
     }
 
     private async Task DisposeServicesAsync()

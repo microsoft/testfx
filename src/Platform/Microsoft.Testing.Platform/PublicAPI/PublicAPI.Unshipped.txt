@@ -213,5 +213,5 @@ Microsoft.Testing.Platform.Extensions.Messages.AssertionFailureProperty.Expected
 override Microsoft.Testing.Platform.Extensions.Messages.AssertionFailureProperty.Equals(object? obj) -> bool
 override Microsoft.Testing.Platform.Extensions.Messages.AssertionFailureProperty.GetHashCode() -> int
 override Microsoft.Testing.Platform.Extensions.Messages.AssertionFailureProperty.ToString() -> string!
-[TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostControllerPipeAuthorizer
-[TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostControllerPipeAuthorizer.GetAuthorizedAppContainerSecurityIdentifiersAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<string!>!>!
+[TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostControllerConnectionAuthorizer
+[TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostControllerConnectionAuthorizer.GetAuthorizedSecurityIdentitiesAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<string!>!>!

@@ -34,9 +34,9 @@ namespace Microsoft.Testing.Extensions.PackagedApp;
 /// </para>
 /// <para>
 /// Both process-argv and windowsApp/UWP launch-activation argument delivery are supported, and this
-/// launcher additionally authorizes the package's own AppContainer SID on the controller pipe through
-/// <see cref="ITestHostControllerPipeAuthorizer"/> (see
-/// <see cref="GetAuthorizedAppContainerSecurityIdentifiersAsync"/>), which is what lets a restricted
+/// launcher additionally authorizes the package's own AppContainer SID on the controller connection
+/// through <see cref="ITestHostControllerConnectionAuthorizer"/> (see
+/// <see cref="GetAuthorizedSecurityIdentitiesAsync"/>), which is what lets a restricted
 /// AppContainer token reach the controller at all. The full register-and-activate path
 /// ships only in the Windows build of this extension (<c>net*-windows10.0.19041.0</c>), where the
 /// <c>PackageManager</c> WinRT projection is available. The plain <c>net8.0</c>/<c>net9.0</c> build
@@ -60,7 +60,7 @@ namespace Microsoft.Testing.Extensions.PackagedApp;
 /// work to do; see <see cref="IsEnabledAsync"/>.
 /// </para>
 /// </remarks>
-internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHostControllerPipeAuthorizer
+internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHostControllerConnectionAuthorizer
 {
     /// <summary>
     /// The environment variable that overrides how the launcher decides whether to take over the test
@@ -211,7 +211,7 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHost
     /// </remarks>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The AppContainer SIDs to authorize, which is at most this package's own SID.</returns>
-    public Task<IReadOnlyList<string>> GetAuthorizedAppContainerSecurityIdentifiersAsync(CancellationToken cancellationToken)
+    public Task<IReadOnlyList<string>> GetAuthorizedSecurityIdentitiesAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         return Task.FromResult(GetAuthorizedAppContainerSecurityIdentifiers());

@@ -227,22 +227,30 @@ contain the package SID, so a DACL that names only the user SID denies the host 
 the same signed-in user — knowing the pipe name changes nothing.
 
 The pipe must exist before the host is launched, so a launcher cannot contribute the package identity from
-`LaunchTestHostAsync`. A launcher that needs it therefore *also* implements:
+`LaunchTestHostAsync`. A launcher that needs it therefore *also* implements a hook that is deliberately
+phrased in OS-neutral terms — core MTP does not name AppContainer, MSIX or packaging anywhere in this
+surface, so the same hook can serve any launcher that starts the host under a restricted identity of its
+own:
 
 ```csharp
 namespace Microsoft.Testing.Platform.Extensions.TestHostControllers;
 
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
-public interface ITestHostControllerPipeAuthorizer
+public interface ITestHostControllerConnectionAuthorizer
 {
     /// <summary>
-    /// Returns the AppContainer package SIDs (S-1-15-2-…) that must be able to connect to the
-    /// controller-to-host pipe in addition to the current user.
+    /// Returns the operating-system security identities that must be able to reach the
+    /// controller-to-host connection in addition to the current user.
     /// </summary>
-    Task<IReadOnlyList<string>> GetAuthorizedAppContainerSecurityIdentifiersAsync(
+    Task<IReadOnlyList<string>> GetAuthorizedSecurityIdentitiesAsync(
         CancellationToken cancellationToken);
 }
 ```
+
+The AppContainer specifics live on the two sides that legitimately own them: the packaged-app extension,
+which knows it launches an AppContainer and derives its package SID, and the platform's internal Windows
+named-pipe security helper, which knows how the OS expresses that identity. What core's *contract* says is
+only "here is a restricted identity that must be able to reach the connection".
 
 `TestHostControllersTestHost` calls it immediately before creating the pipe. The resulting security
 descriptor is deliberately minimal:
@@ -359,7 +367,7 @@ public Task<ITestHostHandle> LaunchTestHostAsync(
 > pipe DACL to grant the exact package SID access. Argument delivery and pipe authorization are
 > deliberately separate concerns: the reference packaged-app extension restores the opaque
 > `LaunchActivatedEventArgs.Arguments` through a reusable bootstrap, and contributes the package SID
-> through `ITestHostControllerPipeAuthorizer` (see
+> through `ITestHostControllerConnectionAuthorizer` (see
 > [Authorizing an AppContainer on the controller pipe](#authorizing-an-appcontainer-on-the-controller-pipe)).
 > `CheckNetIsolation LoopbackExempt` is for network loopback and does not authorize named pipes.
 

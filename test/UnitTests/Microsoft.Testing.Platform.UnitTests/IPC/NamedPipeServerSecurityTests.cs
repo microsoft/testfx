@@ -37,21 +37,21 @@ public sealed class NamedPipeServerSecurityTests
     private const string BuiltinUsersSid = "S-1-5-32-545";
 
     [TestMethod]
-    public void IsAuthorizableAppContainerSid_WithPackageSid_IsAllowed()
+    public void IsAuthorizableSandboxedApplicationIdentity_WithPackageSid_IsAllowed()
     {
-        Assert.IsTrue(NamedPipeServerSecurity.IsAuthorizableAppContainerSid(PackageSid));
-        Assert.IsTrue(NamedPipeServerSecurity.IsAuthorizableAppContainerSid(OtherPackageSid));
+        Assert.IsTrue(NamedPipeServerSecurity.IsAuthorizableSandboxedApplicationIdentity(PackageSid));
+        Assert.IsTrue(NamedPipeServerSecurity.IsAuthorizableSandboxedApplicationIdentity(OtherPackageSid));
 
         // A child AppContainer SID appends further sub-authorities to the package SID and is still a
         // specific container.
-        Assert.IsTrue(NamedPipeServerSecurity.IsAuthorizableAppContainerSid($"{PackageSid}-1234567890"));
+        Assert.IsTrue(NamedPipeServerSecurity.IsAuthorizableSandboxedApplicationIdentity($"{PackageSid}-1234567890"));
     }
 
     [TestMethod]
-    public void IsAuthorizableAppContainerSid_IsCaseAndWhitespaceInsensitive()
+    public void IsAuthorizableSandboxedApplicationIdentity_IsCaseAndWhitespaceInsensitive()
     {
-        Assert.IsTrue(NamedPipeServerSecurity.IsAuthorizableAppContainerSid(PackageSid.ToLowerInvariant()));
-        Assert.IsTrue(NamedPipeServerSecurity.IsAuthorizableAppContainerSid($"  {PackageSid}  "));
+        Assert.IsTrue(NamedPipeServerSecurity.IsAuthorizableSandboxedApplicationIdentity(PackageSid.ToLowerInvariant()));
+        Assert.IsTrue(NamedPipeServerSecurity.IsAuthorizableSandboxedApplicationIdentity($"  {PackageSid}  "));
     }
 
     // The whole point of the extension point is that it can only ever widen access to one specific packaged
@@ -73,8 +73,8 @@ public sealed class NamedPipeServerSecurityTests
     [DataRow("S-1-15-2-1-2-3", DisplayName = "too few sub-authorities to be a package SID")]
     [DataRow("S-1-15-2-1990679259-4123976751-842158434-3026549936-2944832882-252165955-notanumber", DisplayName = "non-numeric sub-authority")]
     [DataRow("AC", DisplayName = "the SDDL alias of ALL APPLICATION PACKAGES")]
-    public void IsAuthorizableAppContainerSid_WithAnythingButASpecificAppContainer_IsRejected(string? securityIdentifier)
-        => Assert.IsFalse(NamedPipeServerSecurity.IsAuthorizableAppContainerSid(securityIdentifier));
+    public void IsAuthorizableSandboxedApplicationIdentity_WithAnythingButASingleSandboxedApplication_IsRejected(string? securityIdentifier)
+        => Assert.IsFalse(NamedPipeServerSecurity.IsAuthorizableSandboxedApplicationIdentity(securityIdentifier));
 
     [TestMethod]
     public void BuildSecurityDescriptor_GrantsOwnerFullControlAndPackagesTheMinimum()
@@ -358,7 +358,7 @@ public sealed class NamedPipeServerSecurityTests
             foreach ((SafeHandle token, string sid) in candidates)
             {
                 Assert.IsTrue(
-                    NamedPipeServerSecurity.IsAuthorizableAppContainerSid(sid),
+                    NamedPipeServerSecurity.IsAuthorizableSandboxedApplicationIdentity(sid),
                     $"A live AppContainer SID must satisfy the platform's authorization policy, but '{sid}' did not.");
 
                 if (!TryConnectAsAppContainer(token, [sid]))

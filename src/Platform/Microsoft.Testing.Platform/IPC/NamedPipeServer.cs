@@ -52,16 +52,16 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
 
     /// <summary>
     /// Initializes a new instance of the <see cref="NamedPipeServer"/> class, optionally authorizing a set
-    /// of AppContainer package SIDs on the pipe in addition to the creating user.
+    /// of security identities on the pipe in addition to the creating user.
     /// </summary>
     /// <param name="name">The friendly pipe name.</param>
     /// <param name="callback">The request handler.</param>
     /// <param name="environment">The environment abstraction.</param>
     /// <param name="logger">The logger.</param>
     /// <param name="task">The task abstraction.</param>
-    /// <param name="authorizedAppContainerSecurityIdentifiers">
-    /// AppContainer package SIDs that must additionally be able to connect, or <see langword="null"/>/empty
-    /// for the default behavior.
+    /// <param name="authorizedSecurityIdentities">
+    /// Security identities that must additionally be able to connect, or <see langword="null"/>/empty for
+    /// the default behavior.
     /// </param>
     /// <param name="cancellationToken">The cancellation token.</param>
     public NamedPipeServer(
@@ -70,9 +70,9 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
         IEnvironment environment,
         ILogger logger,
         ITask task,
-        IReadOnlyList<string>? authorizedAppContainerSecurityIdentifiers,
+        IReadOnlyList<string>? authorizedSecurityIdentities,
         CancellationToken cancellationToken)
-        : this(GetPipeName(name), callback, environment, logger, task, maxNumberOfServerInstances: 1, authorizedAppContainerSecurityIdentifiers, cancellationToken)
+        : this(GetPipeName(name), callback, environment, logger, task, maxNumberOfServerInstances: 1, authorizedSecurityIdentities, cancellationToken)
     {
     }
 
@@ -95,13 +95,13 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
         ITask task,
         int maxNumberOfServerInstances,
         CancellationToken cancellationToken)
-        : this(pipeNameDescription, callback, environment, logger, task, maxNumberOfServerInstances, authorizedAppContainerSecurityIdentifiers: null, cancellationToken)
+        : this(pipeNameDescription, callback, environment, logger, task, maxNumberOfServerInstances, authorizedSecurityIdentities: null, cancellationToken)
     {
     }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="NamedPipeServer"/> class, optionally authorizing a set
-    /// of AppContainer package SIDs on the pipe in addition to the creating user.
+    /// of security identities on the pipe in addition to the creating user.
     /// </summary>
     /// <param name="pipeNameDescription">The pipe name.</param>
     /// <param name="callback">The request handler.</param>
@@ -109,12 +109,13 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
     /// <param name="logger">The logger.</param>
     /// <param name="task">The task abstraction.</param>
     /// <param name="maxNumberOfServerInstances">The maximum number of concurrent server instances.</param>
-    /// <param name="authorizedAppContainerSecurityIdentifiers">
-    /// AppContainer package SIDs that must additionally be able to connect, or <see langword="null"/>/empty
-    /// for the default behavior. Every entry must satisfy
-    /// <see cref="NamedPipeServerSecurity.IsAuthorizableAppContainerSid"/>; the caller is responsible for
-    /// filtering and reporting rejected entries. Ignored on non-Windows operating systems, where
-    /// AppContainers and pipe DACLs do not exist.
+    /// <param name="authorizedSecurityIdentities">
+    /// Security identities that must additionally be able to connect, or <see langword="null"/>/empty for
+    /// the default behavior. Every entry must satisfy
+    /// <see cref="NamedPipeServerSecurity.IsAuthorizableSandboxedApplicationIdentity"/> — on Windows the only identity
+    /// that may be added is that of a single sandboxed application, which the OS expresses as an
+    /// AppContainer package SID. The caller is responsible for filtering and reporting rejected entries.
+    /// Ignored on operating systems that cannot express such an identity.
     /// </param>
     /// <param name="cancellationToken">The cancellation token.</param>
     public NamedPipeServer(
@@ -124,7 +125,7 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
         ILogger logger,
         ITask task,
         int maxNumberOfServerInstances,
-        IReadOnlyList<string>? authorizedAppContainerSecurityIdentifiers,
+        IReadOnlyList<string>? authorizedSecurityIdentities,
         CancellationToken cancellationToken)
     {
         if (pipeNameDescription is null)
@@ -132,7 +133,7 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
             throw new ArgumentNullException(nameof(pipeNameDescription));
         }
 
-        _namedPipeServerStream = CreateServerStream((PipeName = pipeNameDescription).Name, maxNumberOfServerInstances, authorizedAppContainerSecurityIdentifiers);
+        _namedPipeServerStream = CreateServerStream((PipeName = pipeNameDescription).Name, maxNumberOfServerInstances, authorizedSecurityIdentities);
         _callback = callback;
         _environment = environment;
         _logger = logger;
@@ -142,26 +143,26 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
 
     /// <summary>
     /// Creates the underlying server stream, using the hardened Windows path only when a caller actually
-    /// asked for extra AppContainer authorization. Every other run — including every run on a non-Windows
+    /// asked for extra authorization. Every other run — including every run on a non-Windows
     /// operating system — keeps the untouched <c>PipeOptions.CurrentUserOnly</c> pipe.
     /// </summary>
-    private static NamedPipeServerStream CreateServerStream(string name, int maxNumberOfServerInstances, IReadOnlyList<string>? authorizedAppContainerSecurityIdentifiers)
+    private static NamedPipeServerStream CreateServerStream(string name, int maxNumberOfServerInstances, IReadOnlyList<string>? authorizedSecurityIdentities)
     {
-        if (authorizedAppContainerSecurityIdentifiers is { Count: > 0 } securityIdentifiers && NamedPipeServerSecurity.IsSupported)
+        if (authorizedSecurityIdentities is { Count: > 0 } securityIdentities && NamedPipeServerSecurity.IsSupported)
         {
             // Defense in depth: the caller already filters, but a mistake there must not be able to widen
-            // the DACL beyond a specific AppContainer package.
-            foreach (string securityIdentifier in securityIdentifiers)
+            // the DACL beyond a single sandboxed application.
+            foreach (string securityIdentity in securityIdentities)
             {
-                if (!NamedPipeServerSecurity.IsAuthorizableAppContainerSid(securityIdentifier))
+                if (!NamedPipeServerSecurity.IsAuthorizableSandboxedApplicationIdentity(securityIdentity))
                 {
                     throw new ArgumentException(
-                        $"'{securityIdentifier}' is not an AppContainer package SID and cannot be authorized on the test host controller pipe.",
-                        nameof(authorizedAppContainerSecurityIdentifiers));
+                        $"'{securityIdentity}' does not identify a single sandboxed application and cannot be authorized on the test host controller pipe.",
+                        nameof(authorizedSecurityIdentities));
                 }
             }
 
-            return NamedPipeServerSecurity.CreateServerStream(name, maxNumberOfServerInstances, securityIdentifiers);
+            return NamedPipeServerSecurity.CreateServerStream(name, maxNumberOfServerInstances, securityIdentities);
         }
 
         return new NamedPipeServerStream(name, PipeDirection.InOut, maxNumberOfServerInstances, PipeTransmissionMode.Byte, AsyncCurrentUserPipeOptions);

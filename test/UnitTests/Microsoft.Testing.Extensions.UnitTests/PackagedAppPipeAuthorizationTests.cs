@@ -105,9 +105,9 @@ public sealed class PackagedAppPipeAuthorizationTests
                 using var cancellationTokenSource = new CancellationTokenSource();
                 await cancellationTokenSource.CancelAsync();
 
-#pragma warning disable TPEXP // ITestHostControllerPipeAuthorizer is experimental.
+#pragma warning disable TPEXP // ITestHostControllerConnectionAuthorizer is experimental.
                 await Assert.ThrowsExactlyAsync<OperationCanceledException>(
-                    () => launcher.GetAuthorizedAppContainerSecurityIdentifiersAsync(cancellationTokenSource.Token));
+                    () => launcher.GetAuthorizedSecurityIdentitiesAsync(cancellationTokenSource.Token));
 #pragma warning restore TPEXP
             });
 
@@ -118,8 +118,8 @@ public sealed class PackagedAppPipeAuthorizationTests
                 appDirectory,
                 name => name == PackagedAppTestHostLauncher.PipeAuthorizationModeEnvironmentVariable ? mode : null);
 
-#pragma warning disable TPEXP // ITestHostControllerPipeAuthorizer is experimental.
-            IReadOnlyList<string> actual = await launcher.GetAuthorizedAppContainerSecurityIdentifiersAsync(CancellationToken.None);
+#pragma warning disable TPEXP // ITestHostControllerConnectionAuthorizer is experimental.
+            IReadOnlyList<string> actual = await launcher.GetAuthorizedSecurityIdentitiesAsync(CancellationToken.None);
 #pragma warning restore TPEXP
 
             Assert.AreSequenceEqual(expected, actual);
