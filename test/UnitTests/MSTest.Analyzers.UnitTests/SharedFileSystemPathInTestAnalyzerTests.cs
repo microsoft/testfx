@@ -572,6 +572,64 @@ public sealed class SharedFileSystemPathInTestAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenAssemblyInitializeWritesConstantPath_NoDiagnostic()
+    {
+        // [AssemblyInitialize] is serialized before any tests run, so its mutation cannot race a concurrent test.
+        string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [AssemblyInitialize]
+                public static void AssemblySetup(TestContext context)
+                {
+                    File.WriteAllText("setup.txt", "data");
+                }
+
+                [TestMethod]
+                public void MyTestMethod() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenGlobalTestInitializeWritesConstantPath_Diagnostic()
+    {
+        // [GlobalTestInitialize] runs around every test and can race concurrent tests.
+        string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [GlobalTestInitialize]
+                public static void GlobalSetup(TestContext context)
+                {
+                    {|#0:File.WriteAllText("setup.txt", "data")|};
+                }
+
+                [TestMethod]
+                public void MyTestMethod() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(SharedFileSystemPathInTestAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("setup.txt"));
+    }
+
+    [TestMethod]
     public async Task WhenTestMethodDeletesFileWithConstantPath_Diagnostic()
     {
         // File.Delete removes the entry named by its single 'path' argument, so a constant path is a mutation
