@@ -238,8 +238,8 @@ public abstract class AcceptanceTestBase
             "vswhere.exe");
         return await RunAndGetSingleLineStandardOutputAsync(
             vswherePath,
-            "-latest -prerelease -products * -requires Microsoft.Component.MSBuild Microsoft.VisualStudio.Workload.Universal -property installationPath",
-            "a prerelease-capable Visual Studio installation with Microsoft.Component.MSBuild and Microsoft.VisualStudio.Workload.Universal",
+            "-latest -prerelease -products * -requires Microsoft.Component.MSBuild Microsoft.VisualStudio.Workload.Universal Microsoft.VisualStudio.ComponentGroup.UWP.Support -property installationPath",
+            "a prerelease-capable Visual Studio installation with Microsoft.Component.MSBuild, Microsoft.VisualStudio.Workload.Universal, and Microsoft.VisualStudio.ComponentGroup.UWP.Support",
             cancellationToken);
     }
 

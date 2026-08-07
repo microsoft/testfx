@@ -372,19 +372,25 @@ internal static class WindowsApplicationModelTestTools
             .Cast<Version>()
             .OrderDescending()
             .ToArray();
-        Version selectedSdkVersion = installedSdkVersions.FirstOrDefault(version => version >= MinimumModernUwpWindowsSdkVersion)
+        Version selectedSdkVersion = installedSdkVersions.FirstOrDefault(version =>
+            version >= MinimumModernUwpWindowsSdkVersion
+            && GetMissingModernUwpSdkFiles(windowsKitsRoot, sdkBinRoot, version).Length == 0)
             ?? throw new InvalidOperationException(
-                $"Modern UWP requires Windows SDK {MinimumModernUwpWindowsSdkVersion} or newer beneath '{sdkBinRoot}', but found: " +
+                $"Modern UWP requires a complete Windows SDK {MinimumModernUwpWindowsSdkVersion} or newer beneath '{sdkBinRoot}', but found: " +
                 $"{(installedSdkVersions.Length == 0 ? "<none>" : string.Join(", ", installedSdkVersions))}. " +
                 "Install a current Windows 11 SDK through the Visual Studio 2026 installer.");
+    }
 
-        string makeAppxPath = Path.Combine(sdkBinRoot, selectedSdkVersion.ToString(), "x64", "makeappx.exe");
-        if (!File.Exists(makeAppxPath))
-        {
-            throw new FileNotFoundException(
-                $"Windows SDK {selectedSdkVersion} was found, but its x64 MSIX packaging tool is missing at '{makeAppxPath}'. " +
-                "Repair the Windows SDK and its UWP managed tools component.",
-                makeAppxPath);
-        }
+    private static string[] GetMissingModernUwpSdkFiles(string windowsKitsRoot, string sdkBinRoot, Version sdkVersion)
+    {
+        string version = sdkVersion.ToString();
+        string[] requiredFiles =
+        [
+            Path.Combine(sdkBinRoot, version, "x64", "makeappx.exe"),
+            Path.Combine(sdkBinRoot, version, "x64", "makepri.exe"),
+            Path.Combine(windowsKitsRoot, "Platforms", "UAP", version, "Platform.xml"),
+            Path.Combine(windowsKitsRoot, "UnionMetadata", version, "Windows.winmd"),
+        ];
+        return requiredFiles.Where(path => !File.Exists(path)).ToArray();
     }
 }

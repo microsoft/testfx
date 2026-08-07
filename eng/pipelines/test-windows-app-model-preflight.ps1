@@ -222,6 +222,7 @@ $classicSdkFiles = @(
     (Join-Path $windowsKitsRoot "bin\$classicSdkVersion\x64\makeappx.exe"),
     (Join-Path $windowsKitsRoot "bin\$classicSdkVersion\x64\makepri.exe"),
     (Join-Path $windowsKitsRoot "Platforms\UAP\$classicSdkVersion\Platform.xml"),
+    (Join-Path $windowsKitsRoot "References\$classicSdkVersion\Windows.Foundation.FoundationContract\3.0.0.0\Windows.Foundation.FoundationContract.winmd"),
     (Join-Path $windowsKitsRoot "UnionMetadata\$classicSdkVersion\Windows.winmd")
 )
 $missingClassicSdkFiles = @($classicSdkFiles | Where-Object { -not (Test-Path -LiteralPath $_ -PathType Leaf) })

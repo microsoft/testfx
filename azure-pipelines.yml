@@ -791,6 +791,8 @@ stages:
           - template: /eng/pipelines/variables/test-env-vars.yml
           - name: _BuildConfig
             value: Debug
+          - name: Microsoft_Testing_TestInfrastructure_TempDirectory_Cleanup
+            value: 0
         steps:
         - checkout: self
           clean: true
