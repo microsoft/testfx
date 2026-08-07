@@ -3,9 +3,10 @@ Microsoft.Testing.Platform.Helpers.PasteArguments
 static Microsoft.Testing.Platform.Helpers.PasteArguments.AppendArgument(System.Text.StringBuilder! stringBuilder, string! argument) -> void
 Microsoft.Testing.Extensions.PackagedApp.AppxApplicationInfo
 Microsoft.Testing.Extensions.PackagedApp.AppxApplicationInfo.AppUserModelId.get -> string!
-Microsoft.Testing.Extensions.PackagedApp.AppxApplicationInfo.AppxApplicationInfo(string! id, string? executable, string! appUserModelId) -> void
+Microsoft.Testing.Extensions.PackagedApp.AppxApplicationInfo.AppxApplicationInfo(string! id, string? executable, string! appUserModelId, bool usesLaunchActivationArguments) -> void
 Microsoft.Testing.Extensions.PackagedApp.AppxApplicationInfo.Executable.get -> string?
 Microsoft.Testing.Extensions.PackagedApp.AppxApplicationInfo.Id.get -> string!
+Microsoft.Testing.Extensions.PackagedApp.AppxApplicationInfo.UsesLaunchActivationArguments.get -> bool
 Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo
 Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.Applications.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.PackagedApp.AppxApplicationInfo!>!
 Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.PackageFamilyName.get -> string!
@@ -22,6 +23,15 @@ static Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.ReadFromManifes
 static Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.ReadFromManifest(string! manifestPath) -> Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo!
 Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake
 Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackReader
+Microsoft.Testing.Extensions.PackagedApp.PackagedAppActivationArguments
+Microsoft.Testing.Extensions.PackagedApp.PackagedAppActivationData
+Microsoft.Testing.Extensions.PackagedApp.PackagedAppActivationData.Arguments.get -> string!
+Microsoft.Testing.Extensions.PackagedApp.PackagedAppActivationData.PackagedAppActivationData(string! arguments, string? payloadPath) -> void
+Microsoft.Testing.Extensions.PackagedApp.PackagedAppActivationData.PayloadPath.get -> string?
+static Microsoft.Testing.Extensions.PackagedApp.PackagedAppActivationArguments.Create(System.Collections.Generic.IReadOnlyList<string!>! arguments, string! localStateDirectory) -> Microsoft.Testing.Extensions.PackagedApp.PackagedAppActivationData!
+static Microsoft.Testing.Extensions.PackagedApp.PackagedAppActivationArguments.Read(string! activationArguments, string? localStateDirectory) -> string![]!
+static Microsoft.Testing.Extensions.PackagedApp.PackagedAppActivationArguments.TryDeletePayload(string? payloadPath) -> void
+static Microsoft.Testing.Extensions.PackagedApp.PackagedAppActivationArguments.TryDeleteStalePayloads(string! localStateDirectory, System.DateTime utcNow) -> void
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.GetHandshakeDirectory(string! packageFamilyName) -> string!
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.GetHandshakeFileName(string! testHostControllerPid) -> string!
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.GetHandshakeFilePath(string! packageFamilyName, string! testHostControllerPid) -> string!
@@ -30,5 +40,10 @@ static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.TryGetTestHostControllerPid(System.Collections.Generic.IReadOnlyList<string!>! arguments) -> string?
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.Write(string! filePath, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, string?>>! entries) -> void
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackReader.TryApplyConnectBackEnvironment(System.Collections.Generic.IReadOnlyList<string!>! commandLineArguments) -> void
+static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackReader.TryApplyConnectBackEnvironment(System.Collections.Generic.IReadOnlyList<string!>! commandLineArguments, string! appBaseDirectory, System.Func<string?>! getPackageLocalStateDirectory, System.Action<string!, string?>! setEnvironmentVariable) -> void
+static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackReader.ReadActivationArgumentsAndApplyConnectBack(string! activationArguments) -> string![]!
+static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackReader.ReadActivationArgumentsAndApplyConnectBack(string! activationArguments, string? activationPayloadLocalStateDirectory, string! appBaseDirectory, System.Func<string?>! getPackageLocalStateDirectory, System.Action<string!, string?>! setEnvironmentVariable) -> string![]!
+static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackReader.TryGetPackageLocalStateDirectory() -> string?
 Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostLauncher.PackagedAppTestHostLauncher(string! testApplicationDirectory, System.Func<string!, string?>! getEnvironmentVariable) -> void
 const Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostLauncher.LauncherModeEnvironmentVariable = "TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER" -> string!
+static Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostLauncher.CreateActivationArguments(Microsoft.Testing.Extensions.PackagedApp.AppxApplicationInfo! application, System.Collections.Generic.IReadOnlyList<string!>! arguments, string! localStateDirectory) -> Microsoft.Testing.Extensions.PackagedApp.PackagedAppActivationData!

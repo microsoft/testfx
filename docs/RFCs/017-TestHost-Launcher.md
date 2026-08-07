@@ -265,23 +265,48 @@ public Task<ITestHostHandle> LaunchTestHostAsync(
     string aumid = AppxManifest.ResolveAumid(context.FileName);
 
     // 2. Activate, passing the SAME args the platform prepared. AUMID activation takes a single
-    //    command-line string, so the launcher must escape/quote context.Arguments (e.g. with a
-    //    PasteArguments-style helper) to preserve what ProcessStartInfo.ArgumentList would have done.
+    //    string. Full-trust desktop apps need Windows argv quoting; AppContainer apps need a versioned
+    //    opaque payload that Application.OnLaunched restores before CreateBuilderAsync.
     var aam = (IApplicationActivationManager)new ApplicationActivationManager();
-    aam.ActivateApplication(aumid, PasteArguments(context.Arguments), ACTIVATEOPTIONS.AO_NONE, out uint pid);
+    string activationArguments;
+    string? activationPayloadPath = null;
+    if (manifest.UsesLaunchActivationArguments)
+    {
+        PackagedAppActivationData activationData = PackagedAppActivationArguments.Create(
+            context.Arguments,
+            manifest.LocalStateDirectory);
+        activationArguments = activationData.Arguments;
+        activationPayloadPath = activationData.PayloadPath;
+    }
+    else
+    {
+        activationArguments = PasteArguments(context.Arguments);
+    }
+
+    aam.ActivateApplication(aumid, activationArguments, ACTIVATEOPTIONS.AO_NONE, out uint pid);
 
     // 3. Wrap the activated app. AUMID activation cannot set per-launch environment variables, so the
     //    launcher must bridge the values the host needs from context.EnvironmentVariables (the
     //    MONITORTOHOST pipe name, correlation id, etc.) another way — e.g. activation arguments or a
     //    broker process the activated app reads on startup. The handle surfaces the activated PID as
     //    its (diagnostic-only) Identifier.
-    return Task.FromResult<ITestHostHandle>(new ActivatedAppHandle(pid));
+    return Task.FromResult<ITestHostHandle>(new ActivatedAppHandle(pid, activationPayloadPath));
 }
 ```
 
 > Note: enabling the controller→host pipe across the AppContainer sandbox requires a loopback/pipe-ACL
-> step (e.g. `CheckNetIsolation LoopbackExempt` or granting the package SID on the pipe). That belongs
-> to the package/deploy extension, not the platform.
+> step that grants the exact package SID access to the named pipe. Argument delivery and pipe
+> authorization are deliberately separate: the reference packaged-app extension restores the opaque
+> `LaunchActivatedEventArgs.Arguments` through a reusable bootstrap, while [#10486](https://github.com/microsoft/testfx/issues/10486)
+> tracks the least-privilege pipe ACL. `CheckNetIsolation LoopbackExempt` is for network loopback and
+> does not authorize named pipes.
+
+For launch activation, Windows documents a 2,048-character argument envelope on
+`SecondaryTile.Arguments`, one of the sources surfaced as `LaunchActivatedEventArgs.Arguments`.
+The reference extension keeps payloads within that proven envelope inline. Larger MTP argument arrays
+spill to a one-shot package `LocalState` file as authenticated ciphertext, with the random per-launch
+key carried only in the activation string. This avoids plaintext persistence of filters, runsettings,
+or secrets while preserving exact argument order and values.
 
 ### 2. Launch under a debugger
 

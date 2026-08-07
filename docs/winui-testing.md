@@ -140,9 +140,31 @@ Requirements and limitations:
 
 - Target a Windows TFM at platform version `10.0.19041.0` or higher (for example `net8.0-windows10.0.19041.0`) so NuGet resolves the Windows asset that contains the register-and-activate path. The plain `net8.0`/`net9.0` asset fails fast with an actionable message instead.
 - Registering an unsigned build-output layout requires **Developer Mode** (or sideloading) to be enabled on the machine.
-- Only **full-trust packaged desktop** hosts are supported. True UWP/AppContainer hosts are not: activation arguments are not delivered as `argv` there, and the controller pipe is not granted the package SID.
+- `packagedClassicApp`/`win32App` hosts receive MTP arguments as normal process `argv`, including classic hosts whose trust level is `appContainer`.
+- `windowsApp`/UWP hosts receive one opaque string through `LaunchActivatedEventArgs.Arguments`. Restore the platform argument array with `PackagedAppExtensions.GetTestApplicationArguments(args.Arguments)` before `TestApplication.CreateBuilderAsync`; see [Launch activation](#launch-activation).
+- End-to-end UWP/AppContainer execution remains dependent on granting the exact package SID access to the controller named pipe, tracked separately by [#10486](https://github.com/microsoft/testfx/issues/10486). Argument delivery from [#10485](https://github.com/microsoft/testfx/issues/10485) does not weaken that pipe ACL.
 
 See [#9933](https://github.com/microsoft/testfx/issues/9933) for the implementation of this path.
+
+### Launch activation
+
+Unlike a packaged classic/Win32 app, a `windowsApp`/UWP app does not receive the string passed to `IApplicationActivationManager` as `argv`. Windows exposes it as one opaque value on the launch event. Use the package bootstrap from `OnLaunched` rather than adding a project-specific command-line parser. Classic AppContainer hosts continue to use their process arguments:
+
+```csharp
+protected override async void OnLaunched(LaunchActivatedEventArgs args)
+{
+    string[] cliArgs = PackagedAppExtensions.GetTestApplicationArguments(args.Arguments);
+    ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(cliArgs);
+    builder.AddSelfRegisteredExtensions(cliArgs);
+    using ITestApplication app = await builder.BuildAsync();
+    Environment.ExitCode = await app.RunAsync();
+    Exit();
+}
+```
+
+The launcher and bootstrap share a versioned, length-prefixed format that preserves empty values, whitespace, quotes, backslashes, Unicode, repeated options, and ordering. Arguments that fit the documented 2,048-character Windows launch envelope remain only in the activation string. Larger arrays use a one-shot `LocalState` payload encrypted with a random per-launch key carried in the activation string; the host consumes and deletes it before MTP starts, and the launcher handle removes it if startup fails. Runsettings, filters, and other user input are therefore never persisted in plaintext.
+
+This bootstrap also restores the existing controller connect-back environment handoff before MTP reads it. It cannot by itself authorize the AppContainer token on that pipe; [#10486](https://github.com/microsoft/testfx/issues/10486) is the remaining end-to-end dependency.
 
 ## When does the PackagedApp launcher take over?
 

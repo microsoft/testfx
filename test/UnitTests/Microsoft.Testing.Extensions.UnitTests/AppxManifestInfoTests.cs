@@ -109,6 +109,205 @@ public sealed class AppxManifestInfoTests
     }
 
     [TestMethod]
+    public void ReadFromManifest_LegacyUwpApplication_IsAppContainer()
+    {
+        const string ManifestXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10">
+              <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="App" Executable="MyTestApp.exe" EntryPoint="Contoso.MyTestApp.App" />
+              </Applications>
+            </Package>
+            """;
+
+        Assert.IsTrue(Assert.ContainsSingle(ReadManifest(ManifestXml).Applications).UsesLaunchActivationArguments);
+    }
+
+    [TestMethod]
+    public void ReadFromManifest_ExplicitAppContainerTrustLevel_IsAppContainer()
+    {
+        const string ManifestXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package
+                xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+                xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10">
+              <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="App" Executable="MyTestApp.exe" uap10:TrustLevel="appContainer" />
+              </Applications>
+            </Package>
+            """;
+
+        Assert.IsTrue(Assert.ContainsSingle(ReadManifest(ManifestXml).Applications).UsesLaunchActivationArguments);
+    }
+
+    [TestMethod]
+    public void ReadFromManifest_PackagedDesktopApplication_IsNotAppContainer()
+    {
+        const string ManifestXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package
+                xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+                xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities">
+              <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="App" Executable="MyTestApp.exe" EntryPoint="Windows.FullTrustApplication" />
+              </Applications>
+              <Capabilities>
+                <rescap:Capability Name="runFullTrust" />
+              </Capabilities>
+            </Package>
+            """;
+
+        Assert.IsFalse(Assert.ContainsSingle(ReadManifest(ManifestXml).Applications).UsesLaunchActivationArguments);
+    }
+
+    [TestMethod]
+    public void ReadFromManifest_SingleApplicationRunFullTrustPackage_IsNotAppContainer()
+    {
+        const string ManifestXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package
+                xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+                xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities">
+              <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="App" Executable="MyTestApp.exe" EntryPoint="Contoso.MyTestApp.App" />
+              </Applications>
+              <Capabilities>
+                <rescap:Capability Name="runFullTrust" />
+              </Capabilities>
+            </Package>
+            """;
+
+        Assert.IsFalse(Assert.ContainsSingle(ReadManifest(ManifestXml).Applications).UsesLaunchActivationArguments);
+    }
+
+    [TestMethod]
+    public void ReadFromManifest_SingleUwpApplicationWithFullTrustCompanionExtension_IsAppContainer()
+    {
+        const string ManifestXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package
+                xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+                xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
+                xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities">
+              <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="UwpApp" Executable="UwpApp.exe" EntryPoint="Contoso.MyTestApp.App">
+                  <Extensions>
+                    <desktop:Extension Category="windows.fullTrustProcess" Executable="Companion.exe" />
+                  </Extensions>
+                </Application>
+              </Applications>
+              <Capabilities>
+                <rescap:Capability Name="runFullTrust" />
+              </Capabilities>
+            </Package>
+            """;
+
+        Assert.IsTrue(Assert.ContainsSingle(ReadManifest(ManifestXml).Applications).UsesLaunchActivationArguments);
+    }
+
+    [TestMethod]
+    public void ReadFromManifest_MixedPackage_DoesNotApplyCompanionRunFullTrustCapabilityToUwpApplication()
+    {
+        const string ManifestXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package
+                xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+                xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities">
+              <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="UwpApp" Executable="UwpApp.exe" EntryPoint="Contoso.MyTestApp.App" />
+                <Application Id="Companion" Executable="Companion.exe" EntryPoint="Windows.FullTrustApplication" />
+              </Applications>
+              <Capabilities>
+                <rescap:Capability Name="runFullTrust" />
+              </Capabilities>
+            </Package>
+            """;
+
+        AppxManifestInfo manifest = ReadManifest(ManifestXml);
+
+        Assert.IsTrue(manifest.Applications[0].UsesLaunchActivationArguments);
+        Assert.IsFalse(manifest.Applications[1].UsesLaunchActivationArguments);
+    }
+
+    [TestMethod]
+    public void ReadFromManifest_ExplicitPackagedClassicRuntimeBehavior_IsNotAppContainer()
+    {
+        const string ManifestXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package
+                xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+                xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10">
+              <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="App" Executable="MyTestApp.exe" uap10:RuntimeBehavior="packagedClassicApp" />
+              </Applications>
+            </Package>
+            """;
+
+        Assert.IsFalse(Assert.ContainsSingle(ReadManifest(ManifestXml).Applications).UsesLaunchActivationArguments);
+    }
+
+    [TestMethod]
+    public void ReadFromManifest_ExplicitMediumIntegrityTrustLevel_IsNotAppContainer()
+    {
+        const string ManifestXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package
+                xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+                xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10">
+              <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="App" Executable="MyTestApp.exe" uap10:TrustLevel="mediumIL" />
+              </Applications>
+            </Package>
+            """;
+
+        Assert.IsFalse(Assert.ContainsSingle(ReadManifest(ManifestXml).Applications).UsesLaunchActivationArguments);
+    }
+
+    [TestMethod]
+    public void ReadFromManifest_PackagedClassicAppContainer_UsesProcessArguments()
+    {
+        const string ManifestXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package
+                xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+                xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10">
+              <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="App" Executable="MyTestApp.exe" uap10:RuntimeBehavior="packagedClassicApp" uap10:TrustLevel="appContainer" />
+              </Applications>
+            </Package>
+            """;
+
+        Assert.IsFalse(Assert.ContainsSingle(ReadManifest(ManifestXml).Applications).UsesLaunchActivationArguments);
+    }
+
+    [TestMethod]
+    public void ReadFromManifest_WindowsAppMediumIntegrity_UsesLaunchActivation()
+    {
+        const string ManifestXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package
+                xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+                xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10">
+              <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="App" Executable="MyTestApp.exe" uap10:RuntimeBehavior="windowsApp" uap10:TrustLevel="mediumIL" />
+              </Applications>
+            </Package>
+            """;
+
+        Assert.IsTrue(Assert.ContainsSingle(ReadManifest(ManifestXml).Applications).UsesLaunchActivationArguments);
+    }
+
+    [TestMethod]
     public void ResolveApplication_WithSingleApplication_ReturnsItRegardlessOfExecutable()
     {
         AppxManifestInfo info = ReadManifest(

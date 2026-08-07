@@ -225,24 +225,88 @@ internal sealed class AppxManifestInfo
 
         string packageFamilyName = $"{name}_{ComputePublisherId(publisher)}";
 
+        bool canRunFullTrust = root is not null
+            && root.Descendants()
+            .Any(static element =>
+                element.Name.LocalName == "Capability"
+                && string.Equals(element.Attribute("Name")?.Value, "runFullTrust", StringComparison.OrdinalIgnoreCase));
+
+        List<XElement> applicationElements = root?.Elements().FirstOrDefault(static e => e.Name.LocalName == "Applications")?
+            .Elements().Where(static e => e.Name.LocalName == "Application")
+            .ToList()
+            ?? [];
+
         // A package may declare several applications, each with its own id (and AUMID). Capture them
         // all so the launcher can resolve the one matching the executable it was asked to launch,
         // instead of guessing with the first entry.
-        List<AppxApplicationInfo> applications = root?.Elements().FirstOrDefault(static e => e.Name.LocalName == "Applications")?
-            .Elements().Where(static e => e.Name.LocalName == "Application")
+        var applications = applicationElements
             .Select(application =>
             {
                 string? applicationId = application.Attribute("Id")?.Value;
                 string? executable = application.Attribute("Executable")?.Value;
+                string? entryPoint = application.Attribute("EntryPoint")?.Value;
+                string? trustLevel = application.Attributes().FirstOrDefault(static attribute => attribute.Name.LocalName == "TrustLevel")?.Value;
+                string? runtimeBehavior = application.Attributes().FirstOrDefault(static attribute => attribute.Name.LocalName == "RuntimeBehavior")?.Value;
+                bool hasFullTrustCompanion = application.Descendants()
+                    .Any(static element =>
+                        element.Name.LocalName == "Extension"
+                        && string.Equals(element.Attribute("Category")?.Value, "windows.fullTrustProcess", StringComparison.OrdinalIgnoreCase));
                 return applicationId is null || applicationId.Length == 0
                     ? null
-                    : new AppxApplicationInfo(applicationId, executable, $"{packageFamilyName}!{applicationId}");
+                    : new AppxApplicationInfo(
+                        applicationId,
+                        executable,
+                        $"{packageFamilyName}!{applicationId}",
+                        UsesLaunchActivationArguments(
+                            entryPoint,
+                            trustLevel,
+                            runtimeBehavior,
+                            canUsePackageFullTrustFallback:
+                                canRunFullTrust
+                                && applicationElements.Count == 1
+                                && !hasFullTrustCompanion));
             })
             .OfType<AppxApplicationInfo>()
-            .ToList()
-            ?? [];
+            .ToList();
 
         return new AppxManifestInfo(name, publisher, applications);
+    }
+
+    private static bool UsesLaunchActivationArguments(
+        string? entryPoint,
+        string? trustLevel,
+        string? runtimeBehavior,
+        bool canUsePackageFullTrustFallback)
+    {
+        // RuntimeBehavior determines the activation model. A packaged classic or Win32 application
+        // receives process argv even when its sandbox TrustLevel is appContainer.
+        if (string.Equals(runtimeBehavior, "packagedClassicApp", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(runtimeBehavior, "win32App", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(entryPoint, "Windows.FullTrustApplication", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        if (string.Equals(runtimeBehavior, "windowsApp", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (string.Equals(trustLevel, "appContainer", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (string.Equals(trustLevel, "mediumIL", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        // Legacy UWP manifests express AppContainer by omission. A package-wide runFullTrust capability
+        // is a safe fallback only for one application with no full-trust companion extension (the shape
+        // produced by packaged WinUI). Mixed packages and UWP apps with a windows.fullTrustProcess helper
+        // need application-specific desktop evidence.
+        return !canUsePackageFullTrustFallback;
     }
 
     /// <summary>
