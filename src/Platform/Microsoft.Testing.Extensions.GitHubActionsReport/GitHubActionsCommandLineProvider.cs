@@ -40,4 +40,18 @@ internal sealed class GitHubActionsCommandLineProvider : CommandLineOptionsProvi
                 => ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.InvalidSlowTestThreshold, arguments[0])),
             _ => ValidationResult.ValidTask,
         };
+
+    public override Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
+        => RequiresMainOption(
+            commandLineOptions,
+            [
+                GitHubActionsCommandLineOptions.GitHubActionsGroups,
+                GitHubActionsCommandLineOptions.GitHubActionsAnnotations,
+                GitHubActionsCommandLineOptions.GitHubActionsStepSummary,
+                GitHubActionsCommandLineOptions.GitHubActionsSlowTestNotices,
+                GitHubActionsCommandLineOptions.GitHubActionsSlowTestThreshold,
+            ],
+            GitHubActionsCommandLineOptions.GitHubActionsOptionName,
+            () => string.Format(CultureInfo.CurrentCulture, GitHubActionsResources.SubOptionsRequireReportGh, GitHubActionsCommandLineOptions.GitHubActionsOptionName))
+        ?? ValidationResult.ValidTask;
 }
