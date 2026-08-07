@@ -195,6 +195,10 @@ public sealed class NamedPipeServerSecurityTests
     /// actually uses: the pipe must still be created with a DACL that names only the owner and the validated
     /// package.
     /// </summary>
+    /// <remarks>
+    /// Reading the descriptor back by name connects a client and consumes this single-instance pipe, so this
+    /// test deliberately never calls <c>WaitConnectionAsync</c> and performs exactly one such read.
+    /// </remarks>
     [TestMethod]
     [OSCondition(OperatingSystems.Windows)]
     [SupportedOSPlatform("windows")]
@@ -212,13 +216,56 @@ public sealed class NamedPipeServerSecurityTests
             new ShapeShiftingIdentityList(PackageSid, "WD)(A;;FA;;;WD"),
             CancellationToken.None);
 
-        // The pipe exists now; opening it as the current user proves it was created, and reading the
-        // descriptor of that handle proves nothing extra was granted.
-        string sddl = WindowsSecurity.GetSecurityDescriptorSddlByName(pipeName.Name);
+        string sddl = WindowsSecurity.ConnectAndGetSecurityDescriptorSddl(pipeName.Name);
 
         Assert.AreEqual(2, CountAces(sddl), $"Unexpected security descriptor '{sddl}'.");
         Assert.IsFalse(sddl.Contains(";;;WD)", StringComparison.OrdinalIgnoreCase), $"'Everyone' was injected into '{sddl}'.");
         Assert.IsFalse(sddl.Contains(";;;S-1-1-0)", StringComparison.OrdinalIgnoreCase), $"'Everyone' was injected into '{sddl}'.");
+    }
+
+    /// <summary>
+    /// The snapshot the platform takes lowers to <see cref="ICollection{T}.CopyTo"/> when the runtime type
+    /// implements it, so a hostile collection still chooses what lands in the snapshot array. This pins that
+    /// the validation at the point of concatenation — not the snapshot — is what closes the hole.
+    /// </summary>
+    [TestMethod]
+    public void BuildSecurityDescriptor_WithAHostileCopyTo_StillRejectsTheInjectedValue()
+    {
+        ArgumentException exception = Assert.ThrowsExactly<ArgumentException>(
+            () => NamedPipeServerSecurity.BuildSecurityDescriptor("S-1-5-18", new HostileCopyToIdentityList(PackageSid, "WD)(A;;FA;;;WD")));
+
+        Assert.Contains("does not identify a single sandboxed application", exception.Message);
+    }
+
+    /// <summary>
+    /// An <see cref="IReadOnlyList{T}"/> that also implements <see cref="ICollection{T}"/> so the collection
+    /// expression takes the <see cref="ICollection{T}.CopyTo"/> fast path, and whose <c>CopyTo</c> writes a
+    /// different value than its enumerator yields.
+    /// </summary>
+    private sealed class HostileCopyToIdentityList(string enumeratedValue, string copiedValue) : IReadOnlyList<string>, ICollection<string>
+    {
+        public int Count => 1;
+
+        public bool IsReadOnly => true;
+
+        public string this[int index] => enumeratedValue;
+
+        public void CopyTo(string[] array, int arrayIndex) => array[arrayIndex] = copiedValue;
+
+        public IEnumerator<string> GetEnumerator()
+        {
+            yield return enumeratedValue;
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        public void Add(string item) => throw new NotSupportedException();
+
+        public void Clear() => throw new NotSupportedException();
+
+        public bool Contains(string item) => throw new NotSupportedException();
+
+        public bool Remove(string item) => throw new NotSupportedException();
     }
 
     /// <summary>
@@ -554,13 +601,23 @@ public sealed class NamedPipeServerSecurityTests
         private const int SecurityInformation = OwnerSecurityInformation | GroupSecurityInformation | DaclSecurityInformation | LabelSecurityInformation;
 
         /// <summary>
-        /// Reads the security descriptor of an existing named pipe by name, for cases where the test does
-        /// not hold the server stream (for example when the pipe is owned by a <c>NamedPipeServer</c>).
+        /// Opens an existing named pipe by name and returns its security descriptor, for cases where the
+        /// test does not hold the server stream (for example when the pipe is owned by a
+        /// <c>NamedPipeServer</c>).
         /// </summary>
+        /// <remarks>
+        /// <strong>This connects a client and consumes a pipe instance.</strong> NPFS treats any successful
+        /// <c>CreateFileW</c> on <c>\\.\pipe\name</c> as a client connect regardless of the requested access
+        /// mask, so even a <c>READ_CONTROL</c>-only open transitions a single-instance server to CONNECTED.
+        /// Call it at most once per pipe, and never on a server whose own connection is under test: a second
+        /// call fails with <c>ERROR_PIPE_BUSY</c>, and satisfying a pending <c>WaitConnectionAsync</c> with
+        /// this phantom client would start the read loop against an already-closed peer, which the server
+        /// treats as a fatal error and fails the process rather than the test.
+        /// </remarks>
         [SupportedOSPlatform("windows")]
-        public static string GetSecurityDescriptorSddlByName(string pipeName)
+        public static string ConnectAndGetSecurityDescriptorSddl(string pipeName)
         {
-            // READ_CONTROL only: enough to read the descriptor, and it does not consume the pipe instance.
+            // READ_CONTROL is the minimum needed to read the descriptor. It does not avoid the connect.
             const uint readControl = 0x00020000;
 
             IntPtr handle = CreateFile($@"\\.\pipe\{pipeName}", readControl, 0, IntPtr.Zero, OpenExisting, 0, IntPtr.Zero);

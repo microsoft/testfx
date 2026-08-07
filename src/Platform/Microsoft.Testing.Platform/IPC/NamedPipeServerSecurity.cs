@@ -224,6 +224,12 @@ internal static class NamedPipeServerSecurity
         // Copy to an array first. The sequence can come from an extension, so its Count and indexer are not
         // guaranteed to be stable or even self-consistent; once the values are in an array, the value that
         // is validated below is provably the same value that is appended.
+        //
+        // The snapshot alone is NOT sufficient, and the validation below must not be removed on the grounds
+        // that a caller already validated: when the runtime type also implements ICollection<T>, this spread
+        // lowers to ICollection<T>.CopyTo, so a hostile implementation still chooses what lands in the
+        // array. Validating here — against the very local that is then appended — is what actually closes
+        // the hole, because string is immutable and Normalize is pure.
         string[] securityIdentities = [.. authorizedSecurityIdentities];
 
         var builder = new StringBuilder();
