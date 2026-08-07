@@ -42,6 +42,11 @@
         <target state="translated">Archivo de volcado de bloqueo</target>
         <note />
       </trans-unit>
+      <trans-unit id="HangDumpDeadlineApproaching">
+        <source>CI deadline approaching: taking a hang dump before the run is hard-cancelled.</source>
+        <target state="new">CI deadline approaching: taking a hang dump before the run is hard-cancelled.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="HangDumpEnvironmentVariableInvalidValueErrorMessage">
         <source>Environment variable '{0}' is set to '{1}' instead of '{2}'</source>
         <target state="translated">La variable de entorno '{0}' se establece en '{1}' en lugar de '{2}'</target>

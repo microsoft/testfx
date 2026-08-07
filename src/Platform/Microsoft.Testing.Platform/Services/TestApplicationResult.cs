@@ -175,6 +175,13 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         exitCode = exitCode == ExitCode.Success && _failedTestsCount > 0 ? ExitCode.AtLeastOneTestFailed : exitCode;
         exitCode = exitCode == ExitCode.Success && _policiesService.IsAbortTriggered ? ExitCode.TestSessionAborted : exitCode;
 
+        // A deadline-driven graceful stop (see AbortAtDeadlineExtension) truncates the run before the CI
+        // hard-cancel. Such a run may otherwise look successful (it did not fail or abort), but it did not
+        // execute every test, so it must not report success. Real failures/abort above keep precedence; a
+        // clean-but-truncated run becomes non-zero here and takes precedence over the zero-tests/coverage
+        // verdicts below (a truncated run legitimately may not have run the expected number of tests).
+        exitCode = exitCode == ExitCode.Success && _policiesService.IsDeadlineTriggered ? ExitCode.TestExecutionStoppedAtDeadline : exitCode;
+
         // An explicitly-provided `--minimum-expected-tests` governs the count-based verdict and
         // supersedes the ZeroTests (8) verdict below: a run of fewer than N tests yields
         // ExitCode.MinimumExpectedTestsPolicyViolation (9), even when zero tests ran. This lets callers

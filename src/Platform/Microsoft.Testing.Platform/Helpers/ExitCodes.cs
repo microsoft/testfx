@@ -84,4 +84,5 @@ internal enum ExitCode
     /// One or more code-coverage thresholds were not met.
     /// </summary>
     CoverageThresholdFailed = 14,
+    TestExecutionStoppedAtDeadline = 15,
 }

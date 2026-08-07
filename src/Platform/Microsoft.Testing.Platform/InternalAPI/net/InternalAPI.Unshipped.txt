@@ -1,4 +1,5 @@
 #nullable enable
+Microsoft.Testing.Platform.Extensions.AbortAtDeadlineExtension.DisposeAsync() -> System.Threading.Tasks.ValueTask
 Microsoft.Testing.Platform.Messages.AsyncConsumerDataProcessor.AsyncConsumerDataProcessor(Microsoft.Testing.Platform.Extensions.IDataConsumer! consumer, Microsoft.Testing.Platform.Helpers.ITask! task, System.Threading.CancellationToken cancellationToken, System.TimeSpan canceledShutdownTimeout) -> void
 *REMOVED*Microsoft.Testing.Platform.ServerMode.FormatterUtilities.MessageFormatter.Deserialize<T>(System.ReadOnlyMemory<char> serializedUtf8Content) -> T
 *REMOVED*Microsoft.Testing.Platform.ServerMode.IMessageFormatter.Deserialize<T>(System.ReadOnlyMemory<char> serializedUtf8Content) -> T

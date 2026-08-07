@@ -11,6 +11,7 @@ internal sealed class StopPoliciesService : IStopPoliciesService
 
     private readonly ConcurrentQueue<Func<int, CancellationToken, Task>> _maxFailedTestsCallbacks = new();
     private readonly ConcurrentQueue<Func<Task>> _abortCallbacks = new();
+    private readonly ConcurrentQueue<Func<Task>> _deadlineCallbacks = new();
     private int _lastMaxFailedTests;
 
     public StopPoliciesService(ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource)
@@ -28,6 +29,8 @@ internal sealed class StopPoliciesService : IStopPoliciesService
     public bool IsMaxFailedTestsTriggered { get; private set; }
 
     public bool IsAbortTriggered { get; private set; }
+
+    public bool IsDeadlineTriggered { get; private set; }
 
     public async Task ExecuteMaxFailedTestsCallbacksAsync(int maxFailedTests, CancellationToken cancellationToken)
     {
@@ -63,6 +66,23 @@ internal sealed class StopPoliciesService : IStopPoliciesService
         }
     }
 
+    public async Task ExecuteDeadlineCallbacksAsync()
+    {
+        IsDeadlineTriggered = true;
+
+        if (_deadlineCallbacks is null)
+        {
+            return;
+        }
+
+        foreach (Func<Task> callback in _deadlineCallbacks)
+        {
+            // For now, we are fine if the callback crashed us. It shouldn't happen for our
+            // current usage anyway and the APIs around this are all internal for now.
+            await callback.Invoke().ConfigureAwait(false);
+        }
+    }
+
     public async Task RegisterOnMaxFailedTestsCallbackAsync(Func<int, CancellationToken, Task> callback)
     {
         if (ProcessRole != TestProcessRole.TestHost)
@@ -86,5 +106,15 @@ internal sealed class StopPoliciesService : IStopPoliciesService
         }
 
         _abortCallbacks.Enqueue(callback);
+    }
+
+    public async Task RegisterOnDeadlineCallbackAsync(Func<Task> callback)
+    {
+        if (IsDeadlineTriggered)
+        {
+            await callback().ConfigureAwait(false);
+        }
+
+        _deadlineCallbacks.Enqueue(callback);
     }
 }

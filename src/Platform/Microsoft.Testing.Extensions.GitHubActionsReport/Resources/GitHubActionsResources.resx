@@ -177,6 +177,9 @@
   <data name="ExitCodeReasonCoverageThresholdFailed" xml:space="preserve">
     <value>One or more code coverage thresholds were not met.</value>
   </data>
+  <data name="ExitCodeReasonTestExecutionStoppedAtDeadline" xml:space="preserve">
+    <value>Test execution was stopped early because a CI-imposed deadline was approaching.</value>
+  </data>
   <data name="ExitCodeReasonUnknown" xml:space="preserve">
     <value>The test run reported a non-success exit code.</value>
   </data>
