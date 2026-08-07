@@ -58,6 +58,22 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="CtrfArtifactPostProcessorDescription" xml:space="preserve">
+    <value>Merges CTRF reports produced by Microsoft.Testing.Extensions.CtrfReport</value>
+    <comment>Do not localize format name {Locked="CTRF"} or assembly name {Locked="Microsoft.Testing.Extensions.CtrfReport"}.</comment>
+  </data>
+  <data name="CtrfArtifactPostProcessorDisplayName" xml:space="preserve">
+    <value>CTRF report merger</value>
+    <comment>Do not localize format name {Locked="CTRF"}.</comment>
+  </data>
+  <data name="CtrfMergedArtifactDescription" xml:space="preserve">
+    <value>{0} CTRF files merged</value>
+    <comment>{0} is the number of merged files. Do not localize format name {Locked="CTRF"}.</comment>
+  </data>
+  <data name="CtrfMergedArtifactDisplayName" xml:space="preserve">
+    <value>CTRF report (merged)</value>
+    <comment>Do not localize format name {Locked="CTRF"}.</comment>
+  </data>
   <data name="CtrfReportArtifactDescription" xml:space="preserve">
     <value>CTRF (Common Test Report Format) JSON test report</value>
     <comment>Do not localize {Locked="CTRF"}, {Locked="Common Test Report Format"}, or {Locked="JSON"}.</comment>

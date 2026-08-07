@@ -55,7 +55,7 @@ public sealed class DotnetTestPipeArtifactPostProcessingTests
                 "ArtifactPostProcessor",
                 result.ReceivedHandshake[DotnetTestPipeProtocol.HandshakeProperties.HostType]);
             Assert.AreEqual(
-                "microsoft.testing.trx;test.summary;test.xml",
+                "microsoft.testing.ctrf;microsoft.testing.trx;test.summary;test.xml",
                 result.ReceivedHandshake[DotnetTestPipeProtocol.HandshakeProperties.SupportedPostProcessorKinds]);
             Assert.AreEqual(
                 "test.summary",
@@ -72,6 +72,69 @@ public sealed class DotnetTestPipeArtifactPostProcessingTests
             Assert.AreSequenceEqual(
                 [Path.GetFullPath(firstPath), Path.GetFullPath(secondPath)],
                 artifacts[0].InputArtifactPaths);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task Dispatcher_AdvertisesCtrfCapabilityAndReturnsMergedArtifact()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"artifact-dispatcher-ctrf-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            string firstPath = Path.Combine(directory, "first.ctrf.json");
+            string secondPath = Path.Combine(directory, "second.ctrf.json");
+            WriteMinimalCtrfReport(firstPath, "first");
+            WriteMinimalCtrfReport(secondPath, "second");
+            string manifestPath = Path.Combine(directory, "manifest.json");
+            File.WriteAllText(
+                manifestPath,
+                JsonSerializer.Serialize(new
+                {
+                    schemaVersion = 1,
+                    outputDirectory = directory,
+                    inputs = new[]
+                    {
+                        new { path = firstPath, kind = "microsoft.testing.ctrf", executionId = "execution-1" },
+                        new { path = secondPath, kind = "microsoft.testing.ctrf", executionId = "execution-2" },
+                    },
+                }));
+
+            var testHost = TestInfrastructure.TestHost.LocateFrom(
+                AssetFixture.TargetAssetPath,
+                AssetName,
+                TargetFrameworks.NetCurrent);
+            FakeDotnetTestSdkResult result = await FakeDotnetTestSdk.RunAsync(
+                testHost,
+                extraArguments: $"--manifest \"{manifestPath}\"",
+                supportedProtocolVersions: "1.4.0",
+                toolName: "internal-merge-artifacts",
+                cancellationToken: TestContext.CancellationToken);
+
+            result.TestHostResult.AssertExitCodeIs(ExitCode.Success);
+            Assert.IsNotNull(result.ReceivedHandshake);
+            Assert.AreEqual(
+                "microsoft.testing.ctrf;microsoft.testing.trx;test.summary;test.xml",
+                result.ReceivedHandshake[DotnetTestPipeProtocol.HandshakeProperties.SupportedPostProcessorKinds]);
+
+            RawMessage[] artifactFrames = [.. result.MessagesWithSerializerId(DotnetTestPipeProtocol.SerializerIds.FileArtifactMessages)];
+            Assert.HasCount(1, artifactFrames);
+            IReadOnlyList<FileArtifact> artifacts = DotnetTestPipeProtocol.DecodeFileArtifacts(artifactFrames[0].Body);
+            Assert.HasCount(1, artifacts);
+            Assert.AreEqual("microsoft.testing.ctrf", artifacts[0].Kind);
+            Assert.IsNotNull(artifacts[0].FullPath);
+            Assert.IsTrue(File.Exists(artifacts[0].FullPath!));
+            Assert.IsNotNull(artifacts[0].InputArtifactPaths);
+            Assert.AreSequenceEqual(
+                [Path.GetFullPath(firstPath), Path.GetFullPath(secondPath)],
+                artifacts[0].InputArtifactPaths);
+
+            using var merged = JsonDocument.Parse(File.ReadAllText(artifacts[0].FullPath!));
+            Assert.AreEqual(2, merged.RootElement.GetProperty("results").GetProperty("tests").GetArrayLength());
         }
         finally
         {
@@ -402,6 +465,30 @@ public sealed class DotnetTestPipeArtifactPostProcessingTests
             .Save(path);
     }
 
+    private static void WriteMinimalCtrfReport(string path, string name)
+        => File.WriteAllText(
+            path,
+            JsonSerializer.Serialize(new
+            {
+                reportFormat = "CTRF",
+                specVersion = "0.0.0",
+                reportId = Guid.NewGuid().ToString("D"),
+                results = new
+                {
+                    summary = new
+                    {
+                        tests = 1,
+                        passed = 1,
+                        start = 1000,
+                        stop = 2000,
+                    },
+                    tests = new[]
+                    {
+                        new { name, status = "passed" },
+                    },
+                },
+            }));
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string AssetCode = """
@@ -418,6 +505,7 @@ public sealed class DotnetTestPipeArtifactPostProcessingTests
               </PropertyGroup>
               <ItemGroup>
                 <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+                <PackageReference Include="Microsoft.Testing.Extensions.CtrfReport" Version="$MicrosoftTestingExtensionsCtrfReportVersion$" />
                 <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$MicrosoftTestingPlatformVersion$" />
               </ItemGroup>
             </Project>
@@ -434,6 +522,7 @@ public sealed class DotnetTestPipeArtifactPostProcessingTests
                 public static async Task<int> Main(string[] args)
                 {
                     ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+                    builder.AddCtrfReportProvider();
                     builder.AddTrxReportProvider();
                     ((IArtifactPostProcessingApplicationBuilder)builder).ArtifactPostProcessing
                         .AddArtifactPostProcessor(_ => new SummaryArtifactPostProcessor());
@@ -558,6 +647,7 @@ public sealed class DotnetTestPipeArtifactPostProcessingTests
         public override (string ID, string Name, string Code) GetAssetsToGenerate()
             => (AssetName, AssetName, AssetCode
                 .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingExtensionsCtrfReportVersion$", MicrosoftTestingExtensionsCtrfReportVersion));
     }
 }
