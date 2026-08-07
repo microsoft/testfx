@@ -438,6 +438,7 @@ public sealed class CtrfReportMergerTests
     {
         Guid first = CtrfReportMerger.CreateDeterministicId(["a\0execution-1", "b\0execution-2"]);
 
+        Assert.AreEqual(new Guid("a013bf25-9502-a584-31ca-332457e596d2"), first);
         Assert.AreEqual(first, CtrfReportMerger.CreateDeterministicId(["a\0execution-1", "b\0execution-2"]));
         Assert.AreNotEqual(first, CtrfReportMerger.CreateDeterministicId(["a\0execution-3", "b\0execution-2"]));
     }

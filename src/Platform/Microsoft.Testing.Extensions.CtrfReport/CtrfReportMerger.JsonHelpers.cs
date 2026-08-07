@@ -160,8 +160,14 @@ internal static partial class CtrfReportMerger
         }
 
         byte[] bytes = new byte[16];
-        BitConverter.GetBytes(hashLow).CopyTo(bytes, 0);
-        BitConverter.GetBytes(hashHigh).CopyTo(bytes, 8);
+        for (int i = 0; i < 8; i++)
+        {
+            // Serialize explicitly in little-endian order so identical inputs produce the same identifier on
+            // every architecture. Guid(byte[]) has a stable interpretation once the byte sequence is fixed.
+            bytes[i] = (byte)(hashLow >> (i * 8));
+            bytes[i + 8] = (byte)(hashHigh >> (i * 8));
+        }
+
         return new Guid(bytes);
     }
 
