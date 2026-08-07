@@ -447,6 +447,14 @@ Request for Comments document in the `docs/RFCs/` folder. RFCs describe design d
 
 ## S
 
+### Server Mode
+
+An MTP execution mode where the test host runs as a long-lived process and communicates with a client (e.g. an IDE or `dotnet test`) over a JSON-RPC protocol instead of writing to the console. Used for scenarios like live test discovery/run updates in editors. See also [JSON-RPC Protocol](#json-rpc-protocol).
+
+### Microsoft.Testing.Platform.ServerMode.Client.Sources
+
+A source-only NuGet package providing a client implementation for connecting to an MTP test host running in [Server Mode](#server-mode). Being source-only (no compiled assembly), it is compiled directly into the consuming project, avoiding a runtime dependency and version-lock on the MTP server protocol types. Added in [PR #10085](https://github.com/microsoft/testfx/pull/10085).
+
 ### SequenceOrder
 
 A public enum in `Microsoft.VisualStudio.TestTools.UnitTesting` that controls whether elements must appear in the same position when comparing sequences with `Assert.AreSequenceEqual` and `Assert.AreNotSequenceEqual`. Values: `InOrder` (0, default) — elements must appear in the same order in both sequences (LINQ `SequenceEqual` semantics); `InAnyOrder` (1) — elements may appear in any order, but each element must appear the same number of times in both sequences (multiset equality). Introduced in [PR #8334](https://github.com/microsoft/testfx/pull/8334).
