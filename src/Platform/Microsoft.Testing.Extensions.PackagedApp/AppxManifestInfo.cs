@@ -291,10 +291,15 @@ internal sealed class AppxManifestInfo
         string? trustLevel,
         string? runtimeBehavior,
         bool canUsePackageFullTrustFallback)
-        // An explicit sandbox declaration wins over the activation model: it is a direct statement about the
-        // token the host will run with.
-        => string.Equals(trustLevel, "appContainer", StringComparison.OrdinalIgnoreCase)
-            || UsesLaunchActivationArguments(entryPoint, trustLevel, runtimeBehavior, canUsePackageFullTrustFallback);
+        // An explicit trust level wins over the activation model: it is a direct statement about the token
+        // the host will run with. In particular, a windowsApp can use launch activation while explicitly
+        // running at medium integrity, so UsesLaunchActivationArguments cannot answer this question alone.
+        => trustLevel switch
+        {
+            string value when string.Equals(value, "appContainer", StringComparison.OrdinalIgnoreCase) => true,
+            string value when string.Equals(value, "mediumIL", StringComparison.OrdinalIgnoreCase) => false,
+            _ => UsesLaunchActivationArguments(entryPoint, trustLevel, runtimeBehavior, canUsePackageFullTrustFallback),
+        };
 
     private static bool UsesLaunchActivationArguments(
         string? entryPoint,

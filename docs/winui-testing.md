@@ -172,7 +172,7 @@ Microsoft.Testing.Platform starts an out-of-process test host under a *test host
 
 A **UWP or AppContainer-configured WinUI** host cannot connect to such a pipe. An AppContainer runs with a *restricted* token, and Windows only grants access when the normal access check **and** the restricted-SID check both succeed. The restricting SIDs of an AppContainer contain the app's package SID, so a DACL that names only the user denies the host even though it belongs to the same signed-in user. Knowing the pipe name — or restoring the activation arguments — does not help.
 
-`Microsoft.Testing.Extensions.PackagedApp` closes that gap: when the layout is a packaged app that declares an AppContainer application, the launcher derives that package's own AppContainer SID from its package family name and asks the platform to add it to the pipe DACL before the pipe is created. This is the same manifest classification that decides whether the host is activated with an activation payload or with plain `argv`.
+`Microsoft.Testing.Extensions.PackagedApp` closes that gap: when the layout is a packaged app that declares an AppContainer application, the launcher derives that package's own AppContainer SID from its package family name and asks the platform to add it to the pipe DACL before the pipe is created. Sandbox membership is classified separately from argument delivery: a `packagedClassicApp` at `TrustLevel="appContainer"` receives plain `argv` but still needs the SID grant, while a `windowsApp` explicitly at `TrustLevel="mediumIL"` uses launch activation without running in an AppContainer.
 
 What the resulting pipe grants:
 

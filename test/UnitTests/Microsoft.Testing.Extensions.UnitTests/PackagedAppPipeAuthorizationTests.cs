@@ -65,6 +65,19 @@ public sealed class PackagedAppPipeAuthorizationTests
             mode: null,
             expected: [ContosoPackageSid]);
 
+    /// <summary>
+    /// A <c>windowsApp</c> normally uses launch activation, but an explicit <c>mediumIL</c> trust level is
+    /// authoritative about the token: the process is not an AppContainer and already reaches the pipe
+    /// through the platform's current-user protection.
+    /// </summary>
+    [TestMethod]
+    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "AppContainers are a Windows-only concept.")]
+    public Task WithWindowsAppAtMediumIntegrity_AuthorizesNothing()
+        => AssertAuthorizedSecurityIdentifiersAsync(
+            BuildManifestXml(runFullTrust: false, entryPoint: null, trustLevel: "mediumIL", runtimeBehavior: "windowsApp"),
+            mode: null,
+            expected: []);
+
     // A loose (non-packaged) layout has no package identity at all; it is launched as an ordinary process.
     [TestMethod]
     [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "AppContainers are a Windows-only concept; the launcher unconditionally authorizes nothing elsewhere, which OnNonWindows_AuthorizesNothingEvenWithAlwaysMode covers.")]

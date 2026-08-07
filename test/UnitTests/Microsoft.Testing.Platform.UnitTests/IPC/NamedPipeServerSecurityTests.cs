@@ -858,9 +858,11 @@ public sealed class NamedPipeServerSecurityTests
                 if (handle == new IntPtr(-1))
                 {
                     int error = Marshal.GetLastWin32Error();
-                    return error == ErrorAccessDenied
-                        ? false
-                        : throw new Win32Exception(error, $"Unexpected failure opening '{pipeName}' as an AppContainer.");
+                    return error switch
+                    {
+                        ErrorAccessDenied => false,
+                        _ => throw new Win32Exception(error, $"Unexpected failure opening '{pipeName}' as an AppContainer."),
+                    };
                 }
 
                 CloseHandle(handle);
