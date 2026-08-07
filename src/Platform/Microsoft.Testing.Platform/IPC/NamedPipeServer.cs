@@ -133,7 +133,10 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
             throw new ArgumentNullException(nameof(pipeNameDescription));
         }
 
-        _namedPipeServerStream = CreateServerStream((PipeName = pipeNameDescription).Name, maxNumberOfServerInstances, authorizedSecurityIdentities);
+        PipeName = authorizedSecurityIdentities is { Count: > 0 } && NamedPipeServerSecurity.IsSupported
+            ? new PipeNameDescription(NamedPipeServerSecurity.GetPipeNameForSandboxedApplication(pipeNameDescription.Name))
+            : pipeNameDescription;
+        _namedPipeServerStream = CreateServerStream(PipeName.Name, maxNumberOfServerInstances, authorizedSecurityIdentities);
         _callback = callback;
         _environment = environment;
         _logger = logger;

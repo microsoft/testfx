@@ -32,6 +32,7 @@ When the layout is a packaged app that declares an AppContainer application, thi
 - only **that** package SID is added — `ALL APPLICATION PACKAGES` (`S-1-15-2-1`) is never granted, and the platform rejects any request for a user, a group or `Everyone`;
 - it receives read, write, read-security and synchronize rights only, so it can never create another instance of the pipe, change its DACL, or delete it;
 - the DACL stays protected and the pipe rejects remote clients;
+- authorization-enabled pipes use the Windows-required `LOCAL\` namespace (`\\.\pipe\LOCAL\<name>`);
 - the pipe keeps the controller's own integrity level, so Mandatory Integrity Control stays a second gate behind the DACL;
 - a packaged full-trust host, an unpackaged app, and every non-Windows run keep the existing pipe unchanged.
 

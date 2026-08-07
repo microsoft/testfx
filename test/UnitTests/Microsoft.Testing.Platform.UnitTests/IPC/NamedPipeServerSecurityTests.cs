@@ -126,6 +126,17 @@ public sealed class NamedPipeServerSecurityTests
     public void IsSupported_MatchesWindows()
         => Assert.AreEqual(RuntimeInformation.IsOSPlatform(OSPlatform.Windows), NamedPipeServerSecurity.IsSupported);
 
+    [TestMethod]
+    public void GetPipeNameForSandboxedApplication_AddsTheRequiredLocalNamespaceIdempotently()
+    {
+        Assert.AreEqual(
+            @"LOCAL\testingplatform.pipe.test",
+            NamedPipeServerSecurity.GetPipeNameForSandboxedApplication("testingplatform.pipe.test"));
+        Assert.AreEqual(
+            @"LOCAL\testingplatform.pipe.test",
+            NamedPipeServerSecurity.GetPipeNameForSandboxedApplication(@"LOCAL\testingplatform.pipe.test"));
+    }
+
     // Defense in depth: even if a caller forgets to filter, the pipe must never be created with a widened
     // DACL.
     [TestMethod]
@@ -220,7 +231,7 @@ public sealed class NamedPipeServerSecurityTests
             new ShapeShiftingIdentityList(PackageSid, "WD)(A;;FA;;;WD"),
             CancellationToken.None);
 
-        string sddl = WindowsSecurity.ConnectAndGetSecurityDescriptorSddl(pipeName.Name);
+        string sddl = WindowsSecurity.ConnectAndGetSecurityDescriptorSddl(server.PipeName.Name);
 
         Assert.AreEqual(2, CountAces(sddl), $"Unexpected security descriptor '{sddl}'.");
         Assert.IsFalse(sddl.Contains(";;;WD)", StringComparison.OrdinalIgnoreCase), $"'Everyone' was injected into '{sddl}'.");
@@ -472,7 +483,8 @@ public sealed class NamedPipeServerSecurityTests
         server.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
         server.RegisterSerializer(new TestHostCompletedRequestSerializer(), typeof(TestHostCompletedRequest));
 
-        using var client = new NamedPipeClient(pipeNameDescription.Name);
+        Assert.StartsWith(NamedPipeServerSecurity.SandboxedApplicationPipeNamePrefix, server.PipeName.Name);
+        using var client = new NamedPipeClient(server.PipeName.Name);
         client.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
         client.RegisterSerializer(new TestHostCompletedRequestSerializer(), typeof(TestHostCompletedRequest));
 
@@ -497,6 +509,15 @@ public sealed class NamedPipeServerSecurityTests
     /// <para>
     /// This is a genuine restricted-token access check, which is what makes it meaningful: the same DACL a
     /// normal token is admitted by is rejected for an AppContainer unless its package SID is named.
+    /// </para>
+    /// <para>
+    /// Token impersonation does not place the desktop test process inside the AppContainer named-object
+    /// namespace: trying to resolve <c>LOCAL\</c> under impersonation returns
+    /// <c>ERROR_FILE_NOT_FOUND</c>. This test therefore isolates the restricted-token/DACL check on a bare
+    /// pipe name. <see cref="NamedPipeServer_WithAuthorizedPackage_StillCompletesARequestReplyRoundTrip"/>
+    /// separately proves the product publishes and connects through the Windows-required <c>LOCAL\</c>
+    /// namespace. A real package-activated process remains the only way to exercise both constraints in one
+    /// process boundary.
     /// </para>
     /// <para>
     /// Candidates are filtered to the shape a real test host has. An AppContainer at <em>untrusted</em>
@@ -572,6 +593,7 @@ public sealed class NamedPipeServerSecurityTests
         string[] authorizedSids,
         bool useManagedProductClient = false)
     {
+        // Deliberately bare: an impersonated token does not acquire AppContainer namespace resolution.
         string pipeName = $"testingplatform.pipe.test.{Guid.NewGuid():N}";
         string ownerSid = NamedPipeServerSecurity.GetCurrentProcessOwnerSid();
         using NamedPipeServerStream server = NamedPipeServerSecurity.CreateServerStreamWithExplicitSecurityDescriptor(
@@ -888,7 +910,9 @@ public sealed class NamedPipeServerSecurityTests
                     return error switch
                     {
                         ErrorAccessDenied => false,
-                        _ => throw new Win32Exception(error, $"Unexpected failure opening '{pipeName}' as an AppContainer."),
+                        _ => throw new Win32Exception(
+                            error,
+                            $"Unexpected Win32 error {error} opening '{pipeName}' as an AppContainer."),
                     };
                 }
 

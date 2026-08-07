@@ -186,6 +186,7 @@ Notable properties:
 - The grant is scoped to **your** package. `ALL APPLICATION PACKAGES` (`S-1-15-2-1`) is never granted, and the platform rejects any request for it — or for a user, a group, or `Everyone` — with an error rather than widening the pipe.
 - The package cannot create another instance of the pipe (`FILE_CREATE_PIPE_INSTANCE` is not granted), change its DACL, or delete it.
 - The DACL is protected, and the pipe rejects remote clients.
+- Authorization-enabled pipes use the Windows-required `LOCAL\` namespace (`\\.\pipe\LOCAL\<name>`); the resolved `LOCAL\<name>` value is what the controller hands to the host.
 - The pipe keeps the controller's own integrity level — no mandatory label is lowered — so Mandatory Integrity Control stays a second gate behind the DACL.
 - Nothing changes for a packaged **full-trust** desktop host, an unpackaged app, an ordinary console test app, or any non-Windows run: the pipe is created exactly as it was before.
 - No loopback exemption (`CheckNetIsolation LoopbackExempt`) is used or needed — that applies to network sockets, not named pipes.

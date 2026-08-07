@@ -70,6 +70,13 @@ namespace Microsoft.Testing.Platform.IPC;
 internal static class NamedPipeServerSecurity
 {
     /// <summary>
+    /// The namespace segment Windows requires for named pipes opened by packaged/AppContainer processes.
+    /// <c>NamedPipeClientStream</c> adds <c>\\.\pipe\</c> itself, so peers exchange
+    /// <c>LOCAL\&lt;name&gt;</c>.
+    /// </summary>
+    internal const string SandboxedApplicationPipeNamePrefix = "LOCAL\\";
+
+    /// <summary>
     /// The well-known <c>ALL APPLICATION PACKAGES</c> SID. Granting it would let every packaged
     /// application on the machine reach the controller pipe, so it is never authorized.
     /// </summary>
@@ -139,6 +146,15 @@ internal static class NamedPipeServerSecurity
 #else
         RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 #endif
+
+    /// <summary>
+    /// Qualifies <paramref name="pipeName"/> for the login-session-local named-pipe namespace required by
+    /// packaged/AppContainer clients. The operation is idempotent.
+    /// </summary>
+    internal static string GetPipeNameForSandboxedApplication(string pipeName)
+        => pipeName.StartsWith(SandboxedApplicationPipeNamePrefix, StringComparison.OrdinalIgnoreCase)
+            ? pipeName
+            : SandboxedApplicationPipeNamePrefix + pipeName;
 
     /// <summary>
     /// Returns <see langword="true"/> when <paramref name="securityIdentifier"/> identifies a

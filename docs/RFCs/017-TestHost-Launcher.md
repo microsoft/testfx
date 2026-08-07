@@ -266,6 +266,10 @@ excludes `FILE_CREATE_PIPE_INSTANCE`, `DELETE`, `WRITE_DAC` and `WRITE_OWNER`, s
 talk to the controller but can never create a second instance of the pipe and impersonate it. The pipe is
 additionally created with `PIPE_REJECT_REMOTE_CLIENTS`.
 
+Authorization-enabled Windows pipes are also qualified with the packaged-app-required `LOCAL\` namespace:
+the controller creates `\\.\pipe\LOCAL\<name>` and hands `LOCAL\<name>` to the host. Ordinary runs retain
+their existing pipe name unchanged.
+
 No mandatory integrity label is emitted. The pipe keeps the controller's own integrity level, so Mandatory
 Integrity Control stays a second gate behind the DACL; a lowbox (AppContainer) token's access check is
 satisfied by the package-SID ACE and is not blocked by that label.
