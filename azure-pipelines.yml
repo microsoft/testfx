@@ -283,6 +283,7 @@ stages:
             -prepareMachine `
             /p:ContinuousIntegrationBuild=true `
             /p:FastAcceptanceTest=true `
+            /p:NoBuild=true `
             /p:MSBuildCachePackageEnabled=true `
             /p:MSBuildCacheEnabled=false
           exit $LASTEXITCODE
@@ -597,6 +598,7 @@ stages:
               "-prepareMachine",
               "/p:ContinuousIntegrationBuild=true",
               "/p:FastAcceptanceTest=true",
+              "/p:NoBuild=true",
               "/p:MSBuildCachePackageEnabled=true",
               "/p:MSBuildCacheEnabled=false"
             )
