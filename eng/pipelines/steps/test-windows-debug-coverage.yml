@@ -79,8 +79,8 @@ steps:
         exit 0
       }
 
-      if ($exitCode -eq 2) {
-        Write-Host "##vso[task.logissue type=error]One or more affected tests failed."
+      if ($exitCode -in 2, 8) {
+        Write-Host "##vso[task.logissue type=error]Affected-test execution failed with exit code $exitCode."
         exit $exitCode
       }
 

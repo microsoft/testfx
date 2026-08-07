@@ -140,9 +140,9 @@ if (-not $collectBranch.Success -or
     throw "The affected-test gate must be scoped to the enabled collect and run branches."
 }
 
-if (-not $runBranch.Value.Contains('$exitCode -eq 2') -or
+if (-not $runBranch.Value.Contains('$exitCode -in 2, 8') -or
     -not $runBranch.Value.Contains('exit $exitCode')) {
-    throw "The affected-test run must preserve exit code 2 when selected tests fail."
+    throw "The affected-test run must preserve exit codes 2 and 8 for failed or all-skipped selections."
 }
 
 $runFallback = [regex]::Match(
