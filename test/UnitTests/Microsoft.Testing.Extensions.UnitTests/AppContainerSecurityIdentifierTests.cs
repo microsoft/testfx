@@ -25,6 +25,23 @@ public sealed class AppContainerSecurityIdentifierTests
     public void TryDerive_ProducesTheAppContainerSidOfThePackage()
         => Assert.AreEqual(ContosoPackageSid, AppContainerSecurityIdentifier.TryDerive(ContosoPackageFamilyName));
 
+    /// <summary>
+    /// A ground-truth vector captured from a real Windows <c>AppContainer\Mappings</c> registration, so the
+    /// derivation is pinned against a SID the operating system actually assigned rather than only against a
+    /// value this same algorithm produced.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="TryDerive_MatchesTheAppContainerMappingsRegisteredByWindows"/> sweeps every mapping present
+    /// on the current machine, which is stronger — but it self-skips on a machine that has none (a Server
+    /// Core CI image, for example). This case keeps one real cross-check running everywhere, including on
+    /// non-Windows, since the derivation is pure managed code.
+    /// </remarks>
+    [TestMethod]
+    public void TryDerive_MatchesASidWindowsActuallyAssigned()
+        => Assert.AreEqual(
+            "S-1-15-2-1050576210-4101474698-56307613-2706264498-167457550-835605972-784472318",
+            AppContainerSecurityIdentifier.TryDerive("Microsoft.WindowsNotepad_8wekyb3d8bbwe"));
+
     // A package family name is case-insensitive and Windows lower-cases the moniker before hashing it, so
     // any casing must map to the same container.
     [TestMethod]

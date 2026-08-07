@@ -145,6 +145,112 @@ public sealed class NamedPipeServerSecurityTests
     }
 
     /// <summary>
+    /// Regression test for a time-of-check/time-of-use hole. The sequence of identities is supplied by an
+    /// extension, so a hostile implementation can return a list that yields a valid SID when the platform
+    /// validates it and an SDDL-injection payload when the security descriptor is composed. Before the fix
+    /// that put <c>Everyone</c> — with <c>FILE_CREATE_PIPE_INSTANCE</c>, the very right that lets a client
+    /// impersonate the controller — into the DACL of a real pipe.
+    /// </summary>
+    /// <remarks>
+    /// The assertion is on the resulting DACL rather than on an exception: the platform now snapshots the
+    /// sequence once, so the validated value is the value that gets composed and the payload is simply never
+    /// observed. Asserting the descriptor is what pins the actual security property, and it holds however
+    /// many times the sequence is read.
+    /// </remarks>
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    [SupportedOSPlatform("windows")]
+    public void CreateServerStream_WithASequenceThatChangesBetweenEnumerations_ComposesOnlyValidatedValues()
+    {
+        // Yields a legitimate package SID first, then an ACE-breakout payload.
+        var shapeShifting = new ShapeShiftingIdentityList(PackageSid, "WD)(A;;FA;;;WD");
+        string pipeName = $"testingplatform.pipe.test.{Guid.NewGuid():N}";
+
+        using NamedPipeServerStream stream = NamedPipeServerSecurity.CreateServerStream(pipeName, maxNumberOfServerInstances: 1, shapeShifting);
+
+        string sddl = WindowsSecurity.GetSecurityDescriptorSddl(stream.SafePipeHandle);
+
+        // Exactly the owner ACE and the one authorized package: no injected ACE survived.
+        Assert.AreEqual(2, CountAces(sddl), $"Unexpected security descriptor '{sddl}'.");
+        Assert.Contains($"(A;;0x12019b;;;{PackageSid})", sddl);
+        Assert.IsFalse(sddl.Contains(";;;WD)", StringComparison.OrdinalIgnoreCase), $"'Everyone' was injected into '{sddl}'.");
+        Assert.IsFalse(sddl.Contains(";;;S-1-1-0)", StringComparison.OrdinalIgnoreCase), $"'Everyone' was injected into '{sddl}'.");
+    }
+
+    /// <summary>
+    /// The composition function is the sink where caller strings become a security descriptor, so it must
+    /// refuse an unvalidated value itself rather than trusting that some caller already checked it.
+    /// </summary>
+    [TestMethod]
+    public void BuildSecurityDescriptor_ValidatesAtThePointOfConcatenation()
+    {
+        ArgumentException exception = Assert.ThrowsExactly<ArgumentException>(
+            () => NamedPipeServerSecurity.BuildSecurityDescriptor("S-1-5-18", ["WD)(A;;FA;;;WD"]));
+
+        Assert.Contains("does not identify a single sandboxed application", exception.Message);
+    }
+
+    /// <summary>
+    /// The same shape-shifting sequence through the <see cref="NamedPipeServer"/> entry point the platform
+    /// actually uses: the pipe must still be created with a DACL that names only the owner and the validated
+    /// package.
+    /// </summary>
+    [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    [SupportedOSPlatform("windows")]
+    public void NamedPipeServer_WithASequenceThatChangesBetweenEnumerations_DoesNotWidenTheDacl()
+    {
+        PipeNameDescription pipeName = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
+
+        using var server = new NamedPipeServer(
+            pipeName,
+            static _ => Task.FromResult<IResponse>(VoidResponse.CachedInstance),
+            new SystemEnvironment(),
+            new Mock<ILogger>().Object,
+            new SystemTask(),
+            maxNumberOfServerInstances: 1,
+            new ShapeShiftingIdentityList(PackageSid, "WD)(A;;FA;;;WD"),
+            CancellationToken.None);
+
+        // The pipe exists now; opening it as the current user proves it was created, and reading the
+        // descriptor of that handle proves nothing extra was granted.
+        string sddl = WindowsSecurity.GetSecurityDescriptorSddlByName(pipeName.Name);
+
+        Assert.AreEqual(2, CountAces(sddl), $"Unexpected security descriptor '{sddl}'.");
+        Assert.IsFalse(sddl.Contains(";;;WD)", StringComparison.OrdinalIgnoreCase), $"'Everyone' was injected into '{sddl}'.");
+        Assert.IsFalse(sddl.Contains(";;;S-1-1-0)", StringComparison.OrdinalIgnoreCase), $"'Everyone' was injected into '{sddl}'.");
+    }
+
+    /// <summary>
+    /// An <see cref="IReadOnlyList{T}"/> whose indexer returns a different value on every read, modelling a
+    /// hostile or simply non-deterministic extension. A real attacker does not need a type like this — a
+    /// plain <see cref="List{T}"/> mutated from another thread between the check and the use has the same
+    /// effect — but this makes the race deterministic.
+    /// </summary>
+    private sealed class ShapeShiftingIdentityList(string firstValue, string subsequentValue) : IReadOnlyList<string>
+    {
+        public int ReadCount { get; private set; }
+
+        public int Count => 1;
+
+        public string this[int index]
+        {
+            get
+            {
+                ReadCount++;
+                return ReadCount == 1 ? firstValue : subsequentValue;
+            }
+        }
+
+        public IEnumerator<string> GetEnumerator()
+        {
+            yield return this[0];
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    }
+
+    /// <summary>
     /// Creates a real pipe through the product code path and reads the security descriptor Windows actually
     /// materialized for it, so the assertion is about the live kernel object rather than about a string we
     /// composed.
@@ -446,6 +552,26 @@ public sealed class NamedPipeServerSecurityTests
         private const int ErrorAccessDenied = 5;
 
         private const int SecurityInformation = OwnerSecurityInformation | GroupSecurityInformation | DaclSecurityInformation | LabelSecurityInformation;
+
+        /// <summary>
+        /// Reads the security descriptor of an existing named pipe by name, for cases where the test does
+        /// not hold the server stream (for example when the pipe is owned by a <c>NamedPipeServer</c>).
+        /// </summary>
+        [SupportedOSPlatform("windows")]
+        public static string GetSecurityDescriptorSddlByName(string pipeName)
+        {
+            // READ_CONTROL only: enough to read the descriptor, and it does not consume the pipe instance.
+            const uint readControl = 0x00020000;
+
+            IntPtr handle = CreateFile($@"\\.\pipe\{pipeName}", readControl, 0, IntPtr.Zero, OpenExisting, 0, IntPtr.Zero);
+            if (handle == new IntPtr(-1))
+            {
+                throw new Win32Exception(Marshal.GetLastWin32Error(), $"Failed to open the pipe '{pipeName}' to read its security descriptor.");
+            }
+
+            using var safeHandle = new SafeTokenHandle(handle);
+            return GetSecurityDescriptorSddl(safeHandle);
+        }
 
         [SupportedOSPlatform("windows")]
         public static string GetSecurityDescriptorSddl(SafeHandle handle)

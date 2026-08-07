@@ -504,18 +504,23 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
             return null;
         }
 
-        IReadOnlyList<string> securityIdentities = await connectionAuthorizer.GetAuthorizedSecurityIdentitiesAsync(cancellationToken).ConfigureAwait(false);
-        if (securityIdentities is null || securityIdentities.Count == 0)
+        IReadOnlyList<string> extensionResult = await connectionAuthorizer.GetAuthorizedSecurityIdentitiesAsync(cancellationToken).ConfigureAwait(false);
+        if (extensionResult is null || extensionResult.Count == 0)
         {
             return null;
         }
+
+        // Snapshot immediately. Everything below — validation, logging, and ultimately the security
+        // descriptor — must operate on one fixed set of values; the sequence itself is extension-supplied
+        // and re-enumerating it is not guaranteed to yield what was validated.
+        string[] securityIdentities = [.. extensionResult];
 
         if (!NamedPipeServerSecurity.IsSupported)
         {
             // Sandboxed-application identities and connection access control lists are expressible only on
             // Windows. Anywhere else the request is meaningless, so it is ignored rather than failing an
             // otherwise valid run.
-            await _logger.LogDebugAsync($"'{testHostLauncher.Uid}' requested {securityIdentities.Count} connection authorization(s), ignored on this operating system.").ConfigureAwait(false);
+            await _logger.LogDebugAsync($"'{testHostLauncher.Uid}' requested {securityIdentities.Length} connection authorization(s), ignored on this operating system.").ConfigureAwait(false);
             return null;
         }
 

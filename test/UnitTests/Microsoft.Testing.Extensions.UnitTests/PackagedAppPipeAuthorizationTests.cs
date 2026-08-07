@@ -52,17 +52,20 @@ public sealed class PackagedAppPipeAuthorizationTests
 
     // A loose (non-packaged) layout has no package identity at all; it is launched as an ordinary process.
     [TestMethod]
+    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "AppContainers are a Windows-only concept; the launcher unconditionally authorizes nothing elsewhere, which OnNonWindows_AuthorizesNothingEvenWithAlwaysMode covers.")]
     public Task WithLooseLayout_AuthorizesNothing()
         => AssertAuthorizedSecurityIdentifiersAsync(manifestXml: null, mode: null, expected: []);
 
     // A manifest we cannot parse must never lead to a widened DACL; the launch path reports the parse
     // failure with its own error.
     [TestMethod]
+    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "AppContainers are a Windows-only concept; the launcher unconditionally authorizes nothing elsewhere, which OnNonWindows_AuthorizesNothingEvenWithAlwaysMode covers.")]
     public Task WithMalformedManifest_AuthorizesNothing()
         => AssertAuthorizedSecurityIdentifiersAsync("not xml", mode: null, expected: []);
 
     // The escape hatch must be able to switch the grant off entirely.
     [TestMethod]
+    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "AppContainers are a Windows-only concept; the launcher unconditionally authorizes nothing elsewhere, which OnNonWindows_AuthorizesNothingEvenWithAlwaysMode covers.")]
     public Task WithNeverMode_AuthorizesNothing()
         => AssertAuthorizedSecurityIdentifiersAsync(
             BuildManifestXml(runFullTrust: false, entryPoint: null),
@@ -79,6 +82,7 @@ public sealed class PackagedAppPipeAuthorizationTests
             expected: [ContosoPackageSid]);
 
     [TestMethod]
+    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "AppContainers are a Windows-only concept; the launcher unconditionally authorizes nothing elsewhere, which OnNonWindows_AuthorizesNothingEvenWithAlwaysMode covers.")]
     public Task WithUnrecognizedMode_FallsBackToProbingTheManifest()
         => AssertAuthorizedSecurityIdentifiersAsync(
             BuildManifestXml(runFullTrust: true, entryPoint: null),

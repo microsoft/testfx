@@ -201,15 +201,30 @@ internal static class NamedPipeServerSecurity
     /// <summary>
     /// Builds the SDDL security descriptor for the controller pipe.
     /// </summary>
+    /// <remarks>
+    /// This is the sink where caller-supplied strings are concatenated into a security descriptor, so it
+    /// validates every identity itself rather than trusting that a caller already did. That is deliberate:
+    /// a caller that validates one enumeration of a sequence and then hands the sequence on cannot
+    /// guarantee the second enumeration yields the same values, and an unvalidated value containing
+    /// <c>)</c> or <c>(</c> would break out of its ACE and inject additional ones. Validating at the point
+    /// of concatenation makes that class of bug impossible regardless of how the sequence behaves.
+    /// </remarks>
     /// <param name="ownerSid">The current token's owner SID, which owns the pipe and gets full control.</param>
-    /// <param name="authorizedAppContainerSids">
-    /// The AppContainer SIDs that additionally get the minimum connect/exchange rights. Callers must have
-    /// filtered them through <see cref="IsAuthorizableSandboxedApplicationIdentity"/> first.
+    /// <param name="authorizedSecurityIdentities">
+    /// The identities that additionally get the minimum connect/exchange rights.
     /// </param>
     /// <returns>The SDDL string.</returns>
-    internal static string BuildSecurityDescriptor(string ownerSid, IEnumerable<string> authorizedAppContainerSids)
+    /// <exception cref="ArgumentException">
+    /// An entry does not identify a single sandboxed application.
+    /// </exception>
+    internal static string BuildSecurityDescriptor(string ownerSid, IReadOnlyList<string> authorizedSecurityIdentities)
     {
         string owner = Normalize(ownerSid);
+
+        // Copy to an array first. The sequence can come from an extension, so its Count and indexer are not
+        // guaranteed to be stable or even self-consistent; once the values are in an array, the value that
+        // is validated below is provably the same value that is appended.
+        string[] securityIdentities = [.. authorizedSecurityIdentities];
 
         var builder = new StringBuilder();
 
@@ -218,9 +233,16 @@ internal static class NamedPipeServerSecurity
         builder.Append(CultureInfo.InvariantCulture, $"O:{owner}G:{owner}D:P");
         builder.Append(CultureInfo.InvariantCulture, $"(A;;0x{PipeAccessRightsFullControl:x};;;{owner})");
 
-        foreach (string sid in authorizedAppContainerSids)
+        foreach (string securityIdentity in securityIdentities)
         {
-            builder.Append(CultureInfo.InvariantCulture, $"(A;;0x{PipeAccessRightsReadWriteSynchronize:x};;;{Normalize(sid)})");
+            if (!IsAuthorizableSandboxedApplicationIdentity(securityIdentity))
+            {
+                throw new ArgumentException(
+                    $"'{securityIdentity ?? "<null>"}' does not identify a single sandboxed application and cannot be authorized on the test host controller pipe.",
+                    nameof(authorizedSecurityIdentities));
+            }
+
+            builder.Append(CultureInfo.InvariantCulture, $"(A;;0x{PipeAccessRightsReadWriteSynchronize:x};;;{Normalize(securityIdentity)})");
         }
 
         // No mandatory label is emitted: the pipe keeps the implicit (medium) integrity level of the
@@ -232,20 +254,21 @@ internal static class NamedPipeServerSecurity
 
     /// <summary>
     /// Creates a named pipe server stream whose DACL grants the current token's owner full control and each
-    /// SID in <paramref name="authorizedAppContainerSids"/> the minimum rights required to connect and
-    /// exchange messages.
+    /// identity in <paramref name="authorizedSecurityIdentities"/> the minimum rights required to connect
+    /// and exchange messages. Every identity is validated here, at the point it is composed into the
+    /// security descriptor.
     /// </summary>
     /// <param name="pipeName">The pipe name, without the <c>\\.\pipe\</c> prefix.</param>
     /// <param name="maxNumberOfServerInstances">The maximum number of concurrent server instances.</param>
-    /// <param name="authorizedAppContainerSids">The AppContainer SIDs to authorize.</param>
+    /// <param name="authorizedSecurityIdentities">The identities to authorize.</param>
     /// <returns>An asynchronous, not-yet-connected server stream.</returns>
     [SupportedOSPlatform("windows")]
-    internal static NamedPipeServerStream CreateServerStream(string pipeName, int maxNumberOfServerInstances, IEnumerable<string> authorizedAppContainerSids)
-        => CreateServerStream(pipeName, maxNumberOfServerInstances, BuildSecurityDescriptor(GetCurrentProcessOwnerSid(), authorizedAppContainerSids));
+    internal static NamedPipeServerStream CreateServerStream(string pipeName, int maxNumberOfServerInstances, IReadOnlyList<string> authorizedSecurityIdentities)
+        => CreateServerStream(pipeName, maxNumberOfServerInstances, BuildSecurityDescriptor(GetCurrentProcessOwnerSid(), authorizedSecurityIdentities));
 
     /// <summary>
     /// Creates a named pipe server stream protected by an explicit SDDL security descriptor. Split out from
-    /// <see cref="CreateServerStream(string, int, IEnumerable{string})"/> so tests can exercise arbitrary
+    /// <see cref="CreateServerStream(string, int, IReadOnlyList{string})"/> so tests can exercise arbitrary
     /// descriptors.
     /// </summary>
     /// <param name="pipeName">The pipe name, without the <c>\\.\pipe\</c> prefix.</param>
