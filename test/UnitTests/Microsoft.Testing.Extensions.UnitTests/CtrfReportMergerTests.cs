@@ -361,9 +361,11 @@ public sealed class CtrfReportMergerTests
             File.WriteAllText(valid, BuildReport());
             File.WriteAllText(invalid, """{"not":"ctrf"}""");
 
-            await Assert.ThrowsExactlyAsync<ArgumentException>(
+            ArgumentException exception = await Assert.ThrowsExactlyAsync<ArgumentException>(
                 () => CtrfReportMerger.MergeAllToFileAsync([valid, invalid], output, CancellationToken.None));
 
+            Assert.AreEqual("inputReports", exception.ParamName);
+            Assert.Contains("Every input must be a valid CTRF report.", exception.Message);
             Assert.IsFalse(File.Exists(output));
         }
         finally
