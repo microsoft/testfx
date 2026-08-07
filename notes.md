@@ -46,13 +46,14 @@
 
 1. **MSTest.Engine internal class coverage** — `TestArgumentsManager`, `TestFixtureManager`, `ThreadPoolTestNodeRunner` are internal (~135+ LOC each). Would need `InternalsVisibleTo` or integration tests.
 2. **More Assert method coverage** — Any remaining gaps in newer Assert overloads.
-3. **Analyzer edge cases (ongoing)** — Continue systematic coverage of untested paths in MSTest.Analyzers. Global-fixture (diagnostic-without-fix) branch gap now closed for MSTEST0074/0075/0076 (2026-08-05) — look at other resource-lock analyzers (e.g. MSTEST0077 SharedFileSystemPathInTest) for the same 3-branch pattern next.
+3. **Analyzer edge cases (ongoing)** — Continue systematic coverage of untested paths in MSTest.Analyzers. MSTEST0074/0075/0076/0077 fixture-branch gaps now all closed (2026-08-06). Next candidates: check other parallel-safety/resource-lock analyzers for the same missing-fixture-branch pattern (search for analyzers using ParallelSafetyHelper.GetFixtureAttributeSymbols with sparse test coverage).
 4. **Correction**: the "nameof() edge-case test for PreferConstantForResourceLockAnalyzer" PR referenced in 2026-08-04 memory entry could NOT be found as an open PR on 2026-08-05, and `PreferConstantForResourceLockAnalyzerTests.cs` does not contain a nameof test. Either it was closed without merging or memory was inaccurate — do NOT assume this work is done; re-verify before crediting it as complete.
 
 ## Tasks Run History (summarized)
 
 | Date | Tasks |
 |------|-------|
+| 2026-08-06 | Task 3 (MSTEST0077 SharedFileSystemPathInTestAnalyzer: AssemblyInitialize no-diagnostic + GlobalTestInitialize diagnostic edge cases), Task 7 |
 | 2026-08-05 | Task 3 (MSTEST0074 + MSTEST0076: GlobalTestInitialize "diagnostic without fix" branch tests), Task 7 |
 | 2026-08-02 | Task 3 (MSTEST0054 + MSTEST0044 edge-case tests), Task 7 |
 | 2026-07-31 | Task 3 (CurrentDirectoryMutationUnderParallelizationAnalyzer: TestInitialize+AssemblyInitialize fixture edge cases), Task 7 |
@@ -72,10 +73,11 @@
 
 ## Last Run
 
-2026-08-05 UTC
+2026-08-06 UTC
 
 ## Completed Work (recent, summarized)
 
+- PR (2026-08-06) — MSTEST0077 SharedFileSystemPathInTestAnalyzer: added `WhenAssemblyInitializeWritesConstantPath_NoDiagnostic` and `WhenGlobalTestInitializeWritesConstantPath_Diagnostic`, closing the last remaining fixture-branch gap among the 4 parallel-safety analyzers (0074/0075/0076/0077). Full MSTest.Analyzers.UnitTests suite: 1721/1721 passed.
 - PR (2026-08-05) — MSTEST0074 (UndeclaredProcessGlobalStateMutationAnalyzer) + MSTEST0076 (CultureMutationUnderParallelizationAnalyzer): added `WhenTestMethodSetsEnvironmentVariableInGlobalTestInitialize_DiagnosticWithoutFix` and `WhenGlobalTestInitializeSetsDefaultThreadCurrentCulture_Diagnostic` — fills the "global fixture: diagnostic fires but no fix offered" branch gap, mirroring PR #10383's pattern for MSTEST0075. Locally built + ran full MSTest.Analyzers.UnitTests suite (1718 tests, all passed) before submitting.
 - PR (2026-08-02) — MSTEST0054 UseCancellationTokenPropertyAnalyzer: 1 test; MSTEST0044 PreferTestMethodOverDataTestMethodAnalyzer: 1 test
 - PR (2026-07-31) — CurrentDirectoryMutationUnderParallelizationAnalyzer: 2 fixture edge-case tests
@@ -93,6 +95,6 @@
 - PR #9731 MERGED; PR #9669 MERGED; PR #9615 MERGED
 - PRs #9516,#9489,#9481,#9468,#9438,#9410,#9382,#9355,#9314,#9301,#9223,#9199,#9164,#9103,#9092,#9061,#9020,#8977,#8941,#8909,#8885,#8869,#8837,#8809,#8781,#8721,#8706 — all merged
 
-## Duplicate Monthly Activity Issues Note (2026-08-05)
+## Duplicate Monthly Activity Issues Note — RESOLVED 2026-08-06
 
-Found TWO open `[test-improver] Monthly Activity 2026-08` issues: #10154 (created 2026-07-22, most Run History) and #10389 (created 2026-08-02, less history but references PR #10383). Consolidated into #10154 (kept for richer history) on 2026-08-05; #10389 flagged as duplicate for maintainer to close via Suggested Actions (could not close directly — only 1 update_issue call available per run and target must match a specific issue).
+Maintainer closed #10154 (as not_planned) on 2026-08-06. #10389 is now the sole open Monthly Activity 2026-08 issue — continue updating #10389 going forward. Do not recreate #10154.
