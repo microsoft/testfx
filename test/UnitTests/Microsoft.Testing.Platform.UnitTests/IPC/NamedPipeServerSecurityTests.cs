@@ -370,7 +370,11 @@ public sealed class NamedPipeServerSecurityTests
     [DataRow("S-1-5-21-1111111111-2222222222-3333333333-1001", false, DisplayName = "another user is denied")]
     public void SecurityDescriptor_GrantsOnlyTheOwnerAndTheAuthorizedPackage(string securityIdentifier, bool expectedGranted)
     {
-        string ownerSid = NamedPipeServerSecurity.GetCurrentProcessOwnerSid();
+        // Use a stable synthetic owner that differs from every row. Windows CI runs as LocalSystem, so using
+        // the live process owner makes the "another account" row the actual owner — which must be granted.
+        // SecurityDescriptor_GrantsTheCreatingIdentity separately covers the real owner on every machine.
+        const string OwnerSid = "S-1-5-21-1111111111-2222222222-3333333333-1002";
+        string ownerSid = OwnerSid;
         string sddl = NamedPipeServerSecurity.BuildSecurityDescriptor(ownerSid, [PackageSid]);
 
         Assert.AreEqual(
