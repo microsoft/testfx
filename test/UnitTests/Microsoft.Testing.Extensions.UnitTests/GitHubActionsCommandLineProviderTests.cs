@@ -4,7 +4,9 @@
 extern alias ghactions;
 
 using ghactions::Microsoft.Testing.Extensions.GitHubActionsReport;
+using ghactions::Microsoft.Testing.Extensions.GitHubActionsReport.Resources;
 
+using Microsoft.Testing.Extensions.UnitTests.Helpers;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 
@@ -13,6 +15,44 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public sealed class GitHubActionsCommandLineProviderTests
 {
+    [TestMethod]
+    [DataRow(GitHubActionsCommandLineOptions.GitHubActionsGroups)]
+    [DataRow(GitHubActionsCommandLineOptions.GitHubActionsAnnotations)]
+    [DataRow(GitHubActionsCommandLineOptions.GitHubActionsStepSummary)]
+    [DataRow(GitHubActionsCommandLineOptions.GitHubActionsSlowTestNotices)]
+    [DataRow(GitHubActionsCommandLineOptions.GitHubActionsSlowTestThreshold)]
+    public async Task ValidateCommandLineOptionsAsync_ReturnsInvalid_WhenSubOptionIsUsedWithoutReportGhAsync(string subOption)
+    {
+        GitHubActionsCommandLineProvider provider = new();
+        ValidationResult validationResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [subOption] = ["off"],
+        })).ConfigureAwait(false);
+
+        Assert.IsFalse(validationResult.IsValid);
+        Assert.AreEqual(
+            string.Format(CultureInfo.CurrentCulture, GitHubActionsResources.SubOptionsRequireReportGh, GitHubActionsCommandLineOptions.GitHubActionsOptionName),
+            validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow(GitHubActionsCommandLineOptions.GitHubActionsGroups)]
+    [DataRow(GitHubActionsCommandLineOptions.GitHubActionsAnnotations)]
+    [DataRow(GitHubActionsCommandLineOptions.GitHubActionsStepSummary)]
+    [DataRow(GitHubActionsCommandLineOptions.GitHubActionsSlowTestNotices)]
+    [DataRow(GitHubActionsCommandLineOptions.GitHubActionsSlowTestThreshold)]
+    public async Task ValidateCommandLineOptionsAsync_ReturnsValid_WhenSubOptionIsUsedWithReportGhAsync(string subOption)
+    {
+        GitHubActionsCommandLineProvider provider = new();
+        ValidationResult validationResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [GitHubActionsCommandLineOptions.GitHubActionsOptionName] = [],
+            [subOption] = ["off"],
+        })).ConfigureAwait(false);
+
+        Assert.IsTrue(validationResult.IsValid, validationResult.ErrorMessage);
+    }
+
     [TestMethod]
     public async Task ValidateOptionArgumentsAsync_ReturnsInvalid_WhenGroupsValueIsNotOnOrOffAsync()
     {
