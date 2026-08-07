@@ -191,6 +191,27 @@ public sealed class PackagedAppActivationArgumentsTests
     }
 
     [TestMethod]
+    public void Create_InlinePayload_AlsoScavengesStaleSpillPayloads()
+    {
+        string directory = CreateTemporaryDirectory();
+        try
+        {
+            string stalePayload = Path.Combine(directory, "mtp-activation-orphan.payload");
+            File.WriteAllText(stalePayload, "stale");
+            File.SetLastWriteTimeUtc(stalePayload, DateTime.UnixEpoch);
+
+            PackagedAppActivationData activation = PackagedAppActivationArguments.Create(["--help"], directory);
+
+            Assert.IsNull(activation.PayloadPath);
+            Assert.IsFalse(File.Exists(stalePayload));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
     public void GetTestApplicationArguments_ProvidesTheReusableOnLaunchedBootstrap()
     {
         string directory = CreateTemporaryDirectory();

@@ -31,6 +31,11 @@ internal static class PackagedAppActivationArguments
         byte[] serialized = Serialize(arguments);
         try
         {
+            if (Directory.Exists(localStateDirectory))
+            {
+                TryDeleteStalePayloads(localStateDirectory, TimeProvider.System.GetUtcNow().UtcDateTime);
+            }
+
             long inlineLength = InlinePrefix.Length + ((((long)serialized.Length + 2) / 3) * 4);
             if (inlineLength <= MaximumInlineLength)
             {
@@ -40,7 +45,6 @@ internal static class PackagedAppActivationArguments
             }
 
             Directory.CreateDirectory(localStateDirectory);
-            TryDeleteStalePayloads(localStateDirectory, TimeProvider.System.GetUtcNow().UtcDateTime);
 
             string token = Guid.NewGuid().ToString("N");
             string payloadPath = GetPayloadPath(localStateDirectory, token);
