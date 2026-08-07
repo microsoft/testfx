@@ -198,40 +198,40 @@ internal static class PackagedAppActivationArguments
             throw new FormatException("The Microsoft Testing Platform activation arguments contain an invalid file payload key.");
         }
 
-        string token = tokenValue.ToString("N");
-        string payloadPath = GetPayloadPath(localStateDirectory, token);
-        byte[] encryptedPayload;
         try
         {
-            // Opening with no sharing atomically claims the payload: a concurrent consumer cannot open
-            // the same path. DeleteOnClose keeps that claim through the read and removes the file even
-            // when reading or later validation fails.
-            using var payloadStream = new FileStream(
-                payloadPath,
-                FileMode.Open,
-                FileAccess.Read,
-                FileShare.None,
-                bufferSize: 4096,
-                FileOptions.DeleteOnClose);
-            if (payloadStream.Length > int.MaxValue)
+            string token = tokenValue.ToString("N");
+            string payloadPath = GetPayloadPath(localStateDirectory, token);
+            byte[] encryptedPayload;
+            try
             {
-                throw new FormatException("The Microsoft Testing Platform activation-argument payload is too large.");
+                // Opening with no sharing atomically claims the payload: a concurrent consumer cannot open
+                // the same path. DeleteOnClose keeps that claim through the read and removes the file even
+                // when reading or later validation fails.
+                using var payloadStream = new FileStream(
+                    payloadPath,
+                    FileMode.Open,
+                    FileAccess.Read,
+                    FileShare.None,
+                    bufferSize: 4096,
+                    FileOptions.DeleteOnClose);
+                if (payloadStream.Length > int.MaxValue)
+                {
+                    throw new FormatException("The Microsoft Testing Platform activation-argument payload is too large.");
+                }
+
+                encryptedPayload = new byte[(int)payloadStream.Length];
+                payloadStream.ReadExactly(encryptedPayload);
+            }
+            catch (FormatException)
+            {
+                throw;
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                throw new FormatException("The Microsoft Testing Platform activation-argument payload could not be read.", ex);
             }
 
-            encryptedPayload = new byte[(int)payloadStream.Length];
-            payloadStream.ReadExactly(encryptedPayload);
-        }
-        catch (FormatException)
-        {
-            throw;
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            throw new FormatException("The Microsoft Testing Platform activation-argument payload could not be read.", ex);
-        }
-
-        try
-        {
             if (encryptedPayload.Length < NonceSize + TagSize)
             {
                 throw new FormatException("The Microsoft Testing Platform activation-argument payload is truncated.");
