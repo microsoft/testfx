@@ -142,18 +142,12 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
     }
 
     private static IAssemblySymbol? GetFrameworkAssembly(INamedTypeSymbol classSymbol)
-    {
-        foreach (AttributeData attribute in classSymbol.GetAttributes())
-        {
-            if (GetCanonicalMSTestAttribute(attribute.AttributeClass) is { } canonicalAttribute
-                && string.Equals(canonicalAttribute.Name, TestClassAttributeName, StringComparison.Ordinal))
-            {
-                return canonicalAttribute.ContainingAssembly;
-            }
-        }
-
-        return null;
-    }
+        => classSymbol.GetAttributes()
+            .Select(attribute => GetCanonicalMSTestAttribute(attribute.AttributeClass))
+            .OfType<INamedTypeSymbol>()
+            .Where(canonicalAttribute => string.Equals(canonicalAttribute.Name, TestClassAttributeName, StringComparison.Ordinal))
+            .Select(canonicalAttribute => canonicalAttribute.ContainingAssembly)
+            .FirstOrDefault();
 
     // Walks the applied attribute's base chain and returns the first ancestor that is a well-known MSTest attribute
     // (TestClass or one of the inheritance-sensitive lifecycle/test attributes).
@@ -188,66 +182,67 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
     };
 
     private static bool WouldRunOrBeDiscoveredIfSameVersion(IMethodSymbol method, MSTestMemberKind kind, AttributeData attribute, INamedTypeSymbol testClass, INamedTypeSymbol declaringBaseType)
-        => kind switch
-        {
-            // Test methods and instance fixtures must be public, non-static, and not replaced by an override in a
-            // more-derived type (the override, compiled against the current version, is what actually runs).
-            MSTestMemberKind.TestMethod or MSTestMemberKind.InstanceFixture
-                => method is { DeclaredAccessibility: Accessibility.Public, IsStatic: false }
-                    && !IsOverriddenInDerivedType(method, testClass, declaringBaseType),
+        // A non-public member, or one replaced by an override or a `new` declaration in a more-derived type, is not
+        // the member MSTest would run or discover, so recompiling the base cannot change its behavior.
+        => method.DeclaredAccessibility == Accessibility.Public
+            && !IsHiddenOrOverriddenInDerivedType(method, testClass, declaringBaseType)
+            && kind switch
+            {
+                // Test methods must be public instance methods that return void/Task/ValueTask (parameters are allowed
+                // for data-driven tests).
+                MSTestMemberKind.TestMethod
+                    => !method.IsStatic && ReturnsVoidTaskOrValueTask(method),
 
-            // Class fixtures only flow to derived classes when InheritanceBehavior.BeforeEachDerivedClass is set;
-            // the default (None) does not run on a derived class even in the same version.
-            MSTestMemberKind.ClassFixture
-                => method is { DeclaredAccessibility: Accessibility.Public, IsStatic: true }
-                    && HasBeforeEachDerivedClassBehavior(attribute),
+                // Instance fixtures must be public, non-static, parameterless, and return void/Task/ValueTask.
+                MSTestMemberKind.InstanceFixture
+                    => !method.IsStatic && method.Parameters.IsEmpty && ReturnsVoidTaskOrValueTask(method),
 
-            _ => false,
-        };
+                // Class fixtures must be public static methods with a valid parameter shape (optionally a single
+                // TestContext), returning void/Task/ValueTask, and only flow to derived classes when
+                // InheritanceBehavior.BeforeEachDerivedClass is set (the default None does not, even in the same version).
+                MSTestMemberKind.ClassFixture
+                    => method.IsStatic
+                        && HasClassFixtureParameterShape(method)
+                        && ReturnsVoidTaskOrValueTask(method)
+                        && HasBeforeEachDerivedClassBehavior(attribute),
+
+                _ => false,
+            };
+
+    private static bool ReturnsVoidTaskOrValueTask(IMethodSymbol method)
+        => method.ReturnsVoid
+            || (method.ReturnType.ContainingNamespace is { } containingNamespace
+                && string.Equals(containingNamespace.ToDisplayString(), "System.Threading.Tasks", StringComparison.Ordinal)
+                && (string.Equals(method.ReturnType.Name, "Task", StringComparison.Ordinal)
+                    || string.Equals(method.ReturnType.Name, "ValueTask", StringComparison.Ordinal)));
+
+    private static bool HasClassFixtureParameterShape(IMethodSymbol method)
+        => method.Parameters.IsEmpty
+            || (method.Parameters.Length == 1
+                && method.Parameters[0].Type.ContainingNamespace is { } containingNamespace
+                && string.Equals(containingNamespace.ToDisplayString(), MSTestNamespace, StringComparison.Ordinal)
+                && string.Equals(method.Parameters[0].Type.Name, "TestContext", StringComparison.Ordinal));
 
     private static bool HasBeforeEachDerivedClassBehavior(AttributeData attribute)
+        => attribute.ConstructorArguments.Any(argument =>
+            argument.Type is INamedTypeSymbol argumentType
+            && string.Equals(argumentType.Name, InheritanceBehaviorTypeName, StringComparison.Ordinal)
+            && argumentType.ContainingNamespace is { } containingNamespace
+            && string.Equals(containingNamespace.ToDisplayString(), MSTestNamespace, StringComparison.Ordinal)
+            && argument.Value is int value
+            && value == BeforeEachDerivedClass);
+
+    private static bool IsHiddenOrOverriddenInDerivedType(IMethodSymbol baseMethod, INamedTypeSymbol testClass, INamedTypeSymbol declaringBaseType)
     {
-        foreach (TypedConstant argument in attribute.ConstructorArguments)
-        {
-            if (argument.Type is INamedTypeSymbol argumentType
-                && string.Equals(argumentType.Name, InheritanceBehaviorTypeName, StringComparison.Ordinal)
-                && argumentType.ContainingNamespace is { } containingNamespace
-                && string.Equals(containingNamespace.ToDisplayString(), MSTestNamespace, StringComparison.Ordinal)
-                && argument.Value is int value
-                && value == BeforeEachDerivedClass)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private static bool IsOverriddenInDerivedType(IMethodSymbol baseMethod, INamedTypeSymbol testClass, INamedTypeSymbol declaringBaseType)
-    {
-        if (!baseMethod.IsVirtual && !baseMethod.IsAbstract && !baseMethod.IsOverride)
-        {
-            return false;
-        }
-
+        // MSTest suppresses an inherited member whenever a more-derived type declares a method with the same name,
+        // whether it overrides the base virtual method or hides it with `new`.
         for (INamedTypeSymbol? type = testClass;
             type is not null && !SymbolEqualityComparer.Default.Equals(type, declaringBaseType);
             type = type.BaseType)
         {
-            foreach (ISymbol member in type.GetMembers())
+            if (type.GetMembers(baseMethod.Name).Any(member => member is IMethodSymbol))
             {
-                if (member is not IMethodSymbol { IsOverride: true } overridingMethod)
-                {
-                    continue;
-                }
-
-                for (IMethodSymbol? overridden = overridingMethod.OverriddenMethod; overridden is not null; overridden = overridden.OverriddenMethod)
-                {
-                    if (SymbolEqualityComparer.Default.Equals(overridden.OriginalDefinition, baseMethod.OriginalDefinition))
-                    {
-                        return true;
-                    }
-                }
+                return true;
             }
         }
 

@@ -216,6 +216,8 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
         string legacyBaseCode = """
             namespace Microsoft.VisualStudio.TestTools.UnitTesting
             {
+                public class TestContext { }
+
                 public enum InheritanceBehavior { None, BeforeEachDerivedClass }
 
                 public sealed class ClassInitializeAttribute : System.Attribute
@@ -232,7 +234,7 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
                 public abstract class TestBase
                 {
                     [ClassInitialize(InheritanceBehavior.BeforeEachDerivedClass)]
-                    public static void BaseClassInitialize() { }
+                    public static void BaseClassInitialize(TestContext context) { }
                 }
             }
             """;
@@ -459,6 +461,8 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
         string legacyBaseCode = """
             namespace Microsoft.VisualStudio.TestTools.UnitTesting
             {
+                public class TestContext { }
+
                 public enum InheritanceBehavior { None, BeforeEachDerivedClass }
 
                 public sealed class ClassInitializeAttribute : System.Attribute
@@ -475,7 +479,7 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
                 public abstract class TestBase
                 {
                     [ClassInitialize]
-                    public static void BaseClassInitialize() { }
+                    public static void BaseClassInitialize(TestContext context) { }
                 }
             }
             """;
@@ -569,6 +573,94 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
             {
                 public class NotATestClass : TestBase
                 {
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddLegacyFrameworkBaseProject(test, legacyBaseCode);
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenInheritedTestInitializeIsHiddenWithNewInDerivedType_NoDiagnostic()
+    {
+        // The base lifecycle method is hidden with `new` in the derived type; MSTest suppresses the inherited member
+        // whenever a more-derived type declares one with the same name.
+        string legacyBaseCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public sealed class TestInitializeAttribute : System.Attribute { }
+            }
+
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                public abstract class TestBase
+                {
+                    [TestInitialize]
+                    public void BaseInitialize() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                public class SampleTests : TestBase
+                {
+                    public new void BaseInitialize() { }
+
+                    [TestMethod]
+                    public void MyTest() { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddLegacyFrameworkBaseProject(test, legacyBaseCode);
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenInheritedTestInitializeHasInvalidSignatureFromDifferentFrameworkAssembly_NoDiagnostic()
+    {
+        // A [TestInitialize] with parameters is not a valid instance fixture and would not run even in the same
+        // version, so recompiling the base cannot help.
+        string legacyBaseCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public sealed class TestInitializeAttribute : System.Attribute { }
+            }
+
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                public abstract class TestBase
+                {
+                    [TestInitialize]
+                    public void BaseInitialize(int value) { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                public class SampleTests : TestBase
+                {
+                    [TestMethod]
+                    public void MyTest() { }
                 }
             }
             """;
