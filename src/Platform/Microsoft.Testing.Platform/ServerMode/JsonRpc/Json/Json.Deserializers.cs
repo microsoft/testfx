@@ -23,35 +23,65 @@ internal sealed partial class Json
             Dictionary<string, object?> items = [];
             foreach (JsonProperty kvp in jsonDocument.EnumerateObject())
             {
-                switch (kvp.Value.ValueKind)
+                // Indexer assignment (last value wins) rather than Add, so a duplicate JSON key in
+                // untrusted input does not throw and crash the read loop. This mirrors how Jsonite and
+                // System.Text.Json tolerate duplicate keys.
+                items[kvp.Name] = kvp.Value.ValueKind switch
                 {
-                    case JsonValueKind.String:
-                        items.Add(kvp.Name, kvp.Value.GetString());
-                        break;
-                    case JsonValueKind.Number:
-                        items.Add(kvp.Name, kvp.Value.GetInt32());
-                        break;
-                    case JsonValueKind.True:
-                        items.Add(kvp.Name, true);
-                        break;
-                    case JsonValueKind.False:
-                        items.Add(kvp.Name, false);
-                        break;
-                    case JsonValueKind.Object:
-                        items.Add(kvp.Name, json.Bind<IDictionary<string, object?>>(kvp.Value));
-                        break;
-                    case JsonValueKind.Array:
-                        items.Add(kvp.Name, json.Bind<object[]>(kvp.Value));
-                        break;
-                    case JsonValueKind.Null:
-                        items.Add(kvp.Name, null);
-                        break;
-                    default:
-                        throw new InvalidOperationException($"key: {kvp.Name}, value: {kvp.Value}, type: {kvp.Value.ValueKind}");
-                }
+                    JsonValueKind.String => kvp.Value.GetString(),
+                    JsonValueKind.Number => ReadNumber(kvp.Value),
+                    JsonValueKind.True => true,
+                    JsonValueKind.False => false,
+                    JsonValueKind.Object => json.Bind<IDictionary<string, object?>>(kvp.Value),
+                    JsonValueKind.Array => json.Bind<object[]>(kvp.Value),
+                    JsonValueKind.Null => null,
+                    _ => throw new InvalidOperationException($"key: {kvp.Name}, value: {kvp.Value}, type: {kvp.Value.ValueKind}"),
+                };
             }
 
             return items;
+        });
+
+        // A generic JSON array becomes an object?[] whose elements are decoded with the same rules as the
+        // IDictionary deserializer above. The server's own IDictionary deserializer already depends on this
+        // (see the JsonValueKind.Array branch) but never exercised it, because the server only ever
+        // deserializes client-to-server REQUESTS whose params are strongly typed. A client reusing this engine
+        // to read server-to-client responses/notifications (which DO carry arrays, e.g. run attachments or
+        // test-node changes) needs it, so register it here.
+        deserializers[typeof(object[])] = new JsonElementDeserializer<object[]>((json, jsonDocument) =>
+        {
+            var items = new List<object?>();
+            foreach (JsonElement element in jsonDocument.EnumerateArray())
+            {
+                switch (element.ValueKind)
+                {
+                    case JsonValueKind.String:
+                        items.Add(element.GetString());
+                        break;
+                    case JsonValueKind.Number:
+                        items.Add(ReadNumber(element));
+                        break;
+                    case JsonValueKind.True:
+                        items.Add(true);
+                        break;
+                    case JsonValueKind.False:
+                        items.Add(false);
+                        break;
+                    case JsonValueKind.Object:
+                        items.Add(json.Bind<IDictionary<string, object?>>(element));
+                        break;
+                    case JsonValueKind.Array:
+                        items.Add(json.Bind<object[]>(element));
+                        break;
+                    case JsonValueKind.Null:
+                        items.Add(null);
+                        break;
+                    default:
+                        throw new InvalidOperationException($"value: {element}, type: {element.ValueKind}");
+                }
+            }
+
+            return items.ToArray()!;
         });
 
         deserializers[typeof(RpcMessage)] = new JsonElementDeserializer<RpcMessage>((json, jsonElement) =>
@@ -76,11 +106,19 @@ internal sealed partial class Json
                             JsonRpcMethods.CancelRequest => json.Bind<CancelRequestArgs>(value),
                             JsonRpcMethods.Exit => json.Bind<ExitRequestArgs>(value),
 
-                            // Note: Let the server report unknown RPC request back to the client.
-                            _ => null,
+                            // Note: the server only strongly-types the request methods above. Any other
+                            // method reaching this decoder is a server-to-client notification (for example
+                            // testing/testUpdates/tests, client/log, telemetry/update,
+                            // testing/testUpdates/attachments) being read by a CLIENT reusing this engine.
+                            // Keep its params as a raw property bag so the client can decode them itself,
+                            // instead of dropping them. For the server this only affects unknown methods,
+                            // which it ignores anyway.
+                            _ => value.ValueKind == JsonValueKind.Object
+                                ? json.Bind<IDictionary<string, object?>>(value)
+                                : null,
                         };
                     }
-                    catch (Exception ex) when (ex is MessageFormatException or InvalidOperationException or JsonException)
+                    catch (Exception ex) when (ex is MessageFormatException or InvalidOperationException or JsonException or ArgumentException)
                     {
                         // If params can't be deserialized for a request, capture the failure so
                         // we can later send back a properly coded JSON-RPC error using the request id.
@@ -88,8 +126,8 @@ internal sealed partial class Json
                         // crashing the message-handling loop by swallowing into the sentinel.
                         // We catch the broader set of deserialization-related exceptions because the
                         // request payload is untrusted client input and the lower-level helpers
-                        // (e.g. JsonElement.GetString() on a non-string element) can throw types
-                        // other than MessageFormatException.
+                        // (e.g. JsonElement.GetString() on a non-string element, or an ArgumentException
+                        // from a nested typed binder) can throw types other than MessageFormatException.
                         @params = new InvalidRequestParamsArgs(ErrorCodes.InvalidParams, ex.Message);
                     }
                 }
@@ -249,4 +287,52 @@ internal sealed partial class Json
                   Data: data);
           });
     }
+
+    /// <summary>
+    /// Decodes a JSON number that lands in an untyped <see cref="object"/> slot (a property-bag value or a
+    /// generic array element) into the same .NET numeric type the Jsonite reader (the net462 / netstandard2.0
+    /// path) produces, so both formatter paths hand identical boxed types to consumers.
+    /// </summary>
+    /// <remarks>
+    /// A plain <c>GetInt32()</c> throws <see cref="System.FormatException"/> on the non-Int32 numbers real MTP
+    /// notifications carry (durations as doubles, timestamps / counts as longs). We therefore widen exactly the
+    /// way Jsonite does: an integer becomes <see cref="int"/>, then <see cref="long"/>, <see cref="ulong"/>, or
+    /// <see cref="decimal"/>; a value with a fractional part or exponent becomes <see cref="double"/>. This is a
+    /// pure superset of the old behavior — every value that used to decode as <see cref="int"/> still does, only
+    /// the ones that used to throw now widen.
+    /// </remarks>
+    // IDE0046 (prefer conditional expression) is suppressed on purpose: collapsing these guarded returns into
+    // a single ?: chain that ends in double gives the whole expression the static type double, so every integer
+    // branch implicitly widens and boxes as double — silently defeating the type preservation this method exists
+    // for (and which the JsonTests regression tests assert). Keep the explicit returns.
+#pragma warning disable IDE0046 // Convert to conditional expression
+    private static object ReadNumber(JsonElement element)
+    {
+        if (element.TryGetInt32(out int intValue))
+        {
+            return intValue;
+        }
+
+        if (element.TryGetInt64(out long longValue))
+        {
+            return longValue;
+        }
+
+        if (element.TryGetUInt64(out ulong ulongValue))
+        {
+            return ulongValue;
+        }
+
+        string rawValue = element.GetRawText();
+        if (rawValue.IndexOf('.') is -1
+            && rawValue.IndexOf('e') is -1
+            && rawValue.IndexOf('E') is -1
+            && element.TryGetDecimal(out decimal decimalValue))
+        {
+            return decimalValue;
+        }
+
+        return element.GetDouble();
+    }
+#pragma warning restore IDE0046 // Convert to conditional expression
 }
