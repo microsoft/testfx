@@ -225,12 +225,6 @@ internal sealed class AppxManifestInfo
 
         string packageFamilyName = $"{name}_{ComputePublisherId(publisher)}";
 
-        bool canRunFullTrust = root is not null
-            && root.Descendants()
-            .Any(static element =>
-                element.Name.LocalName == "Capability"
-                && string.Equals(element.Attribute("Name")?.Value, "runFullTrust", StringComparison.OrdinalIgnoreCase));
-
         List<XElement> applicationElements = root?.Elements().FirstOrDefault(static e => e.Name.LocalName == "Applications")?
             .Elements().Where(static e => e.Name.LocalName == "Application")
             .ToList()
@@ -256,8 +250,7 @@ internal sealed class AppxManifestInfo
                         IsAppContainerApplication(
                             entryPoint,
                             trustLevel,
-                            runtimeBehavior,
-                            canUsePackageFullTrustFallback: canRunFullTrust && applicationElements.Count == 1));
+                            runtimeBehavior));
             })
             .OfType<AppxApplicationInfo>()
             .ToList();
@@ -268,8 +261,7 @@ internal sealed class AppxManifestInfo
     private static bool IsAppContainerApplication(
         string? entryPoint,
         string? trustLevel,
-        string? runtimeBehavior,
-        bool canUsePackageFullTrustFallback)
+        string? runtimeBehavior)
     {
         if (string.Equals(trustLevel, "appContainer", StringComparison.OrdinalIgnoreCase))
         {
@@ -289,11 +281,10 @@ internal sealed class AppxManifestInfo
             return true;
         }
 
-        // Legacy UWP manifests express AppContainer by omission. A single-app desktop package can use
-        // the package-wide runFullTrust capability as its only full-trust signal. In a mixed package that
-        // capability may exist solely for a companion process, so each application needs explicit
-        // desktop evidence; otherwise the UWP application must retain AppContainer activation semantics.
-        return !canUsePackageFullTrustFallback;
+        // Legacy UWP manifests express AppContainer by omission. The package-wide runFullTrust
+        // capability is not application identity evidence: it may only authorize a full-trust companion
+        // extension. Without an application-specific desktop signal, preserve AppContainer activation.
+        return true;
     }
 
     /// <summary>

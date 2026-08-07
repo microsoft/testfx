@@ -202,41 +202,41 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher
         // PackagedAppConnectBackReader).
         string? testHostControllerPid = PackagedAppConnectBackHandshake.TryGetTestHostControllerPid(context.Arguments);
         string? handshakePath = null;
-        if (testHostControllerPid is not null)
-        {
-            handshakePath = PackagedAppConnectBackHandshake.GetHandshakeFilePath(manifestInfo.PackageFamilyName, testHostControllerPid);
-            PackagedAppConnectBackHandshake.Write(handshakePath, GetConnectBackEnvironment(context));
-        }
-
-        string activationArguments;
         string? activationPayloadPath = null;
-        if (application.IsAppContainer)
-        {
-            // AppContainer activation exposes one opaque string through OnLaunched rather than argv.
-            // Inline the compact versioned payload when it fits the documented launch-argument envelope;
-            // otherwise spill only authenticated ciphertext to LocalState and carry its one-shot key in
-            // the activation string. User filters/runsettings are therefore never persisted in plaintext.
-            PackagedAppActivationData activationData = PackagedAppActivationArguments.Create(
-                context.Arguments,
-                PackagedAppConnectBackHandshake.GetHandshakeDirectory(manifestInfo.PackageFamilyName));
-            activationArguments = activationData.Arguments;
-            activationPayloadPath = activationData.PayloadPath;
-        }
-        else
-        {
-            // A packaged full-trust desktop app receives activation arguments as process argv. Preserve
-            // the existing Windows command-line quoting exactly for that path.
-            var commandLineBuilder = new StringBuilder();
-            foreach (string argument in context.Arguments)
-            {
-                PasteArguments.AppendArgument(commandLineBuilder, argument);
-            }
-
-            activationArguments = commandLineBuilder.ToString();
-        }
-
         try
         {
+            if (testHostControllerPid is not null)
+            {
+                handshakePath = PackagedAppConnectBackHandshake.GetHandshakeFilePath(manifestInfo.PackageFamilyName, testHostControllerPid);
+                PackagedAppConnectBackHandshake.Write(handshakePath, GetConnectBackEnvironment(context));
+            }
+
+            string activationArguments;
+            if (application.IsAppContainer)
+            {
+                // AppContainer activation exposes one opaque string through OnLaunched rather than argv.
+                // Inline the compact versioned payload when it fits the documented launch-argument envelope;
+                // otherwise spill only authenticated ciphertext to LocalState and carry its one-shot key in
+                // the activation string. User filters/runsettings are therefore never persisted in plaintext.
+                PackagedAppActivationData activationData = PackagedAppActivationArguments.Create(
+                    context.Arguments,
+                    PackagedAppConnectBackHandshake.GetHandshakeDirectory(manifestInfo.PackageFamilyName));
+                activationArguments = activationData.Arguments;
+                activationPayloadPath = activationData.PayloadPath;
+            }
+            else
+            {
+                // A packaged full-trust desktop app receives activation arguments as process argv. Preserve
+                // the existing Windows command-line quoting exactly for that path.
+                var commandLineBuilder = new StringBuilder();
+                foreach (string argument in context.Arguments)
+                {
+                    PasteArguments.AppendArgument(commandLineBuilder, argument);
+                }
+
+                activationArguments = commandLineBuilder.ToString();
+            }
+
             uint processId = await PackageDeployer
                 .RegisterAndActivateAsync(manifestPath, application.AppUserModelId, activationArguments, cancellationToken)
                 .ConfigureAwait(false);

@@ -152,7 +152,7 @@ public sealed class AppxManifestInfoTests
                 xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities">
               <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
               <Applications>
-                <Application Id="App" Executable="MyTestApp.exe" EntryPoint="Contoso.MyTestApp.App" />
+                <Application Id="App" Executable="MyTestApp.exe" EntryPoint="Windows.FullTrustApplication" />
               </Applications>
               <Capabilities>
                 <rescap:Capability Name="runFullTrust" />
@@ -161,6 +161,32 @@ public sealed class AppxManifestInfoTests
             """;
 
         Assert.IsFalse(Assert.ContainsSingle(ReadManifest(ManifestXml).Applications).IsAppContainer);
+    }
+
+    [TestMethod]
+    public void ReadFromManifest_SingleUwpApplicationWithFullTrustCompanionExtension_IsAppContainer()
+    {
+        const string ManifestXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package
+                xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+                xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
+                xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities">
+              <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="UwpApp" Executable="UwpApp.exe" EntryPoint="Contoso.MyTestApp.App">
+                  <Extensions>
+                    <desktop:Extension Category="windows.fullTrustProcess" Executable="Companion.exe" />
+                  </Extensions>
+                </Application>
+              </Applications>
+              <Capabilities>
+                <rescap:Capability Name="runFullTrust" />
+              </Capabilities>
+            </Package>
+            """;
+
+        Assert.IsTrue(Assert.ContainsSingle(ReadManifest(ManifestXml).Applications).IsAppContainer);
     }
 
     [TestMethod]
