@@ -1197,6 +1197,11 @@ Přečtěte si další informace o telemetrii Microsoft Testing Platform: https:
         <target state="translated">Selhání testovací relace testovacího adaptéru</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestHostControllerConnectionInvalidAuthorizedSecurityIdentityErrorMessage">
+        <source>The test host launcher '{0}' (UID: {1}) asked to authorize the security identity '{2}' on the test host controller connection, but only the identity of a single sandboxed application (on Windows, a security identifier of the form 'S-1-15-2-...') can be authorized. Users, groups and the catch-all '{3}' security identifier are never granted access.</source>
+        <target state="new">The test host launcher '{0}' (UID: {1}) asked to authorize the security identity '{2}' on the test host controller connection, but only the identity of a single sandboxed application (on Windows, a security identifier of the form 'S-1-15-2-...') can be authorized. Users, groups and the catch-all '{3}' security identifier are never granted access.</target>
+        <note>{0} is the launcher display name, {1} is the launcher unique identifier, {2} is the rejected security identity, {3} is the well-known 'ALL APPLICATION PACKAGES' security identifier. {Locked="'S-1-15-2-...'"}</note>
+      </trans-unit>
       <trans-unit id="TestHostControllerProcessRestartNotSupportedOnWebAssembly">
         <source>Test host controller extensions that require process restart are not supported on browser/WebAssembly platforms.</source>
         <target state="translated">Rozšíření testovacího hostitelského řadiče, která vyžadují restartování procesu, nejsou na platformách browser/WebAssembly podporována.</target>

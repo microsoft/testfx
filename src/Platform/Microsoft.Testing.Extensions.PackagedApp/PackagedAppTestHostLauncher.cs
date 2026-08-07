@@ -33,9 +33,11 @@ namespace Microsoft.Testing.Extensions.PackagedApp;
 /// argument array.
 /// </para>
 /// <para>
-/// Both process-argv and windowsApp/UWP launch-activation argument delivery are supported. End-to-end
-/// AppContainer execution additionally requires the controller pipe to grant the package SID access; that separate
-/// transport dependency is tracked by https://github.com/microsoft/testfx/issues/10486. The full register-and-activate path
+/// Both process-argv and windowsApp/UWP launch-activation argument delivery are supported, and this
+/// launcher additionally authorizes the package's own AppContainer SID on the controller connection
+/// through <see cref="ITestHostControllerConnectionAuthorizer"/> (see
+/// <see cref="GetAuthorizedSecurityIdentitiesAsync"/>), which is what lets a restricted
+/// AppContainer token reach the controller at all. The full register-and-activate path
 /// ships only in the Windows build of this extension (<c>net*-windows10.0.19041.0</c>), where the
 /// <c>PackageManager</c> WinRT projection is available. The plain <c>net8.0</c>/<c>net9.0</c> build
 /// still deploys and launches an opted-in non-packaged loose layout, but rejects a packaged layout with
@@ -58,7 +60,7 @@ namespace Microsoft.Testing.Extensions.PackagedApp;
 /// work to do; see <see cref="IsEnabledAsync"/>.
 /// </para>
 /// </remarks>
-internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher
+internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher, ITestHostControllerConnectionAuthorizer
 {
     /// <summary>
     /// The environment variable that overrides how the launcher decides whether to take over the test
@@ -73,6 +75,15 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher
 
     /// <summary>Never take over the launch, even for a packaged layout.</summary>
     private const string NeverMode = "never";
+
+    /// <summary>
+    /// The environment variable that overrides whether the launcher asks the platform to authorize this
+    /// package's AppContainer SID on the test host controller pipe. Accepted values are <c>auto</c> (the
+    /// default when unset, which authorizes only when the manifest says the app runs in an AppContainer),
+    /// <c>always</c> and <c>never</c>, compared case-insensitively; any other value is treated as
+    /// <c>auto</c> rather than failing a run over a typo in an environment variable.
+    /// </summary>
+    internal const string PipeAuthorizationModeEnvironmentVariable = "TESTINGPLATFORM_PACKAGEDAPP_PIPEAUTHORIZATION";
 
 #if PACKAGEDAPP_WINRT
     // The prefix of the environment variables the platform uses for the controller-to-host connect-back
@@ -173,6 +184,87 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher
         }
 
         return new PackagedAppActivationData(commandLineBuilder.ToString(), payloadPath: null);
+    }
+
+    /// <summary>
+    /// Returns the AppContainer SID of the packaged application about to be launched, so the platform can
+    /// authorize it on the controller-to-host IPC pipe.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The platform creates that pipe before the launcher runs — it has to be listening before the host
+    /// starts — so the package identity cannot be contributed from <see cref="LaunchTestHostAsync"/>. This
+    /// method therefore re-derives it from the same layout <see cref="IsEnabledAsync"/> probes: the
+    /// controller process <em>is</em> the test application whose host is about to be launched, so its base
+    /// directory is that layout.
+    /// </para>
+    /// <para>
+    /// The grant is deliberately narrow. Nothing is requested unless the selected test host application is
+    /// packaged (MSIX) and runs inside an AppContainer, as classified by
+    /// <see cref="AppxApplicationInfo.RunsInAppContainer"/>. A packaged
+    /// full-trust desktop host already reaches the pipe with the platform's normal current-user protection
+    /// and gets nothing extra — even when an AppContainer sibling shares its package. The value returned is
+    /// the SID of this very package, derived from its own family name, so it cannot authorize any other
+    /// package. The platform independently re-validates it and rejects anything that is not a specific
+    /// AppContainer SID.
+    /// </para>
+    /// </remarks>
+    /// <param name="testHostFileName">The executable path of the test host application being launched.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>The AppContainer SIDs to authorize, which is at most this package's own SID.</returns>
+    public Task<IReadOnlyList<string>> GetAuthorizedSecurityIdentitiesAsync(string testHostFileName, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.FromResult(GetAuthorizedAppContainerSecurityIdentifiers(testHostFileName));
+    }
+
+    private IReadOnlyList<string> GetAuthorizedAppContainerSecurityIdentifiers(string testHostFileName)
+    {
+        // AppContainers, package SIDs and named-pipe DACLs are Windows concepts.
+        if (!OperatingSystem.IsWindows())
+        {
+            return [];
+        }
+
+        string? mode = _getEnvironmentVariable(PipeAuthorizationModeEnvironmentVariable)?.Trim();
+        if (string.Equals(mode, NeverMode, StringComparison.OrdinalIgnoreCase))
+        {
+            return [];
+        }
+
+        // Only a packaged layout has a package identity to authorize. Resolve the manifest against the
+        // selected executable, not merely the controller's base directory: one package can declare a
+        // full-trust test host alongside an AppContainer sibling, and the sibling must not widen that run.
+        string? sourceDirectory = Path.GetDirectoryName(testHostFileName);
+        if (sourceDirectory is null
+            || AppxManifestInfo.FindManifestPath(sourceDirectory, testHostFileName) is not { } manifestPath)
+        {
+            return [];
+        }
+
+        AppxManifestInfo manifestInfo;
+        AppxApplicationInfo? application;
+        try
+        {
+            manifestInfo = AppxManifestInfo.ReadFromManifest(manifestPath);
+            application = manifestInfo.ResolveApplication(Path.GetDirectoryName(manifestPath)!, testHostFileName);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or XmlException)
+        {
+            // A manifest we cannot read is handled by the launch path, which reports it with a proper
+            // error. Widening the pipe DACL is never the right answer to a parsing problem.
+            Debug.WriteLine($"Unable to read '{manifestPath}' while computing the controller pipe authorization: {ex}");
+            return [];
+        }
+
+        // Note this asks RunsInAppContainer, not UsesLaunchActivationArguments: a packagedClassicApp whose
+        // TrustLevel is appContainer receives ordinary argv but is still sandboxed, so it needs the grant.
+        bool alwaysAuthorize = string.Equals(mode, AlwaysMode, StringComparison.OrdinalIgnoreCase);
+        return !alwaysAuthorize && application?.RunsInAppContainer != true
+            ? []
+            : AppContainerSecurityIdentifier.TryDerive(manifestInfo.PackageFamilyName) is { } securityIdentifier
+                ? [securityIdentifier]
+                : [];
     }
 
     public async Task<ITestHostHandle> LaunchTestHostAsync(TestHostLaunchContext context, CancellationToken cancellationToken)

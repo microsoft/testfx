@@ -21,16 +21,16 @@ Two independent settings describe a Windows app:
 
 A packaged WinUI 3 desktop app is full trust by default. Packaging gives it identity and MSIX file/registry virtualization, but does not put it in AppContainer. A WinUI 3 app can be explicitly configured for AppContainer with `uap10:TrustLevel="appContainer"` in its package manifest; it then has the same MTP communication restrictions as UWP.
 
-`Microsoft.Testing.Extensions.PackagedApp` currently supports packaged **full-trust** desktop hosts. It can register and activate an AppContainer layout, but the activated host cannot receive MTP's command line through `argv` or access the controller pipe with its package SID, so the test run cannot connect.
+`Microsoft.Testing.Extensions.PackagedApp` currently supports packaged **full-trust** desktop hosts end to end. It also provides both communication primitives an AppContainer host needs: a reusable launch-activation argument bootstrap and exact package-SID authorization on the controller pipe. Those primitives do not by themselves make true UWP/AppContainer an MTP test-host mode: `MSTest.Sdk` still routes `UseUwp=true` to VSTest and rejects forced MTP, and the existing MTP startup path still expects an ordinary initial controller process.
 
-#### Why MTP cannot communicate with AppContainer yet
+#### AppContainer communication primitives
 
 MTP's controller must give the new test host its command-line options and then establish a two-way named-pipe connection. AppContainer changes both mechanisms:
 
-1. **Activation arguments are not process arguments.** For a packaged full-trust desktop app, AUMID activation starts an ordinary Win32 process and the activation string becomes its command line, which .NET exposes through `Environment.GetCommandLineArgs()`. A true UWP/AppContainer app instead receives one opaque string through [`LaunchActivatedEventArgs.Arguments`](https://learn.microsoft.com/uwp/api/windows.applicationmodel.activation.launchactivatedeventargs.arguments) in `Application.OnLaunched`. An AppContainer MTP host would need to read that value and parse it back into the `string[]` expected by the platform.
-2. **The controller pipe does not authorize the app identity.** MTP creates its named pipe with [`PipeOptions.CurrentUserOnly`](https://learn.microsoft.com/dotnet/api/system.io.pipes.pipeoptions), granting the controller user's SID access. An AppContainer token is additionally restricted by its package SID, and Windows grants access only when both the normal and restricted identity checks succeed. The pipe would therefore need an explicit access rule for the exact package SID (preferred) or the broader `ALL APPLICATION PACKAGES` SID.
+1. **Activation arguments are not process arguments.** For a packaged full-trust desktop app, AUMID activation starts an ordinary Win32 process and the activation string becomes its command line, which .NET exposes through `Environment.GetCommandLineArgs()`. A true UWP/AppContainer app instead receives one opaque string through [`LaunchActivatedEventArgs.Arguments`](https://learn.microsoft.com/uwp/api/windows.applicationmodel.activation.launchactivatedeventargs.arguments) in `Application.OnLaunched`. `PackagedAppExtensions.GetTestApplicationArguments(args.Arguments)` restores that value to the `string[]` expected by the platform before `TestApplication.CreateBuilderAsync`.
+2. **The controller pipe must authorize the app identity.** MTP normally creates its named pipe with [`PipeOptions.CurrentUserOnly`](https://learn.microsoft.com/dotnet/api/system.io.pipes.pipeoptions), granting the creating token's owner SID access. An AppContainer token is additionally restricted by its package SID, and Windows grants access only when both the normal and restricted identity checks succeed. The packaged-app launcher now contributes the selected application's exact package SID; the platform grants only the minimum client rights and explicitly rejects `ALL APPLICATION PACKAGES`.
 
-The packaged-app handshake already transfers the controller pipe name and related environment values through the package's `LocalState`, but knowing the pipe name does not grant permission to open it. Both argument delivery and pipe authorization must be solved for true UWP/AppContainer support.
+The packaged-app handshake transfers the controller pipe name and related environment values through the package's `LocalState`. Together these mechanisms solve activation argument delivery and pipe access. The remaining limitation is earlier in the lifecycle: selecting and starting a true UWP/AppContainer application as an MTP test host is not yet supported by the SDK/platform routing described above.
 
 For modern UWP, the test-related part of the project is reduced to the SDK declaration:
 
@@ -142,7 +142,7 @@ Requirements and limitations:
 - Registering an unsigned build-output layout requires **Developer Mode** (or sideloading) to be enabled on the machine.
 - `packagedClassicApp`/`win32App` hosts receive MTP arguments as normal process `argv`, including classic hosts whose trust level is `appContainer`.
 - `windowsApp`/UWP hosts receive one opaque string through `LaunchActivatedEventArgs.Arguments`. Restore the platform argument array with `PackagedAppExtensions.GetTestApplicationArguments(args.Arguments)` before `TestApplication.CreateBuilderAsync`; see [Launch activation](#launch-activation).
-- End-to-end UWP/AppContainer execution remains dependent on granting the exact package SID access to the controller named pipe, tracked separately by [#10486](https://github.com/microsoft/testfx/issues/10486). Argument delivery from [#10485](https://github.com/microsoft/testfx/issues/10485) does not weaken that pipe ACL.
+- The controller named pipe additionally authorizes the exact package SID of an AppContainer host, which a restricted AppContainer token needs in order to connect at all; see [Controller pipe access for AppContainer hosts](#controller-pipe-access-for-appcontainer-hosts).
 
 See [#9933](https://github.com/microsoft/testfx/issues/9933) for the implementation of this path.
 
@@ -164,7 +164,42 @@ protected override async void OnLaunched(LaunchActivatedEventArgs args)
 
 The launcher and bootstrap share a versioned, length-prefixed format that preserves empty values, whitespace, quotes, backslashes, Unicode, repeated options, and ordering. Arguments that fit the documented 2,048-character Windows launch envelope remain only in the activation string. Larger arrays use a one-shot `LocalState` payload encrypted with a random per-launch key carried in the activation string; the host consumes and deletes it before MTP starts, and the launcher handle removes it if startup fails. Runsettings, filters, and other user input are therefore never persisted in plaintext.
 
-This bootstrap also restores the existing controller connect-back environment handoff before MTP reads it. It cannot by itself authorize the AppContainer token on that pipe; [#10486](https://github.com/microsoft/testfx/issues/10486) is the remaining end-to-end dependency.
+This bootstrap also restores the existing controller connect-back environment handoff before MTP reads it.
+
+## Controller pipe access for AppContainer hosts
+
+Microsoft.Testing.Platform starts an out-of-process test host under a *test host controller* and the two talk over a named pipe. That pipe is created with the equivalent of `PipeOptions.CurrentUserOnly`: it is owned by the creating token's owner SID and its DACL grants only that SID. This is what keeps another user — and, thanks to the owner (rather than user) SID, a differently-elevated process of the same user — out of your test run.
+
+A **UWP or AppContainer-configured WinUI** host cannot connect to such a pipe. An AppContainer runs with a *restricted* token, and Windows only grants access when the normal access check **and** the restricted-SID check both succeed. The restricting SIDs of an AppContainer contain the app's package SID, so a DACL that names only the user denies the host even though it belongs to the same signed-in user. Knowing the pipe name — or restoring the activation arguments — does not help.
+
+`Microsoft.Testing.Extensions.PackagedApp` closes that gap: when the layout is a packaged app that declares an AppContainer application, the launcher derives that package's own AppContainer SID from its package family name and asks the platform to add it to the pipe DACL before the pipe is created. Sandbox membership is classified separately from argument delivery: a `packagedClassicApp` at `TrustLevel="appContainer"` receives plain `argv` but still needs the SID grant, while a `windowsApp` explicitly at `TrustLevel="mediumIL"` uses launch activation without running in an AppContainer.
+
+What the resulting pipe grants:
+
+| Principal | Rights |
+| --- | --- |
+| The creating token's owner SID | full control |
+| The one authorized package SID | read, write, read-security and synchronize only |
+
+Notable properties:
+
+- The grant is scoped to **your** package. `ALL APPLICATION PACKAGES` (`S-1-15-2-1`) is never granted, and the platform rejects any request for it — or for a user, a group, or `Everyone` — with an error rather than widening the pipe.
+- The package cannot create another instance of the pipe (`FILE_CREATE_PIPE_INSTANCE` is not granted), change its DACL, or delete it.
+- The DACL is protected, and the pipe rejects remote clients.
+- Authorization-enabled pipes use the Windows-required `LOCAL\` namespace (`\\.\pipe\LOCAL\<name>`); the resolved `LOCAL\<name>` value is what the controller hands to the host.
+- The pipe keeps the controller's own integrity level — no mandatory label is lowered — so Mandatory Integrity Control stays a second gate behind the DACL.
+- Nothing changes for a packaged **full-trust** desktop host, an unpackaged app, an ordinary console test app, or any non-Windows run: the pipe is created exactly as it was before.
+- No loopback exemption (`CheckNetIsolation LoopbackExempt`) is used or needed — that applies to network sockets, not named pipes.
+
+> **Elevated controllers are out of scope.** The pipe is owned by the creating token's *owner* SID, which for an elevated controller is `BUILTIN\Administrators`. An AppContainer can never be elevated, so its own owner SID is the user — and the client-side `PipeOptions.CurrentUserOnly` check then rejects the connection as "not owned by the current user" even though the DACL admits it. Run AppContainer test hosts from a non-elevated controller.
+
+Set `TESTINGPLATFORM_PACKAGEDAPP_PIPEAUTHORIZATION` to override the decision. Values are compared case-insensitively; anything unrecognized falls back to `auto`.
+
+| Value | Behavior |
+| --- | --- |
+| unset, or `auto` | Authorize the package SID only when the manifest declares an AppContainer application. |
+| `always` | Authorize the package SID for any packaged layout. Use this if the manifest classification misreads your app. |
+| `never` | Never authorize anything; the pipe keeps its current-user-only DACL. |
 
 ## When does the PackagedApp launcher take over?
 
@@ -176,7 +211,7 @@ The launcher therefore decides for itself, per run:
 | --- | --- | --- |
 | Not Windows | no | Nothing changes. Packaged Windows apps are a Windows-only concept. |
 | Supported packaged full-trust layout (an `AppxManifest.xml` that describes this app — see below) | yes | The layout is registered and activated by AUMID. |
-| True UWP/AppContainer packaged layout | yes, but unsupported | Registration and activation may succeed, but the host cannot receive the MTP arguments or connect to the controller pipe. |
+| True UWP/AppContainer packaged layout | yes, but unsupported | Registration, activation arguments, and exact package-SID pipe authorization are implemented; SDK/platform routing still does not support starting it as an MTP test host. |
 | Any other layout — including unpackaged WinUI and ordinary console test apps | no | The platform keeps its default in-process / `Process.Start` path. |
 
 So an **unpackaged** WinUI app that references `Microsoft.Testing.Extensions.PackagedApp` (directly, or transitively through a shared `Directory.Packages.props`) pays nothing for it: no extra process, and no copy of the build output into a deployment directory.
