@@ -927,4 +927,65 @@ public sealed class SharedFileSystemPathInTestAnalyzerTests
                 .WithLocation(0)
                 .WithArguments("setup.txt"));
     }
+
+    [TestMethod]
+    public async Task WhenAssemblyInitializeWritesConstantPath_NoDiagnostic()
+    {
+        // [AssemblyInitialize] is serialized behind a semaphore ahead of every worker, so a constant-path write
+        // inside it cannot race a concurrent test - GetFixtureAttributeSymbols deliberately excludes it.
+        string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [AssemblyInitialize]
+                public static void AssemblyInit(TestContext context)
+                {
+                    File.WriteAllText("setup.txt", "data");
+                }
+
+                [TestMethod]
+                public void MyTestMethod() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenGlobalTestInitializeWritesConstantPath_Diagnostic()
+    {
+        // [GlobalTestInitialize] runs before every test in the assembly and genuinely races under
+        // method-level parallelization, so a constant-path write inside it must still be flagged even though
+        // (unlike [TestInitialize]) there is no single class-scope [ResourceLock] target that could suppress it.
+        string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [GlobalTestInitialize]
+                public static void GlobalInit(TestContext context)
+                {
+                    {|#0:File.WriteAllText("setup.txt", "data")|};
+                }
+
+                [TestMethod]
+                public void MyTestMethod() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(SharedFileSystemPathInTestAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("setup.txt"));
+    }
 }
