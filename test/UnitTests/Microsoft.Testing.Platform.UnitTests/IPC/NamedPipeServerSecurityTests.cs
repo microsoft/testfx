@@ -510,6 +510,12 @@ public sealed class NamedPipeServerSecurityTests
     public void CreateServerStream_AnAppContainerConnectsOnlyWhenItsOwnPackageIsAuthorized()
     {
         List<(SafeHandle Token, string Sid)> candidates = WindowsSecurity.EnumerateAppContainerTokens();
+        if (candidates.Count == 0)
+        {
+            Assert.Inconclusive("This machine exposes no low-integrity AppContainer process whose token can be duplicated.");
+            return;
+        }
+
         try
         {
             foreach ((SafeHandle token, string sid) in candidates)
@@ -540,7 +546,8 @@ public sealed class NamedPipeServerSecurityTests
                 return;
             }
 
-            Assert.Inconclusive("This machine exposes no AppContainer process whose token can be duplicated and used to connect.");
+            Assert.Fail(
+                $"Found {candidates.Count} duplicable low-integrity AppContainer token(s), but none could open a pipe that authorized its exact package SID.");
         }
         finally
         {
