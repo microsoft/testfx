@@ -782,7 +782,7 @@ stages:
       - job: WindowsAppModel
         displayName: Windows application-model acceptance
         dependsOn: DetectChanges
-        condition: and(succeeded(), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))
+        condition: and(succeeded(), or(ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'), ne(dependencies.DetectChanges.outputs['detect.hasSamplesChanges'], 'false')))
         timeoutInMinutes: 120
         pool:
           name: NetCore-Public

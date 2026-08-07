@@ -267,41 +267,34 @@ else {
     Write-Host "  Selected Modern UWP SDK: $modernSdkVersion"
 }
 
-$developerModeSettings = @(
-    @{
-        Path = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock'
-        Name = 'AllowDevelopmentWithoutDevLicense'
-    },
-    @{
-        Path = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock'
-        Name = 'AllowAllTrustedApps'
-    },
-    @{
-        Path = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\Appx'
-        Name = 'AllowDevelopmentWithoutDevLicense'
-    },
-    @{
-        Path = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\Appx'
-        Name = 'AllowAllTrustedApps'
-    }
-)
-$packageRegistrationEnabled = $false
-foreach ($setting in $developerModeSettings) {
-    $effectiveValue = Get-RegistryValueDisplay -Path $setting.Path -Name $setting.Name
-    Write-Host "  Package registration setting '$($setting.Path)\$($setting.Name)': $effectiveValue"
-    if ($effectiveValue -eq '1') {
-        $packageRegistrationEnabled = $true
-    }
-}
+$appModelUnlockPath = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock'
+$developerPolicyPath = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\Appx'
+$localDeveloperMode = Get-RegistryValueDisplay -Path $appModelUnlockPath -Name 'AllowDevelopmentWithoutDevLicense'
+$policyDeveloperMode = Get-RegistryValueDisplay -Path $developerPolicyPath -Name 'AllowDevelopmentWithoutDevLicense'
+$localTrustedApps = Get-RegistryValueDisplay -Path $appModelUnlockPath -Name 'AllowAllTrustedApps'
+$policyTrustedApps = Get-RegistryValueDisplay -Path $developerPolicyPath -Name 'AllowAllTrustedApps'
+Write-Host "  Developer Mode local setting: $localDeveloperMode"
+Write-Host "  Developer Mode policy setting: $policyDeveloperMode"
+Write-Host "  Trusted-app sideload local setting (diagnostic only): $localTrustedApps"
+Write-Host "  Trusted-app sideload policy setting (diagnostic only): $policyTrustedApps"
+
+$developerPolicyConfigured = $policyDeveloperMode -notin @('<key missing>', '<value missing>')
+$effectiveDeveloperMode = if ($developerPolicyConfigured) { $policyDeveloperMode } else { $localDeveloperMode }
+$packageRegistrationEnabled = $effectiveDeveloperMode -eq '1'
 if (-not $packageRegistrationEnabled) {
-    if (-not $isAdministrator) {
+    if ($developerPolicyConfigured) {
         Add-PreflightFailure (
-            'Developer Mode or trusted-app sideloading is not enabled, and the agent is not elevated. Enable ' +
-            'AllowDevelopmentWithoutDevLicense or AllowAllTrustedApps before running the application-model tests.'
+            "Developer Mode policy '$developerPolicyPath\AllowDevelopmentWithoutDevLicense' overrides the local setting " +
+            "with '$policyDeveloperMode'. It must be DWORD 1 for unsigned loose package registration."
+        )
+    }
+    elseif (-not $isAdministrator) {
+        Add-PreflightFailure (
+            'Developer Mode is not enabled, and the agent is not elevated. Enable AllowDevelopmentWithoutDevLicense ' +
+            'before running the application-model tests.'
         )
     }
     else {
-        $appModelUnlockPath = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock'
         try {
             New-Item -Path $appModelUnlockPath -Force | Out-Null
             New-ItemProperty `
@@ -320,7 +313,7 @@ if (-not $packageRegistrationEnabled) {
     }
 }
 if (-not $packageRegistrationEnabled) {
-    Add-PreflightFailure 'Developer Mode or trusted-app sideloading is required for loose package registration.'
+    Add-PreflightFailure 'Developer Mode is required for unsigned loose package registration.'
 }
 
 $uacPolicyPath = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System'
