@@ -383,7 +383,8 @@ stages:
       testResultsFormat: 'vstest'
       artifacts:
         publish:
-          artifacts: true
+          artifacts:
+            name: 'Artifacts_$(Agent.JobName)_$(_BuildConfig)'
           logs:
             name: 'Logs_Build_$(Agent.JobName)_$(_BuildConfig)'
           manifests: true
