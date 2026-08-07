@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Buffers.Binary;
 using System.Security.Cryptography;
 
 namespace Microsoft.Testing.Extensions.PackagedApp;
@@ -78,7 +79,8 @@ internal static class AppContainerSecurityIdentifier
         var builder = new StringBuilder(AppContainerSidPrefix);
         for (int i = 0; i < SubAuthorityCount; i++)
         {
-            builder.Append(CultureInfo.InvariantCulture, $"-{BitConverter.ToUInt32(hash, i * sizeof(uint))}");
+            uint subAuthority = BinaryPrimitives.ReadUInt32LittleEndian(hash.AsSpan(i * sizeof(uint), sizeof(uint)));
+            builder.Append(CultureInfo.InvariantCulture, $"-{subAuthority}");
         }
 
         return builder.ToString();
