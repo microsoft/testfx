@@ -59,9 +59,14 @@ $affectedTestsEnabled =
     $collectCall.Groups["enabled"].Value -eq "true" -or
     $runCall.Groups["enabled"].Value -eq "true"
 
+$bootstrappedSdk = [System.Management.Automation.SemanticVersion]$configuration.tools.dotnet
+$selectedSdk = [System.Management.Automation.SemanticVersion]$configuration.sdk.version
+if ($bootstrappedSdk -ne $selectedSdk) {
+    throw "global.json tools.dotnet and sdk.version must match."
+}
+
 $lastUnsupportedAffectedTestsSdk = [System.Management.Automation.SemanticVersion]"11.0.100-rc.1.26406.108"
-$configuredSdk = [System.Management.Automation.SemanticVersion]$configuration.sdk.version
-if ($affectedTestsEnabled -and $configuredSdk -le $lastUnsupportedAffectedTestsSdk) {
+if ($affectedTestsEnabled -and $bootstrappedSdk -le $lastUnsupportedAffectedTestsSdk) {
     throw "Affected-test execution requires an SDK newer than $lastUnsupportedAffectedTestsSdk with dotnet/sdk#55595."
 }
 
