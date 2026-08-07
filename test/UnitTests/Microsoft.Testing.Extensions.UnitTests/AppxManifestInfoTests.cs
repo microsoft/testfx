@@ -164,6 +164,31 @@ public sealed class AppxManifestInfoTests
     }
 
     [TestMethod]
+    public void ReadFromManifest_MixedPackage_DoesNotApplyCompanionRunFullTrustCapabilityToUwpApplication()
+    {
+        const string ManifestXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package
+                xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+                xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities">
+              <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="UwpApp" Executable="UwpApp.exe" EntryPoint="Contoso.MyTestApp.App" />
+                <Application Id="Companion" Executable="Companion.exe" EntryPoint="Windows.FullTrustApplication" />
+              </Applications>
+              <Capabilities>
+                <rescap:Capability Name="runFullTrust" />
+              </Capabilities>
+            </Package>
+            """;
+
+        AppxManifestInfo manifest = ReadManifest(ManifestXml);
+
+        Assert.IsTrue(manifest.Applications[0].IsAppContainer);
+        Assert.IsFalse(manifest.Applications[1].IsAppContainer);
+    }
+
+    [TestMethod]
     public void ReadFromManifest_ExplicitMediumIntegrityApplication_IsNotAppContainer()
     {
         const string ManifestXml = """

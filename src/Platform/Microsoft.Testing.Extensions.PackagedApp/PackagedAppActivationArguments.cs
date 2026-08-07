@@ -56,11 +56,21 @@ internal static class PackagedAppActivationArguments
                 nonce.CopyTo(encryptedPayload, 0);
                 tag.CopyTo(encryptedPayload, NonceSize);
                 ciphertext.CopyTo(encryptedPayload, NonceSize + TagSize);
-                File.WriteAllBytes(payloadPath, encryptedPayload);
+                try
+                {
+                    File.WriteAllBytes(payloadPath, encryptedPayload);
 
-                return new PackagedAppActivationData(
-                    $"{FilePrefix}{token}:{Convert.ToBase64String(key)}",
-                    payloadPath);
+                    return new PackagedAppActivationData(
+                        $"{FilePrefix}{token}:{Convert.ToBase64String(key)}",
+                        payloadPath);
+                }
+                catch
+                {
+                    // File.WriteAllBytes can leave a partial file behind. Create has not returned its path
+                    // to the launcher yet, so this is the only cleanup point that can remove it.
+                    TryDeletePayload(payloadPath);
+                    throw;
+                }
             }
             finally
             {

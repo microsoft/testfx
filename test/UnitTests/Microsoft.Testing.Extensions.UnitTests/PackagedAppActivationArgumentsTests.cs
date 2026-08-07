@@ -105,6 +105,43 @@ public sealed class PackagedAppActivationArgumentsTests
     }
 
     [TestMethod]
+    public void Read_RejectsMalformedInlineBinaryPayloads()
+    {
+        string[] malformedPayloads =
+        [
+            CreateInlinePayload([0, 0, 0]),
+            CreateInlinePayload([255, 255, 255, 255]),
+            CreateInlinePayload([1, 0, 0, 0]),
+            CreateInlinePayload([1, 0, 0, 0, 255, 255, 255, 255]),
+            CreateInlinePayload([0, 0, 0, 0, 1]),
+        ];
+
+        foreach (string payload in malformedPayloads)
+        {
+            Assert.ThrowsExactly<FormatException>(() => PackagedAppActivationArguments.Read(payload, localStateDirectory: null));
+        }
+    }
+
+    [TestMethod]
+    public void Read_TruncatedEncryptedPayload_RejectsAndDeletesPayload()
+    {
+        string directory = CreateTemporaryDirectory();
+        try
+        {
+            PackagedAppActivationData activation = PackagedAppActivationArguments.Create([new string('x', 3000)], directory);
+            Assert.IsNotNull(activation.PayloadPath);
+            File.WriteAllBytes(activation.PayloadPath, new byte[10]);
+
+            Assert.ThrowsExactly<FormatException>(() => PackagedAppActivationArguments.Read(activation.Arguments, directory));
+            Assert.IsFalse(File.Exists(activation.PayloadPath), "A truncated payload must be consumed exactly once.");
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
     public void GetTestApplicationArguments_ProvidesTheReusableOnLaunchedBootstrap()
     {
         string directory = CreateTemporaryDirectory();
@@ -129,6 +166,9 @@ public sealed class PackagedAppActivationArgumentsTests
         Directory.CreateDirectory(directory);
         return directory;
     }
+
+    private static string CreateInlinePayload(byte[] payload)
+        => "mtp:v1:inline:" + Convert.ToBase64String(payload);
 
     private static void AssertArgumentsAreEqual(string[] expected, string[] actual)
     {

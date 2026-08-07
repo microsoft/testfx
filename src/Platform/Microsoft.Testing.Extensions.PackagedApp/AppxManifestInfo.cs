@@ -231,11 +231,15 @@ internal sealed class AppxManifestInfo
                 element.Name.LocalName == "Capability"
                 && string.Equals(element.Attribute("Name")?.Value, "runFullTrust", StringComparison.OrdinalIgnoreCase));
 
+        List<XElement> applicationElements = root?.Elements().FirstOrDefault(static e => e.Name.LocalName == "Applications")?
+            .Elements().Where(static e => e.Name.LocalName == "Application")
+            .ToList()
+            ?? [];
+
         // A package may declare several applications, each with its own id (and AUMID). Capture them
         // all so the launcher can resolve the one matching the executable it was asked to launch,
         // instead of guessing with the first entry.
-        List<AppxApplicationInfo> applications = root?.Elements().FirstOrDefault(static e => e.Name.LocalName == "Applications")?
-            .Elements().Where(static e => e.Name.LocalName == "Application")
+        var applications = applicationElements
             .Select(application =>
             {
                 string? applicationId = application.Attribute("Id")?.Value;
@@ -249,11 +253,14 @@ internal sealed class AppxManifestInfo
                         applicationId,
                         executable,
                         $"{packageFamilyName}!{applicationId}",
-                        IsAppContainerApplication(entryPoint, trustLevel, runtimeBehavior, canRunFullTrust));
+                        IsAppContainerApplication(
+                            entryPoint,
+                            trustLevel,
+                            runtimeBehavior,
+                            canUsePackageFullTrustFallback: canRunFullTrust && applicationElements.Count == 1));
             })
             .OfType<AppxApplicationInfo>()
-            .ToList()
-            ?? [];
+            .ToList();
 
         return new AppxManifestInfo(name, publisher, applications);
     }
@@ -262,7 +269,7 @@ internal sealed class AppxManifestInfo
         string? entryPoint,
         string? trustLevel,
         string? runtimeBehavior,
-        bool canRunFullTrust)
+        bool canUsePackageFullTrustFallback)
     {
         if (string.Equals(trustLevel, "appContainer", StringComparison.OrdinalIgnoreCase))
         {
@@ -282,9 +289,11 @@ internal sealed class AppxManifestInfo
             return true;
         }
 
-        // Legacy UWP manifests express AppContainer by omission. Packaged desktop apps declare the
-        // runFullTrust restricted capability, so preserve their argv-based activation path.
-        return !canRunFullTrust;
+        // Legacy UWP manifests express AppContainer by omission. A single-app desktop package can use
+        // the package-wide runFullTrust capability as its only full-trust signal. In a mixed package that
+        // capability may exist solely for a companion process, so each application needs explicit
+        // desktop evidence; otherwise the UWP application must retain AppContainer activation semantics.
+        return !canUsePackageFullTrustFallback;
     }
 
     /// <summary>
