@@ -190,6 +190,35 @@ public sealed class GitHubActionsSummaryReporterTests
         fileSystem.Verify(f => f.NewFileStream("summary.md", FileMode.Append, FileAccess.Write, FileShare.Read), Times.Once);
     }
 
+    [TestMethod]
+    public async Task UpsertStepSummaryWithRetryAsync_ReplacesMatchingSection()
+    {
+        string path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, "existing\n");
+            var fileSystem = new SystemFileSystem();
+
+            await GitHubActionsSummaryReporter.UpsertStepSummaryWithRetryAsync(
+                fileSystem, path, "run-1", "first", maxAttempts: 1, retryDelay: TimeSpan.Zero, CancellationToken.None);
+            await GitHubActionsSummaryReporter.UpsertStepSummaryWithRetryAsync(
+                fileSystem, path, "run-1", "second", maxAttempts: 1, retryDelay: TimeSpan.Zero, CancellationToken.None);
+
+            string summary = File.ReadAllText(path);
+            Assert.Contains("existing", summary);
+            Assert.Contains("second", summary);
+            Assert.DoesNotContain("first", summary);
+            const string Marker = "microsoft-testing-platform:github-actions:run-1:start";
+            int firstMarker = summary.IndexOf(Marker, StringComparison.Ordinal);
+            Assert.IsGreaterThanOrEqualTo(0, firstMarker);
+            Assert.AreEqual(-1, summary.IndexOf(Marker, firstMarker + Marker.Length, StringComparison.Ordinal));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
     private static Mock<IFileSystem> CreateFileSystemWritingTo(Stream target)
     {
         var fileStream = new Mock<IFileStream>();

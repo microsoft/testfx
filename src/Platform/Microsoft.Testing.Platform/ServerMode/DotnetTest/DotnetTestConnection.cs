@@ -144,6 +144,8 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
     // property (a capability), not on the negotiated version string, so an older SDK simply never enables it.
     public bool IsServerControlChannelSupported { get; private set; }
 
+    public bool IsRequiredArtifactPostProcessingSupported { get; private set; }
+
     public async Task<bool> IsCompatibleProtocolAsync(string hostType, IReadOnlyDictionary<byte, string>? additionalHandshakeProperties = null)
     {
         IClient transportClient = _transportClient
@@ -184,6 +186,10 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
         IsIDE = response.Properties?.TryGetValue(HandshakeMessagePropertyNames.IsIDE, out string? isIDEValue) == true &&
             bool.TryParse(isIDEValue, out bool isIDE) &&
             isIDE;
+        IsRequiredArtifactPostProcessingSupported =
+            response.Properties?.TryGetValue(HandshakeMessagePropertyNames.RequiredPostProcessingSupported, out string? requiredPostProcessingValue) == true
+            && bool.TryParse(requiredPostProcessingValue, out bool requiredPostProcessingSupported)
+            && requiredPostProcessingSupported;
 
         if (_transportKind == DotnetTestTransportKind.NamedPipe
             && response.Properties?.TryGetValue(HandshakeMessagePropertyNames.ServerControlPipeName, out string? serverControlPipeName) is true &&

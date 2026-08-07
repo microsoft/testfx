@@ -60,6 +60,9 @@ public sealed class DotnetTestPipeArtifactPostProcessingTests
             Assert.AreEqual(
                 "test.summary",
                 result.ReceivedHandshake[DotnetTestPipeProtocol.HandshakeProperties.SupportedTruncatedRunPostProcessorKinds]);
+            Assert.AreEqual(
+                "test.summary",
+                result.ReceivedHandshake[DotnetTestPipeProtocol.HandshakeProperties.RequiredPostProcessorKinds]);
 
             RawMessage[] artifactFrames = [.. result.MessagesWithSerializerId(DotnetTestPipeProtocol.SerializerIds.FileArtifactMessages)];
             Assert.HasCount(1, artifactFrames);
@@ -225,6 +228,16 @@ public sealed class DotnetTestPipeArtifactPostProcessingTests
                     schemaVersion = 1,
                     outputDirectory = directory,
                     truncationReason = "maximumFailedTests",
+                    runSummary = new
+                    {
+                        totalTests = 10,
+                        passedTests = 7,
+                        failedTests = 2,
+                        skippedTests = 1,
+                        durationTicks = 1234567,
+                        exitCode = 2,
+                        testModuleCount = 2,
+                    },
                     inputs = new[]
                     {
                         new { path = summaryPath, kind = "test.summary", executionId = "execution-1" },
@@ -253,7 +266,7 @@ public sealed class DotnetTestPipeArtifactPostProcessingTests
             string? outputPath = artifacts[0].FullPath;
             Assert.IsNotNull(outputPath);
             Assert.AreEqual(
-                "True|MaximumFailedTests|1",
+                "True|MaximumFailedTests|1|10|7|2|1|1234567|2|2",
                 File.ReadAllText(outputPath));
             Assert.IsFalse(Directory.Exists(Path.Combine(directory, "merged")));
         }
@@ -465,7 +478,7 @@ public sealed class DotnetTestPipeArtifactPostProcessingTests
                 }
             }
 
-            public sealed class SummaryArtifactPostProcessor : IArtifactPostProcessor
+            public sealed class SummaryArtifactPostProcessor : IArtifactPostProcessorRequiresPostProcessing
             {
                 public string Uid => nameof(SummaryArtifactPostProcessor);
                 public string Version => "1.0.0";
@@ -485,7 +498,7 @@ public sealed class DotnetTestPipeArtifactPostProcessingTests
                     string outputPath = Path.Combine(outputDirectory, "partial-summary.txt");
                     await File.WriteAllTextAsync(
                         outputPath,
-                        $"{context.IsTruncated}|{context.TruncationReason}|{inputs.Count}",
+                        $"{context.IsTruncated}|{context.TruncationReason}|{inputs.Count}|{context.RunSummary?.TotalTests}|{context.RunSummary?.PassedTests}|{context.RunSummary?.FailedTests}|{context.RunSummary?.SkippedTests}|{context.RunSummary?.Duration.Ticks}|{context.RunSummary?.ExitCode}|{context.RunSummary?.TestModuleCount}",
                         cancellationToken);
                     return new ProcessedArtifact(
                         outputPath,

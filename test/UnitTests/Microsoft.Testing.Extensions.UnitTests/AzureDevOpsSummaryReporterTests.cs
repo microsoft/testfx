@@ -11,6 +11,7 @@ using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
@@ -27,9 +28,11 @@ public sealed class AzureDevOpsSummaryReporterTests
     private readonly Mock<IConfiguration> _configurationMock = new();
     private readonly Mock<IEnvironment> _environmentMock = new();
     private readonly Mock<IFileSystem> _fileSystemMock = new();
+    private readonly Mock<IMessageBus> _messageBusMock = new();
     private readonly Mock<IOutputDevice> _outputDeviceMock = new();
     private readonly Mock<ITestApplicationModuleInfo> _testApplicationModuleInfoMock = new();
     private readonly Mock<ILoggerFactory> _loggerFactoryMock = new();
+    private readonly Mock<ITestApplicationProcessExitCode> _testApplicationProcessExitCodeMock = new();
     private readonly List<IOutputDeviceData> _outputData = [];
 
     public AzureDevOpsSummaryReporterTests()
@@ -176,9 +179,12 @@ public sealed class AzureDevOpsSummaryReporterTests
             _configurationMock.Object,
             _environmentMock.Object,
             _fileSystemMock.Object,
+            _messageBusMock.Object,
             _outputDeviceMock.Object,
             _testApplicationModuleInfoMock.Object,
-            _loggerFactoryMock.Object);
+            _testApplicationProcessExitCodeMock.Object,
+            _loggerFactoryMock.Object,
+            static () => false);
 
     private static TestNodeUpdateMessage CreatePassed(string uid)
         => Create(uid, new PassedTestNodeStateProperty());

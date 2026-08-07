@@ -44,6 +44,8 @@ const Microsoft.Testing.Platform.IPC.HandshakeMessagePropertyNames.SupportedPost
 const Microsoft.Testing.Platform.IPC.HandshakeMessagePropertyNames.SupportedPostProcessorKinds = 14 -> byte
 const Microsoft.Testing.Platform.IPC.HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorExtensionsLegacy = 17 -> byte
 const Microsoft.Testing.Platform.IPC.HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorKinds = 16 -> byte
+const Microsoft.Testing.Platform.IPC.HandshakeMessagePropertyNames.RequiredPostProcessingSupported = 19 -> byte
+const Microsoft.Testing.Platform.IPC.HandshakeMessagePropertyNames.RequiredPostProcessorKinds = 18 -> byte
 static Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingHandshakeProperties.Create(System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor!>! processors) -> System.Collections.Generic.IReadOnlyDictionary<byte, string!>?
 Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool
 Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool.ArtifactPostProcessingDispatcherTool(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor!>! processors, Microsoft.Testing.Platform.ServerMode.IPushOnlyProtocol? protocol, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDevice) -> void
@@ -73,6 +75,7 @@ Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcess
 Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingManifest.Inputs.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>!
 Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingManifest.OutputDirectory.get -> string!
 static Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingManifest.Load(string! path) -> Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingManifest!
+Microsoft.Testing.Platform.DotnetTestConnection.IsRequiredArtifactPostProcessingSupported.get -> bool
 const Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool.ToolName = "internal-merge-artifacts" -> string!
 const Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherToolCommandLine.ManifestOptionName = "manifest" -> string!
 const Microsoft.Testing.Platform.IPC.HandshakeMessageExecutionModes.Tool = "tool" -> string!

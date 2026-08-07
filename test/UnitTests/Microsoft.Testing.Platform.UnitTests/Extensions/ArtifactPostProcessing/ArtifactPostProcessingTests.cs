@@ -20,16 +20,18 @@ public sealed class ArtifactPostProcessingTests
         [
             new StubProcessor("first", ["z.kind", "a.kind"], [".TRX"]),
             new StubProcessor("second", ["a.kind"], [".trx", ".xml"], supportsTruncatedRuns: true),
+            new RequiredStubProcessor("required", ["summary.kind"]),
         ];
 
         IReadOnlyDictionary<byte, string> properties = ArtifactPostProcessingHandshakeProperties.Create(processors)!;
 
-        Assert.AreEqual("a.kind;z.kind", properties[HandshakeMessagePropertyNames.SupportedPostProcessorKinds]);
+        Assert.AreEqual("a.kind;summary.kind;z.kind", properties[HandshakeMessagePropertyNames.SupportedPostProcessorKinds]);
         Assert.AreEqual(".trx;.xml", properties[HandshakeMessagePropertyNames.SupportedPostProcessorExtensionsLegacy]);
         Assert.AreEqual("a.kind", properties[HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorKinds]);
         Assert.AreEqual(
             ".trx;.xml",
             properties[HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorExtensionsLegacy]);
+        Assert.AreEqual("summary.kind", properties[HandshakeMessagePropertyNames.RequiredPostProcessorKinds]);
     }
 
     [TestMethod]
@@ -49,6 +51,17 @@ public sealed class ArtifactPostProcessingTests
     [TestMethod]
     public void ProcessedArtifact_BlankKind_ThrowsArgumentException(string kind)
         => Assert.ThrowsExactly<ArgumentException>(() => new ProcessedArtifact("artifact.trx", kind, "artifact", null));
+
+    [TestMethod]
+    public void RunSummary_OverflowingCounts_ThrowsArgumentOutOfRangeException()
+        => Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new ArtifactPostProcessingRunSummary(
+            totalTests: 0,
+            passedTests: long.MaxValue,
+            failedTests: long.MaxValue,
+            skippedTests: 2,
+            duration: TimeSpan.Zero,
+            exitCode: 0,
+            testModuleCount: 1));
 
     [TestMethod]
     public async Task Manager_BuildsOnlyEnabledProcessors()
@@ -247,6 +260,49 @@ public sealed class ArtifactPostProcessingTests
     }
 
     [TestMethod]
+    public void Manifest_WithRunSummary_LoadsAuthoritativeContext()
+    {
+        string manifestPath = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(
+                manifestPath,
+                """
+                {
+                  "schemaVersion": 1,
+                  "outputDirectory": "out",
+                  "runSummary": {
+                    "totalTests": 10,
+                    "passedTests": 7,
+                    "failedTests": 2,
+                    "skippedTests": 1,
+                    "durationTicks": 1234567,
+                    "exitCode": 2,
+                    "testModuleCount": 3
+                  },
+                  "inputs": []
+                }
+                """);
+
+            var manifest = ArtifactPostProcessingManifest.Load(manifestPath);
+
+            ArtifactPostProcessingRunSummary? runSummary = manifest.Context.RunSummary;
+            Assert.IsNotNull(runSummary);
+            Assert.AreEqual(10, runSummary.TotalTests);
+            Assert.AreEqual(7, runSummary.PassedTests);
+            Assert.AreEqual(2, runSummary.FailedTests);
+            Assert.AreEqual(1, runSummary.SkippedTests);
+            Assert.AreEqual(TimeSpan.FromTicks(1234567), runSummary.Duration);
+            Assert.AreEqual(2, runSummary.ExitCode);
+            Assert.AreEqual(3, runSummary.TestModuleCount);
+        }
+        finally
+        {
+            File.Delete(manifestPath);
+        }
+    }
+
+    [TestMethod]
     public void Manifest_WithUnsupportedVersion_ThrowsFormatException()
     {
         string manifestPath = Path.GetTempFileName();
@@ -377,7 +433,7 @@ public sealed class ArtifactPostProcessingTests
         }
     }
 
-    private sealed class StubProcessor(
+    private class StubProcessor(
         string uid,
         IReadOnlyList<string> supportedKinds,
         IReadOnlyList<string> supportedExtensions,
@@ -407,4 +463,7 @@ public sealed class ArtifactPostProcessingTests
             CancellationToken cancellationToken)
             => Task.FromResult<ProcessedArtifact?>(null);
     }
+
+    private sealed class RequiredStubProcessor(string uid, IReadOnlyList<string> supportedKinds)
+        : StubProcessor(uid, supportedKinds, []), IArtifactPostProcessorRequiresPostProcessing;
 }

@@ -103,11 +103,68 @@ internal sealed class ArtifactPostProcessingManifest(
                 _ => throw new FormatException(PlatformResources.ArtifactPostProcessingManifestInvalid),
             };
 
+        ArtifactPostProcessingRunSummary? runSummary = LoadRunSummary(values, propertiesWithChildren);
+
         return new ArtifactPostProcessingManifest(
             outputDirectory,
             inputs,
-            new ArtifactPostProcessingContext(truncationReason));
+            new ArtifactPostProcessingContext(truncationReason, runSummary));
     }
+
+    private static ArtifactPostProcessingRunSummary? LoadRunSummary(
+        Dictionary<string, string?> values,
+        Dictionary<string, string?> propertiesWithChildren)
+    {
+        if (!propertiesWithChildren.TryGetValue("runSummary", out string? runSummaryJson))
+        {
+            return null;
+        }
+
+        if (runSummaryJson is null || !runSummaryJson.TrimStart().StartsWith("{", StringComparison.Ordinal))
+        {
+            throw new FormatException(PlatformResources.ArtifactPostProcessingManifestInvalid);
+        }
+
+        try
+        {
+            long totalTests = GetIntegerValue(values, propertiesWithChildren, "runSummary:totalTests");
+            long passedTests = GetIntegerValue(values, propertiesWithChildren, "runSummary:passedTests");
+            long failedTests = GetIntegerValue(values, propertiesWithChildren, "runSummary:failedTests");
+            long skippedTests = GetIntegerValue(values, propertiesWithChildren, "runSummary:skippedTests");
+            long durationTicks = GetIntegerValue(values, propertiesWithChildren, "runSummary:durationTicks");
+            long exitCode = GetIntegerValue(values, propertiesWithChildren, "runSummary:exitCode");
+            long testModuleCount = GetIntegerValue(values, propertiesWithChildren, "runSummary:testModuleCount");
+
+            return durationTicks < 0
+                || exitCode is < int.MinValue or > int.MaxValue
+                || testModuleCount is <= 0 or > int.MaxValue
+                    ? throw new FormatException(PlatformResources.ArtifactPostProcessingManifestInvalid)
+                    : new ArtifactPostProcessingRunSummary(
+                        totalTests,
+                        passedTests,
+                        failedTests,
+                        skippedTests,
+                        TimeSpan.FromTicks(durationTicks),
+                        (int)exitCode,
+                        (int)testModuleCount);
+        }
+        catch (Exception ex) when (ex is ArgumentException or OverflowException)
+        {
+            throw new FormatException(PlatformResources.ArtifactPostProcessingManifestInvalid, ex);
+        }
+    }
+
+    private static long GetIntegerValue(
+        Dictionary<string, string?> values,
+        Dictionary<string, string?> propertiesWithChildren,
+        string key)
+        => !propertiesWithChildren.TryGetValue(key, out string? valueJson)
+            || valueJson is null
+            || valueJson.TrimStart().StartsWith("\"", StringComparison.Ordinal)
+            || !values.TryGetValue(key, out string? value)
+            || !long.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out long result)
+                ? throw new FormatException(PlatformResources.ArtifactPostProcessingManifestInvalid)
+                : result;
 
     private static string? GetValue(
         Dictionary<string, string?> values,
