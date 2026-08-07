@@ -142,6 +142,26 @@ public sealed class PackagedAppActivationArgumentsTests
     }
 
     [TestMethod]
+    public void Read_EncryptedPayload_CanOnlyBeConsumedOnce()
+    {
+        string directory = CreateTemporaryDirectory();
+        try
+        {
+            string[] expected = [new string('x', 3000)];
+            PackagedAppActivationData activation = PackagedAppActivationArguments.Create(expected, directory);
+
+            string[] actual = PackagedAppActivationArguments.Read(activation.Arguments, directory);
+
+            AssertArgumentsAreEqual(expected, actual);
+            Assert.ThrowsExactly<FormatException>(() => PackagedAppActivationArguments.Read(activation.Arguments, directory));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
     public void GetTestApplicationArguments_ProvidesTheReusableOnLaunchedBootstrap()
     {
         string directory = CreateTemporaryDirectory();
