@@ -178,7 +178,7 @@ What the resulting pipe grants:
 
 | Principal | Rights |
 | --- | --- |
-| The current user (the pipe's owner, as before) | full control |
+| The creating token's owner SID | full control |
 | The one authorized package SID | read, write, read-security and synchronize only |
 
 Notable properties:
