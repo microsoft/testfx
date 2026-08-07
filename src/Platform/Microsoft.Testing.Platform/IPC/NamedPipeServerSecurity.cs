@@ -103,10 +103,14 @@ internal static class NamedPipeServerSecurity
     /// </summary>
     internal const int PipeAccessRightsReadWriteSynchronize = 0x12019B;
 
-    // The expected shape of an AppContainer package SID: 'S', revision, identifier authority (15),
-    // SECURITY_APP_PACKAGE_BASE_RID (2), then the seven sub-authorities Windows derives from the package
-    // family name. A child AppContainer SID appends four more, so this is a minimum.
-    private const int MinimumAppContainerSidPartCount = 11;
+    // The expected shapes are exact, not minimums:
+    //   package SID: 'S', revision, identifier authority (15), SECURITY_APP_PACKAGE_BASE_RID (2), then
+    //                the seven sub-authorities derived from the package family name = 11 dash-separated parts;
+    //   child SID:   package SID plus four child sub-authorities = 15 parts.
+    // Accepting a partial or overlong descendant would break the fail-closed policy and defer it to an
+    // unlocalized SDDL/Win32 error.
+    private const int AppContainerPackageSidPartCount = 11;
+    private const int ChildAppContainerSidPartCount = 15;
 
     private const uint SddlRevision1 = 1;
     private const uint PipeAccessDuplex = 0x00000003;
@@ -171,7 +175,7 @@ internal static class NamedPipeServerSecurity
         }
 
         string[] parts = normalized.Split('-');
-        if (parts.Length < MinimumAppContainerSidPartCount)
+        if (parts.Length is not (AppContainerPackageSidPartCount or ChildAppContainerSidPartCount))
         {
             return false;
         }

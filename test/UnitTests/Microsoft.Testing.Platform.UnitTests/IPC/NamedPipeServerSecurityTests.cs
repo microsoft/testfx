@@ -42,9 +42,9 @@ public sealed class NamedPipeServerSecurityTests
         Assert.IsTrue(NamedPipeServerSecurity.IsAuthorizableSandboxedApplicationIdentity(PackageSid));
         Assert.IsTrue(NamedPipeServerSecurity.IsAuthorizableSandboxedApplicationIdentity(OtherPackageSid));
 
-        // A child AppContainer SID appends further sub-authorities to the package SID and is still a
+        // A child AppContainer SID appends exactly four sub-authorities to the package SID and is still a
         // specific container.
-        Assert.IsTrue(NamedPipeServerSecurity.IsAuthorizableSandboxedApplicationIdentity($"{PackageSid}-1234567890"));
+        Assert.IsTrue(NamedPipeServerSecurity.IsAuthorizableSandboxedApplicationIdentity($"{PackageSid}-1-2-3-4"));
     }
 
     [TestMethod]
@@ -71,6 +71,10 @@ public sealed class NamedPipeServerSecurityTests
     [DataRow("S-1-5-21-1111111111-2222222222-3333333333-1001", DisplayName = "a user")]
     [DataRow("S-1-15-3-1", DisplayName = "a capability SID")]
     [DataRow("S-1-15-2-1-2-3", DisplayName = "too few sub-authorities to be a package SID")]
+    [DataRow(PackageSid + "-1", DisplayName = "a partial child SID with one extra sub-authority")]
+    [DataRow(PackageSid + "-1-2", DisplayName = "a partial child SID with two extra sub-authorities")]
+    [DataRow(PackageSid + "-1-2-3", DisplayName = "a partial child SID with three extra sub-authorities")]
+    [DataRow(PackageSid + "-1-2-3-4-5", DisplayName = "an overlong child SID")]
     [DataRow("S-1-15-2-1990679259-4123976751-842158434-3026549936-2944832882-252165955-notanumber", DisplayName = "non-numeric sub-authority")]
     [DataRow("AC", DisplayName = "the SDDL alias of ALL APPLICATION PACKAGES")]
     public void IsAuthorizableSandboxedApplicationIdentity_WithAnythingButASingleSandboxedApplication_IsRejected(string? securityIdentifier)
