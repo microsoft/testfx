@@ -164,6 +164,27 @@ public sealed class AppxManifestInfoTests
     }
 
     [TestMethod]
+    public void ReadFromManifest_SingleApplicationRunFullTrustPackage_IsNotAppContainer()
+    {
+        const string ManifestXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package
+                xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+                xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities">
+              <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="App" Executable="MyTestApp.exe" EntryPoint="Contoso.MyTestApp.App" />
+              </Applications>
+              <Capabilities>
+                <rescap:Capability Name="runFullTrust" />
+              </Capabilities>
+            </Package>
+            """;
+
+        Assert.IsFalse(Assert.ContainsSingle(ReadManifest(ManifestXml).Applications).IsAppContainer);
+    }
+
+    [TestMethod]
     public void ReadFromManifest_SingleUwpApplicationWithFullTrustCompanionExtension_IsAppContainer()
     {
         const string ManifestXml = """

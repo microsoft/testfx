@@ -14,24 +14,31 @@ public sealed class PackagedAppActivationArgumentsTests : AcceptanceTestBase<Pac
     public async Task AppContainerOnLaunched_RestoresArgumentsBeforeMtpParsesThem(string currentTfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
-        string markerPath = Path.Combine(testHost.DirectoryName, "activation-arguments.txt");
+        string markerPath = Path.Combine(testHost.DirectoryName, $"activation-arguments-{Guid.NewGuid():N}.txt");
         string[] expectedArguments = ["--help"];
 
-        TestHostResult result = await testHost.ExecuteAsync(
-            environmentVariables: new Dictionary<string, string?>
-            {
-                ["PACKAGEDAPP_ACTIVATION_ARGUMENTS"] = CreateInlineActivationArguments(expectedArguments),
-                ["PACKAGEDAPP_ACTIVATION_MARKER"] = markerPath,
-            },
-            cancellationToken: TestContext.CancellationToken);
-
-        result.AssertExitCodeIs(ExitCode.Success);
-        Assert.IsTrue(File.Exists(markerPath), "The activation-shaped host must record arguments only after MTP accepts them.");
-        string[] actualArguments = File.ReadAllLines(markerPath);
-        Assert.HasCount(expectedArguments.Length, actualArguments);
-        for (int i = 0; i < expectedArguments.Length; i++)
+        try
         {
-            Assert.AreEqual(expectedArguments[i], actualArguments[i], $"Argument {i} differs.");
+            TestHostResult result = await testHost.ExecuteAsync(
+                environmentVariables: new Dictionary<string, string?>
+                {
+                    ["PACKAGEDAPP_ACTIVATION_ARGUMENTS"] = CreateInlineActivationArguments(expectedArguments),
+                    ["PACKAGEDAPP_ACTIVATION_MARKER"] = markerPath,
+                },
+                cancellationToken: TestContext.CancellationToken);
+
+            result.AssertExitCodeIs(ExitCode.Success);
+            Assert.IsTrue(File.Exists(markerPath), "The activation-shaped host must record arguments only after MTP accepts them.");
+            string[] actualArguments = File.ReadAllLines(markerPath);
+            Assert.HasCount(expectedArguments.Length, actualArguments);
+            for (int i = 0; i < expectedArguments.Length; i++)
+            {
+                Assert.AreEqual(expectedArguments[i], actualArguments[i], $"Argument {i} differs.");
+            }
+        }
+        finally
+        {
+            File.Delete(markerPath);
         }
     }
 

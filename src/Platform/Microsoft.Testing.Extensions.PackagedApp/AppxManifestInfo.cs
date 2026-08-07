@@ -225,6 +225,12 @@ internal sealed class AppxManifestInfo
 
         string packageFamilyName = $"{name}_{ComputePublisherId(publisher)}";
 
+        bool canRunFullTrust = root is not null
+            && root.Descendants()
+            .Any(static element =>
+                element.Name.LocalName == "Capability"
+                && string.Equals(element.Attribute("Name")?.Value, "runFullTrust", StringComparison.OrdinalIgnoreCase));
+
         List<XElement> applicationElements = root?.Elements().FirstOrDefault(static e => e.Name.LocalName == "Applications")?
             .Elements().Where(static e => e.Name.LocalName == "Application")
             .ToList()
@@ -241,6 +247,10 @@ internal sealed class AppxManifestInfo
                 string? entryPoint = application.Attribute("EntryPoint")?.Value;
                 string? trustLevel = application.Attributes().FirstOrDefault(static attribute => attribute.Name.LocalName == "TrustLevel")?.Value;
                 string? runtimeBehavior = application.Attributes().FirstOrDefault(static attribute => attribute.Name.LocalName == "RuntimeBehavior")?.Value;
+                bool hasFullTrustCompanion = application.Descendants()
+                    .Any(static element =>
+                        element.Name.LocalName == "Extension"
+                        && string.Equals(element.Attribute("Category")?.Value, "windows.fullTrustProcess", StringComparison.OrdinalIgnoreCase));
                 return applicationId is null || applicationId.Length == 0
                     ? null
                     : new AppxApplicationInfo(
@@ -250,7 +260,11 @@ internal sealed class AppxManifestInfo
                         IsAppContainerApplication(
                             entryPoint,
                             trustLevel,
-                            runtimeBehavior));
+                            runtimeBehavior,
+                            canUsePackageFullTrustFallback:
+                                canRunFullTrust
+                                && applicationElements.Count == 1
+                                && !hasFullTrustCompanion));
             })
             .OfType<AppxApplicationInfo>()
             .ToList();
@@ -261,7 +275,8 @@ internal sealed class AppxManifestInfo
     private static bool IsAppContainerApplication(
         string? entryPoint,
         string? trustLevel,
-        string? runtimeBehavior)
+        string? runtimeBehavior,
+        bool canUsePackageFullTrustFallback)
     {
         if (string.Equals(trustLevel, "appContainer", StringComparison.OrdinalIgnoreCase))
         {
@@ -281,10 +296,11 @@ internal sealed class AppxManifestInfo
             return true;
         }
 
-        // Legacy UWP manifests express AppContainer by omission. The package-wide runFullTrust
-        // capability is not application identity evidence: it may only authorize a full-trust companion
-        // extension. Without an application-specific desktop signal, preserve AppContainer activation.
-        return true;
+        // Legacy UWP manifests express AppContainer by omission. A package-wide runFullTrust capability
+        // is a safe fallback only for one application with no full-trust companion extension (the shape
+        // produced by packaged WinUI). Mixed packages and UWP apps with a windows.fullTrustProcess helper
+        // need application-specific desktop evidence.
+        return !canUsePackageFullTrustFallback;
     }
 
     /// <summary>
