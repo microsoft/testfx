@@ -54,7 +54,8 @@
           "build.sh",
           "test.sh",
           "eng/**",
-          "test/Directory.Build.*"
+          "src/**/Directory.Build.*",
+          "test/**/Directory.Build.*"
         ]
       },
       "instrumentation": {

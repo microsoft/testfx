@@ -73,9 +73,15 @@ steps:
 
   - pwsh: |
       dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false --affected-tests
-      if ($LASTEXITCODE -eq 0) {
+      $exitCode = $LASTEXITCODE
+      if ($exitCode -eq 0) {
         Write-Host "##vso[task.setvariable variable=AffectedTestsSucceeded]true"
         exit 0
+      }
+
+      if ($exitCode -eq 2) {
+        Write-Host "##vso[task.logissue type=error]One or more affected tests failed."
+        exit $exitCode
       }
 
       Write-Host "##vso[task.logissue type=warning]Affected-test selection failed; running the full test suite."

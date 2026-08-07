@@ -29,6 +29,16 @@ foreach ($path in @(
     }
 }
 
+foreach ($requiredForceAllPattern in @(
+    "Directory.Build.*",
+    "src/**/Directory.Build.*",
+    "test/**/Directory.Build.*"
+)) {
+    if ($requiredForceAllPattern -notin $affectedTests.changes.forceAllTests) {
+        throw "global.json test.affectedTests.changes.forceAllTests must include '$requiredForceAllPattern'."
+    }
+}
+
 $globalJsonText = Get-Content -LiteralPath $globalJsonPath -Raw
 if ($globalJsonText -match '(?i)"[^"]*(token|secret|password|connectionString|sas)[^"]*"\s*:') {
     throw "global.json must not contain affected-test credentials or secret-bearing settings."
@@ -128,6 +138,11 @@ if (-not $collectBranch.Success -or
     -not $runBranch.Success -or
     -not $runBranch.Value.Contains("DOTNET_CLI_ENABLE_AFFECTED_TESTS: 1")) {
     throw "The affected-test gate must be scoped to the enabled collect and run branches."
+}
+
+if (-not $runBranch.Value.Contains('$exitCode -eq 2') -or
+    -not $runBranch.Value.Contains('exit $exitCode')) {
+    throw "The affected-test run must preserve exit code 2 when selected tests fail."
 }
 
 $runFallback = [regex]::Match(
