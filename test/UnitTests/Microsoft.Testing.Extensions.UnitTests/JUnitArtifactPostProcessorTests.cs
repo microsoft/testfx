@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.JUnitReport;
+using Microsoft.Testing.Extensions.JUnitReport.Resources;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
@@ -55,7 +56,7 @@ public sealed class JUnitArtifactPostProcessorTests
             () => builder.AddJUnitReportProvider());
 
         Assert.AreEqual(
-            "JUnit report generation requires a test application builder that supports artifact post-processing.",
+            ExtensionResources.JUnitReportRequiresArtifactPostProcessing,
             exception.Message);
     }
 
@@ -68,7 +69,7 @@ public sealed class JUnitArtifactPostProcessorTests
         InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(
             () => builder.Object.AddJUnitReportProvider());
 
-        Assert.AreEqual("Invalid test application builder type. Expected 'TestApplicationBuilder'.", exception.Message);
+        Assert.AreEqual(ExtensionResources.InvalidTestApplicationBuilderType, exception.Message);
     }
 
     [TestMethod]
@@ -106,8 +107,10 @@ public sealed class JUnitArtifactPostProcessorTests
 
             Assert.IsNotNull(output);
             Assert.AreEqual(JUnitReportGenerator.JUnitArtifactKind, output.Kind);
-            Assert.AreEqual("JUnit XML report (merged)", output.DisplayName);
-            Assert.AreEqual("2 JUnit XML report files merged", output.Description);
+            Assert.AreEqual(ExtensionResources.JUnitMergedArtifactDisplayName, output.DisplayName);
+            Assert.AreEqual(
+                string.Format(CultureInfo.CurrentCulture, ExtensionResources.JUnitMergedArtifactDescription, 2),
+                output.Description);
             Assert.MatchesRegex(new Regex("^merged-[0-9a-f]{32}\\.xml$", RegexOptions.CultureInvariant), Path.GetFileName(output.Path));
             Assert.AreEqual("merged", Path.GetFileName(Path.GetDirectoryName(output.Path)));
             Assert.AreEqual("5", XDocument.Load(output.Path).Root!.Attribute("tests")!.Value);
@@ -171,6 +174,34 @@ public sealed class JUnitArtifactPostProcessorTests
             JUnitArtifactPostProcessor.CreateMergeId([second]));
     }
 
+    [TestMethod]
+    public async Task ProcessAsync_WhenMergedPathIsAFile_DoesNotMerge()
+    {
+        string root = CreateTemporaryDirectory();
+        string resultsDirectory = Path.Combine(root, "results");
+        Directory.CreateDirectory(resultsDirectory);
+        File.WriteAllText(Path.Combine(resultsDirectory, "merged"), string.Empty);
+        try
+        {
+            string firstPath = Path.Combine(resultsDirectory, "first.xml");
+            string secondPath = Path.Combine(resultsDirectory, "second.xml");
+            WriteReport(firstPath, "first", tests: 1);
+            WriteReport(secondPath, "second", tests: 1);
+
+            ProcessedArtifact? output = await new JUnitArtifactPostProcessor().ProcessAsync(
+                [CreateInput(firstPath), CreateInput(secondPath)],
+                resultsDirectory,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+                CancellationToken.None);
+
+            Assert.IsNull(output);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
 #if NETCOREAPP
     [TestMethod]
     public async Task ProcessAsync_WhenMergedDirectoryIsAReparsePoint_DoesNotMerge()
@@ -205,6 +236,45 @@ public sealed class JUnitArtifactPostProcessorTests
 
             Assert.IsNull(output);
             Assert.IsEmpty(Directory.GetFileSystemEntries(outsideDirectory));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task ProcessAsync_WhenMergedDirectoryIsADanglingReparsePoint_DoesNotMerge()
+    {
+        string root = CreateTemporaryDirectory();
+        string resultsDirectory = Path.Combine(root, "results");
+        string missingDirectory = Path.Combine(root, "missing");
+        Directory.CreateDirectory(resultsDirectory);
+        try
+        {
+            try
+            {
+                Directory.CreateSymbolicLink(Path.Combine(resultsDirectory, "merged"), missingDirectory);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PlatformNotSupportedException)
+            {
+                Assert.Inconclusive("Host cannot create directory symbolic links.");
+                return;
+            }
+
+            string firstPath = Path.Combine(resultsDirectory, "first.xml");
+            string secondPath = Path.Combine(resultsDirectory, "second.xml");
+            WriteReport(firstPath, "first", tests: 1);
+            WriteReport(secondPath, "second", tests: 1);
+
+            ProcessedArtifact? output = await new JUnitArtifactPostProcessor().ProcessAsync(
+                [CreateInput(firstPath), CreateInput(secondPath)],
+                resultsDirectory,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+                CancellationToken.None);
+
+            Assert.IsNull(output);
+            Assert.IsFalse(Directory.Exists(missingDirectory));
         }
         finally
         {

@@ -48,7 +48,15 @@ internal sealed class JUnitArtifactPostProcessor : IArtifactPostProcessor
         ];
 
         string mergedDirectory = Path.Combine(outputDirectory, MergedReportDirectoryName);
-        Directory.CreateDirectory(mergedDirectory);
+        try
+        {
+            Directory.CreateDirectory(mergedDirectory);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
+
         if (IsReparsePoint(mergedDirectory))
         {
             return null;
