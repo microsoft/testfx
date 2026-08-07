@@ -33,8 +33,8 @@ namespace Microsoft.Testing.Extensions.PackagedApp;
 /// argument array.
 /// </para>
 /// <para>
-/// Both full-trust and AppContainer activation arguments are supported. End-to-end AppContainer
-/// execution additionally requires the controller pipe to grant the package SID access; that separate
+/// Both process-argv and windowsApp/UWP launch-activation argument delivery are supported. End-to-end
+/// AppContainer execution additionally requires the controller pipe to grant the package SID access; that separate
 /// transport dependency is tracked by https://github.com/microsoft/testfx/issues/10486. The full register-and-activate path
 /// ships only in the Windows build of this extension (<c>net*-windows10.0.19041.0</c>), where the
 /// <c>PackageManager</c> WinRT projection is available. The plain <c>net8.0</c>/<c>net9.0</c> build
@@ -155,9 +155,9 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher
         IReadOnlyList<string> arguments,
         string localStateDirectory)
     {
-        if (application.IsAppContainer)
+        if (application.UsesLaunchActivationArguments)
         {
-            // AppContainer activation exposes one opaque string through OnLaunched rather than argv.
+            // windowsApp/UWP activation exposes one opaque string through OnLaunched rather than argv.
             // Inline the compact versioned payload when it fits the documented launch-argument envelope;
             // otherwise spill only authenticated ciphertext to LocalState and carry its one-shot key in
             // the activation string. User filters/runsettings are therefore never persisted in plaintext.

@@ -121,7 +121,7 @@ public sealed class AppxManifestInfoTests
             </Package>
             """;
 
-        Assert.IsTrue(Assert.ContainsSingle(ReadManifest(ManifestXml).Applications).IsAppContainer);
+        Assert.IsTrue(Assert.ContainsSingle(ReadManifest(ManifestXml).Applications).UsesLaunchActivationArguments);
     }
 
     [TestMethod]
@@ -139,7 +139,7 @@ public sealed class AppxManifestInfoTests
             </Package>
             """;
 
-        Assert.IsTrue(Assert.ContainsSingle(ReadManifest(ManifestXml).Applications).IsAppContainer);
+        Assert.IsTrue(Assert.ContainsSingle(ReadManifest(ManifestXml).Applications).UsesLaunchActivationArguments);
     }
 
     [TestMethod]
@@ -160,7 +160,7 @@ public sealed class AppxManifestInfoTests
             </Package>
             """;
 
-        Assert.IsFalse(Assert.ContainsSingle(ReadManifest(ManifestXml).Applications).IsAppContainer);
+        Assert.IsFalse(Assert.ContainsSingle(ReadManifest(ManifestXml).Applications).UsesLaunchActivationArguments);
     }
 
     [TestMethod]
@@ -181,7 +181,7 @@ public sealed class AppxManifestInfoTests
             </Package>
             """;
 
-        Assert.IsFalse(Assert.ContainsSingle(ReadManifest(ManifestXml).Applications).IsAppContainer);
+        Assert.IsFalse(Assert.ContainsSingle(ReadManifest(ManifestXml).Applications).UsesLaunchActivationArguments);
     }
 
     [TestMethod]
@@ -207,7 +207,7 @@ public sealed class AppxManifestInfoTests
             </Package>
             """;
 
-        Assert.IsTrue(Assert.ContainsSingle(ReadManifest(ManifestXml).Applications).IsAppContainer);
+        Assert.IsTrue(Assert.ContainsSingle(ReadManifest(ManifestXml).Applications).UsesLaunchActivationArguments);
     }
 
     [TestMethod]
@@ -231,8 +231,8 @@ public sealed class AppxManifestInfoTests
 
         AppxManifestInfo manifest = ReadManifest(ManifestXml);
 
-        Assert.IsTrue(manifest.Applications[0].IsAppContainer);
-        Assert.IsFalse(manifest.Applications[1].IsAppContainer);
+        Assert.IsTrue(manifest.Applications[0].UsesLaunchActivationArguments);
+        Assert.IsFalse(manifest.Applications[1].UsesLaunchActivationArguments);
     }
 
     [TestMethod]
@@ -250,7 +250,7 @@ public sealed class AppxManifestInfoTests
             </Package>
             """;
 
-        Assert.IsFalse(Assert.ContainsSingle(ReadManifest(ManifestXml).Applications).IsAppContainer);
+        Assert.IsFalse(Assert.ContainsSingle(ReadManifest(ManifestXml).Applications).UsesLaunchActivationArguments);
     }
 
     [TestMethod]
@@ -268,7 +268,7 @@ public sealed class AppxManifestInfoTests
             </Package>
             """;
 
-        Assert.IsFalse(Assert.ContainsSingle(ReadManifest(ManifestXml).Applications).IsAppContainer);
+        Assert.IsFalse(Assert.ContainsSingle(ReadManifest(ManifestXml).Applications).UsesLaunchActivationArguments);
     }
 
     [TestMethod]
@@ -286,7 +286,7 @@ public sealed class AppxManifestInfoTests
             </Package>
             """;
 
-        Assert.IsFalse(Assert.ContainsSingle(ReadManifest(ManifestXml).Applications).IsAppContainer);
+        Assert.IsFalse(Assert.ContainsSingle(ReadManifest(ManifestXml).Applications).UsesLaunchActivationArguments);
     }
 
     [TestMethod]
@@ -304,7 +304,7 @@ public sealed class AppxManifestInfoTests
             </Package>
             """;
 
-        Assert.IsTrue(Assert.ContainsSingle(ReadManifest(ManifestXml).Applications).IsAppContainer);
+        Assert.IsTrue(Assert.ContainsSingle(ReadManifest(ManifestXml).Applications).UsesLaunchActivationArguments);
     }
 
     [TestMethod]

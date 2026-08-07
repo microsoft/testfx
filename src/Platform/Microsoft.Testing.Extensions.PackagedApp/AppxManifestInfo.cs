@@ -257,7 +257,7 @@ internal sealed class AppxManifestInfo
                         applicationId,
                         executable,
                         $"{packageFamilyName}!{applicationId}",
-                        IsAppContainerApplication(
+                        UsesLaunchActivationArguments(
                             entryPoint,
                             trustLevel,
                             runtimeBehavior,
@@ -272,7 +272,7 @@ internal sealed class AppxManifestInfo
         return new AppxManifestInfo(name, publisher, applications);
     }
 
-    private static bool IsAppContainerApplication(
+    private static bool UsesLaunchActivationArguments(
         string? entryPoint,
         string? trustLevel,
         string? runtimeBehavior,

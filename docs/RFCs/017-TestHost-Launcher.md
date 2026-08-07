@@ -270,7 +270,7 @@ public Task<ITestHostHandle> LaunchTestHostAsync(
     var aam = (IApplicationActivationManager)new ApplicationActivationManager();
     string activationArguments;
     string? activationPayloadPath = null;
-    if (manifest.IsAppContainer)
+    if (manifest.UsesLaunchActivationArguments)
     {
         PackagedAppActivationData activationData = PackagedAppActivationArguments.Create(
             context.Arguments,

@@ -11,12 +11,12 @@ namespace Microsoft.Testing.Extensions.PackagedApp;
 /// </summary>
 internal sealed class AppxApplicationInfo
 {
-    internal AppxApplicationInfo(string id, string? executable, string appUserModelId, bool isAppContainer)
+    internal AppxApplicationInfo(string id, string? executable, string appUserModelId, bool usesLaunchActivationArguments)
     {
         Id = id;
         Executable = executable;
         AppUserModelId = appUserModelId;
-        IsAppContainer = isAppContainer;
+        UsesLaunchActivationArguments = usesLaunchActivationArguments;
     }
 
     /// <summary>Gets the application id (the manifest's <c>Application/@Id</c>).</summary>
@@ -39,5 +39,5 @@ internal sealed class AppxApplicationInfo
     /// Gets a value indicating whether this application receives launch arguments through
     /// <c>LaunchActivatedEventArgs.Arguments</c> instead of process <c>argv</c>.
     /// </summary>
-    public bool IsAppContainer { get; }
+    public bool UsesLaunchActivationArguments { get; }
 }

@@ -192,7 +192,7 @@ public sealed class PackagedAppTestHostLauncherTests
         try
         {
             string[] expected = ["--filter", "two words", string.Empty];
-            var application = new AppxApplicationInfo("App", "App.exe", "Contoso!App", isAppContainer: true);
+            var application = new AppxApplicationInfo("App", "App.exe", "Contoso!App", usesLaunchActivationArguments: true);
 
             PackagedAppActivationData activation = PackagedAppTestHostLauncher.CreateActivationArguments(application, expected, directory);
             string[] actual = PackagedAppActivationArguments.Read(activation.Arguments, directory);
@@ -216,7 +216,7 @@ public sealed class PackagedAppTestHostLauncherTests
     [TestMethod]
     public void CreateActivationArguments_WithFullTrustApplication_UsesWindowsArgvQuoting()
     {
-        var application = new AppxApplicationInfo("App", "App.exe", "Contoso!App", isAppContainer: false);
+        var application = new AppxApplicationInfo("App", "App.exe", "Contoso!App", usesLaunchActivationArguments: false);
 
         PackagedAppActivationData activation = PackagedAppTestHostLauncher.CreateActivationArguments(
             application,

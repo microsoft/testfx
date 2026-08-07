@@ -4,7 +4,7 @@
 
 It is the consumer of the platform's `ITestHostLauncher` extension point for Windows test hosts. Packaged Windows apps require package identity and ship as MSIX; VSTest exposes a single `UwpTestHostRuntimeProvider` for the equivalent scenario, built on Visual-Studio-internal deployment components, whereas this extension uses only public, redistributable Windows APIs:
 
-- **Packaged AUMID activation** (Windows build): a packaged (MSIX) layout is registered in place with the `PackageManager` and the app is activated by AUMID via `IApplicationActivationManager`. Full-trust desktop apps receive the platform-prepared command line through `argv`. UWP/AppContainer apps receive one opaque launch string and restore the exact logical argument array through `PackagedAppExtensions.GetTestApplicationArguments(args.Arguments)` in `Application.OnLaunched` (see [#10485](https://github.com/microsoft/testfx/issues/10485)). Registering an unsigned build-output layout requires Developer Mode (or sideloading). The plain `net8.0`/`net9.0` build rejects a packaged layout with an actionable error pointing at the Windows TFM.
+- **Packaged AUMID activation** (Windows build): a packaged (MSIX) layout is registered in place with the `PackageManager` and the app is activated by AUMID via `IApplicationActivationManager`. `packagedClassicApp`/`win32App` hosts receive the platform-prepared command line through `argv`, including when their trust level is `appContainer`. `windowsApp`/UWP hosts receive one opaque launch string and restore the exact logical argument array through `PackagedAppExtensions.GetTestApplicationArguments(args.Arguments)` in `Application.OnLaunched` (see [#10485](https://github.com/microsoft/testfx/issues/10485)). Registering an unsigned build-output layout requires Developer Mode (or sideloading). The plain `net8.0`/`net9.0` build rejects a packaged layout with an actionable error pointing at the Windows TFM.
 - **Deploy + launch loose layout** (opt-in): a non-packaged app — one without an `AppxManifest.xml` — is deployed to a deployment directory and the produced executable is launched from there.
 
 ## When the launcher takes over
@@ -23,9 +23,9 @@ So referencing this package from an unpackaged app costs nothing: no extra proce
 
 Set `TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER` to override that decision — `always` opts a non-packaged layout into deploy-and-launch, `never` keeps the launcher out of the way entirely, and `auto` (the default) probes the layout.
 
-## AppContainer activation bootstrap
+## Launch-activation bootstrap
 
-An AppContainer app has no `Main(string[] args)` receiving the activation string as process arguments. Its `OnLaunched` override must restore the MTP argument array before creating the builder:
+A `windowsApp`/UWP app has no `Main(string[] args)` receiving the activation string as process arguments. Its `OnLaunched` override must restore the MTP argument array before creating the builder. A `packagedClassicApp`/`win32App` uses its normal process arguments instead, even when its trust level is `appContainer`:
 
 ```csharp
 protected override async void OnLaunched(LaunchActivatedEventArgs args)

@@ -110,15 +110,15 @@ Requirements and limitations:
 
 - Target a Windows TFM at platform version `10.0.19041.0` or higher (for example `net8.0-windows10.0.19041.0`) so NuGet resolves the Windows asset that contains the register-and-activate path. The plain `net8.0`/`net9.0` asset fails fast with an actionable message instead.
 - Registering an unsigned build-output layout requires **Developer Mode** (or sideloading) to be enabled on the machine.
-- Full-trust packaged desktop hosts receive MTP arguments as normal process `argv`.
-- UWP/AppContainer hosts receive one opaque string through `LaunchActivatedEventArgs.Arguments`. Restore the platform argument array with `PackagedAppExtensions.GetTestApplicationArguments(args.Arguments)` before `TestApplication.CreateBuilderAsync`; see [AppContainer activation](#appcontainer-activation).
+- `packagedClassicApp`/`win32App` hosts receive MTP arguments as normal process `argv`, including classic hosts whose trust level is `appContainer`.
+- `windowsApp`/UWP hosts receive one opaque string through `LaunchActivatedEventArgs.Arguments`. Restore the platform argument array with `PackagedAppExtensions.GetTestApplicationArguments(args.Arguments)` before `TestApplication.CreateBuilderAsync`; see [Launch activation](#launch-activation).
 - End-to-end UWP/AppContainer execution remains dependent on granting the exact package SID access to the controller named pipe, tracked separately by [#10486](https://github.com/microsoft/testfx/issues/10486). Argument delivery from [#10485](https://github.com/microsoft/testfx/issues/10485) does not weaken that pipe ACL.
 
 See [#9933](https://github.com/microsoft/testfx/issues/9933) for the implementation of this path.
 
-### AppContainer activation
+### Launch activation
 
-Unlike a full-trust packaged desktop app, a UWP/AppContainer app does not receive the string passed to `IApplicationActivationManager` as `argv`. Windows exposes it as one opaque value on the launch event. Use the package bootstrap from `OnLaunched` rather than adding a project-specific command-line parser:
+Unlike a packaged classic/Win32 app, a `windowsApp`/UWP app does not receive the string passed to `IApplicationActivationManager` as `argv`. Windows exposes it as one opaque value on the launch event. Use the package bootstrap from `OnLaunched` rather than adding a project-specific command-line parser. Classic AppContainer hosts continue to use their process arguments:
 
 ```csharp
 protected override async void OnLaunched(LaunchActivatedEventArgs args)

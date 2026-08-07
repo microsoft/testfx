@@ -8,12 +8,12 @@ namespace Microsoft.Testing.Extensions;
 
 /// <summary>
 /// Provides extension methods for adding Windows test host launch support for packaged MSIX apps
-/// (full-trust desktop and AppContainer), and — when opted in — non-packaged loose layouts.
+/// (desktop and windowsApp/UWP), and — when opted in — non-packaged loose layouts.
 /// </summary>
 public static class PackagedAppExtensions
 {
     /// <summary>
-    /// Restores the platform-prepared argument array delivered to an AppContainer test host through
+    /// Restores the platform-prepared argument array delivered to a windowsApp/UWP test host through
     /// <c>LaunchActivatedEventArgs.Arguments</c>.
     /// </summary>
     /// <remarks>
@@ -34,7 +34,7 @@ public static class PackagedAppExtensions
     /// with the OS and activated by Application User Model ID in the Windows build of this extension
     /// (see https://github.com/microsoft/testfx/issues/9933); the plain build rejects a packaged layout
     /// with an actionable error. Full-trust desktop hosts receive normal process arguments, while
-    /// AppContainer hosts restore launch activation arguments with
+    /// windowsApp/UWP hosts restore launch activation arguments with
     /// <see cref="GetTestApplicationArguments(string)"/>. End-to-end AppContainer execution additionally
     /// requires the exact package-SID controller-pipe authorization tracked by
     /// https://github.com/microsoft/testfx/issues/10486.
