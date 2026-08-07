@@ -373,6 +373,10 @@ A lightweight, extensible test platform for .NET that serves as a modern alterna
 
 A NuGet package (`Microsoft.Testing.Platform.AI`) that provides AI extensibility abstractions for Microsoft.Testing.Platform. It defines the [IChatClientProvider](#ichatclientprovider) interface and leverages [Microsoft.Extensions.AI](https://www.nuget.org/packages/Microsoft.Extensions.AI) types so that test frameworks and extensions can consume Large Language Model (LLM) capabilities — flaky test analysis, crash dump analysis, test failure root-cause analysis, and more — without implementing provider-specific logic. This package ships the **abstractions only**; an AI provider implementation such as [Microsoft.Testing.Extensions.AzureFoundry](#azurefoundry) must also be registered to supply actual AI capabilities. See `docs/microsoft.testing.platform/001-AI-Extensibility.md` for the design RFC.
 
+### Microsoft.Testing.Platform.ServerMode.Client.Sources
+
+A source-only NuGet package that provides a client implementation for launching and communicating with an MTP test host running in [Server Mode](#server-mode). Its C# sources are compiled as internal types directly into the consuming project, avoiding a runtime dependency or separate assembly while keeping the client wire-compatible with the MTP server protocol. Added in [PR #10085](https://github.com/microsoft/testfx/pull/10085).
+
 ### Microsoft.Testing.Extensions.Logging
 
 An experimental MTP extension (`Microsoft.Testing.Extensions.Logging`, `[TPEXP]`) that bridges Microsoft Testing Platform diagnostic logs to any `Microsoft.Extensions.Logging` provider (e.g., Console, Serilog, Application Insights, OpenTelemetry exporters). Register via `AddMicrosoftExtensionsLogging()` on `ITestApplicationBuilder`, passing either an existing `ILoggerFactory` or a configuration delegate for the logging builder. The minimum log level is bounded by the platform's effective diagnostic level; per-category filters in the `ILoggingBuilder` can narrow but not widen it. MTP core (`Microsoft.Testing.Platform`) does not depend on `Microsoft.Extensions.Logging`; this package provides an additive opt-in bridge only. Currently **experimental** — API surface may change without notice. See `docs/RFCs/013-Microsoft-Extensions-Bridges.md` for the design.
@@ -450,6 +454,10 @@ An MTP extension (`Microsoft.Testing.Extensions.Retry`) that automatically re-ru
 Request for Comments document in the `docs/RFCs/` folder. RFCs describe design decisions, proposed features, and implementation details for MSTest and MTP.
 
 ## S
+
+### Server Mode
+
+An MTP execution mode in which a test runner executable remains available as a server and communicates with a client (such as an IDE, CLI, or CI tool) over the [JSON-RPC Protocol](#json-rpc-protocol). The client can initialize the server, request test discovery or execution, receive test updates, and stop the server when finished.
 
 ### SequenceOrder
 
