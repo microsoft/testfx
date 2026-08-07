@@ -12,12 +12,12 @@
 
 ## Task Schedule (last run dates)
 - Task 1 (Discover Commands): 2026-07-30
-- Task 2 (Identify Opportunities): 2026-08-05 (no new opportunities — scanned VSTest adapter discovery, IPC serializers, JsonRpc, TcmTestPropertiesProvider; all clean)
+- Task 2 (Identify Opportunities): 2026-08-07 (scanned new CtrfReportMerger/JUnitReportMerger post-processing code, TerminalTestReporter.SlowestTests + TestProgressState.GetSlowestTests — all well-optimized, gated behind feature flags, cold-path only; no new opportunities)
 - Task 3 (Implement): 2026-08-03 (no viable target found — codebase well-optimized)
-- Task 4 (Maintain PRs): 2026-08-04 (no open perf-improver PRs)
-- Task 5 (Comment Issues): 2026-08-04 (no open performance issues found)
+- Task 4 (Maintain PRs): 2026-08-07 (no open perf-improver PRs)
+- Task 5 (Comment Issues): 2026-08-07 (no open performance-labeled issues found; issue #3495 "Show slowest tests" is effectively implemented via --show-slowest-tests, left as-is since discussion has since pivoted to a broader declarative-duration RFC)
 - Task 6 (Infrastructure): 2026-08-05 (reviewed perf-timing-nightly.yml + MSTest.Performance.Runner; infra already solid — PlainProcess timing, cross-platform)
-- Task 7 (Monthly Summary): 2026-08-05
+- Task 7 (Monthly Summary): 2026-08-07
 
 ## Monthly Activity Issue
 - Issue #10381 (August 2026, open) — kept updated; no suggested actions pending
@@ -44,6 +44,7 @@ None
 - Backlog is now very slim — codebase is well-optimized for hot paths
 - 2026-08-04: Confirmed ReflectHelper/TypeCache attribute caching already centralized (ReflectionOperations._attributeCache); StackTraceHelper already uses [GeneratedRegex] with static cache fallback for non-source-gen targets. No fresh targets found.
 - 2026-08-05: Scanned VSTest discovery pipeline (UnitTestDiscoverer, MSTestDiscovererHelpers) — no LINQ/List allocation hot spots found. TcmTestPropertiesProvider Dictionary pre-sized (capacity:15) already. JsonRpc SerializerUtilities.Select().ToArray() on ev.Attachments is per-event-with-attachments (rare path, not hot). No open perf-labeled issues or perf-improver PRs found this run. Reviewed nightly perf-timing workflow (PlainProcess scenario, Windows+Linux) — solid, no gaps identified.
+- 2026-08-07: Scanned recently-merged CtrfReportMerger.cs/.JsonHelpers.cs/.RetryCollapsing.cs and JUnitReportMerger.cs (post-processing/artifact-merge feature, PRs #10506/#10507 area). BuildCommonEnvironment uses O(n²) `environments.All(...)` per field across inputs — acceptable since it's a one-shot CLI merge step over a handful of report files, not a hot per-test path. CtrfReportEngine.JsonSerializer.BuildCtrfJson uses Utf8JsonWriter directly (no intermediate string), already efficient. TestProgressState.GetSlowestTests/RecordTestDuration (backing --show-slowest-tests, issue #3495) is properly gated (`if (_options.SlowestTestsCount > 0)`) so a run without the flag pays zero bookkeeping cost — no perf issue there. No new optimization targets found; backlog remains empty.
 
 ## Completed Work (this month)
 ### July 2026
