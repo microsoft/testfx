@@ -164,7 +164,7 @@ a workflow needs elevated access (then use the GitHub App above).
 > cause — *AI credits budget exceeded*, an engine/inference error, or transient
 > container-image / AWF-binary download failures are all unrelated to authentication.
 > Only the *"Lockdown Check Failed … custom GitHub token"* banner indicates a PAT issue.
-> For the recurring `Install GitHub Copilot CLI` download failure, see
+> For an `Install GitHub Copilot CLI` download failure, see
 > [Known transient failures](#known-transient-failures) below.
 
 ## Known transient failures
@@ -185,91 +185,34 @@ file was never written. The step log shows repeated
 change the gate, so a job-level infrastructure failure still swallows the outputs. Setting it
 explicitly in frontmatter is a no-op; the compiled condition is byte-identical.
 
-**Root cause.** `gh aw compile` bakes an *exact* Copilot CLI version into every `.lock.yml`
-(`install_copilot_cli.sh <version>`), taken from gh-aw's own `DefaultCopilotVersion` constant.
-Passing an explicit version makes `install_copilot_cli.sh` skip compat-matrix resolution, so the
-toolcache lookup runs with `range: none..none` and can never match the CLI the hosted runner image
-already ships. Every agentic workflow run therefore downloads the CLI twice — once in the `agent`
-job, once in the `detection` job — and each download is a chance to hit a transient GitHub CDN 5xx.
-The gap is structural, not a stale-image problem: `github/gh-aw-actions`'s `compat.json` caps
-`max-agent` at `1.0.56` (exactly what the runner image caches), while `DefaultCopilotVersion` is
-`1.0.73` on the gh-aw v0.83.1 compiler this repo's lock files are pinned to, and `1.0.75` as of
-gh-aw v0.83.4 — so bumping gh-aw *widens* the gap.
+**Status.** Fixed upstream in [github/gh-aw#48358][gh-aw-48358] and adopted by this repository in
+[#10427](https://github.com/microsoft/testfx/pull/10427) with gh-aw v0.84.3. When a workflow does not
+declare `engine.version`, the generated lock now calls `install_copilot_cli.sh` without a version and
+passes `GH_AW_COMPILED_VERSION`. The installer resolves the supported Copilot CLI range from
+`compat.json`, uses the newest compatible entry already in the runner toolcache, and downloads the
+range maximum only when no suitable cached binary exists. A bundled compatibility matrix is used if
+the live matrix cannot be fetched.
 
-**There is no repo-side fix *today*.** All of the following were evaluated and rejected:
+The earlier locks always passed gh-aw's exact `DefaultCopilotVersion`, which disabled range matching
+and forced both the `agent` and `detection` jobs to download the CLI. The companion fix
+[github/gh-aw#48519][gh-aw-48519] also made an explicitly configured `engine.version` effective.
 
-- `engine.version` is silently ignored for the Copilot engine — gh-aw overwrites it with
-  `DefaultCopilotVersion` (`pkg/workflow/copilot_engine_installation.go`, still the case in
-  v0.83.4). `gh aw compile --strict` reports no error, and the regenerated lock keeps the pinned
-  version. This is the one rejected option upstream is actively changing — see
-  [Tracking the upstream fix](#tracking-the-upstream-fix).
-- Hand-editing a `.lock.yml` (older pin, extra retries) is overwritten on the next `gh aw compile`.
-- `engine.command:` pointed at `/opt/hostedtoolcache/copilot-cli/<version>/x64/bin/copilot` bypasses
-  the install step, but hardcodes a path that rotates with runner images and skips the `.copilot`
-  ownership fix and stale `awf-*-chroot-home` cleanup that `install_copilot_cli.sh` performs.
-- `safe-outputs.threat-detection.steps:` *does* inject steps ahead of `Install GitHub Copilot CLI`,
-  so a retry/pre-warm shim is technically possible — but it would have to be repeated in every
-  workflow, re-download from the same CDN, and hardcode both the drifting version pin and the
-  toolcache layout. That trades a rare transient failure for permanent maintenance debt.
-- Disabling `threat-detection` removes the failure by removing a security control.
+**What to do.** Leave `engine.version` unset so the compat-driven toolcache path remains active. Do
+not pin the version currently present on hosted runners: runner images rotate, and an explicit pin
+switches the installer back to exact-version matching.
 
-**What to do.** Nothing structural — re-run the failed workflow. The occurrence rate is roughly one
-run per tracker issue, and the tracker auto-expires via its `gh-aw-expires` marker. A durable fix
-belongs upstream in [`github/gh-aw`][gh-aw]: either pin `DefaultCopilotVersion` to the exact CLI
-version the hosted runner toolcache is expected to contain (in practice the `compat.json`
-`max-agent`, with a CI guard against drift), or pass the compat range to the toolcache lookup even
-when a version is pinned. Merely choosing a default somewhere inside the compat window still
-downloads unless that exact version is cached.
+For a failure on current locks:
 
-#### Tracking the upstream fix
+1. Check the install log for `No explicit Copilot CLI version requested` and
+   `Using compat-resolved Copilot CLI window`.
+2. If the log instead reports an explicit version, remove `engine.version` and recompile the source
+   workflow in strict mode.
+3. If compat resolution succeeds but no compatible cached binary is available, re-run the failed
+   workflow. The fallback download can still encounter a transient GitHub release-CDN failure.
 
-The drift is filed upstream as [github/gh-aw#48358][gh-aw-48358] — *"DefaultCopilotVersion drifts
-past compat.json max-agent, forcing a network install on every job and disabling the toolcache
-path"*. It is still open, and nothing in gh-aw v0.83.2 – v0.83.4 touches the install path:
-v0.83.4 only bumps `DefaultCopilotVersion` to `1.0.75`, and `install_copilot_cli.sh` is byte-for-byte
-unchanged since v0.83.1 (both curls already carry `--retry 3 --retry-delay 5`, which is the retry
-budget the failing run exhausted).
-
-The unblocking change is [github/gh-aw#48519][gh-aw-48519] — *"honor `engine.version` for
-copilot"*, open against `main`. It makes the compiler emit `install_copilot_cli.sh <engine.version>`
-instead of always substituting `DefaultCopilotVersion`. That alone does **not** restore compat-matrix
-resolution — an explicit version still skips it — but it hands us the lever we currently lack,
-because `find_cached_copilot_bin` already short-circuits on an exact match:
-
-```text
-Found candidate: /opt/hostedtoolcache/copilot-cli/1.0.56/x64/bin/copilot (version: 1.0.56, arch: x64)
-Exact version match found: /opt/hostedtoolcache/copilot-cli/1.0.56/x64/bin/copilot
-```
-
-That branch returns *before* the cache-TTL check, so pinning the version the runner image already
-caches skips both downloads outright — which is precisely what today's `range: none..none` lookup
-cannot do.
-
-**Once #48519 ships in a gh-aw release**, the repo-side follow-up is:
-
-1. Bump the pinned gh-aw toolchain, recompile with `gh aw compile --strict`, review the `.lock.yml`
-   diff, and run `python .github/scripts/check_action_pins.py` (see
-   [Compile on the pinned toolchain](#compile-on-the-pinned-toolchain-and-check-the-pins-afterwards)).
-2. Pin the engine to the version the hosted runner caches:
-
-   ```yaml
-   engine:
-     id: copilot
-     version: "1.0.56"   # == compat.json max-agent == hosted-runner toolcache entry
-   ```
-
-   No workflow here declares `engine:` today, so this is new frontmatter. Check whether gh-aw's
-   frontmatter merging lets a `shared/` import carry it before adding the block to all ~30
-   workflows individually.
-3. Verify a run logs `Exact version match found:` instead of `No compatible toolcache entry found`
-   followed by `-> Downloading ...`.
-
-Re-check *both* the `compat.json` window and the version the runner image actually caches before
-choosing the pin, and only pin a version that satisfies both: it must sit inside
-`min-agent`..`max-agent` *and* exist in the toolcache (`1.0.56` is both today). If they diverge —
-the image caches something outside the compat window — stay on a compat-sanctioned version and keep
-paying for the download. `max-agent` is the supported ceiling; pinning past it to chase a cache hit
-would run every agentic workflow on an unsupported CLI.
+Never hand-edit a `.lock.yml`, inject a toolcache path through `engine.command`, or disable threat
+detection to avoid the installer. Those changes are brittle, overwritten by compilation, or remove
+a security control.
 
 ## Catalog
 
