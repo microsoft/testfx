@@ -52,6 +52,13 @@ internal static partial class CtrfReportMerger
         => Merge(inputReports, mode, requireAllReports: false);
 
     private static string Merge(IReadOnlyList<string> inputReports, CtrfMergeMode mode, bool requireAllReports)
+        => Merge(inputReports, mode, requireAllReports, nameof(inputReports));
+
+    private static string Merge(
+        IReadOnlyList<string> inputReports,
+        CtrfMergeMode mode,
+        bool requireAllReports,
+        string invalidInputParameterName)
     {
         if (inputReports is null)
         {
@@ -121,7 +128,7 @@ internal static partial class CtrfReportMerger
                 && (root["results"]?["tests"] is not JsonArray strictTests
                     || strictTests.Any(test => test is not JsonObject)))
             {
-                throw new ArgumentException("Every input must be a valid CTRF report.", nameof(inputReports));
+                throw new ArgumentException("Every input must be a valid CTRF report.", invalidInputParameterName);
             }
 
             first ??= root;
@@ -194,7 +201,7 @@ internal static partial class CtrfReportMerger
 
         if (requireAllReports && reportCount != inputReports.Count)
         {
-            throw new ArgumentException("Every input must be a valid CTRF report.", nameof(inputReports));
+            throw new ArgumentException("Every input must be a valid CTRF report.", invalidInputParameterName);
         }
 
         if (first is null)

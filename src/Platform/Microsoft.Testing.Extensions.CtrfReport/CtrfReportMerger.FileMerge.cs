@@ -69,7 +69,7 @@ internal static partial class CtrfReportMerger
 #endif
         }
 
-        string merged = Merge(reports, mode, requireAllReports);
+        string merged = Merge(reports, mode, requireAllReports, nameof(inputPaths));
 
         string? outputDirectory = Path.GetDirectoryName(outputPath);
         if (!RoslynString.IsNullOrEmpty(outputDirectory))

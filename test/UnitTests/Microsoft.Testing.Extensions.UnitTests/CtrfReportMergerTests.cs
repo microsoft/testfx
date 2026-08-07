@@ -364,7 +364,7 @@ public sealed class CtrfReportMergerTests
             ArgumentException exception = await Assert.ThrowsExactlyAsync<ArgumentException>(
                 () => CtrfReportMerger.MergeAllToFileAsync([valid, invalid], output, CancellationToken.None));
 
-            Assert.AreEqual("inputReports", exception.ParamName);
+            Assert.AreEqual("inputPaths", exception.ParamName);
             Assert.Contains("Every input must be a valid CTRF report.", exception.Message);
             Assert.IsFalse(File.Exists(output));
         }
@@ -390,7 +390,7 @@ public sealed class CtrfReportMergerTests
             ArgumentException exception = await Assert.ThrowsExactlyAsync<ArgumentException>(
                 () => CtrfReportMerger.MergeAllToFileAsync([first, second], output, CancellationToken.None));
 
-            Assert.AreEqual("inputReports", exception.ParamName);
+            Assert.AreEqual("inputPaths", exception.ParamName);
             Assert.Contains("Every input must be a valid CTRF report.", exception.Message);
             Assert.IsFalse(File.Exists(output));
         }
