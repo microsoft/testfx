@@ -1,4 +1,17 @@
 #nullable enable
+const Microsoft.Testing.Extensions.JUnitReport.JUnitReportGenerator.JUnitArtifactKind = "microsoft.testing.junit" -> string!
+Microsoft.Testing.Extensions.JUnitReport.JUnitArtifactPostProcessor
+Microsoft.Testing.Extensions.JUnitReport.JUnitArtifactPostProcessor.Description.get -> string!
+Microsoft.Testing.Extensions.JUnitReport.JUnitArtifactPostProcessor.DisplayName.get -> string!
+Microsoft.Testing.Extensions.JUnitReport.JUnitArtifactPostProcessor.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Extensions.JUnitReport.JUnitArtifactPostProcessor.JUnitArtifactPostProcessor() -> void
+Microsoft.Testing.Extensions.JUnitReport.JUnitArtifactPostProcessor.ProcessAsync(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>! inputs, string! outputDirectory, Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact?>!
+Microsoft.Testing.Extensions.JUnitReport.JUnitArtifactPostProcessor.SupportsTruncatedRuns.get -> bool
+Microsoft.Testing.Extensions.JUnitReport.JUnitArtifactPostProcessor.SupportedFileExtensionsFallback.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Microsoft.Testing.Extensions.JUnitReport.JUnitArtifactPostProcessor.SupportedKinds.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Microsoft.Testing.Extensions.JUnitReport.JUnitArtifactPostProcessor.Uid.get -> string!
+Microsoft.Testing.Extensions.JUnitReport.JUnitArtifactPostProcessor.Version.get -> string!
+static Microsoft.Testing.Extensions.JUnitReport.JUnitArtifactPostProcessor.CreateMergeId(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>! inputs) -> string!
 virtual Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.ArtifactKind.get -> string?
 Microsoft.Testing.Extensions.JUnitReport.JUnitReportMerger
 static Microsoft.Testing.Extensions.JUnitReport.JUnitReportMerger.Merge(System.Collections.Generic.IReadOnlyList<System.Xml.Linq.XDocument!>! inputReports, string! reportName) -> System.Xml.Linq.XDocument!
