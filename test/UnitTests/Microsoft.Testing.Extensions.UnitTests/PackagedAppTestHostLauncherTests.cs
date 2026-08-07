@@ -185,6 +185,48 @@ public sealed class PackagedAppTestHostLauncherTests
         Assert.Contains($"Contoso.MyTestApp_{MicrosoftStorePublisherId}!App", exception.Message);
     }
 
+    [TestMethod]
+    public void CreateActivationArguments_WithAppContainerApplication_UsesOpaquePayload()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "PackagedAppTestHostLauncherTests", Guid.NewGuid().ToString("N"));
+        try
+        {
+            string[] expected = ["--filter", "two words", string.Empty];
+            var application = new AppxApplicationInfo("App", "App.exe", "Contoso!App", isAppContainer: true);
+
+            PackagedAppActivationData activation = PackagedAppTestHostLauncher.CreateActivationArguments(application, expected, directory);
+            string[] actual = PackagedAppActivationArguments.Read(activation.Arguments, directory);
+
+            Assert.IsNull(activation.PayloadPath);
+            Assert.HasCount(expected.Length, actual);
+            for (int i = 0; i < expected.Length; i++)
+            {
+                Assert.AreEqual(expected[i], actual[i], $"Argument {i} differs.");
+            }
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
+    [TestMethod]
+    public void CreateActivationArguments_WithFullTrustApplication_UsesWindowsArgvQuoting()
+    {
+        var application = new AppxApplicationInfo("App", "App.exe", "Contoso!App", isAppContainer: false);
+
+        PackagedAppActivationData activation = PackagedAppTestHostLauncher.CreateActivationArguments(
+            application,
+            ["--filter", "two words", string.Empty],
+            Path.GetTempPath());
+
+        Assert.IsNull(activation.PayloadPath);
+        Assert.AreEqual("--filter \"two words\" \"\"", activation.Arguments);
+    }
+
     private static Task<InvalidOperationException> LaunchInLayoutContainingManifestAsync(string? applicationId)
         => LaunchInLayoutContainingManifestAsync(
             BuildManifestXml("Contoso.MyTestApp", MicrosoftStorePublisher, applicationId),

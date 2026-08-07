@@ -3,9 +3,7 @@
 
 using Microsoft.Testing.Extensions.PackagedApp.Resources;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
-#if PACKAGEDAPP_WINRT
 using Microsoft.Testing.Platform.Helpers;
-#endif
 
 namespace Microsoft.Testing.Extensions.PackagedApp;
 
@@ -152,6 +150,31 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher
                 || AppxManifestInfo.FindManifestPath(_testApplicationDirectory) is not null);
     }
 
+    internal static PackagedAppActivationData CreateActivationArguments(
+        AppxApplicationInfo application,
+        IReadOnlyList<string> arguments,
+        string localStateDirectory)
+    {
+        if (application.IsAppContainer)
+        {
+            // AppContainer activation exposes one opaque string through OnLaunched rather than argv.
+            // Inline the compact versioned payload when it fits the documented launch-argument envelope;
+            // otherwise spill only authenticated ciphertext to LocalState and carry its one-shot key in
+            // the activation string. User filters/runsettings are therefore never persisted in plaintext.
+            return PackagedAppActivationArguments.Create(arguments, localStateDirectory);
+        }
+
+        // A packaged full-trust desktop app receives activation arguments as process argv. Preserve the
+        // existing Windows command-line quoting exactly for that path.
+        var commandLineBuilder = new StringBuilder();
+        foreach (string argument in arguments)
+        {
+            PasteArguments.AppendArgument(commandLineBuilder, argument);
+        }
+
+        return new PackagedAppActivationData(commandLineBuilder.ToString(), payloadPath: null);
+    }
+
     public async Task<ITestHostHandle> LaunchTestHostAsync(TestHostLaunchContext context, CancellationToken cancellationToken)
     {
         // Honor immediate cancellation before doing any (potentially expensive) deployment work.
@@ -211,31 +234,12 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher
                 PackagedAppConnectBackHandshake.Write(handshakePath, GetConnectBackEnvironment(context));
             }
 
-            string activationArguments;
-            if (application.IsAppContainer)
-            {
-                // AppContainer activation exposes one opaque string through OnLaunched rather than argv.
-                // Inline the compact versioned payload when it fits the documented launch-argument envelope;
-                // otherwise spill only authenticated ciphertext to LocalState and carry its one-shot key in
-                // the activation string. User filters/runsettings are therefore never persisted in plaintext.
-                PackagedAppActivationData activationData = PackagedAppActivationArguments.Create(
-                    context.Arguments,
-                    PackagedAppConnectBackHandshake.GetHandshakeDirectory(manifestInfo.PackageFamilyName));
-                activationArguments = activationData.Arguments;
-                activationPayloadPath = activationData.PayloadPath;
-            }
-            else
-            {
-                // A packaged full-trust desktop app receives activation arguments as process argv. Preserve
-                // the existing Windows command-line quoting exactly for that path.
-                var commandLineBuilder = new StringBuilder();
-                foreach (string argument in context.Arguments)
-                {
-                    PasteArguments.AppendArgument(commandLineBuilder, argument);
-                }
-
-                activationArguments = commandLineBuilder.ToString();
-            }
+            PackagedAppActivationData activationData = CreateActivationArguments(
+                application,
+                context.Arguments,
+                PackagedAppConnectBackHandshake.GetHandshakeDirectory(manifestInfo.PackageFamilyName));
+            string activationArguments = activationData.Arguments;
+            activationPayloadPath = activationData.PayloadPath;
 
             uint processId = await PackageDeployer
                 .RegisterAndActivateAsync(manifestPath, application.AppUserModelId, activationArguments, cancellationToken)
