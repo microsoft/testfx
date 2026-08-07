@@ -3,9 +3,34 @@
   <file datatype="xml" source-language="en" target-language="es" original="../ExtensionResources.resx">
     <body>
       <trans-unit id="InvalidTestApplicationBuilderType">
-        <source>Invalid test application builder type. Expected 'TestApplicationBuilder'.</source>
-        <target state="translated">Tipo de generador de aplicaciones de prueba no válido. Se esperaba "TestApplicationBuilder".</target>
-        <note>Do not localize {Locked="TestApplicationBuilder"}.</note>
+        <source>JUnit report generation requires a test application builder that supports artifact post-processing.</source>
+        <target state="needs-review-translation">Tipo de generador de aplicaciones de prueba no válido. Se esperaba "TestApplicationBuilder".</target>
+        <note>Do not localize format name {Locked="JUnit"}.</note>
+      </trans-unit>
+      <trans-unit id="JUnitArtifactPostProcessorDescription">
+        <source>Merges JUnit XML reports produced by Microsoft.Testing.Extensions.JUnitReport</source>
+        <target state="new">Merges JUnit XML reports produced by Microsoft.Testing.Extensions.JUnitReport</target>
+        <note>Do not localize format names {Locked="JUnit"}{Locked="XML"} or assembly name {Locked="Microsoft.Testing.Extensions.JUnitReport"}.</note>
+      </trans-unit>
+      <trans-unit id="JUnitArtifactPostProcessorDisplayName">
+        <source>JUnit XML report merger</source>
+        <target state="new">JUnit XML report merger</target>
+        <note>Do not localize format names {Locked="JUnit"}{Locked="XML"}.</note>
+      </trans-unit>
+      <trans-unit id="JUnitMergedArtifactDescription">
+        <source>{0} JUnit XML report files merged</source>
+        <target state="new">{0} JUnit XML report files merged</target>
+        <note>{0} is the number of merged files. Do not localize format names {Locked="JUnit"}{Locked="XML"}.</note>
+      </trans-unit>
+      <trans-unit id="JUnitMergedArtifactDisplayName">
+        <source>JUnit XML report (merged)</source>
+        <target state="new">JUnit XML report (merged)</target>
+        <note>Do not localize format names {Locked="JUnit"}{Locked="XML"}.</note>
+      </trans-unit>
+      <trans-unit id="JUnitMergedReportName">
+        <source>Merged JUnit XML report</source>
+        <target state="new">Merged JUnit XML report</target>
+        <note>Do not localize format names {Locked="JUnit"}{Locked="XML"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportArtifactDescription">
         <source>JUnit XML report file</source>
