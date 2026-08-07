@@ -7,7 +7,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 /// <summary>
 /// Exercises the real full-trust packaged WinUI launch path contributed by
-/// Microsoft.Testing.Extensions.PackagedApp.
+/// Microsoft.Testing.Extensions.PackagedApp through MSTest.Sdk.
 /// </summary>
 [TestClass]
 [TestCategory("WindowsApplicationModel")]
@@ -53,7 +53,6 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
                     .PatchCodeWithReplace("$TargetFramework$", TargetFramework)
                     .PatchCodeWithReplace("$RuntimeIdentifier$", RuntimeIdentifier)
                     .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-                    .PatchCodeWithReplace("$MicrosoftTestingExtensionsPackagedAppVersion$", MicrosoftTestingExtensionsPackagedAppVersion)
                     .PatchCodeWithReplace("$WindowsAppSdkVersion$", WindowsAppSdkPackageVersion)
                     .PatchCodeWithReplace("$WindowsSdkBuildToolsVersion$", WindowsSdkBuildToolsPackageVersion));
 
@@ -238,6 +237,11 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
         string report = File.ReadAllText(reportPath).Replace('\\', '/');
         Assert.Contains("UseWinUI=true", report, reportPath);
         Assert.Contains($"TargetFramework={TargetFramework}", report, reportPath);
+        Assert.Contains("UsingMSTestSdk=true", report, reportPath);
+        Assert.Contains("EnableMSTestRunner=true", report, reportPath);
+        Assert.Contains("GenerateTestingPlatformEntryPoint=false", report, reportPath);
+        Assert.Contains("GenerateTestingPlatformApplicationHelper=true", report, reportPath);
+        Assert.Contains("EnableMicrosoftTestingExtensionsPackagedApp=true", report, reportPath);
 
         string[] required =
         [
@@ -488,7 +492,7 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
 
     private const string SourceCode = """
 #file $AssetName$.csproj
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="MSTest.Sdk/$MSTestVersion$">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>$TargetFramework$</TargetFramework>
@@ -502,8 +506,7 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
     <WinUIDSKReferences>false</WinUIDSKReferences>
     <EnableMsixTooling>true</EnableMsixTooling>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
-    <EnableMSTestRunner>true</EnableMSTestRunner>
-    <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
+    <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
     <Nullable>enable</Nullable>
     <NoWarn>$(NoWarn);NETSDK1201;TPEXP</NoWarn>
   </PropertyGroup>
@@ -511,7 +514,6 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
   <ItemGroup>
     <Page Remove="UnitTestApp.xaml" />
     <ApplicationDefinition Include="UnitTestApp.xaml" />
-    <ProjectCapability Include="TestContainer" />
   </ItemGroup>
 
   <ItemGroup>
@@ -522,15 +524,14 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
   <ItemGroup>
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="$WindowsSdkBuildToolsVersion$" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="$WindowsAppSdkVersion$" />
-    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
-    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
-    <PackageReference Include="Microsoft.Testing.Extensions.PackagedApp" Version="$MicrosoftTestingExtensionsPackagedAppVersion$" />
   </ItemGroup>
 
-  <Target Name="WriteResolvedWinUIAssets" AfterTargets="ResolveReferences">
+  <Target Name="WriteResolvedWinUIAssets"
+          BeforeTargets="CoreCompile"
+          DependsOnTargets="_CalculateGenerateTestingPlatformEntryPoint">
     <WriteLinesToFile
       File="$(MSBuildProjectDirectory)\resolved-mstest-assets.txt"
-      Lines="UseWinUI=$(UseWinUI);TargetFramework=$(TargetFramework);RuntimeIdentifier=$(RuntimeIdentifier)"
+      Lines="UseWinUI=$(UseWinUI);TargetFramework=$(TargetFramework);RuntimeIdentifier=$(RuntimeIdentifier);UsingMSTestSdk=$(UsingMSTestSdk);EnableMSTestRunner=$(EnableMSTestRunner);GenerateTestingPlatformEntryPoint=$(GenerateTestingPlatformEntryPoint);GenerateTestingPlatformApplicationHelper=$(GenerateTestingPlatformApplicationHelper);EnableMicrosoftTestingExtensionsPackagedApp=$(EnableMicrosoftTestingExtensionsPackagedApp)"
       Overwrite="true" />
     <WriteLinesToFile
       File="$(MSBuildProjectDirectory)\resolved-mstest-assets.txt"
@@ -611,7 +612,6 @@ public sealed class PackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
 #file UnitTestApp.xaml.cs
 using System;
 using System.Linq;
-using Microsoft.Testing.Platform.Builder;
 using Microsoft.UI.Xaml;
 using Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
 
@@ -631,11 +631,8 @@ public partial class UnitTestApp : Application
 
         try
         {
-            string[] cliArgs = Environment.GetCommandLineArgs().Skip(1).ToArray();
-            ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(cliArgs);
-            builder.AddSelfRegisteredExtensions(cliArgs);
-            using ITestApplication app = await builder.BuildAsync();
-            Environment.ExitCode = await app.RunAsync();
+            Environment.ExitCode = await MicrosoftTestingPlatformApplication.RunAsync(
+                Environment.GetCommandLineArgs().Skip(1).ToArray());
         }
         finally
         {
