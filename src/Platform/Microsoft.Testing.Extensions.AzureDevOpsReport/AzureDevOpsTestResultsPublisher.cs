@@ -7,19 +7,22 @@ using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 
-internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSessionLifetimeHandler, IDisposable
+internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSessionLifetimeHandler, IOutputDeviceDataProducer, IDisposable
 {
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IConfiguration _configuration;
     private readonly IEnvironment _environment;
     private readonly IFileSystem _fileSystem;
+    private readonly IOutputDevice _outputDevice;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
     private readonly ITestApplicationProcessExitCode _testApplicationProcessExitCode;
     private readonly IAzureDevOpsTestResultsClient _client;
@@ -39,6 +42,8 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
     private DateTimeOffset _lastFlushTime;
     private CancellationTokenSource? _backgroundFlushCts;
     private Task? _backgroundFlushTask;
+    private int _isDisposed;
+    private int _failedAttachmentCount;
 
     private int? CurrentRunId { get; set; }
 
@@ -47,13 +52,14 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
         IConfiguration configuration,
         IEnvironment environment,
         IFileSystem fileSystem,
+        IOutputDevice outputDevice,
         ITestApplicationModuleInfo testApplicationModuleInfo,
         ITestApplicationProcessExitCode testApplicationProcessExitCode,
         IAzureDevOpsTestResultsClient client,
         ITask task,
         IClock clock,
         ILoggerFactory loggerFactory)
-        : this(commandLineOptions, configuration, environment, fileSystem, testApplicationModuleInfo, testApplicationProcessExitCode, client, task, clock, loggerFactory.CreateLogger<AzureDevOpsTestResultsPublisher>(), AzureDevOpsTestResultsPublisherOptions.Default)
+        : this(commandLineOptions, configuration, environment, fileSystem, outputDevice, testApplicationModuleInfo, testApplicationProcessExitCode, client, task, clock, loggerFactory.CreateLogger<AzureDevOpsTestResultsPublisher>(), AzureDevOpsTestResultsPublisherOptions.Default)
     {
     }
 
@@ -62,6 +68,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
         IConfiguration configuration,
         IEnvironment environment,
         IFileSystem fileSystem,
+        IOutputDevice outputDevice,
         ITestApplicationModuleInfo testApplicationModuleInfo,
         ITestApplicationProcessExitCode testApplicationProcessExitCode,
         IAzureDevOpsTestResultsClient client,
@@ -74,6 +81,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
         _configuration = configuration;
         _environment = environment;
         _fileSystem = fileSystem;
+        _outputDevice = outputDevice;
         _testApplicationModuleInfo = testApplicationModuleInfo;
         _testApplicationProcessExitCode = testApplicationProcessExitCode;
         _client = client;
@@ -98,6 +106,15 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
 
     public void Dispose()
     {
+        // Dispose must be idempotent: the platform can dispose an extension more than once during
+        // teardown (e.g. once when the test host tears down its services and once again during
+        // process shutdown). Without this guard the Cancel below throws ObjectDisposedException,
+        // which surfaces as an unhandled exception and fails the run even though every test passed.
+        if (Interlocked.Exchange(ref _isDisposed, 1) != 0)
+        {
+            return;
+        }
+
         // Signal the background flush loop to stop. The loop is already awaited in
         // OnTestSessionFinishingAsync; this Cancel is a safety net for cases where the
         // session lifecycle methods are not called (e.g. early disposal in tests).
@@ -108,41 +125,28 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
         _flushSemaphore.Dispose();
     }
 
+    // The extension stays enabled whenever the option is set so that a missing or invalid Azure DevOps
+    // configuration can be reported to the user in OnTestSessionStartingAsync. Silently disabling the
+    // extension here would leave users with no test run and no explanation for why.
     public Task<bool> IsEnabledAsync()
+        => Task.FromResult(_commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.PublishAzureDevOpsTestResultsOptionName));
+
+    public async Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
-        if (!_commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.PublishAzureDevOpsTestResultsOptionName))
-        {
-            return Task.FromResult(false);
-        }
-
-        if (_publishConfiguration is not null)
-        {
-            return Task.FromResult(true);
-        }
-
         if (!TryCreatePublishConfiguration(out AzureDevOpsPublishConfiguration? publishConfiguration, out string? warning))
         {
-            _logger.LogWarning(warning ?? AzureDevOpsResources.AzureDevOpsLivePublishingMissingConfiguration);
-            return Task.FromResult(false);
+            await WarnAsync(warning, testSessionContext.CancellationToken).ConfigureAwait(false);
+            return;
         }
 
         _publishConfiguration = publishConfiguration;
         _runIdCoordinator = new AzureDevOpsRunIdCoordinator(_fileSystem, _task, _clock, _environment, _logger, _options);
-        return Task.FromResult(true);
-    }
-
-    public async Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
-    {
-        if (_publishConfiguration is null || _runIdCoordinator is null)
-        {
-            return;
-        }
 
         try
         {
             _coordinatedRun = await _runIdCoordinator.AcquireRunAsync(
-                _publishConfiguration,
-                cancellationToken => _client.CreateTestRunAsync(_publishConfiguration, cancellationToken),
+                publishConfiguration,
+                cancellationToken => _client.CreateTestRunAsync(publishConfiguration, cancellationToken),
                 testSessionContext.CancellationToken).ConfigureAwait(false);
             CurrentRunId = _coordinatedRun.RunId;
 
@@ -153,10 +157,56 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingCreateRunFailed} {ex.Message}");
+            // Reset state before reporting so a failure to display the warning can never leave the
+            // publisher half-initialized.
             _publishConfiguration = null;
             _coordinatedRun = null;
             CurrentRunId = null;
+            await WarnAsync($"{AzureDevOpsResources.AzureDevOpsLivePublishingCreateRunFailed} {ex.Message}", testSessionContext.CancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    /// Reports a live-publishing problem both to the diagnostic log and to the output device, so that
+    /// it is visible in CI logs (as an Azure DevOps warning) instead of only in an opt-in log file.
+    /// </summary>
+    /// <remarks>
+    /// Never throws: this is a best-effort diagnostic invoked from error-recovery paths and from
+    /// session teardown, where propagating would turn a warning into a failed run.
+    /// </remarks>
+    private async Task WarnAsync(string message, CancellationToken cancellationToken)
+    {
+        TryLogWarning(message);
+
+        try
+        {
+            await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(message), cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            // The message is already in the diagnostic log; losing the console copy is preferable to
+            // failing the test run from inside a diagnostic helper.
+            TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingWarningDisplayFailed} {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Logs a warning, swallowing any failure from the logging providers.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="Logger"/> invokes each registered provider directly, so a failing provider would
+    /// otherwise propagate out of <see cref="WarnAsync"/> — including out of its own recovery path,
+    /// where it would replace the exception being handled — and break its never-throws contract.
+    /// </remarks>
+    private void TryLogWarning(string message)
+    {
+        try
+        {
+            _logger.LogWarning(message);
+        }
+        catch (Exception)
+        {
+            // There is nowhere left to report this: the diagnostic logger is the fallback sink.
         }
     }
 
@@ -180,8 +230,12 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
                         return;
                     }
 
-                    await _runIdCoordinator.RenewLeaseAsync(_coordinatedRun, cancellationToken).ConfigureAwait(false);
+                    // Enqueue before renewing the lease: RenewLeaseAsync does file I/O that can throw
+                    // (e.g. a sharing violation while another process reads the lease). If it threw
+                    // first, the result would be dropped without ever reaching a queue, so the
+                    // end-of-session "results dropped" count could not see it.
                     _pendingResults.Enqueue(testCaseResult);
+                    await _runIdCoordinator.RenewLeaseAsync(_coordinatedRun, cancellationToken).ConfigureAwait(false);
                     await FlushPendingResultsAsync(force: false, cancellationToken).ConfigureAwait(false);
                     break;
 
@@ -192,7 +246,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
+            TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
         }
     }
 
@@ -217,7 +271,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 // Unexpected failure in the background flush loop; the loop already logs per-flush warnings.
-                _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
+                TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
             }
             catch
             {
@@ -236,7 +290,19 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
+            TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
+        }
+
+        // The session-end flush is the last chance to publish: nothing drains the retry queue after
+        // this point, so anything still pending is permanently lost. Report it once here rather than
+        // per failed batch (which the background loop would repeat every flush interval).
+        // Use CancellationToken.None so the warning still surfaces when the session was canceled.
+        int unpublishedResultCount = _retryResults.Count + _pendingResults.Count;
+        if (unpublishedResultCount > 0)
+        {
+            await WarnAsync(
+                string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingResultsDropped, unpublishedResultCount),
+                CancellationToken.None).ConfigureAwait(false);
         }
 
         try
@@ -249,7 +315,20 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingRunAttachmentFailed} {ex.Message}");
+            // Defensive: individual upload failures are already handled (and counted) per attachment,
+            // so nothing is expected here. Swallow anyway because the platform does not guard lifetime
+            // handlers, so throwing would fail an otherwise successful run.
+            await WarnAsync($"{AzureDevOpsResources.AzureDevOpsLivePublishingRunAttachmentFailed} {ex.Message}", CancellationToken.None).ConfigureAwait(false);
+        }
+
+        // Attachment failures are swallowed per attachment so that one bad file cannot abort the drain.
+        // Report them once here, otherwise coverage files and dumps go missing with no explanation.
+        int failedAttachmentCount = Volatile.Read(ref _failedAttachmentCount);
+        if (failedAttachmentCount > 0)
+        {
+            await WarnAsync(
+                string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingAttachmentsDropped, failedAttachmentCount),
+                CancellationToken.None).ConfigureAwait(false);
         }
 
         // Azure DevOps test runs use "Aborted" specifically for cancellation or session-level
@@ -275,9 +354,16 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
                 cancellationToken => _client.UpdateTestRunStateAsync(_publishConfiguration, CurrentRunId.Value, finalState, cancellationToken),
                 cleanupCts.Token).ConfigureAwait(false);
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (Exception ex)
         {
-            _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingCompleteRunFailed} {ex.Message}");
+            // A run left in "InProgress" is not surfaced in the build's Tests tab, so the user would
+            // otherwise see an empty tab with no explanation even though every result was uploaded.
+            // Cancellation is handled here too: this step runs on its own cleanupCts, so an expiry (or
+            // an HTTP client TaskCanceledException) is a finalization failure rather than a session
+            // cancellation, and must not escape and fail an otherwise successful run.
+            await WarnAsync(
+                $"{AzureDevOpsResources.AzureDevOpsLivePublishingCompleteRunFailed} {ex.Message} {AzureDevOpsResources.AzureDevOpsLivePublishingRunLeftInProgress}",
+                CancellationToken.None).ConfigureAwait(false);
         }
     }
 }
