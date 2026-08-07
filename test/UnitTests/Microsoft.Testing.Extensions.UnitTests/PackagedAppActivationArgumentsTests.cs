@@ -160,6 +160,54 @@ public sealed class PackagedAppActivationArgumentsTests
         }
     }
 
+    [TestMethod]
+    public void ReadActivationArgumentsAndApplyConnectBack_PackageShapedHost_RestoresEnvironmentAndConsumesHandshake()
+    {
+        string directory = CreateTemporaryDirectory();
+        try
+        {
+            File.WriteAllText(
+                Path.Combine(directory, AppxManifestInfo.AppxManifestFileName),
+                """
+                <?xml version="1.0" encoding="utf-8"?>
+                <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10">
+                  <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+                  <Applications>
+                    <Application Id="App" Executable="MyTestApp.exe" EntryPoint="Contoso.MyTestApp.App" />
+                  </Applications>
+                </Package>
+                """);
+
+            const string ControllerPid = "4321";
+            string handshakePath = Path.Combine(directory, PackagedAppConnectBackHandshake.GetHandshakeFileName(ControllerPid));
+            PackagedAppConnectBackHandshake.Write(
+                handshakePath,
+                new Dictionary<string, string?>
+                {
+                    ["TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME_4321"] = "MONITORTOHOST_deadbeef",
+                });
+
+            string[] expectedArguments = ["--internal-testhostcontroller-pid", ControllerPid, "--help"];
+            PackagedAppActivationData activation = PackagedAppActivationArguments.Create(expectedArguments, directory);
+            var restoredEnvironment = new Dictionary<string, string?>(StringComparer.Ordinal);
+
+            string[] actualArguments = PackagedAppConnectBackReader.ReadActivationArgumentsAndApplyConnectBack(
+                activation.Arguments,
+                directory,
+                directory,
+                () => directory,
+                (name, value) => restoredEnvironment[name] = value);
+
+            AssertArgumentsAreEqual(expectedArguments, actualArguments);
+            Assert.AreEqual("MONITORTOHOST_deadbeef", restoredEnvironment["TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME_4321"]);
+            Assert.IsFalse(File.Exists(handshakePath), "The bootstrap must consume the connect-back handshake before returning.");
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
     private static string CreateTemporaryDirectory()
     {
         string directory = Path.Combine(Path.GetTempPath(), "PackagedAppActivationArgumentsTests", Guid.NewGuid().ToString("N"));

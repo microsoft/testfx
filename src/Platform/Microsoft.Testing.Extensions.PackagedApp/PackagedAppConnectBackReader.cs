@@ -14,6 +14,36 @@ namespace Microsoft.Testing.Extensions.PackagedApp;
 internal static class PackagedAppConnectBackReader
 {
     /// <summary>
+    /// Restores activation arguments and connect-back environment for the current packaged process.
+    /// </summary>
+    public static string[] ReadActivationArgumentsAndApplyConnectBack(string activationArguments)
+    {
+        string? localStateDirectory = TryGetPackageLocalStateDirectory();
+        return ReadActivationArgumentsAndApplyConnectBack(
+            activationArguments,
+            localStateDirectory,
+            AppContext.BaseDirectory,
+            () => localStateDirectory,
+            Environment.SetEnvironmentVariable);
+    }
+
+    public static string[] ReadActivationArgumentsAndApplyConnectBack(
+        string activationArguments,
+        string? activationPayloadLocalStateDirectory,
+        string appBaseDirectory,
+        Func<string?> getPackageLocalStateDirectory,
+        Action<string, string?> setEnvironmentVariable)
+    {
+        string[] arguments = PackagedAppActivationArguments.Read(activationArguments, activationPayloadLocalStateDirectory);
+        TryApplyConnectBackEnvironment(
+            arguments,
+            appBaseDirectory,
+            getPackageLocalStateDirectory,
+            setEnvironmentVariable);
+        return arguments;
+    }
+
+    /// <summary>
     /// Applies the handed-off connect-back environment variables when the current process is an
     /// activated packaged test host. It is a no-op for the controller, for non-packaged layouts, and
     /// when there is no handshake file to consume. Must run before the platform reads the connect-back
@@ -21,6 +51,17 @@ internal static class PackagedAppConnectBackReader
     /// </summary>
     /// <param name="commandLineArguments">The current process command line.</param>
     public static void TryApplyConnectBackEnvironment(IReadOnlyList<string> commandLineArguments)
+        => TryApplyConnectBackEnvironment(
+            commandLineArguments,
+            AppContext.BaseDirectory,
+            TryGetPackageLocalStateDirectory,
+            Environment.SetEnvironmentVariable);
+
+    public static void TryApplyConnectBackEnvironment(
+        IReadOnlyList<string> commandLineArguments,
+        string appBaseDirectory,
+        Func<string?> getPackageLocalStateDirectory,
+        Action<string, string?> setEnvironmentVariable)
     {
         // Only the spawned test host leg carries the test host controller PID option; the controller
         // process does not, so it never consumes a handshake.
@@ -32,7 +73,7 @@ internal static class PackagedAppConnectBackReader
 
         // We only act when running from a packaged (MSIX) layout, detected by an AppxManifest.xml at or
         // above the app's install directory (the same manifest the launcher registered).
-        string? manifestPath = AppxManifestInfo.FindManifestPath(AppContext.BaseDirectory);
+        string? manifestPath = AppxManifestInfo.FindManifestPath(appBaseDirectory);
         if (manifestPath is null)
         {
             return;
@@ -55,7 +96,7 @@ internal static class PackagedAppConnectBackReader
         // %LOCALAPPDATA%\Packages\{PFN}\LocalState the (unpackaged) launcher wrote to;
         // Environment.SpecialFolder.LocalApplicationData is redirected here and would not find the file.
         string fileName = PackagedAppConnectBackHandshake.GetHandshakeFileName(testHostControllerPid);
-        string? localStateDirectory = TryGetPackageLocalStateDirectory();
+        string? localStateDirectory = getPackageLocalStateDirectory();
         string handshakePath = localStateDirectory is not null
             ? Path.Combine(localStateDirectory, fileName)
             : PackagedAppConnectBackHandshake.GetHandshakeFilePath(packageFamilyName, testHostControllerPid);
@@ -72,7 +113,7 @@ internal static class PackagedAppConnectBackReader
             // off (a null value deletes the variable). These are the variables an AUMID-activated host
             // needs to reach its controller and would not otherwise inherit across the activation
             // boundary.
-            Environment.SetEnvironmentVariable(entry.Key, entry.Value);
+            setEnvironmentVariable(entry.Key, entry.Value);
         }
     }
 

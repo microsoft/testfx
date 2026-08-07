@@ -27,13 +27,7 @@ public static class PackagedAppExtensions
     /// <exception cref="ArgumentNullException"><paramref name="activationArguments"/> is <see langword="null"/>.</exception>
     /// <exception cref="FormatException">The activation string is not a valid Microsoft Testing Platform payload.</exception>
     public static string[] GetTestApplicationArguments(string activationArguments)
-    {
-        string[] arguments = PackagedAppActivationArguments.Read(
-            activationArguments,
-            PackagedAppConnectBackReader.TryGetPackageLocalStateDirectory());
-        PackagedAppConnectBackReader.TryApplyConnectBackEnvironment(arguments);
-        return arguments;
-    }
+        => PackagedAppConnectBackReader.ReadActivationArgumentsAndApplyConnectBack(activationArguments);
 
     /// <summary>
     /// Registers a test host launcher for Windows test applications. Packaged MSIX hosts are registered
