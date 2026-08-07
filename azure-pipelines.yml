@@ -291,6 +291,10 @@ stages:
         condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'), eq(variables['MSBuildCacheBuildSucceeded'], 'true'))
 
       - template: /eng/pipelines/steps/test-windows-debug-coverage.yml
+        parameters:
+          # Enable only after the prerequisites in docs/affected-test-selection.md are satisfied.
+          enableAffectedTests: false
+          affectedTestsMode: collect
 
     - task: PublishBuildArtifacts@1
       displayName: 'Publish cache seed build binlogs'
@@ -327,6 +331,8 @@ stages:
     - checkout: self
       fetchDepth: 0
       clean: false
+    - pwsh: ./eng/validate-affected-tests.ps1
+      displayName: Validate affected-test rollout
     - bash: |
         set -euo pipefail
 
@@ -714,6 +720,10 @@ stages:
         - ${{ if eq(parameters.SkipTests, False) }}:
 
           - template: /eng/pipelines/steps/test-windows-debug-coverage.yml
+            parameters:
+              # Enable only after the prerequisites in docs/affected-test-selection.md are satisfied.
+              enableAffectedTests: false
+              affectedTestsMode: run
 
           # Integration tests are redundant in Release—they spawn child processes that already cover
           # both Debug and Release configurations. Use --test-modules to run only unit tests.
