@@ -42,10 +42,15 @@ internal class PlainProcess : IStep<BuildArtifact, Files>
         for (int i = 0; i < _numberOfRun; i++)
         {
             using Process process = Process.Start(processStartInfo)!;
+
+            // Capture StartTime before awaiting exit. On Linux, the /proc/<pid> entry is
+            // removed once the process has exited, so reading StartTime afterwards throws
+            // InvalidOperationException ("Cannot process request because the process has exited").
+            DateTime startTime = process.StartTime;
             await process.WaitForExitAsync();
             var result = new
             {
-                ElapsedTime = process.ExitTime - process.StartTime,
+                ElapsedTime = process.ExitTime - startTime,
                 process.TotalProcessorTime,
                 Environment.ProcessorCount,
                 GC.GetGCMemoryInfo().TotalAvailableMemoryBytes,
