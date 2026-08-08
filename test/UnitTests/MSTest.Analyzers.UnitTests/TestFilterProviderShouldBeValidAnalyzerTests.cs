@@ -128,6 +128,50 @@ public sealed class TestFilterProviderShouldBeValidAnalyzerTests
                 .WithArguments("NotAFilter"));
     }
 
+    // The filter type is not required to be public: the adapter loads it via Activator.CreateInstance
+    // within the test assembly, so an internal type with a public parameterless constructor is a valid
+    // registration. This pins that the accessibility of the *type itself* is irrelevant to the analyzer.
+    [TestMethod]
+    public async Task WhenFilterTypeIsInternalWithPublicConstructor_NoDiagnostic()
+    {
+        string code = Header + """
+            [assembly: TestFilterProvider(typeof(MyFilter))]
+
+            internal sealed class MyFilter : ITestFilter
+            {
+                public MyFilter() { }
+
+                public TestFilterResult Filter(TestFilterContext context) => TestFilterResult.Run;
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    // Unlike the type's own accessibility, the constructor's declared accessibility does matter:
+    // Activator.CreateInstance(Type) only binds a public parameterless constructor, so an internal
+    // constructor on an otherwise-internal filter type still fails at run time with UTA077.
+    [TestMethod]
+    public async Task WhenFilterTypeIsInternalWithInternalConstructor_Diagnostic()
+    {
+        string code = Header + """
+            [assembly: {|#0:TestFilterProvider(typeof(MyFilter))|}]
+
+            internal sealed class MyFilter : ITestFilter
+            {
+                internal MyFilter() { }
+
+                public TestFilterResult Filter(TestFilterContext context) => TestFilterResult.Run;
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(TestFilterProviderShouldBeValidAnalyzer.NoParameterlessConstructorRule)
+                .WithLocation(0)
+                .WithArguments("MyFilter"));
+    }
+
     [TestMethod]
     public async Task WhenFilterTypeIsNotANamedType_Diagnostic()
     {
