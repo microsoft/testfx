@@ -133,3 +133,11 @@ Notes:
 - #10419 (duplicate August summary issue) still open — still flagged for maintainer closure.
 - Backlog remains empty (repo continues to be actively self-optimized by maintainers/Copilot coding agent). No new efficiency-labeled issues found via search this run.
 - Next run: consider Task 6 (measurement infrastructure) since Task 3 backlog has been empty for a week — investigate whether MSTest.Performance.Runner results are tracked over time in CI (regression detection), which would be a concrete infra contribution.
+
+## 2026-08-08 Run Notes
+
+- Only one commit landed since last run (a6010ba, dependency/skills bump) — no efficiency-relevant code changes.
+- Closed duplicate issue #10419 (was a leftover from 2026-08-03 duplication bug); #10382 confirmed as sole canonical August summary issue.
+- IMPORTANT: `update_issue` safe-output has a limit of 1 per run. When both closing a duplicate issue AND updating the canonical monthly summary are needed in the same run, only one `update_issue` call succeeds — the other must be done via `add_comment` instead (comment appended to #10382 this run rather than full body rewrite). Next run: do a full body rewrite of #10382 to fold this comment into Run History and remove the now-closed #10419 reference from Suggested Actions.
+- Noted infra: `.github/workflows/perf-timing-nightly.yml` — nightly artifact-only PlainProcess timing collection via MSTest.Performance.Runner (Win+Linux), tracks #9312, no regression gating. Candidate for Task 6 follow-up (propose regression-gating via issue, not direct workflow edit).
+- Backlog remains empty. Next run: prioritise Task 6 (measurement infra proposal issue) or Task 3 (needs backlog repopulation via fresh Task 2 scan of any new merged features since 2026-08-08).
