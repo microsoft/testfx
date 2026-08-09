@@ -138,8 +138,10 @@ public sealed class HtmlArtifactPostProcessorTests
             Assert.AreEqual("tests.dll", (string?)tests[0]!["testApplication"]);
             Assert.AreEqual("net8.0", (string?)tests[0]!["targetFramework"]);
             Assert.AreEqual("x64", (string?)tests[0]!["architecture"]);
-            Assert.AreEqual("execution-1", (string?)tests[0]!["executionId"]);
-            Assert.AreEqual("Passed </script><img src=x>", (string?)tests[1]!["displayName"]);
+            Assert.AreEqual("execution-2", (string?)tests[0]!["executionId"]);
+            Assert.AreEqual("Passed </script><img src=x>", (string?)tests[0]!["displayName"]);
+            Assert.AreEqual("execution-1", (string?)tests[1]!["executionId"]);
+            Assert.AreEqual("Failed <script>", (string?)tests[1]!["displayName"]);
 
             var summary = (JsonObject)merged["summary"]!;
             Assert.AreEqual(2, (int?)summary["total"]);
@@ -149,6 +151,44 @@ public sealed class HtmlArtifactPostProcessorTests
             Assert.AreSequenceEqual(
                 new[] { "first.html", "second.html" },
                 Directory.GetFiles(directory, "*.html").Select(Path.GetFileName).OrderBy(name => name, StringComparer.Ordinal));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task ProcessAsync_OrdersAttemptsByEmbeddedStartTime()
+    {
+        string directory = CreateTemporaryDirectory();
+        try
+        {
+            string attempt10Directory = Path.Combine(directory, "10");
+            string attempt2Directory = Path.Combine(directory, "2");
+            Directory.CreateDirectory(attempt10Directory);
+            Directory.CreateDirectory(attempt2Directory);
+            string attempt10Path = Path.Combine(attempt10Directory, "report.html");
+            string attempt2Path = Path.Combine(attempt2Directory, "report.html");
+            File.WriteAllText(
+                attempt10Path,
+                CreateReport("tests.dll", "MSTest", Epoch.AddMinutes(10), Epoch.AddMinutes(11), Test("same", "attempt 10", "passed", 1)));
+            File.WriteAllText(
+                attempt2Path,
+                CreateReport("tests.dll", "MSTest", Epoch.AddMinutes(2), Epoch.AddMinutes(3), Test("same", "attempt 2", "failed", 1)));
+
+            ProcessedArtifact? output = await new HtmlArtifactPostProcessor().ProcessAsync(
+                [CreateInput(attempt10Path), CreateInput(attempt2Path)],
+                directory,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+                CancellationToken.None);
+
+            Assert.IsNotNull(output);
+            var tests = (JsonArray)ParseReport(File.ReadAllText(output.Path))["tests"]!;
+            Assert.AreEqual("attempt 2", (string?)tests[0]!["displayName"]);
+            Assert.AreEqual(1, (int?)tests[0]!["attemptIndex"]);
+            Assert.AreEqual("attempt 10", (string?)tests[1]!["displayName"]);
+            Assert.AreEqual(2, (int?)tests[1]!["attemptIndex"]);
         }
         finally
         {

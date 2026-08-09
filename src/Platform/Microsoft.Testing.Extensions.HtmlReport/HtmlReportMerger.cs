@@ -32,21 +32,26 @@ internal static class HtmlReportMerger
             throw new ArgumentException(ExtensionResources.HtmlReportsRequired, nameof(inputs));
         }
 
-        var reports = new List<JsonObject>(inputs.Count);
+        var parsedReports = new List<ParsedHtmlReport>(inputs.Count);
         var tests = new List<MergedTest>();
         DateTimeOffset? earliestStartTime = null;
         DateTimeOffset? latestEndTime = null;
 
-        foreach (HtmlReportMergeInput input in inputs)
+        for (int i = 0; i < inputs.Count; i++)
         {
+            HtmlReportMergeInput input = inputs[i];
             JsonObject report = ParseReport(input.Html);
-            reports.Add(report);
-
             DateTimeOffset startTime = ReadRequiredTimestamp(report, "startTime");
             DateTimeOffset endTime = ReadRequiredTimestamp(report, "endTime");
+            parsedReports.Add(new ParsedHtmlReport(input, report, startTime, i));
             earliestStartTime = earliestStartTime is null || startTime < earliestStartTime ? startTime : earliestStartTime;
             latestEndTime = latestEndTime is null || endTime > latestEndTime ? endTime : latestEndTime;
+        }
 
+        foreach (ParsedHtmlReport parsedReport in parsedReports.OrderBy(report => report.StartTime).ThenBy(report => report.OriginalIndex))
+        {
+            HtmlReportMergeInput input = parsedReport.Input;
+            JsonObject report = parsedReport.Report;
             foreach (JsonNode? test in (JsonArray)report["tests"]!)
             {
                 tests.Add(new MergedTest(
@@ -58,6 +63,7 @@ internal static class HtmlReportMerger
             }
         }
 
+        IReadOnlyList<JsonObject> reports = [.. parsedReports.Select(report => report.Report)];
         var countByIdentity = new Dictionary<string, int>(StringComparer.Ordinal);
         foreach (MergedTest mergedTest in tests)
         {
@@ -340,6 +346,12 @@ internal static class HtmlReportMerger
         string? TargetFramework,
         string? Architecture,
         string? ExecutionId);
+
+    private sealed record ParsedHtmlReport(
+        HtmlReportMergeInput Input,
+        JsonObject Report,
+        DateTimeOffset StartTime,
+        int OriginalIndex);
 
     private sealed record MergedTest(
         JsonObject Test,
