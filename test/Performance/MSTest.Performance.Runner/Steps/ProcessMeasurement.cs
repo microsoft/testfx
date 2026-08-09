@@ -41,9 +41,11 @@ internal static class ProcessMeasurement
         }
         catch (InvalidOperationException) when (process.HasExited)
         {
+            // Retain the last sample because Unix removes process metrics after reaping.
         }
         catch (Win32Exception) when (process.HasExited)
         {
+            // Retain the last sample because Unix removes process metrics after reaping.
         }
     }
 }
