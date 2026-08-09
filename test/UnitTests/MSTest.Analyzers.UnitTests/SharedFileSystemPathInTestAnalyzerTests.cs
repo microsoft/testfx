@@ -508,6 +508,33 @@ public sealed class SharedFileSystemPathInTestAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenTestMethodCreatesFileSymbolicLinkToConstantTarget_NoDiagnostic()
+    {
+        // Only 'path' is created by File.CreateSymbolicLink; 'pathToTarget' merely names an existing file the link
+        // points at, so a constant target - like a shared fixture file - must not be flagged. Mirrors the
+        // Directory.CreateSymbolicLink 'pathToTarget' negative test.
+        string code = """
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    string link = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+                    File.CreateSymbolicLink(link, "shared-fixture.txt");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
     [DataRow("AppendAllTextAsync", "\"shared.txt\", \"entry\"")]
     [DataRow("AppendAllLinesAsync", "\"shared.txt\", new[] { \"line\" }")]
     [DataRow("WriteAllBytesAsync", "\"shared.txt\", new byte[] { 1 }")]
