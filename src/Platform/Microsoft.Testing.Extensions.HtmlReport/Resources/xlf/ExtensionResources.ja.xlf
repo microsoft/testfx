@@ -2,6 +2,31 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="ja" original="../ExtensionResources.resx">
     <body>
+      <trans-unit id="HtmlArtifactPostProcessorDescription">
+        <source>Merges HTML reports produced by Microsoft.Testing.Extensions.HtmlReport</source>
+        <target state="new">Merges HTML reports produced by Microsoft.Testing.Extensions.HtmlReport</target>
+        <note>Do not localize format name {Locked="HTML"} or assembly name {Locked="Microsoft.Testing.Extensions.HtmlReport"}.</note>
+      </trans-unit>
+      <trans-unit id="HtmlArtifactPostProcessorDisplayName">
+        <source>HTML report merger</source>
+        <target state="new">HTML report merger</target>
+        <note>Do not localize format name {Locked="HTML"}.</note>
+      </trans-unit>
+      <trans-unit id="HtmlMergedArtifactDescription">
+        <source>{0} HTML report files merged</source>
+        <target state="new">{0} HTML report files merged</target>
+        <note>{0} is the number of merged files. Do not localize format name {Locked="HTML"}.</note>
+      </trans-unit>
+      <trans-unit id="HtmlMergedArtifactDisplayName">
+        <source>HTML report (merged)</source>
+        <target state="new">HTML report (merged)</target>
+        <note>Do not localize format name {Locked="HTML"}.</note>
+      </trans-unit>
+      <trans-unit id="HtmlMergedReportName">
+        <source>Merged HTML report</source>
+        <target state="new">Merged HTML report</target>
+        <note>Do not localize format name {Locked="HTML"}.</note>
+      </trans-unit>
       <trans-unit id="HtmlReportArtifactDescription">
         <source>Self-contained HTML test report</source>
         <target state="translated">自己完結型の HTML テスト レポート</target>
@@ -56,6 +81,11 @@ Example: MyReport_{tfm}.html</source>
         <target state="translated">HTML レポート生成プログラム</target>
         <note>Do not localize {Locked="HTML"}.</note>
       </trans-unit>
+      <trans-unit id="HtmlReportInputIsNotValid">
+        <source>The input is not a valid HTML report produced by Microsoft.Testing.Extensions.HtmlReport.</source>
+        <target state="new">The input is not a valid HTML report produced by Microsoft.Testing.Extensions.HtmlReport.</target>
+        <note>Do not localize format name {Locked="HTML"} or assembly name {Locked="Microsoft.Testing.Extensions.HtmlReport"}.</note>
+      </trans-unit>
       <trans-unit id="HtmlReportIsNotValidForDiscovery">
         <source>'--report-html' cannot be enabled when using '--list-tests'</source>
         <target state="translated">'--list-tests' を使用している場合、'--report-html' を有効にすることはできません</target>
@@ -65,6 +95,11 @@ Example: MyReport_{tfm}.html</source>
         <source>Enable generating an HTML report</source>
         <target state="translated">HTML レポートの生成を有効にする</target>
         <note>Do not localize option name {Locked="--report-html"} or format name {Locked="HTML"}.</note>
+      </trans-unit>
+      <trans-unit id="HtmlReportsRequired">
+        <source>At least one HTML report is required to merge.</source>
+        <target state="new">At least one HTML report is required to merge.</target>
+        <note>Do not localize format name {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="InvalidTestApplicationBuilderType">
         <source>HTML report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
