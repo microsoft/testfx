@@ -762,6 +762,9 @@ footer {
           (t.displayName || "") + "\n" +
           (t.className || "") + "\n" +
           (t.methodName || "") + "\n" +
+          (t.testApplication || "") + "\n" +
+          (t.targetFramework || "") + "\n" +
+          (t.architecture || "") + "\n" +
           (t.errorMessage || "") + "\n" +
           (t.exceptionType || "");
         if (hay.toLowerCase().indexOf(q) === -1) continue;
@@ -1042,6 +1045,16 @@ footer {
         + (t.className && t.methodName ? "." : "")
         + (t.methodName || "");
       name.appendChild(qual);
+    }
+    if (t.testApplication || t.targetFramework || t.architecture) {
+      var source = document.createElement("span");
+      source.className = "qualified";
+      var sourceParts = [];
+      if (t.testApplication) sourceParts.push(t.testApplication);
+      if (t.targetFramework) sourceParts.push(t.targetFramework);
+      if (t.architecture) sourceParts.push(t.architecture);
+      source.textContent = sourceParts.join(" · ");
+      name.appendChild(source);
     }
     row.appendChild(name);
 

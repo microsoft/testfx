@@ -55,7 +55,7 @@ public sealed class DotnetTestPipeArtifactPostProcessingTests
                 "ArtifactPostProcessor",
                 result.ReceivedHandshake[DotnetTestPipeProtocol.HandshakeProperties.HostType]);
             Assert.AreEqual(
-                "microsoft.testing.ctrf;microsoft.testing.trx;test.summary;test.xml",
+                "microsoft.testing.ctrf;microsoft.testing.html;microsoft.testing.trx;test.summary;test.xml",
                 result.ReceivedHandshake[DotnetTestPipeProtocol.HandshakeProperties.SupportedPostProcessorKinds]);
             Assert.AreEqual(
                 "test.summary",
@@ -118,7 +118,7 @@ public sealed class DotnetTestPipeArtifactPostProcessingTests
             result.TestHostResult.AssertExitCodeIs(ExitCode.Success);
             Assert.IsNotNull(result.ReceivedHandshake);
             Assert.AreEqual(
-                "microsoft.testing.ctrf;microsoft.testing.trx;test.summary;test.xml",
+                "microsoft.testing.ctrf;microsoft.testing.html;microsoft.testing.trx;test.summary;test.xml",
                 result.ReceivedHandshake[DotnetTestPipeProtocol.HandshakeProperties.SupportedPostProcessorKinds]);
 
             RawMessage[] artifactFrames = [.. result.MessagesWithSerializerId(DotnetTestPipeProtocol.SerializerIds.FileArtifactMessages)];
@@ -135,6 +135,65 @@ public sealed class DotnetTestPipeArtifactPostProcessingTests
 
             using var merged = JsonDocument.Parse(File.ReadAllText(artifacts[0].FullPath!));
             Assert.AreEqual(2, merged.RootElement.GetProperty("results").GetProperty("tests").GetArrayLength());
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task Dispatcher_AdvertisesHtmlCapabilityAndReturnsMergedArtifact()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"artifact-dispatcher-html-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            string firstPath = Path.Combine(directory, "first.html");
+            string secondPath = Path.Combine(directory, "second.html");
+            WriteMinimalHtmlReport(firstPath, "first");
+            WriteMinimalHtmlReport(secondPath, "second");
+            string manifestPath = Path.Combine(directory, "manifest.json");
+            File.WriteAllText(
+                manifestPath,
+                JsonSerializer.Serialize(new
+                {
+                    schemaVersion = 1,
+                    outputDirectory = directory,
+                    inputs = new[]
+                    {
+                        new { path = firstPath, kind = "microsoft.testing.html", executionId = "execution-1" },
+                        new { path = secondPath, kind = "microsoft.testing.html", executionId = "execution-2" },
+                    },
+                }));
+
+            var testHost = TestInfrastructure.TestHost.LocateFrom(
+                AssetFixture.TargetAssetPath,
+                AssetName,
+                TargetFrameworks.NetCurrent);
+            FakeDotnetTestSdkResult result = await FakeDotnetTestSdk.RunAsync(
+                testHost,
+                extraArguments: $"--manifest \"{manifestPath}\"",
+                supportedProtocolVersions: "1.4.0",
+                toolName: "internal-merge-artifacts",
+                cancellationToken: TestContext.CancellationToken);
+
+            result.TestHostResult.AssertExitCodeIs(ExitCode.Success);
+            Assert.IsNotNull(result.ReceivedHandshake);
+            Assert.AreEqual(
+                "microsoft.testing.ctrf;microsoft.testing.html;microsoft.testing.trx;test.summary;test.xml",
+                result.ReceivedHandshake[DotnetTestPipeProtocol.HandshakeProperties.SupportedPostProcessorKinds]);
+
+            RawMessage artifactFrame = Assert.ContainsSingle(
+                result.MessagesWithSerializerId(DotnetTestPipeProtocol.SerializerIds.FileArtifactMessages));
+            FileArtifact artifact = Assert.ContainsSingle(DotnetTestPipeProtocol.DecodeFileArtifacts(artifactFrame.Body));
+            Assert.AreEqual("microsoft.testing.html", artifact.Kind);
+            Assert.IsNotNull(artifact.FullPath);
+            Assert.IsTrue(File.Exists(artifact.FullPath));
+            Assert.IsNotNull(artifact.InputArtifactPaths);
+            Assert.AreSequenceEqual(
+                [Path.GetFullPath(firstPath), Path.GetFullPath(secondPath)],
+                artifact.InputArtifactPaths);
         }
         finally
         {
@@ -465,6 +524,30 @@ public sealed class DotnetTestPipeArtifactPostProcessingTests
             .Save(path);
     }
 
+    private static void WriteMinimalHtmlReport(string path, string name)
+        => File.WriteAllText(
+            path,
+            $"<!DOCTYPE html><script id=\"mtp-data\" type=\"application/json\">{JsonSerializer.Serialize(new
+            {
+                schemaVersion = "1",
+                generator = "Microsoft.Testing.Extensions.HtmlReport",
+                generatorVersion = "1.0.0",
+                testApplication = $"{name}.dll",
+                machineName = "machine",
+                userName = "user",
+                framework = "MSTest",
+                frameworkUid = "MSTest",
+                frameworkVersion = "1.0.0",
+                startTime = "2026-08-09T10:00:00.0000000+00:00",
+                endTime = "2026-08-09T10:00:01.0000000+00:00",
+                exitCode = 0,
+                tests = new[]
+                {
+                    new { rowKey = 0, uid = name, displayName = name, outcome = "passed", durationMs = 1d },
+                },
+                summary = new { },
+            })}</script>");
+
     private static void WriteMinimalCtrfReport(string path, string name)
         => File.WriteAllText(
             path,
@@ -506,6 +589,7 @@ public sealed class DotnetTestPipeArtifactPostProcessingTests
               <ItemGroup>
                 <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
                 <PackageReference Include="Microsoft.Testing.Extensions.CtrfReport" Version="$MicrosoftTestingExtensionsCtrfReportVersion$" />
+                <PackageReference Include="Microsoft.Testing.Extensions.HtmlReport" Version="$MicrosoftTestingPlatformVersion$" />
                 <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$MicrosoftTestingPlatformVersion$" />
               </ItemGroup>
             </Project>
@@ -523,6 +607,7 @@ public sealed class DotnetTestPipeArtifactPostProcessingTests
                 {
                     ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
                     builder.AddCtrfReportProvider();
+                    builder.AddHtmlReportProvider();
                     builder.AddTrxReportProvider();
                     ((IArtifactPostProcessingApplicationBuilder)builder).ArtifactPostProcessing
                         .AddArtifactPostProcessor(_ => new SummaryArtifactPostProcessor());
