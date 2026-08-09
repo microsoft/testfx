@@ -2,6 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WINDOWS_UWP
+#if NETFRAMEWORK
+using System.Security;
+#endif
+
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
@@ -30,6 +34,11 @@ internal sealed class MTPTraceLogger :
 
     public bool IsErrorEnabled
         => _logger.IsEnabled(LogLevel.Warning);
+
+#if NETFRAMEWORK
+    [SecurityCritical]
+    public override object? InitializeLifetimeService() => null;
+#endif
 
     public void Verbose(string format, params object?[] args)
         => _logger.LogTrace(string.Format(CultureInfo.InvariantCulture, format, args));
