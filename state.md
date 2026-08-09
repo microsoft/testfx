@@ -12,24 +12,26 @@
 
 ## Task Schedule (last run dates)
 - Task 1 (Discover Commands): 2026-07-30
-- Task 2 (Identify Opportunities): 2026-08-08 (explore-agent scan of ServerMode/JsonRpc, Retry extension, MSTestAdapter.PlatformServices, TestFramework.Extensions — no new hot-path issues found; all either already cached/optimized or low-frequency error/config paths)
-- Task 3 (Implement): 2026-08-03 (no viable target found — codebase well-optimized)
-- Task 4 (Maintain PRs): 2026-08-08 (no open perf-improver PRs)
+- Task 2 (Identify Opportunities): 2026-08-09 (explore-agent scan of Platform Extensions/Configurations/Services-DI, MSTest.TestAdapter execution path, Analyzers, TestFramework Assert/DataRow — found TestDataSourceUtilities display-name LINQ allocation; ServiceProvider.GetServiceInternal/RegisterCoverageProducer LINQ noted but cold/startup-only, low value)
+- Task 3 (Implement): 2026-08-09 (PR: reduced allocations in TestDataSourceUtilities.ComputeDefaultDisplayName by replacing LINQ Select/Join/Cast<object>() with a direct StringBuilder loop; ~40% faster, ~18% less alloc in 200k-iter microbenchmark; DataRowAttributeTests 17/17 pass)
+- Task 4 (Maintain PRs): 2026-08-08 (no open perf-improver PRs at start of 2026-08-09 run)
 - Task 5 (Comment Issues): 2026-08-07 (no open performance-labeled issues found; issue #3495 "Show slowest tests" is effectively implemented via --show-slowest-tests, left as-is since discussion has since pivoted to a broader declarative-duration RFC)
 - Task 6 (Infrastructure): 2026-08-05 (reviewed perf-timing-nightly.yml + MSTest.Performance.Runner; infra already solid — PlainProcess timing, cross-platform)
-- Task 7 (Monthly Summary): 2026-08-08
+- Task 7 (Monthly Summary): 2026-08-09
 
 ## Monthly Activity Issue
 - Issue #10381 (August 2026, open) — kept updated; no suggested actions pending
 
 ## Work In Progress
-None
+None (PR "Reduce allocations in data-driven test display name computation" submitted 2026-08-09, awaiting review)
 
 ## Optimization Backlog (low priority)
-1. `DotnetTestHttpClient`: `new byte[1]` trailing-byte check → `Memory<byte>` on .NET. Very low priority (cold path).
-2. `SilenceDrivenHeartbeatRenderer.BuildSlowTestDescription`: `new StringBuilder()` per slow-test event. Very low priority.
-3. `AntiTerminal.StopUpdate()`: `_stringBuilder.ToString()` on every flush. Blocked by IConsole + netstandard2.0 compat.
-4. OpenTelemetryResultHandler: `GetFullyQualifiedName()` allocates string per test result - only matters for OTel users; low priority.
+1. `ServiceProvider.GetServiceInternal`/`RegisterCoverageProducer` (src/Platform/Microsoft.Testing.Platform/Services/ServiceProvider.cs): uses `FirstOrDefault`/`OfType<IDataProducer>()` LINQ per service lookup/registration. Cold/startup-only path (not per-test), low value — noted but not prioritized.
+2. `DotnetTestHttpClient`: `new byte[1]` trailing-byte check → won't-fix (see issue #10381 comments; reverted after review, not worth the coupling).
+3. `SilenceDrivenHeartbeatRenderer.BuildSlowTestDescription`: done (lazy StringBuilder) — see PR #10384.
+4. `AntiTerminal.StopUpdate()`: done (IConsole.Write(StringBuilder) overload) — see PR #10384.
+5. OpenTelemetryResultHandler.GetFullyQualifiedName(): won't-fix — see issue #10381 comments.
+
 
 ## Performance Notes
 - TestMethod: FullyQualifiedName, ManagedTypeName use C# 13 `field ??=` caching
@@ -57,6 +59,7 @@ None
 ### August 2026
 - 2026-08-03: Deep scan of hot paths; codebase continues to be well-optimized. No new opportunities identified.
 - 2026-08-08: Explore-agent scan of ServerMode/Retry/PlatformServices/TestFramework.Extensions — no new targets found; backlog remains empty.
+- 2026-08-09: Scanned Platform Extensions (TrxReport/HtmlReport/AzureDevOpsReport/CrashDump/HangDump), Configurations, Services/DI (ServiceProvider), MSTest.TestAdapter execution path, Analyzers, TestFramework Assert/DataRow. Found and fixed `TestDataSourceUtilities.ComputeDefaultDisplayName`/`GetHumanizedArguments`: LINQ `Select`+`Join` and `Cast<object>()` boxing enumeration replaced with a direct loop over a reused `StringBuilder`. Runs once per data-driven ([DataRow]/[DynamicData]) test case. Microbenchmark (200k iters, mixed-type array): 371ms/103MB alloc -> 223ms/84MB alloc (~40% faster, ~18% less alloc). Output verified byte-identical to old implementation. DataRowAttributeTests (17/17) pass. `ServiceProvider.GetServiceInternal`/`RegisterCoverageProducer` also use LINQ but are startup/cold-path only — added to backlog as low-value, not fixed this run.
 
 ## Checked-off by Maintainer (do not re-suggest)
 (none yet for August 2026)
