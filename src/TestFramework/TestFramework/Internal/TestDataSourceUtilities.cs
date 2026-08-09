@@ -14,49 +14,85 @@ internal static class TestDataSourceUtilities
 
         ParameterInfo[] parameters = methodInfo.GetParameters();
 
-        // We want to force call to `data.AsEnumerable()` to ensure that objects are casted to strings (using ToString())
-        // so that null do appear as "null". If you remove the call, and do string.Join(",", new object[] { null, "a" }),
-        // you will get empty string while with the call you will get "null,a".
-        IEnumerable<object?> displayData = parameters.Length == 1 && parameters[0].ParameterType == typeof(object[])
-            ? [data.AsEnumerable()]
-            : data.AsEnumerable();
+        // We want to force treating `data` as a single array element to ensure that objects are casted to strings
+        // (using ToString()) so that null do appear as "null". If you remove this special-casing, and do
+        // string.Join(",", new object[] { null, "a" }), you will get empty string while with the special-casing
+        // you will get "null,a".
+        bool wrapAsSingleElement = parameters.Length == 1 && parameters[0].ParameterType == typeof(object[]);
 
         string methodDisplayName = methodInfo is ReflectionTestMethodInfo reflectionTestMethodInfo
             ? reflectionTestMethodInfo.DisplayName
             : methodInfo.Name;
 
+        var argumentsBuilder = new StringBuilder();
+        if (wrapAsSingleElement)
+        {
+            AppendHumanizedArguments(argumentsBuilder, data);
+        }
+        else
+        {
+            for (int i = 0; i < data.Length; i++)
+            {
+                if (i > 0)
+                {
+                    argumentsBuilder.Append(',');
+                }
+
+                AppendHumanizedArguments(argumentsBuilder, data[i]);
+            }
+        }
+
         return string.Format(
             CultureInfo.CurrentCulture,
             FrameworkMessages.DataDrivenResultDisplayName,
             methodDisplayName,
-            string.Join(",", displayData.Select(GetHumanizedArguments)));
+            argumentsBuilder.ToString());
     }
 
     /// <summary>
     /// Recursively resolve collections of objects to a proper string representation.
     /// </summary>
+    /// <param name="builder">The builder to append the humanized representation to.</param>
     /// <param name="data">The method arguments.</param>
-    /// <returns>The humanized representation of the data.</returns>
-    private static string? GetHumanizedArguments(object? data)
+    private static void AppendHumanizedArguments(StringBuilder builder, object? data)
     {
         if (data is null)
         {
-            return "null";
+            builder.Append("null");
+            return;
         }
 
-        if (!data.GetType().IsArray)
+        if (data is string s)
         {
-            return data switch
-            {
-                string s => $"\"{s}\"",
-                char c => $"'{c}'",
-                _ => data.ToString(),
-            };
+            builder.Append('"').Append(s).Append('"');
+            return;
         }
 
-        // We need to box the object here so that we can support value types
-        IEnumerable<object> boxedObjectEnumerable = ((IEnumerable)data).Cast<object>();
-        IEnumerable<string?> elementStrings = boxedObjectEnumerable.Select(GetHumanizedArguments);
-        return $"[{string.Join(",", elementStrings)}]";
+        if (data is char c)
+        {
+            builder.Append('\'').Append(c).Append('\'');
+            return;
+        }
+
+        if (data is not IEnumerable enumerable || data is not System.Array)
+        {
+            builder.Append(data.ToString());
+            return;
+        }
+
+        builder.Append('[');
+        bool first = true;
+        foreach (object? element in enumerable)
+        {
+            if (!first)
+            {
+                builder.Append(',');
+            }
+
+            first = false;
+            AppendHumanizedArguments(builder, element);
+        }
+
+        builder.Append(']');
     }
 }
