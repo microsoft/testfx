@@ -343,15 +343,22 @@ internal sealed class GitHubActionsSummaryReporter :
         string startMarker = $"<!-- microsoft-testing-platform:{GitHubActionsSummaryArtifactPostProcessor.Provider}:{aggregationId}:start -->";
         string endMarker = $"<!-- microsoft-testing-platform:{GitHubActionsSummaryArtifactPostProcessor.Provider}:{aggregationId}:end -->";
         string section = $"{startMarker}\n{content.TrimEnd()}\n{endMarker}\n";
+        // Keep one stable lock entry for the lifetime of the GitHub step. Deleting it after releasing the handle
+        // would let a third writer create a new inode while a second writer still holds the unlinked old lock.
+        string lockPath = path + ".microsoft-testing-platform.lock";
 
         for (int attempt = 1; ; attempt++)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            IFileStream stream;
+            IFileStream lockStream;
             try
             {
-                stream = fileSystem.NewFileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
+                lockStream = fileSystem.NewFileStream(
+                    lockPath,
+                    FileMode.OpenOrCreate,
+                    FileAccess.ReadWrite,
+                    FileShare.None);
             }
             catch (IOException) when (attempt < maxAttempts)
             {
@@ -359,49 +366,73 @@ internal sealed class GitHubActionsSummaryReporter :
                 continue;
             }
 
-            using (stream)
+            string tempPath = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
+            try
             {
-                string existing;
-                using (var reader = new StreamReader(stream.Stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 1024, leaveOpen: true))
+                using (lockStream)
                 {
+                    string existing;
+                    using (IFileStream summaryStream = fileSystem.NewFileStream(
+                        path,
+                        FileMode.OpenOrCreate,
+                        FileAccess.Read,
+                        FileShare.ReadWrite | FileShare.Delete))
+                    using (var reader = new StreamReader(summaryStream.Stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true))
+                    {
 #if NET8_0_OR_GREATER
-                    existing = await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
+                        existing = await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
 #else
 #pragma warning disable CA2016 // The target framework has no cancellation-aware StreamReader overload.
-                    existing = await reader.ReadToEndAsync().ConfigureAwait(false);
+                        existing = await reader.ReadToEndAsync().ConfigureAwait(false);
 #pragma warning restore CA2016
 #endif
-                }
-
-                int start = existing.IndexOf(startMarker, StringComparison.Ordinal);
-                if (start >= 0)
-                {
-                    int end = existing.IndexOf(endMarker, start, StringComparison.Ordinal);
-                    if (end < 0)
-                    {
-                        throw new FormatException("The existing GitHub step summary contains an incomplete Microsoft Testing Platform summary section.");
                     }
 
-                    existing = existing.Remove(start, end + endMarker.Length - start).Insert(start, section.TrimEnd());
-                }
-                else
-                {
-                    existing = existing.Length == 0
-                        ? section
-                        : existing.TrimEnd() + "\n\n" + section;
-                }
+                    int start = existing.IndexOf(startMarker, StringComparison.Ordinal);
+                    if (start >= 0)
+                    {
+                        int end = existing.IndexOf(endMarker, start, StringComparison.Ordinal);
+                        if (end < 0)
+                        {
+                            throw new FormatException("The existing GitHub step summary contains an incomplete Microsoft Testing Platform summary section.");
+                        }
 
-                stream.Stream.SetLength(0);
-                stream.Stream.Position = 0;
-                using var writer = new StreamWriter(stream.Stream, new UTF8Encoding(false), bufferSize: 1024, leaveOpen: true);
-                await writer.WriteAsync(existing).ConfigureAwait(false);
+                        existing = existing.Remove(start, end + endMarker.Length - start).Insert(start, section.TrimEnd());
+                    }
+                    else
+                    {
+                        existing = existing.Length == 0
+                            ? section
+                            : existing.TrimEnd() + "\n\n" + section;
+                    }
+
+                    using (IFileStream tempStream = fileSystem.NewFileStream(tempPath, FileMode.CreateNew, FileAccess.Write, FileShare.Read))
+                    using (var writer = new StreamWriter(tempStream.Stream, new UTF8Encoding(false)))
+                    {
+                        await writer.WriteAsync(existing).ConfigureAwait(false);
 #if NET8_0_OR_GREATER
-                await writer.FlushAsync(cancellationToken).ConfigureAwait(false);
+                        await writer.FlushAsync(cancellationToken).ConfigureAwait(false);
 #else
 #pragma warning disable CA2016 // The target framework has no cancellation-aware StreamWriter overload.
-                await writer.FlushAsync().ConfigureAwait(false);
+                        await writer.FlushAsync().ConfigureAwait(false);
 #pragma warning restore CA2016
 #endif
+                    }
+
+                    cancellationToken.ThrowIfCancellationRequested();
+                    fileSystem.ReplaceFile(tempPath, path);
+                }
+            }
+            finally
+            {
+                try
+                {
+                    fileSystem.DeleteFile(tempPath);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    // Best-effort cleanup must not hide a successful write or its primary failure.
+                }
             }
 
             return;
@@ -510,10 +541,10 @@ internal sealed class GitHubActionsSummaryReporter :
         bool failed = aggregate.ExitCode is int exitCode
             ? GitHubActionsExitCode.IndicatesFailure(exitCode)
             : aggregate.FailedTests > 0;
-        string statusIcon = aggregate.IsPartial || !aggregate.HasAuthoritativeRunSummary
-            ? "⚠️"
-            : failed
-                ? "❌"
+        string statusIcon = failed
+            ? "❌"
+            : aggregate.IsPartial || !aggregate.HasAuthoritativeRunSummary
+                ? "⚠️"
                 : "✅";
         string duration = aggregate.Duration is { } value ? FormatDuration(value) : "Unavailable";
 
@@ -529,7 +560,7 @@ internal sealed class GitHubActionsSummaryReporter :
 
         if (aggregate.IsPartial)
         {
-            builder.Append("> [!WARNING]\n> This summary is partial because the test run was truncated or not every scheduled module produced a summary fragment.\n\n");
+            builder.Append("> [!WARNING]\n> This summary is partial because the test run was truncated.\n\n");
         }
         else if (!aggregate.HasAuthoritativeRunSummary)
         {
@@ -550,10 +581,18 @@ internal sealed class GitHubActionsSummaryReporter :
 
         foreach (CiRunSummaryModule module in aggregate.Modules)
         {
+            bool needsDiscriminator = HasDuplicateModuleIdentity(aggregate.Modules, module);
             builder.Append("<details>\n<summary>")
-                .Append(EscapeInlineCode(module.AssemblyName))
-                .Append(" (").Append(EscapeInlineCode(module.TargetFramework)).Append(", ")
-                .Append(EscapeInlineCode(module.Architecture)).Append(")</summary>\n\n");
+                .Append(HtmlEncode(module.AssemblyName))
+                .Append(" (").Append(HtmlEncode(module.TargetFramework)).Append(", ")
+                .Append(HtmlEncode(module.Architecture));
+            if (needsDiscriminator)
+            {
+                builder.Append(", attempt ").Append(module.AttemptNumber.ToString(CultureInfo.InvariantCulture))
+                    .Append(", session ").Append(HtmlEncode(module.SessionUid));
+            }
+
+            builder.Append(")</summary>\n\n");
             AppendModuleMarkdown(builder, module, headingLevel: 3);
             builder.Append("</details>\n\n");
         }
@@ -610,4 +649,13 @@ internal sealed class GitHubActionsSummaryReporter :
 
     private static string EscapeInlineCode(string value)
         => RoslynString.IsNullOrEmpty(value) ? value : value.Replace("`", "'").Replace("\r", string.Empty).Replace("\n", " ");
+
+    private static string HtmlEncode(string value)
+        => System.Net.WebUtility.HtmlEncode(value);
+
+    private static bool HasDuplicateModuleIdentity(IReadOnlyList<CiRunSummaryModule> modules, CiRunSummaryModule module)
+        => modules.Count(candidate =>
+            string.Equals(candidate.ModulePath, module.ModulePath, StringComparison.Ordinal)
+            && string.Equals(candidate.TargetFramework, module.TargetFramework, StringComparison.Ordinal)
+            && string.Equals(candidate.Architecture, module.Architecture, StringComparison.OrdinalIgnoreCase)) > 1;
 }

@@ -274,12 +274,6 @@ internal static partial class CiRunSummaryAggregation
 
         long observedTotal = checked(observedPassed + observedFailed + observedSkipped);
         ArtifactPostProcessingRunSummary? runSummary = context.RunSummary;
-        int observedModuleCount = modules
-            .Select(module => $"{module.ModulePath}\0{module.TargetFramework}\0{module.Architecture}")
-            .Distinct(StringComparer.Ordinal)
-            .Count();
-        bool moduleSetIncomplete = runSummary is not null && observedModuleCount != runSummary.TestModuleCount;
-
         return runSummary is null
             ? new CiRunSummaryAggregate(
                 modules,
@@ -302,7 +296,7 @@ internal static partial class CiRunSummaryAggregation
                 runSummary.Duration,
                 runSummary.ExitCode,
                 hasAuthoritativeRunSummary: true,
-                isPartial: context.IsTruncated || moduleSetIncomplete);
+                isPartial: context.IsTruncated);
     }
 
     public static string CreateAggregationId(IReadOnlyList<InputArtifact> inputs)

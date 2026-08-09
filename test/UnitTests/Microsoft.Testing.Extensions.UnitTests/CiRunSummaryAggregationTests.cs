@@ -53,7 +53,7 @@ public sealed class CiRunSummaryAggregationTests
                 skippedTests: 1,
                 duration: TimeSpan.FromSeconds(12),
                 exitCode: 2,
-                testModuleCount: 2);
+                testModuleCount: 12);
 
             CiRunSummaryAggregate aggregate = CiRunSummaryAggregation.ReadAndAggregate(
                 inputs,
@@ -122,6 +122,31 @@ public sealed class CiRunSummaryAggregationTests
         finally
         {
             File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public async Task ReadAndAggregate_DuplicateFragmentIdentity_ThrowsFormatExceptionAsync()
+    {
+        string directory = CreateDirectory();
+        try
+        {
+            CiRunSummaryModule module = CreateModule("A", passed: 1, failed: 0);
+            string path = await CiRunSummaryAggregation.WriteFragmentAsync(
+                directory,
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                AzureDevOpsSummaryArtifactPostProcessor.ProviderSlug,
+                module);
+            InputArtifact input = CreateInput(path, module);
+
+            Assert.ThrowsExactly<FormatException>(() => CiRunSummaryAggregation.ReadAndAggregate(
+                [input, input],
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None)));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
         }
     }
 
@@ -223,6 +248,58 @@ public sealed class CiRunSummaryAggregationTests
             Mock.Of<IOutputDevice>());
 
         Assert.IsTrue(await processor.IsEnabledAsync());
+    }
+
+    [TestMethod]
+    public async Task AzureDevOpsPostProcessor_ConflictingOutputPaths_UsesCanonicalOutputAsync()
+    {
+        string directory = CreateDirectory();
+        try
+        {
+            CiRunSummaryModule firstModule = CreateModule("A", passed: 1, failed: 0);
+            firstModule.RequestedOutputPath = Path.Combine(directory, "first.md");
+            CiRunSummaryModule secondModule = CreateModule("B", passed: 1, failed: 0);
+            secondModule.RequestedOutputPath = Path.Combine(directory, "second.md");
+            string firstPath = await CiRunSummaryAggregation.WriteFragmentAsync(
+                directory,
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                AzureDevOpsSummaryArtifactPostProcessor.ProviderSlug,
+                firstModule);
+            string secondPath = await CiRunSummaryAggregation.WriteFragmentAsync(
+                directory,
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                AzureDevOpsSummaryArtifactPostProcessor.ProviderSlug,
+                secondModule);
+            var outputDevice = new Mock<IOutputDevice>();
+            var processor = new AzureDevOpsSummaryArtifactPostProcessor(
+                new TestCommandLineOptions(new()
+                {
+                    ["manifest"] = ["manifest.json"],
+                }),
+                Mock.Of<IEnvironment>(),
+                outputDevice.Object);
+
+            ProcessedArtifact? result = await processor.ProcessAsync(
+                [CreateInput(firstPath, firstModule), CreateInput(secondPath, secondModule)],
+                directory,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+                CancellationToken.None);
+
+            Assert.IsNotNull(result);
+            Assert.IsTrue(File.Exists(result.Path));
+            Assert.IsFalse(File.Exists(firstModule.RequestedOutputPath));
+            Assert.IsFalse(File.Exists(secondModule.RequestedOutputPath));
+            outputDevice.Verify(
+                item => item.DisplayAsync(
+                    It.IsAny<IOutputDeviceDataProducer>(),
+                    It.Is<AzureDevOpsCommandOutputDeviceData>(data => data.Text.Contains(result.Path, StringComparison.Ordinal)),
+                    It.IsAny<CancellationToken>()),
+                Times.Once);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
     }
 
     [TestMethod]

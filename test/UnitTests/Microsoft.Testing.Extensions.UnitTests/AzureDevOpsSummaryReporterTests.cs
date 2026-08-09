@@ -7,6 +7,7 @@ using Microsoft.Testing.Extensions.Reporting;
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
+using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
@@ -138,6 +139,37 @@ public sealed class AzureDevOpsSummaryReporterTests
         Assert.Contains("Has<br>Newline", md);
         Assert.DoesNotContain("Has|Pipe", md);
         Assert.DoesNotContain("Has\nNewline", md);
+    }
+
+    [TestMethod]
+    public void BuildAggregateMarkdown_HtmlEncodesModuleSummaryLabel()
+    {
+        var module = new CiRunSummaryModule
+        {
+            AssemblyName = "<h1>A&B</h1>",
+            ModulePath = "A.dll",
+            TargetFramework = "net9.0<&>",
+            Architecture = "x64&arm64",
+            ExecutionId = "execution",
+            SessionUid = "session",
+            AttemptNumber = 1,
+        };
+        var aggregate = new CiRunSummaryAggregate(
+            [module],
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 0,
+            passedTests: 0,
+            failedTests: 0,
+            skippedTests: 0,
+            duration: null,
+            exitCode: null,
+            hasAuthoritativeRunSummary: false,
+            isPartial: false);
+
+        string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(aggregate);
+
+        Assert.Contains("<summary>&lt;h1&gt;A&amp;B&lt;/h1&gt; (net9.0&lt;&amp;&gt;, x64&amp;arm64)</summary>", markdown);
+        Assert.DoesNotContain("<summary><h1>", markdown);
     }
 
     [TestMethod]

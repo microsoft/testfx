@@ -470,7 +470,7 @@ internal sealed class AzureDevOpsSummaryReporter : IDataConsumer, IDataProducer,
         builder.Append('\n');
         if (aggregate.IsPartial)
         {
-            builder.Append("> **Partial summary:** the run was truncated or not every scheduled module produced a summary fragment.\n\n");
+            builder.Append("> **Partial summary:** the test run was truncated.\n\n");
         }
         else if (!aggregate.HasAuthoritativeRunSummary)
         {
@@ -479,10 +479,18 @@ internal sealed class AzureDevOpsSummaryReporter : IDataConsumer, IDataProducer,
 
         foreach (CiRunSummaryModule module in aggregate.Modules)
         {
+            bool needsDiscriminator = HasDuplicateModuleIdentity(aggregate.Modules, module);
             builder.Append("<details>\n<summary>")
-                .Append(EscapeCell(module.AssemblyName))
-                .Append(" (").Append(EscapeCell(module.TargetFramework)).Append(", ")
-                .Append(EscapeCell(module.Architecture)).Append(")</summary>\n\n");
+                .Append(HtmlEncode(module.AssemblyName))
+                .Append(" (").Append(HtmlEncode(module.TargetFramework)).Append(", ")
+                .Append(HtmlEncode(module.Architecture));
+            if (needsDiscriminator)
+            {
+                builder.Append(", attempt ").Append(module.AttemptNumber.ToString(CultureInfo.InvariantCulture))
+                    .Append(", session ").Append(HtmlEncode(module.SessionUid));
+            }
+
+            builder.Append(")</summary>\n\n");
             AppendModuleMarkdown(builder, module);
             builder.Append("</details>\n\n");
         }
@@ -587,4 +595,13 @@ internal sealed class AzureDevOpsSummaryReporter : IDataConsumer, IDataProducer,
 
         return sb.ToString();
     }
+
+    private static string HtmlEncode(string value)
+        => System.Net.WebUtility.HtmlEncode(value);
+
+    private static bool HasDuplicateModuleIdentity(IReadOnlyList<CiRunSummaryModule> modules, CiRunSummaryModule module)
+        => modules.Count(candidate =>
+            string.Equals(candidate.ModulePath, module.ModulePath, StringComparison.Ordinal)
+            && string.Equals(candidate.TargetFramework, module.TargetFramework, StringComparison.Ordinal)
+            && string.Equals(candidate.Architecture, module.Architecture, StringComparison.OrdinalIgnoreCase)) > 1;
 }

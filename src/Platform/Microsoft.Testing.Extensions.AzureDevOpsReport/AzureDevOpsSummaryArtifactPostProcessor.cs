@@ -68,11 +68,6 @@ internal sealed class AzureDevOpsSummaryArtifactPostProcessor(
                 .Where(path => !RoslynString.IsNullOrWhiteSpace(path))
                 .Distinct(PathComparer),
         ];
-        if (requestedOutputPaths.Length > 1)
-        {
-            throw new FormatException("Azure DevOps summary fragments requested different output paths.");
-        }
-
         string uploadPath = requestedOutputPaths is [string requestedOutputPath] ? requestedOutputPath : outputPath;
         if (!string.Equals(Path.GetFullPath(uploadPath), Path.GetFullPath(outputPath), PathComparison))
         {
