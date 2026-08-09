@@ -54,12 +54,15 @@ internal static class HtmlReportMerger
             JsonObject report = parsedReport.Report;
             foreach (JsonNode? test in (JsonArray)report["tests"]!)
             {
+                var testObject = (JsonObject)test!.DeepClone();
                 tests.Add(new MergedTest(
-                    (JsonObject)test!.DeepClone(),
-                    input.ProducingTestModule ?? ReadOptionalString(report, "testApplication"),
-                    input.TargetFramework,
-                    input.Architecture,
-                    input.ExecutionId));
+                    testObject,
+                    ReadOptionalString(testObject, "testApplication")
+                        ?? input.ProducingTestModule
+                        ?? ReadOptionalString(report, "testApplication"),
+                    ReadOptionalString(testObject, "targetFramework") ?? input.TargetFramework,
+                    ReadOptionalString(testObject, "architecture") ?? input.Architecture,
+                    ReadOptionalString(testObject, "executionId") ?? input.ExecutionId));
             }
         }
 
