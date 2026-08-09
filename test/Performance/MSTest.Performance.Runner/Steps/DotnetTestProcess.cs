@@ -94,7 +94,7 @@ internal class DotnetTestProcess : IStep<BuildArtifact, Files>
             // Drain stdout/stderr asynchronously to prevent buffer deadlocks.
             Task<string> stdoutTask = process.StandardOutput.ReadToEndAsync();
             Task<string> stderrTask = process.StandardError.ReadToEndAsync();
-            TimeSpan totalProcessorTime = await ProcessMeasurement.WaitForExitAndGetTotalProcessorTimeAsync(process);
+            TimeSpan totalProcessorTime = await ProcessMeasurement.WaitForExitAndSampleTotalProcessorTimeAsync(process);
             TimeSpan elapsedTime = Stopwatch.GetElapsedTime(startTimestamp);
             await Task.WhenAll(stdoutTask, stderrTask);
 

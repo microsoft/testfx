@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.ComponentModel;
 using System.IO.Compression;
 using System.Text.Json;
 
@@ -44,7 +43,7 @@ internal class PlainProcess : IStep<BuildArtifact, Files>
         {
             long startTimestamp = Stopwatch.GetTimestamp();
             using Process process = Process.Start(processStartInfo)!;
-            TimeSpan totalProcessorTime = await ProcessMeasurement.WaitForExitAndGetTotalProcessorTimeAsync(process);
+            TimeSpan totalProcessorTime = await ProcessMeasurement.WaitForExitAndSampleTotalProcessorTimeAsync(process);
             var result = new
             {
                 ElapsedTime = Stopwatch.GetElapsedTime(startTimestamp),
@@ -67,43 +66,5 @@ internal class PlainProcess : IStep<BuildArtifact, Files>
         ZipFile.CreateFromDirectory(payload.TestAsset.TargetAssetPath, sample, _compressionLevel, includeBaseDirectory: true);
 
         return new Files([sample]);
-    }
-}
-
-internal static class ProcessMeasurement
-{
-    private static readonly TimeSpan SamplingInterval = TimeSpan.FromMilliseconds(10);
-
-    public static async Task<TimeSpan> WaitForExitAndGetTotalProcessorTimeAsync(Process process)
-    {
-        Task waitForExitTask = process.WaitForExitAsync();
-        if (OperatingSystem.IsWindows())
-        {
-            await waitForExitTask;
-            return process.TotalProcessorTime;
-        }
-
-        // Unix removes process metrics when a child is reaped, so retain the latest live sample.
-        TimeSpan totalProcessorTime = TimeSpan.Zero;
-        while (!waitForExitTask.IsCompleted)
-        {
-            try
-            {
-                totalProcessorTime = process.TotalProcessorTime;
-            }
-            catch (InvalidOperationException) when (process.HasExited)
-            {
-                break;
-            }
-            catch (Win32Exception) when (process.HasExited)
-            {
-                break;
-            }
-
-            await Task.WhenAny(waitForExitTask, Task.Delay(SamplingInterval));
-        }
-
-        await waitForExitTask;
-        return totalProcessorTime;
     }
 }
