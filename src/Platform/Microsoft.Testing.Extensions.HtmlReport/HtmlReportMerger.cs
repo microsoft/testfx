@@ -82,9 +82,8 @@ internal static class HtmlReportMerger
                 .ThenBy(test => test.OriginalTestIndex),
         ];
         var countByIdentity = new Dictionary<string, int>(StringComparer.Ordinal);
-        foreach (MergedTest mergedTest in orderedTests)
+        foreach (string identity in orderedTests.Select(CreateTestIdentity))
         {
-            string identity = CreateTestIdentity(mergedTest);
             countByIdentity[identity] = countByIdentity.TryGetValue(identity, out int existing) ? existing + 1 : 1;
         }
 
