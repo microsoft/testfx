@@ -247,6 +247,54 @@ public sealed class HtmlArtifactPostProcessorTests
     }
 
     [TestMethod]
+    public async Task ProcessAsync_WhenInputIsAlreadyMerged_OrdersAttemptsByOriginalSourceStartTime()
+    {
+        string directory = CreateTemporaryDirectory();
+        try
+        {
+            string firstPath = Path.Combine(directory, "first.html");
+            string thirdPath = Path.Combine(directory, "third.html");
+            File.WriteAllText(firstPath, CreateReport("tests.dll", "MSTest", Epoch.AddMinutes(1), Epoch.AddMinutes(2), Test("same", "attempt 1", "failed", 1)));
+            File.WriteAllText(thirdPath, CreateReport("tests.dll", "MSTest", Epoch.AddMinutes(3), Epoch.AddMinutes(4), Test("same", "attempt 3", "passed", 1)));
+
+            HtmlArtifactPostProcessor processor = new();
+            ProcessedArtifact? firstMerge = await processor.ProcessAsync(
+                [
+                    CreateInput(firstPath, module: "tests.dll", targetFramework: "net8.0", architecture: "x64", executionId: "execution-1"),
+                    CreateInput(thirdPath, module: "tests.dll", targetFramework: "net8.0", architecture: "x64", executionId: "execution-3"),
+                ],
+                directory,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+                CancellationToken.None);
+            Assert.IsNotNull(firstMerge);
+
+            string secondPath = Path.Combine(directory, "second.html");
+            File.WriteAllText(secondPath, CreateReport("tests.dll", "MSTest", Epoch.AddMinutes(2), Epoch.AddMinutes(3), Test("same", "attempt 2", "failed", 1)));
+            ProcessedArtifact? secondMerge = await processor.ProcessAsync(
+                [
+                    CreateInput(firstMerge.Path),
+                    CreateInput(secondPath, module: "tests.dll", targetFramework: "net8.0", architecture: "x64", executionId: "execution-2"),
+                ],
+                directory,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+                CancellationToken.None);
+
+            Assert.IsNotNull(secondMerge);
+            var tests = (JsonArray)ParseReport(File.ReadAllText(secondMerge.Path))["tests"]!;
+            Assert.AreEqual("attempt 1", (string?)tests[0]!["displayName"]);
+            Assert.AreEqual(1, (int?)tests[0]!["attemptIndex"]);
+            Assert.AreEqual("attempt 2", (string?)tests[1]!["displayName"]);
+            Assert.AreEqual(2, (int?)tests[1]!["attemptIndex"]);
+            Assert.AreEqual("attempt 3", (string?)tests[2]!["displayName"]);
+            Assert.AreEqual(3, (int?)tests[2]!["attemptIndex"]);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
     public async Task ProcessAsync_WhenModuleMetadataIsMissing_UsesEmbeddedApplicationForProvenanceAndAttemptIdentity()
     {
         string directory = CreateTemporaryDirectory();

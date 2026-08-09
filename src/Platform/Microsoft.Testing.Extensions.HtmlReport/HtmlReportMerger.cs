@@ -48,12 +48,14 @@ internal static class HtmlReportMerger
             latestEndTime = latestEndTime is null || endTime > latestEndTime ? endTime : latestEndTime;
         }
 
-        foreach (ParsedHtmlReport parsedReport in parsedReports.OrderBy(report => report.StartTime).ThenBy(report => report.OriginalIndex))
+        foreach (ParsedHtmlReport parsedReport in parsedReports)
         {
             HtmlReportMergeInput input = parsedReport.Input;
             JsonObject report = parsedReport.Report;
-            foreach (JsonNode? test in (JsonArray)report["tests"]!)
+            var reportTests = (JsonArray)report["tests"]!;
+            for (int i = 0; i < reportTests.Count; i++)
             {
+                JsonNode? test = reportTests[i];
                 var testObject = (JsonObject)test!.DeepClone();
                 tests.Add(new MergedTest(
                     testObject,
@@ -62,13 +64,25 @@ internal static class HtmlReportMerger
                         ?? ReadOptionalString(report, "testApplication"),
                     ReadOptionalString(testObject, "targetFramework") ?? input.TargetFramework,
                     ReadOptionalString(testObject, "architecture") ?? input.Architecture,
-                    ReadOptionalString(testObject, "executionId") ?? input.ExecutionId));
+                    ReadOptionalString(testObject, "executionId") ?? input.ExecutionId,
+                    TryReadTimestamp(testObject, "sourceReportStartTime", out DateTimeOffset sourceReportStartTime)
+                        ? sourceReportStartTime
+                        : parsedReport.StartTime,
+                    parsedReport.OriginalIndex,
+                    i));
             }
         }
 
         IReadOnlyList<JsonObject> reports = [.. parsedReports.Select(report => report.Report)];
+        MergedTest[] orderedTests =
+        [
+            .. tests
+                .OrderBy(test => test.SourceReportStartTime)
+                .ThenBy(test => test.OriginalReportIndex)
+                .ThenBy(test => test.OriginalTestIndex),
+        ];
         var countByIdentity = new Dictionary<string, int>(StringComparer.Ordinal);
-        foreach (MergedTest mergedTest in tests)
+        foreach (MergedTest mergedTest in orderedTests)
         {
             string identity = CreateTestIdentity(mergedTest);
             countByIdentity[identity] = countByIdentity.TryGetValue(identity, out int existing) ? existing + 1 : 1;
@@ -83,9 +97,9 @@ internal static class HtmlReportMerger
         int errored = 0;
         double totalDurationMs = 0;
 
-        for (int i = 0; i < tests.Count; i++)
+        for (int i = 0; i < orderedTests.Length; i++)
         {
-            MergedTest mergedTest = tests[i];
+            MergedTest mergedTest = orderedTests[i];
             JsonObject test = mergedTest.Test;
             string identity = CreateTestIdentity(mergedTest);
             string outcome = ReadRequiredString(test, "outcome");
@@ -98,6 +112,7 @@ internal static class HtmlReportMerger
             AddOptionalString(test, "targetFramework", mergedTest.TargetFramework);
             AddOptionalString(test, "architecture", mergedTest.Architecture);
             AddOptionalString(test, "executionId", mergedTest.ExecutionId);
+            test["sourceReportStartTime"] = mergedTest.SourceReportStartTime.ToString("O", CultureInfo.InvariantCulture);
 
             int attemptOf = countByIdentity[identity];
             if (attemptOf > 1)
@@ -130,7 +145,7 @@ internal static class HtmlReportMerger
             ["tests"] = mergedTests,
             ["summary"] = new JsonObject
             {
-                ["total"] = tests.Count,
+                ["total"] = orderedTests.Length,
                 ["passed"] = passed,
                 ["failed"] = failed,
                 ["skipped"] = skipped,
@@ -243,13 +258,16 @@ internal static class HtmlReportMerger
             : throw new ArgumentException(ExtensionResources.HtmlReportInputIsNotValid, nameof(owner));
 
     private static DateTimeOffset ReadRequiredTimestamp(JsonObject owner, string propertyName)
+        => TryReadTimestamp(owner, propertyName, out DateTimeOffset timestamp)
+                ? timestamp
+                : throw new ArgumentException(ExtensionResources.HtmlReportInputIsNotValid, nameof(owner));
+
+    private static bool TryReadTimestamp(JsonObject owner, string propertyName, out DateTimeOffset timestamp)
         => DateTimeOffset.TryParse(
             ReadOptionalString(owner, propertyName),
             CultureInfo.InvariantCulture,
             DateTimeStyles.RoundtripKind,
-            out DateTimeOffset timestamp)
-                ? timestamp
-                : throw new ArgumentException(ExtensionResources.HtmlReportInputIsNotValid, nameof(owner));
+            out timestamp);
 
     private static string CreateTestIdentity(MergedTest test)
         => string.Join(
@@ -361,5 +379,8 @@ internal static class HtmlReportMerger
         string? ProducingTestModule,
         string? TargetFramework,
         string? Architecture,
-        string? ExecutionId);
+        string? ExecutionId,
+        DateTimeOffset SourceReportStartTime,
+        int OriginalReportIndex,
+        int OriginalTestIndex);
 }
