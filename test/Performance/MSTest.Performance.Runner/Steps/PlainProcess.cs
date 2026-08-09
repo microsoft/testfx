@@ -41,12 +41,13 @@ internal class PlainProcess : IStep<BuildArtifact, Files>
         List<object> results = [];
         for (int i = 0; i < _numberOfRun; i++)
         {
+            long startTimestamp = Stopwatch.GetTimestamp();
             using Process process = Process.Start(processStartInfo)!;
-            await process.WaitForExitAsync();
+            TimeSpan totalProcessorTime = await ProcessMeasurement.WaitForExitAndSampleTotalProcessorTimeAsync(process);
             var result = new
             {
-                ElapsedTime = process.ExitTime - process.StartTime,
-                process.TotalProcessorTime,
+                ElapsedTime = Stopwatch.GetElapsedTime(startTimestamp),
+                TotalProcessorTime = totalProcessorTime,
                 Environment.ProcessorCount,
                 GC.GetGCMemoryInfo().TotalAvailableMemoryBytes,
             };
