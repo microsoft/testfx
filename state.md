@@ -12,18 +12,18 @@
 
 ## Task Schedule (last run dates)
 - Task 1 (Discover Commands): 2026-07-30
-- Task 2 (Identify Opportunities): 2026-08-09 (explore-agent scan of Platform Extensions/Configurations/Services-DI, MSTest.TestAdapter execution path, Analyzers, TestFramework Assert/DataRow — found TestDataSourceUtilities display-name LINQ allocation; ServiceProvider.GetServiceInternal/RegisterCoverageProducer LINQ noted but cold/startup-only, low value)
-- Task 3 (Implement): 2026-08-09 (PR: reduced allocations in TestDataSourceUtilities.ComputeDefaultDisplayName by replacing LINQ Select/Join/Cast<object>() with a direct StringBuilder loop; ~40% faster, ~18% less alloc in 200k-iter microbenchmark; DataRowAttributeTests 17/17 pass)
-- Task 4 (Maintain PRs): 2026-08-08 (no open perf-improver PRs at start of 2026-08-09 run)
-- Task 5 (Comment Issues): 2026-08-07 (no open performance-labeled issues found; issue #3495 "Show slowest tests" is effectively implemented via --show-slowest-tests, left as-is since discussion has since pivoted to a broader declarative-duration RFC)
+- Task 2 (Identify Opportunities): 2026-08-10 (scanned CommandLine/*, TreeNodeFilter regex usage (already cached per-ValueExpression instance, correct), Terminal/CursorProgressRenderer (500ms tick, no alloc concerns), TerminalTestReporter.*.cs string.Format usages (all cold/low-frequency reporting paths) — no new hot-path targets found)
+- Task 3 (Implement): 2026-08-09 (PR #10528 "Reduce data-driven display name allocations", now closed — reduced allocations in TestDataSourceUtilities.ComputeDefaultDisplayName by replacing LINQ Select/Join/Cast<object>() with a direct StringBuilder loop; ~40% faster, ~18% less alloc in 200k-iter microbenchmark; DataRowAttributeTests 17/17 pass)
+- Task 4 (Maintain PRs): 2026-08-10 (no open perf-improver PRs)
+- Task 5 (Comment Issues): 2026-08-10 (no open performance-labeled issues found via search_issues)
 - Task 6 (Infrastructure): 2026-08-05 (reviewed perf-timing-nightly.yml + MSTest.Performance.Runner; infra already solid — PlainProcess timing, cross-platform)
-- Task 7 (Monthly Summary): 2026-08-09
+- Task 7 (Monthly Summary): 2026-08-10
 
 ## Monthly Activity Issue
 - Issue #10381 (August 2026, open) — kept updated; no suggested actions pending
 
 ## Work In Progress
-None (PR "Reduce allocations in data-driven test display name computation" submitted 2026-08-09, awaiting review)
+None. PR #10528 (data-driven display name allocations) closed. No open perf-improver PRs or performance-labeled issues as of 2026-08-10.
 
 ## Optimization Backlog (low priority)
 1. `ServiceProvider.GetServiceInternal`/`RegisterCoverageProducer` (src/Platform/Microsoft.Testing.Platform/Services/ServiceProvider.cs): uses `FirstOrDefault`/`OfType<IDataProducer>()` LINQ per service lookup/registration. Cold/startup-only path (not per-test), low value — noted but not prioritized.
@@ -60,6 +60,7 @@ None (PR "Reduce allocations in data-driven test display name computation" submi
 - 2026-08-03: Deep scan of hot paths; codebase continues to be well-optimized. No new opportunities identified.
 - 2026-08-08: Explore-agent scan of ServerMode/Retry/PlatformServices/TestFramework.Extensions — no new targets found; backlog remains empty.
 - 2026-08-09: Scanned Platform Extensions (TrxReport/HtmlReport/AzureDevOpsReport/CrashDump/HangDump), Configurations, Services/DI (ServiceProvider), MSTest.TestAdapter execution path, Analyzers, TestFramework Assert/DataRow. Found and fixed `TestDataSourceUtilities.ComputeDefaultDisplayName`/`GetHumanizedArguments`: LINQ `Select`+`Join` and `Cast<object>()` boxing enumeration replaced with a direct loop over a reused `StringBuilder`. Runs once per data-driven ([DataRow]/[DynamicData]) test case. Microbenchmark (200k iters, mixed-type array): 371ms/103MB alloc -> 223ms/84MB alloc (~40% faster, ~18% less alloc). Output verified byte-identical to old implementation. DataRowAttributeTests (17/17) pass. `ServiceProvider.GetServiceInternal`/`RegisterCoverageProducer` also use LINQ but are startup/cold-path only — added to backlog as low-value, not fixed this run.
+- 2026-08-10: PR #10528 (the display-name allocation fix) is now closed. Re-scanned CommandLine/*.cs LINQ usage (Where/GroupBy/Select on CLI options — all one-shot at startup, not hot), TreeNodeFilter regex (already per-ValueExpression cached, RegexOptions.Compiled), CursorProgressRenderer (500ms tick interval, no per-frame allocation concerns), TerminalTestReporter.*.cs string.Format call sites (Coverage/FlakyTests/Summary/TestDiscovery — all cold reporting paths, not per-test hot loops). No new optimization targets found. Backlog remains empty; no open perf-labeled issues or perf-improver PRs.
 
 ## Checked-off by Maintainer (do not re-suggest)
 (none yet for August 2026)
