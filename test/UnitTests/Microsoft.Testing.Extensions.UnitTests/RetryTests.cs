@@ -6,12 +6,54 @@
 using Microsoft.Testing.Extensions.Policy;
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
+using Microsoft.Testing.Platform.Extensions.OutputDevice;
+using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.OutputDevice;
+
+using Moq;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
 
 [TestClass]
 public class RetryTests
 {
+    [TestMethod]
+    public async Task MoveArtifactsAsync_NormalizesRelativePathsBeforeApplyingReplacement()
+    {
+        string currentAttemptDirectory = Path.Combine("TR", "Retries", "abcde", "2");
+        string relativeAttemptFile = Path.Combine(currentAttemptDirectory, "report.xml");
+        string replacementFile = Path.GetFullPath(Path.Combine("merged", "report.xml"));
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem
+            .Setup(fs => fs.GetFiles(currentAttemptDirectory, "*.*", SearchOption.AllDirectories))
+            .Returns([relativeAttemptFile]);
+        var outputDevice = new Mock<IOutputDevice>();
+        outputDevice
+            .Setup(device => device.DisplayAsync(
+                It.IsAny<IOutputDeviceDataProducer>(),
+                It.IsAny<IOutputDeviceData>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        await RetrySummaryReporter.MoveArtifactsAsync(
+            new Mock<IOutputDeviceDataProducer>().Object,
+            outputDevice.Object,
+            fileSystem.Object,
+            new Mock<ILogger>().Object,
+            currentAttemptDirectory,
+            "TR",
+            new Dictionary<string, string>
+            {
+                [Path.GetFullPath(relativeAttemptFile)] = replacementFile,
+            },
+            CancellationToken.None);
+
+        fileSystem.Verify(
+            fs => fs.CopyFile(replacementFile, Path.Combine("TR", "report.xml"), overwrite: true),
+            Times.Once);
+    }
+
     [TestMethod]
     public void GetCommandLineOptions_PublicRetryOptions_AreExtensionOptions()
     {

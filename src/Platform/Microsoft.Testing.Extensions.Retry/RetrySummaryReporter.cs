@@ -258,7 +258,8 @@ internal static class RetrySummaryReporter
             string finalFileLocation = Path.Combine(
                 resultDirectory,
                 relativePath);
-            string sourceFile = replacements.TryGetValue(file, out string? replacement) ? replacement : file;
+            string normalizedFile = Path.GetFullPath(file);
+            string sourceFile = replacements.TryGetValue(normalizedFile, out string? replacement) ? replacement : file;
 
             // Create the directory if missing
             fileSystem.CreateDirectory(Path.GetDirectoryName(finalFileLocation)!);

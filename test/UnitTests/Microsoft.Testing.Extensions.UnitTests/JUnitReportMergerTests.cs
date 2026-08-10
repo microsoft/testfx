@@ -160,6 +160,45 @@ public sealed class JUnitReportMergerTests
     }
 
     [TestMethod]
+    public void MergeRetryAttempts_UsesStableIdentityWhenDuplicateSuffixDisappears()
+    {
+        XDocument firstAttempt = BuildReport(suites:
+        [
+            Suite(
+                "Suite",
+                tests: 2,
+                failures: 1,
+                testCases:
+                [
+                    RetryTestCase("Parameterized [attempt 1]", "case-1", "Parameterized"),
+                    RetryTestCase(
+                        "Parameterized [attempt 2]",
+                        "case-2",
+                        "Parameterized",
+                        new XElement("failure")),
+                ]),
+        ]);
+        XDocument secondAttempt = BuildReport(suites:
+        [
+            Suite(
+                "Suite",
+                tests: 1,
+                testCases: [RetryTestCase("Parameterized", "case-2")]),
+        ]);
+
+        XElement suite = JUnitReportMerger.Merge(
+            [firstAttempt, secondAttempt],
+            "run",
+            JUnitMergeMode.CollapseRetryAttempts).Root!.Element("testsuite")!;
+
+        Assert.AreEqual("2", suite.Attribute("tests")!.Value);
+        Assert.AreEqual("0", suite.Attribute("failures")!.Value);
+        Assert.AreSequenceEqual(
+            new[] { "Parameterized [attempt 1]", "Parameterized" },
+            suite.Elements("testcase").Select(testCase => testCase.Attribute("name")!.Value));
+    }
+
+    [TestMethod]
     public async Task MergeToFileAsync_WritesMergedFileToDisk()
     {
         string tempDirectory = Path.Combine(Path.GetTempPath(), $"junit-merge-{Guid.NewGuid():N}");
@@ -278,6 +317,25 @@ public sealed class JUnitReportMergerTests
             new XAttribute("name", name),
             new XAttribute("classname", "Suite"),
             new XAttribute("time", time.ToString("0.000", CultureInfo.InvariantCulture)),
+            outcomeElement);
+
+    private static XElement RetryTestCase(
+        string name,
+        string testPath,
+        string? originalName = null,
+        XElement? outcomeElement = null)
+        => new(
+            "testcase",
+            new XAttribute("name", name),
+            new XAttribute("classname", "Suite"),
+            new XAttribute("time", "0.000"),
+            new XElement(
+                "properties",
+                new XElement("property", new XAttribute("name", "uid"), new XAttribute("value", "shared-uid")),
+                new XElement("property", new XAttribute("name", "testpath"), new XAttribute("value", testPath)),
+                originalName is null
+                    ? null
+                    : new XElement("property", new XAttribute("name", "original-name"), new XAttribute("value", originalName))),
             outcomeElement);
 
     private static XDocument BuildReport(

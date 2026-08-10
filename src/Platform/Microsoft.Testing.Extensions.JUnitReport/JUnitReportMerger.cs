@@ -313,9 +313,10 @@ internal static class JUnitReportMerger
     private static string BuildTestIdentity(XElement testCase)
         => BuildIdentity(
             testCase.Attribute("classname")?.Value,
-            testCase.Attribute("name")?.Value,
             testCase.Attribute("file")?.Value,
-            ReadProperty(testCase, "testpath"));
+            ReadProperty(testCase, "uid"),
+            ReadProperty(testCase, "testpath"),
+            ReadProperty(testCase, "original-name") ?? testCase.Attribute("name")?.Value);
 
     private static string BuildIdentity(params string?[] components)
     {
