@@ -48,12 +48,13 @@
 2. **More Assert method coverage** — Any remaining gaps in newer Assert overloads.
 3. **DependsOnShouldBeValidAnalyzer / TestFilterProviderShouldBeValidAnalyzer (MSTEST0078/0081)** — internal-target-class gap closed (2026-08-07); accessibility (type vs constructor) gap closed (2026-08-08). Remaining: another pass for any leftover branch gaps.
 4. **Analyzer edge cases (ongoing)** — Continue systematic coverage of untested paths in MSTest.Analyzers. MSTEST0074/0075/0076 fixture-branch gaps all closed.
-5. **Issue #10316 — MSTEST0077 File.* allowlist coverage**: `File.CreateSymbolicLink` pathToTarget negative closed 2026-08-09. Remaining per issue: write/append/create family (`WriteAllTextAsync`, `WriteAllBytes(Async)`, `WriteAllLines(Async)`, `AppendAllText(Async)`, `AppendAllLines(Async)`, `AppendText`, `Create`, `CreateText`) and attribute/encryption members (`Encrypt`, `Decrypt`, `SetAttributes`, `SetUnixFileMode`) — NOTE: on closer inspection these are ALREADY covered via the `WhenTestMethodCallsMutatingFileMethodWithConstantPath_Diagnostic`/`WhenTestMethodCallsAsyncMutatingFileMethodWithConstantPath_Diagnostic` DataRow tests (lines ~465-540) added in earlier work; issue #10316 body may be stale — verify and consider closing/commenting on #10316 next run.
+5. **Issue #10316 — CLOSED 2026-08-10**: verified all remaining File.* allowlist entries (write/append/create family, Encrypt/Decrypt/SetAttributes/SetUnixFileMode, CreateSymbolicLink, Set*Time* family) are covered via existing DataRow tests in `SharedFileSystemPathInTestAnalyzerTests.cs` (including PR #10534 merged 2026-08-09/10). Commented with confirmation and closed the issue.
 
 ## Tasks Run History (summarized)
 
 | Date | Tasks |
 |------|-------|
+| 2026-08-10 | Task 2/5 (verified & closed issue #10316 — all File.* allowlist entries confirmed covered), Task 7. No new PR this run (DependsOnShouldBeValidAnalyzer checked, already has broad rule coverage). |
 | 2026-08-09 | Task 3 (SharedFileSystemPathInTestAnalyzer MSTEST0077: File.CreateSymbolicLink pathToTarget negative, per issue #10316), Task 7 |
 | 2026-08-08 | Task 3 (TestFilterProviderShouldBeValidAnalyzer MSTEST0081: filter-type vs constructor accessibility edge cases), Task 7 |
 | 2026-08-07 | Task 3 (DependsOnShouldBeValidAnalyzer MSTEST0078: internal target class HasValidAccessibility edge cases), Task 7 |
@@ -77,7 +78,7 @@
 
 ## Last Run
 
-2026-08-09 UTC
+2026-08-10 UTC
 
 ## Completed Work (recent, summarized)
 
