@@ -81,7 +81,9 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
     {
         var classSymbol = (INamedTypeSymbol)context.Symbol;
 
-        if (!classSymbol.IsTestClass(testClassAttributeSymbol))
+        // Abstract test classes are never instantiated, so no inherited fixture or test runs for them; any concrete
+        // derived test class is analyzed separately and still gets the warning.
+        if (!classSymbol.IsTestClass(testClassAttributeSymbol) || classSymbol.IsAbstract)
         {
             return;
         }
@@ -294,9 +296,9 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
                             && ReturnsVoidTaskOrValueTask(derivedMethod, taskSymbol, valueTaskSymbol):
                         return true;
 
-                    // Test-method hiding is signature-based: only a same-parameter method shadows the inherited test;
-                    // a different-signature overload stays discoverable.
-                    case MSTestMemberKind.TestMethod when HaveSameParameterTypes(derivedMethod, baseMethod):
+                    // Test-method hiding is signature-based: only a same-signature method shadows the inherited test;
+                    // a different-arity, by-ref, or otherwise different-signature overload stays discoverable.
+                    case MSTestMemberKind.TestMethod when HaveSameSignature(derivedMethod, baseMethod):
                         return true;
                 }
             }
@@ -318,16 +320,19 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
         return false;
     }
 
-    private static bool HaveSameParameterTypes(IMethodSymbol left, IMethodSymbol right)
+    private static bool HaveSameSignature(IMethodSymbol left, IMethodSymbol right)
     {
-        if (left.Parameters.Length != right.Parameters.Length)
+        if (left.Arity != right.Arity || left.Parameters.Length != right.Parameters.Length)
         {
             return false;
         }
 
         for (int index = 0; index < left.Parameters.Length; index++)
         {
-            if (!SymbolEqualityComparer.Default.Equals(left.Parameters[index].Type, right.Parameters[index].Type))
+            IParameterSymbol leftParameter = left.Parameters[index];
+            IParameterSymbol rightParameter = right.Parameters[index];
+            if (leftParameter.RefKind != rightParameter.RefKind
+                || !SymbolEqualityComparer.Default.Equals(leftParameter.Type, rightParameter.Type))
             {
                 return false;
             }
