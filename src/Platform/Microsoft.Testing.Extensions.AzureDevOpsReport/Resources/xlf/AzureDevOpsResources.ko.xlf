@@ -64,7 +64,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingFailedToReadCoordinationFile">
         <source>Azure DevOps live publishing failed to read coordination file</source>
-        <target state="new">Azure DevOps live publishing failed to read coordination file</target>
+        <target state="translated">Azure DevOps 라이브 게시에서 조정 파일을 읽지 못함</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingFailedToWriteCoordinationFile">
@@ -119,7 +119,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingResultMapHandoffFailed">
         <source>Azure DevOps live publishing failed to update the result map handoff.</source>
-        <target state="new">Azure DevOps live publishing failed to update the result map handoff.</target>
+        <target state="translated">Azure DevOps 라이브 게시에서 결과 맵 핸드오프를 업데이트하지 못했습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingResultsDropped">
@@ -259,7 +259,7 @@
       </trans-unit>
       <trans-unit id="GroupsOptionDescription">
         <source>Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'off'. Requires '--report-azdo'.</source>
-        <target state="needs-review-translation">어셈블리별 Azure DevOps 로그 그룹을 사용하거나 사용하지 않도록 설정합니다('on' 또는 'off'). 기본값은 'on'입니다. '--report-azdo'가 필요합니다.</target>
+        <target state="new">Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'off'. Requires '--report-azdo'.</target>
         <note>{Locked="on"}{Locked="off"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="InvalidArtifactUploadGlob">
