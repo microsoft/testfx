@@ -197,10 +197,18 @@ internal static class JUnitReportMerger
         var suites = new List<RetrySuite>();
         var suiteIndices = new Dictionary<string, int>(StringComparer.Ordinal);
         DateTimeOffset? earliestTimestamp = null;
+        XElement? finalSuiteProperties = null;
 
         foreach (XDocument report in inputReports)
         {
-            foreach (XElement suite in GetSuites(report))
+            XElement[] reportSuites = [.. GetSuites(report)];
+            finalSuiteProperties = reportSuites
+                .SelectMany(suite => suite.Elements().Where(IsProperties))
+                .Select(properties => new XElement(properties))
+                .FirstOrDefault()
+                ?? finalSuiteProperties;
+
+            foreach (XElement suite in reportSuites)
             {
                 if (TryReadTimestamp(suite, "timestamp", out DateTimeOffset timestamp)
                     && (earliestTimestamp is null || timestamp < earliestTimestamp))
@@ -247,6 +255,23 @@ internal static class JUnitReportMerger
             foreach (XElement testCase in mergedSuite.Elements().Where(IsTestCase).ToArray())
             {
                 testCase.Remove();
+            }
+
+            if (finalSuiteProperties is not null)
+            {
+                XElement[] existingProperties = [.. mergedSuite.Elements().Where(IsProperties)];
+                if (existingProperties.Length == 0)
+                {
+                    mergedSuite.AddFirst(new XElement(finalSuiteProperties));
+                }
+                else
+                {
+                    existingProperties[0].ReplaceWith(new XElement(finalSuiteProperties));
+                    foreach (XElement duplicateProperties in existingProperties.Skip(1))
+                    {
+                        duplicateProperties.Remove();
+                    }
+                }
             }
 
             long failures = 0;
@@ -303,6 +328,9 @@ internal static class JUnitReportMerger
 
     private static bool IsTestCase(XElement element)
         => element.Name.LocalName == "testcase";
+
+    private static bool IsProperties(XElement element)
+        => element.Name.LocalName == "properties";
 
     private static string BuildSuiteIdentity(XElement suite)
         => BuildIdentity(

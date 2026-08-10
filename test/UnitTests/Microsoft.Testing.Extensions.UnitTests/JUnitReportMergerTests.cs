@@ -199,6 +199,43 @@ public sealed class JUnitReportMergerTests
     }
 
     [TestMethod]
+    public void MergeRetryAttempts_UsesFinalAttemptSuiteProperties()
+    {
+        XDocument firstAttempt = BuildReport(suites:
+        [
+            SuiteWithExitCode(
+                "Suite",
+                exitCode: 2,
+                tests: 2,
+                failures: 1,
+                testCases:
+                [
+                    TestCase("AlwaysPasses"),
+                    TestCase("Flaky", outcomeElement: new XElement("failure")),
+                ]),
+        ]);
+        XDocument secondAttempt = BuildReport(suites:
+        [
+            SuiteWithExitCode(
+                "Suite",
+                exitCode: 0,
+                testCases: [TestCase("Flaky")]),
+        ]);
+
+        XElement suite = JUnitReportMerger.Merge(
+            [firstAttempt, secondAttempt],
+            "run",
+            JUnitMergeMode.CollapseRetryAttempts).Root!.Element("testsuite")!;
+
+        Assert.AreEqual("0", suite.Element("properties")!
+            .Elements("property")
+            .Single(property => property.Attribute("name")!.Value == "exit-code")
+            .Attribute("value")!
+            .Value);
+        Assert.AreEqual("0", suite.Attribute("failures")!.Value);
+    }
+
+    [TestMethod]
     public async Task MergeToFileAsync_WritesMergedFileToDisk()
     {
         string tempDirectory = Path.Combine(Path.GetTempPath(), $"junit-merge-{Guid.NewGuid():N}");
@@ -318,6 +355,24 @@ public sealed class JUnitReportMergerTests
             new XAttribute("classname", "Suite"),
             new XAttribute("time", time.ToString("0.000", CultureInfo.InvariantCulture)),
             outcomeElement);
+
+    private static XElement SuiteWithExitCode(
+        string name,
+        int exitCode,
+        long tests = 1,
+        long failures = 0,
+        IEnumerable<XElement>? testCases = null)
+    {
+        XElement suite = Suite(name, tests, failures, testCases: testCases);
+        suite.AddFirst(
+            new XElement(
+                "properties",
+                new XElement(
+                    "property",
+                    new XAttribute("name", "exit-code"),
+                    new XAttribute("value", exitCode))));
+        return suite;
+    }
 
     private static XElement RetryTestCase(
         string name,
