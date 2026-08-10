@@ -11,6 +11,9 @@ using Microsoft.CodeAnalysis.Testing;
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.InheritedMemberFromDifferentMSTestVersionAnalyzer,
     Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
+using VerifyVB = MSTest.Analyzers.Test.VisualBasicCodeFixVerifier<
+    MSTest.Analyzers.InheritedMemberFromDifferentMSTestVersionAnalyzer,
+    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
 namespace MSTest.Analyzers.Test;
 
@@ -800,15 +803,503 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
         await test.RunAsync();
     }
 
+    [TestMethod]
+    public async Task WhenInheritedTestInitializeReturnsTaskOfT_NoDiagnostic()
+    {
+        // Task<T> is not a valid fixture return type, so recompiling the base would not make it run.
+        string legacyBaseCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public sealed class TestInitializeAttribute : System.Attribute { }
+            }
+
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                public abstract class TestBase
+                {
+                    [TestInitialize]
+                    public System.Threading.Tasks.Task<int> BaseInitialize() => System.Threading.Tasks.Task.FromResult(0);
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                public class SampleTests : TestBase
+                {
+                    [TestMethod]
+                    public void MyTest() { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddLegacyFrameworkBaseProject(test, legacyBaseCode);
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenInheritedTestInitializeReturnsTask_Diagnostic()
+    {
+        // Non-generic Task is a valid fixture return type.
+        string legacyBaseCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public sealed class TestInitializeAttribute : System.Attribute { }
+            }
+
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                public abstract class TestBase
+                {
+                    [TestInitialize]
+                    public System.Threading.Tasks.Task BaseInitialize() => System.Threading.Tasks.Task.CompletedTask;
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                public class {|#0:SampleTests|} : TestBase
+                {
+                    [TestMethod]
+                    public void MyTest() { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddLegacyFrameworkBaseProject(test, legacyBaseCode);
+
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(InheritedMemberFromDifferentMSTestVersionAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("BaseInitialize", "TestBase", "TestInitialize", LegacyFrameworkAssemblyName));
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenInheritedParameterlessClassInitialize_NoDiagnostic()
+    {
+        // ClassInitialize requires a TestContext parameter; a parameterless one is invalid and would not run even
+        // after recompiling the base.
+        string legacyBaseCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public class TestContext { }
+
+                public enum InheritanceBehavior { None, BeforeEachDerivedClass }
+
+                public sealed class ClassInitializeAttribute : System.Attribute
+                {
+                    public ClassInitializeAttribute() { }
+                    public ClassInitializeAttribute(InheritanceBehavior inheritanceBehavior) { }
+                }
+            }
+
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                public abstract class TestBase
+                {
+                    [ClassInitialize(InheritanceBehavior.BeforeEachDerivedClass)]
+                    public static void BaseClassInitialize() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                public class SampleTests : TestBase
+                {
+                    [TestMethod]
+                    public void MyTest() { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddLegacyFrameworkBaseProject(test, legacyBaseCode);
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenInheritedParameterlessClassCleanupIsInheritable_Diagnostic()
+    {
+        // Unlike ClassInitialize, ClassCleanup may be parameterless, so an inheritable one is a real mismatch.
+        string legacyBaseCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public enum InheritanceBehavior { None, BeforeEachDerivedClass }
+
+                public sealed class ClassCleanupAttribute : System.Attribute
+                {
+                    public ClassCleanupAttribute() { }
+                    public ClassCleanupAttribute(InheritanceBehavior inheritanceBehavior) { }
+                }
+            }
+
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                public abstract class TestBase
+                {
+                    [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass)]
+                    public static void BaseClassCleanup() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                public class {|#0:SampleTests|} : TestBase
+                {
+                    [TestMethod]
+                    public void MyTest() { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddLegacyFrameworkBaseProject(test, legacyBaseCode);
+
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(InheritedMemberFromDifferentMSTestVersionAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("BaseClassCleanup", "TestBase", "ClassCleanup", LegacyFrameworkAssemblyName));
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenInheritedTestInitializeShadowedByInvalidDerivedMethod_Diagnostic()
+    {
+        // A private same-name method in the derived class is not a valid fixture, so it does not suppress the
+        // inherited public fixture; the mismatch must still be reported.
+        string legacyBaseCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public sealed class TestInitializeAttribute : System.Attribute { }
+            }
+
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                public abstract class TestBase
+                {
+                    [TestInitialize]
+                    public void BaseInitialize() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                public class {|#0:SampleTests|} : TestBase
+                {
+                    private new void BaseInitialize() { }
+
+                    [TestMethod]
+                    public void MyTest() { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddLegacyFrameworkBaseProject(test, legacyBaseCode);
+
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(InheritedMemberFromDifferentMSTestVersionAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("BaseInitialize", "TestBase", "TestInitialize", LegacyFrameworkAssemblyName));
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenInheritedTestMethodShadowedByDifferentSignature_Diagnostic()
+    {
+        // A different-signature overload does not hide the inherited test method, so it stays discoverable and the
+        // mismatch is reported.
+        string legacyBaseCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public sealed class TestMethodAttribute : System.Attribute { }
+            }
+
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                public abstract class TestBase
+                {
+                    [TestMethod]
+                    public void Run() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                public class {|#0:SampleTests|} : TestBase
+                {
+                    public void Run(int value) { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddLegacyFrameworkBaseProject(test, legacyBaseCode);
+
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(InheritedMemberFromDifferentMSTestVersionAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Run", "TestBase", "TestMethod", LegacyFrameworkAssemblyName));
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenInheritedTestMethodHiddenBySameSignature_NoDiagnostic()
+    {
+        // A same-signature derived method hides the inherited test, so it is the derived one that runs.
+        string legacyBaseCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public sealed class TestMethodAttribute : System.Attribute { }
+            }
+
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                public abstract class TestBase
+                {
+                    [TestMethod]
+                    public void Run() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                public class SampleTests : TestBase
+                {
+                    public new void Run() { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddLegacyFrameworkBaseProject(test, legacyBaseCode);
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenInheritedClassInitializeWithSameNameDerivedMethod_Diagnostic()
+    {
+        // Class fixtures are accumulated independently, so a same-name derived method does not suppress an inherited
+        // class fixture.
+        string legacyBaseCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public class TestContext { }
+
+                public enum InheritanceBehavior { None, BeforeEachDerivedClass }
+
+                public sealed class ClassInitializeAttribute : System.Attribute
+                {
+                    public ClassInitializeAttribute() { }
+                    public ClassInitializeAttribute(InheritanceBehavior inheritanceBehavior) { }
+                }
+            }
+
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                public abstract class TestBase
+                {
+                    [ClassInitialize(InheritanceBehavior.BeforeEachDerivedClass)]
+                    public static void BaseClassInitialize(TestContext context) { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                public class {|#0:SampleTests|} : TestBase
+                {
+                    public static void BaseClassInitialize() { }
+
+                    [TestMethod]
+                    public void MyTest() { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddLegacyFrameworkBaseProject(test, legacyBaseCode);
+
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(InheritedMemberFromDifferentMSTestVersionAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("BaseClassInitialize", "TestBase", "ClassInitialize", LegacyFrameworkAssemblyName));
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenInheritedTestInitializeFromDifferentFrameworkAssemblyInVisualBasic_Diagnostic()
+    {
+        // The analyzer is symbol-based, so it reports the same mismatch for a Visual Basic test class inheriting a
+        // base compiled against a differently named framework.
+        string legacyBaseCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public sealed class TestInitializeAttribute : System.Attribute { }
+            }
+
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                public abstract class TestBase
+                {
+                    [TestInitialize]
+                    public void BaseInitialize() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            Namespace Repro
+                <TestClass>
+                Public Class {|#0:SampleTests|}
+                    Inherits TestBase
+
+                    <TestMethod>
+                    Public Sub MyTest()
+                    End Sub
+                End Class
+            End Namespace
+            """;
+
+        var test = new VerifyVB.Test { TestCode = consumerCode };
+        AddLegacyFrameworkBaseProject(test.TestState, legacyBaseCode);
+
+        test.ExpectedDiagnostics.Add(
+            VerifyVB.Diagnostic(InheritedMemberFromDifferentMSTestVersionAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("BaseInitialize", "TestBase", "TestInitialize", LegacyFrameworkAssemblyName));
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenInheritedTestInitializeShadowedByValidMethodInVisualBasic_NoDiagnostic()
+    {
+        // A valid same-name Shadows method in the derived Visual Basic class hides the inherited fixture, so the
+        // mismatch is not reported.
+        string legacyBaseCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public sealed class TestInitializeAttribute : System.Attribute { }
+            }
+
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                public abstract class TestBase
+                {
+                    [TestInitialize]
+                    public void BaseInitialize() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            Namespace Repro
+                <TestClass>
+                Public Class SampleTests
+                    Inherits TestBase
+
+                    Public Shadows Sub BaseInitialize()
+                    End Sub
+
+                    <TestMethod>
+                    Public Sub MyTest()
+                    End Sub
+                End Class
+            End Namespace
+            """;
+
+        var test = new VerifyVB.Test { TestCode = consumerCode };
+        AddLegacyFrameworkBaseProject(test.TestState, legacyBaseCode);
+
+        await test.RunAsync();
+    }
+
     // Adds a base library whose MSTest lifecycle/test attributes are defined in an assembly named like the legacy v3
     // framework. It deliberately does NOT reference the real framework, so the attributes it applies bind to its own
     // types, reproducing the different-type-identity situation from issue #10505.
     private static void AddLegacyFrameworkBaseProject(VerifyCS.Test test, string libraryCode)
+        => AddLegacyFrameworkBaseProject(test.TestState, libraryCode);
+
+    private static void AddLegacyFrameworkBaseProject(SolutionState testState, string libraryCode)
     {
         var libraryProject = new ProjectState(LegacyFrameworkAssemblyName, LanguageNames.CSharp, "/LegacyBase/", "cs");
         libraryProject.Sources.Add(("LegacyBase.cs", libraryCode));
-        test.TestState.AdditionalProjects.Add(LegacyFrameworkAssemblyName, libraryProject);
-        test.TestState.AdditionalProjectReferences.Add(LegacyFrameworkAssemblyName);
+        testState.AdditionalProjects.Add(LegacyFrameworkAssemblyName, libraryProject);
+        testState.AdditionalProjectReferences.Add(LegacyFrameworkAssemblyName);
     }
 
     // Adds a legacy framework assembly plus a base library that references it, and links only the base library into the
