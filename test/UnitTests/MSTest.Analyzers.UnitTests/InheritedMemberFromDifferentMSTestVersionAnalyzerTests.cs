@@ -1431,6 +1431,105 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenInheritedTestMethodShadowedByProtectedMethodWithDiscoverInternals_Diagnostic()
+    {
+        // Even with DiscoverInternals the adapter only discovers public or internal methods, so a protected derived
+        // method does not hide the inherited test and the mismatch is reported.
+        string legacyBaseCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public sealed class DataTestMethodAttribute : System.Attribute { }
+            }
+
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                public abstract class TestBase
+                {
+                    [DataTestMethod]
+                    public void Run() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: DiscoverInternals]
+
+            namespace Repro
+            {
+                [TestClass]
+                public class {|#0:SampleTests|} : TestBase
+                {
+                    [TestMethod]
+                    protected new void Run() { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddLegacyFrameworkBaseProject(test, legacyBaseCode);
+
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(InheritedMemberFromDifferentMSTestVersionAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Run", "TestBase", "DataTestMethod", LegacyFrameworkAssemblyName));
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenNestedProtectedTestClassInheritsLegacyFixture_NoDiagnostic()
+    {
+        // A nested protected test class is not discovered by the adapter (even with DiscoverInternals, only nested
+        // public/internal classes with a fully public/internal container chain are), so no inherited member runs and
+        // there is nothing to report.
+        string legacyBaseCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public sealed class TestInitializeAttribute : System.Attribute { }
+            }
+
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                public abstract class TestBase
+                {
+                    [TestInitialize]
+                    public void BaseInitialize() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: DiscoverInternals]
+
+            namespace Repro
+            {
+                public class Outer
+                {
+                    [TestClass]
+                    protected class InnerTests : TestBase
+                    {
+                        [TestMethod]
+                        public void MyTest() { }
+                    }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddLegacyFrameworkBaseProject(test, legacyBaseCode);
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
     public async Task WhenInheritedGenericTestMethodShadowedByRenamedTypeParameter_NoDiagnostic()
     {
         // 'Run<U>(U)' and 'Run<T>(T)' share a CLR signature (method type parameters are identified by ordinal, not by

@@ -162,10 +162,22 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
 
     private static bool IsDiscoverableTestClassVisibility(INamedTypeSymbol classSymbol, bool canDiscoverInternals)
     {
-        SymbolVisibility resultantVisibility = classSymbol.GetResultantVisibility();
-        return canDiscoverInternals
-            ? resultantVisibility != SymbolVisibility.Private
-            : resultantVisibility == SymbolVisibility.Public;
+        // Mirror TypeValidator.TypeHasValidAccessibility: the class and every containing type must be public, or (when
+        // the assembly opts into DiscoverInternals) public or internal. Nested protected/protected-internal/
+        // private-protected/private types are never discovered, so GetResultantVisibility (which collapses protected to
+        // public) is not precise enough here.
+        for (INamedTypeSymbol? type = classSymbol; type is not null; type = type.ContainingType)
+        {
+            bool accessible = canDiscoverInternals
+                ? type.DeclaredAccessibility is Accessibility.Public or Accessibility.Internal
+                : type.DeclaredAccessibility == Accessibility.Public;
+            if (!accessible)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private static IAssemblySymbol? GetFrameworkAssembly(INamedTypeSymbol classSymbol)
@@ -371,12 +383,11 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
                 && string.Equals(assembly.Name, referenceAssembly.Name, StringComparison.Ordinal));
 
     private static bool HasDiscoverableTestMethodAccessibility(IMethodSymbol method, bool canDiscoverInternals)
-    {
-        SymbolVisibility resultantVisibility = method.GetResultantVisibility();
-        return canDiscoverInternals
-            ? resultantVisibility != SymbolVisibility.Private
-            : resultantVisibility == SymbolVisibility.Public && method.DeclaredAccessibility == Accessibility.Public;
-    }
+        // Mirror TestMethodValidator: a discoverable test method is exactly public, or exactly internal when the
+        // assembly opts into DiscoverInternals. Protected/protected-internal/private-protected/private methods are never
+        // discovered, so a derived one cannot hide the inherited test.
+        => method.DeclaredAccessibility == Accessibility.Public
+            || (canDiscoverInternals && method.DeclaredAccessibility == Accessibility.Internal);
 
     private static bool HaveSameSignature(IMethodSymbol left, IMethodSymbol right)
     {
