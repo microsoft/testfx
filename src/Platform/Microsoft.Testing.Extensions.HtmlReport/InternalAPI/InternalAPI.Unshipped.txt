@@ -6,6 +6,7 @@ Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.DisplayName.ge
 Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.HtmlArtifactPostProcessor() -> void
 Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
 Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.ProcessAsync(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>! inputs, string! outputDirectory, Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact?>!
+Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.SupportedModes.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingMode>!
 Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.SupportedFileExtensionsFallback.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.SupportedKinds.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Microsoft.Testing.Extensions.HtmlReport.HtmlArtifactPostProcessor.SupportsTruncatedRuns.get -> bool

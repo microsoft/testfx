@@ -67,7 +67,9 @@ internal sealed class ArtifactPostProcessingDispatcherTool(
 
         IArtifactPostProcessor[] eligibleProcessors =
         [
-            .. _processors.Where(processor => !manifest.Context.IsTruncated || processor.SupportsTruncatedRuns),
+            .. _processors.Where(processor =>
+                processor.SupportedModes.Contains(manifest.Context.Mode)
+                && (!manifest.Context.IsTruncated || processor.SupportsTruncatedRuns)),
         ];
         await WarnAboutProcessorConflictsAsync(eligibleProcessors, cancellationToken).ConfigureAwait(false);
 

@@ -29,6 +29,7 @@ public sealed class HtmlArtifactPostProcessorTests
         HtmlArtifactPostProcessor processor = new();
 
         Assert.AreSequenceEqual(new[] { HtmlReportGenerator.HtmlArtifactKind }, processor.SupportedKinds);
+        Assert.AreSequenceEqual(new[] { ArtifactPostProcessingMode.TestModules }, processor.SupportedModes);
         Assert.IsEmpty(processor.SupportedFileExtensionsFallback);
         Assert.IsFalse(processor.SupportsTruncatedRuns);
     }

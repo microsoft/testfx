@@ -71,7 +71,7 @@ internal readonly struct RetryRunSummary
 }
 
 /// <summary>
-/// Renders the retry summary output and moves the last attempt's artifacts to the final result directory.
+/// Renders the retry summary output and publishes the final logical-run artifacts to the result directory.
 /// </summary>
 internal static class RetrySummaryReporter
 {
@@ -215,6 +215,24 @@ internal static class RetrySummaryReporter
         return builder?.ToString() ?? text;
     }
 
+    public static Task MoveArtifactsAsync(
+        IOutputDeviceDataProducer producer,
+        IOutputDevice outputDevice,
+        IFileSystem fileSystem,
+        ILogger logger,
+        string currentTryResultFolder,
+        string resultDirectory,
+        CancellationToken cancellationToken)
+        => MoveArtifactsAsync(
+            producer,
+            outputDevice,
+            fileSystem,
+            logger,
+            currentTryResultFolder,
+            resultDirectory,
+            new Dictionary<string, string>(),
+            cancellationToken);
+
     public static async Task MoveArtifactsAsync(
         IOutputDeviceDataProducer producer,
         IOutputDevice outputDevice,
@@ -222,6 +240,7 @@ internal static class RetrySummaryReporter
         ILogger logger,
         string currentTryResultFolder,
         string resultDirectory,
+        IReadOnlyDictionary<string, string> replacements,
         CancellationToken cancellationToken)
     {
         string[] filesToMove = fileSystem.GetFiles(currentTryResultFolder, "*.*", SearchOption.AllDirectories);
@@ -230,27 +249,27 @@ internal static class RetrySummaryReporter
             return;
         }
 
-        // Move last attempt assets. The per-file detail is demoted to a debug log; the user-facing output is a
-        // single collapsed line so a large artifact set no longer spams the console.
+        // Preserve the final attempt under Retries like every earlier attempt, and publish copies at the top level.
+        // A retry-aware post-processor can replace a final-attempt report with one describing the logical run.
         foreach (string file in filesToMove)
         {
-            string finalFileLocation = file.Replace(currentTryResultFolder, resultDirectory);
+            string relativePath = file.Substring(currentTryResultFolder.Length)
+                .TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            string finalFileLocation = Path.Combine(
+                resultDirectory,
+                relativePath);
+            string sourceFile = replacements.TryGetValue(file, out string? replacement) ? replacement : file;
 
             // Create the directory if missing
             fileSystem.CreateDirectory(Path.GetDirectoryName(finalFileLocation)!);
 
-            logger.LogDebug($"Moving file '{file}' to '{finalFileLocation}'");
-#if NETCOREAPP
-            fileSystem.MoveFile(file, finalFileLocation, overwrite: true);
-#else
-            fileSystem.CopyFile(file, finalFileLocation, overwrite: true);
-            fileSystem.DeleteFile(file);
-#endif
+            logger.LogDebug($"Copying file '{sourceFile}' to '{finalFileLocation}'");
+            fileSystem.CopyFile(sourceFile, finalFileLocation, overwrite: true);
         }
 
         await outputDevice.DisplayAsync(
             producer,
-            new FormattedTextOutputDeviceData(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryArtifactsMoved, filesToMove.Length, resultDirectory))
+            new FormattedTextOutputDeviceData(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryArtifactsPublished, filesToMove.Length, resultDirectory))
             {
                 ForegroundColor = new SystemConsoleColor { ConsoleColor = ConsoleColor.DarkGray },
             },

@@ -80,13 +80,16 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             testHostResult.AssertOutputDoesNotContain("Test run summary: Passed!");
 
             string[] trxFiles = Directory.GetFiles(resultDirectory, "*.trx", SearchOption.AllDirectories);
-            Assert.HasCount(2, trxFiles);
-            string trxContents1 = File.ReadAllText(trxFiles[0]);
-            string trxContents2 = File.ReadAllText(trxFiles[1]);
-            Assert.AreNotEqual(trxContents1, trxContents2);
-            string id1 = Regex.Match(trxContents1, "<TestRun id=\"(.+?)\"").Groups[1].Value;
-            string id2 = Regex.Match(trxContents2, "<TestRun id=\"(.+?)\"").Groups[1].Value;
-            Assert.AreEqual(id1, id2);
+            Assert.HasCount(3, trxFiles);
+            string[] trxContents = [.. trxFiles.Select(File.ReadAllText)];
+            Assert.HasCount(2, trxContents.Distinct(StringComparer.Ordinal));
+            string[] ids =
+            [
+                .. trxContents
+                    .Select(contents => Regex.Match(contents, "<TestRun id=\"(.+?)\"").Groups[1].Value)
+                    .Distinct(StringComparer.Ordinal),
+            ];
+            Assert.HasCount(1, ids);
         }
         else
         {
@@ -601,19 +604,31 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContains("Retry summary: Passed! after 2/4 attempts");
 
-        // Attempts 1..N-1 stay under Retries/<n>/; only the final attempt's report is moved to the top level.
+        // Every physical attempt stays under Retries/<n>/, and the top-level report is a new consolidated document.
         string[] ctrfFiles =
         [
             .. Directory.GetFiles(resultDirectory, "*.ctrf.json", SearchOption.AllDirectories).OrderBy(f => f, StringComparer.Ordinal),
         ];
-        Assert.HasCount(2, ctrfFiles, $"Expected one CTRF report per attempt.{Environment.NewLine}{string.Join(Environment.NewLine, ctrfFiles)}");
+        Assert.HasCount(3, ctrfFiles, $"Expected two per-attempt reports and one consolidated report.{Environment.NewLine}{string.Join(Environment.NewLine, ctrfFiles)}");
 
         string[] runIds = [.. ctrfFiles.Select(f => ReadRequiredStringProperty(f, "runId"))];
         string[] reportIds = [.. ctrfFiles.Select(f => ReadRequiredStringProperty(f, "reportId"))];
 
-        Assert.AreEqual(runIds[0], runIds[1], "Both attempts belong to the same logical run, so they must share a runId.");
-        Assert.AreNotEqual(reportIds[0], reportIds[1], "Each attempt is a distinct artifact, so it must have its own reportId.");
+        Assert.HasCount(1, runIds.Distinct(StringComparer.Ordinal));
+        Assert.HasCount(3, reportIds.Distinct(StringComparer.Ordinal));
         Assert.AreNotEqual(runIds[0], reportIds[0], "runId and reportId identify different things and must not be the same value.");
+
+        string consolidatedPath = Directory.GetFiles(resultDirectory, "*.ctrf.json", SearchOption.TopDirectoryOnly).Single();
+        using var consolidated = System.Text.Json.JsonDocument.Parse(File.ReadAllText(consolidatedPath));
+        System.Text.Json.JsonElement results = consolidated.RootElement.GetProperty("results");
+        Assert.AreEqual(3, results.GetProperty("summary").GetProperty("tests").GetInt32());
+        Assert.AreEqual(1, results.GetProperty("summary").GetProperty("flaky").GetInt32());
+        System.Text.Json.JsonElement flakyTest = results.GetProperty("tests")
+            .EnumerateArray()
+            .Single(test => test.GetProperty("name").GetString() == "TestMethod1");
+        Assert.AreEqual("passed", flakyTest.GetProperty("status").GetString());
+        Assert.AreEqual(1, flakyTest.GetProperty("retries").GetInt32());
+        Assert.AreEqual("failed", flakyTest.GetProperty("retryAttempts")[0].GetProperty("status").GetString());
 
         if (expectedRunId is not null)
         {

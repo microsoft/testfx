@@ -13,6 +13,7 @@ internal sealed class HtmlArtifactPostProcessor : IArtifactPostProcessor
     private const string MergedReportDirectoryName = "merged";
 
     private static readonly string[] SupportedArtifactKinds = [HtmlReportGenerator.HtmlArtifactKind];
+    private static readonly ArtifactPostProcessingMode[] SupportedPostProcessingModes = [ArtifactPostProcessingMode.TestModules];
 
     public string Uid => "Microsoft.Testing.Extensions.HtmlReport.PostProcessor";
 
@@ -21,6 +22,8 @@ internal sealed class HtmlArtifactPostProcessor : IArtifactPostProcessor
     public string DisplayName => ExtensionResources.HtmlArtifactPostProcessorDisplayName;
 
     public string Description => ExtensionResources.HtmlArtifactPostProcessorDescription;
+
+    public IReadOnlyList<ArtifactPostProcessingMode> SupportedModes => SupportedPostProcessingModes;
 
     public bool SupportsTruncatedRuns => false;
 

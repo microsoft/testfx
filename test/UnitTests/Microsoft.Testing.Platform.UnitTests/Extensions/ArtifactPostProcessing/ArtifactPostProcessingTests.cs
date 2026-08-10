@@ -392,6 +392,8 @@ public sealed class ArtifactPostProcessingTests
 
         public string Description => Uid;
 
+        public IReadOnlyList<ArtifactPostProcessingMode> SupportedModes { get; } = [ArtifactPostProcessingMode.TestModules];
+
         public bool SupportsTruncatedRuns { get; } = supportsTruncatedRuns;
 
         public IReadOnlyList<string> SupportedKinds { get; } = supportedKinds;

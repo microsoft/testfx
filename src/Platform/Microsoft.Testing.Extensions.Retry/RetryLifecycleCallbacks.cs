@@ -56,6 +56,7 @@ internal sealed class RetryLifecycleCallbacks : ITestHostApplicationLifetime, ID
         Client.RegisterSerializer(new GetListOfFailedTestsRequestSerializer(), typeof(GetListOfFailedTestsRequest));
         Client.RegisterSerializer(new GetListOfFailedTestsResponseSerializer(), typeof(GetListOfFailedTestsResponse));
         Client.RegisterSerializer(new TestRunCountsRequestSerializer(), typeof(TestRunCountsRequest));
+        Client.RegisterSerializer(new ArtifactRequestSerializer(), typeof(ArtifactRequest));
         await Client.ConnectAsync(cancellationToken).ConfigureAwait(false);
 
         GetListOfFailedTestsResponse result = await Client.RequestReplyAsync<GetListOfFailedTestsRequest, GetListOfFailedTestsResponse>(new GetListOfFailedTestsRequest(), cancellationToken).ConfigureAwait(false);

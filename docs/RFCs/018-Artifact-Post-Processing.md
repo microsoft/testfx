@@ -144,6 +144,8 @@ public interface IArtifactPostProcessor : IExtension
 {
     // Inherited from IExtension: Uid, Version, DisplayName, Description, Task<bool> IsEnabledAsync().
 
+    IReadOnlyList<ArtifactPostProcessingMode> SupportedModes { get; }
+
     /// <summary>
     /// Whether this processor can consume the incomplete set of complete artifacts observed
     /// before --maximum-failed-tests or --timeout truncated a run.
@@ -182,8 +184,18 @@ public interface IArtifactPostProcessor : IExtension
 public sealed class ArtifactPostProcessingContext
 {
     public ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason truncationReason);
+    public ArtifactPostProcessingContext(
+        ArtifactPostProcessingTruncationReason truncationReason,
+        ArtifactPostProcessingMode mode);
     public bool IsTruncated { get; }
+    public ArtifactPostProcessingMode Mode { get; }
     public ArtifactPostProcessingTruncationReason TruncationReason { get; }
+}
+
+public enum ArtifactPostProcessingMode
+{
+    TestModules,
+    RetryAttempts,
 }
 
 public enum ArtifactPostProcessingTruncationReason
@@ -224,6 +236,7 @@ public sealed record ProcessedArtifact(
 - **Returning `null`** means "I looked but there's nothing to do" (e.g. < 2 inputs). The orchestrator then leaves the originals visible.
 - **Idempotent / deterministic.** The contract is intentionally pure-functional from `inputs` -> `output`. Implementations must not stash state across calls.
 - **Truncated runs are fail-closed.** A processor must explicitly return `true` from `SupportsTruncatedRuns` before the SDK or dispatcher offers it artifacts from a run truncated by `--maximum-failed-tests` or `--timeout`. Opting in means the processor accepts an incomplete *set* of artifacts and will clearly represent that state in its output; it does not mean partially written or malformed files are valid inputs.
+- **Retry merging is opt-in.** `RetryAttempts` inputs are ordered from the initial execution to the final attempt and overlap by definition. A processor must advertise that mode and deliberately collapse repeated logical tests; processors that only concatenate disjoint module results advertise `TestModules` alone.
 - **`IExtension` base** gives us `Uid`, `Version`, `DisplayName`, `Description`, and `IsEnabledAsync()` for free, plus integration with the existing extension manifest tooling. (`IsEnabledAsync()` is therefore *not* a bespoke member of this contract; the sketch in Appendix A.1 implements the inherited member.)
 
 #### The producer/post-processor co-location invariant
@@ -627,6 +640,9 @@ One might avoid a relaunch by keeping an elected host process alive at end-of-ru
 ```csharp
 internal sealed class TrxArtifactPostProcessor : IArtifactPostProcessor
 {
+    public IReadOnlyList<ArtifactPostProcessingMode> SupportedModes
+        => [ArtifactPostProcessingMode.TestModules];
+
     public bool SupportsTruncatedRuns => false;
 
     public string Uid => "Microsoft.Testing.Extensions.TrxReport.PostProcessor";

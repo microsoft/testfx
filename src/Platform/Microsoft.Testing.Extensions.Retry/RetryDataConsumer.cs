@@ -40,7 +40,7 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
         _commandLineOptions = _serviceProvider.GetCommandLineOptions();
     }
 
-    public Type[] DataTypesConsumed => [typeof(TestNodeUpdateMessage)];
+    public Type[] DataTypesConsumed => [typeof(TestNodeUpdateMessage), typeof(SessionFileArtifact)];
 
     public string Uid => nameof(RetryDataConsumer);
 
@@ -52,6 +52,16 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
 
     public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
+        if (value is SessionFileArtifact artifact)
+        {
+            ApplicationStateGuard.Ensure(_retryFailedTestsLifecycleCallbacks is not null);
+            ApplicationStateGuard.Ensure(_retryFailedTestsLifecycleCallbacks.Client is not null);
+            await _retryFailedTestsLifecycleCallbacks.Client.RequestReplyAsync<ArtifactRequest, VoidResponse>(
+                new ArtifactRequest(artifact.FileInfo.FullName, artifact.Kind),
+                cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
         var testNodeUpdateMessage = (TestNodeUpdateMessage)value;
         TestNodeStateProperty? nodeState = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
         if (nodeState is null)

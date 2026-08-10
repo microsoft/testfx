@@ -645,6 +645,7 @@ public sealed class DotnetTestPipeArtifactPostProcessingTests
                 public string Version => "1.0.0";
                 public string DisplayName => nameof(SummaryArtifactPostProcessor);
                 public string Description => nameof(SummaryArtifactPostProcessor);
+                public IReadOnlyList<ArtifactPostProcessingMode> SupportedModes => [ArtifactPostProcessingMode.TestModules];
                 public bool SupportsTruncatedRuns => true;
                 public IReadOnlyList<string> SupportedKinds => ["test.summary"];
                 public IReadOnlyList<string> SupportedFileExtensionsFallback => [];
@@ -675,6 +676,7 @@ public sealed class DotnetTestPipeArtifactPostProcessingTests
                 public string Version => "1.0.0";
                 public string DisplayName => nameof(XmlArtifactPostProcessor);
                 public string Description => nameof(XmlArtifactPostProcessor);
+                public IReadOnlyList<ArtifactPostProcessingMode> SupportedModes => [ArtifactPostProcessingMode.TestModules];
                 public bool SupportsTruncatedRuns => false;
                 public IReadOnlyList<string> SupportedKinds => ["test.xml"];
                 public IReadOnlyList<string> SupportedFileExtensionsFallback => [];
@@ -701,6 +703,7 @@ public sealed class DotnetTestPipeArtifactPostProcessingTests
                 public string Version => "1.0.0";
                 public string DisplayName => nameof(LegacyXmlArtifactPostProcessor);
                 public string Description => nameof(LegacyXmlArtifactPostProcessor);
+                public IReadOnlyList<ArtifactPostProcessingMode> SupportedModes => [ArtifactPostProcessingMode.TestModules];
                 public bool SupportsTruncatedRuns => false;
                 public IReadOnlyList<string> SupportedKinds => [];
                 public IReadOnlyList<string> SupportedFileExtensionsFallback => [".xml"];

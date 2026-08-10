@@ -118,6 +118,48 @@ public sealed class JUnitReportMergerTests
     }
 
     [TestMethod]
+    public void MergeRetryAttempts_KeepsOneFinalOutcomePerLogicalTest()
+    {
+        XDocument firstAttempt = BuildReport(suites:
+        [
+            Suite(
+                "Suite",
+                tests: 2,
+                failures: 1,
+                time: 0.3,
+                testCases:
+                [
+                    TestCase("AlwaysPasses", time: 0.1),
+                    TestCase("Flaky", time: 0.2, outcomeElement: new XElement("failure")),
+                ]),
+        ]);
+        XDocument secondAttempt = BuildReport(suites:
+        [
+            Suite(
+                "Suite",
+                tests: 1,
+                time: 0.05,
+                testCases: [TestCase("Flaky", time: 0.05)]),
+        ]);
+
+        XElement root = JUnitReportMerger.Merge(
+            [firstAttempt, secondAttempt],
+            "run",
+            JUnitMergeMode.CollapseRetryAttempts).Root!;
+
+        Assert.AreEqual("2", root.Attribute("tests")!.Value);
+        Assert.AreEqual("0", root.Attribute("failures")!.Value);
+        Assert.AreEqual("0.150", root.Attribute("time")!.Value);
+        XElement suite = root.Element("testsuite")!;
+        Assert.AreEqual("2", suite.Attribute("tests")!.Value);
+        Assert.AreEqual("0", suite.Attribute("failures")!.Value);
+        Assert.AreSequenceEqual(
+            new[] { "AlwaysPasses", "Flaky" },
+            suite.Elements("testcase").Select(testCase => testCase.Attribute("name")!.Value));
+        Assert.IsEmpty(suite.Elements("testcase").Single(testCase => testCase.Attribute("name")!.Value == "Flaky").Elements("failure"));
+    }
+
+    [TestMethod]
     public async Task MergeToFileAsync_WritesMergedFileToDisk()
     {
         string tempDirectory = Path.Combine(Path.GetTempPath(), $"junit-merge-{Guid.NewGuid():N}");
@@ -217,7 +259,8 @@ public sealed class JUnitReportMergerTests
         long errors = 0,
         long skipped = 0,
         double time = 0,
-        DateTimeOffset? timestamp = null)
+        DateTimeOffset? timestamp = null,
+        IEnumerable<XElement>? testCases = null)
         => new(
             "testsuite",
             new XAttribute("name", name),
@@ -227,7 +270,15 @@ public sealed class JUnitReportMergerTests
             new XAttribute("skipped", skipped),
             new XAttribute("time", time.ToString("0.000", CultureInfo.InvariantCulture)),
             new XAttribute("timestamp", (timestamp ?? new DateTimeOffset(2020, 1, 1, 10, 0, 0, TimeSpan.Zero)).UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ss.fff", CultureInfo.InvariantCulture)),
-            new XElement("testcase", new XAttribute("name", $"{name}.Test1"), new XAttribute("classname", name)));
+            testCases ?? [TestCase($"{name}.Test1")]);
+
+    private static XElement TestCase(string name, double time = 0, XElement? outcomeElement = null)
+        => new(
+            "testcase",
+            new XAttribute("name", name),
+            new XAttribute("classname", "Suite"),
+            new XAttribute("time", time.ToString("0.000", CultureInfo.InvariantCulture)),
+            outcomeElement);
 
     private static XDocument BuildReport(
         long tests = 1,

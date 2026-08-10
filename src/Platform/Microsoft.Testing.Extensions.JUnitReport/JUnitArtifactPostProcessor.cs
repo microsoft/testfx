@@ -13,6 +13,8 @@ internal sealed class JUnitArtifactPostProcessor : IArtifactPostProcessor
     private const string MergedReportDirectoryName = "merged";
 
     private static readonly string[] SupportedArtifactKinds = [JUnitReportGenerator.JUnitArtifactKind];
+    private static readonly ArtifactPostProcessingMode[] SupportedPostProcessingModes =
+        [ArtifactPostProcessingMode.TestModules, ArtifactPostProcessingMode.RetryAttempts];
 
     public string Uid => "Microsoft.Testing.Extensions.JUnitReport.PostProcessor";
 
@@ -21,6 +23,8 @@ internal sealed class JUnitArtifactPostProcessor : IArtifactPostProcessor
     public string DisplayName => ExtensionResources.JUnitArtifactPostProcessorDisplayName;
 
     public string Description => ExtensionResources.JUnitArtifactPostProcessorDescription;
+
+    public IReadOnlyList<ArtifactPostProcessingMode> SupportedModes => SupportedPostProcessingModes;
 
     public bool SupportsTruncatedRuns => false;
 
@@ -42,10 +46,9 @@ internal sealed class JUnitArtifactPostProcessor : IArtifactPostProcessor
             return null;
         }
 
-        InputArtifact[] orderedInputs =
-        [
-            .. OrderInputs(inputs),
-        ];
+        InputArtifact[] orderedInputs = context.Mode == ArtifactPostProcessingMode.RetryAttempts
+            ? [.. inputs]
+            : [.. OrderInputs(inputs)];
 
         string mergedDirectory = Path.Combine(outputDirectory, MergedReportDirectoryName);
         try
@@ -62,12 +65,16 @@ internal sealed class JUnitArtifactPostProcessor : IArtifactPostProcessor
             return null;
         }
 
-        string mergeId = CreateMergeIdFromOrderedInputs(orderedInputs);
+        string mergeId = CreateMergeIdFromOrderedInputs(orderedInputs, context.Mode);
         string outputPath = Path.Combine(mergedDirectory, $"merged-{mergeId}.xml");
+        JUnitMergeMode mergeMode = context.Mode == ArtifactPostProcessingMode.RetryAttempts
+            ? JUnitMergeMode.CollapseRetryAttempts
+            : JUnitMergeMode.Concatenate;
         await JUnitReportMerger.MergeToFileAsync(
             [.. orderedInputs.Select(input => input.Path)],
             outputPath,
             ExtensionResources.JUnitMergedReportName,
+            mergeMode,
             cancellationToken).ConfigureAwait(false);
 
         return new ProcessedArtifact(
@@ -78,11 +85,13 @@ internal sealed class JUnitArtifactPostProcessor : IArtifactPostProcessor
     }
 
     internal static string CreateMergeId(IReadOnlyList<InputArtifact> inputs)
-        => CreateMergeIdFromOrderedInputs(OrderInputs(inputs));
+        => CreateMergeIdFromOrderedInputs(OrderInputs(inputs), ArtifactPostProcessingMode.TestModules);
 
-    private static string CreateMergeIdFromOrderedInputs(IEnumerable<InputArtifact> orderedInputs)
+    private static string CreateMergeIdFromOrderedInputs(
+        IEnumerable<InputArtifact> orderedInputs,
+        ArtifactPostProcessingMode mode)
     {
-        var identity = new StringBuilder();
+        var identity = new StringBuilder(mode.ToString());
         foreach (InputArtifact input in orderedInputs)
         {
             AppendIdentityPart(identity, Path.GetFullPath(input.Path));

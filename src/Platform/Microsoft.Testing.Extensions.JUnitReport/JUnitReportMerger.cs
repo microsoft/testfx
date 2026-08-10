@@ -5,6 +5,12 @@ using Microsoft.Testing.Platform;
 
 namespace Microsoft.Testing.Extensions.JUnitReport;
 
+internal enum JUnitMergeMode
+{
+    Concatenate,
+    CollapseRetryAttempts,
+}
+
 /// <summary>
 /// Merges several already-produced JUnit XML reports into a single JUnit document.
 /// </summary>
@@ -27,6 +33,12 @@ internal static class JUnitReportMerger
     private const string SuiteElementName = "testsuite";
 
     internal static XDocument Merge(IReadOnlyList<XDocument> inputReports, string reportName)
+        => Merge(inputReports, reportName, JUnitMergeMode.Concatenate);
+
+    internal static XDocument Merge(
+        IReadOnlyList<XDocument> inputReports,
+        string reportName,
+        JUnitMergeMode mode)
     {
         if (inputReports is null)
         {
@@ -41,6 +53,11 @@ internal static class JUnitReportMerger
         if (inputReports.Count == 0)
         {
             throw new ArgumentException("At least one JUnit report is required to merge.", nameof(inputReports));
+        }
+
+        if (mode == JUnitMergeMode.CollapseRetryAttempts)
+        {
+            return MergeRetryAttempts(inputReports, reportName);
         }
 
         long totalTests = 0;
@@ -110,6 +127,19 @@ internal static class JUnitReportMerger
         string outputPath,
         string reportName,
         CancellationToken cancellationToken)
+        => await MergeToFileAsync(
+            inputPaths,
+            outputPath,
+            reportName,
+            JUnitMergeMode.Concatenate,
+            cancellationToken).ConfigureAwait(false);
+
+    internal static async Task MergeToFileAsync(
+        IReadOnlyList<string> inputPaths,
+        string outputPath,
+        string reportName,
+        JUnitMergeMode mode,
+        CancellationToken cancellationToken)
     {
         if (inputPaths is null)
         {
@@ -140,7 +170,7 @@ internal static class JUnitReportMerger
             reports.Add(XDocument.Load(inputPath));
         }
 
-        XDocument merged = Merge(reports, reportName);
+        XDocument merged = Merge(reports, reportName, mode);
 
         string? outputDirectory = Path.GetDirectoryName(outputPath);
         if (!RoslynString.IsNullOrEmpty(outputDirectory))
@@ -162,6 +192,154 @@ internal static class JUnitReportMerger
         }).ConfigureAwait(false);
     }
 
+    private static XDocument MergeRetryAttempts(IReadOnlyList<XDocument> inputReports, string reportName)
+    {
+        var suites = new List<RetrySuite>();
+        var suiteIndices = new Dictionary<string, int>(StringComparer.Ordinal);
+        DateTimeOffset? earliestTimestamp = null;
+
+        foreach (XDocument report in inputReports)
+        {
+            foreach (XElement suite in GetSuites(report))
+            {
+                if (TryReadTimestamp(suite, "timestamp", out DateTimeOffset timestamp)
+                    && (earliestTimestamp is null || timestamp < earliestTimestamp))
+                {
+                    earliestTimestamp = timestamp;
+                }
+
+                string suiteIdentity = BuildSuiteIdentity(suite);
+                if (!suiteIndices.TryGetValue(suiteIdentity, out int suiteIndex))
+                {
+                    suiteIndex = suites.Count;
+                    suiteIndices.Add(suiteIdentity, suiteIndex);
+                    suites.Add(new RetrySuite(new XElement(suite)));
+                }
+
+                RetrySuite retrySuite = suites[suiteIndex];
+                foreach (XElement testCase in suite.Elements().Where(IsTestCase))
+                {
+                    string testIdentity = BuildTestIdentity(testCase);
+                    if (retrySuite.TestIndices.TryGetValue(testIdentity, out int testIndex))
+                    {
+                        retrySuite.Tests[testIndex] = new XElement(testCase);
+                    }
+                    else
+                    {
+                        retrySuite.TestIndices.Add(testIdentity, retrySuite.Tests.Count);
+                        retrySuite.Tests.Add(new XElement(testCase));
+                    }
+                }
+            }
+        }
+
+        long totalTests = 0;
+        long totalFailures = 0;
+        long totalErrors = 0;
+        long totalSkipped = 0;
+        double totalTime = 0;
+        var mergedRoot = new XElement(RootElementName);
+
+        for (int i = 0; i < suites.Count; i++)
+        {
+            RetrySuite retrySuite = suites[i];
+            XElement mergedSuite = retrySuite.Template;
+            foreach (XElement testCase in mergedSuite.Elements().Where(IsTestCase).ToArray())
+            {
+                testCase.Remove();
+            }
+
+            long failures = 0;
+            long errors = 0;
+            long skipped = 0;
+            double time = 0;
+            foreach (XElement testCase in retrySuite.Tests)
+            {
+                mergedSuite.Add(testCase);
+                failures += testCase.Elements().Any(element => element.Name.LocalName == "failure") ? 1 : 0;
+                errors += testCase.Elements().Any(element => element.Name.LocalName == "error") ? 1 : 0;
+                skipped += testCase.Elements().Any(element => element.Name.LocalName == "skipped") ? 1 : 0;
+                time += ReadDouble(testCase, "time");
+            }
+
+            long tests = retrySuite.Tests.Count;
+            mergedSuite.SetAttributeValue("id", i);
+            mergedSuite.SetAttributeValue("tests", tests.ToString(CultureInfo.InvariantCulture));
+            mergedSuite.SetAttributeValue("failures", failures.ToString(CultureInfo.InvariantCulture));
+            mergedSuite.SetAttributeValue("errors", errors.ToString(CultureInfo.InvariantCulture));
+            mergedSuite.SetAttributeValue("skipped", skipped.ToString(CultureInfo.InvariantCulture));
+            mergedSuite.SetAttributeValue("time", time.ToString("0.000", CultureInfo.InvariantCulture));
+            mergedRoot.Add(mergedSuite);
+
+            totalTests += tests;
+            totalFailures += failures;
+            totalErrors += errors;
+            totalSkipped += skipped;
+            totalTime += time;
+        }
+
+        mergedRoot.SetAttributeValue("name", reportName);
+        mergedRoot.SetAttributeValue("tests", totalTests.ToString(CultureInfo.InvariantCulture));
+        mergedRoot.SetAttributeValue("failures", totalFailures.ToString(CultureInfo.InvariantCulture));
+        mergedRoot.SetAttributeValue("errors", totalErrors.ToString(CultureInfo.InvariantCulture));
+        mergedRoot.SetAttributeValue("skipped", totalSkipped.ToString(CultureInfo.InvariantCulture));
+        mergedRoot.SetAttributeValue("time", totalTime.ToString("0.000", CultureInfo.InvariantCulture));
+        if (earliestTimestamp is { } stamp)
+        {
+            mergedRoot.SetAttributeValue("timestamp", stamp.UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ss.fff", CultureInfo.InvariantCulture));
+        }
+
+        return new XDocument(new XDeclaration("1.0", "UTF-8", null), mergedRoot);
+    }
+
+    private static IEnumerable<XElement> GetSuites(XDocument report)
+        => report.Root is not XElement root
+            ? []
+            : string.Equals(root.Name.LocalName, RootElementName, StringComparison.Ordinal)
+                ? root.Elements().Where(element => string.Equals(element.Name.LocalName, SuiteElementName, StringComparison.Ordinal))
+                : string.Equals(root.Name.LocalName, SuiteElementName, StringComparison.Ordinal)
+                    ? [root]
+                    : [];
+
+    private static bool IsTestCase(XElement element)
+        => element.Name.LocalName == "testcase";
+
+    private static string BuildSuiteIdentity(XElement suite)
+        => BuildIdentity(
+            suite.Attribute("name")?.Value,
+            suite.Attribute("package")?.Value,
+            suite.Attribute("hostname")?.Value);
+
+    private static string BuildTestIdentity(XElement testCase)
+        => BuildIdentity(
+            testCase.Attribute("classname")?.Value,
+            testCase.Attribute("name")?.Value,
+            testCase.Attribute("file")?.Value,
+            ReadProperty(testCase, "testpath"));
+
+    private static string BuildIdentity(params string?[] components)
+    {
+        var identity = new StringBuilder();
+        foreach (string? component in components)
+        {
+            identity.Append(component?.Length ?? -1)
+                .Append(':')
+                .Append(component);
+        }
+
+        return identity.ToString();
+    }
+
+    private static string? ReadProperty(XElement testCase, string propertyName)
+        => testCase.Elements()
+            .Where(element => element.Name.LocalName == "properties")
+            .Elements()
+            .FirstOrDefault(element =>
+                element.Name.LocalName == "property"
+                && element.Attribute("name")?.Value == propertyName)
+            ?.Attribute("value")
+            ?.Value;
+
     private static long ReadLong(XElement element, string attributeName)
         => long.TryParse(element.Attribute(attributeName)?.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out long value)
             ? value
@@ -182,5 +360,14 @@ internal static class JUnitReportMerger
         }
 
         return DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out result);
+    }
+
+    private sealed class RetrySuite(XElement template)
+    {
+        public XElement Template { get; } = template;
+
+        public List<XElement> Tests { get; } = [];
+
+        public Dictionary<string, int> TestIndices { get; } = [with(StringComparer.Ordinal)];
     }
 }

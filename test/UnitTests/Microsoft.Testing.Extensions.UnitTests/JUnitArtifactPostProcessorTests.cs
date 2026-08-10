@@ -25,6 +25,9 @@ public sealed class JUnitArtifactPostProcessorTests
         JUnitArtifactPostProcessor processor = new();
 
         Assert.AreSequenceEqual(new[] { JUnitReportGenerator.JUnitArtifactKind }, processor.SupportedKinds);
+        Assert.AreSequenceEqual(
+            new[] { ArtifactPostProcessingMode.TestModules, ArtifactPostProcessingMode.RetryAttempts },
+            processor.SupportedModes);
         Assert.IsEmpty(processor.SupportedFileExtensionsFallback);
         Assert.IsFalse(processor.SupportsTruncatedRuns);
     }

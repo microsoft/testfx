@@ -6,6 +6,7 @@ using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
+using Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers;
 using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
@@ -132,6 +133,7 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
         bool thresholdPolicyKickedIn = false;
         string retryRootFolder = CreateRetriesDirectory(resultDirectory);
         bool retryInterrupted = false;
+        List<RetryAttemptArtifact> attemptArtifacts = [];
 
         // Retries are the single most useful thing to measure about a flaky suite, and the orchestrator is the only
         // component that sees every attempt. Emitting the count here (rather than inferring it from duplicated test
@@ -232,6 +234,11 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
             if (attemptResult.ExitedBeforeConnect)
             {
                 return (int)ExitCode.GenericFailure;
+            }
+
+            foreach (ArtifactRequest artifact in retryFailedTestsPipeServer.Artifacts)
+            {
+                attemptArtifacts.Add(new RetryAttemptArtifact(artifact.Path, artifact.Kind, attemptCount));
             }
 
             exitCodes.Add(attemptResult.ExitCode);
@@ -381,7 +388,45 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
 
         ApplicationStateGuard.Ensure(currentTryResultFolder is not null);
 
-        await RetrySummaryReporter.MoveArtifactsAsync(this, outputDevice, fileSystem, logger, currentTryResultFolder, resultDirectory, cancellationToken).ConfigureAwait(false);
+        string postProcessingDirectory = Path.Combine(
+            Path.GetTempPath(),
+            $"testfx-retry-postprocess-{Guid.NewGuid():N}");
+        try
+        {
+            IReadOnlyDictionary<string, string> replacements = await RetryArtifactProcessor.ProcessAsync(
+                _serviceProvider,
+                this,
+                outputDevice,
+                logger,
+                attemptArtifacts,
+                attemptCount,
+                postProcessingDirectory,
+                cancellationToken).ConfigureAwait(false);
+
+            await RetrySummaryReporter.MoveArtifactsAsync(
+                this,
+                outputDevice,
+                fileSystem,
+                logger,
+                currentTryResultFolder,
+                resultDirectory,
+                replacements,
+                cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(postProcessingDirectory))
+                {
+                    Directory.Delete(postProcessingDirectory, recursive: true);
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                logger.LogWarning($"Failed to clean retry artifact post-processing directory '{postProcessingDirectory}': {ex}");
+            }
+        }
 
         return exitCodes[^1];
     }
