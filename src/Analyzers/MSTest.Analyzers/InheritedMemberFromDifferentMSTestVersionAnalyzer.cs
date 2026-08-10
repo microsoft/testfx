@@ -70,21 +70,26 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
             {
                 INamedTypeSymbol? taskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask);
                 INamedTypeSymbol? valueTaskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask);
+                bool canDiscoverInternals = context.Compilation.CanDiscoverInternals();
                 context.RegisterSymbolAction(
-                    context => AnalyzeSymbol(context, testClassAttributeSymbol, taskSymbol, valueTaskSymbol),
+                    context => AnalyzeSymbol(context, testClassAttributeSymbol, taskSymbol, valueTaskSymbol, canDiscoverInternals),
                     SymbolKind.NamedType);
             }
         });
     }
 
-    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testClassAttributeSymbol, INamedTypeSymbol? taskSymbol, INamedTypeSymbol? valueTaskSymbol)
+    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testClassAttributeSymbol, INamedTypeSymbol? taskSymbol, INamedTypeSymbol? valueTaskSymbol, bool canDiscoverInternals)
     {
         var classSymbol = (INamedTypeSymbol)context.Symbol;
 
-        // Abstract or generic test classes are never instantiated as a runnable test class (the adapter rejects
-        // them), so no inherited fixture or test runs for them; concrete non-generic derived classes are analyzed
+        // A test class the adapter cannot discover never runs, so no inherited member can run for it: abstract and
+        // generic types are rejected, and the type must be visible enough to be discovered (public, or internal when
+        // the assembly opts into DiscoverInternals). Concrete, accessible, non-generic derived classes are analyzed
         // separately and still get the warning.
-        if (!classSymbol.IsTestClass(testClassAttributeSymbol) || classSymbol.IsAbstract || classSymbol.IsGenericType)
+        if (!classSymbol.IsTestClass(testClassAttributeSymbol)
+            || classSymbol.IsAbstract
+            || classSymbol.IsGenericType
+            || !IsDiscoverableTestClassVisibility(classSymbol, canDiscoverInternals))
         {
             return;
         }
@@ -155,6 +160,14 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
         }
     }
 
+    private static bool IsDiscoverableTestClassVisibility(INamedTypeSymbol classSymbol, bool canDiscoverInternals)
+    {
+        SymbolVisibility resultantVisibility = classSymbol.GetResultantVisibility();
+        return canDiscoverInternals
+            ? resultantVisibility != SymbolVisibility.Private
+            : resultantVisibility == SymbolVisibility.Public;
+    }
+
     private static IAssemblySymbol? GetFrameworkAssembly(INamedTypeSymbol classSymbol)
         => classSymbol.GetAttributes()
             .Select(attribute => GetCanonicalMSTestAttribute(attribute.AttributeClass))
@@ -197,9 +210,10 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
     };
 
     private static bool WouldRunOrBeDiscoveredIfSameVersion(IMethodSymbol method, MSTestMemberKind kind, AttributeData attribute, INamedTypeSymbol testClass, INamedTypeSymbol declaringBaseType, INamedTypeSymbol? taskSymbol, INamedTypeSymbol? valueTaskSymbol)
-        // A non-public member, or one replaced by an override or a `new` declaration in a more-derived type, is not
-        // the member MSTest would run or discover, so recompiling the base cannot change its behavior.
+        // A non-public or generic member, or one replaced by an override or a `new` declaration in a more-derived
+        // type, is not the member MSTest would run or discover, so recompiling the base cannot change its behavior.
         => method.DeclaredAccessibility == Accessibility.Public
+            && !method.IsGenericMethod
             && !IsHiddenOrOverriddenInDerivedType(method, kind, testClass, declaringBaseType, taskSymbol, valueTaskSymbol)
             && kind switch
             {
