@@ -1337,6 +1337,143 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenInheritedTestMethodShadowedByInternalMethodWithDiscoverInternals_NoDiagnostic()
+    {
+        // With [assembly: DiscoverInternals] an internal derived [TestMethod] is discoverable, so it hides the inherited
+        // test and recompiling the base cannot change behavior. The base uses [DataTestMethod] so the consumer can apply
+        // the real [TestMethod] without a type-name collision.
+        string legacyBaseCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public sealed class DataTestMethodAttribute : System.Attribute { }
+            }
+
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                public abstract class TestBase
+                {
+                    [DataTestMethod]
+                    public void Run() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: DiscoverInternals]
+
+            namespace Repro
+            {
+                [TestClass]
+                public class SampleTests : TestBase
+                {
+                    [TestMethod]
+                    internal new void Run() { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddLegacyFrameworkBaseProject(test, legacyBaseCode);
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenInheritedTestMethodShadowedByInternalMethodWithoutDiscoverInternals_Diagnostic()
+    {
+        // Without DiscoverInternals an internal derived method is not discoverable, so it does not hide the inherited
+        // test and the mismatch is reported.
+        string legacyBaseCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public sealed class DataTestMethodAttribute : System.Attribute { }
+            }
+
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                public abstract class TestBase
+                {
+                    [DataTestMethod]
+                    public void Run() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                public class {|#0:SampleTests|} : TestBase
+                {
+                    [TestMethod]
+                    internal new void Run() { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddLegacyFrameworkBaseProject(test, legacyBaseCode);
+
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(InheritedMemberFromDifferentMSTestVersionAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Run", "TestBase", "DataTestMethod", LegacyFrameworkAssemblyName));
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenInheritedGenericTestMethodShadowedByRenamedTypeParameter_NoDiagnostic()
+    {
+        // 'Run<U>(U)' and 'Run<T>(T)' share a CLR signature (method type parameters are identified by ordinal, not by
+        // name), so the derived current-version test method hides the inherited generic test and no mismatch is reported.
+        string legacyBaseCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public sealed class DataTestMethodAttribute : System.Attribute { }
+            }
+
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                public abstract class TestBase
+                {
+                    [DataTestMethod]
+                    public void Run<T>(T value) { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                public class SampleTests : TestBase
+                {
+                    [TestMethod]
+                    public new void Run<U>(U value) { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddLegacyFrameworkBaseProject(test, legacyBaseCode);
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
     public async Task WhenInheritedTestMethodShadowedByGenericMethod_Diagnostic()
     {
         // A generic overload has a different arity, so it does not hide the inherited non-generic test method.

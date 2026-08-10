@@ -144,7 +144,7 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
                     // Only warn about members that would actually run or be discovered if the base were recompiled
                     // against the current version. Otherwise the remediation ("recompile the base") cannot help and
                     // the diagnostic is a false positive.
-                    if (!WouldRunOrBeDiscoveredIfSameVersion(method, kind, attribute, classSymbol, baseType, referenceAssembly, taskSymbol, valueTaskSymbol))
+                    if (!WouldRunOrBeDiscoveredIfSameVersion(method, kind, attribute, classSymbol, baseType, referenceAssembly, canDiscoverInternals, taskSymbol, valueTaskSymbol))
                     {
                         continue;
                     }
@@ -209,11 +209,11 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
         _ => MSTestMemberKind.None,
     };
 
-    private static bool WouldRunOrBeDiscoveredIfSameVersion(IMethodSymbol method, MSTestMemberKind kind, AttributeData attribute, INamedTypeSymbol testClass, INamedTypeSymbol declaringBaseType, IAssemblySymbol referenceAssembly, INamedTypeSymbol? taskSymbol, INamedTypeSymbol? valueTaskSymbol)
+    private static bool WouldRunOrBeDiscoveredIfSameVersion(IMethodSymbol method, MSTestMemberKind kind, AttributeData attribute, INamedTypeSymbol testClass, INamedTypeSymbol declaringBaseType, IAssemblySymbol referenceAssembly, bool canDiscoverInternals, INamedTypeSymbol? taskSymbol, INamedTypeSymbol? valueTaskSymbol)
         // A non-public member, or one replaced by an override or a `new` declaration in a more-derived type, is not the
         // member MSTest would run or discover, so recompiling the base cannot change its behavior.
         => method.DeclaredAccessibility == Accessibility.Public
-            && !IsHiddenOrOverriddenInDerivedType(method, kind, testClass, declaringBaseType, referenceAssembly, taskSymbol, valueTaskSymbol)
+            && !IsHiddenOrOverriddenInDerivedType(method, kind, testClass, declaringBaseType, referenceAssembly, canDiscoverInternals, taskSymbol, valueTaskSymbol)
             && kind switch
             {
                 // Test methods must be public instance methods that return void/Task/ValueTask (parameters are allowed
@@ -289,7 +289,7 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
             && argument.Value is int value
             && value == BeforeEachDerivedClass);
 
-    private static bool IsHiddenOrOverriddenInDerivedType(IMethodSymbol baseMethod, MSTestMemberKind kind, INamedTypeSymbol testClass, INamedTypeSymbol declaringBaseType, IAssemblySymbol referenceAssembly, INamedTypeSymbol? taskSymbol, INamedTypeSymbol? valueTaskSymbol)
+    private static bool IsHiddenOrOverriddenInDerivedType(IMethodSymbol baseMethod, MSTestMemberKind kind, INamedTypeSymbol testClass, INamedTypeSymbol declaringBaseType, IAssemblySymbol referenceAssembly, bool canDiscoverInternals, INamedTypeSymbol? taskSymbol, INamedTypeSymbol? valueTaskSymbol)
     {
         // Class fixtures are static and accumulated independently by the adapter, so a same-named derived method does
         // not suppress them (and static methods cannot be overridden anyway).
@@ -331,7 +331,7 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
                     // return type). A derived method with a different return type, a static one, or one without a
                     // recognized current-version [TestMethod] is skipped, so the inherited base test is still discovered.
                     case MSTestMemberKind.TestMethod
-                        when IsDiscoverableTestMethod(derivedMethod, referenceAssembly, taskSymbol, valueTaskSymbol)
+                        when IsDiscoverableTestMethod(derivedMethod, referenceAssembly, canDiscoverInternals, taskSymbol, valueTaskSymbol)
                             && HaveSameSignature(derivedMethod, baseMethod):
                         return true;
                 }
@@ -355,11 +355,13 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
     }
 
     // Mirrors the adapter's IsValidTestMethod for the purpose of discovery de-duplication: a method only shadows an
-    // inherited test when it is itself discoverable — public, instance, returns void/Task/ValueTask, has inferable
-    // generics, and carries a [TestMethod]/[DataTestMethod] from the current framework (a legacy-version attribute is
-    // not recognized by the current adapter, so it would not be discovered either).
-    private static bool IsDiscoverableTestMethod(IMethodSymbol method, IAssemblySymbol referenceAssembly, INamedTypeSymbol? taskSymbol, INamedTypeSymbol? valueTaskSymbol)
-        => method is { DeclaredAccessibility: Accessibility.Public, IsStatic: false }
+    // inherited test when it is itself discoverable — instance, discoverable accessibility (public, or non-private when
+    // the assembly opts into DiscoverInternals), returns void/Task/ValueTask, has inferable generics, and carries a
+    // [TestMethod]/[DataTestMethod] from the current framework (a legacy-version attribute is not recognized by the
+    // current adapter, so it would not be discovered either).
+    private static bool IsDiscoverableTestMethod(IMethodSymbol method, IAssemblySymbol referenceAssembly, bool canDiscoverInternals, INamedTypeSymbol? taskSymbol, INamedTypeSymbol? valueTaskSymbol)
+        => !method.IsStatic
+            && HasDiscoverableTestMethodAccessibility(method, canDiscoverInternals)
             && ReturnsVoidTaskOrValueTask(method, taskSymbol, valueTaskSymbol)
             && (!method.IsGenericMethod || AllGenericTypeParametersAreInferable(method))
             && method.GetAttributes().Any(attribute =>
@@ -367,6 +369,14 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
                 && GetMemberKind(canonicalAttribute.Name) == MSTestMemberKind.TestMethod
                 && canonicalAttribute.ContainingAssembly is { } assembly
                 && string.Equals(assembly.Name, referenceAssembly.Name, StringComparison.Ordinal));
+
+    private static bool HasDiscoverableTestMethodAccessibility(IMethodSymbol method, bool canDiscoverInternals)
+    {
+        SymbolVisibility resultantVisibility = method.GetResultantVisibility();
+        return canDiscoverInternals
+            ? resultantVisibility != SymbolVisibility.Private
+            : resultantVisibility == SymbolVisibility.Public && method.DeclaredAccessibility == Accessibility.Public;
+    }
 
     private static bool HaveSameSignature(IMethodSymbol left, IMethodSymbol right)
     {
@@ -389,13 +399,54 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
             // ref/out/in all share the same by-ref CLR signature, so compare by-value versus by-ref rather than the
             // exact RefKind (a derived 'Run(out int)' still hides a base 'Run(ref int)').
             if ((leftParameter.RefKind == RefKind.None) != (rightParameter.RefKind == RefKind.None)
-                || !SymbolEqualityComparer.Default.Equals(leftParameter.Type, rightParameter.Type))
+                || !AreSignatureTypesEquivalent(leftParameter.Type, rightParameter.Type))
             {
                 return false;
             }
         }
 
         return true;
+    }
+
+    // Compares parameter types the way the CLR signature does: a method's own type parameters are identified by ordinal,
+    // not by name, so 'Run&lt;T&gt;(T)' and 'Run&lt;U&gt;(U)' share a signature. Recurses through arrays and constructed
+    // generic types and falls back to symbol identity for everything else.
+    private static bool AreSignatureTypesEquivalent(ITypeSymbol left, ITypeSymbol right)
+    {
+        if (left is ITypeParameterSymbol leftTypeParameter && right is ITypeParameterSymbol rightTypeParameter)
+        {
+            return leftTypeParameter.TypeParameterKind == rightTypeParameter.TypeParameterKind
+                && (leftTypeParameter.TypeParameterKind != TypeParameterKind.Method
+                    ? SymbolEqualityComparer.Default.Equals(leftTypeParameter, rightTypeParameter)
+                    : leftTypeParameter.Ordinal == rightTypeParameter.Ordinal);
+        }
+
+        if (left is IArrayTypeSymbol leftArray && right is IArrayTypeSymbol rightArray)
+        {
+            return leftArray.Rank == rightArray.Rank
+                && AreSignatureTypesEquivalent(leftArray.ElementType, rightArray.ElementType);
+        }
+
+        if (left is INamedTypeSymbol leftNamed && right is INamedTypeSymbol rightNamed && !leftNamed.TypeArguments.IsEmpty)
+        {
+            if (leftNamed.TypeArguments.Length != rightNamed.TypeArguments.Length
+                || !SymbolEqualityComparer.Default.Equals(leftNamed.OriginalDefinition, rightNamed.OriginalDefinition))
+            {
+                return false;
+            }
+
+            for (int index = 0; index < leftNamed.TypeArguments.Length; index++)
+            {
+                if (!AreSignatureTypesEquivalent(leftNamed.TypeArguments[index], rightNamed.TypeArguments[index]))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        return SymbolEqualityComparer.Default.Equals(left, right);
     }
 
     private static string GetDisplayName(INamedTypeSymbol attributeClass)
