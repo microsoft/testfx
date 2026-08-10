@@ -199,13 +199,14 @@ sample-input changes.
 Use the repository-pinned SDK and the smallest build and focused tests that cover
 the edited class or methods. Follow `.github/copilot-instructions.md` exactly:
 
-- Bootstrap and build through `./build.sh`; do not install a different SDK.
+- Bootstrap and build through `bash ./build.sh`; do not install a different SDK.
 - Unit-test projects do not require packing. After the build, invoke the
-  affected test host directly with `dotnet run --project <project> -f net8.0
-  --no-build -c Debug -- --filter-uid <test-uid>` or its documented MTP
-  `--treenode-filter` equivalent.
-- Before any acceptance/integration test, run `./build.sh -pack`, then run the
-  smallest applicable filtered test command for the owning project.
+  affected test host directly with `PATH="$PWD/.dotnet:$PATH" dotnet run
+  --project <project> -f net8.0 --no-build -c Debug -- --filter-uid
+  <test-uid>` or its documented MTP `--treenode-filter` equivalent.
+- Before any acceptance/integration test, run `bash ./build.sh -pack`, then run
+  the smallest applicable filtered test command for the owning project, also
+  prefixed with `PATH="$PWD/.dotnet:$PATH"`.
 
 Fix failures caused by the patch. If a runner prerequisite is unavailable,
 record the exact command and limitation in the pull request; never claim an
