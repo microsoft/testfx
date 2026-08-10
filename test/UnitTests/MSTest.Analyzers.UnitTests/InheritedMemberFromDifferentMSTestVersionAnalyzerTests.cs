@@ -610,6 +610,63 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenMostDerivedOverrideInheritsInheritableAttributeThroughIntermediateWithOwnAttribute_Diagnostic()
+    {
+        // Multi-level override chain: only the most-derived override (which reflection surfaces) matters. It carries no
+        // current attribute and still inherits the inheritable legacy [RetryTest], so it is a real break. The
+        // intermediate override's own current [TestMethod] is non-inheritable and must not suppress the warning.
+        string legacyBaseCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public class DataTestMethodAttribute : System.Attribute { }
+            }
+
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                [System.AttributeUsage(System.AttributeTargets.Method, Inherited = true)]
+                public sealed class RetryTestAttribute : DataTestMethodAttribute { }
+
+                public abstract class TestBase
+                {
+                    [RetryTest]
+                    public virtual void Run() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                public abstract class Intermediate : TestBase
+                {
+                    [TestMethod]
+                    public override void Run() { }
+                }
+
+                [TestClass]
+                public class {|#0:SampleTests|} : Intermediate
+                {
+                    public override void Run() { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddLegacyFrameworkBaseProject(test, legacyBaseCode);
+
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(InheritedMemberFromDifferentMSTestVersionAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Run", "TestBase", "RetryTest", LegacyFrameworkAssemblyName));
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
     public async Task WhenInheritedClassInitializeIsNotInheritable_NoDiagnostic()
     {
         // A base [ClassInitialize] without InheritanceBehavior.BeforeEachDerivedClass does not run on derived classes

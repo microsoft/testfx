@@ -342,15 +342,12 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
                 // inherit:true); when it derives from a different-version framework type, the override is discoverable
                 // only after recompilation, so it is a real break that must still be reported — unless the override
                 // carries its own current-version attribute of the same kind (then it is discoverable regardless).
+                // The walk is top-down, so the first override found is the most-derived one that reflection surfaces;
+                // it is the effective method, so its outcome is decisive and we return immediately either way.
                 if (Overrides(derivedMethod, baseMethod))
                 {
-                    if (IsAppliedAttributeInheritable(attribute)
-                        && !HasOwnCurrentVersionAttributeOfKind(derivedMethod, kind, referenceAssembly))
-                    {
-                        continue;
-                    }
-
-                    return true;
+                    return !IsAppliedAttributeInheritable(attribute)
+                        || HasOwnCurrentVersionAttributeOfKind(derivedMethod, kind, referenceAssembly);
                 }
 
                 switch (kind)
