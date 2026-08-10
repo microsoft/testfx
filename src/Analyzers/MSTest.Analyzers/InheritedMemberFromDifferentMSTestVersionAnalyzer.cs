@@ -81,9 +81,10 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
     {
         var classSymbol = (INamedTypeSymbol)context.Symbol;
 
-        // Abstract test classes are never instantiated, so no inherited fixture or test runs for them; any concrete
-        // derived test class is analyzed separately and still gets the warning.
-        if (!classSymbol.IsTestClass(testClassAttributeSymbol) || classSymbol.IsAbstract)
+        // Abstract or generic test classes are never instantiated as a runnable test class (the adapter rejects
+        // them), so no inherited fixture or test runs for them; concrete non-generic derived classes are analyzed
+        // separately and still get the warning.
+        if (!classSymbol.IsTestClass(testClassAttributeSymbol) || classSymbol.IsAbstract || classSymbol.IsGenericType)
         {
             return;
         }
@@ -331,7 +332,10 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
         {
             IParameterSymbol leftParameter = left.Parameters[index];
             IParameterSymbol rightParameter = right.Parameters[index];
-            if (leftParameter.RefKind != rightParameter.RefKind
+
+            // ref/out/in all share the same by-ref CLR signature, so compare by-value versus by-ref rather than the
+            // exact RefKind (a derived 'Run(out int)' still hides a base 'Run(ref int)').
+            if ((leftParameter.RefKind == RefKind.None) != (rightParameter.RefKind == RefKind.None)
                 || !SymbolEqualityComparer.Default.Equals(leftParameter.Type, rightParameter.Type))
             {
                 return false;

@@ -1328,6 +1328,139 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenGenericTestClassInheritsFromDifferentFrameworkAssembly_NoDiagnostic()
+    {
+        // A generic test class is rejected by the adapter (open generics are not instantiated), so no inherited
+        // fixture runs for it.
+        string legacyBaseCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public sealed class TestInitializeAttribute : System.Attribute { }
+            }
+
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                public abstract class TestBase
+                {
+                    [TestInitialize]
+                    public void BaseInitialize() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                public class SampleTests<T> : TestBase
+                {
+                    [TestMethod]
+                    public void MyTest() { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddLegacyFrameworkBaseProject(test, legacyBaseCode);
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenInheritedDataTestMethodComesFromDifferentFrameworkAssembly_Diagnostic()
+    {
+        string legacyBaseCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public sealed class DataTestMethodAttribute : System.Attribute { }
+            }
+
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                public abstract class TestBase
+                {
+                    [DataTestMethod]
+                    public void InheritedDataTest() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                public class {|#0:SampleTests|} : TestBase
+                {
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddLegacyFrameworkBaseProject(test, legacyBaseCode);
+
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(InheritedMemberFromDifferentMSTestVersionAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("InheritedDataTest", "TestBase", "DataTestMethod", LegacyFrameworkAssemblyName));
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenInheritedTestCleanupComesFromDifferentFrameworkAssembly_Diagnostic()
+    {
+        string legacyBaseCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public sealed class TestCleanupAttribute : System.Attribute { }
+            }
+
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                public abstract class TestBase
+                {
+                    [TestCleanup]
+                    public void BaseCleanup() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                public class {|#0:SampleTests|} : TestBase
+                {
+                    [TestMethod]
+                    public void MyTest() { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddLegacyFrameworkBaseProject(test, legacyBaseCode);
+
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(InheritedMemberFromDifferentMSTestVersionAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("BaseCleanup", "TestBase", "TestCleanup", LegacyFrameworkAssemblyName));
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
     public async Task WhenInheritedTestInitializeFromDifferentFrameworkAssemblyInVisualBasic_Diagnostic()
     {
         // The analyzer is symbol-based, so it reports the same mismatch for a Visual Basic test class inheriting a
