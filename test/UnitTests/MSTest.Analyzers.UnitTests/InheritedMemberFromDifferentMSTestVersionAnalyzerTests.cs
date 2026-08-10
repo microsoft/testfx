@@ -1096,7 +1096,52 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
     [TestMethod]
     public async Task WhenInheritedTestMethodHiddenBySameSignature_NoDiagnostic()
     {
-        // A same-signature derived method hides the inherited test, so it is the derived one that runs.
+        // A derived method that is itself a current-version [TestMethod] with the same signature hides the inherited
+        // test, so the derived one runs and recompiling the base cannot change behavior. The base uses [DataTestMethod]
+        // (also a test-method kind) so the consumer can apply the real [TestMethod] without a type-name collision.
+        string legacyBaseCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public sealed class DataTestMethodAttribute : System.Attribute { }
+            }
+
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                public abstract class TestBase
+                {
+                    [DataTestMethod]
+                    public void Run() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                public class SampleTests : TestBase
+                {
+                    [TestMethod]
+                    public new void Run() { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddLegacyFrameworkBaseProject(test, legacyBaseCode);
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenInheritedTestMethodShadowedByNonTestMethod_Diagnostic()
+    {
+        // A derived same-signature method without [TestMethod] is not a valid test method, so MSTest discovery skips
+        // it and still discovers the inherited base test — the mismatch must be reported.
         string legacyBaseCode = """
             namespace Microsoft.VisualStudio.TestTools.UnitTesting
             {
@@ -1121,7 +1166,7 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
             namespace Repro
             {
                 [TestClass]
-                public class SampleTests : TestBase
+                public class {|#0:SampleTests|} : TestBase
                 {
                     public new void Run() { }
                 }
@@ -1130,6 +1175,105 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
 
         var test = new VerifyCS.Test { TestCode = consumerCode };
         AddLegacyFrameworkBaseProject(test, legacyBaseCode);
+
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(InheritedMemberFromDifferentMSTestVersionAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Run", "TestBase", "TestMethod", LegacyFrameworkAssemblyName));
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenInheritedTestMethodShadowedByDifferentReturnType_Diagnostic()
+    {
+        // A derived 'new int Run()' has a different CLR signature (return type) and an invalid test return type, so
+        // discovery keeps it distinct and rejects it, leaving the inherited base test discoverable.
+        string legacyBaseCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public sealed class TestMethodAttribute : System.Attribute { }
+            }
+
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                public abstract class TestBase
+                {
+                    [TestMethod]
+                    public void Run() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                public class {|#0:SampleTests|} : TestBase
+                {
+                    public new int Run() => 0;
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddLegacyFrameworkBaseProject(test, legacyBaseCode);
+
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(InheritedMemberFromDifferentMSTestVersionAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Run", "TestBase", "TestMethod", LegacyFrameworkAssemblyName));
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenInheritedTestMethodShadowedByStaticMethod_Diagnostic()
+    {
+        // A derived 'new static void Run()' has a different (static) calling convention and is an invalid test method,
+        // so discovery rejects it and still discovers the inherited instance base test.
+        string legacyBaseCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public sealed class TestMethodAttribute : System.Attribute { }
+            }
+
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                public abstract class TestBase
+                {
+                    [TestMethod]
+                    public void Run() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                public class {|#0:SampleTests|} : TestBase
+                {
+                    public static new void Run() { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddLegacyFrameworkBaseProject(test, legacyBaseCode);
+
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(InheritedMemberFromDifferentMSTestVersionAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Run", "TestBase", "TestMethod", LegacyFrameworkAssemblyName));
 
         await test.RunAsync();
     }

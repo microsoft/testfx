@@ -144,7 +144,7 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
                     // Only warn about members that would actually run or be discovered if the base were recompiled
                     // against the current version. Otherwise the remediation ("recompile the base") cannot help and
                     // the diagnostic is a false positive.
-                    if (!WouldRunOrBeDiscoveredIfSameVersion(method, kind, attribute, classSymbol, baseType, taskSymbol, valueTaskSymbol))
+                    if (!WouldRunOrBeDiscoveredIfSameVersion(method, kind, attribute, classSymbol, baseType, referenceAssembly, taskSymbol, valueTaskSymbol))
                     {
                         continue;
                     }
@@ -209,11 +209,11 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
         _ => MSTestMemberKind.None,
     };
 
-    private static bool WouldRunOrBeDiscoveredIfSameVersion(IMethodSymbol method, MSTestMemberKind kind, AttributeData attribute, INamedTypeSymbol testClass, INamedTypeSymbol declaringBaseType, INamedTypeSymbol? taskSymbol, INamedTypeSymbol? valueTaskSymbol)
+    private static bool WouldRunOrBeDiscoveredIfSameVersion(IMethodSymbol method, MSTestMemberKind kind, AttributeData attribute, INamedTypeSymbol testClass, INamedTypeSymbol declaringBaseType, IAssemblySymbol referenceAssembly, INamedTypeSymbol? taskSymbol, INamedTypeSymbol? valueTaskSymbol)
         // A non-public member, or one replaced by an override or a `new` declaration in a more-derived type, is not the
         // member MSTest would run or discover, so recompiling the base cannot change its behavior.
         => method.DeclaredAccessibility == Accessibility.Public
-            && !IsHiddenOrOverriddenInDerivedType(method, kind, testClass, declaringBaseType, taskSymbol, valueTaskSymbol)
+            && !IsHiddenOrOverriddenInDerivedType(method, kind, testClass, declaringBaseType, referenceAssembly, taskSymbol, valueTaskSymbol)
             && kind switch
             {
                 // Test methods must be public instance methods that return void/Task/ValueTask (parameters are allowed
@@ -289,7 +289,7 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
             && argument.Value is int value
             && value == BeforeEachDerivedClass);
 
-    private static bool IsHiddenOrOverriddenInDerivedType(IMethodSymbol baseMethod, MSTestMemberKind kind, INamedTypeSymbol testClass, INamedTypeSymbol declaringBaseType, INamedTypeSymbol? taskSymbol, INamedTypeSymbol? valueTaskSymbol)
+    private static bool IsHiddenOrOverriddenInDerivedType(IMethodSymbol baseMethod, MSTestMemberKind kind, INamedTypeSymbol testClass, INamedTypeSymbol declaringBaseType, IAssemblySymbol referenceAssembly, INamedTypeSymbol? taskSymbol, INamedTypeSymbol? valueTaskSymbol)
     {
         // Class fixtures are static and accumulated independently by the adapter, so a same-named derived method does
         // not suppress them (and static methods cannot be overridden anyway).
@@ -325,9 +325,14 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
                             && ReturnsVoidTaskOrValueTask(derivedMethod, taskSymbol, valueTaskSymbol):
                         return true;
 
-                    // Test-method hiding is signature-based: only a same-signature method shadows the inherited test;
-                    // a different-arity, by-ref, or otherwise different-signature overload stays discoverable.
-                    case MSTestMemberKind.TestMethod when HaveSameSignature(derivedMethod, baseMethod):
+                    // A derived same-name method shadows the inherited test in MSTest discovery only when it is itself
+                    // a valid, current-version test method. TypeEnumerator enumerates every runtime method, keeps only
+                    // those that pass IsValidTestMethod, and de-duplicates by MethodInfo.ToString() (which includes the
+                    // return type). A derived method with a different return type, a static one, or one without a
+                    // recognized current-version [TestMethod] is skipped, so the inherited base test is still discovered.
+                    case MSTestMemberKind.TestMethod
+                        when IsDiscoverableTestMethod(derivedMethod, referenceAssembly, taskSymbol, valueTaskSymbol)
+                            && HaveSameSignature(derivedMethod, baseMethod):
                         return true;
                 }
             }
@@ -349,9 +354,29 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
         return false;
     }
 
+    // Mirrors the adapter's IsValidTestMethod for the purpose of discovery de-duplication: a method only shadows an
+    // inherited test when it is itself discoverable — public, instance, returns void/Task/ValueTask, has inferable
+    // generics, and carries a [TestMethod]/[DataTestMethod] from the current framework (a legacy-version attribute is
+    // not recognized by the current adapter, so it would not be discovered either).
+    private static bool IsDiscoverableTestMethod(IMethodSymbol method, IAssemblySymbol referenceAssembly, INamedTypeSymbol? taskSymbol, INamedTypeSymbol? valueTaskSymbol)
+        => method is { DeclaredAccessibility: Accessibility.Public, IsStatic: false }
+            && ReturnsVoidTaskOrValueTask(method, taskSymbol, valueTaskSymbol)
+            && (!method.IsGenericMethod || AllGenericTypeParametersAreInferable(method))
+            && method.GetAttributes().Any(attribute =>
+                GetCanonicalMSTestAttribute(attribute.AttributeClass) is { } canonicalAttribute
+                && GetMemberKind(canonicalAttribute.Name) == MSTestMemberKind.TestMethod
+                && canonicalAttribute.ContainingAssembly is { } assembly
+                && string.Equals(assembly.Name, referenceAssembly.Name, StringComparison.Ordinal));
+
     private static bool HaveSameSignature(IMethodSymbol left, IMethodSymbol right)
     {
-        if (left.Arity != right.Arity || left.Parameters.Length != right.Parameters.Length)
+        // MSTest discovery de-duplicates by MethodInfo.ToString(), which includes the return type, and the
+        // static/instance calling convention also distinguishes the CLR method, so both must match for one method to
+        // shadow the other.
+        if (left.Arity != right.Arity
+            || left.Parameters.Length != right.Parameters.Length
+            || left.IsStatic != right.IsStatic
+            || !SymbolEqualityComparer.Default.Equals(left.ReturnType, right.ReturnType))
         {
             return false;
         }
