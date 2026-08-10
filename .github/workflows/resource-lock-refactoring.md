@@ -176,8 +176,14 @@ sample-input changes.
   `TestAssetFixture`/test-asset identifiers when generated projects would
   otherwise share `bin` or `obj`.
 - Use the narrowest correct attribute placement. Put `[ResourceLock]` on a test
-  method when only that method uses the resource. Use a class-level attribute
-  only when lifecycle code or most tests in the class require the same lock.
+  method when only that method uses the resource. A class-level attribute can
+  cover per-test lifecycle code (`[TestInitialize]` / `[TestCleanup]`) or most
+  tests in the class that require the same lock.
+- Under `MethodLevel`, a class-level lock is reacquired for each test; it does
+  not continuously protect state established in `[ClassInitialize]` through
+  `[ClassCleanup]`. For such class-lifetime state, move setup and restoration
+  into each test's lifecycle, eliminate the shared state, or retain
+  `[DoNotParallelize]`.
 - Use `WellKnownResources.EnvironmentVariables`,
   `WellKnownResources.CurrentDirectory`, or `WellKnownResources.Console` for
   those resources. For a genuinely custom in-process resource, introduce and
