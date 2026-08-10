@@ -1,5 +1,5 @@
-# gh-aw-metadata: {"schema_version":"v4","frontmatter_hash":"fd94277ef06ee1f4c9e9b3baabee0d5f47b7878fd25f8606f44b7f5edbdbfbf1","body_hash":"df763af411bdc2047070e6dd69b35c05c6be2b5d0c01611afc886243fc17907a","compiler_version":"v0.84.3","strict":true,"agent_id":"copilot","engine_versions":{"copilot":"1.0.77"}}
-# gh-aw-manifest: {"version":1,"secrets":["COPILOT_GITHUB_TOKEN","GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN"],"actions":[{"repo":"actions/cache/restore","sha":"55cc8345863c7cc4c66a329aec7e433d2d1c52a9","version":"v6.1.0"},{"repo":"actions/cache/save","sha":"55cc8345863c7cc4c66a329aec7e433d2d1c52a9","version":"v6.1.0"},{"repo":"actions/checkout","sha":"3d3c42e5aac5ba805825da76410c181273ba90b1","version":"v7.0.1"},{"repo":"actions/download-artifact","sha":"3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c","version":"v8.0.1"},{"repo":"actions/github-script","sha":"3a2844b7e9c422d3c10d287c895573f7108da1b3","version":"v9.0.0"},{"repo":"actions/setup-node","sha":"820762786026740c76f36085b0efc47a31fe5020","version":"v7.0.0"},{"repo":"actions/setup-python","sha":"5fda3b95a4ea91299a34e894583c3862153e4b97","version":"v7.0.0"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"github/gh-aw-actions/setup","sha":"c863074b673419603d146aab585e2986ef08deec","version":"v0.84.3"}],"containers":[{"image":"ghcr.io/github/gh-aw-firewall/agent:0.27.43","digest":"sha256:04e2d1987a565000a8f114b89d806ae7a3864dd4f944be65275b28c93d8690e6","pinned_image":"ghcr.io/github/gh-aw-firewall/agent:0.27.43@sha256:04e2d1987a565000a8f114b89d806ae7a3864dd4f944be65275b28c93d8690e6"},{"image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.27.43","digest":"sha256:d85f57975af5ea23af4996e41ed73fbc8f5b4a47402472bfe82e508f352cb0c1","pinned_image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.27.43@sha256:d85f57975af5ea23af4996e41ed73fbc8f5b4a47402472bfe82e508f352cb0c1"},{"image":"ghcr.io/github/gh-aw-firewall/squid:0.27.43","digest":"sha256:26be5e0b8c8f4c41c8a59126b29bb5d80b07253597472ded2a16bdd75abcbf9d","pinned_image":"ghcr.io/github/gh-aw-firewall/squid:0.27.43@sha256:26be5e0b8c8f4c41c8a59126b29bb5d80b07253597472ded2a16bdd75abcbf9d"},{"image":"ghcr.io/github/gh-aw-mcpg:v0.4.7","digest":"sha256:7545220a9aca134b71e51193ee0eaf4c50756ebf8fbd25a63ae7556e62815c00","pinned_image":"ghcr.io/github/gh-aw-mcpg:v0.4.7@sha256:7545220a9aca134b71e51193ee0eaf4c50756ebf8fbd25a63ae7556e62815c00"},{"image":"ghcr.io/github/gh-aw-node","digest":"sha256:0d9f1fb5fd6610c0ac1f5194a38e45a8a1e81f8a390d5142d8e4e6f26a4b3196","pinned_image":"ghcr.io/github/gh-aw-node@sha256:0d9f1fb5fd6610c0ac1f5194a38e45a8a1e81f8a390d5142d8e4e6f26a4b3196"},{"image":"ghcr.io/github/github-mcp-server:v1.8.0","digest":"sha256:d5a18c04b92714c309eb46a2305087e91a4dbd80420f6e462656699f95093520","pinned_image":"ghcr.io/github/github-mcp-server:v1.8.0@sha256:d5a18c04b92714c309eb46a2305087e91a4dbd80420f6e462656699f95093520"}]}
+# gh-aw-metadata: {"schema_version":"v4","frontmatter_hash":"76e1b2c569da8d627e289b85428b8eed8b8add6289ecc7231d80c5ec27e3db8d","body_hash":"df763af411bdc2047070e6dd69b35c05c6be2b5d0c01611afc886243fc17907a","compiler_version":"v0.84.3","strict":true,"agent_id":"copilot","engine_versions":{"copilot":"1.0.77"}}
+# gh-aw-manifest: {"version":1,"secrets":["COPILOT_GITHUB_TOKEN","GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN"],"actions":[{"repo":"actions/cache/restore","sha":"55cc8345863c7cc4c66a329aec7e433d2d1c52a9","version":"v6.1.0"},{"repo":"actions/cache/save","sha":"55cc8345863c7cc4c66a329aec7e433d2d1c52a9","version":"v6.1.0"},{"repo":"actions/checkout","sha":"3d3c42e5aac5ba805825da76410c181273ba90b1","version":"v7.0.1"},{"repo":"actions/download-artifact","sha":"3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c","version":"v8.0.1"},{"repo":"actions/github-script","sha":"3a2844b7e9c422d3c10d287c895573f7108da1b3","version":"v9.0.0"},{"repo":"actions/setup-node","sha":"820762786026740c76f36085b0efc47a31fe5020","version":"v7.0.0"},{"repo":"actions/setup-python","sha":"5fda3b95a4ea91299a34e894583c3862153e4b97","version":"v7.0.0"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"github/gh-aw-actions/setup","sha":"c863074b673419603d146aab585e2986ef08deec","version":"v0.84.3"}],"containers":[{"image":"ghcr.io/github/gh-aw-firewall/agent:0.27.43","digest":"sha256:04e2d1987a565000a8f114b89d806ae7a3864dd4f944be65275b28c93d8690e6","pinned_image":"ghcr.io/github/gh-aw-firewall/agent:0.27.43@sha256:04e2d1987a565000a8f114b89d806ae7a3864dd4f944be65275b28c93d8690e6"},{"image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.27.43","digest":"sha256:d85f57975af5ea23af4996e41ed73fbc8f5b4a47402472bfe82e508f352cb0c1","pinned_image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.27.43@sha256:d85f57975af5ea23af4996e41ed73fbc8f5b4a47402472bfe82e508f352cb0c1"},{"image":"ghcr.io/github/gh-aw-firewall/squid:0.27.43","digest":"sha256:26be5e0b8c8f4c41c8a59126b29bb5d80b07253597472ded2a16bdd75abcbf9d","pinned_image":"ghcr.io/github/gh-aw-firewall/squid:0.27.43@sha256:26be5e0b8c8f4c41c8a59126b29bb5d80b07253597472ded2a16bdd75abcbf9d"},{"image":"ghcr.io/github/gh-aw-mcpg:v0.4.7","digest":"sha256:7545220a9aca134b71e51193ee0eaf4c50756ebf8fbd25a63ae7556e62815c00","pinned_image":"ghcr.io/github/gh-aw-mcpg:v0.4.7@sha256:7545220a9aca134b71e51193ee0eaf4c50756ebf8fbd25a63ae7556e62815c00"},{"image":"ghcr.io/github/gh-aw-node","digest":"sha256:0d9f1fb5fd6610c0ac1f5194a38e45a8a1e81f8a390d5142d8e4e6f26a4b3196","pinned_image":"ghcr.io/github/gh-aw-node@sha256:0d9f1fb5fd6610c0ac1f5194a38e45a8a1e81f8a390d5142d8e4e6f26a4b3196"}]}
 # This file was automatically generated by gh-aw (v0.84.3). DO NOT EDIT. To debug this workflow, load the skill at https://github.com/github/gh-aw/blob/main/debug.md
 #
 #    ___                   _   _
@@ -39,7 +39,6 @@
 #   - actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 #   - actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
 #   - actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-#   - actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0 (source v9)
 #   - actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
 #   - actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
 #   - actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -51,7 +50,6 @@
 #   - ghcr.io/github/gh-aw-firewall/squid:0.27.43@sha256:26be5e0b8c8f4c41c8a59126b29bb5d80b07253597472ded2a16bdd75abcbf9d
 #   - ghcr.io/github/gh-aw-mcpg:v0.4.7@sha256:7545220a9aca134b71e51193ee0eaf4c50756ebf8fbd25a63ae7556e62815c00
 #   - ghcr.io/github/gh-aw-node@sha256:0d9f1fb5fd6610c0ac1f5194a38e45a8a1e81f8a390d5142d8e4e6f26a4b3196
-#   - ghcr.io/github/github-mcp-server:v1.8.0@sha256:d5a18c04b92714c309eb46a2305087e91a4dbd80420f6e462656699f95093520
 
 name: "Weekly Issue Summary"
 on:
@@ -239,66 +237,28 @@ jobs:
         env:
           GH_AW_PROMPT: /tmp/gh-aw/aw-prompts/prompt.txt
           GH_AW_SAFE_OUTPUTS: ${{ runner.temp }}/gh-aw/safeoutputs/outputs.jsonl
-          GH_AW_EXPR_1A3A194A: ${{ github.event.discussion.number || (fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_type == 'discussion' && fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_number) }}
-          GH_AW_EXPR_463A214A: ${{ github.event.pull_request.number || (fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_type == 'pull_request' && fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_number) }}
-          GH_AW_EXPR_802A9F6A: ${{ github.event.issue.number || (fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_type == 'issue' && fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_number) }}
-          GH_AW_EXPR_FF1D34CE: ${{ github.event.comment.id || fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').comment_id }}
-          GH_AW_GITHUB_ACTOR: ${{ github.actor }}
           GH_AW_GITHUB_REPOSITORY: ${{ github.repository }}
-          GH_AW_GITHUB_RUN_ID: ${{ github.run_id }}
-          GH_AW_GITHUB_WORKSPACE: ${{ github.workspace }}
         # poutine:ignore untrusted_checkout_exec
         run: |
           bash "${RUNNER_TEMP}/gh-aw/actions/create_prompt_first.sh"
           {
-          cat << 'GH_AW_PROMPT_cb93fb7baa9163c1_EOF'
+          cat << 'GH_AW_PROMPT_561e40f14cac8467_EOF'
           <system>
-          GH_AW_PROMPT_cb93fb7baa9163c1_EOF
+          GH_AW_PROMPT_561e40f14cac8467_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/xpia.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/temp_folder_prompt.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/markdown.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/safe_outputs_prompt.md"
-          cat << 'GH_AW_PROMPT_cb93fb7baa9163c1_EOF'
+          cat << 'GH_AW_PROMPT_561e40f14cac8467_EOF'
           <safe-output-tools>
           Tools: create_discussion, missing_tool, missing_data, noop
           </safe-output-tools>
-          GH_AW_PROMPT_cb93fb7baa9163c1_EOF
+          GH_AW_PROMPT_561e40f14cac8467_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/mcp_cli_tools_prompt.md"
-          cat << 'GH_AW_PROMPT_cb93fb7baa9163c1_EOF'
-          <github-context>
-          The following GitHub context information is available for this workflow:
-          {{#if github.actor}}
-          - **actor**: __GH_AW_GITHUB_ACTOR__
-          {{/if}}
-          {{#if github.repository}}
-          - **repository**: __GH_AW_GITHUB_REPOSITORY__
-          {{/if}}
-          {{#if github.workspace}}
-          - **workspace**: __GH_AW_GITHUB_WORKSPACE__
-          {{/if}}
-          {{#if github.event.issue.number || (github.aw.context.item_type == 'issue' && github.aw.context.item_number)}}
-          - **issue-number**: #__GH_AW_EXPR_802A9F6A__
-          {{/if}}
-          {{#if github.event.discussion.number || (github.aw.context.item_type == 'discussion' && github.aw.context.item_number)}}
-          - **discussion-number**: #__GH_AW_EXPR_1A3A194A__
-          {{/if}}
-          {{#if github.event.pull_request.number || (github.aw.context.item_type == 'pull_request' && github.aw.context.item_number)}}
-          - **pull-request-number**: #__GH_AW_EXPR_463A214A__
-          {{/if}}
-          {{#if github.event.comment.id || github.aw.context.comment_id}}
-          - **comment-id**: __GH_AW_EXPR_FF1D34CE__
-          {{/if}}
-          {{#if github.run_id}}
-          - **workflow-run-id**: __GH_AW_GITHUB_RUN_ID__
-          {{/if}}
-          </github-context>
-
-          GH_AW_PROMPT_cb93fb7baa9163c1_EOF
-          cat "${RUNNER_TEMP}/gh-aw/prompts/github_mcp_tools_with_safeoutputs_prompt.md"
-          cat << 'GH_AW_PROMPT_cb93fb7baa9163c1_EOF'
+          cat << 'GH_AW_PROMPT_561e40f14cac8467_EOF'
           </system>
           {{#runtime-import .github/workflows/weekly-issue-activity.md}}
-          GH_AW_PROMPT_cb93fb7baa9163c1_EOF
+          GH_AW_PROMPT_561e40f14cac8467_EOF
           } > "$GH_AW_PROMPT"
       - name: Interpolate variables and render templates
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -316,15 +276,8 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           GH_AW_PROMPT: /tmp/gh-aw/aw-prompts/prompt.txt
-          GH_AW_EXPR_1A3A194A: ${{ github.event.discussion.number || (fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_type == 'discussion' && fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_number) }}
-          GH_AW_EXPR_463A214A: ${{ github.event.pull_request.number || (fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_type == 'pull_request' && fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_number) }}
-          GH_AW_EXPR_802A9F6A: ${{ github.event.issue.number || (fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_type == 'issue' && fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_number) }}
-          GH_AW_EXPR_FF1D34CE: ${{ github.event.comment.id || fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').comment_id }}
-          GH_AW_GITHUB_ACTOR: ${{ github.actor }}
           GH_AW_GITHUB_REPOSITORY: ${{ github.repository }}
-          GH_AW_GITHUB_RUN_ID: ${{ github.run_id }}
-          GH_AW_GITHUB_WORKSPACE: ${{ github.workspace }}
-          GH_AW_MCP_CLI_SERVERS_LIST: "- `github` — run `github --help` to see available tools\n- `safeoutputs` — run `safeoutputs --help` to see available tools"
+          GH_AW_MCP_CLI_SERVERS_LIST: '- `safeoutputs` — run `safeoutputs --help` to see available tools'
         with:
           script: |
             const { setupGlobals } = require('${{ runner.temp }}/gh-aw/actions/setup_globals.cjs');
@@ -336,14 +289,7 @@ jobs:
             return await substitutePlaceholders({
               file: process.env.GH_AW_PROMPT,
               substitutions: {
-                GH_AW_EXPR_1A3A194A: process.env.GH_AW_EXPR_1A3A194A,
-                GH_AW_EXPR_463A214A: process.env.GH_AW_EXPR_463A214A,
-                GH_AW_EXPR_802A9F6A: process.env.GH_AW_EXPR_802A9F6A,
-                GH_AW_EXPR_FF1D34CE: process.env.GH_AW_EXPR_FF1D34CE,
-                GH_AW_GITHUB_ACTOR: process.env.GH_AW_GITHUB_ACTOR,
                 GH_AW_GITHUB_REPOSITORY: process.env.GH_AW_GITHUB_REPOSITORY,
-                GH_AW_GITHUB_RUN_ID: process.env.GH_AW_GITHUB_RUN_ID,
-                GH_AW_GITHUB_WORKSPACE: process.env.GH_AW_GITHUB_WORKSPACE,
                 GH_AW_MCP_CLI_SERVERS_LIST: process.env.GH_AW_MCP_CLI_SERVERS_LIST
               }
             });
@@ -465,7 +411,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         name: Collect and aggregate issue data
-        run: "set -euo pipefail\n\ndata_dir=/tmp/gh-aw/agent/data\nmkdir -p \"$data_dir\"\n\ngenerated_at=\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"\nstart_date=\"$(date -u --date='84 days ago' +%F)\"\n\ngh api --method GET search/issues \\\n  -f q=\"repo:${GH_REPO} is:issue created:>=${start_date}\" \\\n  -f per_page=100 \\\n  --paginate \\\n  --slurp > \"$data_dir/created-pages.json\"\n\ngh api --method GET search/issues \\\n  -f q=\"repo:${GH_REPO} is:issue closed:>=${start_date}\" \\\n  -f per_page=100 \\\n  --paginate \\\n  --slurp > \"$data_dir/closed-pages.json\"\n\ngh api --method GET search/issues \\\n  -f q=\"repo:${GH_REPO} is:issue is:open\" \\\n  -f per_page=1 > \"$data_dir/open-count.json\"\n\nGENERATED_AT=\"$generated_at\" python3 <<'PY'\nimport json\nimport math\nimport os\nimport statistics\nfrom collections import Counter, defaultdict\nfrom datetime import date, datetime, timedelta\nfrom pathlib import Path\n\ndata_dir = Path(\"/tmp/gh-aw/agent/data\")\ngenerated_at = datetime.fromisoformat(os.environ[\"GENERATED_AT\"].replace(\"Z\", \"+00:00\"))\nactivity_start = generated_at - timedelta(weeks=12)\nresolution_start = generated_at - timedelta(days=30)\n\ndef load_search_pages(path):\n    pages = json.loads(path.read_text(encoding=\"utf-8\"))\n    items = [item for page in pages for item in page[\"items\"]]\n    total_count = pages[0][\"total_count\"] if pages else 0\n    return items, total_count\n\ndef parse_timestamp(value):\n    return datetime.fromisoformat(value.replace(\"Z\", \"+00:00\"))\n\ndef labels(issue):\n    return [label[\"name\"] for label in issue[\"labels\"]]\n\ndef author(issue):\n    user = issue.get(\"user\")\n    return user[\"login\"] if user else \"ghost\"\n\ndef public_issue(issue):\n    return {\n        \"number\": issue[\"number\"],\n        \"title\": issue[\"title\"],\n        \"author\": author(issue),\n        \"labels\": labels(issue),\n        \"created_at\": issue[\"created_at\"],\n        \"closed_at\": issue[\"closed_at\"],\n    }\n\ncreated, created_total = load_search_pages(data_dir / \"created-pages.json\")\nclosed, closed_total = load_search_pages(data_dir / \"closed-pages.json\")\ncurrent_open = json.loads((data_dir / \"open-count.json\").read_text(encoding=\"utf-8\"))[\"total_count\"]\n\nweeks = []\nfor index in range(12):\n    start = activity_start + timedelta(weeks=index)\n    end = start + timedelta(weeks=1)\n    opened = sum(start <= parse_timestamp(issue[\"created_at\"]) < end for issue in created)\n    closed_count = sum(\n        issue[\"closed_at\"] is not None and start <= parse_timestamp(issue[\"closed_at\"]) < end\n        for issue in closed\n    )\n    weeks.append({\n        \"start\": start.date().isoformat(),\n        \"end\": end.date().isoformat(),\n        \"opened\": opened,\n        \"closed\": closed_count,\n    })\n\nrunning_open = current_open\nfor week in reversed(weeks):\n    week[\"open_total\"] = running_open\n    running_open -= week[\"opened\"] - week[\"closed\"]\n\nlatest_week_start = activity_start + timedelta(weeks=11)\nprevious_week_start = activity_start + timedelta(weeks=10)\nlatest_issues = [\n    issue for issue in created\n    if latest_week_start <= parse_timestamp(issue[\"created_at\"]) <= generated_at\n]\nprevious_issues = [\n    issue for issue in created\n    if previous_week_start <= parse_timestamp(issue[\"created_at\"]) < latest_week_start\n]\n\nrecently_created = [\n    issue for issue in created\n    if parse_timestamp(issue[\"created_at\"]) >= resolution_start\n]\nrecently_closed = [\n    issue for issue in closed\n    if issue[\"closed_at\"] is not None and parse_timestamp(issue[\"closed_at\"]) >= resolution_start\n]\nlifespans = [\n    (parse_timestamp(issue[\"closed_at\"]) - parse_timestamp(issue[\"created_at\"])).total_seconds() / 86400\n    for issue in recently_closed\n]\n\ndaily_lifespans = defaultdict(list)\nfor issue, lifespan in zip(recently_closed, lifespans):\n    daily_lifespans[parse_timestamp(issue[\"closed_at\"]).date()].append(lifespan)\n\nresolution_days = []\nfirst_resolution_day = generated_at.date() - timedelta(days=29)\nfor offset in range(30):\n    current_date = first_resolution_day + timedelta(days=offset)\n    values = daily_lifespans[current_date]\n    resolution_days.append({\n        \"date\": current_date.isoformat(),\n        \"closed\": len(values),\n        \"average_days\": round(statistics.fmean(values), 2) if values else None,\n        \"median_days\": round(statistics.median(values), 2) if values else None,\n    })\n\ndef top_counts(values, limit=10):\n    return [{\"name\": name, \"count\": count} for name, count in Counter(values).most_common(limit)]\n\nnotes = [\n    \"Running open totals are reconstructed backward from the live open-issue count.\",\n]\nif created_total > len(created):\n    notes.append(\n        f\"Created-issue search returned {len(created)} of {created_total} results because GitHub caps search pagination.\"\n    )\nif closed_total > len(closed):\n    notes.append(\n        f\"Closed-issue search returned {len(closed)} of {closed_total} results because GitHub caps search pagination.\"\n    )\n\nsummary = {\n    \"generated_at\": generated_at.isoformat(),\n    \"activity_window\": {\n        \"start\": activity_start.isoformat(),\n        \"weeks\": weeks,\n        \"current_open\": current_open,\n    },\n    \"this_week\": {\n        \"opened\": weeks[-1][\"opened\"],\n        \"closed\": weeks[-1][\"closed\"],\n        \"issues\": [public_issue(issue) for issue in sorted(latest_issues, key=lambda item: item[\"number\"])],\n        \"top_authors\": top_counts(author(issue) for issue in latest_issues),\n        \"top_labels\": top_counts(label for issue in latest_issues for label in labels(issue)),\n    },\n    \"last_week\": {\n        \"opened\": weeks[-2][\"opened\"],\n        \"closed\": weeks[-2][\"closed\"],\n        \"issue_count\": len(previous_issues),\n    },\n    \"last_30_days\": {\n        \"opened\": len(recently_created),\n        \"closed\": len(recently_closed),\n        \"average_close_days\": round(statistics.fmean(lifespans), 2) if lifespans else None,\n        \"median_close_days\": round(statistics.median(lifespans), 2) if lifespans else None,\n        \"resolution_by_day\": resolution_days,\n        \"top_opened_labels\": top_counts(\n            label for issue in recently_created for label in labels(issue)\n        ),\n        \"top_closed_labels\": top_counts(\n            label for issue in recently_closed for label in labels(issue)\n        ),\n    },\n    \"data_notes\": notes,\n}\n(data_dir / \"issue-summary.json\").write_text(\n    json.dumps(summary, indent=2, ensure_ascii=False) + \"\\n\",\n    encoding=\"utf-8\",\n)\n\nblocks = \"▁▂▃▄▅▆▇█\"\n\ndef bar(value, maximum, width=8):\n    length = math.ceil(value / maximum * width) if value else 0\n    return \"█\" * length\n\nmax_activity = max(\n    max(week[\"opened\"], week[\"closed\"])\n    for week in weeks\n) or 1\nactivity_chart = [\"Week  Opened       Closed       Open\"]\nfor week in weeks:\n    activity_chart.append(\n        f\"{week['end'][5:]} \"\n        f\"{bar(week['opened'], max_activity):<8} {week['opened']:>3}  \"\n        f\"{bar(week['closed'], max_activity):<8} {week['closed']:>3}  \"\n        f\"{week['open_total']:>4}\"\n    )\n(data_dir / \"issue-activity.txt\").write_text(\n    \"\\n\".join(activity_chart) + \"\\n\",\n    encoding=\"utf-8\",\n)\n\naverages = [day[\"average_days\"] for day in resolution_days if day[\"average_days\"] is not None]\nmedians = [day[\"median_days\"] for day in resolution_days if day[\"median_days\"] is not None]\nscale_values = sorted(averages + medians)\nscale = scale_values[round((len(scale_values) - 1) * 0.9)] if scale_values else 1\nscale = max(scale, 0.01)\n\ndef sparkline(key):\n    result = []\n    for day in resolution_days:\n        value = day[key]\n        if value is None:\n            result.append(\"·\")\n            continue\n        index = round(min(value, scale) / scale * (len(blocks) - 1))\n        result.append(blocks[index])\n    return \"\".join(result)\n\nresolution_chart = [\n    f\"Avg {sparkline('average_days')}\",\n    f\"Med {sparkline('median_days')}\",\n    f\"    {resolution_days[0]['date'][5:]}{' ' * 19}{resolution_days[-1]['date'][5:]}\",\n    f\"Scale: ▁=0d, █≥{scale:.1f}d, ·=no closures\",\n]\n(data_dir / \"issue-resolution.txt\").write_text(\n    \"\\n\".join(resolution_chart) + \"\\n\",\n    encoding=\"utf-8\",\n)\nPY"
+        run: "set -euo pipefail\n\ndata_dir=/tmp/gh-aw/agent/data\nmkdir -p \"$data_dir\"\n\ngenerated_at=\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"\nstart_date=\"$(date -u --date='84 days ago' +%F)\"\n\ngh api --method GET search/issues \\\n  -f q=\"repo:${GH_REPO} is:issue created:>=${start_date}\" \\\n  -f per_page=100 \\\n  --paginate \\\n  --slurp > \"$data_dir/created-pages.json\"\n\ngh api --method GET search/issues \\\n  -f q=\"repo:${GH_REPO} is:issue closed:>=${start_date}\" \\\n  -f per_page=100 \\\n  --paginate \\\n  --slurp > \"$data_dir/closed-pages.json\"\n\ngh api --method GET search/issues \\\n  -f q=\"repo:${GH_REPO} is:issue is:open\" \\\n  -f per_page=1 > \"$data_dir/open-count.json\"\n\nGENERATED_AT=\"$generated_at\" python3 <<'PY'\nimport json\nimport math\nimport os\nimport statistics\nfrom collections import Counter, defaultdict\nfrom datetime import datetime, timedelta\nfrom pathlib import Path\n\ndata_dir = Path(\"/tmp/gh-aw/agent/data\")\ngenerated_at = datetime.fromisoformat(os.environ[\"GENERATED_AT\"].replace(\"Z\", \"+00:00\"))\nactivity_start = generated_at - timedelta(weeks=12)\nresolution_start = generated_at.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=29)\n\ndef load_search_pages(path):\n    pages = json.loads(path.read_text(encoding=\"utf-8\"))\n    items = [item for page in pages for item in page[\"items\"]]\n    total_count = pages[0][\"total_count\"] if pages else 0\n    return items, total_count\n\ndef parse_timestamp(value):\n    return datetime.fromisoformat(value.replace(\"Z\", \"+00:00\"))\n\ndef labels(issue):\n    return [label[\"name\"] for label in issue[\"labels\"]]\n\ndef author(issue):\n    user = issue.get(\"user\")\n    return user[\"login\"] if user else \"ghost\"\n\ndef public_issue(issue):\n    return {\n        \"number\": issue[\"number\"],\n        \"title\": issue[\"title\"],\n        \"author\": author(issue),\n        \"labels\": labels(issue),\n        \"created_at\": issue[\"created_at\"],\n        \"closed_at\": issue[\"closed_at\"],\n    }\n\ncreated, created_total = load_search_pages(data_dir / \"created-pages.json\")\nclosed, closed_total = load_search_pages(data_dir / \"closed-pages.json\")\ncurrent_open = json.loads((data_dir / \"open-count.json\").read_text(encoding=\"utf-8\"))[\"total_count\"]\n\nweeks = []\nfor index in range(12):\n    start = activity_start + timedelta(weeks=index)\n    end = start + timedelta(weeks=1)\n    opened = sum(start <= parse_timestamp(issue[\"created_at\"]) < end for issue in created)\n    closed_count = sum(\n        issue[\"closed_at\"] is not None and start <= parse_timestamp(issue[\"closed_at\"]) < end\n        for issue in closed\n    )\n    weeks.append({\n        \"start\": start.date().isoformat(),\n        \"end\": end.date().isoformat(),\n        \"opened\": opened,\n        \"closed\": closed_count,\n    })\n\nrunning_open = current_open\nfor week in reversed(weeks):\n    week[\"open_total\"] = running_open\n    running_open -= week[\"opened\"] - week[\"closed\"]\n\nlatest_week_start = activity_start + timedelta(weeks=11)\nprevious_week_start = activity_start + timedelta(weeks=10)\nlatest_issues = [\n    issue for issue in created\n    if latest_week_start <= parse_timestamp(issue[\"created_at\"]) <= generated_at\n]\nprevious_issues = [\n    issue for issue in created\n    if previous_week_start <= parse_timestamp(issue[\"created_at\"]) < latest_week_start\n]\n\nrecently_created = [\n    issue for issue in created\n    if parse_timestamp(issue[\"created_at\"]) >= resolution_start\n]\nrecently_closed = [\n    issue for issue in closed\n    if issue[\"closed_at\"] is not None and parse_timestamp(issue[\"closed_at\"]) >= resolution_start\n]\nlifespans = [\n    (parse_timestamp(issue[\"closed_at\"]) - parse_timestamp(issue[\"created_at\"])).total_seconds() / 86400\n    for issue in recently_closed\n]\n\ndaily_lifespans = defaultdict(list)\nfor issue, lifespan in zip(recently_closed, lifespans):\n    daily_lifespans[parse_timestamp(issue[\"closed_at\"]).date()].append(lifespan)\n\nresolution_days = []\nfirst_resolution_day = resolution_start.date()\nfor offset in range(30):\n    current_date = first_resolution_day + timedelta(days=offset)\n    values = daily_lifespans[current_date]\n    resolution_days.append({\n        \"date\": current_date.isoformat(),\n        \"closed\": len(values),\n        \"average_days\": round(statistics.fmean(values), 2) if values else None,\n        \"median_days\": round(statistics.median(values), 2) if values else None,\n    })\n\ndef top_counts(values, limit=10):\n    return [{\"name\": name, \"count\": count} for name, count in Counter(values).most_common(limit)]\n\nnotes = [\n    \"Running open totals are reconstructed backward from the live open-issue count.\",\n]\nif created_total > len(created):\n    notes.append(\n        f\"Created-issue search returned {len(created)} of {created_total} results because GitHub caps search pagination.\"\n    )\nif closed_total > len(closed):\n    notes.append(\n        f\"Closed-issue search returned {len(closed)} of {closed_total} results because GitHub caps search pagination.\"\n    )\n\nsummary = {\n    \"generated_at\": generated_at.isoformat(),\n    \"activity_window\": {\n        \"start\": activity_start.isoformat(),\n        \"weeks\": weeks,\n        \"current_open\": current_open,\n    },\n    \"this_week\": {\n        \"opened\": weeks[-1][\"opened\"],\n        \"closed\": weeks[-1][\"closed\"],\n        \"issues\": [public_issue(issue) for issue in sorted(latest_issues, key=lambda item: item[\"number\"])],\n        \"top_authors\": top_counts(author(issue) for issue in latest_issues),\n        \"top_labels\": top_counts(label for issue in latest_issues for label in labels(issue)),\n    },\n    \"last_week\": {\n        \"opened\": weeks[-2][\"opened\"],\n        \"closed\": weeks[-2][\"closed\"],\n        \"issue_count\": len(previous_issues),\n    },\n    \"last_30_days\": {\n        \"opened\": len(recently_created),\n        \"closed\": len(recently_closed),\n        \"average_close_days\": round(statistics.fmean(lifespans), 2) if lifespans else None,\n        \"median_close_days\": round(statistics.median(lifespans), 2) if lifespans else None,\n        \"resolution_by_day\": resolution_days,\n        \"top_opened_labels\": top_counts(\n            label for issue in recently_created for label in labels(issue)\n        ),\n        \"top_closed_labels\": top_counts(\n            label for issue in recently_closed for label in labels(issue)\n        ),\n    },\n    \"data_notes\": notes,\n}\n(data_dir / \"issue-summary.json\").write_text(\n    json.dumps(summary, indent=2, ensure_ascii=False) + \"\\n\",\n    encoding=\"utf-8\",\n)\n\nblocks = \"▁▂▃▄▅▆▇█\"\n\ndef bar(value, maximum, width=8):\n    length = math.ceil(value / maximum * width) if value else 0\n    return \"█\" * length\n\nmax_activity = max(\n    max(week[\"opened\"], week[\"closed\"])\n    for week in weeks\n) or 1\nactivity_chart = [\"Week  Opened       Closed       Open\"]\nfor week in weeks:\n    activity_chart.append(\n        f\"{week['end'][5:]} \"\n        f\"{bar(week['opened'], max_activity):<8} {week['opened']:>3}  \"\n        f\"{bar(week['closed'], max_activity):<8} {week['closed']:>3}  \"\n        f\"{week['open_total']:>4}\"\n    )\n(data_dir / \"issue-activity.txt\").write_text(\n    \"\\n\".join(activity_chart) + \"\\n\",\n    encoding=\"utf-8\",\n)\n\naverages = [day[\"average_days\"] for day in resolution_days if day[\"average_days\"] is not None]\nmedians = [day[\"median_days\"] for day in resolution_days if day[\"median_days\"] is not None]\nscale_values = sorted(averages + medians)\nscale = scale_values[round((len(scale_values) - 1) * 0.9)] if scale_values else 1\nscale = max(scale, 0.01)\n\ndef sparkline(key):\n    result = []\n    for day in resolution_days:\n        value = day[key]\n        if value is None:\n            result.append(\"·\")\n            continue\n        index = round(min(value, scale) / scale * (len(blocks) - 1))\n        result.append(blocks[index])\n    return \"\".join(result)\n\nresolution_chart = [\n    f\"Avg {sparkline('average_days')}\",\n    f\"Med {sparkline('median_days')}\",\n    f\"    {resolution_days[0]['date'][5:]}{' ' * 19}{resolution_days[-1]['date'][5:]}\",\n    f\"Scale: ▁=0d, █≥{scale:.1f}d, ·=no closures\",\n]\n(data_dir / \"issue-resolution.txt\").write_text(\n    \"\\n\".join(resolution_chart) + \"\\n\",\n    encoding=\"utf-8\",\n)\nPY"
 
       - name: Configure Git credentials
         env:
@@ -494,16 +440,6 @@ jobs:
           GH_AW_COMPILED_VERSION: v0.84.3
       - name: Install AWF binary
         run: bash "${RUNNER_TEMP}/gh-aw/actions/install_awf_binary.sh" v0.27.43 --rootless
-      - name: Determine automatic lockdown mode for GitHub MCP Server
-        id: determine-automatic-lockdown
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0 (source v9)
-        env:
-          GH_AW_GITHUB_TOKEN: ${{ secrets.GH_AW_GITHUB_TOKEN }}
-          GH_AW_GITHUB_MCP_SERVER_TOKEN: ${{ secrets.GH_AW_GITHUB_MCP_SERVER_TOKEN }}
-        with:
-          script: |
-            const determineAutomaticLockdown = require('${{ runner.temp }}/gh-aw/actions/determine_automatic_lockdown.cjs');
-            await determineAutomaticLockdown(github, context, core);
       - name: Restore agent config folders from base branch
         if: steps.checkout-pr.outcome == 'success'
         env:
@@ -520,7 +456,7 @@ jobs:
           GH_AW_SKILL_DIR: ".github/skills"
         run: bash "${RUNNER_TEMP}/gh-aw/actions/restore_inline_skills.sh"
       - name: Download container images
-        run: bash "${RUNNER_TEMP}/gh-aw/actions/download_docker_images.sh" ghcr.io/github/gh-aw-firewall/agent:0.27.43@sha256:04e2d1987a565000a8f114b89d806ae7a3864dd4f944be65275b28c93d8690e6 ghcr.io/github/gh-aw-firewall/api-proxy:0.27.43@sha256:d85f57975af5ea23af4996e41ed73fbc8f5b4a47402472bfe82e508f352cb0c1 ghcr.io/github/gh-aw-firewall/squid:0.27.43@sha256:26be5e0b8c8f4c41c8a59126b29bb5d80b07253597472ded2a16bdd75abcbf9d ghcr.io/github/gh-aw-mcpg:v0.4.7@sha256:7545220a9aca134b71e51193ee0eaf4c50756ebf8fbd25a63ae7556e62815c00 ghcr.io/github/gh-aw-node@sha256:0d9f1fb5fd6610c0ac1f5194a38e45a8a1e81f8a390d5142d8e4e6f26a4b3196 ghcr.io/github/github-mcp-server:v1.8.0@sha256:d5a18c04b92714c309eb46a2305087e91a4dbd80420f6e462656699f95093520
+        run: bash "${RUNNER_TEMP}/gh-aw/actions/download_docker_images.sh" ghcr.io/github/gh-aw-firewall/agent:0.27.43@sha256:04e2d1987a565000a8f114b89d806ae7a3864dd4f944be65275b28c93d8690e6 ghcr.io/github/gh-aw-firewall/api-proxy:0.27.43@sha256:d85f57975af5ea23af4996e41ed73fbc8f5b4a47402472bfe82e508f352cb0c1 ghcr.io/github/gh-aw-firewall/squid:0.27.43@sha256:26be5e0b8c8f4c41c8a59126b29bb5d80b07253597472ded2a16bdd75abcbf9d ghcr.io/github/gh-aw-mcpg:v0.4.7@sha256:7545220a9aca134b71e51193ee0eaf4c50756ebf8fbd25a63ae7556e62815c00 ghcr.io/github/gh-aw-node@sha256:0d9f1fb5fd6610c0ac1f5194a38e45a8a1e81f8a390d5142d8e4e6f26a4b3196
       - name: Generate Safe Outputs Config
         run: |
           mkdir -p "${RUNNER_TEMP}/gh-aw/safeoutputs"
@@ -656,10 +592,6 @@ jobs:
           GH_AW_SAFE_OUTPUTS: ${{ steps.set-runtime-paths.outputs.GH_AW_SAFE_OUTPUTS }}
           GH_AW_SAFE_OUTPUTS_CONFIG_PATH: ${{ steps.set-runtime-paths.outputs.GH_AW_SAFE_OUTPUTS_CONFIG_PATH }}
           GH_AW_SAFE_OUTPUTS_TOOLS_PATH: ${{ steps.set-runtime-paths.outputs.GH_AW_SAFE_OUTPUTS_TOOLS_PATH }}
-          GH_AW_SINK_VISIBILITY: ${{ steps.determine-automatic-lockdown.outputs.visibility }}
-          GITHUB_MCP_GUARD_MIN_INTEGRITY: ${{ steps.determine-automatic-lockdown.outputs.min_integrity }}
-          GITHUB_MCP_GUARD_REPOS: ${{ steps.determine-automatic-lockdown.outputs.repos }}
-          GITHUB_MCP_SERVER_TOKEN: ${{ secrets.GH_AW_GITHUB_MCP_SERVER_TOKEN || secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -eo pipefail
@@ -685,26 +617,9 @@ jobs:
 
           mkdir -p "$HOME/.copilot"
           GH_AW_NODE=$(which node 2>/dev/null || command -v node 2>/dev/null || echo node)
-          cat << GH_AW_MCP_CONFIG_bd6748a39fe70b8b_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
+          cat << GH_AW_MCP_CONFIG_948d9cbdbcfa4bfe_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
           {
             "mcpServers": {
-              "github": {
-                "type": "stdio",
-                "container": "ghcr.io/github/github-mcp-server:v1.8.0",
-                "env": {
-                  "GITHUB_FEATURES": "fields_param",
-                  "GITHUB_HOST": "${GITHUB_SERVER_URL}",
-                  "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_MCP_SERVER_TOKEN}",
-                  "GITHUB_READ_ONLY": "1",
-                  "GITHUB_TOOLSETS": "context,repos,issues,pull_requests"
-                },
-                "guard-policies": {
-                  "allow-only": {
-                    "min-integrity": "$GITHUB_MCP_GUARD_MIN_INTEGRITY",
-                    "repos": "$GITHUB_MCP_GUARD_REPOS"
-                  }
-                }
-              },
               "safeoutputs": {
                 "type": "stdio",
                 "container": "ghcr.io/github/gh-aw-node",
@@ -728,14 +643,6 @@ jobs:
                   "GITHUB_TOKEN": "\${GITHUB_TOKEN}",
                   "GITHUB_WORKSPACE": "\${GITHUB_WORKSPACE}",
                   "RUNNER_TEMP": "\${RUNNER_TEMP}"
-                },
-                "guard-policies": {
-                  "write-sink": {
-                    "accept": [
-                      "*"
-                    ],
-                    "sink-visibility": "${GH_AW_SINK_VISIBILITY}"
-                  }
                 }
               }
             },
@@ -747,7 +654,7 @@ jobs:
               "startupTimeout": 120
             }
           }
-          GH_AW_MCP_CONFIG_bd6748a39fe70b8b_EOF
+          GH_AW_MCP_CONFIG_948d9cbdbcfa4bfe_EOF
       - name: Mount MCP servers as CLIs
         id: mount-mcp-clis
         continue-on-error: true
@@ -805,7 +712,7 @@ jobs:
             fi
           fi
           # shellcheck disable=SC1003,SC2016,SC2086
-          awf --config "${RUNNER_TEMP}/gh-aw/awf-config.json" --container-workdir "${GITHUB_WORKSPACE}" --mount "${RUNNER_TEMP}/gh-aw:${RUNNER_TEMP}/gh-aw:ro" --mount "${RUNNER_TEMP}/gh-aw:/host${RUNNER_TEMP}/gh-aw:ro" ${GH_AW_TOOL_CACHE_MOUNT:+--mount "$GH_AW_TOOL_CACHE_MOUNT"} ${GH_AW_DOCKER_HOST:+--docker-host "$GH_AW_DOCKER_HOST"} --env-all --exclude-env COPILOT_GITHUB_TOKEN --exclude-env GITHUB_MCP_SERVER_TOKEN --exclude-env MCP_GATEWAY_API_KEY --log-level info --skip-pull \
+          awf --config "${RUNNER_TEMP}/gh-aw/awf-config.json" --container-workdir "${GITHUB_WORKSPACE}" --mount "${RUNNER_TEMP}/gh-aw:${RUNNER_TEMP}/gh-aw:ro" --mount "${RUNNER_TEMP}/gh-aw:/host${RUNNER_TEMP}/gh-aw:ro" ${GH_AW_TOOL_CACHE_MOUNT:+--mount "$GH_AW_TOOL_CACHE_MOUNT"} ${GH_AW_DOCKER_HOST:+--docker-host "$GH_AW_DOCKER_HOST"} --env-all --exclude-env COPILOT_GITHUB_TOKEN --exclude-env MCP_GATEWAY_API_KEY --log-level info --skip-pull \
             -- /bin/bash -c 'set +o histexpand; export PATH="${RUNNER_TEMP}/gh-aw/mcp-cli/bin:$PATH" && : "${RUNNER_TOOL_CACHE:?RUNNER_TOOL_CACHE must be set}"; GH_AW_TOOL_CACHE="$RUNNER_TOOL_CACHE"; export PATH="$(find "$GH_AW_TOOL_CACHE" -maxdepth 5 -type d -name bin 2>/dev/null | tr '\''\n'\'' '\'':'\'')$PATH"; [ -n "$GOROOT" ] && export PATH="$GOROOT/bin:$PATH" || true; [ -n "$ERLANG_HOME" ] && export PATH="$ERLANG_HOME/bin:$PATH" || true && GH_AW_NODE_EXEC="${GH_AW_NODE_BIN:-}"; if [ -z "$GH_AW_NODE_EXEC" ] || [ ! -x "$GH_AW_NODE_EXEC" ]; then GH_AW_NODE_EXEC="$(command -v node 2>/dev/null || true)"; fi; if [ -z "$GH_AW_NODE_EXEC" ]; then echo "node runtime missing on this runner — check runtimes.node in workflow YAML" >&2; exit 127; fi; GH_AW_NPM_GLOBAL_ROOT="$(npm root -g 2>/dev/null || true)"; if [ -n "$GH_AW_NPM_GLOBAL_ROOT" ]; then export NODE_PATH="${GH_AW_NPM_GLOBAL_ROOT}${NODE_PATH:+:${NODE_PATH}}"; fi; "$GH_AW_NODE_EXEC" ${RUNNER_TEMP}/gh-aw/actions/copilot_harness.cjs /usr/local/bin/copilot --add-dir /tmp/gh-aw/ --log-level all --log-dir /tmp/gh-aw/sandbox/agent/logs/ --disable-builtin-mcps --no-ask-user --allow-all-tools --allow-all-paths --add-dir "${GITHUB_WORKSPACE}" --prompt-file /tmp/gh-aw/aw-prompts/prompt.txt' 2>&1 | tee -a /tmp/gh-aw/agent-stdio.log
         env:
           AWF_REFLECT_ENABLED: 1
@@ -824,7 +731,6 @@ jobs:
           GITHUB_AW: true
           GITHUB_COPILOT_INTEGRATION_ID: agentic-workflows
           GITHUB_HEAD_REF: ${{ github.head_ref }}
-          GITHUB_MCP_SERVER_TOKEN: ${{ secrets.GH_AW_GITHUB_MCP_SERVER_TOKEN || secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           GITHUB_REF_NAME: ${{ github.ref_name }}
           GITHUB_SERVER_URL: ${{ github.server_url }}
           GITHUB_STEP_SUMMARY: /tmp/gh-aw/agent-step-summary.md

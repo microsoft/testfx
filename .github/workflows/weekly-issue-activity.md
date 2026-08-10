@@ -20,6 +20,7 @@ network:
 tools:
   bash:
     - "*"
+  github: false
 
 steps:
   - name: Collect and aggregate issue data
@@ -57,13 +58,13 @@ steps:
       import os
       import statistics
       from collections import Counter, defaultdict
-      from datetime import date, datetime, timedelta
+      from datetime import datetime, timedelta
       from pathlib import Path
 
       data_dir = Path("/tmp/gh-aw/agent/data")
       generated_at = datetime.fromisoformat(os.environ["GENERATED_AT"].replace("Z", "+00:00"))
       activity_start = generated_at - timedelta(weeks=12)
-      resolution_start = generated_at - timedelta(days=30)
+      resolution_start = generated_at.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=29)
 
       def load_search_pages(path):
           pages = json.loads(path.read_text(encoding="utf-8"))
@@ -145,7 +146,7 @@ steps:
           daily_lifespans[parse_timestamp(issue["closed_at"]).date()].append(lifespan)
 
       resolution_days = []
-      first_resolution_day = generated_at.date() - timedelta(days=29)
+      first_resolution_day = resolution_start.date()
       for offset in range(30):
           current_date = first_resolution_day + timedelta(days=offset)
           values = daily_lifespans[current_date]
