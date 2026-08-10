@@ -83,12 +83,14 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
         var classSymbol = (INamedTypeSymbol)context.Symbol;
 
         // A test class the adapter cannot discover never runs, so no inherited member can run for it: abstract and
-        // generic types are rejected, and the type must be visible enough to be discovered (public, or internal when
-        // the assembly opts into DiscoverInternals). Concrete, accessible, non-generic derived classes are analyzed
-        // separately and still get the warning.
+        // generic types are rejected — including a concrete class nested in a generic container, which cannot be
+        // constructed without the container's type arguments — and the type must be visible enough to be discovered
+        // (public, or internal when the assembly opts into DiscoverInternals). Concrete, accessible, non-generic derived
+        // classes are analyzed separately and still get the warning.
         if (!classSymbol.IsTestClass(testClassAttributeSymbol)
             || classSymbol.IsAbstract
             || classSymbol.IsGenericType
+            || IsNestedInGenericType(classSymbol)
             || !IsDiscoverableTestClassVisibility(classSymbol, canDiscoverInternals))
         {
             return;
@@ -178,6 +180,19 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
         }
 
         return true;
+    }
+
+    private static bool IsNestedInGenericType(INamedTypeSymbol classSymbol)
+    {
+        for (INamedTypeSymbol? container = classSymbol.ContainingType; container is not null; container = container.ContainingType)
+        {
+            if (container.IsGenericType)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static IAssemblySymbol? GetFrameworkAssembly(INamedTypeSymbol classSymbol)
@@ -365,8 +380,11 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
     }
 
     // The effective AttributeUsage.Inherited of the applied attribute. AttributeUsage is itself inherited down the
-    // attribute class hierarchy, so the first [AttributeUsage] found walking up the base chain wins; when it omits
-    // Inherited (or none is present at all) the .NET default is true. Standard MSTest attributes declare Inherited=false.
+    // attribute class hierarchy, so the first [AttributeUsage] found walking up the base chain wins; when it is present
+    // but omits Inherited the default is true. This is only called for an attribute that resolved to a canonical MSTest
+    // attribute, and every standard MSTest test/lifecycle attribute declares Inherited=false — so when no [AttributeUsage]
+    // is found at all (e.g. the legacy framework PE is absent and the attribute type cannot be read) the correct and
+    // conservative fallback is false, matching the standard semantics rather than the generic .NET default of true.
     private static bool IsAppliedAttributeInheritable(AttributeData attribute)
     {
         for (INamedTypeSymbol? type = attribute.AttributeClass; type is not null; type = type.BaseType)
@@ -391,7 +409,7 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
             return true;
         }
 
-        return true;
+        return false;
     }
 
     private static bool HasOwnCurrentVersionAttributeOfKind(IMethodSymbol method, MSTestMemberKind kind, IAssemblySymbol referenceAssembly)

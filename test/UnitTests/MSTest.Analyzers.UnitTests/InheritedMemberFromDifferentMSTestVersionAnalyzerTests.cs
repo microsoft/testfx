@@ -1677,6 +1677,93 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenTestClassNestedInGenericContainerInheritsLegacyFixture_NoDiagnostic()
+    {
+        // A concrete test class nested in a generic container cannot be constructed without the container's type
+        // arguments, so the adapter never discovers it and no inherited member runs — nothing to report.
+        string legacyBaseCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public sealed class TestInitializeAttribute : System.Attribute { }
+            }
+
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                public abstract class TestBase
+                {
+                    [TestInitialize]
+                    public void BaseInitialize() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                public class Outer<T>
+                {
+                    [TestClass]
+                    public class InnerTests : TestBase
+                    {
+                        [TestMethod]
+                        public void MyTest() { }
+                    }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddLegacyFrameworkBaseProject(test, legacyBaseCode);
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenOverrideOfEmittedMissingFrameworkFixture_NoDiagnostic()
+    {
+        // Missing-framework-PE override: the base library's [TestInitialize] is unresolved metadata, so its
+        // AttributeUsage cannot be read. The standard attribute is Inherited=false, so an attribute-less override does
+        // not carry it and is not discoverable even after recompiling — the analyzer must not report here.
+        string baseLibraryCode = """
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                public abstract class TestBase
+                {
+                    [TestInitialize]
+                    public virtual void BaseInitialize() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                public class SampleTests : TestBase
+                {
+                    public override void BaseInitialize() { }
+
+                    [TestMethod]
+                    public void MyTest() { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddEmittedMissingFrameworkBaseLibrary(test, baseLibraryCode);
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
     public async Task WhenInheritedGenericTestMethodShadowedByRenamedTypeParameter_Diagnostic()
     {
         // MSTest de-duplicates by MethodInfo.ToString(), which prints the type parameter name, so 'Run<U>(U)' and
