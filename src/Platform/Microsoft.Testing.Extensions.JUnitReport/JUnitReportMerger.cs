@@ -225,16 +225,20 @@ internal static class JUnitReportMerger
                 }
 
                 RetrySuite retrySuite = suites[suiteIndex];
+                var occurrences = new Dictionary<string, int>(StringComparer.Ordinal);
                 foreach (XElement testCase in suite.Elements().Where(IsTestCase))
                 {
                     string testIdentity = BuildTestIdentity(testCase);
-                    if (retrySuite.TestIndices.TryGetValue(testIdentity, out int testIndex))
+                    occurrences.TryGetValue(testIdentity, out int occurrence);
+                    occurrences[testIdentity] = occurrence + 1;
+                    string occurrenceIdentity = BuildIdentity(testIdentity, occurrence.ToString(CultureInfo.InvariantCulture));
+                    if (retrySuite.TestIndices.TryGetValue(occurrenceIdentity, out int testIndex))
                     {
                         retrySuite.Tests[testIndex] = new XElement(testCase);
                     }
                     else
                     {
-                        retrySuite.TestIndices.Add(testIdentity, retrySuite.Tests.Count);
+                        retrySuite.TestIndices.Add(occurrenceIdentity, retrySuite.Tests.Count);
                         retrySuite.Tests.Add(new XElement(testCase));
                     }
                 }

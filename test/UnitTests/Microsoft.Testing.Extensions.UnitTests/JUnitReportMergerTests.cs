@@ -236,6 +236,43 @@ public sealed class JUnitReportMergerTests
     }
 
     [TestMethod]
+    public void MergeRetryAttempts_PreservesSameIdentityOccurrencesWithinAnAttempt()
+    {
+        XDocument firstAttempt = BuildReport(suites:
+        [
+            Suite(
+                "Suite",
+                tests: 2,
+                failures: 1,
+                testCases:
+                [
+                    RetryTestCase("Repeated [attempt 1]", "same-path", "Repeated"),
+                    RetryTestCase("Repeated [attempt 2]", "same-path", "Repeated", new XElement("failure")),
+                ]),
+        ]);
+        XDocument secondAttempt = BuildReport(suites:
+        [
+            Suite(
+                "Suite",
+                tests: 2,
+                testCases:
+                [
+                    RetryTestCase("Repeated [attempt 1]", "same-path", "Repeated"),
+                    RetryTestCase("Repeated [attempt 2]", "same-path", "Repeated"),
+                ]),
+        ]);
+
+        XElement suite = JUnitReportMerger.Merge(
+            [firstAttempt, secondAttempt],
+            "run",
+            JUnitMergeMode.CollapseRetryAttempts).Root!.Element("testsuite")!;
+
+        Assert.AreEqual("2", suite.Attribute("tests")!.Value);
+        Assert.AreEqual("0", suite.Attribute("failures")!.Value);
+        Assert.HasCount(2, suite.Elements("testcase"));
+    }
+
+    [TestMethod]
     public async Task MergeToFileAsync_WritesMergedFileToDisk()
     {
         string tempDirectory = Path.Combine(Path.GetTempPath(), $"junit-merge-{Guid.NewGuid():N}");
