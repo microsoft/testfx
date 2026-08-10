@@ -69,15 +69,18 @@ public sealed class AppInsightsProviderTests
     public async Task ClientInitializationFailure_IsLogged()
     {
         InvalidOperationException exception = new("Initialization failed");
+        using ManualResetEventSlim initializationFailureLogged = new(initialState: false);
         Mock<ITelemetryClientFactory> telemetryClientFactory = new();
         telemetryClientFactory.Setup(x => x.Create(It.IsAny<string?>(), It.IsAny<string>())).Throws(exception);
         Mock<ILogger> logger = new();
         logger
             .Setup(x => x.LogAsync(LogLevel.Error, It.IsAny<string>(), It.IsAny<Exception>(), LoggingExtensions.Formatter))
+            .Callback((LogLevel _, string _, Exception? _, Func<string, Exception?, string> _) => initializationFailureLogged.Set())
             .Returns(Task.CompletedTask);
 
         AppInsightsProvider appInsightsProvider = CreateProvider(telemetryClientFactory, logger.Object);
         await appInsightsProvider.LogEventAsync("Sample", new Dictionary<string, object>(), CancellationToken.None);
+        Assert.IsTrue(initializationFailureLogged.Wait(TimeSpan.FromSeconds(30), TestContext.CancellationToken), "Telemetry client initialization failure was not logged within the timeout.");
 
 #if NETCOREAPP
         await appInsightsProvider.DisposeAsync();
