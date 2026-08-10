@@ -199,11 +199,11 @@ public sealed class JUnitReportMTPRetryExtensionTests : AcceptanceTestBase<JUnit
             SearchOption.AllDirectories);
         Assert.HasCount(2, perAttemptFiles);
 
-        XElement firstAttempt = XDocument.Load(perAttemptFiles.Single(file => file.Contains($"{Path.DirectorySeparatorChar}1{Path.DirectorySeparatorChar}", StringComparison.Ordinal))).Root!;
+        XElement firstAttempt = XDocument.Load(perAttemptFiles.Single(file => Path.GetFileName(Path.GetDirectoryName(file)) == "1")).Root!;
         Assert.AreEqual("2", firstAttempt.Attribute("tests")!.Value);
         Assert.AreEqual("1", firstAttempt.Attribute("failures")!.Value);
 
-        XElement finalAttempt = XDocument.Load(perAttemptFiles.Single(file => file.Contains($"{Path.DirectorySeparatorChar}2{Path.DirectorySeparatorChar}", StringComparison.Ordinal))).Root!;
+        XElement finalAttempt = XDocument.Load(perAttemptFiles.Single(file => Path.GetFileName(Path.GetDirectoryName(file)) == "2")).Root!;
         Assert.AreEqual("1", finalAttempt.Attribute("tests")!.Value);
         Assert.AreEqual("0", finalAttempt.Attribute("failures")!.Value);
 
