@@ -8,6 +8,7 @@ using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.Services;
 
@@ -54,9 +55,8 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
     {
         if (value is SessionFileArtifact artifact)
         {
-            ApplicationStateGuard.Ensure(_retryFailedTestsLifecycleCallbacks is not null);
-            ApplicationStateGuard.Ensure(_retryFailedTestsLifecycleCallbacks.Client is not null);
-            await _retryFailedTestsLifecycleCallbacks.Client.RequestReplyAsync<ArtifactRequest, VoidResponse>(
+            NamedPipeClient client = GetClient();
+            await client.RequestReplyAsync<ArtifactRequest, VoidResponse>(
                 new ArtifactRequest(artifact.FileInfo.FullName, artifact.Kind),
                 cancellationToken).ConfigureAwait(false);
             return;
@@ -86,9 +86,8 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
             or CancelledTestNodeStateProperty)
 #pragma warning restore CS0618, MTP0001 // Type or member is obsolete
         {
-            ApplicationStateGuard.Ensure(_retryFailedTestsLifecycleCallbacks is not null);
-            ApplicationStateGuard.Ensure(_retryFailedTestsLifecycleCallbacks.Client is not null);
-            await _retryFailedTestsLifecycleCallbacks.Client.RequestReplyAsync<FailedTestRequest, VoidResponse>(new FailedTestRequest(uid, testNodeUpdateMessage.TestNode.DisplayName), cancellationToken).ConfigureAwait(false);
+            NamedPipeClient client = GetClient();
+            await client.RequestReplyAsync<FailedTestRequest, VoidResponse>(new FailedTestRequest(uid, testNodeUpdateMessage.TestNode.DisplayName), cancellationToken).ConfigureAwait(false);
             _failedTests++;
             MarkNotRecovered(uid);
         }
@@ -128,6 +127,9 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
             _recoveredTests.Remove(uid);
         }
     }
+
+    private NamedPipeClient GetClient()
+        => _retryFailedTestsLifecycleCallbacks?.Client ?? throw ApplicationStateGuard.Unreachable();
 
     public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
     {
