@@ -19,7 +19,8 @@ network:
 
 tools:
   bash:
-    - "*"
+    - cat
+  edit: false
   github: false
 
 steps:
