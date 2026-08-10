@@ -398,9 +398,9 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
                 continue;
             }
 
-            foreach (KeyValuePair<string, TypedConstant> namedArgument in usage.NamedArguments)
+            foreach (KeyValuePair<string, TypedConstant> namedArgument in usage.NamedArguments.Where(namedArgument => string.Equals(namedArgument.Key, "Inherited", StringComparison.Ordinal)))
             {
-                if (string.Equals(namedArgument.Key, "Inherited", StringComparison.Ordinal) && namedArgument.Value.Value is bool inherited)
+                if (namedArgument.Value.Value is bool inherited)
                 {
                     return inherited;
                 }
