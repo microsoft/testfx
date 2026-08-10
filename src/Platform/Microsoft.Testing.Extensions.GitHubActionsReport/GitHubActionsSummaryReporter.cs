@@ -655,7 +655,7 @@ internal sealed class GitHubActionsSummaryReporter :
 
     private static bool HasDuplicateModuleIdentity(IReadOnlyList<CiRunSummaryModule> modules, CiRunSummaryModule module)
         => modules.Count(candidate =>
-            string.Equals(candidate.ModulePath, module.ModulePath, StringComparison.Ordinal)
+            string.Equals(candidate.AssemblyName, module.AssemblyName, StringComparison.Ordinal)
             && string.Equals(candidate.TargetFramework, module.TargetFramework, StringComparison.Ordinal)
             && string.Equals(candidate.Architecture, module.Architecture, StringComparison.OrdinalIgnoreCase)) > 1;
 }

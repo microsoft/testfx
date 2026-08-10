@@ -82,6 +82,11 @@
         <target state="translated">아티팩트 후처리 매니페스트를 읽을 수 없음: {0}</target>
         <note>{0} is the exception message.</note>
       </trans-unit>
+      <trans-unit id="ArtifactPostProcessingManifestRunSummaryInvalid">
+        <source>The artifact post-processing manifest runSummary must contain valid totalTests, passedTests, failedTests, skippedTests, durationTicks, exitCode, and testModuleCount values.</source>
+        <target state="new">The artifact post-processing manifest runSummary must contain valid totalTests, passedTests, failedTests, skippedTests, durationTicks, exitCode, and testModuleCount values.</target>
+        <note>Do not localize property names {Locked="runSummary"}{Locked="totalTests"}{Locked="passedTests"}{Locked="failedTests"}{Locked="skippedTests"}{Locked="durationTicks"}{Locked="exitCode"}{Locked="testModuleCount"}.</note>
+      </trans-unit>
       <trans-unit id="ArtifactPostProcessorCapabilityContainsSeparator">
         <source>Artifact post-processor '{0}' declares capability '{1}', which cannot contain the semicolon separator.</source>
         <target state="translated">아티팩트 후처리기 '{0}'은(는) 기능 '{1}'을(를) 선언합니다. 이 기능에는 세미콜론 구분 기호를 포함할 수 없습니다.</target>

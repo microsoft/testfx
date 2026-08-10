@@ -187,7 +187,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             bool.TryParse(isIDEValue, out bool isIDE) &&
             isIDE;
         IsRequiredArtifactPostProcessingSupported =
-            response.Properties?.TryGetValue(HandshakeMessagePropertyNames.RequiredPostProcessingSupported, out string? requiredPostProcessingValue) == true
+            response.Properties?.TryGetValue(HandshakeMessagePropertyNames.RequiredPostProcessingSupported, out string? requiredPostProcessingValue) is true
             && bool.TryParse(requiredPostProcessingValue, out bool requiredPostProcessingSupported)
             && requiredPostProcessingSupported;
 

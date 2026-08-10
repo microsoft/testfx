@@ -172,6 +172,10 @@
     <value>The artifact post-processing manifest must have schemaVersion 1 and an outputDirectory.</value>
     <comment>Do not localize property names {Locked="schemaVersion"}{Locked="outputDirectory"}.</comment>
   </data>
+  <data name="ArtifactPostProcessingManifestRunSummaryInvalid" xml:space="preserve">
+    <value>The artifact post-processing manifest runSummary must contain valid totalTests, passedTests, failedTests, skippedTests, durationTicks, exitCode, and testModuleCount values.</value>
+    <comment>Do not localize property names {Locked="runSummary"}{Locked="totalTests"}{Locked="passedTests"}{Locked="failedTests"}{Locked="skippedTests"}{Locked="durationTicks"}{Locked="exitCode"}{Locked="testModuleCount"}.</comment>
+  </data>
   <data name="ArtifactPostProcessingManifestReadError" xml:space="preserve">
     <value>Cannot read the artifact post-processing manifest: {0}</value>
     <comment>{0} is the exception message.</comment>

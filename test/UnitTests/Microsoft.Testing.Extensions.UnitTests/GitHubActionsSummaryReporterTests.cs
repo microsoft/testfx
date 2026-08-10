@@ -175,7 +175,7 @@ public sealed class GitHubActionsSummaryReporterTests
         var second = new GitHubCiRunSummaryModule
         {
             AssemblyName = "Tests",
-            ModulePath = "Tests.dll",
+            ModulePath = "other/Tests.dll",
             TargetFramework = "net9.0",
             Architecture = "x64",
             ExecutionId = "execution",

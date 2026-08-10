@@ -179,12 +179,36 @@ public interface IArtifactPostProcessor : IExtension
         CancellationToken cancellationToken);
 }
 
+public interface IArtifactPostProcessorRequiresPostProcessing : IArtifactPostProcessor;
+
 public sealed class ArtifactPostProcessingContext
 {
     public ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason truncationReason);
+    public ArtifactPostProcessingContext(
+        ArtifactPostProcessingTruncationReason truncationReason,
+        ArtifactPostProcessingRunSummary? runSummary);
     public bool IsTruncated { get; }
     public ArtifactPostProcessingTruncationReason TruncationReason { get; }
     public ArtifactPostProcessingRunSummary? RunSummary { get; }
+}
+
+public sealed class ArtifactPostProcessingRunSummary
+{
+    public ArtifactPostProcessingRunSummary(
+        long totalTests,
+        long passedTests,
+        long failedTests,
+        long skippedTests,
+        TimeSpan duration,
+        int exitCode,
+        int testModuleCount);
+    public long TotalTests { get; }
+    public long PassedTests { get; }
+    public long FailedTests { get; }
+    public long SkippedTests { get; }
+    public TimeSpan Duration { get; }
+    public int ExitCode { get; }
+    public int TestModuleCount { get; }
 }
 
 public enum ArtifactPostProcessingTruncationReason

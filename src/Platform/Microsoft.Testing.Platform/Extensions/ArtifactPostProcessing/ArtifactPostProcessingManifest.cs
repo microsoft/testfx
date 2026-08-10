@@ -122,7 +122,7 @@ internal sealed class ArtifactPostProcessingManifest(
 
         if (runSummaryJson is null || !runSummaryJson.TrimStart().StartsWith("{", StringComparison.Ordinal))
         {
-            throw new FormatException(PlatformResources.ArtifactPostProcessingManifestInvalid);
+            throw new FormatException(PlatformResources.ArtifactPostProcessingManifestRunSummaryInvalid);
         }
 
         try
@@ -138,7 +138,7 @@ internal sealed class ArtifactPostProcessingManifest(
             return durationTicks < 0
                 || exitCode is < int.MinValue or > int.MaxValue
                 || testModuleCount is <= 0 or > int.MaxValue
-                    ? throw new FormatException(PlatformResources.ArtifactPostProcessingManifestInvalid)
+                    ? throw new FormatException(PlatformResources.ArtifactPostProcessingManifestRunSummaryInvalid)
                     : new ArtifactPostProcessingRunSummary(
                         totalTests,
                         passedTests,
@@ -150,7 +150,7 @@ internal sealed class ArtifactPostProcessingManifest(
         }
         catch (Exception ex) when (ex is ArgumentException or OverflowException)
         {
-            throw new FormatException(PlatformResources.ArtifactPostProcessingManifestInvalid, ex);
+            throw new FormatException(PlatformResources.ArtifactPostProcessingManifestRunSummaryInvalid, ex);
         }
     }
 
@@ -163,7 +163,7 @@ internal sealed class ArtifactPostProcessingManifest(
             || valueJson.TrimStart().StartsWith("\"", StringComparison.Ordinal)
             || !values.TryGetValue(key, out string? value)
             || !long.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out long result)
-                ? throw new FormatException(PlatformResources.ArtifactPostProcessingManifestInvalid)
+                ? throw new FormatException(PlatformResources.ArtifactPostProcessingManifestRunSummaryInvalid)
                 : result;
 
     private static string? GetValue(

@@ -173,6 +173,47 @@ public sealed class AzureDevOpsSummaryReporterTests
     }
 
     [TestMethod]
+    public void BuildAggregateMarkdown_SameRenderedIdentityDifferentPaths_DisambiguatesSections()
+    {
+        var first = new CiRunSummaryModule
+        {
+            AssemblyName = "Tests",
+            ModulePath = "first/Tests.dll",
+            TargetFramework = "net9.0",
+            Architecture = "x64",
+            ExecutionId = "execution",
+            SessionUid = "session-1",
+            AttemptNumber = 1,
+        };
+        var second = new CiRunSummaryModule
+        {
+            AssemblyName = "Tests",
+            ModulePath = "second/Tests.dll",
+            TargetFramework = "net9.0",
+            Architecture = "x64",
+            ExecutionId = "execution",
+            SessionUid = "session-2",
+            AttemptNumber = 2,
+        };
+        var aggregate = new CiRunSummaryAggregate(
+            [first, second],
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 0,
+            passedTests: 0,
+            failedTests: 0,
+            skippedTests: 0,
+            duration: null,
+            exitCode: null,
+            hasAuthoritativeRunSummary: false,
+            isPartial: false);
+
+        string markdown = AzureDevOpsSummaryReporter.BuildAggregateMarkdown(aggregate);
+
+        Assert.Contains("attempt 1, session session-1", markdown);
+        Assert.Contains("attempt 2, session session-2", markdown);
+    }
+
+    [TestMethod]
     public async Task SessionFinishing_WritesSummaryFileAndEmitsUploadSummaryCommandAsync()
     {
         AzureDevOpsSummaryReporter reporter = CreateReporter(EnabledOptions());

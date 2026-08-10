@@ -128,15 +128,24 @@ public sealed class ArtifactPostProcessingRunSummary
         int exitCode,
         int testModuleCount)
     {
-        if (totalTests < 0
-            || passedTests < 0
-            || failedTests < 0
-            || skippedTests < 0
-            || passedTests > totalTests
-            || failedTests > totalTests - passedTests
-            || skippedTests != totalTests - passedTests - failedTests)
+        if (totalTests < 0)
         {
             throw new ArgumentOutOfRangeException(nameof(totalTests));
+        }
+
+        if (passedTests < 0 || passedTests > totalTests)
+        {
+            throw new ArgumentOutOfRangeException(nameof(passedTests));
+        }
+
+        if (failedTests < 0 || failedTests > totalTests - passedTests)
+        {
+            throw new ArgumentOutOfRangeException(nameof(failedTests));
+        }
+
+        if (skippedTests < 0 || skippedTests != totalTests - passedTests - failedTests)
+        {
+            throw new ArgumentOutOfRangeException(nameof(skippedTests));
         }
 
         if (duration < TimeSpan.Zero)

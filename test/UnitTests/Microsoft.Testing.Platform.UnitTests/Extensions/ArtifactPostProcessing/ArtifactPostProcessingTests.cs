@@ -53,15 +53,44 @@ public sealed class ArtifactPostProcessingTests
         => Assert.ThrowsExactly<ArgumentException>(() => new ProcessedArtifact("artifact.trx", kind, "artifact", null));
 
     [TestMethod]
-    public void RunSummary_OverflowingCounts_ThrowsArgumentOutOfRangeException()
-        => Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new ArtifactPostProcessingRunSummary(
+    public void RunSummary_PassedExceedsTotal_ThrowsArgumentOutOfRangeException()
+    {
+        ArgumentOutOfRangeException exception = Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new ArtifactPostProcessingRunSummary(
             totalTests: 0,
-            passedTests: long.MaxValue,
-            failedTests: long.MaxValue,
-            skippedTests: 2,
+            passedTests: 1,
+            failedTests: 0,
+            skippedTests: 0,
             duration: TimeSpan.Zero,
             exitCode: 0,
             testModuleCount: 1));
+
+        Assert.AreEqual("passedTests", exception.ParamName);
+    }
+
+    [DataRow(-1, 0, 0, 0, "totalTests")]
+    [DataRow(1, -1, 1, 1, "passedTests")]
+    [DataRow(1, 0, -1, 1, "failedTests")]
+    [DataRow(1, 0, 0, -1, "skippedTests")]
+    [DataRow(1, 0, 0, 0, "skippedTests")]
+    [TestMethod]
+    public void RunSummary_InvalidCount_ReportsCorrespondingParameter(
+        long totalTests,
+        long passedTests,
+        long failedTests,
+        long skippedTests,
+        string expectedParameter)
+    {
+        ArgumentOutOfRangeException exception = Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new ArtifactPostProcessingRunSummary(
+            totalTests,
+            passedTests,
+            failedTests,
+            skippedTests,
+            TimeSpan.Zero,
+            exitCode: 0,
+            testModuleCount: 1));
+
+        Assert.AreEqual(expectedParameter, exception.ParamName);
+    }
 
     [TestMethod]
     public async Task Manager_BuildsOnlyEnabledProcessors()
@@ -295,6 +324,35 @@ public sealed class ArtifactPostProcessingTests
             Assert.AreEqual(TimeSpan.FromTicks(1234567), runSummary.Duration);
             Assert.AreEqual(2, runSummary.ExitCode);
             Assert.AreEqual(3, runSummary.TestModuleCount);
+        }
+        finally
+        {
+            File.Delete(manifestPath);
+        }
+    }
+
+    [TestMethod]
+    public void Manifest_WithInvalidRunSummary_ThrowsSpecificFormatException()
+    {
+        string manifestPath = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(
+                manifestPath,
+                """
+                {
+                  "schemaVersion": 1,
+                  "outputDirectory": "out",
+                  "runSummary": {
+                    "totalTests": 1
+                  },
+                  "inputs": []
+                }
+                """);
+
+            FormatException exception = Assert.ThrowsExactly<FormatException>(() => ArtifactPostProcessingManifest.Load(manifestPath));
+
+            Assert.AreEqual(Platform.Resources.PlatformResources.ArtifactPostProcessingManifestRunSummaryInvalid, exception.Message);
         }
         finally
         {

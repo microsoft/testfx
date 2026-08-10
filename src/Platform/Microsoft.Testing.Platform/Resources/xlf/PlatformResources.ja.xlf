@@ -82,6 +82,11 @@
         <target state="translated">アーティファクト ポスト プロセス マニフェストを読み取れません: {0}</target>
         <note>{0} is the exception message.</note>
       </trans-unit>
+      <trans-unit id="ArtifactPostProcessingManifestRunSummaryInvalid">
+        <source>The artifact post-processing manifest runSummary must contain valid totalTests, passedTests, failedTests, skippedTests, durationTicks, exitCode, and testModuleCount values.</source>
+        <target state="new">The artifact post-processing manifest runSummary must contain valid totalTests, passedTests, failedTests, skippedTests, durationTicks, exitCode, and testModuleCount values.</target>
+        <note>Do not localize property names {Locked="runSummary"}{Locked="totalTests"}{Locked="passedTests"}{Locked="failedTests"}{Locked="skippedTests"}{Locked="durationTicks"}{Locked="exitCode"}{Locked="testModuleCount"}.</note>
+      </trans-unit>
       <trans-unit id="ArtifactPostProcessorCapabilityContainsSeparator">
         <source>Artifact post-processor '{0}' declares capability '{1}', which cannot contain the semicolon separator.</source>
         <target state="translated">アーティファクト ポスト プロセス プロセッサ '{0}' は機能 '{1}' を宣言していますが、セミコロン区切り記号を含めることはできません。</target>
