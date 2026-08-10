@@ -225,7 +225,7 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
         // A non-public member, or one replaced by an override or a `new` declaration in a more-derived type, is not the
         // member MSTest would run or discover, so recompiling the base cannot change its behavior.
         => method.DeclaredAccessibility == Accessibility.Public
-            && !IsHiddenOrOverriddenInDerivedType(method, kind, testClass, declaringBaseType, referenceAssembly, canDiscoverInternals, taskSymbol, valueTaskSymbol)
+            && !IsHiddenOrOverriddenInDerivedType(method, kind, attribute, testClass, declaringBaseType, referenceAssembly, canDiscoverInternals, taskSymbol, valueTaskSymbol)
             && kind switch
             {
                 // Test methods must be public instance methods that return void/Task/ValueTask (parameters are allowed
@@ -301,7 +301,7 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
             && argument.Value is int value
             && value == BeforeEachDerivedClass);
 
-    private static bool IsHiddenOrOverriddenInDerivedType(IMethodSymbol baseMethod, MSTestMemberKind kind, INamedTypeSymbol testClass, INamedTypeSymbol declaringBaseType, IAssemblySymbol referenceAssembly, bool canDiscoverInternals, INamedTypeSymbol? taskSymbol, INamedTypeSymbol? valueTaskSymbol)
+    private static bool IsHiddenOrOverriddenInDerivedType(IMethodSymbol baseMethod, MSTestMemberKind kind, AttributeData attribute, INamedTypeSymbol testClass, INamedTypeSymbol declaringBaseType, IAssemblySymbol referenceAssembly, bool canDiscoverInternals, INamedTypeSymbol? taskSymbol, INamedTypeSymbol? valueTaskSymbol)
     {
         // Class fixtures are static and accumulated independently by the adapter, so a same-named derived method does
         // not suppress them (and static methods cannot be overridden anyway).
@@ -321,9 +321,20 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
                     continue;
                 }
 
-                // An override always replaces the inherited member.
+                // An override normally replaces the inherited member: standard test/lifecycle attributes use
+                // Inherited=false, so an attribute-less override does not carry the attribute. But a custom attribute
+                // with Inherited=true flows onto the override via reflection (the adapter reads attributes with
+                // inherit:true); when it derives from a different-version framework type, the override is discoverable
+                // only after recompilation, so it is a real break that must still be reported — unless the override
+                // carries its own current-version attribute of the same kind (then it is discoverable regardless).
                 if (Overrides(derivedMethod, baseMethod))
                 {
+                    if (IsAppliedAttributeInheritable(attribute)
+                        && !HasOwnCurrentVersionAttributeOfKind(derivedMethod, kind, referenceAssembly))
+                    {
+                        continue;
+                    }
+
                     return true;
                 }
 
@@ -352,6 +363,43 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
 
         return false;
     }
+
+    // The effective AttributeUsage.Inherited of the applied attribute. AttributeUsage is itself inherited down the
+    // attribute class hierarchy, so the first [AttributeUsage] found walking up the base chain wins; when it omits
+    // Inherited (or none is present at all) the .NET default is true. Standard MSTest attributes declare Inherited=false.
+    private static bool IsAppliedAttributeInheritable(AttributeData attribute)
+    {
+        for (INamedTypeSymbol? type = attribute.AttributeClass; type is not null; type = type.BaseType)
+        {
+            AttributeData? usage = type.GetAttributes().FirstOrDefault(applied =>
+                applied.AttributeClass is { Name: "AttributeUsageAttribute" } usageClass
+                && usageClass.ContainingNamespace is { } usageNamespace
+                && string.Equals(usageNamespace.ToDisplayString(), "System", StringComparison.Ordinal));
+            if (usage is null)
+            {
+                continue;
+            }
+
+            foreach (KeyValuePair<string, TypedConstant> namedArgument in usage.NamedArguments)
+            {
+                if (string.Equals(namedArgument.Key, "Inherited", StringComparison.Ordinal) && namedArgument.Value.Value is bool inherited)
+                {
+                    return inherited;
+                }
+            }
+
+            return true;
+        }
+
+        return true;
+    }
+
+    private static bool HasOwnCurrentVersionAttributeOfKind(IMethodSymbol method, MSTestMemberKind kind, IAssemblySymbol referenceAssembly)
+        => method.GetAttributes().Any(attribute =>
+            GetCanonicalMSTestAttribute(attribute.AttributeClass) is { } canonicalAttribute
+            && GetMemberKind(canonicalAttribute.Name) == kind
+            && canonicalAttribute.ContainingAssembly is { } assembly
+            && string.Equals(assembly.Name, referenceAssembly.Name, StringComparison.Ordinal));
 
     private static bool Overrides(IMethodSymbol candidate, IMethodSymbol baseMethod)
     {
@@ -419,17 +467,16 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
         return true;
     }
 
-    // Compares parameter types the way the CLR signature does: a method's own type parameters are identified by ordinal,
-    // not by name, so 'Run&lt;T&gt;(T)' and 'Run&lt;U&gt;(U)' share a signature. Recurses through arrays and constructed
-    // generic types and falls back to symbol identity for everything else.
+    // Compares parameter types the way MSTest discovery de-duplicates methods — by MethodInfo.ToString(), which prints
+    // a method type parameter by its name (e.g. 'Void Run[T](T)'). So 'Run&lt;T&gt;(T)' and 'Run&lt;U&gt;(U)' have
+    // different discovery keys and do not hide each other, while 'Run&lt;T&gt;(T)' hides 'Run&lt;T&gt;(T)'. Recurses
+    // through arrays and constructed generic types and falls back to symbol identity for everything else.
     private static bool AreSignatureTypesEquivalent(ITypeSymbol left, ITypeSymbol right)
     {
         if (left is ITypeParameterSymbol leftTypeParameter && right is ITypeParameterSymbol rightTypeParameter)
         {
             return leftTypeParameter.TypeParameterKind == rightTypeParameter.TypeParameterKind
-                && (leftTypeParameter.TypeParameterKind != TypeParameterKind.Method
-                    ? SymbolEqualityComparer.Default.Equals(leftTypeParameter, rightTypeParameter)
-                    : leftTypeParameter.Ordinal == rightTypeParameter.Ordinal);
+                && string.Equals(leftTypeParameter.Name, rightTypeParameter.Name, StringComparison.Ordinal);
         }
 
         if (left is IArrayTypeSymbol leftArray && right is IArrayTypeSymbol rightArray)

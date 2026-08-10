@@ -420,11 +420,13 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
     [TestMethod]
     public async Task WhenInheritedTestInitializeIsOverriddenInDerivedType_NoDiagnostic()
     {
-        // The base lifecycle method is overridden by a more-derived method, so the override (compiled against the
-        // current version) is what runs; the base attribute is moot.
+        // The base lifecycle method is overridden by a more-derived method, and the standard [TestInitialize] uses
+        // Inherited=false, so the override (compiled against the current version) does not carry the base attribute and
+        // is what runs; the base attribute is moot.
         string legacyBaseCode = """
             namespace Microsoft.VisualStudio.TestTools.UnitTesting
             {
+                [System.AttributeUsage(System.AttributeTargets.Method, Inherited = false)]
                 public sealed class TestInitializeAttribute : System.Attribute { }
             }
 
@@ -452,6 +454,151 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
 
                     [TestMethod]
                     public void MyTest() { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddLegacyFrameworkBaseProject(test, legacyBaseCode);
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenOverrideInheritsInheritableCustomAttributeFromDifferentFrameworkAssembly_Diagnostic()
+    {
+        // A custom [RetryTest : DataTestMethod] with Inherited=true flows onto the override via reflection
+        // (the adapter reads attributes with inherit:true). Because it derives from the legacy framework type, the
+        // override is discoverable only after recompiling the base, so the mismatch must be reported.
+        string legacyBaseCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public class DataTestMethodAttribute : System.Attribute { }
+            }
+
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                [System.AttributeUsage(System.AttributeTargets.Method, Inherited = true)]
+                public sealed class RetryTestAttribute : DataTestMethodAttribute { }
+
+                public abstract class TestBase
+                {
+                    [RetryTest]
+                    public virtual void Run() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                public class {|#0:SampleTests|} : TestBase
+                {
+                    public override void Run() { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddLegacyFrameworkBaseProject(test, legacyBaseCode);
+
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(InheritedMemberFromDifferentMSTestVersionAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Run", "TestBase", "RetryTest", LegacyFrameworkAssemblyName));
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenOverrideInheritsNonInheritableCustomAttributeFromDifferentFrameworkAssembly_NoDiagnostic()
+    {
+        // With Inherited=false (like the standard attributes) the override does not carry the base attribute, so it is
+        // not a test either before or after recompiling the base — nothing to report.
+        string legacyBaseCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public class DataTestMethodAttribute : System.Attribute { }
+            }
+
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                [System.AttributeUsage(System.AttributeTargets.Method, Inherited = false)]
+                public sealed class RetryTestAttribute : DataTestMethodAttribute { }
+
+                public abstract class TestBase
+                {
+                    [RetryTest]
+                    public virtual void Run() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                public class SampleTests : TestBase
+                {
+                    public override void Run() { }
+
+                    [TestMethod]
+                    public void MyTest() { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddLegacyFrameworkBaseProject(test, legacyBaseCode);
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenOverrideInheritsInheritableCustomAttributeButHasOwnCurrentAttribute_NoDiagnostic()
+    {
+        // Even when the inherited custom attribute is inheritable, an override that carries its own current-version
+        // [TestMethod] is discoverable regardless of the base version, so there is no migration break to report.
+        string legacyBaseCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public class DataTestMethodAttribute : System.Attribute { }
+            }
+
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                [System.AttributeUsage(System.AttributeTargets.Method, Inherited = true)]
+                public sealed class RetryTestAttribute : DataTestMethodAttribute { }
+
+                public abstract class TestBase
+                {
+                    [RetryTest]
+                    public virtual void Run() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                public class SampleTests : TestBase
+                {
+                    [TestMethod]
+                    public override void Run() { }
                 }
             }
             """;
@@ -1530,10 +1677,59 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenInheritedGenericTestMethodShadowedByRenamedTypeParameter_NoDiagnostic()
+    public async Task WhenInheritedGenericTestMethodShadowedByRenamedTypeParameter_Diagnostic()
     {
-        // 'Run<U>(U)' and 'Run<T>(T)' share a CLR signature (method type parameters are identified by ordinal, not by
-        // name), so the derived current-version test method hides the inherited generic test and no mismatch is reported.
+        // MSTest de-duplicates by MethodInfo.ToString(), which prints the type parameter name, so 'Run<U>(U)' and
+        // 'Run<T>(T)' have different discovery keys. The derived method therefore does not hide the inherited generic
+        // test, and after recompiling the base both would be discovered, so the mismatch is reported.
+        string legacyBaseCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public sealed class DataTestMethodAttribute : System.Attribute { }
+            }
+
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                public abstract class TestBase
+                {
+                    [DataTestMethod]
+                    public void Run<T>(T value) { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                public class {|#0:SampleTests|} : TestBase
+                {
+                    [TestMethod]
+                    public new void Run<U>(U value) { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddLegacyFrameworkBaseProject(test, legacyBaseCode);
+
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(InheritedMemberFromDifferentMSTestVersionAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Run", "TestBase", "DataTestMethod", LegacyFrameworkAssemblyName));
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenInheritedGenericTestMethodShadowedBySameTypeParameterName_NoDiagnostic()
+    {
+        // 'Run<T>(T)' and 'Run<T>(T)' produce the same MethodInfo.ToString() key, so the derived current-version test
+        // method hides the inherited generic test and no mismatch is reported.
         string legacyBaseCode = """
             namespace Microsoft.VisualStudio.TestTools.UnitTesting
             {
@@ -1561,7 +1757,7 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
                 public class SampleTests : TestBase
                 {
                     [TestMethod]
-                    public new void Run<U>(U value) { }
+                    public new void Run<T>(T value) { }
                 }
             }
             """;
@@ -2149,6 +2345,105 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
                     Inherits TestBase
 
                     Public Shadows Sub BaseInitialize()
+                    End Sub
+
+                    <TestMethod>
+                    Public Sub MyTest()
+                    End Sub
+                End Class
+            End Namespace
+            """;
+
+        var test = new VerifyVB.Test { TestCode = consumerCode };
+        AddLegacyFrameworkBaseProject(test.TestState, legacyBaseCode);
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenOverrideInheritsInheritableCustomAttributeFromDifferentFrameworkAssemblyInVisualBasic_Diagnostic()
+    {
+        // Same inheritable-custom-attribute migration break as the C# case, verified for a Visual Basic Overrides.
+        string legacyBaseCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public class DataTestMethodAttribute : System.Attribute { }
+            }
+
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                [System.AttributeUsage(System.AttributeTargets.Method, Inherited = true)]
+                public sealed class RetryTestAttribute : DataTestMethodAttribute { }
+
+                public abstract class TestBase
+                {
+                    [RetryTest]
+                    public virtual void Run() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            Namespace Repro
+                <TestClass>
+                Public Class {|#0:SampleTests|}
+                    Inherits TestBase
+
+                    Public Overrides Sub Run()
+                    End Sub
+                End Class
+            End Namespace
+            """;
+
+        var test = new VerifyVB.Test { TestCode = consumerCode };
+        AddLegacyFrameworkBaseProject(test.TestState, legacyBaseCode);
+
+        test.ExpectedDiagnostics.Add(
+            VerifyVB.Diagnostic(InheritedMemberFromDifferentMSTestVersionAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Run", "TestBase", "RetryTest", LegacyFrameworkAssemblyName));
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenOverrideInheritsNonInheritableCustomAttributeFromDifferentFrameworkAssemblyInVisualBasic_NoDiagnostic()
+    {
+        // With Inherited=false the Visual Basic override does not carry the base attribute, so nothing is reported.
+        string legacyBaseCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public class DataTestMethodAttribute : System.Attribute { }
+            }
+
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                [System.AttributeUsage(System.AttributeTargets.Method, Inherited = false)]
+                public sealed class RetryTestAttribute : DataTestMethodAttribute { }
+
+                public abstract class TestBase
+                {
+                    [RetryTest]
+                    public virtual void Run() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            Imports Microsoft.VisualStudio.TestTools.UnitTesting
+
+            Namespace Repro
+                <TestClass>
+                Public Class SampleTests
+                    Inherits TestBase
+
+                    Public Overrides Sub Run()
                     End Sub
 
                     <TestMethod>
