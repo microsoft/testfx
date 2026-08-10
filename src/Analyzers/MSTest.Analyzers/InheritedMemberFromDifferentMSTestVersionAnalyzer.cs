@@ -251,43 +251,12 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
     // A generic test method is only discoverable when every type parameter can be inferred from the parameter list,
     // mirroring MSTEST0003's rule (e.g. 'T' must appear as 'T', 'T[]', or 'List&lt;T&gt;' in some parameter).
     private static bool AllGenericTypeParametersAreInferable(IMethodSymbol method)
-    {
-        foreach (ITypeParameterSymbol typeParameter in method.TypeParameters)
-        {
-            if (!method.Parameters.Any(parameter => IsOrHasTypeParameter(parameter.Type, typeParameter)))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
+        => method.TypeParameters.All(typeParameter => method.Parameters.Any(parameter => IsOrHasTypeParameter(parameter.Type, typeParameter)));
 
     private static bool IsOrHasTypeParameter(ITypeSymbol type, ITypeParameterSymbol typeParameter)
-    {
-        if (SymbolEqualityComparer.Default.Equals(type, typeParameter))
-        {
-            return true;
-        }
-
-        if (type is IArrayTypeSymbol array)
-        {
-            return IsOrHasTypeParameter(array.ElementType, typeParameter);
-        }
-
-        if (type is INamedTypeSymbol namedType)
-        {
-            foreach (ITypeSymbol typeArgument in namedType.TypeArguments)
-            {
-                if (IsOrHasTypeParameter(typeArgument, typeParameter))
-                {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
+        => SymbolEqualityComparer.Default.Equals(type, typeParameter)
+            || (type is IArrayTypeSymbol array && IsOrHasTypeParameter(array.ElementType, typeParameter))
+            || (type is INamedTypeSymbol namedType && namedType.TypeArguments.Any(typeArgument => IsOrHasTypeParameter(typeArgument, typeParameter)));
 
     // A fixture/test method must return void (non-async), non-generic Task, or non-generic ValueTask. Comparing against
     // the resolved Task/ValueTask symbols rejects Task&lt;T&gt;/ValueTask&lt;T&gt;, and the async check rejects async void.
