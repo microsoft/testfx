@@ -132,15 +132,15 @@ public static class ReflectionMetadataHook
     /// the <c>[ModuleInitializer]</c> emitted by the MSTest source generator.
     /// </para>
     /// <para>
-    /// <b>Ownership transfer.</b> The adapter takes ownership of every collection passed in
+    /// <b>Ownership transfer.</b> The adapter treats every collection passed in
     /// (the <paramref name="types"/> array, the <paramref name="assemblyAttributes"/> array, and
     /// each dictionary with its value arrays) and stores them without cloning; the read-only
-    /// dictionaries are held as-is behind <see cref="IReadOnlyDictionary{TKey, TValue}"/>. Callers
-    /// MUST hand over freshly-built collections and MUST NOT mutate them after the call returns;
-    /// the source generator (the only intended caller) already emits fresh, throwaway collections
-    /// that satisfy this. This is a contract about ownership and mutation, not caller identity: it
-    /// trades the previous defensive copies for zero-copy startup on the understanding that the
-    /// inputs are the adapter's to keep.
+    /// dictionaries are held as-is behind <see cref="IReadOnlyDictionary{TKey, TValue}"/>. The
+    /// adapter never mutates these collections, and callers MUST NOT mutate them after the call
+    /// returns. The source generator (the only intended caller) satisfies this by publishing
+    /// immutable generated metadata and fresh registration dictionaries. This is a contract about
+    /// ownership and mutation, not caller identity: it trades defensive copies for zero-copy
+    /// startup on the understanding that the inputs remain immutable.
     /// </para>
     /// </remarks>
     [EditorBrowsable(EditorBrowsableState.Never)]

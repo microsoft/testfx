@@ -40,11 +40,10 @@ internal static class MetadataRegistryEmitter
             sb.AppendLine("/// <summary>Describes one test class as discovered at compile-time. Mirrors what <c>IReflectionOperations</c> would return at runtime.</summary>");
             using (sb.Block("internal sealed class TestClassReflectionInfo"))
             {
-                // The stored Type flows into ResolveMethod / ResolveProperty at registration time, which
-                // require these members to be kept for trimming/AOT. Annotate the property so the trimmer
-                // propagates the requirement; the registry assigns typeof(<concrete class>), which the
-                // trimmer treats as satisfying any DynamicallyAccessedMembers requirement, so no warning
-                // is produced at the assignment site.
+                // The stored Type flows into the generated Initialize method's direct GetMethods /
+                // GetProperties calls. Annotate the property so the trimmer keeps those members; the
+                // registry assigns typeof(<concrete class>), which satisfies the requirement without
+                // warnings at the assignment site.
                 sb.AppendLine("[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods | DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.NonPublicProperties)]");
                 sb.AppendLine("public Type Type { get; set; } = null!;");
                 sb.AppendLine("public Attribute[] Attributes { get; set; } = Array.Empty<Attribute>();");
@@ -157,17 +156,17 @@ internal static class MetadataRegistryEmitter
     {
         if (attributes.Length == 0)
         {
-            sb.AppendLine("public static Attribute[] AssemblyAttributes { get; } = Array.Empty<Attribute>();");
+            sb.AppendLine("public static object[] AssemblyAttributes { get; } = Array.Empty<object>();");
             return;
         }
 
-        sb.AppendLine("public static Attribute[] AssemblyAttributes { get; } = new Attribute[]");
+        sb.AppendLine("public static object[] AssemblyAttributes { get; } = new object[]");
         using (sb.Block(null))
         {
             for (int i = 0; i < attributes.Length; i++)
             {
                 AttributeApplicationModel attr = attributes[i];
-                sb.Append(BuildAttributeExpression(attr));
+                sb.Append($"(Attribute){BuildAttributeExpression(attr)}");
                 if (i < attributes.Length - 1)
                 {
                     sb.AppendLine(",");

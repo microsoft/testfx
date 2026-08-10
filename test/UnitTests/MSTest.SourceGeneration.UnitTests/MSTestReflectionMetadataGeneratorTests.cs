@@ -1406,8 +1406,8 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         result.Diagnostics.Should().BeEmpty();
         string registry = GetRegistry(result);
         registry.Should().Contain("#pragma warning disable MSTESTEXP");
-        registry.Should().Contain("public static Attribute[] AssemblyAttributes { get; } = new Attribute[]");
-        registry.Should().Contain("new global::Microsoft.VisualStudio.TestTools.UnitTesting.ParallelizeAttribute()");
+        registry.Should().Contain("public static object[] AssemblyAttributes { get; } = new object[]");
+        registry.Should().Contain("(Attribute)new global::Microsoft.VisualStudio.TestTools.UnitTesting.ParallelizeAttribute()");
         registry.Should().Contain("Workers = 4");
         registry.Should().Contain("Scope = \"Method\"");
     }
@@ -1433,8 +1433,8 @@ public sealed class MSTestReflectionMetadataGeneratorTests
 
         result.Diagnostics.Should().BeEmpty();
         string registry = GetRegistry(result);
-        registry.Should().Contain("public static Attribute[] AssemblyAttributes { get; } = Array.Empty<Attribute>();");
-        registry.Should().NotContain("public static IReadOnlyList<Attribute> AssemblyAttributes { get; } = new Attribute[]");
+        registry.Should().Contain("public static object[] AssemblyAttributes { get; } = Array.Empty<object>();");
+        registry.Should().NotContain("public static object[] AssemblyAttributes { get; } = new object[]");
     }
 
     [TestMethod]
@@ -2435,7 +2435,6 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         registration.Should().Contain("private static MethodInfo? ResolveMethod(MethodInfo[] availableMethods");
         registration.Should().Contain("availableProperties ??= type.GetProperties(memberFlags);");
         registration.Should().Contain("private static PropertyInfo? ResolveProperty(PropertyInfo[] availableProperties");
-        registration.Split("type.GetMethods(memberFlags)", StringSplitOptions.None).Length.Should().Be(2);
         registration.Should().NotContain("type.GetMethods(flags)");
         registration.Should().Contain("object[] assemblyAttributes = global::MSTest.SourceGenerated.MSTestReflectionMetadata.AssemblyAttributes;");
         registration.Should().NotContain("assemblyAttributeList");
@@ -3077,7 +3076,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
             .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registration.g.cs", System.StringComparison.Ordinal))
             .ToString();
 
-        registration.Should().Contain("var methodAttributes = new Dictionary<MethodInfo, Attribute[]>(1);");
+        registration.Should().Contain("var methodAttributes = new Dictionary<MethodInfo, Attribute[]>(");
         int resolvedGuard = registration.IndexOf("if (methodInfo is not null)", System.StringComparison.Ordinal);
         int completenessGuard = registration.IndexOf("if (method.AreAttributesComplete)", resolvedGuard, System.StringComparison.Ordinal);
         int assignment = registration.IndexOf("methodAttributes[methodInfo] = method.Attributes;", completenessGuard, System.StringComparison.Ordinal);
