@@ -18,6 +18,113 @@ public sealed class AppInsightsProviderTests
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
+    public async Task DisposeWithoutPayload_DoesNotInitializeTelemetryClient()
+    {
+        Mock<ITelemetryClient> telemetryClient = new();
+        Mock<ITelemetryClientFactory> telemetryClientFactory = new();
+        telemetryClientFactory.Setup(x => x.Create(It.IsAny<string?>(), It.IsAny<string>())).Returns(telemetryClient.Object);
+
+        AppInsightsProvider appInsightsProvider = CreateProvider(telemetryClientFactory);
+
+#if NETCOREAPP
+        await appInsightsProvider.DisposeAsync();
+#else
+        appInsightsProvider.Dispose();
+#endif
+
+        telemetryClientFactory.Verify(x => x.Create(It.IsAny<string?>(), It.IsAny<string>()), Times.Never);
+        telemetryClient.Verify(x => x.Flush(), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task FirstPayload_InitializesTelemetryClientOnce()
+    {
+        using ManualResetEventSlim eventTracked = new(initialState: false);
+        Mock<ITelemetryClient> telemetryClient = new();
+        telemetryClient
+            .Setup(x => x.TrackEvent(It.IsAny<string>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<Dictionary<string, double>>()))
+            .Callback((string _, Dictionary<string, string> _, Dictionary<string, double> _) => eventTracked.Set());
+        Mock<ITelemetryClientFactory> telemetryClientFactory = new();
+        telemetryClientFactory.Setup(x => x.Create(It.IsAny<string?>(), It.IsAny<string>())).Returns(telemetryClient.Object);
+
+        AppInsightsProvider appInsightsProvider = CreateProvider(telemetryClientFactory);
+        telemetryClientFactory.Verify(x => x.Create(It.IsAny<string?>(), It.IsAny<string>()), Times.Never);
+
+        await appInsightsProvider.LogEventAsync("Sample", new Dictionary<string, object>(), CancellationToken.None);
+        Assert.IsTrue(eventTracked.Wait(TimeSpan.FromSeconds(30), TestContext.CancellationToken), "Telemetry consumer did not invoke TrackEvent within the timeout.");
+
+#if NETCOREAPP
+        await appInsightsProvider.DisposeAsync();
+#else
+        appInsightsProvider.Dispose();
+#endif
+
+        telemetryClientFactory.Verify(x => x.Create("sessionId", "osVersion"), Times.Once);
+        telemetryClient.Verify(
+            x => x.TrackEvent("Sample", It.IsAny<Dictionary<string, string>>(), It.IsAny<Dictionary<string, double>>()),
+            Times.Once);
+    }
+
+    [TestMethod]
+    public async Task ClientInitializationFailure_IsLogged()
+    {
+        InvalidOperationException exception = new("Initialization failed");
+        Mock<ITelemetryClientFactory> telemetryClientFactory = new();
+        telemetryClientFactory.Setup(x => x.Create(It.IsAny<string?>(), It.IsAny<string>())).Throws(exception);
+        Mock<ILogger> logger = new();
+        logger
+            .Setup(x => x.LogAsync(LogLevel.Error, It.IsAny<string>(), It.IsAny<Exception>(), LoggingExtensions.Formatter))
+            .Returns(Task.CompletedTask);
+
+        AppInsightsProvider appInsightsProvider = CreateProvider(telemetryClientFactory, logger.Object);
+        await appInsightsProvider.LogEventAsync("Sample", new Dictionary<string, object>(), CancellationToken.None);
+
+#if NETCOREAPP
+        await appInsightsProvider.DisposeAsync();
+#else
+        appInsightsProvider.Dispose();
+#endif
+
+        telemetryClientFactory.Verify(x => x.Create("sessionId", "osVersion"), Times.Once);
+        logger.Verify(
+            x => x.LogAsync(LogLevel.Error, "Failed to initialize telemetry client", exception, LoggingExtensions.Formatter),
+            Times.Once);
+    }
+
+    [TestMethod]
+    public async Task FlushFailure_IsLogged()
+    {
+        InvalidOperationException exception = new("Flush failed");
+        using ManualResetEventSlim eventTracked = new(initialState: false);
+        Mock<ITelemetryClient> telemetryClient = new();
+        telemetryClient
+            .Setup(x => x.TrackEvent(It.IsAny<string>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<Dictionary<string, double>>()))
+            .Callback((string _, Dictionary<string, string> _, Dictionary<string, double> _) => eventTracked.Set());
+        telemetryClient.Setup(x => x.Flush()).Throws(exception);
+        Mock<ITelemetryClientFactory> telemetryClientFactory = new();
+        telemetryClientFactory.Setup(x => x.Create(It.IsAny<string?>(), It.IsAny<string>())).Returns(telemetryClient.Object);
+        Mock<ILogger> logger = new();
+        logger.Setup(x => x.IsEnabled(LogLevel.Error)).Returns(true);
+        logger
+            .Setup(x => x.LogAsync(LogLevel.Error, It.IsAny<string>(), It.IsAny<Exception>(), LoggingExtensions.Formatter))
+            .Returns(Task.CompletedTask);
+
+        AppInsightsProvider appInsightsProvider = CreateProvider(telemetryClientFactory, logger.Object);
+        await appInsightsProvider.LogEventAsync("Sample", new Dictionary<string, object>(), CancellationToken.None);
+        Assert.IsTrue(eventTracked.Wait(TimeSpan.FromSeconds(30), TestContext.CancellationToken), "Telemetry consumer did not invoke TrackEvent within the timeout.");
+
+#if NETCOREAPP
+        await appInsightsProvider.DisposeAsync();
+#else
+        appInsightsProvider.Dispose();
+#endif
+
+        logger.Verify(
+            x => x.LogAsync(LogLevel.Error, "Error during telemetry flush.", exception, LoggingExtensions.Formatter),
+            Times.Once);
+    }
+
+    [TestMethod]
     public void Platform_CancellationToken_Cancellation_Should_Exit_Gracefully()
     {
         Mock<IEnvironment> environment = new();
@@ -368,5 +475,26 @@ public sealed class AppInsightsProviderTests
         Assert.AreEqual("FirstEvent", trackedEvents[0]);
         Assert.AreEqual("SecondEvent", trackedEvents[1]);
         Assert.AreEqual(1, Volatile.Read(ref flushCallCount), "Flush should be invoked exactly once after the ingest loop drains.");
+    }
+
+    private static AppInsightsProvider CreateProvider(Mock<ITelemetryClientFactory> telemetryClientFactory, ILogger? logger = null)
+    {
+        Mock<IEnvironment> environment = new();
+        environment.Setup(x => x.OsVersion).Returns("osVersion");
+        Mock<ITestApplicationCancellationTokenSource> testApplicationCancellationTokenSource = new();
+        testApplicationCancellationTokenSource.Setup(x => x.CancellationToken).Returns(CancellationToken.None);
+        Mock<ILoggerFactory> loggerFactory = new();
+        loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(logger ?? new Mock<ILogger>().Object);
+
+        return new AppInsightsProvider(
+            environment.Object,
+            testApplicationCancellationTokenSource.Object,
+            new SystemTask(),
+            loggerFactory.Object,
+            new Mock<IClock>().Object,
+            new Mock<IConfiguration>().Object,
+            new Mock<ITelemetryInformation>().Object,
+            telemetryClientFactory.Object,
+            "sessionId");
     }
 }
