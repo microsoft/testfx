@@ -22,6 +22,15 @@ namespace MSTest.Analyzers;
 /// whose type identity does not match the ones the current adapter looks for. When such a base is inherited by a test
 /// class compiled against another version, the inherited fixtures do not run and the inherited test methods are not
 /// discovered — with no build error and no discovery error. This analyzer surfaces that silent mismatch.
+/// <para>
+/// Limitation: class-fixture inheritance (<c>[ClassInitialize]</c>/<c>[ClassCleanup]</c>) is only detected when the
+/// legacy attribute constructor resolves. When the base library's framework assembly is entirely absent from the
+/// compilation (a real PE reference whose dependency is not provided), Roslyn cannot bind the attribute constructor
+/// and exposes no constructor arguments, so <c>InheritanceBehavior</c> cannot be read and the inherited class fixture
+/// is conservatively not reported — treating an undecodable argument as <c>BeforeEachDerivedClass</c> would falsely
+/// flag the default <c>None</c>. Instance fixtures and test methods, which carry no constructor arguments, are
+/// detected regardless of whether the legacy framework is resolvable.
+/// </para>
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : DiagnosticAnalyzer
@@ -223,6 +232,9 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
                 && string.Equals(containingNamespace.ToDisplayString(), MSTestNamespace, StringComparison.Ordinal)
                 && string.Equals(method.Parameters[0].Type.Name, "TestContext", StringComparison.Ordinal));
 
+    // Reads InheritanceBehavior from the applied attribute's constructor arguments. When the legacy framework assembly
+    // is entirely absent from the compilation the attribute constructor cannot bind and ConstructorArguments is empty,
+    // so this returns false and the inherited class fixture is conservatively not reported. See the type-level remarks.
     private static bool HasBeforeEachDerivedClassBehavior(AttributeData attribute)
         => attribute.ConstructorArguments.Any(argument =>
             argument.Type is INamedTypeSymbol argumentType

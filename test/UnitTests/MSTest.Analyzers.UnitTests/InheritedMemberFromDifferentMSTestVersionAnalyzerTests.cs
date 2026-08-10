@@ -1,7 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.IO;
+using System.Linq;
+
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Testing;
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
@@ -161,10 +165,12 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenInheritedTestInitializeFromUnreferencedFrameworkAssembly_Diagnostic()
+    public async Task WhenInheritedTestInitializeFromSeparatelyCompiledBaseLibrary_Diagnostic()
     {
-        // The realistic graph: the base library references the old framework, but the consumer compilation sees that
-        // framework only through the base library metadata (it is not a direct reference of the test project).
+        // The base library references the old framework and is linked into the consumer through a Roslyn project
+        // reference. Project references preserve the referenced symbols, so the legacy attribute still resolves here
+        // (its assembly name is available) — this is the resolved cross-assembly case. The truly-absent PE case, where
+        // the attribute cannot bind, is covered separately by the emitted-PE tests below.
         string legacyFrameworkCode = """
             namespace Microsoft.VisualStudio.TestTools.UnitTesting
             {
@@ -671,6 +677,129 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
         await test.RunAsync();
     }
 
+    [TestMethod]
+    public async Task WhenInheritedTestInitializeFromEmittedMissingFrameworkPe_Diagnostic()
+    {
+        // A real emitted PE graph: the base library is compiled against the legacy framework, but only the base library
+        // PE is linked into the consumer (the legacy framework PE is absent). Roslyn then sees the base library's
+        // [TestInitialize] as missing metadata whose constructor cannot bind — instance fixtures carry no constructor
+        // arguments, so detection still works. This is the shape a project reference cannot reproduce.
+        string baseLibraryCode = """
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                public abstract class TestBase
+                {
+                    [TestInitialize]
+                    public void BaseInitialize() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                public class {|#0:SampleTests|} : TestBase
+                {
+                    [TestMethod]
+                    public void MyTest() { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddEmittedMissingFrameworkBaseLibrary(test, baseLibraryCode);
+
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(InheritedMemberFromDifferentMSTestVersionAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("BaseInitialize", "TestBase", "TestInitialize", LegacyFrameworkAssemblyName));
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenInheritedClassInitializeFromEmittedMissingFrameworkPe_NoDiagnostic()
+    {
+        // Known limitation (documented on the analyzer): when the legacy framework PE is absent, the class-fixture
+        // attribute constructor cannot bind, so its ConstructorArguments are empty and InheritanceBehavior cannot be
+        // read. The analyzer conservatively does not flag it — treating an undecodable argument as
+        // BeforeEachDerivedClass would falsely flag the default None.
+        string baseLibraryCode = """
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                public abstract class TestBase
+                {
+                    [ClassInitialize(InheritanceBehavior.BeforeEachDerivedClass)]
+                    public static void BaseClassInitialize(TestContext context) { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                public class SampleTests : TestBase
+                {
+                    [TestMethod]
+                    public void MyTest() { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddEmittedMissingFrameworkBaseLibrary(test, baseLibraryCode);
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenInheritedClassCleanupFromEmittedMissingFrameworkPe_NoDiagnostic()
+    {
+        // Same limitation as ClassInitialize: with the legacy framework PE absent, the constructor argument carrying
+        // InheritanceBehavior cannot be decoded, so the inherited class cleanup is conservatively not reported.
+        string baseLibraryCode = """
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                public abstract class TestBase
+                {
+                    [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass)]
+                    public static void BaseClassCleanup(TestContext context) { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                public class SampleTests : TestBase
+                {
+                    [TestMethod]
+                    public void MyTest() { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddEmittedMissingFrameworkBaseLibrary(test, baseLibraryCode);
+
+        await test.RunAsync();
+    }
+
     // Adds a base library whose MSTest lifecycle/test attributes are defined in an assembly named like the legacy v3
     // framework. It deliberately does NOT reference the real framework, so the attributes it applies bind to its own
     // types, reproducing the different-type-identity situation from issue #10505.
@@ -682,9 +811,9 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
         test.TestState.AdditionalProjectReferences.Add(LegacyFrameworkAssemblyName);
     }
 
-    // Adds a legacy framework assembly plus a base library that references it, and links only the base library into
-    // the consumer. The consumer therefore sees the legacy framework attribute as an unresolved/missing type reached
-    // through the base library metadata — the realistic dotnet test graph.
+    // Adds a legacy framework assembly plus a base library that references it, and links only the base library into the
+    // consumer via project references. Roslyn project references keep the referenced symbols resolvable, so this is the
+    // resolved cross-assembly case, not the absent-PE case — see AddEmittedMissingFrameworkBaseLibrary for the latter.
     private static void AddLegacyFrameworkAndBaseProjects(VerifyCS.Test test, string frameworkCode, string baseLibraryCode)
     {
         var frameworkProject = new ProjectState(LegacyFrameworkAssemblyName, LanguageNames.CSharp, "/LegacyFramework/", "cs");
@@ -709,4 +838,73 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
         test.TestState.AdditionalProjects.Add("SameVersionBase", libraryProject);
         test.TestState.AdditionalProjectReferences.Add("SameVersionBase");
     }
+
+    // Emits a real legacy framework PE and a base-library PE compiled against it, then links ONLY the base library into
+    // the consumer. Because the legacy framework PE is absent, the consumer sees the base library's attributes as
+    // missing metadata whose constructor cannot bind — the exact shape (unlike a Roslyn project reference) that occurs
+    // after NuGet unifies the package to the current major and drops the old framework assembly.
+    private static void AddEmittedMissingFrameworkBaseLibrary(VerifyCS.Test test, string baseLibraryCode)
+    {
+        MetadataReference legacyFramework = EmitAssembly(LegacyFrameworkAssemblyName, LegacyFrameworkSource);
+        MetadataReference baseLibrary = EmitAssembly("BaseLibrary", baseLibraryCode, legacyFramework);
+
+        // Only the base library is referenced; the legacy framework PE is intentionally left out.
+        test.TestState.AdditionalReferences.Add(baseLibrary);
+    }
+
+    private static MetadataReference EmitAssembly(string assemblyName, string source, params MetadataReference[] additionalReferences)
+    {
+        var compilation = CSharpCompilation.Create(
+            assemblyName,
+            new[] { CSharpSyntaxTree.ParseText(source) },
+            FrameworkReferences.Concat(additionalReferences),
+            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+
+        using var peStream = new MemoryStream();
+        Microsoft.CodeAnalysis.Emit.EmitResult emitResult = compilation.Emit(peStream);
+        Assert.IsTrue(emitResult.Success, $"Failed to emit '{assemblyName}': {string.Join("; ", emitResult.Diagnostics)}");
+
+        return MetadataReference.CreateFromImage(peStream.ToArray());
+    }
+
+    // The emitted assemblies must be compiled against the same reference assemblies the analyzer test uses for the
+    // consumer, otherwise the base library's core-type references (e.g. System.Object) resolve to a different corlib
+    // identity and the consumer fails with CS0012.
+    private static readonly MetadataReference[] FrameworkReferences = ResolveFrameworkReferences();
+
+    private static MetadataReference[] ResolveFrameworkReferences()
+    {
+        string nuGetConfig = Path.Combine(RootFinder.Find(), "NuGet.config");
+#if NET462
+        ReferenceAssemblies referenceAssemblies = ReferenceAssemblies.NetFramework.Net462.Default.WithNuGetConfigFilePath(nuGetConfig);
+#else
+        ReferenceAssemblies referenceAssemblies = ReferenceAssemblies.Net.Net80.WithNuGetConfigFilePath(nuGetConfig);
+#endif
+        return referenceAssemblies.ResolveAsync(LanguageNames.CSharp, System.Threading.CancellationToken.None).GetAwaiter().GetResult().ToArray();
+    }
+
+    // The MSTest attribute surface a v3-compiled base library would have been compiled against, in an assembly named
+    // like the legacy framework so its type identity differs from the current MSTest.TestFramework.
+    private const string LegacyFrameworkSource = """
+        namespace Microsoft.VisualStudio.TestTools.UnitTesting
+        {
+            public class TestContext { }
+
+            public enum InheritanceBehavior { None, BeforeEachDerivedClass }
+
+            public sealed class TestInitializeAttribute : System.Attribute { }
+
+            public sealed class ClassInitializeAttribute : System.Attribute
+            {
+                public ClassInitializeAttribute() { }
+                public ClassInitializeAttribute(InheritanceBehavior inheritanceBehavior) { }
+            }
+
+            public sealed class ClassCleanupAttribute : System.Attribute
+            {
+                public ClassCleanupAttribute() { }
+                public ClassCleanupAttribute(InheritanceBehavior inheritanceBehavior) { }
+            }
+        }
+        """;
 }
