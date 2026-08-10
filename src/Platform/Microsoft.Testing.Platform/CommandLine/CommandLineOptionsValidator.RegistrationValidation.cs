@@ -108,11 +108,6 @@ internal static partial class CommandLineOptionsValidator
 
                 if (registration.DuplicateProviders is null)
                 {
-                    if (EqualityComparer<ICommandLineOptionsProvider>.Default.Equals(registration.FirstProvider, provider))
-                    {
-                        continue;
-                    }
-
                     registration.DuplicateProviders = [registration.FirstProvider];
                 }
 
