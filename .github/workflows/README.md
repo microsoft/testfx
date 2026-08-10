@@ -251,6 +251,7 @@ a security control.
 | [`efficiency-improver.md`](./efficiency-improver.md) | Daily + manual + `/efficiency-assist` | Green-software-focused assistant that identifies and implements energy/compute efficiency improvements. |
 | [`perf-improver.md`](./perf-improver.md) | Daily + manual + `/perf-assist` | Performance-focused assistant that identifies bottlenecks and lands measured improvements. |
 | [`test-improver.md`](./test-improver.md) | Daily + manual + `/test-assist` | Testing-focused assistant that improves test quality and coverage. |
+| [`resource-lock-refactoring.md`](./resource-lock-refactoring.md) | Daily + manual | Prepares one bounded test project for safe parallel execution by eliminating shared state or applying the narrowest appropriate `[ResourceLock]`, then opens a draft PR. |
 | [`repository-quality-improver.md`](./repository-quality-improver.md) | Weekday schedule + manual | Daily analysis of repository quality, rotating focus areas. Opens tracking issues like this one. |
 | [`daily-file-diet.md`](./daily-file-diet.md) | Daily + manual | Identifies oversized source files and opens actionable refactoring issues. |
 | [`unskip-closed-tests.md`](./unskip-closed-tests.md) | Weekly + manual | Finds tests skipped via `[Ignore("…#issue")]` whose tracking issue is now closed, verifies they pass, and opens a PR re-enabling them. |
