@@ -210,26 +210,29 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
     };
 
     private static bool WouldRunOrBeDiscoveredIfSameVersion(IMethodSymbol method, MSTestMemberKind kind, AttributeData attribute, INamedTypeSymbol testClass, INamedTypeSymbol declaringBaseType, INamedTypeSymbol? taskSymbol, INamedTypeSymbol? valueTaskSymbol)
-        // A non-public or generic member, or one replaced by an override or a `new` declaration in a more-derived
-        // type, is not the member MSTest would run or discover, so recompiling the base cannot change its behavior.
+        // A non-public member, or one replaced by an override or a `new` declaration in a more-derived type, is not the
+        // member MSTest would run or discover, so recompiling the base cannot change its behavior.
         => method.DeclaredAccessibility == Accessibility.Public
-            && !method.IsGenericMethod
             && !IsHiddenOrOverriddenInDerivedType(method, kind, testClass, declaringBaseType, taskSymbol, valueTaskSymbol)
             && kind switch
             {
                 // Test methods must be public instance methods that return void/Task/ValueTask (parameters are allowed
-                // for data-driven tests).
+                // for data-driven tests). A generic test method is still discovered and constructed from its data as long
+                // as every type parameter is inferable from the parameters, matching MSTEST0003.
                 MSTestMemberKind.TestMethod
-                    => !method.IsStatic && ReturnsVoidTaskOrValueTask(method, taskSymbol, valueTaskSymbol),
+                    => !method.IsStatic
+                        && ReturnsVoidTaskOrValueTask(method, taskSymbol, valueTaskSymbol)
+                        && (!method.IsGenericMethod || AllGenericTypeParametersAreInferable(method)),
 
-                // Instance fixtures must be public, non-static, parameterless, and return void/Task/ValueTask.
+                // Instance fixtures must be public, non-static, non-generic, parameterless, and return void/Task/ValueTask.
                 MSTestMemberKind.InstanceFixture
-                    => !method.IsStatic && method.Parameters.IsEmpty && ReturnsVoidTaskOrValueTask(method, taskSymbol, valueTaskSymbol),
+                    => !method.IsStatic && !method.IsGenericMethod && method.Parameters.IsEmpty && ReturnsVoidTaskOrValueTask(method, taskSymbol, valueTaskSymbol),
 
-                // ClassInitialize must be a public static method taking exactly one TestContext, returning
+                // ClassInitialize must be a public static non-generic method taking exactly one TestContext, returning
                 // void/Task/ValueTask, and only flows to derived classes when BeforeEachDerivedClass is set.
                 MSTestMemberKind.ClassInitialize
                     => method.IsStatic
+                        && !method.IsGenericMethod
                         && HasSingleTestContextParameter(method)
                         && ReturnsVoidTaskOrValueTask(method, taskSymbol, valueTaskSymbol)
                         && HasBeforeEachDerivedClassBehavior(attribute),
@@ -237,12 +240,54 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
                 // ClassCleanup is like ClassInitialize but its TestContext parameter is optional.
                 MSTestMemberKind.ClassCleanup
                     => method.IsStatic
+                        && !method.IsGenericMethod
                         && HasOptionalTestContextParameter(method)
                         && ReturnsVoidTaskOrValueTask(method, taskSymbol, valueTaskSymbol)
                         && HasBeforeEachDerivedClassBehavior(attribute),
 
                 _ => false,
             };
+
+    // A generic test method is only discoverable when every type parameter can be inferred from the parameter list,
+    // mirroring MSTEST0003's rule (e.g. 'T' must appear as 'T', 'T[]', or 'List&lt;T&gt;' in some parameter).
+    private static bool AllGenericTypeParametersAreInferable(IMethodSymbol method)
+    {
+        foreach (ITypeParameterSymbol typeParameter in method.TypeParameters)
+        {
+            if (!method.Parameters.Any(parameter => IsOrHasTypeParameter(parameter.Type, typeParameter)))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static bool IsOrHasTypeParameter(ITypeSymbol type, ITypeParameterSymbol typeParameter)
+    {
+        if (SymbolEqualityComparer.Default.Equals(type, typeParameter))
+        {
+            return true;
+        }
+
+        if (type is IArrayTypeSymbol array)
+        {
+            return IsOrHasTypeParameter(array.ElementType, typeParameter);
+        }
+
+        if (type is INamedTypeSymbol namedType)
+        {
+            foreach (ITypeSymbol typeArgument in namedType.TypeArguments)
+            {
+                if (IsOrHasTypeParameter(typeArgument, typeParameter))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
 
     // A fixture/test method must return void (non-async), non-generic Task, or non-generic ValueTask. Comparing against
     // the resolved Task/ValueTask symbols rejects Task&lt;T&gt;/ValueTask&lt;T&gt;, and the async check rejects async void.

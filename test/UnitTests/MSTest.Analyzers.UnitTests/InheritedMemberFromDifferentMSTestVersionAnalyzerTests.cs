@@ -1461,10 +1461,10 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenInheritedGenericTestMethodComesFromDifferentFrameworkAssembly_NoDiagnostic()
+    public async Task WhenInheritedGenericTestMethodWithUninferableTypeParameterComesFromDifferentFrameworkAssembly_NoDiagnostic()
     {
-        // MSTest rejects generic test/fixture methods, so an inherited generic one would not run even after
-        // recompiling the base.
+        // A generic test method whose type parameter cannot be inferred from the parameters is never discovered
+        // (MSTEST0003 rejects it), so it would not run even after recompiling the base.
         string legacyBaseCode = """
             namespace Microsoft.VisualStudio.TestTools.UnitTesting
             {
@@ -1491,6 +1491,101 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
                 [TestClass]
                 public class SampleTests : TestBase
                 {
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddLegacyFrameworkBaseProject(test, legacyBaseCode);
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenInheritedGenericTestMethodWithInferableTypeParameterComesFromDifferentFrameworkAssembly_Diagnostic()
+    {
+        // MSTest discovers a generic test method and constructs it from its data when every type parameter is inferable
+        // from the parameters, so an inherited one from a differently named framework assembly is still silently skipped.
+        string legacyBaseCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public sealed class TestMethodAttribute : System.Attribute { }
+
+                public sealed class DataRowAttribute : System.Attribute
+                {
+                    public DataRowAttribute(object data) { }
+                }
+            }
+
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                public abstract class TestBase
+                {
+                    [TestMethod]
+                    [DataRow(1)]
+                    public void Run<T>(T value) { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                public class {|#0:SampleTests|} : TestBase
+                {
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddLegacyFrameworkBaseProject(test, legacyBaseCode);
+
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(InheritedMemberFromDifferentMSTestVersionAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Run", "TestBase", "TestMethod", LegacyFrameworkAssemblyName));
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenInheritedGenericTestInitializeComesFromDifferentFrameworkAssembly_NoDiagnostic()
+    {
+        // Fixtures are invoked with no inferable arguments, so a generic fixture never runs regardless of framework
+        // version and must not be reported.
+        string legacyBaseCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public sealed class TestInitializeAttribute : System.Attribute { }
+            }
+
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                public abstract class TestBase
+                {
+                    [TestInitialize]
+                    public void Initialize<T>() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                public class SampleTests : TestBase
+                {
+                    [TestMethod]
+                    public void MyTest() { }
                 }
             }
             """;
