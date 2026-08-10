@@ -63,16 +63,9 @@ internal sealed record DynamicDataSourceModel(
     string? DisplayNameDeclaringTypeFullyQualifiedName,
     string? DisplayNameMethodName);
 
-/// <summary>
-/// One row of arguments from a <c>[DataRow]</c> attribute, materialized at compile time so
-/// the consumer can iterate without re-reading <c>DataRowAttribute.Data</c> via reflection.
-/// </summary>
-internal sealed record DataRowModel(EquatableArray<TypedConstantModel> Arguments);
-
 internal sealed record TestMethodModel(
     string Name,
     bool IsStatic,
-    bool IsAsync,
     bool ReturnsTask,
     bool ReturnsValueTask,
     bool ReturnsVoid,
@@ -80,7 +73,6 @@ internal sealed record TestMethodModel(
     EquatableArray<TestParameterModel> Parameters,
     EquatableArray<AttributeApplicationModel> Attributes,
     bool AreAttributesComplete,
-    EquatableArray<DataRowModel> DataRows,
     EquatableArray<DynamicDataSourceModel> DynamicDataSources);
 
 internal sealed record TestPropertyModel(

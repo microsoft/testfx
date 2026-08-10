@@ -76,6 +76,18 @@ public class UnitTest1
     {
         Assert.AreEqual(a + 1, b);
     }
+
+    [TestMethod]
+    public void Overload()
+    {
+    }
+
+    [TestMethod]
+    [DataRow(42)]
+    public void Overload(int value)
+    {
+        Assert.AreEqual(42, value);
+    }
 }
 """;
 
@@ -162,6 +174,14 @@ public class UnitTest1
             : [];
         Assert.IsNotEmpty(generatedFiles, $"the source generator should have emitted a '*MSTestReflectionMetadata*.g.cs' file under '{objGenerated}'");
 
+        string registry = File.ReadAllText(generatedFiles.Single(path => path.EndsWith("MSTestReflectionMetadata.Registry.g.cs", StringComparison.Ordinal)));
+        Assert.DoesNotContain("DataRows", registry, "DataRowAttribute instances are authoritative; a second argument-array descriptor is redundant.");
+        Assert.DoesNotContain("ParameterNames", registry, "runtime registration only resolves overloads by parameter type.");
+
+        string registration = File.ReadAllText(generatedFiles.Single(path => path.EndsWith("MSTestReflectionMetadata.Registration.g.cs", StringComparison.Ordinal)));
+        Assert.HasCount(2, registration.Split("type.GetMethods(memberFlags)", StringSplitOptions.None), "generated registration should enumerate methods once per class, not once per method.");
+        StringAssert.Contains(registration, "ResolveMethod(availableMethods, method.Name, method.ParameterTypes)");
+
         // Behavioral evidence: tests still discover and run when the source-generated
         // ReflectionMetadataHook is the only metadata provider wired in at module init.
         // If the hook crashed during ModuleInitializer or swapped in a broken provider, the
@@ -169,7 +189,7 @@ public class UnitTest1
         // catch silent discovery regressions where tests are not picked up.)
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: BuildConfiguration.Release);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 4, skipped: 0);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 6, skipped: 0);
         testHostResult.AssertExitCodeIs(0);
     }
 
