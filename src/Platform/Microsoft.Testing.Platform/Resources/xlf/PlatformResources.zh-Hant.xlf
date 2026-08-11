@@ -82,6 +82,11 @@
         <target state="translated">無法讀取成品後置處理資訊清單: {0}</target>
         <note>{0} is the exception message.</note>
       </trans-unit>
+      <trans-unit id="ArtifactPostProcessingManifestRunSummaryInvalid">
+        <source>The artifact post-processing manifest runSummary must contain valid totalTests, passedTests, failedTests, skippedTests, durationTicks, exitCode, and testModuleCount values.</source>
+        <target state="new">The artifact post-processing manifest runSummary must contain valid totalTests, passedTests, failedTests, skippedTests, durationTicks, exitCode, and testModuleCount values.</target>
+        <note>Do not localize property names {Locked="runSummary"}{Locked="totalTests"}{Locked="passedTests"}{Locked="failedTests"}{Locked="skippedTests"}{Locked="durationTicks"}{Locked="exitCode"}{Locked="testModuleCount"}.</note>
+      </trans-unit>
       <trans-unit id="ArtifactPostProcessorCapabilityContainsSeparator">
         <source>Artifact post-processor '{0}' declares capability '{1}', which cannot contain the semicolon separator.</source>
         <target state="translated">成品後置處理器 '{0}' 宣告了功能 '{1}'，其中不能包含分號分隔符號。</target>
