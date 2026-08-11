@@ -99,6 +99,7 @@ public sealed class AppInsightsProviderTests
     {
         InvalidOperationException exception = new("Flush failed");
         using ManualResetEventSlim eventTracked = new(initialState: false);
+        using ManualResetEventSlim flushFailureLogged = new(initialState: false);
         Mock<ITelemetryClient> telemetryClient = new();
         telemetryClient
             .Setup(x => x.TrackEvent(It.IsAny<string>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<Dictionary<string, double>>()))
@@ -110,6 +111,7 @@ public sealed class AppInsightsProviderTests
         logger.Setup(x => x.IsEnabled(LogLevel.Error)).Returns(true);
         logger
             .Setup(x => x.LogAsync(LogLevel.Error, It.IsAny<string>(), It.IsAny<Exception>(), LoggingExtensions.Formatter))
+            .Callback((LogLevel _, string _, Exception? _, Func<string, Exception?, string> _) => flushFailureLogged.Set())
             .Returns(Task.CompletedTask);
 
         AppInsightsProvider appInsightsProvider = CreateProvider(telemetryClientFactory, logger.Object);
@@ -121,6 +123,8 @@ public sealed class AppInsightsProviderTests
 #else
         appInsightsProvider.Dispose();
 #endif
+
+        Assert.IsTrue(flushFailureLogged.Wait(TimeSpan.FromSeconds(30), TestContext.CancellationToken), "Telemetry flush failure was not logged within the timeout.");
 
         logger.Verify(
             x => x.LogAsync(LogLevel.Error, "Error during telemetry flush.", exception, LoggingExtensions.Formatter),
