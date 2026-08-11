@@ -504,23 +504,28 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
 
         // Verify that the first attempt honored the treenode-filter.
         string[] retryTrxFiles = Directory.GetFiles(Path.Combine(resultDirectory, "Retries"), "*.trx", SearchOption.AllDirectories);
-        Assert.HasCount(1, retryTrxFiles);
+        Assert.HasCount(2, retryTrxFiles);
 
-        string retryTrxContent = File.ReadAllText(retryTrxFiles[0]);
-        Assert.Contains("TestMethod1", retryTrxContent);
-        Assert.Contains("TestMethod2", retryTrxContent);
-        Assert.DoesNotContain("TestMethod3", retryTrxContent);
+        string firstAttemptTrxContent = File.ReadAllText(
+            retryTrxFiles.Single(file => Path.GetFileName(Path.GetDirectoryName(file)) == "1"));
+        Assert.Contains("TestMethod1", firstAttemptTrxContent);
+        Assert.Contains("TestMethod2", firstAttemptTrxContent);
+        Assert.DoesNotContain("TestMethod3", firstAttemptTrxContent);
 
         // Verify that the retry attempt only ran the failed test (TestMethod1) - i.e. the treenode-filter was
         // dropped and replaced by --filter-uid 1.
-        // The TRX in the top-level results directory (not under Retries/) is from the last attempt.
+        string finalAttemptTrxContent = File.ReadAllText(
+            retryTrxFiles.Single(file => Path.GetFileName(Path.GetDirectoryName(file)) == "2"));
+        Assert.Contains("TestMethod1", finalAttemptTrxContent);
+        Assert.DoesNotContain("TestMethod2", finalAttemptTrxContent);
+        Assert.DoesNotContain("TestMethod3", finalAttemptTrxContent);
+
+        // TRX intentionally keeps final-attempt semantics, so the top-level file is a copy of attempt 2.
         string[] topLevelTrxFiles = Directory.GetFiles(resultDirectory, "*.trx", SearchOption.TopDirectoryOnly);
         Assert.HasCount(1, topLevelTrxFiles);
 
         string trxContent = File.ReadAllText(topLevelTrxFiles[0]);
-        Assert.Contains("TestMethod1", trxContent);
-        Assert.DoesNotContain("TestMethod2", trxContent);
-        Assert.DoesNotContain("TestMethod3", trxContent);
+        Assert.AreEqual(finalAttemptTrxContent, trxContent);
     }
 
     [TestMethod]

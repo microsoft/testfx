@@ -101,6 +101,14 @@ internal static class HandshakeMessagePropertyNames
 
     // Subset of SupportedPostProcessorExtensionsLegacy that can process artifacts observed before a run was truncated.
     internal const byte SupportedTruncatedRunPostProcessorExtensionsLegacy = 17;
+
+    // Subset of SupportedPostProcessorKinds whose inputs are internal coordination artifacts that must be
+    // post-processed even when a group contains only one artifact.
+    internal const byte RequiredPostProcessorKinds = 18;
+
+    // Sent only by the SDK in its handshake response. A true value means the SDK honors
+    // RequiredPostProcessorKinds and supplies an authoritative runSummary in the post-processing manifest.
+    internal const byte RequiredPostProcessingSupported = 19;
 }
 
 [Embedded]

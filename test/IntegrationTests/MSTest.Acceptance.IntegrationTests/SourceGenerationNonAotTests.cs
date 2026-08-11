@@ -36,6 +36,7 @@ public class SourceGenerationNonAotTests : AcceptanceTestBase<NopAssetFixture>
         <OutputType>Exe</OutputType>
         <LangVersion>preview</LangVersion>
         <EnableMSTestRunner>true</EnableMSTestRunner>
+        <MSTestSourceGenMode>ReflectionFree</MSTestSourceGenMode>
         <!-- Persist the generator output to disk so the test can assert it was emitted. -->
         <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
     </PropertyGroup>
@@ -75,6 +76,18 @@ public class UnitTest1
     public void TestMethod3(int a, int b)
     {
         Assert.AreEqual(a + 1, b);
+    }
+
+    [TestMethod]
+    public void Overload()
+    {
+    }
+
+    [TestMethod]
+    [DataRow(42)]
+    public void Overload(int value)
+    {
+        Assert.AreEqual(42, value);
     }
 }
 """;
@@ -150,17 +163,21 @@ public class UnitTest1
         // Static evidence the source generator actually ran in the build (not just that
         // the package was restored). EmitCompilerGeneratedFiles writes the generator
         // output under obj/<config>/<tfm>/generated/<generator-assembly>/<full-type-name>/<hintname>.
-        // The emitted hint name depends on which generator ran, and that is selected by the
-        // MSTestSourceGenMode default (ReflectionFree) supplied by MSTest.TestAdapter.targets:
-        //   - Rooting        -> '<AssemblyName>.MSTestReflectionMetadata.g.cs'
-        //   - ReflectionFree -> 'MSTestReflectionMetadata.Registry.g.cs' (plus SupportTypes/Registration)
-        // Both contain 'MSTestReflectionMetadata' and end with '.g.cs', so match either with a glob
-        // to keep this smoke test independent of the default mode.
+        // This asset explicitly selects ReflectionFree mode because the assertions below verify
+        // its compact registry and registration shape.
         string objGenerated = Path.Combine(generator.TargetAssetPath, "obj", "Release", tfm, "generated");
         string[] generatedFiles = Directory.Exists(objGenerated)
             ? Directory.GetFiles(objGenerated, "*MSTestReflectionMetadata*.g.cs", SearchOption.AllDirectories)
             : [];
         Assert.IsNotEmpty(generatedFiles, $"the source generator should have emitted a '*MSTestReflectionMetadata*.g.cs' file under '{objGenerated}'");
+
+        string registry = File.ReadAllText(generatedFiles.Single(path => path.EndsWith("MSTestReflectionMetadata.Registry.g.cs", StringComparison.Ordinal)));
+        Assert.DoesNotContain("DataRows", registry, "DataRowAttribute instances are authoritative; a second argument-array descriptor is redundant.");
+        Assert.DoesNotContain("ParameterNames", registry, "runtime registration only resolves overloads by parameter type.");
+
+        string registration = File.ReadAllText(generatedFiles.Single(path => path.EndsWith("MSTestReflectionMetadata.Registration.g.cs", StringComparison.Ordinal)));
+        StringAssert.Contains(registration, "availableMethods ??= type.GetMethods(memberFlags)");
+        StringAssert.Contains(registration, "ResolveMethod(availableMethods, method.Name, method.ParameterTypes)");
 
         // Behavioral evidence: tests still discover and run when the source-generated
         // ReflectionMetadataHook is the only metadata provider wired in at module init.
@@ -169,7 +186,7 @@ public class UnitTest1
         // catch silent discovery regressions where tests are not picked up.)
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: BuildConfiguration.Release);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 4, skipped: 0);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 6, skipped: 0);
         testHostResult.AssertExitCodeIs(0);
     }
 

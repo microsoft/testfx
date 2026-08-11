@@ -66,6 +66,8 @@ internal static class DotnetTestPipeProtocol
         public const byte SupportedPostProcessorExtensionsLegacy = 15;
         public const byte SupportedTruncatedRunPostProcessorKinds = 16;
         public const byte SupportedTruncatedRunPostProcessorExtensionsLegacy = 17;
+        public const byte RequiredPostProcessorKinds = 18;
+        public const byte RequiredPostProcessingSupported = 19;
     }
 
     public static class ServerControlKinds

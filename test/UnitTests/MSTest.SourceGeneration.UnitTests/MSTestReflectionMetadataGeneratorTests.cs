@@ -361,7 +361,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         result.Diagnostics.Should().BeEmpty();
         string registry = GetRegistry(result);
         registry.Should().Contain("ParameterTypes = new Type[] { typeof(int), typeof(string) }");
-        registry.Should().Contain("ParameterNames = new string[] { \"x\", \"y\" }");
+        registry.Should().NotContain("ParameterNames");
     }
 
     [TestMethod]
@@ -1089,7 +1089,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
 
         registry.Should().Contain("\"Base\"");
         registry.Should().Contain("\"Derived\"");
-        registry.Should().Contain("DataRows = Array.Empty<object?[]>()");
+        registry.Should().NotContain("DataRows");
         registry.Should().NotContain("new object?[] { 1 }");
     }
 
@@ -1406,8 +1406,8 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         result.Diagnostics.Should().BeEmpty();
         string registry = GetRegistry(result);
         registry.Should().Contain("#pragma warning disable MSTESTEXP");
-        registry.Should().Contain("public static IReadOnlyList<Attribute> AssemblyAttributes { get; } = new Attribute[]");
-        registry.Should().Contain("new global::Microsoft.VisualStudio.TestTools.UnitTesting.ParallelizeAttribute()");
+        registry.Should().Contain("public static object[] AssemblyAttributes { get; } = new object[]");
+        registry.Should().Contain("(Attribute)new global::Microsoft.VisualStudio.TestTools.UnitTesting.ParallelizeAttribute()");
         registry.Should().Contain("Workers = 4");
         registry.Should().Contain("Scope = \"Method\"");
     }
@@ -1433,8 +1433,8 @@ public sealed class MSTestReflectionMetadataGeneratorTests
 
         result.Diagnostics.Should().BeEmpty();
         string registry = GetRegistry(result);
-        registry.Should().Contain("public static IReadOnlyList<Attribute> AssemblyAttributes { get; } = Array.Empty<Attribute>();");
-        registry.Should().NotContain("public static IReadOnlyList<Attribute> AssemblyAttributes { get; } = new Attribute[]");
+        registry.Should().Contain("public static object[] AssemblyAttributes { get; } = Array.Empty<object>();");
+        registry.Should().NotContain("public static object[] AssemblyAttributes { get; } = new object[]");
     }
 
     [TestMethod]
@@ -1496,7 +1496,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
-    public void Generator_EmitsEmptyDataRows_WhenMethodHasNoDataRow()
+    public void Generator_DoesNotEmitRedundantDataRowsDescriptor()
     {
         const string userCode = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -1515,13 +1515,16 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
 
         result.Diagnostics.Should().BeEmpty();
+        string support = result.GeneratedSources
+            .Single(s => s.HintName == "MSTestReflectionMetadata.SupportTypes.g.cs")
+            .SourceText.ToString();
         string registry = GetRegistry(result);
-        registry.Should().Contain("DataRows = Array.Empty<object?[]>()");
-        registry.Should().NotContain("DataRows = new object?[][]");
+        support.Should().NotContain("DataRows");
+        registry.Should().NotContain("DataRows");
     }
 
     [TestMethod]
-    public void Generator_CapturesSingleDataRow_WithScalarArgs()
+    public void Generator_EmitsDataRowAttributeWithoutDuplicateArgumentArray()
     {
         const string userCode = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -1542,12 +1545,12 @@ public sealed class MSTestReflectionMetadataGeneratorTests
 
         result.Diagnostics.Should().BeEmpty();
         string registry = GetRegistry(result);
-        registry.Should().Contain("DataRows = new object?[][]");
-        registry.Should().Contain("new object?[] { 1, \"x\" }");
+        registry.Should().Contain("new global::Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute(1, new object[] { \"x\" })");
+        registry.Should().NotContain("DataRows");
     }
 
     [TestMethod]
-    public void Generator_CapturesMultipleDataRows_InDeclarationOrder()
+    public void Generator_EmitsMultipleDataRowAttributes_InDeclarationOrder()
     {
         const string userCode = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -1570,11 +1573,10 @@ public sealed class MSTestReflectionMetadataGeneratorTests
 
         result.Diagnostics.Should().BeEmpty();
         string registry = GetRegistry(result);
-        registry.Should().Contain("DataRows = new object?[][]");
 
-        int idx1 = registry.IndexOf("new object?[] { 1, \"a\" }", StringComparison.Ordinal);
-        int idx2 = registry.IndexOf("new object?[] { 2, \"b\" }", StringComparison.Ordinal);
-        int idx3 = registry.IndexOf("new object?[] { 3, \"c\" }", StringComparison.Ordinal);
+        int idx1 = registry.IndexOf("DataRowAttribute(1, new object[] { \"a\" })", StringComparison.Ordinal);
+        int idx2 = registry.IndexOf("DataRowAttribute(2, new object[] { \"b\" })", StringComparison.Ordinal);
+        int idx3 = registry.IndexOf("DataRowAttribute(3, new object[] { \"c\" })", StringComparison.Ordinal);
 
         idx1.Should().BeGreaterThan(-1);
         idx2.Should().BeGreaterThan(idx1);
@@ -1582,7 +1584,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
-    public void Generator_FlattensParamsArrayInDataRow()
+    public void Generator_LeavesDataRowParamsMaterializationToAttribute()
     {
         const string userCode = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -1603,9 +1605,8 @@ public sealed class MSTestReflectionMetadataGeneratorTests
 
         result.Diagnostics.Should().BeEmpty();
         string registry = GetRegistry(result);
-        // The variadic `params object?[] moreData` tail must be flattened into a single flat row
-        // within the DataRows block — the row contains all four values inline, not nested.
-        registry.Should().Contain("new object?[] { 1, 2, 3, 4 }");
+        registry.Should().Contain("new global::Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute(1, new object[] { 2, 3, 4 })");
+        registry.Should().NotContain("DataRows");
     }
 
     [TestMethod]
@@ -1630,11 +1631,11 @@ public sealed class MSTestReflectionMetadataGeneratorTests
 
         result.Diagnostics.Should().BeEmpty();
         string registry = GetRegistry(result);
-        registry.Should().Contain("DataRows = new object?[][]");
         // The single-arg DataRowAttribute(object? data1) overload binds null to object,
         // which surfaces as `(object)null!` from BuildConstantExpression (C# keyword form
         // produced by FullyQualifiedFormat for System.Object).
-        registry.Should().Contain("new object?[] { (object)null! }");
+        registry.Should().Contain("new global::Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute((object)null!)");
+        registry.Should().NotContain("DataRows");
     }
 
     [TestMethod]
@@ -2414,8 +2415,8 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         // publishes the delegate-based invokers via the richer Register overload so the adapter
         // executes tests without runtime reflection.
         registration.Should().Contain("global::MSTest.SourceGenerated.MSTestReflectionMetadata.TestClasses");
-        registration.Should().Contain("var methodInvokers = new Dictionary<MethodInfo, Func<object?, object?[]?, object?>>();");
-        registration.Should().Contain("var propertySetters = new Dictionary<PropertyInfo, Action<object?, object?>>();");
+        registration.Should().Contain("var methodInvokers = new Dictionary<MethodInfo, Func<object?, object?[]?, object?>>(");
+        registration.Should().Contain("var propertySetters = new Dictionary<PropertyInfo, Action<object?, object?>>(0);");
         registration.Should().Contain("methodInvokers[methodInfo] = method.Invoke;");
         registration.Should().Contain("constructorInvokers[type] = constructors;");
         registration.Should().Contain("propertySetters[propertyInfo] = property.Set;");
@@ -2426,9 +2427,17 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         registration.Should().Contain("if (method.IsTestMethod)");
         registration.Should().Contain("testMethodRoots.Add(methodInfo);");
 
-        // The initializer resolves the reflection objects it keys on at startup.
-        registration.Should().Contain("private static MethodInfo? ResolveMethod(");
-        registration.Should().Contain("private static PropertyInfo? ResolveProperty(");
+        // Enumerate reflection members once per class, then preserve the existing exact-signature
+        // matching and unresolved-member fallback over those cached arrays.
+        registration.Should().Contain("MethodInfo[]? availableMethods = null;");
+        registration.Should().Contain("availableMethods ??= type.GetMethods(memberFlags);");
+        registration.Should().Contain("ResolveMethod(availableMethods, method.Name, method.ParameterTypes)");
+        registration.Should().Contain("private static MethodInfo? ResolveMethod(MethodInfo[] availableMethods");
+        registration.Should().Contain("availableProperties ??= type.GetProperties(memberFlags);");
+        registration.Should().Contain("private static PropertyInfo? ResolveProperty(PropertyInfo[] availableProperties");
+        registration.Should().NotContain("type.GetMethods(flags)");
+        registration.Should().Contain("object[] assemblyAttributes = global::MSTest.SourceGenerated.MSTestReflectionMetadata.AssemblyAttributes;");
+        registration.Should().NotContain("assemblyAttributeList");
 
         // The generator run itself should produce no diagnostics. This guards against future
         // generator changes that emit warnings/errors going unnoticed because the emitted code
@@ -3067,7 +3076,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
             .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registration.g.cs", System.StringComparison.Ordinal))
             .ToString();
 
-        registration.Should().Contain("var methodAttributes = new Dictionary<MethodInfo, Attribute[]>();");
+        registration.Should().Contain("var methodAttributes = new Dictionary<MethodInfo, Attribute[]>(");
         int resolvedGuard = registration.IndexOf("if (methodInfo is not null)", System.StringComparison.Ordinal);
         int completenessGuard = registration.IndexOf("if (method.AreAttributesComplete)", resolvedGuard, System.StringComparison.Ordinal);
         int assignment = registration.IndexOf("methodAttributes[methodInfo] = method.Attributes;", completenessGuard, System.StringComparison.Ordinal);

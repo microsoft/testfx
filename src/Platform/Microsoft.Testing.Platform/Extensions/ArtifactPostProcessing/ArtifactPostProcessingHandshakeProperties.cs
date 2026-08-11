@@ -39,6 +39,13 @@ internal static class ArtifactPostProcessingHandshakeProperties
                 .Select(extension => extension.ToLowerInvariant())
                 .Distinct(StringComparer.Ordinal)
                 .OrderBy(extension => extension, StringComparer.Ordinal));
+        string requiredKinds = string.Join(
+            ";",
+            processors.OfType<IArtifactPostProcessorRequiresPostProcessing>()
+                .SelectMany(processor => processor.SupportedKinds)
+                .Where(kind => !RoslynString.IsNullOrWhiteSpace(kind))
+                .Distinct(StringComparer.Ordinal)
+                .OrderBy(kind => kind, StringComparer.Ordinal));
 
         if (kinds.Length == 0 && extensions.Length == 0)
         {
@@ -64,6 +71,11 @@ internal static class ArtifactPostProcessingHandshakeProperties
         if (truncatedRunExtensions.Length > 0)
         {
             properties[HandshakeMessagePropertyNames.SupportedTruncatedRunPostProcessorExtensionsLegacy] = truncatedRunExtensions;
+        }
+
+        if (requiredKinds.Length > 0)
+        {
+            properties[HandshakeMessagePropertyNames.RequiredPostProcessorKinds] = requiredKinds;
         }
 
         return properties;
