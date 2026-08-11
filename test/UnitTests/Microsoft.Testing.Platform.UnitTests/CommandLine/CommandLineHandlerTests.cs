@@ -586,7 +586,8 @@ public sealed class CommandLineHandlerTests
         ICommandLineOptionsProvider[] extensionCommandLineOptionsProviders =
         [
             new ExtensionCommandLineProviderMockWithNamedOption("userOption", "ProviderOne"),
-            new ExtensionCommandLineProviderMockWithNamedOption("userOption", "ProviderTwo")
+            new ExtensionCommandLineProviderMockWithNamedOption("userOption", "ProviderTwo"),
+            new ExtensionCommandLineProviderMockWithNamedOption("userOption", "ProviderThree")
         ];
 
         // Act
@@ -595,7 +596,7 @@ public sealed class CommandLineHandlerTests
 
         // Assert
         Assert.IsFalse(result.IsValid);
-        Assert.Contains("Option '--userOption' is declared by multiple providers: 'ProviderOne', 'ProviderTwo'", result.ErrorMessage);
+        Assert.Contains("Option '--userOption' is declared by multiple providers: 'ProviderOne', 'ProviderTwo', 'ProviderThree'", result.ErrorMessage);
     }
 
     [TestMethod]
