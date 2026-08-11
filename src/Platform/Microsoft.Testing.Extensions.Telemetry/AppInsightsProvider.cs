@@ -130,23 +130,11 @@ internal sealed partial class AppInsightsProvider :
         _logger = loggerFactory.CreateLogger<AppInsightsProvider>();
     }
 
-    // Initialize the telemetry client and start ingesting events.
+    // Start ingesting events, initializing the telemetry client only when there is data to send.
     private async Task IngestLoopAsync()
     {
         if (_testApplicationCancellationTokenSource.CancellationToken.IsCancellationRequested)
         {
-            return;
-        }
-
-        try
-        {
-            _client = _telemetryClientFactory.Create(_currentSessionId, _environment.OsVersion);
-        }
-        catch (Exception e)
-        {
-            _client = null;
-
-            await _logger.LogErrorAsync("Failed to initialize telemetry client", e).ConfigureAwait(false);
             return;
         }
 
@@ -157,12 +145,27 @@ internal sealed partial class AppInsightsProvider :
         {
 #if NETCOREAPP
             while (await _payloads.Reader.WaitToReadAsync(_flushTimeoutOrStop.Token).ConfigureAwait(false))
+#else
+            while (await _payloads.WaitToReadAsync(_flushTimeoutOrStop.Token).ConfigureAwait(false))
+#endif
             {
+                if (_client is null)
+                {
+                    try
+                    {
+                        _client = _telemetryClientFactory.Create(_currentSessionId, _environment.OsVersion);
+                    }
+                    catch (Exception e)
+                    {
+                        await _logger.LogErrorAsync("Failed to initialize telemetry client", e).ConfigureAwait(false);
+                        return;
+                    }
+                }
+
+#if NETCOREAPP
                 {
                     (string eventName, IDictionary<string, object> paramsMap) = await _payloads.Reader.ReadAsync().ConfigureAwait(false);
 #else
-            while (await _payloads.WaitToReadAsync(_flushTimeoutOrStop.Token).ConfigureAwait(false))
-            {
                 while (_payloads.TryRead(out (string EventName, IDictionary<string, object> ParamsMap) payload))
                 {
                     if (_flushTimeoutOrStop.Token.IsCancellationRequested)
