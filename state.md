@@ -12,18 +12,18 @@
 
 ## Task Schedule (last run dates)
 - Task 1 (Discover Commands): 2026-07-30
-- Task 2 (Identify Opportunities): 2026-08-10 (scanned CommandLine/*, TreeNodeFilter regex usage (already cached per-ValueExpression instance, correct), Terminal/CursorProgressRenderer (500ms tick, no alloc concerns), TerminalTestReporter.*.cs string.Format usages (all cold/low-frequency reporting paths) — no new hot-path targets found)
-- Task 3 (Implement): 2026-08-09 (PR #10528 "Reduce data-driven display name allocations", now closed — reduced allocations in TestDataSourceUtilities.ComputeDefaultDisplayName by replacing LINQ Select/Join/Cast<object>() with a direct StringBuilder loop; ~40% faster, ~18% less alloc in 200k-iter microbenchmark; DataRowAttributeTests 17/17 pass)
-- Task 4 (Maintain PRs): 2026-08-10 (no open perf-improver PRs)
+- Task 2 (Identify Opportunities): 2026-08-11 (explore-agent scan of Assert*.cs, MSTest.TestAdapter/Execution, Platform Hosts/Requests, DataRow/DynamicData attrs, Analyzers hot paths — found TelemetryCollector.TrackAssertionCall ConcurrentDictionary.AddOrUpdate contention, fixed same run; secondary: Assert.HasCount non-generic overload Cast<object>() not fast-pathing ICollection.Count, low priority/not fixed)
+- Task 3 (Implement): 2026-08-11 (PR: "Reduce TelemetryCollector.TrackAssertionCall contention on the assertion hot path" — replaced ConcurrentDictionary<string,long>.AddOrUpdate with ConcurrentDictionary<string,StrongBox<long>>.GetOrAdd + Interlocked.Increment; microbenchmark 2M iters: 197ms->23ms single-threaded (~8.6x), 168ms->34ms under 4-thread contention (~5x); TestFramework.UnitTests 1506/1506 pass)
+- Task 4 (Maintain PRs): 2026-08-10 (no open perf-improver PRs at that time; PR #10543 "Reduce MTP command-line validation allocations" from a human/other contributor also open, not perf-improver's)
 - Task 5 (Comment Issues): 2026-08-10 (no open performance-labeled issues found via search_issues)
 - Task 6 (Infrastructure): 2026-08-05 (reviewed perf-timing-nightly.yml + MSTest.Performance.Runner; infra already solid — PlainProcess timing, cross-platform)
-- Task 7 (Monthly Summary): 2026-08-10
+- Task 7 (Monthly Summary): 2026-08-11
 
 ## Monthly Activity Issue
 - Issue #10381 (August 2026, open) — kept updated; no suggested actions pending
 
 ## Work In Progress
-None. PR #10528 (data-driven display name allocations) closed. No open perf-improver PRs or performance-labeled issues as of 2026-08-10.
+None. New PR created 2026-08-11: "Reduce TelemetryCollector.TrackAssertionCall contention on the assertion hot path" (branch perf-assist/telemetry-collector-counter). No other open perf-improver PRs or performance-labeled issues as of 2026-08-11.
 
 ## Optimization Backlog (low priority)
 1. `ServiceProvider.GetServiceInternal`/`RegisterCoverageProducer` (src/Platform/Microsoft.Testing.Platform/Services/ServiceProvider.cs): uses `FirstOrDefault`/`OfType<IDataProducer>()` LINQ per service lookup/registration. Cold/startup-only path (not per-test), low value — noted but not prioritized.
@@ -31,6 +31,7 @@ None. PR #10528 (data-driven display name allocations) closed. No open perf-impr
 3. `SilenceDrivenHeartbeatRenderer.BuildSlowTestDescription`: done (lazy StringBuilder) — see PR #10384.
 4. `AntiTerminal.StopUpdate()`: done (IConsole.Write(StringBuilder) overload) — see PR #10384.
 5. OpenTelemetryResultHandler.GetFullyQualifiedName(): won't-fix — see issue #10381 comments.
+6. `Assert.HasCount.cs` non-generic `HasCount(string, int, IEnumerable, ...)` overload: falls through to `collection.Cast<object>()` then LINQ `Count()` without an `ICollection.Count` fast path first. Only hit for non-generic-collection overloads (minor), low priority — noted 2026-08-11, not fixed yet.
 
 
 ## Performance Notes
