@@ -6,7 +6,6 @@ using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
-using Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers;
 using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
@@ -236,10 +235,12 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                 return (int)ExitCode.GenericFailure;
             }
 
-            foreach (ArtifactRequest artifact in retryFailedTestsPipeServer.Artifacts)
-            {
-                attemptArtifacts.Add(new RetryAttemptArtifact(artifact.Path, artifact.Kind, attemptCount));
-            }
+            attemptArtifacts.AddRange(RetryArtifactProcessor.SnapshotAttemptArtifacts(
+                fileSystem,
+                retryFailedTestsPipeServer.Artifacts,
+                attemptCount,
+                currentTryResultFolder,
+                retryRootFolder));
 
             exitCodes.Add(attemptResult.ExitCode);
 
@@ -412,6 +413,11 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                 resultDirectory,
                 replacements,
                 cancellationToken).ConfigureAwait(false);
+            RetryArtifactProcessor.PublishExternalArtifacts(
+                fileSystem,
+                attemptArtifacts,
+                attemptCount,
+                replacements);
         }
         finally
         {

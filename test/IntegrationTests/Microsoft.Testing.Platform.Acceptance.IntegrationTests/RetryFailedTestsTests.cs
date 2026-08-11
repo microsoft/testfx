@@ -645,6 +645,42 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         }
     }
 
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    public async Task RetryFailedTests_CtrfAbsoluteFileName_PublishesConsolidatedReport(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        string resultDirectory = Path.Combine(testHost.DirectoryName, Guid.NewGuid().ToString("N"));
+        string reportPath = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.ctrf.json");
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--retry-failed-tests 3 --report-ctrf --report-ctrf-filename \"{reportPath}\" --results-directory \"{resultDirectory}\"",
+            new()
+            {
+                { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
+                { "METHOD1", "1" },
+                { "RESULTDIR", resultDirectory },
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        Assert.IsTrue(File.Exists(reportPath));
+        Assert.IsEmpty(Directory.GetFiles(resultDirectory, "*.ctrf.json", SearchOption.TopDirectoryOnly));
+        Assert.HasCount(
+            2,
+            Directory.GetFiles(Path.Combine(resultDirectory, "Retries"), "*.ctrf.json", SearchOption.AllDirectories));
+
+        using var report = System.Text.Json.JsonDocument.Parse(File.ReadAllText(reportPath));
+        System.Text.Json.JsonElement results = report.RootElement.GetProperty("results");
+        Assert.AreEqual(3, results.GetProperty("summary").GetProperty("tests").GetInt32());
+        Assert.AreEqual(1, results.GetProperty("summary").GetProperty("flaky").GetInt32());
+        System.Text.Json.JsonElement flakyTest = results.GetProperty("tests")
+            .EnumerateArray()
+            .Single(test => test.GetProperty("name").GetString() == "TestMethod1");
+        Assert.AreEqual("passed", flakyTest.GetProperty("status").GetString());
+        Assert.AreEqual("failed", flakyTest.GetProperty("retryAttempts")[0].GetProperty("status").GetString());
+    }
+
     private static string ReadRequiredStringProperty(string filePath, string propertyName)
     {
         using var document = System.Text.Json.JsonDocument.Parse(File.ReadAllText(filePath));

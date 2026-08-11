@@ -42,6 +42,7 @@ internal static class ArtifactPostProcessingHandshakeProperties
         string requiredKinds = string.Join(
             ";",
             processors.OfType<IArtifactPostProcessorRequiresPostProcessing>()
+                .Where(SupportsTestModuleMerging)
                 .SelectMany(processor => processor.SupportedKinds)
                 .Where(kind => !RoslynString.IsNullOrWhiteSpace(kind))
                 .Distinct(StringComparer.Ordinal)
