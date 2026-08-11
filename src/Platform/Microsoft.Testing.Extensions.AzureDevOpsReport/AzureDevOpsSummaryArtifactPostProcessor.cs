@@ -26,6 +26,7 @@ internal sealed class AzureDevOpsSummaryArtifactPostProcessor(
     internal const string ProviderSlug = "azure-devops";
 
     private static readonly string[] SupportedArtifactKinds = [FragmentArtifactKind];
+    private static readonly ArtifactPostProcessingMode[] SupportedPostProcessingModes = [ArtifactPostProcessingMode.TestModules];
     private readonly bool _isEnabled =
         (commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsSummary)
             && AzureDevOpsConstants.IsRunningInAzureDevOps(environment))
@@ -38,6 +39,8 @@ internal sealed class AzureDevOpsSummaryArtifactPostProcessor(
     public string DisplayName => AzureDevOpsResources.DisplayName;
 
     public string Description => AzureDevOpsResources.Description;
+
+    public IReadOnlyList<ArtifactPostProcessingMode> SupportedModes => SupportedPostProcessingModes;
 
     public bool SupportsTruncatedRuns => true;
 

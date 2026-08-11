@@ -21,6 +21,7 @@ Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxArtifactPostProcessor.Des
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxArtifactPostProcessor.DisplayName.get -> string!
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxArtifactPostProcessor.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxArtifactPostProcessor.ProcessAsync(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>! inputs, string! outputDirectory, Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact?>!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxArtifactPostProcessor.SupportedModes.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingMode>!
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxArtifactPostProcessor.SupportsTruncatedRuns.get -> bool
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxArtifactPostProcessor.SupportedFileExtensionsFallback.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxArtifactPostProcessor.SupportedKinds.get -> System.Collections.Generic.IReadOnlyList<string!>!

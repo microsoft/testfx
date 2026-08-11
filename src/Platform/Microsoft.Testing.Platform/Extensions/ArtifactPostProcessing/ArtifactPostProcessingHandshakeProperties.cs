@@ -11,27 +11,29 @@ internal static class ArtifactPostProcessingHandshakeProperties
     {
         string kinds = string.Join(
             ";",
-            processors.SelectMany(processor => processor.SupportedKinds)
+            processors.Where(SupportsTestModuleMerging)
+                .SelectMany(processor => processor.SupportedKinds)
                 .Where(kind => !RoslynString.IsNullOrWhiteSpace(kind))
                 .Distinct(StringComparer.Ordinal)
                 .OrderBy(kind => kind, StringComparer.Ordinal));
         string extensions = string.Join(
             ";",
-            processors.SelectMany(processor => processor.SupportedFileExtensionsFallback)
+            processors.Where(SupportsTestModuleMerging)
+                .SelectMany(processor => processor.SupportedFileExtensionsFallback)
                 .Where(extension => !RoslynString.IsNullOrWhiteSpace(extension))
                 .Select(extension => extension.ToLowerInvariant())
                 .Distinct(StringComparer.Ordinal)
                 .OrderBy(extension => extension, StringComparer.Ordinal));
         string truncatedRunKinds = string.Join(
             ";",
-            processors.Where(processor => processor.SupportsTruncatedRuns)
+            processors.Where(processor => SupportsTestModuleMerging(processor) && processor.SupportsTruncatedRuns)
                 .SelectMany(processor => processor.SupportedKinds)
                 .Where(kind => !RoslynString.IsNullOrWhiteSpace(kind))
                 .Distinct(StringComparer.Ordinal)
                 .OrderBy(kind => kind, StringComparer.Ordinal));
         string truncatedRunExtensions = string.Join(
             ";",
-            processors.Where(processor => processor.SupportsTruncatedRuns)
+            processors.Where(processor => SupportsTestModuleMerging(processor) && processor.SupportsTruncatedRuns)
                 .SelectMany(processor => processor.SupportedFileExtensionsFallback)
                 .Where(extension => !RoslynString.IsNullOrWhiteSpace(extension))
                 .Select(extension => extension.ToLowerInvariant())
@@ -40,6 +42,7 @@ internal static class ArtifactPostProcessingHandshakeProperties
         string requiredKinds = string.Join(
             ";",
             processors.OfType<IArtifactPostProcessorRequiresPostProcessing>()
+                .Where(SupportsTestModuleMerging)
                 .SelectMany(processor => processor.SupportedKinds)
                 .Where(kind => !RoslynString.IsNullOrWhiteSpace(kind))
                 .Distinct(StringComparer.Ordinal)
@@ -78,4 +81,7 @@ internal static class ArtifactPostProcessingHandshakeProperties
 
         return properties;
     }
+
+    private static bool SupportsTestModuleMerging(IArtifactPostProcessor processor)
+        => processor.SupportedModes.Contains(ArtifactPostProcessingMode.TestModules);
 }

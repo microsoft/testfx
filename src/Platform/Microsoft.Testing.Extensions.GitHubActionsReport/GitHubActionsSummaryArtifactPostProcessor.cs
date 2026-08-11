@@ -25,6 +25,7 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
     private const string StepSummaryEnvironmentVariable = "GITHUB_STEP_SUMMARY";
     private const int StepSummaryMaxWriteAttempts = 20;
     private static readonly string[] SupportedArtifactKinds = [FragmentArtifactKind];
+    private static readonly ArtifactPostProcessingMode[] SupportedPostProcessingModes = [ArtifactPostProcessingMode.TestModules];
     private static readonly TimeSpan StepSummaryRetryDelay = TimeSpan.FromMilliseconds(50);
     private readonly bool _isEnabled =
         GitHubActionsFeature.IsEnabled(commandLineOptions, environment, GitHubActionsCommandLineOptions.GitHubActionsStepSummary)
@@ -37,6 +38,8 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
     public string DisplayName => GitHubActionsResources.DisplayName;
 
     public string Description => GitHubActionsResources.Description;
+
+    public IReadOnlyList<ArtifactPostProcessingMode> SupportedModes => SupportedPostProcessingModes;
 
     public bool SupportsTruncatedRuns => true;
 

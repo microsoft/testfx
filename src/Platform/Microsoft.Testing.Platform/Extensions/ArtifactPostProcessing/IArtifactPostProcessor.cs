@@ -10,6 +10,11 @@ namespace Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 public interface IArtifactPostProcessor : IExtension
 {
     /// <summary>
+    /// Gets the post-processing modes supported by this processor.
+    /// </summary>
+    IReadOnlyList<ArtifactPostProcessingMode> SupportedModes { get; }
+
+    /// <summary>
     /// Gets a value indicating whether this processor can process artifacts observed before a run was truncated.
     /// </summary>
     /// <remarks>
@@ -76,7 +81,19 @@ public sealed class ArtifactPostProcessingContext
     /// </summary>
     /// <param name="truncationReason">The reason the run was truncated, or <see cref="ArtifactPostProcessingTruncationReason.None"/> for a complete run.</param>
     public ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason truncationReason)
-        : this(truncationReason, runSummary: null)
+        : this(truncationReason, ArtifactPostProcessingMode.TestModules, runSummary: null)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ArtifactPostProcessingContext"/> class.
+    /// </summary>
+    /// <param name="truncationReason">The reason the run was truncated, or <see cref="ArtifactPostProcessingTruncationReason.None"/> for a complete run.</param>
+    /// <param name="mode">The operation that supplied the artifacts.</param>
+    public ArtifactPostProcessingContext(
+        ArtifactPostProcessingTruncationReason truncationReason,
+        ArtifactPostProcessingMode mode)
+        : this(truncationReason, mode, runSummary: null)
     {
     }
 
@@ -88,8 +105,23 @@ public sealed class ArtifactPostProcessingContext
     public ArtifactPostProcessingContext(
         ArtifactPostProcessingTruncationReason truncationReason,
         ArtifactPostProcessingRunSummary? runSummary)
+        : this(truncationReason, ArtifactPostProcessingMode.TestModules, runSummary)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ArtifactPostProcessingContext"/> class.
+    /// </summary>
+    /// <param name="truncationReason">The reason the run was truncated, or <see cref="ArtifactPostProcessingTruncationReason.None"/> for a complete run.</param>
+    /// <param name="mode">The operation that supplied the artifacts.</param>
+    /// <param name="runSummary">The authoritative orchestrator summary, or <see langword="null"/> when unavailable.</param>
+    public ArtifactPostProcessingContext(
+        ArtifactPostProcessingTruncationReason truncationReason,
+        ArtifactPostProcessingMode mode,
+        ArtifactPostProcessingRunSummary? runSummary)
     {
         TruncationReason = truncationReason;
+        Mode = mode;
         RunSummary = runSummary;
     }
 
@@ -97,6 +129,11 @@ public sealed class ArtifactPostProcessingContext
     /// Gets a value indicating whether the test run was truncated.
     /// </summary>
     public bool IsTruncated => TruncationReason != ArtifactPostProcessingTruncationReason.None;
+
+    /// <summary>
+    /// Gets the operation that supplied the artifacts.
+    /// </summary>
+    public ArtifactPostProcessingMode Mode { get; }
 
     /// <summary>
     /// Gets the reason the test run was truncated.
@@ -201,6 +238,24 @@ public sealed class ArtifactPostProcessingRunSummary
     /// Gets the number of test modules included in the orchestrator summary.
     /// </summary>
     public int TestModuleCount { get; }
+}
+
+/// <summary>
+/// Specifies how the supplied artifacts relate to one another.
+/// </summary>
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+public enum ArtifactPostProcessingMode
+{
+    /// <summary>
+    /// Artifacts were produced by distinct test modules in one test run.
+    /// </summary>
+    TestModules,
+
+    /// <summary>
+    /// Artifacts were produced by successive attempts of the same logical tests.
+    /// Inputs are ordered from the initial execution to the final attempt.
+    /// </summary>
+    RetryAttempts,
 }
 
 /// <summary>

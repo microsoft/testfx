@@ -22,6 +22,9 @@ public sealed class CtrfArtifactPostProcessorTests
         CtrfArtifactPostProcessor processor = new();
 
         Assert.AreSequenceEqual(new[] { CtrfReportGenerator.CtrfArtifactKind }, processor.SupportedKinds);
+        Assert.AreSequenceEqual(
+            new[] { ArtifactPostProcessingMode.TestModules, ArtifactPostProcessingMode.RetryAttempts },
+            processor.SupportedModes);
         Assert.IsEmpty(processor.SupportedFileExtensionsFallback);
         Assert.IsFalse(processor.SupportsTruncatedRuns);
     }
@@ -88,6 +91,38 @@ public sealed class CtrfArtifactPostProcessorTests
             Assert.AreEqual("CTRF", (string?)merged["reportFormat"]);
             Assert.AreEqual(2, merged["results"]!["tests"]!.AsArray().Count);
             Assert.IsTrue(Guid.TryParse((string?)merged["reportId"], out _));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task ProcessAsync_ForRetryAttempts_CollapsesToFinalOutcome()
+    {
+        string directory = CreateTemporaryDirectory();
+        try
+        {
+            string firstPath = WriteReport(directory, "first.ctrf.json", "flaky", "failed");
+            string secondPath = WriteReport(directory, "second.ctrf.json", "flaky", "passed");
+
+            ProcessedArtifact? output = await new CtrfArtifactPostProcessor().ProcessAsync(
+                [CreateInput(firstPath, "1"), CreateInput(secondPath, "2")],
+                directory,
+                new ArtifactPostProcessingContext(
+                    ArtifactPostProcessingTruncationReason.None,
+                    ArtifactPostProcessingMode.RetryAttempts),
+                CancellationToken.None);
+
+            Assert.IsNotNull(output);
+            JsonNode results = JsonNode.Parse(File.ReadAllText(output.Path))!["results"]!;
+            Assert.AreEqual(1, results["summary"]!["tests"]!.GetValue<int>());
+            Assert.AreEqual(1, results["summary"]!["flaky"]!.GetValue<int>());
+            JsonNode test = results["tests"]![0]!;
+            Assert.AreEqual("passed", (string?)test["status"]);
+            Assert.AreEqual(1, test["retries"]!.GetValue<int>());
+            Assert.AreEqual("failed", (string?)test["retryAttempts"]![0]!["status"]);
         }
         finally
         {
@@ -239,7 +274,7 @@ public sealed class CtrfArtifactPostProcessorTests
         return directory;
     }
 
-    private static string WriteReport(string directory, string fileName, string testName)
+    private static string WriteReport(string directory, string fileName, string testName, string status = "passed")
     {
         string path = Path.Combine(directory, fileName);
         var report = new JsonObject
@@ -260,7 +295,7 @@ public sealed class CtrfArtifactPostProcessorTests
                     new JsonObject
                     {
                         ["name"] = testName,
-                        ["status"] = "passed",
+                        ["status"] = status,
                     }),
             },
         };

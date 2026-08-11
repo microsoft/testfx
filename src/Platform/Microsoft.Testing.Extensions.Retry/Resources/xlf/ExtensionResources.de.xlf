@@ -22,10 +22,15 @@
         <target state="translated">Der Schwellenwert für den Prozentsatz fehlgeschlagener Tests ist {0} %, und {1} % Tests mit Fehlern ({2}/{3})</target>
         <note>{0} is the maximum failed tests percentage threshold. {1} is the actual failed tests percentage. {2} is the failed tests count. {3} is the total tests count.</note>
       </trans-unit>
-      <trans-unit id="RetryArtifactsMoved">
-        <source>Retry: moved {0} result file(s) to '{1}'</source>
-        <target state="translated">Wiederholung: {0} Ergebnisdatei(en) in '{1}' verschoben</target>
-        <note>{0} is the number of files moved. {1} is the destination result directory.</note>
+      <trans-unit id="RetryArtifactPostProcessorFailed">
+        <source>Retry artifact post-processor '{0}' failed: {1}</source>
+        <target state="new">Retry artifact post-processor '{0}' failed: {1}</target>
+        <note>{0} is the processor UID. {1} is the exception message.</note>
+      </trans-unit>
+      <trans-unit id="RetryArtifactsPublished">
+        <source>Retry: published {0} result file(s) to '{1}'</source>
+        <target state="new">Retry: published {0} result file(s) to '{1}'</target>
+        <note>{0} is the number of files published. {1} is the destination result directory.</note>
       </trans-unit>
       <trans-unit id="RetryAttemptFailedWillRetry">
         <source>Retry: attempt {0}/{1} failed - {2} failing test(s), retrying</source>

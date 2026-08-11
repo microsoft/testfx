@@ -12,6 +12,8 @@ internal sealed class CtrfArtifactPostProcessor : IArtifactPostProcessor
 
     private static readonly string[] SupportedArtifactKinds = [CtrfReportGenerator.CtrfArtifactKind];
     private static readonly string[] NoSupportedExtensions = [];
+    private static readonly ArtifactPostProcessingMode[] SupportedPostProcessingModes =
+        [ArtifactPostProcessingMode.TestModules, ArtifactPostProcessingMode.RetryAttempts];
 
     public string Uid => "Microsoft.Testing.Extensions.CtrfReport.PostProcessor";
 
@@ -20,6 +22,8 @@ internal sealed class CtrfArtifactPostProcessor : IArtifactPostProcessor
     public string DisplayName => ExtensionResources.CtrfArtifactPostProcessorDisplayName;
 
     public string Description => ExtensionResources.CtrfArtifactPostProcessorDescription;
+
+    public IReadOnlyList<ArtifactPostProcessingMode> SupportedModes => SupportedPostProcessingModes;
 
     // CTRF has no marker that lets this merger label an incomplete input set as a partial run.
     public bool SupportsTruncatedRuns => false;
@@ -42,15 +46,18 @@ internal sealed class CtrfArtifactPostProcessor : IArtifactPostProcessor
             return null;
         }
 
-        InputArtifact[] orderedInputs =
-        [
-            .. inputs
-                .OrderBy(input => Path.GetFullPath(input.Path), StringComparer.Ordinal)
-                .ThenBy(input => input.ExecutionId, StringComparer.Ordinal),
-        ];
+        InputArtifact[] orderedInputs = context.Mode == ArtifactPostProcessingMode.RetryAttempts
+            ? [.. inputs]
+            :
+            [
+                .. inputs
+                    .OrderBy(input => Path.GetFullPath(input.Path), StringComparer.Ordinal)
+                    .ThenBy(input => input.ExecutionId, StringComparer.Ordinal),
+            ];
         string[] inputPaths = [.. orderedInputs.Select(input => input.Path)];
         string[] identityInputs =
         [
+            context.Mode.ToString(),
             .. orderedInputs.Select(input => $"{Path.GetFullPath(input.Path)}\0{input.ExecutionId}"),
         ];
         Guid artifactId = CtrfReportMerger.CreateDeterministicId(identityInputs);
@@ -62,7 +69,10 @@ internal sealed class CtrfArtifactPostProcessor : IArtifactPostProcessor
         }
 
         string outputPath = Path.Combine(mergedDirectory, $"merged-{artifactId:N}.ctrf.json");
-        await CtrfReportMerger.MergeAllToFileAsync(inputPaths, outputPath, cancellationToken).ConfigureAwait(false);
+        CtrfMergeMode mergeMode = context.Mode == ArtifactPostProcessingMode.RetryAttempts
+            ? CtrfMergeMode.CollapseRetryAttempts
+            : CtrfMergeMode.Concatenate;
+        await CtrfReportMerger.MergeAllToFileAsync(inputPaths, outputPath, mergeMode, cancellationToken).ConfigureAwait(false);
 
         return new ProcessedArtifact(
             outputPath,

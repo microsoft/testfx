@@ -35,6 +35,17 @@ internal sealed class ArtifactPostProcessingManager : IArtifactPostProcessingMan
 
     private static void ValidateCapabilities(IArtifactPostProcessor processor)
     {
+        if (processor.SupportedModes.Count == 0
+            || processor.SupportedModes.Distinct().Count() != processor.SupportedModes.Count
+            || processor.SupportedModes.Any(mode => !Enum.IsDefined(typeof(ArtifactPostProcessingMode), mode)))
+        {
+            throw new InvalidOperationException(string.Format(
+                CultureInfo.CurrentCulture,
+                PlatformResources.ArtifactPostProcessorCapabilityInvalid,
+                processor.Uid,
+                nameof(processor.SupportedModes)));
+        }
+
         foreach (string kind in processor.SupportedKinds)
         {
             ValidateCapability(processor, kind);

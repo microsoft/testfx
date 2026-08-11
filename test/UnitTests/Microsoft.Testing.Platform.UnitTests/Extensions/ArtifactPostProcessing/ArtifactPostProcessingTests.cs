@@ -38,6 +38,24 @@ public sealed class ArtifactPostProcessingTests
     public void HandshakeProperties_WithNoCapabilities_ReturnsNull()
         => Assert.IsNull(ArtifactPostProcessingHandshakeProperties.Create([new StubProcessor("empty", [], [])]));
 
+    [TestMethod]
+    public void HandshakeProperties_ExcludesRetryOnlyRequiredKinds()
+    {
+        IArtifactPostProcessor[] processors =
+        [
+            new StubProcessor("module", ["module.kind"], []),
+            new RequiredStubProcessor(
+                "retry",
+                ["retry.kind"],
+                [ArtifactPostProcessingMode.RetryAttempts]),
+        ];
+
+        IReadOnlyDictionary<byte, string> properties = ArtifactPostProcessingHandshakeProperties.Create(processors)!;
+
+        Assert.AreEqual("module.kind", properties[HandshakeMessagePropertyNames.SupportedPostProcessorKinds]);
+        Assert.IsFalse(properties.ContainsKey(HandshakeMessagePropertyNames.RequiredPostProcessorKinds));
+    }
+
     [DataRow(HandshakeMessageHostTypes.TestHost, true)]
     [DataRow(HandshakeMessageHostTypes.ServerTestHost, true)]
     [DataRow(HandshakeMessageHostTypes.TestHostController, true)]
@@ -496,7 +514,8 @@ public sealed class ArtifactPostProcessingTests
         IReadOnlyList<string> supportedKinds,
         IReadOnlyList<string> supportedExtensions,
         bool supportsTruncatedRuns = false,
-        bool isEnabled = true) : IArtifactPostProcessor
+        bool isEnabled = true,
+        IReadOnlyList<ArtifactPostProcessingMode>? supportedModes = null) : IArtifactPostProcessor
     {
         public string Uid { get; } = uid;
 
@@ -505,6 +524,9 @@ public sealed class ArtifactPostProcessingTests
         public string DisplayName => Uid;
 
         public string Description => Uid;
+
+        public IReadOnlyList<ArtifactPostProcessingMode> SupportedModes { get; } =
+            supportedModes ?? [ArtifactPostProcessingMode.TestModules];
 
         public bool SupportsTruncatedRuns { get; } = supportsTruncatedRuns;
 
@@ -522,6 +544,10 @@ public sealed class ArtifactPostProcessingTests
             => Task.FromResult<ProcessedArtifact?>(null);
     }
 
-    private sealed class RequiredStubProcessor(string uid, IReadOnlyList<string> supportedKinds)
-        : StubProcessor(uid, supportedKinds, []), IArtifactPostProcessorRequiresPostProcessing;
+    private sealed class RequiredStubProcessor(
+        string uid,
+        IReadOnlyList<string> supportedKinds,
+        IReadOnlyList<ArtifactPostProcessingMode>? supportedModes = null)
+        : StubProcessor(uid, supportedKinds, [], supportedModes: supportedModes),
+        IArtifactPostProcessorRequiresPostProcessing;
 }

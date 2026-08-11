@@ -23,6 +23,13 @@ internal static partial class CtrfReportMerger
         CancellationToken cancellationToken)
         => MergeToFileAsync(inputPaths, outputPath, CtrfMergeMode.Concatenate, requireAllReports: true, cancellationToken);
 
+    internal static Task MergeAllToFileAsync(
+        IReadOnlyList<string> inputPaths,
+        string outputPath,
+        CtrfMergeMode mode,
+        CancellationToken cancellationToken)
+        => MergeToFileAsync(inputPaths, outputPath, mode, requireAllReports: true, cancellationToken);
+
     internal static Task MergeToFileAsync(
         IReadOnlyList<string> inputPaths,
         string outputPath,
