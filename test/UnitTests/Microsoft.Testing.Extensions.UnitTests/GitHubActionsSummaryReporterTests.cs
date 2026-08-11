@@ -5,12 +5,15 @@ extern alias ghactions;
 
 using ghactions::Microsoft.Testing.Extensions.GitHubActionsReport;
 
+using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 using Microsoft.Testing.Platform.Helpers;
 
 using Moq;
 
 using GitHubActionsTerminalKind = ghactions::Microsoft.Testing.Extensions.TerminalKind;
 using GitHubActionsTestRecord = ghactions::Microsoft.Testing.Extensions.TestRecord;
+using GitHubCiRunSummaryAggregate = ghactions::Microsoft.Testing.Extensions.CiRunSummaryAggregate;
+using GitHubCiRunSummaryModule = ghactions::Microsoft.Testing.Extensions.CiRunSummaryModule;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
 
@@ -123,6 +126,84 @@ public sealed class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
+    public void BuildAggregateMarkdown_HtmlEncodesModuleSummaryLabel()
+    {
+        var module = new GitHubCiRunSummaryModule
+        {
+            AssemblyName = "<h1>A&B</h1>",
+            ModulePath = "A.dll",
+            TargetFramework = "net9.0<&>",
+            Architecture = "x64&arm64",
+            ExecutionId = "execution",
+            SessionUid = "session",
+            AttemptNumber = 1,
+        };
+        var aggregate = new GitHubCiRunSummaryAggregate(
+            [module],
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 0,
+            passedTests: 0,
+            failedTests: 0,
+            skippedTests: 0,
+            duration: null,
+            exitCode: null,
+            hasAuthoritativeRunSummary: false,
+            isPartial: false);
+
+        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate);
+
+        Assert.Contains("<summary>&lt;h1&gt;A&amp;B&lt;/h1&gt; (net9.0&lt;&amp;&gt;, x64&amp;arm64)</summary>", markdown);
+        Assert.DoesNotContain("<summary><h1>", markdown);
+    }
+
+    [TestMethod]
+    public void BuildAggregateMarkdown_PartialFailureUsesFailureIconAndDisambiguatesAttempts()
+    {
+        var first = new GitHubCiRunSummaryModule
+        {
+            AssemblyName = "Tests",
+            ModulePath = "Tests.dll",
+            TargetFramework = "net9.0",
+            Architecture = "x64",
+            ExecutionId = "execution",
+            SessionUid = "session-1",
+            AttemptNumber = 1,
+            ExitCode = AtLeastOneTestFailedExitCode,
+            FailedTests = 1,
+            TotalTests = 1,
+        };
+        var second = new GitHubCiRunSummaryModule
+        {
+            AssemblyName = "Tests",
+            ModulePath = "other/Tests.dll",
+            TargetFramework = "net9.0",
+            Architecture = "x64",
+            ExecutionId = "execution",
+            SessionUid = "session-2",
+            AttemptNumber = 2,
+            ExitCode = SuccessExitCode,
+        };
+        var aggregate = new GitHubCiRunSummaryAggregate(
+            [first, second],
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.MaximumFailedTests),
+            totalTests: 1,
+            passedTests: 0,
+            failedTests: 1,
+            skippedTests: 0,
+            duration: TimeSpan.FromSeconds(1),
+            exitCode: AtLeastOneTestFailedExitCode,
+            hasAuthoritativeRunSummary: true,
+            isPartial: true);
+
+        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate);
+
+        Assert.StartsWith("## ❌ Overall Test Run Summary", markdown);
+        Assert.Contains("attempt 1, session session-1", markdown);
+        Assert.Contains("attempt 2, session session-2", markdown);
+        Assert.Contains("This summary is partial because the test run was truncated.", markdown);
+    }
+
+    [TestMethod]
     public async Task AppendStepSummaryWithRetryAsync_WritesContent_OnFirstAttempt()
     {
         var buffer = new MemoryStream();
@@ -188,6 +269,35 @@ public sealed class GitHubActionsSummaryReporterTests
 
         // Exactly one acquisition: a post-acquire write failure is not contention and must not be retried.
         fileSystem.Verify(f => f.NewFileStream("summary.md", FileMode.Append, FileAccess.Write, FileShare.Read), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task UpsertStepSummaryWithRetryAsync_ReplacesMatchingSection()
+    {
+        string path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, "existing\n");
+            var fileSystem = new SystemFileSystem();
+
+            await GitHubActionsSummaryReporter.UpsertStepSummaryWithRetryAsync(
+                fileSystem, path, "run-1", "first", maxAttempts: 1, retryDelay: TimeSpan.Zero, CancellationToken.None);
+            await GitHubActionsSummaryReporter.UpsertStepSummaryWithRetryAsync(
+                fileSystem, path, "run-1", "second", maxAttempts: 1, retryDelay: TimeSpan.Zero, CancellationToken.None);
+
+            string summary = File.ReadAllText(path);
+            Assert.Contains("existing", summary);
+            Assert.Contains("second", summary);
+            Assert.DoesNotContain("first", summary);
+            const string Marker = "microsoft-testing-platform:github-actions:run-1:start";
+            int firstMarker = summary.IndexOf(Marker, StringComparison.Ordinal);
+            Assert.IsGreaterThanOrEqualTo(0, firstMarker);
+            Assert.AreEqual(-1, summary.IndexOf(Marker, firstMarker + Marker.Length, StringComparison.Ordinal));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
     }
 
     private static Mock<IFileSystem> CreateFileSystemWritingTo(Stream target)

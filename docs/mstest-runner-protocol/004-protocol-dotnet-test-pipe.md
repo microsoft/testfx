@@ -436,6 +436,8 @@ Property IDs (`HandshakeMessagePropertyNames`):
 | 15 | `SupportedPostProcessorExtensionsLegacy` | test host, server test host, test host controller, or artifact post-processor | Semicolon-separated lowercase file extensions used as a fallback for untagged artifacts. |
 | 16 | `SupportedTruncatedRunPostProcessorKinds` | test host, server test host, test host controller, or artifact post-processor | Subset of ID 14 whose processors can consume artifacts observed before a policy-truncated run stopped. |
 | 17 | `SupportedTruncatedRunPostProcessorExtensionsLegacy` | test host, server test host, test host controller, or artifact post-processor | Subset of ID 15 whose processors can consume artifacts observed before a policy-truncated run stopped. |
+| 18 | `RequiredPostProcessorKinds` | test host, server test host, test host controller, or artifact post-processor | Subset of ID 14 containing internal coordination kinds that must be post-processed even when only one matching artifact exists. |
+| 19 | `RequiredPostProcessingSupported` | SDK handshake response only | Boolean capability. `true` means the SDK honors ID 18 and supplies the authoritative `runSummary` manifest block before producers defer their standalone output. |
 
 ### 8.2 SDK → host: `HandshakeMessage` (reply)
 

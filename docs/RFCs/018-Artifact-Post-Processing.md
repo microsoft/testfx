@@ -179,11 +179,36 @@ public interface IArtifactPostProcessor : IExtension
         CancellationToken cancellationToken);
 }
 
+public interface IArtifactPostProcessorRequiresPostProcessing : IArtifactPostProcessor;
+
 public sealed class ArtifactPostProcessingContext
 {
     public ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason truncationReason);
+    public ArtifactPostProcessingContext(
+        ArtifactPostProcessingTruncationReason truncationReason,
+        ArtifactPostProcessingRunSummary? runSummary);
     public bool IsTruncated { get; }
     public ArtifactPostProcessingTruncationReason TruncationReason { get; }
+    public ArtifactPostProcessingRunSummary? RunSummary { get; }
+}
+
+public sealed class ArtifactPostProcessingRunSummary
+{
+    public ArtifactPostProcessingRunSummary(
+        long totalTests,
+        long passedTests,
+        long failedTests,
+        long skippedTests,
+        TimeSpan duration,
+        int exitCode,
+        int testModuleCount);
+    public long TotalTests { get; }
+    public long PassedTests { get; }
+    public long FailedTests { get; }
+    public long SkippedTests { get; }
+    public TimeSpan Duration { get; }
+    public int ExitCode { get; }
+    public int TestModuleCount { get; }
 }
 
 public enum ArtifactPostProcessingTruncationReason
@@ -224,6 +249,7 @@ public sealed record ProcessedArtifact(
 - **Returning `null`** means "I looked but there's nothing to do" (e.g. < 2 inputs). The orchestrator then leaves the originals visible.
 - **Idempotent / deterministic.** The contract is intentionally pure-functional from `inputs` -> `output`. Implementations must not stash state across calls.
 - **Truncated runs are fail-closed.** A processor must explicitly return `true` from `SupportsTruncatedRuns` before the SDK or dispatcher offers it artifacts from a run truncated by `--maximum-failed-tests` or `--timeout`. Opting in means the processor accepts an incomplete *set* of artifacts and will clearly represent that state in its output; it does not mean partially written or malformed files are valid inputs.
+- **Required post-processing is capability-gated.** Internal coordination formats such as CI summary fragments implement `IArtifactPostProcessorRequiresPostProcessing`. Their kinds are advertised separately so a supporting orchestrator invokes the processor even for one input. Producers defer standalone output only after the SDK handshake response confirms support; older SDKs continue the existing direct behavior.
 - **`IExtension` base** gives us `Uid`, `Version`, `DisplayName`, `Description`, and `IsEnabledAsync()` for free, plus integration with the existing extension manifest tooling. (`IsEnabledAsync()` is therefore *not* a bespoke member of this contract; the sketch in Appendix A.1 implements the inherited member.)
 
 #### The producer/post-processor co-location invariant
@@ -422,6 +448,15 @@ Manifest (orchestrator -> dispatcher):
   "schemaVersion": 1,
   "outputDirectory": "C:/path/to/TestResults",
   "truncationReason": "maximumFailedTests", // optional; absent means complete, or "timeout"
+  "runSummary": {                           // optional; authoritative outer-orchestrator values
+    "totalTests": 2935,
+    "passedTests": 2929,
+    "failedTests": 1,
+    "skippedTests": 5,
+    "durationTicks": 2062210000,
+    "exitCode": 2,
+    "testModuleCount": 12
+  },
   "inputs": [
     {
       "path": "C:/.../A/TestResults/A_net10.0_...trx",
@@ -443,7 +478,7 @@ Manifest (orchestrator -> dispatcher):
 }
 ```
 
-`truncationReason` is an additive schema-1 field because the existing parser ignores unknown fields. An old dispatcher reading a new manifest therefore continues to fail closed at election time: an SDK must elect a host through the new truncated-run capability before it writes this field. A new dispatcher reading an old manifest treats the run as complete.
+`truncationReason` and `runSummary` are additive schema-1 fields because the existing parser ignores unknown fields. An old dispatcher reading a new manifest therefore continues to fail closed at election time: an SDK must elect a host through the matching capability before it writes these fields. A new dispatcher reading an old manifest treats the run as complete and leaves `RunSummary` null. Processors must not present reconstructed duration or exit data as authoritative when it is absent.
 
 **Preferred result path: over the pipe.** In the recommended design the dispatcher reports each merged
 artifact back as a `FileArtifactMessage`, so there is no separate result file and no SDK-side result-JSON
@@ -469,6 +504,7 @@ Dispatcher exit codes (final values to be finalized so they don't overlap existi
 | Scenario | Outcome |
 | --- | --- |
 | 1 module, 1 TRX | No relaunch (only 1 input; group filtered out by the `>= 2` rule). |
+| 1 module, 1 required CI summary fragment | A supporting SDK relaunches the processor despite one input and returns one final summary; older SDKs leave the reporter's direct summary behavior unchanged. |
 | 5 modules, 5 TRX, all tag `microsoft.testing.trx` | 1 relaunch, 1 merged TRX, 5 originals on disk, 1 summary line. |
 | 5 modules, mixed TRX + coverage, one app covers both | 1 relaunch (set-cover), 1 merged TRX + 1 merged coverage. |
 | `.xml` artifacts: 3 JUnit (kind `junit.report`) + 2 NUnit3 (kind `nunit.report`) | Two distinct groups, two merges, no cross-contamination (would have collided under pure extension matching). |
