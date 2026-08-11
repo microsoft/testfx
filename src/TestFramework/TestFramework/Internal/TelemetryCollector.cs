@@ -15,7 +15,11 @@ internal static class TelemetryCollector
     // happens at most once per process.
     private static readonly Lazy<bool> IsEnabled = new(IsTelemetryEnabledFromEnvironment, LazyThreadSafetyMode.ExecutionAndPublication);
 
-    private static ConcurrentDictionary<string, long> s_assertionCallCounts = new();
+    // Values are boxed in a StrongBox<long> so that, once an assertion name's entry exists, repeat
+    // calls only need a dictionary lookup (no write) plus a single Interlocked.Increment on the box.
+    // This avoids ConcurrentDictionary.AddOrUpdate's internal per-update locking/CAS-retry loop and
+    // the per-call lambda invocation on the (by far) most common case where the key already exists.
+    private static ConcurrentDictionary<string, StrongBox<long>> s_assertionCallCounts = new();
 
     /// <summary>
     /// Records that an assertion method was called. This is on the hot path of every assertion,
@@ -35,7 +39,8 @@ internal static class TelemetryCollector
 
         try
         {
-            s_assertionCallCounts.AddOrUpdate(assertionName, 1, static (_, count) => count + 1);
+            StrongBox<long> box = s_assertionCallCounts.GetOrAdd(assertionName, static _ => new StrongBox<long>());
+            Interlocked.Increment(ref box.Value);
         }
         catch
         {
@@ -52,14 +57,15 @@ internal static class TelemetryCollector
     /// <returns>A dictionary mapping assertion names to their (best-effort) call counts.</returns>
     internal static Dictionary<string, long> DrainAssertionCallCounts()
     {
-        ConcurrentDictionary<string, long> old = Interlocked.Exchange(ref s_assertionCallCounts, new ConcurrentDictionary<string, long>());
+        ConcurrentDictionary<string, StrongBox<long>> old = Interlocked.Exchange(ref s_assertionCallCounts, new ConcurrentDictionary<string, StrongBox<long>>());
 
-        // Use the explicit Dictionary(IEnumerable<KeyValuePair>) ctor so we get a stable
-        // snapshot of the swapped-out instance. A collection-expression spread would be
-        // semantically equivalent but the explicit ctor reads more clearly here.
-#pragma warning disable IDE0028 // Simplify collection initialization
-        return new Dictionary<string, long>(old);
-#pragma warning restore IDE0028
+        var result = new Dictionary<string, long>(old.Count);
+        foreach (KeyValuePair<string, StrongBox<long>> entry in old)
+        {
+            result[entry.Key] = entry.Value.Value;
+        }
+
+        return result;
     }
 
     private static bool IsTelemetryEnabledFromEnvironment()
