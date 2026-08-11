@@ -137,6 +137,7 @@
   <!-- Sign config -->
   <PropertyGroup>
     <StrongNameKeyId>Microsoft</StrongNameKeyId>
+    <StrongNameKeyId Condition="'$(MutationTesting)' == 'true' and ('$(MSBuildProjectName)' == 'Microsoft.Testing.Platform.ServerMode.Client.Sources' or '$(MSBuildProjectName)' == 'Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests')">Open</StrongNameKeyId>
   </PropertyGroup>
 
   <!-- Test config -->

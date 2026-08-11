@@ -191,6 +191,31 @@ For Linux and macOS:
 
 Note that `-test` allows to run the unit tests and `-integrationTest` allows to run the two kinds of integration tests. Acceptance integration tests require the NuGet packages to have been produced hence the `-pack` flag.
 
+### Mutation testing
+
+The repository uses [Stryker.NET](https://stryker-mutator.io/docs/stryker-net/introduction/) to mutation-test the server-mode client sources. Restore the pinned local tool and run it from the configured unit-test project:
+
+On Windows PowerShell:
+
+```powershell
+dotnet tool restore
+Set-Location test/UnitTests/Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests
+$env:MutationTesting = "true"
+dotnet stryker --output ../../../artifacts/mutation-testing
+```
+
+On Linux and macOS:
+
+```shell
+dotnet tool restore
+cd test/UnitTests/Microsoft.Testing.Platform.ServerMode.Client.Sources.UnitTests
+MutationTesting=true dotnet stryker --output ../../../artifacts/mutation-testing
+```
+
+The opt-in property selects Arcade's open strong-name key for the mutated assembly because Stryker's in-memory compiler cannot complete Microsoft delay signing.
+
+The HTML and JSON reports are written to `artifacts/mutation-testing`. The [mutation testing workflow](../.github/workflows/mutation-testing.yml) also runs weekly and can be started manually.
+
 ## Working with Visual Studio
 
 If you are working with Visual Studio, we recommend opening it through the `open-vs.cmd` script at the repo root. This script will set all the required environment variables required so that Visual Studio picks up the locally downloaded version of the .NET SDK. If you prefer to use your machine-wide configuration, you can open Visual Studio directly.
