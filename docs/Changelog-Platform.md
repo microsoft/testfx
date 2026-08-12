@@ -1091,7 +1091,7 @@ See full log [of v1.4.0...v1.4.1](https://github.com/microsoft/testanywhere/comp
 
 ## <a name="1.4.0" />[1.4.0] - 2024-09-11
 
-See full log [of v1.3.2...v1.4.0](https://github.com/microsoft/testanywhere/compare/v1.3.2...v1.4.0)
+See full log [of v1.3.2...v1.4.0](https://github.com/microsoft/testfx/compare/v1.3.2...1.4.0)
 
 ### Added
 
