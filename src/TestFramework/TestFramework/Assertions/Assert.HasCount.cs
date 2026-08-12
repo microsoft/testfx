@@ -214,7 +214,28 @@ public sealed partial class Assert
     }
 
     private static void HasCount(string assertionName, int expected, IEnumerable collection, string? message, string collectionExpression)
-        => HasCount(assertionName, expected, collection.Cast<object>(), message, collectionExpression);
+    {
+        // Fast path: avoid the Cast<object>() allocation + LINQ Count() enumeration when the
+        // collection already exposes its count directly (ICollection.Count is O(1) for the vast
+        // majority of real-world collections, e.g. List<T>, arrays, Dictionary, etc.).
+        if (collection is ICollection nonGenericCollection)
+        {
+            // assertionName is one of a small fixed set ("HasCount", "IsEmpty"); use a cached prefixed
+            // string instead of allocating "Assert." + assertionName on every call.
+            TelemetryCollector.TrackAssertionCall(GetTrackedAssertionName(assertionName));
+
+            int actualCount = nonGenericCollection.Count;
+            if (actualCount == expected)
+            {
+                return;
+            }
+
+            ReportAssertCountFailed(assertionName, expected, actualCount, message, collectionExpression);
+            return;
+        }
+
+        HasCount(assertionName, expected, collection.Cast<object>(), message, collectionExpression);
+    }
 
 #if NETCOREAPP3_1_OR_GREATER
     private static void HasCount<T>(string assertionName, int expected, ReadOnlySpan<T> collection, string? message, string collectionExpression)
