@@ -13,17 +13,18 @@
 ## Task Schedule (last run dates)
 - Task 1 (Discover Commands): 2026-07-30
 - Task 2 (Identify Opportunities): 2026-08-11 (explore-agent scan of Assert*.cs, MSTest.TestAdapter/Execution, Platform Hosts/Requests, DataRow/DynamicData attrs, Analyzers hot paths — found TelemetryCollector.TrackAssertionCall ConcurrentDictionary.AddOrUpdate contention, fixed same run; secondary: Assert.HasCount non-generic overload Cast<object>() not fast-pathing ICollection.Count, low priority/not fixed)
-- Task 3 (Implement): 2026-08-11 (PR: "Reduce TelemetryCollector.TrackAssertionCall contention on the assertion hot path" — replaced ConcurrentDictionary<string,long>.AddOrUpdate with ConcurrentDictionary<string,StrongBox<long>>.GetOrAdd + Interlocked.Increment; microbenchmark 2M iters: 197ms->23ms single-threaded (~8.6x), 168ms->34ms under 4-thread contention (~5x); TestFramework.UnitTests 1506/1506 pass)
+- Task 3 (Implement): 2026-08-12 (PR: "Add ICollection fast path to non-generic Assert.HasCount/IsEmpty" — branch perf-assist/hascount-icollection-fastpath; avoids Cast<object>()+LINQ Count() when collection is ICollection; microbenchmark 2M iters over 1000-item ArrayList: 20371ms->15ms (~1350x); TestFramework.UnitTests 1506/1506 pass)
+- Task 3 (previous): 2026-08-11 (PR: "Reduce TelemetryCollector.TrackAssertionCall contention on the assertion hot path" — replaced ConcurrentDictionary<string,long>.AddOrUpdate with ConcurrentDictionary<string,StrongBox<long>>.GetOrAdd + Interlocked.Increment; microbenchmark 2M iters: 197ms->23ms single-threaded (~8.6x), 168ms->34ms under 4-thread contention (~5x); TestFramework.UnitTests 1506/1506 pass)
 - Task 4 (Maintain PRs): 2026-08-10 (no open perf-improver PRs at that time; PR #10543 "Reduce MTP command-line validation allocations" from a human/other contributor also open, not perf-improver's)
 - Task 5 (Comment Issues): 2026-08-10 (no open performance-labeled issues found via search_issues)
 - Task 6 (Infrastructure): 2026-08-05 (reviewed perf-timing-nightly.yml + MSTest.Performance.Runner; infra already solid — PlainProcess timing, cross-platform)
-- Task 7 (Monthly Summary): 2026-08-11
+- Task 7 (Monthly Summary): 2026-08-12
 
 ## Monthly Activity Issue
 - Issue #10381 (August 2026, open) — kept updated; no suggested actions pending
 
 ## Work In Progress
-None. New PR created 2026-08-11: "Reduce TelemetryCollector.TrackAssertionCall contention on the assertion hot path" (branch perf-assist/telemetry-collector-counter). No other open perf-improver PRs or performance-labeled issues as of 2026-08-11.
+None. New PR created 2026-08-12: "Add ICollection fast path to non-generic Assert.HasCount/IsEmpty" (branch perf-assist/hascount-icollection-fastpath). Also open from 2026-08-11: "Reduce TelemetryCollector.TrackAssertionCall contention on the assertion hot path" (branch perf-assist/telemetry-collector-counter). No performance-labeled issues found needing comment as of 2026-08-12 (search returned 0 results).
 
 ## Optimization Backlog (low priority)
 1. `ServiceProvider.GetServiceInternal`/`RegisterCoverageProducer` (src/Platform/Microsoft.Testing.Platform/Services/ServiceProvider.cs): uses `FirstOrDefault`/`OfType<IDataProducer>()` LINQ per service lookup/registration. Cold/startup-only path (not per-test), low value — noted but not prioritized.
@@ -31,7 +32,7 @@ None. New PR created 2026-08-11: "Reduce TelemetryCollector.TrackAssertionCall c
 3. `SilenceDrivenHeartbeatRenderer.BuildSlowTestDescription`: done (lazy StringBuilder) — see PR #10384.
 4. `AntiTerminal.StopUpdate()`: done (IConsole.Write(StringBuilder) overload) — see PR #10384.
 5. OpenTelemetryResultHandler.GetFullyQualifiedName(): won't-fix — see issue #10381 comments.
-6. `Assert.HasCount.cs` non-generic `HasCount(string, int, IEnumerable, ...)` overload: falls through to `collection.Cast<object>()` then LINQ `Count()` without an `ICollection.Count` fast path first. Only hit for non-generic-collection overloads (minor), low priority — noted 2026-08-11, not fixed yet.
+6. `Assert.HasCount.cs` non-generic `HasCount(string, int, IEnumerable, ...)` overload: DONE 2026-08-12 (PR above) — added ICollection fast path.
 
 
 ## Performance Notes
@@ -65,3 +66,4 @@ None. New PR created 2026-08-11: "Reduce TelemetryCollector.TrackAssertionCall c
 
 ## Checked-off by Maintainer (do not re-suggest)
 (none yet for August 2026)
+- 2026-08-12: Fixed Assert.HasCount/IsEmpty non-generic ICollection fast path (see backlog item 6, now done). No open performance-labeled issues found this run (search_issues 0 results). No comments needed for Task 5.
