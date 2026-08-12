@@ -5,16 +5,20 @@
 
 using Microsoft.Testing.Extensions.Policy;
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
+using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.Services;
 
 using Moq;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
+
+#pragma warning disable TPEXP // Artifact post-processing is experimental.
 
 [TestClass]
 public class RetryTests
@@ -296,5 +300,206 @@ public class RetryTests
         ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
         Assert.IsTrue(validateOptionsResult.IsValid);
         Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+    }
+
+    [TestMethod]
+    public async Task ProcessAsync_WithNoRegisteredProcessors_ReturnsEmptyDictionary()
+    {
+        var serviceProvider = new ServiceProvider();
+
+        IReadOnlyDictionary<string, string> replacements = await RetryArtifactProcessor.ProcessAsync(
+            serviceProvider,
+            new Mock<IOutputDeviceDataProducer>().Object,
+            new Mock<IOutputDevice>().Object,
+            new Mock<ILogger>().Object,
+            [new RetryAttemptArtifact("report1.trx", "trx", 1, destinationPath: null)],
+            attemptCount: 2,
+            Path.GetTempPath(),
+            CancellationToken.None);
+
+        Assert.IsEmpty(replacements);
+    }
+
+    [TestMethod]
+    public async Task ProcessAsync_WithFewerThanTwoAttempts_ReturnsEmptyDictionaryWithoutInvokingProcessor()
+    {
+        var serviceProvider = new ServiceProvider();
+        bool processorInvoked = false;
+        serviceProvider.AddService(new TestArtifactPostProcessor(
+            ["trx"],
+            (_, _, _, _) =>
+            {
+                processorInvoked = true;
+                return Task.FromResult<ProcessedArtifact?>(null);
+            }));
+
+        IReadOnlyDictionary<string, string> replacements = await RetryArtifactProcessor.ProcessAsync(
+            serviceProvider,
+            new Mock<IOutputDeviceDataProducer>().Object,
+            new Mock<IOutputDevice>().Object,
+            new Mock<ILogger>().Object,
+            [new RetryAttemptArtifact("report1.trx", "trx", 1, destinationPath: null)],
+            attemptCount: 1,
+            Path.GetTempPath(),
+            CancellationToken.None);
+
+        Assert.IsEmpty(replacements);
+        Assert.IsFalse(processorInvoked);
+    }
+
+    [TestMethod]
+    public async Task ProcessAsync_WithIncompleteAttemptCoverage_SkipsProcessorAndReturnsEmptyDictionary()
+    {
+        var serviceProvider = new ServiceProvider();
+        bool processorInvoked = false;
+        serviceProvider.AddService(new TestArtifactPostProcessor(
+            ["trx"],
+            (_, _, _, _) =>
+            {
+                processorInvoked = true;
+                return Task.FromResult<ProcessedArtifact?>(null);
+            }));
+
+        // Only attempt 1 contributed a "trx" artifact even though there were 2 attempts overall: the merge is not
+        // authoritative and must be skipped rather than produce a misleadingly incomplete merged report.
+        IReadOnlyDictionary<string, string> replacements = await RetryArtifactProcessor.ProcessAsync(
+            serviceProvider,
+            new Mock<IOutputDeviceDataProducer>().Object,
+            new Mock<IOutputDevice>().Object,
+            new Mock<ILogger>().Object,
+            [new RetryAttemptArtifact("report1.trx", "trx", 1, destinationPath: null)],
+            attemptCount: 2,
+            Path.GetTempPath(),
+            CancellationToken.None);
+
+        Assert.IsEmpty(replacements);
+        Assert.IsFalse(processorInvoked);
+    }
+
+    [TestMethod]
+    public async Task ProcessAsync_WithProcessorReturningNull_SkipsWithoutRecordingReplacement()
+    {
+        var serviceProvider = new ServiceProvider();
+        serviceProvider.AddService(new TestArtifactPostProcessor(
+            ["trx"],
+            (_, _, _, _) => Task.FromResult<ProcessedArtifact?>(null)));
+
+        IReadOnlyDictionary<string, string> replacements = await RetryArtifactProcessor.ProcessAsync(
+            serviceProvider,
+            new Mock<IOutputDeviceDataProducer>().Object,
+            new Mock<IOutputDevice>().Object,
+            new Mock<ILogger>().Object,
+            [
+                new RetryAttemptArtifact("report1.trx", "trx", 1, destinationPath: null),
+                new RetryAttemptArtifact("report2.trx", "trx", 2, destinationPath: null),
+            ],
+            attemptCount: 2,
+            Path.GetTempPath(),
+            CancellationToken.None);
+
+        Assert.IsEmpty(replacements);
+    }
+
+    [TestMethod]
+    public async Task ProcessAsync_WithSuccessfulMerge_RecordsReplacementForFinalAttemptArtifact()
+    {
+        string outputDirectory = Path.GetTempPath();
+        string mergedPath = Path.Combine(outputDirectory, "merged.trx");
+        File.WriteAllText(mergedPath, "<merged/>");
+        try
+        {
+            var serviceProvider = new ServiceProvider();
+            serviceProvider.AddService(new TestArtifactPostProcessor(
+                ["trx"],
+                (inputs, _, _, _) =>
+                {
+                    Assert.HasCount(2, inputs);
+                    return Task.FromResult<ProcessedArtifact?>(new ProcessedArtifact(mergedPath, "trx", "Merged", "Merged trx"));
+                }));
+
+            IReadOnlyDictionary<string, string> replacements = await RetryArtifactProcessor.ProcessAsync(
+                serviceProvider,
+                new Mock<IOutputDeviceDataProducer>().Object,
+                new Mock<IOutputDevice>().Object,
+                new Mock<ILogger>().Object,
+                [
+                    new RetryAttemptArtifact("report1.trx", "trx", 1, destinationPath: null),
+                    new RetryAttemptArtifact("report2.trx", "trx", 2, destinationPath: null),
+                ],
+                attemptCount: 2,
+                outputDirectory,
+                CancellationToken.None);
+
+            Assert.HasCount(1, replacements);
+            Assert.AreEqual(Path.GetFullPath(mergedPath), replacements["report2.trx"]);
+        }
+        finally
+        {
+            File.Delete(mergedPath);
+        }
+    }
+
+    [TestMethod]
+    public async Task ProcessAsync_WhenProcessorThrows_LogsWarningAndDisplaysMessageWithoutThrowing()
+    {
+        var serviceProvider = new ServiceProvider();
+        var exception = new InvalidOperationException("boom");
+        serviceProvider.AddService(new TestArtifactPostProcessor(
+            ["trx"],
+            (_, _, _, _) => throw exception));
+        var logger = new Mock<ILogger>();
+        var outputDevice = new Mock<IOutputDevice>();
+        outputDevice
+            .Setup(device => device.DisplayAsync(
+                It.IsAny<IOutputDeviceDataProducer>(),
+                It.IsAny<IOutputDeviceData>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        IReadOnlyDictionary<string, string> replacements = await RetryArtifactProcessor.ProcessAsync(
+            serviceProvider,
+            new Mock<IOutputDeviceDataProducer>().Object,
+            outputDevice.Object,
+            logger.Object,
+            [
+                new RetryAttemptArtifact("report1.trx", "trx", 1, destinationPath: null),
+                new RetryAttemptArtifact("report2.trx", "trx", 2, destinationPath: null),
+            ],
+            attemptCount: 2,
+            Path.GetTempPath(),
+            CancellationToken.None);
+
+        Assert.IsEmpty(replacements);
+        logger.Verify(l => l.Log(LogLevel.Warning, It.IsAny<string>(), null, It.IsAny<Func<string, Exception?, string>>()), Times.Once);
+        outputDevice.Verify(
+            device => device.DisplayAsync(
+                It.IsAny<IOutputDeviceDataProducer>(),
+                It.Is<IOutputDeviceData>(data => data is WarningMessageOutputDeviceData),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [TestMethod]
+    public async Task ProcessAsync_WhenProcessorThrowsOperationCanceledExceptionWithCancellationRequested_Rethrows()
+    {
+        var serviceProvider = new ServiceProvider();
+        using var cts = new CancellationTokenSource();
+        await cts.CancelAsync();
+        serviceProvider.AddService(new TestArtifactPostProcessor(
+            ["trx"],
+            (_, _, _, _) => throw new OperationCanceledException(cts.Token)));
+
+        await Assert.ThrowsExactlyAsync<OperationCanceledException>(() => RetryArtifactProcessor.ProcessAsync(
+            serviceProvider,
+            new Mock<IOutputDeviceDataProducer>().Object,
+            new Mock<IOutputDevice>().Object,
+            new Mock<ILogger>().Object,
+            [
+                new RetryAttemptArtifact("report1.trx", "trx", 1, destinationPath: null),
+                new RetryAttemptArtifact("report2.trx", "trx", 2, destinationPath: null),
+            ],
+            attemptCount: 2,
+            Path.GetTempPath(),
+            cts.Token));
     }
 }
