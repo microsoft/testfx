@@ -167,3 +167,13 @@ Notes:
 - IMPORTANT: `update_issue` safe-output has a limit of 1 per run. When both closing a duplicate issue AND updating the canonical monthly summary are needed in the same run, only one `update_issue` call succeeds — the other must be done via `add_comment` instead (comment appended to #10382 this run rather than full body rewrite). Next run: do a full body rewrite of #10382 to fold this comment into Run History and remove the now-closed #10419 reference from Suggested Actions.
 - Noted infra: `.github/workflows/perf-timing-nightly.yml` — nightly artifact-only PlainProcess timing collection via MSTest.Performance.Runner (Win+Linux), tracks #9312, no regression gating. Candidate for Task 6 follow-up (propose regression-gating via issue, not direct workflow edit).
 - Backlog remains empty. Next run: prioritise Task 6 (measurement infra proposal issue) or Task 3 (needs backlog repopulation via fresh Task 2 scan of any new merged features since 2026-08-08).
+
+## 2026-08-13 Run Notes
+
+- Reviewed commits since 2026-08-11 on main: only maintainer dependency-bump landed (c2592c9); most efficiency work sits in open PRs not yet merged.
+- Reviewed new open PR #10586 "Optimize VSTestBridge property lookup" — `testCase.Properties.Any(x => ...)` → `testCase.GetProperties().Any(static property => ...)`. Removes per-call closure capture via `static` lambda. Code-Level focus area, well-tested by maintainer.
+- Checked #10575, #10560, #10543 (still open, no CI failures needing us), #10549 (regression-gating proposal, still no maintainer response — not re-engaging).
+- Re-checked #3495 (slowest tests) — no new human comments since our 2026-07-30 comment; not re-engaging.
+- No open `[efficiency-improver]` PRs to maintain (Task 4 — nothing to do).
+- Backlog remains empty. Updated #10382 (canonical Aug summary) via full body rewrite — trimmed Run History to keep body length reasonable (kept ~8 most recent entries, dropped oldest 2026-08-04 duplicate line already folded).
+- Next run: continue monitoring commits/PRs for un-reviewed hot paths; watch #10549 for maintainer response.
