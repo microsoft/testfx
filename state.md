@@ -12,10 +12,13 @@
 
 ## Task Schedule (last run dates)
 - Task 1 (Discover Commands): 2026-07-30
-- Task 2 (Identify Opportunities): 2026-08-11 (explore-agent scan of Assert*.cs, MSTest.TestAdapter/Execution, Platform Hosts/Requests, DataRow/DynamicData attrs, Analyzers hot paths — found TelemetryCollector.TrackAssertionCall ConcurrentDictionary.AddOrUpdate contention, fixed same run; secondary: Assert.HasCount non-generic overload Cast<object>() not fast-pathing ICollection.Count, low priority/not fixed)
-- Task 3 (Implement): 2026-08-12 (PR: "Add ICollection fast path to non-generic Assert.HasCount/IsEmpty" — branch perf-assist/hascount-icollection-fastpath; avoids Cast<object>()+LINQ Count() when collection is ICollection; microbenchmark 2M iters over 1000-item ArrayList: 20371ms->15ms (~1350x); TestFramework.UnitTests 1506/1506 pass)
+- Task 2 (Identify Opportunities): 2026-08-13 (explore-agent scan of Retry, CrashDump/HangDump, VSTestBridge, MSTestAdapter.PlatformServices, TestFramework.Extensions — found ObjectModelConverters.FixUpTestCase LINQ Any(lambda) delegate alloc per test case; fixed same run. Other findings: PrivateObject generic-method cache rebuild (net-framework-only, medium risk, not fixed), TestExecutionManager.ParallelExecution per-test array wrapping (medium risk, not fixed), RetryDataConsumer SingleOrDefault already uses optimized PropertyBag method not LINQ (no action needed))
+- Task 2 (previous): 2026-08-11 (explore-agent scan of Assert*.cs, MSTest.TestAdapter/Execution, Platform Hosts/Requests, DataRow/DynamicData attrs, Analyzers hot paths — found TelemetryCollector.TrackAssertionCall ConcurrentDictionary.AddOrUpdate contention, fixed same run; secondary: Assert.HasCount non-generic overload Cast<object>() not fast-pathing ICollection.Count, low priority/not fixed)
+- Task 3 (Implement): 2026-08-13 (PR: "Avoid LINQ Any() delegate allocation in VSTestBridge FixUpTestCase" — branch perf-assist/fixup-testcase-any-loop; manual foreach replaces Any(lambda) over testCase.Properties, per-test-case hot path in VSTest bridge; microbenchmark 5M calls over 4-item list: 252ms/440MB alloc -> 225ms/0 alloc; VSTestBridge.UnitTests 70/70 pass)
+- Task 3 (previous): 2026-08-12 (PR: "Add ICollection fast path to non-generic Assert.HasCount/IsEmpty" — branch perf-assist/hascount-icollection-fastpath; avoids Cast<object>()+LINQ Count() when collection is ICollection; microbenchmark 2M iters over 1000-item ArrayList: 20371ms->15ms (~1350x); TestFramework.UnitTests 1506/1506 pass)
 - Task 3 (previous): 2026-08-11 (PR: "Reduce TelemetryCollector.TrackAssertionCall contention on the assertion hot path" — replaced ConcurrentDictionary<string,long>.AddOrUpdate with ConcurrentDictionary<string,StrongBox<long>>.GetOrAdd + Interlocked.Increment; microbenchmark 2M iters: 197ms->23ms single-threaded (~8.6x), 168ms->34ms under 4-thread contention (~5x); TestFramework.UnitTests 1506/1506 pass)
-- Task 4 (Maintain PRs): 2026-08-10 (no open perf-improver PRs at that time; PR #10543 "Reduce MTP command-line validation allocations" from a human/other contributor also open, not perf-improver's)
+- Task 4 (Maintain PRs): 2026-08-13 (checked open PRs 10560 "Reduce assertion telemetry contention" and 10575 "Optimize non-generic collection count assertions" — these correspond to previously-tracked perf-improver work, both already under human review with state/needs-review label, no CI failures observed needing action from this run; no push made)
+- Task 4 (previous): 2026-08-10 (no open perf-improver PRs at that time; PR #10543 "Reduce MTP command-line validation allocations" from a human/other contributor also open, not perf-improver's)
 - Task 5 (Comment Issues): 2026-08-10 (no open performance-labeled issues found via search_issues)
 - Task 6 (Infrastructure): 2026-08-05 (reviewed perf-timing-nightly.yml + MSTest.Performance.Runner; infra already solid — PlainProcess timing, cross-platform)
 - Task 7 (Monthly Summary): 2026-08-12
@@ -24,7 +27,7 @@
 - Issue #10381 (August 2026, open) — kept updated; no suggested actions pending
 
 ## Work In Progress
-None. New PR created 2026-08-12: "Add ICollection fast path to non-generic Assert.HasCount/IsEmpty" (branch perf-assist/hascount-icollection-fastpath). Also open from 2026-08-11: "Reduce TelemetryCollector.TrackAssertionCall contention on the assertion hot path" (branch perf-assist/telemetry-collector-counter). No performance-labeled issues found needing comment as of 2026-08-12 (search returned 0 results).
+None. New PR created 2026-08-13: "Avoid LINQ Any() delegate allocation in VSTestBridge FixUpTestCase" (branch perf-assist/fixup-testcase-any-loop). Prior open PRs 10560 (telemetry contention) and 10575 (HasCount/IsEmpty ICollection fast path) are the same work from 2026-08-11/12 runs, both awaiting maintainer review. No performance-labeled issues found needing comment as of 2026-08-13 (search_issues 0 results).
 
 ## Optimization Backlog (low priority)
 1. `ServiceProvider.GetServiceInternal`/`RegisterCoverageProducer` (src/Platform/Microsoft.Testing.Platform/Services/ServiceProvider.cs): uses `FirstOrDefault`/`OfType<IDataProducer>()` LINQ per service lookup/registration. Cold/startup-only path (not per-test), low value — noted but not prioritized.
@@ -33,6 +36,9 @@ None. New PR created 2026-08-12: "Add ICollection fast path to non-generic Asser
 4. `AntiTerminal.StopUpdate()`: done (IConsole.Write(StringBuilder) overload) — see PR #10384.
 5. OpenTelemetryResultHandler.GetFullyQualifiedName(): won't-fix — see issue #10381 comments.
 6. `Assert.HasCount.cs` non-generic `HasCount(string, int, IEnumerable, ...)` overload: DONE 2026-08-12 (PR above) — added ICollection fast path.
+7. `ObjectModelConverters.FixUpTestCase` (VSTestBridge): DONE 2026-08-13 — replaced Any(lambda) with manual loop, see PR above.
+8. `PrivateObject.Helpers.cs BuildGenericMethodCacheForType` (net-framework-only): rebuilds cache per PrivateObject instance construction, not cached across instances of same type. Medium risk (touches internal representation), low priority — noted, not fixed.
+9. `TestExecutionManager.ParallelExecution.cs`: wraps each single test element into a new array/enumerable per test when building parallel scheduling chunks. Medium risk/effort, noted not fixed.
 
 
 ## Performance Notes
@@ -67,3 +73,4 @@ None. New PR created 2026-08-12: "Add ICollection fast path to non-generic Asser
 ## Checked-off by Maintainer (do not re-suggest)
 (none yet for August 2026)
 - 2026-08-12: Fixed Assert.HasCount/IsEmpty non-generic ICollection fast path (see backlog item 6, now done). No open performance-labeled issues found this run (search_issues 0 results). No comments needed for Task 5.
+- 2026-08-13: Fixed ObjectModelConverters.FixUpTestCase LINQ Any(lambda) delegate allocation (backlog item 7, now done, PR created). Explore-agent scan of Retry/CrashDump/HangDump/VSTestBridge/PlatformServices/TestFramework.Extensions found two lower-priority items added to backlog (8, 9), not fixed this run. Reviewed PRs 10560 and 10575 (from previous runs, still open awaiting review) — no CI issues found needing action. No open performance-labeled issues found this run (search_issues 0 results).
