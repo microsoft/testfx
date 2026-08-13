@@ -270,7 +270,19 @@ internal static class ObjectModelConverters
     {
         // Because this project is the actually registered test adapter, we need to replace test framework executor
         // URI by ours.
-        if (!testCase.Properties.Any(x => x.Id == OriginalExecutorUriProperty.Id))
+        // Manual loop instead of LINQ Any(predicate) to avoid the per-call delegate allocation on this
+        // per-test-case hot path.
+        bool hasOriginalExecutorUriProperty = false;
+        foreach (TestProperty property in testCase.Properties)
+        {
+            if (property.Id == OriginalExecutorUriProperty.Id)
+            {
+                hasOriginalExecutorUriProperty = true;
+                break;
+            }
+        }
+
+        if (!hasOriginalExecutorUriProperty)
         {
             testCase.SetPropertyValue(OriginalExecutorUriProperty, testCase.ExecutorUri);
         }
