@@ -270,7 +270,7 @@ internal static class ObjectModelConverters
     {
         // Because this project is the actually registered test adapter, we need to replace test framework executor
         // URI by ours.
-        if (!testCase.Properties.Any(x => x.Id == OriginalExecutorUriProperty.Id))
+        if (!testCase.GetProperties().Any(static property => property.Key.Id == OriginalExecutorUriProperty.Id))
         {
             testCase.SetPropertyValue(OriginalExecutorUriProperty, testCase.ExecutorUri);
         }
