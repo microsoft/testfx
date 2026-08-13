@@ -11,7 +11,14 @@ using StackTraceSourceLocationResolver = ghactions::Microsoft.Testing.Extensions
 
 namespace Microsoft.Testing.Extensions.UnitTests;
 
+/// <remarks>
+/// <see cref="CreateRepoRoot"/> reads (but never mutates) <see cref="Environment.CurrentDirectory"/>, the
+/// same process-global resource that <see cref="TrxLongPathHelperTests"/> temporarily overwrites. A read
+/// lock lets this class keep running concurrently with other readers while still serializing against that
+/// writer.
+/// </remarks>
 [TestClass]
+[ResourceLock(WellKnownResources.CurrentDirectory, Mode = ResourceAccessMode.Read)]
 public sealed class StackTraceSourceLocationResolverTests
 {
     [TestMethod]
