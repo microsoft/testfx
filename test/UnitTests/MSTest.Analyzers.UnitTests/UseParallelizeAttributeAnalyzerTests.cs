@@ -34,6 +34,25 @@ public class UseParallelizeAttributeAnalyzerTests
         await test.RunAsync();
     }
 
+    private static async Task VerifyWithRawAdapterFlagValueAsync(string code, string rawAdapterFlagValue, params DiagnosticResult[] expected)
+    {
+        var test = new VerifyCS.Test
+        {
+            TestCode = code,
+        };
+
+        test.TestState.AnalyzerConfigFiles.Add((
+            "/.globalconfig",
+            $"""
+            is_global = true
+
+            build_property.IsMSTestTestAdapterReferenced = {rawAdapterFlagValue}
+            """));
+
+        test.ExpectedDiagnostics.AddRange(expected);
+        await test.RunAsync();
+    }
+
     [TestMethod]
     public async Task WhenNoAttributeSpecified_TestAdapterNotReferenced_NoDiagnostic()
         => await VerifyAsync(string.Empty, includeTestAdapter: false);
@@ -137,4 +156,16 @@ public class UseParallelizeAttributeAnalyzerTests
             VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.DoNotUseBothAttributesRule).WithLocation(0),
             VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.DoNotUseBothAttributesRule).WithLocation(1));
     }
+
+    [TestMethod]
+    public async Task WhenAdapterFlagValueIsNotAValidBoolean_NoDiagnostic()
+        => await VerifyWithRawAdapterFlagValueAsync(string.Empty, "not-a-boolean");
+
+    [TestMethod]
+    public async Task WhenAdapterFlagValueIsFalse_NoDiagnostic()
+        => await VerifyWithRawAdapterFlagValueAsync(string.Empty, "false");
+
+    [TestMethod]
+    public async Task WhenAdapterFlagValueHasDifferentCasing_Diagnostic()
+        => await VerifyWithRawAdapterFlagValueAsync(string.Empty, "True", VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.Rule).WithNoLocation());
 }
