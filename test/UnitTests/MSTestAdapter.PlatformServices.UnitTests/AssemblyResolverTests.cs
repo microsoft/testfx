@@ -210,6 +210,12 @@ public class AssemblyResolverTests : TestContainer
 
             act.Should().NotThrow();
             resolvedAssembly.Should().BeSameAs(expectedAssembly);
+            assemblyResolver.TraceLoggingFailureMessage.Should().Contain("MSTest AssemblyResolver trace logging failure");
+            assemblyResolver.TraceLoggingFailureMessage.Should().Contain("DummyTestDllForTest");
+            assemblyResolver.TraceLoggingFailureMessage.Should().Contain(nameof(RemotingException));
+            assemblyResolver.TraceLoggingFailureMessage.Should().NotContain("MSTest.AssemblyResolver(0,0): error");
+            assemblyResolver.TraceLoggingFailureMessage.Should().NotMatchRegex(@"(?mi)^[^:\r\n]+:.*\berror\s*:");
+            assemblyResolver.TraceLoggingFailureMessage.Should().NotMatchRegex(@"(?mi)^.+\(\d+,\d+\):\s*error\b");
         }
         finally
         {
@@ -220,10 +226,16 @@ public class AssemblyResolverTests : TestContainer
 
 internal class TestableAssemblyResolver : AssemblyResolver
 {
+    private readonly StringWriter _traceLoggingFailureWriter = new();
+
     public TestableAssemblyResolver(IList<string> directories)
         : base(directories)
     {
     }
+
+    public string TraceLoggingFailureMessage => _traceLoggingFailureWriter.ToString();
+
+    protected override TextWriter TraceLoggingFailureWriter => _traceLoggingFailureWriter;
 
     public Func<string, bool> DoesDirectoryExistSetter { get; set; } = null!;
 

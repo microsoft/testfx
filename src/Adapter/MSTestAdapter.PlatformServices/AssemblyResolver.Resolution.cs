@@ -234,8 +234,13 @@ internal partial class AssemblyResolver
                     try
                     {
                         // Bypass MSTest's Console.Error router so this infrastructure failure is not attributed to the active test.
-                        StandardErrorWriter.Value.WriteLine(
-                            $"MSTest.AssemblyResolver: Trace logging failed while resolving '{assemblyName}'. Error: {ex}");
+                        string traceLoggingFailureMessage =
+                            $"MSTest AssemblyResolver trace logging failure while resolving '{assemblyName}'. Exception: {ex}";
+#if NETFRAMEWORK
+                        TraceLoggingFailureWriter.WriteLine(traceLoggingFailureMessage);
+#else
+                        StandardErrorWriter.Value.WriteLine(traceLoggingFailureMessage);
+#endif
                     }
                     catch (Exception)
                     {
@@ -245,6 +250,10 @@ internal partial class AssemblyResolver
             }
         }
     }
+
+#if NETFRAMEWORK
+    protected virtual TextWriter TraceLoggingFailureWriter => StandardErrorWriter.Value;
+#endif
 
     private static TextWriter CreateStandardErrorWriter()
     {
