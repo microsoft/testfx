@@ -59,7 +59,10 @@
          stable release on nuget.org. Promote when the internal feed ships a non-preview version.
          Tracking context: https://github.com/microsoft/testfx/issues/9091 (Task 5). -->
     <MicrosoftTestingInternalFrameworkVersion>1.5.0-preview.24577.4</MicrosoftTestingInternalFrameworkVersion>
-    <SystemThreadingTasksExtensionsVersion>4.5.4</SystemThreadingTasksExtensionsVersion>
+    <!-- Must stay >= the version required by Azure.Core (pulled in transitively on .NETFramework via
+         Microsoft.ApplicationInsights 3.x -> Azure.Monitor.OpenTelemetry.Exporter -> Azure.Core).
+         Anything lower produces an NU1605 downgrade error on the .NETFramework adapter assemblies. -->
+    <SystemThreadingTasksExtensionsVersion>4.6.3</SystemThreadingTasksExtensionsVersion>
     <!-- System.Memory flows in transitively (via System.Reflection.Metadata / System.Collections.Immutable)
          at 4.5.5, whose .NETFramework assembly version is 4.0.1.2. We pin it explicitly to 4.6.3
          (assembly 4.0.5.0) so the .NETFramework adapter assemblies reference 4.0.5.0. Hosts that unify
@@ -77,10 +80,11 @@
     <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
   </ItemGroup>
   <ItemGroup Label="Product dependencies">
-    <!-- If this gets updated, please revise if the explicit dependency on System.Diagnostics.DiagnosticSource is still needed -->
-    <PackageVersion Include="Microsoft.ApplicationInsights" Version="2.23.0" />
-    <!-- This comes transitvely via Microsoft.ApplicationInsights, but we want to upgrade it because 5.0.0 is not maintained -->
-    <PackageVersion Include="System.Diagnostics.DiagnosticSource" Version="6.0.0" />
+    <!-- Microsoft.ApplicationInsights 3.x is a shim over OpenTelemetry + Azure Monitor Exporter.
+         Its dependency closure (via Azure.Monitor.OpenTelemetry.Exporter -> Azure.Core) already
+         brings a modern, maintained System.Diagnostics.DiagnosticSource transitively, so we no
+         longer need an explicit reference/pin here. See https://github.com/microsoft/testfx/issues/7465. -->
+    <PackageVersion Include="Microsoft.ApplicationInsights" Version="3.1.2" />
     <PackageVersion Include="Microsoft.Build.Framework" Version="$(MicrosoftBuildVersion)" />
     <PackageVersion Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis" Version="$(MicrosoftCodeAnalysisVersion)" />
