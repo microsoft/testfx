@@ -87,3 +87,10 @@ None. New PR created 2026-08-13: "Avoid LINQ Any() delegate allocation in VSTest
 - No open performance-labeled issues found needing comment (search_issues 0 results, integrity-filtered).
 - Backlog remains slim: PrivateObject.Helpers.cs generic-method cache (net-fx only, low priority) and TestExecutionManager.ParallelExecution.cs per-test array wrapping (inherent to design) - both unchanged.
 - Task schedule updated: Task 1 (last 2026-07-30, stable commands unchanged), Task 2 done this run, Task 4 done this run, Task 7 done this run.
+
+## Run 2026-08-16 Notes
+- Task 4 (Maintain PRs): re-checked PRs #10560, #10575, #10586 - all authored by maintainer (Evangelink), not perf-improver bot; CI status "pending" at check time (likely queued), no action needed since these aren't perf-improver's own PRs to push fixes to.
+- Task 2: explore-agent scanned Adapter/MSTest.TestAdapter/Execution (TestMethodInfo/TestMethodRunner - already cached via GetCustomAttributesCached), Platform Hosting/Extensions (cold/startup-only), Platform Configurations (AggregatedConfiguration linear provider scan - low impact, results already memoized), CollectionAssert/StringAssert (failure-path-only string building, not hot). No significant new findings; one low-ROI candidate (AggregatedConfiguration indexer scan) noted but not worth fixing.
+- No open performance-labeled issues found needing comment (search filtered/empty).
+- No new comments on Monthly Activity issue #10381 since last run.
+- Backlog remains slim/unchanged: PrivateObject.Helpers.cs generic-method cache (net-fx only) and TestExecutionManager.ParallelExecution.cs per-test array wrapping (inherent to design) - both still low priority.
