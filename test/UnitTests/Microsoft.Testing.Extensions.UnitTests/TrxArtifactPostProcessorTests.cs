@@ -17,7 +17,9 @@ public sealed class TrxArtifactPostProcessorTests
         TrxArtifactPostProcessor processor = new();
 
         Assert.AreSequenceEqual(new[] { TrxReportEngine.TrxArtifactKind }, processor.SupportedKinds);
+        Assert.AreSequenceEqual(new[] { ArtifactPostProcessingMode.TestModules }, processor.SupportedModes);
         Assert.AreSequenceEqual(new[] { ".trx" }, processor.SupportedFileExtensionsFallback);
+        Assert.IsFalse(processor.SupportsTruncatedRuns);
     }
 
     [TestMethod]
@@ -26,7 +28,11 @@ public sealed class TrxArtifactPostProcessorTests
         TrxArtifactPostProcessor processor = new();
         var input = new InputArtifact("input.trx", TrxReportEngine.TrxArtifactKind, null, null, null, null);
 
-        Assert.IsNull(await processor.ProcessAsync([input], Path.GetTempPath(), CancellationToken.None));
+        Assert.IsNull(await processor.ProcessAsync(
+            [input],
+            Path.GetTempPath(),
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            CancellationToken.None));
     }
 
     [TestMethod]
@@ -48,6 +54,7 @@ public sealed class TrxArtifactPostProcessorTests
                     new InputArtifact(secondPath, TrxReportEngine.TrxArtifactKind, null, null, null, "execution-2"),
                 ],
                 directory,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
                 CancellationToken.None);
 
             Assert.IsNotNull(output);
@@ -95,6 +102,7 @@ public sealed class TrxArtifactPostProcessorTests
                     new InputArtifact(secondPath, TrxReportEngine.TrxArtifactKind, null, null, null, "execution-2"),
                 ],
                 directory,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
                 CancellationToken.None);
 
             Assert.IsNotNull(output);
@@ -106,6 +114,7 @@ public sealed class TrxArtifactPostProcessorTests
                     new InputArtifact(firstPath, TrxReportEngine.TrxArtifactKind, null, null, null, "execution-1"),
                 ],
                 directory,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
                 CancellationToken.None);
 
             Assert.IsNotNull(retriedOutput);
@@ -139,6 +148,7 @@ public sealed class TrxArtifactPostProcessorTests
                     new InputArtifact(secondPath, TrxReportEngine.TrxArtifactKind, null, null, null, "execution-2"),
                 ],
                 directory,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
                 CancellationToken.None);
 
             Assert.IsNotNull(output);
@@ -205,6 +215,7 @@ public sealed class TrxArtifactPostProcessorTests
                     new InputArtifact(secondPath, TrxReportEngine.TrxArtifactKind, null, null, null, "execution-2"),
                 ],
                 resultsDirectory,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
                 CancellationToken.None);
 
             Assert.IsNull(output);

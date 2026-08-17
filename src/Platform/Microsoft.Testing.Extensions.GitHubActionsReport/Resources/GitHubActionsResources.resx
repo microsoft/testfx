@@ -122,6 +122,10 @@
     <value>Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</value>
     <comment>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</comment>
   </data>
+  <data name="SubOptionsRequireReportGh" xml:space="preserve">
+    <value>The GitHub Actions report sub-options require '--{0}' to be specified.</value>
+    <comment>Validation error when a sub-option is used without the report option. {0} is the report option name. {Locked="'--{0}'"}</comment>
+  </data>
   <data name="OptionDescription" xml:space="preserve">
     <value>Enable GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</value>
   </data>

@@ -213,6 +213,8 @@ public sealed class UnpackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
 
     <!-- The WinUI app owns its entry point (generated from the ApplicationDefinition below). -->
     <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
+    <!-- This asset references the individual packages rather than MSTest.Sdk, so opt into its reusable helper explicitly. -->
+    <GenerateTestingPlatformApplicationHelper>true</GenerateTestingPlatformApplicationHelper>
   </PropertyGroup>
 
   <ItemGroup>
@@ -252,8 +254,6 @@ public sealed class UnpackagedWinUITests : AcceptanceTestBase<NopAssetFixture>
 
 #file UnitTestApp.xaml.cs
 using System;
-using System.Linq;
-using Microsoft.Testing.Platform.Builder;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
@@ -273,11 +273,7 @@ public partial class UnitTestApp : Application
 
         try
         {
-            string[] cliArgs = Environment.GetCommandLineArgs().Skip(1).ToArray();
-            ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(cliArgs);
-            builder.AddSelfRegisteredExtensions(cliArgs);
-            using ITestApplication app = await builder.BuildAsync();
-            Environment.ExitCode = await app.RunAsync();
+            Environment.ExitCode = await MicrosoftTestingPlatformApplication.RunAsync(Environment.GetCommandLineArgs()[1..]);
         }
         finally
         {

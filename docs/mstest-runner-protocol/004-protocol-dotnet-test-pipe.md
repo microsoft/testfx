@@ -434,6 +434,10 @@ Property IDs (`HandshakeMessagePropertyNames`):
 | 13 | `AttemptNumber` | test host only | Positive, 1-based retry attempt. Multiple Instance IDs may share one attempt. |
 | 14 | `SupportedPostProcessorKinds` | test host, server test host, test host controller, or artifact post-processor | Semicolon-separated reverse-DNS artifact kinds supported by registered post-processors. |
 | 15 | `SupportedPostProcessorExtensionsLegacy` | test host, server test host, test host controller, or artifact post-processor | Semicolon-separated lowercase file extensions used as a fallback for untagged artifacts. |
+| 16 | `SupportedTruncatedRunPostProcessorKinds` | test host, server test host, test host controller, or artifact post-processor | Subset of ID 14 whose processors can consume artifacts observed before a policy-truncated run stopped. |
+| 17 | `SupportedTruncatedRunPostProcessorExtensionsLegacy` | test host, server test host, test host controller, or artifact post-processor | Subset of ID 15 whose processors can consume artifacts observed before a policy-truncated run stopped. |
+| 18 | `RequiredPostProcessorKinds` | test host, server test host, test host controller, or artifact post-processor | Subset of ID 14 containing internal coordination kinds that must be post-processed even when only one matching artifact exists. |
+| 19 | `RequiredPostProcessingSupported` | SDK handshake response only | Boolean capability. `true` means the SDK honors ID 18 and supplies the authoritative `runSummary` manifest block before producers defer their standalone output. |
 
 ### 8.2 SDK → host: `HandshakeMessage` (reply)
 
@@ -559,9 +563,13 @@ currently running (rendered by non-IDE consumers as a "currently running tests" 
 
 Reports produced files (per-test artifacts, session artifacts, and standalone `FileArtifact`s). Each
 `FileArtifactMessage`: `FullPath`(1), `DisplayName`(2), `Description`(3), `TestUid`(4),
-`TestDisplayName`(5), `SessionUid`(6), `Kind`(7). `Kind` carries the producer-asserted artifact kind
-used for post-processor routing. Test-scoped artifacts fill `TestUid`/`TestDisplayName`; session and
-standalone artifacts leave them empty.
+`TestDisplayName`(5), `SessionUid`(6), `Kind`(7), `InputArtifactPaths`(8, string list). `Kind` carries
+the producer-asserted artifact kind used for post-processor routing. `InputArtifactPaths` is present
+only on dispatcher-produced artifacts and contains the non-empty set of manifest input paths represented
+by that output. The dispatcher preserves each path string exactly as received; consumers intersect it
+with the paths from that job's manifest rather than independently normalizing it. Its absence means
+provenance is unavailable, including messages from older hosts. Test-scoped artifacts fill
+`TestUid`/`TestDisplayName`; session and standalone artifacts leave them empty.
 
 ### 9.6 `CommandLineOptionMessages` (ID 3)
 
@@ -601,6 +609,13 @@ agent.
 | 1.2.0 | Adds `AzureDevOpsLogMessage` (ID 11). Host forwards ADO logging commands (only on an ADO agent). |
 | 1.3.0 | Adds `DisplayMessage` (ID 12). Host forwards warning/error host diagnostics (always). |
 | 1.4.0 | Adds the reverse **server-control** channel (`WaitForServerControlRequest` ID 13, `ServerControlMessage` ID 14). Version is bumped so negotiated state advances in lockstep, but the feature itself is gated on the `ServerControlPipeName` handshake property, not on the version. **testfx-side / pending SDK support:** the current `dotnet/sdk` advertises only `1.0.0`–`1.3.0` and does not vendor serializers 13/14, so it cannot advertise `ServerControlPipeName` or drive the channel yet. In practice the negotiated version tops out at 1.3.0 until the coordinated SDK change lands (see §12). |
+
+Additive fields on known messages do not require a protocol-version bump:
+
+| MTP package version | Message field |
+| --- | --- |
+| 2.4.0 | `FileArtifactMessage.Kind` (7) |
+| 2.4.0 | `FileArtifactMessage.InputArtifactPaths` (8) |
 
 Compatibility rules / assumptions:
 

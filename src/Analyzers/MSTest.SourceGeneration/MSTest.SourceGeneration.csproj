@@ -19,9 +19,6 @@
     <PackageLicenseExpression></PackageLicenseExpression>
     <PackageLicenseFile>License.txt</PackageLicenseFile>
 
-    <VersionPrefix>$(MSTestSourceGenerationVersionPrefix)</VersionPrefix>
-    <PreReleaseVersionLabel>$(MSTestSourceGenerationPreReleaseVersionLabel)</PreReleaseVersionLabel>
-    <SuppressFinalPackageVersion>true</SuppressFinalPackageVersion>
     <IsPackable>true</IsPackable>
   </PropertyGroup>
 

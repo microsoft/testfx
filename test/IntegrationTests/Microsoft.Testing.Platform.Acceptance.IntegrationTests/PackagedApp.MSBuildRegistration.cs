@@ -53,8 +53,6 @@ public sealed class PackagedAppMSBuildRegistrationTests : AcceptanceTestBase<Nop
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
     <OutputType>Exe</OutputType>
-    <!-- The PackagedApp package is an experimental package with a downgraded (alpha) version. -->
-    <NoWarn>$(NoWarn);NETSDK1201</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

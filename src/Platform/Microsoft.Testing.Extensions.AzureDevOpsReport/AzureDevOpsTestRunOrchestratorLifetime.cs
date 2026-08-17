@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Security;
+
 using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
 using Microsoft.Testing.Extensions.Reporting;
 using Microsoft.Testing.Platform.CommandLine;
@@ -50,6 +52,7 @@ internal sealed class AzureDevOpsTestRunOrchestratorLifetime : ITestHostOrchestr
     private AzureDevOpsPublishConfiguration? _publishConfiguration;
     private AzureDevOpsRunIdCoordinator? _runIdCoordinator;
     private AzureDevOpsCoordinatedRun? _coordinatedRun;
+    private string? _resultMapPath;
 
     public AzureDevOpsTestRunOrchestratorLifetime(
         ICommandLineOptions commandLineOptions,
@@ -155,6 +158,23 @@ internal sealed class AzureDevOpsTestRunOrchestratorLifetime : ITestHostOrchestr
             // Published before any test host is launched so that every orchestrated process inherits it.
             _environment.SetEnvironmentVariable(AzureDevOpsConstants.TestRunIdEnvironmentVariableName, AzureDevOpsConstants.FormatInheritedTestRunId(publishConfiguration.BuildId, _coordinatedRun.RunId));
 
+            // Attempts publish into one run but run in separate processes with separate results
+            // directories, so the mapping from test to result id needs a location they all agree on and
+            // that only they can see. A random orchestration id keeps two orchestrations of the same build
+            // apart even if an agent reuses a process id after a crash.
+            _resultMapPath = Path.Combine(
+                publishConfiguration.ResultsDirectory,
+                $"azdo-results.{publishConfiguration.BuildId.ToString(CultureInfo.InvariantCulture)}.{Guid.NewGuid():N}.json");
+            try
+            {
+                _environment.SetEnvironmentVariable(AzureDevOpsConstants.ResultMapPathEnvironmentVariableName, AzureDevOpsConstants.FormatResultMapPath(publishConfiguration.BuildId, _resultMapPath));
+            }
+            catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+            {
+                _resultMapPath = null;
+                TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingResultMapHandoffFailed} {ex.Message}");
+            }
+
             // Only the process that created the run announces it; the others share the same id and would
             // just repeat the same line.
             if (_coordinatedRun.IsOwner)
@@ -184,9 +204,11 @@ internal sealed class AzureDevOpsTestRunOrchestratorLifetime : ITestHostOrchestr
         AzureDevOpsCoordinatedRun? coordinatedRun = _coordinatedRun;
         AzureDevOpsRunIdCoordinator? coordinator = _runIdCoordinator;
         AzureDevOpsPublishConfiguration? publishConfiguration = _publishConfiguration;
+        string? resultMapPath = _resultMapPath;
         _coordinatedRun = null;
         _runIdCoordinator = null;
         _publishConfiguration = null;
+        _resultMapPath = null;
 
         if (coordinatedRun is null || coordinator is null || publishConfiguration is null)
         {
@@ -195,7 +217,22 @@ internal sealed class AzureDevOpsTestRunOrchestratorLifetime : ITestHostOrchestr
 
         // Stop handing the run id to any process started later: the run is about to be closed, and a
         // straggler publishing into a completed run would be rejected by Azure DevOps.
-        TrySetEnvironmentVariable(AzureDevOpsConstants.TestRunIdEnvironmentVariableName, null);
+        TrySetEnvironmentVariable(
+            AzureDevOpsConstants.TestRunIdEnvironmentVariableName,
+            null,
+            AzureDevOpsResources.AzureDevOpsLivePublishingRunIdHandoffFailed);
+        TrySetEnvironmentVariable(
+            AzureDevOpsConstants.ResultMapPathEnvironmentVariableName,
+            null,
+            AzureDevOpsResources.AzureDevOpsLivePublishingResultMapHandoffFailed);
+
+        // The map only has meaning for the run being closed, and it lives in the results directory, which
+        // is published as a build artifact. Removing it keeps an internal coordination file out of the
+        // artifacts without affecting anything already in Azure DevOps.
+        if (resultMapPath is not null)
+        {
+            TryDeleteFile(resultMapPath);
+        }
 
         // Azure DevOps uses "Aborted" for cancellation and session-level infrastructure failures.
         // Individual failing tests must still complete the run, so only exit codes that are not a test
@@ -228,13 +265,35 @@ internal sealed class AzureDevOpsTestRunOrchestratorLifetime : ITestHostOrchestr
     }
 
     /// <summary>
+    /// Deletes a coordination file, swallowing any failure.
+    /// </summary>
+    /// <remarks>
+    /// Called from teardown, where a leftover file is only untidy: nothing reads it once the handoff
+    /// variable is withdrawn, and every later orchestration receives a different random map path.
+    /// </remarks>
+    private void TryDeleteFile(string path)
+    {
+        try
+        {
+            if (_fileSystem.ExistFile(path))
+            {
+                _fileSystem.DeleteFile(path);
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException)
+        {
+            TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingFailedToDeleteCoordinationFile} {path}: {ex.Message}");
+        }
+    }
+
+    /// <summary>
     /// Sets an environment variable, swallowing any failure.
     /// </summary>
     /// <remarks>
     /// Called from teardown, where the host may refuse the write (a <c>SecurityException</c> on
     /// .NET Framework). Failing to withdraw the handoff is far less harmful than failing the run.
     /// </remarks>
-    private void TrySetEnvironmentVariable(string name, string? value)
+    private void TrySetEnvironmentVariable(string name, string? value, string failureMessage)
     {
         try
         {
@@ -242,7 +301,7 @@ internal sealed class AzureDevOpsTestRunOrchestratorLifetime : ITestHostOrchestr
         }
         catch (Exception ex)
         {
-            TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingRunIdHandoffFailed} {ex.Message}");
+            TryLogWarning($"{failureMessage} {ex.Message}");
         }
     }
 

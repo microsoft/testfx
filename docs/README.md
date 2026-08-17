@@ -39,6 +39,7 @@ For technical reasoning and implementation details, you can refer to the list of
 
 ## Guides
 
+- [Affected-test selection rollout](affected-test-selection.md): disabled adoption layout and activation prerequisites.
 - [Testing WinUI apps](winui-testing.md): packaged (MSIX) vs unpackaged WinUI, and how the test host is started for each.
 
 ## Design notes

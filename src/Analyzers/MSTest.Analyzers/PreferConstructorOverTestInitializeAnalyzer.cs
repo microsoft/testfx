@@ -20,12 +20,13 @@ public sealed class PreferConstructorOverTestInitializeAnalyzer : DiagnosticAnal
 {
     private static readonly LocalizableResourceString Title = new(nameof(Resources.PreferConstructorOverTestInitializeTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.PreferConstructorOverTestInitializeMessageFormat), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString Description = new(nameof(Resources.PreferConstructorOverTestInitializeDescription), Resources.ResourceManager, typeof(Resources));
 
     internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.PreferConstructorOverTestInitializeRuleId,
         Title,
         MessageFormat,
-        null,
+        Description,
         Category.Design,
         DiagnosticSeverity.Info,
         isEnabledByDefault: false,

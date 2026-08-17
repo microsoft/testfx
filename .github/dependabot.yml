@@ -47,3 +47,5 @@ updates:
       - dependency-name: "github/gh-aw-actions/*"
     commit-message:
       prefix: '[main] '
+    cooldown:
+      default-days: 7

@@ -16,6 +16,7 @@ internal sealed class TrxArtifactPostProcessor : IArtifactPostProcessor
 
     private static readonly string[] SupportedArtifactKinds = [TrxReportEngine.TrxArtifactKind];
     private static readonly string[] SupportedExtensions = [".trx"];
+    private static readonly ArtifactPostProcessingMode[] SupportedPostProcessingModes = [ArtifactPostProcessingMode.TestModules];
 
     public string Uid => "Microsoft.Testing.Extensions.TrxReport.PostProcessor";
 
@@ -24,6 +25,10 @@ internal sealed class TrxArtifactPostProcessor : IArtifactPostProcessor
     public string DisplayName => ExtensionResources.TrxArtifactPostProcessorDisplayName;
 
     public string Description => ExtensionResources.TrxArtifactPostProcessorDescription;
+
+    public IReadOnlyList<ArtifactPostProcessingMode> SupportedModes => SupportedPostProcessingModes;
+
+    public bool SupportsTruncatedRuns => false;
 
     public IReadOnlyList<string> SupportedKinds => SupportedArtifactKinds;
 
@@ -34,6 +39,7 @@ internal sealed class TrxArtifactPostProcessor : IArtifactPostProcessor
     public async Task<ProcessedArtifact?> ProcessAsync(
         IReadOnlyList<InputArtifact> inputs,
         string outputDirectory,
+        ArtifactPostProcessingContext context,
         CancellationToken cancellationToken)
     {
         if (inputs.Count < 2)

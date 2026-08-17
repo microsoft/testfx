@@ -56,7 +56,7 @@ internal static class RuntimeRegistrationEmitter
 
                 using (sb.Block("internal static void Initialize()"))
                 {
-                    EmitInitializeBody(sb);
+                    EmitInitializeBody(sb, testClasses);
                 }
 
                 sb.AppendLine();
@@ -89,18 +89,39 @@ internal static class RuntimeRegistrationEmitter
         }
     }
 
-    private static void EmitInitializeBody(IndentedStringBuilder sb)
+    private static void EmitInitializeBody(IndentedStringBuilder sb, IReadOnlyList<TestClassModel> testClasses)
     {
+        int typeAttributeCount = 0;
+        int methodCount = 0;
+        int methodAttributeCount = 0;
+        int propertySetterCount = 0;
+
+        foreach (TestClassModel testClass in testClasses)
+        {
+            typeAttributeCount += testClass.AreAttributesComplete ? 1 : 0;
+            methodCount += testClass.Methods.Length;
+            foreach (TestMethodModel method in testClass.Methods)
+            {
+                methodAttributeCount += method.AreAttributesComplete ? 1 : 0;
+            }
+
+            foreach (TestPropertyModel property in testClass.Properties)
+            {
+                propertySetterCount += property.HasPublicSetter ? 1 : 0;
+            }
+        }
+
         sb.AppendLine($"var assembly = typeof({GeneratedTypeName}).Assembly;");
         sb.AppendLine($"IReadOnlyList<{RegistryNamespace}.TestClassReflectionInfo> testClasses = {RegistryNamespace}.MSTestReflectionMetadata.TestClasses;");
         sb.AppendLine();
+        sb.AppendLine("const BindingFlags memberFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;");
         sb.AppendLine("var types = new Type[testClasses.Count];");
         sb.AppendLine("var testMethods = new Dictionary<Type, MethodInfo[]>(testClasses.Count);");
-        sb.AppendLine("var typeAttributes = new Dictionary<Type, Attribute[]>(testClasses.Count);");
-        sb.AppendLine("var methodAttributes = new Dictionary<MethodInfo, Attribute[]>();");
-        sb.AppendLine("var methodInvokers = new Dictionary<MethodInfo, Func<object?, object?[]?, object?>>();");
+        sb.AppendLine($"var typeAttributes = new Dictionary<Type, Attribute[]>({typeAttributeCount});");
+        sb.AppendLine($"var methodAttributes = new Dictionary<MethodInfo, Attribute[]>({methodAttributeCount});");
+        sb.AppendLine($"var methodInvokers = new Dictionary<MethodInfo, Func<object?, object?[]?, object?>>({methodCount});");
         sb.AppendLine($"var constructorInvokers = new Dictionary<Type, {ConstructorInvokerInfoFullName}[]>(testClasses.Count);");
-        sb.AppendLine("var propertySetters = new Dictionary<PropertyInfo, Action<object?, object?>>();");
+        sb.AppendLine($"var propertySetters = new Dictionary<PropertyInfo, Action<object?, object?>>({propertySetterCount});");
         sb.AppendLine();
 
         using (sb.Block("for (int classIndex = 0; classIndex < testClasses.Count; classIndex++)"))
@@ -108,6 +129,7 @@ internal static class RuntimeRegistrationEmitter
             sb.AppendLine($"{RegistryNamespace}.TestClassReflectionInfo testClass = testClasses[classIndex];");
             sb.AppendLine("Type type = testClass.Type;");
             sb.AppendLine("types[classIndex] = type;");
+            sb.AppendLine("MethodInfo[]? availableMethods = null;");
             using (sb.Block("if (testClass.AreAttributesComplete)"))
             {
                 sb.AppendLine("typeAttributes[type] = testClass.Attributes;");
@@ -133,7 +155,8 @@ internal static class RuntimeRegistrationEmitter
                 // Tolerate an unresolved member: skip its invoker (the adapter falls back to
                 // reflection for that one method) rather than throwing out of the [ModuleInitializer],
                 // which would fault registration for the whole assembly.
-                sb.AppendLine("MethodInfo? methodInfo = ResolveMethod(type, method.Name, method.ParameterTypes);");
+                sb.AppendLine("availableMethods ??= type.GetMethods(memberFlags);");
+                sb.AppendLine("MethodInfo? methodInfo = ResolveMethod(availableMethods, method.Name, method.ParameterTypes);");
                 using (sb.Block("if (methodInfo is not null)"))
                 {
                     sb.AppendLine("methodInvokers[methodInfo] = method.Invoke;");
@@ -163,6 +186,7 @@ internal static class RuntimeRegistrationEmitter
 
             sb.AppendLine("testMethods[type] = testMethodRoots.ToArray();");
             sb.AppendLine();
+            sb.AppendLine("PropertyInfo[]? availableProperties = null;");
 
             using (sb.Block("for (int propertyIndex = 0; propertyIndex < testClass.Properties.Count; propertyIndex++)"))
             {
@@ -173,7 +197,8 @@ internal static class RuntimeRegistrationEmitter
                 // unregistered and let the adapter fall back to PropertyInfo.SetValue.
                 using (sb.Block("if (property.HasPublicSetter)"))
                 {
-                    sb.AppendLine("PropertyInfo? propertyInfo = ResolveProperty(type, property.Name);");
+                    sb.AppendLine("availableProperties ??= type.GetProperties(memberFlags);");
+                    sb.AppendLine("PropertyInfo? propertyInfo = ResolveProperty(availableProperties, property.Name);");
                     using (sb.Block("if (propertyInfo is not null)"))
                     {
                         sb.AppendLine("propertySetters[propertyInfo] = property.Set;");
@@ -183,24 +208,16 @@ internal static class RuntimeRegistrationEmitter
         }
 
         sb.AppendLine();
-        sb.AppendLine($"IReadOnlyList<Attribute> assemblyAttributeList = {RegistryNamespace}.MSTestReflectionMetadata.AssemblyAttributes;");
-        sb.AppendLine("var assemblyAttributes = new object[assemblyAttributeList.Count];");
-        using (sb.Block("for (int attributeIndex = 0; attributeIndex < assemblyAttributeList.Count; attributeIndex++)"))
-        {
-            sb.AppendLine("assemblyAttributes[attributeIndex] = assemblyAttributeList[attributeIndex];");
-        }
-
-        sb.AppendLine();
+        sb.AppendLine($"object[] assemblyAttributes = {RegistryNamespace}.MSTestReflectionMetadata.AssemblyAttributes;");
         sb.AppendLine($"{Constants.ReflectionMetadataHookFullName}.Register(assembly, types, testMethods, typeAttributes, assemblyAttributes, methodAttributes, methodInvokers, constructorInvokers, propertySetters);");
     }
 
     private static void EmitResolveMethodHelper(IndentedStringBuilder sb)
     {
-        sb.AppendLine("private static MethodInfo? ResolveMethod([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods)] Type type, string name, Type[] parameterTypes)");
+        sb.AppendLine("private static MethodInfo? ResolveMethod(MethodInfo[] availableMethods, string name, Type[] parameterTypes)");
         using (sb.Block(null))
         {
-            sb.AppendLine("const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;");
-            using (sb.Block("foreach (MethodInfo candidate in type.GetMethods(flags))"))
+            using (sb.Block("foreach (MethodInfo candidate in availableMethods)"))
             {
                 using (sb.Block("if (candidate.Name != name)"))
                 {
@@ -240,11 +257,10 @@ internal static class RuntimeRegistrationEmitter
 
     private static void EmitResolvePropertyHelper(IndentedStringBuilder sb)
     {
-        sb.AppendLine("private static PropertyInfo? ResolveProperty([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.NonPublicProperties)] Type type, string name)");
+        sb.AppendLine("private static PropertyInfo? ResolveProperty(PropertyInfo[] availableProperties, string name)");
         using (sb.Block(null))
         {
-            sb.AppendLine("const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;");
-            using (sb.Block("foreach (PropertyInfo candidate in type.GetProperties(flags))"))
+            using (sb.Block("foreach (PropertyInfo candidate in availableProperties)"))
             {
                 using (sb.Block("if (candidate.Name == name)"))
                 {

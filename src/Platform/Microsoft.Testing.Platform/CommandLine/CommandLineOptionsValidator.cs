@@ -25,6 +25,11 @@ internal static partial class CommandLineOptionsValidator
             PlatformCommandLineProvider.DiagnosticOutputFilePrefixOptionKey,
             PlatformCommandLineProvider.DiagnosticVerbosityOptionKey,
             PlatformCommandLineProvider.DiagnosticFileLoggerSynchronousWriteOptionKey,
+
+            // Consumed during CreateBuilderAsync, before testconfig.json has been read, so a JSON entry would
+            // be accepted by validation and then silently ignored, leaving the author to conclude the feature
+            // is broken. Failing the run instead says which channel actually works.
+            PlatformCommandLineProvider.EnableDynamicExtensionsOptionKey,
         ],
         StringComparer.OrdinalIgnoreCase);
 

@@ -70,7 +70,11 @@ internal sealed class AzureDevOpsLogGroupReporter : IDataConsumer, ITestSessionL
         => Task.FromResult(
             _commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsOptionName)
             && AzureDevOpsConstants.IsRunningInAzureDevOps(_environment)
-            && AzureDevOpsConstants.IsFeatureKnobEnabled(_commandLineOptions, AzureDevOpsCommandLineOptions.AzureDevOpsGroups));
+            && _commandLineOptions.TryGetOptionArgumentList(
+                AzureDevOpsCommandLineOptions.AzureDevOpsGroups,
+                out string[]? groupsArguments)
+            && groupsArguments is [string groupsValue]
+            && string.Equals(groupsValue, AzureDevOpsCommandLineOptions.OptionOn, StringComparison.OrdinalIgnoreCase));
 
     // No-op: this consumer subscribes to data only to be ordered in the consumer phase at session
     // end (see the type-level remarks). It does not act on individual messages.

@@ -35,10 +35,15 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
     private readonly ConcurrentQueue<AzureDevOpsTestCaseResultWithAttachments> _pendingResults = new();
     private readonly ConcurrentQueue<AzureDevOpsTestResultAttachment> _pendingRunAttachments = new();
     private readonly SemaphoreSlim _flushSemaphore = new(1, 1);
+    // Mutate only while holding _flushSemaphore. One persisted parent may be updated at most once per
+    // test-host attempt; a later duplicate is ambiguous and falls back to a separate create.
+    private readonly HashSet<int> _claimedResultIds = [];
 
     private AzureDevOpsPublishConfiguration? _publishConfiguration;
     private AzureDevOpsRunIdCoordinator? _runIdCoordinator;
     private AzureDevOpsCoordinatedRun? _coordinatedRun;
+    // Mutate only while holding _flushSemaphore.
+    private AzureDevOpsResultIdStore? _resultIdStore;
     private DateTimeOffset _lastFlushTime;
     private CancellationTokenSource? _backgroundFlushCts;
     private Task? _backgroundFlushTask;
@@ -148,13 +153,28 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
             // must span every attempt. When that happened, join the existing run: this process neither
             // created it nor can tell whether it is the last one to publish into it, so it must not
             // complete it either. See AzureDevOpsTestRunOrchestratorLifetime.
-            _coordinatedRun = AzureDevOpsConstants.TryGetInheritedTestRunId(_environment, publishConfiguration.BuildId) is { } inheritedRunId
-                ? AzureDevOpsRunIdCoordinator.CreateInheritedRun(inheritedRunId, publishConfiguration)
+            int? inheritedRunId = AzureDevOpsConstants.TryGetInheritedTestRunId(_environment, publishConfiguration.BuildId);
+            _coordinatedRun = inheritedRunId is { } inheritedId
+                ? AzureDevOpsRunIdCoordinator.CreateInheritedRun(inheritedId, publishConfiguration)
                 : await _runIdCoordinator.AcquireRunAsync(
                     publishConfiguration,
                     cancellationToken => _client.CreateTestRunAsync(publishConfiguration, cancellationToken),
                     testSessionContext.CancellationToken).ConfigureAwait(false);
             CurrentRunId = _coordinatedRun.RunId;
+
+            // An orchestrator also hands down where the result map lives, which is what lets a retry
+            // attempt update the result an earlier attempt created rather than publish a second one for
+            // the same test. Absent (a run with no orchestrator) means every result is simply created.
+            if (inheritedRunId is not null
+                && AzureDevOpsConstants.TryGetInheritedResultMapPath(_environment, publishConfiguration.BuildId) is { } resultMapPath)
+            {
+                _resultIdStore = await AzureDevOpsResultIdStore.OpenAsync(
+                    _fileSystem,
+                    _logger,
+                    resultMapPath,
+                    publishConfiguration.BuildId,
+                    CurrentRunId.Value).ConfigureAwait(false);
+            }
 
             // Results stream into the run as tests complete, but the build's Tests tab only lists the run
             // once it is finalized. Point users at the run itself so they can watch results arrive live,
@@ -185,6 +205,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
             // those must be reported, not rethrown as if the user had canceled.
             _publishConfiguration = null;
             _coordinatedRun = null;
+            _resultIdStore = null;
             CurrentRunId = null;
             await WarnAsync($"{AzureDevOpsResources.AzureDevOpsLivePublishingCreateRunFailed} {ex.Message}", testSessionContext.CancellationToken).ConfigureAwait(false);
         }
@@ -338,6 +359,17 @@ internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, I
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
+        }
+
+        // Hand the map to the next attempt. Written once, here, rather than after every batch: only
+        // another process ever reads it, and no other process runs while this one does — the orchestrator
+        // runs attempts one at a time. Saving per batch would rewrite the whole map on each flush, which is
+        // quadratic in the number of tests and would be paid by every run, including those that never
+        // retry anything. If this process dies before reaching here the map is simply absent, and the next
+        // attempt publishes its own results: degraded, not lost.
+        if (_resultIdStore is not null)
+        {
+            await _resultIdStore.SaveAsync(CancellationToken.None).ConfigureAwait(false);
         }
 
         // The session-end flush is the last chance to publish: nothing drains the retry queue after

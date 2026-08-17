@@ -20,7 +20,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Sou
 /// and delegates the specialized subsystems to focused helpers:
 /// <list type="bullet">
 /// <item><see cref="DynamicDataSourceBuilder"/> resolves <c>[DynamicData]</c> sources.</item>
-/// <item><see cref="DataRowBuilder"/> parses <c>[DataRow]</c> applications.</item>
 /// <item><see cref="AttributeMaterializationHelper"/> decides which attributes survive trimming and converts them to models.</item>
 /// <item><see cref="SymbolReferenceabilityHelper"/> provides the reusable accessibility / referenceability predicates.</item>
 /// </list>
@@ -164,7 +163,6 @@ internal static class TestClassModelBuilder
         return new TestMethodModel(
             Name: method.Name,
             IsStatic: method.IsStatic,
-            IsAsync: method.IsAsync,
             ReturnsTask: returnsTask,
             ReturnsValueTask: returnsValueTask,
             ReturnsVoid: returnsVoid,
@@ -175,7 +173,6 @@ internal static class TestClassModelBuilder
             // IMethodSymbol.GetAttributes(). Keep async entries non-authoritative so runtime
             // reflection can observe it, including when rejecting async-void test methods.
             AreAttributesComplete: methodAttributes.IsComplete && !method.IsAsync,
-            DataRows: DataRowBuilder.BuildDataRows(inheritedAttributes),
             DynamicDataSources: DynamicDataSourceBuilder.BuildDynamicDataSources(inheritedAttributes, method, consumingAssembly));
     }
 

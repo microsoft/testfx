@@ -5,24 +5,21 @@
     <CodeCoverageVersion>18.9.0</CodeCoverageVersion>
     <MSTestVersion>4.3.2</MSTestVersion>
     <!--
-      MSTestAOTVersion pins the experimental MSTest.Engine / MSTest.SourceGeneration packages used by the
-      non-SDK Native AOT runner sample (mstest-runner/NativeAotRunner). It is kept at the highest version
-      mirrored to the dotnet-public NuGet feed used by these samples. MSTestEngineVersion aliases it for the
-      same reason. Note: the SDK-style Native AOT sample (DemoMSTestSdk/ProjectWithNativeAOT) does not use
-      these properties; MSTest.Sdk 4.3.0 drives its source generator via its own independent
-      MSTestSourceGenerationVersion (an early-preview 2.0.0-alpha.* build, decoupled from the 4.x MSTestVersion).
-      The generated code calls runtime hooks (e.g. ReflectionMetadataHook) that only exist in a recent-enough
-      MSTest adapter, so MSTestVersion above must be new enough (4.2.2 was too old); it does not need to, and
-      cannot, match the source-generation package version.
+      MSTestAOTVersion pins the experimental MSTest.Engine and the last independently versioned
+      MSTest.SourceGeneration package used by the non-SDK Native AOT runner sample
+      (mstest-runner/NativeAotRunner). It is kept at the highest version mirrored to the dotnet-public NuGet
+      feed used by these samples. MSTestEngineVersion aliases it for the same reason. New
+      MSTest.SourceGeneration packages use the standard MSTestVersion; the legacy pin can be removed once a
+      matching package is available on the feed.
     -->
     <MSTestAOTVersion>2.0.0-alpha.26228.3</MSTestAOTVersion>
     <MSTestEngineVersion>$(MSTestAOTVersion)</MSTestEngineVersion>
     <PlaywrightVersion>1.61.0</PlaywrightVersion>
     <TestingPlatformVersion>2.3.2</TestingPlatformVersion>
     <!--
-      Microsoft.Testing.Extensions.PackagedApp is the experimental extension that deploys and launches
-      a packaged Windows (UWP/WinUI) test host. It versions independently from the 2.x testing platform
-      (it ships as a 1.0.0-alpha.* build), which is why it has its own property here.
+      Microsoft.Testing.Extensions.PackagedApp deploys and launches a packaged Windows (UWP/WinUI)
+      test host. The latest published package predates its alignment with the testing platform version,
+      so this sample pins that package separately.
     -->
     <MicrosoftTestingExtensionsPackagedAppVersion>1.0.0-alpha.26363.8</MicrosoftTestingExtensionsPackagedAppVersion>
     <VSTestVersion>18.8.0</VSTestVersion>

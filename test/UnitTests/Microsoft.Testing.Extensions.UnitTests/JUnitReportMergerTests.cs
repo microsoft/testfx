@@ -118,6 +118,161 @@ public sealed class JUnitReportMergerTests
     }
 
     [TestMethod]
+    public void MergeRetryAttempts_KeepsOneFinalOutcomePerLogicalTest()
+    {
+        XDocument firstAttempt = BuildReport(suites:
+        [
+            Suite(
+                "Suite",
+                tests: 2,
+                failures: 1,
+                time: 0.3,
+                testCases:
+                [
+                    TestCase("AlwaysPasses", time: 0.1),
+                    TestCase("Flaky", time: 0.2, outcomeElement: new XElement("failure")),
+                ]),
+        ]);
+        XDocument secondAttempt = BuildReport(suites:
+        [
+            Suite(
+                "Suite",
+                tests: 1,
+                time: 0.05,
+                testCases: [TestCase("Flaky", time: 0.05)]),
+        ]);
+
+        XElement root = JUnitReportMerger.Merge(
+            [firstAttempt, secondAttempt],
+            "run",
+            JUnitMergeMode.CollapseRetryAttempts).Root!;
+
+        Assert.AreEqual("2", root.Attribute("tests")!.Value);
+        Assert.AreEqual("0", root.Attribute("failures")!.Value);
+        Assert.AreEqual("0.150", root.Attribute("time")!.Value);
+        XElement suite = root.Element("testsuite")!;
+        Assert.AreEqual("2", suite.Attribute("tests")!.Value);
+        Assert.AreEqual("0", suite.Attribute("failures")!.Value);
+        Assert.AreSequenceEqual(
+            new[] { "AlwaysPasses", "Flaky" },
+            suite.Elements("testcase").Select(testCase => testCase.Attribute("name")!.Value));
+        Assert.IsEmpty(suite.Elements("testcase").Single(testCase => testCase.Attribute("name")!.Value == "Flaky").Elements("failure"));
+    }
+
+    [TestMethod]
+    public void MergeRetryAttempts_UsesStableIdentityWhenDuplicateSuffixDisappears()
+    {
+        XDocument firstAttempt = BuildReport(suites:
+        [
+            Suite(
+                "Suite",
+                tests: 2,
+                failures: 1,
+                testCases:
+                [
+                    RetryTestCase("Parameterized [attempt 1]", "case-1", "Parameterized"),
+                    RetryTestCase(
+                        "Parameterized [attempt 2]",
+                        "case-2",
+                        "Parameterized",
+                        new XElement("failure")),
+                ]),
+        ]);
+        XDocument secondAttempt = BuildReport(suites:
+        [
+            Suite(
+                "Suite",
+                tests: 1,
+                testCases: [RetryTestCase("Parameterized", "case-2")]),
+        ]);
+
+        XElement suite = JUnitReportMerger.Merge(
+            [firstAttempt, secondAttempt],
+            "run",
+            JUnitMergeMode.CollapseRetryAttempts).Root!.Element("testsuite")!;
+
+        Assert.AreEqual("2", suite.Attribute("tests")!.Value);
+        Assert.AreEqual("0", suite.Attribute("failures")!.Value);
+        Assert.AreSequenceEqual(
+            new[] { "Parameterized [attempt 1]", "Parameterized" },
+            suite.Elements("testcase").Select(testCase => testCase.Attribute("name")!.Value));
+    }
+
+    [TestMethod]
+    public void MergeRetryAttempts_UsesFinalAttemptSuiteProperties()
+    {
+        XDocument firstAttempt = BuildReport(suites:
+        [
+            SuiteWithExitCode(
+                "Suite",
+                exitCode: 2,
+                tests: 2,
+                failures: 1,
+                testCases:
+                [
+                    TestCase("AlwaysPasses"),
+                    TestCase("Flaky", outcomeElement: new XElement("failure")),
+                ]),
+        ]);
+        XDocument secondAttempt = BuildReport(suites:
+        [
+            SuiteWithExitCode(
+                "Suite",
+                exitCode: 0,
+                testCases: [TestCase("Flaky")]),
+        ]);
+
+        XElement suite = JUnitReportMerger.Merge(
+            [firstAttempt, secondAttempt],
+            "run",
+            JUnitMergeMode.CollapseRetryAttempts).Root!.Element("testsuite")!;
+
+        Assert.AreEqual("0", suite.Element("properties")!
+            .Elements("property")
+            .Single(property => property.Attribute("name")!.Value == "exit-code")
+            .Attribute("value")!
+            .Value);
+        Assert.AreEqual("0", suite.Attribute("failures")!.Value);
+    }
+
+    [TestMethod]
+    public void MergeRetryAttempts_PreservesSameIdentityOccurrencesWithinAnAttempt()
+    {
+        XDocument firstAttempt = BuildReport(suites:
+        [
+            Suite(
+                "Suite",
+                tests: 2,
+                failures: 1,
+                testCases:
+                [
+                    RetryTestCase("Repeated [attempt 1]", "same-path", "Repeated"),
+                    RetryTestCase("Repeated [attempt 2]", "same-path", "Repeated", new XElement("failure")),
+                ]),
+        ]);
+        XDocument secondAttempt = BuildReport(suites:
+        [
+            Suite(
+                "Suite",
+                tests: 2,
+                testCases:
+                [
+                    RetryTestCase("Repeated [attempt 1]", "same-path", "Repeated"),
+                    RetryTestCase("Repeated [attempt 2]", "same-path", "Repeated"),
+                ]),
+        ]);
+
+        XElement suite = JUnitReportMerger.Merge(
+            [firstAttempt, secondAttempt],
+            "run",
+            JUnitMergeMode.CollapseRetryAttempts).Root!.Element("testsuite")!;
+
+        Assert.AreEqual("2", suite.Attribute("tests")!.Value);
+        Assert.AreEqual("0", suite.Attribute("failures")!.Value);
+        Assert.HasCount(2, suite.Elements("testcase"));
+    }
+
+    [TestMethod]
     public async Task MergeToFileAsync_WritesMergedFileToDisk()
     {
         string tempDirectory = Path.Combine(Path.GetTempPath(), $"junit-merge-{Guid.NewGuid():N}");
@@ -217,7 +372,8 @@ public sealed class JUnitReportMergerTests
         long errors = 0,
         long skipped = 0,
         double time = 0,
-        DateTimeOffset? timestamp = null)
+        DateTimeOffset? timestamp = null,
+        IEnumerable<XElement>? testCases = null)
         => new(
             "testsuite",
             new XAttribute("name", name),
@@ -227,7 +383,52 @@ public sealed class JUnitReportMergerTests
             new XAttribute("skipped", skipped),
             new XAttribute("time", time.ToString("0.000", CultureInfo.InvariantCulture)),
             new XAttribute("timestamp", (timestamp ?? new DateTimeOffset(2020, 1, 1, 10, 0, 0, TimeSpan.Zero)).UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ss.fff", CultureInfo.InvariantCulture)),
-            new XElement("testcase", new XAttribute("name", $"{name}.Test1"), new XAttribute("classname", name)));
+            testCases ?? [TestCase($"{name}.Test1")]);
+
+    private static XElement TestCase(string name, double time = 0, XElement? outcomeElement = null)
+        => new(
+            "testcase",
+            new XAttribute("name", name),
+            new XAttribute("classname", "Suite"),
+            new XAttribute("time", time.ToString("0.000", CultureInfo.InvariantCulture)),
+            outcomeElement);
+
+    private static XElement SuiteWithExitCode(
+        string name,
+        int exitCode,
+        long tests = 1,
+        long failures = 0,
+        IEnumerable<XElement>? testCases = null)
+    {
+        XElement suite = Suite(name, tests, failures, testCases: testCases);
+        suite.AddFirst(
+            new XElement(
+                "properties",
+                new XElement(
+                    "property",
+                    new XAttribute("name", "exit-code"),
+                    new XAttribute("value", exitCode))));
+        return suite;
+    }
+
+    private static XElement RetryTestCase(
+        string name,
+        string testPath,
+        string? originalName = null,
+        XElement? outcomeElement = null)
+        => new(
+            "testcase",
+            new XAttribute("name", name),
+            new XAttribute("classname", "Suite"),
+            new XAttribute("time", "0.000"),
+            new XElement(
+                "properties",
+                new XElement("property", new XAttribute("name", "uid"), new XAttribute("value", "shared-uid")),
+                new XElement("property", new XAttribute("name", "testpath"), new XAttribute("value", testPath)),
+                originalName is null
+                    ? null
+                    : new XElement("property", new XAttribute("name", "original-name"), new XAttribute("value", originalName))),
+            outcomeElement);
 
     private static XDocument BuildReport(
         long tests = 1,

@@ -121,6 +121,30 @@
     <value>Invalid test application builder type. Expected 'TestApplicationBuilder'.</value>
     <comment>Do not localize {Locked="TestApplicationBuilder"}.</comment>
   </data>
+  <data name="JUnitReportRequiresArtifactPostProcessing" xml:space="preserve">
+    <value>JUnit report generation requires a test application builder that supports artifact post-processing.</value>
+    <comment>Do not localize format name {Locked="JUnit"}.</comment>
+  </data>
+  <data name="JUnitArtifactPostProcessorDescription" xml:space="preserve">
+    <value>Merges JUnit XML reports produced by Microsoft.Testing.Extensions.JUnitReport</value>
+    <comment>Do not localize format names {Locked="JUnit"}{Locked="XML"} or assembly name {Locked="Microsoft.Testing.Extensions.JUnitReport"}.</comment>
+  </data>
+  <data name="JUnitArtifactPostProcessorDisplayName" xml:space="preserve">
+    <value>JUnit XML report merger</value>
+    <comment>Do not localize format names {Locked="JUnit"}{Locked="XML"}.</comment>
+  </data>
+  <data name="JUnitMergedArtifactDescription" xml:space="preserve">
+    <value>{0} JUnit XML report files merged</value>
+    <comment>{0} is the number of merged files. Do not localize format names {Locked="JUnit"}{Locked="XML"}.</comment>
+  </data>
+  <data name="JUnitMergedArtifactDisplayName" xml:space="preserve">
+    <value>JUnit XML report (merged)</value>
+    <comment>Do not localize format names {Locked="JUnit"}{Locked="XML"}.</comment>
+  </data>
+  <data name="JUnitMergedReportName" xml:space="preserve">
+    <value>Merged JUnit XML report</value>
+    <comment>Do not localize format names {Locked="JUnit"}{Locked="XML"}.</comment>
+  </data>
   <data name="JUnitReportArtifactDescription" xml:space="preserve">
     <value>JUnit XML report file</value>
     <comment>Do not localize {Locked="JUnit"} or {Locked="XML"}.</comment>

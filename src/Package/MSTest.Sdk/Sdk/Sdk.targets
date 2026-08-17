@@ -5,6 +5,10 @@
     <!-- If the project targets .NET Standard, it's not supposed to be a test application. So, we default to false. -->
     <IsTestApplication Condition=" '$(IsTestApplication)' == '' AND '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' == '.NETStandard' ">false</IsTestApplication>
     <IsTestApplication Condition=" '$(IsTestApplication)' == '' ">true</IsTestApplication>
+
+    <!-- True UWP/AppContainer test applications require the VSTest host. -->
+    <UseVSTest Condition=" '$(UseVSTest)' == '' AND ('$(UseUwp)' == 'true' OR '$(UseUwpTools)' == 'true') ">true</UseVSTest>
+    <UseVSTest Condition=" '$(UseVSTest)' == '' ">false</UseVSTest>
   </PropertyGroup>
 
   <!-- Import Runner.targets -->
@@ -12,6 +16,47 @@
 
   <!-- Import VSTest.targets -->
   <Import Project="$(MSBuildThisFileDirectory)VSTest/VSTest.targets" Condition=" '$(UseVSTest)' == 'true' " />
+
+  <Target Name="_MSTestSDKValidateWindowsApplicationModel" BeforeTargets="PrepareForBuild">
+    <Error Condition=" '$(UseWinUI)' == 'true' AND ('$(UseUwp)' == 'true' OR '$(UseUwpTools)' == 'true') "
+           Text="A test project cannot use both WinUI and UWP application models." />
+    <Error Condition=" '$(IsTestApplication)' == 'true' AND ('$(UseUwp)' == 'true' OR '$(UseUwpTools)' == 'true') AND '$(UseVSTest)' != 'true' "
+           Text="Microsoft.Testing.Platform does not support true UWP/AppContainer test hosts. Remove the explicit UseVSTest setting or set &lt;UseVSTest&gt;true&lt;/UseVSTest&gt;." />
+    <Error Condition=" '$(UseWinUI)' == 'true' AND '$(WindowsPackageType)' == 'None' AND '$(UseVSTest)' == 'true' "
+           Text="VSTest does not support unpackaged WinUI test applications. Remove UseVSTest or set &lt;UseVSTest&gt;false&lt;/UseVSTest&gt; to use Microsoft.Testing.Platform." />
+  </Target>
+
+  <Target Name="_MSTestSDKValidateSourceGeneration"
+          BeforeTargets="PrepareForBuild"
+          Condition=" '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' == '.NETStandard'
+                      and ( '$(EnableMSTestSourceGeneration)' == 'true'
+                            or ( '$(UseVSTest)' == 'false' and '$(PublishAot)' == 'true' ) ) ">
+    <Error Text="MSTest source generation is not supported for .NET Standard target frameworks because the required MSTest.TestAdapter runtime hooks are unavailable." />
+  </Target>
+
+  <!-- Source generation is automatic for NativeAOT and opt-in for all other configurations. -->
+  <ItemGroup Condition=" '$(EnableMSTestSourceGeneration)' == 'true'
+                         and ( '$(UseVSTest)' == 'true' or '$(PublishAot)' != 'true' )
+                         and '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' != '.NETStandard' ">
+    <PackageReference Include="MSTest.SourceGeneration" Sdk="MSTest">
+      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MSTestVersion)</Version>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageVersion Include="MSTest.SourceGeneration" Version="$(MSTestVersion)"
+                    Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(IsTestApplication)' != 'true'
+                         and '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' != '.NETStandard'
+                         and ( '$(EnableMSTestSourceGeneration)' == 'true'
+                               or ( '$(UseVSTest)' == 'false' and '$(PublishAot)' == 'true' ) ) ">
+    <!-- Test libraries do not otherwise reference the adapter assembly that contains the generated code's runtime hooks. -->
+    <PackageReference Include="MSTest.TestAdapter" Sdk="MSTest">
+      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MSTestVersion)</Version>
+    </PackageReference>
+    <PackageVersion Include="MSTest.TestAdapter" Version="$(MSTestVersion)"
+                    Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
+  </ItemGroup>
 
   <!--
     Implicit bottom import.

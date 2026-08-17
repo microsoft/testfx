@@ -2,6 +2,26 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="ru" original="../ExtensionResources.resx">
     <body>
+      <trans-unit id="CtrfArtifactPostProcessorDescription">
+        <source>Merges CTRF reports produced by Microsoft.Testing.Extensions.CtrfReport</source>
+        <target state="new">Merges CTRF reports produced by Microsoft.Testing.Extensions.CtrfReport</target>
+        <note>Do not localize format name {Locked="CTRF"} or assembly name {Locked="Microsoft.Testing.Extensions.CtrfReport"}.</note>
+      </trans-unit>
+      <trans-unit id="CtrfArtifactPostProcessorDisplayName">
+        <source>CTRF report merger</source>
+        <target state="new">CTRF report merger</target>
+        <note>Do not localize format name {Locked="CTRF"}.</note>
+      </trans-unit>
+      <trans-unit id="CtrfMergedArtifactDescription">
+        <source>{0} CTRF files merged</source>
+        <target state="new">{0} CTRF files merged</target>
+        <note>{0} is the number of merged files. Do not localize format name {Locked="CTRF"}.</note>
+      </trans-unit>
+      <trans-unit id="CtrfMergedArtifactDisplayName">
+        <source>CTRF report (merged)</source>
+        <target state="new">CTRF report (merged)</target>
+        <note>Do not localize format name {Locked="CTRF"}.</note>
+      </trans-unit>
       <trans-unit id="CtrfReportArtifactDescription">
         <source>CTRF (Common Test Report Format) JSON test report</source>
         <target state="translated">Тестовый отчет JSON CTRF (Common Test Report Format)</target>

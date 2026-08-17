@@ -62,9 +62,14 @@
         <target state="translated">Azure DevOps 即時發佈無法刪除協調檔案</target>
         <note />
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingFailedToReadCoordinationFile">
+        <source>Azure DevOps live publishing failed to read coordination file</source>
+        <target state="new">Azure DevOps live publishing failed to read coordination file</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingFailedToWriteCoordinationFile">
         <source>Azure DevOps live publishing failed to write coordination file</source>
-        <target state="new">Azure DevOps live publishing failed to write coordination file</target>
+        <target state="translated">Azure DevOps 即時發佈無法寫入協調檔案</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingFinalizeWaitTimedOut">
@@ -112,6 +117,11 @@
         <target state="translated">Azure DevOps 即時發佈已接受一批測試結果，但無法剖析指派的結果 ID；將略過此批次的結果層級附件。</target>
         <note />
       </trans-unit>
+      <trans-unit id="AzureDevOpsLivePublishingResultMapHandoffFailed">
+        <source>Azure DevOps live publishing failed to update the result map handoff.</source>
+        <target state="new">Azure DevOps live publishing failed to update the result map handoff.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingResultsDropped">
         <source>Azure DevOps live publishing could not publish {0} test result(s); they will be missing from the Azure DevOps test run.</source>
         <target state="translated">Azure DevOps 即時發佈無法發佈 {0} 個測試結果; 這些測試結果將不會出現在 Azure DevOps 測試執行中。</target>
@@ -134,7 +144,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingRunIdHandoffFailed">
         <source>Azure DevOps live publishing failed to update the test run id handoff.</source>
-        <target state="new">Azure DevOps live publishing failed to update the test run id handoff.</target>
+        <target state="translated">Azure DevOps 即時發佈無法更新測試執行識別碼遞交。</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingRunLeftInProgress">
@@ -248,8 +258,8 @@
         <note>{0} is the number of runs returned. {1} is the maximum number of runs to inspect.</note>
       </trans-unit>
       <trans-unit id="GroupsOptionDescription">
-        <source>Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.</source>
-        <target state="translated">啟用或停用每個組件的 Azure DevOps 記錄群組 ('on' 或 'off')。預設為 'on'。需要 '--report-azdo'。</target>
+        <source>Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'off'. Requires '--report-azdo'.</source>
+        <target state="needs-review-translation">啟用或停用每個組件的 Azure DevOps 記錄群組 ('on' 或 'off')。預設為 'on'。需要 '--report-azdo'。</target>
         <note>{Locked="on"}{Locked="off"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="InvalidArtifactUploadGlob">
