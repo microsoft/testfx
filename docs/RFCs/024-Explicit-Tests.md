@@ -410,9 +410,9 @@ Concrete selections activate the concrete tests they contain:
 | VSTest `RunTests(IEnumerable<string> sources, ...)` | none; this is Run All unless `TestCaseFilter` contributes a positive activation. |
 | VSTest `RunTests(IEnumerable<TestCase> tests, ...)` | exactly the supplied test cases. |
 | MTP `--filter-uid <uid>` | the matching UID. |
-| MTP `--treenode-filter <expression>` | positively matched nodes. |
+| MTP `--treenode-filter <expression>` | nodes matched through a discriminating segment; see [tree-node and graph filters](#tree-node-and-graph-filters). |
 | MTP server request containing test-node UIDs | exactly those UIDs. |
-| MTP server graph filter | positively matched nodes in the graph filter. |
+| MTP server graph filter | the same grammar and the same rule as `--treenode-filter`. |
 | Empty MTP UID/node list | no activation and no tests; it is not Run All. |
 
 Selecting a class, fixture, or namespace node activates all descendant explicit tests selected by
@@ -501,6 +501,103 @@ This duplication is contained and tested rather than hidden:
 
 An upstream VSTest API that exposes a tree-walkable expression can replace this parser later without
 changing the semantics in this RFC.
+
+### Tree-node and graph filters
+
+`--treenode-filter` and the MTP server graph filter are one language, not two: `ServerTestHost`
+builds a `TreeNodeFilter` from the request's `GraphFilter` string, so one rule covers both rows of
+the direct-selection table.
+
+That language is not the expression language above and its leaves cannot be classified with the
+expression table. A tree-node filter is a `/`-separated path of segment expressions:
+
+```text
+TREE_NODE_FILTER = EXPR ( '/' EXPR )*
+EXPR             = '(' EXPR ')' | EXPR OP EXPR | NODE_VALUE
+FILTER_EXPR      = '(' FILTER_EXPR ')' | TOKEN '=' TOKEN | TOKEN '!=' TOKEN
+                 | FILTER_EXPR OP FILTER_EXPR | TOKEN
+OP               = '&' | '|'
+NODE_VALUE       = TOKEN | TOKEN '[' FILTER_EXPR ']'
+```
+
+`(!EXPR)` negates a segment, `*` matches within one segment, and a trailing `**` matches everything
+below. A tree-node filter can therefore match a node without naming anything: `/**` is Run All
+written as a filter, and `/*/*/*/*[Category!=Slow]` is a pure exclusion. Reading "matched" as
+"selected" would let either of those start a destructive explicit test, which is the outcome the
+constraint/activation split exists to prevent.
+
+Segments produce the same `(matches, activates)` pair as expression filters. `matches` keeps its
+current meaning and its current results; only `activates` is new.
+
+| Segment expression | `activates` |
+| --- | --- |
+| Token with at least one literal character (`MyTest`, `My*Test`) | Same as `matches`. |
+| Wildcard-only token (`*`, `**`) or an empty segment | Always `false`. |
+| `[Name=Value]` where the value has a literal character | Same as `matches`. |
+| `[Name=*]` | Always `false`. |
+| `[Name!=Value]` | Always `false`. |
+| `(!EXPR)` | Always `false`. |
+| `A & B` | `matches` and either child activates. |
+| `A \| B` | `(A.matches && A.activates) \|\| (B.matches && B.activates)`. |
+| `Token[FILTER_EXPR]` | `matches` and either the token or the property expression activates. |
+
+A segment whose `activates` is true is **discriminating**: it names something rather than accepting
+everything or rejecting something. A node is activated when it matches the filter and at least one
+**non-root** segment on its path is discriminating.
+
+Both halves of that rule carry weight:
+
+- *At least one segment*, because a path is a conjunction of segments and the `A & B` row above
+  already says a conjunction activates when one side names something. `/*/*/MyClass/(!Slow)` selects
+  a class and then narrows it, so the class segment activates its descendants, which is the same
+  answer as the existing rule that selecting a class or namespace node activates the explicit tests
+  under it.
+- *Non-root*, because the root segment names the test project rather than a test in it. In a
+  single-assembly host `/MyAssembly/**` and `/**` select exactly the same tests, so they must
+  activate the same way; otherwise naming the assembly is a silent step from a safe Run All to
+  running every destructive test in it. A user who wants that run has `/*/*/*/*[Explicit=True]` or
+  `ExplicitTestMode=Run`.
+
+| Filter | Explicit test it matches | Activated? |
+| --- | --- | --- |
+| `/**` | matches | no; this is Run All written as a filter |
+| `/MyAssembly/**` | matches | no; the root names the project, not tests |
+| `/*/*/*/*` | matches | no |
+| `/*/*/*/MyTest` | matches | yes |
+| `/*/*/MyClass/*` | matches | yes, through the class segment |
+| `/*/MyNamespace/**` | matches | yes, through the namespace segment |
+| `/*/*/*/(!Slow)` | matches | no |
+| `/*/*/*/*[Category!=Slow]` | matches | no |
+| `/*/*/*/*[Category=Hardware]` | matches | yes |
+| `/*/*/MyClass/(!Slow)` | matches | yes, through `MyClass` |
+| `/*/*/*/(MyTest\|(!Slow))` | matches through either branch | yes for `MyTest`; no for a node matched only by `(!Slow)` |
+| `/*/*/*/(MyTest&(!Slow))` | matches | yes |
+| `/*/*/*/*[Explicit=True]` | matches | yes |
+| `/*/*/*/*[Explicit!=False]` | matches | no |
+
+#### Evaluating and enforcing tree activation
+
+The VSTest side needs a second parser because `ITestCaseFilterExpression` is an opaque evaluator
+owned by another repository. That reasoning does not carry over here. `TreeNodeFilter` lives in this
+repository and `Microsoft.Testing.Platform` already grants `InternalsVisibleTo` to
+`MSTest.TestAdapter`, so the activation result is produced by `TreeNodeFilter` itself, through an
+internal match overload that also reports whether the match was discriminating, and reaches the
+adapter through the same friend-assembly surface as the rest of the provenance work. There is no
+second grammar to keep in sync and no new public MTP API.
+
+The tables above describe how tree-node and graph selection must behave once MSTest accepts such a
+filter, not what today's build does. `MSTestFilterContext` and the VSTest bridge's
+`ContextAdapterBase` currently throw `UnsupportedTestExecutionFilter` for every leaf filter other
+than `NopFilter` and `TestNodeUidListFilter`, so neither `--treenode-filter` nor a graph filter
+reaches MSTest at all.
+
+That gap sets the general rule for every request shape not covered above: **activation is proven,
+never assumed**. When activation cannot be determined, the request constrains the run and activates
+nothing, so explicit tests under it are reported skipped. That covers an unsupported filter type, a
+shape the activation evaluator cannot classify, and any future grammar addition. It is the same
+fail-closed direction as malformed expressions and malformed persisted metadata, and it means a new
+filter feature cannot silently start running destructive tests before its activation semantics are
+designed.
 
 ### Provider filters
 
@@ -792,10 +889,11 @@ new reflection contract.
 | VSTest request origin | `VSTestAdapter/MSTestExecutor.cs` | Classify source versus test-case execution. |
 | VSTest metadata | `AdapterTestProperties.cs`, `UnitTestElementExtensions.cs`, `TestCaseExtensions.cs` | Register and round-trip explicit properties. |
 | VSTest expressions | `TestMethodFilter.cs`, new adapter-layer `ExplicitActivationFilterExpression.cs` | Parse the original expression, evaluate `(matches, activates)`, differential-test against VSTest, and expose `Explicit`. |
+| MTP tree/graph expressions | `Requests/TreeNodeFilter/TreeNodeFilter.Matching.cs`, `MSTestFilterContext.cs` | Report whether a match was discriminating through an internal overload, and accept tree-node/graph filters instead of throwing `UnsupportedTestExecutionFilter`. |
 | Native MTP request origin | `TestingPlatformAdapter/MSTestTestFramework.cs`, `MSTestFilterContext.cs`, `MtpTestElementFilter.cs` | Build activation from UID/tree/property request filters. |
 | Native MTP metadata/results | `MSTestTestNodeConverter.cs`, `MtpTestResultRecorder.cs` | Add discovery metadata and skipped reasons. |
 | Platform filter provenance | `TestExecutionFilterComposer.cs`, `TestExecutionRequest.cs`, `RunTestExecutionRequest.cs`, `ConsoleTestExecutionRequestFactory.cs`, `ServerTestExecutionRequestFactory.cs`, server request mapping | Preserve the original request selection separately from the provider-constrained effective filter through an internal/friend surface, not new public MTP API. |
-| Server selections | `ServerTestHost.RequestExecution.cs` | Classify node-list and graph selections as activation. |
+| Server selections | `ServerTestHost.RequestExecution.cs` | Classify node-list selections as activation and graph filters through the tree-node rule. |
 | Settings | `MSTestSettings.cs`, `.RunSettingsXml.cs`, `.Configuration.cs` | Parse the three explicit modes with existing precedence. |
 | Localization | Adapter/platform-services `.resx` resources and generated accessors | Add default skip and invalid-setting messages; regenerate XLF, never edit XLF manually. |
 | Source generation | `TestFramework.SourceGeneration`, `SourceGeneration/ReflectionMetadataHook.cs`, `SourceGeneratedReflectionOperations` tests | Ensure explicit attributes and capability-bearing data types are rooted; attribute reading remains on the existing reflection abstraction. |
@@ -859,6 +957,10 @@ Add focused tests for:
 - request positive filter plus provider positive constraint;
 - provider-only positive constraint;
 - source Run All, concrete `TestCase`, UID, tree, server node list, and server graph origins;
+- tree-node/graph segment vectors: wildcard-only (`/**`, `/*/*/*/*`), root-only (`/MyAssembly/**`),
+  literal method, class, and namespace segments, negated segment `(!X)`, `[Name!=Value]`,
+  `[Name=Value]`, `[Name=*]`, and `&`/`|` branches where only one branch is positive;
+- a request shape whose activation cannot be classified activating nothing;
 - empty MTP direct selections and the unchanged VSTest empty-list exception;
 - malformed expressions;
 - `RequireSelection`, `Skip`, and `Run`.
@@ -911,9 +1013,11 @@ Run the same asset through the native MTP host and verify:
 
 1. no-selector Run All skips explicit tests;
 2. `--filter-uid` runs only the selected explicit UID;
-3. `--treenode-filter` activates selected methods, classes, namespaces, and unfolded rows;
+3. `--treenode-filter` activates selected methods, classes, namespaces, and unfolded rows, and does
+   not activate through `/**`, a root-only path, a negated segment, or a `!=` property predicate;
 4. MSTest `--filter` positive/exclusion/mixed expressions match VSTest;
-5. server UID lists and graph filters activate only selected nodes;
+5. server UID lists activate only the listed nodes, and graph filters follow the `--treenode-filter`
+   rule;
 6. empty server selection runs nothing;
 7. provider filters constrain without activation;
 8. discovery and result nodes carry explicit metadata and reasons;
@@ -957,6 +1061,8 @@ Run the same asset through the native MTP host and verify:
 | Can direct selection override ignore/conditions? | No. It removes only the explicit gate. |
 | What activates an explicit test? | Concrete selection or a matching positive request-filter branch. |
 | Does an exclusion filter activate? | Never. |
+| Does a wildcard-only or root-only tree/graph filter activate? | No; `/**` and `/MyAssembly/**` are Run All written as filters. |
+| What happens when activation cannot be determined? | Nothing is activated. The request constrains only, and explicit tests under it are reported skipped. |
 | Can a provider/policy filter activate? | Never, including assembly `ITestFilter` returning Run. |
 | Does selecting a class/namespace activate descendants? | Yes. |
 | Does selecting a folded parent activate its rows? | Yes; rows have no independent identity. |
@@ -970,5 +1076,6 @@ Run the same asset through the native MTP host and verify:
 | Must both hosts ship together? | Yes. |
 
 There are no remaining behavioral decisions required before implementation. Approval is needed for
-the public API, the positive-filter activation model, the three-value configuration override, and
-the documented legacy VSTest boundary.
+the public API, the positive-filter activation model, the discriminating-segment rule for tree-node
+and graph filters, the three-value configuration override, and the documented legacy VSTest
+boundary.
