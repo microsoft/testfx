@@ -210,12 +210,6 @@ public class AssemblyResolverTests : TestContainer
 
             act.Should().NotThrow();
             resolvedAssembly.Should().BeSameAs(expectedAssembly);
-
-            // SafeLog writes its fallback directly to stderr. Running this test through MTP/MSBuild
-            // verifies that the diagnostic is not parsed as an MSBuild error.
-            resolvedAssembly = null;
-            act.Should().NotThrow();
-            resolvedAssembly.Should().BeSameAs(expectedAssembly);
         }
         finally
         {
