@@ -40,11 +40,10 @@ internal static class MetadataRegistryEmitter
             sb.AppendLine("/// <summary>Describes one test class as discovered at compile-time. Mirrors what <c>IReflectionOperations</c> would return at runtime.</summary>");
             using (sb.Block("internal sealed class TestClassReflectionInfo"))
             {
-                // The stored Type flows into ResolveMethod / ResolveProperty at registration time, which
-                // require these members to be kept for trimming/AOT. Annotate the property so the trimmer
-                // propagates the requirement; the registry assigns typeof(<concrete class>), which the
-                // trimmer treats as satisfying any DynamicallyAccessedMembers requirement, so no warning
-                // is produced at the assignment site.
+                // The stored Type flows into the generated Initialize method's direct GetMethods /
+                // GetProperties calls. Annotate the property so the trimmer keeps those members; the
+                // registry assigns typeof(<concrete class>), which satisfies the requirement without
+                // warnings at the assignment site.
                 sb.AppendLine("[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods | DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.NonPublicProperties)]");
                 sb.AppendLine("public Type Type { get; set; } = null!;");
                 sb.AppendLine("public Attribute[] Attributes { get; set; } = Array.Empty<Attribute>();");
@@ -65,11 +64,8 @@ internal static class MetadataRegistryEmitter
                 sb.AppendLine("public bool ReturnsValueTask { get; set; }");
                 sb.AppendLine("public bool ReturnsVoid { get; set; }");
                 sb.AppendLine("public Type[] ParameterTypes { get; set; } = Array.Empty<Type>();");
-                sb.AppendLine("public string[] ParameterNames { get; set; } = Array.Empty<string>();");
                 sb.AppendLine("public Attribute[] Attributes { get; set; } = Array.Empty<Attribute>();");
                 sb.AppendLine("public bool AreAttributesComplete { get; set; }");
-                sb.AppendLine("/// <summary>Materialized argument tuples from <c>[DataRow]</c> attributes (empty for non-data-driven tests). Each <c>object?[]</c> corresponds to one <c>[DataRow]</c> application.</summary>");
-                sb.AppendLine("public IReadOnlyList<object?[]> DataRows { get; set; } = Array.Empty<object?[]>();");
                 sb.AppendLine("/// <summary>Source-generated accessors for this method's <c>[DynamicData]</c> sources (empty when none were resolved), registered with <c>DynamicDataSourceResolver</c> so the data is read without runtime reflection.</summary>");
                 sb.AppendLine("public IReadOnlyList<DynamicDataSourceReflectionInfo> DynamicDataSources { get; set; } = Array.Empty<DynamicDataSourceReflectionInfo>();");
                 sb.AppendLine("/// <summary>Direct invoker — replaces <see cref=\"System.Reflection.MethodInfo.Invoke(object, object[])\" />. Always returns a non-null <see cref=\"Task\" /> so the caller can <c>await</c> regardless of whether the underlying test method is <c>void</c>, <c>Task</c>, <c>Task&lt;T&gt;</c>, <c>ValueTask</c>, or <c>ValueTask&lt;T&gt;</c>; the result value (if any) is discarded.</summary>");
@@ -160,17 +156,17 @@ internal static class MetadataRegistryEmitter
     {
         if (attributes.Length == 0)
         {
-            sb.AppendLine("public static IReadOnlyList<Attribute> AssemblyAttributes { get; } = Array.Empty<Attribute>();");
+            sb.AppendLine("public static object[] AssemblyAttributes { get; } = Array.Empty<object>();");
             return;
         }
 
-        sb.AppendLine("public static IReadOnlyList<Attribute> AssemblyAttributes { get; } = new Attribute[]");
+        sb.AppendLine("public static object[] AssemblyAttributes { get; } = new object[]");
         using (sb.Block(null))
         {
             for (int i = 0; i < attributes.Length; i++)
             {
                 AttributeApplicationModel attr = attributes[i];
-                sb.Append(BuildAttributeExpression(attr));
+                sb.Append($"(Attribute){BuildAttributeExpression(attr)}");
                 if (i < attributes.Length - 1)
                 {
                     sb.AppendLine(",");
@@ -254,13 +250,9 @@ internal static class MetadataRegistryEmitter
                     sb.AppendLine($"ReturnsVoid = {Bool(method.ReturnsVoid)},");
                     EmitParameterTypes(sb, method.Parameters);
                     sb.AppendLine(",");
-                    EmitParameterNames(sb, method.Parameters);
-                    sb.AppendLine(",");
                     EmitAttributesProperty(sb, "Attributes", method.Attributes);
                     sb.AppendLine(",");
                     sb.AppendLine($"AreAttributesComplete = {Bool(method.AreAttributesComplete)},");
-                    EmitDataRows(sb, method.DataRows);
-                    sb.AppendLine(",");
                     EmitDynamicDataSources(sb, method.DynamicDataSources);
                     sb.AppendLine(",");
                     EmitMethodInvoker(sb, fqn, method);
@@ -360,43 +352,6 @@ internal static class MetadataRegistryEmitter
         }
 
         sb.AppendLine($"Invoke = static (instance, args) => {body},");
-    }
-
-    private static void EmitDataRows(IndentedStringBuilder sb, EquatableArray<DataRowModel> dataRows)
-    {
-        if (dataRows.Length == 0)
-        {
-            sb.Append("DataRows = Array.Empty<object?[]>()");
-            sb.AppendLine();
-            return;
-        }
-
-        sb.AppendLine("DataRows = new object?[][]");
-        using (sb.Block(null))
-        {
-            for (int i = 0; i < dataRows.Length; i++)
-            {
-                EquatableArray<TypedConstantModel> args = dataRows[i].Arguments;
-                if (args.Length == 0)
-                {
-                    sb.Append("Array.Empty<object?>()");
-                }
-                else
-                {
-                    string literals = string.Join(", ", args.AsImmutableArray().Select(BuildConstantExpression));
-                    sb.Append($"new object?[] {{ {literals} }}");
-                }
-
-                if (i < dataRows.Length - 1)
-                {
-                    sb.AppendLine(",");
-                }
-                else
-                {
-                    sb.AppendLine();
-                }
-            }
-        }
     }
 
     private static void EmitDynamicDataSources(IndentedStringBuilder sb, EquatableArray<DynamicDataSourceModel> sources)
@@ -503,19 +458,6 @@ internal static class MetadataRegistryEmitter
 
         string typesList = string.Join(", ", parameters.AsImmutableArray().Select(p => $"typeof({p.FullyQualifiedType})"));
         sb.AppendLine($"ParameterTypes = new Type[] {{ {typesList} }}");
-    }
-
-    private static void EmitParameterNames(IndentedStringBuilder sb, EquatableArray<TestParameterModel> parameters)
-    {
-        if (parameters.Length == 0)
-        {
-            sb.Append("ParameterNames = Array.Empty<string>()");
-            sb.AppendLine();
-            return;
-        }
-
-        string names = string.Join(", ", parameters.AsImmutableArray().Select(p => $"\"{Escape(p.Name)}\""));
-        sb.AppendLine($"ParameterNames = new string[] {{ {names} }}");
     }
 
     private static void EmitAttributesProperty(IndentedStringBuilder sb, string propertyName, EquatableArray<AttributeApplicationModel> attributes)

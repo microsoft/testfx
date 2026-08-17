@@ -89,38 +89,42 @@ internal static partial class CommandLineOptionsValidator
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> extensionOptionsByProvider,
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> systemOptionsByProvider)
     {
-        // Use a dictionary to track option names and their distinct providers. OrdinalIgnoreCase
-        // ensures we catch case-differing duplicates (e.g. "Timeout" vs "timeout") with a friendly
-        // error rather than a later ArgumentException when building the lookup dictionary.
-        // We cover both extension and system providers so that any pair of case-differing
-        // duplicates — extension/extension, extension/system, or system/system — surfaces as a
-        // ValidationResult.Invalid rather than crashing the platform.
-        var optionNameToProviders = new Dictionary<string, HashSet<ICommandLineOptionsProvider>>(StringComparer.OrdinalIgnoreCase);
+        // Most options are unique, so retain only their first provider. Allocate a HashSet only
+        // after finding a provider collision, while preserving the registration order used by
+        // diagnostics. OrdinalIgnoreCase ensures we catch case-differing duplicates (e.g.
+        // "Timeout" vs "timeout") with a friendly error rather than a later ArgumentException.
+        var optionNameToProviders = new Dictionary<string, (ICommandLineOptionsProvider FirstProvider, HashSet<ICommandLineOptionsProvider>? DuplicateProviders)>(StringComparer.OrdinalIgnoreCase);
         foreach (KeyValuePair<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> kvp in extensionOptionsByProvider.Concat(systemOptionsByProvider))
         {
             ICommandLineOptionsProvider provider = kvp.Key;
             foreach (CommandLineOption option in kvp.Value)
             {
                 string name = option.Name;
-                if (!optionNameToProviders.TryGetValue(name, out HashSet<ICommandLineOptionsProvider>? providers))
+                if (!optionNameToProviders.TryGetValue(name, out (ICommandLineOptionsProvider FirstProvider, HashSet<ICommandLineOptionsProvider>? DuplicateProviders) registration))
                 {
-                    providers = [];
-                    optionNameToProviders[name] = providers;
+                    optionNameToProviders.Add(name, (provider, null));
+                    continue;
                 }
 
-                providers.Add(provider);
+                if (registration.DuplicateProviders is null)
+                {
+                    registration.DuplicateProviders = [registration.FirstProvider];
+                }
+
+                registration.DuplicateProviders.Add(provider);
+                optionNameToProviders[name] = registration;
             }
         }
 
         // Check for duplications
         StringBuilder? stringBuilder = null;
-        foreach (KeyValuePair<string, HashSet<ICommandLineOptionsProvider>> kvp in optionNameToProviders)
+        foreach (KeyValuePair<string, (ICommandLineOptionsProvider FirstProvider, HashSet<ICommandLineOptionsProvider>? DuplicateProviders)> kvp in optionNameToProviders)
         {
-            if (kvp.Value.Count > 1)
+            if (kvp.Value.DuplicateProviders is { Count: > 1 } providers)
             {
                 string duplicatedOption = kvp.Key;
                 stringBuilder ??= new();
-                IEnumerable<string> faultyProvidersDisplayNames = kvp.Value.Select(p => p.DisplayName);
+                IEnumerable<string> faultyProvidersDisplayNames = providers.Select(p => p.DisplayName);
                 stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionIsDeclaredByMultipleProviders, duplicatedOption, string.Join("', '", faultyProvidersDisplayNames)));
             }
         }

@@ -126,19 +126,28 @@ internal static partial class CtrfReportMerger
     /// collision-resistant enough to identify a merged report, not secret.
     /// </summary>
     private static string CreateDeterministicReportId(IReadOnlyList<string> acceptedReports, CtrfMergeMode mode)
+        => CreateDeterministicId(acceptedReports, (ulong)mode).ToString("D");
+
+    internal static Guid CreateDeterministicId(IReadOnlyList<string> values)
+        => CreateDeterministicId(values, discriminator: null);
+
+    private static Guid CreateDeterministicId(IReadOnlyList<string> values, ulong? discriminator)
     {
         const ulong fnvPrime = 1099511628211UL;
         ulong hashLow = 14695981039346656037UL;
         ulong hashHigh = 0x9E3779B97F4A7C15UL;
 
-        // Fold in the merge mode: the same inputs concatenated and collapsed are two materially different
-        // documents, and CTRF 5.3 wants a distinct reportId for each rather than one id naming both.
-        hashLow = (hashLow ^ (ulong)mode) * fnvPrime;
-        hashHigh = (hashHigh ^ ((ulong)mode + 1UL)) * fnvPrime;
-
-        foreach (string report in acceptedReports)
+        if (discriminator is { } value)
         {
-            foreach (char c in report)
+            // The report merge mode is a discriminator: the same inputs concatenated and collapsed are two
+            // materially different documents, and CTRF 5.3 wants a distinct reportId for each.
+            hashLow = (hashLow ^ value) * fnvPrime;
+            hashHigh = (hashHigh ^ (value + 1UL)) * fnvPrime;
+        }
+
+        foreach (string input in values)
+        {
+            foreach (char c in input)
             {
                 hashLow = (hashLow ^ c) * fnvPrime;
                 hashHigh = (hashHigh ^ c) * fnvPrime;
@@ -146,14 +155,20 @@ internal static partial class CtrfReportMerger
 
             // Fold in each input's length so different chunk boundaries (e.g. ["ab","c"] vs ["a","bc"])
             // never collide.
-            hashLow = (hashLow ^ (ulong)report.Length) * fnvPrime;
-            hashHigh = (hashHigh ^ ((ulong)report.Length + 1UL)) * fnvPrime;
+            hashLow = (hashLow ^ (ulong)input.Length) * fnvPrime;
+            hashHigh = (hashHigh ^ ((ulong)input.Length + 1UL)) * fnvPrime;
         }
 
         byte[] bytes = new byte[16];
-        BitConverter.GetBytes(hashLow).CopyTo(bytes, 0);
-        BitConverter.GetBytes(hashHigh).CopyTo(bytes, 8);
-        return new Guid(bytes).ToString("D");
+        for (int i = 0; i < 8; i++)
+        {
+            // Serialize explicitly in little-endian order so identical inputs produce the same identifier on
+            // every architecture. Guid(byte[]) has a stable interpretation once the byte sequence is fixed.
+            bytes[i] = (byte)(hashLow >> (i * 8));
+            bytes[i + 8] = (byte)(hashHigh >> (i * 8));
+        }
+
+        return new Guid(bytes);
     }
 
     private static long Min(long? current, long candidate)

@@ -12,12 +12,13 @@ using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 
-internal sealed class AzureDevOpsSummaryReporter : IDataConsumer, ITestSessionLifetimeHandler, IOutputDeviceDataProducer
+internal sealed class AzureDevOpsSummaryReporter : IDataConsumer, IDataProducer, ITestSessionLifetimeHandler, IOutputDeviceDataProducer
 {
     private const string DefaultSummaryFileNameFormat = "azdo-summary-{0}-{1}-{2}.md";
     private const string FullyQualifiedNamePropertyKey = "vstest.TestCase.FullyQualifiedName";
@@ -29,10 +30,13 @@ internal sealed class AzureDevOpsSummaryReporter : IDataConsumer, ITestSessionLi
     private readonly IConfiguration _configuration;
     private readonly IEnvironment _environment;
     private readonly IFileSystem _fileSystem;
+    private readonly IMessageBus _messageBus;
     private readonly IOutputDevice _outputDevice;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
     private readonly ILogger _logger;
     private readonly Lazy<string> _targetFrameworkMoniker;
+    private readonly ITestApplicationProcessExitCode _testApplicationProcessExitCode;
+    private readonly Func<bool> _shouldDeferToArtifactPostProcessing;
 
 #if NET9_0_OR_GREATER
     private readonly System.Threading.Lock _stateLock = new();
@@ -51,22 +55,30 @@ internal sealed class AzureDevOpsSummaryReporter : IDataConsumer, ITestSessionLi
         IConfiguration configuration,
         IEnvironment environment,
         IFileSystem fileSystem,
+        IMessageBus messageBus,
         IOutputDevice outputDevice,
         ITestApplicationModuleInfo testApplicationModuleInfo,
-        ILoggerFactory loggerFactory)
+        ITestApplicationProcessExitCode testApplicationProcessExitCode,
+        ILoggerFactory loggerFactory,
+        Func<bool> shouldDeferToArtifactPostProcessing)
     {
         _commandLineOptions = commandLineOptions;
         _configuration = configuration;
         _environment = environment;
         _fileSystem = fileSystem;
+        _messageBus = messageBus;
         _outputDevice = outputDevice;
         _testApplicationModuleInfo = testApplicationModuleInfo;
+        _testApplicationProcessExitCode = testApplicationProcessExitCode;
         _logger = loggerFactory.CreateLogger<AzureDevOpsSummaryReporter>();
         _isEnabled = commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsSummary);
         _targetFrameworkMoniker = new(TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform);
+        _shouldDeferToArtifactPostProcessing = shouldDeferToArtifactPostProcessing;
     }
 
     public Type[] DataTypesConsumed { get; } = [typeof(TestNodeUpdateMessage)];
+
+    public Type[] DataTypesProduced { get; } = [typeof(SessionFileArtifact)];
 
     public string Uid => nameof(AzureDevOpsSummaryReporter);
 
@@ -202,7 +214,29 @@ internal sealed class AzureDevOpsSummaryReporter : IDataConsumer, ITestSessionLi
                 snapshot = [.. _records.Values];
             }
 
-            string markdown = BuildMarkdown(snapshot, _testApplicationModuleInfo.TryGetAssemblyName() ?? "unknown", _targetFrameworkMoniker.Value);
+            string assemblyName = _testApplicationModuleInfo.TryGetAssemblyName() ?? "unknown";
+            if (_shouldDeferToArtifactPostProcessing()
+                && _configuration.GetTestResultDirectory() is { } resultsDirectory
+                && !RoslynString.IsNullOrWhiteSpace(resultsDirectory))
+            {
+                CiRunSummaryModule module = CreateModule(snapshot, assemblyName, testSessionContext);
+                string fragmentPath = await CiRunSummaryAggregation.WriteFragmentAsync(
+                    resultsDirectory,
+                    AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                    AzureDevOpsSummaryArtifactPostProcessor.ProviderSlug,
+                    module).ConfigureAwait(false);
+                await _messageBus.PublishAsync(
+                    this,
+                    new SessionFileArtifact(
+                        testSessionContext.SessionUid,
+                        new FileInfo(fragmentPath),
+                        AzureDevOpsResources.DisplayName,
+                        AzureDevOpsResources.Description,
+                        AzureDevOpsSummaryArtifactPostProcessor.FragmentArtifactKind)).ConfigureAwait(false);
+                return;
+            }
+
+            string markdown = BuildMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value);
             string? path = ResolveSummaryPath();
             if (path is null)
             {
@@ -251,6 +285,32 @@ internal sealed class AzureDevOpsSummaryReporter : IDataConsumer, ITestSessionLi
         }
     }
 
+    private CiRunSummaryModule CreateModule(
+        IReadOnlyList<TestRecord> records,
+        string assemblyName,
+        ITestSessionContext testSessionContext)
+        => CiRunSummaryAggregation.CreateModule(
+            records,
+            assemblyName,
+            _testApplicationModuleInfo.GetCurrentTestApplicationFullPath(),
+            _targetFrameworkMoniker.Value,
+            RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant(),
+            _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID),
+            testSessionContext.SessionUid.Value,
+            GetAttemptNumber(),
+            _testApplicationProcessExitCode.GetProcessExitCode(),
+            ResolveExplicitSummaryPath(_commandLineOptions));
+
+    private int GetAttemptNumber()
+        => int.TryParse(
+            _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER),
+            NumberStyles.None,
+            CultureInfo.InvariantCulture,
+            out int attemptNumber)
+            && attemptNumber > 0
+                ? attemptNumber
+                : 1;
+
     private string? ResolveSummaryPath()
     {
         if (_commandLineOptions.TryGetOptionArgumentList(AzureDevOpsCommandLineOptions.AzureDevOpsSummary, out string[]? arguments)
@@ -285,6 +345,13 @@ internal sealed class AzureDevOpsSummaryReporter : IDataConsumer, ITestSessionLi
             architecture));
         return Path.GetFullPath(Path.Combine(configuredTestResultsDirectory!, fileName));
     }
+
+    internal static string? ResolveExplicitSummaryPath(ICommandLineOptions commandLineOptions)
+        => commandLineOptions.TryGetOptionArgumentList(AzureDevOpsCommandLineOptions.AzureDevOpsSummary, out string[]? arguments)
+            && arguments is [string explicitPath]
+            && !RoslynString.IsNullOrWhiteSpace(explicitPath)
+                ? Path.GetFullPath(explicitPath)
+                : null;
 
     internal static /* for testing */ string BuildMarkdown(IReadOnlyList<TestRecord> records, string assemblyName, string targetFrameworkMoniker)
     {
@@ -382,6 +449,107 @@ internal sealed class AzureDevOpsSummaryReporter : IDataConsumer, ITestSessionLi
         return builder.ToString();
     }
 
+    internal static string BuildAggregateMarkdown(CiRunSummaryAggregate aggregate)
+    {
+        var builder = new StringBuilder();
+        builder.Append("# Overall test summary\n\n");
+        builder.Append("| Metric | Value |\n");
+        builder.Append("| --- | ---: |\n");
+        builder.Append("| Total | ").Append(aggregate.TotalTests.ToString(CultureInfo.InvariantCulture)).Append(" |\n");
+        builder.Append("| Passed | ").Append(aggregate.PassedTests.ToString(CultureInfo.InvariantCulture)).Append(" |\n");
+        builder.Append("| Failed | ").Append(aggregate.FailedTests.ToString(CultureInfo.InvariantCulture)).Append(" |\n");
+        builder.Append("| Skipped | ").Append(aggregate.SkippedTests.ToString(CultureInfo.InvariantCulture)).Append(" |\n");
+        builder.Append("| Duration | ")
+            .Append(aggregate.Duration is { } duration ? FormatDuration(duration) : "Unavailable")
+            .Append(" |\n");
+        if (aggregate.ExitCode is int exitCode)
+        {
+            builder.Append("| Exit code | ").Append(exitCode.ToString(CultureInfo.InvariantCulture)).Append(" |\n");
+        }
+
+        builder.Append('\n');
+        if (aggregate.IsPartial)
+        {
+            builder.Append("> **Partial summary:** the test run was truncated.\n\n");
+        }
+        else if (!aggregate.HasAuthoritativeRunSummary)
+        {
+            builder.Append("> Counts reflect the observed module fragments. The outer `dotnet test` duration and exit verdict were not supplied by the SDK.\n\n");
+        }
+
+        foreach (CiRunSummaryModule module in aggregate.Modules)
+        {
+            bool needsDiscriminator = HasDuplicateModuleIdentity(aggregate.Modules, module);
+            builder.Append("<details>\n<summary>")
+                .Append(HtmlEncode(module.AssemblyName))
+                .Append(" (").Append(HtmlEncode(module.TargetFramework)).Append(", ")
+                .Append(HtmlEncode(module.Architecture));
+            if (needsDiscriminator)
+            {
+                builder.Append(", attempt ").Append(module.AttemptNumber.ToString(CultureInfo.InvariantCulture))
+                    .Append(", session ").Append(HtmlEncode(module.SessionUid));
+            }
+
+            builder.Append(")</summary>\n\n");
+            AppendModuleMarkdown(builder, module);
+            builder.Append("</details>\n\n");
+        }
+
+        return builder.ToString();
+    }
+
+    private static void AppendModuleMarkdown(StringBuilder builder, CiRunSummaryModule module)
+    {
+        builder.Append("## ").Append(EscapeCell(module.AssemblyName)).Append("\n\n");
+        builder.Append("| Metric | Value |\n");
+        builder.Append("| --- | ---: |\n");
+        builder.Append("| Total | ").Append(module.TotalTests.ToString(CultureInfo.InvariantCulture)).Append(" |\n");
+        builder.Append("| Passed | ").Append(module.PassedTests.ToString(CultureInfo.InvariantCulture)).Append(" |\n");
+        builder.Append("| Failed | ").Append(module.FailedTests.ToString(CultureInfo.InvariantCulture)).Append(" |\n");
+        builder.Append("| Skipped | ").Append(module.SkippedTests.ToString(CultureInfo.InvariantCulture)).Append(" |\n");
+        builder.Append("| Test duration | ").Append(FormatDuration(TimeSpan.FromTicks(module.TestDurationTicks))).Append(" |\n");
+        builder.Append("| Module exit code | ").Append(module.ExitCode.ToString(CultureInfo.InvariantCulture)).Append(" |\n\n");
+
+        if (module.TopFailingClasses.Length > 0)
+        {
+            builder.Append("### Top failing classes\n\n");
+            builder.Append("| Class | Failures |\n");
+            builder.Append("| --- | ---: |\n");
+            foreach (CiRunSummaryFailingClass item in module.TopFailingClasses)
+            {
+                builder.Append("| ").Append(EscapeCell(item.ClassName)).Append(" | ")
+                    .Append(item.FailureCount.ToString(CultureInfo.InvariantCulture)).Append(" |\n");
+            }
+
+            builder.Append('\n');
+        }
+
+        if (module.Failures.Length > 0)
+        {
+            builder.Append("### First failing tests\n\n");
+            foreach (CiRunSummaryTest failure in module.Failures.Take(MaxFirstFailingFqns))
+            {
+                builder.Append("- ").Append(EscapeCell(failure.FullyQualifiedName)).Append('\n');
+            }
+
+            builder.Append('\n');
+        }
+
+        if (module.SlowestTests.Length > 0)
+        {
+            builder.Append("### Slowest tests\n\n");
+            builder.Append("| Test | Duration |\n");
+            builder.Append("| --- | ---: |\n");
+            foreach (CiRunSummaryTest test in module.SlowestTests)
+            {
+                builder.Append("| ").Append(EscapeCell(test.DisplayName)).Append(" | ")
+                    .Append(FormatDuration(TimeSpan.FromTicks(test.DurationTicks))).Append(" |\n");
+            }
+
+            builder.Append('\n');
+        }
+    }
+
     private static string GetClassName(string fullyQualifiedName)
     {
         if (RoslynString.IsNullOrEmpty(fullyQualifiedName))
@@ -427,4 +595,13 @@ internal sealed class AzureDevOpsSummaryReporter : IDataConsumer, ITestSessionLi
 
         return sb.ToString();
     }
+
+    private static string HtmlEncode(string value)
+        => System.Net.WebUtility.HtmlEncode(value);
+
+    private static bool HasDuplicateModuleIdentity(IReadOnlyList<CiRunSummaryModule> modules, CiRunSummaryModule module)
+        => modules.Count(candidate =>
+            string.Equals(candidate.AssemblyName, module.AssemblyName, StringComparison.Ordinal)
+            && string.Equals(candidate.TargetFramework, module.TargetFramework, StringComparison.Ordinal)
+            && string.Equals(candidate.Architecture, module.Architecture, StringComparison.OrdinalIgnoreCase)) > 1;
 }

@@ -1,20 +1,21 @@
 ---
-name: "Grade Tests on PR (on open / sync)"
+name: "Test Reviewer on PR (on open / sync)"
 description: >-
-  Automatically grades new and modified test methods when a non-draft
-  PR is opened, reopened, marked ready-for-review, or pushed to — but
-  only when the change touches files under `test/`. Posts a scorecard
-  comment plus inline `suggestion` comments for tests graded below A.
+  Automatically reviews new and modified test methods when a non-draft PR
+  is opened, reopened, marked ready-for-review, or pushed to — but only when
+  the change touches files under `test/`. Reviews correctness, effectiveness,
+  reliability, maintainability, and repository conventions; posts a compact
+  scorecard plus complete, apply-ready inline suggestions.
 
 # Triggers:
 # - pull_request `opened` / `reopened` / `ready_for_review` — initial
-#   grade on the PR's first appearance as a non-draft.
-# - pull_request `synchronize` — re-grade when new commits are pushed
+#   review on the PR's first appearance as a non-draft.
+# - pull_request `synchronize` — re-review when new commits are pushed
 #   so the comment stays current. Combined with `paths` so we only fire
 #   when test files change, and with `concurrency.cancel-in-progress`
 #   so superseded runs are cancelled.
 #
-# The companion `/grade-tests` slash command lives in `grade-tests.agent.md`.
+# The companion `/review-tests` slash command lives in `test-reviewer.agent.md`.
 # They must remain separate workflows because mixing `slash_command` with
 # other triggers makes gh-aw's activation gate always require a command
 # position match, silently skipping the agent on every `pull_request`
@@ -40,14 +41,14 @@ permissions:
   copilot-requests: write
 
 imports:
-  - shared/grade-tests-shared.md
+  - shared/test-reviewer-shared.md
 
 # This workflow fires automatically on every PR open / reopen / ready-for-review
 # and on every push (`synchronize`) that touches `test/**`. On a busy weekend the
 # per-workflow 24h AI-credit usage aggregated across all those runs crossed the
 # enterprise default of 5K, tripping the daily guardrail and failing every
 # subsequent activation (see issues #9086 and #9053). Raise the daily budget so a
-# busy day of PR pushes does not skip grading.
+# busy day of PR pushes does not skip reviews.
 max-daily-ai-credits: 20K
 
 safe-outputs:
@@ -58,10 +59,10 @@ safe-outputs:
     report-as-issue: false
 
 concurrency:
-  group: grade-tests-${{ github.event.pull_request.number }}
+  group: test-reviewer-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 timeout-minutes: 20
 ---
 
-<!-- Body provided by shared/grade-tests-shared.md -->
+<!-- Body provided by shared/test-reviewer-shared.md -->

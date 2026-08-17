@@ -8,6 +8,8 @@ namespace Microsoft.Testing.Extensions.JUnitReport;
 
 internal sealed class JUnitReportGenerator : ReportGeneratorBase<JUnitReportGenerator, CapturedTestResult>
 {
+    internal const string JUnitArtifactKind = "microsoft.testing.junit";
+
     // Parent chain for ALL TestNodeUpdateMessages (including Discovered / InProgress).
     // Keyed by the TestNodeUid value after truncation to TestResultCaptureHelper.MaxIdentityFieldLength
     // so it matches the capped RawUid / ParentRawUid keys used everywhere else in capture
@@ -33,7 +35,7 @@ internal sealed class JUnitReportGenerator : ReportGeneratorBase<JUnitReportGene
 
     protected override string ArtifactDisplayName => ExtensionResources.JUnitReportArtifactDisplayName;
 
-    protected override string? ArtifactKind => "microsoft.testing.junit";
+    protected override string? ArtifactKind => JUnitArtifactKind;
 
     protected override string ArtifactDescription => ExtensionResources.JUnitReportArtifactDescription;
 

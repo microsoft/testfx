@@ -6,12 +6,98 @@
 using Microsoft.Testing.Extensions.Policy;
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
+using Microsoft.Testing.Platform.Extensions.OutputDevice;
+using Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers;
+using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.OutputDevice;
+
+using Moq;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
 
 [TestClass]
 public class RetryTests
 {
+    [TestMethod]
+    public void SnapshotAttemptArtifacts_CopiesExternalArtifactAndPreservesDestination()
+    {
+        string retryRoot = Path.GetFullPath(Path.Combine("TR", "Retries", "abcde"));
+        string attemptDirectory = Path.Combine(retryRoot, "1");
+        string externalPath = Path.GetFullPath(Path.Combine("custom", "report.ctrf.json"));
+        string expectedSnapshot = Path.Combine(retryRoot, "Artifacts", "1", "0000-report.ctrf.json");
+        var fileSystem = new Mock<IFileSystem>();
+
+        IReadOnlyList<RetryAttemptArtifact> captured = RetryArtifactProcessor.SnapshotAttemptArtifacts(
+            fileSystem.Object,
+            [new ArtifactRequest(externalPath, "microsoft.testing.ctrf")],
+            attempt: 1,
+            attemptDirectory,
+            retryRoot);
+
+        RetryAttemptArtifact artifact = Assert.ContainsSingle(captured);
+        Assert.AreEqual(expectedSnapshot, artifact.Path);
+        Assert.AreEqual(externalPath, artifact.DestinationPath);
+        Assert.AreEqual(1, artifact.Attempt);
+        fileSystem.Verify(fs => fs.CreateDirectory(Path.Combine(retryRoot, "Artifacts", "1")), Times.Once);
+        fileSystem.Verify(fs => fs.CopyFile(externalPath, expectedSnapshot, overwrite: true), Times.Once);
+    }
+
+    [TestMethod]
+    public void PublishExternalArtifacts_UsesMergedReplacement()
+    {
+        string snapshotPath = Path.GetFullPath(Path.Combine("TR", "Retries", "abcde", "Artifacts", "2", "report.ctrf.json"));
+        string destinationPath = Path.GetFullPath(Path.Combine("custom", "report.ctrf.json"));
+        string replacementPath = Path.GetFullPath(Path.Combine("temp", "merged.ctrf.json"));
+        var fileSystem = new Mock<IFileSystem>();
+        var artifact = new RetryAttemptArtifact(snapshotPath, "microsoft.testing.ctrf", attempt: 2, destinationPath);
+
+        RetryArtifactProcessor.PublishExternalArtifacts(
+            fileSystem.Object,
+            [artifact],
+            finalAttempt: 2,
+            new Dictionary<string, string> { [snapshotPath] = replacementPath });
+
+        fileSystem.Verify(fs => fs.CreateDirectory(Path.GetDirectoryName(destinationPath)!), Times.Once);
+        fileSystem.Verify(fs => fs.CopyFile(replacementPath, destinationPath, overwrite: true), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task MoveArtifactsAsync_NormalizesRelativePathsBeforeApplyingReplacement()
+    {
+        string currentAttemptDirectory = Path.Combine("TR", "Retries", "abcde", "2");
+        string relativeAttemptFile = Path.Combine(currentAttemptDirectory, "report.xml");
+        string replacementFile = Path.GetFullPath(Path.Combine("merged", "report.xml"));
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem
+            .Setup(fs => fs.GetFiles(currentAttemptDirectory, "*.*", SearchOption.AllDirectories))
+            .Returns([relativeAttemptFile]);
+        var outputDevice = new Mock<IOutputDevice>();
+        outputDevice
+            .Setup(device => device.DisplayAsync(
+                It.IsAny<IOutputDeviceDataProducer>(),
+                It.IsAny<IOutputDeviceData>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        await RetrySummaryReporter.MoveArtifactsAsync(
+            new Mock<IOutputDeviceDataProducer>().Object,
+            outputDevice.Object,
+            fileSystem.Object,
+            new Mock<ILogger>().Object,
+            currentAttemptDirectory,
+            "TR",
+            new Dictionary<string, string>
+            {
+                [Path.GetFullPath(relativeAttemptFile)] = replacementFile,
+            },
+            CancellationToken.None);
+
+        fileSystem.Verify(
+            fs => fs.CopyFile(replacementFile, Path.Combine("TR", "report.xml"), overwrite: true),
+            Times.Once);
+    }
+
     [TestMethod]
     public void GetCommandLineOptions_PublicRetryOptions_AreExtensionOptions()
     {

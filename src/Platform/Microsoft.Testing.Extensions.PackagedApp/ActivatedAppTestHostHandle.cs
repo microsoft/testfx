@@ -17,11 +17,13 @@ internal sealed class ActivatedAppTestHostHandle : ITestHostHandle
 {
     private readonly Process _process;
     private readonly string? _handshakePath;
+    private readonly string? _activationPayloadPath;
 
-    public ActivatedAppTestHostHandle(uint processId, string? handshakePath)
+    public ActivatedAppTestHostHandle(uint processId, string? handshakePath, string? activationPayloadPath)
     {
         _process = Process.GetProcessById((int)processId);
         _handshakePath = handshakePath;
+        _activationPayloadPath = activationPayloadPath;
     }
 
     public string? Identifier => _process.Id.ToString(CultureInfo.InvariantCulture);
@@ -55,6 +57,8 @@ internal sealed class ActivatedAppTestHostHandle : ITestHostHandle
         {
             PackagedAppConnectBackHandshake.TryDelete(_handshakePath);
         }
+
+        PackagedAppActivationArguments.TryDeletePayload(_activationPayloadPath);
     }
 }
 

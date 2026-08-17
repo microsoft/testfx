@@ -2,7 +2,7 @@
 
 - [ ] Approved in principle
 - [x] Under discussion
-- [ ] Implementation
+- [x] Implementation
 - [ ] Shipped
 
 > **Renumber note.** This design was originally drafted as "RFC 017" in [microsoft/testfx#9187](https://github.com/microsoft/testfx/pull/9187). `017` has since been taken by `017-TestHost-Launcher.md` (merged in [#9349](https://github.com/microsoft/testfx/pull/9349)), so this document is renumbered to **018**.
@@ -144,6 +144,8 @@ public interface IArtifactPostProcessor : IExtension
 {
     // Inherited from IExtension: Uid, Version, DisplayName, Description, Task<bool> IsEnabledAsync().
 
+    IReadOnlyList<ArtifactPostProcessingMode> SupportedModes { get; }
+
     /// <summary>
     /// Whether this processor can consume the incomplete set of complete artifacts observed
     /// before --maximum-failed-tests or --timeout truncated a run.
@@ -179,11 +181,50 @@ public interface IArtifactPostProcessor : IExtension
         CancellationToken cancellationToken);
 }
 
+public interface IArtifactPostProcessorRequiresPostProcessing : IArtifactPostProcessor;
+
 public sealed class ArtifactPostProcessingContext
 {
     public ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason truncationReason);
+    public ArtifactPostProcessingContext(
+        ArtifactPostProcessingTruncationReason truncationReason,
+        ArtifactPostProcessingMode mode);
+    public ArtifactPostProcessingContext(
+        ArtifactPostProcessingTruncationReason truncationReason,
+        ArtifactPostProcessingRunSummary? runSummary);
+    public ArtifactPostProcessingContext(
+        ArtifactPostProcessingTruncationReason truncationReason,
+        ArtifactPostProcessingMode mode,
+        ArtifactPostProcessingRunSummary? runSummary);
     public bool IsTruncated { get; }
+    public ArtifactPostProcessingMode Mode { get; }
     public ArtifactPostProcessingTruncationReason TruncationReason { get; }
+    public ArtifactPostProcessingRunSummary? RunSummary { get; }
+}
+
+public sealed class ArtifactPostProcessingRunSummary
+{
+    public ArtifactPostProcessingRunSummary(
+        long totalTests,
+        long passedTests,
+        long failedTests,
+        long skippedTests,
+        TimeSpan duration,
+        int exitCode,
+        int testModuleCount);
+    public long TotalTests { get; }
+    public long PassedTests { get; }
+    public long FailedTests { get; }
+    public long SkippedTests { get; }
+    public TimeSpan Duration { get; }
+    public int ExitCode { get; }
+    public int TestModuleCount { get; }
+}
+
+public enum ArtifactPostProcessingMode
+{
+    TestModules,
+    RetryAttempts,
 }
 
 public enum ArtifactPostProcessingTruncationReason
@@ -224,6 +265,8 @@ public sealed record ProcessedArtifact(
 - **Returning `null`** means "I looked but there's nothing to do" (e.g. < 2 inputs). The orchestrator then leaves the originals visible.
 - **Idempotent / deterministic.** The contract is intentionally pure-functional from `inputs` -> `output`. Implementations must not stash state across calls.
 - **Truncated runs are fail-closed.** A processor must explicitly return `true` from `SupportsTruncatedRuns` before the SDK or dispatcher offers it artifacts from a run truncated by `--maximum-failed-tests` or `--timeout`. Opting in means the processor accepts an incomplete *set* of artifacts and will clearly represent that state in its output; it does not mean partially written or malformed files are valid inputs.
+- **Retry merging is opt-in.** `RetryAttempts` inputs are ordered from the initial execution to the final attempt and overlap by definition. A processor must advertise that mode and deliberately collapse repeated logical tests; processors that only concatenate disjoint module results advertise `TestModules` alone.
+- **Required post-processing is capability-gated.** Internal coordination formats such as CI summary fragments implement `IArtifactPostProcessorRequiresPostProcessing`. Their kinds are advertised separately so a supporting orchestrator invokes the processor even for one input. Producers defer standalone output only after the SDK handshake response confirms support; older SDKs continue the existing direct behavior.
 - **`IExtension` base** gives us `Uid`, `Version`, `DisplayName`, `Description`, and `IsEnabledAsync()` for free, plus integration with the existing extension manifest tooling. (`IsEnabledAsync()` is therefore *not* a bespoke member of this contract; the sketch in Appendix A.1 implements the inherited member.)
 
 #### The producer/post-processor co-location invariant
@@ -376,8 +419,9 @@ foreach (PostProcessingJob job in plan.Jobs)
         manifestPath: job.WriteManifest(),
         onMergedArtifact: merged =>
         {
-            // Re-enters the normal reporter path; collapse the consumed originals.
-            output.RemoveArtifacts(job.InputsFor(merged.Kind));
+            // Re-enters the normal reporter path; collapse only the inputs that
+            // the dispatcher reports as represented by this output.
+            output.RemoveArtifacts(job.Inputs.IntersectByPath(merged.InputArtifactPaths));
             output.ArtifactAdded(outOfProcess: true, path: merged.Path, /* ... */);
         },
         onError: err => output.Warning($"Post-processing of {err.ProcessorUid}: {err.Message}"),
@@ -395,7 +439,16 @@ The relaunched host runs a **platform-owned dispatcher `ITool`** (`internal-merg
 3. Reads the manifest and filters out processors that did not opt into its truncation state.
 4. Routes inputs to eligible processors **by Kind first, then by file-extension fallback** for untagged inputs. An input is never routed to more than one processor.
 5. Calls each matched processor's `ProcessAsync` once with the run context.
-6. Reports each merged `ProcessedArtifact` back over the connected `dotnet-test` pipe as a `FileArtifactMessage`, and surfaces per-processor errors, then exits.
+6. Reports each merged `ProcessedArtifact` back over the connected `dotnet-test` pipe as a
+   `FileArtifactMessage`. Its `InputArtifactPaths` field contains the original manifest path strings for
+   every input supplied to that processor invocation, copied verbatim, and the SDK removes exactly those
+   job inputs from the summary. The dispatcher surfaces per-processor errors, then exits.
+
+A non-null `ProcessedArtifact` represents every input supplied to that processor invocation. A processor
+that cannot produce one artifact representing the complete input set returns `null` or throws. This
+all-or-nothing rule makes `InputArtifactPaths` authoritative without changing the processor API. A
+processor that advertises both kinds and legacy extensions can receive the union of producer-kind matches
+and untagged extension-fallback matches, so it must be able to represent that complete union.
 
 The dispatcher tool is marked **internal** (a flag mirroring command-line `IsHidden`) so it is not listed under "Registered tools:" by `--info`. A user would never type `--tool internal-merge-artifacts --manifest ...`; the non-hidden manual value comes entirely from the per-extension user tools in §7.2, which ship regardless of this decision.
 
@@ -412,6 +465,15 @@ Manifest (orchestrator -> dispatcher):
   "schemaVersion": 1,
   "outputDirectory": "C:/path/to/TestResults",
   "truncationReason": "maximumFailedTests", // optional; absent means complete, or "timeout"
+  "runSummary": {                           // optional; authoritative outer-orchestrator values
+    "totalTests": 2935,
+    "passedTests": 2929,
+    "failedTests": 1,
+    "skippedTests": 5,
+    "durationTicks": 2062210000,
+    "exitCode": 2,
+    "testModuleCount": 12
+  },
   "inputs": [
     {
       "path": "C:/.../A/TestResults/A_net10.0_...trx",
@@ -433,9 +495,15 @@ Manifest (orchestrator -> dispatcher):
 }
 ```
 
-`truncationReason` is an additive schema-1 field because the existing parser ignores unknown fields. An old dispatcher reading a new manifest therefore continues to fail closed at election time: an SDK must elect a host through the new truncated-run capability before it writes this field. A new dispatcher reading an old manifest treats the run as complete.
+`truncationReason` and `runSummary` are additive schema-1 fields because the existing parser ignores unknown fields. An old dispatcher reading a new manifest therefore continues to fail closed at election time: an SDK must elect a host through the matching capability before it writes these fields. A new dispatcher reading an old manifest treats the run as complete and leaves `RunSummary` null. Processors must not present reconstructed duration or exit data as authoritative when it is absent.
 
-**Preferred result path: over the pipe.** In the recommended design the dispatcher reports each merged artifact back as a `FileArtifactMessage`, so there is no separate result file and no SDK-side result-JSON parsing. The SDK correlates the incoming merged artifact to the job it dispatched (it knows which inputs it sent) and collapses the originals.
+**Preferred result path: over the pipe.** In the recommended design the dispatcher reports each merged
+artifact back as a `FileArtifactMessage`, so there is no separate result file and no SDK-side result-JSON
+parsing. Each dispatcher output includes the additive `InputArtifactPaths` field (field ID 8), containing
+the original manifest path strings copied verbatim. The SDK intersects those strings with the job manifest
+and collapses exactly the matching originals. Older readers skip the unknown field; newer readers treat its
+absence as an old-host response and use a conservative fallback. No protocol-version bump or handshake
+capability is required.
 
 **Transitional result path: result JSON.** If the pipe-composition task in §7.6 is deferred, the dispatcher writes a result JSON (path supplied in the manifest) and the SDK performs the swap. This keeps the same typed contract and the same manifest; only the *return channel* changes. Keeping the manifest/result schema `schemaVersion`-versioned means the return channel can switch from files to the pipe without touching `IArtifactPostProcessor`.
 
@@ -453,9 +521,11 @@ Dispatcher exit codes (final values to be finalized so they don't overlap existi
 | Scenario | Outcome |
 | --- | --- |
 | 1 module, 1 TRX | No relaunch (only 1 input; group filtered out by the `>= 2` rule). |
+| 1 module, 1 required CI summary fragment | A supporting SDK relaunches the processor despite one input and returns one final summary; older SDKs leave the reporter's direct summary behavior unchanged. |
 | 5 modules, 5 TRX, all tag `microsoft.testing.trx` | 1 relaunch, 1 merged TRX, 5 originals on disk, 1 summary line. |
 | 5 modules, mixed TRX + coverage, one app covers both | 1 relaunch (set-cover), 1 merged TRX + 1 merged coverage. |
 | `.xml` artifacts: 3 JUnit (kind `junit.report`) + 2 NUnit3 (kind `nunit.report`) | Two distinct groups, two merges, no cross-contamination (would have collided under pure extension matching). |
+| Tagged JUnit and untagged NUnit3 `.xml` artifacts route to different processors in one app | Per-output dispatcher provenance collapses each processor's inputs independently; if the fallback processor returns `null`, those legacy inputs remain listed. |
 | Module lacks a processor for `playwright.trace` | Those files listed individually (today's behavior). |
 | Older testfx with no `IArtifactPostProcessor` | No advertisements -> no relaunch -> today's behavior end-to-end. |
 | New SDK + new platform + producer not tagging Kind yet | Orchestrator falls back to file extension; merge still happens. |
@@ -610,6 +680,9 @@ One might avoid a relaunch by keeping an elected host process alive at end-of-ru
 ```csharp
 internal sealed class TrxArtifactPostProcessor : IArtifactPostProcessor
 {
+    public IReadOnlyList<ArtifactPostProcessingMode> SupportedModes
+        => [ArtifactPostProcessingMode.TestModules];
+
     public bool SupportsTruncatedRuns => false;
 
     public string Uid => "Microsoft.Testing.Extensions.TrxReport.PostProcessor";

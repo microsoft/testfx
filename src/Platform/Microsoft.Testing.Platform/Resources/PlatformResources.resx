@@ -172,6 +172,10 @@
     <value>The artifact post-processing manifest must have schemaVersion 1 and an outputDirectory.</value>
     <comment>Do not localize property names {Locked="schemaVersion"}{Locked="outputDirectory"}.</comment>
   </data>
+  <data name="ArtifactPostProcessingManifestRunSummaryInvalid" xml:space="preserve">
+    <value>The artifact post-processing manifest runSummary must contain valid totalTests, passedTests, failedTests, skippedTests, durationTicks, exitCode, and testModuleCount values.</value>
+    <comment>Do not localize property names {Locked="runSummary"}{Locked="totalTests"}{Locked="passedTests"}{Locked="failedTests"}{Locked="skippedTests"}{Locked="durationTicks"}{Locked="exitCode"}{Locked="testModuleCount"}.</comment>
+  </data>
   <data name="ArtifactPostProcessingManifestReadError" xml:space="preserve">
     <value>Cannot read the artifact post-processing manifest: {0}</value>
     <comment>{0} is the exception message.</comment>
@@ -727,10 +731,15 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
     <value>The named pipe directory '{0}' does not exist or is not writable: {1}. Set the '{2}' environment variable to an existing writable directory, or unset it to fall back to the default temporary directory.</value>
     <comment>{0} is the directory path, {1} is the underlying error message, {2} is the environment variable name. Do not translate the environment variable name.</comment>
   </data>
+  <data name="TestHostControllerConnectionInvalidAuthorizedSecurityIdentityErrorMessage" xml:space="preserve">
+    <value>The test host launcher '{0}' (UID: {1}) asked to authorize the security identity '{2}' on the test host controller connection, but only the identity of a single sandboxed application (on Windows, a security identifier of the form 'S-1-15-2-...') can be authorized. Users, groups and the catch-all '{3}' security identifier are never granted access.</value>
+    <comment>{0} is the launcher display name, {1} is the launcher unique identifier, {2} is the rejected security identity, {3} is the well-known 'ALL APPLICATION PACKAGES' security identifier. {Locked="'S-1-15-2-...'"}</comment>
+  </data>
   <data name="PlatformCommandLineIgnoreExitCodeOptionDescription" xml:space="preserve">
-    <value>Do not report non successful exit value for specific exit codes
-(e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</value>
-    <comment>{Locked="--ignore-exit-code 8;9"}</comment>
+    <value>Do not report a non-successful exit value for the specified exit codes.
+For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
+For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</value>
+    <comment>{Locked="'--ignore-exit-code 8;9'"} {Locked="https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes"}</comment>
   </data>
   <data name="PlatformCommandLineExitOnProcessExitOptionDescription" xml:space="preserve">
     <value>Exit the test process if dependent process exits. PID must be provided.</value>

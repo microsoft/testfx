@@ -49,6 +49,16 @@ internal static partial class CtrfReportMerger
         => Merge(inputReports, CtrfMergeMode.Concatenate);
 
     internal static string Merge(IReadOnlyList<string> inputReports, CtrfMergeMode mode)
+        => Merge(inputReports, mode, requireAllReports: false);
+
+    private static string Merge(IReadOnlyList<string> inputReports, CtrfMergeMode mode, bool requireAllReports)
+        => Merge(inputReports, mode, requireAllReports, nameof(inputReports));
+
+    private static string Merge(
+        IReadOnlyList<string> inputReports,
+        CtrfMergeMode mode,
+        bool requireAllReports,
+        string invalidInputParameterName)
     {
         if (inputReports is null)
         {
@@ -108,6 +118,17 @@ internal static partial class CtrfReportMerger
             if (!string.Equals(format, "CTRF", StringComparison.OrdinalIgnoreCase))
             {
                 continue;
+            }
+
+            // The permissive manual merger drops non-object test entries and tolerates a missing tests array.
+            // Artifact post-processing cannot do that because its output must represent every supplied input,
+            // so strict mode rejects precisely the shapes the merger could not carry through. Test objects
+            // themselves remain pass-through data under the validity contract documented above.
+            if (requireAllReports
+                && (root["results"]?["tests"] is not JsonArray strictTests
+                    || strictTests.Any(test => test is not JsonObject)))
+            {
+                throw new ArgumentException("Every input must be a valid CTRF report.", invalidInputParameterName);
             }
 
             first ??= root;
@@ -176,6 +197,11 @@ internal static partial class CtrfReportMerger
                     latestStop = Max(latestStop, stop);
                 }
             }
+        }
+
+        if (requireAllReports && reportCount != inputReports.Count)
+        {
+            throw new ArgumentException("Every input must be a valid CTRF report.", invalidInputParameterName);
         }
 
         if (first is null)

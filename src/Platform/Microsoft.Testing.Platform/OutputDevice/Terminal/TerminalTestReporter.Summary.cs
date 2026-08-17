@@ -141,7 +141,7 @@ internal sealed partial class TerminalTestReporter
 
         bool colorizeFailed = failed > 0;
         bool colorizePassed = passed > 0 && failed == 0;
-        bool colorizeSkipped = skipped > 0 && skipped == total && failed == 0;
+        bool colorizeSkipped = skipped > 0;
 
         string errorText = $"{SingleIndentation}{TerminalResources.Error}: {error}";
         string totalText = $"{SingleIndentation}{TerminalResources.TotalLowercase}: {total}";

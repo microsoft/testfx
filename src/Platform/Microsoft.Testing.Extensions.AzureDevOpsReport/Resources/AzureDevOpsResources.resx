@@ -293,7 +293,7 @@
     <comment>{0} is the Azure DevOps run URL. {1} is the maximum number of pages.</comment>
   </data>
   <data name="GroupsOptionDescription" xml:space="preserve">
-    <value>Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.</value>
+    <value>Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'off'. Requires '--report-azdo'.</value>
     <comment>{Locked="on"}{Locked="off"}{Locked="--report-azdo"}</comment>
   </data>
   <data name="InvalidArtifactUploadGlob" xml:space="preserve">

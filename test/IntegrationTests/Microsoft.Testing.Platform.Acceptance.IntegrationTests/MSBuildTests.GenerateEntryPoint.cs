@@ -58,9 +58,9 @@ public class MSBuildTests_EntryPoint : AcceptanceTestBase<NopAssetFixture>
 namespace MSBuildTests
 {
     [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-    internal sealed class MicrosoftTestingPlatformEntryPoint
+    internal static class MicrosoftTestingPlatformApplication
     {
-        public static async global::System.Threading.Tasks.Task<int> Main(string[] args)
+        public static async global::System.Threading.Tasks.Task<int> RunAsync(string[] args)
         {
             global::Microsoft.Testing.Platform.Builder.ITestApplicationBuilder builder = await global::Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(args);
             global::MSBuildTests.SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args);
@@ -69,6 +69,13 @@ namespace MSBuildTests
                 return await app.RunAsync();
             }
         }
+    }
+
+    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+    internal sealed class MicrosoftTestingPlatformEntryPoint
+    {
+        public static global::System.Threading.Tasks.Task<int> Main(string[] args)
+            => MicrosoftTestingPlatformApplication.RunAsync(args);
     }
 }'", "Csc");
 
@@ -84,13 +91,8 @@ namespace MSBuildTests
 '------------------------------------------------------------------------------
 
 <System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>
-Module MicrosoftTestingPlatformEntryPoint
-
-    Function Main(args As String()) As Integer
-        Return MainAsync(args).GetAwaiter().GetResult()
-    End Function
-
-    Public Async Function MainAsync(args As String()) As Global.System.Threading.Tasks.Task(Of Integer)
+Friend Module MicrosoftTestingPlatformApplication
+    Public Async Function RunAsync(args As String()) As Global.System.Threading.Tasks.Task(Of Integer)
         Dim builder = Await Global.Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(args)
         SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args)
         Using testApplication = Await builder.BuildAsync()
@@ -98,7 +100,38 @@ Module MicrosoftTestingPlatformEntryPoint
         End Using
     End Function
 
+End Module
+
+<System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>
+Module MicrosoftTestingPlatformEntryPoint
+    Function Main(args As String()) As Integer
+        Return MicrosoftTestingPlatformApplication.RunAsync(args).GetAwaiter().GetResult()
+    End Function
+
+    Public Function MainAsync(args As String()) As Global.System.Threading.Tasks.Task(Of Integer)
+        Return MicrosoftTestingPlatformApplication.RunAsync(args)
+    End Function
 End Module'", "Vbc");
+
+    [TestMethod]
+    public async Task GenerateVBApplicationHelperWithoutEntryPoint()
+    {
+        string sourceCode = VBSourceCode
+            .PatchCodeWithReplace("$TargetFrameworks$", TargetFrameworks.NetCurrent)
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion);
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(nameof(GenerateVBApplicationHelperWithoutEntryPoint), sourceCode);
+
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
+            $"build -c {BuildConfiguration.Debug} -p:GenerateTestingPlatformEntryPoint=false -p:GenerateTestingPlatformApplicationHelper=true -p:OutputType=Library {testAsset.TargetAssetPath} -v:n",
+            cancellationToken: TestContext.CancellationToken);
+        SL.Build binLog = SL.Serialization.Read(buildResult.BinlogPath!);
+
+        SL.Task entryPointTask = binLog.FindChildrenRecursive<SL.Task>().Single(t => t.Name == "TestingPlatformEntryPointTask");
+        string generatedSource = entryPointTask.FindChildrenRecursive<SL.Message>().Single(m => m.Text.Contains("Entrypoint source:")).Text;
+        Assert.Contains("Friend Module MicrosoftTestingPlatformApplication", generatedSource);
+        Assert.Contains("Public Async Function RunAsync(args As String())", generatedSource);
+        Assert.DoesNotContain("Module MicrosoftTestingPlatformEntryPoint", generatedSource);
+    }
 
     [CombinatorialData]
     [TestMethod]
@@ -113,17 +146,22 @@ End Module'", "Vbc");
 
 namespace MSBuildTests
 
-module MicrosoftTestingPlatformEntryPoint =
+module internal MicrosoftTestingPlatformApplication =
 
-    [<System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>]
-    [<EntryPoint>]
-    let main args =
+    let runAsync args =
         task {
             let! builder = Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync args
             SelfRegisteredExtensions.AddSelfRegisteredExtensions(builder, args)
             use! app = builder.BuildAsync()
             return! app.RunAsync()
         }
+
+module MicrosoftTestingPlatformEntryPoint =
+
+    [<System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage>]
+    [<EntryPoint>]
+    let main args =
+        MicrosoftTestingPlatformApplication.runAsync args
         |> Async.AwaitTask
         |> Async.RunSynchronously'", "Fsc");
 

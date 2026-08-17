@@ -225,6 +225,41 @@ public sealed class UndeclaredProcessGlobalStateMutationAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenTestMethodSetsEnvironmentVariableInGlobalTestInitialize_DiagnosticWithoutFix()
+    {
+        // A global fixture can race every test in the assembly, but it has no effective ResourceLock target.
+        // Verify that the diagnostic is reported without offering a code fix.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: Parallelize(Workers = 0, Scope = ExecutionScope.MethodLevel)]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [GlobalTestInitialize]
+                public static void GlobalSetup(TestContext context)
+                {
+                    {|#0:Environment.SetEnvironmentVariable("MY_VAR", "value")|};
+                }
+
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic(UndeclaredProcessGlobalStateMutationAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Environment.SetEnvironmentVariable", "EnvironmentVariables"),
+            code);
+    }
+
+    [TestMethod]
     public async Task WhenTestMethodSetsEnvironmentVariableInClassInitialize_Diagnostic()
     {
         // Contrast with the two tests above: ClassInitialize runs per class, so under MethodLevel parallelization

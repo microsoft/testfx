@@ -4,12 +4,14 @@
 using Microsoft.Testing.Extensions.GitHubActionsReport.Resources;
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
 
@@ -23,6 +25,7 @@ namespace Microsoft.Testing.Extensions.GitHubActionsReport;
 /// </summary>
 internal sealed class GitHubActionsSummaryReporter :
     IDataConsumer,
+    IDataProducer,
     ITestSessionLifetimeHandler,
     IOutputDeviceDataProducer
 {
@@ -38,14 +41,17 @@ internal sealed class GitHubActionsSummaryReporter :
     private const int StepSummaryMaxWriteAttempts = 20;
     private static readonly TimeSpan StepSummaryRetryDelay = TimeSpan.FromMilliseconds(50);
 
+    private readonly IConfiguration _configuration;
     private readonly IEnvironment _environment;
     private readonly IFileSystem _fileSystem;
+    private readonly IMessageBus _messageBus;
     private readonly IOutputDevice _outputDevice;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
     private readonly ITestApplicationProcessExitCode _testApplicationProcessExitCode;
     private readonly ILogger _logger;
     private readonly Lazy<string> _targetFrameworkMoniker;
     private readonly bool _isEnabled;
+    private readonly Func<bool> _shouldDeferToArtifactPostProcessing;
 
 #if NET9_0_OR_GREATER
     private readonly System.Threading.Lock _stateLock = new();
@@ -58,24 +64,32 @@ internal sealed class GitHubActionsSummaryReporter :
 
     public GitHubActionsSummaryReporter(
         ICommandLineOptions commandLineOptions,
+        IConfiguration configuration,
         IEnvironment environment,
         IFileSystem fileSystem,
+        IMessageBus messageBus,
         IOutputDevice outputDevice,
         ITestApplicationModuleInfo testApplicationModuleInfo,
         ITestApplicationProcessExitCode testApplicationProcessExitCode,
-        ILoggerFactory loggerFactory)
+        ILoggerFactory loggerFactory,
+        Func<bool> shouldDeferToArtifactPostProcessing)
     {
+        _configuration = configuration;
         _environment = environment;
         _fileSystem = fileSystem;
+        _messageBus = messageBus;
         _outputDevice = outputDevice;
         _testApplicationModuleInfo = testApplicationModuleInfo;
         _testApplicationProcessExitCode = testApplicationProcessExitCode;
         _logger = loggerFactory.CreateLogger<GitHubActionsSummaryReporter>();
         _targetFrameworkMoniker = new(TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform);
         _isEnabled = GitHubActionsFeature.IsEnabled(commandLineOptions, environment, GitHubActionsCommandLineOptions.GitHubActionsStepSummary);
+        _shouldDeferToArtifactPostProcessing = shouldDeferToArtifactPostProcessing;
     }
 
     public Type[] DataTypesConsumed { get; } = [typeof(TestNodeUpdateMessage)];
+
+    public Type[] DataTypesProduced { get; } = [typeof(SessionFileArtifact)];
 
     public string Uid => nameof(GitHubActionsSummaryReporter);
 
@@ -182,7 +196,30 @@ internal sealed class GitHubActionsSummaryReporter :
                 snapshot = [.. _records.Values];
             }
 
-            string markdown = BuildMarkdown(snapshot, _testApplicationModuleInfo.TryGetAssemblyName() ?? "unknown assembly name", _targetFrameworkMoniker.Value, _testApplicationProcessExitCode.GetProcessExitCode());
+            string assemblyName = _testApplicationModuleInfo.TryGetAssemblyName() ?? "unknown assembly name";
+            int exitCode = _testApplicationProcessExitCode.GetProcessExitCode();
+            if (_shouldDeferToArtifactPostProcessing()
+                && _configuration.GetTestResultDirectory() is { } resultsDirectory
+                && !RoslynString.IsNullOrWhiteSpace(resultsDirectory))
+            {
+                CiRunSummaryModule module = CreateModule(snapshot, assemblyName, testSessionContext);
+                string fragmentPath = await CiRunSummaryAggregation.WriteFragmentAsync(
+                    resultsDirectory,
+                    GitHubActionsSummaryArtifactPostProcessor.Provider,
+                    GitHubActionsSummaryArtifactPostProcessor.ProviderSlug,
+                    module).ConfigureAwait(false);
+                await _messageBus.PublishAsync(
+                    this,
+                    new SessionFileArtifact(
+                        testSessionContext.SessionUid,
+                        new FileInfo(fragmentPath),
+                        GitHubActionsResources.DisplayName,
+                        GitHubActionsResources.Description,
+                        GitHubActionsSummaryArtifactPostProcessor.FragmentArtifactKind)).ConfigureAwait(false);
+                return;
+            }
+
+            string markdown = BuildMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value, exitCode);
 
             try
             {
@@ -208,6 +245,31 @@ internal sealed class GitHubActionsSummaryReporter :
             _logger.LogUnexpectedException(nameof(OnTestSessionFinishingAsync), ex);
         }
     }
+
+    private CiRunSummaryModule CreateModule(
+        IReadOnlyList<TestRecord> records,
+        string assemblyName,
+        ITestSessionContext testSessionContext)
+        => CiRunSummaryAggregation.CreateModule(
+            records,
+            assemblyName,
+            _testApplicationModuleInfo.GetCurrentTestApplicationFullPath(),
+            _targetFrameworkMoniker.Value,
+            RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant(),
+            _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID),
+            testSessionContext.SessionUid.Value,
+            GetAttemptNumber(),
+            _testApplicationProcessExitCode.GetProcessExitCode());
+
+    private int GetAttemptNumber()
+        => int.TryParse(
+            _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER),
+            NumberStyles.None,
+            CultureInfo.InvariantCulture,
+            out int attemptNumber)
+            && attemptNumber > 0
+                ? attemptNumber
+                : 1;
 
     /// <summary>
     /// Appends <paramref name="content"/> to the shared <c>GITHUB_STEP_SUMMARY</c> file in a way that is safe
@@ -263,6 +325,114 @@ internal sealed class GitHubActionsSummaryReporter :
             using (var writer = new StreamWriter(stream.Stream, new UTF8Encoding(false)))
             {
                 await writer.WriteAsync(content).ConfigureAwait(false);
+            }
+
+            return;
+        }
+    }
+
+    internal static async Task UpsertStepSummaryWithRetryAsync(
+        IFileSystem fileSystem,
+        string path,
+        string aggregationId,
+        string content,
+        int maxAttempts,
+        TimeSpan retryDelay,
+        CancellationToken cancellationToken)
+    {
+        string startMarker = $"<!-- microsoft-testing-platform:{GitHubActionsSummaryArtifactPostProcessor.Provider}:{aggregationId}:start -->";
+        string endMarker = $"<!-- microsoft-testing-platform:{GitHubActionsSummaryArtifactPostProcessor.Provider}:{aggregationId}:end -->";
+        string section = $"{startMarker}\n{content.TrimEnd()}\n{endMarker}\n";
+        // Keep one stable lock entry for the lifetime of the GitHub step. Deleting it after releasing the handle
+        // would let a third writer create a new inode while a second writer still holds the unlinked old lock.
+        string lockPath = path + ".microsoft-testing-platform.lock";
+
+        for (int attempt = 1; ; attempt++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            IFileStream lockStream;
+            try
+            {
+                lockStream = fileSystem.NewFileStream(
+                    lockPath,
+                    FileMode.OpenOrCreate,
+                    FileAccess.ReadWrite,
+                    FileShare.None);
+            }
+            catch (IOException) when (attempt < maxAttempts)
+            {
+                await Task.Delay(retryDelay, cancellationToken).ConfigureAwait(false);
+                continue;
+            }
+
+            string tempPath = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
+            try
+            {
+                using (lockStream)
+                {
+                    string existing;
+                    using (IFileStream summaryStream = fileSystem.NewFileStream(
+                        path,
+                        FileMode.OpenOrCreate,
+                        FileAccess.Read,
+                        FileShare.ReadWrite | FileShare.Delete))
+                    using (var reader = new StreamReader(summaryStream.Stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true))
+                    {
+#if NET8_0_OR_GREATER
+                        existing = await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
+#else
+#pragma warning disable CA2016 // The target framework has no cancellation-aware StreamReader overload.
+                        existing = await reader.ReadToEndAsync().ConfigureAwait(false);
+#pragma warning restore CA2016
+#endif
+                    }
+
+                    int start = existing.IndexOf(startMarker, StringComparison.Ordinal);
+                    if (start >= 0)
+                    {
+                        int end = existing.IndexOf(endMarker, start, StringComparison.Ordinal);
+                        if (end < 0)
+                        {
+                            throw new FormatException("The existing GitHub step summary contains an incomplete Microsoft Testing Platform summary section.");
+                        }
+
+                        existing = existing.Remove(start, end + endMarker.Length - start).Insert(start, section.TrimEnd());
+                    }
+                    else
+                    {
+                        existing = existing.Length == 0
+                            ? section
+                            : existing.TrimEnd() + "\n\n" + section;
+                    }
+
+                    using (IFileStream tempStream = fileSystem.NewFileStream(tempPath, FileMode.CreateNew, FileAccess.Write, FileShare.Read))
+                    using (var writer = new StreamWriter(tempStream.Stream, new UTF8Encoding(false)))
+                    {
+                        await writer.WriteAsync(existing).ConfigureAwait(false);
+#if NET8_0_OR_GREATER
+                        await writer.FlushAsync(cancellationToken).ConfigureAwait(false);
+#else
+#pragma warning disable CA2016 // The target framework has no cancellation-aware StreamWriter overload.
+                        await writer.FlushAsync().ConfigureAwait(false);
+#pragma warning restore CA2016
+#endif
+                    }
+
+                    cancellationToken.ThrowIfCancellationRequested();
+                    fileSystem.ReplaceFile(tempPath, path);
+                }
+            }
+            finally
+            {
+                try
+                {
+                    fileSystem.DeleteFile(tempPath);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    // Best-effort cleanup must not hide a successful write or its primary failure.
+                }
             }
 
             return;
@@ -366,9 +536,126 @@ internal sealed class GitHubActionsSummaryReporter :
         return builder.ToString();
     }
 
+    internal static string BuildAggregateMarkdown(CiRunSummaryAggregate aggregate)
+    {
+        bool failed = aggregate.ExitCode is int exitCode
+            ? GitHubActionsExitCode.IndicatesFailure(exitCode)
+            : aggregate.FailedTests > 0;
+        string statusIcon = failed
+            ? "❌"
+            : aggregate.IsPartial || !aggregate.HasAuthoritativeRunSummary
+                ? "⚠️"
+                : "✅";
+        string duration = aggregate.Duration is { } value ? FormatDuration(value) : "Unavailable";
+
+        var builder = new StringBuilder();
+        builder.Append("## ").Append(statusIcon).Append(" Overall Test Run Summary\n\n");
+        builder.Append("| Total | Passed | Failed | Skipped | Duration |\n");
+        builder.Append("|---:|---:|---:|---:|---:|\n");
+        builder.Append("| ").Append(aggregate.TotalTests.ToString(CultureInfo.InvariantCulture))
+            .Append(" | ").Append(aggregate.PassedTests.ToString(CultureInfo.InvariantCulture))
+            .Append(" | ").Append(aggregate.FailedTests.ToString(CultureInfo.InvariantCulture))
+            .Append(" | ").Append(aggregate.SkippedTests.ToString(CultureInfo.InvariantCulture))
+            .Append(" | ").Append(duration).Append(" |\n\n");
+
+        if (aggregate.IsPartial)
+        {
+            builder.Append("> [!WARNING]\n> This summary is partial because the test run was truncated.\n\n");
+        }
+        else if (!aggregate.HasAuthoritativeRunSummary)
+        {
+            builder.Append("> [!NOTE]\n> Counts reflect the observed module fragments. The outer `dotnet test` duration and exit verdict were not supplied by the SDK.\n\n");
+        }
+
+        if (aggregate.ExitCode is int authoritativeExitCode
+            && !GitHubActionsExitCode.IsTestResultOutcome(authoritativeExitCode))
+        {
+            string calloutText = string.Format(
+                CultureInfo.InvariantCulture,
+                GitHubActionsResources.ExitCodeCallout,
+                authoritativeExitCode.ToString(CultureInfo.InvariantCulture),
+                GitHubActionsExitCode.GetName(authoritativeExitCode),
+                GitHubActionsExitCode.GetReason(authoritativeExitCode));
+            builder.Append("> [!WARNING]\n> ").Append(EscapeInlineCode(calloutText)).Append("\n\n");
+        }
+
+        foreach (CiRunSummaryModule module in aggregate.Modules)
+        {
+            bool needsDiscriminator = HasDuplicateModuleIdentity(aggregate.Modules, module);
+            builder.Append("<details>\n<summary>")
+                .Append(HtmlEncode(module.AssemblyName))
+                .Append(" (").Append(HtmlEncode(module.TargetFramework)).Append(", ")
+                .Append(HtmlEncode(module.Architecture));
+            if (needsDiscriminator)
+            {
+                builder.Append(", attempt ").Append(module.AttemptNumber.ToString(CultureInfo.InvariantCulture))
+                    .Append(", session ").Append(HtmlEncode(module.SessionUid));
+            }
+
+            builder.Append(")</summary>\n\n");
+            AppendModuleMarkdown(builder, module, headingLevel: 3);
+            builder.Append("</details>\n\n");
+        }
+
+        return builder.ToString();
+    }
+
+    private static void AppendModuleMarkdown(StringBuilder builder, CiRunSummaryModule module, int headingLevel)
+    {
+        string heading = new('#', headingLevel);
+        bool runFailed = module.FailedTests > 0 || GitHubActionsExitCode.IndicatesFailure(module.ExitCode);
+        builder.Append(heading).Append(' ').Append(runFailed ? "❌" : "✅").Append(' ')
+            .Append(EscapeInlineCode(module.AssemblyName)).Append("\n\n");
+        builder.Append("| Total | Passed | Failed | Skipped | Test duration |\n");
+        builder.Append("|---:|---:|---:|---:|---:|\n");
+        builder.Append("| ").Append(module.TotalTests.ToString(CultureInfo.InvariantCulture))
+            .Append(" | ").Append(module.PassedTests.ToString(CultureInfo.InvariantCulture))
+            .Append(" | ").Append(module.FailedTests.ToString(CultureInfo.InvariantCulture))
+            .Append(" | ").Append(module.SkippedTests.ToString(CultureInfo.InvariantCulture))
+            .Append(" | ").Append(FormatDuration(TimeSpan.FromTicks(module.TestDurationTicks))).Append(" |\n\n");
+
+        if (!GitHubActionsExitCode.IsTestResultOutcome(module.ExitCode))
+        {
+            builder.Append("> Module exit code: `").Append(module.ExitCode.ToString(CultureInfo.InvariantCulture)).Append("` (")
+                .Append(EscapeInlineCode(GitHubActionsExitCode.GetName(module.ExitCode))).Append(")\n\n");
+        }
+
+        if (module.Failures.Length > 0)
+        {
+            builder.Append(heading).Append("# ❌ Failures (").Append(module.FailedTests.ToString(CultureInfo.InvariantCulture)).Append(")\n\n");
+            foreach (CiRunSummaryTest failure in module.Failures)
+            {
+                builder.Append("- `").Append(EscapeInlineCode(failure.FullyQualifiedName)).Append("`\n");
+            }
+
+            builder.Append('\n');
+        }
+
+        if (module.SlowestTests.Length > 0)
+        {
+            builder.Append(heading).Append("# ⏱ Slowest tests\n\n");
+            foreach (CiRunSummaryTest test in module.SlowestTests)
+            {
+                builder.Append("- `").Append(EscapeInlineCode(test.FullyQualifiedName)).Append("` — ")
+                    .Append(FormatDuration(TimeSpan.FromTicks(test.DurationTicks))).Append('\n');
+            }
+
+            builder.Append('\n');
+        }
+    }
+
     private static string FormatDuration(TimeSpan duration)
         => SummaryReporterHelpers.FormatDuration(duration, "{0}m {1:00}s", "{0}h {1:00}m {2:00}s");
 
     private static string EscapeInlineCode(string value)
         => RoslynString.IsNullOrEmpty(value) ? value : value.Replace("`", "'").Replace("\r", string.Empty).Replace("\n", " ");
+
+    private static string HtmlEncode(string value)
+        => System.Net.WebUtility.HtmlEncode(value);
+
+    private static bool HasDuplicateModuleIdentity(IReadOnlyList<CiRunSummaryModule> modules, CiRunSummaryModule module)
+        => modules.Count(candidate =>
+            string.Equals(candidate.AssemblyName, module.AssemblyName, StringComparison.Ordinal)
+            && string.Equals(candidate.TargetFramework, module.TargetFramework, StringComparison.Ordinal)
+            && string.Equals(candidate.Architecture, module.Architecture, StringComparison.OrdinalIgnoreCase)) > 1;
 }

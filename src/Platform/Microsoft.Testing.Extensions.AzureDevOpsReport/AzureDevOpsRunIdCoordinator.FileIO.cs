@@ -64,11 +64,7 @@ internal sealed partial class AzureDevOpsRunIdCoordinator
                 _fileSystem.DeleteFile(path);
             }
         }
-        catch (IOException ex)
-        {
-            TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingFailedToDeleteCoordinationFile} {path}: {ex.Message}");
-        }
-        catch (UnauthorizedAccessException ex)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             TryLogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingFailedToDeleteCoordinationFile} {path}: {ex.Message}");
         }

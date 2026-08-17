@@ -132,9 +132,13 @@
     <value>Percentage failed threshold is {0}% and {1}% tests failed ({2}/{3})</value>
     <comment>{0} is the maximum failed tests percentage threshold. {1} is the actual failed tests percentage. {2} is the failed tests count. {3} is the total tests count.</comment>
   </data>
-  <data name="RetryArtifactsMoved" xml:space="preserve">
-    <value>Retry: moved {0} result file(s) to '{1}'</value>
-    <comment>{0} is the number of files moved. {1} is the destination result directory.</comment>
+  <data name="RetryArtifactsPublished" xml:space="preserve">
+    <value>Retry: published {0} result file(s) to '{1}'</value>
+    <comment>{0} is the number of files published. {1} is the destination result directory.</comment>
+  </data>
+  <data name="RetryArtifactPostProcessorFailed" xml:space="preserve">
+    <value>Retry artifact post-processor '{0}' failed: {1}</value>
+    <comment>{0} is the processor UID. {1} is the exception message.</comment>
   </data>
   <data name="RetryAttemptFailedWillRetry" xml:space="preserve">
     <value>Retry: attempt {0}/{1} failed - {2} failing test(s), retrying</value>

@@ -2,8 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.GitHubActionsReport;
+using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions;
@@ -11,7 +13,6 @@ namespace Microsoft.Testing.Extensions;
 /// <summary>
 /// Provides extension methods for adding GitHub Actions reporting support to the test application builder.
 /// </summary>
-[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public static class GitHubActionsExtensions
 {
     /// <summary>
@@ -23,12 +24,18 @@ public static class GitHubActionsExtensions
         var compositeSummaryReporter = new CompositeExtensionFactory<GitHubActionsSummaryReporter>(serviceProvider =>
             new GitHubActionsSummaryReporter(
                 serviceProvider.GetCommandLineOptions(),
+                serviceProvider.GetConfiguration(),
                 serviceProvider.GetEnvironment(),
                 serviceProvider.GetFileSystem(),
+                serviceProvider.GetMessageBus(),
                 serviceProvider.GetOutputDevice(),
                 serviceProvider.GetTestApplicationModuleInfo(),
                 serviceProvider.GetTestApplicationProcessExitCode(),
-                serviceProvider.GetLoggerFactory()));
+                serviceProvider.GetLoggerFactory(),
+                () => serviceProvider.GetService<IPushOnlyProtocol>() is DotnetTestConnection
+                {
+                    IsRequiredArtifactPostProcessingSupported: true,
+                }));
 
         var compositeSlowTestReporter = new CompositeExtensionFactory<GitHubActionsSlowTestReporter>(serviceProvider =>
             new GitHubActionsSlowTestReporter(
@@ -69,5 +76,14 @@ public static class GitHubActionsExtensions
         builder.TestHost.AddDataConsumer(compositeReporter);
         builder.TestHost.AddTestSessionLifetimeHandler(compositeReporter);
         builder.CommandLine.AddProvider(() => new GitHubActionsCommandLineProvider());
+
+        if (builder is IArtifactPostProcessingApplicationBuilder artifactPostProcessingBuilder)
+        {
+            artifactPostProcessingBuilder.ArtifactPostProcessing.AddArtifactPostProcessor(serviceProvider =>
+                new GitHubActionsSummaryArtifactPostProcessor(
+                    serviceProvider.GetCommandLineOptions(),
+                    serviceProvider.GetEnvironment(),
+                    serviceProvider.GetFileSystem()));
+        }
     }
 }

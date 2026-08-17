@@ -336,7 +336,19 @@ safe-outputs:
   add-comment:
     max: 5
     target: "*"
-    hide-older-comments: true
+    # Hiding superseded comments is scoped to the posting workflow's id, so by
+    # default this workflow would only ever hide its own comments and a re-run
+    # via `/analyze-build-failure` would leave this stale automatic analysis
+    # visible next to the fresh one. Listing both ids makes either workflow
+    # supersede the other. gh-aw always includes the current workflow
+    # implicitly; `match` only adds to that set.
+    # NOTE: the id is the workflow FILE stem (`GH_AW_WORKFLOW_ID`), not `name:`.
+    # KEEP IN SYNC with the two workflow file names.
+    hide-older-comments:
+      enabled: true
+      match:
+        - build-failure-analysis
+        - build-failure-analysis-command
   create-pull-request-review-comment:
     max: 25
     target: "*"

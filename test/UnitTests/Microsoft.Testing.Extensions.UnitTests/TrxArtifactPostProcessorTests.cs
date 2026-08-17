@@ -17,6 +17,7 @@ public sealed class TrxArtifactPostProcessorTests
         TrxArtifactPostProcessor processor = new();
 
         Assert.AreSequenceEqual(new[] { TrxReportEngine.TrxArtifactKind }, processor.SupportedKinds);
+        Assert.AreSequenceEqual(new[] { ArtifactPostProcessingMode.TestModules }, processor.SupportedModes);
         Assert.AreSequenceEqual(new[] { ".trx" }, processor.SupportedFileExtensionsFallback);
         Assert.IsFalse(processor.SupportsTruncatedRuns);
     }

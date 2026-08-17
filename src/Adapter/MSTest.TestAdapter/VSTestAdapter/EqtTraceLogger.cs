@@ -1,6 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NETFRAMEWORK
+using System.Security;
+#endif
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
@@ -25,6 +29,11 @@ internal sealed class EqtTraceLogger :
     public bool IsWarningEnabled => EqtTrace.IsWarningEnabled;
 
     public bool IsErrorEnabled => EqtTrace.IsErrorEnabled;
+
+#if NETFRAMEWORK
+    [SecurityCritical]
+    public override object? InitializeLifetimeService() => null;
+#endif
 
     public void Verbose(string format, params object?[] args)
         => EqtTrace.Verbose(format, args);

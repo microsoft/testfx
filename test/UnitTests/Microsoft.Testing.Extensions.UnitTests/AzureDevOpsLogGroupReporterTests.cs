@@ -52,10 +52,10 @@ public sealed class AzureDevOpsLogGroupReporterTests
     }
 
     [TestMethod]
-    public async Task IsEnabledAsync_ReturnsTrue_WhenAzureDevOpsOptionSetAndTfBuildSetAsync()
+    public async Task IsEnabledAsync_ReturnsFalse_WhenGroupsNotSetAsync()
     {
         AzureDevOpsLogGroupReporter reporter = CreateReporter(enabled: true, tfBuild: true);
-        Assert.IsTrue(await reporter.IsEnabledAsync());
+        Assert.IsFalse(await reporter.IsEnabledAsync());
     }
 
     [TestMethod]

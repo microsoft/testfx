@@ -11,6 +11,15 @@ namespace Microsoft.Testing.TestInfrastructure;
 public sealed class SlowestTestsConsumer : IDataConsumer, ITestSessionLifetimeHandler
 {
     private readonly List<(string TestId, string DisplayName, double Milliseconds)> _testPerf = [];
+    private readonly Action<string> _writeLine;
+
+    public SlowestTestsConsumer()
+        : this(Console.WriteLine)
+    {
+    }
+
+    internal SlowestTestsConsumer(Action<string> writeLine)
+        => _writeLine = writeLine;
 
     public Type[] DataTypesConsumed => [typeof(TestNodeUpdateMessage)];
 
@@ -40,10 +49,10 @@ public sealed class SlowestTestsConsumer : IDataConsumer, ITestSessionLifetimeHa
 
     public Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
     {
-        Console.WriteLine("Slowest 10 tests");
+        _writeLine("Slowest 10 tests:");
         foreach ((_, string displayName, double milliseconds) in _testPerf.OrderByDescending(x => x.Milliseconds).Take(10))
         {
-            Console.WriteLine($"{displayName} {TimeSpan.FromMilliseconds(milliseconds).TotalSeconds:F5}s");
+            _writeLine($"  {TimeSpan.FromMilliseconds(milliseconds).TotalSeconds:F5}s {displayName}");
         }
 
         return Task.CompletedTask;

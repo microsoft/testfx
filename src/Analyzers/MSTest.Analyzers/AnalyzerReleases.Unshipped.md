@@ -15,3 +15,4 @@ MSTEST0078 | Usage | Warning | DependsOnShouldBeValidAnalyzer, [Documentation](h
 MSTEST0079 | Usage | Info | UseArchitectureConditionAttributeInsteadOfRuntimeCheckAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0079)
 MSTEST0080 | Usage | Info | UseCIConditionAttributeInsteadOfEnvironmentCheckAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0080)
 MSTEST0081 | Usage | Warning | TestFilterProviderShouldBeValidAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0081)
+MSTEST0082 | Usage | Warning | InheritedMemberFromDifferentMSTestVersionAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0082)
