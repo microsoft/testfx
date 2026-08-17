@@ -48,13 +48,14 @@
 2. **More Assert method coverage** — Any remaining gaps in newer Assert overloads.
 3. **DependsOnShouldBeValidAnalyzer / TestFilterProviderShouldBeValidAnalyzer (MSTEST0078/0081)** — internal-target-class gap closed (2026-08-07); accessibility (type vs constructor) gap closed (2026-08-08). Remaining: another pass for any leftover branch gaps.
 4. **Analyzer edge cases (ongoing)** — Continue systematic coverage of untested paths in MSTest.Analyzers. MSTEST0074/0075/0076 fixture-branch gaps all closed.
-5. **Issue #10316 — still OPEN as of 2026-08-13** (correcting prior memory entry that claimed it was closed 2026-08-10 — a live re-check via `github-issue_read` confirmed `state: open`). Remaining gaps per the issue body: write/append/create family (`WriteAllTextAsync`, `WriteAllBytes(Async)`, `WriteAllLines(Async)`, `AppendAllText(Async)`, `AppendAllLines(Async)`, `AppendText`, `Create`, `CreateText`), attribute/encryption members (`Encrypt`, `Decrypt`, `SetAttributes`, `SetUnixFileMode`). `File.CreateSymbolicLink` and `Set*Time*` family were already closed out via PR from 2026-08-09. Candidate for a future Task 3 run.
+5. **Issue #10316 — CLOSED 2026-08-17.** Confirmed complete (3rd independent verification, after 2026-08-10 and 2026-08-16 comments already on the issue) — all File.* allowlist entries are covered by existing DataRow tests in `SharedFileSystemPathInTestAnalyzerTests.cs`. Do not resurface.
 6. **`ReportFileWriterHelper` (SharedExtensionHelpers) — DONE 2026-08-13**: added direct unit tests for `RetryWhenIOExceptionAsync` (immediate success, retry-then-success, non-IOException passthrough, rethrow after timeout). No more zero-coverage helpers found in `SharedExtensionHelpers/` for now — `TrxReportGeneratorCommandLine`/`ReportFileNameValidator`/`ReportFileWriterHelper` all now covered directly. `TargetFrameworkMonikerHelper.cs` still untested but is a thin one-liner wrapper (low value).
 
 ## Tasks Run History (summarized)
 
 | Date | Tasks |
 |------|-------|
+| 2026-08-17 | Task 2 (broad Assert/CollectionAssert/StringAssert audit — no new zero-coverage gaps found; area is saturated), Task 5 (closed issue #10316 as confirmed-complete, 3rd verification), Task 7. No new PR this run — did not find a genuine, undertested, non-trivial gap after build validated. |
 | 2026-08-13 | Task 3 (ReportFileWriterHelper.RetryWhenIOExceptionAsync unit tests, SharedExtensionHelpers), corrected #10316 status (still open, not closed as previously logged), Task 7. |
 | 2026-08-10 | Task 2/5 (verified & closed issue #10316 — all File.* allowlist entries confirmed covered), Task 7. No new PR this run (DependsOnShouldBeValidAnalyzer checked, already has broad rule coverage). |
 | 2026-08-09 | Task 3 (SharedFileSystemPathInTestAnalyzer MSTEST0077: File.CreateSymbolicLink pathToTarget negative, per issue #10316), Task 7 |
@@ -78,9 +79,11 @@
 | 2026-07-07 | Task 3 (MSTEST0062), Task 4, Task 7 |
 | ≤2026-07-06 | Tasks 3/4/7 for many MSTEST00xx analyzers |
 
+7. **Assert/CollectionAssert/StringAssert audit (2026-08-17)**: Did a broad sweep of `src/TestFramework/TestFramework/Assertions/*.cs` looking for zero-coverage newer methods (AreAllDistinct, AreAllNotNull, AreAllOfType, AreAllOfType span/memory, StringAssert.Regex, CollectionAssert.Subset/Type/Membership, Assert.That expression evaluation internals). All are already thoroughly covered (dozens of edge-case tests each) by prior runs. No fresh zero-coverage gap found this pass — future runs should look at MTP/Retry/Analyzer areas rather than core Assert methods, which appear saturated.
+
 ## Last Run
 
-2026-08-13 UTC
+2026-08-17 UTC
 
 ## Completed Work (recent, summarized)
 
