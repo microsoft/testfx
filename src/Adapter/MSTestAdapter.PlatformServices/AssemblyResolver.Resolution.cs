@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK || (NET && !WINDOWS_UWP)
@@ -235,7 +235,7 @@ internal partial class AssemblyResolver
                     {
                         // Bypass MSTest's Console.Error router so this infrastructure failure is not attributed to the active test.
                         StandardErrorWriter.Value.WriteLine(
-                            $"MSTest.AssemblyResolver: Trace logging failed while resolving '{assemblyName}'. Error: {ex}");
+                            $"[MSTest.AssemblyResolver] Trace logging failed while resolving '{assemblyName}'. Exception: {ex}");
                     }
                     catch (Exception)
                     {
