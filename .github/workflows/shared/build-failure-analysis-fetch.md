@@ -46,6 +46,7 @@ jobs:
       pr-number: ${{ steps.fetch.outputs.pr-number }}
       pr-head-sha: ${{ steps.fetch.outputs.pr-head-sha }}
       pr-merge-sha: ${{ steps.fetch.outputs.pr-merge-sha }}
+      pr-checkout-ref: ${{ steps.fetch.outputs.pr-checkout-ref }}
       ado-build-id: ${{ steps.fetch.outputs.ado-build-id }}
       ado-build-url: ${{ steps.fetch.outputs.ado-build-url }}
       missing-legs: ${{ steps.fetch.outputs.missing-legs }}
@@ -273,6 +274,26 @@ jobs:
             main|rel/*) echo "PR #${PR_NUMBER} base '${BASE_REF}' is in scope." ;;
             *) echo "::warning::PR #${PR_NUMBER} base '${BASE_REF}' is out of scope (main, rel/*); skipping."; emit_none ;;
           esac
+
+          # --- 2b. Resolve the ref the agent job should check out ---
+          # The agent edits the PR's tree in place when it can push a fix, so it
+          # needs the PR revision — not `check_run`'s ref, which is the default
+          # branch. Two cases:
+          #   * same-repo PR (dependency flow, maintainer branches): check out
+          #     the head BRANCH BY NAME. gh-aw derives the push target from
+          #     `git rev-parse --abbrev-ref HEAD`, so a detached checkout would
+          #     report `HEAD` and break bundle generation.
+          #   * fork PR: that branch does not exist here, so use the read-only
+          #     `refs/pull/<n>/head`. Detached is fine — gh-aw refuses pushes to
+          #     fork branches anyway, so those runs stay comment-only.
+          HEAD_REPO=$(printf '%s' "${PR_JSON}" | jq -r '.head.repo.full_name // empty')
+          HEAD_REF=$(printf '%s' "${PR_JSON}" | jq -r '.head.ref // empty')
+          if [ -n "${HEAD_REF}" ] && [ "${HEAD_REPO}" = "${GH_AW_REPO}" ]; then
+            CHECKOUT_REF="${HEAD_REF}"
+          else
+            CHECKOUT_REF="refs/pull/${PR_NUMBER}/head"
+          fi
+          echo "Agent checkout ref: '${CHECKOUT_REF}' (head repo '${HEAD_REPO}')"
 
           # --- 3. Validate the build, whichever way it was resolved ---
           # It must be the microsoft.testfx definition (209), have failed, and
@@ -601,6 +622,7 @@ jobs:
             echo "pr-number=${PR_NUMBER}"
             echo "pr-head-sha=${HEAD_SHA}"
             echo "pr-merge-sha=${BUILD_MERGE_SHA}"
+            echo "pr-checkout-ref=${CHECKOUT_REF}"
             echo "ado-build-id=${BUILD_ID}"
             echo "ado-build-url=${ADO_BUILD_UI}?buildId=${BUILD_ID}"
           } >> "$GITHUB_OUTPUT"
