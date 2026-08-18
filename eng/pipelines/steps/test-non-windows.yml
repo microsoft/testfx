@@ -79,6 +79,24 @@ steps:
     ArtifactName: TestResults_${{ parameters.osName }}_$(_BuildConfig)_Attempt$(System.JobAttempt)
   condition: always()
 
+# The integration suite only creates artifacts/tmp/$(_BuildConfig)/testsuite once it runs, and CopyFiles@2
+# hard-fails when SourceFolder does not exist. A Test failure early enough to skip the suite therefore
+# reported one real problem as three failed steps: Test, Copy binlogs, and Publish integration tests binlogs
+# all failed in https://dev.azure.com/dnceng/internal/_build/results?buildId=3045544. Probe for the binlogs so
+# both steps skip when there are none. When the suite did produce binlogs they are copied and published
+# exactly as before, including on a failed run, which is why these use always().
+- pwsh: |
+    $testsuite = Join-Path '$(Build.SourcesDirectory)' 'artifacts/tmp/$(_BuildConfig)/testsuite'
+    $hasBinlogs = 'false'
+    if (Test-Path -LiteralPath $testsuite -PathType Container) {
+      $binlog = Get-ChildItem -LiteralPath $testsuite -Filter '*.binlog' -Recurse -File -ErrorAction SilentlyContinue | Select-Object -First 1
+      if ($null -ne $binlog) { $hasBinlogs = 'true' }
+    }
+    Write-Host "Integration tests binlogs under '$testsuite': $hasBinlogs"
+    Write-Host "##vso[task.setvariable variable=HasIntegrationTestBinlogs]$hasBinlogs"
+  displayName: 'Check for integration tests binlogs'
+  condition: and(always(), eq(variables._BuildConfig, 'Debug'))
+
 - task: CopyFiles@2
   displayName: 'Copy binlogs'
   inputs:
@@ -86,11 +104,11 @@ steps:
     Contents: |
       **/*.binlog
     TargetFolder: '$(Build.ArtifactStagingDirectory)/binlogs'
-  condition: and(always(), eq(variables._BuildConfig, 'Debug'))
+  condition: and(always(), eq(variables._BuildConfig, 'Debug'), eq(variables.HasIntegrationTestBinlogs, 'true'))
 
 - task: PublishBuildArtifacts@1
   displayName: 'Publish integration tests binlogs'
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)/binlogs'
     ArtifactName: Integration_Tests_${{ parameters.osName }}_Binlogs_$(_BuildConfig)
-  condition: and(always(), eq(variables._BuildConfig, 'Debug'))
+  condition: and(always(), eq(variables._BuildConfig, 'Debug'), eq(variables.HasIntegrationTestBinlogs, 'true'))

@@ -254,6 +254,10 @@
     <value>Use '[CICondition]' attribute</value>
     <comment>{Locked="[CICondition]"}</comment>
   </data>
+  <data name="UseExecutableConditionAttributeInsteadOfProcessCheckFix" xml:space="preserve">
+    <value>Use '[ExecutableCondition]' attribute</value>
+    <comment>{Locked="'[ExecutableCondition]'"}</comment>
+  </data>
   <data name="AvoidOutRefTestMethodParametersFix" xml:space="preserve">
     <value>Remove 'out' and 'ref' modifiers</value>
     <comment>{Locked="out"}{Locked="ref"}</comment>

@@ -50,6 +50,8 @@ public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAsset
         Assert.IsTrue(Regex.IsMatch(content, "mstest\\.attribute_usage"), $"Expected attribute_usage in telemetry.\n{content}");
         Assert.IsTrue(Regex.IsMatch(content, "mstest\\.config_source"), $"Expected config_source in telemetry.\n{content}");
         Assert.IsTrue(Regex.IsMatch(content, "mstest\\.assertion_usage"), $"Expected assertion_usage in telemetry.\n{content}");
+        Assert.IsTrue(Regex.IsMatch(content, "\"Assert\\.HasCount\":1(?:,|})"), $"Expected exactly one Assert.HasCount telemetry call.\n{content}");
+        Assert.IsTrue(Regex.IsMatch(content, "\"Assert\\.IsEmpty\":1(?:,|})"), $"Expected exactly one Assert.IsEmpty telemetry call.\n{content}");
 
         // Regression guard: discovery + execution data must ship in a single sessionexit event,
         // not split across two (an earlier iteration of this code did the latter).
@@ -275,6 +277,9 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
 </Project>
 
 #file UnitTest1.cs
+using System;
+using System.Collections;
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [TestClass]
@@ -297,6 +302,34 @@ public class UnitTest1
     [Timeout(30000)]
     public void TestWithTimeout()
     {
+    }
+
+    [TestMethod]
+    public void NonGenericCountAssertions()
+    {
+        IEnumerable populated = new ArrayList { 1 };
+        IEnumerable empty = new ArrayList();
+
+        Assert.HasCount(1, populated);
+        Assert.IsEmpty(empty);
+
+        try
+        {
+            Assert.HasCount(0, (IEnumerable)null!);
+            throw new InvalidOperationException("Assert.HasCount should reject a null collection.");
+        }
+        catch (ArgumentNullException ex) when (ex.ParamName == "source")
+        {
+        }
+
+        try
+        {
+            Assert.IsEmpty((IEnumerable)null!);
+            throw new InvalidOperationException("Assert.IsEmpty should reject a null collection.");
+        }
+        catch (ArgumentNullException ex) when (ex.ParamName == "source")
+        {
+        }
     }
 }
 

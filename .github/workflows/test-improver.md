@@ -97,7 +97,6 @@ safe-outputs:
     max: 4
   update-issue:
     target: "*"
-    title-prefix: "[test-improver] "
     max: 1
 
 tools:
