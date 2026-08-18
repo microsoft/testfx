@@ -250,7 +250,7 @@ An unpackaged app has no MSIX manifest declaring a framework dependency, so the 
 - `WindowsAppSDKSelfContained` is not `true`, and
 - `OutputType` is `Exe` or `WinExe`,
 
-the Windows App SDK build injects a [module initializer](https://learn.microsoft.com/dotnet/csharp/language-reference/proposals/csharp-9.0/module-initializers) into **your app assembly** that calls `Bootstrap.Initialize`. The CLR runs a module initializer before the first use of any type in that assembly, so it has already run by the time your tests execute.
+the Windows App SDK build injects a [module initializer](https://learn.microsoft.com/dotnet/csharp/language-reference/attributes/general#moduleinitializer-attribute) into **your app assembly** that calls `Bootstrap.Initialize`. The CLR runs a module initializer before the first use of any type in that assembly, so it has already run by the time your tests execute.
 
 That is why a plain `[TestMethod]` — not just `[UITestMethod]` — can call Windows App SDK WinRT APIs in an unpackaged test app.
 
