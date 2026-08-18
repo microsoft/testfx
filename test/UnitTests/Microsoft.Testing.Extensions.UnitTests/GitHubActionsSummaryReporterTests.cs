@@ -11,9 +11,11 @@ using Microsoft.Testing.Platform.Helpers;
 using Moq;
 
 using GitHubActionsTerminalKind = ghactions::Microsoft.Testing.Extensions.TerminalKind;
+using GitHubActionsTestFailureDetails = ghactions::Microsoft.Testing.Extensions.TestFailureDetails;
 using GitHubActionsTestRecord = ghactions::Microsoft.Testing.Extensions.TestRecord;
 using GitHubCiRunSummaryAggregate = ghactions::Microsoft.Testing.Extensions.CiRunSummaryAggregate;
 using GitHubCiRunSummaryModule = ghactions::Microsoft.Testing.Extensions.CiRunSummaryModule;
+using GitHubCiRunSummaryTest = ghactions::Microsoft.Testing.Extensions.CiRunSummaryTest;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
 
@@ -201,6 +203,199 @@ public sealed class GitHubActionsSummaryReporterTests
         Assert.Contains("attempt 1, session session-1", markdown);
         Assert.Contains("attempt 2, session session-2", markdown);
         Assert.Contains("This summary is partial because the test run was truncated.", markdown);
+    }
+
+    [TestMethod]
+    public void BuildMarkdown_WithFailureDetails_RendersCollapsibleSection()
+    {
+        var failure = new GitHubActionsTestFailureDetails(
+            "Expected: 42\nActual:   41",
+            "System.Exception",
+            "   at Calc.Add() in Calc.cs:line 42",
+            "src/Calc.cs",
+            42);
+        GitHubActionsTestRecord[] records =
+        [
+            new("Boom", "CalcTests.Boom", GitHubActionsTerminalKind.Failed, TimeSpan.FromMilliseconds(2400), failure),
+        ];
+
+        string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "CalcTests", "net9.0", AtLeastOneTestFailedExitCode);
+
+        Assert.Contains("<details>\n<summary><code>CalcTests.Boom</code> — 2.40s</summary>", markdown);
+        Assert.Contains("**Exception:** `System.Exception`", markdown);
+        Assert.Contains("**Location:** `src/Calc.cs:42`", markdown);
+        Assert.Contains("Expected: 42", markdown);
+        Assert.Contains("at Calc.Add() in Calc.cs:line 42", markdown);
+        Assert.Contains("</details>", markdown);
+    }
+
+    [TestMethod]
+    public void BuildMarkdown_WithFailureDetailsDisabled_KeepsCompactFailureList()
+    {
+        var failure = new GitHubActionsTestFailureDetails("boom", "System.Exception", "at X()", "src/X.cs", 3);
+        GitHubActionsTestRecord[] records =
+        [
+            new("Boom", "CalcTests.Boom", GitHubActionsTerminalKind.Failed, TimeSpan.FromMilliseconds(120), failure),
+        ];
+
+        string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "CalcTests", "net9.0", AtLeastOneTestFailedExitCode, includeFailureDetails: false);
+
+        Assert.Contains("### ❌ Failures (1)", markdown);
+        Assert.Contains("- `CalcTests.Boom` — 120ms", markdown);
+        Assert.DoesNotContain("<details>", markdown);
+        Assert.DoesNotContain("**Exception:**", markdown);
+    }
+
+    [TestMethod]
+    public void BuildMarkdown_FailureWithoutDetails_FallsBackToCompactLine()
+    {
+        // A framework that reports a failure without an explanation, exception or location has nothing to expand.
+        GitHubActionsTestRecord[] records =
+        [
+            new("Boom", "CalcTests.Boom", GitHubActionsTerminalKind.Failed, TimeSpan.FromMilliseconds(5)),
+        ];
+
+        string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "CalcTests", "net9.0", AtLeastOneTestFailedExitCode);
+
+        Assert.Contains("- `CalcTests.Boom` — 5ms", markdown);
+        Assert.DoesNotContain("<details>", markdown);
+    }
+
+    [TestMethod]
+    public void BuildMarkdown_HtmlEncodesFailureNameInSummaryElement()
+    {
+        // A generic test name would otherwise be parsed as an HTML tag and swallow the rest of the <summary> line.
+        var failure = new GitHubActionsTestFailureDetails("boom", null, null, null, 0);
+        GitHubActionsTestRecord[] records =
+        [
+            new("Map", "T.Map<string,int>", GitHubActionsTerminalKind.Failed, TimeSpan.FromMilliseconds(1), failure),
+        ];
+
+        string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "T", "net9.0", AtLeastOneTestFailedExitCode);
+
+        Assert.Contains("<code>T.Map&lt;string,int&gt;</code>", markdown);
+        Assert.DoesNotContain("<code>T.Map<string,int></code>", markdown);
+    }
+
+    [TestMethod]
+    public void BuildMarkdown_FailureMessageContainingCodeFence_DoesNotBreakOutOfTheBlock()
+    {
+        // A message that itself contains a ``` fence must not terminate the block we open around it.
+        var failure = new GitHubActionsTestFailureDetails("before\n```\ninjected\n```\nafter", null, null, null, 0);
+        GitHubActionsTestRecord[] records =
+        [
+            new("Boom", "T.Boom", GitHubActionsTerminalKind.Failed, TimeSpan.FromMilliseconds(1), failure),
+        ];
+
+        string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "T", "net9.0", AtLeastOneTestFailedExitCode);
+
+        Assert.Contains("````text", markdown);
+        Assert.Contains("injected", markdown);
+    }
+
+    [TestMethod]
+    public void BuildMarkdown_TruncatesFailureList_AndSaysSo()
+    {
+        // 25 failures exceed the 20-failure cap, so the summary must state that the list was truncated.
+        GitHubActionsTestRecord[] records =
+        [
+            .. Enumerable.Range(0, 25).Select(i =>
+                new GitHubActionsTestRecord($"T{i}", $"T.Test{i}", GitHubActionsTerminalKind.Failed, TimeSpan.FromMilliseconds(1))),
+        ];
+
+        string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "T", "net9.0", AtLeastOneTestFailedExitCode);
+
+        Assert.Contains("### ❌ Failures (25)", markdown);
+        Assert.Contains("Showing the first 20 of 25 failed tests", markdown);
+    }
+
+    [TestMethod]
+    public void BuildMarkdown_TruncatesOversizedFailureDetails_AndSaysSo()
+    {
+        // Every failure carries a stack trace far larger than the per-section budget, so only the first few can be
+        // expanded; the rest must degrade to compact lines and be reported as omitted.
+        string hugeStackTrace = new('x', GitHubActionsFailureDetails.MaxStackTraceLength);
+        GitHubActionsTestRecord[] records =
+        [
+            .. Enumerable.Range(0, 20).Select(i => new GitHubActionsTestRecord(
+                $"T{i}",
+                $"T.Test{i}",
+                GitHubActionsTerminalKind.Failed,
+                TimeSpan.FromMilliseconds(1),
+                new GitHubActionsTestFailureDetails("boom", "System.Exception", hugeStackTrace, null, 0))),
+        ];
+
+        string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "T", "net9.0", AtLeastOneTestFailedExitCode);
+
+        Assert.Contains("<details>", markdown);
+        Assert.Contains("job summary size limit was reached", markdown);
+    }
+
+    [TestMethod]
+    public void Clip_LongValue_TruncatesAndMarksIt()
+    {
+        string clipped = GitHubActionsFailureDetails.Clip(new string('a', 100), maxLength: 10)!;
+
+        Assert.StartsWith("aaaaaaaaaa", clipped);
+        Assert.Contains("[... truncated]", clipped);
+    }
+
+    [TestMethod]
+    public void Clip_ShortOrEmptyValue_IsReturnedAsIsOrNull()
+    {
+        Assert.AreEqual("short", GitHubActionsFailureDetails.Clip("short", maxLength: 10));
+        Assert.IsNull(GitHubActionsFailureDetails.Clip("   ", maxLength: 10));
+        Assert.IsNull(GitHubActionsFailureDetails.Clip(null, maxLength: 10));
+    }
+
+    [TestMethod]
+    public void BuildAggregateMarkdown_RendersFailureDetailsFromFragment()
+    {
+        var module = new GitHubCiRunSummaryModule
+        {
+            AssemblyName = "Tests",
+            ModulePath = "Tests.dll",
+            TargetFramework = "net9.0",
+            Architecture = "x64",
+            ExecutionId = "execution",
+            SessionUid = "session",
+            AttemptNumber = 1,
+            ExitCode = AtLeastOneTestFailedExitCode,
+            TotalTests = 1,
+            FailedTests = 1,
+            Failures =
+            [
+                new GitHubCiRunSummaryTest
+                {
+                    DisplayName = "Boom",
+                    FullyQualifiedName = "T.Boom",
+                    DurationTicks = TimeSpan.FromSeconds(2).Ticks,
+                    ErrorMessage = "assertion failed",
+                    ErrorType = "System.Exception",
+                    StackTrace = "at T.Boom()",
+                    FilePath = "src/T.cs",
+                    LineNumber = 7,
+                },
+            ],
+        };
+        var aggregate = new GitHubCiRunSummaryAggregate(
+            [module],
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 1,
+            passedTests: 0,
+            failedTests: 1,
+            skippedTests: 0,
+            duration: TimeSpan.FromSeconds(2),
+            exitCode: AtLeastOneTestFailedExitCode,
+            hasAuthoritativeRunSummary: true,
+            isPartial: false);
+
+        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate);
+
+        Assert.Contains("<summary><code>T.Boom</code> — 2.00s</summary>", markdown);
+        Assert.Contains("**Exception:** `System.Exception`", markdown);
+        Assert.Contains("**Location:** `src/T.cs:7`", markdown);
+        Assert.Contains("assertion failed", markdown);
     }
 
     [TestMethod]

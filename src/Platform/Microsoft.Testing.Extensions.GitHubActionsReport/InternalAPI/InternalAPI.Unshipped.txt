@@ -17,8 +17,8 @@ static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsExitCode.Ge
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsExitCode.IndicatesFailure(int exitCode) -> bool
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsExitCode.IsTestResultOutcome(int exitCode) -> bool
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSlowTestReporter.BuildNoticeLine(string! testLabel, System.TimeSpan elapsed) -> string!
-static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.BuildMarkdown(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.TestRecord>! records, string! assemblyName, string! targetFrameworkMoniker, int exitCode) -> string!
-static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.BuildAggregateMarkdown(Microsoft.Testing.Extensions.CiRunSummaryAggregate! aggregate) -> string!
+static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.BuildMarkdown(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.TestRecord>! records, string! assemblyName, string! targetFrameworkMoniker, int exitCode, bool includeFailureDetails = true) -> string!
+static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.BuildAggregateMarkdown(Microsoft.Testing.Extensions.CiRunSummaryAggregate! aggregate, bool includeFailureDetails = true) -> string!
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.UpsertStepSummaryWithRetryAsync(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, string! path, string! aggregationId, string! content, int maxAttempts, System.TimeSpan retryDelay, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 static Microsoft.Testing.Extensions.TestNodeIdentity.GetDisplayLabel(Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode) -> string!
 *REMOVED*abstract Microsoft.Testing.Extensions.SlowTestReporterBase.EmitSlowTestAsync(string! testName, System.TimeSpan elapsed, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
@@ -39,3 +39,32 @@ static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsAnnotationR
 static Microsoft.Testing.Extensions.StackTraceSourceLocationResolver.TryMakeWorkspaceRelative(string? filePath, string? repoRoot, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem) -> string?
 *REMOVED*static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsAnnotationReporter.GetErrorAnnotation(string! testName, string? explanation, System.Exception? exception, string? repoRoot, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Logging.ILogger! logger, bool skipAssertionFrames) -> string!
 *REMOVED*static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsAnnotationReporter.GetSkippedAnnotation(string! testName, string? explanation) -> string!
+Microsoft.Testing.Extensions.TestFailureDetails
+Microsoft.Testing.Extensions.TestFailureDetails.ExceptionType.get -> string?
+Microsoft.Testing.Extensions.TestFailureDetails.FilePath.get -> string?
+Microsoft.Testing.Extensions.TestFailureDetails.IsEmpty.get -> bool
+Microsoft.Testing.Extensions.TestFailureDetails.LineNumber.get -> int
+Microsoft.Testing.Extensions.TestFailureDetails.Message.get -> string?
+Microsoft.Testing.Extensions.TestFailureDetails.StackTrace.get -> string?
+Microsoft.Testing.Extensions.TestFailureDetails.TestFailureDetails(string? message, string? exceptionType, string? stackTrace, string? filePath, int lineNumber) -> void
+Microsoft.Testing.Extensions.TestRecord.Failure.get -> Microsoft.Testing.Extensions.TestFailureDetails?
+Microsoft.Testing.Extensions.TestRecord.TestRecord(string! displayName, string! fullyQualifiedName, Microsoft.Testing.Extensions.TerminalKind kind, System.TimeSpan duration, Microsoft.Testing.Extensions.TestFailureDetails? failure = null) -> void
+*REMOVED*Microsoft.Testing.Extensions.TestRecord.TestRecord(string! displayName, string! fullyQualifiedName, Microsoft.Testing.Extensions.TerminalKind kind, System.TimeSpan duration) -> void
+const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsCommandLineOptions.GitHubActionsFailureDetails = "report-gh-failure-details" -> string!
+Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureDetails
+const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureDetails.MaxMessageLength = 2000 -> int
+const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureDetails.MaxStackTraceLength = 4000 -> int
+const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureDetails.MaxTotalDetailsLength = 60000 -> int
+static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureDetails.AppendFailuresSection(System.Text.StringBuilder! builder, string! heading, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureEntry>! entries, long totalFailedCount, bool includeDetails) -> void
+static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureDetails.Clip(string? value, int maxLength) -> string?
+Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureEntry
+Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureEntry.Duration.get -> System.TimeSpan
+Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureEntry.ExceptionType.get -> string?
+Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureEntry.FilePath.get -> string?
+Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureEntry.FullyQualifiedName.get -> string!
+Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureEntry.GitHubActionsFailureEntry() -> void
+Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureEntry.GitHubActionsFailureEntry(string! fullyQualifiedName, System.TimeSpan duration, string? message = null, string? exceptionType = null, string? stackTrace = null, string? filePath = null, int lineNumber = 0) -> void
+Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureEntry.HasDetails.get -> bool
+Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureEntry.LineNumber.get -> int
+Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureEntry.Message.get -> string?
+Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureEntry.StackTrace.get -> string?

@@ -51,6 +51,7 @@ internal sealed class GitHubActionsSummaryReporter :
     private readonly ILogger _logger;
     private readonly Lazy<string> _targetFrameworkMoniker;
     private readonly bool _isEnabled;
+    private readonly bool _includeFailureDetails;
     private readonly Func<bool> _shouldDeferToArtifactPostProcessing;
 
 #if NET9_0_OR_GREATER
@@ -84,6 +85,7 @@ internal sealed class GitHubActionsSummaryReporter :
         _logger = loggerFactory.CreateLogger<GitHubActionsSummaryReporter>();
         _targetFrameworkMoniker = new(TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform);
         _isEnabled = GitHubActionsFeature.IsEnabled(commandLineOptions, environment, GitHubActionsCommandLineOptions.GitHubActionsStepSummary);
+        _includeFailureDetails = GitHubActionsFeature.IsKnobEnabled(commandLineOptions, GitHubActionsCommandLineOptions.GitHubActionsFailureDetails);
         _shouldDeferToArtifactPostProcessing = shouldDeferToArtifactPostProcessing;
     }
 
@@ -149,9 +151,13 @@ internal sealed class GitHubActionsSummaryReporter :
 
             TimeSpan duration = timing?.GlobalTiming.Duration ?? TimeSpan.Zero;
 
+            TestFailureDetails? failureDetails = kind == TerminalKind.Failed && _includeFailureDetails
+                ? CaptureFailureDetails(update.TestNode, state)
+                : null;
+
             lock (_stateLock)
             {
-                _records[uid] = new TestRecord(displayName, fullyQualifiedName, kind, duration);
+                _records[uid] = new TestRecord(displayName, fullyQualifiedName, kind, duration, failureDetails);
             }
         }
         catch (OperationCanceledException)
@@ -164,6 +170,55 @@ internal sealed class GitHubActionsSummaryReporter :
         }
 
         return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Captures the diagnostics of a failing test — explanation/exception message, exception type, stack trace and
+    /// the source location — so the job summary can expand the failure beyond its name.
+    /// </summary>
+    /// <remarks>
+    /// The location is resolved the same way <see cref="GitHubActionsAnnotationReporter"/> resolves it: prefer the
+    /// exception's call site (it pinpoints the failing statement) and fall back to the location the test framework
+    /// reported for the test itself, so frameworks without a usable stack trace still get a location. Values are
+    /// clipped here rather than at render time so an enormous stack trace never reaches the aggregation fragment
+    /// written to disk.
+    /// </remarks>
+    private TestFailureDetails? CaptureFailureDetails(TestNode testNode, TestNodeStateProperty? state)
+    {
+        (string? Explanation, Exception? Exception)? failure = state switch
+        {
+            FailedTestNodeStateProperty failed => (failed.Explanation, failed.Exception),
+            ErrorTestNodeStateProperty error => (error.Explanation, error.Exception),
+            TimeoutTestNodeStateProperty timeout => (timeout.Explanation, timeout.Exception),
+#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
+            CancelledTestNodeStateProperty cancelled => (cancelled.Explanation, cancelled.Exception),
+#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
+            _ => null,
+        };
+
+        if (failure is null)
+        {
+            return null;
+        }
+
+        Exception? exception = failure.Value.Exception;
+        string repoRoot = GitHubActionsRepositoryRoot.Resolve(_environment) ?? string.Empty;
+        (string RelativeNormalizedPath, int LineNumber)? stackLocation = StackTraceSourceLocationResolver.TryResolve(
+            exception?.StackTrace,
+            repoRoot,
+            _fileSystem,
+            _logger,
+            StackTraceSourceLocationResolver.SkipAssertionFramesForCurrentRuntime);
+        GitHubActionsSourceLocation? location = stackLocation is { } resolved
+            ? new GitHubActionsSourceLocation(resolved.RelativeNormalizedPath, resolved.LineNumber)
+            : GitHubActionsAnnotationReporter.TryResolveDeclaredLocation(testNode, repoRoot, _fileSystem);
+
+        return new TestFailureDetails(
+            GitHubActionsFailureDetails.Clip(failure.Value.Explanation ?? exception?.Message, GitHubActionsFailureDetails.MaxMessageLength),
+            exception?.GetType().FullName,
+            GitHubActionsFailureDetails.Clip(exception?.StackTrace, GitHubActionsFailureDetails.MaxStackTraceLength),
+            location?.RelativeNormalizedPath,
+            location?.LineNumber ?? 0);
     }
 
     public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
@@ -219,7 +274,7 @@ internal sealed class GitHubActionsSummaryReporter :
                 return;
             }
 
-            string markdown = BuildMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value, exitCode);
+            string markdown = BuildMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value, exitCode, _includeFailureDetails);
 
             try
             {
@@ -439,7 +494,7 @@ internal sealed class GitHubActionsSummaryReporter :
         }
     }
 
-    internal static /* for testing */ string BuildMarkdown(IReadOnlyList<TestRecord> records, string assemblyName, string targetFrameworkMoniker, int exitCode)
+    internal static /* for testing */ string BuildMarkdown(IReadOnlyList<TestRecord> records, string assemblyName, string targetFrameworkMoniker, int exitCode, bool includeFailureDetails = true)
     {
         int total = records.Count;
         int passed = 0;
@@ -502,13 +557,19 @@ internal sealed class GitHubActionsSummaryReporter :
 
         if (failures.Count > 0)
         {
-            builder.Append("### ❌ Failures (").Append(failed.ToString(CultureInfo.InvariantCulture)).Append(")\n\n");
-            foreach (TestRecord failure in failures)
-            {
-                builder.Append("- `").Append(EscapeInlineCode(failure.FullyQualifiedName)).Append("`\n");
-            }
-
-            builder.Append('\n');
+            GitHubActionsFailureDetails.AppendFailuresSection(
+                builder,
+                "###",
+                [.. failures.Select(static failure => new GitHubActionsFailureEntry(
+                    failure.FullyQualifiedName,
+                    failure.Duration,
+                    failure.Failure?.Message,
+                    failure.Failure?.ExceptionType,
+                    failure.Failure?.StackTrace,
+                    failure.Failure?.FilePath,
+                    failure.Failure?.LineNumber ?? 0))],
+                failed,
+                includeFailureDetails);
         }
 
         IEnumerable<TestRecord> slowest = records
@@ -536,7 +597,7 @@ internal sealed class GitHubActionsSummaryReporter :
         return builder.ToString();
     }
 
-    internal static string BuildAggregateMarkdown(CiRunSummaryAggregate aggregate)
+    internal static string BuildAggregateMarkdown(CiRunSummaryAggregate aggregate, bool includeFailureDetails = true)
     {
         bool failed = aggregate.ExitCode is int exitCode
             ? GitHubActionsExitCode.IndicatesFailure(exitCode)
@@ -593,14 +654,14 @@ internal sealed class GitHubActionsSummaryReporter :
             }
 
             builder.Append(")</summary>\n\n");
-            AppendModuleMarkdown(builder, module, headingLevel: 3);
+            AppendModuleMarkdown(builder, module, headingLevel: 3, includeFailureDetails);
             builder.Append("</details>\n\n");
         }
 
         return builder.ToString();
     }
 
-    private static void AppendModuleMarkdown(StringBuilder builder, CiRunSummaryModule module, int headingLevel)
+    private static void AppendModuleMarkdown(StringBuilder builder, CiRunSummaryModule module, int headingLevel, bool includeFailureDetails)
     {
         string heading = new('#', headingLevel);
         bool runFailed = module.FailedTests > 0 || GitHubActionsExitCode.IndicatesFailure(module.ExitCode);
@@ -622,13 +683,19 @@ internal sealed class GitHubActionsSummaryReporter :
 
         if (module.Failures.Length > 0)
         {
-            builder.Append(heading).Append("# ❌ Failures (").Append(module.FailedTests.ToString(CultureInfo.InvariantCulture)).Append(")\n\n");
-            foreach (CiRunSummaryTest failure in module.Failures)
-            {
-                builder.Append("- `").Append(EscapeInlineCode(failure.FullyQualifiedName)).Append("`\n");
-            }
-
-            builder.Append('\n');
+            GitHubActionsFailureDetails.AppendFailuresSection(
+                builder,
+                heading + "#",
+                [.. module.Failures.Select(static failure => new GitHubActionsFailureEntry(
+                    failure.FullyQualifiedName,
+                    TimeSpan.FromTicks(failure.DurationTicks),
+                    failure.ErrorMessage,
+                    failure.ErrorType,
+                    failure.StackTrace,
+                    failure.FilePath,
+                    failure.LineNumber ?? 0))],
+                module.FailedTests,
+                includeFailureDetails);
         }
 
         if (module.SlowestTests.Length > 0)

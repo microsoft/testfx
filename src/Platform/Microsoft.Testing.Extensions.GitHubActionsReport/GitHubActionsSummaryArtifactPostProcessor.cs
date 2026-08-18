@@ -31,6 +31,9 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
         GitHubActionsFeature.IsEnabled(commandLineOptions, environment, GitHubActionsCommandLineOptions.GitHubActionsStepSummary)
         || commandLineOptions.IsOptionSet(ArtifactPostProcessingDispatcherToolCommandLine.ManifestOptionName);
 
+    private readonly bool _includeFailureDetails =
+        GitHubActionsFeature.IsKnobEnabled(commandLineOptions, GitHubActionsCommandLineOptions.GitHubActionsFailureDetails);
+
     public string Uid => "Microsoft.Testing.Extensions.GitHubActionsReport.SummaryPostProcessor";
 
     public string Version => ExtensionVersion.DefaultSemVer;
@@ -59,7 +62,7 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
 
         CiRunSummaryAggregate aggregate = CiRunSummaryAggregation.ReadAndAggregate(inputs, Provider, context);
         string aggregationId = CiRunSummaryAggregation.CreateAggregationId(inputs);
-        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate);
+        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate, _includeFailureDetails);
         string outputPath = CiRunSummaryAggregation.GetMergedOutputPath(outputDirectory, ProviderSlug, aggregationId);
         await CiRunSummaryAggregation.WriteOutputAsync(outputPath, markdown).ConfigureAwait(false);
 
