@@ -35,7 +35,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </para>
 /// <para>
 /// Executable availability depends on the runtime environment, including its <c>PATH</c>, so a missing or misspelled
-/// executable cannot be validated statically and is evaluated when the test is discovered.
+/// executable cannot be validated statically and is evaluated immediately before the test executes.
 /// </para>
 /// <para>
 /// Each distinct executable-and-arguments combination forms its own condition group (see <see cref="GroupName"/>).
