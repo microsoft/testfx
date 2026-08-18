@@ -392,32 +392,22 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
             await _logger.LogInformationAsync($"{dumpReason}.").ConfigureAwait(false);
 
-            // Query the in-progress tests once for the whole dump operation. The list belongs to the test host,
-            // so it is the same for every process in the tree, while the query is bounded by
-            // InProgressTestsQueryTimeout. Asking per process would multiply that timeout by the size of the
-            // tree, and with a wedged consumer pipe a six-process tree would spend the entire default 30s dump
-            // margin waiting before a single dump is written.
-            (string, int)[] inProgressTests = await GetInProgressTestsAsync(cancellationToken).ConfigureAwait(false);
-
-            // Do not suspend processes with NetClient dumper it stops the diagnostic thread running in
-            // them and hang dump request will get stuck forever, because the process is not co-operating.
-            // Instead we start one task per dump asynchronously, and hope that the parent process will start dumping
-            // before the child process is done dumping. This way if the parent is waiting for the children to exit,
-            // we will be dumping it before it observes the child exiting and we get a more accurate results. If we did not
-            // do this, then parent that is awaiting child might exit before we get to dumping it.
-            foreach (IProcess p in bottomUpTree)
-            {
-                try
+            await QueryOnceAndDumpTreeAsync(
+                bottomUpTree,
+                GetInProgressTestsAsync,
+                async (p, inProgressTests, ct) =>
                 {
-                    await TakeDumpAsync(p, inProgressTests, cancellationToken).ConfigureAwait(false);
-                }
-                catch (Exception e)
-                {
-                    // exceptions.Add(new InvalidOperationException($"Error while taking dump of process {p.Name} {p.Id}", e));
-                    await _logger.LogErrorAsync($"Error while taking dump of process {p.Id} - {p.Name}", e).ConfigureAwait(false);
-                    await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.ErrorWhileDumpingProcess, p.Id, p.Name, e)), cancellationToken).ConfigureAwait(false);
-                }
-            }
+                    try
+                    {
+                        await TakeDumpAsync(p, inProgressTests, ct).ConfigureAwait(false);
+                    }
+                    catch (Exception e)
+                    {
+                        await _logger.LogErrorAsync($"Error while taking dump of process {p.Id} - {p.Name}", e).ConfigureAwait(false);
+                        await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.ErrorWhileDumpingProcess, p.Id, p.Name, e)), ct).ConfigureAwait(false);
+                    }
+                },
+                cancellationToken).ConfigureAwait(false);
         }
         finally
         {
@@ -448,6 +438,39 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
                     await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.ErrorKillingProcess, p.Id, p.Name, e)), cancellationToken).ConfigureAwait(false);
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// Asks <paramref name="queryInProgressTestsAsync"/> once and then dumps every process in
+    /// <paramref name="bottomUpTree"/>, annotating each dump with that single answer.
+    /// </summary>
+    /// <remarks>
+    /// The in-progress-test list describes the test host, so it is the same for every process in the tree,
+    /// while the query is bounded by <see cref="InProgressTestsQueryTimeout"/>. Asking per process would
+    /// multiply that bound by the size of the tree, and with a wedged consumer pipe a six-process tree would
+    /// spend the entire default 30s dump margin waiting before a single dump is written.
+    /// This is a separate method so that guarantee can be exercised with a fake tree and a stalled query:
+    /// <see cref="TakeDumpOfTreeAsync"/> itself dumps and then kills every process it walks, so a test
+    /// cannot drive it against a real process tree.
+    /// </remarks>
+    internal static async Task QueryOnceAndDumpTreeAsync(
+        IEnumerable<IProcess> bottomUpTree,
+        Func<CancellationToken, Task<(string, int)[]>> queryInProgressTestsAsync,
+        Func<IProcess, (string, int)[], CancellationToken, Task> dumpProcessAsync,
+        CancellationToken cancellationToken)
+    {
+        (string, int)[] inProgressTests = await queryInProgressTestsAsync(cancellationToken).ConfigureAwait(false);
+
+        // Do not suspend processes with NetClient dumper it stops the diagnostic thread running in
+        // them and hang dump request will get stuck forever, because the process is not co-operating.
+        // Instead we start one task per dump asynchronously, and hope that the parent process will start dumping
+        // before the child process is done dumping. This way if the parent is waiting for the children to exit,
+        // we will be dumping it before it observes the child exiting and we get a more accurate results. If we did not
+        // do this, then parent that is awaiting child might exit before we get to dumping it.
+        foreach (IProcess p in bottomUpTree)
+        {
+            await dumpProcessAsync(p, inProgressTests, cancellationToken).ConfigureAwait(false);
         }
     }
 

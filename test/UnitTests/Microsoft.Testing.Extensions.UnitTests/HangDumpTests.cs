@@ -141,6 +141,56 @@ public sealed class HangDumpTests
     }
 
     [TestMethod]
+    public async Task QueryOnceAndDumpTree_WithStalledQuery_QueriesOncePerDumpAndStillDumpsWholeTree()
+    {
+        // A wedged test host never answers the in-progress-test query, so the query costs a full
+        // InProgressTestsQueryTimeout. Issuing it per process would multiply that bound by the size of
+        // the tree, so a six-process tree must still pay it exactly once and then dump every process.
+        int queryCount = 0;
+        IProcess[] bottomUpTree = [.. Enumerable.Range(0, 6).Select(_ => Mock.Of<IProcess>())];
+        List<IProcess> dumped = [];
+        List<(string, int)[]> annotations = [];
+
+        await HangDumpProcessLifetimeHandler.QueryOnceAndDumpTreeAsync(
+            bottomUpTree,
+            async cancellationToken =>
+            {
+                Interlocked.Increment(ref queryCount);
+
+                // Same shape as GetInProgressTestsAsync against a stalled request/reply: the reply never
+                // arrives, the bound cancels the wait, and the dump proceeds with an empty list.
+                using var queryCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                queryCts.CancelAfter(TimeSpan.FromMilliseconds(50));
+                try
+                {
+                    await Task.Delay(Timeout.Infinite, queryCts.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                }
+
+                return [];
+            },
+            (process, inProgressTests, _) =>
+            {
+                dumped.Add(process);
+                annotations.Add(inProgressTests);
+                return Task.CompletedTask;
+            },
+            CancellationToken.None);
+
+        Assert.AreEqual(1, queryCount);
+        Assert.AreSequenceEqual(bottomUpTree, dumped);
+
+        // Every dump is annotated with the answer from that one query, so no process triggers another.
+        Assert.HasCount(bottomUpTree.Length, annotations);
+        foreach ((string, int)[] annotation in annotations)
+        {
+            Assert.AreSame(annotations[0], annotation);
+        }
+    }
+
+    [TestMethod]
     [DataRow("Mini")]
     [DataRow("Heap")]
     [DataRow("Full")]

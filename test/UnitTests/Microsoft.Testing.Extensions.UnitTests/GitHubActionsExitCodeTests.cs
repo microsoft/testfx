@@ -56,6 +56,16 @@ public sealed class GitHubActionsExitCodeTests
         Assert.Contains("--minimum-expected-tests", GitHubActionsExitCode.GetReason(9));
         Assert.Contains("--maximum-failed-tests", GitHubActionsExitCode.GetReason(13));
         Assert.Contains("coverage threshold", GitHubActionsExitCode.GetReason(14));
+        Assert.Contains("deadline", GitHubActionsExitCode.GetReason(15));
+    }
+
+    [TestMethod]
+    public void GetReason_ForDeadlineStop_IsNotTheUnknownFallback()
+    {
+        // 15 is the newest arm, so it is the one most likely to be dropped and silently answered by the
+        // unknown fallback. Pin it to its own text so that regression is visible.
+        Assert.AreNotEqual(GitHubActionsExitCode.GetReason(255), GitHubActionsExitCode.GetReason(15));
+        Assert.AreEqual("TestExecutionStoppedAtDeadline", GitHubActionsExitCode.GetName(15));
     }
 
     [TestMethod]
