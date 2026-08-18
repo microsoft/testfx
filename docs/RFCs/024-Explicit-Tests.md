@@ -383,8 +383,9 @@ one after.
 
 ### Fail closed
 
-That gap sets the rule for every request shape not listed above: **activation is proven, never
-assumed**. Two questions are asked in order, and only the second one is new.
+The filters that do not reach MSTest today set the rule for every request shape not listed above:
+**activation is proven, never assumed**. Two questions are asked in order, and only the second one is
+new.
 
 **Can the constraint be evaluated?** A filter MSTest cannot evaluate does not become a constraint
 that happens to activate nothing, because a filter whose semantics are unknown cannot narrow a run
