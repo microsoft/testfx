@@ -172,6 +172,60 @@ public sealed class StopPoliciesServiceTests : IDisposable
     }
 
     [TestMethod]
+    public async Task RevertDeadlineTrigger_KeepsCallbacksOneShot()
+    {
+        // Reverting undoes the exit-code verdict only. If it also re-armed the callback gate, the next
+        // trigger would run every callback a second time.
+        StopPoliciesService service = new(_cancellationTokenSource.Object);
+
+        int invocationCount = 0;
+        await service.RegisterOnDeadlineCallbackAsync(() =>
+        {
+            invocationCount++;
+            return Task.CompletedTask;
+        });
+
+        await service.ExecuteDeadlineCallbacksAsync();
+        service.RevertDeadlineTrigger();
+        await service.ExecuteDeadlineCallbacksAsync();
+
+        Assert.AreEqual(1, invocationCount);
+    }
+
+    [TestMethod]
+    public async Task RegisterOnDeadlineCallbackAsync_AfterRevert_InvokesCallbackImmediately()
+    {
+        // The callbacks have already run, so a registration arriving after the revert has missed the only
+        // trigger there will ever be. Queueing it instead would drop it: nothing drains the list any more.
+        StopPoliciesService service = new(_cancellationTokenSource.Object);
+        await service.ExecuteDeadlineCallbacksAsync();
+        service.RevertDeadlineTrigger();
+
+        int invocationCount = 0;
+        await service.RegisterOnDeadlineCallbackAsync(() =>
+        {
+            invocationCount++;
+            return Task.CompletedTask;
+        });
+
+        Assert.AreEqual(1, invocationCount);
+    }
+
+    [TestMethod]
+    public async Task RevertDeadlineTrigger_DoesNotResurrectTheVerdict()
+    {
+        // A second trigger after a revert must stay a no-op: the run was not truncated, so it must not be
+        // reported as stopped at the deadline.
+        StopPoliciesService service = new(_cancellationTokenSource.Object);
+        await service.ExecuteDeadlineCallbacksAsync();
+        service.RevertDeadlineTrigger();
+
+        await service.ExecuteDeadlineCallbacksAsync();
+
+        Assert.IsFalse(service.IsDeadlineTriggered);
+    }
+
+    [TestMethod]
     public async Task ExecuteMaxFailedTestsCallbacksAsync_SetsIsMaxFailedTestsTriggered()
     {
         StopPoliciesService service = new(_cancellationTokenSource.Object);

@@ -18,6 +18,8 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public sealed class HangDumpTests
 {
+    public TestContext TestContext { get; set; } = null!;
+
     private HangDumpCommandLineProvider GetProvider()
     {
         var testApplicationModuleInfo = new Mock<ITestApplicationModuleInfo>();
@@ -153,23 +155,21 @@ public sealed class HangDumpTests
 
         await HangDumpProcessLifetimeHandler.QueryOnceAndDumpTreeAsync(
             bottomUpTree,
-            async cancellationToken =>
+            cancellationToken =>
             {
                 Interlocked.Increment(ref queryCount);
 
-                // Same shape as GetInProgressTestsAsync against a stalled request/reply: the reply never
-                // arrives, the bound cancels the wait, and the dump proceeds with an empty list.
-                using var queryCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                queryCts.CancelAfter(TimeSpan.FromMilliseconds(50));
-                try
-                {
-                    await Task.Delay(Timeout.Infinite, queryCts.Token);
-                }
-                catch (OperationCanceledException)
-                {
-                }
-
-                return [];
+                // The real bounded query, against a reply that never arrives: the product's own bound
+                // cancels the wait and the dump proceeds with an empty list.
+                return HangDumpProcessLifetimeHandler.QueryInProgressTestsWithTimeoutAsync(
+                    async queryCancellationToken =>
+                    {
+                        await Task.Delay(Timeout.Infinite, queryCancellationToken);
+                        return [];
+                    },
+                    TimeSpan.FromMilliseconds(50),
+                    _ => Task.CompletedTask,
+                    cancellationToken);
             },
             (process, inProgressTests, _) =>
             {
@@ -188,6 +188,54 @@ public sealed class HangDumpTests
         {
             Assert.AreSame(annotations[0], annotation);
         }
+    }
+
+    [TestMethod]
+    public async Task QueryInProgressTestsWithTimeout_WhenTheReplyNeverArrives_ReturnsEmptyList()
+    {
+        // A connected-but-wedged host accepts the request and never replies, and the application token is
+        // not cancelled while the run is still in progress -- which is exactly when the deadline dump
+        // fires. So the bound inside the product is the only thing that can end this wait: the request
+        // here honors the token it is handed and nothing else, and never times out on its own.
+        Exception? loggedFailure = null;
+
+        Task<(string, int)[]> query = HangDumpProcessLifetimeHandler.QueryInProgressTestsWithTimeoutAsync(
+            async queryCancellationToken =>
+            {
+                await Task.Delay(Timeout.Infinite, queryCancellationToken);
+                return [];
+            },
+            TimeSpan.FromMilliseconds(200),
+            ex =>
+            {
+                loggedFailure = ex;
+                return Task.CompletedTask;
+            },
+            CancellationToken.None);
+
+        // Fail with a message rather than hanging the run if the bound is ever removed.
+        Task completed = await Task.WhenAny(query, Task.Delay(TimeSpan.FromSeconds(30), TestContext.CancellationToken));
+        Assert.AreSame(query, completed, "The query did not give up on a reply that never arrives, so a wedged host would block the dump.");
+
+        Assert.IsEmpty(await query);
+
+        // The give-up is reported, so a missing in-progress-test list in a dump can be explained.
+        Assert.IsNotNull(loggedFailure);
+    }
+
+    [TestMethod]
+    public async Task QueryInProgressTestsWithTimeout_WhenTheHostReplies_ReturnsTheAnswer()
+    {
+        // The bound must not get in the way of the healthy path, which answers in milliseconds.
+        (string, int)[] expected = [("Test1", 3), ("Test2", 7)];
+
+        (string, int)[] inProgressTests = await HangDumpProcessLifetimeHandler.QueryInProgressTestsWithTimeoutAsync(
+            _ => Task.FromResult(expected),
+            TimeSpan.FromSeconds(30),
+            _ => Task.CompletedTask,
+            CancellationToken.None);
+
+        Assert.AreSequenceEqual(expected, inProgressTests);
     }
 
     [TestMethod]

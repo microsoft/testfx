@@ -12,7 +12,7 @@ internal sealed class StopPoliciesService : IStopPoliciesService
     private readonly ConcurrentQueue<Func<int, CancellationToken, Task>> _maxFailedTestsCallbacks = new();
     private readonly ConcurrentQueue<Func<Task>> _abortCallbacks = new();
 
-    // Guards the deadline verdict together with its callback list, so registration and the one-shot trigger
+    // Guards the deadline state together with its callback list, so registration and the one-shot trigger
     // cannot interleave and drop a callback. A flag plus a concurrent queue is not enough: the registering
     // thread can read the flag as false, the trigger can then set it and snapshot a still-empty queue, and only
     // afterwards does the callback land in the queue -- where nothing will ever invoke it, because the deadline
@@ -24,7 +24,17 @@ internal sealed class StopPoliciesService : IStopPoliciesService
     private readonly object _deadlineLock = new();
 #endif
     private readonly List<Func<Task>> _deadlineCallbacks = [];
+
+    // Whether the callbacks have run. This is the one-shot gate and it is never cleared: once the callbacks
+    // have run, a second trigger must not run them again and a late registration must be invoked on the spot.
+    private bool _areDeadlineCallbacksExecuted;
+
+    // Whether the run is to be reported as stopped at the deadline. This is only the exit-code verdict, and
+    // RevertDeadlineTrigger clears it when the graceful stop it was meant to precede could not be requested.
+    // Kept separate from _areDeadlineCallbacksExecuted so reverting the verdict cannot re-arm the callbacks.
+#pragma warning disable IDE0032 // Use auto property - synchronized access requires a backing field.
     private bool _isDeadlineTriggered;
+#pragma warning restore IDE0032
     private int _lastMaxFailedTests;
 
     public StopPoliciesService(ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource)
@@ -93,12 +103,15 @@ internal sealed class StopPoliciesService : IStopPoliciesService
         Func<Task>[] callbacks;
         lock (_deadlineLock)
         {
-            if (_isDeadlineTriggered)
+            if (_areDeadlineCallbacksExecuted)
             {
-                // The deadline is one-shot; a second trigger must not run the callbacks again.
+                // The deadline is one-shot; a second trigger must not run the callbacks again. This is
+                // gated on the callback flag rather than the verdict, so a reverted verdict cannot let a
+                // later trigger run them a second time.
                 return;
             }
 
+            _areDeadlineCallbacksExecuted = true;
             _isDeadlineTriggered = true;
 
             // Take the callbacks under the lock and clear the list, so a callback registered from now on is
@@ -119,6 +132,9 @@ internal sealed class StopPoliciesService : IStopPoliciesService
     {
         lock (_deadlineLock)
         {
+            // Only the verdict is cleared. _areDeadlineCallbacksExecuted deliberately stays set: the
+            // callbacks have already run, and re-arming them here would let a later trigger run them a
+            // second time and would queue a late registration into a list nothing drains any more.
             _isDeadlineTriggered = false;
         }
     }
@@ -152,14 +168,14 @@ internal sealed class StopPoliciesService : IStopPoliciesService
     {
         lock (_deadlineLock)
         {
-            if (!_isDeadlineTriggered)
+            if (!_areDeadlineCallbacksExecuted)
             {
                 _deadlineCallbacks.Add(callback);
                 return;
             }
         }
 
-        // The deadline already fired, so this registration came too late for the snapshot in
+        // The callbacks already ran, so this registration came too late for the snapshot in
         // ExecuteDeadlineCallbacksAsync. Invoke the callback here instead, outside the lock: it is
         // arbitrary code and must not run while the deadline transition is held.
         await callback().ConfigureAwait(false);

@@ -27,7 +27,9 @@ internal interface IStopPoliciesService
     /// Undoes the verdict set by <see cref="ExecuteDeadlineCallbacksAsync"/> when the graceful stop it was
     /// meant to precede could not be requested, so a run that was never truncated does not report
     /// <see cref="Helpers.ExitCode.TestExecutionStoppedAtDeadline"/>. Callbacks that already ran are not
-    /// undone; only the verdict is.
+    /// undone; only the verdict is, and the callbacks stay one-shot: a later
+    /// <see cref="ExecuteDeadlineCallbacksAsync"/> still does nothing, and a later
+    /// <see cref="RegisterOnDeadlineCallbackAsync"/> is still invoked immediately rather than queued.
     /// </summary>
     void RevertDeadlineTrigger();
 }

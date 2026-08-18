@@ -87,6 +87,12 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     private ITestHostProcessInformation? _testHostProcessInformation;
     private NamedPipeClient? _namedPipeClient;
 
+    // Cancels the pipe handshake in OnTestHostProcessStartedAsync when a dump wins the race. Read and
+    // written under _dumpLock, and null whenever no handshake is in flight. Cancelled outside the lock,
+    // because cancellation runs the waiters' continuations inline and those continue into the handshake,
+    // which takes _dumpLock again on its way out.
+    private CancellationTokenSource? _handshakeCancellationTokenSource;
+
     public HangDumpProcessLifetimeHandler(
         PipeNameDescription pipeNameDescription,
         IMessageBus messageBus,
@@ -215,62 +221,90 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
         _testHostProcessInformation = testHostProcessInformation;
 
-        // Arm the absolute CI deadline timer as early as possible, before we block on the pipe
-        // handshake below. If the test host wedges during startup (never connects back over the
-        // pipe), those waits would otherwise block well past the deadline and the deadline dump/kill
-        // would never be armed, which defeats the purpose of the deadline. The dump path only needs
-        // the test host PID, which we already have here; the in-progress-test list (which needs the
-        // consumer pipe) is best-effort and skipped when the pipe never connected.
-        if (_deadlineDumpAt is { } deadlineDumpAt)
+        // The pipe handshake below must be interruptible by a dump. Killing the test host does not
+        // complete this process's own WaitConnectionAsync -- that pipe is waiting for a client that will
+        // now never connect -- so without this token a host that wedged before connecting keeps Started
+        // blocked for DefaultHangTimeSpanTimeout (five minutes), far past the default 30s dump margin and
+        // the CI hard deadline, and OnTestHostProcessExitedAsync never runs to publish the dump that was
+        // taken. Published before the deadline timer is armed so a timer that fires immediately (a
+        // deadline already in the past) still finds it.
+        var handshakeCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        lock (_dumpLock)
         {
-            TimeSpan dueTime = deadlineDumpAt - _clock.UtcNow;
-            if (dueTime < TimeSpan.Zero)
-            {
-                dueTime = TimeSpan.Zero;
-            }
-            else if (dueTime > MaxTimerDueTime)
-            {
-                // Clamp far-future deadlines so the Timer ctor does not throw. The run (and this
-                // timer) is disposed long before the clamped due time elapses, so it never fires early.
-                dueTime = MaxTimerDueTime;
-            }
-
-            _deadlineTimer = new Timer(
-                _ => TriggerDumpOnce(cancellationToken, triggeredByDeadline: true),
-                null,
-                dueTime,
-                TimeSpan.FromMilliseconds(-1));
+            _handshakeCancellationTokenSource = handshakeCancellation;
         }
 
-        // Once the absolute deadline timer has fired and started taking a dump, the test host is being
-        // dumped and killed out from under this handshake, so the pipe waits below will throw
-        // (cancellation, timeout, or a torn-down pipe). Let Started return normally in that case so the
-        // lifetime handler still receives OnTestHostProcessExitedAsync, which is where the dump files
-        // are published; otherwise a deadline dump would be taken but never surfaced as an artifact.
+        CancellationToken handshakeToken = handshakeCancellation.Token;
+
         try
         {
-            await _logger.LogDebugAsync($"Wait for test host connection to the server pipe '{_singleConnectionNamedPipeServer.PipeName.Name}'").ConfigureAwait(false);
-            await _waitConnectionTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false);
-            using CancellationTokenSource timeout = new(TimeoutHelper.DefaultHangTimeSpanTimeout);
-            using var linkedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeout.Token);
-            _waitConsumerPipeName.Wait(linkedCancellationToken.Token);
-            ApplicationStateGuard.Ensure(_namedPipeClient is not null);
-            await _namedPipeClient.ConnectAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false);
-            await _logger.LogDebugAsync($"Connected to the test host server pipe '{_namedPipeClient.PipeName}'").ConfigureAwait(false);
+            // Arm the absolute CI deadline timer as early as possible, before we block on the pipe
+            // handshake below. If the test host wedges during startup (never connects back over the
+            // pipe), those waits would otherwise block well past the deadline and the deadline dump/kill
+            // would never be armed, which defeats the purpose of the deadline. The dump path only needs
+            // the test host PID, which we already have here; the in-progress-test list (which needs the
+            // consumer pipe) is best-effort and skipped when the pipe never connected.
+            if (_deadlineDumpAt is { } deadlineDumpAt)
+            {
+                TimeSpan dueTime = deadlineDumpAt - _clock.UtcNow;
+                if (dueTime < TimeSpan.Zero)
+                {
+                    dueTime = TimeSpan.Zero;
+                }
+                else if (dueTime > MaxTimerDueTime)
+                {
+                    // Clamp far-future deadlines so the Timer ctor does not throw. The run (and this
+                    // timer) is disposed long before the clamped due time elapses, so it never fires early.
+                    dueTime = MaxTimerDueTime;
+                }
 
-            // The inactivity timer only makes sense once the host has connected and can send activity
-            // signals; before that there is nothing to reset it. The deadline timer above is independent.
-            _activityTimer = new Timer(
-                _ => TriggerDumpOnce(cancellationToken, triggeredByDeadline: false),
-                null,
-                _activityTimerValue!.Value,
-                TimeSpan.FromMilliseconds(-1));
+                _deadlineTimer = new Timer(
+                    _ => TriggerDumpOnce(cancellationToken, triggeredByDeadline: true),
+                    null,
+                    dueTime,
+                    TimeSpan.FromMilliseconds(-1));
+            }
+
+            // Once a dump has started, the test host is being dumped and killed out from under this
+            // handshake, so the pipe waits below will throw (cancellation, timeout, or a torn-down pipe).
+            // Let Started return normally in that case so the lifetime handler still receives
+            // OnTestHostProcessExitedAsync, which is where the dump files are published; otherwise a
+            // deadline dump would be taken but never surfaced as an artifact.
+            try
+            {
+                await _logger.LogDebugAsync($"Wait for test host connection to the server pipe '{_singleConnectionNamedPipeServer.PipeName.Name}'").ConfigureAwait(false);
+                await _waitConnectionTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, handshakeToken).ConfigureAwait(false);
+                using CancellationTokenSource timeout = new(TimeoutHelper.DefaultHangTimeSpanTimeout);
+                using var linkedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(handshakeToken, timeout.Token);
+                _waitConsumerPipeName.Wait(linkedCancellationToken.Token);
+                ApplicationStateGuard.Ensure(_namedPipeClient is not null);
+                await _namedPipeClient.ConnectAsync(handshakeToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, handshakeToken).ConfigureAwait(false);
+                await _logger.LogDebugAsync($"Connected to the test host server pipe '{_namedPipeClient.PipeName}'").ConfigureAwait(false);
+
+                // The inactivity timer only makes sense once the host has connected and can send activity
+                // signals; before that there is nothing to reset it. The deadline timer above is independent.
+                _activityTimer = new Timer(
+                    _ => TriggerDumpOnce(cancellationToken, triggeredByDeadline: false),
+                    null,
+                    _activityTimerValue!.Value,
+                    TimeSpan.FromMilliseconds(-1));
+            }
+            catch (Exception ex) when (Volatile.Read(ref _dumpTaken) != 0)
+            {
+                // A dump is already in progress; the failed handshake is expected. Return normally so
+                // OnTestHostProcessExitedAsync runs and publishes the dump that is being taken.
+                await _logger.LogDebugAsync($"Test host handshake failed after the dump started; continuing so the dump can be published. {ex}").ConfigureAwait(false);
+            }
         }
-        catch (Exception ex) when (Volatile.Read(ref _dumpTaken) != 0)
+        finally
         {
-            // A deadline dump is already in progress; the failed handshake is expected. Return normally
-            // so OnTestHostProcessExitedAsync runs and publishes the dump that is being taken.
-            await _logger.LogDebugAsync($"Test host handshake failed after the deadline dump started; continuing so the dump can be published. {ex}").ConfigureAwait(false);
+            // Unpublish before disposing, so a later dump reads null instead of a disposed source.
+            lock (_dumpLock)
+            {
+                _handshakeCancellationTokenSource = null;
+            }
+
+            handshakeCancellation.Dispose();
         }
     }
 
@@ -336,6 +370,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         // concurrently. Claim the gate and publish the running dump task under the same lock, so both
         // disposal paths (which take the lock, claim the gate, and capture _activityIndicatorTask)
         // always observe and await the winning dump instead of tearing down the pipes underneath it.
+        CancellationTokenSource? handshakeCancellation;
         lock (_dumpLock)
         {
             if (_dumpTaken != 0)
@@ -345,6 +380,23 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
             _dumpTaken = 1;
             _activityIndicatorTask = TakeDumpOfTreeAsync(cancellationToken, triggeredByDeadline);
+            handshakeCancellation = _handshakeCancellationTokenSource;
+        }
+
+        // Interrupt the pipe handshake, if one is still in flight. We are about to dump and kill the test
+        // host, and a host that wedged before connecting leaves that handshake waiting for a connection
+        // that will never arrive; killing it does not complete our own wait, so nothing else would end it
+        // before DefaultHangTimeSpanTimeout and the dump would never reach OnTestHostProcessExitedAsync
+        // to be published. Cancelled outside _dumpLock on purpose: the waiters' continuations can run
+        // inline here, and they continue into a handshake that takes _dumpLock again on its way out.
+        try
+        {
+            handshakeCancellation?.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+            // The handshake finished and disposed the source between the read above and this call, so
+            // there is nothing left to interrupt.
         }
     }
 
@@ -488,23 +540,49 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     /// mid-run, so any failure is logged and swallowed and an empty list is returned, and it can never block
     /// taking the dump and killing the tree.
     /// </remarks>
-    private async Task<(string, int)[]> GetInProgressTestsAsync(CancellationToken cancellationToken)
+    private Task<(string, int)[]> GetInProgressTestsAsync(CancellationToken cancellationToken)
     {
-        if (_namedPipeClient is null)
-        {
-            return [];
-        }
+        NamedPipeClient? namedPipeClient = _namedPipeClient;
+        return namedPipeClient is null
+            ? Task.FromResult<(string, int)[]>([])
+            : QueryInProgressTestsWithTimeoutAsync(
+                async queryCancellationToken =>
+                {
+                    GetInProgressTestsResponse tests = await namedPipeClient.RequestReplyAsync<GetInProgressTestsRequest, GetInProgressTestsResponse>(new GetInProgressTestsRequest(), queryCancellationToken).ConfigureAwait(false);
+                    return tests.Tests;
+                },
+                InProgressTestsQueryTimeout,
+                ex => _logger.LogDebugAsync($"Could not collect the in-progress tests before dumping (the consumer pipe may not be connected, or the host did not reply within {InProgressTestsQueryTimeout}). Continuing with the dump. {ex}"),
+                cancellationToken);
+    }
 
+    /// <summary>
+    /// Runs <paramref name="requestInProgressTestsAsync"/> under a bound of <paramref name="timeout"/>, and
+    /// returns an empty list if it does not answer in time or fails.
+    /// </summary>
+    /// <remarks>
+    /// The bound lives here rather than in the caller's delegate so it is the product, not the caller, that
+    /// gives up on a connected-but-wedged host: the application token is not cancelled while the run is still
+    /// "in progress", which is exactly when the deadline dump fires, so an unbounded request/reply would block
+    /// the dump and the kill indefinitely and consume the whole dump margin.
+    /// This is a separate method so that bound can be exercised with a reply that never arrives: the real
+    /// request/reply goes over a named pipe to another process, which a unit test cannot stand up.
+    /// </remarks>
+    internal static async Task<(string, int)[]> QueryInProgressTestsWithTimeoutAsync(
+        Func<CancellationToken, Task<(string, int)[]>> requestInProgressTestsAsync,
+        TimeSpan timeout,
+        Func<Exception, Task> logFailureAsync,
+        CancellationToken cancellationToken)
+    {
         try
         {
             using var queryCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            queryCts.CancelAfter(InProgressTestsQueryTimeout);
-            GetInProgressTestsResponse tests = await _namedPipeClient.RequestReplyAsync<GetInProgressTestsRequest, GetInProgressTestsResponse>(new GetInProgressTestsRequest(), queryCts.Token).ConfigureAwait(false);
-            return tests.Tests;
+            queryCts.CancelAfter(timeout);
+            return await requestInProgressTestsAsync(queryCts.Token).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
-            await _logger.LogDebugAsync($"Could not collect the in-progress tests before dumping (the consumer pipe may not be connected, or the host did not reply within {InProgressTestsQueryTimeout}). Continuing with the dump. {ex}").ConfigureAwait(false);
+            await logFailureAsync(ex).ConfigureAwait(false);
             return [];
         }
     }
