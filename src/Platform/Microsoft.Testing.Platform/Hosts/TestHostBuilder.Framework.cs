@@ -130,17 +130,18 @@ internal sealed partial class TestHostBuilder
             {
                 dataConsumersBuilder.Add(abortAtDeadlineExtension);
 
-                // Also register it as a session-lifetime handler so it is told when test execution completes.
-                // On that signal it disarms the deadline, so a timer firing while the reporters finalize an
-                // already-finished run cannot wrongly mark the run as deadline-truncated (exit code 15).
-                testSessionLifetimeHandlers.Add(abortAtDeadlineExtension);
+                // Also register it as a service so the host can tell it, the moment the test framework invoker
+                // returns, that test execution is over. On that signal it disarms the deadline, so a timer
+                // firing while the reporters finalize an already-finished run cannot wrongly mark the run as
+                // deadline-truncated (exit code 15). A session-lifetime handler would be too late: this is an
+                // IDataConsumer, and consumer handlers run at the very end of NotifyTestSessionEndAsync.
+                serviceProvider.AddService(abortAtDeadlineExtension);
             }
         }
 
-        // Registered after the deadline extension is (conditionally) added above so the container clearly
-        // includes it as a lifetime handler. The container captures the list by reference (so a later Add would
-        // still be observed), but populating the list fully before registering keeps this order-independent and
-        // free of that subtlety. Lifetime handlers are enumerated later, during NotifyTestSessionEndAsync.
+        // The container captures the list by reference (so a later Add would still be observed), but populating
+        // it fully before registering keeps this order-independent and free of that subtlety. Lifetime handlers
+        // are enumerated later, during NotifyTestSessionEndAsync.
         serviceProvider.AddService(new TestSessionLifetimeHandlersContainer(testSessionLifetimeHandlers));
 
         AsynchronousMessageBus concreteMessageBusService = new(

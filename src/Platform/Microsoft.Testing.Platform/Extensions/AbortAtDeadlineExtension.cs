@@ -23,12 +23,12 @@ namespace Microsoft.Testing.Platform.Extensions;
 /// This is a prototype. It is timer-driven (the deadline is an absolute instant, so the timer is
 /// armed at construction). It implements <see cref="IDataConsumer"/> so the message bus keeps a live
 /// reference to it for the duration of the run (which also keeps its timer alive); it consumes no
-/// message types, so the bus keeps that reference without routing any message to it. It also implements
-/// <see cref="ITestSessionLifetimeHandler"/> so it can disarm the deadline once test execution
-/// completes: a timer that fired while the reporters finalize an already-finished run would otherwise
+/// message types, so the bus keeps that reference without routing any message to it. It is also registered
+/// as a service so the host can call <see cref="NotifyTestExecutionCompleted"/> the moment the test framework
+/// invoker returns: a timer that fired while the reporters finalize an already-finished run would otherwise
 /// wrongly mark the run as deadline-truncated.
 /// </remarks>
-internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLifetimeHandler, IOutputDeviceDataProducer, IDisposable
+internal sealed class AbortAtDeadlineExtension : IDataConsumer, IOutputDeviceDataProducer, IDisposable
 #if NETCOREAPP
 #pragma warning disable SA1001 // Commas should be spaced correctly
     , IAsyncDisposable
@@ -53,7 +53,7 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
     private int _handled;
     private volatile bool _disposed;
 
-    // Set once test execution has completed (OnTestSessionFinishingAsync). After this the deadline must not
+    // Set once test execution has completed (NotifyTestExecutionCompleted). After this the deadline must not
     // fire: the run already finished, so marking it deadline-truncated would be wrong. Written under _lock and
     // read on the timer callback's fast-path, so it is volatile.
     private volatile bool _executionCompleted;
@@ -182,35 +182,35 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
     public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
         => Task.CompletedTask;
 
-    /// <inheritdoc />
-    public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
-        => Task.CompletedTask;
-
-    /// <inheritdoc />
-    public Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
+    /// <summary>
+    /// Disarms the deadline because test execution has finished.
+    /// </summary>
+    /// <remarks>
+    /// The host calls this as soon as the test framework invoker returns, before end-of-session draining and
+    /// reporting begin. That instant matters: from here on the deadline is moot, because every test that was
+    /// going to run has run. Doing it through <see cref="ITestSessionLifetimeHandler"/> instead would be far
+    /// too late -- session-end notification first drains the message bus, then runs the non-consumer handlers,
+    /// then the consumer handlers in registration order, and this extension is a consumer appended after the
+    /// reporters. A deadline reached anywhere in that window would still mark a fully-executed run as
+    /// truncated (exit code 15).
+    /// Set under the same lock <see cref="OnDeadlineReached"/> and <see cref="Dispose"/> use, so a timer firing
+    /// right now is gated rather than half-applied. This never un-marks a real truncation: if the timer already
+    /// fired during execution, the deadline verdict is already recorded and setting this flag now is harmless.
+    /// The timer itself is left to be disposed at host teardown; the flag is what makes any late fire a no-op.
+    /// </remarks>
+    public void NotifyTestExecutionCompleted()
     {
-        // Test execution has completed (this runs right after the test framework invoker returns, before the
-        // reporters render their summary). Disarm the deadline so a timer that fires from now on -- while the
-        // reporters finalize an already-finished run -- is ignored instead of marking the run as
-        // deadline-truncated. Without this, a fully-completed run whose reporting overlaps the stop instant
-        // would wrongly exit with ExitCode.TestExecutionStoppedAtDeadline (15) and report that tests stopped
-        // early. Set the flag under the same lock OnDeadlineReached/Dispose use, so a timer firing right now is
-        // gated rather than half-applied. This never un-marks a real truncation: if the timer already fired
-        // during execution, IsDeadlineTriggered is already set and setting this flag now is harmless. The timer
-        // itself is left to be disposed at host teardown; the flag is what makes any late fire a no-op.
         lock (_lock)
         {
             _executionCompleted = true;
         }
-
-        return Task.CompletedTask;
     }
 
     private void OnDeadlineReached()
     {
         // Do not start deadline handling once we are tearing down, or once test execution has already
         // completed (cheap fast-path; both are re-checked under the lock below to actually close the race
-        // with Dispose and OnTestSessionFinishingAsync).
+        // with Dispose and NotifyTestExecutionCompleted).
         if (_disposed || _executionCompleted)
         {
             return;
@@ -307,6 +307,13 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
         }
         catch (Exception ex)
         {
+            // The verdict above was committed on the assumption that the stop would be accepted. It was not,
+            // so the framework was never asked to stop and the run carries on to completion -- leaving the
+            // verdict set would report TestExecutionStoppedAtDeadline for a run that executed every test.
+            // Take it back. This cannot resurrect the finalization race the early commit avoids: that race
+            // only exists once the stop is accepted, and here it never was.
+            _policiesService.RevertDeadlineTrigger();
+
             // Best-effort: never let the timer callback crash the process during teardown. The error
             // log is itself best-effort (the logger may be what threw), so guard it too.
             try

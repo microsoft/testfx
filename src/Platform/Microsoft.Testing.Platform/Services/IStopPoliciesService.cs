@@ -22,4 +22,12 @@ internal interface IStopPoliciesService
     Task ExecuteAbortCallbacksAsync();
 
     Task ExecuteDeadlineCallbacksAsync();
+
+    /// <summary>
+    /// Undoes the verdict set by <see cref="ExecuteDeadlineCallbacksAsync"/> when the graceful stop it was
+    /// meant to precede could not be requested, so a run that was never truncated does not report
+    /// <see cref="Helpers.ExitCode.TestExecutionStoppedAtDeadline"/>. Callbacks that already ran are not
+    /// undone; only the verdict is.
+    /// </summary>
+    void RevertDeadlineTrigger();
 }
