@@ -84,8 +84,8 @@ internal sealed class MtpServerProcess : IDisposable
     /// Launches the MTP application at <paramref name="source"/> and waits for it to connect back.
     /// </summary>
     /// <param name="source">
-    /// Path to the test application. May be a managed <c>.dll</c> (launched via its sibling apphost
-    /// <c>.exe</c> when present, otherwise via <c>dotnet &lt;dll&gt;</c>) or a native <c>.exe</c>.
+    /// Path to the test application. May be a managed <c>.dll</c> (launched via its sibling apphost when that
+    /// apphost is usable on the current OS, otherwise via <c>dotnet &lt;dll&gt;</c>) or a native executable.
     /// </param>
     /// <param name="options">Client options (name, connection timeout, environment, logger).</param>
     public static MtpServerProcess Start(string source, MtpServerClientOptions? options = null)
@@ -284,17 +284,19 @@ internal sealed class MtpServerProcess : IDisposable
         }
     }
 
-    private static LaunchCommand BuildLaunch(string source, int port)
+    internal static LaunchCommand BuildLaunch(string source, int port)
     {
         string serverArgs = $"{ServerArgument} {ClientPortArgument} {port} {NoBannerArgument}";
         string workingDirectory = Path.GetDirectoryName(source) ?? Directory.GetCurrentDirectory();
         string extension = Path.GetExtension(source);
 
         // A managed .NET assembly must be launched through its apphost (preferred) or `dotnet <dll>`.
+        // The apphost is only preferred when it is actually launchable here: a candidate that merely
+        // exists is not enough (see IsUsableApphost), and an unusable one falls back to `dotnet <dll>`.
         if (extension.Equals(".dll", StringComparison.OrdinalIgnoreCase))
         {
             string apphost = GetAppHostPath(source);
-            return File.Exists(apphost)
+            return IsUsableApphost(apphost)
                 ? new LaunchCommand(apphost, serverArgs, workingDirectory)
                 : new LaunchCommand("dotnet", $"\"{source}\" {serverArgs}", workingDirectory);
         }
@@ -307,7 +309,7 @@ internal sealed class MtpServerProcess : IDisposable
     // A named launch descriptor rather than a value tuple: System.ValueTuple is not in the .NET
     // Framework before 4.7, and this source is compiled into consumers that may target net462 without
     // referencing the System.ValueTuple package. A tiny class keeps the package dependency-free.
-    private sealed class LaunchCommand
+    internal sealed class LaunchCommand
     {
         public LaunchCommand(string fileName, string arguments, string workingDirectory)
         {
@@ -335,10 +337,49 @@ internal sealed class MtpServerProcess : IDisposable
 #else
         bool isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 #endif
+
+        // The probe is OS-aware rather than always appending ".exe": a test payload built on a Windows
+        // agent and executed on a Linux machine (the dotnet/aspnetcore Helix layout) ships a Windows PE
+        // `Foo.exe` next to `Foo.dll`. Probing for ".exe" on Linux finds that Windows binary and launching
+        // it aborts the run, which is the CI failure fixed in microsoft/vstest#16336. A Unix apphost has
+        // no extension, so asking for the right name per OS never selects the foreign one.
         string appHostFileName = isWindows
             ? nameWithoutExtension + ".exe"
             : nameWithoutExtension;
         return Path.Combine(directory, appHostFileName);
+    }
+
+    /// <summary>
+    /// Determines whether <paramref name="apphost"/> can actually be launched on the current operating system.
+    /// </summary>
+    /// <remarks>
+    /// Existence is not sufficient on Unix. Archive formats used to move test payloads between agents (zip in
+    /// particular) do not carry the POSIX permission bits, so an extensionless apphost that survives a
+    /// Windows-build/Linux-run round trip can arrive without its execute bit. Launching such a file throws
+    /// <c>Permission denied</c> instead of degrading, which is the second half of the fix in
+    /// microsoft/vstest#16336. Requiring an execute bit lets the caller fall back to <c>dotnet &lt;dll&gt;</c>,
+    /// which needs no permissions on the apphost at all.
+    /// </remarks>
+    internal static bool IsUsableApphost(string apphost)
+    {
+        if (!File.Exists(apphost))
+        {
+            return false;
+        }
+
+#if NETCOREAPP
+        // File.GetUnixFileMode is .NET 7+. Consumers compiling the netstandard2.0 slice (net462, and
+        // net5.0-net7.0 which select that slice) fall back to the existence check above. That stays correct
+        // because GetAppHostPath already refuses to consider a Windows ".exe" on Unix, so the only case left
+        // uncovered there is an extensionless file that lost its execute bit.
+        if (!OperatingSystem.IsWindows())
+        {
+            const UnixFileMode ExecuteBits = UnixFileMode.UserExecute | UnixFileMode.GroupExecute | UnixFileMode.OtherExecute;
+            return (File.GetUnixFileMode(apphost) & ExecuteBits) != 0;
+        }
+#endif
+
+        return true;
     }
 
     private static void SafeStop(TcpListener listener, IMtpClientLogger logger)
