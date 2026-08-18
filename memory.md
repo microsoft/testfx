@@ -1,13 +1,25 @@
 # Efficiency Improver — Persistent Memory for microsoft/testfx
 
 ## Last Updated
-2026-08-17 UTC
+2026-08-18 UTC
 
 ## Round-Robin Schedule
 
-Tasks run this session (2026-08-17, run 32072721341): **2 (scan), 4 (check own PRs — none open), 5 (issue comments — no new activity), 7 (monthly summary)**
-Last run before this: Tasks 2/4/7 (2026-08-16, run 31974311003)
-Next run should prioritise: Task 3 (implementation — backlog is empty/LOW-only, need fresh deep scan of a specific area), Task 6 (infra — #10549 regression-gating proposal still awaiting maintainer response)
+Tasks run this session (2026-08-18, run 32189242907): **2 (scan recent commits), 3 (implementation — PR created), 7 (monthly summary)**
+Last run before this: Tasks 2/4/7 (2026-08-17, run 32072721341)
+Next run should prioritise: Task 4 (maintain the new PR from this run once it has CI results), Task 6 (infra — #10549 regression-gating proposal still awaiting maintainer response), Task 3 follow-up on the executable-condition-analyzer recursive-walk opportunity below.
+
+## 2026-08-18 Run Notes
+
+- Scanned recently merged commits since last run (#10634 executable-condition analyzer, #10632 reparse-point consolidation, #10574/#10579 test-only PRs) via a sub-agent.
+- Found a genuine I/O-efficiency opportunity in **pre-existing** (untouched by #10632) `TrxReportEngine.Merge.PathHelpers.cs`: `HasReparsePointComponent` did `Directory.Exists(current) && IsReparsePoint(current)` per ancestor directory level — 2 filesystem stat syscalls per level (`Directory.Exists` + `File.GetAttributes`).
+- **Implemented**: added `DirectoryExistsAndIsReparsePoint(path)` combining both checks into a single `File.GetAttributes()` call (try/catch for `IOException`/`UnauthorizedAccessException` to preserve `Directory.Exists()`'s silent-false semantics). Updated `HasReparsePointComponent` and an equivalent inline check in `TrxReportEngine.Merge.Attachments.cs` to use it. Left `IsReparsePoint(path)` (file-based) untouched — still used in `TrxReportEngine.Merge.AttachmentReferences.cs`.
+- Branch: `efficiency/trx-reparse-point-syscall`. Build: `./build.sh` succeeded, 0 warnings/errors. Tests: `TrxArtifactPostProcessorTests` (net8.0+net9.0) 16/16 passed.
+- Proxy metric used: filesystem syscalls per directory-ancestor level (2 → 1) — path is low-frequency (TRX merge post-processing), so wall-clock timing wasn't meaningful; syscall-count reduction is the honest proxy, documented as such in the PR.
+- Created draft PR `[efficiency-improver] Reduce duplicate filesystem stat calls in TRX reparse-point detection` (safeoutputs create_pull_request succeeded; PR number will be assigned downstream).
+- New backlog item noted (not acted on this run, higher risk/complexity): executable-condition analyzer (#10634) does a recursive tree walk that is not memoized — LOW-MEDIUM priority, gated behind narrow guards so not urgent. Candidate for a future Task 3 run.
+- Checked #10549 (regression-gating proposal) — still open, zero comments; not re-engaging (anti-spam rule).
+- No open `[efficiency-improver]` PRs existed at start of this run (Task 4 had nothing to maintain) — now one exists as of this run, for next run's Task 4.
 
 ## 2026-08-17 Run Notes
 
@@ -116,6 +128,7 @@ Notes:
 
 | Date | PR/Issue | Summary |
 |------|----------|---------|
+| 2026-08-18 | PR created (draft, `efficiency/trx-reparse-point-syscall`) | Combine `Directory.Exists()` + `File.GetAttributes()` into one syscall in `TrxReportEngine`'s reparse-point ancestor-walk (`HasReparsePointComponent` + `TrxReportEngine.Merge.Attachments.cs`); build succeeded, TrxArtifactPostProcessorTests 16/16 passed |
 | 2026-08-01 | scan only | Scanned new OTel (#10358), MSTestTestNodeConverter caching (#10366), TestResult assertion texts (#10353) — all well-optimized by maintainers; no new HIGH/MEDIUM opportunities |
 | 2026-07-31 | scan only | Scanned new OpenTelemetry spans (#10358), CtrfReportMerger partials (#10354), RetryOrchestrator — all well-optimized |
 | 2026-07-29 | scan only | Scanned TreeNodeFilter, new AzureDevOps extension (#10331), TestMethodFilter, Assert.ContainsAll — all already well-optimized |
@@ -137,9 +150,15 @@ Notes:
 
 ## Backlog Cursor
 
-- Code scan cursor: All code through 2026-08-04 reviewed (commits up to ff9bca1). Backlog is EMPTY as of maintainer's 2026-08-03 consolidation comment on #10382 (fixed via #10397; rest won't-fix or needs-maintainer-decision).
-- Issue comments cursor: #8824 ✅ (no new comments since 2026-07-14), #9712 ✅ — no new efficiency-labeled issues found as of 2026-08-04.
-- Next code scan area: repo has been very active (dozens of commits/day from maintainer + Copilot coding agent) — re-scan diffs since ff9bca1 (2026-08-04) next run for new hot-path code.
+- Code scan cursor: reviewed commits through 2026-08-18 (up to #10634). One new LOW-MEDIUM item added below (executable-condition analyzer recursive walk). Reparse-point double-syscall item resolved via this run's PR.
+- Issue comments cursor: #8824 ✅ (no new comments since 2026-07-14), #9712 ✅ — no new efficiency-labeled issues found as of 2026-08-18.
+- Next code scan area: `src/Analyzers` executable-condition analyzer (#10634) recursive tree walk — check if memoizable; also continue rotating through less-recently-scanned Platform extension folders.
+
+## Open Backlog Items
+
+| Priority | Focus Area | Item | Notes |
+|---|---|---|---|
+| LOW-MEDIUM | Code-Level | Executable-condition analyzer (#10634) recursive tree walk not memoized | Gated behind narrow guards, not urgent; analyzer code is riskier to change — evaluate memoization feasibility before attempting |
 
 
 ## 2026-08-04 Run Notes
