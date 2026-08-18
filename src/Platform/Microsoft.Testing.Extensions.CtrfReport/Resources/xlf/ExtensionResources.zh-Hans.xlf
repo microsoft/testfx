@@ -4,22 +4,22 @@
     <body>
       <trans-unit id="CtrfArtifactPostProcessorDescription">
         <source>Merges CTRF reports produced by Microsoft.Testing.Extensions.CtrfReport</source>
-        <target state="new">Merges CTRF reports produced by Microsoft.Testing.Extensions.CtrfReport</target>
+        <target state="translated">合并由 Microsoft.Testing.Extensions.CtrfReport 生成的 CTRF 报表</target>
         <note>Do not localize format name {Locked="CTRF"} or assembly name {Locked="Microsoft.Testing.Extensions.CtrfReport"}.</note>
       </trans-unit>
       <trans-unit id="CtrfArtifactPostProcessorDisplayName">
         <source>CTRF report merger</source>
-        <target state="new">CTRF report merger</target>
+        <target state="translated">CTRF 报告合并器</target>
         <note>Do not localize format name {Locked="CTRF"}.</note>
       </trans-unit>
       <trans-unit id="CtrfMergedArtifactDescription">
         <source>{0} CTRF files merged</source>
-        <target state="new">{0} CTRF files merged</target>
+        <target state="translated">已合并 {0} 个 CTRF 文件</target>
         <note>{0} is the number of merged files. Do not localize format name {Locked="CTRF"}.</note>
       </trans-unit>
       <trans-unit id="CtrfMergedArtifactDisplayName">
         <source>CTRF report (merged)</source>
-        <target state="new">CTRF report (merged)</target>
+        <target state="translated">CTRF 报表(已合并)</target>
         <note>Do not localize format name {Locked="CTRF"}.</note>
       </trans-unit>
       <trans-unit id="CtrfReportArtifactDescription">
