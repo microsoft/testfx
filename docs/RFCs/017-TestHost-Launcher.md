@@ -289,6 +289,7 @@ Loopback exemptions (`CheckNetIsolation LoopbackExempt`) are explicitly *not* pa
 apply to network loopback sockets, not to named-pipe DACLs, and would not help here.
 
 ### Contract requirements on the launcher
+
 - The launched host **must** end up with the values in `context.EnvironmentVariables` (so it connects
   back on the controller pipe) and **must** receive `context.Arguments`. *How* those values reach the
   host is left to the launcher — they can be inherited from the environment, passed as activation
