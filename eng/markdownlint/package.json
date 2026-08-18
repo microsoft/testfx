@@ -1,0 +1,10 @@
+{
+  "name": "testfx-markdownlint",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pins the markdownlint-cli2 toolchain used by the Markdownlint workflow. The lockfile pins the whole dependency graph, including the markdownlint library itself, so a new rule in an upstream release cannot start failing the lint on unchanged files.",
+  "license": "MIT",
+  "devDependencies": {
+    "markdownlint-cli2": "0.23.2"
+  }
+}

@@ -158,7 +158,7 @@ Writing the stack trace alone would **not** be equivalent to Java's output: .NET
 
 The `message` and `type` attributes are still written, so consumers that read them directly are unaffected. The resulting duplication between the `message` attribute and the body is exactly what every Maven/Surefire report already exhibits, so consumers that render both have long handled it.
 
-Each part degrades gracefully: a missing exception type drops the header prefix, a missing message drops the `:` separator, and a missing stack trace yields a header-only body.
+Each part degrades gracefully: a missing exception type drops the header prefix, a missing message drops the colon-space separator, and a missing stack trace yields a header-only body.
 
 ### The `type` attribute
 

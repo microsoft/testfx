@@ -32,6 +32,12 @@ updates:
         update-types:
           - version-update:semver-major
           - version-update:semver-minor
+  - package-ecosystem: npm
+    directory: "/eng/markdownlint"
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: '[main] '
   - package-ecosystem: github-actions
     directory: /
     schedule:

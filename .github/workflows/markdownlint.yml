@@ -10,6 +10,8 @@ on:
       - ".markdownlint*.json*"
       - ".markdownlintignore"
       - ".github/workflows/markdownlint.yml"
+      - "eng/markdownlint/package.json"
+      - "eng/markdownlint/package-lock.json"
 
 concurrency:
   group: markdownlint-${{ github.event.pull_request.number || github.ref }}
@@ -23,10 +25,22 @@ jobs:
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-    # Run the CLI directly rather than DavidAnson/markdownlint-cli2-action. The microsoft
+    - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      with:
+        node-version: "22"
+
+    # Run the CLI directly rather than DavidAnson/markdownlint-cli2-action. The Microsoft
     # organization's allowed-actions list only permits that action at @v18, so every other
     # version is rejected before a job is created and the run ends in startup_failure with
     # no logs and no check run. A `run:` step is not subject to the allow-list, so the gate
     # can no longer be silently disabled by a version bump.
+    #
+    # Install from the committed lockfile rather than resolving at run time: the lockfile
+    # pins the whole graph, markdownlint itself included, so an upstream release cannot add
+    # a rule that fails the lint on files nobody touched.
+    - name: Install markdownlint-cli2
+      run: npm ci
+      working-directory: eng/markdownlint
+
     - name: Run markdownlint-cli2
-      run: npx --yes markdownlint-cli2@0.23.2 "**/*.md"
+      run: node eng/markdownlint/node_modules/markdownlint-cli2/markdownlint-cli2-bin.mjs "**/*.md"

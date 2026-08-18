@@ -156,3 +156,4 @@ project.fragment.lock.json
 
 # Workflow script dependencies
 .github/workflows/scripts/node_modules/
+eng/markdownlint/node_modules/
