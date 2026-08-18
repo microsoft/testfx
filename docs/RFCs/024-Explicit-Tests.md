@@ -135,14 +135,24 @@ public interface ITestDataSourceExplicitCapability
     bool IsExplicit { get; set; }
     string? ExplicitReason { get; set; }
 }
+
+public sealed class TestDataRow<T>
+{
+    // Added next to the existing IgnoreMessage, DisplayName and TestCategories.
+    public bool IsExplicit { get; set; }
+    public string? ExplicitReason { get; set; }
+}
 ```
 
-`DataRowAttribute`, `DynamicDataAttribute`, and `TestDataRow<T>` implement the capability.
-`TestDataRow<T>` carries both properties as `[DataMember]`, and the internal `ITestDataRow` contract
-exposes them next to `IgnoreMessage`, `DisplayName`, and `TestCategories`, so row metadata survives
-every existing unwrapping and serialization path.
+The source capability and the row properties stay separate, the way the ignore metadata already
+works. `ITestDataSourceExplicitCapability` goes on data sources, so `DataRowAttribute` and
+`DynamicDataAttribute` implement it exactly as they implement `ITestDataSourceIgnoreCapability`
+today. `TestDataRow<T>` is a row and not an `ITestDataSource`, so it declares the two properties
+directly instead, as `[DataMember]` next to `IgnoreMessage`, and the internal `ITestDataRow`
+contract exposes them, so row metadata survives every existing unwrapping and serialization path.
+Making the row implement a source named interface would claim a relationship that does not exist.
 
-A custom `ITestDataSource` implements the interface to mark every row it produces, or returns
+A custom `ITestDataSource` implements the capability to mark every row it produces, or returns
 `TestDataRow<T>` to mark single rows:
 
 ```csharp
@@ -429,10 +439,18 @@ has `--filter "Explicit=True"`, which stays visible in the command line.
 
 ### The gate
 
-The explicit check happens in `UnitTestRunner.RunSingleTestAsync`, before the test type is loaded and
-therefore before assembly initialization, class initialization, construction, `TestInitialize`, and
-the body. An assembly whose only selected tests are unactivated class, method, or unfolded-row
-explicit tests runs no user code at all. Folded row declarations are the exception, see below.
+The explicit check happens in `UnitTestRunner.RunSingleTestAsync`, after the assembly `ITestFilter`
+and before `TypeCache.GetTestMethodInfo`. An unactivated class, method, or unfolded-row explicit test
+therefore loads no test type, and runs no assembly initialization, class initialization, constructor,
+`TestInitialize`, or body.
+
+The gate does not promise more than that. Filter discovery loads the test assembly before it can look
+for the attribute, and a registered `[TestFilterProvider]` is then constructed and asked about every
+selected test, so module initializers and that filter run whatever the explicit state is. That is
+existing `ITestFilter` behavior and this RFC does not change it. The filter keeps its place ahead of
+the gate because it answers whether the test belongs in the run at all, which is a different question
+from whether the user asked for it, and a test the policy drops must report as dropped rather than as
+an explicit skip. Folded row declarations are the other exception, see below.
 
 An unactivated test goes through `FinishTestThatDidNotRunAsync`, the same bookkeeping used by other
 selected-but-not-run outcomes, so class test counts still reach zero and `ClassCleanup` and
@@ -541,7 +559,9 @@ An upstream API that exposes a walkable tree replaces this later without changin
   vectors run against VSTest and native MTP so the two cannot drift, and against both expression
   evaluators so the duplicated parser cannot drift either.
 - Ordering tests proving that assembly `ITestFilter` returning `Run` and provider constraints never
-  activate, and that an unclassifiable request activates nothing.
+  activate, and that an unclassifiable request activates nothing. One of them registers a
+  `[TestFilterProvider]` alongside an unactivated explicit test and asserts the filter is still
+  constructed and called, pinning the boundary of what the gate skips.
 - Execution tests proving no type load, no fixture, no body, and no retry for an unactivated test,
   correct cleanup counts for explicit skips, and folded and unfolded row behavior.
 - One acceptance asset, run through both hosts, covering explicit method, class, base and override,
