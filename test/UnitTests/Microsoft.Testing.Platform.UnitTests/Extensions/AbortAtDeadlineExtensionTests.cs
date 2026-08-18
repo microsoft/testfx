@@ -97,6 +97,75 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
         _capability.Verify(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    [TestMethod]
+    public async Task WhenTestExecutionCompletesWhileTheDeadlineIsBeingReported_TheVerdictIsNotCommitted()
+    {
+        // The overlap the checks above cannot catch. The handler does not run on the timer callback: it yields
+        // and then reports, and the test framework invoker can return during exactly that window. Checking
+        // completion only before starting the handler would therefore still let the deadline commit its
+        // verdict and request a stop for a run in which every test had already finished (exit code 15 on a
+        // complete run). Gate the handler inside its reporting to make that window deterministic.
+        TaskCompletionSource<bool> reporting = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> abandoned = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        using AbortAtDeadlineExtension extension = CreateExtension(
+            deadlineIn: TimeSpan.Zero,
+            onLog: async logLevel =>
+            {
+                switch (logLevel)
+                {
+                    // "Deadline approaching ...", written before the verdict is committed.
+                    case LogLevel.Information:
+                        reporting.TrySetResult(true);
+                        await release.Task;
+                        break;
+
+                    // "... abandoning the graceful stop.", the only thing the handler does once it sees that
+                    // test execution won the race.
+                    case LogLevel.Debug:
+                        abandoned.TrySetResult(true);
+                        break;
+                }
+            });
+
+        // Park the handler mid-report, then let the invoker return underneath it.
+        await WaitForAsync(reporting.Task);
+        extension.NotifyTestExecutionCompleted();
+        release.SetResult(true);
+
+        await WaitForAsync(abandoned.Task);
+        _policiesService.Verify(x => x.ExecuteDeadlineCallbacksAsync(), Times.Never);
+        _policiesService.Verify(x => x.RevertDeadlineTrigger(), Times.Never);
+        _capability.Verify(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task WhenTestExecutionCompletesAfterTheDeadlineClaimedTheRun_TheVerdictStands()
+    {
+        // The mirror image of the test above, and the reason completion cannot simply revert the verdict: the
+        // graceful stop is what makes execution finish, so the completion that follows a claimed deadline is
+        // the stop taking effect, not a run that got there on its own.
+        TaskCompletionSource<bool> stopping = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        _capability
+            .Setup(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()))
+            .Returns(async () =>
+            {
+                stopping.TrySetResult(true);
+                await release.Task;
+            });
+
+        using AbortAtDeadlineExtension extension = CreateExtension(deadlineIn: TimeSpan.Zero);
+
+        await WaitForAsync(stopping.Task);
+        extension.NotifyTestExecutionCompleted();
+        release.SetResult(true);
+
+        _policiesService.Verify(x => x.ExecuteDeadlineCallbacksAsync(), Times.Once);
+        _policiesService.Verify(x => x.RevertDeadlineTrigger(), Times.Never);
+    }
+
     private async Task WaitForAsync(Task task)
     {
         Task completed = await Task.WhenAny(task, Task.Delay(TimeSpan.FromSeconds(30), TestContext.CancellationToken));
@@ -104,7 +173,7 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
         await task;
     }
 
-    private AbortAtDeadlineExtension CreateExtension(TimeSpan deadlineIn)
+    private AbortAtDeadlineExtension CreateExtension(TimeSpan deadlineIn, Func<LogLevel, Task>? onLog = null)
     {
         Mock<IEnvironment> environment = new();
         _ = environment.Setup(x => x.GetEnvironmentVariable(It.IsAny<string>())).Returns((string?)null);
@@ -124,7 +193,8 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
         Mock<ILogger> logger = new();
         _ = logger
             .Setup(x => x.LogAsync(It.IsAny<LogLevel>(), It.IsAny<string>(), It.IsAny<Exception?>(), It.IsAny<Func<string, Exception?, string>>()))
-            .Returns(Task.CompletedTask);
+            .Returns((LogLevel logLevel, string _, Exception? _, Func<string, Exception?, string> _)
+                => onLog is null ? Task.CompletedTask : onLog(logLevel));
         Mock<ILoggerFactory> loggerFactory = new();
         _ = loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(logger.Object);
 
