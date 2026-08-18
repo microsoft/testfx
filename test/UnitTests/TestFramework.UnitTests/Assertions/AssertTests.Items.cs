@@ -1,6 +1,7 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections;
 using System.Globalization;
 
 using AwesomeAssertions;
@@ -13,6 +14,67 @@ public partial class AssertTests
     {
         var collection = new List<int> { 1, 2, 3 };
         Assert.HasCount(3, collection);
+    }
+
+    public void Count_NonGenericICollection_ShouldUseCountWithoutEnumerating()
+    {
+        CountTrackingCollection collection = new(3);
+
+        Assert.HasCount(3, collection);
+
+        collection.CountAccessCount.Should().Be(1);
+        collection.EnumerationCount.Should().Be(0);
+    }
+
+    public void Count_NonGenericIEnumerable_ShouldEnumerate()
+    {
+        CountTrackingEnumerable collection = new(3);
+
+        Assert.HasCount(3, collection);
+
+        collection.EnumerationCount.Should().Be(1);
+    }
+
+    public void Count_NonGenericICollection_WhenCountDiffers_ShouldPreserveFailureMessage()
+    {
+        CountTrackingCollection collection = new(1);
+
+        Action action = () => Assert.HasCount(3, collection, "custom message", "collection");
+
+        action.Should().Throw<Exception>()
+            .WithMessage(
+                """
+                Assertion failed. Expected collection to contain a specific number of elements.
+                custom message
+
+                expected count: 3
+                actual count:   1
+
+                Assert.HasCount(3, collection)
+                """);
+        collection.CountAccessCount.Should().Be(1);
+        collection.EnumerationCount.Should().Be(0);
+    }
+
+    public void Count_NonGenericICollection_WhenCountThrows_ShouldPropagateWithoutEnumerating()
+    {
+        ThrowingCountCollection collection = new();
+
+        Action action = () => Assert.HasCount(0, collection);
+
+        action.Should().Throw<InvalidOperationException>().WithMessage("count boom");
+        collection.CountAccessCount.Should().Be(1);
+        collection.EnumerationCount.Should().Be(0);
+    }
+
+    public void Count_NonGenericNullCollection_ShouldPreserveException()
+    {
+        IEnumerable collection = null!;
+
+        Action hasCountAction = () => Assert.HasCount(0, collection);
+        Action isEmptyAction = () => Assert.IsEmpty(collection);
+        hasCountAction.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("source");
+        isEmptyAction.Should().Throw<ArgumentNullException>().Which.ParamName.Should().Be("source");
     }
 
     public void Count_InterpolatedString_WhenCountIsSame_ShouldPass()
@@ -489,6 +551,25 @@ public partial class AssertTests
     public void NotAny_WhenEmpty_ShouldPass()
         => Assert.IsEmpty(Array.Empty<int>());
 
+    public void IsEmpty_NonGenericICollection_ShouldUseCountWithoutEnumerating()
+    {
+        CountTrackingCollection collection = new(0);
+
+        Assert.IsEmpty(collection);
+
+        collection.CountAccessCount.Should().Be(1);
+        collection.EnumerationCount.Should().Be(0);
+    }
+
+    public void IsEmpty_NonGenericIEnumerable_ShouldEnumerate()
+    {
+        CountTrackingEnumerable collection = new(0);
+
+        Assert.IsEmpty(collection);
+
+        collection.EnumerationCount.Should().Be(1);
+    }
+
     public void NotAny_InterpolatedString_WhenEmpty_ShouldPass()
     {
         DummyClassTrackingToStringCalls o = new();
@@ -688,5 +769,74 @@ public partial class AssertTests
                 Assert.IsNotEmpty(collection)
                 """);
         o.WasToStringCalled.Should().BeTrue();
+    }
+
+    private sealed class CountTrackingCollection(int count) : ICollection
+    {
+        public int Count
+        {
+            get
+            {
+                CountAccessCount++;
+                return count;
+            }
+        }
+
+        public int CountAccessCount { get; private set; }
+
+        public int EnumerationCount { get; private set; }
+
+        public bool IsSynchronized => false;
+
+        public object SyncRoot { get; } = new();
+
+        public void CopyTo(Array array, int index)
+            => throw new NotSupportedException();
+
+        public IEnumerator GetEnumerator()
+        {
+            EnumerationCount++;
+            throw new InvalidOperationException("The ICollection fast path should not enumerate.");
+        }
+    }
+
+    private sealed class CountTrackingEnumerable(int count) : IEnumerable
+    {
+        public int EnumerationCount { get; private set; }
+
+        public IEnumerator GetEnumerator()
+        {
+            EnumerationCount++;
+            return Enumerable.Range(0, count).GetEnumerator();
+        }
+    }
+
+    private sealed class ThrowingCountCollection : ICollection
+    {
+        public int Count
+        {
+            get
+            {
+                CountAccessCount++;
+                throw new InvalidOperationException("count boom");
+            }
+        }
+
+        public int CountAccessCount { get; private set; }
+
+        public int EnumerationCount { get; private set; }
+
+        public bool IsSynchronized => false;
+
+        public object SyncRoot { get; } = new();
+
+        public void CopyTo(Array array, int index)
+            => throw new NotSupportedException();
+
+        public IEnumerator GetEnumerator()
+        {
+            EnumerationCount++;
+            throw new InvalidOperationException("The ICollection fast path should not enumerate.");
+        }
     }
 }
