@@ -193,6 +193,44 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
         release.SetResult(true);
     }
 
+    [TestMethod]
+    public async Task WhenTheUserFacingMessageNeverCompletes_TheGracefulStopIsStillRequested()
+    {
+        // The verdict is committed before this message is written, so an output device that wedges rather
+        // than throws would leave the run recorded as stopped at the deadline while the stop was never
+        // actually requested -- the same "truncated a run nobody stopped" split, reached the other way
+        // round. Swallowing faults does not cover it: a task that never completes never faults.
+        TaskCompletionSource<bool> displaying = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> neverCompletes = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> stopped = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        _capability
+            .Setup(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()))
+            .Returns(() =>
+            {
+                stopped.TrySetResult(true);
+                return Task.CompletedTask;
+            });
+
+        using AbortAtDeadlineExtension extension = CreateExtension(
+            deadlineIn: TimeSpan.Zero,
+            onDisplay: () =>
+            {
+                displaying.TrySetResult(true);
+                return neverCompletes.Task;
+            },
+            reportTimeout: TimeSpan.FromMilliseconds(200));
+
+        await WaitForAsync(displaying.Task);
+
+        // The bound, not the output device, is what lets the handler carry on.
+        await WaitForAsync(stopped.Task);
+        _capability.Verify(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _policiesService.Verify(x => x.RevertDeadlineTrigger(), Times.Never);
+
+        neverCompletes.SetResult(true);
+    }
+
     private async Task WaitForAsync(Task task)
     {
         Task completed = await Task.WhenAny(task, Task.Delay(TimeSpan.FromSeconds(30), TestContext.CancellationToken));
@@ -200,7 +238,7 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
         await task;
     }
 
-    private AbortAtDeadlineExtension CreateExtension(TimeSpan deadlineIn, Func<LogLevel, Task>? onLog = null, Func<Task>? onDisplay = null)
+    private AbortAtDeadlineExtension CreateExtension(TimeSpan deadlineIn, Func<LogLevel, Task>? onLog = null, Func<Task>? onDisplay = null, TimeSpan? reportTimeout = null)
     {
         Mock<IEnvironment> environment = new();
         _ = environment.Setup(x => x.GetEnvironmentVariable(It.IsAny<string>())).Returns((string?)null);
@@ -240,7 +278,8 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
             _policiesService.Object,
             cancellationTokenSource.Object,
             outputDevice.Object,
-            loggerFactory.Object);
+            loggerFactory.Object,
+            reportTimeout);
     }
 }
 

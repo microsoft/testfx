@@ -566,7 +566,8 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
     /// <summary>
     /// Runs <paramref name="requestInProgressTestsAsync"/> under a bound of <paramref name="timeout"/>, and
-    /// returns an empty list if it does not answer in time or fails.
+    /// returns an empty list if it does not answer in time or fails -- including when reporting that failure
+    /// itself fails.
     /// </summary>
     /// <remarks>
     /// The bound lives here rather than in the caller's delegate so it is the product, not the caller, that
@@ -590,7 +591,18 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         }
         catch (Exception ex)
         {
-            await logFailureAsync(ex).ConfigureAwait(false);
+            // The empty-list fallback is the whole point of this method, so it must survive a failing
+            // diagnostic too. logFailureAsync is a logger call and logger providers can fail; letting that
+            // throw would escape the caller, which is explicitly best-effort, and skip the dump entirely.
+            try
+            {
+                await logFailureAsync(ex).ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                // Ignore: taking the dump matters more than recording why the query could not answer.
+            }
+
             return [];
         }
     }

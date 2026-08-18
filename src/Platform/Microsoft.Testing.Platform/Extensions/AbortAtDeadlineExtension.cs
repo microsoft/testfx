@@ -43,6 +43,10 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, IOutputDeviceDat
     private readonly DateTimeOffset? _stopAt;
     private readonly Timer? _timer;
 
+    // How long a single best-effort diagnostic may take before it is abandoned. Injectable only so a test
+    // can exercise the bound without waiting DefaultReportTimeout for it; production always uses the default.
+    private readonly TimeSpan _reportTimeout;
+
     // Serializes publishing _handleDeadlineTask against Dispose reading it, so the timer callback and
     // disposal cannot interleave in a way that starts the handler after Dispose has already returned.
 #if NET9_0_OR_GREATER
@@ -67,6 +71,16 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, IOutputDeviceDat
     private static readonly TimeSpan DisposeDrainTimeout = TimeSpan.FromSeconds(30);
 
     /// <summary>
+    /// Bounded wait applied to each best-effort diagnostic on the deadline path, so a logger or output
+    /// device that never completes cannot hold up the graceful stop it precedes.
+    /// </summary>
+    /// <remarks>
+    /// Generous enough that a healthy provider never hits it, and short relative to the margin the
+    /// deadline leaves for the stop to take effect.
+    /// </remarks>
+    private static readonly TimeSpan DefaultReportTimeout = TimeSpan.FromSeconds(10);
+
+    /// <summary>
     /// <see cref="Timer"/> throws for due times above ~49.7 days (its internal limit is
     /// <see cref="uint.MaxValue"/> milliseconds). A deadline that far out is effectively "never"
     /// for a test run, so we clamp to this maximum instead of throwing at construction.
@@ -80,13 +94,15 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, IOutputDeviceDat
         IStopPoliciesService policiesService,
         ITestApplicationCancellationTokenSource cancellationTokenSource,
         IOutputDevice outputDevice,
-        ILoggerFactory loggerFactory)
+        ILoggerFactory loggerFactory,
+        TimeSpan? reportTimeout = null)
     {
         _capability = capability;
         _policiesService = policiesService;
         _cancellationTokenSource = cancellationTokenSource;
         _outputDevice = outputDevice;
         _logger = loggerFactory.CreateLogger(nameof(AbortAtDeadlineExtension));
+        _reportTimeout = reportTimeout ?? DefaultReportTimeout;
 
         if (!DeadlineHelper.TryGetDeadline(environment, out DateTimeOffset deadline))
         {
@@ -389,21 +405,29 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, IOutputDeviceDat
     }
 
     /// <summary>
-    /// Runs a best-effort diagnostic, swallowing anything it throws so it can never skip the graceful stop.
+    /// Runs a best-effort diagnostic, swallowing anything it throws and giving up on it if it does not
+    /// complete promptly, so it can never skip or delay the graceful stop.
     /// </summary>
     private async Task TryReportAsync(Func<Task> report, string failureMessage)
     {
         try
         {
-            await report().ConfigureAwait(false);
+            // Swallowing faults is not enough on its own. A wedged logger or output device does not throw,
+            // it hands back a task that never completes, and every call to this sits on the path to
+            // StopTestExecutionAsync -- the one after the claim runs when the verdict is already committed.
+            // Awaiting such a task there would leave the run recorded as stopped at the deadline while the
+            // stop was never actually requested, which is the exact split this extension exists to prevent.
+            // Bound the wait: TimeoutAfterAsync abandons the task and keeps observing it, so a fault
+            // arriving later cannot resurface as an unobserved task exception.
+            await report().TimeoutAfterAsync(_reportTimeout).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
-            // Even this failure log is best-effort. If the logger itself is what threw, logging
-            // again could re-throw and skip the stop, so swallow anything here.
+            // Even this failure log is best-effort, and bounded for the same reason: the logger may be
+            // exactly what threw or wedged, so reporting the failure must not re-throw or block the stop.
             try
             {
-                await _logger.LogErrorAsync(failureMessage, ex).ConfigureAwait(false);
+                await _logger.LogErrorAsync(failureMessage, ex).TimeoutAfterAsync(_reportTimeout).ConfigureAwait(false);
             }
             catch (Exception)
             {

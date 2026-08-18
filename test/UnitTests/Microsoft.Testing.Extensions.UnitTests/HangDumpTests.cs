@@ -239,6 +239,21 @@ public sealed class HangDumpTests
     }
 
     [TestMethod]
+    public async Task QueryInProgressTestsWithTimeout_WhenReportingTheFailureThrows_StillReturnsEmptyList()
+    {
+        // The empty list is what lets the dump go ahead after a failed query, and the delegate that reports
+        // the failure is a logger call -- logger providers can fail. If that throw escaped, a query failure
+        // would take the dump down with it, even though the query is explicitly best-effort.
+        (string, int)[] inProgressTests = await HangDumpProcessLifetimeHandler.QueryInProgressTestsWithTimeoutAsync(
+            _ => throw new InvalidOperationException("The consumer pipe is not connected."),
+            TimeSpan.FromSeconds(30),
+            _ => throw new InvalidOperationException("This logger provider is broken too."),
+            CancellationToken.None);
+
+        Assert.IsEmpty(inProgressTests);
+    }
+
+    [TestMethod]
     [DataRow("Mini")]
     [DataRow("Heap")]
     [DataRow("Full")]
