@@ -23,57 +23,48 @@ safe-outputs:
   noop:
     report-as-issue: false
 steps:
-- name: Download super-linter log
+- name: Download markdownlint log
   uses: actions/download-artifact@v8.0.1
   with:
-    name: super-linter-log
+    name: markdownlint-log
     path: /tmp/gh-aw/
-description: Runs Markdown quality checks using Super Linter and creates issues for violations
+description: Runs Markdown quality checks using markdownlint-cli2 and creates issues for violations
 jobs:
-  super_linter:
+  markdownlint:
     permissions:
       contents: read
-      packages: read
-      statuses: write
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
       uses: actions/checkout@v7.0.1
       with:
-        fetch-depth: 0
         persist-credentials: false
-    - env:
-        CREATE_LOG_FILE: "true"
-        DEFAULT_BRANCH: main
-        ENABLE_GITHUB_ACTIONS_STEP_SUMMARY: "true"
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        LOG_FILE: super-linter.log
-        VALIDATE_ALL_CODEBASE: "false"
-        VALIDATE_MARKDOWN: "true"
-      id: super-linter
-      name: Super-linter
-      uses: super-linter/super-linter@v8.7.0
-    - id: check-results
-      name: Check for linting issues
+    - id: markdownlint
+      name: Run markdownlint-cli2
+      # Pinned to the markdownlint-cli2 version bundled by
+      # DavidAnson/markdownlint-cli2-action@v24.1.0, which .github/workflows/markdownlint.yml
+      # runs on every pull request, so this scheduled report and the pull request gate apply
+      # exactly the same rules. Configuration comes from .markdownlint-cli2.jsonc in the repo
+      # root, including its "ignores" list. Bump this together with that action.
       run: |
-        if [ -f "super-linter.log" ] && [ -s "super-linter.log" ]; then
-          if grep -qE "ERROR|WARN|FAIL" super-linter.log; then
-            echo "needs-linting=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "needs-linting=false" >> "$GITHUB_OUTPUT"
-          fi
-        else
-          echo "needs-linting=false" >> "$GITHUB_OUTPUT"
-        fi
+        set +e
+        npx --yes markdownlint-cli2@0.23.1 "**/*.md" > markdownlint.log 2>&1
+        status=$?
+        cat markdownlint.log
+        echo "markdownlint-cli2 exit code: $status (0 = clean, 1 = violations found)"
     - if: always()
-      name: Upload super-linter log
+      name: Upload markdownlint log
       uses: actions/upload-artifact@v7.0.1
       with:
-        name: super-linter-log
-        path: super-linter.log
+        name: markdownlint-log
+        path: markdownlint.log
         retention-days: 7
 name: Markdown Linter
-source: githubnext/agentics/workflows/markdown-linter.md@main
+# Intentionally no "source:" field. This workflow started as
+# githubnext/agentics/workflows/markdown-linter.md@main, but that version runs
+# super-linter/super-linter, which this repository's Actions policy does not allow, so every
+# run failed at startup. Re-linking it to upstream would let `gh aw update` restore the
+# blocked action and break the workflow again.
 timeout-minutes: 15
 tools:
   bash:
@@ -83,7 +74,7 @@ tools:
 ---
 # Markdown Quality Report
 
-You are an expert documentation quality analyst. Your task is to analyze the Super Linter Markdown output and create a comprehensive issue report for the repository maintainers.
+You are an expert documentation quality analyst. Your task is to analyze the markdownlint-cli2 output and create a comprehensive issue report for the repository maintainers.
 
 ## Context
 
@@ -93,12 +84,15 @@ You are an expert documentation quality analyst. Your task is to analyze the Sup
 
 ## Your Task
 
-1. **Read the linter output** from `/tmp/gh-aw/super-linter.log` using the bash tool
+1. **Read the linter output** from `/tmp/gh-aw/markdownlint.log` using the bash tool
 2. **Analyze the findings**:
    - Categorize errors by severity (critical, high, medium, low)
    - Identify patterns in the errors
    - Determine which errors are most important to fix first
-   - Note: This workflow only validates Markdown files
+   - Note: This workflow only validates Markdown files, using the repository's
+     `.markdownlint-cli2.jsonc` rules. The same rules gate every pull request through
+     `.github/workflows/markdownlint.yml`, so anything reported here also blocks new pull
+     requests. Rules that file disables (for example MD013 line length) are not violations.
 3. **Create a detailed issue** with the following structure:
 
 ### Issue Title
@@ -149,7 +143,8 @@ Use format: "Markdown Quality Report - [Date] - [X] issues found"
 ## 🔗 References
 
 - [Link to workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-- [Super Linter Documentation](https://github.com/super-linter/super-linter)
+- [markdownlint-cli2 Documentation](https://github.com/DavidAnson/markdownlint-cli2)
+- [markdownlint rule reference](https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md)
 ```
 
 ## Important Guidelines
