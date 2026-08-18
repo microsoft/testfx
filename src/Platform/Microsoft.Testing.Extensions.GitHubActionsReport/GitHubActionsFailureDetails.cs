@@ -58,10 +58,17 @@ internal readonly struct GitHubActionsFailureEntry
 /// </summary>
 /// <remarks>
 /// A GitHub job summary is capped at 1 MiB per step and is shared by every test host appending to
-/// <c>GITHUB_STEP_SUMMARY</c>, so diagnostics are bounded twice: each individual value is clipped
-/// (<see cref="MaxMessageLength"/> / <see cref="MaxStackTraceLength"/>) and the section as a whole stops
-/// expanding once <see cref="MaxTotalDetailsLength"/> characters of detail have been emitted. Every clip is
-/// stated in the rendered output so a reader never mistakes truncated diagnostics for complete ones.
+/// <c>GITHUB_STEP_SUMMARY</c>, so diagnostics are bounded on four axes, and every reduction is stated in
+/// the rendered output so a reader never mistakes truncated diagnostics for complete ones:
+/// <list type="bullet">
+/// <item>each value is clipped by length (<see cref="MaxMessageLength"/> / <see cref="MaxStackTraceLength"/>);</item>
+/// <item>each value is clipped by line count (<see cref="MaxMessageRows"/> / <see cref="MaxStackTraceRows"/>),
+/// because a 200-line trace of one-word frames is under the character cap yet unreadable;</item>
+/// <item>the failure list itself is capped by the caller;</item>
+/// <item>expansion stops once the caller's remaining character budget is exhausted.</item>
+/// </list>
+/// The budget is supplied by the caller rather than being a per-section constant, because the 1 MiB cap
+/// applies to the whole file — which several test projects share — not to one project's section.
 /// </remarks>
 internal static class GitHubActionsFailureDetails
 {
@@ -78,17 +85,36 @@ internal static class GitHubActionsFailureDetails
     internal const int MaxStackTraceLength = 4000;
 
     /// <summary>
-    /// Maximum characters of expanded failure detail rendered per module section, leaving ample room under
-    /// GitHub's 1 MiB job-summary limit for the other sections and for sibling test assemblies.
+    /// Maximum lines kept from a single failure message. A character cap alone does not bound readability:
+    /// a message of many very short lines stays under it while being far too long to read.
     /// </summary>
-    internal const int MaxTotalDetailsLength = 60_000;
+    internal const int MaxMessageRows = 30;
 
     /// <summary>
-    /// Clips <paramref name="value"/> to <paramref name="maxLength"/>, appending a marker so the reader can
-    /// tell the value was cut. Returns <see langword="null"/> for null/whitespace input so callers can treat
-    /// "nothing useful" uniformly.
+    /// Maximum stack frames kept from a single stack trace, for the same reason as <see cref="MaxMessageRows"/>.
+    /// Deep recursion produces hundreds of near-identical one-line frames that carry no extra information.
     /// </summary>
-    internal static string? Clip(string? value, int maxLength)
+    internal const int MaxStackTraceRows = 30;
+
+    /// <summary>
+    /// GitHub's hard limit on a single job summary file. Exceeding it makes GitHub drop the summary entirely,
+    /// so the reporters aim well below it.
+    /// </summary>
+    internal const int GitHubStepSummaryLimit = 1024 * 1024;
+
+    /// <summary>
+    /// The share of <see cref="GitHubStepSummaryLimit"/> this extension will occupy. The headroom absorbs the
+    /// non-detail parts of the summary (headings, tables, notes) and any content other tools append to the
+    /// same file.
+    /// </summary>
+    internal const int MaxTotalDetailsLength = (int)(GitHubStepSummaryLimit * 0.8);
+
+    /// <summary>
+    /// Clips <paramref name="value"/> to <paramref name="maxLength"/> characters and <paramref name="maxRows"/>
+    /// lines, appending a marker whenever either bound trims the value so the reader can tell it was cut.
+    /// Returns <see langword="null"/> for null/whitespace input so callers can treat "nothing useful" uniformly.
+    /// </summary>
+    internal static string? Clip(string? value, int maxLength, int maxRows = int.MaxValue)
     {
         if (RoslynString.IsNullOrWhiteSpace(value))
         {
@@ -96,9 +122,27 @@ internal static class GitHubActionsFailureDetails
         }
 
         string normalized = value!.Replace("\r\n", "\n").TrimEnd();
-        return normalized.Length <= maxLength
-            ? normalized
-            : normalized.Substring(0, maxLength).TrimEnd() + "\n" + GitHubActionsResources.FailureDetailTruncated;
+        bool truncated = false;
+
+        if (normalized.Length > maxLength)
+        {
+            normalized = normalized.Substring(0, maxLength).TrimEnd();
+            truncated = true;
+        }
+
+        if (maxRows < int.MaxValue)
+        {
+            string[] rows = normalized.Split('\n');
+            if (rows.Length > maxRows)
+            {
+                normalized = string.Join("\n", rows.Take(maxRows)).TrimEnd();
+                truncated = true;
+            }
+        }
+
+        return truncated
+            ? normalized + "\n" + GitHubActionsResources.FailureDetailTruncated
+            : normalized;
     }
 
     /// <summary>
@@ -111,21 +155,30 @@ internal static class GitHubActionsFailureDetails
     /// <param name="entries">The failures to render, already capped to the reporter's maximum.</param>
     /// <param name="totalFailedCount">The total number of failing tests, which may exceed <paramref name="entries"/>.</param>
     /// <param name="includeDetails">Whether expanded diagnostics are enabled.</param>
-    internal static void AppendFailuresSection(
+    /// <param name="remainingBudget">
+    /// The characters of expanded detail this section may still emit, decremented by what it renders. Passed by
+    /// reference so a caller rendering several project sections into one file shares a single budget across them
+    /// — the 1 MiB cap applies to the whole file, not to any one section.
+    /// </param>
+    /// <returns>
+    /// The number of listed failures that were rendered without their diagnostics because the budget ran out, so
+    /// a caller rendering many sections can also report the shortfall at the file level.
+    /// </returns>
+    internal static int AppendFailuresSection(
         StringBuilder builder,
         string heading,
         IReadOnlyList<GitHubActionsFailureEntry> entries,
         long totalFailedCount,
-        bool includeDetails)
+        bool includeDetails,
+        ref int remainingBudget)
     {
         if (entries.Count == 0)
         {
-            return;
+            return 0;
         }
 
         builder.Append(heading).Append(" ❌ Failures (").Append(totalFailedCount.ToString(CultureInfo.InvariantCulture)).Append(")\n\n");
 
-        int remainingBudget = MaxTotalDetailsLength;
         int omittedDetails = 0;
 
         foreach (GitHubActionsFailureEntry entry in entries)
@@ -174,6 +227,8 @@ internal static class GitHubActionsFailureDetails
                     omittedDetails.ToString(CultureInfo.InvariantCulture)))
                 .Append("\n\n");
         }
+
+        return omittedDetails;
     }
 
     private static void AppendCompactEntry(StringBuilder builder, GitHubActionsFailureEntry entry)

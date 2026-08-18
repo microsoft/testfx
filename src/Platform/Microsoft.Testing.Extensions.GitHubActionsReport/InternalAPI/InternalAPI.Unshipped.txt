@@ -17,7 +17,7 @@ static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsExitCode.Ge
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsExitCode.IndicatesFailure(int exitCode) -> bool
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsExitCode.IsTestResultOutcome(int exitCode) -> bool
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSlowTestReporter.BuildNoticeLine(string! testLabel, System.TimeSpan elapsed) -> string!
-static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.BuildMarkdown(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.TestRecord>! records, string! assemblyName, string! targetFrameworkMoniker, int exitCode, bool includeFailureDetails = true) -> string!
+static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.BuildMarkdown(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.TestRecord>! records, string! assemblyName, string! targetFrameworkMoniker, int exitCode, bool includeFailureDetails = true, int detailsBudget = 838860) -> string!
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.BuildAggregateMarkdown(Microsoft.Testing.Extensions.CiRunSummaryAggregate! aggregate, bool includeFailureDetails = true) -> string!
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.UpsertStepSummaryWithRetryAsync(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, string! path, string! aggregationId, string! content, int maxAttempts, System.TimeSpan retryDelay, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 static Microsoft.Testing.Extensions.TestNodeIdentity.GetDisplayLabel(Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode) -> string!
@@ -54,9 +54,9 @@ const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsCommandLineO
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureDetails
 const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureDetails.MaxMessageLength = 2000 -> int
 const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureDetails.MaxStackTraceLength = 4000 -> int
-const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureDetails.MaxTotalDetailsLength = 60000 -> int
-static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureDetails.AppendFailuresSection(System.Text.StringBuilder! builder, string! heading, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureEntry>! entries, long totalFailedCount, bool includeDetails) -> void
-static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureDetails.Clip(string? value, int maxLength) -> string?
+const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureDetails.MaxTotalDetailsLength = 838860 -> int
+static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureDetails.AppendFailuresSection(System.Text.StringBuilder! builder, string! heading, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureEntry>! entries, long totalFailedCount, bool includeDetails, ref int remainingBudget) -> int
+static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureDetails.Clip(string? value, int maxLength, int maxRows = 2147483647) -> string?
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureEntry
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureEntry.Duration.get -> System.TimeSpan
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureEntry.ExceptionType.get -> string?
@@ -68,3 +68,8 @@ Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureEntry.HasDe
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureEntry.LineNumber.get -> int
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureEntry.Message.get -> string?
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureEntry.StackTrace.get -> string?
+
+const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureDetails.MaxMessageRows = 30 -> int
+const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureDetails.MaxStackTraceRows = 30 -> int
+const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureDetails.GitHubStepSummaryLimit = 1048576 -> int
+static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.GetRemainingDetailsBudget(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, string! path, Microsoft.Testing.Platform.Logging.ILogger! logger) -> int

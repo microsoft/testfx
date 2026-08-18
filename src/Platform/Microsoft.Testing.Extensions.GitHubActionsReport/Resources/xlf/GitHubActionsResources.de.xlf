@@ -157,6 +157,11 @@
         <target state="translated">Ungültiger Wert: „{0}“. Der Schwellenwert für langsame Tests muss eine positive Dauer aufweisen, z. B. „60“, „90 Sek.“ oder „2 Min.“.</target>
         <note>{Locked="s"}{Locked="m"}</note>
       </trans-unit>
+      <trans-unit id="ModuleDetailsOmitted">
+        <source>Failure details were omitted for {0} of {1} test project(s) because the job summary size limit was reached. See the workflow log or the test report for their full diagnostics.</source>
+        <target state="new">Failure details were omitted for {0} of {1} test project(s) because the job summary size limit was reached. See the workflow log or the test report for their full diagnostics.</target>
+        <note>{0} is the number of test projects rendered without expanded failure diagnostics, {1} is the total number of test projects.</note>
+      </trans-unit>
       <trans-unit id="NoFailureMessageFallback">
         <source>The test failed without providing a failure message.</source>
         <target state="translated">Fehler beim Test ohne Angabe einer Fehlermeldung.</target>

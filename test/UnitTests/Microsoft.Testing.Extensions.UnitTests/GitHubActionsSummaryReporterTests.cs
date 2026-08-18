@@ -7,6 +7,7 @@ using ghactions::Microsoft.Testing.Extensions.GitHubActionsReport;
 
 using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Logging;
 
 using Moq;
 
@@ -312,9 +313,10 @@ public sealed class GitHubActionsSummaryReporterTests
     [TestMethod]
     public void BuildMarkdown_TruncatesOversizedFailureDetails_AndSaysSo()
     {
-        // Every failure carries a stack trace far larger than the per-section budget, so only the first few can be
-        // expanded; the rest must degrade to compact lines and be reported as omitted.
-        string hugeStackTrace = new('x', GitHubActionsFailureDetails.MaxStackTraceLength);
+        // Every failure carries a stack trace far larger than the supplied budget, so only the first few can be
+        // expanded; the rest must degrade to compact lines and be reported as omitted. The budget is passed
+        // explicitly rather than relying on the default, so the test states the ratio it depends on.
+        string hugeStackTrace = string.Join("\n", Enumerable.Repeat(new string('x', 100), GitHubActionsFailureDetails.MaxStackTraceRows));
         GitHubActionsTestRecord[] records =
         [
             .. Enumerable.Range(0, 20).Select(i => new GitHubActionsTestRecord(
@@ -325,10 +327,187 @@ public sealed class GitHubActionsSummaryReporterTests
                 new GitHubActionsTestFailureDetails("boom", "System.Exception", hugeStackTrace, null, 0))),
         ];
 
-        string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "T", "net9.0", AtLeastOneTestFailedExitCode);
+        // Room for roughly two of the ~3.2 KB blocks, so the remaining failures must degrade.
+        string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "T", "net9.0", AtLeastOneTestFailedExitCode, includeFailureDetails: true, detailsBudget: 7000);
 
         Assert.Contains("<details>", markdown);
         Assert.Contains("job summary size limit was reached", markdown);
+    }
+
+    [TestMethod]
+    public void BuildMarkdown_SharesTheBudgetAcrossFailures_SoASmallerBudgetExpandsFewer()
+    {
+        string stackTrace = string.Join("\n", Enumerable.Repeat(new string('x', 100), 20));
+        GitHubActionsTestRecord[] records =
+        [
+            .. Enumerable.Range(0, 10).Select(i => new GitHubActionsTestRecord(
+                $"T{i}",
+                $"T.Test{i}",
+                GitHubActionsTerminalKind.Failed,
+                TimeSpan.FromMilliseconds(1),
+                new GitHubActionsTestFailureDetails("boom", "System.Exception", stackTrace, null, 0))),
+        ];
+
+        int generous = CountOccurrences(
+            GitHubActionsSummaryReporter.BuildMarkdown(records, "T", "net9.0", AtLeastOneTestFailedExitCode, includeFailureDetails: true, detailsBudget: 100_000),
+            "<details>");
+        int tight = CountOccurrences(
+            GitHubActionsSummaryReporter.BuildMarkdown(records, "T", "net9.0", AtLeastOneTestFailedExitCode, includeFailureDetails: true, detailsBudget: 5_000),
+            "<details>");
+
+        Assert.AreEqual(10, generous);
+        Assert.IsLessThan(generous, tight);
+    }
+
+    [TestMethod]
+    public void Clip_ManyShortRows_IsTruncatedByRowCountEvenWhenUnderTheCharacterLimit()
+    {
+        // 200 one-word frames are only ~2,600 characters — under the character cap — yet far too long to read.
+        // The row limit is what bounds this shape.
+        string manyRows = string.Join("\n", Enumerable.Range(0, 200).Select(i => $"at Frame{i}()"));
+        Assert.IsLessThan(GitHubActionsFailureDetails.MaxStackTraceLength, manyRows.Length, "The input must be under the character cap for this test to be meaningful.");
+
+        string clipped = GitHubActionsFailureDetails.Clip(manyRows, GitHubActionsFailureDetails.MaxStackTraceLength, GitHubActionsFailureDetails.MaxStackTraceRows)!;
+
+        Assert.Contains("[... truncated]", clipped);
+
+        // The kept rows plus the truncation marker.
+        Assert.AreEqual(GitHubActionsFailureDetails.MaxStackTraceRows + 1, clipped.Split('\n').Length);
+        Assert.Contains("at Frame0()", clipped);
+        Assert.DoesNotContain("at Frame199()", clipped);
+    }
+
+    [TestMethod]
+    public void Clip_RowCountUnderLimit_IsNotMarkedTruncated()
+    {
+        string fewRows = "line 1\nline 2\nline 3";
+
+        string clipped = GitHubActionsFailureDetails.Clip(fewRows, GitHubActionsFailureDetails.MaxMessageLength, GitHubActionsFailureDetails.MaxMessageRows)!;
+
+        Assert.AreEqual(fewRows, clipped);
+        Assert.DoesNotContain("[... truncated]", clipped);
+    }
+
+    [TestMethod]
+    public void GetRemainingDetailsBudget_MissingFile_ReturnsFullBudget()
+    {
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(f => f.ExistFile("summary.md")).Returns(false);
+
+        int budget = GitHubActionsSummaryReporter.GetRemainingDetailsBudget(fileSystem.Object, "summary.md", new Mock<ILogger>().Object);
+
+        Assert.AreEqual(GitHubActionsFailureDetails.MaxTotalDetailsLength, budget);
+    }
+
+    [TestMethod]
+    public void GetRemainingDetailsBudget_ExistingContent_IsSubtracted()
+    {
+        // A sibling test project already wrote to the shared summary file; this project may only claim the rest.
+        const int AlreadyWritten = 100_000;
+        var fileStream = new Mock<IFileStream>();
+        fileStream.Setup(s => s.Stream).Returns(new MemoryStream(new byte[AlreadyWritten]));
+
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(f => f.ExistFile("summary.md")).Returns(true);
+        fileSystem.Setup(f => f.NewFileStream("summary.md", FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
+            .Returns(fileStream.Object);
+
+        int budget = GitHubActionsSummaryReporter.GetRemainingDetailsBudget(fileSystem.Object, "summary.md", new Mock<ILogger>().Object);
+
+        Assert.AreEqual(GitHubActionsFailureDetails.MaxTotalDetailsLength - AlreadyWritten, budget);
+    }
+
+    [TestMethod]
+    public void GetRemainingDetailsBudget_FileAlreadyOverBudget_ReturnsZero()
+    {
+        var fileStream = new Mock<IFileStream>();
+        fileStream.Setup(s => s.Stream).Returns(new MemoryStream(new byte[GitHubActionsFailureDetails.MaxTotalDetailsLength + 1]));
+
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(f => f.ExistFile("summary.md")).Returns(true);
+        fileSystem.Setup(f => f.NewFileStream("summary.md", FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
+            .Returns(fileStream.Object);
+
+        int budget = GitHubActionsSummaryReporter.GetRemainingDetailsBudget(fileSystem.Object, "summary.md", new Mock<ILogger>().Object);
+
+        // Never negative: the caller uses this as a length, and a later project simply renders compact lines.
+        Assert.AreEqual(0, budget);
+    }
+
+    [TestMethod]
+    public void GetRemainingDetailsBudget_UnreadableFile_FallsBackToFullBudget()
+    {
+        // Measuring the file is an optimization; failing to read it must not suppress diagnostics.
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(f => f.ExistFile("summary.md")).Returns(true);
+        fileSystem.Setup(f => f.NewFileStream("summary.md", FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
+            .Throws(new IOException("locked"));
+
+        int budget = GitHubActionsSummaryReporter.GetRemainingDetailsBudget(fileSystem.Object, "summary.md", new Mock<ILogger>().Object);
+
+        Assert.AreEqual(GitHubActionsFailureDetails.MaxTotalDetailsLength, budget);
+    }
+
+    [TestMethod]
+    public void BuildAggregateMarkdown_ManyModules_StaysUnderTheLimitAndReportsOmittedModules()
+    {
+        // 40 modules, each with failures large enough that the shared budget cannot expand them all. The
+        // file-level note must say so, because a per-module note is invisible inside a collapsed section.
+        string stackTrace = string.Join("\n", Enumerable.Repeat(new string('x', 120), 25));
+        var modules = Enumerable.Range(0, 40).Select(i => new GitHubCiRunSummaryModule
+        {
+            AssemblyName = $"Tests{i}",
+            ModulePath = $"Tests{i}.dll",
+            TargetFramework = "net9.0",
+            Architecture = "x64",
+            ExecutionId = "execution",
+            SessionUid = $"session-{i}",
+            AttemptNumber = 1,
+            ExitCode = AtLeastOneTestFailedExitCode,
+            TotalTests = 20,
+            FailedTests = 20,
+            Failures =
+            [
+                .. Enumerable.Range(0, 20).Select(j => new GitHubCiRunSummaryTest
+                {
+                    DisplayName = $"Boom{j}",
+                    FullyQualifiedName = $"Tests{i}.Boom{j}",
+                    DurationTicks = TimeSpan.FromMilliseconds(1).Ticks,
+                    ErrorMessage = "assertion failed",
+                    ErrorType = "System.Exception",
+                    StackTrace = stackTrace,
+                }),
+            ],
+        }).ToArray();
+
+        var aggregate = new GitHubCiRunSummaryAggregate(
+            modules,
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 800,
+            passedTests: 0,
+            failedTests: 800,
+            skippedTests: 0,
+            duration: TimeSpan.FromSeconds(10),
+            exitCode: AtLeastOneTestFailedExitCode,
+            hasAuthoritativeRunSummary: true,
+            isPartial: false);
+
+        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate);
+
+        // The whole point of the shared budget: the file stays under GitHub's cap no matter the module count.
+        Assert.IsLessThan(GitHubActionsFailureDetails.GitHubStepSummaryLimit, markdown.Length);
+        Assert.Contains("test project(s) because the job summary size limit was reached", markdown);
+    }
+
+    private static int CountOccurrences(string haystack, string needle)
+    {
+        int count = 0;
+        for (int i = haystack.IndexOf(needle, StringComparison.Ordinal); i >= 0; i = haystack.IndexOf(needle, i + needle.Length, StringComparison.Ordinal))
+        {
+            count++;
+        }
+
+        return count;
     }
 
     [TestMethod]

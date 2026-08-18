@@ -214,9 +214,9 @@ internal sealed class GitHubActionsSummaryReporter :
             : GitHubActionsAnnotationReporter.TryResolveDeclaredLocation(testNode, repoRoot, _fileSystem);
 
         return new TestFailureDetails(
-            GitHubActionsFailureDetails.Clip(failure.Value.Explanation ?? exception?.Message, GitHubActionsFailureDetails.MaxMessageLength),
+            GitHubActionsFailureDetails.Clip(failure.Value.Explanation ?? exception?.Message, GitHubActionsFailureDetails.MaxMessageLength, GitHubActionsFailureDetails.MaxMessageRows),
             exception?.GetType().FullName,
-            GitHubActionsFailureDetails.Clip(exception?.StackTrace, GitHubActionsFailureDetails.MaxStackTraceLength),
+            GitHubActionsFailureDetails.Clip(exception?.StackTrace, GitHubActionsFailureDetails.MaxStackTraceLength, GitHubActionsFailureDetails.MaxStackTraceRows),
             location?.RelativeNormalizedPath,
             location?.LineNumber ?? 0);
     }
@@ -274,7 +274,13 @@ internal sealed class GitHubActionsSummaryReporter :
                 return;
             }
 
-            string markdown = BuildMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value, exitCode, _includeFailureDetails);
+            // The 1 MiB cap applies to the whole GITHUB_STEP_SUMMARY file, which every test project in the job
+            // appends to. Measure what earlier projects already wrote and claim only the remainder, so a job with
+            // many test projects degrades gracefully instead of the last ones pushing the file over the cap (at
+            // which point GitHub drops the summary entirely).
+            int detailsBudget = GetRemainingDetailsBudget(_fileSystem, path!, _logger);
+
+            string markdown = BuildMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value, exitCode, _includeFailureDetails, detailsBudget);
 
             try
             {
@@ -494,7 +500,47 @@ internal sealed class GitHubActionsSummaryReporter :
         }
     }
 
-    internal static /* for testing */ string BuildMarkdown(IReadOnlyList<TestRecord> records, string assemblyName, string targetFrameworkMoniker, int exitCode, bool includeFailureDetails = true)
+    /// <summary>
+    /// Returns the characters of expanded failure detail this test project may still write, given what other
+    /// projects in the same GitHub Actions job have already appended to the shared summary file.
+    /// </summary>
+    /// <remarks>
+    /// Each test project runs in its own process and cannot know how many siblings will run, or whether it is
+    /// first or last. It can, however, observe the shared file: whatever is already there is a lower bound on
+    /// the space consumed. Claiming only the remainder keeps the file under
+    /// <see cref="GitHubActionsFailureDetails.MaxTotalDetailsLength"/> regardless of project count, which
+    /// matters because GitHub silently drops a summary that exceeds its 1 MiB cap.
+    /// <para>
+    /// A file that cannot be measured (not yet created, or an I/O failure) yields the full budget: the file
+    /// length is an optimization, and failing to read it must not suppress diagnostics.
+    /// </para>
+    /// </remarks>
+    internal static /* for testing */ int GetRemainingDetailsBudget(IFileSystem fileSystem, string path, ILogger logger)
+    {
+        try
+        {
+            if (!fileSystem.ExistFile(path))
+            {
+                return GitHubActionsFailureDetails.MaxTotalDetailsLength;
+            }
+
+            using IFileStream stream = fileSystem.NewFileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            long alreadyWritten = stream.Stream.Length;
+            long remaining = GitHubActionsFailureDetails.MaxTotalDetailsLength - alreadyWritten;
+            return remaining <= 0 ? 0 : (int)Math.Min(remaining, GitHubActionsFailureDetails.MaxTotalDetailsLength);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException)
+        {
+            if (logger.IsEnabled(LogLevel.Trace))
+            {
+                logger.LogTrace($"Could not measure '{path}' to size the failure-details budget: {ex.Message}");
+            }
+
+            return GitHubActionsFailureDetails.MaxTotalDetailsLength;
+        }
+    }
+
+    internal static /* for testing */ string BuildMarkdown(IReadOnlyList<TestRecord> records, string assemblyName, string targetFrameworkMoniker, int exitCode, bool includeFailureDetails = true, int detailsBudget = GitHubActionsFailureDetails.MaxTotalDetailsLength)
     {
         int total = records.Count;
         int passed = 0;
@@ -557,6 +603,7 @@ internal sealed class GitHubActionsSummaryReporter :
 
         if (failures.Count > 0)
         {
+            int remainingBudget = detailsBudget;
             GitHubActionsFailureDetails.AppendFailuresSection(
                 builder,
                 "###",
@@ -569,7 +616,8 @@ internal sealed class GitHubActionsSummaryReporter :
                     failure.Failure?.FilePath,
                     failure.Failure?.LineNumber ?? 0))],
                 failed,
-                includeFailureDetails);
+                includeFailureDetails,
+                ref remainingBudget);
         }
 
         IEnumerable<TestRecord> slowest = records
@@ -640,6 +688,14 @@ internal sealed class GitHubActionsSummaryReporter :
             builder.Append("> [!WARNING]\n> ").Append(EscapeInlineCode(calloutText)).Append("\n\n");
         }
 
+        // The 1 MiB cap applies to the whole file, so the budget is shared across every module rather than
+        // granted per module. Divide it up front so an early module with many large failures cannot starve the
+        // later ones — each gets a fair share, and unused remainder is carried forward by the running total.
+        int moduleCount = Math.Max(1, aggregate.Modules.Count);
+        int perModuleBudget = GitHubActionsFailureDetails.MaxTotalDetailsLength / moduleCount;
+        int remainingBudget = 0;
+        int modulesWithOmittedDetails = 0;
+
         foreach (CiRunSummaryModule module in aggregate.Modules)
         {
             bool needsDiscriminator = HasDuplicateModuleIdentity(aggregate.Modules, module);
@@ -654,14 +710,39 @@ internal sealed class GitHubActionsSummaryReporter :
             }
 
             builder.Append(")</summary>\n\n");
-            AppendModuleMarkdown(builder, module, headingLevel: 3, includeFailureDetails);
+
+            // Top up with this module's share, keeping whatever earlier modules left unspent.
+            remainingBudget += perModuleBudget;
+            if (AppendModuleMarkdown(builder, module, headingLevel: 3, includeFailureDetails, ref remainingBudget) > 0)
+            {
+                modulesWithOmittedDetails++;
+            }
+
             builder.Append("</details>\n\n");
+        }
+
+        // Surface budget exhaustion at the file level too. A per-module note is easy to miss when it is buried
+        // inside one of dozens of collapsed module sections, and the reader needs to know the summary as a whole
+        // is not showing everything it collected.
+        if (modulesWithOmittedDetails > 0)
+        {
+            builder.Append("> [!NOTE]\n> ")
+                .Append(string.Format(
+                    CultureInfo.InvariantCulture,
+                    GitHubActionsResources.ModuleDetailsOmitted,
+                    modulesWithOmittedDetails.ToString(CultureInfo.InvariantCulture),
+                    aggregate.Modules.Count.ToString(CultureInfo.InvariantCulture)))
+                .Append("\n\n");
         }
 
         return builder.ToString();
     }
 
-    private static void AppendModuleMarkdown(StringBuilder builder, CiRunSummaryModule module, int headingLevel, bool includeFailureDetails)
+    /// <summary>
+    /// Renders one module's section, returning the number of its listed failures whose diagnostics did not fit
+    /// the shared budget.
+    /// </summary>
+    private static int AppendModuleMarkdown(StringBuilder builder, CiRunSummaryModule module, int headingLevel, bool includeFailureDetails, ref int remainingBudget)
     {
         string heading = new('#', headingLevel);
         bool runFailed = module.FailedTests > 0 || GitHubActionsExitCode.IndicatesFailure(module.ExitCode);
@@ -681,9 +762,10 @@ internal sealed class GitHubActionsSummaryReporter :
                 .Append(EscapeInlineCode(GitHubActionsExitCode.GetName(module.ExitCode))).Append(")\n\n");
         }
 
+        int omittedDetails = 0;
         if (module.Failures.Length > 0)
         {
-            GitHubActionsFailureDetails.AppendFailuresSection(
+            omittedDetails = GitHubActionsFailureDetails.AppendFailuresSection(
                 builder,
                 heading + "#",
                 [.. module.Failures.Select(static failure => new GitHubActionsFailureEntry(
@@ -695,7 +777,8 @@ internal sealed class GitHubActionsSummaryReporter :
                     failure.FilePath,
                     failure.LineNumber ?? 0))],
                 module.FailedTests,
-                includeFailureDetails);
+                includeFailureDetails,
+                ref remainingBudget);
         }
 
         if (module.SlowestTests.Length > 0)
@@ -709,6 +792,8 @@ internal sealed class GitHubActionsSummaryReporter :
 
             builder.Append('\n');
         }
+
+        return omittedDetails;
     }
 
     private static string FormatDuration(TimeSpan duration)

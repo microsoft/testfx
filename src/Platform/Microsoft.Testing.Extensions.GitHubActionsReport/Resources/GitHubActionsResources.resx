@@ -208,4 +208,8 @@
     <value>Failure details for {0} listed test(s) were omitted because the job summary size limit was reached.</value>
     <comment>{0} is the number of failures rendered without their expanded diagnostics.</comment>
   </data>
+  <data name="ModuleDetailsOmitted" xml:space="preserve">
+    <value>Failure details were omitted for {0} of {1} test project(s) because the job summary size limit was reached. See the workflow log or the test report for their full diagnostics.</value>
+    <comment>{0} is the number of test projects rendered without expanded failure diagnostics, {1} is the total number of test projects.</comment>
+  </data>
 </root>
