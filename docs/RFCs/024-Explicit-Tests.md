@@ -366,19 +366,46 @@ These tables describe how tree node and graph selection must behave once MSTest 
 filter. Today `MSTestFilterContext` and the VSTest bridge throw `UnsupportedTestExecutionFilter` for
 every leaf other than `NopFilter` and `TestNodeUidListFilter`, so neither reaches MSTest at all.
 
+`*[Explicit=True]` needs one thing the other rows do not. `TreeNodeFilter.IsMatchingProperty`
+compares `[Key=Value]` against `TestMetadataProperty` and nothing else, so `Explicit` is a
+`TestMetadataProperty` on the node, the same property type MSTest already gives categories and
+traits. The matcher needs no change. "Not a trait" in [Metadata](#metadata) means the property does
+not come from `[TestCategory]` or `[TestProperty]` and is not in `UnitTestElement.Traits`, not that
+it is some other kind of property.
+
+MSTest filters before a `TestNode` exists, though. `MtpTestElementFilter` evaluates over
+`UnitTestElement`s so the native path never materializes a VSTest `TestCase`, and a tree node filter
+is evaluated there too, against a path and property bag built from the element. That bag carries the
+same key/value pairs `MSTestTestNodeConverter` would write for the node, including `Explicit` read
+from `UnitTestElement.IsExplicit` with the same `True` value. Pre-node filtering and node matching
+then read one source, and `*[Explicit=True]` cannot select one set before nodes exist and a different
+one after.
+
 ### Fail closed
 
 That gap sets the rule for every request shape not listed above: **activation is proven, never
-assumed**. A well-formed request that cannot be classified, an unsupported filter type, or a future
-grammar addition constrains the run and activates nothing, so explicit tests under it are reported
-skipped. A new filter feature cannot start running destructive tests before somebody has designed its
-activation semantics.
+assumed**. Two questions are asked in order, and only the second one is new.
 
-Malformed input is a different case and keeps the existing behavior, it fails rather than degrading
-to a constraint. A filter that does not parse reports its parse error, and an expression VSTest
-accepts but the activation evaluator cannot parse fails the run as well. Neither falls back to
-Run All, and neither falls back to "any positive token activates", which could start a destructive
-test through the wrong `|` branch.
+**Can the constraint be evaluated?** A filter MSTest cannot evaluate does not become a constraint
+that happens to activate nothing, because a filter whose semantics are unknown cannot narrow a run
+either. It keeps its existing failure. An `ITestExecutionFilter` type MSTest does not understand goes
+on throwing `UnsupportedTestExecutionFilter`, and a filter string that does not parse goes on
+reporting its parse error. Nothing runs, nothing is reported skipped, and neither falls back to
+Run All.
+
+**Can activation be classified?** This question is asked only of a filter that survived the first
+one, so the constraint is evaluable and the run is correctly narrowed either way. A well-formed
+request whose leaves the tables above do not cover, and a future grammar addition the activation
+evaluator has no rule for, constrain the run normally and activate nothing, so explicit tests they
+select are reported skipped. A new filter feature cannot start running destructive tests before
+somebody has designed its activation semantics.
+
+One case looks like the second and is deliberately treated as the first. An expression VSTest accepts
+but the adapter's activation evaluator cannot parse means the two parsers have diverged, which is a
+bug in the duplicated grammar rather than an undesigned feature, so it fails the run and the
+divergence surfaces instead of being absorbed as "nothing activated". The differential vectors under
+[Testing](#testing) exist to keep that case empty. It does not fall back to "any positive token
+activates" either, which could start a destructive test through the wrong `|` branch.
 
 The same fail-closed direction applies to persisted metadata. A VSTest property that cannot be parsed
 as a Boolean is treated as explicit and logged, so a stale cache cannot turn an opt-in test into a
@@ -432,8 +459,12 @@ One setting, for environments that need a deterministic override:
 
 Unknown values throw `AdapterSettingsException` in both parsers instead of falling back, matching
 `ParallelWorkers` and `ExecutionScope`. A misspelled `Skip` must not quietly permit a destructive
-test. `Run` is configuration rather than a CLI shortcut, a CI definition that wants the same effect
-has `--filter "Explicit=True"`, which stays visible in the command line.
+test. `Run` is configuration rather than a CLI shortcut, and the nearest command line is
+`--filter "Explicit=True"`, which stays visible in the command line. The two are not interchangeable
+and a CI definition has to choose deliberately. `Run` widens activation and leaves selection alone,
+so Run All still selects the whole suite and now runs the explicit tests in it as well. The filter
+narrows selection, so the run contains explicit tests and nothing else. A job meant to exercise only
+the explicit tests wants the filter, and reaching for `Run` there runs the entire suite.
 
 ## Implementation
 
@@ -475,10 +506,21 @@ today. Data enumeration and the initialization needed to reach it can therefore 
 every produced row turns out to be explicit. That is inherent to folded data, the metadata does not
 exist until the source runs, and it is not a reason to force unfolding.
 
-`ITestDataSourceIgnoreCapability` and row `IgnoreMessage` keep precedence over the explicit state for
-both folded and unfolded rows, they are known at the same point as the explicit metadata rather than
-after type loading. If a data source throws while producing that metadata, existing data source
-failure behavior wins, the adapter cannot know that the missing row would have been explicit.
+`ITestDataSourceIgnoreCapability` and row `IgnoreMessage` take precedence over the explicit state
+wherever both are known, which is not the same point for every declaration scope:
+
+- Unfolded rows carry both on the `UnitTestElement` from discovery, so ignore wins for every row.
+- A folded parent that is not itself explicit reaches data enumeration, so source and row ignore
+  metadata arrives alongside the source and row explicit metadata and wins there, row by row.
+- A folded parent that is itself explicit and unactivated never gets that far. The gate skips it
+  before the source runs, so no source or row metadata exists to take precedence, and the method
+  reports one explicit skip rather than one result per row. That is the folded-parent gate above,
+  and it is deliberate: an explicit test must not run its data source to discover that it would have
+  been ignored anyway. Both states end in a skipped result, so what this changes is the reported
+  reason and the result count, not whether anything ran.
+
+If a data source throws while producing that metadata, existing data source failure behavior wins,
+the adapter cannot know that the missing row would have been explicit.
 
 ### Retry
 
@@ -502,10 +544,13 @@ an execution request fails to activate it. Each `UnitTestElement` carries `IsExp
   missing reason means no reason, so a case persisted by an older version still deserializes.
   Reasons are prose and stay unfilterable.
 - Native MTP: `MSTestTestNodeConverter` adds `Explicit` with value `True` to explicit nodes only, and
-  `ExplicitReason` only when a non-empty reason exists, on both discovered and result nodes. They are
-  not traits, so they do not show up as user authored categories. UIDs do not change when
-  `[Explicit]` is added, and a server client that ignores the metadata still receives ordinary nodes
-  and ordinary skipped results.
+  `ExplicitReason` only when a non-empty reason exists, on both discovered and result nodes.
+  `Explicit` is a `TestMetadataProperty`, which is the property type `[Key=Value]` in a tree node
+  filter matches, so `*[Explicit=True]` works with no platform matcher change. It is still not a
+  trait: it is produced from `IsExplicit` rather than from `[TestCategory]` or `[TestProperty]`, it
+  is not in `UnitTestElement.Traits`, and it does not show up as a user authored category. UIDs do
+  not change when `[Explicit]` is added, and a server client that ignores the metadata still receives
+  ordinary nodes and ordinary skipped results.
 
 A folded parent carries only its class and method declarations, source and row declarations do not
 exist until the data is enumerated.
@@ -562,12 +607,23 @@ An upstream API that exposes a walkable tree replaces this later without changin
   activate, and that an unclassifiable request activates nothing. One of them registers a
   `[TestFilterProvider]` alongside an unactivated explicit test and asserts the filter is still
   constructed and called, pinning the boundary of what the gate skips.
+- Fail-closed tests separating the two outcomes: an unsupported filter type and an unparseable filter
+  string still fail the run, while a well-formed but unclassifiable filter runs its ordinary tests and
+  reports the explicit ones skipped.
+- Filter-path agreement tests for `Explicit` as node metadata: `*[Explicit=True]` selects the same
+  tests through `MtpTestElementFilter` before nodes exist as `TreeNodeFilter` matches against the
+  `TestMetadataProperty` the converter writes, and `Explicit` appears in neither the trait nor the
+  category surfaces.
 - Execution tests proving no type load, no fixture, no body, and no retry for an unactivated test,
-  correct cleanup counts for explicit skips, and folded and unfolded row behavior.
+  correct cleanup counts for explicit skips, and folded and unfolded row behavior. One covers the
+  folded parent that is itself explicit and unactivated, asserting the data source never runs and the
+  method reports one explicit skip even when its rows would have been ignored.
 - One acceptance asset, run through both hosts, covering explicit method, class, base and override,
   ignored and conditional explicit tests, ordinary and explicit sibling rows, source-wide and
   row-specific dynamic data, retry, all three `ExplicitTestMode` values, and fixture counters written
-  to disk so initialization can be asserted rather than assumed.
+  to disk so initialization can be asserted rather than assumed. It also runs `ExplicitTestMode=Run`
+  and `--filter "Explicit=True"` over the same asset and asserts the result sets differ, pinning that
+  the two are not interchangeable.
 - Compatibility runs: an assembly with no declarations before and after the feature, an old adapter
   with a new framework, a persisted test case with missing and malformed properties, and unchanged
   MTP UIDs.
