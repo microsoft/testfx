@@ -225,8 +225,8 @@ public sealed class UseExecutableConditionAttributeInsteadOfProcessCheckAnalyzer
         bool isMatchingProcessStart = operation is IInvocationOperation invocation &&
             invocation.TargetMethod is { IsStatic: true, Name: "Start", ContainingType: { } containingType } &&
             SymbolEqualityComparer.Default.Equals(containingType, processSymbol) &&
-            invocation.Arguments.Length > 0 &&
-            TryGetProcessStartExecutable(invocation.Arguments[0].Value, processStartInfoSymbol, out string? startedExecutable) &&
+            TryGetArgumentValueForParameterOrdinal(invocation.Arguments, 0, out IOperation? processStartArgument) &&
+            TryGetProcessStartExecutable(processStartArgument, processStartInfoSymbol, out string? startedExecutable) &&
             startedExecutable == executable;
 
         return isMatchingProcessStart
@@ -248,14 +248,36 @@ public sealed class UseExecutableConditionAttributeInsteadOfProcessCheckAnalyzer
         }
 
         if (operation is IObjectCreationOperation objectCreation &&
-            SymbolEqualityComparer.Default.Equals(objectCreation.Type, processStartInfoSymbol) &&
-            objectCreation.Arguments is [{ Value.ConstantValue: { HasValue: true, Value: string fileName } }, ..])
+            SymbolEqualityComparer.Default.Equals(objectCreation.Type, processStartInfoSymbol))
         {
-            executable = fileName;
-            return true;
+            IOperation? fileNameInitializer = objectCreation.Initializer?.Initializers
+                .OfType<ISimpleAssignmentOperation>()
+                .FirstOrDefault(assignment =>
+                    assignment.Target is IPropertyReferenceOperation { Property.Name: "FileName", Property.ContainingType: { } containingType } &&
+                    SymbolEqualityComparer.Default.Equals(containingType, processStartInfoSymbol))
+                ?.Value;
+
+            if (fileNameInitializer is not null)
+            {
+                return TryGetProcessStartExecutable(fileNameInitializer, processStartInfoSymbol, out executable);
+            }
+
+            if (TryGetArgumentValueForParameterOrdinal(objectCreation.Arguments, 0, out IOperation? constructorFileName))
+            {
+                return TryGetProcessStartExecutable(constructorFileName, processStartInfoSymbol, out executable);
+            }
         }
 
         executable = null;
         return false;
+    }
+
+    private static bool TryGetArgumentValueForParameterOrdinal(
+        ImmutableArray<IArgumentOperation> arguments,
+        int ordinal,
+        [NotNullWhen(true)] out IOperation? argumentValue)
+    {
+        argumentValue = arguments.FirstOrDefault(argument => argument.Parameter?.Ordinal == ordinal)?.Value;
+        return argumentValue is not null;
     }
 }

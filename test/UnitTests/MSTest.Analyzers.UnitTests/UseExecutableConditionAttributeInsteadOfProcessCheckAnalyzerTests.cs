@@ -150,6 +150,148 @@ public sealed class UseExecutableConditionAttributeInsteadOfProcessCheckAnalyzer
     }
 
     [TestMethod]
+    public async Task WhenProcessStartUsesOutOfOrderNamedArguments_Diagnostic()
+    {
+        string code = """
+            using System.Diagnostics;
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    [|if (!File.Exists("git"))
+                    {
+                        return;
+                    }|]
+
+                    Process.Start(arguments: "--version", fileName: "git");
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Diagnostics;
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [ExecutableCondition("git")]
+                public void TestMethod()
+                {
+                    Process.Start(arguments: "--version", fileName: "git");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenProcessStartArgumentsMatchCheckedFileButFileNameDoesNot_NoDiagnostic()
+    {
+        string code = """
+            using System.Diagnostics;
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    if (!File.Exists("--version"))
+                    {
+                        return;
+                    }
+
+                    Process.Start(arguments: "--version", fileName: "git");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenProcessStartInfoUsesOutOfOrderNamedArguments_Diagnostic()
+    {
+        string code = """
+            using System.Diagnostics;
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    [|if (!File.Exists("git"))
+                    {
+                        return;
+                    }|]
+
+                    Process.Start(new ProcessStartInfo(arguments: "--version", fileName: "git"));
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System.Diagnostics;
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [ExecutableCondition("git")]
+                public void TestMethod()
+                {
+                    Process.Start(new ProcessStartInfo(arguments: "--version", fileName: "git"));
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenProcessStartInfoInitializerOverridesCheckedFile_NoDiagnostic()
+    {
+        string code = """
+            using System.Diagnostics;
+            using System.IO;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    if (!File.Exists("git"))
+                    {
+                        return;
+                    }
+
+                    Process.Start(new ProcessStartInfo("git") { FileName = "dotnet" });
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
     public async Task WhenCheckedFileIsNotStarted_NoDiagnostic()
     {
         string code = """
