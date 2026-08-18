@@ -51,8 +51,35 @@ internal sealed partial class TrxReportEngine
             || candidateFullPath.StartsWith(rootWithSeparator, comparison);
     }
 
+    /// <summary>
+    /// Returns <see langword="true"/> if <paramref name="path"/> (file or directory) is a reparse point
+    /// (symlink/junction). Callers are expected to have already established the path exists.
+    /// </summary>
     private static bool IsReparsePoint(string path)
         => (File.GetAttributes(path) & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint;
+
+    /// <summary>
+    /// Returns <see langword="true"/> if <paramref name="path"/> exists as a directory and is a reparse
+    /// point (symlink/junction). Uses a single <see cref="File.GetAttributes(string)"/> syscall for both
+    /// the existence and reparse-point checks (instead of a separate <see cref="Directory.Exists(string?)"/>
+    /// call followed by a second attributes lookup), halving the filesystem stat calls per path component.
+    /// </summary>
+    private static bool DirectoryExistsAndIsReparsePoint(string path)
+    {
+        FileAttributes attributes;
+        try
+        {
+            attributes = File.GetAttributes(path);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Path does not exist (or is otherwise inaccessible) - matches the prior Directory.Exists() == false behavior.
+            return false;
+        }
+
+        return (attributes & FileAttributes.Directory) == FileAttributes.Directory
+            && (attributes & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint;
+    }
 
     /// <summary>
     /// Returns <see langword="true"/> if any existing directory component strictly below
@@ -68,7 +95,7 @@ internal sealed partial class TrxReportEngine
 
         while (!string.Equals(current, baseFull, PathComparison) && IsUnderDirectory(current, baseFull))
         {
-            if (Directory.Exists(current) && IsReparsePoint(current))
+            if (DirectoryExistsAndIsReparsePoint(current))
             {
                 return true;
             }
