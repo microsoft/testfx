@@ -156,8 +156,10 @@ Microsoft.Testing.Platform.Services.IStopPoliciesService.RegisterOnDeadlineCallb
 Microsoft.Testing.Platform.Services.IStopPoliciesService.ExecuteDeadlineCallbacksAsync() -> System.Threading.Tasks.Task!
 Microsoft.Testing.Platform.Services.IStopPoliciesService.IsTestExecutionCompleted.get -> bool
 Microsoft.Testing.Platform.Services.IStopPoliciesService.NotifyTestExecutionCompleted() -> void
+Microsoft.Testing.Platform.Services.IStopPoliciesService.RevertDeadlineTriggered() -> void
 Microsoft.Testing.Platform.Services.StopPoliciesService.IsTestExecutionCompleted.get -> bool
 Microsoft.Testing.Platform.Services.StopPoliciesService.NotifyTestExecutionCompleted() -> void
+Microsoft.Testing.Platform.Services.StopPoliciesService.RevertDeadlineTriggered() -> void
 Microsoft.Testing.Platform.Services.StopPoliciesService.IsDeadlineTriggered.get -> bool
 Microsoft.Testing.Platform.Services.StopPoliciesService.RegisterOnDeadlineCallbackAsync(System.Func<System.Threading.Tasks.Task!>! callback) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Platform.Services.StopPoliciesService.ExecuteDeadlineCallbacksAsync() -> System.Threading.Tasks.Task!

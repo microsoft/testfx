@@ -40,6 +40,8 @@ internal sealed class StopPoliciesService : IStopPoliciesService
 
     public void NotifyTestExecutionCompleted() => _isTestExecutionCompleted = true;
 
+    public void RevertDeadlineTriggered() => IsDeadlineTriggered = false;
+
     public async Task ExecuteMaxFailedTestsCallbacksAsync(int maxFailedTests, CancellationToken cancellationToken)
     {
         _lastMaxFailedTests = maxFailedTests;

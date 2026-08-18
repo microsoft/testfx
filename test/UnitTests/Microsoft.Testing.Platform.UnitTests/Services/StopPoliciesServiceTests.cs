@@ -65,6 +65,31 @@ public sealed class StopPoliciesServiceTests : IDisposable
     }
 
     [TestMethod]
+    public async Task RevertDeadlineTriggered_ClearsIsDeadlineTriggered()
+    {
+        StopPoliciesService service = new(_cancellationTokenSource.Object);
+
+        await service.ExecuteDeadlineCallbacksAsync();
+        Assert.IsTrue(service.IsDeadlineTriggered);
+
+        // The deadline outcome is recorded before the graceful stop is requested, so it has to be
+        // retractable when that request is rejected and nothing was actually truncated.
+        service.RevertDeadlineTriggered();
+
+        Assert.IsFalse(service.IsDeadlineTriggered);
+    }
+
+    [TestMethod]
+    public void RevertDeadlineTriggered_WhenNeverTriggered_LeavesFlagFalse()
+    {
+        StopPoliciesService service = new(_cancellationTokenSource.Object);
+
+        service.RevertDeadlineTriggered();
+
+        Assert.IsFalse(service.IsDeadlineTriggered);
+    }
+
+    [TestMethod]
     public async Task ExecuteMaxFailedTestsCallbacksAsync_SetsIsMaxFailedTestsTriggered()
     {
         StopPoliciesService service = new(_cancellationTokenSource.Object);

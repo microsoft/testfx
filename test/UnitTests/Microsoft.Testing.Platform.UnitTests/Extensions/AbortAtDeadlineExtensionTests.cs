@@ -67,6 +67,34 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
         Assert.IsFalse(policies.IsDeadlineTriggered, "A run that finished before the deadline must not be reported as deadline-truncated.");
     }
 
+    [TestMethod]
+    public async Task WhenGracefulStopIsRejected_RunIsNotReportedAsDeadlineTruncated()
+    {
+        TaskCompletionSource<bool> stopAttempted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        StopPoliciesService policies = CreatePoliciesService();
+
+        AbortAtDeadlineExtension extension = CreateExtension(policies, stopAttempted, rejectStop: true);
+        try
+        {
+            Task winner = await Task.WhenAny(stopAttempted.Task, Task.Delay(FireTimeout, TestContext.CancellationToken));
+            Assert.AreSame(stopAttempted.Task, winner, "The elapsed deadline should have attempted a graceful stop.");
+        }
+        finally
+        {
+            // Disposal drains the in-flight deadline handler, so its rollback has run once this returns.
+            // Only the netstandard2.0 build drains from Dispose; on .NET the drain lives in DisposeAsync.
+#if NETCOREAPP
+            await extension.DisposeAsync();
+#else
+            extension.Dispose();
+#endif
+        }
+
+        Assert.IsFalse(
+            policies.IsDeadlineTriggered,
+            "A graceful stop that was rejected truncated nothing, so the run must not exit with TestExecutionStoppedAtDeadline.");
+    }
+
     private StopPoliciesService CreatePoliciesService()
     {
         Mock<ITestApplicationCancellationTokenSource> cancellationTokenSource = new();
@@ -74,7 +102,7 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
         return new StopPoliciesService(cancellationTokenSource.Object);
     }
 
-    private AbortAtDeadlineExtension CreateExtension(IStopPoliciesService policies, TaskCompletionSource<bool> stopRequested)
+    private AbortAtDeadlineExtension CreateExtension(IStopPoliciesService policies, TaskCompletionSource<bool> stopRequested, bool rejectStop = false)
     {
         Mock<IEnvironment> environment = new();
         environment.Setup(x => x.GetEnvironmentVariable(It.IsAny<string>())).Returns((string?)null);
@@ -88,7 +116,12 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
             .Returns(() =>
             {
                 stopRequested.TrySetResult(true);
-                return Task.CompletedTask;
+
+                // StopTestExecutionAsync is a [TPEXP] extensibility point, so a third-party framework can
+                // reject the request by throwing. Signal the attempt first so the test can observe it.
+                return rejectStop
+                    ? throw new InvalidOperationException("Graceful stop is not available.")
+                    : Task.CompletedTask;
             });
 
         Mock<ITestApplicationCancellationTokenSource> cancellationTokenSource = new();

@@ -309,6 +309,7 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
             }
         }
 
+        bool stopAccepted = false;
         try
         {
             // Mark the run as deadline-triggered BEFORE requesting the stop. StopTestExecutionAsync can
@@ -320,6 +321,7 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
             await _policiesService.ExecuteDeadlineCallbacksAsync().ConfigureAwait(false);
 
             await capability.StopTestExecutionAsync(_cancellationTokenSource.CancellationToken).ConfigureAwait(false);
+            stopAccepted = true;
         }
         catch (Exception ex)
         {
@@ -332,6 +334,19 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
             catch (Exception)
             {
                 // Ignore: nothing else can be done here.
+            }
+        }
+        finally
+        {
+            if (!stopAccepted)
+            {
+                // The stop request was rejected (StopTestExecutionAsync is a [TPEXP] extensibility point, so a
+                // framework can throw anything), which means the platform truncated nothing. Take the outcome
+                // back, otherwise a run that carries on and executes every test still exits with
+                // ExitCode.TestExecutionStoppedAtDeadline and fails a job that actually completed. If the run
+                // is instead hard-killed at the real deadline, the process never reports an exit code at all,
+                // so reverting cannot mask a genuine truncation.
+                _policiesService.RevertDeadlineTriggered();
             }
         }
     }
