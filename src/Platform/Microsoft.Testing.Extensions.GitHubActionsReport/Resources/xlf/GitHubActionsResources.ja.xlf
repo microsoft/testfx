@@ -217,6 +217,11 @@
         <target state="new">The GitHub Actions report sub-options require '--{0}' to be specified.</target>
         <note>Validation error when a sub-option is used without the report option. {0} is the report option name. {Locked="'--{0}'"}</note>
       </trans-unit>
+      <trans-unit id="SummaryCondensed">
+        <source>condensed to one line because the job summary size limit was reached. See the workflow log or the test report for full results.</source>
+        <target state="new">condensed to one line because the job summary size limit was reached. See the workflow log or the test report for full results.</target>
+        <note>Appended to a single-line test project verdict when the shared job summary file is close to GitHub's size limit.</note>
+      </trans-unit>
     </body>
   </file>
 </xliff>

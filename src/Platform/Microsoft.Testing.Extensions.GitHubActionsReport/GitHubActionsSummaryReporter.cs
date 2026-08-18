@@ -280,7 +280,12 @@ internal sealed class GitHubActionsSummaryReporter :
             // which point GitHub drops the summary entirely).
             int detailsBudget = GetRemainingDetailsBudget(_fileSystem, path!, _logger);
 
-            string markdown = BuildMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value, exitCode, _includeFailureDetails, detailsBudget);
+            string markdown = detailsBudget <= 0 && IsSummaryNearLimit(_fileSystem, path!, _logger)
+                // Even a details-free section costs a few KB per project (heading, totals table, failure lines).
+                // Once the shared file is close to the cap, that per-project overhead is itself what would push
+                // it over, so collapse to a single line that still reports this project's verdict.
+                ? BuildMinimalMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value, exitCode)
+                : BuildMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value, exitCode, _includeFailureDetails, detailsBudget);
 
             try
             {
@@ -501,33 +506,63 @@ internal sealed class GitHubActionsSummaryReporter :
     }
 
     /// <summary>
-    /// Returns the characters of expanded failure detail this test project may still write, given what other
-    /// projects in the same GitHub Actions job have already appended to the shared summary file.
+    /// Indicates whether the shared summary file is close enough to its target size that even a compact
+    /// per-project section risks pushing it over.
     /// </summary>
-    /// <remarks>
-    /// Each test project runs in its own process and cannot know how many siblings will run, or whether it is
-    /// first or last. It can, however, observe the shared file: whatever is already there is a lower bound on
-    /// the space consumed. Claiming only the remainder keeps the file under
-    /// <see cref="GitHubActionsFailureDetails.MaxTotalDetailsLength"/> regardless of project count, which
-    /// matters because GitHub silently drops a summary that exceeds its 1 MiB cap.
-    /// <para>
-    /// A file that cannot be measured (not yet created, or an I/O failure) yields the full budget: the file
-    /// length is an optimization, and failing to read it must not suppress diagnostics.
-    /// </para>
-    /// </remarks>
-    internal static /* for testing */ int GetRemainingDetailsBudget(IFileSystem fileSystem, string path, ILogger logger)
+    internal static /* for testing */ bool IsSummaryNearLimit(IFileSystem fileSystem, string path, ILogger logger)
+        => GetSummaryLength(fileSystem, path, logger) is long length
+            && length >= GitHubActionsFailureDetails.MaxSummaryLength - GitHubActionsFailureDetails.PerProjectOverheadReserve;
+
+    /// <summary>
+    /// Renders a single-line verdict for this test project. Used only when the shared summary file is already
+    /// near GitHub's cap, where the few kilobytes of a normal section would be the thing that overflows it.
+    /// </summary>
+    internal static /* for testing */ string BuildMinimalMarkdown(IReadOnlyList<TestRecord> records, string assemblyName, string targetFrameworkMoniker, int exitCode)
+    {
+        int passed = 0;
+        int failed = 0;
+        int skipped = 0;
+        foreach (TestRecord record in records)
+        {
+            switch (record.Kind)
+            {
+                case TerminalKind.Passed:
+                    passed++;
+                    break;
+                case TerminalKind.Failed:
+                    failed++;
+                    break;
+                case TerminalKind.Skipped:
+                    skipped++;
+                    break;
+            }
+        }
+
+        bool runFailed = failed > 0 || GitHubActionsExitCode.IndicatesFailure(exitCode);
+        return string.Format(
+            CultureInfo.InvariantCulture,
+            "{0} `{1}` ({2}): {3} total, {4} passed, {5} failed, {6} skipped — {7}\n\n",
+            runFailed ? "❌" : "✅",
+            EscapeInlineCode(assemblyName),
+            EscapeInlineCode(targetFrameworkMoniker),
+            records.Count.ToString(CultureInfo.InvariantCulture),
+            passed.ToString(CultureInfo.InvariantCulture),
+            failed.ToString(CultureInfo.InvariantCulture),
+            skipped.ToString(CultureInfo.InvariantCulture),
+            GitHubActionsResources.SummaryCondensed);
+    }
+
+    private static long? GetSummaryLength(IFileSystem fileSystem, string path, ILogger logger)
     {
         try
         {
             if (!fileSystem.ExistFile(path))
             {
-                return GitHubActionsFailureDetails.MaxTotalDetailsLength;
+                return null;
             }
 
             using IFileStream stream = fileSystem.NewFileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-            long alreadyWritten = stream.Stream.Length;
-            long remaining = GitHubActionsFailureDetails.MaxTotalDetailsLength - alreadyWritten;
-            return remaining <= 0 ? 0 : (int)Math.Min(remaining, GitHubActionsFailureDetails.MaxTotalDetailsLength);
+            return stream.Stream.Length;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException)
         {
@@ -536,8 +571,37 @@ internal sealed class GitHubActionsSummaryReporter :
                 logger.LogTrace($"Could not measure '{path}' to size the failure-details budget: {ex.Message}");
             }
 
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Returns the characters of expanded failure detail this test project may still write, given what other
+    /// projects in the same GitHub Actions job have already appended to the shared summary file.
+    /// </summary>
+    /// <remarks>
+    /// Each test project runs in its own process and cannot know how many siblings will run, or whether it is
+    /// first or last. It can, however, observe the shared file: whatever is already there is a lower bound on
+    /// the space consumed. Claiming only the remainder — minus a reserve for this project's own headings,
+    /// tables and failure lines — keeps the whole file near
+    /// <see cref="GitHubActionsFailureDetails.MaxSummaryLength"/> regardless of project count, which matters
+    /// because GitHub silently drops a summary that exceeds its 1 MiB cap.
+    /// <para>
+    /// A file that cannot be measured (not yet created, or an I/O failure) yields the full budget: the file
+    /// length is an optimization, and failing to read it must not suppress diagnostics.
+    /// </para>
+    /// </remarks>
+    internal static /* for testing */ int GetRemainingDetailsBudget(IFileSystem fileSystem, string path, ILogger logger)
+    {
+        if (GetSummaryLength(fileSystem, path, logger) is not long alreadyWritten)
+        {
             return GitHubActionsFailureDetails.MaxTotalDetailsLength;
         }
+
+        long remaining = GitHubActionsFailureDetails.MaxSummaryLength
+            - alreadyWritten
+            - GitHubActionsFailureDetails.PerProjectOverheadReserve;
+        return remaining <= 0 ? 0 : (int)Math.Min(remaining, GitHubActionsFailureDetails.MaxTotalDetailsLength);
     }
 
     internal static /* for testing */ string BuildMarkdown(IReadOnlyList<TestRecord> records, string assemblyName, string targetFrameworkMoniker, int exitCode, bool includeFailureDetails = true, int detailsBudget = GitHubActionsFailureDetails.MaxTotalDetailsLength)
@@ -689,10 +753,13 @@ internal sealed class GitHubActionsSummaryReporter :
         }
 
         // The 1 MiB cap applies to the whole file, so the budget is shared across every module rather than
-        // granted per module. Divide it up front so an early module with many large failures cannot starve the
-        // later ones — each gets a fair share, and unused remainder is carried forward by the running total.
+        // granted per module. Reserve each module's non-detail overhead (heading, tables, failure lines) up
+        // front so the rendered file lands near MaxSummaryLength rather than that much detail *plus* overhead,
+        // then divide the rest so an early module with many large failures cannot starve the later ones.
         int moduleCount = Math.Max(1, aggregate.Modules.Count);
-        int perModuleBudget = GitHubActionsFailureDetails.MaxTotalDetailsLength / moduleCount;
+        int overheadReserve = moduleCount * GitHubActionsFailureDetails.PerProjectOverheadReserve;
+        int detailsBudget = Math.Max(0, GitHubActionsFailureDetails.MaxSummaryLength - overheadReserve);
+        int perModuleBudget = detailsBudget / moduleCount;
         int remainingBudget = 0;
         int modulesWithOmittedDetails = 0;
 

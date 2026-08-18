@@ -103,11 +103,32 @@ internal static class GitHubActionsFailureDetails
     internal const int GitHubStepSummaryLimit = 1024 * 1024;
 
     /// <summary>
-    /// The share of <see cref="GitHubStepSummaryLimit"/> this extension will occupy. The headroom absorbs the
-    /// non-detail parts of the summary (headings, tables, notes) and any content other tools append to the
-    /// same file.
+    /// The share of <see cref="GitHubStepSummaryLimit"/> this extension will drive the summary file to before
+    /// it starts condensing its own output.
     /// </summary>
-    internal const int MaxTotalDetailsLength = (int)(GitHubStepSummaryLimit * 0.8);
+    /// <remarks>
+    /// This is deliberately well below the 1 MiB cap rather than just under it, because this extension is not
+    /// the only writer to <c>GITHUB_STEP_SUMMARY</c>. Test frameworks (TUnit, for one) append their own
+    /// per-assembly summary block after this reporter runs, measured at roughly 5 KB per test project. This
+    /// reporter observes the shared file and so accounts for what earlier projects wrote, but it cannot
+    /// prevent the writes that follow it. The headroom left here absorbs that co-writer overhead — at ~5 KB
+    /// per project it covers on the order of 80 further test projects — so the file lands under the cap and
+    /// GitHub renders it, instead of exceeding the cap and being dropped in its entirety.
+    /// </remarks>
+    internal const int MaxSummaryLength = (int)(GitHubStepSummaryLimit * 0.4);
+
+    /// <summary>
+    /// Characters reserved for one test project's non-detail content — heading, totals table, failure and
+    /// slowest-test lines, truncation notes — so the budget bounds the <em>file</em> rather than just the
+    /// expanded diagnostics. Without this reserve a job with many projects lands well over
+    /// <see cref="MaxSummaryLength"/>: each project writes several kilobytes even when it expands nothing.
+    /// </summary>
+    internal const int PerProjectOverheadReserve = 8_000;
+
+    /// <summary>
+    /// Maximum characters of expanded failure detail available across the whole summary file.
+    /// </summary>
+    internal const int MaxTotalDetailsLength = MaxSummaryLength - PerProjectOverheadReserve;
 
     /// <summary>
     /// Clips <paramref name="value"/> to <paramref name="maxLength"/> characters and <paramref name="maxRows"/>

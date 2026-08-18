@@ -212,4 +212,8 @@
     <value>Failure details were omitted for {0} of {1} test project(s) because the job summary size limit was reached. See the workflow log or the test report for their full diagnostics.</value>
     <comment>{0} is the number of test projects rendered without expanded failure diagnostics, {1} is the total number of test projects.</comment>
   </data>
+  <data name="SummaryCondensed" xml:space="preserve">
+    <value>condensed to one line because the job summary size limit was reached. See the workflow log or the test report for full results.</value>
+    <comment>Appended to a single-line test project verdict when the shared job summary file is close to GitHub's size limit.</comment>
+  </data>
 </root>
