@@ -166,6 +166,33 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
         _policiesService.Verify(x => x.RevertDeadlineTrigger(), Times.Never);
     }
 
+    [TestMethod]
+    public async Task TheDeadlineVerdictIsCommittedBeforeTheUserFacingMessage()
+    {
+        // Claiming the run closes the door on NotifyTestExecutionCompleted: once claimed, a completion can no
+        // longer disarm the deadline. So nothing may be awaited between the claim and the commit -- a run that
+        // finishes in such a window is ignored and still reported as truncated (exit code 15 on a complete
+        // run). The user-facing message is the one await that used to sit there, so pin it after the commit.
+        TaskCompletionSource<bool> displaying = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        using AbortAtDeadlineExtension extension = CreateExtension(
+            deadlineIn: TimeSpan.Zero,
+            onDisplay: async () =>
+            {
+                displaying.TrySetResult(true);
+                await release.Task;
+            });
+
+        // Park the handler inside the message. If the commit still came after it, this is the window a
+        // completion would be swallowed in.
+        await WaitForAsync(displaying.Task);
+        _policiesService.Verify(x => x.ExecuteDeadlineCallbacksAsync(), Times.Once);
+        _capability.Verify(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Never);
+
+        release.SetResult(true);
+    }
+
     private async Task WaitForAsync(Task task)
     {
         Task completed = await Task.WhenAny(task, Task.Delay(TimeSpan.FromSeconds(30), TestContext.CancellationToken));
@@ -173,7 +200,7 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
         await task;
     }
 
-    private AbortAtDeadlineExtension CreateExtension(TimeSpan deadlineIn, Func<LogLevel, Task>? onLog = null)
+    private AbortAtDeadlineExtension CreateExtension(TimeSpan deadlineIn, Func<LogLevel, Task>? onLog = null, Func<Task>? onDisplay = null)
     {
         Mock<IEnvironment> environment = new();
         _ = environment.Setup(x => x.GetEnvironmentVariable(It.IsAny<string>())).Returns((string?)null);
@@ -201,7 +228,7 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
         Mock<IOutputDevice> outputDevice = new();
         _ = outputDevice
             .Setup(x => x.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+            .Returns(() => onDisplay is null ? Task.CompletedTask : onDisplay());
 
         Mock<ITestApplicationCancellationTokenSource> cancellationTokenSource = new();
         _ = cancellationTokenSource.SetupGet(x => x.CancellationToken).Returns(_cts.Token);

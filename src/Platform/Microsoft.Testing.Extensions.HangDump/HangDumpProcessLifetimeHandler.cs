@@ -191,7 +191,15 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         if (request is ConsumerPipeNameRequest consumerPipeNameRequest)
         {
             await _logger.LogDebugAsync($"Consumer pipe name received '{consumerPipeNameRequest.PipeName}'").ConfigureAwait(false);
-            _namedPipeClient = new NamedPipeClient(consumerPipeNameRequest.PipeName, _environment);
+
+            // exitProcessOnConnectionLoss: false, because this is an auxiliary channel. It carries nothing but
+            // the best-effort in-progress-test query used to annotate a dump, and the peer is a test host we
+            // are often about to dump and kill -- so a disconnect here is expected rather than fatal. With the
+            // default (true) a host that drops while the query is in flight would call IEnvironment.Exit on
+            // this controller, killing the very process that still has to take and publish the dump, and the
+            // catch in QueryInProgressTestsWithTimeoutAsync would never run. Surfacing it as an exception lets
+            // the query fall back to an empty list and the dump continue.
+            _namedPipeClient = new NamedPipeClient(consumerPipeNameRequest.PipeName, _environment, exitProcessOnConnectionLoss: false);
             _namedPipeClient.RegisterSerializer(new GetInProgressTestsResponseSerializer(), typeof(GetInProgressTestsResponse));
             _namedPipeClient.RegisterSerializer(new GetInProgressTestsRequestSerializer(), typeof(GetInProgressTestsRequest));
             _namedPipeClient.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));

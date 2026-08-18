@@ -336,23 +336,30 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, IOutputDeviceDat
             return;
         }
 
-        // Only now tell the user, so the message is never printed for a run that finished on its own.
-        await TryReportAsync(
-            () => _outputDevice.DisplayAsync(
-                this,
-                new FormattedTextOutputDeviceData(PlatformResources.AbortAtDeadlineMessage),
-                _cancellationTokenSource.CancellationToken),
-            "Failed to report the approaching deadline.").ConfigureAwait(false);
-
         try
         {
-            // Mark the run as deadline-triggered BEFORE requesting the stop. StopTestExecutionAsync can
-            // unblock the framework and let it finalize the session (and compute the process exit code)
-            // right away, so setting the flag afterwards would race that finalization and the deadline
-            // exit code could be missed. The graceful stop does not cancel the token, so unlike abort
-            // this flag is not set by a token-registered callback; set it here first. Setting it is
-            // synchronous inside ExecuteDeadlineCallbacksAsync, so it is visible before the stop begins.
+            // Commit the verdict with nothing awaited between it and the claim above. The claim closes the
+            // door on NotifyTestExecutionCompleted -- once the run is claimed, a completion can no longer
+            // disarm the deadline -- so any await in between would be a window where the run finishes on its
+            // own and we still go on to report it as truncated. Setting the flag is synchronous inside
+            // ExecuteDeadlineCallbacksAsync, so claim and commit are effectively one step.
+            //
+            // It also has to happen BEFORE the stop is requested. StopTestExecutionAsync can unblock the
+            // framework and let it finalize the session (and compute the process exit code) right away, so
+            // setting the flag afterwards would race that finalization and the deadline exit code could be
+            // missed. The graceful stop does not cancel the token, so unlike abort this flag is not set by a
+            // token-registered callback; set it here first.
             await _policiesService.ExecuteDeadlineCallbacksAsync().ConfigureAwait(false);
+
+            // Only now tell the user. This sits after the commit rather than before it so that the claim is
+            // not held across this await, and it is still reached only when the deadline actually won the
+            // race, so the message is never printed for a run that finished on its own.
+            await TryReportAsync(
+                () => _outputDevice.DisplayAsync(
+                    this,
+                    new FormattedTextOutputDeviceData(PlatformResources.AbortAtDeadlineMessage),
+                    _cancellationTokenSource.CancellationToken),
+                "Failed to report the approaching deadline.").ConfigureAwait(false);
 
             await capability.StopTestExecutionAsync(_cancellationTokenSource.CancellationToken).ConfigureAwait(false);
         }
