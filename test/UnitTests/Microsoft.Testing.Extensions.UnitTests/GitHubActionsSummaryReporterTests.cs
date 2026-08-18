@@ -454,7 +454,7 @@ public sealed class GitHubActionsSummaryReporterTests
         // 40 modules, each with failures large enough that the shared budget cannot expand them all. The
         // file-level note must say so, because a per-module note is invisible inside a collapsed section.
         string stackTrace = string.Join("\n", Enumerable.Repeat(new string('x', 120), 25));
-        var modules = Enumerable.Range(0, 40).Select(i => new GitHubCiRunSummaryModule
+        GitHubCiRunSummaryModule[] modules = Enumerable.Range(0, 40).Select(i => new GitHubCiRunSummaryModule
         {
             AssemblyName = $"Tests{i}",
             ModulePath = $"Tests{i}.dll",
