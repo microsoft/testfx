@@ -212,6 +212,11 @@
         <target state="translated">문자열 인수 대신 'DisplayName' 속성 사용</target>
         <note>{Locked="DisplayName"}</note>
       </trans-unit>
+      <trans-unit id="UseExecutableConditionAttributeInsteadOfProcessCheckFix">
+        <source>Use '[ExecutableCondition]' attribute</source>
+        <target state="new">Use '[ExecutableCondition]' attribute</target>
+        <note>{Locked="'[ExecutableCondition]'"}</note>
+      </trans-unit>
       <trans-unit id="UseMSTestDescriptionAttributeInsteadFix">
         <source>Use MSTest 'Description' attribute instead</source>
         <target state="translated">대신 MSTest의 'Description' 특성 사용</target>

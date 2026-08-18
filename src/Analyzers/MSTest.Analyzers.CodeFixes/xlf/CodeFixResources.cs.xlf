@@ -212,6 +212,11 @@
         <target state="translated">Místo řetězcového argumentu použijte vlastnost DisplayName</target>
         <note>{Locked="DisplayName"}</note>
       </trans-unit>
+      <trans-unit id="UseExecutableConditionAttributeInsteadOfProcessCheckFix">
+        <source>Use '[ExecutableCondition]' attribute</source>
+        <target state="new">Use '[ExecutableCondition]' attribute</target>
+        <note>{Locked="'[ExecutableCondition]'"}</note>
+      </trans-unit>
       <trans-unit id="UseMSTestDescriptionAttributeInsteadFix">
         <source>Use MSTest 'Description' attribute instead</source>
         <target state="translated">Místo toho použijte atribut MSTest Description.</target>

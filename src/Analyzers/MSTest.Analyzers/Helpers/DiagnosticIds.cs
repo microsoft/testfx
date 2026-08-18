@@ -87,4 +87,5 @@ internal static class DiagnosticIds
     public const string UseCIConditionAttributeInsteadOfEnvironmentCheckRuleId = "MSTEST0080";
     public const string TestFilterProviderShouldBeValidRuleId = "MSTEST0081";
     public const string InheritedMemberFromDifferentMSTestVersionRuleId = "MSTEST0082";
+    public const string UseExecutableConditionAttributeInsteadOfProcessCheckRuleId = "MSTEST0083";
 }
