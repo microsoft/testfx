@@ -63,7 +63,7 @@ internal sealed class CtrfArtifactPostProcessor : IArtifactPostProcessor
         Guid artifactId = CtrfReportMerger.CreateDeterministicId(identityInputs);
         string mergedDirectory = Path.Combine(outputDirectory, MergedReportDirectoryName);
         Directory.CreateDirectory(mergedDirectory);
-        if (IsReparsePoint(mergedDirectory))
+        if (ArtifactPostProcessingHelper.IsReparsePoint(mergedDirectory))
         {
             return null;
         }
@@ -79,17 +79,5 @@ internal sealed class CtrfArtifactPostProcessor : IArtifactPostProcessor
             CtrfReportGenerator.CtrfArtifactKind,
             ExtensionResources.CtrfMergedArtifactDisplayName,
             string.Format(CultureInfo.CurrentCulture, ExtensionResources.CtrfMergedArtifactDescription, inputs.Count));
-    }
-
-    private static bool IsReparsePoint(string path)
-    {
-        try
-        {
-            return (File.GetAttributes(path) & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint;
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            return true;
-        }
     }
 }
