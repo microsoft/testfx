@@ -72,9 +72,10 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     /// Upper bound for the optional in-progress-test query before taking a dump. A connected but
     /// wedged host never answers the request/reply, and the application token is not cancelled while
     /// the run is still "in progress" (which is exactly when the deadline dump fires), so an unbounded
-    /// query would block the dump and kill indefinitely and consume the whole dump margin. Kept short
-    /// so it never eats a meaningful slice of the default 30s dump margin; the healthy path answers in
-    /// milliseconds.
+    /// query would block the dump and kill indefinitely and consume the whole dump margin. The query
+    /// is issued once per dump of the tree, not once per process, so this is the total worst case for
+    /// the whole tree and stays a small slice of the default 30s dump margin however many processes
+    /// are dumped; the healthy path answers in milliseconds.
     /// </summary>
     private static readonly TimeSpan InProgressTestsQueryTimeout = TimeSpan.FromSeconds(5);
 
@@ -392,6 +393,13 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
             await _logger.LogInformationAsync($"{dumpReason}.").ConfigureAwait(false);
 
+            // Ask the test host which tests are still running once, before the dump loop. The query goes
+            // to the single consumer pipe of the test host, so the answer does not depend on which
+            // process of the tree we are about to dump. Querying inside the loop would multiply the
+            // bounded timeout by the size of the tree, and a connected-but-wedged host that never
+            // replies could then consume the whole dump margin before the first dump is even started.
+            (string, int)[] inProgressTests = await GetInProgressTestsAsync(cancellationToken).ConfigureAwait(false);
+
             // Do not suspend processes with NetClient dumper it stops the diagnostic thread running in
             // them and hang dump request will get stuck forever, because the process is not co-operating.
             // Instead we start one task per dump asynchronously, and hope that the parent process will start dumping
@@ -402,7 +410,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             {
                 try
                 {
-                    await TakeDumpAsync(p, cancellationToken).ConfigureAwait(false);
+                    await TakeDumpAsync(p, inProgressTests, cancellationToken).ConfigureAwait(false);
                 }
                 catch (Exception e)
                 {
@@ -444,7 +452,36 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         }
     }
 
-    private async Task TakeDumpAsync(IProcess process, CancellationToken cancellationToken)
+    /// <summary>
+    /// Asks the test host which tests are still running, so the dumps can be annotated with them.
+    /// Best-effort: the consumer pipe is only usable once the test host connected back over it, and a
+    /// non-null client is not enough because it is created when the host sends its pipe name but only
+    /// connected later, so a deadline dump firing in that window (or a host that wedged during startup)
+    /// would hit an unconnected pipe. Any failure is logged and swallowed so it can never block taking
+    /// the dumps and killing the tree.
+    /// </summary>
+    private async Task<(string, int)[]> GetInProgressTestsAsync(CancellationToken cancellationToken)
+    {
+        if (_namedPipeClient is null)
+        {
+            return [];
+        }
+
+        try
+        {
+            using var queryCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            queryCts.CancelAfter(InProgressTestsQueryTimeout);
+            GetInProgressTestsResponse tests = await _namedPipeClient.RequestReplyAsync<GetInProgressTestsRequest, GetInProgressTestsResponse>(new GetInProgressTestsRequest(), queryCts.Token).ConfigureAwait(false);
+            return tests.Tests;
+        }
+        catch (Exception ex)
+        {
+            await _logger.LogDebugAsync($"Could not collect the in-progress tests before dumping (the consumer pipe may not be connected, or the host did not reply within {InProgressTestsQueryTimeout}). Continuing with the dump. {ex}").ConfigureAwait(false);
+            return [];
+        }
+    }
+
+    private async Task TakeDumpAsync(IProcess process, (string, int)[] inProgressTests, CancellationToken cancellationToken)
     {
         ApplicationStateGuard.Ensure(_testHostProcessInformation is not null);
         ApplicationStateGuard.Ensure(_dumpType is not null);
@@ -478,40 +515,30 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         // Ensure the destination directory exists (templates may include directory separators, e.g. {asm}/{pname}).
         Directory.CreateDirectory(Path.GetDirectoryName(finalDumpFileName)!);
 
-        // The consumer pipe is only usable once the test host connected back over it. A non-null
-        // client is not enough: it is created when the host sends its pipe name but only connected
-        // later, so a deadline dump firing in that window (or a host that wedged during startup)
-        // would hit an unconnected pipe. Treat the in-progress-test list as best-effort: the query is
-        // bounded by a short timeout (a connected-but-wedged host never replies and the app token is
-        // not cancelled mid-run) and any failure is logged and swallowed, so it can never block taking
-        // the dump and killing the tree.
-        if (_namedPipeClient is not null)
+        // The in-progress tests were collected once before the dump loop (see TakeDumpOfTreeAsync) and
+        // are written next to every dump of the tree. Writing the list must never block the dump, so
+        // any failure here is logged and swallowed.
+        if (inProgressTests.Length > 0)
         {
             try
             {
-                using var queryCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                queryCts.CancelAfter(InProgressTestsQueryTimeout);
-                GetInProgressTestsResponse tests = await _namedPipeClient.RequestReplyAsync<GetInProgressTestsRequest, GetInProgressTestsResponse>(new GetInProgressTestsRequest(), queryCts.Token).ConfigureAwait(false);
-                if (tests.Tests.Length > 0)
+                string hangTestsFileName = Path.ChangeExtension(finalDumpFileName, ".log");
+                using (FileStream fs = File.OpenWrite(hangTestsFileName))
+                using (StreamWriter sw = new(fs))
                 {
-                    string hangTestsFileName = Path.ChangeExtension(finalDumpFileName, ".log");
-                    using (FileStream fs = File.OpenWrite(hangTestsFileName))
-                    using (StreamWriter sw = new(fs))
+                    await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(ExtensionResources.RunningTestsWhileDumping), cancellationToken).ConfigureAwait(false);
+                    foreach ((string testName, int seconds) in inProgressTests)
                     {
-                        await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(ExtensionResources.RunningTestsWhileDumping), cancellationToken).ConfigureAwait(false);
-                        foreach ((string testName, int seconds) in tests.Tests)
-                        {
-                            await sw.WriteLineAsync($"[{TimeSpan.FromSeconds(seconds)}] {testName}").ConfigureAwait(false);
-                            await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData($"[{TimeSpan.FromSeconds(seconds)}] {testName}"), cancellationToken).ConfigureAwait(false);
-                        }
+                        await sw.WriteLineAsync($"[{TimeSpan.FromSeconds(seconds)}] {testName}").ConfigureAwait(false);
+                        await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData($"[{TimeSpan.FromSeconds(seconds)}] {testName}"), cancellationToken).ConfigureAwait(false);
                     }
-
-                    await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(hangTestsFileName), ExtensionResources.HangTestListArtifactDisplayName, ExtensionResources.HangTestListArtifactDescription)).ConfigureAwait(false);
                 }
+
+                await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(hangTestsFileName), ExtensionResources.HangTestListArtifactDisplayName, ExtensionResources.HangTestListArtifactDescription)).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                await _logger.LogDebugAsync($"Could not collect the in-progress tests before dumping (the consumer pipe may not be connected, or the host did not reply within {InProgressTestsQueryTimeout}). Continuing with the dump. {ex}").ConfigureAwait(false);
+                await _logger.LogDebugAsync($"Could not write the in-progress test list next to the dump of process {process.Id}. Continuing with the dump. {ex}").ConfigureAwait(false);
             }
         }
 
