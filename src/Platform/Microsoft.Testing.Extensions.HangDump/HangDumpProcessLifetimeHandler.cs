@@ -364,15 +364,40 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             ? $"CI deadline approaching (dump scheduled at {_deadlineDumpAt:o})"
             : $"Hang dump timeout({_activityTimerValue}) expired";
 
-        await _logger.LogInformationAsync($"{dumpReason}. Taking hang dump.").ConfigureAwait(false);
-        await _outputDisplay.DisplayAsync(
-            new ErrorMessageOutputDeviceData(triggeredByDeadline
-                ? ExtensionResources.HangDumpDeadlineApproaching
-                : string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTimeoutExpired, _activityTimerValue)),
-            cancellationToken).ConfigureAwait(false);
+        // Announcing the dump is diagnostics only, and it runs before the try/finally that kills the
+        // process tree. Loggers and output devices propagate exceptions, so letting one escape here would
+        // fault the dump task and leave the wedged host alive with no dump at all -- the exact situation
+        // this handler exists to resolve. Report the failure and take the dump anyway.
+        try
+        {
+            await _logger.LogInformationAsync($"{dumpReason}. Taking hang dump.").ConfigureAwait(false);
+            await _outputDisplay.DisplayAsync(
+                new ErrorMessageOutputDeviceData(triggeredByDeadline
+                    ? ExtensionResources.HangDumpDeadlineApproaching
+                    : string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTimeoutExpired, _activityTimerValue)),
+                cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception e)
+        {
+            await LogBestEffortAsync("Could not announce the hang dump. Continuing with the dump.", e).ConfigureAwait(false);
+        }
 
         using IProcess process = _processHandler.GetProcessById(_testHostProcessInformation.PID);
-        var processTree = (await process.GetProcessTreeAsync(_logger, _outputDisplay, cancellationToken).ConfigureAwait(false)).Where(p => p.Process?.Name is not null and not "conhost" and not "WerFault").ToList();
+
+        // Walking the tree writes diagnostics through the same logger and output device, so it can fail
+        // for the same reason. Fall back to the root test host process: dumping and killing at least that
+        // one is what unblocks the run.
+        List<ProcessTreeNode> processTree;
+        try
+        {
+            processTree = (await process.GetProcessTreeAsync(_logger, _outputDisplay, cancellationToken).ConfigureAwait(false)).Where(p => p.Process?.Name is not null and not "conhost" and not "WerFault").ToList();
+        }
+        catch (Exception e)
+        {
+            await LogBestEffortAsync("Could not enumerate the test host process tree. Falling back to the root test host process.", e).ConfigureAwait(false);
+            processTree = [new ProcessTreeNode { Process = process, Level = 0 }];
+        }
+
         IEnumerable<IProcess> bottomUpTree = processTree.OrderByDescending(t => t.Level).Select(t => t.Process).OfType<IProcess>();
 
         try
@@ -449,6 +474,24 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
                     await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.ErrorKillingProcess, p.Id, p.Name, e)), cancellationToken).ConfigureAwait(false);
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// Reports a failure from a step that must never stop a dump from being taken or a wedged process
+    /// tree from being killed. Logging is itself best-effort here, because the failure being reported is
+    /// typically a logger or output device that is already throwing.
+    /// </summary>
+    private async Task LogBestEffortAsync(string message, Exception exception)
+    {
+        try
+        {
+            await _logger.LogErrorAsync(message, exception).ConfigureAwait(false);
+        }
+        catch
+        {
+            // The logger is the thing that failed, so there is nothing left to report to. Swallowing is
+            // the whole point: the caller must continue to the dump and the process tree kill.
         }
     }
 
