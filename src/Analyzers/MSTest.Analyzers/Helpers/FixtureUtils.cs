@@ -88,6 +88,34 @@ internal static class FixtureUtils
     public static bool IsTestClass(this ImmutableArray<AttributeData> typeAttributes, INamedTypeSymbol testClassAttributeSymbol)
         => typeAttributes.Any(typeAttribute => typeAttribute.AttributeClass.Inherits(testClassAttributeSymbol));
 
+    /// <summary>
+    /// Mirrors the adapter's test-class validation for declared <c>TestContext</c> properties.
+    /// </summary>
+    public static bool HasCorrectTestContextSignature(this INamedTypeSymbol type)
+    {
+        foreach (ISymbol member in type.GetMembers())
+        {
+            if (member is not IPropertySymbol property
+                || property.Type is not INamedTypeSymbol { Name: "TestContext", Arity: 0 } propertyType
+                || propertyType.ContainingType is not null
+                || propertyType.ContainingNamespace is not { } containingNamespace
+                || !string.Equals(containingNamespace.ToDisplayString(), "Microsoft.VisualStudio.TestTools.UnitTesting", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            if (property.GetMethod is not { } getter
+                || getter.DeclaredAccessibility == Accessibility.Private
+                || getter.IsStatic
+                || getter.IsAbstract)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public static bool IsInheritanceModeSet(this IMethodSymbol methodSymbol, INamedTypeSymbol? inheritanceBehaviorSymbol,
         INamedTypeSymbol? classInitializeOrCleanupAttributeSymbol)
     {
