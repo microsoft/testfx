@@ -13,140 +13,288 @@ using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
+#pragma warning disable TPEXP // IGracefulStopTestExecutionCapability is for evaluation purposes only.
+
 [TestClass]
 public sealed class AbortAtDeadlineExtensionTests : IDisposable
 {
-    // Far in the past, so the extension clamps its timer to a zero due time and it fires as soon as it is armed.
-    private const string ElapsedDeadline = "2020-01-01T00:00:00Z";
-
-    // Generous upper bound for an already-elapsed timer to fire. Only used to fail a hung test, never to pass one.
-    private static readonly TimeSpan FireTimeout = TimeSpan.FromSeconds(30);
-
-    // How long an elapsed deadline is given to (wrongly) fire before we conclude the completion gate suppressed it.
-    // WhenDeadlineElapsesBeforeExecutionCompletes_RequestsGracefulStop is the control showing that an unsuppressed
-    // timer fires far inside this budget.
-    private static readonly TimeSpan SuppressionObservationWindow = TimeSpan.FromSeconds(2);
+    private static readonly DateTimeOffset Now = new(2030, 1, 1, 12, 0, 0, TimeSpan.Zero);
 
     private readonly CancellationTokenSource _cts = new();
+    private readonly Mock<IStopPoliciesService> _policiesService = new();
+    private readonly Mock<IGracefulStopTestExecutionCapability> _capability = new();
 
     public TestContext TestContext { get; set; } = null!;
 
     public void Dispose() => _cts.Dispose();
 
     [TestMethod]
-    public async Task WhenDeadlineElapsesBeforeExecutionCompletes_RequestsGracefulStop()
+    public async Task WhenGracefulStopFails_TheDeadlineVerdictIsReverted()
     {
-        TaskCompletionSource<bool> stopRequested = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        StopPoliciesService policies = CreatePoliciesService();
+        TaskCompletionSource<bool> reverted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        _policiesService.Setup(x => x.RevertDeadlineTriggered()).Callback(() => reverted.TrySetResult(true));
+        _capability
+            .Setup(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("This framework refuses to stop."));
 
-        using (CreateExtension(policies, stopRequested))
-        {
-            Task winner = await Task.WhenAny(stopRequested.Task, Task.Delay(FireTimeout, TestContext.CancellationToken));
-            Assert.AreSame(stopRequested.Task, winner, "The elapsed deadline should have requested a graceful stop.");
-        }
+        using AbortAtDeadlineExtension extension = CreateExtension(deadlineIn: TimeSpan.Zero);
 
-        Assert.IsTrue(policies.IsDeadlineTriggered, "A deadline that fires during execution marks the run as truncated.");
+        // The stop was never accepted, so the run carries on and executes every test. Reporting exit code 15
+        // for it would be a lie, so the verdict committed before the stop request has to be taken back.
+        await WaitForAsync(reverted.Task);
+        _policiesService.Verify(x => x.RevertDeadlineTriggered(), Times.Once);
     }
 
     [TestMethod]
-    public async Task WhenExecutionAlreadyCompleted_ElapsedDeadlineIsIgnored()
+    public async Task WhenGracefulStopSucceeds_TheDeadlineVerdictIsKept()
     {
-        TaskCompletionSource<bool> stopRequested = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        StopPoliciesService policies = CreatePoliciesService();
-
-        // The host sets this the moment the test framework invoker returns, before the session-end notification
-        // drains the message bus and runs the reporters. Everything after it belongs to a run that already finished.
-        policies.NotifyTestExecutionCompleted();
-
-        using (CreateExtension(policies, stopRequested))
-        {
-            Task winner = await Task.WhenAny(stopRequested.Task, Task.Delay(SuppressionObservationWindow, TestContext.CancellationToken));
-            Assert.AreNotSame(stopRequested.Task, winner, "A deadline elapsing after execution completed must not stop a finished run.");
-        }
-
-        Assert.IsFalse(policies.IsDeadlineTriggered, "A run that finished before the deadline must not be reported as deadline-truncated.");
-    }
-
-    [TestMethod]
-    public async Task WhenGracefulStopIsRejected_RunIsNotReportedAsDeadlineTruncated()
-    {
-        TaskCompletionSource<bool> stopAttempted = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        StopPoliciesService policies = CreatePoliciesService();
-
-        AbortAtDeadlineExtension extension = CreateExtension(policies, stopAttempted, rejectStop: true);
-        try
-        {
-            Task winner = await Task.WhenAny(stopAttempted.Task, Task.Delay(FireTimeout, TestContext.CancellationToken));
-            Assert.AreSame(stopAttempted.Task, winner, "The elapsed deadline should have attempted a graceful stop.");
-        }
-        finally
-        {
-            // Disposal drains the in-flight deadline handler, so its rollback has run once this returns.
-            // Only the netstandard2.0 build drains from Dispose; on .NET the drain lives in DisposeAsync.
-#if NETCOREAPP
-            await extension.DisposeAsync();
-#else
-            extension.Dispose();
-#endif
-        }
-
-        Assert.IsFalse(
-            policies.IsDeadlineTriggered,
-            "A graceful stop that was rejected truncated nothing, so the run must not exit with TestExecutionStoppedAtDeadline.");
-    }
-
-    private StopPoliciesService CreatePoliciesService()
-    {
-        Mock<ITestApplicationCancellationTokenSource> cancellationTokenSource = new();
-        cancellationTokenSource.SetupGet(x => x.CancellationToken).Returns(_cts.Token);
-        return new StopPoliciesService(cancellationTokenSource.Object);
-    }
-
-    private AbortAtDeadlineExtension CreateExtension(IStopPoliciesService policies, TaskCompletionSource<bool> stopRequested, bool rejectStop = false)
-    {
-        Mock<IEnvironment> environment = new();
-        environment.Setup(x => x.GetEnvironmentVariable(It.IsAny<string>())).Returns((string?)null);
-        environment.Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE)).Returns(ElapsedDeadline);
-
-        Mock<IClock> clock = new();
-        clock.SetupGet(x => x.UtcNow).Returns(DateTimeOffset.UtcNow);
-
-        Mock<IGracefulStopTestExecutionCapability> capability = new();
-        capability.Setup(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()))
+        TaskCompletionSource<bool> stopped = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        _capability
+            .Setup(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()))
             .Returns(() =>
             {
-                stopRequested.TrySetResult(true);
-
-                // StopTestExecutionAsync is a [TPEXP] extensibility point, so a third-party framework can
-                // reject the request by throwing. Signal the attempt first so the test can observe it.
-                return rejectStop
-                    ? throw new InvalidOperationException("Graceful stop is not available.")
-                    : Task.CompletedTask;
+                stopped.TrySetResult(true);
+                return Task.CompletedTask;
             });
 
-        Mock<ITestApplicationCancellationTokenSource> cancellationTokenSource = new();
-        cancellationTokenSource.SetupGet(x => x.CancellationToken).Returns(_cts.Token);
+        using AbortAtDeadlineExtension extension = CreateExtension(deadlineIn: TimeSpan.Zero);
 
-        Mock<IOutputDevice> outputDevice = new();
-        outputDevice
-            .Setup(x => x.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+        await WaitForAsync(stopped.Task);
+        _policiesService.Verify(x => x.ExecuteDeadlineCallbacksAsync(), Times.Once);
+        _policiesService.Verify(x => x.RevertDeadlineTriggered(), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task WhenTestExecutionCompleted_TheDeadlineDoesNotTrigger()
+    {
+        TaskCompletionSource<bool> triggered = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        _policiesService.Setup(x => x.ExecuteDeadlineCallbacksAsync()).Callback(() => triggered.TrySetResult(true)).Returns(Task.CompletedTask);
+
+        using AbortAtDeadlineExtension extension = CreateExtension(deadlineIn: TimeSpan.FromMilliseconds(300));
+
+        // The host signals this the moment the test framework invoker returns, which is well before the timer
+        // below fires. Everything after it -- draining the message bus, the reporters -- happens on a run that
+        // already executed every test, so a deadline reached during it must not truncate the verdict.
+        extension.NotifyTestExecutionCompleted();
+
+        Task completed = await Task.WhenAny(triggered.Task, Task.Delay(TimeSpan.FromSeconds(2), TestContext.CancellationToken));
+        Assert.AreNotSame(triggered.Task, completed, "The deadline fired even though test execution had already completed.");
+        _policiesService.Verify(x => x.ExecuteDeadlineCallbacksAsync(), Times.Never);
+        _capability.Verify(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task WhenPoliciesReportTestExecutionCompleted_TheDeadlineDoesNotTrigger()
+    {
+        TaskCompletionSource<bool> triggered = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        _policiesService.SetupGet(x => x.IsTestExecutionCompleted).Returns(true);
+        _policiesService.Setup(x => x.ExecuteDeadlineCallbacksAsync()).Callback(() => triggered.TrySetResult(true)).Returns(Task.CompletedTask);
+
+        using AbortAtDeadlineExtension extension = CreateExtension(deadlineIn: TimeSpan.Zero);
+
+        Task completed = await Task.WhenAny(triggered.Task, Task.Delay(TimeSpan.FromSeconds(2), TestContext.CancellationToken));
+        Assert.AreNotSame(triggered.Task, completed, "The deadline fired even though the shared policy state reported completed execution.");
+        _capability.Verify(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task WhenTestExecutionIsStillRunning_TheDeadlineTriggers()
+    {
+        // Control for the test above: same timer, no completion signal, so the deadline must fire. Without
+        // this, that test would still pass if the timer were simply broken.
+        TaskCompletionSource<bool> triggered = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        _policiesService.Setup(x => x.ExecuteDeadlineCallbacksAsync()).Callback(() => triggered.TrySetResult(true)).Returns(Task.CompletedTask);
+
+        using AbortAtDeadlineExtension extension = CreateExtension(deadlineIn: TimeSpan.FromMilliseconds(300));
+
+        await WaitForAsync(triggered.Task);
+        _capability.Verify(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task WhenTestExecutionCompletesWhileTheDeadlineIsBeingReported_TheVerdictIsNotCommitted()
+    {
+        // The overlap the checks above cannot catch. The handler does not run on the timer callback: it yields
+        // and then reports, and the test framework invoker can return during exactly that window. Checking
+        // completion only before starting the handler would therefore still let the deadline commit its
+        // verdict and request a stop for a run in which every test had already finished (exit code 15 on a
+        // complete run). Gate the handler inside its reporting to make that window deterministic.
+        TaskCompletionSource<bool> reporting = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> abandoned = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        using AbortAtDeadlineExtension extension = CreateExtension(
+            deadlineIn: TimeSpan.Zero,
+            onLog: async logLevel =>
+            {
+                switch (logLevel)
+                {
+                    // "Deadline approaching ...", written before the verdict is committed.
+                    case LogLevel.Information:
+                        reporting.TrySetResult(true);
+                        await release.Task;
+                        break;
+
+                    // "... abandoning the graceful stop.", the only thing the handler does once it sees that
+                    // test execution won the race.
+                    case LogLevel.Debug:
+                        abandoned.TrySetResult(true);
+                        break;
+                }
+            });
+
+        // Park the handler mid-report, then let the invoker return underneath it.
+        await WaitForAsync(reporting.Task);
+        extension.NotifyTestExecutionCompleted();
+        release.SetResult(true);
+
+        await WaitForAsync(abandoned.Task);
+        _policiesService.Verify(x => x.ExecuteDeadlineCallbacksAsync(), Times.Never);
+        _policiesService.Verify(x => x.RevertDeadlineTriggered(), Times.Never);
+        _capability.Verify(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task WhenTestExecutionCompletesAfterTheDeadlineClaimedTheRun_TheVerdictStands()
+    {
+        // The mirror image of the test above, and the reason completion cannot simply revert the verdict: the
+        // graceful stop is what makes execution finish, so the completion that follows a claimed deadline is
+        // the stop taking effect, not a run that got there on its own.
+        TaskCompletionSource<bool> stopping = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        _capability
+            .Setup(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()))
+            .Returns(async () =>
+            {
+                stopping.TrySetResult(true);
+                await release.Task;
+            });
+
+        using AbortAtDeadlineExtension extension = CreateExtension(deadlineIn: TimeSpan.Zero);
+
+        await WaitForAsync(stopping.Task);
+        extension.NotifyTestExecutionCompleted();
+        release.SetResult(true);
+
+        _policiesService.Verify(x => x.ExecuteDeadlineCallbacksAsync(), Times.Once);
+        _policiesService.Verify(x => x.RevertDeadlineTriggered(), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task TheDeadlineVerdictIsCommittedBeforeTheUserFacingMessage()
+    {
+        // Claiming the run closes the door on NotifyTestExecutionCompleted: once claimed, a completion can no
+        // longer disarm the deadline. So nothing may be awaited between the claim and the commit -- a run that
+        // finishes in such a window is ignored and still reported as truncated (exit code 15 on a complete
+        // run). The user-facing message is the one await that used to sit there, so pin it after the commit.
+        TaskCompletionSource<bool> displaying = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        using AbortAtDeadlineExtension extension = CreateExtension(
+            deadlineIn: TimeSpan.Zero,
+            onDisplay: async () =>
+            {
+                displaying.TrySetResult(true);
+                await release.Task;
+            });
+
+        // Park the handler inside the message. If the commit still came after it, this is the window a
+        // completion would be swallowed in.
+        await WaitForAsync(displaying.Task);
+        _policiesService.Verify(x => x.ExecuteDeadlineCallbacksAsync(), Times.Once);
+        _capability.Verify(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Never);
+
+        release.SetResult(true);
+    }
+
+    [TestMethod]
+    public async Task WhenTheUserFacingMessageNeverCompletes_TheGracefulStopIsStillRequested()
+    {
+        // The verdict is committed before this message is written, so an output device that wedges rather
+        // than throws would leave the run recorded as stopped at the deadline while the stop was never
+        // actually requested -- the same "truncated a run nobody stopped" split, reached the other way
+        // round. Swallowing faults does not cover it: a task that never completes never faults.
+        TaskCompletionSource<bool> displaying = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> neverCompletes = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> stopped = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        _capability
+            .Setup(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()))
+            .Returns(() =>
+            {
+                stopped.TrySetResult(true);
+                return Task.CompletedTask;
+            });
+
+        using AbortAtDeadlineExtension extension = CreateExtension(
+            deadlineIn: TimeSpan.Zero,
+            onDisplay: () =>
+            {
+                displaying.TrySetResult(true);
+                return neverCompletes.Task;
+            },
+            reportTimeout: TimeSpan.FromMilliseconds(200));
+
+        await WaitForAsync(displaying.Task);
+
+        // The bound, not the output device, is what lets the handler carry on.
+        await WaitForAsync(stopped.Task);
+        _capability.Verify(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _policiesService.Verify(x => x.RevertDeadlineTriggered(), Times.Never);
+
+        neverCompletes.SetResult(true);
+    }
+
+    private async Task WaitForAsync(Task task)
+    {
+        Task completed = await Task.WhenAny(task, Task.Delay(TimeSpan.FromSeconds(30), TestContext.CancellationToken));
+        Assert.AreSame(task, completed, "Timed out waiting for the deadline handler.");
+        await task;
+    }
+
+    private AbortAtDeadlineExtension CreateExtension(TimeSpan deadlineIn, Func<LogLevel, Task>? onLog = null, Func<Task>? onDisplay = null, TimeSpan? reportTimeout = null)
+    {
+        Mock<IEnvironment> environment = new();
+        _ = environment.Setup(x => x.GetEnvironmentVariable(It.IsAny<string>())).Returns((string?)null);
+        _ = environment
+            .Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE))
+            .Returns((Now + deadlineIn).ToString("o", CultureInfo.InvariantCulture));
+
+        // A zero stop margin makes the stop instant the deadline itself, so deadlineIn is exactly how long the
+        // timer waits (measured against the fixed clock below, not wall-clock time when the test starts).
+        _ = environment
+            .Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE_STOP_MARGIN))
+            .Returns("0");
+
+        Mock<IClock> clock = new();
+        _ = clock.SetupGet(x => x.UtcNow).Returns(Now);
 
         Mock<ILogger> logger = new();
-        logger
+        _ = logger
             .Setup(x => x.LogAsync(It.IsAny<LogLevel>(), It.IsAny<string>(), It.IsAny<Exception?>(), It.IsAny<Func<string, Exception?, string>>()))
-            .Returns(Task.CompletedTask);
-
+            .Returns((LogLevel logLevel, string _, Exception? _, Func<string, Exception?, string> _)
+                => onLog is null ? Task.CompletedTask : onLog(logLevel));
         Mock<ILoggerFactory> loggerFactory = new();
-        loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(logger.Object);
+        _ = loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(logger.Object);
+
+        Mock<IOutputDevice> outputDevice = new();
+        _ = outputDevice
+            .Setup(x => x.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()))
+            .Returns(() => onDisplay is null ? Task.CompletedTask : onDisplay());
+
+        Mock<ITestApplicationCancellationTokenSource> cancellationTokenSource = new();
+        _ = cancellationTokenSource.SetupGet(x => x.CancellationToken).Returns(_cts.Token);
 
         return new AbortAtDeadlineExtension(
             environment.Object,
             clock.Object,
-            capability.Object,
-            policies,
+            _capability.Object,
+            _policiesService.Object,
             cancellationTokenSource.Object,
             outputDevice.Object,
-            loggerFactory.Object);
+            loggerFactory.Object,
+            reportTimeout);
     }
 }
+
+#pragma warning restore TPEXP

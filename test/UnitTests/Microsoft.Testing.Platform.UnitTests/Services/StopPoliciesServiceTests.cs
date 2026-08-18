@@ -90,6 +90,195 @@ public sealed class StopPoliciesServiceTests : IDisposable
     }
 
     [TestMethod]
+    public void IsDeadlineTriggered_InitiallyFalse()
+    {
+        StopPoliciesService service = new(_cancellationTokenSource.Object);
+        Assert.IsFalse(service.IsDeadlineTriggered);
+    }
+
+    [TestMethod]
+    public async Task ExecuteDeadlineCallbacksAsync_SetsIsDeadlineTriggered()
+    {
+        StopPoliciesService service = new(_cancellationTokenSource.Object);
+
+        await service.ExecuteDeadlineCallbacksAsync();
+
+        Assert.IsTrue(service.IsDeadlineTriggered);
+    }
+
+    [TestMethod]
+    public async Task ExecuteDeadlineCallbacksAsync_InvokesRegisteredCallback()
+    {
+        StopPoliciesService service = new(_cancellationTokenSource.Object);
+
+        int invocationCount = 0;
+        await service.RegisterOnDeadlineCallbackAsync(() =>
+        {
+            invocationCount++;
+            return Task.CompletedTask;
+        });
+
+        await service.ExecuteDeadlineCallbacksAsync();
+
+        Assert.AreEqual(1, invocationCount);
+    }
+
+    [TestMethod]
+    public async Task ExecuteDeadlineCallbacksAsync_IsOneShot()
+    {
+        StopPoliciesService service = new(_cancellationTokenSource.Object);
+
+        int invocationCount = 0;
+        await service.RegisterOnDeadlineCallbackAsync(() =>
+        {
+            invocationCount++;
+            return Task.CompletedTask;
+        });
+
+        await service.ExecuteDeadlineCallbacksAsync();
+        await service.ExecuteDeadlineCallbacksAsync();
+
+        Assert.AreEqual(1, invocationCount);
+    }
+
+    [TestMethod]
+    public async Task RegisterOnDeadlineCallbackAsync_InvokesCallbackExactlyOnceIfAlreadyTriggered()
+    {
+        StopPoliciesService service = new(_cancellationTokenSource.Object);
+        await service.ExecuteDeadlineCallbacksAsync();
+
+        int invocationCount = 0;
+        await service.RegisterOnDeadlineCallbackAsync(() =>
+        {
+            invocationCount++;
+            return Task.CompletedTask;
+        });
+
+        // The deadline is one-shot, so registering after it fired must invoke the callback right away and
+        // must not leave it queued for a second, never-arriving trigger.
+        await service.ExecuteDeadlineCallbacksAsync();
+
+        Assert.AreEqual(1, invocationCount);
+    }
+
+    [TestMethod]
+    public async Task RegisterOnDeadlineCallbackAsync_RacingTheTrigger_InvokesEveryCallbackExactlyOnce()
+    {
+        // Registration used to be able to lose a callback: the registering thread could read the trigger flag
+        // as false, the trigger could then commit and snapshot a still-empty queue, and only afterwards would
+        // the callback be enqueued -- where a one-shot deadline never reaches it. Hammer registration against
+        // the trigger and assert every callback ran exactly once.
+        for (int attempt = 0; attempt < 50; attempt++)
+        {
+            StopPoliciesService service = new(_cancellationTokenSource.Object);
+            int[] invocationCounts = new int[8];
+
+            // Async start gate so every task is released at the same moment. Barrier would be the obvious
+            // choice but it is unsupported on browser, which this project targets.
+            TaskCompletionSource<bool> start = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            var tasks = new List<Task>();
+            for (int i = 0; i < invocationCounts.Length; i++)
+            {
+                int index = i;
+                tasks.Add(Task.Run(
+                    async () =>
+                    {
+                        await start.Task;
+                        await service.RegisterOnDeadlineCallbackAsync(() =>
+                        {
+                            Interlocked.Increment(ref invocationCounts[index]);
+                            return Task.CompletedTask;
+                        });
+                    },
+                    TestContext.CancellationToken));
+            }
+
+            tasks.Add(Task.Run(
+                async () =>
+                {
+                    await start.Task;
+                    await service.ExecuteDeadlineCallbacksAsync();
+                },
+                TestContext.CancellationToken));
+
+            start.SetResult(true);
+            await Task.WhenAll(tasks);
+
+            for (int i = 0; i < invocationCounts.Length; i++)
+            {
+                Assert.AreEqual(1, invocationCounts[i], $"Callback {i} was invoked {invocationCounts[i]} times on attempt {attempt}.");
+            }
+        }
+    }
+
+    [TestMethod]
+    public async Task RevertDeadlineTriggered_ClearsTheVerdictAndKeepsCallbacksOneShot()
+    {
+        StopPoliciesService service = new(_cancellationTokenSource.Object);
+        await service.ExecuteDeadlineCallbacksAsync();
+        Assert.IsTrue(service.IsDeadlineTriggered);
+
+        service.RevertDeadlineTriggered();
+
+        Assert.IsFalse(service.IsDeadlineTriggered);
+    }
+
+    [TestMethod]
+    public async Task RevertDeadlineTriggered_KeepsCallbacksOneShot()
+    {
+        // Reverting undoes the exit-code verdict only. If it also re-armed the callback gate, the next
+        // trigger would run every callback a second time.
+        StopPoliciesService service = new(_cancellationTokenSource.Object);
+
+        int invocationCount = 0;
+        await service.RegisterOnDeadlineCallbackAsync(() =>
+        {
+            invocationCount++;
+            return Task.CompletedTask;
+        });
+
+        await service.ExecuteDeadlineCallbacksAsync();
+        service.RevertDeadlineTriggered();
+        await service.ExecuteDeadlineCallbacksAsync();
+
+        Assert.AreEqual(1, invocationCount);
+    }
+
+    [TestMethod]
+    public async Task RegisterOnDeadlineCallbackAsync_AfterRevert_InvokesCallbackImmediately()
+    {
+        // The callbacks have already run, so a registration arriving after the revert has missed the only
+        // trigger there will ever be. Queueing it instead would drop it: nothing drains the list any more.
+        StopPoliciesService service = new(_cancellationTokenSource.Object);
+        await service.ExecuteDeadlineCallbacksAsync();
+        service.RevertDeadlineTriggered();
+
+        int invocationCount = 0;
+        await service.RegisterOnDeadlineCallbackAsync(() =>
+        {
+            invocationCount++;
+            return Task.CompletedTask;
+        });
+
+        Assert.AreEqual(1, invocationCount);
+    }
+
+    [TestMethod]
+    public async Task RevertDeadlineTriggered_DoesNotResurrectTheVerdict()
+    {
+        // A second trigger after a revert must stay a no-op: the run was not truncated, so it must not be
+        // reported as stopped at the deadline.
+        StopPoliciesService service = new(_cancellationTokenSource.Object);
+        await service.ExecuteDeadlineCallbacksAsync();
+        service.RevertDeadlineTriggered();
+
+        await service.ExecuteDeadlineCallbacksAsync();
+
+        Assert.IsFalse(service.IsDeadlineTriggered);
+    }
+
+    [TestMethod]
     public async Task ExecuteMaxFailedTestsCallbacksAsync_SetsIsMaxFailedTestsTriggered()
     {
         StopPoliciesService service = new(_cancellationTokenSource.Object);

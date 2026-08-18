@@ -18,6 +18,8 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public sealed class HangDumpTests
 {
+    public TestContext TestContext { get; set; } = null!;
+
     private HangDumpCommandLineProvider GetProvider()
     {
         var testApplicationModuleInfo = new Mock<ITestApplicationModuleInfo>();
@@ -138,6 +140,117 @@ public sealed class HangDumpTests
 
         Assert.AreEqual($"\"{dumpFileName}\"", dumpFileNames.WriteDumpFileName);
         Assert.AreEqual(dumpFileName, dumpFileNames.ArtifactDumpFileName);
+    }
+
+    [TestMethod]
+    public async Task QueryOnceAndDumpTree_WithStalledQuery_QueriesOncePerDumpAndStillDumpsWholeTree()
+    {
+        // A wedged test host never answers the in-progress-test query, so the query costs a full
+        // InProgressTestsQueryTimeout. Issuing it per process would multiply that bound by the size of
+        // the tree, so a six-process tree must still pay it exactly once and then dump every process.
+        int queryCount = 0;
+        IProcess[] bottomUpTree = [.. Enumerable.Range(0, 6).Select(_ => Mock.Of<IProcess>())];
+        List<IProcess> dumped = [];
+        List<(string, int)[]> annotations = [];
+
+        await HangDumpProcessLifetimeHandler.QueryOnceAndDumpTreeAsync(
+            bottomUpTree,
+            cancellationToken =>
+            {
+                Interlocked.Increment(ref queryCount);
+
+                // The real bounded query, against a reply that never arrives: the product's own bound
+                // cancels the wait and the dump proceeds with an empty list.
+                return HangDumpProcessLifetimeHandler.QueryInProgressTestsWithTimeoutAsync(
+                    async queryCancellationToken =>
+                    {
+                        await Task.Delay(Timeout.Infinite, queryCancellationToken);
+                        return [];
+                    },
+                    TimeSpan.FromMilliseconds(50),
+                    _ => Task.CompletedTask,
+                    cancellationToken);
+            },
+            (process, inProgressTests, _) =>
+            {
+                dumped.Add(process);
+                annotations.Add(inProgressTests);
+                return Task.CompletedTask;
+            },
+            CancellationToken.None);
+
+        Assert.AreEqual(1, queryCount);
+        Assert.AreSequenceEqual(bottomUpTree, dumped);
+
+        // Every dump is annotated with the answer from that one query, so no process triggers another.
+        Assert.HasCount(bottomUpTree.Length, annotations);
+        foreach ((string, int)[] annotation in annotations)
+        {
+            Assert.AreSame(annotations[0], annotation);
+        }
+    }
+
+    [TestMethod]
+    public async Task QueryInProgressTestsWithTimeout_WhenTheReplyNeverArrives_ReturnsEmptyList()
+    {
+        // A connected-but-wedged host accepts the request and never replies, and the application token is
+        // not cancelled while the run is still in progress -- which is exactly when the deadline dump
+        // fires. So the bound inside the product is the only thing that can end this wait: the request
+        // here honors the token it is handed and nothing else, and never times out on its own.
+        Exception? loggedFailure = null;
+
+        Task<(string, int)[]> query = HangDumpProcessLifetimeHandler.QueryInProgressTestsWithTimeoutAsync(
+            async queryCancellationToken =>
+            {
+                await Task.Delay(Timeout.Infinite, queryCancellationToken);
+                return [];
+            },
+            TimeSpan.FromMilliseconds(200),
+            ex =>
+            {
+                loggedFailure = ex;
+                return Task.CompletedTask;
+            },
+            CancellationToken.None);
+
+        // Fail with a message rather than hanging the run if the bound is ever removed.
+        Task completed = await Task.WhenAny(query, Task.Delay(TimeSpan.FromSeconds(30), TestContext.CancellationToken));
+        Assert.AreSame(query, completed, "The query did not give up on a reply that never arrives, so a wedged host would block the dump.");
+
+        Assert.IsEmpty(await query);
+
+        // The give-up is reported, so a missing in-progress-test list in a dump can be explained.
+        Assert.IsNotNull(loggedFailure);
+    }
+
+    [TestMethod]
+    public async Task QueryInProgressTestsWithTimeout_WhenTheHostReplies_ReturnsTheAnswer()
+    {
+        // The bound must not get in the way of the healthy path, which answers in milliseconds.
+        (string, int)[] expected = [("Test1", 3), ("Test2", 7)];
+
+        (string, int)[] inProgressTests = await HangDumpProcessLifetimeHandler.QueryInProgressTestsWithTimeoutAsync(
+            _ => Task.FromResult(expected),
+            TimeSpan.FromSeconds(30),
+            _ => Task.CompletedTask,
+            CancellationToken.None);
+
+        Assert.AreSequenceEqual(expected, inProgressTests);
+    }
+
+    [TestMethod]
+    public async Task QueryInProgressTestsWithTimeout_WhenReportingTheFailureThrows_StillReturnsEmptyList()
+    {
+        // The empty list is what lets the dump go ahead after a failed query, and the delegate that reports
+        // the failure is a logger call -- logger providers can fail. If that throw escaped, a query failure
+        // would take the dump down with it, even though the query is explicitly best-effort.
+        (string, int)[] inProgressTests = await HangDumpProcessLifetimeHandler.QueryInProgressTestsWithTimeoutAsync(
+            _ => throw new InvalidOperationException("The consumer pipe is not connected."),
+            TimeSpan.FromSeconds(30),
+            _ => throw new InvalidOperationException("This logger provider is broken too."),
+            CancellationToken.None);
+
+        Assert.IsEmpty(inProgressTests);
     }
 
     [TestMethod]
