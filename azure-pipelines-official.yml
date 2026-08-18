@@ -165,6 +165,28 @@ extends:
                   # mapping is required; the history service no-ops if the token or endpoints are unavailable.
                   SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
+              # artifacts/tmp/<config>/testsuite is created by the acceptance tests as they run, so it does not
+              # exist yet when the build or the test step fails before reaching them. Both binlog steps below
+              # hard-fail on a missing folder ('Not found SourceFolder' / 'Not found PathtoPublish'), so every
+              # failed build used to report two extra red steps that have nothing to do with the real failure.
+              # Detect the binlogs up front and let the two steps skip when there is nothing to collect, so a
+              # failed build only shows the step that actually broke.
+              - pwsh: |
+                  $testsuiteDirectory = "$(Build.SourcesDirectory)/artifacts/tmp/$(_BuildConfig)/testsuite"
+                  $binlogs = @()
+                  if (Test-Path $testsuiteDirectory) {
+                    # SilentlyContinue: this task defaults to $ErrorActionPreference = 'Stop', so an unreadable
+                    # or too-long path under the generated test assets would otherwise fail the step.
+                    $binlogs = @(Get-ChildItem $testsuiteDirectory -Filter *.binlog -File -Recurse -ErrorAction SilentlyContinue)
+                  }
+
+                  Write-Host "Found $($binlogs.Count) integration test binlog(s) under $testsuiteDirectory."
+                  if ($binlogs.Count -gt 0) {
+                    Write-Host "##vso[task.setvariable variable=IntegrationTestBinlogsFound]true"
+                  }
+                displayName: 'Detect integration tests binlogs'
+                condition: always()
+
               - task: CopyFiles@2
                 displayName: 'Copy binlogs'
                 inputs:
@@ -172,14 +194,14 @@ extends:
                   Contents: |
                     **/*.binlog
                   TargetFolder: '$(Build.ArtifactStagingDirectory)/binlogs'
-                condition: always()
+                condition: and(always(), eq(variables['IntegrationTestBinlogsFound'], 'true'))
 
               - task: 1ES.PublishBuildArtifacts@1
                 displayName: 'Publish integration tests binlogs'
                 inputs:
                   PathtoPublish: '$(Build.ArtifactStagingDirectory)/binlogs'
                   ArtifactName: Integration_Tests_Windows_Binlogs_$(_BuildConfig)
-                condition: always()
+                condition: and(always(), eq(variables['IntegrationTestBinlogsFound'], 'true'))
 
               # Remove temporary artifacts to avoid finding binskim issues for exes we don't own.
               - pwsh: |
