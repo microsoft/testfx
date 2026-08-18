@@ -24,9 +24,10 @@ namespace Microsoft.Testing.Platform.Extensions;
 /// armed at construction). It implements <see cref="IDataConsumer"/> so the message bus keeps a live
 /// reference to it for the duration of the run (which also keeps its timer alive); it consumes no
 /// message types, so the bus keeps that reference without routing any message to it. It also implements
-/// <see cref="ITestSessionLifetimeHandler"/> so it can disarm the deadline once test execution
-/// completes: a timer that fired while the reporters finalize an already-finished run would otherwise
-/// wrongly mark the run as deadline-truncated.
+/// <see cref="ITestSessionLifetimeHandler"/> as a backstop for the completion gate, but the gate that actually
+/// matters is <see cref="IStopPoliciesService.IsTestExecutionCompleted"/>, which the host sets as soon as the test
+/// framework invoker returns: a timer that fired while the reporters finalize an already-finished run would
+/// otherwise wrongly mark the run as deadline-truncated.
 /// </remarks>
 internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLifetimeHandler, IOutputDeviceDataProducer, IDisposable
 #if NETCOREAPP
@@ -189,15 +190,16 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
     /// <inheritdoc />
     public Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
     {
-        // Test execution has completed (this runs right after the test framework invoker returns, before the
-        // reporters render their summary). Disarm the deadline so a timer that fires from now on -- while the
-        // reporters finalize an already-finished run -- is ignored instead of marking the run as
-        // deadline-truncated. Without this, a fully-completed run whose reporting overlaps the stop instant
-        // would wrongly exit with ExitCode.TestExecutionStoppedAtDeadline (15) and report that tests stopped
-        // early. Set the flag under the same lock OnDeadlineReached/Dispose use, so a timer firing right now is
-        // gated rather than half-applied. This never un-marks a real truncation: if the timer already fired
-        // during execution, IsDeadlineTriggered is already set and setting this flag now is harmless. The timer
-        // itself is left to be disposed at host teardown; the flag is what makes any late fire a no-op.
+        // Backstop for the completion gate. The host already signalled completion through
+        // IStopPoliciesService.NotifyTestExecutionCompleted the moment the test framework invoker returned, which is
+        // what actually protects the reporting window: this callback runs at the END of the session-end
+        // notification, because the extension is an IDataConsumer and consumer lifetime handlers are invoked last
+        // (after the initial drain, every non-consumer handler and another drain). Setting the flag here as well
+        // costs nothing and keeps the extension correct on any host path that does not signal completion. Set it
+        // under the same lock OnDeadlineReached/Dispose use, so a timer firing right now is gated rather than
+        // half-applied. This never un-marks a real truncation: if the timer already fired during execution,
+        // IsDeadlineTriggered is already set and setting this flag now is harmless. The timer itself is left to be
+        // disposed at host teardown; the flag is what makes any late fire a no-op.
         lock (_lock)
         {
             _executionCompleted = true;
@@ -206,12 +208,26 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Gets a value indicating whether test execution has finished, so a deadline firing from now on must be ignored.
+    /// </summary>
+    /// <remarks>
+    /// The authoritative signal is <see cref="IStopPoliciesService.IsTestExecutionCompleted"/>, which the host sets
+    /// the moment the test framework invoker returns -- before the session-end notification drains the message bus
+    /// and runs the reporters. <see cref="OnTestSessionFinishingAsync"/> also sets the local flag, but that runs at
+    /// the very end of that phase (this extension is an <see cref="IDataConsumer"/>, and consumer lifetime handlers
+    /// run last), so on its own it would leave the whole reporting window exposed. It is kept as a backstop for host
+    /// paths that never signal completion. Both flags are monotonic (false -> true only), so reading them outside the
+    /// lock cannot observe a value that is later retracted.
+    /// </remarks>
+    private bool IsExecutionCompleted => _executionCompleted || _policiesService.IsTestExecutionCompleted;
+
     private void OnDeadlineReached()
     {
         // Do not start deadline handling once we are tearing down, or once test execution has already
         // completed (cheap fast-path; both are re-checked under the lock below to actually close the race
-        // with Dispose and OnTestSessionFinishingAsync).
-        if (_disposed || _executionCompleted)
+        // with Dispose and the completion signal).
+        if (_disposed || IsExecutionCompleted)
         {
             return;
         }
@@ -234,7 +250,7 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
             // acquiring the lock (the timer fired while the reporters are finalizing a fully-completed run). In
             // either case there is nothing left to stop, and marking the run deadline-truncated would wrongly
             // force exit code 15 on a run that actually completed.
-            if (_disposed || _executionCompleted)
+            if (_disposed || IsExecutionCompleted)
             {
                 return;
             }

@@ -37,6 +37,14 @@ internal abstract partial class CommonHost
                     await serviceProvider.GetTestFrameworkInvoker().ExecuteAsync(testFramework, client, cancellationToken).ConfigureAwait(false);
                 }
 
+                // Test execution is over the moment the invoker returns. Record it here, before the session-end
+                // notification starts draining the bus and running the reporters, because that phase is unbounded:
+                // it renders summaries and writes TRX/HTML/coverage artifacts. A deadline elapsing during it must
+                // not mark a run that actually finished as deadline-truncated (ExitCode.TestExecutionStoppedAtDeadline).
+                // Signalling it from an ITestSessionLifetimeHandler instead would be too late, because handlers that
+                // are also IDataConsumer run last in NotifyTestSessionEndAsync, after that whole phase.
+                serviceProvider.GetRequiredService<IStopPoliciesService>().NotifyTestExecutionCompleted();
+
                 using (otelService?.StartActivity("OnTestSessionEnding"))
                 {
                     await NotifyTestSessionEndAsync(testSessionInfo, baseMessageBus, serviceProvider, otelService).ConfigureAwait(false);

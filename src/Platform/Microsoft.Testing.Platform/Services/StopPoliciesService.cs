@@ -14,6 +14,10 @@ internal sealed class StopPoliciesService : IStopPoliciesService
     private readonly ConcurrentQueue<Func<Task>> _deadlineCallbacks = new();
     private int _lastMaxFailedTests;
 
+    // Read on the deadline timer thread and written on the host thread that runs the request, so it is
+    // volatile. It is monotonic (false -> true only), so no lock is needed to read it consistently.
+    private volatile bool _isTestExecutionCompleted;
+
     public StopPoliciesService(ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource)
     {
         _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
@@ -31,6 +35,10 @@ internal sealed class StopPoliciesService : IStopPoliciesService
     public bool IsAbortTriggered { get; private set; }
 
     public bool IsDeadlineTriggered { get; private set; }
+
+    public bool IsTestExecutionCompleted => _isTestExecutionCompleted;
+
+    public void NotifyTestExecutionCompleted() => _isTestExecutionCompleted = true;
 
     public async Task ExecuteMaxFailedTestsCallbacksAsync(int maxFailedTests, CancellationToken cancellationToken)
     {

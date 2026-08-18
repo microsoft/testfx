@@ -37,6 +37,34 @@ public sealed class StopPoliciesServiceTests : IDisposable
     }
 
     [TestMethod]
+    public void IsTestExecutionCompleted_InitiallyFalse()
+    {
+        StopPoliciesService service = new(_cancellationTokenSource.Object);
+        Assert.IsFalse(service.IsTestExecutionCompleted);
+    }
+
+    [TestMethod]
+    public void NotifyTestExecutionCompleted_SetsIsTestExecutionCompleted()
+    {
+        StopPoliciesService service = new(_cancellationTokenSource.Object);
+
+        service.NotifyTestExecutionCompleted();
+
+        Assert.IsTrue(service.IsTestExecutionCompleted);
+    }
+
+    [TestMethod]
+    public void NotifyTestExecutionCompleted_DoesNotAffectDeadlineTriggered()
+    {
+        StopPoliciesService service = new(_cancellationTokenSource.Object);
+
+        service.NotifyTestExecutionCompleted();
+
+        // Completing execution gates future deadlines; it must not itself look like a deadline truncation.
+        Assert.IsFalse(service.IsDeadlineTriggered);
+    }
+
+    [TestMethod]
     public async Task ExecuteMaxFailedTestsCallbacksAsync_SetsIsMaxFailedTestsTriggered()
     {
         StopPoliciesService service = new(_cancellationTokenSource.Object);

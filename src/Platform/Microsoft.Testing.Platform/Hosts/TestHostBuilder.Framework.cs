@@ -130,9 +130,11 @@ internal sealed partial class TestHostBuilder
             {
                 dataConsumersBuilder.Add(abortAtDeadlineExtension);
 
-                // Also register it as a session-lifetime handler so it is told when test execution completes.
-                // On that signal it disarms the deadline, so a timer firing while the reporters finalize an
-                // already-finished run cannot wrongly mark the run as deadline-truncated (exit code 15).
+                // Also register it as a session-lifetime handler. This is only a backstop: the deadline is disarmed
+                // by the host through IStopPoliciesService.NotifyTestExecutionCompleted as soon as the test framework
+                // invoker returns, which is what keeps a timer firing during reporting from wrongly marking the run
+                // as deadline-truncated (exit code 15). This callback runs much later -- consumer lifetime handlers
+                // are invoked last during NotifyTestSessionEndAsync -- so it cannot protect that window on its own.
                 testSessionLifetimeHandlers.Add(abortAtDeadlineExtension);
             }
         }
