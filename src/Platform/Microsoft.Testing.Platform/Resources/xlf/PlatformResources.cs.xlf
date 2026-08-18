@@ -1204,7 +1204,7 @@ Přečtěte si další informace o telemetrii Microsoft Testing Platform: https:
       </trans-unit>
       <trans-unit id="TestHostControllerConnectionInvalidAuthorizedSecurityIdentityErrorMessage">
         <source>The test host launcher '{0}' (UID: {1}) asked to authorize the security identity '{2}' on the test host controller connection, but only the identity of a single sandboxed application (on Windows, a security identifier of the form 'S-1-15-2-...') can be authorized. Users, groups and the catch-all '{3}' security identifier are never granted access.</source>
-        <target state="new">The test host launcher '{0}' (UID: {1}) asked to authorize the security identity '{2}' on the test host controller connection, but only the identity of a single sandboxed application (on Windows, a security identifier of the form 'S-1-15-2-...') can be authorized. Users, groups and the catch-all '{3}' security identifier are never granted access.</target>
+        <target state="translated">Spouštěč testovacího hostitele {0} (UID: {1}) požádal o autorizaci identity zabezpečení {2} v připojení ke kontroleru testovacího hostitele, ale autorizovat je možné jen identitu jedné aplikace v sandboxu (ve Windows identifikátor zabezpečení ve tvaru 'S-1-15-2-...'). Uživatelům, skupinám ani univerzálnímu identifikátoru zabezpečení {3} se přístup nikdy neuděluje.</target>
         <note>{0} is the launcher display name, {1} is the launcher unique identifier, {2} is the rejected security identity, {3} is the well-known 'ALL APPLICATION PACKAGES' security identifier. {Locked="'S-1-15-2-...'"}</note>
       </trans-unit>
       <trans-unit id="TestHostControllerProcessRestartNotSupportedOnWebAssembly">

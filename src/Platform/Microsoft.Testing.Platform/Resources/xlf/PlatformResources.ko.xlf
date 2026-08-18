@@ -1204,7 +1204,7 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
       </trans-unit>
       <trans-unit id="TestHostControllerConnectionInvalidAuthorizedSecurityIdentityErrorMessage">
         <source>The test host launcher '{0}' (UID: {1}) asked to authorize the security identity '{2}' on the test host controller connection, but only the identity of a single sandboxed application (on Windows, a security identifier of the form 'S-1-15-2-...') can be authorized. Users, groups and the catch-all '{3}' security identifier are never granted access.</source>
-        <target state="new">The test host launcher '{0}' (UID: {1}) asked to authorize the security identity '{2}' on the test host controller connection, but only the identity of a single sandboxed application (on Windows, a security identifier of the form 'S-1-15-2-...') can be authorized. Users, groups and the catch-all '{3}' security identifier are never granted access.</target>
+        <target state="translated">테스트 호스트 시작 관리자 '{0}'(UID: {1})에서 테스트 호스트 컨트롤러 연결 시 보안 ID '{2}'에 권한을 부여해 달라고 요청했습니다. 하지만 단일 샌드박스가 적용된 애플리케이션의 ID만에만 권한을 부여할 수 있습니다(Windows에서는 'S-1-15-2-...' 형식의 보안 식별자). 사용자, 그룹 그리고 모두 캐치 '{3}' 보안 ID에는 절대 액세스 권한이 부여되지 않습니다.</target>
         <note>{0} is the launcher display name, {1} is the launcher unique identifier, {2} is the rejected security identity, {3} is the well-known 'ALL APPLICATION PACKAGES' security identifier. {Locked="'S-1-15-2-...'"}</note>
       </trans-unit>
       <trans-unit id="TestHostControllerProcessRestartNotSupportedOnWebAssembly">
