@@ -27,7 +27,7 @@ public sealed class InvokeTestingPlatformTaskTests
         => Assert.AreEqual(expected, InvokeTestingPlatformTask.IsAzureDevOpsLoggingCommand(line));
 
     [TestMethod]
-    [DoNotParallelize] // Mutates process-wide Console.Out; must not overlap with parallel tests capturing/using the console.
+    [ResourceLock(WellKnownResources.Console)] // Mutates process-wide Console.Out; coordinate with other tests contending on the console instead of deferring this test to the sequential phase.
     public void LogEventsFromTextOutput_AzureDevOpsCommands_AreWrittenToStdoutAtColumnZero_NotThroughMSBuildLog()
     {
         List<string> loggedMessages = [];
