@@ -30,4 +30,6 @@ Microsoft.Testing.Extensions.MergeOutputFileHelper
 static Microsoft.Testing.Extensions.MergeOutputFileHelper.BuildCaseFoldedProbePath(string! directory, string! probeFileName) -> string!
 static Microsoft.Testing.Extensions.MergeOutputFileHelper.EnsureOutputDoesNotAliasInput(System.Collections.Generic.IReadOnlyList<string!>! inputPaths, string! outputPath) -> void
 static Microsoft.Testing.Extensions.MergeOutputFileHelper.WriteViaTemporarySiblingAsync(string! outputPath, System.Func<string!, System.Threading.Tasks.Task!>! writeToTempAsync) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.ArtifactPostProcessingHelper
+static Microsoft.Testing.Extensions.ArtifactPostProcessingHelper.IsReparsePoint(string! path) -> bool
 static Microsoft.Testing.Extensions.JUnitReport.JUnitXmlWriter.BuildFailureBody(Microsoft.Testing.Extensions.JUnitReport.CapturedTestResult! result) -> string?

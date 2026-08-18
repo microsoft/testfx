@@ -74,7 +74,7 @@ A proposed MTP extensibility point (see `docs/RFCs/015-Command-Line-Option-Mappi
 
 ### ConditionBaseAttribute
 
-An abstract MSTest attribute base class in `Microsoft.VisualStudio.TestTools.UnitTesting` for implementing custom conditional test execution. Derived attributes override `IsConditionMet` (returns `true` when the condition is met) and `GroupName` (used to group multiple condition attributes on the same test). Multiple `ConditionBaseAttribute`-derived attributes are evaluated with OR logic within a group and AND logic across groups: a test is skipped only if every attribute in at least one group evaluates to `false`. The `IgnoreMessage` property supplies the skip reason displayed in test output. Built-in concrete implementations include [ArchitectureConditionAttribute](#architectureconditionattribute), [CIConditionAttribute](#ciconditionattribute), [MemberConditionAttribute](#memberconditionattribute), [OSConditionAttribute](#osconditionattribute), and `IgnoreAttribute`.
+An abstract MSTest attribute base class in `Microsoft.VisualStudio.TestTools.UnitTesting` for implementing custom conditional test execution. Derived attributes override `IsConditionMet` (returns `true` when the condition is met) and `GroupName` (used to group multiple condition attributes on the same test). Multiple `ConditionBaseAttribute`-derived attributes are evaluated with OR logic within a group and AND logic across groups: a test is skipped only if every attribute in at least one group evaluates to `false`. The `IgnoreMessage` property supplies the skip reason displayed in test output. Built-in concrete implementations include [ArchitectureConditionAttribute](#architectureconditionattribute), [CIConditionAttribute](#ciconditionattribute), [ExecutableConditionAttribute](#executableconditionattribute), [MemberConditionAttribute](#memberconditionattribute), [OSConditionAttribute](#osconditionattribute), and `IgnoreAttribute`.
 
 ### ConditionMode
 
@@ -129,6 +129,12 @@ A public enum in the `Microsoft.VisualStudio.TestTools.UnitTesting` namespace th
 ### DynamicData
 
 An MSTest attribute (`[DynamicData]`) for data-driven tests where test data is sourced from a static property, method, or field rather than inline `[DataRow]` values. The data source name is passed as a constructor argument; `DynamicDataSourceType` controls how the source is located (`Property`, `Method`, `Field`, or `AutoDetect`). Unlike `[DataRow]`, a single `[DynamicData]` source can be shared across multiple test methods and can produce any number of test cases at runtime. See `docs/RFCs/006-DynamicData-Attribute.md` for the original design.
+
+## E
+
+### ExecutableConditionAttribute
+
+An MSTest attribute (`[ExecutableConditionAttribute]`) in `Microsoft.VisualStudio.TestTools.UnitTesting` that conditionally controls whether a test class or test method runs based on executable availability. The presence-only overload (`[ExecutableCondition("dotnet")]`) resolves a command through `PATH` and, on Windows, `PATHEXT`; the command overload (`[ExecutableCondition("dotnet", "--info")]`) runs the executable with the supplied arguments and requires exit code 0. `TimeoutSeconds` controls how long command execution may take and defaults to 30 seconds. Each distinct executable, arguments, and `ConditionMode` combination has its own `GroupName`, so different commands or opposite modes compose with logical AND while repeated attributes for the same command and mode compose with logical OR. Presence checks and command executions use distinct group and cache keys, and command cache keys also include the timeout. The attribute is not inherited, and executable availability is evaluated immediately before test execution rather than validated statically. Introduced in [PR #9369](https://github.com/microsoft/testfx/pull/9369). Inherits from [ConditionBaseAttribute](#conditionbaseattribute).
 
 ## F
 

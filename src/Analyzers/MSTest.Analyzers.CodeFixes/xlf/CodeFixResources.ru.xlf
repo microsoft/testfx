@@ -212,6 +212,11 @@
         <target state="translated">Использовать свойство "DisplayName" вместо строкового аргумента</target>
         <note>{Locked="DisplayName"}</note>
       </trans-unit>
+      <trans-unit id="UseExecutableConditionAttributeInsteadOfProcessCheckFix">
+        <source>Use '[ExecutableCondition]' attribute</source>
+        <target state="new">Use '[ExecutableCondition]' attribute</target>
+        <note>{Locked="'[ExecutableCondition]'"}</note>
+      </trans-unit>
       <trans-unit id="UseMSTestDescriptionAttributeInsteadFix">
         <source>Use MSTest 'Description' attribute instead</source>
         <target state="translated">Вместо этого используйте атрибут MSTest "Description"</target>
