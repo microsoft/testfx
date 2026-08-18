@@ -222,30 +222,17 @@ public sealed class UseExecutableConditionAttributeInsteadOfProcessCheckAnalyzer
         INamedTypeSymbol processStartInfoSymbol,
         string executable)
     {
-        if (operation is IInvocationOperation invocation &&
+        bool isMatchingProcessStart = operation is IInvocationOperation invocation &&
             invocation.TargetMethod is { IsStatic: true, Name: "Start", ContainingType: { } containingType } &&
             SymbolEqualityComparer.Default.Equals(containingType, processSymbol) &&
             invocation.Arguments.Length > 0 &&
             TryGetProcessStartExecutable(invocation.Arguments[0].Value, processStartInfoSymbol, out string? startedExecutable) &&
-            startedExecutable == executable)
-        {
-            return true;
-        }
+            startedExecutable == executable;
 
-        if (operation is IAnonymousFunctionOperation or ILocalFunctionOperation)
-        {
-            return false;
-        }
-
-        foreach (IOperation child in operation.Children)
-        {
-            if (ContainsMatchingProcessStart(child, processSymbol, processStartInfoSymbol, executable))
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return isMatchingProcessStart
+            || (operation is not (IAnonymousFunctionOperation or ILocalFunctionOperation)
+                && operation.Children.Any(child =>
+                    ContainsMatchingProcessStart(child, processSymbol, processStartInfoSymbol, executable)));
     }
 
     private static bool TryGetProcessStartExecutable(
