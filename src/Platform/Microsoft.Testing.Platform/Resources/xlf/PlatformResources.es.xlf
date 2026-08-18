@@ -329,27 +329,27 @@
       </trans-unit>
       <trans-unit id="DynamicExtensionAssemblyLoadFailedErrorMessage">
         <source>The assembly '{0}' of the extension '{1}' declared in the extension manifest '{2}' could not be loaded.</source>
-        <target state="new">The assembly '{0}' of the extension '{1}' declared in the extension manifest '{2}' could not be loaded.</target>
+        <target state="translated">No se pudo cargar el ensamblado "{0}" de la extensión "{1}" declarado en el manifiesto de extensión ''{2}".</target>
         <note>{0} is the resolved assembly path. {1} is the extension display name. {2} is the manifest file path.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionAssemblyNotFoundErrorMessage">
         <source>The assembly '{0}' of the extension '{1}' declared in the extension manifest '{2}' was not found.</source>
-        <target state="new">The assembly '{0}' of the extension '{1}' declared in the extension manifest '{2}' was not found.</target>
+        <target state="translated">No se encontró el ensamblado "{0}" de la extensión "{1}" declarado en el manifiesto de extensión ''{2}".</target>
         <note>{0} is the resolved assembly path. {1} is the extension display name. {2} is the manifest file path.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionCannotRegisterTestFrameworkErrorMessage">
         <source>The extension '{0}' declared in the extension manifest '{1}' tried to register a test framework. Dynamically loaded extensions must not replace the test framework, because that would silently change which tests run and what results they report.</source>
-        <target state="new">The extension '{0}' declared in the extension manifest '{1}' tried to register a test framework. Dynamically loaded extensions must not replace the test framework, because that would silently change which tests run and what results they report.</target>
+        <target state="translated">La extensión "{0}" declarada en el manifiesto de extensión "{1}" intentó registrar un marco de pruebas. Las extensiones cargadas dinámicamente no deben reemplazar el marco de pruebas, ya que esto cambiaría silenciosamente qué pruebas se ejecutan y qué resultados notifican.</target>
         <note>{0} is the extension display name. {1} is the manifest file path.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionDuplicateIdConflictErrorMessage">
         <source>The extension id '{0}' is declared twice with different content: '{1}' in the extension manifest '{2}' and '{3}' in the extension manifest '{4}'. Ids must identify the same extension, otherwise one declaration would silently replace the other.</source>
-        <target state="new">The extension id '{0}' is declared twice with different content: '{1}' in the extension manifest '{2}' and '{3}' in the extension manifest '{4}'. Ids must identify the same extension, otherwise one declaration would silently replace the other.</target>
+        <target state="translated">El id. de extensión "{0}" se declara dos veces con contenido diferente: "{1}" en el manifiesto de extensión "{2}" y "{3}" en el manifiesto de extensión "{4}". Los identificadores deben identificar la misma extensión; de lo contrario, una declaración reemplazaría silenciosamente a la otra.</target>
         <note>{0} is the extension id. {1} and {3} are 'assembly path' plus 'type full name' descriptions of the conflicting declarations. {2} and {4} are manifest file paths.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionHookFailedErrorMessage">
         <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' failed.</source>
-        <target state="new">The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' failed.</target>
+        <target state="translated">Error en el enlace de extensión "{0}.{1}" del ensamblado "{2}" declarado en el manifiesto de extensión ''{3}".</target>
         <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionHookMustNotBeAsyncVoidErrorMessage">
@@ -369,87 +369,87 @@
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestDirectoryNotReadableErrorMessage">
         <source>The directory '{0}' could not be searched for extension manifests, so the platform cannot tell whether any extension had to be loaded. Remove '{1}' from the command line to skip extension manifest discovery.</source>
-        <target state="new">The directory '{0}' could not be searched for extension manifests, so the platform cannot tell whether any extension had to be loaded. Remove '{1}' from the command line to skip extension manifest discovery.</target>
+        <target state="translated">No se pudieron buscar manifiestos de extensión en el directorio ''{0}", por lo que la plataforma no puede saber si se ha tenido que cargar alguna extensión. Quite "{1}" de la línea de comandos para omitir la detección del manifiesto de extensión.</target>
         <note>{0} is the directory path. {1} is the command line option that enables the feature.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestDuplicatePropertyErrorMessage">
         <source>The extension manifest '{0}' is invalid: the '{1}' property is declared more than once, so one of the declarations would be discarded.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the '{1}' property is declared more than once, so one of the declarations would be discarded.</target>
+        <target state="translated">El manifiesto de extensión "{0}" no es válido: la propiedad "{1}" se declara más de una vez, por lo que se descartaría una de las declaraciones.</target>
         <note>{0} is the manifest file path. {1} is the name of the duplicated JSON property.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestEntryDuplicatePropertyErrorMessage">
         <source>The extension manifest '{0}' is invalid: the extension at index {1} declares the '{2}' property more than once, so one of the declarations would be discarded.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the extension at index {1} declares the '{2}' property more than once, so one of the declarations would be discarded.</target>
+        <target state="translated">El manifiesto de la extensión "{0}" no es válido: la extensión en el índice {1} declara la propiedad "{2}" más de una vez, por lo que se descartaría una de las declaraciones.</target>
         <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the duplicated JSON property.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestEntryInvalidAssemblyPathErrorMessage">
         <source>The extension manifest '{0}' is invalid: the assembly path '{2}' of the extension at index {1} is not a valid path.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the assembly path '{2}' of the extension at index {1} is not a valid path.</target>
+        <target state="translated">El manifiesto de la extensión "{0}" no es válido: la ruta de acceso del ensamblado "{2}v de la extensión en el índice {1} no es una ruta válida.</target>
         <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the invalid assembly path.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestEntryMissingPropertyErrorMessage">
         <source>The extension manifest '{0}' is invalid: the extension at index {1} is missing the required '{2}' property, or its value is empty.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the extension at index {1} is missing the required '{2}' property, or its value is empty.</target>
+        <target state="translated">El manifiesto de la extensión "{0}" no es válido: la extensión en el índice {1} no tiene la propiedad requerida "{2}" o su valor está vacío.</target>
         <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the missing JSON property.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestEntryNotObjectErrorMessage">
         <source>The extension manifest '{0}' is invalid: the element at index {1} of '{2}' must be a JSON object.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the element at index {1} of '{2}' must be a JSON object.</target>
+        <target state="translated">El manifiesto de extensión "{0}" no es válido: el elemento en el índice {1} de "{2}" debe ser un objeto JSON.</target>
         <note>{0} is the manifest file path. {1} is the zero-based index of the element. {2} is the name of the JSON array property.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestEntryPropertyNotBooleanErrorMessage">
         <source>The extension manifest '{0}' is invalid: the '{2}' property of the extension at index {1} must be a JSON boolean.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the '{2}' property of the extension at index {1} must be a JSON boolean.</target>
+        <target state="translated">El manifiesto de la extensión "{0}" no es válido: la propiedad "{2}" de la extensión en el índice {1} debe ser un booleano JSON.</target>
         <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the JSON property.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestEntryPropertyNotStringErrorMessage">
         <source>The extension manifest '{0}' is invalid: the '{2}' property of the extension at index {1} must be a JSON string.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the '{2}' property of the extension at index {1} must be a JSON string.</target>
+        <target state="translated">El manifiesto de la extensión "{0}" no es válido: la propiedad "{2}" de la extensión en el índice {1} debe ser una cadena JSON.</target>
         <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the JSON property.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestExtensionsPropertyNotArrayErrorMessage">
         <source>The extension manifest '{0}' is invalid: the '{1}' property must be a JSON array.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the '{1}' property must be a JSON array.</target>
+        <target state="translated">El manifiesto de extensión "{0}" no es válido: la propiedad "{1}" debe ser una matriz JSON.</target>
         <note>{0} is the manifest file path. {1} is the name of the JSON property that has the wrong type.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestInvalidJsonErrorMessage">
         <source>The extension manifest '{0}' is not valid JSON. {1}</source>
-        <target state="new">The extension manifest '{0}' is not valid JSON. {1}</target>
+        <target state="translated">El manifiesto de extensión "{0}" no es un JSON válido. {1}</target>
         <note>{0} is the manifest file path. {1} is the underlying JSON parser error message.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestMissingExtensionsPropertyErrorMessage">
         <source>The extension manifest '{0}' is invalid: the required '{1}' property is missing.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the required '{1}' property is missing.</target>
+        <target state="translated">El manifiesto de extensión "{0}" no es válido: falta la propiedad "{1}" necesaria.</target>
         <note>{0} is the manifest file path. {1} is the name of the missing JSON property.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestReadFailedErrorMessage">
         <source>The extension manifest '{0}' could not be read.</source>
-        <target state="new">The extension manifest '{0}' could not be read.</target>
+        <target state="translated">No se pudo leer el manifiesto de extensión "{0}".</target>
         <note>{0} is the manifest file path.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestRootNotObjectErrorMessage">
         <source>The extension manifest '{0}' is invalid: the top-level JSON element must be an object but '{1}' was found.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the top-level JSON element must be an object but '{1}' was found.</target>
+        <target state="translated">El manifiesto de extensión "{0}" no es válido: el elemento JSON de nivel superior debe ser un objeto, pero se encontró ''{1}".</target>
         <note>{0} is the manifest file path. {1} is the JSON value kind that was found.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestTrailingContentErrorMessage">
         <source>Unexpected content after the top-level JSON object.</source>
-        <target state="new">Unexpected content after the top-level JSON object.</target>
+        <target state="translated">Contenido inesperado después del objeto JSON de nivel superior.</target>
         <note>Used as the parser-error detail when a manifest contains text after its closing brace.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionTypeNotFoundErrorMessage">
         <source>The type '{0}' was not found in the assembly '{1}' declared in the extension manifest '{2}'.</source>
-        <target state="new">The type '{0}' was not found in the assembly '{1}' declared in the extension manifest '{2}'.</target>
+        <target state="translated">No se encontró el tipo "{0}" en el ensamblado "{1}" declarado en el manifiesto de extensión "{2}".</target>
         <note>{0} is the full type name. {1} is the resolved assembly path. {2} is the manifest file path.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionsLoadedEntry">
         <source>  {0} -&gt; {1} ({2}), declared in {3}</source>
-        <target state="new">  {0} -&gt; {1} ({2}), declared in {3}</target>
+        <target state="translated">  {0} -&gt; {1} ({2}), declarado en {3}</target>
         <note>{0} is the extension display name. {1} is the resolved assembly path. {2} is the full type name of the hook. {3} is the manifest file path.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionsLoadedHeader">
         <source>Dynamically loaded test platform extensions ({0}):</source>
-        <target state="new">Dynamically loaded test platform extensions ({0}):</target>
+        <target state="translated">Extensiones de plataforma de prueba cargadas dinámicamente ({0}):</target>
         <note>{0} is the number of extensions that were loaded.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionsNotSupportedOnCurrentRuntimeErrorMessage">
@@ -862,9 +862,9 @@ Opcionalmente, acepta "text" (la salida legible por el usuario predeterminada) o
         <source>Do not report a non-successful exit value for the specified exit codes.
 For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
 For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</source>
-        <target state="new">Do not report a non-successful exit value for the specified exit codes.
-For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
-For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</target>
+        <target state="translated">No informe de un valor de salida no correcto para los códigos de salida especificados.
+Por ejemplo, '--ignore-exit-code 8;9' omite los códigos de salida 8 y 9 y devuelve 0 en esos casos.
+Para obtener más información sobre los códigos de salida, consulte https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</target>
         <note>{Locked="'--ignore-exit-code 8;9'"} {Locked="https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">

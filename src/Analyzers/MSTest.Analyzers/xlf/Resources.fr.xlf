@@ -109,7 +109,7 @@ Le type doit être une classe
       </trans-unit>
       <trans-unit id="AssertionArgsShouldAvoidConditionalAccessDescription">
         <source>Conditional access adds an implicit null branch to an assertion, which can hide whether the object was unexpectedly null. A separate null assertion makes failures identify the violated condition.</source>
-        <target state="new">Conditional access adds an implicit null branch to an assertion, which can hide whether the object was unexpectedly null. A separate null assertion makes failures identify the violated condition.</target>
+        <target state="translated">L’accès conditionnel ajoute une branche nulle implicite à une assertion, ce qui peut masquer que l’objet était inattendu null. Une assertion nulle distincte permet aux échecs d’identifier la condition violée.</target>
         <note>{Locked="null"}</note>
       </trans-unit>
       <trans-unit id="AssertionArgsShouldAvoidConditionalAccessMessageFormat">
@@ -412,7 +412,7 @@ Le type doit être une classe
       </trans-unit>
       <trans-unit id="DoNotNegateBooleanAssertionDescription">
         <source>Using the opposite assertion directly makes the test easier to read and produces clearer failure diagnostics.</source>
-        <target state="new">Using the opposite assertion directly makes the test easier to read and produces clearer failure diagnostics.</target>
+        <target state="translated">L’utilisation directe de l’assertion opposée facilite la lecture du test et produit des diagnostics d’échec plus clairs.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotStoreStaticTestContextAnalyzerDescription">
@@ -822,7 +822,7 @@ Le type déclarant ces méthodes doit également respecter les règles suivantes
       </trans-unit>
       <trans-unit id="PreferTestInitializeOverConstructorDescription">
         <source>'[TestInitialize]' supports both synchronous and asynchronous initialization, whereas constructors cannot be awaited. This opt-in style rule is mutually exclusive with MSTEST0020.</source>
-        <target state="new">'[TestInitialize]' supports both synchronous and asynchronous initialization, whereas constructors cannot be awaited. This opt-in style rule is mutually exclusive with MSTEST0020.</target>
+        <target state="translated">'[TestInitialize]' prend en charge l’initialisation synchrone et asynchrone, alors que les constructeurs ne peuvent pas être attendus. Cette règle de style en acceptation est mutuellement exclusive avec MSTEST0020.</target>
         <note>{Locked="'[TestInitialize]'"}{Locked="MSTEST0020"}</note>
       </trans-unit>
       <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerDescription">
@@ -857,7 +857,7 @@ Le type déclarant ces méthodes doit également respecter les règles suivantes
       </trans-unit>
       <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerDescription">
         <source>An assertion that can never fail does not verify behavior and obscures the condition the test is intended to check.</source>
-        <target state="new">An assertion that can never fail does not verify behavior and obscures the condition the test is intended to check.</target>
+        <target state="translated">Une assertion qui ne peut jamais échouer ne vérifie pas le comportement et masque la condition que le test est censé vérifier.</target>
         <note />
       </trans-unit>
       <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat">
@@ -1022,7 +1022,7 @@ Le type déclarant ces méthodes doit également respecter les règles suivantes
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationDescription">
         <source>Propagating the source file and line number allows MSTest to report accurate diagnostics, test results, and Test Explorer navigation.</source>
-        <target state="new">Propagating the source file and line number allows MSTest to report accurate diagnostics, test results, and Test Explorer navigation.</target>
+        <target state="translated">La propagation du fichier source et du numéro de ligne permet à MSTest de fournir des diagnostics précis, des résultats et la navigation dans Test Explorer.</target>
         <note>{Locked="MSTest"}{Locked="Test Explorer"}</note>
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationMessageFormat">
@@ -1037,7 +1037,7 @@ Le type déclarant ces méthodes doit également respecter les règles suivantes
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldSetDisplayNameCorrectlyDescription">
         <source>In MSTest 4 and later, the string constructor argument represents the caller file path rather than the test display name.</source>
-        <target state="new">In MSTest 4 and later, the string constructor argument represents the caller file path rather than the test display name.</target>
+        <target state="translated">Dans MSTest 4 et versions ultérieures, l’argument du constructeur de chaîne représente le chemin d’accès au fichier de l’appelant plutôt que le nom d’affichage du test.</target>
         <note>{Locked="MSTest 4"}</note>
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldSetDisplayNameCorrectlyMessageFormat">
@@ -1087,7 +1087,7 @@ Le type déclarant ces méthodes doit également respecter les règles suivantes
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerDescription">
         <source>MSTest ignores these attributes outside a test context.</source>
-        <target state="new">MSTest ignores these attributes outside a test context.</target>
+        <target state="translated">MSTest ignore ces attributs en dehors d’un contexte de test.</target>
         <note>{Locked="MSTest"}</note>
       </trans-unit>
       <trans-unit id="UseCIConditionAttributeInsteadOfEnvironmentCheckDescription">
@@ -1334,7 +1334,7 @@ Le type doit être une classe
       </trans-unit>
       <trans-unit id="UseConditionBaseWithTestClassDescription">
         <source>When applied to a class, MSTest evaluates condition attributes only if the class is a test class, so applying them to a non-test class has no effect.</source>
-        <target state="new">When applied to a class, MSTest evaluates condition attributes only if the class is a test class, so applying them to a non-test class has no effect.</target>
+        <target state="translated">Lorsqu’il est appliqué à une classe, MSTest évalue les attributs de condition uniquement si la classe est une classe de test; leur application à une classe non test n’a donc aucun effet.</target>
         <note>{Locked="MSTest"}</note>
       </trans-unit>
       <trans-unit id="UseConditionBaseWithTestClassMessageFormat">
@@ -1394,7 +1394,7 @@ Le type doit être une classe
       </trans-unit>
       <trans-unit id="UseProperAssertMethodsDescription">
         <source>Specialized assertion methods improve readability and provide more precise failure diagnostics.</source>
-        <target state="new">Specialized assertion methods improve readability and provide more precise failure diagnostics.</target>
+        <target state="translated">Les méthodes d’assertion spécialisées améliorent la lisibilité et fournissent des diagnostics d’échec plus précis.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseProperAssertMethodsMessageFormat">
@@ -1409,7 +1409,7 @@ Le type doit être une classe
       </trans-unit>
       <trans-unit id="UseRetryWithTestMethodDescription">
         <source>Retry attributes have no effect on methods or classes that MSTest does not recognize as tests.</source>
-        <target state="new">Retry attributes have no effect on methods or classes that MSTest does not recognize as tests.</target>
+        <target state="translated">Les attributs Retry n’ont aucun effet sur les méthodes ou les classes que MSTest ne reconnaît pas comme des tests.</target>
         <note>{Locked="MSTest"}</note>
       </trans-unit>
       <trans-unit id="UseRetryWithTestMethodMessageFormat">

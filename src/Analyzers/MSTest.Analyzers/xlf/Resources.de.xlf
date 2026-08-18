@@ -109,7 +109,7 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
       </trans-unit>
       <trans-unit id="AssertionArgsShouldAvoidConditionalAccessDescription">
         <source>Conditional access adds an implicit null branch to an assertion, which can hide whether the object was unexpectedly null. A separate null assertion makes failures identify the violated condition.</source>
-        <target state="new">Conditional access adds an implicit null branch to an assertion, which can hide whether the object was unexpectedly null. A separate null assertion makes failures identify the violated condition.</target>
+        <target state="translated">Der bedingte Zugriff fügt einer Assertion einen impliziten null-Branch hinzu, wodurch ausgeblendet werden kann, ob das Objekt unerwartet null war. Eine separate null-Assertion bewirkt, dass Fehler die verletzte Bedingung identifizieren.</target>
         <note>{Locked="null"}</note>
       </trans-unit>
       <trans-unit id="AssertionArgsShouldAvoidConditionalAccessMessageFormat">
@@ -169,7 +169,7 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
       </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeDescription">
         <source>Since MSTest 3.8, 'DynamicDataSourceType.AutoDetect' is the default and automatically identifies properties, methods, and fields, reducing verbosity and coupling to the member kind.</source>
-        <target state="new">Since MSTest 3.8, 'DynamicDataSourceType.AutoDetect' is the default and automatically identifies properties, methods, and fields, reducing verbosity and coupling to the member kind.</target>
+        <target state="translated">Seit MSTest 3.8 ist 'DynamicDataSourceType.AutoDetect' die Standardeinstellung und identifiziert automatisch Eigenschaften, Methoden und Felder, wodurch die Ausführlichkeit und die Kopplung mit der Memberart reduziert werden.</target>
         <note>{Locked="MSTest 3.8"}{Locked="'DynamicDataSourceType.AutoDetect'"}</note>
       </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeMessageFormat">
@@ -313,7 +313,7 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
       </trans-unit>
       <trans-unit id="CollectionAssertToAssertDescription">
         <source>'CollectionAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</source>
-        <target state="new">'CollectionAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</target>
+        <target state="translated">'CollectionAssert'-Methoden verfügen über entsprechende 'Assert'-Gegenstücke. Die Verwendung einer Assertions-API verbessert die Konsistenz und Auffindbarkeit.</target>
         <note>{Locked="'CollectionAssert'"}{Locked="'Assert'"}{Locked="API"}</note>
       </trans-unit>
       <trans-unit id="CollectionAssertToAssertMessageFormat">
@@ -413,12 +413,12 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
       </trans-unit>
       <trans-unit id="DoNotNegateBooleanAssertionDescription">
         <source>Using the opposite assertion directly makes the test easier to read and produces clearer failure diagnostics.</source>
-        <target state="new">Using the opposite assertion directly makes the test easier to read and produces clearer failure diagnostics.</target>
+        <target state="translated">Die direkte Verwendung der entgegengesetzten Assertion erleichtert das Lesen des Tests und liefert eine klarere Fehlerdiagnose.</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotStoreStaticTestContextAnalyzerDescription">
         <source>The TestContext passed to assembly or class initialization is specific to that context and is not updated for each test execution. Reusing it in a 'static' member can expose stale context.</source>
-        <target state="new">The TestContext passed to assembly or class initialization is specific to that context and is not updated for each test execution. Reusing it in a 'static' member can expose stale context.</target>
+        <target state="translated">Der an die Assembly- oder Klasseninitialisierung übergebene TestContext ist spezifisch für diesen Kontext und wird nicht für jede Testausführung aktualisiert. Durch die Wiederverwendung in einem 'static' Member kann veralteter Kontext verfügbar gemacht werden.</target>
         <note>{Locked="TestContext"}{Locked="'static'"}</note>
       </trans-unit>
       <trans-unit id="InheritedMemberFromDifferentMSTestVersionDescription">
@@ -764,7 +764,7 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsDescription">
         <source>'Assert.Fail' makes an intentional failure explicit and allows the failure message to document why the test cannot continue.</source>
-        <target state="new">'Assert.Fail' makes an intentional failure explicit and allows the failure message to document why the test cannot continue.</target>
+        <target state="translated">'Assert.Fail' macht einen absichtlichen Fehler explizit und ermöglicht es, anhand der Fehlermeldung zu dokumentieren, warum der Test nicht fortgesetzt werden kann.</target>
         <note>{Locked="'Assert.Fail'"}</note>
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
@@ -809,22 +809,22 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
       </trans-unit>
       <trans-unit id="PreferConstructorOverTestInitializeDescription">
         <source>Constructors allow initialization through 'readonly' fields and provide stronger compiler feedback, especially with nullable reference types. This opt-in style rule is mutually exclusive with MSTEST0019.</source>
-        <target state="new">Constructors allow initialization through 'readonly' fields and provide stronger compiler feedback, especially with nullable reference types. This opt-in style rule is mutually exclusive with MSTEST0019.</target>
+        <target state="translated">Konstruktoren ermöglichen die Initialisierung über 'readonly'-Felder und bieten stärkeres Compilerfeedback, insbesondere bei Verweistypen, die NULL-Werte zulassen. Diese Opt-In-Stilregel und MSTEST0019 schließen sich gegenseitig aus.</target>
         <note>{Locked="'readonly'"}{Locked="MSTEST0019"}</note>
       </trans-unit>
       <trans-unit id="PreferDisposeOverTestCleanupDescription">
         <source>'Dispose' and 'DisposeAsync' follow standard .NET lifetime patterns, making test cleanup consistent with production code. This opt-in style rule is mutually exclusive with MSTEST0022.</source>
-        <target state="new">'Dispose' and 'DisposeAsync' follow standard .NET lifetime patterns, making test cleanup consistent with production code. This opt-in style rule is mutually exclusive with MSTEST0022.</target>
+        <target state="translated">'Dispose' und 'DisposeAsync' folgen standardmäßigen .NET-Lebensdauermustern, sodass die Testbereinigung mit Produktionscode konsistent ist. Diese Opt-In-Stilregel und MSTEST0022 schließen sich gegenseitig aus.</target>
         <note>{Locked="'DisposeAsync'"}{Locked="'Dispose'"}{Locked=".NET"}{Locked="MSTEST0022"}</note>
       </trans-unit>
       <trans-unit id="PreferTestCleanupOverDisposeDescription">
         <source>'[TestCleanup]' supports asynchronous cleanup on target frameworks where 'IAsyncDisposable' is unavailable. This opt-in style rule is mutually exclusive with MSTEST0021.</source>
-        <target state="new">'[TestCleanup]' supports asynchronous cleanup on target frameworks where 'IAsyncDisposable' is unavailable. This opt-in style rule is mutually exclusive with MSTEST0021.</target>
+        <target state="translated">'[TestCleanup]' unterstützt die asynchrone Bereinigung für Zielframeworks, in denen 'IAsyncDisposable' nicht verfügbar ist. Diese Opt-In-Stilregel und MSTEST0021 schließen sich gegenseitig aus.</target>
         <note>{Locked="'[TestCleanup]'"}{Locked="'IAsyncDisposable'"}{Locked="MSTEST0021"}</note>
       </trans-unit>
       <trans-unit id="PreferTestInitializeOverConstructorDescription">
         <source>'[TestInitialize]' supports both synchronous and asynchronous initialization, whereas constructors cannot be awaited. This opt-in style rule is mutually exclusive with MSTEST0020.</source>
-        <target state="new">'[TestInitialize]' supports both synchronous and asynchronous initialization, whereas constructors cannot be awaited. This opt-in style rule is mutually exclusive with MSTEST0020.</target>
+        <target state="translated">'[TestInitialize]' unterstützt sowohl die synchrone als auch die asynchrone Initialisierung, auf Konstruktoren kann dagegen nicht gewartet werden. Diese Opt-In-Stilregel und MSTEST0020 schließen sich gegenseitig aus.</target>
         <note>{Locked="'[TestInitialize]'"}{Locked="MSTEST0020"}</note>
       </trans-unit>
       <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerDescription">
@@ -859,7 +859,7 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
       </trans-unit>
       <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerDescription">
         <source>An assertion that can never fail does not verify behavior and obscures the condition the test is intended to check.</source>
-        <target state="new">An assertion that can never fail does not verify behavior and obscures the condition the test is intended to check.</target>
+        <target state="translated">Eine Assertion, die nie fehlschlagen kann, verifiziert das Verhalten nicht und verdeckt die Bedingung, die der Test überprüfen soll.</target>
         <note />
       </trans-unit>
       <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat">
@@ -959,7 +959,7 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
       </trans-unit>
       <trans-unit id="StringAssertToAssertDescription">
         <source>'StringAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</source>
-        <target state="new">'StringAssert' methods have equivalent 'Assert' counterparts. Using one assertion API improves consistency and discoverability.</target>
+        <target state="translated">'StringAssert'-Methoden verfügen über entsprechende 'Assert'-Gegenstücke. Die Verwendung einer Assertions-API verbessert die Konsistenz und Auffindbarkeit.</target>
         <note>{Locked="'StringAssert'"}{Locked="'Assert'"}{Locked="API"}</note>
       </trans-unit>
       <trans-unit id="StringAssertToAssertMessageFormat">
@@ -1024,7 +1024,7 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationDescription">
         <source>Propagating the source file and line number allows MSTest to report accurate diagnostics, test results, and Test Explorer navigation.</source>
-        <target state="new">Propagating the source file and line number allows MSTest to report accurate diagnostics, test results, and Test Explorer navigation.</target>
+        <target state="translated">Durch die Weitergabe der Quelldatei und der Zeilennummer kann MSTest genaue Diagnosen, Testergebnisse und die Navigation im Test Explorer bereitstellen.</target>
         <note>{Locked="MSTest"}{Locked="Test Explorer"}</note>
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationMessageFormat">
@@ -1039,7 +1039,7 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldSetDisplayNameCorrectlyDescription">
         <source>In MSTest 4 and later, the string constructor argument represents the caller file path rather than the test display name.</source>
-        <target state="new">In MSTest 4 and later, the string constructor argument represents the caller file path rather than the test display name.</target>
+        <target state="translated">In MSTest 4 und höher steht das Argument des String-Konstruktors für den Dateipfad des Aufrufers und nicht für den Anzeigenamen des Tests.</target>
         <note>{Locked="MSTest 4"}</note>
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldSetDisplayNameCorrectlyMessageFormat">
@@ -1089,7 +1089,7 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerDescription">
         <source>MSTest ignores these attributes outside a test context.</source>
-        <target state="new">MSTest ignores these attributes outside a test context.</target>
+        <target state="translated">MSTest ignoriert diese Attribute außerhalb eines Testkontexts.</target>
         <note>{Locked="MSTest"}</note>
       </trans-unit>
       <trans-unit id="UseCIConditionAttributeInsteadOfEnvironmentCheckDescription">
@@ -1336,7 +1336,7 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
       </trans-unit>
       <trans-unit id="UseConditionBaseWithTestClassDescription">
         <source>When applied to a class, MSTest evaluates condition attributes only if the class is a test class, so applying them to a non-test class has no effect.</source>
-        <target state="new">When applied to a class, MSTest evaluates condition attributes only if the class is a test class, so applying them to a non-test class has no effect.</target>
+        <target state="translated">Wenn MSTest auf eine Klasse angewendet wird, wertet MSTest Bedingungsattribute nur aus, wenn es sich bei der Klasse um eine Testklasse handelt; die Anwendung auf eine Nicht-Testklasse hat daher keine Auswirkung.</target>
         <note>{Locked="MSTest"}</note>
       </trans-unit>
       <trans-unit id="UseConditionBaseWithTestClassMessageFormat">
@@ -1366,7 +1366,7 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassDescription">
         <source>MSTest ignores '[DeploymentItem]' when it is applied outside a test class or test method.</source>
-        <target state="new">MSTest ignores '[DeploymentItem]' when it is applied outside a test class or test method.</target>
+        <target state="translated">MSTest ignoriert '[DeploymentItem]', wenn es außerhalb einer Testklasse oder Testmethode angewendet wird.</target>
         <note>{Locked="MSTest"}{Locked="'[DeploymentItem]'"}</note>
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">
@@ -1396,7 +1396,7 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
       </trans-unit>
       <trans-unit id="UseProperAssertMethodsDescription">
         <source>Specialized assertion methods improve readability and provide more precise failure diagnostics.</source>
-        <target state="new">Specialized assertion methods improve readability and provide more precise failure diagnostics.</target>
+        <target state="translated">Spezialisierte Assertionsmethoden verbessern die Lesbarkeit und bieten eine genauere Fehlerdiagnose.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseProperAssertMethodsMessageFormat">
@@ -1411,7 +1411,7 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
       </trans-unit>
       <trans-unit id="UseRetryWithTestMethodDescription">
         <source>Retry attributes have no effect on methods or classes that MSTest does not recognize as tests.</source>
-        <target state="new">Retry attributes have no effect on methods or classes that MSTest does not recognize as tests.</target>
+        <target state="translated">Wiederholungsattribute haben keine Auswirkungen auf Methoden oder Klassen, die MSTest nicht als Tests erkennt.</target>
         <note>{Locked="MSTest"}</note>
       </trans-unit>
       <trans-unit id="UseRetryWithTestMethodMessageFormat">
