@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Security;
 
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
@@ -11,6 +13,8 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 public sealed class TrxReportEngineMergeTests
 {
     private static readonly XNamespace Ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+    private static readonly MethodInfo GetReparsePointStatusMethod = typeof(TrxReportEngine)
+        .GetMethod("GetReparsePointStatus", BindingFlags.NonPublic | BindingFlags.Static)!;
 
     [TestMethod]
     public void Merge_WithNullReports_ThrowsArgumentNullException()
@@ -48,7 +52,7 @@ public sealed class TrxReportEngineMergeTests
     {
         int callCount = 0;
 
-        bool? result = TrxReportEngine.GetReparsePointStatus(
+        bool? result = GetReparsePointStatus(
             "link",
             path =>
             {
@@ -64,7 +68,7 @@ public sealed class TrxReportEngineMergeTests
     [TestMethod]
     public void GetReparsePointStatus_WhenEntryIsARegularFile_ReturnsFalse()
     {
-        bool? result = TrxReportEngine.GetReparsePointStatus(
+        bool? result = GetReparsePointStatus(
             "file",
             _ => FileAttributes.Archive);
 
@@ -74,10 +78,10 @@ public sealed class TrxReportEngineMergeTests
     [TestMethod]
     public void GetReparsePointStatus_WhenEntryIsMissing_ReturnsFalse()
     {
-        Assert.IsFalse(TrxReportEngine.GetReparsePointStatus(
+        Assert.IsFalse(GetReparsePointStatus(
             "missing-file",
             _ => throw new FileNotFoundException()));
-        Assert.IsFalse(TrxReportEngine.GetReparsePointStatus(
+        Assert.IsFalse(GetReparsePointStatus(
             "missing-directory",
             _ => throw new DirectoryNotFoundException()));
     }
@@ -85,13 +89,13 @@ public sealed class TrxReportEngineMergeTests
     [TestMethod]
     public void GetReparsePointStatus_WhenAttributesCannotBeRead_ReturnsNull()
     {
-        Assert.IsNull(TrxReportEngine.GetReparsePointStatus(
+        Assert.IsNull(GetReparsePointStatus(
             "inaccessible",
             _ => throw new UnauthorizedAccessException()));
-        Assert.IsNull(TrxReportEngine.GetReparsePointStatus(
+        Assert.IsNull(GetReparsePointStatus(
             "io-failure",
             _ => throw new IOException()));
-        Assert.IsNull(TrxReportEngine.GetReparsePointStatus(
+        Assert.IsNull(GetReparsePointStatus(
             "security-failure",
             _ => throw new SecurityException()));
     }
@@ -99,7 +103,7 @@ public sealed class TrxReportEngineMergeTests
     [TestMethod]
     public void GetReparsePointStatus_WhenUnexpectedExceptionOccurs_Propagates()
         => Assert.ThrowsExactly<InvalidOperationException>(
-            () => TrxReportEngine.GetReparsePointStatus(
+            () => GetReparsePointStatus(
                 "invalid",
                 _ => throw new InvalidOperationException()));
 
@@ -123,7 +127,7 @@ public sealed class TrxReportEngineMergeTests
                 return;
             }
 
-            Assert.IsTrue(TrxReportEngine.GetReparsePointStatus(link, static path => File.GetAttributes(path)));
+            Assert.IsTrue(GetReparsePointStatus(link, static path => File.GetAttributes(path)));
             Assert.IsFalse(Directory.Exists(missingTarget));
         }
         finally
@@ -132,6 +136,19 @@ public sealed class TrxReportEngineMergeTests
         }
     }
 #endif
+
+    private static bool? GetReparsePointStatus(string path, Func<string, FileAttributes> getAttributes)
+    {
+        try
+        {
+            return (bool?)GetReparsePointStatusMethod.Invoke(null, [path, getAttributes]);
+        }
+        catch (TargetInvocationException ex) when (ex.InnerException is not null)
+        {
+            ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
+            throw;
+        }
+    }
 
     [TestMethod]
     public void Merge_CarriesRunLevelOutputMessages()

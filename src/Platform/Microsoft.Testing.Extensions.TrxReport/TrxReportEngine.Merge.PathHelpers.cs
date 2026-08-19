@@ -64,7 +64,7 @@ internal sealed partial class TrxReportEngine
     /// attributes cannot be read. A missing entry returns <see langword="false"/> because callers may
     /// safely create missing output components after inspecting their existing ancestors.
     /// </summary>
-    internal static bool? GetReparsePointStatus(string path, Func<string, FileAttributes> getAttributes)
+    private static bool? GetReparsePointStatus(string path, Func<string, FileAttributes> getAttributes)
     {
         try
         {

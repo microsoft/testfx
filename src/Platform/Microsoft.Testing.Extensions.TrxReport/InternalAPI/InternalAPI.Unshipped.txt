@@ -7,7 +7,6 @@ const Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId.InputArtifactPa
 const Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId.Kind = 7 -> ushort
 static Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportEngine.Merge(System.Collections.Generic.IReadOnlyList<System.Xml.Linq.XDocument!>! inputReports, System.Guid runId, string! runName) -> System.Xml.Linq.XDocument!
 static Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportEngine.MergeToFileAsync(System.Collections.Generic.IReadOnlyList<string!>! inputPaths, string! outputPath, System.Guid runId, string! runName, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
-static Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportEngine.GetReparsePointStatus(string! path, System.Func<string!, System.IO.FileAttributes>! getAttributes) -> bool?
 Microsoft.Testing.Extensions.TrxReport.Abstractions.ToolTrxMergeFactory
 Microsoft.Testing.Extensions.TrxReport.Abstractions.ToolTrxMergeFactory.CreateCommandLine() -> Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeToolCommandLine!
 Microsoft.Testing.Extensions.TrxReport.Abstractions.ToolTrxMergeFactory.CreateTool(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeTool!
