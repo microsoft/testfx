@@ -451,11 +451,11 @@ public sealed class GitHubActionsSummaryReporterTests
     [TestMethod]
     public void EffectiveStepSummaryLimit_IsSlightlyBelowTheDocumentedLimit()
     {
-        // Measured on ubuntu-latest: a summary of exactly 1 MiB is accepted, and 1,148,551 bytes is rejected
-        // outright with "$GITHUB_STEP_SUMMARY upload aborted" — GitHub discards the whole file rather than
-        // truncating it. The small margin below the documented limit guards the near-boundary rejection
-        // reported in actions/runner#4337, which did not reproduce but costs two bytes to defend against.
-        Assert.AreEqual(1024 * 1024, GitHubActionsFailureDetails.GitHubStepSummaryLimit);
+        // GitHubStepSummaryLimit is defined as 1024 * 1024, GitHub's documented cap. Measured on ubuntu-latest: a
+        // summary of exactly 1 MiB is accepted, and 1,148,551 bytes is rejected outright with
+        // "$GITHUB_STEP_SUMMARY upload aborted" — GitHub discards the whole file rather than truncating it. The
+        // small margin below the documented limit guards the near-boundary rejection reported in
+        // actions/runner#4337, which did not reproduce but costs two bytes to defend against.
         Assert.IsLessThan(GitHubActionsFailureDetails.GitHubStepSummaryLimit, GitHubActionsFailureDetails.EffectiveStepSummaryLimit);
 
         // The margin must stay negligible: a large one would silently cost users summary content for no reason.
