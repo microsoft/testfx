@@ -257,7 +257,7 @@ a security control.
 | [`unskip-closed-tests.md`](./unskip-closed-tests.md) | Weekly + manual | Finds tests skipped via `[Ignore("…#issue")]` whose tracking issue is now closed, verifies they pass, and opens a PR re-enabling them. |
 | [`duplicate-code-detector.md`](./duplicate-code-detector.md) | Schedule + manual | Identifies duplicate code patterns and suggests refactoring opportunities. |
 | [`malicious-code-scan.md`](./malicious-code-scan.md) | Schedule + manual | Reviews code changes from the last 3 days for suspicious patterns indicating malicious or agentic threats. |
-| [`markdown-linter.md`](./markdown-linter.md) | Schedule + manual + issues | Runs Markdown quality checks using Super Linter and opens issues for violations. |
+| [`markdown-linter.md`](./markdown-linter.md) | Schedule + manual + issues | Runs Markdown quality checks using markdownlint-cli2 and opens issues for violations. |
 | [`link-checker.md`](./link-checker.md) | Daily | Daily automated link checker that finds and fixes broken links in documentation files. |
 | [`glossary-maintainer.md`](./glossary-maintainer.md) | Schedule + manual | Maintains and updates the documentation glossary based on codebase changes. |
 

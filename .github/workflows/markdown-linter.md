@@ -47,11 +47,18 @@ jobs:
       # exactly the same rules. Configuration comes from .markdownlint-cli2.jsonc in the repo
       # root, including its "ignores" list. Bump this together with that action.
       run: |
-        set +e
-        npx --yes markdownlint-cli2@0.23.1 "**/*.md" > markdownlint.log 2>&1
-        status=$?
+        status=0
+        npx --yes markdownlint-cli2@0.23.1 "**/*.md" > markdownlint.log 2>&1 || status=$?
         cat markdownlint.log
         echo "markdownlint-cli2 exit code: $status (0 = clean, 1 = violations found)"
+        # Exit 1 means violations, which are what the agent reports on, so the job stays green.
+        # Anything above that is markdownlint-cli2 failing to run at all (2 = execution or
+        # configuration error). The log then holds a stack trace rather than lint results, so
+        # fail instead of letting the agent report "no issues" over a run that never linted.
+        if [ "$status" -gt 1 ]; then
+          echo "::error::markdownlint-cli2 could not complete (exit $status); see the log above."
+          exit "$status"
+        fi
     - if: always()
       name: Upload markdownlint log
       uses: actions/upload-artifact@v7.0.1
