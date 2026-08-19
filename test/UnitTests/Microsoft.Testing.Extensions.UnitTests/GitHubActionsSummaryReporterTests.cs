@@ -747,30 +747,31 @@ public sealed class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
-    public async Task AppendStepSummaryWithTrailingNoticeAsync_MovesNoticeAfterNewContent_InsteadOfRepeatingIt()
+    public async Task AppendStepSummaryWithLeadingNoticeAsync_HoistsNoticeToTheTop_AndAppendsContentAfterIt()
     {
         string path = Path.GetTempFileName();
         try
         {
-            File.WriteAllText(path, string.Empty);
+            File.WriteAllText(path, "earlier-project\n");
             var fileSystem = new SystemFileSystem();
             string notice = GitHubActionsSummaryReporter.BuildTruncationNotice();
 
-            await GitHubActionsSummaryReporter.AppendStepSummaryWithTrailingNoticeAsync(
+            await GitHubActionsSummaryReporter.AppendStepSummaryWithLeadingNoticeAsync(
                 fileSystem, path, "first-project\n", notice, maxAttempts: 1, retryDelay: TimeSpan.Zero, CancellationToken.None);
-            await GitHubActionsSummaryReporter.AppendStepSummaryWithTrailingNoticeAsync(
+            await GitHubActionsSummaryReporter.AppendStepSummaryWithLeadingNoticeAsync(
                 fileSystem, path, "second-project\n", notice, maxAttempts: 1, retryDelay: TimeSpan.Zero, CancellationToken.None);
 
             string summary = File.ReadAllText(path);
 
-            // Both projects' verdicts survive, and the note closes the summary rather than being stranded between
-            // them — a reader scrolling to the bottom is exactly who needs to know the report was cut short.
-            Assert.Contains("first-project", summary);
-            Assert.Contains("second-project", summary);
-            Assert.EndsWith(notice, summary);
+            // The warning leads the report, so a reader meets it before the sections it is warning about, and the
+            // content that was already there keeps its order behind it.
+            Assert.StartsWith(notice, summary);
             Assert.IsLessThan(
-                summary.IndexOf(GitHubActionsSummaryReporter.TruncationNoticeMarker, StringComparison.Ordinal),
-                summary.IndexOf("second-project", StringComparison.Ordinal));
+                summary.IndexOf("first-project", StringComparison.Ordinal),
+                summary.IndexOf("earlier-project", StringComparison.Ordinal));
+            Assert.IsLessThan(
+                summary.IndexOf("second-project", StringComparison.Ordinal),
+                summary.IndexOf("first-project", StringComparison.Ordinal));
             AssertSingleNotice(summary);
         }
         finally
@@ -780,7 +781,7 @@ public sealed class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
-    public async Task AppendStepSummaryWithTrailingNoticeAsync_MovesNoticePastACoWritersOutput_SoItStaysLast()
+    public async Task AppendStepSummaryWithLeadingNoticeAsync_KeepsNoticeFirst_WhenACoWriterAppendsAfterIt()
     {
         string path = Path.GetTempFileName();
         try
@@ -789,28 +790,22 @@ public sealed class GitHubActionsSummaryReporterTests
             var fileSystem = new SystemFileSystem();
             string notice = GitHubActionsSummaryReporter.BuildTruncationNotice();
 
-            await GitHubActionsSummaryReporter.AppendStepSummaryWithTrailingNoticeAsync(
+            await GitHubActionsSummaryReporter.AppendStepSummaryWithLeadingNoticeAsync(
                 fileSystem, path, "first-project\n", notice, maxAttempts: 1, retryDelay: TimeSpan.Zero, CancellationToken.None);
 
             // This extension is not the only writer to GITHUB_STEP_SUMMARY: a test framework appends its own block
-            // after the reporter runs, so the note is no longer the tail when the next project writes.
+            // after the reporter runs. Appending cannot dislodge a note that sits at the top, which is the reason
+            // it goes there rather than at the end.
             File.AppendAllText(path, "### framework's own section\n");
 
-            await GitHubActionsSummaryReporter.AppendStepSummaryWithTrailingNoticeAsync(
+            await GitHubActionsSummaryReporter.AppendStepSummaryWithLeadingNoticeAsync(
                 fileSystem, path, "second-project\n", notice, maxAttempts: 1, retryDelay: TimeSpan.Zero, CancellationToken.None);
 
             string summary = File.ReadAllText(path);
 
-            // The co-writer's block is preserved and stays in order, but the note is lifted past it so it still
-            // closes the summary instead of being stranded where the budget first ran out.
+            Assert.StartsWith(notice, summary);
             Assert.Contains("framework's own section", summary);
-            Assert.EndsWith(notice, summary);
-            Assert.IsLessThan(
-                summary.IndexOf(GitHubActionsSummaryReporter.TruncationNoticeMarker, StringComparison.Ordinal),
-                summary.IndexOf("framework's own section", StringComparison.Ordinal));
-            Assert.IsLessThan(
-                summary.IndexOf("second-project", StringComparison.Ordinal),
-                summary.IndexOf("framework's own section", StringComparison.Ordinal));
+            Assert.Contains("second-project", summary);
             // The note is stated once. Repeating it per project would spend the little headroom that is left on
             // restating the same sentence.
             AssertSingleNotice(summary);

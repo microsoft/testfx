@@ -301,7 +301,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
         {
             if (truncationNotice.Length > 0)
             {
-                await AppendStepSummaryWithTrailingNoticeAsync(_fileSystem, path, markdown, truncationNotice, StepSummaryMaxWriteAttempts, StepSummaryRetryDelay, testSessionContext.CancellationToken).ConfigureAwait(false);
+                await AppendStepSummaryWithLeadingNoticeAsync(_fileSystem, path, markdown, truncationNotice, StepSummaryMaxWriteAttempts, StepSummaryRetryDelay, testSessionContext.CancellationToken).ConfigureAwait(false);
             }
             else
             {

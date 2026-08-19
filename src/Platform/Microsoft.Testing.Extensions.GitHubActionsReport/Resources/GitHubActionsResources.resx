@@ -217,8 +217,8 @@
     <comment>Appended to a single-line test project verdict when the shared job summary file is close to GitHub's size limit.</comment>
   </data>
   <data name="SummaryTruncatedNotice" xml:space="preserve">
-    <value>This job summary is too long, so it was truncated to keep GitHub from dropping it. GitHub discards a job summary larger than {0} bytes in full rather than shortening it, so some of the test project sections above were condensed or left out. See the workflow log or the test report for the complete results.</value>
-    <comment>Closing note appended to the job summary once its size limit forces this extension to stop writing full sections. {0} is the size limit in bytes.</comment>
+    <value>This job summary is too long, so it was truncated to keep GitHub from dropping it. GitHub discards a job summary larger than {0} bytes in full rather than shortening it, so some of the test project sections below were condensed or left out. See the workflow log or the test report for the complete results.</value>
+    <comment>Note placed at the top of the job summary once its size limit forces this extension to stop writing full sections. {0} is the size limit in bytes.</comment>
   </data>
   <data name="StepSummaryLimitExceededWarning" xml:space="preserve">
     <value>The GitHub job summary file is {0} bytes and appending this test project's section would exceed the {1}-byte limit GitHub enforces per step. GitHub discards an oversized job summary in full rather than truncating it, so appending would have lost every section, including those other test projects already wrote. This project's section was skipped to keep the rest of the summary intact. This usually means many test projects, or other tools, are writing to the same job summary; see the workflow log or the test report for this project's results.</value>

@@ -68,23 +68,21 @@ internal sealed partial class GitHubActionsSummaryReporter
     }
 
     /// <summary>
-    /// Appends <paramref name="content"/> and then leaves <paramref name="notice"/> as the closing note of the
-    /// shared <c>GITHUB_STEP_SUMMARY</c> file, keeping exactly one copy of that note however many test projects
-    /// write while the file is over budget.
+    /// Appends <paramref name="content"/> to the shared <c>GITHUB_STEP_SUMMARY</c> file, having first placed
+    /// <paramref name="notice"/> at the very top of that file if it is not there already.
     /// </summary>
     /// <remarks>
-    /// Every test project that runs after the summary budget is exhausted wants to say the same thing — that the
-    /// report stops short on purpose — so appending the note unconditionally would repeat it once per project and
-    /// spend the little headroom that is left on saying it. Instead the note is moved: whatever this reporter (or
-    /// a sibling project) left behind is lifted, together with anything a co-writer appended after it, and put back
-    /// after the new content. The summary therefore carries exactly one note, and it is the last thing the report
-    /// says rather than a marker stranded wherever the budget first ran out.
+    /// The note belongs at the top for two reasons. It is the first thing the reader sees, which is what a warning
+    /// that the report is incomplete deserves; and nothing can displace it, because every writer to this file —
+    /// this reporter, sibling test projects, and the test framework's own summary block — only ever appends. A note
+    /// placed at the end is only last until the next append, so it cannot be kept there.
     /// <para>
-    /// Because the note is moved on every write it never drifts far from the tail, so the span rewritten here stays
-    /// small — a few kilobytes of co-writer output — rather than growing with the summary.
+    /// Hoisting the note rewrites the file, so it is done once: every later project finds the marker already
+    /// present and simply appends. That single rewrite happens when the budget first runs out, while the file is
+    /// still only a fraction of GitHub's cap.
     /// </para>
     /// </remarks>
-    internal static /* for testing */ async Task AppendStepSummaryWithTrailingNoticeAsync(
+    internal static /* for testing */ async Task AppendStepSummaryWithLeadingNoticeAsync(
         IFileSystem fileSystem,
         string path,
         string content,
@@ -94,7 +92,6 @@ internal sealed partial class GitHubActionsSummaryReporter
         CancellationToken cancellationToken)
     {
         var encoding = new UTF8Encoding(false);
-        byte[] noticeBytes = encoding.GetBytes(notice);
 
         for (int attempt = 1; ; attempt++)
         {
@@ -117,9 +114,7 @@ internal sealed partial class GitHubActionsSummaryReporter
             {
                 Stream inner = stream.Stream;
 
-                string existing;
-                int existingLength = (int)Math.Min(inner.Length, int.MaxValue);
-                byte[] existingBytes = new byte[existingLength];
+                byte[] existingBytes = new byte[(int)Math.Min(inner.Length, int.MaxValue)];
                 inner.Seek(0, SeekOrigin.Begin);
                 int totalRead = 0;
                 while (totalRead < existingBytes.Length)
@@ -133,29 +128,30 @@ internal sealed partial class GitHubActionsSummaryReporter
                     totalRead += read;
                 }
 
-                existing = encoding.GetString(existingBytes, 0, totalRead);
+                string existing = encoding.GetString(existingBytes, 0, totalRead);
+                bool noticeAlreadyPresent = existing.IndexOf(TruncationNoticeMarker, StringComparison.Ordinal) >= 0;
 
-                // Lift the note this reporter left behind earlier, along with whatever was appended after it, so it
-                // can be put back last. Because the note is moved on every write it stays near the tail, so the span
-                // rewritten here is a few kilobytes rather than the whole summary.
-                string displacedTail = string.Empty;
-                int noticeIndex = existing.IndexOf(TruncationNoticeMarker, StringComparison.Ordinal);
-                if (noticeIndex >= 0
-                    && noticeIndex + notice.Length <= existing.Length
-                    && string.CompareOrdinal(existing, noticeIndex, notice, 0, notice.Length) == 0)
+                byte[] payload = noticeAlreadyPresent
+                    ? encoding.GetBytes(content)
+                    : encoding.GetBytes(notice + existing + content);
+
+                // Rewriting from the start is only correct because the note is hoisted at most once per job; from
+                // then on this is a plain append.
+                if (noticeAlreadyPresent)
                 {
-                    displacedTail = existing.Substring(noticeIndex + notice.Length);
-                    inner.SetLength(encoding.GetByteCount(existing.Substring(0, noticeIndex)));
+                    inner.Seek(0, SeekOrigin.End);
+                }
+                else
+                {
+                    inner.Seek(0, SeekOrigin.Begin);
+                    inner.SetLength(0);
                 }
 
-                inner.Seek(0, SeekOrigin.End);
-                byte[] pending = encoding.GetBytes(displacedTail + content);
-                if (pending.Length > 0)
+                if (payload.Length > 0)
                 {
-                    await inner.WriteAsync(pending, 0, pending.Length, cancellationToken).ConfigureAwait(false);
+                    await inner.WriteAsync(payload, 0, payload.Length, cancellationToken).ConfigureAwait(false);
                 }
 
-                await inner.WriteAsync(noticeBytes, 0, noticeBytes.Length, cancellationToken).ConfigureAwait(false);
                 await inner.FlushAsync(cancellationToken).ConfigureAwait(false);
             }
 
