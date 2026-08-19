@@ -20,23 +20,21 @@ The type declaring these methods should also respect the following rules:
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
         <target state="translated">Чтобы метод, помеченный "[AssemblyCleanup]", был допустимым, он должен соответствовать следующим правилам:
-– не может быть объявлен для универсального class ("generic");
-– должен быть общедоступным ("public");
-– должен быть статическим ("static");
+– не может быть объявлен для универсального class ("generic")
+– должен быть общедоступным ("public")
+– должен быть статическим ("static")
 – не должен быть асинхронным и не возвращающим значения ("async void")
-– не должен быть специальным (метод завершения, оператор…).
+– не быть специальным (метод завершения, оператор...).
 – не должен быть общим ("generic")
-;
-– не должен принимать никаких параметров или должен принимать один параметр типа TestContext
-;
-– должен иметь тип возвращаемого значения "void", "Task" или "ValueTask";
+– не должен принимать никаких параметров или должен принимать один параметр типа "TestContext"
+– должен иметь тип возвращаемого значения "void", "Task" или "ValueTask"
 
 Тип, объявляющий такие методы, также должен соответствовать следующим правилам:
-– должен быть class;
-– class должен быть объявлен как "public" или "internal" (если тестовый проект использует атрибут "[DiscoverInternals]");
-– class должен быть статическим ("static");
-– class должен быть помечен как "[TestClass]" (или производный атрибут);
-– class должен быть универсальным ("generic").</target>
+– должен быть class ом
+– class должен быть объявлен как "public" или "internal" (если тестовый проект использует атрибут "[DiscoverInternals]")
+– class не должен быть статическим ("static")
+– class должен быть помечен как "[TestClass]" (или производный атрибут)
+– class не должен быть универсальным.</target>
         <note>{Locked="[DiscoverInternals]"}{Locked="[AssemblyCleanup]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat">
@@ -82,22 +80,21 @@ The type declaring these methods should also respect the following rules:
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
         <target state="translated">Чтобы метод, помеченный "[AssemblyInitialize]", был допустимым, он должен соответствовать следующим правилам:
-– не может быть объявлен для универсального class ("generic");
-– должен быть общедоступным ("public");
-– должен быть статическим ("static");
-– не быть асинхронным и не возвращающим значения ("async void")
-– не быть специальным (метод завершения, оператор…).
-– не быть общим ("generic")
-;
-– должен принимать один параметр типа "TestContext";
-– тип возвращаемого значения должен быть "void", "Task" или "ValueTask";
+– не может быть объявлен для универсального class ("generic")
+– должен быть общедоступным ("public")
+– должен быть статическим ("static")
+– не должен быть асинхронным и не возвращающим значения ("async void")
+– не быть специальным (метод завершения, оператор...).
+– не должен быть общим ("generic")
+– должен принимать один параметр типа "TestContext"
+– должен иметь тип возвращаемого значения "void", "Task" или "ValueTask"
 
 Тип, объявляющий такие методы, также должен соответствовать следующим правилам:
-– должен быть class;
-– class должен быть объявлен как "public" или "internal" (если тестовый проект использует атрибут "[DiscoverInternals]");
-– class должен быть статическим ("static");
-– class должен быть помечен как "[TestClass]" (или производный атрибут);
-– class должен быть универсальным ("generic").</target>
+– должен быть class ом
+– class должен быть объявлен как "public" или "internal" (если тестовый проект использует атрибут "[DiscoverInternals]")
+– class не должен быть статическим ("static")
+– class должен быть помечен как "[TestClass]" (или производный атрибут)
+– class не должен быть универсальным.</target>
         <note>{Locked="[AssemblyInitialize]"}{Locked="[DiscoverInternals]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat">
@@ -235,25 +232,23 @@ The type declaring these methods should also respect the following rules:
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
         <target state="translated">Чтобы метод, помеченный "[ClassCleanup]", был допустимым, он должен соответствовать следующим правилам:
-– не может быть объявлен для универсального class, если не установлен режим InheritanceBehavior;
-– должен быть общедоступным ("public");
-– должен быть статическим ("static");
+– не может быть объявлен для универсального class, если не установлен режим "InheritanceBehavior"
+– должен быть общедоступным ("public")
+– должен быть статическим ("static")
 – не должен быть асинхронным и не возвращающим значения ("async void")
-– не должен быть специальным (метод завершения, оператор…).
+– не быть специальным (метод завершения, оператор...).
 – не должен быть общим ("generic")
-;
-– не должен принимать никаких параметров или должен принимать один параметр типа TestContext
-;
-– должен иметь тип возвращаемого значения "void", "Task" или "ValueTask";
-– если class abstract, должен быть указан параметр атрибута "InheritanceBehavior.BeforeEachDerivedClass";
-– если class sealed, не следует указывать параметр атрибута "InheritanceBehavior.BeforeEachDerivedClass";
+– не должен принимать никаких параметров или должен принимать один параметр типа "TestContext"
+– должен иметь тип возвращаемого значения "void", "Task" или "ValueTask"
+– если class является "abstract", должен быть указан параметр атрибута "InheritanceBehavior.BeforeEachDerivedClass";
+– если class является "sealed", не следует указывать параметр атрибута "InheritanceBehavior.BeforeEachDerivedClass";
 
 Тип, объявляющий такие методы, также должен соответствовать следующим правилам:
-– должен быть class;
-– class должен быть объявлен как "public" или "internal" (если тестовый проект использует атрибут "[DiscoverInternals]");
-– class должен быть объявлен как статический ("static");
-– если class sealed, его следует пометить как "[TestClass]" (или производный атрибут);
-– class должен быть универсальным ("generic").</target>
+– должен быть class ом
+– class должен быть объявлен как "public" или "internal" (если тестовый проект использует атрибут "[DiscoverInternals]")
+– class не должен быть объявлен как статический ("static")
+– если class является "sealed", его следует пометить как "[TestClass]" (или производный атрибут)
+– class не должен быть универсальным.</target>
         <note>{Locked="InheritanceBehavior.BeforeEachDerivedClass"}{Locked="[DiscoverInternals]"}{Locked="[ClassCleanup]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="sealed"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
@@ -286,24 +281,23 @@ The type declaring these methods should also respect the following rules:
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
         <target state="translated">Чтобы метод, помеченный "[ClassInitialize]", был допустимым, он должен соответствовать следующим правилам:
-– не может быть объявлен для универсального class, если не установлен режим InheritanceBehavior;
-– должен быть общедоступным ("public");
-– должен быть статическим ("static");
-– не быть асинхронным и не возвращающим значения ("async void")
-– не быть специальным (метод завершения, оператор…).
-– не быть общим ("generic")
-;
-– должен принимать один параметр типа "TestContext";
-– тип возвращаемого значения должен быть "void", "Task" или "ValueTask";
-– если class abstract, должен быть указан параметр атрибута "InheritanceBehavior.BeforeEachDerivedClass";
-– если class sealed, не следует указывать параметр атрибута "InheritanceBehavior.BeforeEachDerivedClass";
+– не может быть объявлен для универсального class, если не установлен режим "InheritanceBehavior"
+– должен быть общедоступным ("public")
+– должен быть статическим ("static")
+– не должен быть асинхронным и не возвращающим значения ("async void")
+– не быть специальным (метод завершения, оператор...).
+– не должен быть общим ("generic")
+– должен принимать один параметр типа "TestContext"
+– должен иметь тип возвращаемого значения "void", "Task" или "ValueTask"
+– если class является "abstract", должен быть указан параметр атрибута "InheritanceBehavior.BeforeEachDerivedClass";
+– если class является "sealed", не следует указывать параметр атрибута "InheritanceBehavior.BeforeEachDerivedClass";
 
 Тип, объявляющий такие методы, также должен соответствовать следующим правилам:
-– должен быть class;
-– class должен быть объявлен как "public" или "internal" (если тестовый проект использует атрибут "[DiscoverInternals]");
-– class должен быть объявлен как статический ("static");
-– если class sealed, его следует пометить как "[TestClass]" (или производный атрибут);
-– class должен быть универсальным ("generic").</target>
+– должен быть class ом
+– class должен быть объявлен как "public" или "internal" (если тестовый проект использует атрибут "[DiscoverInternals]")
+– class не должен быть объявлен как статический ("static")
+– если class является "sealed", его следует пометить как "[TestClass]" (или производный атрибут)
+– class не должен быть универсальным.</target>
         <note>{Locked="InheritanceBehavior.BeforeEachDerivedClass"}{Locked="[DiscoverInternals]"}{Locked="[ClassInitialize]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="sealed"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">
@@ -1174,23 +1168,20 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
         <target state="translated">Чтобы метод, помеченный "[TestCleanup]", был допустимым, он должен соответствовать следующим правилам:
-– быть общедоступным ("public")
-;
+– метод должен быть общедоступным ("public")
 – не быть абстрактным ("abstract")
-;
 – не быть асинхронным и не возвращающим значения ("async void")
 – не быть статическим ("static")
-– не быть специальным (метод завершения, оператор…).
-– не быть общим ("generic")
-;
-– не принимать никаких параметров;
-– тип возвращаемого значения должен быть "void", "Task" или "ValueTask";
+– не быть специальным (метод завершения, оператор...).
+– не должен быть общим ("generic")
+– не должен принимать никаких параметров
+– должен иметь тип возвращаемого значения "void", "Task" или "ValueTask"
 
 Тип, объявляющий такие методы, также должен соответствовать следующим правилам:
-– должен быть class;
-– class должен быть объявлен как "public" или "internal" (если тестовый проект использует атрибут "[DiscoverInternals]");
-– class должен быть статическим ("static");
-– если class sealed, его следует пометить как "[TestClass]" (или производный атрибут).</target>
+– должен быть class ом
+– class должен быть объявлен как "public" или "internal" (если тестовый проект использует атрибут "[DiscoverInternals]")
+– class не должен быть статическим ("static")
+– если class является "sealed", его следует пометить как "[TestClass]" (или производный атрибут).</target>
         <note>{Locked="[DiscoverInternals]"}{Locked="[TestCleanup]"}{Locked="[TestClass]"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="sealed"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidMessageFormat">
@@ -1236,23 +1227,20 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
         <target state="translated">Чтобы метод, помеченный "[TestInitialize]", был допустимым, он должен соответствовать следующим правилам:
-– быть общедоступным ("public")
-;
+– метод должен быть общедоступным ("public")
 – не быть абстрактным ("abstract")
-;
 – не быть асинхронным и не возвращающим значения ("async void")
 – не быть статическим ("static")
-– не быть специальным (метод завершения, оператор…).
-– не быть общим ("generic")
-;
-– не принимать никаких параметров;
-– тип возвращаемого значения должен быть "void", "Task" или "ValueTask";
+– не быть специальным (метод завершения, оператор...).
+– не должен быть общим ("generic")
+– не должен принимать никаких параметров
+– должен иметь тип возвращаемого значения "void", "Task" или "ValueTask"
 
 Тип, объявляющий такие методы, также должен соответствовать следующим правилам:
-– должен быть class;
-– class должен быть объявлен как "public" или "internal" (если тестовый проект использует атрибут "[DiscoverInternals]");
-– class должен быть статическим ("static");
-– если class sealed, его следует пометить как "[TestClass]" (или производный атрибут).</target>
+– должен быть class ом
+– class должен быть объявлен как "public" или "internal" (если тестовый проект использует атрибут "[DiscoverInternals]")
+– class не должен быть статическим ("static")
+– если class является "sealed", его следует пометить как "[TestClass]" (или производный атрибут).</target>
         <note>{Locked="[DiscoverInternals]"}{Locked="[TestInitialize]"}{Locked="[TestClass]"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="sealed"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidMessageFormat">
