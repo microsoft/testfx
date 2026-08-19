@@ -83,7 +83,7 @@
 
 ## Last Run
 
-2026-08-17 UTC
+2026-08-19 UTC
 
 ## Completed Work (recent, summarized)
 
@@ -131,4 +131,10 @@ Maintainer closed #10154 (as not_planned) on 2026-08-06. #10389 is now the sole 
 
 - PR (2026-08-18) — DisposeHelper.DisposeAsync (Microsoft.Testing.Platform, internal `[Embedded]` helper, previously 0 tests): added 6 tests covering null input, IAsyncCleanableExtension-only, IAsyncDisposable+IDisposable combo (net8/net9 — verifies DisposeAsync preferred over Dispose), IDisposable-only (netcoreapp vs net462 variants), both cleanable+disposable together, and plain object (no-op). Required linking DisposeHelper.cs into the test csproj (see gotcha above) since InternalsVisibleTo wasn't sufficient. Full Microsoft.Testing.Platform.UnitTests suite (net8.0): 2213 total, 2194 succeeded, 0 failed, 19 skipped (pre-existing).
 - Confirmed PR #10635 (human-authored, open) already covers ReportFileWriterHelper.RetryWhenIOExceptionAsync — do not duplicate.
-- Fallback candidates not yet used (still viable next run): `RetryThresholdPolicy` (Microsoft.Testing.Extensions.Retry, no tests), `StackTraceRegexHelper` (localized regex builder w/ reflection fallback, no tests).
+- Fallback candidates not yet used (still viable next run): `RetryThresholdPolicy` (Microsoft.Testing.Extensions.Retry, no tests — requires constructing a real `RetryFailedTestsPipeServer` with IServiceProvider/named-pipe deps; deprioritized as too heavy to mock cleanly).
+
+## 2026-08-19 UTC
+
+## Completed Work (recent)
+
+- PR (2026-08-19) — StackTraceRegexHelper.CreateFrameRegexPattern (src/Platform/SharedExtensionHelpers, previously 0 tests): added 6 tests covering matchFramesWithoutLocation true/false branches (frame with/without file+line info), the required 3-space "at" indentation, and the MatchTimeout constant. **Correction to the `[Embedded]` gotcha above**: `StackTraceRegexHelper` is a plain `internal static class` (NOT `[Embedded]`-attributed) and IS compiled into `Microsoft.Testing.Platform.dll` proper — it is already visible to `Microsoft.Testing.Platform.UnitTests` via existing `InternalsVisibleTo`, no source-link needed. Attempting to also `<Compile Include>` link its source (as done for genuinely `[Embedded]` types) causes CS0436 duplicate-type errors, since the type would then exist both in the referenced assembly and as directly-compiled source. Rule of thumb: only link source for internal helpers confirmed `[Embedded]`-attributed; for plain internal types, just add a `using` and rely on IVT. Full Microsoft.Testing.Platform.UnitTests suite (net8.0): 2213 total, 2194 succeeded, 0 failed, 19 skipped (pre-existing, unchanged).
