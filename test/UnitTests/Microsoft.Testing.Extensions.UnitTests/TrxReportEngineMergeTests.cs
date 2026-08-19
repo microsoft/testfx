@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Security;
+
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
@@ -40,6 +42,96 @@ public sealed class TrxReportEngineMergeTests
             }
         }
     }
+
+    [TestMethod]
+    public void GetReparsePointStatus_ReadsAttributesOnceAndDetectsReparsePoint()
+    {
+        int callCount = 0;
+
+        bool? result = TrxReportEngine.GetReparsePointStatus(
+            "link",
+            path =>
+            {
+                Assert.AreEqual("link", path);
+                callCount++;
+                return FileAttributes.ReparsePoint;
+            });
+
+        Assert.IsTrue(result);
+        Assert.AreEqual(1, callCount);
+    }
+
+    [TestMethod]
+    public void GetReparsePointStatus_WhenEntryIsARegularFile_ReturnsFalse()
+    {
+        bool? result = TrxReportEngine.GetReparsePointStatus(
+            "file",
+            _ => FileAttributes.Archive);
+
+        Assert.IsFalse(result);
+    }
+
+    [TestMethod]
+    public void GetReparsePointStatus_WhenEntryIsMissing_ReturnsFalse()
+    {
+        Assert.IsFalse(TrxReportEngine.GetReparsePointStatus(
+            "missing-file",
+            _ => throw new FileNotFoundException()));
+        Assert.IsFalse(TrxReportEngine.GetReparsePointStatus(
+            "missing-directory",
+            _ => throw new DirectoryNotFoundException()));
+    }
+
+    [TestMethod]
+    public void GetReparsePointStatus_WhenAttributesCannotBeRead_ReturnsNull()
+    {
+        Assert.IsNull(TrxReportEngine.GetReparsePointStatus(
+            "inaccessible",
+            _ => throw new UnauthorizedAccessException()));
+        Assert.IsNull(TrxReportEngine.GetReparsePointStatus(
+            "io-failure",
+            _ => throw new IOException()));
+        Assert.IsNull(TrxReportEngine.GetReparsePointStatus(
+            "security-failure",
+            _ => throw new SecurityException()));
+    }
+
+    [TestMethod]
+    public void GetReparsePointStatus_WhenUnexpectedExceptionOccurs_Propagates()
+        => Assert.ThrowsExactly<InvalidOperationException>(
+            () => TrxReportEngine.GetReparsePointStatus(
+                "invalid",
+                _ => throw new InvalidOperationException()));
+
+#if NETCOREAPP
+    [TestMethod]
+    public void GetReparsePointStatus_WhenDirectoryLinkIsDangling_ReturnsTrue()
+    {
+        string tempDirectory = Path.Combine(Path.GetTempPath(), $"trx-merge-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDirectory);
+        try
+        {
+            string link = Path.Combine(tempDirectory, "link");
+            string missingTarget = Path.Combine(tempDirectory, "missing");
+            try
+            {
+                Directory.CreateSymbolicLink(link, missingTarget);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PlatformNotSupportedException)
+            {
+                Assert.Inconclusive("Host cannot create directory symbolic links.");
+                return;
+            }
+
+            Assert.IsTrue(TrxReportEngine.GetReparsePointStatus(link, static path => File.GetAttributes(path)));
+            Assert.IsFalse(Directory.Exists(missingTarget));
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+#endif
 
     [TestMethod]
     public void Merge_CarriesRunLevelOutputMessages()

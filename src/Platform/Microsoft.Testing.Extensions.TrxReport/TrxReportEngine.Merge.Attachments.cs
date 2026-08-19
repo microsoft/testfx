@@ -40,7 +40,17 @@ internal sealed partial class TrxReportEngine
         // On a reused output directory the merged 'In' root could pre-exist as a junction/symlink that
         // would redirect every copy below it outside the confined merged root. Remove such a link so a
         // fresh, real directory is created instead.
-        if (Directory.Exists(mergedInRoot) && IsReparsePoint(mergedInRoot))
+        bool? mergedInRootIsReparsePoint = GetReparsePointStatus(
+            mergedInRoot,
+            static path => File.GetAttributes(path));
+        if (mergedInRootIsReparsePoint is null)
+        {
+            // Do not delete an entry whose type cannot be established, and do not write through it.
+            DropAllReferences(reports);
+            return;
+        }
+
+        if (mergedInRootIsReparsePoint is true)
         {
             try
             {
