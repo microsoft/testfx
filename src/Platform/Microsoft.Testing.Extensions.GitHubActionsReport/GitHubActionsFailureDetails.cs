@@ -97,10 +97,22 @@ internal static class GitHubActionsFailureDetails
     internal const int MaxStackTraceRows = 30;
 
     /// <summary>
-    /// GitHub's hard limit on a single job summary file. Exceeding it makes GitHub drop the summary entirely,
-    /// so the reporters aim well below it.
+    /// GitHub's hard limit on a single job summary file. Exceeding it makes GitHub drop the summary entirely —
+    /// silently, with no error or warning in the workflow log — so the reporters aim well below it.
     /// </summary>
+    /// <remarks>
+    /// The documented limit is 1 MiB, but the runner rejects at two bytes below it and reports nothing when it
+    /// does (<see href="https://github.com/actions/runner/issues/4337"/>). <see cref="EffectiveStepSummaryLimit"/>
+    /// is what this extension actually compares against; the difference is immaterial next to the headroom in
+    /// <see cref="MaxSummaryLength"/>, but the constant should not claim a limit the runner does not honor.
+    /// </remarks>
     internal const int GitHubStepSummaryLimit = 1024 * 1024;
+
+    /// <summary>
+    /// The size at which the runner is known to actually reject a job summary, which is two bytes below the
+    /// documented <see cref="GitHubStepSummaryLimit"/>.
+    /// </summary>
+    internal const int EffectiveStepSummaryLimit = GitHubStepSummaryLimit - 2;
 
     /// <summary>
     /// The share of <see cref="GitHubStepSummaryLimit"/> this extension will drive the summary file to before

@@ -449,6 +449,62 @@ public sealed class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
+    public void EffectiveStepSummaryLimit_IsTwoBytesBelowTheDocumentedLimit()
+    {
+        // The runner rejects at two bytes below the documented 1 MiB and logs nothing when it does
+        // (actions/runner#4337), so the constant this extension compares against must not claim the
+        // documented figure.
+        Assert.AreEqual(1024 * 1024, GitHubActionsFailureDetails.GitHubStepSummaryLimit);
+        Assert.AreEqual(GitHubActionsFailureDetails.GitHubStepSummaryLimit - 2, GitHubActionsFailureDetails.EffectiveStepSummaryLimit);
+
+        // The condense threshold must leave real headroom below the point of no return, since co-writer
+        // output continues to accumulate after this reporter has degraded to one-liners.
+        Assert.IsLessThan(GitHubActionsFailureDetails.EffectiveStepSummaryLimit, GitHubActionsFailureDetails.MaxSummaryLength);
+    }
+
+    [TestMethod]
+    public void GetRemainingDetailsBudget_FileOverGitHubLimit_ReturnsZeroAndReportsNearLimit()
+    {
+        // A file this large is already beyond saving: GitHub will discard it. The budget must bottom out at
+        // zero rather than going negative, and the near-limit check must agree, because together they are what
+        // stop this project appending to a file that will be thrown away.
+        var fileStream = new Mock<IFileStream>();
+        fileStream.Setup(s => s.Stream).Returns(new MemoryStream(new byte[GitHubActionsFailureDetails.EffectiveStepSummaryLimit + 1024]));
+
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(f => f.ExistFile("summary.md")).Returns(true);
+        fileSystem.Setup(f => f.NewFileStream("summary.md", FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
+            .Returns(fileStream.Object);
+
+        Assert.AreEqual(0, GitHubActionsSummaryReporter.GetRemainingDetailsBudget(fileSystem.Object, "summary.md", new Mock<ILogger>().Object));
+        Assert.IsTrue(GitHubActionsSummaryReporter.IsSummaryNearLimit(fileSystem.Object, "summary.md", new Mock<ILogger>().Object));
+    }
+
+    [TestMethod]
+    public void BuildMinimalMarkdown_IsSmallEnoughThatTheProjectedSizeGateIsMeaningful()
+    {
+        // The overflow gate compares current file length + the rendered markdown against the limit. That is only
+        // a useful last line of defence if the condensed form is genuinely small: a multi-kilobyte "minimal"
+        // section would be refused so often that projects near the limit would report nothing at all.
+        GitHubActionsTestRecord[] records =
+        [
+            .. Enumerable.Range(0, 500).Select(i => new GitHubActionsTestRecord(
+                $"T{i}",
+                $"Some.Very.Long.Namespace.And.Class.Name.Test{i}",
+                GitHubActionsTerminalKind.Failed,
+                TimeSpan.FromMilliseconds(1),
+                new GitHubActionsTestFailureDetails(new string('x', 5000), "System.Exception", new string('y', 5000), "src/F.cs", 1))),
+        ];
+
+        string minimal = GitHubActionsSummaryReporter.BuildMinimalMarkdown(records, "Asm", "net9.0", AtLeastOneTestFailedExitCode);
+
+        // Independent of test count and of how large the individual failures are.
+        Assert.IsLessThan(1024, minimal.Length, minimal);
+        Assert.Contains("500 total", minimal);
+        Assert.Contains("condensed to one line", minimal);
+    }
+
+    [TestMethod]
     public void BuildAggregateMarkdown_ManyModules_StaysUnderTheLimitAndReportsOmittedModules()
     {
         // 40 modules, each with failures large enough that the shared budget cannot expand them all. The

@@ -77,3 +77,4 @@ static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryRepo
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.BuildMinimalMarkdown(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.TestRecord>! records, string! assemblyName, string! targetFrameworkMoniker, int exitCode) -> string!
 const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureDetails.MaxSummaryLength = 419430 -> int
 const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureDetails.PerProjectOverheadReserve = 8000 -> int
+const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureDetails.EffectiveStepSummaryLimit = 1048574 -> int

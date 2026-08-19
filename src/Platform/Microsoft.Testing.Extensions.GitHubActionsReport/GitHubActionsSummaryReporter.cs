@@ -238,6 +238,29 @@ internal sealed partial class GitHubActionsSummaryReporter :
                 ? BuildMinimalMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value, exitCode)
                 : BuildMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value, exitCode, _includeFailureDetails, detailsBudget);
 
+            // Final gate, on the *projected* size rather than the current one. The budgeting above aims the file
+            // at MaxSummaryLength, but it cannot bound what other tools append to the same file, so the file can
+            // still arrive here close enough to the limit that even a one-line verdict would cross it. GitHub
+            // discards an oversized summary silently and in full — including every section earlier projects
+            // wrote — so a write that would cross the limit is worse than no write at all.
+            if (GetSummaryLength(_fileSystem, path!, _logger) is long currentLength
+                && currentLength + markdown.Length > GitHubActionsFailureDetails.EffectiveStepSummaryLimit)
+            {
+                string overflowWarning = string.Format(
+                    CultureInfo.InvariantCulture,
+                    GitHubActionsResources.StepSummaryLimitExceededWarning,
+                    currentLength.ToString(CultureInfo.InvariantCulture),
+                    GitHubActionsFailureDetails.EffectiveStepSummaryLimit.ToString(CultureInfo.InvariantCulture));
+
+                if (_logger.IsEnabled(LogLevel.Warning))
+                {
+                    _logger.LogWarning(overflowWarning);
+                }
+
+                await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(overflowWarning), testSessionContext.CancellationToken).ConfigureAwait(false);
+                return;
+            }
+
             try
             {
                 await AppendStepSummaryWithRetryAsync(_fileSystem, path!, markdown, StepSummaryMaxWriteAttempts, StepSummaryRetryDelay, testSessionContext.CancellationToken).ConfigureAwait(false);

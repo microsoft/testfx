@@ -202,6 +202,11 @@
         <target state="new">The duration a test may run before a GitHub Actions slow-test notice is emitted. Accepts a bare number of seconds or a value with a unit suffix such as '90s', '2m', or '1.5h'. Defaults to 60s.</target>
         <note>{Locked="s"}{Locked="m"}{Locked="h"}</note>
       </trans-unit>
+      <trans-unit id="StepSummaryLimitExceededWarning">
+        <source>The GitHub job summary file is {0} bytes, which exceeds the {1}-byte limit GitHub enforces per step. GitHub discards an oversized job summary without reporting an error, so the Summary page for this run will be empty. This test project's section was not appended, to avoid adding to a file that will be discarded. This usually means many test projects, or other tools, are writing to the same job summary; see the workflow log or the test report for full results.</source>
+        <target state="new">The GitHub job summary file is {0} bytes, which exceeds the {1}-byte limit GitHub enforces per step. GitHub discards an oversized job summary without reporting an error, so the Summary page for this run will be empty. This test project's section was not appended, to avoid adding to a file that will be discarded. This usually means many test projects, or other tools, are writing to the same job summary; see the workflow log or the test report for full results.</target>
+        <note>{0} is the current size of the job summary file in bytes, {1} is the limit in bytes.</note>
+      </trans-unit>
       <trans-unit id="StepSummaryOptionDescription">
         <source>Enable or disable writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</source>
         <target state="translated">Enable o disable per la scrittura di un riepilogo del processo markdown nel file GITHUB_STEP_SUMMARY. I valori validi sono 'on' (accetta anche 'true', 'enable', '1') o 'off' (accetta anche 'false', 'disable', '0'). Il valore predefinito è 'on' quando si esegue in GitHub Actions.</target>
