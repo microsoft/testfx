@@ -67,6 +67,102 @@ internal sealed partial class GitHubActionsSummaryReporter
         }
     }
 
+    /// <summary>
+    /// Appends <paramref name="content"/> and then leaves <paramref name="notice"/> as the closing note of the
+    /// shared <c>GITHUB_STEP_SUMMARY</c> file, keeping exactly one copy of that note however many test projects
+    /// write while the file is over budget.
+    /// </summary>
+    /// <remarks>
+    /// Every test project that runs after the summary budget is exhausted wants to say the same thing — that the
+    /// report stops short on purpose — so appending the note unconditionally would repeat it once per project and
+    /// spend the little headroom that is left on saying it. Instead the note is moved: whatever this reporter (or
+    /// a sibling project) left behind is lifted, together with anything a co-writer appended after it, and put back
+    /// after the new content. The summary therefore carries exactly one note, and it is the last thing the report
+    /// says rather than a marker stranded wherever the budget first ran out.
+    /// <para>
+    /// Because the note is moved on every write it never drifts far from the tail, so the span rewritten here stays
+    /// small — a few kilobytes of co-writer output — rather than growing with the summary.
+    /// </para>
+    /// </remarks>
+    internal static /* for testing */ async Task AppendStepSummaryWithTrailingNoticeAsync(
+        IFileSystem fileSystem,
+        string path,
+        string content,
+        string notice,
+        int maxAttempts,
+        TimeSpan retryDelay,
+        CancellationToken cancellationToken)
+    {
+        var encoding = new UTF8Encoding(false);
+        byte[] noticeBytes = encoding.GetBytes(notice);
+
+        for (int attempt = 1; ; attempt++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            IFileStream stream;
+            try
+            {
+                stream = fileSystem.NewFileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
+            }
+            catch (IOException) when (attempt < maxAttempts)
+            {
+                // Another test-host process currently holds the summary file. Back off briefly and retry, exactly
+                // as the plain append path does, so this project's section is written intact once it is released.
+                await Task.Delay(retryDelay, cancellationToken).ConfigureAwait(false);
+                continue;
+            }
+
+            using (stream)
+            {
+                Stream inner = stream.Stream;
+
+                string existing;
+                int existingLength = (int)Math.Min(inner.Length, int.MaxValue);
+                byte[] existingBytes = new byte[existingLength];
+                inner.Seek(0, SeekOrigin.Begin);
+                int totalRead = 0;
+                while (totalRead < existingBytes.Length)
+                {
+                    int read = await inner.ReadAsync(existingBytes, totalRead, existingBytes.Length - totalRead, cancellationToken).ConfigureAwait(false);
+                    if (read == 0)
+                    {
+                        break;
+                    }
+
+                    totalRead += read;
+                }
+
+                existing = encoding.GetString(existingBytes, 0, totalRead);
+
+                // Lift the note this reporter left behind earlier, along with whatever was appended after it, so it
+                // can be put back last. Because the note is moved on every write it stays near the tail, so the span
+                // rewritten here is a few kilobytes rather than the whole summary.
+                string displacedTail = string.Empty;
+                int noticeIndex = existing.IndexOf(TruncationNoticeMarker, StringComparison.Ordinal);
+                if (noticeIndex >= 0
+                    && noticeIndex + notice.Length <= existing.Length
+                    && string.CompareOrdinal(existing, noticeIndex, notice, 0, notice.Length) == 0)
+                {
+                    displacedTail = existing.Substring(noticeIndex + notice.Length);
+                    inner.SetLength(encoding.GetByteCount(existing.Substring(0, noticeIndex)));
+                }
+
+                inner.Seek(0, SeekOrigin.End);
+                byte[] pending = encoding.GetBytes(displacedTail + content);
+                if (pending.Length > 0)
+                {
+                    await inner.WriteAsync(pending, 0, pending.Length, cancellationToken).ConfigureAwait(false);
+                }
+
+                await inner.WriteAsync(noticeBytes, 0, noticeBytes.Length, cancellationToken).ConfigureAwait(false);
+                await inner.FlushAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            return;
+        }
+    }
+
     internal static async Task UpsertStepSummaryWithRetryAsync(
         IFileSystem fileSystem,
         string path,

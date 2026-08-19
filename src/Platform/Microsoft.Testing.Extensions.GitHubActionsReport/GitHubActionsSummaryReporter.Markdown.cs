@@ -210,6 +210,31 @@ internal sealed partial class GitHubActionsSummaryReporter
     }
 
     /// <summary>
+    /// Marks the closing truncation note in the shared summary file so a later test project can find the note
+    /// it (or a sibling) already wrote instead of appending a second copy.
+    /// </summary>
+    internal const string TruncationNoticeMarker = "<!-- microsoft-testing-platform:github:summary-truncated -->";
+
+    /// <summary>
+    /// Renders the closing note that tells the reader the summary stops short on purpose: GitHub discards an
+    /// oversized job summary in full, so this extension condenses and then stops rather than losing everything.
+    /// </summary>
+    /// <remarks>
+    /// Without this note the summary simply ends, which is indistinguishable from the reporter crashing or the
+    /// run being cut short. The note is deliberately small — it is written while the file is already close to
+    /// the cap, so it has to cost a few hundred bytes, not a few thousand.
+    /// </remarks>
+    internal static /* for testing */ string BuildTruncationNotice()
+    {
+        string message = string.Format(
+            CultureInfo.InvariantCulture,
+            GitHubActionsResources.SummaryTruncatedNotice,
+            GitHubActionsFailureDetails.EffectiveStepSummaryLimit.ToString(CultureInfo.InvariantCulture));
+
+        return $"{TruncationNoticeMarker}\n> [!WARNING]\n> {message}\n\n";
+    }
+
+    /// <summary>
     /// Renders a single-line verdict for this test project. Used only when the shared summary file is already
     /// near GitHub's cap, where the few kilobytes of a normal section would be the thing that overflows it.
     /// </summary>

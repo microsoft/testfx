@@ -734,6 +734,101 @@ public sealed class GitHubActionsSummaryReporterTests
         }
     }
 
+    [TestMethod]
+    public void BuildTruncationNotice_SaysWhyTheSummaryStopsShort()
+    {
+        string notice = GitHubActionsSummaryReporter.BuildTruncationNotice();
+
+        Assert.Contains(GitHubActionsSummaryReporter.TruncationNoticeMarker, notice);
+        Assert.Contains("truncated", notice);
+        // The reader needs the reason, not just the fact: an oversized summary is dropped outright by GitHub.
+        Assert.Contains("dropping", notice);
+        Assert.Contains(GitHubActionsFailureDetails.EffectiveStepSummaryLimit.ToString(CultureInfo.InvariantCulture), notice);
+    }
+
+    [TestMethod]
+    public async Task AppendStepSummaryWithTrailingNoticeAsync_MovesNoticeAfterNewContent_InsteadOfRepeatingIt()
+    {
+        string path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, string.Empty);
+            var fileSystem = new SystemFileSystem();
+            string notice = GitHubActionsSummaryReporter.BuildTruncationNotice();
+
+            await GitHubActionsSummaryReporter.AppendStepSummaryWithTrailingNoticeAsync(
+                fileSystem, path, "first-project\n", notice, maxAttempts: 1, retryDelay: TimeSpan.Zero, CancellationToken.None);
+            await GitHubActionsSummaryReporter.AppendStepSummaryWithTrailingNoticeAsync(
+                fileSystem, path, "second-project\n", notice, maxAttempts: 1, retryDelay: TimeSpan.Zero, CancellationToken.None);
+
+            string summary = File.ReadAllText(path);
+
+            // Both projects' verdicts survive, and the note closes the summary rather than being stranded between
+            // them — a reader scrolling to the bottom is exactly who needs to know the report was cut short.
+            Assert.Contains("first-project", summary);
+            Assert.Contains("second-project", summary);
+            Assert.EndsWith(notice, summary);
+            Assert.IsLessThan(
+                summary.IndexOf(GitHubActionsSummaryReporter.TruncationNoticeMarker, StringComparison.Ordinal),
+                summary.IndexOf("second-project", StringComparison.Ordinal));
+            AssertSingleNotice(summary);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public async Task AppendStepSummaryWithTrailingNoticeAsync_MovesNoticePastACoWritersOutput_SoItStaysLast()
+    {
+        string path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, string.Empty);
+            var fileSystem = new SystemFileSystem();
+            string notice = GitHubActionsSummaryReporter.BuildTruncationNotice();
+
+            await GitHubActionsSummaryReporter.AppendStepSummaryWithTrailingNoticeAsync(
+                fileSystem, path, "first-project\n", notice, maxAttempts: 1, retryDelay: TimeSpan.Zero, CancellationToken.None);
+
+            // This extension is not the only writer to GITHUB_STEP_SUMMARY: a test framework appends its own block
+            // after the reporter runs, so the note is no longer the tail when the next project writes.
+            File.AppendAllText(path, "### framework's own section\n");
+
+            await GitHubActionsSummaryReporter.AppendStepSummaryWithTrailingNoticeAsync(
+                fileSystem, path, "second-project\n", notice, maxAttempts: 1, retryDelay: TimeSpan.Zero, CancellationToken.None);
+
+            string summary = File.ReadAllText(path);
+
+            // The co-writer's block is preserved and stays in order, but the note is lifted past it so it still
+            // closes the summary instead of being stranded where the budget first ran out.
+            Assert.Contains("framework's own section", summary);
+            Assert.EndsWith(notice, summary);
+            Assert.IsLessThan(
+                summary.IndexOf(GitHubActionsSummaryReporter.TruncationNoticeMarker, StringComparison.Ordinal),
+                summary.IndexOf("framework's own section", StringComparison.Ordinal));
+            Assert.IsLessThan(
+                summary.IndexOf("second-project", StringComparison.Ordinal),
+                summary.IndexOf("framework's own section", StringComparison.Ordinal));
+            // The note is stated once. Repeating it per project would spend the little headroom that is left on
+            // restating the same sentence.
+            AssertSingleNotice(summary);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    private static void AssertSingleNotice(string summary)
+    {
+        string marker = GitHubActionsSummaryReporter.TruncationNoticeMarker;
+        int first = summary.IndexOf(marker, StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(0, first);
+        Assert.AreEqual(-1, summary.IndexOf(marker, first + marker.Length, StringComparison.Ordinal));
+    }
+
     private static Mock<IFileSystem> CreateFileSystemWritingTo(Stream target)
     {
         var fileStream = new Mock<IFileStream>();

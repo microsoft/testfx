@@ -231,12 +231,19 @@ internal sealed partial class GitHubActionsSummaryReporter :
             // which point GitHub drops the summary entirely).
             int detailsBudget = GetRemainingDetailsBudget(_fileSystem, path!, _logger);
 
-            string markdown = detailsBudget <= 0 && IsSummaryNearLimit(_fileSystem, path!, _logger)
+            // Once the shared budget is spent, every remaining project's section is a reduced one. That is worth
+            // saying once, at the end of the summary, so a reader can tell the report was cut short deliberately
+            // rather than the run having died partway through.
+            bool summaryTruncated = detailsBudget <= 0;
+
+            string markdown = summaryTruncated && IsSummaryNearLimit(_fileSystem, path!, _logger)
                 // Even a details-free section costs a few KB per project (heading, totals table, failure lines).
                 // Once the shared file is close to the cap, that per-project overhead is itself what would push
                 // it over, so collapse to a single line that still reports this project's verdict.
                 ? BuildMinimalMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value, exitCode)
                 : BuildMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value, exitCode, _includeFailureDetails, detailsBudget);
+
+            string truncationNotice = summaryTruncated ? BuildTruncationNotice() : string.Empty;
 
             // Final gate, on the *projected* size rather than the current one. The budgeting above aims the file
             // at MaxSummaryLength, but it cannot bound what other tools append to the same file, so the file can
@@ -244,7 +251,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
             // discards an oversized summary silently and in full — including every section earlier projects
             // wrote — so a write that would cross the limit is worse than no write at all.
             if (GetSummaryLength(_fileSystem, path!, _logger) is long currentLength
-                && currentLength + markdown.Length > GitHubActionsFailureDetails.EffectiveStepSummaryLimit)
+                && currentLength + markdown.Length + truncationNotice.Length > GitHubActionsFailureDetails.EffectiveStepSummaryLimit)
             {
                 string overflowWarning = string.Format(
                     CultureInfo.InvariantCulture,
@@ -258,23 +265,21 @@ internal sealed partial class GitHubActionsSummaryReporter :
                 }
 
                 await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(overflowWarning), testSessionContext.CancellationToken).ConfigureAwait(false);
+
+                // This project's section is gone, but the reader still deserves to know the summary stops here on
+                // purpose. The note is a few hundred bytes, so try it on its own — dropping the section frees far
+                // more room than the note takes. If even that does not fit, the summary is genuinely full and
+                // staying silent is the only option that keeps what is already rendered.
+                if (truncationNotice.Length > 0
+                    && currentLength + truncationNotice.Length <= GitHubActionsFailureDetails.EffectiveStepSummaryLimit)
+                {
+                    await TryAppendSummaryAsync(path!, string.Empty, truncationNotice, testSessionContext).ConfigureAwait(false);
+                }
+
                 return;
             }
 
-            try
-            {
-                await AppendStepSummaryWithRetryAsync(_fileSystem, path!, markdown, StepSummaryMaxWriteAttempts, StepSummaryRetryDelay, testSessionContext.CancellationToken).ConfigureAwait(false);
-            }
-            catch (Exception ex) when (ex is not OperationCanceledException)
-            {
-                string warning = string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.StepSummaryWriteFailedWarning, path, ex.Message);
-                if (_logger.IsEnabled(LogLevel.Warning))
-                {
-                    _logger.LogWarning(warning);
-                }
-
-                await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), testSessionContext.CancellationToken).ConfigureAwait(false);
-            }
+            await TryAppendSummaryAsync(path!, markdown, truncationNotice, testSessionContext).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {
@@ -283,6 +288,35 @@ internal sealed partial class GitHubActionsSummaryReporter :
         catch (Exception ex)
         {
             _logger.LogUnexpectedException(nameof(OnTestSessionFinishingAsync), ex);
+        }
+    }
+
+    /// <summary>
+    /// Writes this project's section to the shared summary file, best-effort: a failure to write the summary must
+    /// not fail the test run, so it surfaces as a warning.
+    /// </summary>
+    private async Task TryAppendSummaryAsync(string path, string markdown, string truncationNotice, ITestSessionContext testSessionContext)
+    {
+        try
+        {
+            if (truncationNotice.Length > 0)
+            {
+                await AppendStepSummaryWithTrailingNoticeAsync(_fileSystem, path, markdown, truncationNotice, StepSummaryMaxWriteAttempts, StepSummaryRetryDelay, testSessionContext.CancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                await AppendStepSummaryWithRetryAsync(_fileSystem, path, markdown, StepSummaryMaxWriteAttempts, StepSummaryRetryDelay, testSessionContext.CancellationToken).ConfigureAwait(false);
+            }
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            string warning = string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.StepSummaryWriteFailedWarning, path, ex.Message);
+            if (_logger.IsEnabled(LogLevel.Warning))
+            {
+                _logger.LogWarning(warning);
+            }
+
+            await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), testSessionContext.CancellationToken).ConfigureAwait(false);
         }
     }
 
