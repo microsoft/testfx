@@ -372,7 +372,7 @@ public sealed class GitHubActionsSummaryReporterTests
         Assert.Contains("[... truncated]", clipped);
 
         // The kept rows plus the truncation marker.
-        Assert.AreEqual(GitHubActionsFailureDetails.MaxStackTraceRows + 1, clipped.Split('\n').Length);
+        Assert.HasCount(GitHubActionsFailureDetails.MaxStackTraceRows + 1, clipped.Split('\n'));
         Assert.Contains("at Frame0()", clipped);
         Assert.DoesNotContain("at Frame199()", clipped);
     }
