@@ -52,6 +52,9 @@ public sealed class DisposeHelperTests
             () => DisposeHelper.DisposeAsync(resource));
 
         Assert.AreSame(expectedException, actualException);
+        Assert.AreSequenceEqual(
+            new[] { nameof(RecordingSyncResource.CleanupAsync), nameof(RecordingSyncResource.Dispose) },
+            resource.Invocations);
     }
 
     [TestMethod]
