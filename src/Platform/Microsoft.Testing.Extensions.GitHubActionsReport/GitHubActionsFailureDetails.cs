@@ -97,21 +97,31 @@ internal static class GitHubActionsFailureDetails
     internal const int MaxStackTraceRows = 30;
 
     /// <summary>
-    /// GitHub's hard limit on a single job summary file. Exceeding it makes GitHub drop the summary entirely —
-    /// silently, with no error or warning in the workflow log — so the reporters aim well below it.
+    /// GitHub's hard limit on a single job summary file. An oversized summary is discarded in full — the
+    /// runner logs <c>$GITHUB_STEP_SUMMARY upload aborted</c> and nothing is rendered — rather than being
+    /// truncated, so the reporters aim well below it.
     /// </summary>
     /// <remarks>
-    /// The documented limit is 1 MiB, but the runner rejects at two bytes below it and reports nothing when it
-    /// does (<see href="https://github.com/actions/runner/issues/4337"/>). <see cref="EffectiveStepSummaryLimit"/>
-    /// is what this extension actually compares against; the difference is immaterial next to the headroom in
-    /// <see cref="MaxSummaryLength"/>, but the constant should not claim a limit the runner does not honor.
+    /// Verified empirically: a step writing 1,148,551 bytes produced
+    /// <c>##[error]$GITHUB_STEP_SUMMARY upload aborted, supports content up to a size of 1024k, got 1121k</c>
+    /// and rendered no summary at all, confirming that exceeding the limit costs the whole file rather than
+    /// its tail. The documented limit is 1 MiB, but the runner has been reported to reject just below it
+    /// (<see href="https://github.com/actions/runner/issues/4337"/>), which is why
+    /// <see cref="EffectiveStepSummaryLimit"/> rather than this constant is what the reporters compare against.
     /// </remarks>
     internal const int GitHubStepSummaryLimit = 1024 * 1024;
 
     /// <summary>
-    /// The size at which the runner is known to actually reject a job summary, which is two bytes below the
-    /// documented <see cref="GitHubStepSummaryLimit"/>.
+    /// The size the reporters treat as the point of no return: the documented limit less a small safety margin.
     /// </summary>
+    /// <remarks>
+    /// Measured behaviour on ubuntu-latest with byte-exact writes: a summary of exactly
+    /// <see cref="GitHubStepSummaryLimit"/> bytes is accepted, and the limit is therefore inclusive. The margin
+    /// exists because <see href="https://github.com/actions/runner/issues/4337"/> reports summaries being
+    /// rejected just below the documented figure — that did not reproduce here, but the report is recent and the
+    /// cost of the margin is two bytes out of a megabyte, against the cost of being wrong, which is the entire
+    /// summary.
+    /// </remarks>
     internal const int EffectiveStepSummaryLimit = GitHubStepSummaryLimit - 2;
 
     /// <summary>

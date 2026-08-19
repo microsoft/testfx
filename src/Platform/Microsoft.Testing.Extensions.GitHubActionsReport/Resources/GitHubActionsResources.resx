@@ -217,7 +217,7 @@
     <comment>Appended to a single-line test project verdict when the shared job summary file is close to GitHub's size limit.</comment>
   </data>
   <data name="StepSummaryLimitExceededWarning" xml:space="preserve">
-    <value>The GitHub job summary file is {0} bytes, which exceeds the {1}-byte limit GitHub enforces per step. GitHub discards an oversized job summary without reporting an error, so the Summary page for this run will be empty. This test project's section was not appended, to avoid adding to a file that will be discarded. This usually means many test projects, or other tools, are writing to the same job summary; see the workflow log or the test report for full results.</value>
+    <value>The GitHub job summary file is {0} bytes and appending this test project's section would exceed the {1}-byte limit GitHub enforces per step. GitHub discards an oversized job summary in full rather than truncating it, so appending would have lost every section, including those other test projects already wrote. This project's section was skipped to keep the rest of the summary intact. This usually means many test projects, or other tools, are writing to the same job summary; see the workflow log or the test report for this project's results.</value>
     <comment>{0} is the current size of the job summary file in bytes, {1} is the limit in bytes.</comment>
   </data>
 </root>
