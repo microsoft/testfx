@@ -56,9 +56,6 @@ internal sealed partial class TrxReportEngine
     private static bool IsReparsePoint(string path)
         => (File.GetAttributes(path) & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint;
 
-    private static bool IsReparsePointOrInaccessible(string path)
-        => GetReparsePointStatus(path, static path => File.GetAttributes(path)) is not false;
-
     /// <summary>
     /// Returns whether <paramref name="path"/> is a reparse point, or <see langword="null"/> when its
     /// attributes cannot be read. A missing entry returns <see langword="false"/> because callers may
@@ -91,13 +88,22 @@ internal sealed partial class TrxReportEngine
     /// such trees.
     /// </summary>
     private static bool HasReparsePointComponent(string candidateFullPath, string baseDirectory)
+        => HasReparsePointComponent(
+            candidateFullPath,
+            baseDirectory,
+            static path => File.GetAttributes(path));
+
+    private static bool HasReparsePointComponent(
+        string candidateFullPath,
+        string baseDirectory,
+        Func<string, FileAttributes> getAttributes)
     {
         string baseFull = Path.GetFullPath(baseDirectory);
         string current = candidateFullPath;
 
         while (!string.Equals(current, baseFull, PathComparison) && IsUnderDirectory(current, baseFull))
         {
-            if (IsReparsePointOrInaccessible(current))
+            if (GetReparsePointStatus(current, getAttributes) is not false)
             {
                 return true;
             }

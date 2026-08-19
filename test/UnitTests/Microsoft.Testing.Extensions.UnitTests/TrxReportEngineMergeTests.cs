@@ -16,6 +16,14 @@ public sealed class TrxReportEngineMergeTests
     private static readonly MethodInfo GetReparsePointStatusMethod = typeof(TrxReportEngine)
         .GetMethod("GetReparsePointStatus", BindingFlags.NonPublic | BindingFlags.Static)!;
 
+    private static readonly MethodInfo HasReparsePointComponentMethod = typeof(TrxReportEngine)
+        .GetMethods(BindingFlags.NonPublic | BindingFlags.Static)
+        .Single(method => method.Name == "HasReparsePointComponent" && method.GetParameters().Length == 3);
+
+    private static readonly MethodInfo RelocateAttachmentsMethod = typeof(TrxReportEngine)
+        .GetMethods(BindingFlags.NonPublic | BindingFlags.Static)
+        .Single(method => method.Name == "RelocateAttachments" && method.GetParameters().Length == 7);
+
     [TestMethod]
     public void Merge_WithNullReports_ThrowsArgumentNullException()
         => Assert.ThrowsExactly<ArgumentNullException>(() => TrxReportEngine.Merge(null!, Guid.NewGuid(), "run"));
@@ -107,6 +115,83 @@ public sealed class TrxReportEngineMergeTests
                 "invalid",
                 _ => throw new InvalidOperationException()));
 
+    [TestMethod]
+    public void HasReparsePointComponent_WhenAttributesCannotBeRead_RejectsComponent()
+    {
+        string baseDirectory = Path.GetFullPath(Path.Combine(Path.GetTempPath(), $"trx-merge-{Guid.NewGuid():N}"));
+        string candidate = Path.Combine(baseDirectory, "child");
+        int callCount = 0;
+
+        bool result = HasReparsePointComponent(
+            candidate,
+            baseDirectory,
+            _ =>
+            {
+                callCount++;
+                throw new UnauthorizedAccessException();
+            });
+
+        Assert.IsTrue(result);
+        Assert.AreEqual(1, callCount);
+    }
+
+    [TestMethod]
+    public void RelocateAttachments_WhenMergedInRootAttributesCannotBeRead_DropsReferencesWithoutDeletingRoot()
+    {
+        string tempDirectory = Path.Combine(Path.GetTempPath(), $"trx-merge-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDirectory);
+        try
+        {
+            var runId = Guid.NewGuid();
+            const string runName = "run";
+            string outputDirectory = Path.Combine(tempDirectory, "out");
+            string mergedInRoot = Path.Combine(outputDirectory, $"{runName}.{runId:N}", "In");
+            Directory.CreateDirectory(mergedInRoot);
+            string markerFile = Path.Combine(mergedInRoot, "marker.txt");
+            File.WriteAllText(markerFile, "keep");
+
+            string inputDirectory = Path.Combine(tempDirectory, "input");
+            string sourceInRoot = Path.Combine(inputDirectory, "dep", "In");
+            Directory.CreateDirectory(sourceInRoot);
+            File.WriteAllText(Path.Combine(sourceInRoot, "relative.txt"), "attachment");
+            string inputPath = Path.Combine(inputDirectory, "input.trx");
+
+            var collectorDataEntries = new XElement(
+                Ns + "CollectorDataEntries",
+                new XElement(
+                    Ns + "Collector",
+                    new XElement(
+                        Ns + "UriAttachments",
+                        new XElement(Ns + "UriAttachment", new XElement(Ns + "A", new XAttribute("href", "relative.txt"))))));
+            XDocument report = BuildReport(resultSummaryChildren: [collectorDataEntries]);
+            report.Root!.Add(new XElement(
+                Ns + "TestSettings",
+                new XAttribute("name", "default"),
+                new XElement(Ns + "Deployment", new XAttribute("runDeploymentRoot", "dep"))));
+
+            RelocateAttachments(
+                [inputPath],
+                [report],
+                outputDirectory,
+                runId,
+                runName,
+                CancellationToken.None,
+                path => path == mergedInRoot
+                    ? throw new UnauthorizedAccessException()
+                    : File.GetAttributes(path));
+
+            Assert.IsEmpty(report.Descendants().Where(element => element.Name.LocalName == "A"));
+            Assert.IsTrue(Directory.Exists(mergedInRoot));
+            Assert.IsTrue(File.Exists(markerFile));
+            Assert.IsEmpty(Directory.GetDirectories(mergedInRoot));
+            Assert.HasCount(1, Directory.GetFiles(mergedInRoot));
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
 #if NETCOREAPP
     [TestMethod]
     public void GetReparsePointStatus_WhenDirectoryLinkIsDangling_ReturnsTrue()
@@ -138,10 +223,41 @@ public sealed class TrxReportEngineMergeTests
 #endif
 
     private static bool? GetReparsePointStatus(string path, Func<string, FileAttributes> getAttributes)
+        => (bool?)InvokePrivate(GetReparsePointStatusMethod, path, getAttributes);
+
+    private static bool HasReparsePointComponent(
+        string candidateFullPath,
+        string baseDirectory,
+        Func<string, FileAttributes> getAttributes)
+        => (bool)InvokePrivate(
+            HasReparsePointComponentMethod,
+            candidateFullPath,
+            baseDirectory,
+            getAttributes)!;
+
+    private static void RelocateAttachments(
+        IReadOnlyList<string> inputPaths,
+        IReadOnlyList<XDocument> reports,
+        string outputDirectory,
+        Guid runId,
+        string runName,
+        CancellationToken cancellationToken,
+        Func<string, FileAttributes> getAttributes)
+        => InvokePrivate(
+            RelocateAttachmentsMethod,
+            inputPaths,
+            reports,
+            outputDirectory,
+            runId,
+            runName,
+            cancellationToken,
+            getAttributes);
+
+    private static object? InvokePrivate(MethodInfo method, params object?[] arguments)
     {
         try
         {
-            return (bool?)GetReparsePointStatusMethod.Invoke(null, [path, getAttributes]);
+            return method.Invoke(null, arguments);
         }
         catch (TargetInvocationException ex) when (ex.InnerException is not null)
         {
