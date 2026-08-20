@@ -31,40 +31,33 @@ internal static class BinlogReader
     /// </summary>
     private const string OpenFailureErrorText = "Error when opening the log file.";
 
-    private const int MaxAttempts = 3;
-
     private static readonly Lock ReadLock = new();
 
     /// <summary>
     /// Reads <paramref name="binlogPath"/>, serialized against every other read that goes through this helper.
     /// </summary>
     /// <exception cref="InvalidOperationException">
-    /// The reader kept returning an unusable tree. Never returns a silently empty <c>Build</c>.
+    /// The reader returned an unusable tree. Never returns a silently empty <c>Build</c>.
     /// </exception>
     public static SL.Build Read(string binlogPath)
     {
-        string? corruption = null;
-
-        for (int attempt = 0; attempt < MaxAttempts; attempt++)
+        SL.Build build;
+        lock (ReadLock)
         {
-            SL.Build build;
-            lock (ReadLock)
-            {
-                build = SL.Serialization.Read(binlogPath);
-            }
-
-            corruption = DescribeCorruption(build);
-            if (corruption is null)
-            {
-                return build;
-            }
+            build = SL.Serialization.Read(binlogPath);
         }
 
-        // With the lock held this is unreachable in practice. It is here so that a future version of the reader
-        // cannot quietly reintroduce an empty tree and turn every assertion over it into a meaningless result.
-        throw new InvalidOperationException(
-            $"Could not read the binlog '{binlogPath}' ({DescribeFile(binlogPath)}) after {MaxAttempts} attempts. " +
-            $"{corruption} Asserting over the returned tree would be meaningless, so the read fails here instead.");
+        // The lock is what removes the race, so this check is not expected to fire. It is here so that a future
+        // version of the reader cannot quietly reintroduce an empty tree and turn every assertion over it into a
+        // meaningless result. There is no retry: a read that fails with the lock held fails for a reason reading
+        // the same file again will not change.
+        string? corruption = DescribeCorruption(build);
+
+        return corruption is null
+            ? build
+            : throw new InvalidOperationException(
+                $"Could not read the binlog '{binlogPath}' ({DescribeFile(binlogPath)}). " +
+                $"{corruption} Asserting over the returned tree would be meaningless, so the read fails here instead.");
     }
 
     private static string? DescribeCorruption(SL.Build build)
