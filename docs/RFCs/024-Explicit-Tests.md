@@ -565,24 +565,28 @@ on the `ITestDataSource` attribute instance, reached by reflection exactly like 
 
 A method can carry several sources, and `TryExecuteFoldedDataDrivenTestsAsync` runs all of them under
 one parent, so one flag on the parent cannot answer both questions being asked of it. The parent
-carries `IsExplicit` and `ExplicitScope`, described under [Metadata](#metadata):
+carries `IsExplicit`, `ExplicitFromDeclaration` and `ExplicitFromSources`, described under
+[Metadata](#metadata):
 
-- **Gating**, `ExplicitScope`. The parent is gated as explicit when the class or the method declares
-  it, `ClassOrMethod`, or when every source on the method declares it, `AllSources`. Those are the
-  cases where the whole method skips, so the ordinary gate skips an unactivated parent before
-  `TypeCache.GetTestMethodInfo`, with no type load, exactly as for a method declaration. A method
-  whose sources disagree is `SomeSources`: it is not gated, it reaches enumeration, and each source is
-  resolved on its own below.
+- **Gating**, `ExplicitFromDeclaration` and `ExplicitFromSources`. The parent is gated as explicit
+  when the class or the method declares it, or when every source on the method declares it,
+  `ExplicitFromSources` of `All`. Those are the cases where the whole method skips, so the ordinary
+  gate skips an unactivated parent before `TypeCache.GetTestMethodInfo`, with no type load, exactly as
+  for a method declaration. A method with no class or method declaration whose sources disagree is
+  `Some`: it is not gated, it reaches enumeration, and each source is resolved on its own below.
 - **Selection**, `IsExplicit`. The parent is reported explicit when the class, the method, or any
   source declares it, so `/**[Explicit=True]` and `--filter "Explicit=True"` select it. Discovery does
   not record the source-wide ignore message on a folded parent today, and explicitness has to be
   recorded: an ignored parent never needs to be selectable, while an explicit one does.
 
-The reason on a gated parent follows the ordinary precedence, the most specific declaration that has
-one. When the declaration is source-only and several sources carry different reasons, the parent
-reports no reason rather than picking one, because a result that stands for every source cannot
-attribute itself to one of them. Each source's own reason is still reported when the sources are
-resolved individually.
+A gated parent reports one result standing for everything under it, so its reason has to be true of
+everything under it. A parent gated by a class or method declaration takes that declaration's reason,
+the more specific of the two, because one declaration covers the whole method and there is nothing to
+disagree with it. A parent gated by its sources takes the reason its sources agree on, and reports
+none on any disagreement, including one source carrying a reason where a sibling carries none. Picking
+the most specific available reason there would attribute one source's explanation to a result standing
+for all of them. Each source's own reason is still reported when the sources are resolved
+individually, which is where a per-source explanation belongs.
 
 `TryExecuteFoldedDataDrivenTestsAsync` then checks each source before calling `GetData` on it,
 immediately ahead of that source's `IgnoreMessage` check, the same place and the same granularity the
@@ -660,37 +664,42 @@ both:
 | Field | Meaning | Read by |
 | --- | --- | --- |
 | `IsExplicit` | the class, the method, or any source declares it | filters, node metadata, VSTest properties, reporting |
-| `ExplicitScope` | where the declaration came from: `ClassOrMethod`, `AllSources`, or `SomeSources` | the execution gate in `UnitTestRunner` |
-| `ExplicitReason` | the most specific declaration that has one, and none when the parent is gated by sources that disagree on it | reporting |
+| `ExplicitFromDeclaration` | the class or the method declares it | the execution gate in `UnitTestRunner` |
+| `ExplicitFromSources` | what the data sources say: `None`, `All`, or `Some` | the execution gate in `UnitTestRunner` |
+| `ExplicitReason` | see below, and none whenever the sources a gated parent stands for disagree | reporting |
 
-The gate skips when `IsExplicit` is true and the scope is anything other than `SomeSources`, so
-`ClassOrMethod` and `AllSources` gate and only `SomeSources` defers to the per-source checks. It is a
-scope rather than a boolean because deferring is the one answer that must be earned. A boolean has two
-values, so a single corrupted bit turns any explicit parent into a legitimate looking deferral,
-including one that is explicit at class or method scope with entirely ordinary sources, whose
-per-source checks would then find nothing explicit and run every row under Run All. Naming the
-provenance means deferral is a positive assertion that the explicitness is source scoped and mixed,
-which is the only situation that has anything downstream to catch it, and every other value including
-a missing or unrecognized one gates.
+The gate skips when `IsExplicit` is true unless `ExplicitFromDeclaration` is false and
+`ExplicitFromSources` is `Some`. Deferring to the per-source checks is the one answer that must be
+earned, so it takes a positive assertion from both fields, and everything else gates.
 
-`ExplicitScope` cannot be recomputed where it is read, because recomputing it means reading the source
-attributes, which loads the type the gate exists to avoid loading, so it travels rather than being
-derived. A VSTest `TestCase` reconstructed from serialized properties has only what was written to it,
-and `IsExplicit` alone cannot distinguish a parent where one of several sources is explicit from one
-where all of them are.
+They are two independent fields rather than one because a single field cannot be checked against
+anything. A boolean has two values, so one corrupted bit turns any explicit parent into a legitimate
+looking deferral. Collapsing them into one scope with three names is no better: a parent explicit at
+class scope whose sources are entirely ordinary, corrupted to say `Some`, still reads as a valid
+mixed-source deferral, and its per-source checks then find nothing explicit and run every row under
+Run All. Split, the class or method declaration is still asserted separately, so that combination is
+visibly inconsistent and gates. A declaration that always gates on its own never becomes deferrable
+through a value that describes the sources.
 
-- VSTest: adapter owned `MSTestDiscoverer.Explicit`, `MSTestDiscoverer.ExplicitScope` and
-  `MSTestDiscoverer.ExplicitReason` properties, round-tripped by `ToTestCase` and `ToUnitTestElement`.
+Neither field can be recomputed where it is read, because recomputing means reading the attributes,
+which loads the type the gate exists to avoid loading, so they travel rather than being derived. A
+VSTest `TestCase` reconstructed from serialized properties has only what was written to it, and
+`IsExplicit` alone cannot distinguish a parent where one of several sources is explicit from one where
+all of them are.
+
+- VSTest: adapter owned `MSTestDiscoverer.Explicit`, `MSTestDiscoverer.ExplicitFromDeclaration`,
+  `MSTestDiscoverer.ExplicitFromSources` and `MSTestDiscoverer.ExplicitReason` properties,
+  round-tripped by `ToTestCase` and `ToUnitTestElement`.
   These names are stable wire identifiers. `Explicit` is registered as a filterable string with values
   `True` and `False` compared case-insensitively, deliberately not a `bool`, so malformed persisted
   values reach the fail closed rule instead of being defaulted by VSTest's converter. A missing
   `Explicit` means false and a missing reason means no reason, so a case persisted by an older version
-  still deserializes. `ExplicitScope` is not filterable, it exists only so the gate has its input, and
-  it is a string compared ordinal case-insensitively against the three names for the same reason
-  `Explicit` is. `SomeSources` is honored only on a folded data-driven parent, the one shape with a
-  per-source check downstream, and the case says which shape it is in metadata it already carries, so
-  no type load is needed to ask. On any other shape it is inconsistent rather than a deferral and the
-  gate fires, as it does for a missing or unrecognized value on any shape. Over-skipping costs a folded
+  still deserializes. The two gate inputs are not filterable, they exist only so the gate has them,
+  and both are strings compared ordinal case-insensitively for the same reason `Explicit` is. The
+  deferral is honored only on a folded data-driven parent, the one shape with a per-source check
+  downstream, and the case says which shape it is in metadata it already carries, so no type load is
+  needed to ask. On any other shape it is inconsistent rather than a deferral and the gate fires, as it
+  does for a missing or unrecognized value in either field on any shape. Over-skipping costs a folded
   parent with disagreeing sources one explicit skip instead of its ordinary source's rows, which is
   visible and recoverable by selecting the test. Reasons are prose and stay unfilterable.
 - Native MTP: `MSTestTestNodeConverter` adds `Explicit` to every node, `True` or `False`, on both
@@ -711,7 +720,7 @@ where all of them are.
   the user through the skip message on the result, the same place the other hosts read it. UIDs do
   not change when `[Explicit]` is added, and a server client that ignores the metadata still receives
   ordinary nodes and ordinary skipped results. The native path keeps its elements in process, so
-  nothing is reconstructed there and `ExplicitScope` needs no node metadata.
+  nothing is reconstructed there and the two gate inputs need no node metadata.
 
 `Explicit` and `ExplicitReason` are reserved property names on both hosts, compared ordinal
 case-insensitively, because both hosts match case-insensitively: `ValueExpression` builds its regex
@@ -814,13 +823,14 @@ An upstream API that exposes a walkable tree replaces this later without changin
 - Mixed-source tests over one folded method carrying several data sources: an explicit source beside
   an ordinary one reports one explicit skip and still runs the ordinary source's rows under Run All,
   the parent is selected by `Explicit=True`, selecting it runs both sources, a method whose sources
-  are all explicit is gated with no type load, and two explicit sources with different reasons report
-  no reason on the gated parent and their own reasons when resolved individually. The same two methods
-  round-trip through a serialized VSTest `TestCase` and keep their gate answers, and the corruption
-  vectors all assert a skip rather than a run: `ExplicitScope` stripped, `ExplicitScope` unrecognized,
-  `SomeSources` on a plain explicit method, and `SomeSources` on a folded parent that is explicit at
-  class scope with entirely ordinary sources, which is the one that would otherwise run every row
-  because the per-source checks find nothing explicit to stop.
+  are all explicit is gated with no type load, and the gated parent's reason is the one its sources
+  agree on, with no reason reported when they disagree, including one source carrying a reason beside
+  a sibling that carries none, while each source still reports its own when resolved individually. The
+  same methods round-trip through a serialized VSTest `TestCase` and keep their gate answers, and the
+  corruption vectors all assert a skip rather than a run: either gate input stripped, either
+  unrecognized, a deferral claimed on a plain explicit method, and a deferral claimed on a folded
+  parent whose `ExplicitFromDeclaration` is still true, which is the one that would otherwise run every
+  row because the per-source checks find nothing explicit to stop.
 - A custom `ITestDataSource` test covering both ways in, the capability for every row and a
   `TestDataRow<T>` yielded as the single element of an `object?[]` for one row, asserting the wrapped
   row is recognized exactly as the `DynamicData` shape is.
