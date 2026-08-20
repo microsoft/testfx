@@ -218,9 +218,15 @@ dotnet test --filter "FullyQualifiedName~ResetsTheAttachedDevice"
 # every explicit test in a category, which is how an opt-in suite is usually run
 dotnet test --filter "TestCategory=Hardware"
 
-# every explicit test in the assembly
+# every test declared explicit at discovery, which is class, method, unfolded row, and data source
 dotnet test --filter "Explicit=True"
 ```
+
+`Explicit=True` reaches what discovery knows, and a folded data-driven method whose explicitness is
+declared on individual rows is not part of that, because a row declaration does not exist until the
+source runs. Selecting the method reaches those rows, by name or by any filter that matches it, since
+selecting a folded parent activates every row under it. A job that wants everything opt-in regardless
+of where it was declared wants `ExplicitTestMode=Run` rather than this filter.
 
 With Microsoft.Testing.Platform:
 
@@ -238,7 +244,7 @@ names what it wants:
 - script: dotnet test --filter "TestCategory=Hardware"
   displayName: Hardware suite
 
-# nightly, everything opt-in in one go
+# nightly, everything declared explicit at discovery
 - script: dotnet test --filter "Explicit=True"
   displayName: Explicit suite
 ```
@@ -264,12 +270,12 @@ Every execution carries two things:
 An ordinary test runs when it matches the constraint. An explicit test runs when it matches both.
 With no activation, explicit tests are reported skipped.
 
-Request filters feed both. Filters that come from `ITestFilterProvider` implementations, MTP
-extension providers, and other policy sources feed only the constraint, even when their syntax
-contains a positive leaf. They express repository policy, not user intent, so a provider that keeps
-only `TestCategory=CanRunOnThisMachine` narrows the run and never starts an explicit test. The
-executor receives the two values separately and must not try to recover activation from the composed
-platform filter:
+Request filters feed both. Filters that come from an MTP `ITestExecutionFilterProvider` extension,
+from MSTest's own `[TestFilterProvider]` assembly policy, and from other policy sources feed only the
+constraint, even when their syntax contains a positive leaf. They express repository policy, not user
+intent, so a provider that keeps only `TestCategory=CanRunOnThisMachine` narrows the run and never
+starts an explicit test. The executor receives the two values separately and must not try to recover
+activation from the composed platform filter:
 
 ```csharp
 internal sealed record TestSelection(
@@ -514,16 +520,34 @@ ordinary sibling rows keep running.
 
 Folded rows have no discovery identity, but not every declaration needs the data. Class, method, and
 source explicitness are all readable without running the source, because `IsExplicit` is a property
-on the `ITestDataSource` attribute instance, reached by reflection exactly like `IgnoreMessage`. A
-source-wide declaration is therefore recorded on the folded parent's `UnitTestElement` at discovery,
-and the ordinary gate skips an unactivated parent before `TypeCache.GetTestMethodInfo`, with no type
-load, exactly as for a method declaration. Discovery does not record the source-wide ignore message
-on a folded parent today, and explicitness has to be recorded: an ignored parent never needs to be
-selectable, while an explicit one must be selectable by `*[Explicit=True]`.
+on the `ITestDataSource` attribute instance, reached by reflection exactly like `IgnoreMessage`.
 
-`TryExecuteFoldedDataDrivenTestsAsync` then re-checks the source declaration before calling
-`GetData`, immediately ahead of the source-wide `IgnoreMessage` check, so a parent that arrives
-without the discovery metadata still produces one skipped result and enumerates nothing.
+A method can carry several sources, and `TryExecuteFoldedDataDrivenTestsAsync` runs all of them under
+one parent, so the parent's single explicit bit cannot mean two things at once. It is recorded twice,
+for two different jobs:
+
+- **Gating.** The parent is gated as explicit when the class or the method declares it, or when every
+  source on the method declares it. Those are the cases where the whole method skips, so the ordinary
+  gate skips an unactivated parent before `TypeCache.GetTestMethodInfo`, with no type load, exactly as
+  for a method declaration. A method whose sources disagree is not gated, it reaches enumeration, and
+  each source is resolved on its own below.
+- **Selection.** The parent is reported explicit when the class, the method, or any source declares
+  it, so `*[Explicit=True]` and `--filter "Explicit=True"` select it. Discovery does not record the
+  source-wide ignore message on a folded parent today, and explicitness has to be recorded: an ignored
+  parent never needs to be selectable, while an explicit one does.
+
+The reason on a gated parent follows the ordinary precedence, the most specific declaration that has
+one. When the declaration is source-only and several sources carry different reasons, the parent
+reports no reason rather than picking one, because a result that stands for every source cannot
+attribute itself to one of them. Each source's own reason is still reported when the sources are
+resolved individually.
+
+`TryExecuteFoldedDataDrivenTestsAsync` then checks each source before calling `GetData` on it,
+immediately ahead of that source's `IgnoreMessage` check, the same place and the same granularity the
+ignore check already uses. An unactivated explicit source produces one skipped result and enumerates
+nothing, and the sources beside it are unaffected, so a method mixing an explicit source with an
+ordinary one reports one explicit skip plus the ordinary source's rows. That check also catches a
+gated-looking parent that arrives without the discovery metadata.
 
 Only row declarations need the data. For a source that is not explicit, or one that is activated,
 each row is checked as it is produced, before per-row `TestInitialize`, before test-class
@@ -541,16 +565,16 @@ resolved only after type loading and the gate exists to avoid that load. Folded 
 
 - Unfolded rows carry both on the `UnitTestElement` from discovery, so ignore is resolved at the same
   point as explicitness and wins for every row.
-- A folded parent that is explicit and unactivated at class, method, or source scope reports one
-  explicit skip. The gate reads the element, which carries the explicit state and not the ignore
-  message, so reporting an ignored result would mean loading the type and calling the source. It must
-  not: an explicit test does not run its data source to find out that it would have been ignored
-  anyway. `GetData` is not called and no row metadata exists to take precedence.
-- The source re-check in `TryExecuteFoldedDataDrivenTestsAsync` sits ahead of the existing source
-  ignore check for the same reason, so a parent that arrives without the discovery metadata gives the
-  answer the gate would have given. That changes nothing for a source that declares ignore only,
-  because the explicit check is a no-op for it.
-- A folded parent that is explicit at none of those scopes, or is activated, reaches enumeration, so
+- A folded parent gated as explicit and unactivated reports one explicit skip. The gate reads the
+  element, which carries the explicit state and not the ignore message, so reporting an ignored result
+  would mean loading the type and calling the source. It must not: an explicit test does not run its
+  data source to find out that it would have been ignored anyway. `GetData` is not called and no row
+  metadata exists to take precedence.
+- The per-source check in `TryExecuteFoldedDataDrivenTestsAsync` sits ahead of that source's ignore
+  check for the same reason, so a source resolved there gives the answer the gate would have given for
+  it. That changes nothing for a source that declares ignore only, because the explicit check is a
+  no-op for it.
+- A folded parent that is gated at none of those scopes, or is activated, reaches enumeration, so
   row ignore metadata arrives alongside row explicit metadata and wins there, row by row. An
   activated parent whose source declares ignore reports one ignored result, exactly as today.
 
@@ -606,10 +630,12 @@ an execution request fails to activate it. Each `UnitTestElement` carries `IsExp
   not change when `[Explicit]` is added, and a server client that ignores the metadata still receives
   ordinary nodes and ordinary skipped results.
 
-A folded parent carries its class, method, and source declarations. The source declaration is read
-from the attribute instance and needs no enumeration, so a method whose source is explicit is
-reported explicit at discovery and `*[Explicit=True]` and `--filter "Explicit=True"` select it. Only
-row declarations are missing from the parent, they do not exist until the data is enumerated.
+A folded parent carries its class, method, and source declarations. A source declaration is read from
+the attribute instance and needs no enumeration, so a method with any explicit source is reported
+explicit at discovery and `*[Explicit=True]` and `--filter "Explicit=True"` select it, whether or not
+its other sources are explicit. Only row declarations are missing from the parent, they do not exist
+until the data is enumerated, so a folded method whose explicitness lives only in rows is not
+selectable by those filters and is reached by selecting the method instead.
 
 Skipped results carry `The test is explicit and was not selected.`, with `Reason: <reason>` appended
 when one exists. The reason is copied verbatim, only the decision whether it is empty inspects it,
@@ -630,12 +656,12 @@ and it does not print one console line per skipped test.
 | --- | --- |
 | Framework | `ExplicitAttribute`, the data capability interface, row properties, public API baseline |
 | Discovery | `TypeEnumerator` reads class and method declarations, `AssemblyEnumerator` merges source and row declarations while unfolding |
-| Execution | pre-initialization gate in `UnitTestRunner`, per-row checks in `TestMethodRunner.DataRow` |
+| Execution | pre-initialization gate in `UnitTestRunner`, per-source and per-row checks in `TestMethodRunner.DataRow` |
 | VSTest | classify source versus test-case execution in `MSTestExecutor`, register and round-trip properties, evaluate activation in `TestMethodFilter` |
 | Native MTP | build activation from UID, tree, and property filters in `MSTestFilterContext` and `MtpTestElementFilter`, accept tree node and graph filters instead of throwing, add node metadata |
 | Platform | `TestExecutionFilterComposer` and the request factories keep the original request filter next to the provider-constrained one, on an internal surface reached through the existing friend assembly |
 | Retry | the process retry extension carries the original activation alongside the failed-UID list, so a retry attempt inherits it instead of reading its own `--filter-uid` as a selection |
-| Settings | three `ExplicitTestMode` values with existing precedence, plus localized resources |
+| Settings | three `ExplicitTestMode` values with existing precedence, `explicitTestMode` added to `docs/testconfig.schema.json`, whose `mstest.execution` object sets `additionalProperties: false`, plus localized resources |
 | Source generation | root `ExplicitAttribute` and capability bearing types, keep reading through the existing reflection abstraction so generated and reflection discovery produce identical metadata |
 
 The platform change adds no public MTP API. `TestExecutionRequest.Filter` stays the effective
@@ -672,7 +698,14 @@ An upstream API that exposes a walkable tree replaces this later without changin
 - Filter-path agreement tests for `Explicit` as node metadata: `*[Explicit=True]` selects the same
   tests through `MtpTestElementFilter` before nodes exist as `TreeNodeFilter` matches against the
   `TestMetadataProperty` the converter writes, and `Explicit` appears in neither the trait nor the
-  category surfaces.
+  category surfaces. One asserts the documented reachability boundary directly: a folded method with
+  an explicit source is selected, a folded method whose explicitness is only on rows is not, and
+  selecting that method by name runs its explicit rows.
+- Mixed-source tests over one folded method carrying several data sources: an explicit source beside
+  an ordinary one reports one explicit skip and still runs the ordinary source's rows under Run All,
+  the parent is selected by `Explicit=True`, selecting it runs both sources, a method whose sources
+  are all explicit is gated with no type load, and two explicit sources with different reasons report
+  no reason on the gated parent and their own reasons when resolved individually.
 - Execution tests proving no type load, no fixture, no body, and no retry for an unactivated test,
   correct cleanup counts for explicit skips, and folded and unfolded row behavior. One covers the
   folded parent that is itself explicit and unactivated, asserting the data source never runs and the
@@ -750,6 +783,8 @@ to select on any adapter, so it is not done.
 | Can a provider or policy filter activate? | Never, including assembly `ITestFilter` returning `Run`. |
 | Can selection override `[Ignore]` or a condition? | No, it removes the explicit gate only. |
 | Does selecting a class or namespace activate what is under it? | Yes, and selecting a folded parent activates all its rows. |
+| Does `Explicit=True` reach every explicit test? | It reaches every declaration known at discovery. A folded method explicit only on rows is reached by selecting the method, or by `ExplicitTestMode=Run`. |
+| What if a folded method has several data sources? | It is gated only when all of them are explicit, otherwise each source is resolved on its own before its `GetData`. |
 | Can a row opt out of an explicit method or source? | No, declarations OR-compose. |
 | Which reason wins? | The most specific explicit declaration that has one. |
 | What happens when activation cannot be determined? | Nothing activates, the request constrains only. |
