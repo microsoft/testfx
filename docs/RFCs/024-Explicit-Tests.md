@@ -674,12 +674,15 @@ one of several sources is explicit from one where all of them are.
   values reach the fail closed rule instead of being defaulted by VSTest's converter. A missing
   `Explicit` means false and a missing reason means no reason, so a case persisted by an older version
   still deserializes. `ExplicitGate` is not filterable, it exists only so the gate has its input, and
-  a missing or malformed one gates whenever `Explicit` is true. It fails closed like every other
-  unreadable value here, and in the same direction: the alternative, treating it as not gated, is only
-  safe for a folded parent, where the per-source check downstream still stops the run, and a plain
-  explicit method has no such check, so Run All would execute it. Over-skipping costs a folded parent
-  with disagreeing sources one explicit skip instead of its ordinary source's rows, which is visible
-  and recoverable by selecting the test. Reasons are prose and stay unfilterable.
+  the gate does not trust it on its own. `Explicit=True` with `ExplicitGate=False` is only meaningful
+  for a folded data-driven parent, the one shape with a per-source check downstream to stop the run,
+  and the case says which shape it is in metadata it already carries, so no type load is needed to
+  ask. On any other shape that pair is inconsistent rather than a deferral, and the gate fires. So
+  does a missing or malformed `ExplicitGate` on any shape. Both fail closed like every other
+  unreadable value here, and for the same reason: a plain explicit method has nothing downstream, so
+  believing a `False` there would let Run All execute it. Over-skipping costs a folded parent with
+  disagreeing sources one explicit skip instead of its ordinary source's rows, which is visible and
+  recoverable by selecting the test. Reasons are prose and stay unfilterable.
 - Native MTP: `MSTestTestNodeConverter` adds `Explicit` to every node, `True` or `False`, on both
   discovered and result nodes. `Explicit` is a `TestMetadataProperty`, which is the property type
   `[Key=Value]` in a tree node filter matches, so `/**[Explicit=True]` works with no platform matcher
@@ -801,7 +804,9 @@ An upstream API that exposes a walkable tree replaces this later without changin
   no reason on the gated parent and their own reasons when resolved individually. The same two methods
   round-trip through a serialized VSTest `TestCase` and keep their gate answers, and one whose
   `ExplicitGate` is stripped is gated rather than run, together with a plain explicit method stripped
-  the same way, which is the case that would otherwise execute under Run All.
+  the same way, which is the case that would otherwise execute under Run All. A plain explicit method
+  carrying a well-formed `ExplicitGate=False` is gated too, since that pair is inconsistent for a
+  shape with nothing downstream, while the same pair on a folded parent is honored.
 - A custom `ITestDataSource` test covering both ways in, the capability for every row and a
   `TestDataRow<T>` yielded as the single element of an `object?[]` for one row, asserting the wrapped
   row is recognized exactly as the `DynamicData` shape is.
