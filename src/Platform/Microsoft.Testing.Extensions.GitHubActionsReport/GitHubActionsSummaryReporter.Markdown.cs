@@ -8,6 +8,12 @@ namespace Microsoft.Testing.Extensions.GitHubActionsReport;
 
 internal sealed partial class GitHubActionsSummaryReporter
 {
+    /// <summary>
+    /// Marks a full test project section, so the truncation note can state how many test projects got their
+    /// results into the summary without depending on the localized heading text.
+    /// </summary>
+    internal const string ProjectSectionMarker = "<!-- microsoft-testing-platform:github:project-section -->";
+
     internal static /* for testing */ string BuildMarkdown(IReadOnlyList<TestRecord> records, string assemblyName, string targetFrameworkMoniker, int exitCode, bool includeFailureDetails = true, int detailsBudget = GitHubActionsFailureDetails.MaxTotalDetailsLength)
     {
         int total = records.Count;
@@ -45,6 +51,7 @@ internal sealed partial class GitHubActionsSummaryReporter
         string statusIcon = runFailed ? "❌" : "✅";
 
         var builder = new StringBuilder();
+        builder.Append(ProjectSectionMarker).Append('\n');
         builder.Append("## ").Append(statusIcon).Append(" Test Run Summary — ").Append(assemblyName).Append(" (").Append(targetFrameworkMoniker).Append(")\n\n");
         builder.Append("| Total | Passed | Failed | Skipped | Duration |\n");
         builder.Append("|---:|---:|---:|---:|---:|\n");
@@ -210,28 +217,39 @@ internal sealed partial class GitHubActionsSummaryReporter
     }
 
     /// <summary>
-    /// Marks the closing truncation note in the shared summary file so a later test project can find the note
-    /// it (or a sibling) already wrote instead of appending a second copy.
+    /// Marks the start of the truncation note in the shared summary file so a later test project can find the
+    /// note it (or a sibling) already wrote and replace it, rather than appending a second copy.
     /// </summary>
     internal const string TruncationNoticeMarker = "<!-- microsoft-testing-platform:github:summary-truncated -->";
 
     /// <summary>
-    /// Renders the closing note that tells the reader the summary stops short on purpose: GitHub discards an
-    /// oversized job summary in full, so this extension condenses and then stops rather than losing everything.
+    /// Marks the end of the truncation note. The note carries a project count, so its length varies and it
+    /// cannot be located by its text alone.
     /// </summary>
+    internal const string TruncationNoticeEndMarker = "<!-- /microsoft-testing-platform:github:summary-truncated -->";
+
+    /// <summary>
+    /// Renders the note that tells the reader the summary was shortened on purpose, and how many test projects
+    /// did get their full results in before that happened.
+    /// </summary>
+    /// <param name="reportedProjectCount">
+    /// The number of test projects whose full results are in the summary, counted from the file itself. Each
+    /// test project runs in its own process and cannot know how many siblings will follow, so this is whatever
+    /// is visible when the note is written.
+    /// </param>
     /// <remarks>
-    /// Without this note the summary simply ends, which is indistinguishable from the reporter crashing or the
-    /// run being cut short. The note is deliberately small — it is written while the file is already close to
-    /// the cap, so it has to cost a few hundred bytes, not a few thousand.
+    /// Without this note the report is silently incomplete: the reader sees one-line verdicts with no indication
+    /// that anything was left out. The note is deliberately small — it is written while the file is already well
+    /// into GitHub's cap, so it has to cost a few hundred bytes, not a few thousand.
     /// </remarks>
-    internal static /* for testing */ string BuildTruncationNotice()
+    internal static /* for testing */ string BuildTruncationNotice(int reportedProjectCount)
     {
         string message = string.Format(
             CultureInfo.InvariantCulture,
             GitHubActionsResources.SummaryTruncatedNotice,
-            GitHubActionsFailureDetails.EffectiveStepSummaryLimit.ToString(CultureInfo.InvariantCulture));
+            reportedProjectCount.ToString(CultureInfo.InvariantCulture));
 
-        return $"{TruncationNoticeMarker}\n> [!WARNING]\n> {message}\n\n";
+        return $"{TruncationNoticeMarker}\n> [!WARNING]\n> {message}\n{TruncationNoticeEndMarker}\n\n";
     }
 
     /// <summary>

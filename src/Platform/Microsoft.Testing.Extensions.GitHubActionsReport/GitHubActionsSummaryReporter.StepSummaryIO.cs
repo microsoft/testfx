@@ -68,8 +68,10 @@ internal sealed partial class GitHubActionsSummaryReporter
     }
 
     /// <summary>
-    /// Appends <paramref name="content"/> to the shared <c>GITHUB_STEP_SUMMARY</c> file, having first placed
-    /// <paramref name="notice"/> at the very top of that file if it is not there already.
+    /// Appends <paramref name="content"/> to the shared <c>GITHUB_STEP_SUMMARY</c> file, having first placed the
+    /// note built by <c>noticeFactory</c> at the very top of that file if it is not there already. The factory
+    /// receives the number of full test project sections already in the file, and is invoked while this process
+    /// holds the file exclusively so the count cannot change under it.
     /// </summary>
     /// <remarks>
     /// The note belongs at the top for two reasons. It is the first thing the reader sees, which is what a warning
@@ -78,15 +80,16 @@ internal sealed partial class GitHubActionsSummaryReporter
     /// placed at the end is only last until the next append, so it cannot be kept there.
     /// <para>
     /// Hoisting the note rewrites the file, so it is done once: every later project finds the marker already
-    /// present and simply appends. That single rewrite happens when the budget first runs out, while the file is
-    /// still only a fraction of GitHub's cap.
+    /// present and simply appends. The count it quotes stays correct without being rewritten, because a project is
+    /// only shortened once the file is past the condense threshold, and from that point on no further full
+    /// sections are added — so the number of them can no longer change.
     /// </para>
     /// </remarks>
     internal static /* for testing */ async Task AppendStepSummaryWithLeadingNoticeAsync(
         IFileSystem fileSystem,
         string path,
         string content,
-        string notice,
+        Func<int, string> noticeFactory,
         int maxAttempts,
         TimeSpan retryDelay,
         CancellationToken cancellationToken)
@@ -133,7 +136,7 @@ internal sealed partial class GitHubActionsSummaryReporter
 
                 byte[] payload = noticeAlreadyPresent
                     ? encoding.GetBytes(content)
-                    : encoding.GetBytes(notice + existing + content);
+                    : encoding.GetBytes(noticeFactory(CountProjectSections(existing)) + existing + content);
 
                 // Rewriting from the start is only correct because the note is hoisted at most once per job; from
                 // then on this is a plain append.
@@ -157,6 +160,22 @@ internal sealed partial class GitHubActionsSummaryReporter
 
             return;
         }
+    }
+
+    /// <summary>
+    /// Counts the full test project sections this extension has written to the shared summary file.
+    /// </summary>
+    internal static /* for testing */ int CountProjectSections(string summary)
+    {
+        int count = 0;
+        int index = summary.IndexOf(ProjectSectionMarker, StringComparison.Ordinal);
+        while (index >= 0)
+        {
+            count++;
+            index = summary.IndexOf(ProjectSectionMarker, index + ProjectSectionMarker.Length, StringComparison.Ordinal);
+        }
+
+        return count;
     }
 
     internal static async Task UpsertStepSummaryWithRetryAsync(

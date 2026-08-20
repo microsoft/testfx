@@ -245,7 +245,16 @@ internal sealed partial class GitHubActionsSummaryReporter :
             // The note is only warranted once whole project sections start disappearing. Dropping the expanded
             // diagnostics leaves every project and every failing test still named, which is a shortened report
             // rather than an incomplete one, and does not need a warning at the top of the page.
-            string truncationNotice = condenseSection ? BuildTruncationNotice() : string.Empty;
+            //
+            // The project count it quotes is read from the summary file when the note is written, so it is passed
+            // as a factory rather than a string: only the writer holds the file exclusively, and only it can count
+            // without racing a sibling project.
+            bool includeTruncationNotice = condenseSection;
+
+            // Size the gate against the largest the note can plausibly be. The exact length depends on a project
+            // count that is not known until the file is opened, and an underestimate here would let the write
+            // cross the limit and cost the whole summary.
+            int noticeLengthAllowance = includeTruncationNotice ? BuildTruncationNotice(int.MaxValue).Length : 0;
 
             // Final gate, on the *projected* size rather than the current one. The budgeting above aims the file
             // at MaxSummaryLength, but it cannot bound what other tools append to the same file, so the file can
@@ -253,7 +262,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
             // discards an oversized summary silently and in full — including every section earlier projects
             // wrote — so a write that would cross the limit is worse than no write at all.
             if (GetSummaryLength(_fileSystem, path!, _logger) is long currentLength
-                && currentLength + markdown.Length + truncationNotice.Length > GitHubActionsFailureDetails.EffectiveStepSummaryLimit)
+                && currentLength + markdown.Length + noticeLengthAllowance > GitHubActionsFailureDetails.EffectiveStepSummaryLimit)
             {
                 string overflowWarning = string.Format(
                     CultureInfo.InvariantCulture,
@@ -272,16 +281,15 @@ internal sealed partial class GitHubActionsSummaryReporter :
                 // summary describes, so make sure it is there even if this project was not condensed. The note is
                 // a few hundred bytes and dropping the section frees far more room than it takes; if even that
                 // does not fit, the summary is genuinely full and silence is what keeps the rest rendered.
-                string overflowNotice = truncationNotice.Length > 0 ? truncationNotice : BuildTruncationNotice();
-                if (currentLength + overflowNotice.Length <= GitHubActionsFailureDetails.EffectiveStepSummaryLimit)
+                if (currentLength + BuildTruncationNotice(int.MaxValue).Length <= GitHubActionsFailureDetails.EffectiveStepSummaryLimit)
                 {
-                    await TryAppendSummaryAsync(path!, string.Empty, overflowNotice, testSessionContext).ConfigureAwait(false);
+                    await TryAppendSummaryAsync(path!, string.Empty, includeNotice: true, testSessionContext).ConfigureAwait(false);
                 }
 
                 return;
             }
 
-            await TryAppendSummaryAsync(path!, markdown, truncationNotice, testSessionContext).ConfigureAwait(false);
+            await TryAppendSummaryAsync(path!, markdown, includeTruncationNotice, testSessionContext).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {
@@ -297,13 +305,13 @@ internal sealed partial class GitHubActionsSummaryReporter :
     /// Writes this project's section to the shared summary file, best-effort: a failure to write the summary must
     /// not fail the test run, so it surfaces as a warning.
     /// </summary>
-    private async Task TryAppendSummaryAsync(string path, string markdown, string truncationNotice, ITestSessionContext testSessionContext)
+    private async Task TryAppendSummaryAsync(string path, string markdown, bool includeNotice, ITestSessionContext testSessionContext)
     {
         try
         {
-            if (truncationNotice.Length > 0)
+            if (includeNotice)
             {
-                await AppendStepSummaryWithLeadingNoticeAsync(_fileSystem, path, markdown, truncationNotice, StepSummaryMaxWriteAttempts, StepSummaryRetryDelay, testSessionContext.CancellationToken).ConfigureAwait(false);
+                await AppendStepSummaryWithLeadingNoticeAsync(_fileSystem, path, markdown, BuildTruncationNotice, StepSummaryMaxWriteAttempts, StepSummaryRetryDelay, testSessionContext.CancellationToken).ConfigureAwait(false);
             }
             else
             {

@@ -797,17 +797,36 @@ public sealed class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
-    public void BuildTruncationNotice_SaysWhatWasLeftOutAndWhy()
+    public void BuildTruncationNotice_SaysHowManyProjectsGotTheirResultsIn()
     {
-        string notice = GitHubActionsSummaryReporter.BuildTruncationNotice();
+        string notice = GitHubActionsSummaryReporter.BuildTruncationNotice(7);
 
         Assert.Contains(GitHubActionsSummaryReporter.TruncationNoticeMarker, notice);
+        Assert.Contains(GitHubActionsSummaryReporter.TruncationNoticeEndMarker, notice);
         Assert.Contains("shortened", notice);
-        // The reader needs to know what is missing — whole project results, not just some detail — and that an
-        // oversized summary is discarded outright, which is why shortening is the lesser evil.
-        Assert.Contains("single line", notice);
-        Assert.Contains("discards", notice);
-        Assert.Contains(GitHubActionsFailureDetails.EffectiveStepSummaryLimit.ToString(CultureInfo.InvariantCulture), notice);
+        // The count is the point: it tells the reader how much of the report they can trust as complete.
+        Assert.Contains("7", notice);
+        // The limit is quoted in round units, not to the byte — the exact figure is noise to the reader.
+        Assert.Contains("1 MB", notice);
+        Assert.DoesNotContain(GitHubActionsFailureDetails.EffectiveStepSummaryLimit.ToString(CultureInfo.InvariantCulture), notice);
+    }
+
+    [TestMethod]
+    public void CountProjectSections_CountsOnlyFullSections()
+    {
+        string full = GitHubActionsSummaryReporter.BuildMarkdown(
+            [new GitHubActionsTestRecord("T", "T.Test", GitHubActionsTerminalKind.Passed, TimeSpan.Zero)],
+            "T",
+            "net9.0",
+            exitCode: 0);
+        string condensed = GitHubActionsSummaryReporter.BuildMinimalMarkdown(
+            [new GitHubActionsTestRecord("T", "T.Test", GitHubActionsTerminalKind.Passed, TimeSpan.Zero)],
+            "T",
+            "net9.0",
+            exitCode: 0);
+
+        Assert.AreEqual(0, GitHubActionsSummaryReporter.CountProjectSections(condensed));
+        Assert.AreEqual(2, GitHubActionsSummaryReporter.CountProjectSections(full + condensed + full));
     }
 
     [TestMethod]
@@ -818,18 +837,17 @@ public sealed class GitHubActionsSummaryReporterTests
         {
             File.WriteAllText(path, "earlier-project\n");
             var fileSystem = new SystemFileSystem();
-            string notice = GitHubActionsSummaryReporter.BuildTruncationNotice();
 
             await GitHubActionsSummaryReporter.AppendStepSummaryWithLeadingNoticeAsync(
-                fileSystem, path, "first-project\n", notice, maxAttempts: 1, retryDelay: TimeSpan.Zero, CancellationToken.None);
+                fileSystem, path, "first-project\n", GitHubActionsSummaryReporter.BuildTruncationNotice, maxAttempts: 1, retryDelay: TimeSpan.Zero, CancellationToken.None);
             await GitHubActionsSummaryReporter.AppendStepSummaryWithLeadingNoticeAsync(
-                fileSystem, path, "second-project\n", notice, maxAttempts: 1, retryDelay: TimeSpan.Zero, CancellationToken.None);
+                fileSystem, path, "second-project\n", GitHubActionsSummaryReporter.BuildTruncationNotice, maxAttempts: 1, retryDelay: TimeSpan.Zero, CancellationToken.None);
 
             string summary = File.ReadAllText(path);
 
             // The warning leads the report, so a reader meets it before the sections it is warning about, and the
             // content that was already there keeps its order behind it.
-            Assert.StartsWith(notice, summary);
+            Assert.StartsWith(GitHubActionsSummaryReporter.TruncationNoticeMarker, summary);
             Assert.IsLessThan(
                 summary.IndexOf("first-project", StringComparison.Ordinal),
                 summary.IndexOf("earlier-project", StringComparison.Ordinal));
@@ -852,10 +870,9 @@ public sealed class GitHubActionsSummaryReporterTests
         {
             File.WriteAllText(path, string.Empty);
             var fileSystem = new SystemFileSystem();
-            string notice = GitHubActionsSummaryReporter.BuildTruncationNotice();
 
             await GitHubActionsSummaryReporter.AppendStepSummaryWithLeadingNoticeAsync(
-                fileSystem, path, "first-project\n", notice, maxAttempts: 1, retryDelay: TimeSpan.Zero, CancellationToken.None);
+                fileSystem, path, "first-project\n", GitHubActionsSummaryReporter.BuildTruncationNotice, maxAttempts: 1, retryDelay: TimeSpan.Zero, CancellationToken.None);
 
             // This extension is not the only writer to GITHUB_STEP_SUMMARY: a test framework appends its own block
             // after the reporter runs. Appending cannot dislodge a note that sits at the top, which is the reason
@@ -863,11 +880,11 @@ public sealed class GitHubActionsSummaryReporterTests
             File.AppendAllText(path, "### framework's own section\n");
 
             await GitHubActionsSummaryReporter.AppendStepSummaryWithLeadingNoticeAsync(
-                fileSystem, path, "second-project\n", notice, maxAttempts: 1, retryDelay: TimeSpan.Zero, CancellationToken.None);
+                fileSystem, path, "second-project\n", GitHubActionsSummaryReporter.BuildTruncationNotice, maxAttempts: 1, retryDelay: TimeSpan.Zero, CancellationToken.None);
 
             string summary = File.ReadAllText(path);
 
-            Assert.StartsWith(notice, summary);
+            Assert.StartsWith(GitHubActionsSummaryReporter.TruncationNoticeMarker, summary);
             Assert.Contains("framework's own section", summary);
             Assert.Contains("second-project", summary);
             // The note is stated once. Repeating it per project would spend the little headroom that is left on
