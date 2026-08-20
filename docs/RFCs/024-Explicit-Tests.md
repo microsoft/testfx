@@ -152,8 +152,7 @@ directly instead, as `[DataMember]` next to `IgnoreMessage`, and the internal `I
 contract exposes them, so row metadata survives every existing unwrapping and serialization path.
 Making the row implement a source named interface would claim a relationship that does not exist.
 
-A custom `ITestDataSource` implements the capability to mark every row it produces, or returns
-`TestDataRow<T>` to mark single rows:
+A `DynamicData` member returns `TestDataRow<T>` directly to mark single rows:
 
 ```csharp
 [TestMethod]
@@ -172,6 +171,14 @@ public static IEnumerable<TestDataRow<MigrationCase>> GetMigrations()
     };
 }
 ```
+
+A custom `ITestDataSource` has the other two ways in. It implements
+`ITestDataSourceExplicitCapability` to mark every row it produces, and it marks a single row by
+wrapping the row in a one-element array, because `GetData` returns `IEnumerable<object?[]>` and the
+existing unwrapping contract recognizes a row only as the single element of one:
+`yield return [new TestDataRow<MigrationCase>(migration) { IsExplicit = true }];`. This is the same
+shape row `IgnoreMessage` and `DisplayName` already require from a custom source, and it is worth
+stating because the `DynamicData` example above cannot be copied into one.
 
 The reason is called `ExplicitReason` on all three surfaces, matching `IgnoreAttribute.IgnoreMessage`
 and row `IgnoreMessage` rather than shortening to `Reason` on the attribute alone. It is diagnostic
@@ -367,7 +374,7 @@ discriminating. Non-root, because the root names the test project rather than a 
 | `/*/*/*/*[Category=Hardware]` | yes |
 | `/*/*/MyClass/(!Slow)` | yes, through `MyClass` |
 | `/*/*/*/(MyTest\|(!Slow))` | yes for a node matched by `MyTest`, no for one matched only by `(!Slow)` |
-| `/*/*/*/*[Explicit=True]` | yes |
+| `/*/*/*/*[Explicit=True]`, `/**[Explicit=True]` | yes |
 
 `TreeNodeFilter` lives in this repository and `Microsoft.Testing.Platform` already grants
 `InternalsVisibleTo` to `MSTest.TestAdapter`, so it reports the discriminating result itself through
@@ -377,7 +384,16 @@ These tables describe how tree node and graph selection must behave once MSTest 
 filter. Today `MSTestFilterContext` and the VSTest bridge throw `UnsupportedTestExecutionFilter` for
 every leaf other than `NopFilter` and `TestNodeUidListFilter`, so neither reaches MSTest at all.
 
-`*[Explicit=True]` needs one thing the other rows do not. `TreeNodeFilter.IsMatchingProperty`
+A property predicate has to be written on a segment that reaches the node. `MatchesFilter` walks the
+path fragment by fragment and, once the path has more fragments than the filter has segments, matches
+only when the last segment is `**`, so a one-segment filter selects a one-segment path and nothing
+below it. An MSTest node is assembly, namespace, class, method, so the two forms that select explicit
+tests are `/**[Explicit=True]`, which is the shorter one and is used for the rest of this document,
+and `/*/*/*/*[Explicit=True]`, which spells the depth out. Both activate under the rule above: the
+segment itself is wildcard-only, and `[Explicit=True]` is a property predicate with a literal, which
+is discriminating, and it is not the root segment.
+
+The property predicate needs one thing the other rows do not. `TreeNodeFilter.IsMatchingProperty`
 compares `[Key=Value]` against `TestMetadataProperty` and nothing else, so `Explicit` is a
 `TestMetadataProperty` on the node, the same property type MSTest already gives categories and
 traits. The matcher needs no change. "Not a trait" in [Metadata](#metadata) means the property does
@@ -389,8 +405,8 @@ MSTest filters before a `TestNode` exists, though. `MtpTestElementFilter` evalua
 is evaluated there too, against a path and property bag built from the element. That bag carries the
 same key/value pairs `MSTestTestNodeConverter` would write for the node, including `Explicit` read
 from `UnitTestElement.IsExplicit` with the same `True` value. Pre-node filtering and node matching
-then read one source, and `*[Explicit=True]` cannot select one set before nodes exist and a different
-one after.
+then read one source, and `/**[Explicit=True]` cannot select one set before nodes exist and a
+different one after.
 
 ### Fail closed
 
@@ -543,7 +559,7 @@ carries two, `GatesAsExplicit` and `IsExplicit`, described under [Metadata](#met
   load, exactly as for a method declaration. A method whose sources disagree is not gated, it reaches
   enumeration, and each source is resolved on its own below.
 - **Selection**, `IsExplicit`. The parent is reported explicit when the class, the method, or any
-  source declares it, so `*[Explicit=True]` and `--filter "Explicit=True"` select it. Discovery does
+  source declares it, so `/**[Explicit=True]` and `--filter "Explicit=True"` select it. Discovery does
   not record the source-wide ignore message on a folded parent today, and explicitness has to be
   recorded: an ignored parent never needs to be selectable, while an explicit one does.
 
@@ -632,39 +648,46 @@ both:
 | `GatesAsExplicit` | the class or the method declares it, or every source does | the execution gate in `UnitTestRunner` |
 | `ExplicitReason` | the most specific declaration that has one, and none when the parent is gated by sources that disagree on it | reporting |
 
-For anything other than a folded parent the two flags are equal, and only `IsExplicit` is transported.
-`GatesAsExplicit` is adapter-internal, computed at discovery beside `IsExplicit` and carried on the
-element, so it never reaches a wire format and a persisted case that lacks it is recomputed rather
-than trusted. Each host gets one transport for `IsExplicit`:
+For anything other than a folded parent the two flags are equal and carry the same value, so only a
+folded parent can tell them apart. `GatesAsExplicit` cannot be recomputed where it is read, because
+recomputing it means reading the source attributes, which loads the type the gate exists to avoid
+loading, so it travels rather than being derived. A VSTest `TestCase` reconstructed from serialized
+properties has only what was written to it, and `IsExplicit` alone cannot distinguish a parent where
+one of several sources is explicit from one where all of them are.
 
-- VSTest: adapter owned `MSTestDiscoverer.Explicit` and `MSTestDiscoverer.ExplicitReason` properties,
-  round-tripped by `ToTestCase` and `ToUnitTestElement`. These names are stable wire identifiers.
-  `Explicit` is registered as a filterable string with values `True` and `False` compared
-  case-insensitively, deliberately not a `bool`, so malformed persisted values reach the fail closed
-  rule instead of being defaulted by VSTest's converter. A missing `Explicit` means false and a
-  missing reason means no reason, so a case persisted by an older version still deserializes.
-  Reasons are prose and stay unfilterable.
+- VSTest: adapter owned `MSTestDiscoverer.Explicit`, `MSTestDiscoverer.ExplicitGate` and
+  `MSTestDiscoverer.ExplicitReason` properties, round-tripped by `ToTestCase` and `ToUnitTestElement`.
+  These names are stable wire identifiers. `Explicit` is registered as a filterable string with values
+  `True` and `False` compared case-insensitively, deliberately not a `bool`, so malformed persisted
+  values reach the fail closed rule instead of being defaulted by VSTest's converter. A missing
+  `Explicit` means false and a missing reason means no reason, so a case persisted by an older version
+  still deserializes. `ExplicitGate` is not filterable, it exists only so the gate has its input, and
+  a missing or malformed one means not gated, which sends the case to enumeration and resolves it per
+  source. That is the safe direction: it costs a type load on a case persisted before this feature and
+  it cannot run an explicit test that the per-source check would have skipped. Reasons are prose and
+  stay unfilterable.
 - Native MTP: `MSTestTestNodeConverter` adds `Explicit` with value `True` to explicit nodes only, and
   `ExplicitReason` only when a non-empty reason exists, on both discovered and result nodes.
   `Explicit` is a `TestMetadataProperty`, which is the property type `[Key=Value]` in a tree node
-  filter matches, so `*[Explicit=True]` works with no platform matcher change. It is still not a
+  filter matches, so `/**[Explicit=True]` works with no platform matcher change. It is still not a
   trait: it is produced from `IsExplicit` rather than from `[TestCategory]` or `[TestProperty]`, it
   is not in `UnitTestElement.Traits`, and it does not show up as a user authored category. UIDs do
   not change when `[Explicit]` is added, and a server client that ignores the metadata still receives
-  ordinary nodes and ordinary skipped results.
+  ordinary nodes and ordinary skipped results. The native path keeps its elements in process, so
+  nothing is reconstructed there and `GatesAsExplicit` needs no node metadata.
 
 `Explicit` and `ExplicitReason` are reserved metadata keys, because MTP would otherwise disagree with
 VSTest about a name a user is already allowed to write. The converter turns every `[TestProperty]`
 into `TestMetadataProperty(name, value)` and `TreeNodeFilter` matches any metadata property by key and
 value, so `[TestProperty("Explicit", "True")]` on an ordinary test would be selected by
-`*[Explicit=True]` while VSTest's registered property path ignores it. A `[TestProperty]` with either
+`/**[Explicit=True]` while VSTest's registered property path ignores it. A `[TestProperty]` with either
 reserved name is therefore not written to the metadata surface, and discovery reports a warning naming
 the test, so the built-in value is the only one either host can match. This follows VSTest rather than
 changing it, and the trait is a `[TestProperty]` the user can rename.
 
 A folded parent carries its class, method, and source declarations. A source declaration is read from
 the attribute instance and needs no enumeration, so a method with any explicit source is reported
-explicit at discovery and `*[Explicit=True]` and `--filter "Explicit=True"` select it, whether or not
+explicit at discovery and `/**[Explicit=True]` and `--filter "Explicit=True"` select it, whether or not
 its other sources are explicit. Only row declarations are missing from the parent, they do not exist
 until the data is enumerated, so a folded method whose explicitness lives only in rows is not
 selectable by those filters and is reached by selecting the method instead.
@@ -727,7 +750,7 @@ An upstream API that exposes a walkable tree replaces this later without changin
   reports the explicit ones skipped. Settings parsing is covered the same way in both formats: the
   three names round-trip in any casing, and a misspelling, an alias, and a numeric value each throw
   rather than resolve to a mode.
-- Filter-path agreement tests for `Explicit` as node metadata: `*[Explicit=True]` selects the same
+- Filter-path agreement tests for `Explicit` as node metadata: `/**[Explicit=True]` selects the same
   tests through `MtpTestElementFilter` before nodes exist as `TreeNodeFilter` matches against the
   `TestMetadataProperty` the converter writes, and `Explicit` appears in neither the trait nor the
   category surfaces. One asserts the documented reachability boundary directly: a folded method with
@@ -742,7 +765,12 @@ An upstream API that exposes a walkable tree replaces this later without changin
   an ordinary one reports one explicit skip and still runs the ordinary source's rows under Run All,
   the parent is selected by `Explicit=True`, selecting it runs both sources, a method whose sources
   are all explicit is gated with no type load, and two explicit sources with different reasons report
-  no reason on the gated parent and their own reasons when resolved individually.
+  no reason on the gated parent and their own reasons when resolved individually. The same two methods
+  round-trip through a serialized VSTest `TestCase` and keep their gate answers, and one whose
+  `ExplicitGate` is stripped falls back to per-source resolution rather than gating.
+- A custom `ITestDataSource` test covering both ways in, the capability for every row and a
+  `TestDataRow<T>` yielded as the single element of an `object?[]` for one row, asserting the wrapped
+  row is recognized exactly as the `DynamicData` shape is.
 - Execution tests proving no type load, no fixture, no body, and no retry for an unactivated test,
   correct cleanup counts for explicit skips, and folded and unfolded row behavior. One covers the
   folded parent that is itself explicit and unactivated, asserting the data source never runs and the
@@ -778,6 +806,14 @@ one asset run twice rather than two suites.
 The APIs are additive and binary compatible, and a test with no declarations keeps exactly its
 current discovery, filtering, execution, retry, and result behavior. Existing custom data sources
 compile and behave as before, the capability is opt-in.
+
+Reserving the two metadata keys is the one exception, and it needs a release note. A test that
+carries `[TestProperty("Explicit", ...)]` or `[TestProperty("ExplicitReason", ...)]` compiles and runs
+as before, but that property stops appearing in the MTP node metadata and discovery warns about it, so
+a tree node filter written against it stops matching. The names were only ever matchable on MTP, never
+on VSTest, so this is the two hosts agreeing rather than a capability being taken away, and the fix is
+to rename the property. It is called out here because it is a behavior change for a test with no
+explicit declaration of its own, which nothing else in this design touches.
 
 The risk worth calling out in release notes is version skew, and the alignment check already closes
 most of it. `MSTestExecutor`'s module initializer compares the informational versions of
