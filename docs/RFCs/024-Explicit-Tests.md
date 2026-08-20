@@ -127,7 +127,7 @@ public sealed class ExplicitAttribute : Attribute
     public ExplicitAttribute();
     public ExplicitAttribute(string? reason);
 
-    public string? Reason { get; }
+    public string? ExplicitReason { get; }
 }
 
 public interface ITestDataSourceExplicitCapability
@@ -173,9 +173,11 @@ public static IEnumerable<TestDataRow<MigrationCase>> GetMigrations()
 }
 ```
 
-`Reason` and `ExplicitReason` are diagnostic text. They are not identifiers, they are not filterable,
-and `null`, empty, and whitespace behave like no reason at all. `IsExplicit` is the declaration on
-its own, a reason without it changes nothing, so a stray string can never change what executes.
+The reason is called `ExplicitReason` on all three surfaces, matching `IgnoreAttribute.IgnoreMessage`
+and row `IgnoreMessage` rather than shortening to `Reason` on the attribute alone. It is diagnostic
+text: not an identifier, not filterable, and `null`, empty, and whitespace behave like no reason at
+all. `IsExplicit` is the declaration on its own, a reason without it changes nothing, so a stray
+string can never change what executes.
 
 Declarations OR-compose, a narrower one cannot switch a broader one off:
 
@@ -307,7 +309,7 @@ results, only `activates` is new:
 | --- | --- |
 | positive leaf | same as `matches` |
 | exclusion leaf | always `false` |
-| `A & B` | `matches`, and either child activates |
+| `A & B` | `matches && (A.activates \|\| B.activates)` |
 | `A \| B` | `(A.matches && A.activates) \|\| (B.matches && B.activates)` |
 
 For an explicit test in category `Fast`:
@@ -408,9 +410,12 @@ divergence surfaces instead of being absorbed as "nothing activated". The differ
 [Testing](#testing) exist to keep that case empty. It does not fall back to "any positive token
 activates" either, which could start a destructive test through the wrong `|` branch.
 
-The same fail-closed direction applies to persisted metadata. A VSTest property that cannot be parsed
-as a Boolean is treated as explicit and logged, so a stale cache cannot turn an opt-in test into a
-Run All test.
+The same fail-closed direction applies to persisted metadata. The `Explicit` property is a string and
+exactly two values are recognized, `True` and `False`, compared ordinal case-insensitively with no
+trimming or other normalization. An absent property means false, which is what lets a case persisted
+before the feature still deserialize. Any present value that is not one of the two is treated as
+explicit and logged, so `" False"`, `"0"`, and a truncated cache entry all resolve to explicit and a
+stale cache cannot turn an opt-in test into a Run All test.
 
 ### Precedence
 
