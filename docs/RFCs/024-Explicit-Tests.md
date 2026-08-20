@@ -465,7 +465,15 @@ One setting, for environments that need a deterministic override:
 
 Unknown values throw `AdapterSettingsException` in both parsers instead of falling back, matching
 `ParallelWorkers` and `ExecutionScope`. A misspelled `Skip` must not quietly permit a destructive
-test. `Run` is configuration rather than a CLI shortcut, and the nearest command line is
+test. The three names above are the whole accepted set in both formats, compared ordinal
+case-insensitively the way `ExecutionScope` and `DebuggerLaunchMode` already are, so the lowercase
+`requireSelection` in the JSON example is the same value as the `RequireSelection` in the XML one and
+not a second spelling to support. There are no friendly aliases, and a purely numeric value is
+rejected rather than read as the underlying enum number, the same guard `TryParseCaptureMode` already
+applies for the same reason: `Enum.TryParse` would accept `2`, and a number that happened to land on
+`Run` would widen activation with nothing in the settings naming it.
+
+`Run` is configuration rather than a CLI shortcut, and the nearest command line is
 `--filter "Explicit=True"`, which stays visible in the command line. The two are not interchangeable
 and a CI definition has to choose deliberately. `Run` widens activation and leaves selection alone,
 so Run All still selects the whole suite and now runs the explicit tests in it as well. The filter
@@ -658,7 +666,9 @@ An upstream API that exposes a walkable tree replaces this later without changin
   constructed and called, pinning the boundary of what the gate skips.
 - Fail-closed tests separating the two outcomes: an unsupported filter type and an unparseable filter
   string still fail the run, while a well-formed but unclassifiable filter runs its ordinary tests and
-  reports the explicit ones skipped.
+  reports the explicit ones skipped. Settings parsing is covered the same way in both formats: the
+  three names round-trip in any casing, and a misspelling, an alias, and a numeric value each throw
+  rather than resolve to a mode.
 - Filter-path agreement tests for `Explicit` as node metadata: `*[Explicit=True]` selects the same
   tests through `MtpTestElementFilter` before nodes exist as `TreeNodeFilter` matches against the
   `TestMetadataProperty` the converter writes, and `Explicit` appears in neither the trait nor the
