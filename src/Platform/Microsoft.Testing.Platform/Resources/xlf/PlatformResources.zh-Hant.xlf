@@ -84,7 +84,7 @@
       </trans-unit>
       <trans-unit id="ArtifactPostProcessingManifestRunSummaryInvalid">
         <source>The artifact post-processing manifest runSummary must contain valid totalTests, passedTests, failedTests, skippedTests, durationTicks, exitCode, and testModuleCount values.</source>
-        <target state="new">The artifact post-processing manifest runSummary must contain valid totalTests, passedTests, failedTests, skippedTests, durationTicks, exitCode, and testModuleCount values.</target>
+        <target state="translated">成品後置處理資訊清單 runSummary 必須包含有效的 totalTests、passedTests、failedTests、skippedTests、durationTicks、exitCode 和 testModuleCount 值。</target>
         <note>Do not localize property names {Locked="runSummary"}{Locked="totalTests"}{Locked="passedTests"}{Locked="failedTests"}{Locked="skippedTests"}{Locked="durationTicks"}{Locked="exitCode"}{Locked="testModuleCount"}.</note>
       </trans-unit>
       <trans-unit id="ArtifactPostProcessorCapabilityContainsSeparator">
