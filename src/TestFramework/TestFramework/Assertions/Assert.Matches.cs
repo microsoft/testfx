@@ -195,9 +195,16 @@ public sealed partial class Assert
 
     #endregion // DoesNotMatchRegex
 
+    // Caches compiled Regex instances by pattern string. The string-pattern overloads of
+    // MatchesRegex/DoesNotMatchRegex are typically called with a small, fixed set of literal
+    // patterns repeated across many test invocations, so caching avoids re-parsing the same
+    // pattern on every call. Callers who need finer control (e.g. RegexOptions, a per-call
+    // instance) can use the Regex-accepting overloads directly, which bypass this cache.
+    private static readonly ConcurrentDictionary<string, Regex> RegexCache = new();
+
     private static Regex? ToRegex([NotNull] string? pattern)
     {
         CheckParameterNotNull(pattern, "Assert.MatchesRegex", "pattern");
-        return new Regex(pattern);
+        return RegexCache.GetOrAdd(pattern, static p => new Regex(p));
     }
 }
