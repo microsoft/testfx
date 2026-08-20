@@ -280,25 +280,24 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="translated">Methoden, die mit „[ClassInitialize]“ gekennzeichnet sind, müssen dem folgenden Layout folgen, um gültig zu sein:
-– kann nicht für eine generische class deklariert werden, ohne dass der Modus „InheritanceBehavior“ auf 
- festgelegt ist.
+        <target state="translated">Methoden, die mit „[ClassInitialize]“ gekennzeichnet sind, müssen dem folgenden Layout entsprechen, um gültig zu sein:
+– kann nicht für eine generische class deklariert werden, ohne dass der Modus „InheritanceBehavior“ festgelegt ist
 – muss „public“ sein
 – muss „static“ sein
 – darf nicht „async void“ sein
-– darf keine spezielle Methode sein (Finalizer, Operator...)
+– darf keine spezielle Methode sein (Finalizer, Operator...).
 – darf nicht „generic“ sein
 – muss einen Parameter vom Typ „TestContext“ annehmen
 – der Rückgabetyp muss „void“, „Task“ oder „ValueTask“ sein
 – der Attributparameter „InheritanceBehavior.BeforeEachDerivedClass“ sollte angegeben werden, wenn die class „abstract“ ist
-– der Attributparameter „InheritanceBehavior.BeforeEachDerivedClass“ sollte angegeben werden, wenn die class „sealed“ ist.
+– der Attributparameter „InheritanceBehavior.BeforeEachDerivedClass“ sollte angegeben werden, wenn die class „sealed“ ist
 
 Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachten:
-– Der Typ sollte eine class sein.
+– Der Typ sollte eine class sein
 – Die class muss „public“ oder „internal“ sein (wenn das Testprojekt das Attribut „[DiscoverInternals]“ verwendet)
-– Die class darf nicht „static“ sein.
-– Wenn die class „sealed“ ist, sollte sie mit „[TestClass]“ (oder einem abgeleiteten Attribut) markiert werden.
-- die class darf nicht generisch sein.</target>
+– Die class darf nicht „static“ sein
+– Wenn die class „sealed“ ist, sollte sie mit „[TestClass]“ (oder einem abgeleiteten Attribut) markiert werden
+– die class darf nicht generisch sein.</target>
         <note>{Locked="InheritanceBehavior.BeforeEachDerivedClass"}{Locked="[DiscoverInternals]"}{Locked="[ClassInitialize]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="sealed"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">
@@ -704,21 +703,20 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="translated">Methoden, die mit „[GlobalTestInitialize]“ oder „[GlobalTestCleanup]“ gekennzeichnet sind, sollten dem folgenden Layout folgen, um gültig zu sein:
+        <target state="translated">Methoden, die mit „[GlobalTestInitialize]“ oder „[GlobalTestCleanup]“ gekennzeichnet sind, sollten dem folgenden Layout entsprechen, um gültig zu sein:
 – kann nicht für eine generische class deklariert werden
 – muss „public“ sein
 – muss „static“ sein
 – darf nicht „async void“ sein
 – darf keine spezielle Methode sein (Finalizer, Operator...).
 – darf nicht „generic“ sein
-na zheyibo 
 – muss einen Parameter vom Typ „TestContext“ annehmen
 – der Rückgabetyp muss „void“, „Task“ oder „ValueTask“ sein
 
 Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachten:
-– Der Typ sollte eine class sein.
+– Der Typ sollte eine class sein
 – Die class sollte „public“ sein
-– Die class muss mit „[TestClass]“ (oder einem abgeleiteten Attribut) markiert werden.
+– Die class muss mit „[TestClass]“ (oder einem abgeleiteten Attribut) markiert sein
 – die class darf nicht generisch sein.</target>
         <note>{Locked="[GlobalTestInitialize]"}{Locked="[GlobalTestCleanup]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>

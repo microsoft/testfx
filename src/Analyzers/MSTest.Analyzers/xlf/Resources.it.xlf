@@ -1379,17 +1379,17 @@ Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
       </trans-unit>
       <trans-unit id="UseExecutableConditionAttributeInsteadOfProcessCheckDescription">
         <source>Test methods that use 'File.Exists' to skip a test before starting the same executable with 'Process.Start' should use the '[ExecutableCondition]' attribute instead. This attribute provides a declarative and discoverable tool requirement and reports an early return as a skipped test rather than a passed test.</source>
-        <target state="new">Test methods that use 'File.Exists' to skip a test before starting the same executable with 'Process.Start' should use the '[ExecutableCondition]' attribute instead. This attribute provides a declarative and discoverable tool requirement and reports an early return as a skipped test rather than a passed test.</target>
+        <target state="translated">I metodi di test che usano 'File.Exists' per ignorare un test prima di avviare lo stesso eseguibile con 'Process.Start' devono usare l'attributo '[ExecutableCondition]'. Questo attributo fornisce un requisito dichiarativo e individuabile dello strumento e segnala un ritorno anticipato come test ignorato anziché come test superato.</target>
         <note>{Locked="'File.Exists'"}{Locked="'Process.Start'"}{Locked="'[ExecutableCondition]'"}</note>
       </trans-unit>
       <trans-unit id="UseExecutableConditionAttributeInsteadOfProcessCheckMessageFormat">
         <source>Use '[ExecutableCondition]' attribute instead of checking for executable '{0}' before starting it</source>
-        <target state="new">Use '[ExecutableCondition]' attribute instead of checking for executable '{0}' before starting it</target>
+        <target state="translated">Usare l'attributo '[ExecutableCondition]' invece di cercare l'eseguibile '{0}' prima di avviarlo</target>
         <note>{0} is the executable path. {Locked="'[ExecutableCondition]'"}</note>
       </trans-unit>
       <trans-unit id="UseExecutableConditionAttributeInsteadOfProcessCheckTitle">
         <source>Use '[ExecutableCondition]' attribute instead of 'File.Exists' checks before 'Process.Start'</source>
-        <target state="new">Use '[ExecutableCondition]' attribute instead of 'File.Exists' checks before 'Process.Start'</target>
+        <target state="translated">Usare l'attributo '[ExecutableCondition]' anziché i controlli 'File.Exists' prima di 'Process.Start'</target>
         <note>{Locked="'[ExecutableCondition]'"}{Locked="'File.Exists'"}{Locked="'Process.Start'"}</note>
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">
