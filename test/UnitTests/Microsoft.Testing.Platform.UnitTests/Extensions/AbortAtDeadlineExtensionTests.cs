@@ -181,12 +181,15 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
     }
 
     [TestMethod]
-    public async Task TheDeadlineVerdictIsCommittedBeforeTheUserFacingMessage()
+    public async Task TheVerdictAndTheGracefulStopBothPrecedeTheUserFacingMessage()
     {
         // Claiming the run closes the door on NotifyTestExecutionCompleted: once claimed, a completion can no
-        // longer disarm the deadline. So nothing may be awaited between the claim and the commit -- a run that
-        // finishes in such a window is ignored and still reported as truncated (exit code 15 on a complete
-        // run). The user-facing message is the one await that used to sit there, so pin it after the commit.
+        // longer disarm the deadline. From the claim until the stop is actually requested the run is therefore
+        // recorded as truncated while nothing has been asked to stop, and a run that finishes inside that
+        // window is ignored -- the stop then finds nothing left to stop, succeeds, and a run that executed
+        // every test still exits with code 15. The user-facing message is bounded by _reportTimeout, so
+        // sitting between the commit and the stop it alone could hold that window open for ten seconds. Pin
+        // both the commit and the stop ahead of it.
         TaskCompletionSource<bool> displaying = new(TaskCreationOptions.RunContinuationsAsynchronously);
         TaskCompletionSource<bool> release = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -198,11 +201,10 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
                 await release.Task;
             });
 
-        // Park the handler inside the message. If the commit still came after it, this is the window a
-        // completion would be swallowed in.
+        // Park the handler inside the message. Anything not done by now sits inside the window.
         await WaitForAsync(displaying.Task);
         _policiesService.Verify(x => x.ExecuteDeadlineCallbacksAsync(), Times.Once);
-        _capability.Verify(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Never);
+        _capability.Verify(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Once);
 
         release.SetResult(true);
     }
@@ -210,10 +212,11 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
     [TestMethod]
     public async Task WhenTheUserFacingMessageNeverCompletes_TheGracefulStopIsStillRequested()
     {
-        // The verdict is committed before this message is written, so an output device that wedges rather
-        // than throws would leave the run recorded as stopped at the deadline while the stop was never
-        // actually requested -- the same "truncated a run nobody stopped" split, reached the other way
-        // round. Swallowing faults does not cover it: a task that never completes never faults.
+        // A wedged output device hands back a task that never completes, and a task that never completes never
+        // faults, so swallowing exceptions does not cover it -- only the bound does. The message is written
+        // after the stop, so what this pins is that the bound is still there: without it a wedged device would
+        // keep the handler task alive past the end of the run, and it would once again be able to swallow the
+        // stop entirely if the message ever moved back ahead of it.
         TaskCompletionSource<bool> displaying = new(TaskCreationOptions.RunContinuationsAsynchronously);
         TaskCompletionSource<bool> neverCompletes = new(TaskCreationOptions.RunContinuationsAsynchronously);
         TaskCompletionSource<bool> stopped = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -237,7 +240,8 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
 
         await WaitForAsync(displaying.Task);
 
-        // The bound, not the output device, is what lets the handler carry on.
+        // Already requested: the message runs after the stop, so a wedged device cannot swallow it. The bound
+        // is what then lets the handler finish rather than sitting on a task that never completes.
         await WaitForAsync(stopped.Task);
         _capability.Verify(x => x.StopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Once);
         _policiesService.Verify(x => x.RevertDeadlineTriggered(), Times.Never);

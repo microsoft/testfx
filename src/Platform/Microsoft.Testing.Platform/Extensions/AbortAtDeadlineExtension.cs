@@ -379,18 +379,27 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
             // token-registered callback; set it here first.
             await _policiesService.ExecuteDeadlineCallbacksAsync().ConfigureAwait(false);
 
-            // Only now tell the user. This sits after the commit rather than before it so that the claim is
-            // not held across this await, and it is still reached only when the deadline actually won the
-            // race, so the message is never printed for a run that finished on its own.
+            // Request the stop straight after the commit, with nothing awaited in between. Between the claim
+            // and this call the run is already committed as truncated while nothing has actually been asked to
+            // stop, and a completion arriving in that window can no longer disarm the deadline -- the claim
+            // closed that door. The stop would then find nothing left to stop, return successfully, and a run
+            // that executed every test would still exit with ExitCode.TestExecutionStoppedAtDeadline. Anything
+            // awaited here widens that window; the user-facing message used to sit in it and is bounded by
+            // _reportTimeout, so it alone could hold the window open for ten seconds.
+            await capability.StopTestExecutionAsync(_cancellationTokenSource.CancellationToken).ConfigureAwait(false);
+            stopAccepted = true;
+
+            // Only now tell the user. It is written after the stop is accepted rather than before it for the
+            // window above, and it is reached only when the deadline actually won the race, so the message is
+            // never printed for a run that finished on its own or for a stop the framework rejected. The
+            // framework has been asked to stop but in-flight tests are still finishing, so this still lands
+            // before the end-of-run summary.
             await TryReportAsync(
                 () => _outputDevice.DisplayAsync(
                     this,
                     new FormattedTextOutputDeviceData(PlatformResources.AbortAtDeadlineMessage),
                     _cancellationTokenSource.CancellationToken),
                 "Failed to report the approaching deadline.").ConfigureAwait(false);
-
-            await capability.StopTestExecutionAsync(_cancellationTokenSource.CancellationToken).ConfigureAwait(false);
-            stopAccepted = true;
         }
         catch (Exception ex)
         {
@@ -435,12 +444,11 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
         try
         {
             // Swallowing faults is not enough on its own. A wedged logger or output device does not throw,
-            // it hands back a task that never completes, and every call to this sits on the path to
-            // StopTestExecutionAsync -- the one after the claim runs when the verdict is already committed.
-            // Awaiting such a task there would leave the run recorded as stopped at the deadline while the
-            // stop was never actually requested, which is the exact split this extension exists to prevent.
-            // Bound the wait: TimeoutAfterAsync abandons the task and keeps observing it, so a fault
-            // arriving later cannot resurface as an unobserved task exception.
+            // it hands back a task that never completes. Before the claim that would stop the handler ever
+            // reaching the graceful stop, so the deadline would pass with nothing done; after the stop it
+            // would keep the handler task alive until disposal gave up on draining it. Bound the wait:
+            // TimeoutAfterAsync abandons the task and keeps observing it, so a fault arriving later cannot
+            // resurface as an unobserved task exception.
             await report().TimeoutAfterAsync(_reportTimeout).ConfigureAwait(false);
         }
         catch (Exception ex)
