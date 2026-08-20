@@ -341,11 +341,10 @@ public sealed class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
-    public void BuildMarkdown_ExhaustedBudget_ListsFailuresWithoutApologisingForTheMissingDetails()
+    public void BuildMarkdown_ExhaustedBudget_ListsFailuresAndSaysTheirDetailsWereOmitted()
     {
-        // With no budget at all the section is a plain list. It must not spend space telling the reader that
-        // details were omitted — that is stated once at the top of the summary, not once per project, in a file
-        // that is being shortened precisely because space ran out.
+        // With no budget at all the section is a plain list. It must still say why the diagnostics are missing,
+        // so a bare list is not mistaken for failures that had nothing more to show.
         GitHubActionsTestRecord[] records =
         [
             .. Enumerable.Range(0, 3).Select(i => new GitHubActionsTestRecord(
@@ -359,7 +358,7 @@ public sealed class GitHubActionsSummaryReporterTests
         string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "T", "net9.0", AtLeastOneTestFailedExitCode, includeFailureDetails: true, detailsBudget: 0);
 
         Assert.DoesNotContain("<details>", markdown);
-        Assert.DoesNotContain("were omitted", markdown);
+        Assert.Contains("Failure details for 3 listed test(s) were omitted", markdown);
         Assert.Contains("T.Test0", markdown);
         Assert.Contains("T.Test2", markdown);
     }

@@ -277,10 +277,18 @@ internal static class GitHubActionsFailureDetails
                 .Append("\n\n");
         }
 
-        // Deliberately no "details omitted" note: every failure is still listed with its name and duration, so the
-        // section remains a complete list of what failed. Saying it once per project would cost more than the
-        // diagnostics it apologises for, in a file being shortened precisely because space ran out. The note at
-        // the top of the summary states it once for the whole run instead.
+        // Say which failures lost their diagnostics, so a reader who sees a bare list knows the difference between
+        // "this failure had nothing more to show" and "the summary ran out of room for it".
+        if (omittedDetails > 0)
+        {
+            builder.Append("> [!NOTE]\n> ")
+                .Append(string.Format(
+                    CultureInfo.InvariantCulture,
+                    GitHubActionsResources.FailureDetailsOmitted,
+                    omittedDetails.ToString(CultureInfo.InvariantCulture)))
+                .Append("\n\n");
+        }
+
         return omittedDetails;
     }
 
