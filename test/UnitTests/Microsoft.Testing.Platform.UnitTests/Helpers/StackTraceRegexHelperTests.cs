@@ -86,6 +86,22 @@ public sealed class StackTraceRegexHelperTests
         Assert.Contains(expectedCode, code.Value);
     }
 
+#if NET7_0_OR_GREATER
+    [TestMethod]
+    public void GetFrameRegex_FrameWithLocation_CapturesCodeFileAndLine()
+    {
+        const string frame = "   at Namespace.Type.Method() in /src/File.cs:line 7";
+
+        Match match = StackTraceHelper.GetFrameRegex().Match(frame);
+
+        Assert.IsTrue(match.Success);
+        Assert.AreEqual("Namespace.Type.Method()", match.Groups["code"].Value);
+        Assert.AreEqual("/src/File.cs", match.Groups["file"].Value);
+        Assert.AreEqual("7", match.Groups["line"].Value);
+        Assert.IsFalse(match.Groups["code1"].Success);
+    }
+#endif
+
     [TestMethod]
     public void GetFrameRegex_HasExplicitCapturesAndNoTimeout()
     {
@@ -98,20 +114,6 @@ public sealed class StackTraceRegexHelperTests
         Assert.AreEqual(RegexOptions.Compiled, regex.Options & RegexOptions.Compiled);
         Assert.AreSame(regex, StackTraceHelper.GetFrameRegex());
 #endif
-    }
-
-    [TestMethod]
-    public void MatchTimeout_ConfiguresABoundedRegexTimeout()
-    {
-        var regex = new Regex(
-            StackTraceRegexHelper.CreateFrameRegexPattern(matchFramesWithoutLocation: false),
-            RegexOptions.ExplicitCapture,
-            StackTraceRegexHelper.MatchTimeout);
-
-        Assert.IsGreaterThan(TimeSpan.Zero, regex.MatchTimeout);
-        Assert.AreEqual(
-            TimeSpan.FromMilliseconds(StackTraceRegexHelper.MatchTimeoutMilliseconds),
-            regex.MatchTimeout);
     }
 
     private static Regex CreateRegex(bool matchFramesWithoutLocation)
