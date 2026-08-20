@@ -252,8 +252,8 @@ of where it was declared wants `ExplicitTestMode=Run` rather than this filter.
 With Microsoft.Testing.Platform:
 
 ```bash
-dotnet run --filter-uid <uid>
-dotnet run --treenode-filter "/*/*/DeviceTests/*"
+dotnet run -- --filter-uid <uid>
+dotnet run -- --treenode-filter "/*/*/DeviceTests/*"
 ```
 
 **CI.** The normal build does not change and does not need a new filter. Explicit tests show up in
@@ -365,11 +365,23 @@ Malformed filters keep their current parse-error behavior and never fall back to
 `--treenode-filter` and the MTP server graph filter are one language, `ServerTestHost` builds a
 `TreeNodeFilter` from the request's `GraphFilter`. Its leaves cannot be classified with the table
 above, because a path segment can match everything without naming anything: `/**` is Run All written
-as a filter, and `/*/*/*/*[Category!=Slow]` is a pure exclusion.
+as a filter, and `/*/*/*/*[Slow!=*]` is a pure exclusion.
 
-A segment is **discriminating** when it names something: a token with at least one literal character,
-or `[Name=Value]` with a literal value. Wildcards, empty segments, `[Name!=Value]`, `[Name=*]`, and
-`(!EXPR)` are not. Segments compose the same way expressions do: `A & B` is discriminating when the
+A segment is **discriminating** when it names something. A path token qualifies with at least one
+literal character. A property predicate qualifies when it uses `=` and carries a literal on either
+side, so both `[Explicit=True]` and `[Hardware=*]` do. The key side counts because that is where
+MSTest puts a category: the converter writes `[TestCategory("Hardware")]` as
+`TestMetadataProperty("Hardware", string.Empty)`, so a category is selected as `[Hardware=*]` and
+keying discrimination on the value alone would mean naming a category could never start its explicit
+tests, which is the opt-in job this design is mostly for.
+
+Nothing else qualifies. Wildcards, empty segments and `(!EXPR)` do not, and neither does any `!=`
+predicate whatever literals it carries, since the operator makes it an exclusion. `[Explicit=*]` does
+not either: `Explicit` is written on every node, so asking which nodes carry it selects all of them,
+which is Run All written as a property. That is the only key MSTest writes on every node, and it is
+reserved, so no user property can land in the same position.
+
+Segments compose the same way expressions do: `A & B` is discriminating when the
 segment matches and either side is, `A | B` only through a branch that both matched and is itself
 discriminating, and `Token[FILTER_EXPR]` when either the token or the property expression is. So
 `/*/*/*/(MyTest|(!Slow))` activates a node matched by `MyTest` and not one matched only by `(!Slow)`.
@@ -388,13 +400,14 @@ do not.
 | `/*/*/*/MyTest` | yes |
 | `/*/*/MyClass/*` | yes, through the class segment |
 | `/*/MyNamespace/**` | yes, through the namespace segment |
-| `/*/*/*/(!Slow)`, `/*/*/*/*[Category!=Slow]` | no |
-| `/*/*/*/*[Category=Hardware]` | yes |
+| `/*/*/*/(!Slow)`, `/*/*/*/*[Slow!=*]` | no |
+| `/*/*/*/*[Hardware=*]` | yes, this is how a category is written, and it is the opt-in suite |
 | `/*/*/MyClass/(!Slow)` | yes, through `MyClass` |
 | `/*/*/*/(MyTest\|(!Slow))` | yes for a node matched by `MyTest`, no for one matched only by `(!Slow)` |
 | `/*/*/*/*[Explicit=True]`, `/**[Explicit=True]` | yes |
 | `/**[Explicit=False]` | yes, it names a value, and it selects the ordinary tests |
 | `/**[Explicit!=False]` | no, an exclusion, and it selects the explicit tests without activating them |
+| `/**[Explicit=*]` | no, every node carries the key, so this selects everything |
 
 `TreeNodeFilter` lives in this repository and `Microsoft.Testing.Platform` already grants
 `InternalsVisibleTo` to `MSTest.TestAdapter`, so it reports the discriminating result itself through
@@ -805,7 +818,10 @@ An upstream API that exposes a walkable tree replaces this later without changin
 - Unit tests for the attribute and data APIs, inheritance table, reason precedence, and the rule that
   a reason alone does not make anything explicit.
 - Truth table tests for every row of the filter and tree node tables, over nested `&`/`|`,
-  parentheses, escaping, bare values, and case-insensitive `Explicit` values. The same serialized
+  parentheses, escaping, bare values, and case-insensitive `Explicit` values. They run against nodes
+  the converter actually produced rather than hand-built property bags, because that is what would
+  have caught a category being written as `[Hardware=*]` while the table claimed `[Category=Hardware]`.
+  The same serialized
   vectors run against VSTest and native MTP so the two cannot drift, and against both expression
   evaluators so the duplicated parser cannot drift either. Every `Explicit` vector runs in all four
   combinations of the two operators and the two values, because that is where the hosts would diverge
