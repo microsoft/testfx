@@ -384,6 +384,8 @@ do not.
 | `/*/*/MyClass/(!Slow)` | yes, through `MyClass` |
 | `/*/*/*/(MyTest\|(!Slow))` | yes for a node matched by `MyTest`, no for one matched only by `(!Slow)` |
 | `/*/*/*/*[Explicit=True]`, `/**[Explicit=True]` | yes |
+| `/**[Explicit=False]` | yes, it names a value, and it selects the ordinary tests |
+| `/**[Explicit!=False]` | no, an exclusion, and it selects the explicit tests without activating them |
 
 `TreeNodeFilter` lives in this repository and `Microsoft.Testing.Platform` already grants
 `InternalsVisibleTo` to `MSTest.TestAdapter`, so it reports the discriminating result itself through
@@ -414,8 +416,8 @@ MSTest filters before a `TestNode` exists, though. `MtpTestElementFilter` evalua
 `UnitTestElement`s so the native path never materializes a VSTest `TestCase`, and a tree node filter
 is evaluated there too, against a path and property bag built from the element. That bag carries the
 same key/value pairs `MSTestTestNodeConverter` would write for the node, including `Explicit` read
-from `UnitTestElement.IsExplicit` with the same `True` value. Pre-node filtering and node matching
-then read one source, and `/**[Explicit=True]` cannot select one set before nodes exist and a
+from `UnitTestElement.IsExplicit`. Pre-node filtering and node matching then read one source, and
+`/**[Explicit=True]` cannot select one set before nodes exist and a
 different one after.
 
 ### Fail closed
@@ -678,11 +680,18 @@ one of several sources is explicit from one where all of them are.
   explicit method has no such check, so Run All would execute it. Over-skipping costs a folded parent
   with disagreeing sources one explicit skip instead of its ordinary source's rows, which is visible
   and recoverable by selecting the test. Reasons are prose and stay unfilterable.
-- Native MTP: `MSTestTestNodeConverter` adds `Explicit` with value `True` to explicit nodes only, on
-  both discovered and result nodes. `Explicit` is a `TestMetadataProperty`, which is the property type
+- Native MTP: `MSTestTestNodeConverter` adds `Explicit` to every node, `True` or `False`, on both
+  discovered and result nodes. `Explicit` is a `TestMetadataProperty`, which is the property type
   `[Key=Value]` in a tree node filter matches, so `/**[Explicit=True]` works with no platform matcher
-  change. It is still not a trait: it is produced from `IsExplicit` rather than from `[TestCategory]`
-  or `[TestProperty]`, it is not in `UnitTestElement.Traits`, and it does not show up as a user
+  change. It is written for ordinary nodes as well because `TreeNodeFilter` has no synthetic default:
+  a missing property does not match `=` and therefore does match `!=`, so omitting it would make
+  `/**[Explicit=False]` match nothing and `/**[Explicit!=False]` match everything, which is the
+  opposite of what VSTest answers for both, where the registered property evaluates an ordinary test
+  as `False`. A default cannot be added in the matcher either, since `TreeNodeFilter` is platform code
+  shared by every framework and must not know this key. One short pair per node is the price of the
+  two hosts agreeing on both operators. It is still not a trait: it is produced from `IsExplicit`
+  rather than from `[TestCategory]` or `[TestProperty]`, it is not in `UnitTestElement.Traits`, and it
+  does not show up as a user
   authored category. The reason is deliberately not a node metadata property: `IsMatchingProperty`
   matches every `TestMetadataProperty`, so writing it as one would make it filterable on MTP and
   unfilterable on VSTest, which contradicts both the API contract and the equivalence rule. It reaches
@@ -754,7 +763,11 @@ An upstream API that exposes a walkable tree replaces this later without changin
 - Truth table tests for every row of the filter and tree node tables, over nested `&`/`|`,
   parentheses, escaping, bare values, and case-insensitive `Explicit` values. The same serialized
   vectors run against VSTest and native MTP so the two cannot drift, and against both expression
-  evaluators so the duplicated parser cannot drift either.
+  evaluators so the duplicated parser cannot drift either. Every `Explicit` vector runs in all four
+  combinations of the two operators and the two values, because that is where the hosts would diverge
+  first: a node without the property does not match `=` and does match `!=`, so an ordinary test has
+  to carry `Explicit=False` for `Explicit=False` and `Explicit!=False` to answer the same on MTP as
+  the registered property answers on VSTest.
 - Ordering tests proving that assembly `ITestFilter` returning `Run` and provider constraints never
   activate, and that an unclassifiable request activates nothing. One of them registers a
   `[TestFilterProvider]` alongside an unactivated explicit test and asserts the filter is still
