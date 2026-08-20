@@ -228,6 +228,11 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         ApplicationStateGuard.Ensure(_waitConnectionTask is not null);
         ApplicationStateGuard.Ensure(_singleConnectionNamedPipeServer is not null);
 
+        // Read the pipe server once, here, where the guard above proves it is set. The dereference is in a
+        // nested try several awaits down, and a field can in principle change under those awaits, so a local
+        // is what makes the null-safety contract hold at the point it is actually used.
+        NamedPipeServer singleConnectionNamedPipeServer = _singleConnectionNamedPipeServer;
+
         _testHostProcessInformation = testHostProcessInformation;
 
         // The pipe handshake below must be interruptible by a dump. Killing the test host does not
@@ -281,7 +286,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             // deadline dump would be taken but never surfaced as an artifact.
             try
             {
-                await _logger.LogDebugAsync($"Wait for test host connection to the server pipe '{_singleConnectionNamedPipeServer.PipeName.Name}'").ConfigureAwait(false);
+                await _logger.LogDebugAsync($"Wait for test host connection to the server pipe '{singleConnectionNamedPipeServer.PipeName.Name}'").ConfigureAwait(false);
                 await _waitConnectionTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, handshakeToken).ConfigureAwait(false);
                 using CancellationTokenSource timeout = new(TimeoutHelper.DefaultHangTimeSpanTimeout);
                 using var linkedCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(handshakeToken, timeout.Token);
@@ -538,7 +543,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         {
             await _logger.LogErrorAsync(message, exception).ConfigureAwait(false);
         }
-        catch
+        catch (Exception)
         {
             // The logger is the thing that failed, so there is nothing left to report to. Swallowing is
             // the whole point: the caller must continue to the dump and the process tree kill.
