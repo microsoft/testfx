@@ -204,6 +204,13 @@ test whose declarations all lack one has no reason, not a default one: the local
 under [Metadata](#metadata) is always reported and already says why the test did not run, so putting a
 default at the end of this chain would append it to itself.
 
+That chain resolves the reason for one test. A folded parent skipped before enumeration is not one
+test, it is one result standing for every row under it, so it takes the aggregate rule under
+[Data](#data) instead: the declaration's reason when a class or method declaration gated it, and
+otherwise the reason its sources agree on. The two only differ when a parent is gated with sources
+that also declare a reason, and there the parent is deliberately less specific than this chain would
+be, because a source's explanation cannot speak for rows the source does not produce.
+
 `Inherited = false` matches `[Ignore]` and keeps an override from becoming explicit behind its
 author's back:
 
@@ -687,6 +694,17 @@ VSTest `TestCase` reconstructed from serialized properties has only what was wri
 `IsExplicit` alone cannot distinguish a parent where one of several sources is explicit from one where
 all of them are.
 
+What the fail closed rule covers here is worth stating exactly, because it is narrower than it may
+read. Metadata that cannot be believed skips the test: a field absent, malformed, unrecognized, or in
+a combination that cannot arise from any real declaration. Metadata that has been rewritten into a
+different, individually valid value is not covered and cannot be. `ExplicitFromDeclaration=True` with
+`ExplicitFromSources=Some` rewritten to `False` with `Some` reads exactly like a source-only mixed
+parent, and no amount of added provenance closes that: a third field is corrupted the same way, and
+`Explicit=True` rewritten to `False` defeats the feature at the first field before any of them are
+consulted. A store that rewrites valid values into other valid values is a broken store, not a threat
+this design can absorb, and pretending otherwise would buy a false guarantee at the price of more
+fields to keep consistent.
+
 - VSTest: adapter owned `MSTestDiscoverer.Explicit`, `MSTestDiscoverer.ExplicitFromDeclaration`,
   `MSTestDiscoverer.ExplicitFromSources` and `MSTestDiscoverer.ExplicitReason` properties,
   round-tripped by `ToTestCase` and `ToUnitTestElement`.
@@ -825,12 +843,17 @@ An upstream API that exposes a walkable tree replaces this later without changin
   the parent is selected by `Explicit=True`, selecting it runs both sources, a method whose sources
   are all explicit is gated with no type load, and the gated parent's reason is the one its sources
   agree on, with no reason reported when they disagree, including one source carrying a reason beside
-  a sibling that carries none, while each source still reports its own when resolved individually. The
+  a sibling that carries none, and one where the method declares a reason and every source declares a
+  different one, asserting the method's wins because the method gated it, which is where the aggregate
+  rule and the per-test precedence chain diverge. Each source still reports its own when resolved
+  individually. The
   same methods round-trip through a serialized VSTest `TestCase` and keep their gate answers, and the
-  corruption vectors all assert a skip rather than a run: either gate input stripped, either
+  unbelievable-metadata vectors all assert a skip rather than a run: either gate input stripped, either
   unrecognized, a deferral claimed on a plain explicit method, and a deferral claimed on a folded
   parent whose `ExplicitFromDeclaration` is still true, which is the one that would otherwise run every
-  row because the per-source checks find nothing explicit to stop.
+  row because the per-source checks find nothing explicit to stop. They stop there deliberately: a
+  value rewritten into a different valid value is outside what the gate can detect, as described under
+  [Metadata](#metadata), so there is no vector for it and no assertion claiming one.
 - A custom `ITestDataSource` test covering both ways in, the capability for every row and a
   `TestDataRow<T>` yielded as the single element of an `object?[]` for one row, asserting the wrapped
   row is recognized exactly as the `DynamicData` shape is.
@@ -925,7 +948,7 @@ to select on any adapter, so it is not done.
 | Does `Explicit=True` reach every explicit test? | It reaches every declaration known at discovery. A folded method explicit only on rows is reached by selecting the method, or by `ExplicitTestMode=Run`. |
 | What if a folded method has several data sources? | It is gated only when all of them are explicit, otherwise each source is resolved on its own before its `GetData`. |
 | Can a row opt out of an explicit method or source? | No, declarations OR-compose. |
-| Which reason wins? | The most specific explicit declaration that has one. |
+| Which reason wins? | For a test, the most specific explicit declaration that has one. For a folded parent skipped before enumeration, the one its sources agree on, or the class or method declaration that gated it. |
 | What happens when activation cannot be determined? | Nothing activates, the request constrains only. |
 | Are skipped explicit tests retried? | No. Selected explicit failures retry normally, and a retry attempt inherits the original activation rather than making one. |
 | Is there an override? | `ExplicitTestMode`, with `Skip` and `Run` on either side of the default. |
