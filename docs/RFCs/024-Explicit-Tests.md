@@ -376,10 +376,15 @@ keying discrimination on the value alone would mean naming a category could neve
 tests, which is the opt-in job this design is mostly for.
 
 Nothing else qualifies. Wildcards, empty segments and `(!EXPR)` do not, and neither does any `!=`
-predicate whatever literals it carries, since the operator makes it an exclusion. `[Explicit=*]` does
-not either: `Explicit` is written on every node, so asking which nodes carry it selects all of them,
-which is Run All written as a property. That is the only key MSTest writes on every node, and it is
-reserved, so no user property can land in the same position.
+predicate whatever literals it carries, since the operator makes it an exclusion. Nor does any
+predicate that no node can fail. `Explicit` is written on every node with `True` or `False`, so a
+predicate the universal property satisfies on its own selects everything, which is Run All written as
+a property. That is about what the predicate matches, not how it is spelled, because
+`TreeNodeFilter` expands `*` inside a property name and matches the result against every metadata
+key: `[Explicit=*]`, `[Exp*=*]` and `[*=*]` all reduce to "has the property every node has" and none
+of them activates. Pinning the value to one of the two, as `[Explicit=True]` or `[Exp*=True]` does,
+excludes the other half of the tree and discriminates. `[Hardware=*]` discriminates for the same
+reason, its key matches a property most nodes do not carry.
 
 Segments compose the same way expressions do: `A & B` is discriminating when the
 segment matches and either side is, `A | B` only through a branch that both matched and is itself
@@ -407,7 +412,7 @@ do not.
 | `/*/*/*/*[Explicit=True]`, `/**[Explicit=True]` | yes |
 | `/**[Explicit=False]` | yes, it names a value, and it selects the ordinary tests |
 | `/**[Explicit!=False]` | no, an exclusion, and it selects the explicit tests without activating them |
-| `/**[Explicit=*]` | no, every node carries the key, so this selects everything |
+| `/**[Explicit=*]`, `/**[Exp*=*]`, `/**[*=*]` | no, the property is on every node, so these select everything |
 
 `TreeNodeFilter` lives in this repository and `Microsoft.Testing.Platform` already grants
 `InternalsVisibleTo` to `MSTest.TestAdapter`, so it reports the discriminating result itself through
@@ -790,7 +795,7 @@ and it does not print one console line per skipped test.
 | Area | Change |
 | --- | --- |
 | Framework | `ExplicitAttribute`, the data capability interface, row properties, public API baseline |
-| Discovery | `TypeEnumerator` reads class and method declarations, `AssemblyEnumerator` merges source and row declarations while unfolding |
+| Discovery | `TypeEnumerator` reads class and method declarations, `AssemblyEnumerator` scans every data source's declaration before it decides whether to unfold, since `TryUnfoldITestDataSources` returns for both fold modes ahead of reading the attributes and can also return once a source fails to unfold, and merges row declarations while unfolding |
 | Execution | pre-initialization gate in `UnitTestRunner`, per-source and per-row checks in `TestMethodRunner.DataRow` |
 | VSTest | classify source versus test-case execution in `MSTestExecutor`, register and round-trip properties, evaluate activation in `TestMethodFilter` |
 | Native MTP | build activation from UID, tree, and property filters in `MSTestFilterContext` and `MtpTestElementFilter`, accept tree node and graph filters instead of throwing, add node metadata |
@@ -821,6 +826,9 @@ An upstream API that exposes a walkable tree replaces this later without changin
   parentheses, escaping, bare values, and case-insensitive `Explicit` values. They run against nodes
   the converter actually produced rather than hand-built property bags, because that is what would
   have caught a category being written as `[Hardware=*]` while the table claimed `[Category=Hardware]`.
+  Wildcarded property keys are vectors too, `[Exp*=*]` and `[*=*]` asserting no activation while
+  `[Exp*=True]` asserts it, since the universal `Explicit` property makes the first two select
+  everything.
   The same serialized
   vectors run against VSTest and native MTP so the two cannot drift, and against both expression
   evaluators so the duplicated parser cannot drift either. Every `Explicit` vector runs in all four
@@ -870,6 +878,10 @@ An upstream API that exposes a walkable tree replaces this later without changin
   row because the per-source checks find nothing explicit to stop. They stop there deliberately: a
   value rewritten into a different valid value is outside what the gate can detect, as described under
   [Metadata](#metadata), so there is no vector for it and no assertion claiming one.
+- A discovery test for the folded paths: a method whose sources are all explicit is recorded and
+  selectable under both fold strategies and when an earlier source fails to unfold, pinning that the
+  source scan happens ahead of every early return in `TryUnfoldITestDataSources` rather than inside
+  the unfolding it skips.
 - A custom `ITestDataSource` test covering both ways in, the capability for every row and a
   `TestDataRow<T>` yielded as the single element of an `object?[]` for one row, asserting the wrapped
   row is recognized exactly as the `DynamicData` shape is.
