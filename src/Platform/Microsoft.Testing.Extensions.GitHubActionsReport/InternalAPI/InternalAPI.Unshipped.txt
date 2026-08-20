@@ -73,9 +73,10 @@ const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureDetai
 const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureDetails.MaxStackTraceRows = 30 -> int
 const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureDetails.GitHubStepSummaryLimit = 1048576 -> int
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.GetRemainingDetailsBudget(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, string! path, Microsoft.Testing.Platform.Logging.ILogger! logger) -> int
-static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.IsSummaryNearLimit(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, string! path, Microsoft.Testing.Platform.Logging.ILogger! logger) -> bool
+static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.ShouldCondenseProjectSection(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, string! path, Microsoft.Testing.Platform.Logging.ILogger! logger) -> bool
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.BuildMinimalMarkdown(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.TestRecord>! records, string! assemblyName, string! targetFrameworkMoniker, int exitCode) -> string!
 const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureDetails.MaxSummaryLength = 419430 -> int
+const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureDetails.CondenseSummaryLength = 629145 -> int
 const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureDetails.PerProjectOverheadReserve = 8000 -> int
 const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureDetails.EffectiveStepSummaryLimit = 1048574 -> int
 const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.TruncationNoticeMarker = "<!-- microsoft-testing-platform:github:summary-truncated -->" -> string!

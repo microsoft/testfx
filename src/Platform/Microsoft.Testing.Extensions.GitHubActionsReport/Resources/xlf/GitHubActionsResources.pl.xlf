@@ -122,11 +122,6 @@
         <target state="new">[... truncated]</target>
         <note>Marker appended to a failure message or stack trace that was clipped to fit the job summary size limit.</note>
       </trans-unit>
-      <trans-unit id="FailureDetailsOmitted">
-        <source>Failure details for {0} listed test(s) were omitted because the job summary size limit was reached.</source>
-        <target state="new">Failure details for {0} listed test(s) were omitted because the job summary size limit was reached.</target>
-        <note>{0} is the number of failures rendered without their expanded diagnostics.</note>
-      </trans-unit>
       <trans-unit id="FailureDetailsOptionDescription">
         <source>Enable or disable expanding each failed test in the job summary into a collapsible section with its failure message, exception type, source location and stack trace. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</source>
         <target state="new">Enable or disable expanding each failed test in the job summary into a collapsible section with its failure message, exception type, source location and stack trace. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</target>
@@ -228,9 +223,9 @@
         <note>Appended to a single-line test project verdict when the shared job summary file is close to GitHub's size limit.</note>
       </trans-unit>
       <trans-unit id="SummaryTruncatedNotice">
-        <source>This job summary is too long, so it was truncated to keep GitHub from dropping it. GitHub discards a job summary larger than {0} bytes in full rather than shortening it, so some of the test project sections below were condensed or left out. See the workflow log or the test report for the complete results.</source>
-        <target state="new">This job summary is too long, so it was truncated to keep GitHub from dropping it. GitHub discards a job summary larger than {0} bytes in full rather than shortening it, so some of the test project sections below were condensed or left out. See the workflow log or the test report for the complete results.</target>
-        <note>Note placed at the top of the job summary once its size limit forces this extension to stop writing full sections. {0} is the size limit in bytes.</note>
+        <source>This job summary was getting long, so it was shortened: the test projects below that are reported as a single line had their full results left out. GitHub discards a job summary larger than {0} bytes in full rather than shortening it, and every test project in this job writes to the same summary, so shortening here is what keeps the rest of the report visible. See the workflow log or the test report for the complete results.</source>
+        <target state="new">This job summary was getting long, so it was shortened: the test projects below that are reported as a single line had their full results left out. GitHub discards a job summary larger than {0} bytes in full rather than shortening it, and every test project in this job writes to the same summary, so shortening here is what keeps the rest of the report visible. See the workflow log or the test report for the complete results.</target>
+        <note>Note placed at the top of the job summary once its size forces whole test project sections to be replaced by a one-line verdict. {0} is the size limit in bytes.</note>
       </trans-unit>
     </body>
   </file>

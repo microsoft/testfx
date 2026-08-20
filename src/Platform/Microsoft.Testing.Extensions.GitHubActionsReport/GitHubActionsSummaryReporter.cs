@@ -226,24 +226,26 @@ internal sealed partial class GitHubActionsSummaryReporter :
             }
 
             // The 1 MiB cap applies to the whole GITHUB_STEP_SUMMARY file, which every test project in the job
-            // appends to. Measure what earlier projects already wrote and claim only the remainder, so a job with
-            // many test projects degrades gracefully instead of the last ones pushing the file over the cap (at
-            // which point GitHub drops the summary entirely).
+            // appends to, so this reporter degrades in two stages as the shared file fills up. Measure what
+            // earlier projects already wrote and claim only the remainder.
+            //
+            //   below 40%  full section, failures expanded into collapsible diagnostics
+            //   40% - 60%  full section, but failures listed as name and duration only
+            //   above 60%  one-line verdict for the whole project
+            //
+            // Shedding the diagnostics first is what keeps the report useful for longest: the list of which tests
+            // failed is a line per failure, while the diagnostics behind it are kilobytes.
             int detailsBudget = GetRemainingDetailsBudget(_fileSystem, path!, _logger);
+            bool condenseSection = ShouldCondenseProjectSection(_fileSystem, path!, _logger);
 
-            // Once the shared budget is spent, every remaining project's section is a reduced one. That is worth
-            // saying once, at the end of the summary, so a reader can tell the report was cut short deliberately
-            // rather than the run having died partway through.
-            bool summaryTruncated = detailsBudget <= 0;
-
-            string markdown = summaryTruncated && IsSummaryNearLimit(_fileSystem, path!, _logger)
-                // Even a details-free section costs a few KB per project (heading, totals table, failure lines).
-                // Once the shared file is close to the cap, that per-project overhead is itself what would push
-                // it over, so collapse to a single line that still reports this project's verdict.
+            string markdown = condenseSection
                 ? BuildMinimalMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value, exitCode)
                 : BuildMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value, exitCode, _includeFailureDetails, detailsBudget);
 
-            string truncationNotice = summaryTruncated ? BuildTruncationNotice() : string.Empty;
+            // The note is only warranted once whole project sections start disappearing. Dropping the expanded
+            // diagnostics leaves every project and every failing test still named, which is a shortened report
+            // rather than an incomplete one, and does not need a warning at the top of the page.
+            string truncationNotice = condenseSection ? BuildTruncationNotice() : string.Empty;
 
             // Final gate, on the *projected* size rather than the current one. The budgeting above aims the file
             // at MaxSummaryLength, but it cannot bound what other tools append to the same file, so the file can
@@ -266,14 +268,14 @@ internal sealed partial class GitHubActionsSummaryReporter :
 
                 await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(overflowWarning), testSessionContext.CancellationToken).ConfigureAwait(false);
 
-                // This project's section is gone, but the reader still deserves to know the summary stops here on
-                // purpose. The note is a few hundred bytes, so try it on its own — dropping the section frees far
-                // more room than the note takes. If even that does not fit, the summary is genuinely full and
-                // staying silent is the only option that keeps what is already rendered.
-                if (truncationNotice.Length > 0
-                    && currentLength + truncationNotice.Length <= GitHubActionsFailureDetails.EffectiveStepSummaryLimit)
+                // This project's section is dropped entirely, which is exactly what the note at the top of the
+                // summary describes, so make sure it is there even if this project was not condensed. The note is
+                // a few hundred bytes and dropping the section frees far more room than it takes; if even that
+                // does not fit, the summary is genuinely full and silence is what keeps the rest rendered.
+                string overflowNotice = truncationNotice.Length > 0 ? truncationNotice : BuildTruncationNotice();
+                if (currentLength + overflowNotice.Length <= GitHubActionsFailureDetails.EffectiveStepSummaryLimit)
                 {
-                    await TryAppendSummaryAsync(path!, string.Empty, truncationNotice, testSessionContext).ConfigureAwait(false);
+                    await TryAppendSummaryAsync(path!, string.Empty, overflowNotice, testSessionContext).ConfigureAwait(false);
                 }
 
                 return;
@@ -395,12 +397,12 @@ internal sealed partial class GitHubActionsSummaryReporter :
     }
 
     /// <summary>
-    /// Indicates whether the shared summary file is close enough to its target size that even a compact
-    /// per-project section risks pushing it over.
+    /// Indicates whether the shared summary file has passed the point where a full per-project section costs
+    /// more than it is worth, so this project reports only a one-line verdict.
     /// </summary>
-    internal static /* for testing */ bool IsSummaryNearLimit(IFileSystem fileSystem, string path, ILogger logger)
+    internal static /* for testing */ bool ShouldCondenseProjectSection(IFileSystem fileSystem, string path, ILogger logger)
         => GetSummaryLength(fileSystem, path, logger) is long length
-            && length >= GitHubActionsFailureDetails.MaxSummaryLength - GitHubActionsFailureDetails.PerProjectOverheadReserve;
+            && length >= GitHubActionsFailureDetails.CondenseSummaryLength;
 
     /// <summary>
     /// Returns the characters of expanded failure detail this test project may still write, given what other

@@ -311,11 +311,11 @@ public sealed class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
-    public void BuildMarkdown_TruncatesOversizedFailureDetails_AndSaysSo()
+    public void BuildMarkdown_DegradesOversizedFailuresToNamedLines_KeepingEveryFailureListed()
     {
         // Every failure carries a stack trace far larger than the supplied budget, so only the first few can be
-        // expanded; the rest must degrade to compact lines and be reported as omitted. The budget is passed
-        // explicitly rather than relying on the default, so the test states the ratio it depends on.
+        // expanded. The rest must degrade to a named line rather than disappearing: which tests failed is the
+        // part a reader cannot reconstruct, and it costs a line where the diagnostics cost kilobytes.
         string hugeStackTrace = string.Join("\n", Enumerable.Repeat(new string('x', 100), GitHubActionsFailureDetails.MaxStackTraceRows));
         GitHubActionsTestRecord[] records =
         [
@@ -331,7 +331,37 @@ public sealed class GitHubActionsSummaryReporterTests
         string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "T", "net9.0", AtLeastOneTestFailedExitCode, includeFailureDetails: true, detailsBudget: 7000);
 
         Assert.Contains("<details>", markdown);
-        Assert.Contains("job summary size limit was reached", markdown);
+        Assert.IsLessThan(records.Length, CountOccurrences(markdown, "<details>"));
+
+        // Every failure is still named, expanded or not.
+        foreach (GitHubActionsTestRecord record in records)
+        {
+            Assert.Contains(record.FullyQualifiedName, markdown);
+        }
+    }
+
+    [TestMethod]
+    public void BuildMarkdown_ExhaustedBudget_ListsFailuresWithoutApologisingForTheMissingDetails()
+    {
+        // With no budget at all the section is a plain list. It must not spend space telling the reader that
+        // details were omitted — that is stated once at the top of the summary, not once per project, in a file
+        // that is being shortened precisely because space ran out.
+        GitHubActionsTestRecord[] records =
+        [
+            .. Enumerable.Range(0, 3).Select(i => new GitHubActionsTestRecord(
+                $"T{i}",
+                $"T.Test{i}",
+                GitHubActionsTerminalKind.Failed,
+                TimeSpan.FromMilliseconds(1),
+                new GitHubActionsTestFailureDetails("boom", "System.Exception", "at T.Test()", null, 0))),
+        ];
+
+        string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "T", "net9.0", AtLeastOneTestFailedExitCode, includeFailureDetails: true, detailsBudget: 0);
+
+        Assert.DoesNotContain("<details>", markdown);
+        Assert.DoesNotContain("were omitted", markdown);
+        Assert.Contains("T.Test0", markdown);
+        Assert.Contains("T.Test2", markdown);
     }
 
     [TestMethod]
@@ -461,9 +491,41 @@ public sealed class GitHubActionsSummaryReporterTests
         // The margin must stay negligible: a large one would silently cost users summary content for no reason.
         Assert.IsLessThan(1024, GitHubActionsFailureDetails.GitHubStepSummaryLimit - GitHubActionsFailureDetails.EffectiveStepSummaryLimit);
 
-        // The condense threshold must leave real headroom below the point of no return, since co-writer
-        // output continues to accumulate after this reporter has degraded to one-liners.
-        Assert.IsLessThan(GitHubActionsFailureDetails.EffectiveStepSummaryLimit, GitHubActionsFailureDetails.MaxSummaryLength);
+        // The two degradation thresholds must be ordered and must both leave headroom below the point of no
+        // return, since co-writer output keeps accumulating after this reporter has degraded.
+        Assert.IsLessThan(GitHubActionsFailureDetails.CondenseSummaryLength, GitHubActionsFailureDetails.MaxSummaryLength);
+        Assert.IsLessThan(GitHubActionsFailureDetails.EffectiveStepSummaryLimit, GitHubActionsFailureDetails.CondenseSummaryLength);
+    }
+
+    [TestMethod]
+    public void DegradationThresholds_ShedDiagnosticsBeforeWholeSections()
+        // The order of the two thresholds is the whole design: diagnostics are kilobytes per failure and go
+        // first, while the list of which tests failed is a line each and survives until whole sections have to
+        // go. Reversing them would drop the names of failing tests while still expanding stack traces.
+        => Assert.IsLessThan(
+            GitHubActionsFailureDetails.CondenseSummaryLength,
+            GitHubActionsFailureDetails.MaxTotalDetailsLength);
+
+    [TestMethod]
+    public void ShouldCondenseProjectSection_OnlyOncePastTheCondenseThreshold()
+    {
+        // Between the two thresholds a project still gets a full section, so a file just under the condense
+        // threshold must not be condensed — that is the band where failures are listed without diagnostics.
+        Assert.IsFalse(CondenseAtLength(GitHubActionsFailureDetails.CondenseSummaryLength - 1));
+        Assert.IsTrue(CondenseAtLength(GitHubActionsFailureDetails.CondenseSummaryLength));
+
+        static bool CondenseAtLength(int length)
+        {
+            var fileStream = new Mock<IFileStream>();
+            fileStream.Setup(s => s.Stream).Returns(new MemoryStream(new byte[length]));
+
+            var fileSystem = new Mock<IFileSystem>();
+            fileSystem.Setup(f => f.ExistFile("summary.md")).Returns(true);
+            fileSystem.Setup(f => f.NewFileStream("summary.md", FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
+                .Returns(fileStream.Object);
+
+            return GitHubActionsSummaryReporter.ShouldCondenseProjectSection(fileSystem.Object, "summary.md", new Mock<ILogger>().Object);
+        }
     }
 
     [TestMethod]
@@ -481,7 +543,7 @@ public sealed class GitHubActionsSummaryReporterTests
             .Returns(fileStream.Object);
 
         Assert.AreEqual(0, GitHubActionsSummaryReporter.GetRemainingDetailsBudget(fileSystem.Object, "summary.md", new Mock<ILogger>().Object));
-        Assert.IsTrue(GitHubActionsSummaryReporter.IsSummaryNearLimit(fileSystem.Object, "summary.md", new Mock<ILogger>().Object));
+        Assert.IsTrue(GitHubActionsSummaryReporter.ShouldCondenseProjectSection(fileSystem.Object, "summary.md", new Mock<ILogger>().Object));
     }
 
     [TestMethod]
@@ -735,14 +797,16 @@ public sealed class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
-    public void BuildTruncationNotice_SaysWhyTheSummaryStopsShort()
+    public void BuildTruncationNotice_SaysWhatWasLeftOutAndWhy()
     {
         string notice = GitHubActionsSummaryReporter.BuildTruncationNotice();
 
         Assert.Contains(GitHubActionsSummaryReporter.TruncationNoticeMarker, notice);
-        Assert.Contains("truncated", notice);
-        // The reader needs the reason, not just the fact: an oversized summary is dropped outright by GitHub.
-        Assert.Contains("dropping", notice);
+        Assert.Contains("shortened", notice);
+        // The reader needs to know what is missing — whole project results, not just some detail — and that an
+        // oversized summary is discarded outright, which is why shortening is the lesser evil.
+        Assert.Contains("single line", notice);
+        Assert.Contains("discards", notice);
         Assert.Contains(GitHubActionsFailureDetails.EffectiveStepSummaryLimit.ToString(CultureInfo.InvariantCulture), notice);
     }
 

@@ -125,19 +125,35 @@ internal static class GitHubActionsFailureDetails
     internal const int EffectiveStepSummaryLimit = GitHubStepSummaryLimit - 2;
 
     /// <summary>
-    /// The share of <see cref="GitHubStepSummaryLimit"/> this extension will drive the summary file to before
-    /// it starts condensing its own output.
+    /// The share of <see cref="GitHubStepSummaryLimit"/> this extension will fill with expanded failure
+    /// diagnostics before it stops expanding them.
     /// </summary>
     /// <remarks>
-    /// This is deliberately well below the 1 MiB cap rather than just under it, because this extension is not
-    /// the only writer to <c>GITHUB_STEP_SUMMARY</c>. Test frameworks (TUnit, for one) append their own
-    /// per-assembly summary block after this reporter runs, measured at roughly 5 KB per test project. This
-    /// reporter observes the shared file and so accounts for what earlier projects wrote, but it cannot
-    /// prevent the writes that follow it. The headroom left here absorbs that co-writer overhead — at ~5 KB
-    /// per project it covers on the order of 80 further test projects — so the file lands under the cap and
-    /// GitHub renders it, instead of exceeding the cap and being dropped in its entirety.
+    /// This is the first of two thresholds. Below it a failure is rendered as a collapsible section carrying its
+    /// message, exception type, source location and stack trace; at or above it every failure is still listed,
+    /// but only as its name and duration. The listing is what tells a reader which tests failed, and it costs a
+    /// line rather than a kilobyte, so it survives long after the diagnostics stop.
     /// </remarks>
     internal const int MaxSummaryLength = (int)(GitHubStepSummaryLimit * 0.4);
+
+    /// <summary>
+    /// The share of <see cref="GitHubStepSummaryLimit"/> beyond which a test project is reduced to a one-line
+    /// verdict instead of a full section.
+    /// </summary>
+    /// <remarks>
+    /// This is the second threshold. Between it and <see cref="MaxSummaryLength"/> a project still gets its
+    /// heading, totals table and the names of its failing tests; at or above it the file is close enough to the
+    /// cap that even that costs too much, so the project reports only its counts.
+    /// <para>
+    /// The gap to the 1 MiB cap is not spare capacity. This extension is not the only writer to
+    /// <c>GITHUB_STEP_SUMMARY</c>: test frameworks (TUnit, for one) append their own per-assembly block after
+    /// this reporter has run, measured at roughly 9 KB per test project in a failing run. This reporter can
+    /// observe what earlier projects wrote but cannot prevent what is written after it, so the remaining share
+    /// absorbs that co-writer output — on the order of 40 further test projects — and keeps the file under the
+    /// cap. Exceeding the cap costs the entire summary, not its tail.
+    /// </para>
+    /// </remarks>
+    internal const int CondenseSummaryLength = (int)(GitHubStepSummaryLimit * 0.6);
 
     /// <summary>
     /// Characters reserved for one test project's non-detail content — heading, totals table, failure and
@@ -261,16 +277,10 @@ internal static class GitHubActionsFailureDetails
                 .Append("\n\n");
         }
 
-        if (omittedDetails > 0)
-        {
-            builder.Append("> [!NOTE]\n> ")
-                .Append(string.Format(
-                    CultureInfo.InvariantCulture,
-                    GitHubActionsResources.FailureDetailsOmitted,
-                    omittedDetails.ToString(CultureInfo.InvariantCulture)))
-                .Append("\n\n");
-        }
-
+        // Deliberately no "details omitted" note: every failure is still listed with its name and duration, so the
+        // section remains a complete list of what failed. Saying it once per project would cost more than the
+        // diagnostics it apologises for, in a file being shortened precisely because space ran out. The note at
+        // the top of the summary states it once for the whole run instead.
         return omittedDetails;
     }
 
