@@ -514,8 +514,8 @@ on a folded parent today, and explicitness has to be recorded: an ignored parent
 selectable, while an explicit one must be selectable by `*[Explicit=True]`.
 
 `TryExecuteFoldedDataDrivenTestsAsync` then re-checks the source declaration before calling
-`GetData`, in the position where it already checks the source-wide `IgnoreMessage`, so a parent that
-arrives without the discovery metadata still produces one skipped result and enumerates nothing.
+`GetData`, immediately ahead of the source-wide `IgnoreMessage` check, so a parent that arrives
+without the discovery metadata still produces one skipped result and enumerates nothing.
 
 Only row declarations need the data. For a source that is not explicit, or one that is activated,
 each row is checked as it is produced, before per-row `TestInitialize`, before test-class
@@ -526,31 +526,55 @@ row turns out to be explicit. That is inherent to folded data, a row declaration
 the source runs, and that is not a reason to force unfolding. The same is not true of a source
 declaration, which is why the source check does not wait for enumeration.
 
-`ITestDataSourceIgnoreCapability` and row `IgnoreMessage` take precedence over the explicit state
-wherever both are known, which is not the same point for every declaration scope:
+`ITestDataSourceIgnoreCapability` and row `IgnoreMessage` win over the explicit state wherever both
+are resolved at the same point, and that is not every point. The [Precedence](#precedence) table sets
+the rule for a method: an unactivated explicit test reports an explicit skip, because `[Ignore]` is
+resolved only after type loading and the gate exists to avoid that load. Folded data follows it.
 
-- Unfolded rows carry both on the `UnitTestElement` from discovery, so ignore wins for every row.
-- A folded source declares ignore and explicit on the same attribute instance, so both are known at
-  the same point before enumeration and ignore wins there. The parent reports one ignored result and
-  `GetData` is not called. The ignore check keeps its current position ahead of the explicit check.
-- A folded parent that is explicit and unactivated at class, method, or source scope never reaches
-  enumeration, so no row metadata exists to take precedence, and the method reports one explicit skip
-  rather than one result per row. That is deliberate: an explicit test must not run its data source
-  to discover that it would have been ignored anyway. Both states end in a skipped result, so what
-  this changes is the reported reason and the result count, not whether anything ran.
+- Unfolded rows carry both on the `UnitTestElement` from discovery, so ignore is resolved at the same
+  point as explicitness and wins for every row.
+- A folded parent that is explicit and unactivated at class, method, or source scope reports one
+  explicit skip. The gate reads the element, which carries the explicit state and not the ignore
+  message, so reporting an ignored result would mean loading the type and calling the source. It must
+  not: an explicit test does not run its data source to find out that it would have been ignored
+  anyway. `GetData` is not called and no row metadata exists to take precedence.
+- The source re-check in `TryExecuteFoldedDataDrivenTestsAsync` sits ahead of the existing source
+  ignore check for the same reason, so a parent that arrives without the discovery metadata gives the
+  answer the gate would have given. That changes nothing for a source that declares ignore only,
+  because the explicit check is a no-op for it.
 - A folded parent that is explicit at none of those scopes, or is activated, reaches enumeration, so
-  row ignore metadata arrives alongside row explicit metadata and wins there, row by row.
+  row ignore metadata arrives alongside row explicit metadata and wins there, row by row. An
+  activated parent whose source declares ignore reports one ignored result, exactly as today.
+
+Every one of these ends in a skipped result, so what the ordering decides is the reported reason and
+the result count, never whether anything ran.
 
 If a data source throws while producing that metadata, existing data source failure behavior wins,
 the adapter cannot know that the missing row would have been explicit.
 
 ### Retry
 
-Retries never create activation. The gate runs before retry orchestration, so a test skipped by
-Run All produces one skipped result, zero attempts, and never enters the retry UID set. A selected
-explicit test that fails retries like any other test. The MTP process retry extension and a host's
-"rerun failed tests" both build the next request from tests that actually ran and failed, so
-narrowing a retry request cannot activate anything new.
+An automatic retry does not create activation. A test skipped by Run All produces one skipped result,
+zero attempts, and never enters the retry set, and a selected explicit test that fails retries like
+any other test. MSTest's own `[Retry]` re-runs an already activated method in process and starts no
+new request.
+
+The retry set alone does not give that, because folding makes it coarse. Every folded row reports
+under its parent's UID, so an ordinary row failing puts the parent UID in the set, and the MTP retry
+extension then replaces the original filter with `--filter-uid` for it. Read as a fresh UID
+selection, that request activates the parent, and the explicit rows the first attempt skipped run on
+the second.
+A retry attempt therefore inherits the activation of the attempt it is retrying and never derives one
+from its own UID list. The extension already marks the child process as a retry attempt, and the
+activation of the original request has to travel with the failed-UID list rather than be
+reconstructed from it. An original Run All stays unactivated for every attempt, and an originally
+selected explicit test keeps retrying.
+
+A host's "rerun failed tests" is a user action rather than orchestration. It arrives as ordinary
+test-case selection and activates what it selects, which for a folded parent is every row under it.
+That is the coarseness of folding rather than anything retry adds, and it is the answer
+[What counts as selecting a test](#what-counts-as-selecting-a-test) already gives for selecting the
+parent.
 
 ### Metadata
 
@@ -602,6 +626,7 @@ and it does not print one console line per skipped test.
 | VSTest | classify source versus test-case execution in `MSTestExecutor`, register and round-trip properties, evaluate activation in `TestMethodFilter` |
 | Native MTP | build activation from UID, tree, and property filters in `MSTestFilterContext` and `MtpTestElementFilter`, accept tree node and graph filters instead of throwing, add node metadata |
 | Platform | `TestExecutionFilterComposer` and the request factories keep the original request filter next to the provider-constrained one, on an internal surface reached through the existing friend assembly |
+| Retry | the process retry extension carries the original activation alongside the failed-UID list, so a retry attempt inherits it instead of reading its own `--filter-uid` as a selection |
 | Settings | three `ExplicitTestMode` values with existing precedence, plus localized resources |
 | Source generation | root `ExplicitAttribute` and capability bearing types, keep reading through the existing reflection abstraction so generated and reflection discovery produce identical metadata |
 
@@ -644,8 +669,14 @@ An upstream API that exposes a walkable tree replaces this later without changin
   method reports one explicit skip even when its rows would have been ignored. Another moves the
   declaration from the method to the source and asserts the same outcome, with a counter incremented
   in `GetData` proving enumeration did not happen, and a source declaring both ignore and explicit
-  reporting one ignored result. Row-specific explicitness is the case that does enumerate, and it
-  asserts one result per row with the ordinary siblings still running.
+  reporting one explicit skip while unactivated and one ignored result once activated, asserted both
+  from the discovery metadata and from a parent that arrives without it. Row-specific explicitness is
+  the case that does enumerate, and it asserts one result per row with the ordinary siblings still
+  running.
+- Retry tests over a folded parent whose rows are one ordinary failing row and one explicit row.
+  Under Run All the ordinary row fails and retries, and the explicit row is skipped on every attempt,
+  pinning that the parent UID in the retry set does not activate it. The same asset selected by UID
+  retries both.
 - One acceptance asset, run through both hosts, covering explicit method, class, base and override,
   ignored and conditional explicit tests, ordinary and explicit sibling rows, source-wide and
   row-specific dynamic data, retry, all three `ExplicitTestMode` values, and fixture counters written
@@ -712,7 +743,7 @@ to select on any adapter, so it is not done.
 | Can a row opt out of an explicit method or source? | No, declarations OR-compose. |
 | Which reason wins? | The most specific explicit declaration that has one. |
 | What happens when activation cannot be determined? | Nothing activates, the request constrains only. |
-| Are skipped explicit tests retried? | No. Selected explicit failures retry normally. |
+| Are skipped explicit tests retried? | No. Selected explicit failures retry normally, and a retry attempt inherits the original activation rather than making one. |
 | Is there an override? | `ExplicitTestMode`, with `Skip` and `Run` on either side of the default. |
 
 Approval is needed for the public API, the positive-filter activation model, the discriminating
