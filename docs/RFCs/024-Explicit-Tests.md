@@ -176,9 +176,14 @@ A custom `ITestDataSource` has the other two ways in. It implements
 `ITestDataSourceExplicitCapability` to mark every row it produces, and it marks a single row by
 wrapping the row in a one-element array, because `GetData` returns `IEnumerable<object?[]>` and the
 existing unwrapping contract recognizes a row only as the single element of one:
-`yield return [new TestDataRow<MigrationCase>(migration) { IsExplicit = true }];`. This is the same
-shape row `IgnoreMessage` and `DisplayName` already require from a custom source, and it is worth
-stating because the `DynamicData` example above cannot be copied into one.
+
+```csharp
+yield return new object?[] { new TestDataRow<MigrationCase>(migration) { IsExplicit = true } };
+```
+
+The array type is written out rather than shortened to a collection expression because the array is
+the point: this is the same shape row `IgnoreMessage` and `DisplayName` already require from a custom
+source, and it is worth stating because the `DynamicData` example above cannot be copied into one.
 
 The reason is called `ExplicitReason` on all three surfaces, matching `IgnoreAttribute.IgnoreMessage`
 and row `IgnoreMessage` rather than shortening to `Reason` on the attribute alone. It is diagnostic
