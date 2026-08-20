@@ -365,9 +365,13 @@ segment matches and either side is, `A | B` only through a branch that both matc
 discriminating, and `Token[FILTER_EXPR]` when either the token or the property expression is. So
 `/*/*/*/(MyTest|(!Slow))` activates a node matched by `MyTest` and not one matched only by `(!Slow)`.
 
-A node is activated when it matches the filter and at least one **non-root** segment on its path is
-discriminating. Non-root, because the root names the test project rather than a test in it, and
-`/MyAssembly/**` selects exactly what `/**` selects in a single assembly host.
+A node is activated when it matches the filter and at least one **non-root** path token on its path is
+discriminating, or any segment carries a discriminating property predicate. The root exclusion is
+about the path token, because the root names the test project rather than a test in it and
+`/MyAssembly/**` selects exactly what `/**` selects in a single assembly host. A property predicate
+names a characteristic of the node rather than a container, so it discriminates wherever it is
+written, root segment included, and `/**[Explicit=True]` activates while `/**` and `/MyAssembly/**`
+do not.
 
 | Filter | Activated? |
 | --- | --- |
@@ -395,8 +399,9 @@ only when the last segment is `**`, so a one-segment filter selects a one-segmen
 below it. An MSTest node is assembly, namespace, class, method, so the two forms that select explicit
 tests are `/**[Explicit=True]`, which is the shorter one and is used for the rest of this document,
 and `/*/*/*/*[Explicit=True]`, which spells the depth out. Both activate under the rule above: the
-segment itself is wildcard-only, and `[Explicit=True]` is a property predicate with a literal, which
-is discriminating, and it is not the root segment.
+path token is wildcard-only in each, and `[Explicit=True]` is a property predicate with a literal, so
+it discriminates. `/**[Explicit=True]` is the case the property-predicate half of the rule exists for,
+since it has one segment and that segment is the root.
 
 The property predicate needs one thing the other rows do not. `TreeNodeFilter.IsMatchingProperty`
 compares `[Key=Value]` against `TestMetadataProperty` and nothing else, so `Explicit` is a
@@ -667,28 +672,32 @@ one of several sources is explicit from one where all of them are.
   values reach the fail closed rule instead of being defaulted by VSTest's converter. A missing
   `Explicit` means false and a missing reason means no reason, so a case persisted by an older version
   still deserializes. `ExplicitGate` is not filterable, it exists only so the gate has its input, and
-  a missing or malformed one means not gated, which sends the case to enumeration and resolves it per
-  source. That is the safe direction: it costs a type load on a case persisted before this feature and
-  it cannot run an explicit test that the per-source check would have skipped. Reasons are prose and
-  stay unfilterable.
-- Native MTP: `MSTestTestNodeConverter` adds `Explicit` with value `True` to explicit nodes only, and
-  `ExplicitReason` only when a non-empty reason exists, on both discovered and result nodes.
-  `Explicit` is a `TestMetadataProperty`, which is the property type `[Key=Value]` in a tree node
-  filter matches, so `/**[Explicit=True]` works with no platform matcher change. It is still not a
-  trait: it is produced from `IsExplicit` rather than from `[TestCategory]` or `[TestProperty]`, it
-  is not in `UnitTestElement.Traits`, and it does not show up as a user authored category. UIDs do
+  a missing or malformed one gates whenever `Explicit` is true. It fails closed like every other
+  unreadable value here, and in the same direction: the alternative, treating it as not gated, is only
+  safe for a folded parent, where the per-source check downstream still stops the run, and a plain
+  explicit method has no such check, so Run All would execute it. Over-skipping costs a folded parent
+  with disagreeing sources one explicit skip instead of its ordinary source's rows, which is visible
+  and recoverable by selecting the test. Reasons are prose and stay unfilterable.
+- Native MTP: `MSTestTestNodeConverter` adds `Explicit` with value `True` to explicit nodes only, on
+  both discovered and result nodes. `Explicit` is a `TestMetadataProperty`, which is the property type
+  `[Key=Value]` in a tree node filter matches, so `/**[Explicit=True]` works with no platform matcher
+  change. It is still not a trait: it is produced from `IsExplicit` rather than from `[TestCategory]`
+  or `[TestProperty]`, it is not in `UnitTestElement.Traits`, and it does not show up as a user
+  authored category. The reason is deliberately not a node metadata property: `IsMatchingProperty`
+  matches every `TestMetadataProperty`, so writing it as one would make it filterable on MTP and
+  unfilterable on VSTest, which contradicts both the API contract and the equivalence rule. It reaches
+  the user through the skip message on the result, the same place the other hosts read it. UIDs do
   not change when `[Explicit]` is added, and a server client that ignores the metadata still receives
   ordinary nodes and ordinary skipped results. The native path keeps its elements in process, so
   nothing is reconstructed there and `GatesAsExplicit` needs no node metadata.
 
-`Explicit` and `ExplicitReason` are reserved metadata keys, because MTP would otherwise disagree with
-VSTest about a name a user is already allowed to write. The converter turns every `[TestProperty]`
-into `TestMetadataProperty(name, value)` and `TreeNodeFilter` matches any metadata property by key and
-value, so `[TestProperty("Explicit", "True")]` on an ordinary test would be selected by
-`/**[Explicit=True]` while VSTest's registered property path ignores it. A `[TestProperty]` with either
-reserved name is therefore not written to the metadata surface, and discovery reports a warning naming
-the test, so the built-in value is the only one either host can match. This follows VSTest rather than
-changing it, and the trait is a `[TestProperty]` the user can rename.
+`Explicit` and `ExplicitReason` are reserved property names on both hosts, compared ordinal
+case-insensitively, because both hosts match case-insensitively: `ValueExpression` builds its regex
+with `RegexOptions.IgnoreCase`, and `TestMethodFilter`'s supported-property dictionary and its trait
+fallback both use `OrdinalIgnoreCase`. Reserving only the exact spellings would leave
+`[TestProperty("explicit", "True")]` colliding. A `[TestProperty]` whose name matches either reserved
+name in any casing is not written to the metadata surface or to the traits, and discovery reports a
+warning naming the test, so the built-in value is the only one either host can match.
 
 A folded parent carries its class, method, and source declarations. A source declaration is read from
 the attribute instance and needs no enumeration, so a method with any explicit source is reported
@@ -758,11 +767,17 @@ An upstream API that exposes a walkable tree replaces this later without changin
 - Filter-path agreement tests for `Explicit` as node metadata: `/**[Explicit=True]` selects the same
   tests through `MtpTestElementFilter` before nodes exist as `TreeNodeFilter` matches against the
   `TestMetadataProperty` the converter writes, and `Explicit` appears in neither the trait nor the
-  category surfaces. One asserts the documented reachability boundary directly: a folded method with
-  an explicit source is selected, a folded method whose explicitness is only on rows is not, and
-  selecting that method by name runs its explicit rows. Another puts `[TestProperty("Explicit",
-  "True")]` on an ordinary test and asserts both hosts ignore it, that it reaches neither the node
-  metadata nor the VSTest property, and that discovery warns.
+  category surfaces. One covers the root-segment case specifically, that `/**[Explicit=True]` activates
+  while `/**` and `/MyAssembly/**` do not, since that is the whole reason the rule separates the path
+  token from the property predicate. One asserts the documented reachability boundary directly: a
+  folded method with an explicit source is selected, a folded method whose explicitness is only on rows
+  is not, and selecting that method by name runs its explicit rows. Another puts
+  `[TestProperty("Explicit", "True")]` on an ordinary test, and `[TestProperty("explicit", ...)]` and
+  `[TestProperty("EXPLICITREASON", ...)]` beside it, asserting both hosts ignore every casing, that
+  none reaches the node metadata, the traits, or the VSTest property, that `--filter "Explicit=True"`
+  no longer matches them on VSTest where it does today, and that discovery warns for each.
+- A reason-is-not-filterable test: an explicit test with a reason, asserting `/**[ExplicitReason=*]`
+  matches nothing on MTP and the reason still reaches the skip message on both hosts.
 - A late-row test: an assembly whose only explicit declaration is on a `TestDataRow<T>` produced
   during execution, asserting the row is still skipped under Run All and still runs when the method is
   selected, so an assembly that looks free of explicit tests at discovery does not lose activation.
@@ -772,7 +787,8 @@ An upstream API that exposes a walkable tree replaces this later without changin
   are all explicit is gated with no type load, and two explicit sources with different reasons report
   no reason on the gated parent and their own reasons when resolved individually. The same two methods
   round-trip through a serialized VSTest `TestCase` and keep their gate answers, and one whose
-  `ExplicitGate` is stripped falls back to per-source resolution rather than gating.
+  `ExplicitGate` is stripped is gated rather than run, together with a plain explicit method stripped
+  the same way, which is the case that would otherwise execute under Run All.
 - A custom `ITestDataSource` test covering both ways in, the capability for every row and a
   `TestDataRow<T>` yielded as the single element of an `object?[]` for one row, asserting the wrapped
   row is recognized exactly as the `DynamicData` shape is.
@@ -812,13 +828,16 @@ The APIs are additive and binary compatible, and a test with no declarations kee
 current discovery, filtering, execution, retry, and result behavior. Existing custom data sources
 compile and behave as before, the capability is opt-in.
 
-Reserving the two metadata keys is the one exception, and it needs a release note. A test that
-carries `[TestProperty("Explicit", ...)]` or `[TestProperty("ExplicitReason", ...)]` compiles and runs
-as before, but that property stops appearing in the MTP node metadata and discovery warns about it, so
-a tree node filter written against it stops matching. The names were only ever matchable on MTP, never
-on VSTest, so this is the two hosts agreeing rather than a capability being taken away, and the fix is
-to rename the property. It is called out here because it is a behavior change for a test with no
-explicit declaration of its own, which nothing else in this design touches.
+Reserving the two property names is the one exception, and it needs a release note that covers both
+hosts. A test carrying `[TestProperty("Explicit", ...)]` or `[TestProperty("ExplicitReason", ...)]`,
+in any casing, compiles and runs as before, but the property stops reaching the filterable surfaces
+and discovery warns about it. On MTP a tree node filter written against it stops matching. On VSTest
+it stops matching too, and not because the trait is dropped in isolation: `TestMethodFilter` resolves
+any name it does not recognize from `TestCase.Traits`, so `--filter "Explicit=True"` matches such a
+test today, and registering `Explicit` as a supported property takes that name over regardless. The
+break is therefore on both hosts rather than on MTP alone, the fix is to rename the property, and it
+is called out here because it is a behavior change for a test with no explicit declaration of its own,
+which nothing else in this design touches.
 
 The risk worth calling out in release notes is version skew, and the alignment check already closes
 most of it. `MSTestExecutor`'s module initializer compares the informational versions of
