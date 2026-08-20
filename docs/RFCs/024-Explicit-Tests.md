@@ -283,8 +283,11 @@ internal sealed record TestSelection(
     ITestElementFilter? ExplicitActivation);
 ```
 
-This is internal to the adapter and platform services, not public API. Assemblies with no explicit
-tests keep the current path and never evaluate activation.
+This is internal to the adapter and platform services, not public API. Activation is classified once
+per request rather than per test, so every run computes it and only an explicit test consults it. It
+is deliberately not skipped for an assembly that looks free of explicit tests at discovery: a folded
+source can produce a row whose `IsExplicit` is first seen during execution, and an assembly with no
+declaration anywhere would otherwise have no activation to check when that row appears.
 
 Request shapes map like this:
 
@@ -483,8 +486,16 @@ applies for the same reason: `Enum.TryParse` would accept `2`, and a number that
 `--filter "Explicit=True"`, which stays visible in the command line. The two are not interchangeable
 and a CI definition has to choose deliberately. `Run` widens activation and leaves selection alone,
 so Run All still selects the whole suite and now runs the explicit tests in it as well. The filter
-narrows selection, so the run contains explicit tests and nothing else. A job meant to exercise only
-the explicit tests wants the filter, and reaching for `Run` there runs the entire suite.
+narrows selection instead, so the run is the explicit tests plus whatever folding attaches to them,
+and a job meant to exercise only the explicit tests wants the filter rather than `Run`, which runs the
+entire suite.
+
+Folding blurs both edges of that filter and neither edge is fixable from the filter side. It selects a
+folded parent whose sources are not all explicit, and selecting a parent runs every row under it, so
+an ordinary source beside an explicit one runs too. It also misses a folded method declared explicit
+only on its rows, which is not selectable at discovery at all. A suite that has to be exactly the
+explicit tests wants unfolded rows, where every row is selectable on its own; a CI definition that
+cannot guarantee that should not rely on the result set being explicit-only.
 
 ## Implementation
 
@@ -523,18 +534,18 @@ source explicitness are all readable without running the source, because `IsExpl
 on the `ITestDataSource` attribute instance, reached by reflection exactly like `IgnoreMessage`.
 
 A method can carry several sources, and `TryExecuteFoldedDataDrivenTestsAsync` runs all of them under
-one parent, so the parent's single explicit bit cannot mean two things at once. It is recorded twice,
-for two different jobs:
+one parent, so one flag on the parent cannot answer both questions being asked of it. The parent
+carries two, `GatesAsExplicit` and `IsExplicit`, described under [Metadata](#metadata):
 
-- **Gating.** The parent is gated as explicit when the class or the method declares it, or when every
-  source on the method declares it. Those are the cases where the whole method skips, so the ordinary
-  gate skips an unactivated parent before `TypeCache.GetTestMethodInfo`, with no type load, exactly as
-  for a method declaration. A method whose sources disagree is not gated, it reaches enumeration, and
-  each source is resolved on its own below.
-- **Selection.** The parent is reported explicit when the class, the method, or any source declares
-  it, so `*[Explicit=True]` and `--filter "Explicit=True"` select it. Discovery does not record the
-  source-wide ignore message on a folded parent today, and explicitness has to be recorded: an ignored
-  parent never needs to be selectable, while an explicit one does.
+- **Gating**, `GatesAsExplicit`. The parent is gated as explicit when the class or the method declares
+  it, or when every source on the method declares it. Those are the cases where the whole method skips,
+  so the ordinary gate skips an unactivated parent before `TypeCache.GetTestMethodInfo`, with no type
+  load, exactly as for a method declaration. A method whose sources disagree is not gated, it reaches
+  enumeration, and each source is resolved on its own below.
+- **Selection**, `IsExplicit`. The parent is reported explicit when the class, the method, or any
+  source declares it, so `*[Explicit=True]` and `--filter "Explicit=True"` select it. Discovery does
+  not record the source-wide ignore message on a folded parent today, and explicitness has to be
+  recorded: an ignored parent never needs to be selectable, while an explicit one does.
 
 The reason on a gated parent follows the ordinary precedence, the most specific declaration that has
 one. When the declaration is source-only and several sources carry different reasons, the parent
@@ -611,8 +622,20 @@ parent.
 ### Metadata
 
 Discovery always reports explicit tests, with no skipped state attached, a test is not skipped until
-an execution request fails to activate it. Each `UnitTestElement` carries `IsExplicit` and
-`ExplicitReason`, and each host gets one transport:
+an execution request fails to activate it. Each `UnitTestElement` carries three fields, because
+selection and gating are different questions for a folded parent and the same field cannot answer
+both:
+
+| Field | Meaning | Read by |
+| --- | --- | --- |
+| `IsExplicit` | the class, the method, or any source declares it | filters, node metadata, VSTest properties, reporting |
+| `GatesAsExplicit` | the class or the method declares it, or every source does | the execution gate in `UnitTestRunner` |
+| `ExplicitReason` | the most specific declaration that has one, and none when the parent is gated by sources that disagree on it | reporting |
+
+For anything other than a folded parent the two flags are equal, and only `IsExplicit` is transported.
+`GatesAsExplicit` is adapter-internal, computed at discovery beside `IsExplicit` and carried on the
+element, so it never reaches a wire format and a persisted case that lacks it is recomputed rather
+than trusted. Each host gets one transport for `IsExplicit`:
 
 - VSTest: adapter owned `MSTestDiscoverer.Explicit` and `MSTestDiscoverer.ExplicitReason` properties,
   round-tripped by `ToTestCase` and `ToUnitTestElement`. These names are stable wire identifiers.
@@ -629,6 +652,22 @@ an execution request fails to activate it. Each `UnitTestElement` carries `IsExp
   is not in `UnitTestElement.Traits`, and it does not show up as a user authored category. UIDs do
   not change when `[Explicit]` is added, and a server client that ignores the metadata still receives
   ordinary nodes and ordinary skipped results.
+
+`Explicit` and `ExplicitReason` are reserved metadata keys, because MTP would otherwise disagree with
+VSTest about a name a user is already allowed to write. The converter turns every `[TestProperty]`
+into `TestMetadataProperty(name, value)` and `TreeNodeFilter` matches any metadata property by key and
+value, so `[TestProperty("Explicit", "True")]` on an ordinary test would be selected by
+`*[Explicit=True]` while VSTest's registered property path ignores it. A `[TestProperty]` with either
+reserved name is therefore not written to the metadata surface, and discovery reports a warning naming
+the test, so the built-in value is the only one either host can match. This follows VSTest rather than
+changing it, and the trait is a `[TestProperty]` the user can rename.
+
+A folded parent carries its class, method, and source declarations. A source declaration is read from
+the attribute instance and needs no enumeration, so a method with any explicit source is reported
+explicit at discovery and `*[Explicit=True]` and `--filter "Explicit=True"` select it, whether or not
+its other sources are explicit. Only row declarations are missing from the parent, they do not exist
+until the data is enumerated, so a folded method whose explicitness lives only in rows is not
+selectable by those filters and is reached by selecting the method instead.
 
 A folded parent carries its class, method, and source declarations. A source declaration is read from
 the attribute instance and needs no enumeration, so a method with any explicit source is reported
@@ -700,7 +739,12 @@ An upstream API that exposes a walkable tree replaces this later without changin
   `TestMetadataProperty` the converter writes, and `Explicit` appears in neither the trait nor the
   category surfaces. One asserts the documented reachability boundary directly: a folded method with
   an explicit source is selected, a folded method whose explicitness is only on rows is not, and
-  selecting that method by name runs its explicit rows.
+  selecting that method by name runs its explicit rows. Another puts `[TestProperty("Explicit",
+  "True")]` on an ordinary test and asserts both hosts ignore it, that it reaches neither the node
+  metadata nor the VSTest property, and that discovery warns.
+- A late-row test: an assembly whose only explicit declaration is on a `TestDataRow<T>` produced
+  during execution, asserting the row is still skipped under Run All and still runs when the method is
+  selected, so an assembly that looks free of explicit tests at discovery does not lose activation.
 - Mixed-source tests over one folded method carrying several data sources: an explicit source beside
   an ordinary one reports one explicit skip and still runs the ordinary source's rows under Run All,
   the parent is selected by `Explicit=True`, selecting it runs both sources, a method whose sources
