@@ -367,11 +367,15 @@ internal sealed class MtpServerProcess : IDisposable
             return false;
         }
 
-#if NETCOREAPP
-        // File.GetUnixFileMode is .NET 7+. Consumers compiling the netstandard2.0 slice (net462, and
-        // net5.0-net7.0 which select that slice) fall back to the existence check above. That stays correct
-        // because GetAppHostPath already refuses to consider a Windows ".exe" on Unix, so the only case left
-        // uncovered there is an extensionless file that lost its execute bit.
+#if NET7_0_OR_GREATER
+        // Fenced on the target framework because File.GetUnixFileMode is .NET 7+. Deliberately not the
+        // package's modern-.NET compilation symbol: that one records which JSON slice a consumer compiles
+        // and is defined only for net8.0+, while NuGet serves the net5.0 slice to net5.0, net6.0 and net7.0
+        // consumers alike. Fencing on it would drop a Linux net7.0 consumer back to the existence-only path
+        // even though it has the API. net462, netstandard2.0, net5.0 and net6.0 consumers genuinely lack the
+        // API and keep the existence check above, which stays correct because GetAppHostPath already refuses
+        // to consider a Windows ".exe" on Unix, so the only case left uncovered there is an extensionless
+        // file that lost its execute bit.
         if (!OperatingSystem.IsWindows())
         {
             const UnixFileMode ExecuteBits = UnixFileMode.UserExecute | UnixFileMode.GroupExecute | UnixFileMode.OtherExecute;
