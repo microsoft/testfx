@@ -62,7 +62,7 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
 
         CiRunSummaryAggregate aggregate = CiRunSummaryAggregation.ReadAndAggregate(inputs, Provider, context);
         string aggregationId = CiRunSummaryAggregation.CreateAggregationId(inputs);
-        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate, _includeFailureDetails);
+        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate, _includeFailureDetails, out int modulesWithOmittedDetails);
         string outputPath = CiRunSummaryAggregation.GetMergedOutputPath(outputDirectory, ProviderSlug, aggregationId);
         await CiRunSummaryAggregation.WriteOutputAsync(outputPath, markdown).ConfigureAwait(false);
 
@@ -76,7 +76,10 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
                 markdown,
                 StepSummaryMaxWriteAttempts,
                 StepSummaryRetryDelay,
-                cancellationToken).ConfigureAwait(false);
+                cancellationToken,
+                modulesWithOmittedDetails > 0
+                    ? GitHubActionsSummaryReporter.BuildAggregateTruncationNotice(modulesWithOmittedDetails, aggregate.Modules.Count)
+                    : null).ConfigureAwait(false);
         }
 
         return new ProcessedArtifact(

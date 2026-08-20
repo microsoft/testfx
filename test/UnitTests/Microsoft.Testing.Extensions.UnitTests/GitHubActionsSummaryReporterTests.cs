@@ -613,11 +613,30 @@ public sealed class GitHubActionsSummaryReporterTests
             hasAuthoritativeRunSummary: true,
             isPartial: false);
 
-        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate);
+        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate, includeFailureDetails: true, out int modulesWithOmittedDetails);
 
         // The whole point of the shared budget: the file stays under GitHub's cap no matter the module count.
         Assert.IsLessThan(GitHubActionsFailureDetails.GitHubStepSummaryLimit, markdown.Length);
-        Assert.Contains("test project(s) because the job summary size limit was reached", markdown);
+
+        // The shortfall is reported to the caller rather than buried at the end of the block, so it can be stated
+        // at the top of the file where the reader will actually see it. The per-module notes inside each module's
+        // section stay where they are.
+        Assert.IsGreaterThan(0, modulesWithOmittedDetails);
+        Assert.DoesNotContain("test project(s) because", markdown);
+
+        string notice = GitHubActionsSummaryReporter.BuildAggregateTruncationNotice(modulesWithOmittedDetails, modules.Length);
+        Assert.Contains("already take up too much space", notice);
+        Assert.DoesNotContain("job summary size limit was reached", notice);
+    }
+
+    [TestMethod]
+    public void TruncationNotices_ShareOneMarker_SoASummaryCannotCarryTwoWarnings()
+    {
+        // The per-project and aggregated writing modes describe different losses, and only one of them runs in a
+        // given test process — but a workflow can mix them across steps. They share a marker so whichever warning
+        // is written first is the only one, rather than the reader meeting two contradictory warnings.
+        Assert.StartsWith(GitHubActionsSummaryReporter.TruncationNoticeMarker, GitHubActionsSummaryReporter.BuildTruncationNotice(3));
+        Assert.StartsWith(GitHubActionsSummaryReporter.TruncationNoticeMarker, GitHubActionsSummaryReporter.BuildAggregateTruncationNotice(2, 5));
     }
 
     private static int CountOccurrences(string haystack, string needle)
@@ -888,6 +907,39 @@ public sealed class GitHubActionsSummaryReporterTests
             Assert.Contains("second-project", summary);
             // The note is stated once. Repeating it per project would spend the little headroom that is left on
             // restating the same sentence.
+            AssertSingleNotice(summary);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public async Task UpsertStepSummaryWithRetryAsync_PutsTheNoticeFirst_AndNeverAddsASecondOne()
+    {
+        string path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, "earlier content\n");
+            var fileSystem = new SystemFileSystem();
+            string notice = GitHubActionsSummaryReporter.BuildAggregateTruncationNotice(2, 5);
+
+            await GitHubActionsSummaryReporter.UpsertStepSummaryWithRetryAsync(
+                fileSystem, path, "run-1", "aggregate block", maxAttempts: 1, retryDelay: TimeSpan.Zero, CancellationToken.None, notice);
+
+            string summary = File.ReadAllText(path);
+            Assert.StartsWith(GitHubActionsSummaryReporter.TruncationNoticeMarker, summary);
+            Assert.Contains("earlier content", summary);
+            Assert.Contains("aggregate block", summary);
+            AssertSingleNotice(summary);
+
+            // Re-running the same aggregation replaces its block; the warning must not be duplicated with it.
+            await GitHubActionsSummaryReporter.UpsertStepSummaryWithRetryAsync(
+                fileSystem, path, "run-1", "aggregate block v2", maxAttempts: 1, retryDelay: TimeSpan.Zero, CancellationToken.None, notice);
+
+            summary = File.ReadAllText(path);
+            Assert.Contains("aggregate block v2", summary);
             AssertSingleNotice(summary);
         }
         finally

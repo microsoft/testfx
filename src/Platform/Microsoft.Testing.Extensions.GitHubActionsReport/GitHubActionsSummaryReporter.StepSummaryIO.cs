@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Extensions.GitHubActionsReport;
@@ -185,7 +186,8 @@ internal sealed partial class GitHubActionsSummaryReporter
         string content,
         int maxAttempts,
         TimeSpan retryDelay,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? leadingNotice = null)
     {
         string startMarker = $"<!-- microsoft-testing-platform:{GitHubActionsSummaryArtifactPostProcessor.Provider}:{aggregationId}:start -->";
         string endMarker = $"<!-- microsoft-testing-platform:{GitHubActionsSummaryArtifactPostProcessor.Provider}:{aggregationId}:end -->";
@@ -251,6 +253,15 @@ internal sealed partial class GitHubActionsSummaryReporter
                         existing = existing.Length == 0
                             ? section
                             : existing.TrimEnd() + "\n\n" + section;
+                    }
+
+                    // Put the warning at the very top, where the reader meets it before the results it qualifies,
+                    // and only if no warning is there yet — the two writing modes share one marker so a summary
+                    // can never carry two of them.
+                    if (!RoslynString.IsNullOrWhiteSpace(leadingNotice)
+                        && existing.IndexOf(TruncationNoticeMarker, StringComparison.Ordinal) < 0)
+                    {
+                        existing = leadingNotice + existing;
                     }
 
                     using (IFileStream tempStream = fileSystem.NewFileStream(tempPath, FileMode.CreateNew, FileAccess.Write, FileShare.Read))

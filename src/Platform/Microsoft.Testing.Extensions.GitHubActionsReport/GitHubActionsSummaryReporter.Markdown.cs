@@ -120,7 +120,18 @@ internal sealed partial class GitHubActionsSummaryReporter
         return builder.ToString();
     }
 
-    internal static string BuildAggregateMarkdown(CiRunSummaryAggregate aggregate, bool includeFailureDetails = true)
+    internal static string BuildAggregateMarkdown(CiRunSummaryAggregate aggregate)
+        => BuildAggregateMarkdown(aggregate, includeFailureDetails: true, out _);
+
+    internal static string BuildAggregateMarkdown(CiRunSummaryAggregate aggregate, bool includeFailureDetails)
+        => BuildAggregateMarkdown(aggregate, includeFailureDetails, out _);
+
+    /// <summary>
+    /// Renders the combined summary for a whole <c>dotnet test</c> run, reporting through
+    /// <paramref name="modulesWithOmittedDetails"/> how many test projects lost their expanded diagnostics, so the
+    /// caller can state that at the top of the file rather than at the end of this block.
+    /// </summary>
+    internal static string BuildAggregateMarkdown(CiRunSummaryAggregate aggregate, bool includeFailureDetails, out int modulesWithOmittedDetails)
     {
         bool failed = aggregate.ExitCode is int exitCode
             ? GitHubActionsExitCode.IndicatesFailure(exitCode)
@@ -172,7 +183,7 @@ internal sealed partial class GitHubActionsSummaryReporter
         int detailsBudget = Math.Max(0, GitHubActionsFailureDetails.MaxSummaryLength - overheadReserve);
         int perModuleBudget = detailsBudget / moduleCount;
         int remainingBudget = 0;
-        int modulesWithOmittedDetails = 0;
+        modulesWithOmittedDetails = 0;
 
         foreach (CiRunSummaryModule module in aggregate.Modules)
         {
@@ -199,21 +210,30 @@ internal sealed partial class GitHubActionsSummaryReporter
             builder.Append("</details>\n\n");
         }
 
-        // Surface budget exhaustion at the file level too. A per-module note is easy to miss when it is buried
-        // inside one of dozens of collapsed module sections, and the reader needs to know the summary as a whole
-        // is not showing everything it collected.
-        if (modulesWithOmittedDetails > 0)
-        {
-            builder.Append("> [!NOTE]\n> ")
-                .Append(string.Format(
-                    CultureInfo.InvariantCulture,
-                    GitHubActionsResources.ModuleDetailsOmitted,
-                    modulesWithOmittedDetails.ToString(CultureInfo.InvariantCulture),
-                    aggregate.Modules.Count.ToString(CultureInfo.InvariantCulture)))
-                .Append("\n\n");
-        }
-
+        // The count is reported to the caller rather than written here: a note buried after dozens of collapsed
+        // module sections is easy to miss, so it belongs at the top of the file.
         return builder.ToString();
+    }
+
+    /// <summary>
+    /// Renders the top-of-file warning for a combined <c>dotnet test</c> summary whose modules lost their expanded
+    /// diagnostics.
+    /// </summary>
+    /// <remarks>
+    /// This shares its marker with the per-project warning deliberately. Only one of the two writing modes runs in
+    /// a given test process, but a workflow is free to mix them across steps, and two warnings in one summary —
+    /// each describing a different kind of loss — would be worse than either alone. The shared marker means
+    /// whichever is written first is the only one, and neither writer adds a second.
+    /// </remarks>
+    internal static /* for testing */ string BuildAggregateTruncationNotice(int modulesWithOmittedDetails, int totalModules)
+    {
+        string message = string.Format(
+            CultureInfo.InvariantCulture,
+            GitHubActionsResources.ModuleDetailsOmitted,
+            modulesWithOmittedDetails.ToString(CultureInfo.InvariantCulture),
+            totalModules.ToString(CultureInfo.InvariantCulture));
+
+        return $"{TruncationNoticeMarker}\n> [!WARNING]\n> {message}\n{TruncationNoticeEndMarker}\n\n";
     }
 
     /// <summary>
