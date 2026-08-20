@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
@@ -34,7 +35,22 @@ internal abstract partial class CommonHost
 
                 using (otelService?.StartActivity("TestFrameworkInvoker"))
                 {
-                    await serviceProvider.GetTestFrameworkInvoker().ExecuteAsync(testFramework, client, cancellationToken).ConfigureAwait(false);
+                    try
+                    {
+                        await serviceProvider.GetTestFrameworkInvoker().ExecuteAsync(testFramework, client, cancellationToken).ConfigureAwait(false);
+                    }
+                    finally
+                    {
+                        // Test execution is over -- normally, or because it failed or was canceled. Disarm the
+                        // deadline here, before end-of-session draining and reporting begin, so a deadline
+                        // reached while the reporters finalize an already-executed run cannot mark it as
+                        // truncated. The extension cannot do this from ITestSessionLifetimeHandler: it is an
+                        // IDataConsumer, and consumer handlers run last in NotifyTestSessionEndAsync, after the
+                        // drains and after the reporters. Absent in server mode and for discovery, where the
+                        // extension is not registered.
+                        serviceProvider.GetService<AbortAtDeadlineExtension>()?.NotifyTestExecutionCompleted();
+                        serviceProvider.GetRequiredService<IStopPoliciesService>().NotifyTestExecutionCompleted();
+                    }
                 }
 
                 using (otelService?.StartActivity("OnTestSessionEnding"))

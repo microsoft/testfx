@@ -90,8 +90,6 @@ internal sealed partial class TestHostBuilder
             testSessionLifetimeHandlers.Add(pushOnlyProtocolDataConsumer);
         }
 
-        serviceProvider.AddService(new TestSessionLifetimeHandlersContainer(testSessionLifetimeHandlers));
-
         ITestApplicationProcessExitCode testApplicationResult = serviceProvider.GetRequiredService<ITestApplicationProcessExitCode>();
         await RegisterAsServiceOrConsumerOrBothAsync(testApplicationResult, serviceProvider, dataConsumersBuilder).ConfigureAwait(false);
 
@@ -113,6 +111,42 @@ internal sealed partial class TestHostBuilder
         {
             dataConsumersBuilder.Add(abortForMaxFailedTestsExtension);
         }
+
+        // Deadline-aware graceful stop only makes sense for a console execution run. Skip it for
+        // server mode (BuildTestFrameworkAsync runs per request, which would re-arm the timer against
+        // an already-past deadline and fire on every request) and for discovery-only requests.
+        if (pushOnlyProtocol?.IsServerMode != true && !testFrameworkBuilderData.IsForDiscoveryRequest)
+        {
+            var abortAtDeadlineExtension = new AbortAtDeadlineExtension(
+                serviceProvider.GetEnvironment(),
+                serviceProvider.GetSystemClock(),
+                serviceProvider.GetTestFrameworkCapabilities().GetCapability<IGracefulStopTestExecutionCapability>(),
+                serviceProvider.GetRequiredService<IStopPoliciesService>(),
+                serviceProvider.GetTestApplicationCancellationTokenSource(),
+                serviceProvider.GetOutputDevice(),
+                serviceProvider.GetLoggerFactory());
+
+            if (await abortAtDeadlineExtension.IsEnabledAsync().ConfigureAwait(false))
+            {
+                dataConsumersBuilder.Add(abortAtDeadlineExtension);
+
+                // Also register it as a service so the host can tell it, the moment the test framework invoker
+                // returns, that test execution is over. On that signal it disarms the deadline, so a timer
+                // firing while the reporters finalize an already-finished run cannot wrongly mark the run as
+                // deadline-truncated (exit code 15). A session-lifetime handler would be too late: this is an
+                // IDataConsumer, and consumer handlers run at the very end of NotifyTestSessionEndAsync.
+                serviceProvider.AddService(abortAtDeadlineExtension);
+
+                // Keep the lifetime-handler registration as a backstop for host paths that do not execute the
+                // invoker path above. It runs too late to protect reporting on its own.
+                testSessionLifetimeHandlers.Add(abortAtDeadlineExtension);
+            }
+        }
+
+        // The container captures the list by reference (so a later Add would still be observed), but populating
+        // it fully before registering keeps this order-independent and free of that subtlety. Lifetime handlers
+        // are enumerated later, during NotifyTestSessionEndAsync.
+        serviceProvider.AddService(new TestSessionLifetimeHandlersContainer(testSessionLifetimeHandlers));
 
         AsynchronousMessageBus concreteMessageBusService = new(
             [.. dataConsumersBuilder],

@@ -50,9 +50,12 @@ public sealed class CommonHostTests
             .Setup(x => x.ExecuteAsync(It.IsAny<ITestFramework>(), It.IsAny<ClientInfo>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new OperationCanceledException(cancellationToken));
 
+        Mock<IStopPoliciesService> policiesServiceMock = new();
+
         ServiceProvider serviceProvider = new();
         serviceProvider.AddService(testFrameworkInvokerMock.Object);
         serviceProvider.AddService(new TestCoverageResult());
+        serviceProvider.AddService(policiesServiceMock.Object);
 
         Mock<BaseMessageBus> baseMessageBusMock = new();
         baseMessageBusMock.Setup(x => x.DrainDataAsync()).Returns(Task.CompletedTask);
@@ -73,6 +76,11 @@ public sealed class CommonHostTests
 
         outputDeviceMock.Verify(x => x.DisplayAfterSessionEndRunAsync(It.IsAny<CancellationToken>()), Times.Once);
         testSessionLifetimeHandlerMock.Verify(x => x.OnTestSessionFinishingAsync(It.IsAny<ITestSessionContext>()), Times.Once);
+
+        // Disarming happens in a finally around the invoker, so it must also happen when the invoker threw
+        // because the session was canceled. Otherwise a deadline reached while the reporters finalize an
+        // already-canceled run would still mark it as truncated.
+        policiesServiceMock.Verify(x => x.NotifyTestExecutionCompleted(), Times.Once);
     }
 
     [TestMethod]
@@ -116,6 +124,7 @@ public sealed class CommonHostTests
         ServiceProvider serviceProvider = new();
         serviceProvider.AddService(testFrameworkInvokerMock.Object);
         serviceProvider.AddService(new TestCoverageResult());
+        serviceProvider.AddService(new Mock<IStopPoliciesService>().Object);
 
         Mock<BaseMessageBus> baseMessageBusMock = new();
         baseMessageBusMock.Setup(x => x.DrainDataAsync()).Returns(Task.CompletedTask);
@@ -154,9 +163,12 @@ public sealed class CommonHostTests
             .Setup(x => x.ExecuteAsync(It.IsAny<ITestFramework>(), It.IsAny<ClientInfo>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("test framework failure"));
 
+        Mock<IStopPoliciesService> policiesServiceMock = new();
+
         ServiceProvider serviceProvider = new();
         serviceProvider.AddService(testFrameworkInvokerMock.Object);
         serviceProvider.AddService(new TestCoverageResult());
+        serviceProvider.AddService(policiesServiceMock.Object);
 
         Mock<BaseMessageBus> baseMessageBusMock = new();
         baseMessageBusMock.Setup(x => x.DrainDataAsync()).Returns(Task.CompletedTask);
@@ -174,6 +186,10 @@ public sealed class CommonHostTests
         // The safety net is best effort: it must never replace the exception that is already propagating.
         Assert.AreEqual("test framework failure", ex.Message);
         baseMessageBusMock.Verify(x => x.DisableAsync(), Times.Once);
+
+        // Disarming sits in a finally around the invoker, so a failing test framework must not leave the
+        // deadline armed while the session tears down.
+        policiesServiceMock.Verify(x => x.NotifyTestExecutionCompleted(), Times.Once);
     }
 
     [TestMethod]
