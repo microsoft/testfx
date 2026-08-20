@@ -139,6 +139,7 @@ Notes:
 
 | Date | PR/Issue | Summary |
 |------|----------|---------|
+| 2026-08-19 | PR created (draft, `efficiency/cache-regex-matches`) | Cache compiled `Regex` instances in `Assert.Matches.cs`'s `ToRegex` helper (string-pattern overloads of `MatchesRegex`/`DoesNotMatchRegex`) via `ConcurrentDictionary<string, Regex>`; micro-benchmark showed ~300x per-call reduction (5.12µs uncached vs 0.016µs cached, 200K iterations); build succeeded, 1520/1520 TestFramework.UnitTests passed |
 | 2026-08-18 | PR created (draft, `efficiency/trx-reparse-point-syscall`) | Combine `Directory.Exists()` + `File.GetAttributes()` into one syscall in `TrxReportEngine`'s reparse-point ancestor-walk (`HasReparsePointComponent` + `TrxReportEngine.Merge.Attachments.cs`); build succeeded, TrxArtifactPostProcessorTests 16/16 passed |
 | 2026-08-01 | scan only | Scanned new OTel (#10358), MSTestTestNodeConverter caching (#10366), TestResult assertion texts (#10353) — all well-optimized by maintainers; no new HIGH/MEDIUM opportunities |
 | 2026-07-31 | scan only | Scanned new OpenTelemetry spans (#10358), CtrfReportMerger partials (#10354), RetryOrchestrator — all well-optimized |
@@ -161,9 +162,9 @@ Notes:
 
 ## Backlog Cursor
 
-- Code scan cursor: reviewed commits through 2026-08-18 (up to #10634). One new LOW-MEDIUM item added below (executable-condition analyzer recursive walk). Reparse-point double-syscall item resolved via this run's PR.
-- Issue comments cursor: #8824 ✅ (no new comments since 2026-07-14), #9712 ✅ — no new efficiency-labeled issues found as of 2026-08-18.
-- Next code scan area: `src/Analyzers` executable-condition analyzer (#10634) recursive tree walk — check if memoizable; also continue rotating through less-recently-scanned Platform extension folders.
+- Code scan cursor: reviewed `src/TestFramework/TestFramework/Assertions/` fully this run (2026-08-19) — found and fixed the `Assert.Matches.cs` Regex-caching opportunity; all other files in that folder (CollectionAssert, AreEquivalent, ContainsAll, StringAssert.Regex, HasCount, TelemetryCollector) confirmed already optimal.
+- Issue comments cursor: #8824 ✅ (no new comments since 2026-07-14), #9712 ✅ — no new efficiency-labeled issues found as of 2026-08-19.
+- Next code scan area: `src/Analyzers` executable-condition analyzer (#10634) recursive tree walk — check if memoizable; also continue rotating through less-recently-scanned Platform extension folders (Adapter/VSTestBridge internals not yet scanned this cycle).
 
 ## Open Backlog Items
 
@@ -171,6 +172,17 @@ Notes:
 |---|---|---|---|
 | LOW-MEDIUM | Code-Level | Executable-condition analyzer (#10634) recursive tree walk not memoized | Gated behind narrow guards, not urgent; analyzer code is riskier to change — evaluate memoization feasibility before attempting |
 
+
+## 2026-08-19 Run Notes
+
+- Scanned `src/TestFramework/TestFramework/Assertions/` (an area not recently reviewed) via sub-agent exploration: found one MEDIUM opportunity — `Assert.Matches.cs`'s private `ToRegex` helper constructed a fresh `Regex` on every call of the string-pattern overloads of `MatchesRegex`/`DoesNotMatchRegex`, even for repeated identical patterns. All other files scanned (CollectionAssert, Assert.AreEquivalent, Assert.ContainsAll, StringAssert.Regex, TelemetryCollector, Assert.HasCount) already optimal — no action needed.
+- Implemented the fix: added a `ConcurrentDictionary<string, Regex> RegexCache` field (naming matches repo convention — PascalCase static readonly fields per `.editorconfig`/StyleCop SA1311, confirmed via build warning when initially tried `s_` prefix). Branch `efficiency/cache-regex-matches`, committed.
+- Validated: full repo build (0 warnings/errors); `TestFramework.UnitTests` rebuilt standalone and run in full — 1520/1520 passed. Standalone micro-benchmark (200K iterations, Release, after warm-up): uncached ~5.12µs/call vs cached ~0.016µs/call (~300x reduction).
+- Created draft PR `[efficiency-improver] Cache compiled Regex instances in Assert.MatchesRegex/DoesNotMatchRegex` on branch `efficiency/cache-regex-matches`.
+- Task 4 (maintain own PRs): no open `[efficiency-improver]` PRs found prior to this run's new one — nothing to maintain.
+- Task 5: no new efficiency-labeled issues with unaddressed human comments found; #8824 still stale since 2026-07-14, not re-engaged.
+- Updated #10382 (canonical Aug summary) with new Run History entry.
+- Next run: continue rotating — scan `src/Analyzers` executable-condition analyzer recursive walk (#10634, carried over) or Adapter/VSTestBridge internals; watch #10549 (regression-gating proposal) for maintainer response; monitor new PR for CI results.
 
 ## 2026-08-04 Run Notes
 
