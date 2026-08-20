@@ -34,7 +34,7 @@ public class RunnerTests : AcceptanceTestBase<NopAssetFixture>
             $"{verb} {generator.TargetAssetPath} -c {buildConfiguration} -r {RID}",
             cancellationToken: TestContext.CancellationToken);
 
-        Build binLog = Serialization.Read(compilationResult.BinlogPath);
+        Build binLog = BinlogReader.Read(compilationResult.BinlogPath!);
         Assert.AreNotEqual(0, binLog.FindChildrenRecursive<AddItem>()
             .Count(x => x.Title.Contains("ProjectCapability") && x.Children.Any(c => ((Item)c).Name == "TestingPlatformServer")));
 
@@ -123,7 +123,7 @@ return await app.RunAsync();
 
         DotnetMuxerResult result = await DotnetCli.RunAsync($"{verb} {generator.TargetAssetPath} -c {buildConfiguration} -r {RID} ", cancellationToken: TestContext.CancellationToken);
 
-        Build binLog = Serialization.Read(result.BinlogPath);
+        Build binLog = BinlogReader.Read(result.BinlogPath!);
         Assert.DoesNotContain(x => x.Title.Contains("ProjectCapability") && x.Children.Any(c => ((Item)c).Name == "TestingPlatformServer"), binLog.FindChildrenRecursive<AddItem>());
     }
 
