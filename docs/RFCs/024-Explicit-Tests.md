@@ -499,26 +499,42 @@ from there: Run All skips the explicit row before any fixture work attributable 
 row activates that row, selecting the method or class activates every selected row under it, and
 ordinary sibling rows keep running.
 
-Folded rows have no discovery identity, so class and method explicitness is checked first, and source
-and row declarations are checked as the data is enumerated, before per-row `TestInitialize`, before
-test-class construction where construction is per row, and before the body. Each unactivated row
-produces its own skipped `UnitTestResult`, which keeps folded result cardinality exactly as it is
-today. Data enumeration and the initialization needed to reach it can therefore happen even when
-every produced row turns out to be explicit. That is inherent to folded data, the metadata does not
-exist until the source runs, and it is not a reason to force unfolding.
+Folded rows have no discovery identity, but not every declaration needs the data. Class, method, and
+source explicitness are all readable without running the source, because `IsExplicit` is a property
+on the `ITestDataSource` attribute instance, reached by reflection exactly like `IgnoreMessage`. A
+source-wide declaration is therefore recorded on the folded parent's `UnitTestElement` at discovery,
+and the ordinary gate skips an unactivated parent before `TypeCache.GetTestMethodInfo`, with no type
+load, exactly as for a method declaration. Discovery does not record the source-wide ignore message
+on a folded parent today, and explicitness has to be recorded: an ignored parent never needs to be
+selectable, while an explicit one must be selectable by `*[Explicit=True]`.
+
+`TryExecuteFoldedDataDrivenTestsAsync` then re-checks the source declaration before calling
+`GetData`, in the position where it already checks the source-wide `IgnoreMessage`, so a parent that
+arrives without the discovery metadata still produces one skipped result and enumerates nothing.
+
+Only row declarations need the data. For a source that is not explicit, or one that is activated,
+each row is checked as it is produced, before per-row `TestInitialize`, before test-class
+construction where construction is per row, and before the body. Each unactivated row produces its
+own skipped `UnitTestResult`, which keeps folded result cardinality exactly as it is today.
+Enumeration and the initialization needed to reach it can therefore still happen when every produced
+row turns out to be explicit. That is inherent to folded data, a row declaration does not exist until
+the source runs, and that is not a reason to force unfolding. The same is not true of a source
+declaration, which is why the source check does not wait for enumeration.
 
 `ITestDataSourceIgnoreCapability` and row `IgnoreMessage` take precedence over the explicit state
 wherever both are known, which is not the same point for every declaration scope:
 
 - Unfolded rows carry both on the `UnitTestElement` from discovery, so ignore wins for every row.
-- A folded parent that is not itself explicit reaches data enumeration, so source and row ignore
-  metadata arrives alongside the source and row explicit metadata and wins there, row by row.
-- A folded parent that is itself explicit and unactivated never gets that far. The gate skips it
-  before the source runs, so no source or row metadata exists to take precedence, and the method
-  reports one explicit skip rather than one result per row. That is the folded-parent gate above,
-  and it is deliberate: an explicit test must not run its data source to discover that it would have
-  been ignored anyway. Both states end in a skipped result, so what this changes is the reported
-  reason and the result count, not whether anything ran.
+- A folded source declares ignore and explicit on the same attribute instance, so both are known at
+  the same point before enumeration and ignore wins there. The parent reports one ignored result and
+  `GetData` is not called. The ignore check keeps its current position ahead of the explicit check.
+- A folded parent that is explicit and unactivated at class, method, or source scope never reaches
+  enumeration, so no row metadata exists to take precedence, and the method reports one explicit skip
+  rather than one result per row. That is deliberate: an explicit test must not run its data source
+  to discover that it would have been ignored anyway. Both states end in a skipped result, so what
+  this changes is the reported reason and the result count, not whether anything ran.
+- A folded parent that is explicit at none of those scopes, or is activated, reaches enumeration, so
+  row ignore metadata arrives alongside row explicit metadata and wins there, row by row.
 
 If a data source throws while producing that metadata, existing data source failure behavior wins,
 the adapter cannot know that the missing row would have been explicit.
@@ -553,8 +569,10 @@ an execution request fails to activate it. Each `UnitTestElement` carries `IsExp
   not change when `[Explicit]` is added, and a server client that ignores the metadata still receives
   ordinary nodes and ordinary skipped results.
 
-A folded parent carries only its class and method declarations, source and row declarations do not
-exist until the data is enumerated.
+A folded parent carries its class, method, and source declarations. The source declaration is read
+from the attribute instance and needs no enumeration, so a method whose source is explicit is
+reported explicit at discovery and `*[Explicit=True]` and `--filter "Explicit=True"` select it. Only
+row declarations are missing from the parent, they do not exist until the data is enumerated.
 
 Skipped results carry `The test is explicit and was not selected.`, with `Reason: <reason>` appended
 when one exists. The reason is copied verbatim, only the decision whether it is empty inspects it,
@@ -618,16 +636,22 @@ An upstream API that exposes a walkable tree replaces this later without changin
 - Execution tests proving no type load, no fixture, no body, and no retry for an unactivated test,
   correct cleanup counts for explicit skips, and folded and unfolded row behavior. One covers the
   folded parent that is itself explicit and unactivated, asserting the data source never runs and the
-  method reports one explicit skip even when its rows would have been ignored.
+  method reports one explicit skip even when its rows would have been ignored. Another moves the
+  declaration from the method to the source and asserts the same outcome, with a counter incremented
+  in `GetData` proving enumeration did not happen, and a source declaring both ignore and explicit
+  reporting one ignored result. Row-specific explicitness is the case that does enumerate, and it
+  asserts one result per row with the ordinary siblings still running.
 - One acceptance asset, run through both hosts, covering explicit method, class, base and override,
   ignored and conditional explicit tests, ordinary and explicit sibling rows, source-wide and
   row-specific dynamic data, retry, all three `ExplicitTestMode` values, and fixture counters written
   to disk so initialization can be asserted rather than assumed. It also runs `ExplicitTestMode=Run`
   and `--filter "Explicit=True"` over the same asset and asserts the result sets differ, pinning that
   the two are not interchangeable.
-- Compatibility runs: an assembly with no declarations before and after the feature, an old adapter
-  with a new framework, a persisted test case with missing and malformed properties, and unchanged
-  MTP UIDs.
+- Compatibility runs: an assembly with no declarations before and after the feature, a mismatched
+  adapter and framework pair asserting the existing alignment error rather than any explicit
+  behavior, a persisted test case with missing and malformed properties, and unchanged MTP UIDs. The
+  pre-3.10.0 adapter boundary below is not covered by a test, it needs a published old adapter and
+  what it would assert is the absence of the feature.
 
 Both hosts ship together, and they ship equivalent. Selection, filtering, retry, results, and
 diagnostics must behave the same under VSTest and native MTP, which is why the acceptance asset is
@@ -639,11 +663,21 @@ The APIs are additive and binary compatible, and a test with no declarations kee
 current discovery, filtering, execution, retry, and result behavior. Existing custom data sources
 compile and behave as before, the capability is opt-in.
 
-The risk worth calling out in release notes is version skew. A new adapter with an old framework sees
-no declarations and behaves as today, but a new framework with an old adapter can load `[Explicit]`
-without recognizing it, and may run the test during Run All. The usual MSTest package alignment check
-is the answer. Making the attribute derive from `[Ignore]` would paper over this and would also make
-the test impossible to select on any adapter, so it is not done.
+The risk worth calling out in release notes is version skew, and the alignment check already closes
+most of it. `MSTestExecutor`'s module initializer compares the informational versions of
+`MSTest.TestAdapter` and `MSTest.TestFramework` and throws when they differ, so a mixed pair fails
+the run before anything is discovered. A new adapter with an old framework does not quietly see no
+declarations, and an old adapter with a new framework does not quietly run `[Explicit]`. Both stop
+with the existing alignment error, and this RFC does not change that check.
+
+One boundary is left that the check cannot close. The check itself shipped in 3.10.0, so an adapter
+older than that, paired with a new framework, does not perform it, does not recognize `[Explicit]`,
+and runs the test during Run All. The gate lives in the adapter, so the framework cannot defend its
+own attribute against an adapter that predates it. That is a release-note boundary rather than
+something the design can fix.
+
+Making the attribute derive from `[Ignore]` would hide this and would also make the test impossible
+to select on any adapter, so it is not done.
 
 ## Future work
 
