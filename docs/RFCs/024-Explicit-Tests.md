@@ -669,13 +669,6 @@ its other sources are explicit. Only row declarations are missing from the paren
 until the data is enumerated, so a folded method whose explicitness lives only in rows is not
 selectable by those filters and is reached by selecting the method instead.
 
-A folded parent carries its class, method, and source declarations. A source declaration is read from
-the attribute instance and needs no enumeration, so a method with any explicit source is reported
-explicit at discovery and `*[Explicit=True]` and `--filter "Explicit=True"` select it, whether or not
-its other sources are explicit. Only row declarations are missing from the parent, they do not exist
-until the data is enumerated, so a folded method whose explicitness lives only in rows is not
-selectable by those filters and is reached by selecting the method instead.
-
 Skipped results carry `The test is explicit and was not selected.`, with `Reason: <reason>` appended
 when one exists. The reason is copied verbatim, only the decision whether it is empty inspects it,
 and it appears on the surfaces that already show skip reasons: `TestResult.ErrorMessage` and TRX, the
