@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## <a name="2.4.0" />[2.4.0] - UNRELEASED
 
-See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4.3.3...v4.4.0)
+See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4.3.3...main)
 
 ### Added
 
@@ -1022,7 +1022,7 @@ See full log [of v1.4.3...v1.5.0](https://github.com/microsoft/testfx/compare/v1
 
 ## <a name="1.4.3" />[1.4.3] - 2024-11-12
 
-See full log [of v1.4.2...v1.4.3](https://github.com/microsoft/testanywhere/compare/v1.4.2...v1.4.3)
+See full log [of v1.4.2...v1.4.3](https://github.com/microsoft/testfx/compare/v1.4.2...v1.4.3)
 
 ### Fixed
 
@@ -1045,7 +1045,7 @@ See full log [of v1.4.2...v1.4.3](https://github.com/microsoft/testanywhere/comp
 
 ## <a name="1.4.2" />[1.4.2] - 2024-10-31
 
-See full log [of v1.4.1...v1.4.2](https://github.com/microsoft/testanywhere/compare/v1.4.1...v1.4.2)
+See full log [of v1.4.1...v1.4.2](https://github.com/microsoft/testfx/compare/v1.4.1...v1.4.2)
 
 ### Fixed
 
@@ -1068,7 +1068,7 @@ See full log [of v1.4.1...v1.4.2](https://github.com/microsoft/testanywhere/comp
 
 ## <a name="1.4.1" />[1.4.1] - 2024-10-03
 
-See full log [of v1.4.0...v1.4.1](https://github.com/microsoft/testanywhere/compare/v1.4.0...v1.4.1)
+See full log [of v1.4.0...v1.4.1](https://github.com/microsoft/testfx/compare/v1.4.0...v1.4.1)
 
 ### Fixed
 
@@ -1091,7 +1091,7 @@ See full log [of v1.4.0...v1.4.1](https://github.com/microsoft/testanywhere/comp
 
 ## <a name="1.4.0" />[1.4.0] - 2024-09-11
 
-See full log [of v1.3.2...v1.4.0](https://github.com/microsoft/testanywhere/compare/v1.3.2...v1.4.0)
+See full log [of v1.3.2...v1.4.0](https://github.com/microsoft/testfx/compare/v1.3.2...v1.4.0)
 
 ### Added
 
