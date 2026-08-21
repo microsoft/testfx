@@ -210,7 +210,7 @@ public sealed partial class Assert
         }
 
         string cultureName = CultureInfo.CurrentCulture.Name;
-        if (RegexCache.TryGet(pattern, cultureName, out Regex? cachedRegex))
+        if (RegexCache.TryGet(pattern, cultureName, out Regex cachedRegex))
         {
             return cachedRegex;
         }
@@ -231,7 +231,7 @@ public sealed partial class Assert
 
         private int _nextInsertionIndex;
 
-        public bool TryGet(string pattern, string cultureName, [NotNullWhen(true)] out Regex? regex)
+        public bool TryGet(string pattern, string cultureName, out Regex regex)
         {
             int nextInsertionIndex = Volatile.Read(ref _nextInsertionIndex);
             for (int offset = 1; offset <= RegexCacheSize; offset++)
@@ -247,7 +247,7 @@ public sealed partial class Assert
                 }
             }
 
-            regex = null;
+            regex = null!;
             return false;
         }
 
@@ -255,7 +255,7 @@ public sealed partial class Assert
         {
             lock (_lock)
             {
-                if (TryGet(pattern, cultureName, out Regex? cachedRegex))
+                if (TryGet(pattern, cultureName, out Regex cachedRegex))
                 {
                     return cachedRegex;
                 }

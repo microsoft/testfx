@@ -39,21 +39,40 @@ public partial class AssertTests
         ToRegex(pattern).Should().BeSameAs(ToRegex(pattern));
     }
 
-    public void MatchesRegex_WithMoreThanCacheSizeDistinctStringPatterns_EvictsOldestRegex()
+    public void MatchesRegex_WithCaseDistinctStringPatterns_DoesNotReuseRegex()
+    {
+        string patternPrefix = Guid.NewGuid().ToString("N");
+        string lowercasePattern = $"^{patternPrefix}-a$";
+        string uppercasePattern = $"^{patternPrefix}-A$";
+
+        ToRegex(lowercasePattern).Should().NotBeSameAs(ToRegex(uppercasePattern));
+    }
+
+    public void MatchesRegex_WhenOldestRegexIsReusedBeforeCapacityIsExceeded_StillEvictsOldestRegex()
     {
         string patternPrefix = Guid.NewGuid().ToString("N");
         string oldestPattern = $"^{patternPrefix}-oldest$";
         Regex oldestRegex = ToRegex(oldestPattern);
 
-        for (int i = 0; i < RegexCacheSize; i++)
+        for (int i = 0; i < RegexCacheSize - 1; i++)
         {
             _ = ToRegex($"^{patternPrefix}-{i}$");
         }
 
+        ToRegex(oldestPattern).Should().BeSameAs(oldestRegex);
+        _ = ToRegex($"^{patternPrefix}-newest$");
+
         ToRegex(oldestPattern).Should().NotBeSameAs(oldestRegex);
     }
 
-    public void MatchesRegex_WithLongStringPattern_DoesNotCacheRegex()
+    public void MatchesRegex_WithMaximumLengthStringPattern_ReusesRegex()
+    {
+        string pattern = new('a', MaximumCachedRegexPatternLength);
+
+        ToRegex(pattern).Should().BeSameAs(ToRegex(pattern));
+    }
+
+    public void MatchesRegex_WithOverMaximumLengthStringPattern_DoesNotCacheRegex()
     {
         string pattern = new('a', MaximumCachedRegexPatternLength + 1);
 
@@ -82,13 +101,51 @@ public partial class AssertTests
         }
     }
 
-    public void MatchesRegex_WithSameStringPatternConcurrently_ReusesThreadSafeRegex()
+    public void MatchesRegex_WithConcurrentCandidateRegexes_ConvergesOnSingleCachedRegex()
     {
         string pattern = $"^{Guid.NewGuid():N}$";
-        var regexes = new Regex[64];
+        string cultureName = CultureInfo.CurrentCulture.Name;
+        const int ThreadCount = 8;
+        var regexes = new Regex[ThreadCount];
+        var exceptions = new Exception?[ThreadCount];
+        using var ready = new CountdownEvent(ThreadCount);
+        using var start = new ManualResetEventSlim();
+        Type cacheType = typeof(Assert).GetNestedType("BoundedRegexCache", BindingFlags.NonPublic)!;
+        object cache = Activator.CreateInstance(cacheType, nonPublic: true)!;
+        var addOrGetExisting = (Func<string, string, Regex, Regex>)cacheType
+            .GetMethod("AddOrGetExisting", BindingFlags.Instance | BindingFlags.Public)!
+            .CreateDelegate(typeof(Func<string, string, Regex, Regex>), cache);
+        var threads = new Thread[ThreadCount];
 
-        Parallel.For(0, regexes.Length, i => regexes[i] = ToRegex(pattern));
+        for (int i = 0; i < threads.Length; i++)
+        {
+            int index = i;
+            threads[i] = new Thread(() =>
+            {
+                try
+                {
+                    var candidate = new Regex(pattern);
+                    ready.Signal();
+                    start.Wait();
+                    regexes[index] = addOrGetExisting(pattern, cultureName, candidate);
+                }
+                catch (Exception ex)
+                {
+                    exceptions[index] = ex;
+                }
+            });
+            threads[i].Start();
+        }
 
+        ready.Wait();
+        start.Set();
+
+        foreach (Thread thread in threads)
+        {
+            thread.Join();
+        }
+
+        exceptions.Should().BeEquivalentTo(new Exception?[ThreadCount]);
         regexes.Should().OnlyContain(regex => ReferenceEquals(regexes[0], regex));
     }
 
