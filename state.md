@@ -117,3 +117,11 @@ None. New PR created 2026-08-13: "Avoid LINQ Any() delegate allocation in VSTest
 - Task 5: no open performance-labeled issues found (search_issues label:performance is:open -> 0 results).
 - Backlog unchanged: PrivateObject.Helpers.cs generic-method cache (net-fx only), TestExecutionManager.ParallelExecution.cs per-test array wrapping (inherent design), AggregatedConfiguration indexer scan (low impact) - all still low priority, not fixed. Codebase remains well-optimized; consecutive scan runs (08-14 through 08-19) have found nothing new.
 - Task schedule: Task 2 done this run, Task 4 done this run (nothing to do), Task 5 done this run (nothing to do), Task 7 done this run.
+
+## Run 2026-08-21 Notes
+- Task 2: dispatched explore-agent scan of Retry, MSBuild, HotReload, Telemetry, VSTestBridge (re-check post #10586), TestFramework.Extensions. Retry/MSBuild/HotReload/Telemetry/TestFramework.Extensions all clean (cold-path only or no LINQ found). Explore agent flagged a "duplicate GetProperties() call" in ObjectModelConverters.cs (CopyCategoryAndTraits + FixUpTestCase) as a possible fix, but verified against upstream vstest source (Microsoft.TestPlatform.ObjectModel/TestObject.cs): `GetProperties()` returns the internal `_store` ConcurrentDictionary directly (`return _store;`), NOT a copy/array - so calling it twice does not double any allocation. Finding was a false positive; no fix made.
+- Verified PR #10586 (merged 2026-08-18) already replaced testCase.Properties.Any(...) with testCase.GetProperties().Any(static property => ...) to avoid closure allocation - this was the actionable item, already done.
+- Task 4 (Maintain PRs): no open PRs with "[perf-improver]" title prefix (search_pull_requests 0 results).
+- Task 5: no open performance-labeled issues found (search_issues label:performance is:open 0 results; #10381 and #10549 filtered by integrity policy, not independently actionable this run).
+- Backlog unchanged: PrivateObject.Helpers.cs generic-method cache (net-fx only), TestExecutionManager.ParallelExecution.cs per-test array wrapping (inherent design), AggregatedConfiguration indexer scan (low impact) - all still low priority, not fixed.
+- Task schedule: Task 2 done this run, Task 4 done this run (nothing to do), Task 5 done this run (nothing to do), Task 7 done this run.
