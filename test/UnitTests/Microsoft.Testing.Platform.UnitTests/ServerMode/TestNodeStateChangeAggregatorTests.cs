@@ -154,6 +154,30 @@ public sealed class TestNodeStateChangeAggregatorTests
         Assert.AreSame(terminal, secondAggregatedChange.Changes[0]);
     }
 
+    [TestMethod]
+    public void BuildAggregatedChange_DoesNotMutateBufferedChanges()
+    {
+        ServerTestHost.TestNodeStateChangeAggregator aggregator = new(Guid.NewGuid());
+        TestNodeUpdateMessage before = CreateUpdate("before");
+        TestNodeUpdateMessage inProgress = CreateUpdate("test", InProgressTestNodeStateProperty.CachedInstance);
+        TestNodeUpdateMessage terminal = CreateUpdate("test", PassedTestNodeStateProperty.CachedInstance);
+        aggregator.OnStateChange(before);
+        aggregator.OnStateChange(inProgress);
+        aggregator.OnStateChange(terminal);
+
+        TestNodeStateChangedEventArgs firstAggregatedChange = aggregator.BuildAggregatedChange();
+        TestNodeStateChangedEventArgs secondAggregatedChange = aggregator.BuildAggregatedChange();
+
+        Assert.IsNotNull(firstAggregatedChange.Changes);
+        Assert.IsNotNull(secondAggregatedChange.Changes);
+        Assert.HasCount(2, firstAggregatedChange.Changes);
+        Assert.HasCount(2, secondAggregatedChange.Changes);
+        Assert.AreSame(before, firstAggregatedChange.Changes[0]);
+        Assert.AreSame(terminal, firstAggregatedChange.Changes[1]);
+        Assert.AreSame(before, secondAggregatedChange.Changes[0]);
+        Assert.AreSame(terminal, secondAggregatedChange.Changes[1]);
+    }
+
     public static IEnumerable<object[]> TerminalStates()
     {
         yield return [PassedTestNodeStateProperty.CachedInstance];
