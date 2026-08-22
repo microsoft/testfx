@@ -40,11 +40,29 @@ internal sealed partial class ServerTestHost
                 }
             }
 
-            TestNodeUpdateMessage[] changes = terminalTestNodeUids is null
-                ? [.. _stateChanges]
-                : [.. _stateChanges.Where(stateChange =>
-                    stateChange.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>() is not InProgressTestNodeStateProperty
-                    || !terminalTestNodeUids.Contains(stateChange.TestNode.Uid))];
+            // Manual filtering loop avoids the LINQ Where(lambda) iterator + closure allocation on this
+            // per-flush hot path; the resulting list is pre-sized to the (already known) upper bound.
+            TestNodeUpdateMessage[] changes;
+            if (terminalTestNodeUids is null)
+            {
+                changes = [.. _stateChanges];
+            }
+            else
+            {
+#pragma warning disable IDE0028 // Collection initialization can be simplified: capacity pre-sizing cannot be expressed as a collection expression.
+                List<TestNodeUpdateMessage> filtered = new(_stateChanges.Count);
+#pragma warning restore IDE0028
+                foreach (TestNodeUpdateMessage stateChange in _stateChanges)
+                {
+                    if (stateChange.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>() is not InProgressTestNodeStateProperty
+                        || !terminalTestNodeUids.Contains(stateChange.TestNode.Uid))
+                    {
+                        filtered.Add(stateChange);
+                    }
+                }
+
+                changes = [.. filtered];
+            }
 
             return new(RunId, changes);
         }

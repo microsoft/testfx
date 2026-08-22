@@ -40,7 +40,7 @@ internal static partial class SerializerUtilities
         Serializers[typeof(TestNodeStateChangedEventArgs)] = new ObjectSerializer<TestNodeStateChangedEventArgs>(ev => new Dictionary<string, object?>
         {
             [JsonRpcStrings.RunId] = ev.RunId,
-            [JsonRpcStrings.Changes] = ev.Changes?.Select(ch => Serialize(ch)).ToList<object>(),
+            [JsonRpcStrings.Changes] = SerializeChanges(ev.Changes),
         });
 
         Serializers[typeof(TestNode)] = new ObjectSerializer<TestNode>(
@@ -285,5 +285,25 @@ internal static partial class SerializerUtilities
 
                 return properties;
             });
+    }
+
+    // Avoids the LINQ Select(...).ToList<object>() iterator + unbounded-growth list allocation on this
+    // per-notification hot path by writing directly into a pre-sized list.
+    private static List<object>? SerializeChanges(TestNodeUpdateMessage[]? changes)
+    {
+        if (changes is null)
+        {
+            return null;
+        }
+
+#pragma warning disable IDE0028 // Collection initialization can be simplified: capacity pre-sizing cannot be expressed as a collection expression.
+        List<object> serialized = new(changes.Length);
+#pragma warning restore IDE0028
+        foreach (TestNodeUpdateMessage change in changes)
+        {
+            serialized.Add(Serialize(change));
+        }
+
+        return serialized;
     }
 }
