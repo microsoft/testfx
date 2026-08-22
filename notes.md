@@ -83,7 +83,7 @@
 
 ## Last Run
 
-2026-08-19 UTC
+2026-08-22 UTC
 
 ## Completed Work (recent, summarized)
 
@@ -138,6 +138,14 @@ Maintainer closed #10154 (as not_planned) on 2026-08-06. #10389 is now the sole 
 ## Completed Work (recent)
 
 - PR (2026-08-19) — StackTraceRegexHelper.CreateFrameRegexPattern (src/Platform/SharedExtensionHelpers, previously 0 tests): added 6 tests covering matchFramesWithoutLocation true/false branches (frame with/without file+line info), the required 3-space "at" indentation, and the MatchTimeout constant. **Correction to the `[Embedded]` gotcha above**: `StackTraceRegexHelper` is a plain `internal static class` (NOT `[Embedded]`-attributed) and IS compiled into `Microsoft.Testing.Platform.dll` proper — it is already visible to `Microsoft.Testing.Platform.UnitTests` via existing `InternalsVisibleTo`, no source-link needed. Attempting to also `<Compile Include>` link its source (as done for genuinely `[Embedded]` types) causes CS0436 duplicate-type errors, since the type would then exist both in the referenced assembly and as directly-compiled source. Rule of thumb: only link source for internal helpers confirmed `[Embedded]`-attributed; for plain internal types, just add a `using` and rely on IVT. Full Microsoft.Testing.Platform.UnitTests suite (net8.0): 2213 total, 2194 succeeded, 0 failed, 19 skipped (pre-existing, unchanged).
+
+## 2026-08-22 UTC (this run)
+
+- Task 2/3: Investigated the 5 Retry IPC serializer classes (`ArtifactRequestSerializer`, `FailedTestRequestSerializer`, `GetListOfFailedTestsRequestSerializer`, `GetListOfFailedTestsResponseSerializer`, `TestRunCountsRequestSerializer` in `src/Platform/Microsoft.Testing.Extensions.Retry/Serializers/`) as a new candidate — non-trivial custom binary round-trip logic, 0 direct tests. **Confirmed architecturally blocked**: their base types (`NamedPipeSerializer<T>`, `INamedPipeSerializer`, `BaseSerializer` in `Microsoft.Testing.Platform/IPC/`) are `[Embedded]`-attributed (Roslyn compiler-embedded-type marker). `[Embedded]` types are linked into each consumer project via `<Compile Include>` and become **compiler-private types invisible outside their own compilation**, even to assemblies with `InternalsVisibleTo` — confirmed via `CS0246: The type or namespace name 'INamedPipeSerializer' could not be found` despite correct `using` directive and confirmed IVT grants both from Platform and from Retry. **New gotcha for memory** (extends the existing `[Embedded]` gotcha): the existing gotcha said "link the source into the *test* csproj to fix it" (which worked for `DisposeHelper`/`TimeoutHelper`) — but that trick only works when the *test project itself* needs the type. Here the type is used as a *parameter/return type in the test's own helper method*, and even linking `NamedPipeSerializer.cs`/`INamedPipeSerializer.cs` into the test csproj creates yet another distinct copy, unrelated to the Retry assembly's copy the concrete serializers actually implement — so instanceof/casts still fail conceptually (not attempted fully, abandoned after confirming CS0246 is fundamental, not a config gap). Conclusion: **do not pursue direct unit tests of `[Embedded]`-base-type serializers from an external test project** — would need either (a) linking the source directly into the test project's own compilation AND testing only via reflection/duck-typing, or (b) an in-repo internal test hosted inside the Retry assembly itself (not how this repo's test projects are structured). Abandoned branch `test-assist/retry-serializers`, deleted the WIP test file, no PR created this run.
+- Re-verified `RetryThresholdPolicy`/`RetryDataConsumer`/`RetryLifecycleCallbacks`/`RetryTestHostRunner` — still blocked by live named-pipe dependency, per prior runs. No new fallback candidate found/pursued this run.
+- Verified 4 open human-authored PRs (#10655, #10649, #10635, #10631) unchanged, awaiting maintainer review — kept in Monthly Activity Suggested Actions.
+- Updated backlog item removing the serializer idea as "not viable via standard IVT pattern" (see Monthly Activity issue #10389 backlog section for full text).
+- No new PR this run. Task 7 done (issue #10389 updated). Last Run updated to 2026-08-22.
 
 ## 2026-08-20 UTC (this run)
 
