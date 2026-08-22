@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Extensions.Messages;
 
 namespace Microsoft.Testing.Extensions;
@@ -10,12 +11,13 @@ namespace Microsoft.Testing.Extensions;
 /// </summary>
 internal readonly struct TestRecord
 {
-    public TestRecord(string displayName, string fullyQualifiedName, TerminalKind kind, TimeSpan duration)
+    public TestRecord(string displayName, string fullyQualifiedName, TerminalKind kind, TimeSpan duration, TestFailureDetails? failure = null)
     {
         DisplayName = displayName;
         FullyQualifiedName = fullyQualifiedName;
         Kind = kind;
         Duration = duration;
+        Failure = failure;
     }
 
     public string DisplayName { get; }
@@ -25,6 +27,61 @@ internal readonly struct TestRecord
     public TerminalKind Kind { get; }
 
     public TimeSpan Duration { get; }
+
+    /// <summary>
+    /// Gets the diagnostics captured for a <see cref="TerminalKind.Failed"/> record, or <see langword="null"/> when the
+    /// record is not a failure or the reporter does not collect failure diagnostics.
+    /// </summary>
+    public TestFailureDetails? Failure { get; }
+}
+
+/// <summary>
+/// The diagnostics captured for a failing test so a summary reporter can render them beyond the test's name.
+/// </summary>
+internal sealed class TestFailureDetails
+{
+    public TestFailureDetails(string? message, string? exceptionType, string? stackTrace, string? filePath, int lineNumber)
+    {
+        Message = message;
+        ExceptionType = exceptionType;
+        StackTrace = stackTrace;
+        FilePath = filePath;
+        LineNumber = lineNumber;
+    }
+
+    /// <summary>
+    /// Gets the failure explanation reported by the test framework, falling back to the exception message.
+    /// </summary>
+    public string? Message { get; }
+
+    /// <summary>
+    /// Gets the full name of the exception type that caused the failure, when the framework supplied an exception.
+    /// </summary>
+    public string? ExceptionType { get; }
+
+    /// <summary>
+    /// Gets the stack trace of the failure, when available.
+    /// </summary>
+    public string? StackTrace { get; }
+
+    /// <summary>
+    /// Gets the workspace-relative, forward-slash normalized source file of the failure, when it could be resolved.
+    /// </summary>
+    public string? FilePath { get; }
+
+    /// <summary>
+    /// Gets the 1-based line number within <see cref="FilePath"/>, or <c>0</c> when only the file is known.
+    /// </summary>
+    public int LineNumber { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether anything worth rendering was captured.
+    /// </summary>
+    public bool IsEmpty
+        => RoslynString.IsNullOrWhiteSpace(Message)
+            && RoslynString.IsNullOrWhiteSpace(ExceptionType)
+            && RoslynString.IsNullOrWhiteSpace(StackTrace)
+            && RoslynString.IsNullOrWhiteSpace(FilePath);
 }
 
 /// <summary>

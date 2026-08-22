@@ -9,6 +9,7 @@ internal static class GitHubActionsCommandLineOptions
     public const string GitHubActionsGroups = "report-gh-groups";
     public const string GitHubActionsAnnotations = "report-gh-annotations";
     public const string GitHubActionsStepSummary = "report-gh-step-summary";
+    public const string GitHubActionsFailureDetails = "report-gh-failure-details";
     public const string GitHubActionsSlowTestNotices = "report-gh-slow-test-notices";
     public const string GitHubActionsSlowTestThreshold = "report-gh-slow-test-threshold";
 

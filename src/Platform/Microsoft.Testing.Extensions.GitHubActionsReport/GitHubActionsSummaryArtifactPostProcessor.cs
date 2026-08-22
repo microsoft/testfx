@@ -31,6 +31,9 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
         GitHubActionsFeature.IsEnabled(commandLineOptions, environment, GitHubActionsCommandLineOptions.GitHubActionsStepSummary)
         || commandLineOptions.IsOptionSet(ArtifactPostProcessingDispatcherToolCommandLine.ManifestOptionName);
 
+    private readonly bool _includeFailureDetails =
+        GitHubActionsFeature.IsKnobEnabled(commandLineOptions, GitHubActionsCommandLineOptions.GitHubActionsFailureDetails);
+
     public string Uid => "Microsoft.Testing.Extensions.GitHubActionsReport.SummaryPostProcessor";
 
     public string Version => ExtensionVersion.DefaultSemVer;
@@ -59,9 +62,17 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
 
         CiRunSummaryAggregate aggregate = CiRunSummaryAggregation.ReadAndAggregate(inputs, Provider, context);
         string aggregationId = CiRunSummaryAggregation.CreateAggregationId(inputs);
-        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate);
+        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate, _includeFailureDetails, out int modulesWithOmittedDetails, out int condensedModules);
         string outputPath = CiRunSummaryAggregation.GetMergedOutputPath(outputDirectory, ProviderSlug, aggregationId);
         await CiRunSummaryAggregation.WriteOutputAsync(outputPath, markdown).ConfigureAwait(false);
+
+        // Losing whole project sections is a different loss from losing their diagnostics, so say whichever
+        // actually happened. Condensing implies the budget was already exhausted, so it takes precedence.
+        string? leadingNotice = condensedModules > 0
+            ? GitHubActionsSummaryReporter.BuildTruncationNotice(aggregate.Modules.Count - condensedModules)
+            : modulesWithOmittedDetails > 0
+                ? GitHubActionsSummaryReporter.BuildAggregateTruncationNotice(modulesWithOmittedDetails, aggregate.Modules.Count)
+                : null;
 
         string? stepSummaryPath = environment.GetEnvironmentVariable(StepSummaryEnvironmentVariable);
         if (!RoslynString.IsNullOrWhiteSpace(stepSummaryPath))
@@ -73,7 +84,8 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
                 markdown,
                 StepSummaryMaxWriteAttempts,
                 StepSummaryRetryDelay,
-                cancellationToken).ConfigureAwait(false);
+                cancellationToken,
+                leadingNotice).ConfigureAwait(false);
         }
 
         return new ProcessedArtifact(

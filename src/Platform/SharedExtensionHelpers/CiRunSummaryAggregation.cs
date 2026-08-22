@@ -56,6 +56,25 @@ internal sealed class CiRunSummaryTest
     public string FullyQualifiedName { get; set; } = string.Empty;
 
     public long DurationTicks { get; set; }
+
+    /// <summary>
+    /// Gets or sets the failure explanation (or exception message) of a failing test. Only populated for failures,
+    /// and omitted from the fragment when absent so passing/slow-test entries stay small.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? ErrorMessage { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? ErrorType { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? StackTrace { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? FilePath { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public int? LineNumber { get; set; }
 }
 
 internal sealed class CiRunSummaryFailingClass
@@ -182,7 +201,7 @@ internal static partial class CiRunSummaryAggregation
                     .OrderBy(record => record.FullyQualifiedName, StringComparer.Ordinal)
                     .ThenBy(record => record.DisplayName, StringComparer.Ordinal)
                     .Take(MaxFailures)
-                    .Select(ToSummaryTest),
+                    .Select(record => ToSummaryTest(record, includeFailureDetails: true)),
             ],
             SlowestTests =
             [
@@ -191,7 +210,7 @@ internal static partial class CiRunSummaryAggregation
                     .OrderByDescending(record => record.Duration)
                     .ThenBy(record => record.FullyQualifiedName, StringComparer.Ordinal)
                     .Take(MaxSlowestTests)
-                    .Select(ToSummaryTest),
+                    .Select(record => ToSummaryTest(record, includeFailureDetails: false)),
             ],
             TopFailingClasses =
             [
@@ -390,7 +409,8 @@ internal static partial class CiRunSummaryAggregation
     private static bool IsValidTest(CiRunSummaryTest test)
         => !RoslynString.IsNullOrWhiteSpace(test.DisplayName)
             && !RoslynString.IsNullOrWhiteSpace(test.FullyQualifiedName)
-            && test.DurationTicks >= 0;
+            && test.DurationTicks >= 0
+            && test.LineNumber is null or >= 0;
 
     private static int CompareModules(CiRunSummaryModule left, CiRunSummaryModule right)
     {
@@ -406,13 +426,28 @@ internal static partial class CiRunSummaryAggregation
     private static string GetModuleIdentity(CiRunSummaryModule module)
         => $"{module.ModulePath}\0{module.TargetFramework}\0{module.Architecture}\0{module.ExecutionId}\0{module.AttemptNumber}\0{module.SessionUid}";
 
-    private static CiRunSummaryTest ToSummaryTest(TestRecord record)
-        => new()
+    private static CiRunSummaryTest ToSummaryTest(TestRecord record, bool includeFailureDetails)
+    {
+        var test = new CiRunSummaryTest
         {
             DisplayName = record.DisplayName,
             FullyQualifiedName = record.FullyQualifiedName,
             DurationTicks = record.Duration.Ticks,
         };
+
+        // Diagnostics are only meaningful on the failures list; carrying them on the slowest-tests entries would
+        // duplicate potentially large stack traces inside every fragment for no rendering benefit.
+        if (includeFailureDetails && record.Failure is { IsEmpty: false } failure)
+        {
+            test.ErrorMessage = failure.Message;
+            test.ErrorType = failure.ExceptionType;
+            test.StackTrace = failure.StackTrace;
+            test.FilePath = failure.FilePath;
+            test.LineNumber = failure.LineNumber > 0 ? failure.LineNumber : null;
+        }
+
+        return test;
+    }
 
     private static string GetClassName(string fullyQualifiedName)
     {
