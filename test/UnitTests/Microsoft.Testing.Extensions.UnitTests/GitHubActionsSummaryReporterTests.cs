@@ -685,7 +685,7 @@ public sealed class GitHubActionsSummaryReporterTests
         Assert.DoesNotContain("test project(s) because", markdown);
 
         string notice = GitHubActionsSummaryReporter.BuildAggregateTruncationNotice(modulesWithOmittedDetails, modules.Length);
-        Assert.Contains("already take up too much space", notice);
+        Assert.Contains("take up too much space", notice);
         Assert.DoesNotContain("job summary size limit was reached", notice);
     }
 

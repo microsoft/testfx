@@ -123,8 +123,8 @@
         <note>Marker appended to a failure message or stack trace that was clipped to fit the job summary size limit.</note>
       </trans-unit>
       <trans-unit id="FailureDetailsOmitted">
-        <source>Failure details for {0} listed test(s) were omitted because the error details already take up too much space.</source>
-        <target state="new">Failure details for {0} listed test(s) were omitted because the error details already take up too much space.</target>
+        <source>Failure details for {0} listed test(s) were omitted because the error details take up too much space.</source>
+        <target state="new">Failure details for {0} listed test(s) were omitted because the error details take up too much space.</target>
         <note>{0} is the number of failures rendered without their expanded diagnostics.</note>
       </trans-unit>
       <trans-unit id="FailureDetailsOptionDescription">

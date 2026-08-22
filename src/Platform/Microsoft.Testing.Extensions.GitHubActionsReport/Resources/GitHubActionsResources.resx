@@ -205,7 +205,7 @@
     <comment>{0} is the number of listed failures, {1} is the total number of failed tests.</comment>
   </data>
   <data name="FailureDetailsOmitted" xml:space="preserve">
-    <value>Failure details for {0} listed test(s) were omitted because the error details already take up too much space.</value>
+    <value>Failure details for {0} listed test(s) were omitted because the error details take up too much space.</value>
     <comment>{0} is the number of failures rendered without their expanded diagnostics.</comment>
   </data>
   <data name="ModuleDetailsOmitted" xml:space="preserve">
