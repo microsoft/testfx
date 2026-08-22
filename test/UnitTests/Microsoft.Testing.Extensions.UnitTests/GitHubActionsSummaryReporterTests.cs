@@ -570,6 +570,66 @@ public sealed class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
+    [DataRow(40)]
+    [DataRow(200)]
+    [DataRow(600)]
+    [DataRow(2000)]
+    public void BuildAggregateMarkdown_ScalesWithModuleCount_WithoutExceedingTheCap(int moduleCount)
+    {
+        // The aggregated path divides its detail budget by module count, so expanded diagnostics cannot grow
+        // without bound. Each module's heading, totals table and failure list are written regardless, though, and
+        // that per-module overhead is what a large run accumulates — the reason to check the rendered size at
+        // module counts a big repository would actually reach, not just at the handful a unit test is tempted to
+        // use. Exceeding GitHub's cap costs the entire summary, not its tail.
+        string stackTrace = string.Join("\n", Enumerable.Repeat(new string('x', 120), 25));
+        GitHubCiRunSummaryModule[] modules = Enumerable.Range(0, moduleCount).Select(i => new GitHubCiRunSummaryModule
+        {
+            AssemblyName = $"Contoso.Some.Reasonably.Long.Test.Assembly.Name{i}",
+            ModulePath = $"Tests{i}.dll",
+            TargetFramework = "net9.0",
+            Architecture = "x64",
+            ExecutionId = "execution",
+            SessionUid = $"session-{i}",
+            AttemptNumber = 1,
+            ExitCode = AtLeastOneTestFailedExitCode,
+            TotalTests = 20,
+            FailedTests = 20,
+            Failures =
+            [
+                .. Enumerable.Range(0, 20).Select(j => new GitHubCiRunSummaryTest
+                {
+                    DisplayName = $"Boom{j}",
+                    FullyQualifiedName = $"Contoso.Some.Reasonably.Long.Test.Assembly.Name{i}.SomeFixtureName.Boom{j}",
+                    DurationTicks = TimeSpan.FromMilliseconds(1).Ticks,
+                    ErrorMessage = "assertion failed",
+                    ErrorType = "System.Exception",
+                    StackTrace = stackTrace,
+                }),
+            ],
+        }).ToArray();
+
+        var aggregate = new GitHubCiRunSummaryAggregate(
+            modules,
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: moduleCount * 20,
+            passedTests: 0,
+            failedTests: moduleCount * 20,
+            skippedTests: 0,
+            duration: TimeSpan.FromSeconds(10),
+            exitCode: AtLeastOneTestFailedExitCode,
+            hasAuthoritativeRunSummary: true,
+            isPartial: false);
+
+        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate, includeFailureDetails: true, out int omitted);
+        string notice = omitted > 0 ? GitHubActionsSummaryReporter.BuildAggregateTruncationNotice(omitted, moduleCount) : string.Empty;
+
+        Assert.IsLessThan(
+            GitHubActionsFailureDetails.EffectiveStepSummaryLimit,
+            markdown.Length + notice.Length,
+            $"A {moduleCount}-module run renders {markdown.Length + notice.Length} characters, which GitHub discards in full.");
+    }
+
+    [TestMethod]
     public void BuildAggregateMarkdown_ManyModules_StaysUnderTheLimitAndReportsOmittedModules()
     {
         // 40 modules, each with failures large enough that the shared budget cannot expand them all. The

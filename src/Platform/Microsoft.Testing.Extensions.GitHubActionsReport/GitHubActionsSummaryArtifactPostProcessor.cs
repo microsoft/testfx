@@ -62,9 +62,17 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
 
         CiRunSummaryAggregate aggregate = CiRunSummaryAggregation.ReadAndAggregate(inputs, Provider, context);
         string aggregationId = CiRunSummaryAggregation.CreateAggregationId(inputs);
-        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate, _includeFailureDetails, out int modulesWithOmittedDetails);
+        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate, _includeFailureDetails, out int modulesWithOmittedDetails, out int condensedModules);
         string outputPath = CiRunSummaryAggregation.GetMergedOutputPath(outputDirectory, ProviderSlug, aggregationId);
         await CiRunSummaryAggregation.WriteOutputAsync(outputPath, markdown).ConfigureAwait(false);
+
+        // Losing whole project sections is a different loss from losing their diagnostics, so say whichever
+        // actually happened. Condensing implies the budget was already exhausted, so it takes precedence.
+        string? leadingNotice = condensedModules > 0
+            ? GitHubActionsSummaryReporter.BuildTruncationNotice(aggregate.Modules.Count - condensedModules)
+            : modulesWithOmittedDetails > 0
+                ? GitHubActionsSummaryReporter.BuildAggregateTruncationNotice(modulesWithOmittedDetails, aggregate.Modules.Count)
+                : null;
 
         string? stepSummaryPath = environment.GetEnvironmentVariable(StepSummaryEnvironmentVariable);
         if (!RoslynString.IsNullOrWhiteSpace(stepSummaryPath))
@@ -77,9 +85,7 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
                 StepSummaryMaxWriteAttempts,
                 StepSummaryRetryDelay,
                 cancellationToken,
-                modulesWithOmittedDetails > 0
-                    ? GitHubActionsSummaryReporter.BuildAggregateTruncationNotice(modulesWithOmittedDetails, aggregate.Modules.Count)
-                    : null).ConfigureAwait(false);
+                leadingNotice).ConfigureAwait(false);
         }
 
         return new ProcessedArtifact(

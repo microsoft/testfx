@@ -126,12 +126,20 @@ internal sealed partial class GitHubActionsSummaryReporter
     internal static string BuildAggregateMarkdown(CiRunSummaryAggregate aggregate, bool includeFailureDetails)
         => BuildAggregateMarkdown(aggregate, includeFailureDetails, out _);
 
+    internal static string BuildAggregateMarkdown(CiRunSummaryAggregate aggregate, bool includeFailureDetails, out int modulesWithOmittedDetails)
+        => BuildAggregateMarkdown(aggregate, includeFailureDetails, out modulesWithOmittedDetails, out _);
+
     /// <summary>
     /// Renders the combined summary for a whole <c>dotnet test</c> run, reporting through
-    /// <paramref name="modulesWithOmittedDetails"/> how many test projects lost their expanded diagnostics, so the
-    /// caller can state that at the top of the file rather than at the end of this block.
+    /// <paramref name="modulesWithOmittedDetails"/> how many test projects lost their expanded diagnostics and
+    /// through <paramref name="condensedModules"/> how many were reduced to a one-line verdict, so the caller can
+    /// state that at the top of the file rather than at the end of this block.
     /// </summary>
-    internal static string BuildAggregateMarkdown(CiRunSummaryAggregate aggregate, bool includeFailureDetails, out int modulesWithOmittedDetails)
+    internal static string BuildAggregateMarkdown(
+        CiRunSummaryAggregate aggregate,
+        bool includeFailureDetails,
+        out int modulesWithOmittedDetails,
+        out int condensedModules)
     {
         bool failed = aggregate.ExitCode is int exitCode
             ? GitHubActionsExitCode.IndicatesFailure(exitCode)
@@ -184,9 +192,21 @@ internal sealed partial class GitHubActionsSummaryReporter
         int perModuleBudget = detailsBudget / moduleCount;
         int remainingBudget = 0;
         modulesWithOmittedDetails = 0;
+        condensedModules = 0;
 
         foreach (CiRunSummaryModule module in aggregate.Modules)
         {
+            // Dividing the detail budget bounds the diagnostics, but every module still costs a heading, a totals
+            // table and its failure lines whether or not any budget is left. A run with enough test projects
+            // therefore overruns GitHub's cap on that overhead alone, and an oversized summary is discarded in
+            // full — so past this point a module reports only its verdict, exactly as the per-project path does.
+            if (builder.Length >= GitHubActionsFailureDetails.CondenseSummaryLength)
+            {
+                AppendCondensedModuleLine(builder, module);
+                condensedModules++;
+                continue;
+            }
+
             bool needsDiscriminator = HasDuplicateModuleIdentity(aggregate.Modules, module);
             builder.Append("<details>\n<summary>")
                 .Append(HtmlEncode(module.AssemblyName))
@@ -213,6 +233,23 @@ internal sealed partial class GitHubActionsSummaryReporter
         // The count is reported to the caller rather than written here: a note buried after dozens of collapsed
         // module sections is easy to miss, so it belongs at the top of the file.
         return builder.ToString();
+    }
+
+    /// <summary>
+    /// Renders one module as a single-line verdict, for when the combined summary has grown too large to give it
+    /// a section of its own.
+    /// </summary>
+    private static void AppendCondensedModuleLine(StringBuilder builder, CiRunSummaryModule module)
+    {
+        bool runFailed = module.FailedTests > 0 || GitHubActionsExitCode.IndicatesFailure(module.ExitCode);
+        builder.Append(runFailed ? "❌" : "✅").Append(" `")
+            .Append(EscapeInlineCode(module.AssemblyName)).Append("` (")
+            .Append(EscapeInlineCode(module.TargetFramework)).Append("): ")
+            .Append(module.TotalTests.ToString(CultureInfo.InvariantCulture)).Append(" total, ")
+            .Append(module.PassedTests.ToString(CultureInfo.InvariantCulture)).Append(" passed, ")
+            .Append(module.FailedTests.ToString(CultureInfo.InvariantCulture)).Append(" failed, ")
+            .Append(module.SkippedTests.ToString(CultureInfo.InvariantCulture)).Append(" skipped — ")
+            .Append(GitHubActionsResources.SummaryCondensed).Append("\n\n");
     }
 
     /// <summary>
