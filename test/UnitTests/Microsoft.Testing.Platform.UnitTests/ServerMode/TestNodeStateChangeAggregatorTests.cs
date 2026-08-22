@@ -166,16 +166,18 @@ public sealed class TestNodeStateChangeAggregatorTests
         aggregator.OnStateChange(terminal);
 
         TestNodeStateChangedEventArgs firstAggregatedChange = aggregator.BuildAggregatedChange();
+        terminal.TestNode.Properties._testNodeStateProperty = DiscoveredTestNodeStateProperty.CachedInstance;
         TestNodeStateChangedEventArgs secondAggregatedChange = aggregator.BuildAggregatedChange();
 
         Assert.IsNotNull(firstAggregatedChange.Changes);
         Assert.IsNotNull(secondAggregatedChange.Changes);
         Assert.HasCount(2, firstAggregatedChange.Changes);
-        Assert.HasCount(2, secondAggregatedChange.Changes);
+        Assert.HasCount(3, secondAggregatedChange.Changes);
         Assert.AreSame(before, firstAggregatedChange.Changes[0]);
         Assert.AreSame(terminal, firstAggregatedChange.Changes[1]);
         Assert.AreSame(before, secondAggregatedChange.Changes[0]);
-        Assert.AreSame(terminal, secondAggregatedChange.Changes[1]);
+        Assert.AreSame(inProgress, secondAggregatedChange.Changes[1]);
+        Assert.AreSame(terminal, secondAggregatedChange.Changes[2]);
     }
 
     public static IEnumerable<object[]> TerminalStates()
