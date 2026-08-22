@@ -9,6 +9,45 @@ namespace Microsoft.Testing.Extensions.GitHubActionsReport;
 internal sealed partial class GitHubActionsSummaryReporter
 {
     /// <summary>
+    /// The lock every writer to the shared summary file takes for the duration of its update.
+    /// </summary>
+    /// <remarks>
+    /// Opening the summary itself exclusively is enough to serialize plain appends, but not an update that has to
+    /// replace the file: a file cannot be replaced while it is open, so the handle must be released before the
+    /// swap, and a sibling appending in that gap would have its section overwritten by content captured before it.
+    /// A separate lock file closes that window because it is held across the whole read-modify-replace, and it is
+    /// the same lock the aggregated path already uses, so the two writing modes serialize against each other too.
+    /// </remarks>
+    private static string GetSummaryLockPath(string path)
+        => path + ".microsoft-testing-platform.lock";
+
+    /// <summary>
+    /// Acquires <see cref="GetSummaryLockPath(string)"/>, retrying while another writer holds it.
+    /// </summary>
+    private static async Task<IFileStream> AcquireSummaryLockAsync(
+        IFileSystem fileSystem,
+        string path,
+        int maxAttempts,
+        TimeSpan retryDelay,
+        CancellationToken cancellationToken)
+    {
+        string lockPath = GetSummaryLockPath(path);
+        for (int attempt = 1; ; attempt++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            try
+            {
+                return fileSystem.NewFileStream(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+            }
+            catch (IOException) when (attempt < maxAttempts)
+            {
+                await Task.Delay(retryDelay, cancellationToken).ConfigureAwait(false);
+            }
+        }
+    }
+
+    /// <summary>
     /// Appends <paramref name="content"/> to the shared <c>GITHUB_STEP_SUMMARY</c> file in a way that is safe
     /// when multiple test-host processes (one per assembly / target framework in a <c>dotnet test</c> run) write
     /// concurrently.
@@ -38,6 +77,10 @@ internal sealed partial class GitHubActionsSummaryReporter
         TimeSpan retryDelay,
         CancellationToken cancellationToken)
     {
+        // Taken even for a plain append: the notice-hoisting path replaces the whole file, and an append that
+        // slipped between its read and its swap would be silently overwritten.
+        using IFileStream lockStream = await AcquireSummaryLockAsync(fileSystem, path, maxAttempts, retryDelay, cancellationToken).ConfigureAwait(false);
+
         for (int attempt = 1; ; attempt++)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -96,6 +139,10 @@ internal sealed partial class GitHubActionsSummaryReporter
         CancellationToken cancellationToken)
     {
         var encoding = new UTF8Encoding(false);
+
+        // Held across the whole read-modify-replace. The summary handle alone cannot cover it, because the file
+        // has to be closed before it can be replaced, and a sibling appending in that gap would be overwritten.
+        using IFileStream lockStream = await AcquireSummaryLockAsync(fileSystem, path, maxAttempts, retryDelay, cancellationToken).ConfigureAwait(false);
 
         for (int attempt = 1; ; attempt++)
         {
@@ -159,7 +206,7 @@ internal sealed partial class GitHubActionsSummaryReporter
                 // file and swap it in instead, so the summary is only ever replaced by a complete file.
                 //
                 // The exclusive handle has to be released before the swap, because a file that is open cannot be
-                // replaced; the caller's lock file is what keeps a sibling project out of the gap.
+                // replaced. The lock file held for this whole method is what keeps a sibling out of that gap.
                 pendingPayload = encoding.GetBytes(noticeFactory(CountProjectSections(existing)) + existing + content);
             }
 
@@ -235,7 +282,8 @@ internal sealed partial class GitHubActionsSummaryReporter
         string section = $"{startMarker}\n{content.TrimEnd()}\n{endMarker}\n";
         // Keep one stable lock entry for the lifetime of the GitHub step. Deleting it after releasing the handle
         // would let a third writer create a new inode while a second writer still holds the unlinked old lock.
-        string lockPath = path + ".microsoft-testing-platform.lock";
+        // This is the same lock the per-project path takes, so the two writing modes serialize against each other.
+        string lockPath = GetSummaryLockPath(path);
 
         for (int attempt = 1; ; attempt++)
         {

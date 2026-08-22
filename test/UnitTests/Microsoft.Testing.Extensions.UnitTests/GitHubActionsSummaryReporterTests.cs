@@ -1025,27 +1025,50 @@ public sealed class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
-    public async Task AppendStepSummaryWithLeadingNoticeAsync_LeavesTheSummaryIntact_WhenTheRewriteIsCancelled()
+    public async Task AppendStepSummaryWithLeadingNoticeAsync_LeavesTheSummaryIntact_WhenTheRewriteFailsPartway()
     {
-        // Hoisting the notice rewrites the whole file. If that were done by truncating in place, a cancellation
-        // partway through — session teardown is exactly when it happens — would leave the summary empty, losing
-        // every section earlier projects wrote. Failing must cost this project's section, never the file.
-        string path = Path.GetTempFileName();
+        // Hoisting the notice replaces the whole file. If that were done by truncating in place, a failure partway
+        // through — a full disk on a runner, or cancellation during session teardown — would leave the summary
+        // empty, losing every section earlier projects wrote. Failing must cost this project's section, never the
+        // file, so the write is staged elsewhere and only swapped in once complete.
+        string dir = Path.Combine(Path.GetTempPath(), "mtp-summary-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        string path = Path.Combine(dir, "summary.md");
+        const string Original = "earlier-project-section\n";
         try
         {
-            File.WriteAllText(path, "earlier-project-section\n");
-            var fileSystem = new SystemFileSystem();
-            var cancelled = new CancellationToken(canceled: true);
+            File.WriteAllText(path, Original);
+            var real = new SystemFileSystem();
 
-            await Assert.ThrowsExactlyAsync<OperationCanceledException>(() =>
+            var fileSystem = new Mock<IFileSystem>();
+            fileSystem.Setup(f => f.ExistFile(It.IsAny<string>())).Returns<string>(File.Exists);
+            fileSystem.Setup(f => f.ReplaceFile(It.IsAny<string>(), It.IsAny<string>()))
+                .Callback<string, string>(real.ReplaceFile);
+            fileSystem.Setup(f => f.DeleteFile(It.IsAny<string>())).Callback<string>(real.DeleteFile);
+            fileSystem.Setup(f => f.NewFileStream(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
+                .Returns<string, FileMode, FileAccess, FileShare>((p, mode, access, share) =>
+                {
+                    // Everything behaves normally except the staged copy, which fails mid-write.
+                    if (p.EndsWith(".tmp", StringComparison.Ordinal))
+                    {
+                        var throwing = new Mock<IFileStream>();
+                        throwing.Setup(s => s.Stream).Returns(new ThrowOnWriteStream());
+                        return throwing.Object;
+                    }
+
+                    return real.NewFileStream(p, mode, access, share);
+                });
+
+            await Assert.ThrowsExactlyAsync<IOException>(() =>
                 GitHubActionsSummaryReporter.AppendStepSummaryWithLeadingNoticeAsync(
-                    fileSystem, path, "second-project\n", GitHubActionsSummaryReporter.BuildTruncationNotice, maxAttempts: 1, retryDelay: TimeSpan.Zero, cancelled));
+                    fileSystem.Object, path, "second-project\n", GitHubActionsSummaryReporter.BuildTruncationNotice, maxAttempts: 1, retryDelay: TimeSpan.Zero, CancellationToken.None));
 
-            Assert.AreEqual("earlier-project-section\n", File.ReadAllText(path));
+            // The pre-existing content is still there: the failed write never touched the summary itself.
+            Assert.AreEqual(Original, File.ReadAllText(path));
         }
         finally
         {
-            File.Delete(path);
+            Directory.Delete(dir, recursive: true);
         }
     }
 
