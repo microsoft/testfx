@@ -1008,6 +1008,47 @@ public sealed class GitHubActionsSummaryReporterTests
         }
     }
 
+    [TestMethod]
+    public void CountProjectSections_IgnoresTheMarkerInsideTestOutput()
+    {
+        // A failing test's name and message are rendered into the summary verbatim, so a test that mentions the
+        // marker would otherwise be counted as a project section and inflate the number the warning quotes.
+        string full = GitHubActionsSummaryReporter.BuildMarkdown(
+            [new GitHubActionsTestRecord("T", "T.Test", GitHubActionsTerminalKind.Passed, TimeSpan.Zero)],
+            "T",
+            "net9.0",
+            exitCode: 0);
+
+        string withMarkerInProse = full + $"- `SomeTest_Mentioning_{GitHubActionsSummaryReporter.ProjectSectionMarker}_InItsName` — 1ms\n";
+
+        Assert.AreEqual(1, GitHubActionsSummaryReporter.CountProjectSections(withMarkerInProse));
+    }
+
+    [TestMethod]
+    public async Task AppendStepSummaryWithLeadingNoticeAsync_LeavesTheSummaryIntact_WhenTheRewriteIsCancelled()
+    {
+        // Hoisting the notice rewrites the whole file. If that were done by truncating in place, a cancellation
+        // partway through — session teardown is exactly when it happens — would leave the summary empty, losing
+        // every section earlier projects wrote. Failing must cost this project's section, never the file.
+        string path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, "earlier-project-section\n");
+            var fileSystem = new SystemFileSystem();
+            var cancelled = new CancellationToken(canceled: true);
+
+            await Assert.ThrowsExactlyAsync<OperationCanceledException>(() =>
+                GitHubActionsSummaryReporter.AppendStepSummaryWithLeadingNoticeAsync(
+                    fileSystem, path, "second-project\n", GitHubActionsSummaryReporter.BuildTruncationNotice, maxAttempts: 1, retryDelay: TimeSpan.Zero, cancelled));
+
+            Assert.AreEqual("earlier-project-section\n", File.ReadAllText(path));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
     private static void AssertSingleNotice(string summary)
     {
         string marker = GitHubActionsSummaryReporter.TruncationNoticeMarker;

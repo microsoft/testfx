@@ -254,7 +254,15 @@ internal sealed partial class GitHubActionsSummaryReporter :
             // Size the gate against the largest the note can plausibly be. The exact length depends on a project
             // count that is not known until the file is opened, and an underestimate here would let the write
             // cross the limit and cost the whole summary.
-            int noticeLengthAllowance = includeTruncationNotice ? BuildTruncationNotice(int.MaxValue).Length : 0;
+            //
+            // Measure in bytes, not characters. The file length is bytes and the content is written as UTF-8, so
+            // comparing it against a UTF-16 char count understates a section carrying non-ASCII text — assertion
+            // diffs, exception messages, or test names — by up to threefold, in the one check that stands between
+            // this write and GitHub discarding the entire summary.
+            int noticeLengthAllowance = includeTruncationNotice
+                ? Encoding.UTF8.GetByteCount(BuildTruncationNotice(int.MaxValue))
+                : 0;
+            int markdownByteCount = Encoding.UTF8.GetByteCount(markdown);
 
             // Final gate, on the *projected* size rather than the current one. The budgeting above aims the file
             // at MaxSummaryLength, but it cannot bound what other tools append to the same file, so the file can
@@ -262,7 +270,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
             // discards an oversized summary silently and in full — including every section earlier projects
             // wrote — so a write that would cross the limit is worse than no write at all.
             if (GetSummaryLength(_fileSystem, path!, _logger) is long currentLength
-                && currentLength + markdown.Length + noticeLengthAllowance > GitHubActionsFailureDetails.EffectiveStepSummaryLimit)
+                && currentLength + markdownByteCount + noticeLengthAllowance > GitHubActionsFailureDetails.EffectiveStepSummaryLimit)
             {
                 string overflowWarning = string.Format(
                     CultureInfo.InvariantCulture,
@@ -281,7 +289,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
                 // summary describes, so make sure it is there even if this project was not condensed. The note is
                 // a few hundred bytes and dropping the section frees far more room than it takes; if even that
                 // does not fit, the summary is genuinely full and silence is what keeps the rest rendered.
-                if (currentLength + BuildTruncationNotice(int.MaxValue).Length <= GitHubActionsFailureDetails.EffectiveStepSummaryLimit)
+                if (currentLength + Encoding.UTF8.GetByteCount(BuildTruncationNotice(int.MaxValue)) <= GitHubActionsFailureDetails.EffectiveStepSummaryLimit)
                 {
                     await TryAppendSummaryAsync(path!, string.Empty, includeNotice: true, testSessionContext).ConfigureAwait(false);
                 }

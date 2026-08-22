@@ -101,6 +101,8 @@ internal sealed partial class GitHubActionsSummaryReporter
         {
             cancellationToken.ThrowIfCancellationRequested();
 
+            byte[] pendingPayload;
+
             IFileStream stream;
             try
             {
@@ -135,28 +137,55 @@ internal sealed partial class GitHubActionsSummaryReporter
                 string existing = encoding.GetString(existingBytes, 0, totalRead);
                 bool noticeAlreadyPresent = existing.IndexOf(TruncationNoticeMarker, StringComparison.Ordinal) >= 0;
 
-                byte[] payload = noticeAlreadyPresent
-                    ? encoding.GetBytes(content)
-                    : encoding.GetBytes(noticeFactory(CountProjectSections(existing)) + existing + content);
-
-                // Rewriting from the start is only correct because the note is hoisted at most once per job; from
-                // then on this is a plain append.
                 if (noticeAlreadyPresent)
                 {
+                    // The notice is already at the top, so this is a plain append and nothing existing is at risk.
+                    byte[] appended = encoding.GetBytes(content);
                     inner.Seek(0, SeekOrigin.End);
-                }
-                else
-                {
-                    inner.Seek(0, SeekOrigin.Begin);
-                    inner.SetLength(0);
+                    if (appended.Length > 0)
+                    {
+                        await inner.WriteAsync(appended, 0, appended.Length, cancellationToken).ConfigureAwait(false);
+                    }
+
+                    await inner.FlushAsync(cancellationToken).ConfigureAwait(false);
+                    return;
                 }
 
-                if (payload.Length > 0)
+                // Hoisting the notice means replacing the file, which is the one operation here that can destroy
+                // content: everything earlier projects wrote only survives if the replacement completes.
+                // Truncating in place would leave the summary empty if the write were abandoned midway — on
+                // cancellation during session teardown, or a full disk — which is a worse outcome than the oversized
+                // summary this whole path exists to avoid, and a silent one. Build the new content in a temporary
+                // file and swap it in instead, so the summary is only ever replaced by a complete file.
+                //
+                // The exclusive handle has to be released before the swap, because a file that is open cannot be
+                // replaced; the caller's lock file is what keeps a sibling project out of the gap.
+                pendingPayload = encoding.GetBytes(noticeFactory(CountProjectSections(existing)) + existing + content);
+            }
+
+            string tempPath = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
+            try
+            {
+                using (IFileStream tempStream = fileSystem.NewFileStream(tempPath, FileMode.CreateNew, FileAccess.Write, FileShare.Read))
                 {
-                    await inner.WriteAsync(payload, 0, payload.Length, cancellationToken).ConfigureAwait(false);
+                    await tempStream.Stream.WriteAsync(pendingPayload, 0, pendingPayload.Length, cancellationToken).ConfigureAwait(false);
+                    await tempStream.Stream.FlushAsync(cancellationToken).ConfigureAwait(false);
                 }
 
-                await inner.FlushAsync(cancellationToken).ConfigureAwait(false);
+                // Past this point the replacement is complete on disk, so the swap either happens or it does not;
+                // the summary is never left half-written.
+                fileSystem.ReplaceFile(tempPath, path);
+            }
+            finally
+            {
+                try
+                {
+                    fileSystem.DeleteFile(tempPath);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    // Best-effort cleanup must not hide a successful write or its primary failure.
+                }
             }
 
             return;
@@ -166,14 +195,26 @@ internal sealed partial class GitHubActionsSummaryReporter
     /// <summary>
     /// Counts the full test project sections this extension has written to the shared summary file.
     /// </summary>
+    /// <remarks>
+    /// Only a marker occupying a whole line counts. Failing tests' names and messages are rendered into the
+    /// summary, so a test whose output happens to contain the marker text would otherwise inflate the count —
+    /// and this reporter's own test suite refers to the marker by value, which makes that a live case rather
+    /// than a hypothetical one.
+    /// </remarks>
     internal static /* for testing */ int CountProjectSections(string summary)
     {
         int count = 0;
-        int index = summary.IndexOf(ProjectSectionMarker, StringComparison.Ordinal);
-        while (index >= 0)
+        for (int index = summary.IndexOf(ProjectSectionMarker, StringComparison.Ordinal);
+            index >= 0;
+            index = summary.IndexOf(ProjectSectionMarker, index + ProjectSectionMarker.Length, StringComparison.Ordinal))
         {
-            count++;
-            index = summary.IndexOf(ProjectSectionMarker, index + ProjectSectionMarker.Length, StringComparison.Ordinal);
+            bool atLineStart = index == 0 || summary[index - 1] == '\n';
+            int end = index + ProjectSectionMarker.Length;
+            bool atLineEnd = end == summary.Length || summary[end] == '\n' || summary[end] == '\r';
+            if (atLineStart && atLineEnd)
+            {
+                count++;
+            }
         }
 
         return count;
