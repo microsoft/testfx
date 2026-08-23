@@ -1,13 +1,21 @@
 # Efficiency Improver — Persistent Memory for microsoft/testfx
 
 ## Last Updated
-2026-08-22 UTC
+2026-08-23 UTC
 
 ## Round-Robin Schedule
 
-Tasks run this session (2026-08-22, run 32600423002): **4 (verify prior PR/issue status), 2 (scan TestFramework non-Assertions + Extensions), 5 (check issues), 7 (monthly summary)**
-Last run before this: Tasks 4/2/7 (2026-08-21, run 32529898250)
-Next run should prioritise: Task 6 (measurement infrastructure — still hasn't been actively worked in several runs; check for maintainer response to #10549 regression-gating proposal, still zero comments as of this run). Code scan candidates remaining: `src/Package/MSTest.Sdk` MSBuild logic, `src/Platform/Microsoft.Testing.Extensions.CrashDump`/`HangDump` (not yet scanned this cycle).
+Tasks run this session (2026-08-23, run 32668394261): **4 (verify prior PR/issue status), 2 (scan CrashDump/HangDump/MSTest.Sdk), 5 (check issues), 7 (monthly summary)**
+Last run before this: Tasks 4/2/5/7 (2026-08-22, run 32600423002)
+Next run should prioritise: Task 6 (measurement infrastructure — check for maintainer response to #10549 regression-gating proposal, still zero comments after 7+ runs). Code scan: all major src/ areas now reviewed at least once (TestFramework, Adapter, Analyzers, Platform core + Retry/HotReload/VSTestBridge/CrashDump/HangDump, MSTest.Sdk). Consider re-scanning oldest-reviewed areas for drift, or pivot fully to Task 6.
+
+## 2026-08-23 Run Notes
+
+- Verified Task 4: no open `[efficiency-improver]`-prefixed PRs exist — nothing to maintain. Reviewed current ~24 open PRs (#10670, #10658, #10655, #10649, #10644, #10640, #10635, #10633, #10631, #10622/10621/10619/10581/10571/10565/10551 dependency/infra bumps, #10018/#9725/#8820 unrelated prototypes) — several maintainer-authored efficiency-relevant PRs already landed or in flight (#10670 "Reduce ServerMode notification allocations", #10661 regex caching, #10648 TRX reparse-point, #10658 "Read acceptance-test binlogs behind a lock") — all maintainer-driven, no action needed from us.
+- Ran a background sub-agent scan of `src/Platform/Microsoft.Testing.Extensions.CrashDump`, `Microsoft.Testing.Extensions.HangDump`, and `src/Package/MSTest.Sdk` (all previously unscanned this cycle): found only two LOW/LOW-MEDIUM items, both on rare/terminal (not per-test hot) paths — (1) `CrashDumpFileNameHelper.BuildDumpFileNameRegex` builds a fresh `Regex` per `PublishAsync` call, but that only runs once per test-host *crash* (rare terminal event); (2) `IProcessExtensions.ResolveChildren` in HangDump recursively re-filters the process list per node (O(n²) over `Process.GetProcesses()`), but only triggered on a hang-dump event, not per-test. `MSTest.Sdk` has no .cs files (MSBuild-only); reviewed `.targets` files, no per-item Regex/polling anti-patterns found. Not implementing either — energy impact is negligible given call frequency (cold/terminal paths only), consistent with "no improvement without measurement" — these wouldn't produce a measurable/attributable proxy-metric win worth a PR.
+- Checked #10549 (regression-gating proposal) — still open, zero comments after 7+ consecutive runs; not re-engaging (anti-spam).
+- Checked #8824 — no new comments since 2026-07-14; not re-engaged. No other open efficiency/performance/energy-labeled issues found needing comment.
+- Pure monitoring pass — no new PR created (no genuinely measurable HIGH/MEDIUM opportunity this run). Updated monthly summary issue #10382.
 
 ## 2026-08-22 Run Notes
 
