@@ -48,6 +48,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
     private readonly IOutputDevice _outputDevice;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
     private readonly ITestApplicationProcessExitCode _testApplicationProcessExitCode;
+    private readonly ITestCoverageResult _testCoverageResult;
     private readonly ILogger _logger;
     private readonly Lazy<string> _targetFrameworkMoniker;
     private readonly bool _isEnabled;
@@ -71,6 +72,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
         IOutputDevice outputDevice,
         ITestApplicationModuleInfo testApplicationModuleInfo,
         ITestApplicationProcessExitCode testApplicationProcessExitCode,
+        ITestCoverageResult testCoverageResult,
         ILoggerFactory loggerFactory,
         Func<bool> shouldDeferToArtifactPostProcessing)
     {
@@ -81,6 +83,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
         _outputDevice = outputDevice;
         _testApplicationModuleInfo = testApplicationModuleInfo;
         _testApplicationProcessExitCode = testApplicationProcessExitCode;
+        _testCoverageResult = testCoverageResult;
         _logger = loggerFactory.CreateLogger<GitHubActionsSummaryReporter>();
         _targetFrameworkMoniker = new(TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform);
         _isEnabled = GitHubActionsFeature.IsEnabled(commandLineOptions, environment, GitHubActionsCommandLineOptions.GitHubActionsStepSummary);
@@ -198,11 +201,12 @@ internal sealed partial class GitHubActionsSummaryReporter :
 
             string assemblyName = _testApplicationModuleInfo.TryGetAssemblyName() ?? "unknown assembly name";
             int exitCode = _testApplicationProcessExitCode.GetProcessExitCode();
+            CiCoverageSummaryData coverage = CiCoverageSummary.Create(_testCoverageResult, testSessionContext.SessionUid);
             if (_shouldDeferToArtifactPostProcessing()
                 && _configuration.GetTestResultDirectory() is { } resultsDirectory
                 && !RoslynString.IsNullOrWhiteSpace(resultsDirectory))
             {
-                CiRunSummaryModule module = CreateModule(snapshot, assemblyName, testSessionContext);
+                CiRunSummaryModule module = CreateModule(snapshot, assemblyName, testSessionContext, coverage);
                 string fragmentPath = await CiRunSummaryAggregation.WriteFragmentAsync(
                     resultsDirectory,
                     GitHubActionsSummaryArtifactPostProcessor.Provider,
@@ -219,7 +223,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
                 return;
             }
 
-            string markdown = BuildMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value, exitCode);
+            string markdown = BuildMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value, exitCode, coverage);
 
             try
             {
@@ -249,7 +253,8 @@ internal sealed partial class GitHubActionsSummaryReporter :
     private CiRunSummaryModule CreateModule(
         IReadOnlyList<TestRecord> records,
         string assemblyName,
-        ITestSessionContext testSessionContext)
+        ITestSessionContext testSessionContext,
+        CiCoverageSummaryData coverage)
         => CiRunSummaryAggregation.CreateModule(
             records,
             assemblyName,
@@ -259,7 +264,8 @@ internal sealed partial class GitHubActionsSummaryReporter :
             _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID),
             testSessionContext.SessionUid.Value,
             GetAttemptNumber(),
-            _testApplicationProcessExitCode.GetProcessExitCode());
+            _testApplicationProcessExitCode.GetProcessExitCode(),
+            coverage: coverage);
 
     private int GetAttemptNumber()
         => int.TryParse(
