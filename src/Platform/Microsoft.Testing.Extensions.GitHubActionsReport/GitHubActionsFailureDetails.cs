@@ -169,7 +169,7 @@ internal static class GitHubActionsFailureDetails
     internal const int MaxModuleListingLength = (int)(GitHubStepSummaryLimit * 0.9);
 
     /// <summary>
-    /// Characters reserved for one test project's non-detail content — heading, totals table, failure and
+    /// Bytes reserved for one test project's non-detail content — heading, totals table, failure and
     /// slowest-test lines, truncation notes — so the budget bounds the <em>file</em> rather than just the
     /// expanded diagnostics. Without this reserve a job with many projects lands well over
     /// <see cref="MaxSummaryLength"/>: each project writes several kilobytes even when it expands nothing.
@@ -177,7 +177,7 @@ internal static class GitHubActionsFailureDetails
     internal const int PerProjectOverheadReserve = 8_000;
 
     /// <summary>
-    /// Maximum characters of expanded failure detail available across the whole summary file.
+    /// Maximum UTF-8 bytes of expanded failure detail available across the whole summary file.
     /// </summary>
     internal const int MaxTotalDetailsLength = MaxSummaryLength - PerProjectOverheadReserve;
 
@@ -193,7 +193,10 @@ internal static class GitHubActionsFailureDetails
             return null;
         }
 
-        string normalized = value!.Replace("\r\n", "\n").TrimEnd();
+        // Normalize every line ending, not just CRLF. A lone carriage return still renders as a line break, so
+        // leaving it unnormalized lets a \r-separated message defeat the row cap entirely: Split('\n') sees one
+        // row where the reader sees hundreds.
+        string normalized = value!.Replace("\r\n", "\n").Replace('\r', '\n').TrimEnd();
         bool truncated = false;
 
         if (normalized.Length > maxLength)
@@ -228,7 +231,7 @@ internal static class GitHubActionsFailureDetails
     /// <param name="totalFailedCount">The total number of failing tests, which may exceed <paramref name="entries"/>.</param>
     /// <param name="includeDetails">Whether expanded diagnostics are enabled.</param>
     /// <param name="remainingBudget">
-    /// The characters of expanded detail this section may still emit, decremented by what it renders. Passed by
+    /// The UTF-8 bytes of expanded detail this section may still emit, decremented by what it renders. Passed by
     /// reference so a caller rendering several project sections into one file shares a single budget across them
     /// — the 1 MiB cap applies to the whole file, not to any one section.
     /// </param>
@@ -264,7 +267,13 @@ internal static class GitHubActionsFailureDetails
             var detailsBuilder = new StringBuilder();
             AppendDetailedEntry(detailsBuilder, entry);
 
-            if (detailsBuilder.Length > remainingBudget)
+            // Charged in UTF-8 bytes, because that is what the budget is denominated in and what GitHub counts.
+            // Charging UTF-16 chars would under-bill a failure carrying Japanese text or emoji by up to
+            // threefold, so a module would overshoot its share and force the whole rendering to be refused —
+            // trading a section that degrades gracefully for one that is dropped.
+            int detailsByteCount = Encoding.UTF8.GetByteCount(detailsBuilder.ToString());
+
+            if (detailsByteCount > remainingBudget)
             {
                 // The remaining budget cannot fit this failure's diagnostics. Degrade to the compact line rather
                 // than emitting a half-written <details> block, and account for it in the truncation note below.
@@ -273,7 +282,7 @@ internal static class GitHubActionsFailureDetails
                 continue;
             }
 
-            remainingBudget -= detailsBuilder.Length;
+            remainingBudget -= detailsByteCount;
             builder.Append(detailsBuilder);
         }
 

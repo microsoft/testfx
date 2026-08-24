@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Logging;
 
 namespace Microsoft.Testing.Extensions.GitHubActionsReport;
 
@@ -89,12 +90,27 @@ internal sealed partial class GitHubActionsSummaryReporter
         CancellationToken cancellationToken,
         long maxTotalBytes = long.MaxValue)
     {
-        var encoding = new UTF8Encoding(false);
-        int contentByteCount = encoding.GetByteCount(content);
-
         // Taken even for a plain append: the notice-hoisting path replaces the whole file, and an append that
         // slipped between its read and its swap would be silently overwritten.
         using IFileStream lockStream = await AcquireSummaryLockAsync(fileSystem, path, maxAttempts, retryDelay, cancellationToken).ConfigureAwait(false);
+        return await AppendCoreAsync(fileSystem, path, content, maxAttempts, retryDelay, cancellationToken, maxTotalBytes).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// The body of <see cref="AppendStepSummaryWithRetryAsync"/>, minus the lock, so a caller that already holds
+    /// it can render and write in one transaction.
+    /// </summary>
+    private static async Task<bool> AppendCoreAsync(
+        IFileSystem fileSystem,
+        string path,
+        string content,
+        int maxAttempts,
+        TimeSpan retryDelay,
+        CancellationToken cancellationToken,
+        long maxTotalBytes)
+    {
+        var encoding = new UTF8Encoding(false);
+        int contentByteCount = encoding.GetByteCount(content);
 
         for (int attempt = 1; ; attempt++)
         {
@@ -170,11 +186,27 @@ internal sealed partial class GitHubActionsSummaryReporter
         CancellationToken cancellationToken,
         long maxTotalBytes = long.MaxValue)
     {
-        var encoding = new UTF8Encoding(false);
-
         // Held across the whole read-modify-replace. The summary handle alone cannot cover it, because the file
         // has to be closed before it can be replaced, and a sibling appending in that gap would be overwritten.
         using IFileStream lockStream = await AcquireSummaryLockAsync(fileSystem, path, maxAttempts, retryDelay, cancellationToken).ConfigureAwait(false);
+        return await AppendWithLeadingNoticeCoreAsync(fileSystem, path, content, noticeFactory, maxAttempts, retryDelay, cancellationToken, maxTotalBytes).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// The body of <see cref="AppendStepSummaryWithLeadingNoticeAsync"/>, minus the lock, so a caller that
+    /// already holds it can render and write in one transaction.
+    /// </summary>
+    private static async Task<bool> AppendWithLeadingNoticeCoreAsync(
+        IFileSystem fileSystem,
+        string path,
+        string content,
+        Func<int, string> noticeFactory,
+        int maxAttempts,
+        TimeSpan retryDelay,
+        CancellationToken cancellationToken,
+        long maxTotalBytes)
+    {
+        var encoding = new UTF8Encoding(false);
 
         for (int attempt = 1; ; attempt++)
         {
@@ -282,6 +314,45 @@ internal sealed partial class GitHubActionsSummaryReporter
 
             return true;
         }
+    }
+
+    /// <summary>
+    /// Renders this project's section and writes it in a single locked transaction, so the size of the shared
+    /// file that the rendering decisions are based on cannot change between the decision and the write.
+    /// </summary>
+    /// <remarks>
+    /// The <c>render</c> callback produces the markdown for a given observed file length and says whether the
+    /// top-of-file notice is warranted; it is invoked once, while this process holds the lock.
+    /// <para>
+    /// Gating the already-rendered payload is not enough. The reporter degrades in stages as the shared file
+    /// fills up — full diagnostics, then a bare failure list, then a one-line verdict — and those thresholds are
+    /// what reserve headroom for the test framework's own block, which is appended after this reporter has run
+    /// and which this reporter cannot bound. Deciding before taking the lock lets every project that finishes at
+    /// the same moment observe the same empty file and each render a full section: the absolute cap then admits
+    /// the first few and refuses the rest outright, turning a report where every project degrades gracefully
+    /// into one where the first projects get everything and the others get nothing.
+    /// </para>
+    /// </remarks>
+    internal static /* for testing */ async Task<bool> AppendRenderedStepSummarySectionAsync(
+        IFileSystem fileSystem,
+        string path,
+        Func<long, (string Markdown, bool IncludeNotice)> render,
+        Func<int, string> noticeFactory,
+        ILogger logger,
+        int maxAttempts,
+        TimeSpan retryDelay,
+        CancellationToken cancellationToken,
+        long maxTotalBytes = long.MaxValue)
+    {
+        using IFileStream lockStream = await AcquireSummaryLockAsync(fileSystem, path, maxAttempts, retryDelay, cancellationToken).ConfigureAwait(false);
+
+        // Measured under the lock, so this is the length the write will actually land on.
+        long currentLength = GetSummaryLength(fileSystem, path, logger) ?? 0;
+        (string markdown, bool includeNotice) = render(currentLength);
+
+        return includeNotice
+            ? await AppendWithLeadingNoticeCoreAsync(fileSystem, path, markdown, noticeFactory, maxAttempts, retryDelay, cancellationToken, maxTotalBytes).ConfigureAwait(false)
+            : await AppendCoreAsync(fileSystem, path, markdown, maxAttempts, retryDelay, cancellationToken, maxTotalBytes).ConfigureAwait(false);
     }
 
     /// <summary>

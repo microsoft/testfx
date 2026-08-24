@@ -76,8 +76,6 @@ Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureEntry.Stack
 const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureDetails.MaxMessageRows = 30 -> int
 const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureDetails.MaxStackTraceRows = 30 -> int
 const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureDetails.GitHubStepSummaryLimit = 1048576 -> int
-static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.GetRemainingDetailsBudget(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, string! path, Microsoft.Testing.Platform.Logging.ILogger! logger) -> int
-static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.ShouldCondenseProjectSection(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, string! path, Microsoft.Testing.Platform.Logging.ILogger! logger) -> bool
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.BuildMinimalMarkdown(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.TestRecord>! records, string! assemblyName, string! targetFrameworkMoniker, int exitCode) -> string!
 const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureDetails.MaxSummaryLength = 419430 -> int
 const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureDetails.CondenseSummaryLength = 629145 -> int
@@ -91,3 +89,6 @@ static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryRepo
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.HasLeadingTruncationNotice(string! summary) -> bool
 const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.TruncationNoticeEndMarker = "<!-- /microsoft-testing-platform:github:summary-truncated -->" -> string!
 const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.ProjectSectionMarker = "<!-- microsoft-testing-platform:github:project-section -->" -> string!
+static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.GetRemainingDetailsBudget(long alreadyWritten) -> int
+static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.TryGetFailureInfo(Microsoft.Testing.Platform.Extensions.Messages.TestNodeStateProperty? state) -> (string? Explanation, System.Exception? Exception)?
+static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.AppendRenderedStepSummarySectionAsync(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, string! path, System.Func<long, (string! Markdown, bool IncludeNotice)>! render, System.Func<int, string!>! noticeFactory, Microsoft.Testing.Platform.Logging.ILogger! logger, int maxAttempts, System.TimeSpan retryDelay, System.Threading.CancellationToken cancellationToken, long maxTotalBytes = 9223372036854775807) -> System.Threading.Tasks.Task<bool>!

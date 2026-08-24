@@ -226,8 +226,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
             }
 
             // The 1 MiB cap applies to the whole GITHUB_STEP_SUMMARY file, which every test project in the job
-            // appends to, so this reporter degrades in two stages as the shared file fills up. Measure what
-            // earlier projects already wrote and claim only the remainder.
+            // appends to, so this reporter degrades in two stages as the shared file fills up:
             //
             //   below 40%  full section, failures expanded into collapsible diagnostics
             //   40% - 60%  full section, but failures listed as name and duration only
@@ -235,52 +234,15 @@ internal sealed partial class GitHubActionsSummaryReporter :
             //
             // Shedding the diagnostics first is what keeps the report useful for longest: the list of which tests
             // failed is a line per failure, while the diagnostics behind it are kilobytes.
-            int detailsBudget = GetRemainingDetailsBudget(_fileSystem, path!, _logger);
-            bool condenseSection = ShouldCondenseProjectSection(_fileSystem, path!, _logger);
-
-            string markdown = condenseSection
-                ? BuildMinimalMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value, exitCode)
-                : BuildMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value, exitCode, _includeFailureDetails, detailsBudget);
-
-            // The note is only warranted once whole project sections start disappearing. Dropping the expanded
-            // diagnostics leaves every project and every failing test still named, which is a shortened report
-            // rather than an incomplete one, and does not need a warning at the top of the page.
             //
-            // The project count it quotes is read from the summary file when the note is written, so it is passed
-            // as a factory rather than a string: only the writer holds the file exclusively, and only it can count
-            // without racing a sibling project.
-            bool includeTruncationNotice = condenseSection;
-
-            // Size the gate against the largest the note can plausibly be. The exact length depends on a project
-            // count that is not known until the file is opened, and an underestimate here would let the write
-            // cross the limit and cost the whole summary.
-            //
-            // Measure in bytes, not characters. The file length is bytes and the content is written as UTF-8, so
-            // comparing it against a UTF-16 char count understates a section carrying non-ASCII text — assertion
-            // diffs, exception messages, or test names — by up to threefold, in the one check that stands between
-            // this write and GitHub discarding the entire summary.
-            int noticeLengthAllowance = includeTruncationNotice
-                ? Encoding.UTF8.GetByteCount(BuildTruncationNotice(int.MaxValue))
-                : 0;
-            int markdownByteCount = Encoding.UTF8.GetByteCount(markdown);
-
-            // Fast path only. The authoritative check is inside the writer, which measures the file while holding
-            // the lock: two siblings that both measured here would both see the same length, both conclude they
-            // fit, and both append — landing over the cap, which costs the whole summary. Skipping the work early
-            // when the file is already visibly full is still worth it.
-            long? observedLength = GetSummaryLength(_fileSystem, path!, _logger);
-            if (observedLength is long currentLength
-                && currentLength + markdownByteCount + noticeLengthAllowance > GitHubActionsFailureDetails.EffectiveStepSummaryLimit)
+            // Both the decision and the write happen inside the writer's lock. Deciding beforehand would let every
+            // project that finishes at the same moment observe the same file length and each render a full
+            // section, so the absolute cap would admit the first few and refuse the rest outright — turning a
+            // report where every project degrades gracefully into one where the first get everything and the rest
+            // get nothing.
+            if (!await TryAppendRenderedSummaryAsync(path!, snapshot, assemblyName, exitCode, testSessionContext).ConfigureAwait(false))
             {
-                await ReportSectionDroppedAsync(path!, currentLength, testSessionContext).ConfigureAwait(false);
-                return;
-            }
-
-            if (!await TryAppendSummaryAsync(path!, markdown, includeTruncationNotice, GitHubActionsFailureDetails.EffectiveStepSummaryLimit, testSessionContext).ConfigureAwait(false))
-            {
-                // The writer refused under the lock: a sibling grew the file between the fast path above and the
-                // append. Report it the same way, and re-measure so the warning quotes what the file actually holds.
-                await ReportSectionDroppedAsync(path!, GetSummaryLength(_fileSystem, path!, _logger) ?? observedLength ?? 0, testSessionContext).ConfigureAwait(false);
+                await ReportSectionDroppedAsync(path!, GetSummaryLength(_fileSystem, path!, _logger) ?? 0, testSessionContext).ConfigureAwait(false);
             }
         }
         catch (OperationCanceledException)
@@ -290,6 +252,58 @@ internal sealed partial class GitHubActionsSummaryReporter :
         catch (Exception ex)
         {
             _logger.LogUnexpectedException(nameof(OnTestSessionFinishingAsync), ex);
+        }
+    }
+
+    /// <summary>
+    /// Renders this project's section against the file length observed under the writer's lock, and writes it in
+    /// the same transaction. Best-effort: a failure to write the summary must not fail the test run, so it
+    /// surfaces as a warning.
+    /// </summary>
+    /// <returns>
+    /// <see langword="false"/> only when the writer refused the content because it would have taken the file past
+    /// GitHub's cap. A write that failed for any other reason has already been reported and returns
+    /// <see langword="true"/>, so the caller does not warn about it twice.
+    /// </returns>
+    private async Task<bool> TryAppendRenderedSummaryAsync(
+        string path,
+        IReadOnlyList<TestRecord> snapshot,
+        string assemblyName,
+        int exitCode,
+        ITestSessionContext testSessionContext)
+    {
+        try
+        {
+            return await AppendRenderedStepSummarySectionAsync(
+                _fileSystem,
+                path,
+                currentLength =>
+                {
+                    bool condenseSection = currentLength >= GitHubActionsFailureDetails.CondenseSummaryLength;
+                    string markdown = condenseSection
+                        ? BuildMinimalMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value, exitCode)
+                        : BuildMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value, exitCode, _includeFailureDetails, GetRemainingDetailsBudget(currentLength));
+
+                    // The note is only warranted once whole project sections start disappearing. Dropping the
+                    // expanded diagnostics leaves every project and every failing test still named, which is a
+                    // shortened report rather than an incomplete one, and does not need a warning at the top.
+                    return (markdown, condenseSection);
+                },
+
+                // The project count the note quotes is read from the summary file when the note is written, so it
+                // is passed as a factory rather than a string: only the writer holds the file exclusively, and
+                // only it can count without racing a sibling project.
+                BuildTruncationNotice,
+                _logger,
+                StepSummaryMaxWriteAttempts,
+                StepSummaryRetryDelay,
+                testSessionContext.CancellationToken,
+                GitHubActionsFailureDetails.EffectiveStepSummaryLimit).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            await ReportWriteFailureAsync(path, ex, testSessionContext).ConfigureAwait(false);
+            return true;
         }
     }
 
@@ -316,37 +330,44 @@ internal sealed partial class GitHubActionsSummaryReporter :
         // describes, so make sure it is there even if this project was not condensed. The note is a few hundred
         // bytes and dropping the section frees far more room than it takes; if even that does not fit, the writer
         // refuses it and the summary is genuinely full, where silence is what keeps the rest rendered.
-        await TryAppendSummaryAsync(path, string.Empty, includeNotice: true, GitHubActionsFailureDetails.EffectiveStepSummaryLimit, testSessionContext).ConfigureAwait(false);
+        await TryAppendNoticeOnlyAsync(path, testSessionContext).ConfigureAwait(false);
     }
 
     /// <summary>
-    /// Writes this project's section to the shared summary file, best-effort: a failure to write the summary must
-    /// not fail the test run, so it surfaces as a warning.
+    /// Writes the top-of-file note on its own, for when this project's section was dropped entirely.
     /// </summary>
-    /// <returns>
-    /// <see langword="false"/> only when the writer refused the content because it would have taken the file past
-    /// <paramref name="maxTotalBytes"/>. A write that failed for any other reason has already been reported and
-    /// returns <see langword="true"/>, so the caller does not warn about it twice.
-    /// </returns>
-    private async Task<bool> TryAppendSummaryAsync(string path, string markdown, bool includeNotice, long maxTotalBytes, ITestSessionContext testSessionContext)
+    private async Task TryAppendNoticeOnlyAsync(string path, ITestSessionContext testSessionContext)
     {
         try
         {
-            return includeNotice
-                ? await AppendStepSummaryWithLeadingNoticeAsync(_fileSystem, path, markdown, BuildTruncationNotice, StepSummaryMaxWriteAttempts, StepSummaryRetryDelay, testSessionContext.CancellationToken, maxTotalBytes).ConfigureAwait(false)
-                : await AppendStepSummaryWithRetryAsync(_fileSystem, path, markdown, StepSummaryMaxWriteAttempts, StepSummaryRetryDelay, testSessionContext.CancellationToken, maxTotalBytes).ConfigureAwait(false);
+            await AppendStepSummaryWithLeadingNoticeAsync(
+                _fileSystem,
+                path,
+                string.Empty,
+                BuildTruncationNotice,
+                StepSummaryMaxWriteAttempts,
+                StepSummaryRetryDelay,
+                testSessionContext.CancellationToken,
+                GitHubActionsFailureDetails.EffectiveStepSummaryLimit).ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            string warning = string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.StepSummaryWriteFailedWarning, path, ex.Message);
-            if (_logger.IsEnabled(LogLevel.Warning))
-            {
-                _logger.LogWarning(warning);
-            }
-
-            await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), testSessionContext.CancellationToken).ConfigureAwait(false);
-            return true;
+            await ReportWriteFailureAsync(path, ex, testSessionContext).ConfigureAwait(false);
         }
+    }
+
+    /// <summary>
+    /// Surfaces a failed summary write as a warning: failing to write the summary must not fail the test run.
+    /// </summary>
+    private async Task ReportWriteFailureAsync(string path, Exception ex, ITestSessionContext testSessionContext)
+    {
+        string warning = string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.StepSummaryWriteFailedWarning, path, ex.Message);
+        if (_logger.IsEnabled(LogLevel.Warning))
+        {
+            _logger.LogWarning(warning);
+        }
+
+        await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), testSessionContext.CancellationToken).ConfigureAwait(false);
     }
 
     private CiRunSummaryModule CreateModule(
@@ -385,9 +406,13 @@ internal sealed partial class GitHubActionsSummaryReporter :
     /// clipped here rather than at render time so an enormous stack trace never reaches the aggregation fragment
     /// written to disk.
     /// </remarks>
-    private TestFailureDetails? CaptureFailureDetails(TestNode testNode, TestNodeStateProperty? state)
-    {
-        (string? Explanation, Exception? Exception)? failure = state switch
+    /// <summary>
+    /// Extracts the explanation and exception a failing state carries, or <see langword="null"/> for a state
+    /// that is not a failure. Separate from <see cref="CaptureFailureDetails"/> so each state shape can be
+    /// covered without standing up a whole reporter.
+    /// </summary>
+    internal static /* for testing */ (string? Explanation, Exception? Exception)? TryGetFailureInfo(TestNodeStateProperty? state)
+        => state switch
         {
             FailedTestNodeStateProperty failed => (failed.Explanation, failed.Exception),
             ErrorTestNodeStateProperty error => (error.Explanation, error.Exception),
@@ -397,6 +422,10 @@ internal sealed partial class GitHubActionsSummaryReporter :
 #pragma warning restore CS0618, MTP0001 // Type or member is obsolete
             _ => null,
         };
+
+    private TestFailureDetails? CaptureFailureDetails(TestNode testNode, TestNodeStateProperty? state)
+    {
+        (string? Explanation, Exception? Exception)? failure = TryGetFailureInfo(state);
 
         if (failure is null)
         {
@@ -430,17 +459,13 @@ internal sealed partial class GitHubActionsSummaryReporter :
     }
 
     /// <summary>
-    /// Indicates whether the shared summary file has passed the point where a full per-project section costs
-    /// more than it is worth, so this project reports only a one-line verdict.
-    /// </summary>
-    internal static /* for testing */ bool ShouldCondenseProjectSection(IFileSystem fileSystem, string path, ILogger logger)
-        => GetSummaryLength(fileSystem, path, logger) is long length
-            && length >= GitHubActionsFailureDetails.CondenseSummaryLength;
-
-    /// <summary>
-    /// Returns the characters of expanded failure detail this test project may still write, given what other
+    /// Returns the UTF-8 bytes of expanded failure detail this test project may still write, given what other
     /// projects in the same GitHub Actions job have already appended to the shared summary file.
     /// </summary>
+    /// <param name="alreadyWritten">
+    /// The size of the shared summary file, measured while holding the writer's lock so it cannot change before
+    /// the section this budget sizes is written.
+    /// </param>
     /// <remarks>
     /// Each test project runs in its own process and cannot know how many siblings will run, or whether it is
     /// first or last. It can, however, observe the shared file: whatever is already there is a lower bound on
@@ -448,18 +473,9 @@ internal sealed partial class GitHubActionsSummaryReporter :
     /// tables and failure lines — keeps the whole file near
     /// <see cref="GitHubActionsFailureDetails.MaxSummaryLength"/> regardless of project count, which matters
     /// because GitHub silently drops a summary that exceeds its 1 MiB cap.
-    /// <para>
-    /// A file that cannot be measured (not yet created, or an I/O failure) yields the full budget: the file
-    /// length is an optimization, and failing to read it must not suppress diagnostics.
-    /// </para>
     /// </remarks>
-    internal static /* for testing */ int GetRemainingDetailsBudget(IFileSystem fileSystem, string path, ILogger logger)
+    internal static /* for testing */ int GetRemainingDetailsBudget(long alreadyWritten)
     {
-        if (GetSummaryLength(fileSystem, path, logger) is not long alreadyWritten)
-        {
-            return GitHubActionsFailureDetails.MaxTotalDetailsLength;
-        }
-
         long remaining = GitHubActionsFailureDetails.MaxSummaryLength
             - alreadyWritten
             - GitHubActionsFailureDetails.PerProjectOverheadReserve;

@@ -6,6 +6,7 @@ extern alias ghactions;
 using ghactions::Microsoft.Testing.Extensions.GitHubActionsReport;
 
 using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 
@@ -419,30 +420,16 @@ public sealed class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
-    public void GetRemainingDetailsBudget_MissingFile_ReturnsFullBudget()
-    {
-        var fileSystem = new Mock<IFileSystem>();
-        fileSystem.Setup(f => f.ExistFile("summary.md")).Returns(false);
-
-        int budget = GitHubActionsSummaryReporter.GetRemainingDetailsBudget(fileSystem.Object, "summary.md", new Mock<ILogger>().Object);
-
-        Assert.AreEqual(GitHubActionsFailureDetails.MaxTotalDetailsLength, budget);
-    }
+    public void GetRemainingDetailsBudget_EmptyFile_ReturnsFullBudget()
+        => Assert.AreEqual(GitHubActionsFailureDetails.MaxTotalDetailsLength, GitHubActionsSummaryReporter.GetRemainingDetailsBudget(0));
 
     [TestMethod]
     public void GetRemainingDetailsBudget_ExistingContent_IsSubtracted()
     {
         // A sibling test project already wrote to the shared summary file; this project may only claim the rest.
         const int AlreadyWritten = 100_000;
-        var fileStream = new Mock<IFileStream>();
-        fileStream.Setup(s => s.Stream).Returns(new MemoryStream(new byte[AlreadyWritten]));
 
-        var fileSystem = new Mock<IFileSystem>();
-        fileSystem.Setup(f => f.ExistFile("summary.md")).Returns(true);
-        fileSystem.Setup(f => f.NewFileStream("summary.md", FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
-            .Returns(fileStream.Object);
-
-        int budget = GitHubActionsSummaryReporter.GetRemainingDetailsBudget(fileSystem.Object, "summary.md", new Mock<ILogger>().Object);
+        int budget = GitHubActionsSummaryReporter.GetRemainingDetailsBudget(AlreadyWritten);
 
         Assert.AreEqual(GitHubActionsFailureDetails.MaxTotalDetailsLength - AlreadyWritten, budget);
     }
@@ -450,32 +437,110 @@ public sealed class GitHubActionsSummaryReporterTests
     [TestMethod]
     public void GetRemainingDetailsBudget_FileAlreadyOverBudget_ReturnsZero()
     {
-        var fileStream = new Mock<IFileStream>();
-        fileStream.Setup(s => s.Stream).Returns(new MemoryStream(new byte[GitHubActionsFailureDetails.MaxTotalDetailsLength + 1]));
-
-        var fileSystem = new Mock<IFileSystem>();
-        fileSystem.Setup(f => f.ExistFile("summary.md")).Returns(true);
-        fileSystem.Setup(f => f.NewFileStream("summary.md", FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
-            .Returns(fileStream.Object);
-
-        int budget = GitHubActionsSummaryReporter.GetRemainingDetailsBudget(fileSystem.Object, "summary.md", new Mock<ILogger>().Object);
+        int budget = GitHubActionsSummaryReporter.GetRemainingDetailsBudget(GitHubActionsFailureDetails.MaxTotalDetailsLength + 1);
 
         // Never negative: the caller uses this as a length, and a later project simply renders compact lines.
         Assert.AreEqual(0, budget);
     }
 
     [TestMethod]
-    public void GetRemainingDetailsBudget_UnreadableFile_FallsBackToFullBudget()
+    public void Clip_LoneCarriageReturns_AreCountedAsRows()
     {
-        // Measuring the file is an optimization; failing to read it must not suppress diagnostics.
-        var fileSystem = new Mock<IFileSystem>();
-        fileSystem.Setup(f => f.ExistFile("summary.md")).Returns(true);
-        fileSystem.Setup(f => f.NewFileStream("summary.md", FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
-            .Throws(new IOException("locked"));
+        // A \r still renders as a line break, so leaving it unnormalized would let a \r-separated message defeat
+        // the row cap entirely: Split('\n') sees one row where the reader sees hundreds.
+        string manyRows = string.Join("\r", Enumerable.Range(0, 200).Select(i => $"at Frame{i}()"));
 
-        int budget = GitHubActionsSummaryReporter.GetRemainingDetailsBudget(fileSystem.Object, "summary.md", new Mock<ILogger>().Object);
+        string clipped = GitHubActionsFailureDetails.Clip(manyRows, GitHubActionsFailureDetails.MaxStackTraceLength, GitHubActionsFailureDetails.MaxStackTraceRows)!;
 
-        Assert.AreEqual(GitHubActionsFailureDetails.MaxTotalDetailsLength, budget);
+        Assert.Contains("[... truncated]", clipped);
+        Assert.HasCount(GitHubActionsFailureDetails.MaxStackTraceRows + 1, clipped.Split('\n'));
+    }
+
+    [TestMethod]
+    public void AppendFailuresSection_ChargesTheBudgetInBytes_NotCharacters()
+    {
+        // The budget is denominated in UTF-8 bytes because that is what GitHub counts. Charging UTF-16 chars
+        // would under-bill a failure carrying Japanese text by roughly threefold, so a project would overshoot
+        // its share and have the whole rendering refused rather than degrading gracefully.
+        GitHubActionsTestRecord[] records =
+        [
+            new GitHubActionsTestRecord(
+                "失敗",
+                "テスト.失敗",
+                GitHubActionsTerminalKind.Failed,
+                TimeSpan.FromMilliseconds(1),
+                new GitHubActionsTestFailureDetails(new string('あ', 400), "System.Exception", null, null, 0)),
+        ];
+
+        // Comfortably over the UTF-16 length of the block, but under its UTF-8 size: a char-charged budget would
+        // expand it, a byte-charged one must not.
+        string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "T", "net9.0", AtLeastOneTestFailedExitCode, includeFailureDetails: true, detailsBudget: 700);
+
+        Assert.DoesNotContain("<details>", markdown);
+        Assert.Contains("テスト.失敗", markdown);
+    }
+
+    [TestMethod]
+    public void TryGetFailureInfo_ReadsTheExplanationAndException_FromEveryFailingStateShape()
+    {
+        // The summary is built from whatever these arms return, and nothing else drives them, so an arm that
+        // silently stopped returning diagnostics would leave every rendering test passing.
+        var exception = new InvalidOperationException("boom");
+
+        AssertCarries(new FailedTestNodeStateProperty(exception, "failed explanation"), "failed explanation");
+        AssertCarries(new ErrorTestNodeStateProperty(exception, "error explanation"), "error explanation");
+        AssertCarries(new TimeoutTestNodeStateProperty(exception, "timeout explanation"), "timeout explanation");
+#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
+        AssertCarries(new CancelledTestNodeStateProperty(exception, "cancelled explanation"), "cancelled explanation");
+#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
+
+        // A passing test carries nothing to report.
+        Assert.IsNull(GitHubActionsSummaryReporter.TryGetFailureInfo(new PassedTestNodeStateProperty()));
+        Assert.IsNull(GitHubActionsSummaryReporter.TryGetFailureInfo(null));
+
+        void AssertCarries(TestNodeStateProperty state, string expectedExplanation)
+        {
+            (string? Explanation, Exception? Exception)? info = GitHubActionsSummaryReporter.TryGetFailureInfo(state);
+            Assert.IsNotNull(info);
+            Assert.AreEqual(expectedExplanation, info.Value.Explanation);
+            Assert.AreSame(exception, info.Value.Exception);
+        }
+    }
+
+    [TestMethod]
+    public async Task AppendRenderedStepSummarySectionAsync_RendersAgainstTheLengthObservedUnderTheLock()
+    {
+        string path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, new string('a', 5_000));
+            var fileSystem = new SystemFileSystem();
+            long observed = -1;
+
+            await GitHubActionsSummaryReporter.AppendRenderedStepSummarySectionAsync(
+                fileSystem,
+                path,
+                currentLength =>
+                {
+                    observed = currentLength;
+                    return ("## Section\n", false);
+                },
+                GitHubActionsSummaryReporter.BuildTruncationNotice,
+                new Mock<ILogger>().Object,
+                maxAttempts: 1,
+                retryDelay: TimeSpan.Zero,
+                CancellationToken.None);
+
+            // The rendering decision has to see the same length the write lands on. Measuring before taking the
+            // lock would let every project finishing at the same moment observe an empty file and each render a
+            // full section, so the cap would admit the first few and refuse the rest outright.
+            Assert.AreEqual(5_000, observed);
+            Assert.EndsWith("## Section\n", File.ReadAllText(path));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
     }
 
     [TestMethod]
@@ -507,44 +572,10 @@ public sealed class GitHubActionsSummaryReporterTests
             GitHubActionsFailureDetails.MaxTotalDetailsLength);
 
     [TestMethod]
-    public void ShouldCondenseProjectSection_OnlyOncePastTheCondenseThreshold()
-    {
-        // Between the two thresholds a project still gets a full section, so a file just under the condense
-        // threshold must not be condensed — that is the band where failures are listed without diagnostics.
-        Assert.IsFalse(CondenseAtLength(GitHubActionsFailureDetails.CondenseSummaryLength - 1));
-        Assert.IsTrue(CondenseAtLength(GitHubActionsFailureDetails.CondenseSummaryLength));
-
-        static bool CondenseAtLength(int length)
-        {
-            var fileStream = new Mock<IFileStream>();
-            fileStream.Setup(s => s.Stream).Returns(new MemoryStream(new byte[length]));
-
-            var fileSystem = new Mock<IFileSystem>();
-            fileSystem.Setup(f => f.ExistFile("summary.md")).Returns(true);
-            fileSystem.Setup(f => f.NewFileStream("summary.md", FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
-                .Returns(fileStream.Object);
-
-            return GitHubActionsSummaryReporter.ShouldCondenseProjectSection(fileSystem.Object, "summary.md", new Mock<ILogger>().Object);
-        }
-    }
-
-    [TestMethod]
-    public void GetRemainingDetailsBudget_FileOverGitHubLimit_ReturnsZeroAndReportsNearLimit()
-    {
-        // A file this large is already beyond saving: GitHub will discard it. The budget must bottom out at
-        // zero rather than going negative, and the near-limit check must agree, because together they are what
-        // stop this project appending to a file that will be thrown away.
-        var fileStream = new Mock<IFileStream>();
-        fileStream.Setup(s => s.Stream).Returns(new MemoryStream(new byte[GitHubActionsFailureDetails.EffectiveStepSummaryLimit + 1024]));
-
-        var fileSystem = new Mock<IFileSystem>();
-        fileSystem.Setup(f => f.ExistFile("summary.md")).Returns(true);
-        fileSystem.Setup(f => f.NewFileStream("summary.md", FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
-            .Returns(fileStream.Object);
-
-        Assert.AreEqual(0, GitHubActionsSummaryReporter.GetRemainingDetailsBudget(fileSystem.Object, "summary.md", new Mock<ILogger>().Object));
-        Assert.IsTrue(GitHubActionsSummaryReporter.ShouldCondenseProjectSection(fileSystem.Object, "summary.md", new Mock<ILogger>().Object));
-    }
+    public void GetRemainingDetailsBudget_FileOverGitHubLimit_ReturnsZero()
+        // A file this large is already beyond saving: GitHub will discard it. The budget must bottom out at zero
+        // rather than going negative, which is what stops this project expanding into a file already lost.
+        => Assert.AreEqual(0, GitHubActionsSummaryReporter.GetRemainingDetailsBudget(GitHubActionsFailureDetails.EffectiveStepSummaryLimit + 1024));
 
     [TestMethod]
     public void BuildMinimalMarkdown_IsSmallEnoughThatTheProjectedSizeGateIsMeaningful()
