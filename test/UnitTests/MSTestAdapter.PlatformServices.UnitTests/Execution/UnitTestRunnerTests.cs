@@ -132,7 +132,9 @@ public sealed class UnitTestRunnerTests : TestContainer
             new RetryResult());
 
         Exception exception = act.Should().Throw<Exception>().Which;
-        exception.GetType().FullName.Should().Be(typeof(global::System.Diagnostics.UnreachableException).FullName);
+        // UnreachableException is an internal, per-assembly polyfill on non-NETCOREAPP TFMs, so a generic type
+        // assertion would compare the adapter's copy with this test assembly's copy and fail on type identity.
+        exception.GetType().FullName.Should().Be("System.Diagnostics.UnreachableException");
     }
 
     public async Task RunSingleTestShouldReturnTestResultIndicateATestNotFoundIfTestMethodCannotBeFound()
