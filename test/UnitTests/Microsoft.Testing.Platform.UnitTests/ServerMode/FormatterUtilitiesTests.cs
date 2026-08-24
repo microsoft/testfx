@@ -38,6 +38,57 @@ public sealed class FormatterUtilitiesTests
 #endif
 
     [TestMethod]
+    public async Task Serialize_TestNodeStateChangedEventArgs_NullChanges_PreservesNull()
+    {
+        TestNodeStateChangedEventArgs message = new(Guid.Empty, null);
+
+        IDictionary<string, object?> properties = SerializerUtilities.Serialize(message);
+        string serialized = (await _formatter.SerializeAsync(message)).Replace(" ", string.Empty);
+
+        Assert.IsNull(properties[JsonRpcStrings.Changes]);
+        Assert.AreEqual("""{"runId":"00000000-0000-0000-0000-000000000000","changes":null}""", serialized);
+    }
+
+    [TestMethod]
+    public async Task Serialize_TestNodeStateChangedEventArgs_EmptyChanges_PreservesEmptyObjectList()
+    {
+        TestNodeStateChangedEventArgs message = new(Guid.Empty, []);
+
+        IDictionary<string, object?> properties = SerializerUtilities.Serialize(message);
+        string serialized = (await _formatter.SerializeAsync(message)).Replace(" ", string.Empty);
+
+        List<object> changes = Assert.IsInstanceOfType<List<object>>(properties[JsonRpcStrings.Changes]);
+        Assert.IsEmpty(changes);
+        Assert.AreEqual("""{"runId":"00000000-0000-0000-0000-000000000000","changes":[]}""", serialized);
+    }
+
+    [TestMethod]
+    public async Task Serialize_TestNodeStateChangedEventArgs_Changes_PreservesOrderObjectTypesAndSource()
+    {
+        TestNodeUpdateMessage first = CreateTestNodeUpdate("first");
+        TestNodeUpdateMessage second = CreateTestNodeUpdate("second");
+        TestNodeUpdateMessage[] source = [first, second];
+        TestNodeStateChangedEventArgs message = new(Guid.Empty, source);
+
+        IDictionary<string, object?> properties = SerializerUtilities.Serialize(message);
+        string serialized = (await _formatter.SerializeAsync(message)).Replace(" ", string.Empty);
+
+        List<object> changes = Assert.IsInstanceOfType<List<object>>(properties[JsonRpcStrings.Changes]);
+        Assert.HasCount(2, changes);
+        IDictionary<string, object?> firstSerializedChange = Assert.IsInstanceOfType<IDictionary<string, object?>>(changes[0]);
+        IDictionary<string, object?> secondSerializedChange = Assert.IsInstanceOfType<IDictionary<string, object?>>(changes[1]);
+        IDictionary<string, object?> firstSerializedNode = Assert.IsInstanceOfType<IDictionary<string, object?>>(firstSerializedChange[JsonRpcStrings.Node]);
+        IDictionary<string, object?> secondSerializedNode = Assert.IsInstanceOfType<IDictionary<string, object?>>(secondSerializedChange[JsonRpcStrings.Node]);
+        Assert.AreEqual("first", firstSerializedNode[JsonRpcStrings.Uid]);
+        Assert.AreEqual("second", secondSerializedNode[JsonRpcStrings.Uid]);
+        Assert.AreSame(first, source[0]);
+        Assert.AreSame(second, source[1]);
+        Assert.AreEqual(
+            """{"runId":"00000000-0000-0000-0000-000000000000","changes":[{"node":{"uid":"first","display-name":"first","node-type":"group"},"parent":null},{"node":{"uid":"second","display-name":"second","node-type":"group"},"parent":null}]}""",
+            serialized);
+    }
+
+    [TestMethod]
     public void CanDeserializeTaskResponse()
     {
         RpcMessage msg = Deserialize<RpcMessage>("""
@@ -666,6 +717,15 @@ public sealed class FormatterUtilitiesTests
             return testNode;
         }
     }
+
+    private static TestNodeUpdateMessage CreateTestNodeUpdate(string uid)
+        => new(
+            default,
+            new TestNode
+            {
+                Uid = new TestNodeUid(uid),
+                DisplayName = uid,
+            });
 
     private object Deserialize(Type type, string instanceSerialized)
         => true switch

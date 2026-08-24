@@ -399,7 +399,17 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             environmentVariables: CreateEnvironmentVariables(),
             cancellationToken: TestContext.CancellationToken);
 
-        derivedResult.AssertOutputContains($"[env] {dotnetRootVariableName}={dotnetRoot}");
+        string dotnetRootOutputPrefix = $"[env] {dotnetRootVariableName}=";
+        string? dotnetRootOutput = derivedResult.StandardOutputLines
+            .Select(line => line.TrimStart())
+            .FirstOrDefault(line => line.StartsWith(dotnetRootOutputPrefix, StringComparison.Ordinal));
+        Assert.IsNotNull(dotnetRootOutput, derivedResult.ToString());
+        // DOTNET_HOST_PATH can preserve different drive-letter casing than RootFinder on Windows.
+        Assert.AreEqual(
+            dotnetRoot,
+            dotnetRootOutput[dotnetRootOutputPrefix.Length..],
+            ignoreCase: OperatingSystem.IsWindows(),
+            derivedResult.ToString());
 
         DotnetMuxerResult explicitResult = await DotnetCli.RunAsync(
             $"build -t:Test -p:TestingPlatformCaptureOutput=False -p:ExplicitDotnetRoot=\"{dotnetRoot}\" \"{testAsset.TargetAssetPath}\"",

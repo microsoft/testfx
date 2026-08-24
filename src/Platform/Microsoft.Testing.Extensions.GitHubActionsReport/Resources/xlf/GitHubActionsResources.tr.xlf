@@ -184,7 +184,7 @@
       </trans-unit>
       <trans-unit id="SubOptionsRequireReportGh">
         <source>The GitHub Actions report sub-options require '--{0}' to be specified.</source>
-        <target state="new">The GitHub Actions report sub-options require '--{0}' to be specified.</target>
+        <target state="translated">GitHub Actions raporunun alt seçenekleri için '--{0}' belirtilmelidir.</target>
         <note>Validation error when a sub-option is used without the report option. {0} is the report option name. {Locked="'--{0}'"}</note>
       </trans-unit>
     </body>

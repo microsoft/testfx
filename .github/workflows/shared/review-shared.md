@@ -23,6 +23,12 @@ tools:
 # gh-aw auto-footer is therefore disabled on every comment handler below so the
 # attribution is not duplicated (a single header is enough).
 safe-outputs:
+  # The default detection alias currently resolves to claude-haiku-4.5, which
+  # intermittently emits malformed THREAT_DETECTION_RESULT JSON (see #10438).
+  threat-detection:
+    engine:
+      id: copilot
+      model: gpt-5-mini
   create-pull-request-review-comment:
     max: 30
     footer: "none"
