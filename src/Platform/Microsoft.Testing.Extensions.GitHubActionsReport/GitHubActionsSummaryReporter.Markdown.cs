@@ -127,19 +127,21 @@ internal sealed partial class GitHubActionsSummaryReporter
         => BuildAggregateMarkdown(aggregate, includeFailureDetails, out _);
 
     internal static string BuildAggregateMarkdown(CiRunSummaryAggregate aggregate, bool includeFailureDetails, out int modulesWithOmittedDetails)
-        => BuildAggregateMarkdown(aggregate, includeFailureDetails, out modulesWithOmittedDetails, out _);
+        => BuildAggregateMarkdown(aggregate, includeFailureDetails, out modulesWithOmittedDetails, out _, out _);
 
     /// <summary>
     /// Renders the combined summary for a whole <c>dotnet test</c> run, reporting through
-    /// <paramref name="modulesWithOmittedDetails"/> how many test projects lost their expanded diagnostics and
-    /// through <paramref name="condensedModules"/> how many were reduced to a one-line verdict, so the caller can
-    /// state that at the top of the file rather than at the end of this block.
+    /// <paramref name="modulesWithOmittedDetails"/> how many test projects lost their expanded diagnostics,
+    /// through <paramref name="condensedModules"/> how many were reduced to a one-line verdict, and through
+    /// <paramref name="unlistedModules"/> how many did not fit at all, so the caller can state that at the top of
+    /// the file rather than at the end of this block.
     /// </summary>
     internal static string BuildAggregateMarkdown(
         CiRunSummaryAggregate aggregate,
         bool includeFailureDetails,
         out int modulesWithOmittedDetails,
         out int condensedModules,
+        out int unlistedModules,
         bool condenseAllModules = false)
     {
         bool failed = aggregate.ExitCode is int exitCode
@@ -256,14 +258,15 @@ internal sealed partial class GitHubActionsSummaryReporter
             listedModules++;
         }
 
-        int unlistedModules = aggregate.Modules.Count - listedModules;
-        if (unlistedModules > 0)
+        int unlisted = aggregate.Modules.Count - listedModules;
+        unlistedModules = unlisted;
+        if (unlisted > 0)
         {
             builder.Append("> [!WARNING]\n> ")
                 .Append(EscapeInlineCode(string.Format(
                     CultureInfo.InvariantCulture,
                     GitHubActionsResources.ModulesNotListed,
-                    unlistedModules.ToString(CultureInfo.InvariantCulture))))
+                    unlisted.ToString(CultureInfo.InvariantCulture))))
                 .Append("\n\n");
         }
 

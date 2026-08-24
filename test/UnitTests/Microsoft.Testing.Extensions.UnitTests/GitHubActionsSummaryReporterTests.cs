@@ -939,7 +939,7 @@ public sealed class GitHubActionsSummaryReporterTests
             isPartial: false);
 
         string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(
-            aggregate, includeFailureDetails: true, out _, out int condensedModules, condenseAllModules: true);
+            aggregate, includeFailureDetails: true, out _, out int condensedModules, out _, condenseAllModules: true);
 
         Assert.AreEqual(1, condensedModules);
         Assert.Contains("❌ `Tests` (net9.0): 2 total", markdown);
@@ -991,10 +991,11 @@ public sealed class GitHubActionsSummaryReporterTests
             hasAuthoritativeRunSummary: true,
             isPartial: false);
 
-        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate, includeFailureDetails: true, out _, out int condensedModules);
+        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate, includeFailureDetails: true, out _, out int condensedModules, out int unlistedModules);
 
         int byteCount = Encoding.UTF8.GetByteCount(markdown);
         Assert.IsGreaterThan(0, condensedModules, "This many modules must exhaust the budget, or the test is not exercising the bound.");
+        Assert.IsGreaterThan(0, unlistedModules, "This many modules must exhaust the listing bound, or the test is not exercising it.");
         Assert.IsLessThan(
             GitHubActionsFailureDetails.GitHubStepSummaryLimit,
             byteCount,

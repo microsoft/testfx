@@ -6,6 +6,7 @@ using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Logging;
 
 namespace Microsoft.Testing.Extensions.GitHubActionsReport;
 
@@ -14,7 +15,8 @@ namespace Microsoft.Testing.Extensions.GitHubActionsReport;
 internal sealed class GitHubActionsSummaryArtifactPostProcessor(
     ICommandLineOptions commandLineOptions,
     IEnvironment environment,
-    IFileSystem fileSystem)
+    IFileSystem fileSystem,
+    ILoggerFactory loggerFactory)
     : IArtifactPostProcessorRequiresPostProcessing
 {
     internal const string FragmentArtifactKind = "microsoft.testing.github-actions-summary-fragment";
@@ -62,14 +64,16 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
 
         CiRunSummaryAggregate aggregate = CiRunSummaryAggregation.ReadAndAggregate(inputs, Provider, context);
         string aggregationId = CiRunSummaryAggregation.CreateAggregationId(inputs);
-        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate, _includeFailureDetails, out int modulesWithOmittedDetails, out int condensedModules);
+        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate, _includeFailureDetails, out int modulesWithOmittedDetails, out int condensedModules, out int unlistedModules);
         string outputPath = CiRunSummaryAggregation.GetMergedOutputPath(outputDirectory, ProviderSlug, aggregationId);
         await CiRunSummaryAggregation.WriteOutputAsync(outputPath, markdown).ConfigureAwait(false);
 
         // Losing whole project sections is a different loss from losing their diagnostics, so say whichever
-        // actually happened. Condensing implies the budget was already exhausted, so it takes precedence.
-        string? leadingNotice = condensedModules > 0
-            ? GitHubActionsSummaryReporter.BuildTruncationNotice(aggregate.Modules.Count - condensedModules)
+        // actually happened. Shortening implies the budget was already exhausted, so it takes precedence. The
+        // count is of projects that got a *full* section, so it excludes the ones reduced to a verdict line and
+        // the ones that did not fit at all.
+        string? leadingNotice = condensedModules > 0 || unlistedModules > 0
+            ? GitHubActionsSummaryReporter.BuildTruncationNotice(aggregate.Modules.Count - condensedModules - unlistedModules)
             : modulesWithOmittedDetails > 0
                 ? GitHubActionsSummaryReporter.BuildAggregateTruncationNotice(modulesWithOmittedDetails, aggregate.Modules.Count)
                 : null;
@@ -79,8 +83,8 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
         {
             // The step summary is shared with every other step in the job, so the rendered file can exceed
             // GitHub's cap even though this section was budgeted. The writer refuses rather than replacing the
-            // file with one GitHub would discard in full; fall back to a verdict line per module, which is the
-            // smallest report that still names every test project.
+            // file with one GitHub would discard in full; fall back to a verdict line per test project, which is
+            // the smallest report this can produce.
             if (!await GitHubActionsSummaryReporter.UpsertStepSummaryWithRetryAsync(
                 fileSystem,
                 stepSummaryPath!,
@@ -92,8 +96,9 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
                 leadingNotice,
                 GitHubActionsFailureDetails.EffectiveStepSummaryLimit).ConfigureAwait(false))
             {
-                string condensed = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate, includeFailureDetails: false, out _, out _, condenseAllModules: true);
-                await GitHubActionsSummaryReporter.UpsertStepSummaryWithRetryAsync(
+                // Every listed module is a verdict line in this rendering, so no test project has a full section.
+                string condensed = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate, includeFailureDetails: false, out _, out _, out _, condenseAllModules: true);
+                if (!await GitHubActionsSummaryReporter.UpsertStepSummaryWithRetryAsync(
                     fileSystem,
                     stepSummaryPath!,
                     aggregationId,
@@ -102,7 +107,21 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
                     StepSummaryRetryDelay,
                     cancellationToken,
                     GitHubActionsSummaryReporter.BuildTruncationNotice(0),
-                    GitHubActionsFailureDetails.EffectiveStepSummaryLimit).ConfigureAwait(false);
+                    GitHubActionsFailureDetails.EffectiveStepSummaryLimit).ConfigureAwait(false))
+                {
+                    // Both renderings were refused, so this run contributed nothing to the job summary. Saying so
+                    // is the whole point of the refusal: the alternative is a summary that is silently missing a
+                    // section, indistinguishable from a run that produced none.
+                    ILogger logger = loggerFactory.CreateLogger<GitHubActionsSummaryArtifactPostProcessor>();
+                    if (logger.IsEnabled(LogLevel.Warning))
+                    {
+                        logger.LogWarning(string.Format(
+                            CultureInfo.InvariantCulture,
+                            GitHubActionsResources.StepSummaryLimitExceededWarning,
+                            GetSummaryLength(stepSummaryPath!).ToString(CultureInfo.InvariantCulture),
+                            GitHubActionsFailureDetails.EffectiveStepSummaryLimit.ToString(CultureInfo.InvariantCulture)));
+                    }
+                }
             }
         }
 
@@ -111,6 +130,28 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
             SummaryArtifactKind,
             GitHubActionsResources.DisplayName,
             GitHubActionsResources.Description);
+    }
+
+    /// <summary>
+    /// Measures the shared summary file so the warning can quote its actual size. Best-effort: the size is only
+    /// there to explain the refusal, so a file that cannot be measured reports zero rather than failing the run.
+    /// </summary>
+    private long GetSummaryLength(string path)
+    {
+        try
+        {
+            if (!fileSystem.ExistFile(path))
+            {
+                return 0;
+            }
+
+            using IFileStream stream = fileSystem.NewFileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            return stream.Stream.Length;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException)
+        {
+            return 0;
+        }
     }
 }
 

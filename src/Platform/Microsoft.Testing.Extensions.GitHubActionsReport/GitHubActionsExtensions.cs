@@ -83,7 +83,8 @@ public static class GitHubActionsExtensions
                 new GitHubActionsSummaryArtifactPostProcessor(
                     serviceProvider.GetCommandLineOptions(),
                     serviceProvider.GetEnvironment(),
-                    serviceProvider.GetFileSystem()));
+                    serviceProvider.GetFileSystem(),
+                    serviceProvider.GetLoggerFactory()));
         }
     }
 }
