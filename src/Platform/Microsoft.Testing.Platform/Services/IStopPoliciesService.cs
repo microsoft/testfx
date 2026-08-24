@@ -38,18 +38,6 @@ internal interface IStopPoliciesService
     /// </summary>
     void NotifyTestExecutionCompleted();
 
-    /// <summary>
-    /// Clears the deadline-triggered outcome recorded by <see cref="ExecuteDeadlineCallbacksAsync"/>.
-    /// </summary>
-    /// <remarks>
-    /// The deadline outcome has to be recorded before the graceful stop is requested, because the stop can let
-    /// the framework finalize the session (and compute the exit code) immediately. When the stop request is then
-    /// rejected, nothing was truncated on the platform's account, so the outcome has to be taken back: otherwise
-    /// a run that goes on to execute every test still reports
-    /// <see cref="Helpers.ExitCode.TestExecutionStoppedAtDeadline"/>.
-    /// </remarks>
-    void RevertDeadlineTriggered();
-
     Task RegisterOnMaxFailedTestsCallbackAsync(Func<int, CancellationToken, Task> callback);
 
     Task RegisterOnAbortCallbackAsync(Func<Task> callback);

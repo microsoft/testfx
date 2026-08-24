@@ -176,18 +176,26 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
         // through the VSTest MSTestExecutor class. Results are published natively via MtpTestResultRecorder and the
         // MTP-specific filter provider evaluates the filter from the neutral UnitTestElement model so this path
         // never materializes a vstest TestCase (see #9769).
-        await new MSTestEngine(cancellationToken, CreateTelemetrySender())
-            .RunFromSourcesAsync(
-                assemblyPaths,
-                runSettings.SettingsXml,
-                runContext.TestRunDirectory,
-                handle.ToAdapterMessageLogger(),
-                settings => new MtpTestResultRecorder(messageBus, this, sessionUid, IsTrxEnabled, settings),
-                new MtpTestElementFilterProvider(runContext),
-                _configuration,
-                new TestSourceHandler(),
-                isMTP: true)
-            .ConfigureAwait(false);
+        MSTestGracefulStopTestExecutionCapability.NotifyTestExecutionStarting();
+        try
+        {
+            await new MSTestEngine(cancellationToken, CreateTelemetrySender())
+                .RunFromSourcesAsync(
+                    assemblyPaths,
+                    runSettings.SettingsXml,
+                    runContext.TestRunDirectory,
+                    handle.ToAdapterMessageLogger(),
+                    settings => new MtpTestResultRecorder(messageBus, this, sessionUid, IsTrxEnabled, settings),
+                    new MtpTestElementFilterProvider(runContext),
+                    _configuration,
+                    new TestSourceHandler(),
+                    isMTP: true)
+                .ConfigureAwait(false);
+        }
+        finally
+        {
+            MSTestGracefulStopTestExecutionCapability.NotifyTestExecutionCompleted();
+        }
     }
 
     private MSTestRunSettings CreateRunSettings(MSTestFrameworkHandle handle)

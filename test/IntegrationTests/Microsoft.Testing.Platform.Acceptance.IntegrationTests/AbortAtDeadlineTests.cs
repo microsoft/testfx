@@ -216,7 +216,7 @@ internal class Capabilities : ITestFrameworkCapabilities
 }
 
 #pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-internal sealed class GracefulStop : IGracefulStopTestExecutionCapability
+internal sealed class GracefulStop : IGracefulStopTestExecutionResultCapability
 #pragma warning restore TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 {
     private GracefulStop()
@@ -228,10 +228,10 @@ internal sealed class GracefulStop : IGracefulStopTestExecutionCapability
     public TaskCompletionSource TCS { get; } = new();
 
     public Task StopTestExecutionAsync(CancellationToken cancellationToken)
-    {
-        TCS.TrySetResult();
-        return Task.CompletedTask;
-    }
+        => TryStopTestExecutionAsync(cancellationToken);
+
+    public Task<bool> TryStopTestExecutionAsync(CancellationToken cancellationToken)
+        => Task.FromResult(TCS.TrySetResult());
 }
 
 """;

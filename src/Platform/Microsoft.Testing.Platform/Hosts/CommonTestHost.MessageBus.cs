@@ -48,8 +48,16 @@ internal abstract partial class CommonHost
                         // IDataConsumer, and consumer handlers run last in NotifyTestSessionEndAsync, after the
                         // drains and after the reporters. Absent for discovery requests, where the extension is
                         // not registered.
-                        serviceProvider.GetService<AbortAtDeadlineExtension>()?.NotifyTestExecutionCompleted();
+                        AbortAtDeadlineExtension? abortAtDeadlineExtension = serviceProvider.GetService<AbortAtDeadlineExtension>();
+                        abortAtDeadlineExtension?.NotifyTestExecutionCompleted();
                         serviceProvider.GetRequiredService<IStopPoliciesService>().NotifyTestExecutionCompleted();
+                        if (abortAtDeadlineExtension is not null)
+                        {
+                            // A successful stop can make the invoker return before the deadline handler records
+                            // its verdict, while an asynchronously rejected stop must release its claim. Resolve
+                            // either outcome before reporters and exit-code consumers inspect the run.
+                            await abortAtDeadlineExtension.WaitForDeadlineHandlingAsync().ConfigureAwait(false);
+                        }
                     }
                 }
 

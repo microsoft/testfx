@@ -221,11 +221,10 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
     /// then the consumer handlers in registration order, and this extension is a consumer appended after the
     /// reporters. A deadline reached anywhere in that window would still mark a fully-executed run as
     /// truncated (exit code 15).
-    /// The transition is made under the same lock <see cref="TryClaimDeadline"/> uses, and only out of
-    /// <see cref="RunState.Running"/>, so it is atomic against the deadline handler committing its verdict:
-    /// either this call wins and the handler then abandons the stop, or the handler claimed the run first and
-    /// this call leaves that verdict alone (a real truncation must not be un-marked by the completion that the
-    /// requested stop itself produced).
+    /// The transition is made under the same lock that invokes the graceful-stop capability, and only out of
+    /// <see cref="RunState.Running"/>, so it is atomic against requesting the stop: either this call wins and
+    /// the handler abandons the stop, or the handler invokes the capability first and this call records the
+    /// completion produced by that request without undoing it.
     /// The timer itself is left to be disposed at host teardown; the state is what makes any late fire a no-op.
     /// </remarks>
     public void NotifyTestExecutionCompleted()
@@ -240,42 +239,46 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
     }
 
     /// <summary>
-    /// Takes the run for the deadline, if test execution has not finished (or disposal started) first.
+    /// Waits until a deadline stop request that raced test-execution completion has resolved its verdict.
+    /// </summary>
+    internal Task WaitForDeadlineHandlingAsync()
+    {
+        lock (_lock)
+        {
+            return _handleDeadlineTask ?? Task.CompletedTask;
+        }
+    }
+
+    /// <summary>
+    /// Atomically requests the framework stop while test execution is still running.
     /// </summary>
     /// <remarks>
-    /// This is the commit point of the deadline verdict, and it is deliberately the last thing before the
-    /// verdict is recorded: the handler yields and reports before getting here, and the test framework invoker
-    /// can return during that window. Checking completion only before starting the handler would therefore
-    /// still let a run that executed every test be reported as deadline-truncated.
+    /// Invoking the capability under the same lock as <see cref="NotifyTestExecutionCompleted"/> removes the
+    /// gap between claiming the run and actually requesting the stop. The returned task is awaited outside
+    /// the lock; the host waits for the whole deadline handler before end-of-session reporting.
     /// </remarks>
-    /// <returns><see langword="true"/> when the deadline still applies and this call owns the verdict.</returns>
-    private bool TryClaimDeadline()
+    private Task<bool>? TryRequestGracefulStopAsync(IGracefulStopTestExecutionCapability capability)
     {
         lock (_lock)
         {
             if (_disposed || _state != RunState.Running || _policiesService.IsTestExecutionCompleted)
             {
-                return false;
+                return null;
             }
 
             _state = RunState.DeadlineClaimed;
-            return true;
+            return capability is IGracefulStopTestExecutionResultCapability resultCapability
+                ? resultCapability.TryStopTestExecutionAsync(_cancellationTokenSource.CancellationToken)
+                : RequestGracefulStopAsync(capability, _cancellationTokenSource.CancellationToken);
         }
     }
 
-    /// <summary>
-    /// Gives the run back after a claimed deadline turned out not to stop it, so a completion arriving later
-    /// is recorded normally.
-    /// </summary>
-    private void ReleaseDeadlineClaim()
+    private static async Task<bool> RequestGracefulStopAsync(
+        IGracefulStopTestExecutionCapability capability,
+        CancellationToken cancellationToken)
     {
-        lock (_lock)
-        {
-            if (_state == RunState.DeadlineClaimed)
-            {
-                _state = RunState.Running;
-            }
-        }
+        await capability.StopTestExecutionAsync(cancellationToken).ConfigureAwait(false);
+        return true;
     }
 
     private void OnDeadlineReached()
@@ -306,19 +309,15 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
             // acquiring the lock (the timer fired while the reporters are finalizing a fully-completed run). In
             // either case there is nothing left to stop, and marking the run deadline-truncated would wrongly
             // force exit code 15 on a run that actually completed. This is only an early-out: the handler
-            // re-checks with TryClaimDeadline right before committing the verdict, which is what actually
-            // closes the race.
+            // invokes the graceful-stop capability under this same lock, which closes the race.
             if (_disposed || _state != RunState.Running || _policiesService.IsTestExecutionCompleted)
             {
                 return;
             }
 
             // Start the handler and capture its task while holding the lock so it cannot interleave with
-            // Dispose. HandleDeadlineAsync yields immediately (await Task.Yield()), so none of its work runs
-            // while the lock is held: it returns an incomplete task here, we store it, and the lock is
-            // released before the handler body executes. That keeps the lock's scope to just publishing the
-            // task and avoids running the graceful-stop callback synchronously under the lock -- which could
-            // deadlock if the stop waits on session finishing/disposal (both of which take this lock).
+            // Dispose. HandleDeadlineAsync yields immediately (await Task.Yield()), so it returns an incomplete
+            // task here and the lock is released before the handler body starts.
             _handleDeadlineTask = HandleDeadlineAsync();
         }
     }
@@ -327,14 +326,12 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
     {
         // This method is started synchronously inside _lock (see OnDeadlineReached), which also publishes
         // the returned task into _handleDeadlineTask. An async method does NOT necessarily yield at its
-        // first await: the logger, output device, the empty deadline-callback queue and the framework's
-        // graceful-stop capability can all return already-completed tasks, which would run this whole
-        // handler synchronously while _lock is held. If the graceful stop then synchronously waited on
-        // session finishing or disposal (both take _lock), that would deadlock. Yield first so control
-        // returns to the caller, _handleDeadlineTask is observed, and _lock is released before any handler
-        // work runs. Task.Yield posts the continuation back to the current context, so it is cooperative
-        // and safe even on a single-threaded runtime (browser/WASI) -- unlike Task.Run, which needs another
-        // thread to pick the work up.
+        // first await: the logger and output device can return already-completed tasks, which would otherwise
+        // run the handler synchronously before _handleDeadlineTask is published. Yield first so control returns
+        // to the caller, _handleDeadlineTask is observed, and _lock is released before the handler starts.
+        // The graceful-stop capability is later invoked under _lock to make the request atomic with completion;
+        // capability implementations must return their task without synchronously waiting for session teardown.
+        // Task.Yield is cooperative and safe even on a single-threaded runtime (browser/WASI).
         await Task.Yield();
 
         if (_capability is not { } capability)
@@ -349,45 +346,44 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
             () => _logger.LogInformationAsync($"Deadline approaching (stop scheduled at {_stopAt:o}). Requesting graceful stop of test execution."),
             "Failed to report the approaching deadline.").ConfigureAwait(false);
 
-        // Take the run for the deadline, atomically against NotifyTestExecutionCompleted. Everything above --
-        // the yield that got us off the timer callback, and the logging -- runs while the test framework
-        // invoker may still return, so this is the first point at which committing the verdict is safe.
-        if (!TryClaimDeadline())
+        // Request the stop atomically against NotifyTestExecutionCompleted. Everything above -- the yield that
+        // got us off the timer callback, and the logging -- runs while the invoker may still return. Calling the
+        // capability under the lock means there is no claimed-but-not-requested window.
+        Task<bool>? stopTask;
+        try
         {
-            // Test execution finished (or disposal started) while we were getting here. There is nothing left
-            // to stop and the run was not truncated, so neither the verdict nor the stop request may happen:
-            // both would report a deadline stop for a run that executed every test.
+            stopTask = TryRequestGracefulStopAsync(capability);
+            if (stopTask is null)
+            {
+                await TryReportAsync(
+                    () => _logger.LogDebugAsync("Test execution completed while the approaching deadline was being reported; abandoning the graceful stop."),
+                    "Failed to report the abandoned deadline stop.").ConfigureAwait(false);
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            ReleaseDeadlineClaim();
             await TryReportAsync(
-                () => _logger.LogDebugAsync("Test execution completed while the approaching deadline was being reported; abandoning the graceful stop."),
-                "Failed to report the abandoned deadline stop.").ConfigureAwait(false);
+                () => _logger.LogErrorAsync("Failed to request graceful stop at deadline.", ex),
+                "Failed to report the graceful-stop failure.").ConfigureAwait(false);
             return;
         }
 
         bool stopAccepted = false;
         try
         {
-            // Commit the verdict with nothing awaited between it and the claim above. The claim closes the
-            // door on NotifyTestExecutionCompleted -- once the run is claimed, a completion can no longer
-            // disarm the deadline -- so any await in between would be a window where the run finishes on its
-            // own and we still go on to report it as truncated. Setting the flag is synchronous inside
-            // ExecuteDeadlineCallbacksAsync, so claim and commit are effectively one step.
-            //
-            // It also has to happen BEFORE the stop is requested. StopTestExecutionAsync can unblock the
-            // framework and let it finalize the session (and compute the process exit code) right away, so
-            // setting the flag afterwards would race that finalization and the deadline exit code could be
-            // missed. The graceful stop does not cancel the token, so unlike abort this flag is not set by a
-            // token-registered callback; set it here first.
-            await _policiesService.ExecuteDeadlineCallbacksAsync().ConfigureAwait(false);
+            await stopTask.TimeoutAfterAsync(DisposeDrainTimeout).ConfigureAwait(false);
+            stopAccepted = await stopTask.ConfigureAwait(false);
+            if (!stopAccepted)
+            {
+                return;
+            }
 
-            // Request the stop straight after the commit, with nothing awaited in between. Between the claim
-            // and this call the run is already committed as truncated while nothing has actually been asked to
-            // stop, and a completion arriving in that window can no longer disarm the deadline -- the claim
-            // closed that door. The stop would then find nothing left to stop, return successfully, and a run
-            // that executed every test would still exit with ExitCode.TestExecutionStoppedAtDeadline. Anything
-            // awaited here widens that window; the user-facing message used to sit in it and is bounded by
-            // _reportTimeout, so it alone could hold the window open for ten seconds.
-            await capability.StopTestExecutionAsync(_cancellationTokenSource.CancellationToken).ConfigureAwait(false);
-            stopAccepted = true;
+            // Commit only after the framework accepted the stop. The host awaits this handler after the
+            // invoker returns and before reporters run, so committing here cannot be missed by exit-code
+            // consumers, while an asynchronously rejected stop is resolved before they inspect the verdict.
+            await _policiesService.ExecuteDeadlineCallbacksAsync().ConfigureAwait(false);
 
             // Only now tell the user. It is written after the stop is accepted rather than before it for the
             // window above, and it is reached only when the deadline actually won the race, so the message is
@@ -403,34 +399,32 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
         }
         catch (Exception ex)
         {
-            // The verdict above was committed on the assumption that the stop would be accepted. It was not,
-            // so the framework was never asked to stop and the run carries on to completion -- leaving the
-            // verdict set would report TestExecutionStoppedAtDeadline for a run that executed every test.
-            // Take it back. This cannot resurrect the finalization race the early commit avoids: that race
-            // only exists once the stop is accepted, and here it never was.
-            // Best-effort: never let the timer callback crash the process during teardown. The error
-            // log is itself best-effort (the logger may be what threw), so guard it too.
-            try
-            {
-                await _logger.LogErrorAsync("Failed to request graceful stop at deadline.", ex).ConfigureAwait(false);
-            }
-            catch (Exception)
-            {
-                // Ignore: nothing else can be done here.
-            }
+            // An asynchronous stop failure leaves the verdict unset and releases the claim below. If a
+            // deadline callback failed instead, ExecuteDeadlineCallbacksAsync already set the verdict
+            // synchronously, so the accepted stop remains correctly classified.
+            string message = stopAccepted
+                ? "The deadline stop was accepted, but a deadline callback failed."
+                : "Failed to request graceful stop at deadline.";
+            await TryReportAsync(
+                () => _logger.LogErrorAsync(message, ex),
+                "Failed to report the graceful-stop failure.").ConfigureAwait(false);
         }
         finally
         {
             if (!stopAccepted)
             {
-                // The stop request was rejected (StopTestExecutionAsync is a [TPEXP] extensibility point, so a
-                // framework can throw anything), which means the platform truncated nothing. Take the outcome
-                // back, otherwise a run that carries on and executes every test still exits with
-                // ExitCode.TestExecutionStoppedAtDeadline and fails a job that actually completed. If the run
-                // is instead hard-killed at the real deadline, the process never reports an exit code at all,
-                // so reverting cannot mask a genuine truncation.
-                _policiesService.RevertDeadlineTriggered();
                 ReleaseDeadlineClaim();
+            }
+        }
+    }
+
+    private void ReleaseDeadlineClaim()
+    {
+        lock (_lock)
+        {
+            if (_state == RunState.DeadlineClaimed)
+            {
+                _state = RunState.Running;
             }
         }
     }

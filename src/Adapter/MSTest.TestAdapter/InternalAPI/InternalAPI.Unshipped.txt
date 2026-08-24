@@ -1,4 +1,7 @@
 #nullable enable
+Microsoft.VisualStudio.TestTools.UnitTesting.MSTestGracefulStopTestExecutionCapability.TryStopTestExecutionAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<bool>!
+static Microsoft.VisualStudio.TestTools.UnitTesting.MSTestGracefulStopTestExecutionCapability.NotifyTestExecutionCompleted() -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.MSTestGracefulStopTestExecutionCapability.NotifyTestExecutionStarting() -> void
 abstract Microsoft.Testing.Extensions.RunSettingsCommandLineOptionsProviderBase.EnvironmentVariablesNotSupportedOnBrowserError.get -> string!
 abstract Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.DisplayName.get -> string!
 abstract Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.ReadRunSettings(Microsoft.Testing.Platform.CommandLine.CommandLineParseResult! commandLineParseResult) -> string?

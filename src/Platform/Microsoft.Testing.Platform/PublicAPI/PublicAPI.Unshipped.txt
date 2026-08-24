@@ -1,4 +1,6 @@
 #nullable enable
+[TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.IGracefulStopTestExecutionResultCapability
+[TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.IGracefulStopTestExecutionResultCapability.TryStopTestExecutionAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<bool>!
 [TPEXP]Microsoft.Testing.Platform.Requests.CompositeTestExecutionFilter
 [TPEXP]Microsoft.Testing.Platform.Requests.CompositeTestExecutionFilter.CompositeTestExecutionFilter(Microsoft.Testing.Platform.Requests.TestExecutionFilterOperator operator, params Microsoft.Testing.Platform.Requests.ITestExecutionFilter![]! filters) -> void
 [TPEXP]Microsoft.Testing.Platform.Requests.CompositeTestExecutionFilter.Filters.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Requests.ITestExecutionFilter!>!

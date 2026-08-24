@@ -29,9 +29,7 @@ internal sealed class StopPoliciesService : IStopPoliciesService
     // have run, a second trigger must not run them again and a late registration must be invoked on the spot.
     private bool _areDeadlineCallbacksExecuted;
 
-    // Whether the run is to be reported as stopped at the deadline. This is only the exit-code verdict, and
-    // RevertDeadlineTriggered clears it when the graceful stop it was meant to precede could not be requested.
-    // Kept separate from _areDeadlineCallbacksExecuted so reverting the verdict cannot re-arm the callbacks.
+    // Whether the run is to be reported as stopped at the deadline.
 #pragma warning disable IDE0032 // Use auto property - synchronized access requires a backing field.
     private bool _isDeadlineTriggered;
 #pragma warning restore IDE0032
@@ -115,9 +113,7 @@ internal sealed class StopPoliciesService : IStopPoliciesService
         {
             if (_areDeadlineCallbacksExecuted)
             {
-                // The deadline is one-shot; a second trigger must not run the callbacks again. This is
-                // gated on the callback flag rather than the verdict, so a reverted verdict cannot let a
-                // later trigger run them a second time.
+                // The deadline is one-shot; a second trigger must not run the callbacks again.
                 return;
             }
 
@@ -135,17 +131,6 @@ internal sealed class StopPoliciesService : IStopPoliciesService
             // For now, we are fine if the callback crashed us. It shouldn't happen for our
             // current usage anyway and the APIs around this are all internal for now.
             await callback.Invoke().ConfigureAwait(false);
-        }
-    }
-
-    public void RevertDeadlineTriggered()
-    {
-        lock (_deadlineLock)
-        {
-            // Only the verdict is cleared. _areDeadlineCallbacksExecuted deliberately stays set: the
-            // callbacks have already run, and re-arming them here would let a later trigger run them a
-            // second time and would queue a late registration into a list nothing drains any more.
-            _isDeadlineTriggered = false;
         }
     }
 
