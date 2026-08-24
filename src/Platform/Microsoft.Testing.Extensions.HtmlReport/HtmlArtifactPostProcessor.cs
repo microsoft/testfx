@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 
 using Microsoft.Testing.Extensions.HtmlReport.Resources;
 using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
+using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Extensions.HtmlReport;
 
@@ -87,11 +88,11 @@ internal sealed class HtmlArtifactPostProcessor : IArtifactPostProcessor
         var identity = new StringBuilder();
         foreach (InputArtifact input in orderedInputs)
         {
-            AppendIdentityPart(identity, Path.GetFullPath(input.Path));
-            AppendIdentityPart(identity, input.ProducingTestModule);
-            AppendIdentityPart(identity, input.TargetFramework);
-            AppendIdentityPart(identity, input.Architecture);
-            AppendIdentityPart(identity, input.ExecutionId);
+            IdentityKeyBuilder.AppendLengthPrefixedComponent(identity, Path.GetFullPath(input.Path));
+            IdentityKeyBuilder.AppendLengthPrefixedComponent(identity, input.ProducingTestModule);
+            IdentityKeyBuilder.AppendLengthPrefixedComponent(identity, input.TargetFramework);
+            IdentityKeyBuilder.AppendLengthPrefixedComponent(identity, input.Architecture);
+            IdentityKeyBuilder.AppendLengthPrefixedComponent(identity, input.ExecutionId);
         }
 
         using var sha256 = SHA256.Create();
@@ -111,17 +112,4 @@ internal sealed class HtmlArtifactPostProcessor : IArtifactPostProcessor
             .ThenBy(input => input.TargetFramework, StringComparer.Ordinal)
             .ThenBy(input => input.Architecture, StringComparer.Ordinal)
             .ThenBy(input => input.ExecutionId, StringComparer.Ordinal);
-
-    private static void AppendIdentityPart(StringBuilder builder, string? value)
-    {
-        if (value is null)
-        {
-            builder.Append("-1:");
-            return;
-        }
-
-        builder.Append(value.Length.ToString(CultureInfo.InvariantCulture));
-        builder.Append(':');
-        builder.Append(value);
-    }
 }
