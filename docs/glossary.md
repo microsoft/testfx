@@ -453,7 +453,7 @@ An MTP class (`Microsoft.Testing.Platform.Extensions.Messages.PropertyBag`) that
 
 ### Retry
 
-An MTP extension (`Microsoft.Testing.Extensions.Retry`) that automatically re-runs failed tests a configurable number of times by restarting the test host and filtering each new run to the tests that failed previously. It is independent from MSTest's in-process [`RetryAttribute`](#retryattribute) and [`RetryBaseAttribute`](#retrybaseattribute). When both mechanisms are enabled, their attempt counts multiply, so avoid combining them unless that is intended.
+An MTP extension (`Microsoft.Testing.Extensions.Retry`) that automatically re-runs failed tests a configurable number of times by restarting the test host and filtering each new run to the tests that failed previously. It is independent from MSTest's in-process [`RetryAttribute`](#retryattribute) and [`RetryBaseAttribute`](#retrybaseattribute). When both mechanisms are enabled, their attempt counts multiply: a test using `[Retry(n)]` can run up to `(n + 1) * (--retry-failed-tests + 1)` times, so avoid combining them unless that is intended.
 
 ### RetryAttribute
 

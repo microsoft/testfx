@@ -120,6 +120,7 @@ public sealed class UnitTestRunnerTests : TestContainer
         TestResult[] combined = UnitTestRunner.CombineRetryAttempts([initialFailure], retryResult);
 
         combined.Should().BeEmpty();
+        // The empty final attempt returns before tagging, so the supplied results must remain unchanged.
         initialFailure.IsSupersededRetryAttempt.Should().BeFalse();
         retryFailure.IsSupersededRetryAttempt.Should().BeFalse();
     }
