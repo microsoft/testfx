@@ -92,8 +92,8 @@ internal static class StackTraceHelper
             RegexOptions.Compiled,
             StackTraceRegexHelper.MatchTimeout);
 
-        // Racing callers may each build an instance. Publish the first one and let every caller share it, so callers
-        // always observe the same object and the expensive RegexOptions.Compiled construction is paid for once.
+        // Racing callers on first use may each build an instance. Publish the first one and return it to all of them,
+        // so every caller observes the same object, and once it is published no caller builds the regex again.
         return Interlocked.CompareExchange(ref s_regex, regex, null) ?? regex;
     }
 }
