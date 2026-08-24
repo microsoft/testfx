@@ -64,7 +64,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingFailedToReadCoordinationFile">
         <source>Azure DevOps live publishing failed to read coordination file</source>
-        <target state="new">Azure DevOps live publishing failed to read coordination file</target>
+        <target state="translated">Azure DevOps canlı yayımlama koordinasyon dosyasını okuyamadı</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingFailedToWriteCoordinationFile">
@@ -119,7 +119,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingResultMapHandoffFailed">
         <source>Azure DevOps live publishing failed to update the result map handoff.</source>
-        <target state="new">Azure DevOps live publishing failed to update the result map handoff.</target>
+        <target state="translated">Azure DevOps canlı yayımlama, sonuç eşleme iletimini güncelleştiremedi.</target>
         <note />
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingResultsDropped">
@@ -259,7 +259,7 @@
       </trans-unit>
       <trans-unit id="GroupsOptionDescription">
         <source>Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'off'. Requires '--report-azdo'.</source>
-        <target state="needs-review-translation">Derleme başına Azure DevOps günlük gruplarını ('on' veya 'off') etkinleştirin veya devre dışı bırakın. Varsayılan olarak 'on'. '--report-azdo' gerektirir.</target>
+        <target state="translated">Derleme başına Azure DevOps günlük gruplarını ('on' veya 'off') etkinleştirin veya devre dışı bırakın. Varsayılan olarak 'off'. '--report-azdo' gerektirir.</target>
         <note>{Locked="on"}{Locked="off"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="InvalidArtifactUploadGlob">

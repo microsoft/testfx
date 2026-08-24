@@ -4,57 +4,57 @@
     <body>
       <trans-unit id="ActivationArgumentsInvalidArgumentCount">
         <source>The Microsoft Testing Platform activation-argument payload has an invalid argument count.</source>
-        <target state="new">The Microsoft Testing Platform activation-argument payload has an invalid argument count.</target>
+        <target state="translated">Microsoft Testing Platform 啟用引數承載的引數計數無效。</target>
         <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
       </trans-unit>
       <trans-unit id="ActivationArgumentsInvalidArgumentLength">
         <source>The Microsoft Testing Platform activation-argument payload has an invalid argument length.</source>
-        <target state="new">The Microsoft Testing Platform activation-argument payload has an invalid argument length.</target>
+        <target state="translated">Microsoft Testing Platform 啟用引數承載的引數長度無效。</target>
         <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
       </trans-unit>
       <trans-unit id="ActivationArgumentsInvalidFileKey">
         <source>The Microsoft Testing Platform activation arguments contain an invalid file payload key.</source>
-        <target state="new">The Microsoft Testing Platform activation arguments contain an invalid file payload key.</target>
+        <target state="translated">Microsoft Testing Platform 啟用引數包含無效的檔案承載金鑰。</target>
         <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
       </trans-unit>
       <trans-unit id="ActivationArgumentsInvalidFileReference">
         <source>The Microsoft Testing Platform activation arguments contain an invalid file payload reference.</source>
-        <target state="new">The Microsoft Testing Platform activation arguments contain an invalid file payload reference.</target>
+        <target state="translated">Microsoft Testing Platform 啟用引數包含無效的檔案承載參考。</target>
         <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
       </trans-unit>
       <trans-unit id="ActivationArgumentsInvalidInlinePayload">
         <source>The Microsoft Testing Platform activation arguments contain an invalid inline payload.</source>
-        <target state="new">The Microsoft Testing Platform activation arguments contain an invalid inline payload.</target>
+        <target state="translated">Microsoft Testing Platform 啟用引數包含無效的內嵌承載。</target>
         <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
       </trans-unit>
       <trans-unit id="ActivationArgumentsMissingPayload">
         <source>The launch activation does not contain Microsoft Testing Platform arguments.</source>
-        <target state="new">The launch activation does not contain Microsoft Testing Platform arguments.</target>
+        <target state="translated">啟動啟用不包含 Microsoft Testing Platform 引數。</target>
         <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
       </trans-unit>
       <trans-unit id="ActivationArgumentsPayloadAuthenticationFailed">
         <source>The Microsoft Testing Platform activation-argument payload failed authentication.</source>
-        <target state="new">The Microsoft Testing Platform activation-argument payload failed authentication.</target>
+        <target state="translated">Microsoft Testing Platform 啟用引數承載驗證失敗。</target>
         <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
       </trans-unit>
       <trans-unit id="ActivationArgumentsPayloadReadFailed">
         <source>The Microsoft Testing Platform activation-argument payload could not be read.</source>
-        <target state="new">The Microsoft Testing Platform activation-argument payload could not be read.</target>
+        <target state="translated">Microsoft Testing Platform 啟用引數承載無法讀取。</target>
         <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
       </trans-unit>
       <trans-unit id="ActivationArgumentsPayloadTooLarge">
         <source>The Microsoft Testing Platform activation-argument payload is too large.</source>
-        <target state="new">The Microsoft Testing Platform activation-argument payload is too large.</target>
+        <target state="translated">Microsoft Testing Platform 啟用引數承載太大。</target>
         <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
       </trans-unit>
       <trans-unit id="ActivationArgumentsPayloadTruncated">
         <source>The Microsoft Testing Platform activation-argument payload is truncated.</source>
-        <target state="new">The Microsoft Testing Platform activation-argument payload is truncated.</target>
+        <target state="translated">Microsoft Testing Platform 啟用引數承載已截斷。</target>
         <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
       </trans-unit>
       <trans-unit id="ActivationArgumentsTrailingData">
         <source>The Microsoft Testing Platform activation-argument payload contains trailing data.</source>
-        <target state="new">The Microsoft Testing Platform activation-argument payload contains trailing data.</target>
+        <target state="translated">Microsoft Testing Platform 啟用引數承載包含後置資料。</target>
         <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
       </trans-unit>
       <trans-unit id="AmbiguousAppxManifestApplication">
@@ -74,7 +74,7 @@
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDescription">
         <source>Registers a packaged MSIX test host and activates it by Application User Model ID (Windows build), delivering Microsoft Testing Platform arguments through argv for packagedClassicApp/win32App hosts (including classic AppContainer hosts) or launch activation for windowsApp/UWP hosts. When opted in through TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=always, it also deploys a non-packaged (loose-layout) Windows test host to an isolated directory and launches it from there. Enabled only for a packaged layout by default, so an unpackaged app is left on the default launch path. End-to-end AppContainer execution additionally requires controller-pipe authorization. See https://github.com/microsoft/testfx/issues/10486.</source>
-        <target state="needs-review-translation">註冊已封裝、完整信任的 MSIX 桌面測試主機，並透過Application User Model ID碼 (Windows 組建)啟用該主機，此外，當透過 TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=always 選擇啟用時，會將非封裝 (鬆散配置) 的 Windows 測試主機部署至隔離目錄，並從該目錄啟動。預設只會針對封裝配置啟用，因此未封裝的應用程式會保留在預設啟動路徑上。不支援真正的 UWP/AppContainer 主機。請參閱 https://github.com/microsoft/testfx/issues/9933。</target>
+        <target state="translated">註冊已封裝的 MSIX 測試主機，並透過 Application User Model ID (Windows 組建) 啟動它，將 Microsoft Testing Platform 引數透過 argv 傳遞給 packagedClassicApp/win32App 主機 (包括傳統 AppContainer 主機)，或為 windowsApp/UWP 主機啟動啟用。當透過 TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=always 選擇加入時，它也會將非封裝 (鬆散配置) 的 Windows 測試主機部署到隔離目錄，並從該處啟動。預設只會針對封裝配置啟用，因此未封裝的應用程式會保留在預設啟動路徑上。端對端 AppContainer 執行另外也需要 controller-pipe 授權。請參閱 https://github.com/microsoft/testfx/issues/10486。</target>
         <note>Do not localize the environment variable name or its value {Locked="TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER"}{Locked="always"}, nor the technology names {Locked="Microsoft Testing Platform"}{Locked="MSIX"}{Locked="Application User Model ID"}{Locked="Windows"}{Locked="packagedClassicApp"}{Locked="win32App"}{Locked="windowsApp"}{Locked="UWP"}{Locked="AppContainer"}.</note>
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDisplayName">

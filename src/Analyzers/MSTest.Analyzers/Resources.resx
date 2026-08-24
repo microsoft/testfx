@@ -976,6 +976,18 @@ The type declaring these methods should also respect the following rules:
     <value>Test methods that null-check the 'CI' environment variable and then early return or call 'Assert.Inconclusive' should use the '[CICondition]' attribute instead. This attribute recognizes all the continuous integration providers MSTest knows about and parses their values, and it reports the test as skipped rather than passed, which an early return does not.</value>
     <comment>{Locked="CI"}{Locked="Assert.Inconclusive"}{Locked="[CICondition]"}</comment>
   </data>
+  <data name="UseExecutableConditionAttributeInsteadOfProcessCheckTitle" xml:space="preserve">
+    <value>Use '[ExecutableCondition]' attribute instead of 'File.Exists' checks before 'Process.Start'</value>
+    <comment>{Locked="'[ExecutableCondition]'"}{Locked="'File.Exists'"}{Locked="'Process.Start'"}</comment>
+  </data>
+  <data name="UseExecutableConditionAttributeInsteadOfProcessCheckMessageFormat" xml:space="preserve">
+    <value>Use '[ExecutableCondition]' attribute instead of checking for executable '{0}' before starting it</value>
+    <comment>{0} is the executable path. {Locked="'[ExecutableCondition]'"}</comment>
+  </data>
+  <data name="UseExecutableConditionAttributeInsteadOfProcessCheckDescription" xml:space="preserve">
+    <value>Test methods that use 'File.Exists' to skip a test before starting the same executable with 'Process.Start' should use the '[ExecutableCondition]' attribute instead. This attribute provides a declarative and discoverable tool requirement and reports an early return as a skipped test rather than a passed test.</value>
+    <comment>{Locked="'File.Exists'"}{Locked="'Process.Start'"}{Locked="'[ExecutableCondition]'"}</comment>
+  </data>
   <data name="DuplicateTestMethodAttributeTitle" xml:space="preserve">
     <value>Avoid duplicate test method attributes</value>
   </data>

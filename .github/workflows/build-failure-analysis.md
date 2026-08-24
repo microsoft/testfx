@@ -19,8 +19,9 @@ description: >-
 # only downloads build artifacts (data) and reads them — it does **not** build
 # or execute PR code. (gh-aw's generated agent job **does** check out the
 # repository — via `actions/checkout` — to load the workflow's own agent
-# configuration; that checkout is for tooling only and uses the event's ref,
-# **not** the PR head, so no PR code is built or executed.)
+# configuration and, since the `checkout:` block below, the analysed PR head so
+# the agent can author a fix commit. The PR tree is only read and edited as
+# text; nothing in it is built or executed.)
 
 on:
   # `check_run` fires for every check on a commit, so the `fetch-binlog` job
@@ -32,7 +33,10 @@ on:
   # gh-aw's default author-association gate (which would otherwise skip
   # non-write-access actors, and on `check_run` the actor is the pipeline app
   # anyway). This is safe here: the workflow only reads a public binlog and
-  # posts advisory comments — it never builds or executes PR code.
+  # posts advisory comments — it never builds or executes PR code. The one
+  # write path that touches code (`push-to-pull-request-branch`) is refused
+  # outright by gh-aw's handler for fork PRs, so `roles: all` cannot turn an
+  # external contribution into a push.
   roles: all
   # Manual entry point for reruns / testing: analyse a specific Azure DevOps
   # build id and post to a specific PR.
@@ -55,13 +59,24 @@ on:
 # fetch-binlog job is skipped, its output is empty, and this cascades into a
 # skipped agent — no AI calls on anything but a real `microsoft.testfx` failure whose
 # PR targets an in-scope base branch.
-if: needs.fetch-binlog.outputs.binlog-found == 'true'
+#
+# `push-blocked` is the loop guard for the push escape hatch (shared fetch job,
+# step 2c): when the branch tip is already an automated `[build-failure-analysis]`
+# fix and the build still fails, the previous attempt did not converge and the
+# pull request belongs to a human. Enforcing it here rather than inside the
+# agent is deliberate — this condition skips the activation and agent jobs, and
+# gh-aw's `safe_outputs` job is itself conditioned on the agent not being
+# skipped, so there is no code path left that could push. Nothing the model
+# does (or that a prompt injection makes it do) can re-enable it. The
+# `/analyze-build-failure` command workflow is comment-only and ignores it.
+if: needs.fetch-binlog.outputs.binlog-found == 'true' && needs.fetch-binlog.outputs.push-blocked != 'true'
 
 # Least-privilege for the workflow/agent jobs. The agent runs read-only; it
 # does NOT post directly. All PR writes (summary comment + inline review
-# suggestions) go through gh-aw **safe-outputs**, which the compiler emits as
-# a separate `safe_outputs` job granted `pull-requests: write` + `issues:
-# write` in the generated lock. Keep `pull-requests: read` here so the AI
+# suggestions + the fix commit) go through gh-aw **safe-outputs**, which the
+# compiler emits as a separate `safe_outputs` job granted `pull-requests:
+# write` + `issues: write` (and, for `push-to-pull-request-branch`, `contents:
+# write`) in the generated lock. Keep `pull-requests: read` here so the AI
 # agent job stays least-privilege — do NOT raise it to `write`, that would
 # hand PR-write scope to the agent job unnecessarily.
 permissions:
@@ -80,6 +95,129 @@ concurrency:
   cancel-in-progress: true
 
 timeout-minutes: 30
+
+# The agent job's default checkout uses the event ref, and for `check_run` that
+# is the repository's DEFAULT BRANCH — not the pull request. Without this block
+# the workspace holds `main`, so an agent asked to fix a PR file would patch the
+# wrong revision: `push-to-pull-request-branch` pushes the *file contents* of
+# the agent's tree onto the PR branch, so a fix authored against `main` would
+# silently revert anything else that changed in that file. `pr-checkout-ref` is
+# the PR's head branch for same-repo PRs (attached, so gh-aw can derive the push
+# target from `git rev-parse --abbrev-ref HEAD`) and `refs/pull/<n>/head` for
+# forks, which gh-aw refuses to push to anyway.
+#
+# Checking out the PR head does NOT execute PR code: this workflow never builds,
+# and the agent's bash allowlist contains no interpreters, package managers or
+# build tools — the tree is read and edited as text only.
+#
+# The PR-head checkout is intentionally shallow (`actions/checkout`'s default
+# depth of 1): gh-aw bundles only the commits the agent creates on top of it, so
+# no history is needed. Nothing here needs it either: the loop guard runs in the
+# trusted fetch job (step 2c) and reads only the subject of the PR's *tip*
+# commit through the GitHub API — never `git log`, which cannot see the branch's
+# history in a depth-1 checkout.
+#
+# It does, however, put PR-controlled `.github/`, `.agents/`, `AGENTS.md` and
+# every other agent-config path in the workspace, and the agent reads its
+# playbook from there. gh-aw's
+# own base-branch restore (`restore_base_github_folders.sh`) is gated on its
+# built-in PR-checkout step, which never fires for `check_run` (that event
+# carries no `pull_request` payload), so the second checkout below fetches the
+# same agent config from the base branch and a `pre-agent-steps` step copies it
+# over the PR's copy before the agent starts. Without that, a fork PR could
+# rewrite the analyst's own instructions — `roles: all` lets every fork reach
+# this workflow.
+checkout:
+  - ref: ${{ needs.fetch-binlog.outputs.pr-checkout-ref }}
+  # The pull request's own base branch (resolved from the GitHub API by the
+  # shared fetch job), not the repository default branch: a `rel/*` pull
+  # request must be analyzed with the playbook and agent config that branch
+  # actually carries, otherwise the restore below would silently swap in
+  # `main`'s instructions. Falls back to the default branch if the API lookup
+  # returned nothing.
+  - ref: ${{ needs.fetch-binlog.outputs.base-ref || github.event.repository.default_branch }}
+    path: .gh-aw-base-config
+    fetch-depth: 1
+    # Cone mode (the `actions/checkout` default) materializes every top-level
+    # file in addition to the listed directories. The restore step below does
+    # not rely on that: it consults the base tree directly, so a sparse-checkout
+    # change cannot turn "restore" into "delete". The directory list mirrors
+    # gh-aw's own `GH_AW_AGENT_FOLDERS` (see the generated lock) — every path
+    # the engine treats as agent configuration, not just the ones this repo
+    # happens to use today, so a PR cannot introduce e.g. `.claude/` and have it
+    # survive into the agent's context.
+    sparse-checkout: |
+      .agents
+      .antigravity
+      .claude
+      .codex
+      .crush
+      .gemini
+      .github
+      .opencode
+      .pi
+
+pre-agent-steps:
+  - name: Restore agent config from the base branch
+    shell: bash
+    env:
+      BASE_BRANCH: ${{ needs.fetch-binlog.outputs.base-ref || github.event.repository.default_branch }}
+    run: |
+      set -euo pipefail
+      BASE=".gh-aw-base-config"
+      # Mirror gh-aw's restore_base_github_folders.sh: for each agent-config
+      # path, prefer the base-branch copy, and delete anything the PR added that
+      # the base branch does not have. The two lists below are gh-aw's own
+      # `GH_AW_AGENT_FOLDERS`/`GH_AW_AGENT_FILES` (see the generated lock), with
+      # `.mcp.json` added because this engine also auto-loads it — keeping them
+      # in sync means the mitigation covers every path the engine recognizes,
+      # not only the ones this repo uses. Unknown paths simply do not exist and
+      # cost nothing.
+      for FOLDER in .agents .antigravity .claude .codex .crush .gemini .github .opencode .pi; do
+        rm -rf "${FOLDER}"
+        if [ -d "${BASE}/${FOLDER}" ]; then
+          cp -r "${BASE}/${FOLDER}" "${FOLDER}"
+          echo "Restored ${FOLDER} from ${BASE_BRANCH}"
+        else
+          echo "Base branch has no ${FOLDER}; removed the PR's copy"
+        fi
+      done
+      BASE_ROOT_FILES=$(git -C "${BASE}" ls-tree --name-only HEAD)
+      for FILE in .crush.json .mcp.json AGENTS.md ANTIGRAVITY.md CLAUDE.md GEMINI.md PI.md opencode.jsonc; do
+        rm -f "${FILE}"
+        if [ -f "${BASE}/${FILE}" ]; then
+          cp "${BASE}/${FILE}" "${FILE}"
+          echo "Restored ${FILE} from ${BASE_BRANCH}"
+        elif printf '%s\n' "${BASE_ROOT_FILES}" | grep -qx -- "${FILE}"; then
+          # On the base branch but not materialized by the sparse checkout.
+          git -C "${BASE}" show "HEAD:${FILE}" > "${FILE}"
+          echo "Restored ${FILE} from ${BASE_BRANCH} (via git show)"
+        else
+          # Genuinely absent on the base branch, so the PR added it: removing
+          # it is the intended outcome.
+          echo "Base branch has no ${FILE}; removed the PR's copy"
+        fi
+      done
+      rm -rf "${BASE}"
+      # gh-aw restores inline sub-agents/skills from the activation artifact in
+      # the steps just above; the wipe above would drop them, so replay those
+      # restores. They no-op when the workflow defines none (this one does not),
+      # and are skipped entirely if a compiler upgrade renames the scripts.
+      for SCRIPT in restore_inline_sub_agents.sh restore_inline_skills.sh; do
+        if [ -f "${RUNNER_TEMP}/gh-aw/actions/${SCRIPT}" ]; then
+          GH_AW_SUB_AGENT_DIR=".github/agents" \
+          GH_AW_SUB_AGENT_EXT=".agent.md" \
+          GH_AW_SKILL_DIR=".github/skills" \
+            bash "${RUNNER_TEMP}/gh-aw/actions/${SCRIPT}"
+        fi
+      done
+      # The restored files differ from the PR head, so leave them staged-free and
+      # let git see them as modifications: the agent only ever commits the single
+      # source file it fixes, and gh-aw builds its patch from commits, never from
+      # the dirty worktree. The listing below is diagnostic only — it makes the
+      # restored set visible in the job log when a push has to be explained
+      # after the fact, and deliberately never fails the run.
+      git -c core.fileMode=false status --porcelain -- .github .agents AGENTS.md | head -n 20 || true
 
 network:
   allowed:
@@ -160,6 +298,19 @@ steps:
 tools:
   github:
     toolsets: [pull_requests, repos]
+  # `edit` + the `git add`/`git commit` pair below exist only for the
+  # `push-to-pull-request-branch` escape hatch (see safe-outputs and the
+  # analyst agent's "Step 6b"). Everything else stays read-only.
+  #
+  # NOTE: enabling `push-to-pull-request-branch` makes the **compiler** widen the
+  # generated shell allowlist on its own with `git branch/checkout/merge/rm/
+  # switch` — see the `--allow-tool` list in the compiled lock. Those come from
+  # gh-aw, not from the list below, and cannot be removed from here. What matters
+  # is that `git push` is not among them: the agent can never write to the
+  # remote. The push happens in the `safe_outputs` job, from a bundle of the
+  # agent's local commits, filtered by `allowed-files`. The analyst playbook
+  # (Step 6b) forbids the agent from using the injected branch/history commands.
+  edit:
   bash:
     - "cat"
     - "head"
@@ -170,6 +321,14 @@ tools:
     - "uniq"
     - "ls"
     - "find"
+    # `git log` is deliberately absent: the checkout is depth-1 so it can only
+    # ever show the tip, and the loop guard it might be mistaken for lives in
+    # the trusted fetch job.
+    - "git status:*"
+    - "git diff:*"
+    - "git rev-parse:*"
+    - "git add:*"
+    - "git commit:*"
 
 safe-outputs:
   messages:
@@ -196,6 +355,92 @@ safe-outputs:
   create-pull-request-review-comment:
     max: 25
     target: "*"
+  # Escape hatch for the case inline suggestions structurally cannot cover: a
+  # `suggestion` block is only accepted by GitHub on lines that are part of the
+  # PR diff, so when the root-cause fix lives in a file the PR never touched
+  # (the classic dependency-flow break — a flowed package changes an API and the
+  # unchanged call sites stop compiling) the analysis could previously only
+  # describe the fix and ask a maintainer to commit it by hand. This lets the
+  # agent append the fix commit to the PR branch instead.
+  #
+  # Guardrails, in order of how much they actually protect:
+  #   * The push target is bound to the pull request in the `check_run`
+  #     webhook payload rather than to a number the agent supplies, so the
+  #     agent cannot redirect the push at another pull request. Because GitHub
+  #     leaves that field empty for fork-originated check runs, fork pull
+  #     requests have no push target at all — on top of which gh-aw's handler
+  #     refuses fork branches outright (the workflow token has no write access
+  #     to a fork). So this only ever reaches same-repo branches — i.e.
+  #     dependency-flow (`darc-*`) branches and branches from people who
+  #     already have write access. It is append-only; force-push is impossible.
+  #   * `allowed-files` is an exclusive allowlist: anything outside `src/` and
+  #     `test/` is refused by the handler regardless of what the agent produced.
+  #     Build infrastructure (`eng/`, `global.json`, `.github/`, `NuGet.config`)
+  #     is therefore out of reach, and `protected-files` stays at its default
+  #     `blocked` policy on top of that.
+  #   * `max: 1` bounds a single run; the fail → push → rebuild → fail loop is
+  #     bounded by trusted code rather than by model compliance. `commit-title-
+  #     suffix` (with `patch-format: am`, the only transport on which the
+  #     handler rewrites commit titles) makes gh-aw's push handler stamp
+  #     `[build-failure-analysis]` onto the commit title as it applies the
+  #     patch — the marker is written by the handler, never by the model —
+  #     and the shared fetch job (step 2c) refuses
+  #     to activate this workflow at all when the branch tip already carries it.
+  #     Because the activation and agent jobs are skipped, gh-aw's own
+  #     `safe_outputs` job (conditioned on the agent not being skipped) is
+  #     skipped too, so no push code path remains. The agent playbook explains
+  #     the rule, but nothing depends on the agent honouring it.
+  #     This matters because the push runs with
+  #     `secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN`: with the default
+  #     `GITHUB_TOKEN` the push does not re-trigger *Actions*, but a repository
+  #     that configures `GH_AW_GITHUB_TOKEN` as a PAT or App token gets Actions
+  #     re-runs too. Azure DevOps' GitHub app rebuilds either way, so a new run
+  #     can follow every push — which is precisely why the guard is enforced in
+  #     a trusted job rather than left to the token's behaviour.
+  #     The guard is scoped to the branch *tip*, not to the whole history, so a
+  #     pull request is not abandoned forever after one automated attempt: any
+  #     later commit by anyone restores full analysis.
+  #     Note the optional `GH_AW_CI_TRIGGER_TOKEN` magic secret (gh-aw wires it
+  #     into the generated lock unconditionally) is deliberately NOT configured:
+  #     it exists only to push an extra empty commit so *Actions* CI re-triggers.
+  #     Unset, the expression resolves to an empty string and that step is
+  #     skipped, so this workflow has no new secret prerequisite — and our CI is
+  #     Azure DevOps, which rebuilds on its own.
+  # `fallback-as-pull-request: false` keeps a diverged branch from silently
+  # turning into a surprise PR (and drops the extra `pull-requests: write`
+  # requirement); `check-branch-protection: false` avoids needing
+  # `administration: read` just for a pre-flight the platform enforces anyway.
+  push-to-pull-request-branch:
+    max: 1
+    # Deliberately NOT `target: "*"`. With `*`, gh-aw's handler takes the pull
+    # request number from the agent's own tool call, and only then checks
+    # whether *that* pull request is a fork — so the number is model-controlled
+    # and a prompt injection (build log, source comment, PR description) could
+    # aim the push at an unrelated same-repo pull request. Binding it to the
+    # check payload removes the choice: the number comes from GitHub's own
+    # webhook, is never routed through the model, and the handler rejects
+    # anything else.
+    # This also disables the escape hatch on fork pull requests at no extra
+    # cost: GitHub omits `pull_requests` for check runs on fork-originated
+    # commits, so the expression resolves to an empty string and no push target
+    # exists at all (verified against live `microsoft.testfx` check runs —
+    # same-repo pull requests report exactly one entry, the fork ones report
+    # none). The comment-only analysis is unaffected, which is the whole point
+    # of keeping this gate here instead of in the job-level `if:`.
+    target: "${{ github.event.check_run.pull_requests[0].number || github.event.inputs['pr-number'] }}"
+    allowed-files:
+      - "src/**"
+      - "test/**"
+    commit-title-suffix: " [build-failure-analysis]"
+    # Required for `commit-title-suffix` to do anything: `patch-format`
+    # defaults to `bundle`, and the handler only rewrites commit titles on the
+    # `git am` path. On the default transport the marker would never be
+    # applied, and the loop guard that keys off it would never fire.
+    patch-format: am
+    if-no-changes: "ignore"
+    ignore-missing-branch-failure: true
+    fallback-as-pull-request: false
+    check-branch-protection: false
   noop:
     max: 5
     report-as-issue: false

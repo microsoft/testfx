@@ -16,3 +16,4 @@ MSTEST0079 | Usage | Info | UseArchitectureConditionAttributeInsteadOfRuntimeChe
 MSTEST0080 | Usage | Info | UseCIConditionAttributeInsteadOfEnvironmentCheckAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0080)
 MSTEST0081 | Usage | Warning | TestFilterProviderShouldBeValidAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0081)
 MSTEST0082 | Usage | Warning | InheritedMemberFromDifferentMSTestVersionAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0082)
+MSTEST0083 | Usage | Info | UseExecutableConditionAttributeInsteadOfProcessCheckAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0083)

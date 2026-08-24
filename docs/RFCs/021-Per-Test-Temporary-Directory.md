@@ -283,10 +283,10 @@ contain characters illegal in paths and can be very long. Scheme:
    are cryptographically negligible — a full 128-bit GUID makes two contexts choosing the same
    suffix effectively impossible even at very large scales (millions of contexts).
 5. **Create with collision retry**: attempt `Directory.CreateDirectory` for the candidate; if the
-   directory already exists, regenerate the suffix and retry a bounded number of times. `Directory.Exists`
-   + `CreateDirectory` is not an atomic exclusive create, so the retry is only a belt-and-braces
-   guard — the actual uniqueness guarantee comes from the 128-bit suffix, whose birthday-collision
-   probability is negligible, not from the pre-check.
+   directory already exists, regenerate the suffix and retry a bounded number of times.
+   `Directory.Exists` + `CreateDirectory` is not an atomic exclusive create, so the retry is only a
+   belt-and-braces guard — the actual uniqueness guarantee comes from the 128-bit suffix, whose
+   birthday-collision probability is negligible, not from the pre-check.
 
 If the test name is empty, whitespace-only, made up entirely of invalid characters, or the adaptive
 budget has collapsed to zero, the sanitized prefix is empty and the directory name is **just the

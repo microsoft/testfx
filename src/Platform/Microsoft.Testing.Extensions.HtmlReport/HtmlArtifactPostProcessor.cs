@@ -60,7 +60,7 @@ internal sealed class HtmlArtifactPostProcessor : IArtifactPostProcessor
             return null;
         }
 
-        if (IsReparsePoint(mergedDirectory))
+        if (ArtifactPostProcessingHelper.IsReparsePoint(mergedDirectory))
         {
             return null;
         }
@@ -123,17 +123,5 @@ internal sealed class HtmlArtifactPostProcessor : IArtifactPostProcessor
         builder.Append(value.Length.ToString(CultureInfo.InvariantCulture));
         builder.Append(':');
         builder.Append(value);
-    }
-
-    private static bool IsReparsePoint(string path)
-    {
-        try
-        {
-            return (File.GetAttributes(path) & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint;
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            return true;
-        }
     }
 }
