@@ -423,19 +423,16 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="InheritedMemberFromDifferentMSTestVersionDescription">
         <source>MSTest resolves the inherited lifecycle attributes '[TestInitialize]', '[TestCleanup]', '[ClassInitialize]' and '[ClassCleanup]', and the test attributes '[TestMethod]' and '[DataTestMethod]', by their exact framework type identity. The framework assembly was renamed from 'Microsoft.VisualStudio.TestPlatform.TestFramework' to 'MSTest.TestFramework', so a base class compiled against a different MSTest major exposes these attributes with a different type identity. When such a base is inherited by a test class compiled against another version, the inherited setup and cleanup do not run and inherited test methods are not discovered, with no build error and no discovery error. Recompile the base assembly against the same MSTest version as the test project.</source>
         <target state="translated">MSTest는 상속된 수명 주기 특성 '[TestInitialize]', '[TestCleanup]', '[ClassInitialize]', '[ClassCleanup]'와 테스트 특성 '[TestMethod]', '[DataTestMethod]'를 정확한 프레임워크 형식 ID로 확인합니다. 프레임워크 어셈블리 이름은 'Microsoft.VisualStudio.TestPlatform.TestFramework'에서 'MSTest.TestFramework'로 변경되었으므로, 다른 MSTest 주요 버전에 맞춰 컴파일된 기본 클래스는 이러한 특성을 다른 형식 ID로 노출합니다. 이런 기본 클래스를 다른 버전에 맞춰 컴파일된 테스트 클래스가 상속하면, 상속된 설정과 정리 메서드는 실행되지 않고 상속된 테스트 메서드도 검색되지 않으며, 이때 빌드 오류와 검색 오류는 발생하지 않습니다. 기본 어셈블리를 테스트 프로젝트와 같은 MSTest 버전에 맞춰 다시 컴파일하세요.</target>
-        <target state="translated">MSTest překládá zděděné atributy životního cyklu '[TestInitialize]', '[TestCleanup]', '[ClassInitialize]' a '[ClassCleanup]' a testovací atributy '[TestMethod]' a '[DataTestMethod]' podle přesné identity typu architektury. Sestavení architektury bylo přejmenováno z 'Microsoft.VisualStudio.TestPlatform.TestFramework' to 'MSTest.TestFramework', takže základní třída zkompilovaná pro jinou hlavní verzi MSTest zpřístupňuje tyto atributy s jinou identitou typu. Když testovací třída zkompilovaná pro jinou verzi dědí z takové základní třídy, zděděné nastavení a vyčištění se nespustí a zděděné testovací metody se nezjistí, aniž by došlo k chybě sestavení nebo chybě zjišťování. Znovu zkompilujte základní sestavení pro stejnou verzi MSTest jako testovací projekt.</target>
         <note>{Locked="MSTest"}{Locked="'[TestInitialize]'"}{Locked="'[TestCleanup]'"}{Locked="'[ClassInitialize]'"}{Locked="'[ClassCleanup]'"}{Locked="'[TestMethod]'"}{Locked="'[DataTestMethod]'"}{Locked="'Microsoft.VisualStudio.TestPlatform.TestFramework'"}{Locked="'MSTest.TestFramework'"}</note>
       </trans-unit>
       <trans-unit id="InheritedMemberFromDifferentMSTestVersionMessageFormat">
         <source>The inherited member '{1}.{0}' is annotated with a '[{2}]' attribute that resolves to a canonical MSTest attribute in '{3}', a different MSTest framework assembly than this test project uses; MSTest matches these attributes by exact type identity, so the inherited '[{2}]' is silently ignored at run time. Recompile the assembly that declares '{1}' against the same MSTest version as the test project.</source>
         <target state="translated">상속된 멤버 '{1}.{0}'에 '[{2}]' 특성이 지정되어 있습니다. 이 특성은 '{3}'의 정식 MSTest 특성으로 확인되는데, 이 테스트 프로젝트가 사용하는 MSTest 프레임워크 어셈블리와는 다릅니다. MSTest는 이러한 특성을 정확한 형식 ID로 구분하므로, 상속된 '[{2}]'는 런타임에 조용히 무시됩니다. '{1}'를 선언하는 어셈블리를 테스트 프로젝트와 같은 MSTest 버전에 맞춰 다시 컴파일하세요.</target>
-        <target state="translated">Zděděný člen '{1}.{0}' je opatřen atributem '[{2}]', který se překládá na kanonický atribut MSTest v sestavení '{3}', což je jiné sestavení architektury MSTest, než používá tento testovací projekt. MSTest porovnává tyto atributy podle přesné identity typu, takže zděděný atribut '[{2}]' je za běhu bez upozornění ignorován. Znovu zkompilujte sestavení, které deklaruje {1}, pro stejnou verzi MSTest jako testovací projekt.</target>
         <note>{0} is the inherited member name, {1} is the declaring base type name, {2} is the attribute name (for example TestInitialize), {3} is the MSTest framework assembly the attribute's type resolves to. {Locked="MSTest"}</note>
       </trans-unit>
       <trans-unit id="InheritedMemberFromDifferentMSTestVersionTitle">
         <source>A test class inherits a lifecycle or test method from a different MSTest version</source>
         <target state="translated">테스트 클래스가 다른 MSTest 버전의 수명 주기 메서드 또는 테스트 메서드를 상속합니다</target>
-        <target state="translated">Testovací třída dědí životní cyklus nebo testovací metodu z jiné verze MSTest</target>
         <note>{Locked="MSTest"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidDescription">
@@ -1383,19 +1380,16 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="UseExecutableConditionAttributeInsteadOfProcessCheckDescription">
         <source>Test methods that use 'File.Exists' to skip a test before starting the same executable with 'Process.Start' should use the '[ExecutableCondition]' attribute instead. This attribute provides a declarative and discoverable tool requirement and reports an early return as a skipped test rather than a passed test.</source>
         <target state="translated">'File.Exists'를 사용하여 테스트를 건너뛴 뒤 'Process.Start'로 동일한 실행 파일을 시작하는 테스트 메서드는 대신 '[ExecutableCondition]' 특성을 사용해야 합니다. 이 특성은 선언적이고 검색 가능한 도구 요구 사항을 제공하며, 조기 반환을 통과한 테스트가 아니라 건너뛴 테스트로 보고합니다.</target>
-        <target state="translated">Testovací metody, které používají 'File.Exists' k přeskočení testu před spuštěním stejného spustitelného souboru s 'Process.Start', by místo toho měly používat atribut '[ExecutableCondition]'. Tento atribut poskytuje deklarativní a snadno zjistitelný požadavek na nástroj a hlásí předčasný návrat jako přeskočený test, nikoli jako úspěšný test.</target>
         <note>{Locked="'File.Exists'"}{Locked="'Process.Start'"}{Locked="'[ExecutableCondition]'"}</note>
       </trans-unit>
       <trans-unit id="UseExecutableConditionAttributeInsteadOfProcessCheckMessageFormat">
         <source>Use '[ExecutableCondition]' attribute instead of checking for executable '{0}' before starting it</source>
         <target state="translated">실행 파일 '{0}'을(를) 시작하기 전에 검사하는 대신 '[ExecutableCondition]' 특성 사용</target>
-        <target state="translated">Před spuštěním použijte atribut '[ExecutableCondition]' namísto kontroly spustitelného souboru {0}</target>
         <note>{0} is the executable path. {Locked="'[ExecutableCondition]'"}</note>
       </trans-unit>
       <trans-unit id="UseExecutableConditionAttributeInsteadOfProcessCheckTitle">
         <source>Use '[ExecutableCondition]' attribute instead of 'File.Exists' checks before 'Process.Start'</source>
         <target state="translated">'Process.Start' 전에 'File.Exists' 검사 대신 '[ExecutableCondition]' 특성 사용</target>
-        <target state="translated">Použít atribut '[ExecutableCondition]' namísto kontrol 'File.Exists' před 'Process.Start'</target>
         <note>{Locked="'[ExecutableCondition]'"}{Locked="'File.Exists'"}{Locked="'Process.Start'"}</note>
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">
