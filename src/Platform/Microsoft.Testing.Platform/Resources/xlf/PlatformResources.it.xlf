@@ -715,8 +715,8 @@ Tenere presente ciò rallenta l'esecuzione del test.</target>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</source>
-        <target state="translated">Abilita la registrazione diagnostica. Il livello di registro per impostazione predefinita è ''Trace''.
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</source>
+        <target state="needs-review-translation">Abilita la registrazione diagnostica. Il livello di registro per impostazione predefinita è ''Trace''.
 Il file verrà scritto nella directory di output con il nome log_[yyMMddHHmmssfff].diag</target>
         <note>{Locked="Trace"}{Locked="log_[yyMMddHHmmssfff].diag"}</note>
       </trans-unit>
@@ -738,8 +738,8 @@ Se non specificata, il file verrà generato all'interno della directory 'TestRes
         <note>{Locked="TestResults"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
-        <source>Prefix for the log file name that will replace '[log]_.'</source>
-        <target state="translated">Prefisso per il nome del file di log che sostituirà '[log]_.'</target>
+        <source>Replace '[log]_.' with the specified log file name prefix.</source>
+        <target state="needs-review-translation">Prefisso per il nome del file di log che sostituirà '[log]_.'</target>
         <note>{Locked="[log]_."}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
@@ -949,8 +949,8 @@ L’impostazione predefinita è TestResults nella directory che contiene l'appli
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineSkipBuildersNumberCheckOptionDescription">
-        <source>For testing purposes</source>
-        <target state="translated">A scopo di test</target>
+        <source>For testing purposes.</source>
+        <target state="needs-review-translation">A scopo di test</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTestHostControllerPIDOptionDescription">

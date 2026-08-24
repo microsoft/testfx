@@ -187,7 +187,7 @@ Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (al
     <comment>Do not localize {Locked=".NET (Core)"}.</comment>
   </data>
   <data name="CrashDumpOptionDescription" xml:space="preserve">
-    <value>[net6.0+ only] Generate a dump file if the test process crashes</value>
+    <value>[net6.0+ only] Generate a dump file if the test process crashes.</value>
     <comment>Do not localize option name {Locked="--crashdump"} or target framework moniker {Locked="net6.0+"}.</comment>
   </data>
   <data name="CrashDumpProcessCrashed" xml:space="preserve">
@@ -209,7 +209,7 @@ Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (al
   <data name="CrashDumpTypeOptionDescription" xml:space="preserve">
     <value>Specify the type of the dump.
 Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'.
-For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</value>
+For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps.</value>
     <comment>Do not localize option name {Locked="--crashdump-type"}, dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Triage"}{Locked="Full"}, or link {Locked="https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps"}.</comment>
   </data>
   <data name="CrashDumpTypeOptionInvalidType" xml:space="preserve">

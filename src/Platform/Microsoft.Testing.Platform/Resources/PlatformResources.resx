@@ -544,7 +544,7 @@ Note that this is slowing down the test execution.</value>
   </data>
   <data name="PlatformCommandLineDiagnosticOptionDescription" xml:space="preserve">
     <value>Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</value>
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</value>
     <comment>{Locked="Trace"}{Locked="log_[yyMMddHHmmssfff].diag"}</comment>
   </data>
   <data name="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage" xml:space="preserve">
@@ -561,7 +561,7 @@ If not specified the file will be generated inside the default 'TestResults' dir
     <comment>{Locked="TestResults"}</comment>
   </data>
   <data name="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription" xml:space="preserve">
-    <value>Prefix for the log file name that will replace '[log]_.'</value>
+    <value>Replace '[log]_.' with the specified log file name prefix.</value>
     <comment>{Locked="[log]_."}</comment>
   </data>
   <data name="PlatformCommandLineDiagnosticVerbosityOptionDescription" xml:space="preserve">
@@ -628,7 +628,7 @@ The default is TestResults in the directory that contains the test application.<
     <comment>{0} is the server protocol value. {1} is the required option name without the leading dashes. {Locked="--server"}{Locked="dotnettestcli"}{Locked="dotnet-test-pipe"}</comment>
   </data>
   <data name="PlatformCommandLineSkipBuildersNumberCheckOptionDescription" xml:space="preserve">
-    <value>For testing purposes</value>
+    <value>For testing purposes.</value>
   </data>
   <data name="PlatformCommandLineTestHostControllerPIDOptionDescription" xml:space="preserve">
     <value>Eventual parent test host controller PID.</value>

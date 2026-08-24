@@ -23,8 +23,8 @@
         <note>{0} is the full path of the attachment that could not be copied. {1} is the name of the exception type that was thrown, e.g. 'UnauthorizedAccessException'. {Locked="TRX"}</note>
       </trans-unit>
       <trans-unit id="TrxComparerToolBaselineFileOptionDescription">
-        <source>The baseline TRX file</source>
-        <target state="translated">El archivo TRX de línea de base</target>
+        <source>The baseline TRX file.</source>
+        <target state="needs-review-translation">El archivo TRX de línea de base</target>
         <note>Do not localize option name {Locked="--baseline-trx"} or format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxComparerToolBothFilesMustBeSpecified">
@@ -48,8 +48,8 @@
         <note>0 is the option name without the leading {Locked="--"}. Do not localize file extension {Locked=".trx"}.</note>
       </trans-unit>
       <trans-unit id="TrxComparerToolOtherFileOptionDescription">
-        <source>The TRX file to compare with the baseline</source>
-        <target state="translated">Archivo TRX que se va a comparar con la línea base</target>
+        <source>The TRX file to compare with the baseline.</source>
+        <target state="needs-review-translation">Archivo TRX que se va a comparar con la línea base</target>
         <note>Do not localize option name {Locked="--trx-to-compare"} or format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxFileExistsAndWillBeOverwritten">
@@ -68,8 +68,8 @@
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolInputOptionDescription">
-        <source>Two or more input TRX file paths</source>
-        <target state="translated">Dos o más rutas de acceso de archivo TRX de entrada</target>
+        <source>Two or more input TRX file paths.</source>
+        <target state="needs-review-translation">Dos o más rutas de acceso de archivo TRX de entrada</target>
         <note>Do not localize option name {Locked="--input"} or format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolInvalidInputs">
@@ -83,8 +83,8 @@
         <note>Do not localize option name {Locked="--output-trx"} or format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolOutputOptionDescription">
-        <source>The output TRX file path</source>
-        <target state="translated">Ruta de acceso del archivo TRX de salida</target>
+        <source>The output TRX file path.</source>
+        <target state="needs-review-translation">Ruta de acceso del archivo TRX de salida</target>
         <note>Do not localize option name {Locked="--output-trx"} or format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergedArtifactDescription">
@@ -125,8 +125,8 @@
       <trans-unit id="TrxReportFileNameOptionDescription">
         <source>The name of the generated TRX report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
-Example: MyReport_{tfm}.trx</source>
-        <target state="translated">Nombre del informe TRX generado. Puede incluir una ruta de acceso relativa o absoluta; las rutas de acceso relativas se resuelven respecto al directorio de resultados de pruebas y se crean los directorios que falten.
+Example: MyReport_{tfm}.trx.</source>
+        <target state="needs-review-translation">Nombre del informe TRX generado. Puede incluir una ruta de acceso relativa o absoluta; las rutas de acceso relativas se resuelven respecto al directorio de resultados de pruebas y se crean los directorios que falten.
 Admite los siguientes marcadores de posición: {pname} (nombre de la aplicación de prueba), {pid} (id. de proceso), {asm} (nombre del ensamblado de entrada), {tfm} (moniker de la plataforma de destino), {arch} (arquitectura del proceso), {time} (marca de tiempo).
 Ejemplo: MyReport_{tfm}.trx</target>
         <note>Do not localize option name {Locked="--report-trx-filename"}, format name {Locked="TRX"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".trx"}, or example file name {Locked="MyReport_{tfm}.trx"}.</note>
@@ -177,8 +177,8 @@ Ejemplo: MyReport_{tfm}.trx</target>
         <note>Do not localize option names {Locked="--report-trx"}{Locked="--list-tests"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportOptionDescription">
-        <source>Enable generating TRX report</source>
-        <target state="translated">Habilitación de la generación de informes TRX</target>
+        <source>Enable generating TRX report.</source>
+        <target state="needs-review-translation">Habilitación de la generación de informes TRX</target>
         <note>Do not localize option name {Locked="--report-trx"} or format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">

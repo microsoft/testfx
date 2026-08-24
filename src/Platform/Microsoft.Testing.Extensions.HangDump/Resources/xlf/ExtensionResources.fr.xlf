@@ -83,8 +83,8 @@ Permet de prendre en charge les espaces réservés suivants : {pname} (nom de l
         <note>Do not localize option name {Locked="--hangdump-filename"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, or legacy token {Locked="%p"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
-        <source>Generate a dump file if the test process hangs</source>
-        <target state="translated">Générer un fichier de vidage si le processus de test se bloque</target>
+        <source>Generate a dump file if the test process hangs.</source>
+        <target state="needs-review-translation">Générer un fichier de vidage si le processus de test se bloque</target>
         <note>Do not localize option name {Locked="--hangdump"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTimeoutExpired">
@@ -136,8 +136,8 @@ La valeur du délai d'expiration est spécifiée dans l'un des formats suivants�
       <trans-unit id="HangDumpTypeOptionDescription">
         <source>Specify the type of the dump.
 Valid values are {0}.
-Default type is 'Full'</source>
-        <target state="translated">Spécifiez le type de vidage.
+Default type is 'Full'.</source>
+        <target state="needs-review-translation">Spécifiez le type de vidage.
 Valid values are {0}.
 Le type par défaut est « Full »</target>
         <note>0 is the list of valid dump type values. Do not localize option name {Locked="--hangdump-type"} or default dump type {Locked="Full"}.</note>

@@ -715,8 +715,8 @@ Note that this is slowing down the test execution.</source>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</source>
-        <target state="translated">启用诊断日志记录。默认日志级别为 "Trace"。
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</source>
+        <target state="needs-review-translation">启用诊断日志记录。默认日志级别为 "Trace"。
 文件将写入输出目录，名称为 log_[yyMMddHHmmssfff].diag</target>
         <note>{Locked="Trace"}{Locked="log_[yyMMddHHmmssfff].diag"}</note>
       </trans-unit>
@@ -738,8 +738,8 @@ If not specified the file will be generated inside the default 'TestResults' dir
         <note>{Locked="TestResults"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
-        <source>Prefix for the log file name that will replace '[log]_.'</source>
-        <target state="translated">将替换“[log]_.”的日志文件名的前缀</target>
+        <source>Replace '[log]_.' with the specified log file name prefix.</source>
+        <target state="needs-review-translation">将替换“[log]_.”的日志文件名的前缀</target>
         <note>{Locked="[log]_."}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
@@ -949,8 +949,8 @@ The default is TestResults in the directory that contains the test application.<
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineSkipBuildersNumberCheckOptionDescription">
-        <source>For testing purposes</source>
-        <target state="translated">用于测试目的</target>
+        <source>For testing purposes.</source>
+        <target state="needs-review-translation">用于测试目的</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTestHostControllerPIDOptionDescription">
