@@ -25,6 +25,7 @@ public class NativeAotTests : AcceptanceTestBase<NopAssetFixture>
         <LangVersion>preview</LangVersion>
         <EnableMSTestRunner>true</EnableMSTestRunner>
         <PublishAot>true</PublishAot>
+        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
         <!-- Reflection-free is now the default, but pin it so the test stays meaningful even if the
              product default ever changes again. -->
         <MSTestSourceGenMode>ReflectionFree</MSTestSourceGenMode>
@@ -150,6 +151,19 @@ public sealed class AsyncVoidTests
         {
             compilationResult.AssertOutputDoesNotContain(fileName);
         }
+
+        string registryPath = Directory.GetFiles(
+            generator.TargetAssetPath,
+            "MSTestReflectionMetadata.Registry.g.cs",
+            SearchOption.AllDirectories).Single();
+        string registry = File.ReadAllText(registryPath);
+        int asyncMethodIndex = registry.IndexOf("Name = \"TestMethod3\"", StringComparison.Ordinal);
+        int nextMethodIndex = registry.IndexOf("Name = \"TestMethod4\"", asyncMethodIndex, StringComparison.Ordinal);
+        Assert.IsGreaterThan(-1, asyncMethodIndex);
+        Assert.IsGreaterThan(asyncMethodIndex, nextMethodIndex);
+        StringAssert.Contains(
+            registry.Substring(asyncMethodIndex, nextMethodIndex - asyncMethodIndex),
+            "AreAttributesComplete = true");
 
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "MSTestNativeAotTests", tfm, RID, Verb.publish);
 
