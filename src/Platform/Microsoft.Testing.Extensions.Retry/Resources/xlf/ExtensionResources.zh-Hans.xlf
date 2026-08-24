@@ -25,13 +25,11 @@
       <trans-unit id="RetryArtifactPostProcessorFailed">
         <source>Retry artifact post-processor '{0}' failed: {1}</source>
         <target state="translated">重试工件后处理器“{0}”失败: {1}</target>
-        <target state="translated">Modul následného zpracování artefaktů „{0}“ při opětovném pokusu selhal: {1}</target>
         <note>{0} is the processor UID. {1} is the exception message.</note>
       </trans-unit>
       <trans-unit id="RetryArtifactsPublished">
         <source>Retry: published {0} result file(s) to '{1}'</source>
         <target state="translated">重试: 已将 {0} 个结果发布到“{1}”</target>
-        <target state="translated">Opětovný pokus: publikovány soubory výsledků (celkem {0}) do: {1}</target>
         <note>{0} is the number of files published. {1} is the destination result directory.</note>
       </trans-unit>
       <trans-unit id="RetryAttemptFailedWillRetry">
