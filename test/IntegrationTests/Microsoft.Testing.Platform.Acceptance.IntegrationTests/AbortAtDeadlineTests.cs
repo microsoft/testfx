@@ -46,7 +46,14 @@ public sealed class AbortAtDeadlineTests : AcceptanceTestBase<AbortAtDeadlineTes
             workingDirectory: AssetFixture.TargetAssetPath,
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
+
         testResult.AssertExitCodeIs(ExitCode.TestExecutionStoppedAtDeadline);
+        testResult.AssertOutputContains("Test run summary: Failed!");
+        testResult.AssertOutputContains("error: 1");
+        testResult.AssertOutputContains("total: 1");
+        testResult.AssertOutputContains("failed: 0");
+        testResult.AssertOutputContains("succeeded: 1");
+        testResult.AssertOutputContains("skipped: 0");
     }
 
     [TestMethod]
