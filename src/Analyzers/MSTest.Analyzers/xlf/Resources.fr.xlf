@@ -427,13 +427,11 @@ Le type doit être une classe
       </trans-unit>
       <trans-unit id="InheritedMemberFromDifferentMSTestVersionMessageFormat">
         <source>The inherited member '{1}.{0}' is annotated with a '[{2}]' attribute that resolves to a canonical MSTest attribute in '{3}', a different MSTest framework assembly than this test project uses; MSTest matches these attributes by exact type identity, so the inherited '[{2}]' is silently ignored at run time. Recompile the assembly that declares '{1}' against the same MSTest version as the test project.</source>
-        <target state="new">The inherited member '{1}.{0}' is annotated with a '[{2}]' attribute that resolves to a canonical MSTest attribute in '{3}', a different MSTest framework assembly than this test project uses; MSTest matches these attributes by exact type identity, so the inherited '[{2}]' is silently ignored at run time. Recompile the assembly that declares '{1}' against the same MSTest version as the test project.</target>
         <target state="translated">Le membre hérité « {1}.{0} » est annoté avec un attribut « [{2}] » qui se résout en attribut MSTest canonique dans « {3} », un assembly d’infrastructure MSTest différent de celui utilisé par ce projet de test ; MSTest compare ces attributs par identité de type exacte, si bien que l’attribut hérité « [{2}] » est automatiquement ignoré à l’exécution. Recompilez l’assembly qui déclare « {1} » avec la même version de MSTest que celle du projet de test.</target>
         <note>{0} is the inherited member name, {1} is the declaring base type name, {2} is the attribute name (for example TestInitialize), {3} is the MSTest framework assembly the attribute's type resolves to. {Locked="MSTest"}</note>
       </trans-unit>
       <trans-unit id="InheritedMemberFromDifferentMSTestVersionTitle">
         <source>A test class inherits a lifecycle or test method from a different MSTest version</source>
-        <target state="new">A test class inherits a lifecycle or test method from a different MSTest version</target>
         <target state="translated">Une classe de test hérite d’une méthode de cycle de vie ou de test provenant d’une autre version de MSTest</target>
         <note>{Locked="MSTest"}</note>
       </trans-unit>
@@ -1381,19 +1379,16 @@ Le type doit être une classe
       </trans-unit>
       <trans-unit id="UseExecutableConditionAttributeInsteadOfProcessCheckDescription">
         <source>Test methods that use 'File.Exists' to skip a test before starting the same executable with 'Process.Start' should use the '[ExecutableCondition]' attribute instead. This attribute provides a declarative and discoverable tool requirement and reports an early return as a skipped test rather than a passed test.</source>
-        <target state="new">Test methods that use 'File.Exists' to skip a test before starting the same executable with 'Process.Start' should use the '[ExecutableCondition]' attribute instead. This attribute provides a declarative and discoverable tool requirement and reports an early return as a skipped test rather than a passed test.</target>
         <target state="translated">Les méthodes de test qui utilisent 'File.Exists' pour ignorer un test avant de démarrer le même exécutable avec 'Process.Start' doivent utiliser l’attribut '[ExecutableCondition]' à la place. Cet attribut fournit une exigence d’outil déclarative et facile à repérer, et signale un retour anticipé comme un test ignoré plutôt que réussi.</target>
         <note>{Locked="'File.Exists'"}{Locked="'Process.Start'"}{Locked="'[ExecutableCondition]'"}</note>
       </trans-unit>
       <trans-unit id="UseExecutableConditionAttributeInsteadOfProcessCheckMessageFormat">
         <source>Use '[ExecutableCondition]' attribute instead of checking for executable '{0}' before starting it</source>
-        <target state="new">Use '[ExecutableCondition]' attribute instead of checking for executable '{0}' before starting it</target>
         <target state="translated">Utilisez l’attribut '[ExecutableCondition]' au lieu de vérifier l’exécutable '{0}' avant de le démarrer</target>
         <note>{0} is the executable path. {Locked="'[ExecutableCondition]'"}</note>
       </trans-unit>
       <trans-unit id="UseExecutableConditionAttributeInsteadOfProcessCheckTitle">
         <source>Use '[ExecutableCondition]' attribute instead of 'File.Exists' checks before 'Process.Start'</source>
-        <target state="new">Use '[ExecutableCondition]' attribute instead of 'File.Exists' checks before 'Process.Start'</target>
         <target state="translated">Utilisez l’attribut '[ExecutableCondition]' au lieu de vérifier l’existence de 'File.Exists' avant 'Process.Start'</target>
         <note>{Locked="'[ExecutableCondition]'"}{Locked="'File.Exists'"}{Locked="'Process.Start'"}</note>
       </trans-unit>
