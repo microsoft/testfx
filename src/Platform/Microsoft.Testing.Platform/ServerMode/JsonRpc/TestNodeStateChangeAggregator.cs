@@ -42,12 +42,19 @@ internal sealed partial class ServerTestHost
 
             TestNodeUpdateMessage[] changes = terminalTestNodeUids is null
                 ? [.. _stateChanges]
-                : [.. _stateChanges.Where(stateChange =>
-                    stateChange.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>() is not InProgressTestNodeStateProperty
-                    || !terminalTestNodeUids.Contains(stateChange.TestNode.Uid))];
+                : FilterStateChanges(_stateChanges, terminalTestNodeUids);
 
             return new(RunId, changes);
         }
+
+        // Keep the captured LINQ predicate out of BuildAggregatedChange so batches without terminal states
+        // do not allocate its closure.
+        private static TestNodeUpdateMessage[] FilterStateChanges(
+            List<TestNodeUpdateMessage> stateChanges,
+            HashSet<TestNodeUid> terminalTestNodeUids)
+            => [.. stateChanges.Where(stateChange =>
+                stateChange.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>() is not InProgressTestNodeStateProperty
+                || !terminalTestNodeUids.Contains(stateChange.TestNode.Uid))];
 
 #pragma warning disable CS0618, MTP0001
         private static bool IsTerminalState(TestNodeStateProperty? state)

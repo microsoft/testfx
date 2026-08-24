@@ -37,10 +37,25 @@ internal static partial class SerializerUtilities
         });
 
         // Serialize event types.
-        Serializers[typeof(TestNodeStateChangedEventArgs)] = new ObjectSerializer<TestNodeStateChangedEventArgs>(ev => new Dictionary<string, object?>
+        Serializers[typeof(TestNodeStateChangedEventArgs)] = new ObjectSerializer<TestNodeStateChangedEventArgs>(ev =>
         {
-            [JsonRpcStrings.RunId] = ev.RunId,
-            [JsonRpcStrings.Changes] = ev.Changes?.Select(ch => Serialize(ch)).ToList<object>(),
+            List<object>? changes = null;
+            if (ev.Changes is not null)
+            {
+#pragma warning disable IDE0028 // Collection initialization can be simplified - capacity hint is intentional.
+                changes = new(ev.Changes.Length);
+#pragma warning restore IDE0028
+                for (int i = 0; i < ev.Changes.Length; i++)
+                {
+                    changes.Add(Serialize(ev.Changes[i]));
+                }
+            }
+
+            return new Dictionary<string, object?>
+            {
+                [JsonRpcStrings.RunId] = ev.RunId,
+                [JsonRpcStrings.Changes] = changes,
+            };
         });
 
         Serializers[typeof(TestNode)] = new ObjectSerializer<TestNode>(
