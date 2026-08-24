@@ -189,7 +189,7 @@ Extension options:
     --report-ctrf-filename
         The name of the generated CTRF report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
-        Example: MyReport_{tfm}.ctrf.json.
+        Example: 'MyReport_{tfm}.ctrf.json'.
     --report-gh
         Enable GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.
     --report-gh-annotations
@@ -207,19 +207,19 @@ Extension options:
     --report-html-filename
         The name of the generated HTML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
-        Example: MyReport_{tfm}.html.
+        Example: 'MyReport_{tfm}.html'.
     --report-junit
         Enable generating a JUnit XML report.
     --report-junit-filename
         The name of the generated JUnit XML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
-        Example: MyReport_{tfm}.xml.
+        Example: 'MyReport_{tfm}.xml'.
     --report-trx
         Enable generating TRX report.
     --report-trx-filename
         The name of the generated TRX report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
-        Example: MyReport_{tfm}.trx.
+        Example: 'MyReport_{tfm}.trx'.
     --retry-failed-tests
         Retry failed tests the given number of times.
     --retry-failed-tests-delay
@@ -581,7 +581,7 @@ Registered command line providers:
         Hidden: False
         Description: The name of the generated CTRF report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
-        Example: MyReport_{tfm}.ctrf.json.
+        Example: 'MyReport_{tfm}.ctrf.json'.
   GitHubActionsCommandLineProvider
     Name: GitHub Actions report generator
     Version: *
@@ -661,7 +661,7 @@ Registered command line providers:
         Hidden: False
         Description: The name of the generated HTML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
-        Example: MyReport_{tfm}.html.
+        Example: 'MyReport_{tfm}.html'.
   JUnitReportGeneratorCommandLine
     Name: JUnit XML report generator
     Version: *
@@ -676,16 +676,16 @@ Registered command line providers:
         Hidden: False
         Description: The name of the generated JUnit XML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
-        Example: MyReport_{tfm}.xml.
+        Example: 'MyReport_{tfm}.xml'.
   MSBuildCommandLineProvider
     Name: MSBuild integration
     Version: *
-    Description: Extension used to pass parameters from MSBuild node and the hosts
+    Description: Extension used to pass parameters from MSBuild node and the hosts.
     Options:
       --internal-msbuild-node
         Arity: 1
         Hidden: True
-        Description: Used to pass the MSBuild node handle
+        Description: Used to pass the MSBuild node handle.
   RetryCommandLineOptionsProvider
     Name: Retry failed tests
     Version: *
@@ -725,7 +725,7 @@ Registered command line providers:
         Hidden: False
         Description: The name of the generated TRX report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
-        Example: MyReport_{tfm}.trx.
+        Example: 'MyReport_{tfm}.trx'.
   VideoRecorderCommandLineProvider
     Name: Video recorder
     Version: *
