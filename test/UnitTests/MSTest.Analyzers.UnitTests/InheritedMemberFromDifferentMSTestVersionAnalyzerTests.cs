@@ -2879,6 +2879,74 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenOnlyLegacyTestClassAttributeIsAppliedInCurrentProject_NoDiagnostic()
+    {
+        string baseLibraryCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                public abstract class TestBase
+                {
+                    [TestInitialize]
+                    public void BaseInitialize() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            extern alias legacy;
+
+            namespace Repro
+            {
+                [legacy::Microsoft.VisualStudio.TestTools.UnitTesting.TestClass]
+                public class SampleTests : TestBase
+                {
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddAliasedLegacyFrameworkWithCurrentBaseLibrary(test, baseLibraryCode);
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenOnlyCurrentTestClassAttributeIsAppliedInLegacyProject_NoDiagnostic()
+    {
+        string baseLibraryCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                public abstract class TestBase
+                {
+                    [TestInitialize]
+                    public void BaseInitialize() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            extern alias current;
+
+            namespace Repro
+            {
+                [current::Microsoft.VisualStudio.TestTools.UnitTesting.TestClass]
+                public class SampleTests : TestBase
+                {
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddAliasedCurrentFrameworkWithLegacyBaseLibrary(test, baseLibraryCode);
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
     public async Task WhenLegacyFrameworkIsAliasedAndTestContextPropertyIsInvalid_NoDiagnostic()
     {
         string baseLibraryCode = """
@@ -3041,11 +3109,41 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
         test.TestState.AdditionalReferences.Add(baseLibrary);
     }
 
+    private static void AddAliasedLegacyFrameworkWithCurrentBaseLibrary(VerifyCS.Test test, string baseLibraryCode)
+    {
+        MetadataReference currentFramework = MetadataReference.CreateFromFile(typeof(ParallelizeAttribute).Assembly.Location);
+        MetadataReference legacyFramework = EmitAssembly(LegacyFrameworkAssemblyName, LegacyFrameworkSource);
+        MetadataReference baseLibrary = EmitAssembly("BaseLibrary", baseLibraryCode, currentFramework);
+
+        test.TestState.AdditionalReferences.Add(
+            legacyFramework.WithProperties(legacyFramework.Properties.WithAliases(["legacy"])));
+        test.TestState.AdditionalReferences.Add(baseLibrary);
+    }
+
     private static void AddAliasedCurrentFrameworkBaseLibrary(VerifyCS.Test test, string baseLibraryCode)
     {
         MetadataReference currentFramework = MetadataReference.CreateFromFile(typeof(ParallelizeAttribute).Assembly.Location);
         MetadataReference legacyFramework = EmitAssembly(LegacyFrameworkAssemblyName, LegacyFrameworkSource);
         MetadataReference baseLibrary = EmitAssembly("BaseLibrary", baseLibraryCode, currentFramework);
+
+        test.TestState.AdditionalReferences.Add(legacyFramework);
+        test.TestState.AdditionalReferences.Add(baseLibrary);
+        test.SolutionTransforms.Add((solution, projectId) =>
+        {
+            Project project = solution.GetProject(projectId)!;
+            IEnumerable<MetadataReference> references = project.MetadataReferences.Select(reference =>
+                string.Equals(Path.GetFileName(reference.Display), "MSTest.TestFramework.dll", StringComparison.OrdinalIgnoreCase)
+                    ? reference.WithProperties(reference.Properties.WithAliases(["current"]))
+                    : reference);
+            return project.WithMetadataReferences(references).Solution;
+        });
+    }
+
+    private static void AddAliasedCurrentFrameworkWithLegacyBaseLibrary(VerifyCS.Test test, string baseLibraryCode)
+    {
+        MetadataReference currentFramework = MetadataReference.CreateFromFile(typeof(ParallelizeAttribute).Assembly.Location);
+        MetadataReference legacyFramework = EmitAssembly(LegacyFrameworkAssemblyName, LegacyFrameworkSource);
+        MetadataReference baseLibrary = EmitAssembly("BaseLibrary", baseLibraryCode, legacyFramework);
 
         test.TestState.AdditionalReferences.Add(legacyFramework);
         test.TestState.AdditionalReferences.Add(baseLibrary);

@@ -207,12 +207,20 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
             fallback ??= assembly;
         }
 
-        return fallback;
+        return HasGloballyVisibleFramework(compilation) ? null : fallback;
     }
 
     private static bool IsGloballyVisibleReference(Compilation compilation, IAssemblySymbol assembly)
         => compilation.References.Any(reference =>
             SymbolEqualityComparer.Default.Equals(compilation.GetAssemblyOrModuleSymbol(reference), assembly)
+            && (reference.Properties.Aliases.IsDefaultOrEmpty
+                || reference.Properties.Aliases.Contains("global", StringComparer.Ordinal)));
+
+    private static bool HasGloballyVisibleFramework(Compilation compilation)
+        => compilation.References.Any(reference =>
+            compilation.GetAssemblyOrModuleSymbol(reference) is IAssemblySymbol assembly
+            && IsKnownFrameworkAssembly(assembly)
+            && assembly.GetTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute) is not null
             && (reference.Properties.Aliases.IsDefaultOrEmpty
                 || reference.Properties.Aliases.Contains("global", StringComparer.Ordinal)));
 
