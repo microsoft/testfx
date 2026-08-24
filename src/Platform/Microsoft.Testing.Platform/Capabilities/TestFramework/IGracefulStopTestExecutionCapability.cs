@@ -36,8 +36,8 @@ public interface IGracefulStopTestExecutionResultCapability : IGracefulStopTestE
     /// </summary>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>
-    /// A task whose result is <see langword="true"/> when execution was still active and the stop request was
-    /// accepted; otherwise, <see langword="false"/> when execution had already completed and nothing was stopped.
+    /// A task whose result is <see langword="true"/> when a new stop request was accepted; otherwise,
+    /// <see langword="false"/> when execution had already completed or a stop had already been requested.
     /// </returns>
     Task<bool> TryStopTestExecutionAsync(CancellationToken cancellationToken);
 }

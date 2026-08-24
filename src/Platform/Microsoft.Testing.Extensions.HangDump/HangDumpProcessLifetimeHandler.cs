@@ -692,7 +692,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             // The empty-list fallback is the whole point of this method, so it must survive a failing
             // diagnostic too. logFailureAsync is a logger call and logger providers can fail; letting that
             // throw would escape the caller, which is explicitly best-effort, and skip the dump entirely.
-            await RunBestEffortDiagnosticAsync(() => logFailureAsync(ex), timeout).ConfigureAwait(false);
+            await RunBestEffortDiagnosticAsync(() => logFailureAsync(ex), BestEffortDiagnosticsTimeout).ConfigureAwait(false);
 
             return [];
         }
