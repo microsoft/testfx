@@ -20,7 +20,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         }
 
         TimingProperty? timing = testNode.Properties.SingleOrDefault<TimingProperty>();
-        string automatedTestName = testNode.Uid.Value;
+        string automatedTestName = TestNodeIdentity.GetTestName(testNode);
 
         AzureDevOpsTestCaseResult? result = state switch
         {

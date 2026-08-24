@@ -54,8 +54,8 @@ internal sealed class AzureDevOpsResultIdStore
     private readonly int _buildId;
     private readonly int _runId;
 
-    // Keyed by (storage, name, title): automatedTestName is TestNode.Uid.Value, which can be shared by
-    // several folded data-driven rows. The title carries the row identity within that test application.
+    // Keyed by (storage, name, title): the fully-qualified automated test name can be shared by several
+    // folded data-driven rows. The title carries the row identity within that test application.
     private readonly Dictionary<string, AzureDevOpsPublishedResult> _results = [];
     private readonly HashSet<string> _ambiguousKeys = [];
 
