@@ -777,7 +777,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="PreferAsyncAssertionDescription">
         <source>When verifying exceptions from asynchronous code, use the async assertion methods instead of blocking the asynchronous operation with GetAwaiter().GetResult().</source>
-        <target state="needs-review-translation">验证 asynchronous 代码中的异常时，使用 async 断言方法，而非通过 GetAwaiter().GetResult() 阻塞 asynchronous 操作。</target>
+        <target state="translated">验证 asynchronous 代码中的异常时，使用 async 断言方法，而非通过 GetAwaiter().GetResult() 阻塞 asynchronous 操作。</target>
         <note>{Locked="GetAwaiter().GetResult()"}</note>
       </trans-unit>
       <trans-unit id="PreferAsyncAssertionMessageFormat">
@@ -1554,7 +1554,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidDescription">
         <source>Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</source>
-        <target state="needs-review-translation">测试 class 必须具有无参数或接受单个 TestContext 参数的 public 构造函数。这允许测试框架正确实例化测试 class。</target>
+        <target state="translated">测试 class 必须具有无参数或接受单个 TestContext 参数的 public 构造函数。这允许测试框架正确实例化测试 class。</target>
         <note>{Locked="TestContext"}{Locked="public"}</note>
       </trans-unit>
     </body>

@@ -777,7 +777,7 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       </trans-unit>
       <trans-unit id="PreferAsyncAssertionDescription">
         <source>When verifying exceptions from asynchronous code, use the async assertion methods instead of blocking the asynchronous operation with GetAwaiter().GetResult().</source>
-        <target state="needs-review-translation">Podczas weryfikowania wyjątków z kodu asynchronicznego użyj metod asercji asynchronicznej, zamiast blokować operację asynchroniczną za pomocą metody GetAwaiter().GetResult().</target>
+        <target state="translated">Podczas weryfikowania wyjątków z kodu asynchronicznego użyj metod asercji asynchronicznej, zamiast blokować operację asynchroniczną za pomocą metody GetAwaiter().GetResult().</target>
         <note>{Locked="GetAwaiter().GetResult()"}</note>
       </trans-unit>
       <trans-unit id="PreferAsyncAssertionMessageFormat">
@@ -1554,7 +1554,7 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidDescription">
         <source>Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</source>
-        <target state="new">Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</target>
+        <target state="translated">Class testowe muszą mieć publicznego konstruktora, który jest bezparametrowy lub przyjmuje jeden parametr typu TestContext. Dzięki temu struktura testowa może poprawnie utworzyć wystąpienie class testowej.</target>
         <note>{Locked="TestContext"}{Locked="public"}</note>
       </trans-unit>
     </body>
