@@ -111,15 +111,10 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
                 return;
             }
 
-            // Optional: without it the TestContext property rule simply does not apply, which leaves the
-            // analyzer where it was before that rule existed rather than mis-classifying anything.
-            context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestContext, out INamedTypeSymbol? testContextSymbol);
-
             var symbols = new AnalysisSymbols(
                 dependsOnAttributeSymbol,
                 testMethodAttributeSymbol,
                 testClassAttributeSymbol,
-                testContextSymbol,
                 DiscoversInternals(context.Compilation));
             context.RegisterSymbolAction(context => AnalyzeMethod(context, symbols), SymbolKind.Method);
             context.RegisterSymbolAction(context => AnalyzeNamedType(context, symbols), SymbolKind.NamedType);
@@ -627,42 +622,8 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
             && !type.IsStatic
             && !IsGenericOrNestedInGeneric(type)
             && HasValidAccessibility(type, symbols)
-            && HasCorrectTestContextSignature(type, symbols)
+            && type.HasCorrectTestContextSignature()
             && type.IsTestClass(symbols.TestClassAttribute);
-
-    /// <summary>
-    /// Mirrors <c>TypeValidator.HasCorrectTestContextSignature</c>: a class that declares a
-    /// <c>TestContext</c>-typed property whose getter is missing, private, static or abstract is rejected
-    /// outright, so none of its tests are discovered.
-    /// </summary>
-    private static bool HasCorrectTestContextSignature(INamedTypeSymbol type, AnalysisSymbols symbols)
-    {
-        if (symbols.TestContext is null)
-        {
-            return true;
-        }
-
-        // Declared properties only, matching the reflection call the runtime uses.
-        foreach (ISymbol member in type.GetMembers())
-        {
-            if (member is not IPropertySymbol property
-                || !SymbolEqualityComparer.Default.Equals(property.Type, symbols.TestContext))
-            {
-                continue;
-            }
-
-            // A missing setter is fine - the property can be assigned from the constructor.
-            if (property.GetMethod is not { } getter
-                || getter.DeclaredAccessibility == Accessibility.Private
-                || getter.IsStatic
-                || getter.IsAbstract)
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
 
     /// <summary>
     /// Whether any generic type is involved. Discovery enumerates the assembly's type <em>definitions</em>,
@@ -937,7 +898,6 @@ public sealed class DependsOnShouldBeValidAnalyzer : DiagnosticAnalyzer
         INamedTypeSymbol DependsOnAttribute,
         INamedTypeSymbol TestMethodAttribute,
         INamedTypeSymbol TestClassAttribute,
-        INamedTypeSymbol? TestContext,
         bool DiscoverInternals);
 
     /// <summary>
