@@ -3132,7 +3132,7 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
         {
             Project project = solution.GetProject(projectId)!;
             IEnumerable<MetadataReference> references = project.MetadataReferences.Select(reference =>
-                string.Equals(Path.GetFileName(reference.Display), "MSTest.TestFramework.dll", StringComparison.OrdinalIgnoreCase)
+                IsCurrentFrameworkReference(reference)
                     ? reference.WithProperties(reference.Properties.WithAliases(["current"]))
                     : reference);
             return project.WithMetadataReferences(references).Solution;
@@ -3151,12 +3151,16 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
         {
             Project project = solution.GetProject(projectId)!;
             IEnumerable<MetadataReference> references = project.MetadataReferences.Select(reference =>
-                string.Equals(Path.GetFileName(reference.Display), "MSTest.TestFramework.dll", StringComparison.OrdinalIgnoreCase)
+                IsCurrentFrameworkReference(reference)
                     ? reference.WithProperties(reference.Properties.WithAliases(["current"]))
                     : reference);
             return project.WithMetadataReferences(references).Solution;
         });
     }
+
+    private static bool IsCurrentFrameworkReference(MetadataReference reference)
+        => reference is PortableExecutableReference { FilePath: { } filePath }
+            && string.Equals(Path.GetFileName(filePath), "MSTest.TestFramework.dll", StringComparison.OrdinalIgnoreCase);
 
     private static void AddSeparateCustomAttributeBaseProjects(
         VerifyCS.Test test,
