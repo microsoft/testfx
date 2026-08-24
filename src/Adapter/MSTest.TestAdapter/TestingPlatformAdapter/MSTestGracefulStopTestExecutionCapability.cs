@@ -10,7 +10,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "We can use MTP from this folder")]
 internal sealed class MSTestGracefulStopTestExecutionCapability : IGracefulStopTestExecutionResultCapability
 {
+#pragma warning disable IDE0330 // Use 'System.Threading.Lock' - not available on all target frameworks of this project.
     private static readonly object Sync = new();
+#pragma warning restore IDE0330
     private static ExecutionState s_executionState;
 
     private MSTestGracefulStopTestExecutionCapability()

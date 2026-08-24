@@ -97,7 +97,12 @@ public sealed class AbortAtDeadlineTests : AcceptanceTestBase<AbortAtDeadlineTes
 
         // No deadline environment variable, and the framework does not wait for a stop, so the run
         // completes normally and the extension stays silent (it is strictly opt-in).
-        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            environmentVariables: new()
+            {
+                ["TESTINGPLATFORM_DEADLINE"] = null,
+            },
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputDoesNotContain(StopMessage);

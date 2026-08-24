@@ -308,7 +308,9 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             {
                 // A dump is already in progress; the failed handshake is expected. Return normally so
                 // OnTestHostProcessExitedAsync runs and publishes the dump that is being taken.
-                await _logger.LogDebugAsync($"Test host handshake failed after the dump started; continuing so the dump can be published. {ex}").ConfigureAwait(false);
+                await RunBestEffortDiagnosticAsync(
+                    () => _logger.LogDebugAsync($"Test host handshake failed after the dump started; continuing so the dump can be published. {ex}"),
+                    BestEffortDiagnosticsTimeout).ConfigureAwait(false);
             }
         }
         finally
