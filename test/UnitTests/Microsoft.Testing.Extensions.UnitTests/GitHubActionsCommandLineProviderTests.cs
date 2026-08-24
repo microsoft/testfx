@@ -19,6 +19,7 @@ public sealed class GitHubActionsCommandLineProviderTests
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsGroups)]
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsAnnotations)]
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsStepSummary)]
+    [DataRow(GitHubActionsCommandLineOptions.GitHubActionsFailureDetails)]
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsSlowTestNotices)]
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsSlowTestThreshold)]
     public async Task ValidateCommandLineOptionsAsync_ReturnsInvalid_WhenSubOptionIsUsedWithoutReportGhAsync(string subOption)
@@ -39,6 +40,7 @@ public sealed class GitHubActionsCommandLineProviderTests
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsGroups)]
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsAnnotations)]
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsStepSummary)]
+    [DataRow(GitHubActionsCommandLineOptions.GitHubActionsFailureDetails)]
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsSlowTestNotices)]
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsSlowTestThreshold)]
     public async Task ValidateCommandLineOptionsAsync_ReturnsValid_WhenSubOptionIsUsedWithReportGhAsync(string subOption)
@@ -101,6 +103,26 @@ public sealed class GitHubActionsCommandLineProviderTests
         ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, ["maybe"]).ConfigureAwait(false);
 
         Assert.IsFalse(validationResult.IsValid);
+    }
+
+    [TestMethod]
+    public async Task ValidateOptionArgumentsAsync_ReturnsInvalid_WhenFailureDetailsValueIsNotOnOrOffAsync()
+    {
+        GitHubActionsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == GitHubActionsCommandLineOptions.GitHubActionsFailureDetails);
+        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, ["maybe"]).ConfigureAwait(false);
+
+        Assert.IsFalse(validationResult.IsValid);
+    }
+
+    [TestMethod]
+    public async Task ValidateOptionArgumentsAsync_ReturnsValid_WhenFailureDetailsValueIsOffAsync()
+    {
+        GitHubActionsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == GitHubActionsCommandLineOptions.GitHubActionsFailureDetails);
+        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, ["off"]).ConfigureAwait(false);
+
+        Assert.IsTrue(validationResult.IsValid);
     }
 
     [TestMethod]

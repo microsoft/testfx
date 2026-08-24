@@ -15,6 +15,7 @@ using GitHubActionsTerminalKind = ghactions::Microsoft.Testing.Extensions.Termin
 using GitHubActionsTestFailureDetails = ghactions::Microsoft.Testing.Extensions.TestFailureDetails;
 using GitHubActionsTestRecord = ghactions::Microsoft.Testing.Extensions.TestRecord;
 using GitHubCiRunSummaryAggregate = ghactions::Microsoft.Testing.Extensions.CiRunSummaryAggregate;
+using GitHubCiRunSummaryAggregation = ghactions::Microsoft.Testing.Extensions.CiRunSummaryAggregation;
 using GitHubCiRunSummaryModule = ghactions::Microsoft.Testing.Extensions.CiRunSummaryModule;
 using GitHubCiRunSummaryTest = ghactions::Microsoft.Testing.Extensions.CiRunSummaryTest;
 
@@ -1003,6 +1004,103 @@ public sealed class GitHubActionsSummaryReporterTests
 
         // Silently stopping the listing would leave a reader believing the run had only the projects shown.
         Assert.Contains("further test project(s) are not listed", markdown);
+    }
+
+    [TestMethod]
+    public async Task CreateModule_ThenFragmentRoundTrip_KeepsFailureDiagnostics_AndOmitsThemFromSlowestTests()
+    {
+        // The other aggregate tests hand-build CiRunSummaryTest instances, so none of them exercises the
+        // TestRecord -> CiRunSummaryTest conversion or the JSON fragment the deferred path actually writes.
+        // Without this test, dropping the diagnostics from either would leave every test passing while real
+        // multi-project runs silently lost the failure details this PR exists to render.
+        string resultsDirectory = Path.Combine(Path.GetTempPath(), "mtp-fragment-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(resultsDirectory);
+        try
+        {
+            GitHubActionsTestRecord[] records =
+            [
+                new GitHubActionsTestRecord(
+                    "Boom",
+                    "T.Boom",
+                    GitHubActionsTerminalKind.Failed,
+                    TimeSpan.FromSeconds(9),
+                    new GitHubActionsTestFailureDetails("assertion failed", "System.InvalidOperationException", "   at T.Boom()", "src/T.cs", 42)),
+            ];
+
+            GitHubCiRunSummaryModule module = GitHubCiRunSummaryAggregation.CreateModule(
+                records,
+                "Tests",
+                Path.Combine(resultsDirectory, "Tests.dll"),
+                "net9.0",
+                "x64",
+                executionId: "execution",
+                sessionUid: "session",
+                attemptNumber: 1,
+                exitCode: AtLeastOneTestFailedExitCode);
+
+            string fragmentPath = await GitHubCiRunSummaryAggregation.WriteFragmentAsync(resultsDirectory, "github-actions", "github-actions", module);
+
+            GitHubCiRunSummaryAggregate aggregate = GitHubCiRunSummaryAggregation.ReadAndAggregate(
+                [new InputArtifact(fragmentPath, "microsoft.testing.github-actions-summary-fragment", Path.Combine(resultsDirectory, "Tests.dll"), "net9.0", "x64", "execution")],
+                "github-actions",
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None));
+
+            GitHubCiRunSummaryTest failure = aggregate.Modules.Single().Failures.Single();
+            Assert.AreEqual("assertion failed", failure.ErrorMessage);
+            Assert.AreEqual("System.InvalidOperationException", failure.ErrorType);
+            Assert.AreEqual("   at T.Boom()", failure.StackTrace);
+            Assert.AreEqual("src/T.cs", failure.FilePath);
+            Assert.AreEqual(42, failure.LineNumber);
+
+            // The same test also qualifies as a slowest test. Carrying its stack trace there too would duplicate
+            // potentially large diagnostics in every fragment for no rendering benefit.
+            GitHubCiRunSummaryTest slowest = aggregate.Modules.Single().SlowestTests.Single();
+            Assert.AreEqual("T.Boom", slowest.FullyQualifiedName);
+            Assert.IsNull(slowest.StackTrace);
+            Assert.IsNull(slowest.ErrorMessage);
+
+            // Rendering it end to end is what proves the diagnostics survived in a usable shape.
+            string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate);
+            Assert.Contains("**Exception:** `System.InvalidOperationException`", markdown);
+            Assert.Contains("**Location:** `src/T.cs:42`", markdown);
+            Assert.Contains("assertion failed", markdown);
+        }
+        finally
+        {
+            Directory.Delete(resultsDirectory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void HasLeadingTruncationNotice_IgnoresTheMarker_WhenItAppearsInsideFailureDiagnostics()
+    {
+        // Failure messages are copied verbatim into the summary, so a test whose output contains the marker text
+        // must not be mistaken for the notice — that would suppress the real warning and leave a shortened
+        // summary that never says it was shortened.
+        Assert.IsTrue(GitHubActionsSummaryReporter.HasLeadingTruncationNotice(GitHubActionsSummaryReporter.BuildTruncationNotice(3)));
+        Assert.IsFalse(GitHubActionsSummaryReporter.HasLeadingTruncationNotice(
+            $"## Tests\n\n```text\nExpected the summary to contain {GitHubActionsSummaryReporter.TruncationNoticeMarker}\n```\n"));
+    }
+
+    [TestMethod]
+    public async Task AppendStepSummaryWithLeadingNoticeAsync_StillHoistsTheNotice_WhenAFailureMessageContainsTheMarker()
+    {
+        string path = Path.GetTempFileName();
+        try
+        {
+            // A previously written section whose rendered failure message happens to carry the marker text.
+            File.WriteAllText(path, $"## Tests\n\n```text\nexpected {GitHubActionsSummaryReporter.TruncationNoticeMarker}\n```\n");
+            var fileSystem = new SystemFileSystem();
+
+            await GitHubActionsSummaryReporter.AppendStepSummaryWithLeadingNoticeAsync(
+                fileSystem, path, "## More\n", GitHubActionsSummaryReporter.BuildTruncationNotice, maxAttempts: 1, retryDelay: TimeSpan.Zero, CancellationToken.None);
+
+            Assert.StartsWith(GitHubActionsSummaryReporter.TruncationNoticeMarker, File.ReadAllText(path));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
     }
 
     [TestMethod]

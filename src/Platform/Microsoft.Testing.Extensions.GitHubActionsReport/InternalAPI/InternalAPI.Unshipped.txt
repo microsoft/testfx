@@ -88,5 +88,6 @@ const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryRepor
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.BuildTruncationNotice(int reportedProjectCount) -> string!
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.AppendStepSummaryWithLeadingNoticeAsync(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, string! path, string! content, System.Func<int, string!>! noticeFactory, int maxAttempts, System.TimeSpan retryDelay, System.Threading.CancellationToken cancellationToken, long maxTotalBytes = 9223372036854775807) -> System.Threading.Tasks.Task<bool>!
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.CountProjectSections(string! summary) -> int
+static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.HasLeadingTruncationNotice(string! summary) -> bool
 const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.TruncationNoticeEndMarker = "<!-- /microsoft-testing-platform:github:summary-truncated -->" -> string!
 const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.ProjectSectionMarker = "<!-- microsoft-testing-platform:github:project-section -->" -> string!

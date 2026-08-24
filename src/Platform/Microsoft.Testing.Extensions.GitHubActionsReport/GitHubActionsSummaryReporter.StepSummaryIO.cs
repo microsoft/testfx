@@ -214,7 +214,11 @@ internal sealed partial class GitHubActionsSummaryReporter
                 }
 
                 string existing = encoding.GetString(existingBytes, 0, totalRead);
-                bool noticeAlreadyPresent = existing.IndexOf(TruncationNoticeMarker, StringComparison.Ordinal) >= 0;
+                // The marker must be at the very start of the file, which is the only place this code puts it.
+                // Failure messages are copied verbatim into the summary, so a test whose diagnostics contain the
+                // marker text would otherwise be mistaken for the notice and suppress the real warning — leaving
+                // a shortened summary that never says it was shortened.
+                bool noticeAlreadyPresent = HasLeadingTruncationNotice(existing);
 
                 if (noticeAlreadyPresent)
                 {
@@ -279,6 +283,19 @@ internal sealed partial class GitHubActionsSummaryReporter
             return true;
         }
     }
+
+    /// <summary>
+    /// Indicates whether the shared summary file already opens with the truncation notice.
+    /// </summary>
+    /// <remarks>
+    /// The notice is only ever placed at the very start of the file, so that is the only position that counts.
+    /// Failing tests' messages are copied verbatim into the summary, so a test whose diagnostics contain the
+    /// marker text would otherwise be mistaken for the notice — suppressing the real warning and leaving a
+    /// shortened summary that never says it was shortened. This reporter's own test suite refers to the marker
+    /// by value, which makes that a live case rather than a hypothetical one.
+    /// </remarks>
+    internal static /* for testing */ bool HasLeadingTruncationNotice(string summary)
+        => summary.StartsWith(TruncationNoticeMarker, StringComparison.Ordinal);
 
     /// <summary>
     /// Counts the full test project sections this extension has written to the shared summary file.
@@ -398,7 +415,7 @@ internal sealed partial class GitHubActionsSummaryReporter
                     // and only if no warning is there yet — the two writing modes share one marker so a summary
                     // can never carry two of them.
                     if (!RoslynString.IsNullOrWhiteSpace(leadingNotice)
-                        && existing.IndexOf(TruncationNoticeMarker, StringComparison.Ordinal) < 0)
+                        && !HasLeadingTruncationNotice(existing))
                     {
                         existing = leadingNotice + existing;
                     }

@@ -415,8 +415,14 @@ internal sealed partial class GitHubActionsSummaryReporter :
             ? new GitHubActionsSourceLocation(resolved.RelativeNormalizedPath, resolved.LineNumber)
             : GitHubActionsAnnotationReporter.TryResolveDeclaredLocation(testNode, repoRoot, _fileSystem);
 
+        // Fall back on whitespace, not just null: Clip treats a whitespace-only value as absent, so an empty
+        // explanation would otherwise discard a perfectly good exception message.
+        string? explanation = RoslynString.IsNullOrWhiteSpace(failure.Value.Explanation)
+            ? exception?.Message
+            : failure.Value.Explanation;
+
         return new TestFailureDetails(
-            GitHubActionsFailureDetails.Clip(failure.Value.Explanation ?? exception?.Message, GitHubActionsFailureDetails.MaxMessageLength, GitHubActionsFailureDetails.MaxMessageRows),
+            GitHubActionsFailureDetails.Clip(explanation, GitHubActionsFailureDetails.MaxMessageLength, GitHubActionsFailureDetails.MaxMessageRows),
             exception?.GetType().FullName,
             GitHubActionsFailureDetails.Clip(exception?.StackTrace, GitHubActionsFailureDetails.MaxStackTraceLength, GitHubActionsFailureDetails.MaxStackTraceRows),
             location?.RelativeNormalizedPath,
