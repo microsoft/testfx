@@ -39,6 +39,11 @@ internal static class MSTestTestNodeConverter
     /// A conversion still creates a distinct <see cref="TestNode"/> and <see cref="PropertyBag"/> for every message.
     /// Only immutable properties are shared. Properties that expose mutable arrays are materialized from private
     /// snapshots for each node. The weak key naturally bounds the cache to the lifetime of the element.
+    /// <para>
+    /// Although <see cref="UnitTestElement"/> is mutable while discovery constructs it, the element is fully
+    /// specialized before its first node is published. Data-row and source transformations create distinct element
+    /// clones, so later lifecycle messages for one element observe the same base metadata captured here.
+    /// </para>
     /// </remarks>
 #pragma warning disable IDE0028 // ConditionalWeakTable is not collection-expression-constructible on .NET Framework (CS9174).
     private static readonly ConditionalWeakTable<UnitTestElement, BaseTestNodeData> BaseTestNodeDataCache = new();

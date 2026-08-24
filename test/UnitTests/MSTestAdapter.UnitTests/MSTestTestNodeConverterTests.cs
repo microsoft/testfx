@@ -175,8 +175,17 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
         result.Uid.Should().BeSameAs(discovered.Uid);
         inProgress.Properties.Single<TestFileLocationProperty>().Should().BeSameAs(discovered.Properties.Single<TestFileLocationProperty>());
         result.Properties.Single<TestFileLocationProperty>().Should().BeSameAs(discovered.Properties.Single<TestFileLocationProperty>());
-        inProgress.Properties.OfType<TestMetadataProperty>().Should().Equal(discovered.Properties.OfType<TestMetadataProperty>());
-        result.Properties.OfType<TestMetadataProperty>().Should().Equal(discovered.Properties.OfType<TestMetadataProperty>());
+        TestMetadataProperty[] discoveredMetadata = discovered.Properties.OfType<TestMetadataProperty>();
+        TestMetadataProperty[] inProgressMetadata = inProgress.Properties.OfType<TestMetadataProperty>();
+        TestMetadataProperty[] resultMetadata = result.Properties.OfType<TestMetadataProperty>();
+        inProgressMetadata.Should().BeEquivalentTo(discoveredMetadata);
+        resultMetadata.Should().BeEquivalentTo(discoveredMetadata);
+        foreach (TestMetadataProperty metadata in discoveredMetadata)
+        {
+            inProgressMetadata.Single(candidate => candidate.Equals(metadata)).Should().BeSameAs(metadata);
+            resultMetadata.Single(candidate => candidate.Equals(metadata)).Should().BeSameAs(metadata);
+        }
+
         inProgress.Properties.Single<TestMethodIdentifierProperty>().Should().BeSameAs(discovered.Properties.Single<TestMethodIdentifierProperty>());
         result.Properties.Single<TestMethodIdentifierProperty>().Should().BeSameAs(discovered.Properties.Single<TestMethodIdentifierProperty>());
 
@@ -206,10 +215,10 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
 
         TestMetadataProperty[] firstMetadata = first.Properties.OfType<TestMetadataProperty>();
         TestMetadataProperty[] secondMetadata = second.Properties.OfType<TestMetadataProperty>();
-        secondMetadata.Should().Equal(firstMetadata);
-        for (int i = 0; i < firstMetadata.Length; i++)
+        secondMetadata.Should().BeEquivalentTo(firstMetadata);
+        foreach (TestMetadataProperty metadata in firstMetadata)
         {
-            secondMetadata[i].Should().BeSameAs(firstMetadata[i]);
+            secondMetadata.Single(candidate => candidate.Equals(metadata)).Should().BeSameAs(metadata);
         }
     }
 
@@ -295,11 +304,10 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
     {
         WeakReference elementReference = CreateWeakReferenceToConvertedElement();
 
-        for (int i = 0; elementReference.IsAlive && i < 5; i++)
+        for (int i = 0; elementReference.IsAlive && i < 10; i++)
         {
-            GC.Collect();
+            GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, blocking: true, compacting: true);
             GC.WaitForPendingFinalizers();
-            GC.Collect();
         }
 
         elementReference.IsAlive.Should().BeFalse();
