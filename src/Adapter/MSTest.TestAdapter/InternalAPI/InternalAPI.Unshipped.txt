@@ -12,11 +12,13 @@ Microsoft.Testing.Extensions.RunSettingsCommandLineOptionsProviderBase.RunSettin
 Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase
 Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.BuildAsync(Microsoft.Testing.Platform.CommandLine.CommandLineParseResult! commandLineParseResult) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Configurations.IConfigurationProvider!>!
 Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.Description.get -> string!
+Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.GetChildKeys(string? parentPath) -> System.Collections.Generic.IEnumerable<string!>!
 Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
 Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.LoadAsync() -> System.Threading.Tasks.Task!
 Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.Order.get -> int
 Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.RunSettingsConfigurationProviderBase() -> void
 Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.TryGet(string! key, out string? value) -> bool
+Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.TryGetScalar(string! key, out string? value) -> bool
 Microsoft.Testing.Extensions.RunSettingsEnvironmentVariableProviderBase
 Microsoft.Testing.Extensions.RunSettingsEnvironmentVariableProviderBase.Description.get -> string!
 Microsoft.Testing.Extensions.RunSettingsEnvironmentVariableProviderBase.DisplayName.get -> string!

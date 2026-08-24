@@ -237,9 +237,118 @@ public sealed class AggregatedConfigurationTests
         // Current working directory still comes from env var
         Assert.AreEqual(dotnetTestWorkingDir, aggregatedConfiguration[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory]);
     }
+
+    [TestMethod]
+    public void GetChildren_MergesProvidersAndResolvesValuesByPrecedence()
+    {
+        DictionaryConfigurationProvider higherPriorityProvider = new(new()
+        {
+            ["codeCoverage:Configuration:includeTestAssembly"] = "False",
+            ["codeCoverage:Configuration:CodeCoverage:CollectFromChildProcesses"] = "True",
+        });
+        DictionaryConfigurationProvider lowerPriorityProvider = new(new()
+        {
+            ["codeCoverage:Configuration:IncludeTestAssembly"] = "True",
+            ["codeCoverage:Configuration:Format"] = "cobertura",
+            ["codeCoverage:Configuration:CodeCoverage:UseVerifiableInstrumentation"] = "True",
+        });
+        AggregatedConfiguration configuration = new(
+            [higherPriorityProvider, lowerPriorityProvider],
+            _testApplicationModuleInfoMock.Object,
+            _fileSystemMock.Object,
+            _environmentMock.Object,
+            CommandLineParseResult.Empty);
+
+        IConfigurationSection coverageConfiguration = configuration.GetSection("codeCoverage:Configuration");
+        IConfigurationSection[] children = coverageConfiguration.GetChildren().ToArray();
+
+        Assert.AreSequenceEqual(
+            ["CodeCoverage", "Format", "includeTestAssembly"],
+            children.Select(child => child.Key).ToArray());
+        Assert.AreEqual("False", coverageConfiguration.GetSection("IncludeTestAssembly").Value);
+        Assert.AreEqual("cobertura", coverageConfiguration.GetSection("Format").Value);
+        Assert.AreSequenceEqual(
+            ["CollectFromChildProcesses", "UseVerifiableInstrumentation"],
+            coverageConfiguration.GetSection("CodeCoverage").GetChildren().Select(child => child.Key).ToArray());
+    }
+
+    [TestMethod]
+    public void GetChildren_OrdersNumericKeysNumerically()
+    {
+        DictionaryConfigurationProvider provider = new(new()
+        {
+            ["items:10"] = "ten",
+            ["items:2"] = "two",
+            ["items:0"] = "zero",
+        });
+        AggregatedConfiguration configuration = new(
+            [provider],
+            _testApplicationModuleInfoMock.Object,
+            _fileSystemMock.Object,
+            _environmentMock.Object,
+            CommandLineParseResult.Empty);
+
+        Assert.AreSequenceEqual(
+            ["0", "2", "10"],
+            configuration.GetSection("items").GetChildren().Select(child => child.Key).ToArray());
+    }
+
+    [TestMethod]
+    public void GetChildren_IncludesComputedPlatformConfiguration()
+    {
+        _testApplicationModuleInfoMock.Setup(x => x.GetCurrentTestApplicationDirectory()).Returns("TestAppDir");
+        AggregatedConfiguration configuration = new(
+            [],
+            _testApplicationModuleInfoMock.Object,
+            _fileSystemMock.Object,
+            _environmentMock.Object,
+            CommandLineParseResult.Empty);
+
+        IConfigurationSection platformOptions = Assert.ContainsSingle(
+            configuration.GetChildren().Where(child => child.Key == "platformOptions"));
+        IConfigurationSection resultDirectory = platformOptions.GetSection("resultDirectory");
+
+        Assert.IsTrue(resultDirectory.HasValue);
+        Assert.AreEqual(Path.Combine("TestAppDir", "TestResults"), resultDirectory.Value);
+    }
+
+    [TestMethod]
+    public void GetSection_ComputedPlatformConfigurationIsCaseInsensitive()
+    {
+        _testApplicationModuleInfoMock.Setup(x => x.GetCurrentTestApplicationDirectory()).Returns("TestAppDir");
+        AggregatedConfiguration configuration = new(
+            [],
+            _testApplicationModuleInfoMock.Object,
+            _fileSystemMock.Object,
+            _environmentMock.Object,
+            CommandLineParseResult.Empty);
+
+        IConfigurationSection resultDirectory = configuration.GetSection("PLATFORMOPTIONS:RESULTDIRECTORY");
+
+        Assert.IsTrue(resultDirectory.HasValue);
+        Assert.AreEqual(Path.Combine("TestAppDir", "TestResults"), resultDirectory.Value);
+    }
+
+    [TestMethod]
+    public void GetSection_LegacyProviderValueRemainsAddressableWithoutEnumeration()
+    {
+        ScalarOnlyConfigurationProvider provider = new("custom:value", "from legacy provider");
+        AggregatedConfiguration configuration = new(
+            [provider],
+            _testApplicationModuleInfoMock.Object,
+            _fileSystemMock.Object,
+            _environmentMock.Object,
+            CommandLineParseResult.Empty);
+
+        IConfigurationSection value = configuration.GetSection("custom:value");
+
+        Assert.IsTrue(value.HasValue);
+        Assert.AreEqual("from legacy provider", value.Value);
+        Assert.DoesNotContain("custom", configuration.GetChildren().Select(child => child.Key));
+    }
 }
 
-internal sealed class FakeConfigurationProvider : IConfigurationProvider
+internal sealed class FakeConfigurationProvider : IHierarchicalConfigurationProvider
 {
     private readonly string _path;
 
@@ -261,5 +370,50 @@ internal sealed class FakeConfigurationProvider : IConfigurationProvider
             default:
                 return false;
         }
+    }
+
+    public IEnumerable<string> GetChildKeys(string? parentPath)
+        => ConfigurationProviderHelpers.GetChildKeys(
+            [
+                PlatformConfigurationConstants.PlatformResultDirectory,
+                PlatformConfigurationConstants.PlatformCurrentWorkingDirectory,
+                PlatformConfigurationConstants.PlatformTestHostWorkingDirectory,
+            ],
+            parentPath);
+
+    public bool TryGetScalar(string key, out string? value) => TryGet(key, out value);
+}
+
+internal sealed class DictionaryConfigurationProvider : IHierarchicalConfigurationProvider
+{
+    private readonly Dictionary<string, string?> _entries;
+
+    public DictionaryConfigurationProvider(Dictionary<string, string?> entries)
+        => _entries = new Dictionary<string, string?>(entries, StringComparer.OrdinalIgnoreCase);
+
+    public Task LoadAsync() => Task.CompletedTask;
+
+    public bool TryGet(string key, out string? value) => _entries.TryGetValue(key, out value);
+
+    public IEnumerable<string> GetChildKeys(string? parentPath)
+        => ConfigurationProviderHelpers.GetChildKeys(_entries.Keys, parentPath);
+
+    public bool TryGetScalar(string key, out string? value) => TryGet(key, out value);
+}
+
+internal sealed class ScalarOnlyConfigurationProvider(string key, string value) : IConfigurationProvider
+{
+    public Task LoadAsync() => Task.CompletedTask;
+
+    public bool TryGet(string requestedKey, out string? result)
+    {
+        if (string.Equals(requestedKey, key, StringComparison.OrdinalIgnoreCase))
+        {
+            result = value;
+            return true;
+        }
+
+        result = null;
+        return false;
     }
 }

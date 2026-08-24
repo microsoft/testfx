@@ -74,6 +74,14 @@ public static class ServiceProviderExtensions
         => serviceProvider.GetRequiredService<IConfiguration>();
 
     /// <summary>
+    /// Gets the hierarchical configuration root from the <see cref="IServiceProvider"/>.
+    /// </summary>
+    /// <param name="serviceProvider">The service provider.</param>
+    /// <returns>The hierarchical configuration root.</returns>
+    public static IConfigurationRoot GetConfigurationRoot(this IServiceProvider serviceProvider)
+        => serviceProvider.GetRequiredService<IConfigurationRoot>();
+
+    /// <summary>
     /// Gets the artifact naming service from the <see cref="IServiceProvider"/>.
     /// </summary>
     /// <param name="serviceProvider">The service provider.</param>

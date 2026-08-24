@@ -264,6 +264,45 @@ public sealed class ConfigurationManagerTests
         Assert.AreEqual("True", entries.Single(e => e.Key == "ENABLED").Value);
     }
 
+    [TestMethod]
+    public async ValueTask ConfigurationSection_TraversesCommentedJsonWithoutExposingRawJson()
+    {
+        AggregatedConfiguration configuration = await BuildAggregatedConfigurationAsync(
+            """
+            {
+              "codeCoverage": {
+                "Configuration": {
+                  "IncludeTestAssembly": true, // Include the test assembly.
+                  "CodeCoverage": {
+                    "CollectFromChildProcesses": true,
+                  },
+                },
+              },
+            }
+            """);
+
+        IConfigurationSection coverageConfiguration = configuration
+            .GetSection("codeCoverage")
+            .GetSection("Configuration");
+
+        Assert.AreEqual("Configuration", coverageConfiguration.Key);
+        Assert.AreEqual("codeCoverage:Configuration", coverageConfiguration.Path);
+        Assert.IsFalse(coverageConfiguration.HasValue);
+        Assert.IsNull(coverageConfiguration.Value);
+        Assert.AreEqual("True", coverageConfiguration["IncludeTestAssembly"]);
+        Assert.IsNull(coverageConfiguration["CodeCoverage"]);
+
+        IConfigurationSection includeTestAssembly = coverageConfiguration.GetSection("IncludeTestAssembly");
+        Assert.IsTrue(includeTestAssembly.HasValue);
+        Assert.AreEqual("True", includeTestAssembly.Value);
+
+        IConfigurationSection codeCoverage = Assert.ContainsSingle(
+            coverageConfiguration.GetChildren().Where(child => child.Key == "CodeCoverage"));
+        Assert.AreEqual(
+            "True",
+            codeCoverage.GetSection("CollectFromChildProcesses").Value);
+    }
+
     private static async Task<AggregatedConfiguration> BuildAggregatedConfigurationAsync(string jsonFileContent)
     {
         Mock<IFileSystem> fileSystem = new();
