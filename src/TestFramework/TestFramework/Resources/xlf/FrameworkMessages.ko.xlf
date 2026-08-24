@@ -690,8 +690,7 @@ Actual: {2}</source>
     </source>
         <target state="translated">
       지정한 멤버({0})를 찾을 수 없습니다. 프라이빗 접근자를 다시 생성해야 할 수 있습니다.
-      또는 멤버가 기본 클래스에 정의된 프라이빗 멤버일 수 있습니다. 후자가 true인 경우, 형식
-을 전달해야 합니다.
+      또는 멤버가 기본 클래스에 정의된 프라이빗 멤버일 수 있습니다. 후자가 true인 경우, 형식을 전달해야 합니다.
       PrivateObject의 생성자에 전달해야 합니다.
     </target>
         <note>{0} is the member name. Do not localize the C# keyword {Locked="true"} or the type name {Locked="PrivateObject"}.</note>
@@ -704,8 +703,7 @@ Actual: {2}</source>
     </source>
         <target state="translated">
       지정한 서명을 가진 생성자를 찾을 수 없습니다. 프라이빗 접근자를 다시 생성해야 할 수 있습니다.
-      또는 멤버가 기본 클래스에 정의된 프라이빗 멤버일 수 있습니다. 후자가 true인 경우, 형식
-을 전달해야 합니다.
+      또는 멤버가 기본 클래스에 정의된 프라이빗 멤버일 수 있습니다. 후자가 true인 경우, 형식을 전달해야 합니다.
       PrivateObject의 생성자에 전달해야 합니다.
     </target>
         <note>Do not localize the C# keyword {Locked="true"} or the type name {Locked="PrivateObject"}.</note>
