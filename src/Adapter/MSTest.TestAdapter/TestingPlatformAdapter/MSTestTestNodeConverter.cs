@@ -148,8 +148,8 @@ internal static class MSTestTestNodeConverter
         private readonly string[]? _trxCategories;
         private readonly TestFileLocationProperty? _fileLocation;
         private readonly ParsedManagedName? _parsedManagedName;
+        private readonly string _fullClassName;
         private readonly string _testMethodName;
-        private readonly string? _trxFullyQualifiedTypeName;
         private TrxFullyQualifiedTypeNameProperty? _trxFullyQualifiedTypeNameProperty;
         private TrxTestDefinitionName? _trxTestDefinitionName;
 
@@ -161,8 +161,8 @@ internal static class MSTestTestNodeConverter
             string[]? trxCategories,
             TestFileLocationProperty? fileLocation,
             ParsedManagedName? parsedManagedName,
-            string testMethodName,
-            string? trxFullyQualifiedTypeName)
+            string fullClassName,
+            string testMethodName)
         {
             Uid = uid;
             DisplayName = displayName;
@@ -171,8 +171,8 @@ internal static class MSTestTestNodeConverter
             _trxCategories = trxCategories;
             _fileLocation = fileLocation;
             _parsedManagedName = parsedManagedName;
+            _fullClassName = fullClassName;
             _testMethodName = testMethodName;
-            _trxFullyQualifiedTypeName = trxFullyQualifiedTypeName;
         }
 
         public TestNodeUid Uid { get; }
@@ -223,12 +223,6 @@ internal static class MSTestTestNodeConverter
             }
 
             ParsedManagedName? parsedManagedName = GetParsedManagedName(testMethod);
-            string? trxFullyQualifiedTypeName = parsedManagedName?.FullyQualifiedTypeName;
-            if (trxFullyQualifiedTypeName is null && !StringEx.IsNullOrEmpty(testMethod.FullClassName))
-            {
-                trxFullyQualifiedTypeName = testMethod.FullClassName;
-            }
-
             return new BaseTestNodeData(
                 new TestNodeUid(element.GetTestId().ToString()),
                 testMethod.DisplayName,
@@ -237,8 +231,8 @@ internal static class MSTestTestNodeConverter
                 categories,
                 fileLocation,
                 parsedManagedName,
-                testMethod.Name,
-                trxFullyQualifiedTypeName);
+                testMethod.FullClassName,
+                testMethod.Name);
         }
 
         public void AddProperties(PropertyBag properties, bool isTrxEnabled)
@@ -282,17 +276,18 @@ internal static class MSTestTestNodeConverter
 
         public TrxFullyQualifiedTypeNameProperty GetTrxFullyQualifiedTypeNameProperty()
         {
-            if (_trxFullyQualifiedTypeName is null)
-            {
-                throw new InvalidOperationException($"The test method '{_testMethodName}' does not have a fully qualified class name.");
-            }
-
             if (_trxFullyQualifiedTypeNameProperty is { } cached)
             {
                 return cached;
             }
 
-            var created = new TrxFullyQualifiedTypeNameProperty(_trxFullyQualifiedTypeName);
+            string fullyQualifiedTypeName = _parsedManagedName is not null
+                ? _parsedManagedName.FullyQualifiedTypeName
+                : !StringEx.IsNullOrEmpty(_fullClassName)
+                    ? _fullClassName
+                    : throw new InvalidOperationException($"The test method '{_testMethodName}' does not have a fully qualified class name.");
+
+            var created = new TrxFullyQualifiedTypeNameProperty(fullyQualifiedTypeName);
             return Interlocked.CompareExchange(ref _trxFullyQualifiedTypeNameProperty, created, null) ?? created;
         }
     }
