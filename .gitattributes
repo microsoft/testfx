@@ -67,7 +67,7 @@
 #*.rtf   diff=astextplain
 #*.RTF   diff=astextplain
 
-.github/workflows/*.lock.yml linguist-generated=true merge=ours
+.github/workflows/*.lock.yml linguist-generated=true
 
 ###############################################################################
 # Localization resource files
