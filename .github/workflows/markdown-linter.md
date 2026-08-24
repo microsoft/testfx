@@ -41,13 +41,13 @@ jobs:
         persist-credentials: false
     - name: Install markdownlint-cli2
       # Pinned to the markdownlint-cli2 version bundled by
-      # DavidAnson/markdownlint-cli2-action@v24.1.0, which .github/workflows/markdownlint.yml
+      # DavidAnson/markdownlint-cli2-action@v24.2.0, which .github/workflows/markdownlint.yml
       # runs on every pull request, so this scheduled report and the pull request gate apply
       # exactly the same rules. Bump this together with that action.
       # Installed in its own step so that a registry outage or a bad version fails the job
       # here. npx exits 1 for those too, which the lint step below cannot tell apart from
       # "violations found", and it would report an npm error log as if it were lint results.
-      run: npm install --global markdownlint-cli2@0.23.1
+      run: npm install --global markdownlint-cli2@0.23.2
     - id: markdownlint
       name: Run markdownlint-cli2
       # Configuration comes from .markdownlint-cli2.jsonc in the repo root, including its
