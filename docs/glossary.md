@@ -461,7 +461,7 @@ An MSTest attribute (`Microsoft.VisualStudio.TestTools.UnitTesting.RetryAttribut
 
 ### RetryBaseAttribute
 
-An experimental MSTest extensibility point (`Microsoft.VisualStudio.TestTools.UnitTesting.RetryBaseAttribute`, `[Experimental("MSTESTEXP")]`) for implementing custom in-process retry policies. A derived attribute overrides `ExecuteAsync(RetryContext)`, inspects the initial failed results, invokes the supplied test delegate for each retry attempt, and returns every attempt in a [`RetryResult`](#retryresult). The implementation owns the retry loop and decides when to stop. The attribute can be applied to a test method or test class; a method-level attribute takes precedence over a class-level attribute, and class-level attributes are not inherited.
+An MSTest extensibility point (`Microsoft.VisualStudio.TestTools.UnitTesting.RetryBaseAttribute`) for implementing custom in-process retry policies. A derived attribute overrides the experimental `[Experimental("MSTESTEXP")]` method `ExecuteAsync(RetryContext)`, inspects the initial failed results, invokes the supplied test delegate for each retry attempt, and returns every attempt in a [`RetryResult`](#retryresult). The implementation owns the retry loop and decides when to stop. The attribute can be applied to a test method or test class; a method-level attribute takes precedence over a class-level attribute, and class-level attributes are not inherited.
 
 ### RetryContext
 
