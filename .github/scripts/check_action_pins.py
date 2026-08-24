@@ -374,7 +374,7 @@ def collect_manifest_pins(path: Path, text: str) -> tuple[dict[str, str], list[s
     if not isinstance(manifest, dict):
         return {}, [f"{relative_path}:{lineno}: `gh-aw-manifest` must be a JSON object."]
 
-    actions = manifest.get("actions", [])
+    actions = manifest.get("actions")
     if not isinstance(actions, list):
         return {}, [f"{relative_path}:{lineno}: `gh-aw-manifest.actions` must be a JSON array."]
 
@@ -389,11 +389,22 @@ def collect_manifest_pins(path: Path, text: str) -> tuple[dict[str, str], list[s
 
         repo = action.get("repo")
         sha = action.get("sha")
-        if not isinstance(repo, str) or not isinstance(sha, str) or not repo or not sha:
+        if not isinstance(repo, str) or not isinstance(sha, str):
+            errors.append(
+                f"{relative_path}:{lineno}: every `gh-aw-manifest.actions` entry must contain "
+                "string `repo` and `sha` fields."
+            )
             continue
 
-        canonical = canonical_repo(repo)
-        normalized_sha = sha.lower()
+        parsed_ref = split_ref(f"{repo}@{sha}")
+        if parsed_ref is None or not SHA_RE.match(parsed_ref[1]):
+            errors.append(
+                f"{relative_path}:{lineno}: `gh-aw-manifest.actions` entry `{repo}@{sha}` must "
+                "name a valid action and a 40-character commit SHA."
+            )
+            continue
+
+        canonical, normalized_sha = parsed_ref
         existing = pins.get(canonical)
         if existing is not None and existing != normalized_sha:
             errors.append(
