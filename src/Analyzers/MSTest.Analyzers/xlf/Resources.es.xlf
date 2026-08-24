@@ -778,7 +778,7 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
       <trans-unit id="PreferAsyncAssertionDescription">
         <source>When verifying exceptions from asynchronous code, use the async assertion methods instead of blocking the asynchronous operation with GetAwaiter().GetResult().</source>
         <target state="translated">Al comprobar las excepciones del código asincrónico, use los métodos de asynchronous async en lugar de bloquear la operación asynchronous con GetAwaiter().GetResult().</target>
-        <note>{Locked="GetAwaiter().GetResult()"}{Locked="async"}</note>
+        <note>{Locked="GetAwaiter().GetResult()"}</note>
       </trans-unit>
       <trans-unit id="PreferAsyncAssertionMessageFormat">
         <source>Use 'Assert.{0}' instead of blocking an async call in 'Assert.{1}'</source>
@@ -1555,7 +1555,7 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
       <trans-unit id="TestClassConstructorShouldBeValidDescription">
         <source>Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</source>
         <target state="translated">Las class de prueba deben tener un constructor public que no tenga parámetros o acepte un único parámetro TestContext. Esto permite que el marco de pruebas cree instancias de la class de prueba correctamente.</target>
-        <note>{Locked="TestContext"}{Locked="public"}{Locked="class"}</note>
+        <note>{Locked="TestContext"}{Locked="public"}</note>
       </trans-unit>
     </body>
   </file>

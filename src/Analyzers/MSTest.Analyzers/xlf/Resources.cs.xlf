@@ -778,7 +778,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       <trans-unit id="PreferAsyncAssertionDescription">
         <source>When verifying exceptions from asynchronous code, use the async assertion methods instead of blocking the asynchronous operation with GetAwaiter().GetResult().</source>
         <target state="translated">Při ověřování výjimek z asynchronního kódu používejte asynchronní metody kontrolních výrazů místo blokování asynchronní operace pomocí GetAwaiter().GetResult().</target>
-        <note>{Locked="GetAwaiter().GetResult()"}{Locked="async"}</note>
+        <note>{Locked="GetAwaiter().GetResult()"}</note>
       </trans-unit>
       <trans-unit id="PreferAsyncAssertionMessageFormat">
         <source>Use 'Assert.{0}' instead of blocking an async call in 'Assert.{1}'</source>
@@ -1555,7 +1555,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       <trans-unit id="TestClassConstructorShouldBeValidDescription">
         <source>Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</source>
         <target state="translated">Testovací class musí mít public konstruktor, který je buď bez parametrů, nebo přijímá jeden parametr typu TestContext. To umožňuje testovací architektuře správně vytvořit instanci testovací class.</target>
-        <note>{Locked="TestContext"}{Locked="public"}{Locked="class"}</note>
+        <note>{Locked="TestContext"}{Locked="public"}</note>
       </trans-unit>
     </body>
   </file>

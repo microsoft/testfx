@@ -778,7 +778,7 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="PreferAsyncAssertionDescription">
         <source>When verifying exceptions from asynchronous code, use the async assertion methods instead of blocking the asynchronous operation with GetAwaiter().GetResult().</source>
         <target state="translated">asynchronous 코드의 예외를 검증할 때 GetAwaiter().GetResult()를 사용하여 async 작업을 차단하는 대신 asynchronous 어설션 메서드를 사용합니다.</target>
-        <note>{Locked="GetAwaiter().GetResult()"}{Locked="async"}</note>
+        <note>{Locked="GetAwaiter().GetResult()"}</note>
       </trans-unit>
       <trans-unit id="PreferAsyncAssertionMessageFormat">
         <source>Use 'Assert.{0}' instead of blocking an async call in 'Assert.{1}'</source>
@@ -1555,7 +1555,7 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="TestClassConstructorShouldBeValidDescription">
         <source>Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</source>
         <target state="translated">테스트 class에는 매개 변수가 없거나 TestContext 매개 변수 하나를 받는 public 생성자가 있어야 합니다. 그래야 테스트 프레임워크가 테스트 class를 올바르게 생성할 수 있습니다.</target>
-        <note>{Locked="TestContext"}{Locked="public"}{Locked="class"}</note>
+        <note>{Locked="TestContext"}{Locked="public"}</note>
       </trans-unit>
     </body>
   </file>
