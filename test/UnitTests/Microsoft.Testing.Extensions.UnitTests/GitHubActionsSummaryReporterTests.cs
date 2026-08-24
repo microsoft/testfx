@@ -15,6 +15,7 @@ using GitHubActionsTerminalKind = ghactions::Microsoft.Testing.Extensions.Termin
 using GitHubActionsTestRecord = ghactions::Microsoft.Testing.Extensions.TestRecord;
 using GitHubCiCoverageMetric = ghactions::Microsoft.Testing.Extensions.CiCoverageMetric;
 using GitHubCiCoverageSummaryData = ghactions::Microsoft.Testing.Extensions.CiCoverageSummaryData;
+using GitHubCiCoverageThreshold = ghactions::Microsoft.Testing.Extensions.CiCoverageThreshold;
 using GitHubCiRunSummaryAggregate = ghactions::Microsoft.Testing.Extensions.CiRunSummaryAggregate;
 using GitHubCiRunSummaryModule = ghactions::Microsoft.Testing.Extensions.CiRunSummaryModule;
 
@@ -153,6 +154,19 @@ public sealed class GitHubActionsSummaryReporterTests
                         CoverableCount = 0,
                     },
                 ],
+                Thresholds =
+                [
+                    new GitHubCiCoverageThreshold
+                    {
+                        ScopeLevel = CoverageScopeLevel.Overall,
+                        Metric = CoverageMetric.Line,
+                        ProducerId = "coverlet",
+                        ActualPercentage = 82,
+                        RequiredPercentage = 80,
+                        HasCoverableData = true,
+                        Passed = true,
+                    },
+                ],
                 ReportingModuleCount = 1,
                 TotalModuleCount = 1,
             },
@@ -174,6 +188,7 @@ public sealed class GitHubActionsSummaryReporterTests
         Assert.Contains("<summary>&lt;h1&gt;A&amp;B&lt;/h1&gt; (net9.0&lt;&amp;&gt;, x64&amp;arm64)</summary>", markdown);
         Assert.DoesNotContain("<summary><h1>", markdown);
         Assert.Contains("| Overall | Branch | 0 | 0 | No data |", markdown);
+        Assert.Contains("| &lt;h1&gt;A&amp;B&lt;/h1&gt; (net9.0&lt;&amp;&gt;) — Overall | Line | 82.0% | 80.0% | ✅ Passed |", markdown);
     }
 
     [TestMethod]
