@@ -423,6 +423,7 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="InheritedMemberFromDifferentMSTestVersionDescription">
         <source>MSTest resolves the inherited lifecycle attributes '[TestInitialize]', '[TestCleanup]', '[ClassInitialize]' and '[ClassCleanup]', and the test attributes '[TestMethod]' and '[DataTestMethod]', by their exact framework type identity. The framework assembly was renamed from 'Microsoft.VisualStudio.TestPlatform.TestFramework' to 'MSTest.TestFramework', so a base class compiled against a different MSTest major exposes these attributes with a different type identity. When such a base is inherited by a test class compiled against another version, the inherited setup and cleanup do not run and inherited test methods are not discovered, with no build error and no discovery error. Recompile the base assembly and, for custom attributes, the assembly that defines the attribute against the same MSTest version as the test project.</source>
         <target state="needs-review-translation">MSTest では、継承されたライフサイクル属性 '[TestInitialize]'、'[TestCleanup]'、'[ClassInitialize]'、'[ClassCleanup]' と、テスト属性 '[TestMethod]' および '[DataTestMethod]' が、厳密なフレームワークの型 ID で解決されます。フレームワーク アセンブリは 'Microsoft.VisualStudio.TestPlatform.TestFramework' から 'MSTest.TestFramework' に名前が変更されたため、異なる MSTest のメジャーに対してコンパイルされた基底クラスでは、異なる型 ID でこれらの属性が公開されます。こうした基底のものが、別のバージョンに対してコンパイルされたテスト クラスによって継承されると、継承されたセットアップとクリーンアップは実行されず、継承されたテスト メソッドは検出されず、ビルド エラーも検出エラーも発生しません。テスト プロジェクトと同じ MSTest バージョンに対してベース アセンブリを再コンパイルしてください。</target>
+        <target state="new">MSTest resolves the inherited lifecycle attributes '[TestInitialize]', '[TestCleanup]', '[ClassInitialize]' and '[ClassCleanup]', and the test attributes '[TestMethod]' and '[DataTestMethod]', by their exact framework type identity. The framework assembly was renamed from 'Microsoft.VisualStudio.TestPlatform.TestFramework' to 'MSTest.TestFramework', so a base class compiled against a different MSTest major exposes these attributes with a different type identity. When such a base is inherited by a test class compiled against another version, the inherited setup and cleanup do not run and inherited test methods are not discovered, with no build error and no discovery error. Recompile the base assembly and, for custom attributes, the assembly that defines the attribute against the same MSTest version as the test project.</target>
         <note>{Locked="MSTest"}{Locked="'[TestInitialize]'"}{Locked="'[TestCleanup]'"}{Locked="'[ClassInitialize]'"}{Locked="'[ClassCleanup]'"}{Locked="'[TestMethod]'"}{Locked="'[DataTestMethod]'"}{Locked="'Microsoft.VisualStudio.TestPlatform.TestFramework'"}{Locked="'MSTest.TestFramework'"}</note>
       </trans-unit>
       <trans-unit id="InheritedMemberFromDifferentMSTestVersionMessageFormat">
@@ -778,6 +779,7 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="PreferAsyncAssertionDescription">
         <source>When verifying exceptions from asynchronous code, use the async assertion methods instead of blocking the asynchronous operation with GetAwaiter().GetResult().</source>
         <target state="needs-review-translation">asynchronous コードからの例外を検証する場合は、GetAwaiter().GetResult() で async操作をブロックするのではなく、asynchronous アサーション メソッドを使用します。</target>
+        <target state="translated">asynchronous コードからの例外を検証する場合は、GetAwaiter().GetResult() で async操作をブロックするのではなく、asynchronous アサーション メソッドを使用します。</target>
         <note>{Locked="GetAwaiter().GetResult()"}</note>
       </trans-unit>
       <trans-unit id="PreferAsyncAssertionMessageFormat">
@@ -1555,6 +1557,7 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="TestClassConstructorShouldBeValidDescription">
         <source>Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</source>
         <target state="needs-review-translation">テスト class には、パラメーターなし、または単一の TestContext パラメーターを受け取る public コンストラクターが必要です。これにより、テスト フレームワークはテスト class を適切にインスタンス化できます。</target>
+        <target state="translated">テスト class には、パラメーターなし、または単一の TestContext パラメーターを受け取る public コンストラクターが必要です。これにより、テスト フレームワークはテスト class を適切にインスタンス化できます。</target>
         <note>{Locked="TestContext"}{Locked="public"}</note>
       </trans-unit>
     </body>

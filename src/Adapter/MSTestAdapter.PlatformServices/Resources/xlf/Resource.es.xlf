@@ -124,6 +124,7 @@ pero recibió {4} argumentos, con los tipos '{5}'.</target>
       <trans-unit id="DependencyConfigurationNodeWithoutTest">
         <source>The dependency node at index {0} of the 'mstest:execution:dependencies:nodes' configuration section has no 'test' value and is ignored.</source>
         <target state="needs-review-translation">El nodo de dependencia en el índice {0} de la sección de configuración "mstest:execution:dependencies:nodes" no tiene ningún valor "test" y se omite.</target>
+        <target state="new">The dependency node at index {0} of the 'mstest:execution:dependencies:nodes' configuration section has no 'test' value and is ignored.</target>
         <note>{0} is the zero-based index of the node. {Locked="mstest:execution:dependencies:nodes"}{Locked="'test'"}</note>
       </trans-unit>
       <trans-unit id="DependsOnClassLevelCycle">

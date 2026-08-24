@@ -124,6 +124,7 @@ ancak, '{5}' türünde {4} bağımsız değişken aldı.</target>
       <trans-unit id="DependencyConfigurationNodeWithoutTest">
         <source>The dependency node at index {0} of the 'mstest:execution:dependencies:nodes' configuration section has no 'test' value and is ignored.</source>
         <target state="needs-review-translation">'mstest:execution:dependencies:nodes' yapılandırma bölümünün {0} dizinindeki bağımlılık düğümünde 'test' değeri yok ve yoksayıldı.</target>
+        <target state="translated">'mstest:execution:dependencies:nodes' yapılandırma bölümünün {0} dizinindeki bağımlılık düğümünde 'test' değeri yok ve yoksayıldı.</target>
         <note>{0} is the zero-based index of the node. {Locked="mstest:execution:dependencies:nodes"}{Locked="'test'"}</note>
       </trans-unit>
       <trans-unit id="DependsOnClassLevelCycle">

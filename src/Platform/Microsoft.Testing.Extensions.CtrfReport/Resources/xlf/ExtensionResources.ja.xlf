@@ -51,9 +51,9 @@
         <source>The name of the generated CTRF report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
 Example: 'MyReport_{tfm}.ctrf.json'.</source>
-        <target state="needs-review-translation">生成された CTRF レポートの名前。相対パスまたは絶対パスを含めることができます。相対パスはテスト結果ディレクトリを基準に解決され、存在しないディレクトリは作成されます。
-次のプレースホルダーがサポートされています: {pname} (テスト アプリケーション名)、{pid} (プロセス ID)、{asm} (エントリ アセンブリ名)、{tfm} (ターゲット フレームワーク モニカー)、{time} (タイムスタンプ)。
-例: MyReport_{tfm}.ctrf.json</target>
+        <target state="new">The name of the generated CTRF report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
+Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
+Example: 'MyReport_{tfm}.ctrf.json'.</target>
         <note>Do not localize option name {Locked="--report-ctrf-filename"}, format name {Locked="CTRF"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{time}"}, file extension {Locked=".json"}, or example file name {Locked="'MyReport_{tfm}.ctrf.json'"}.</note>
       </trans-unit>
       <trans-unit id="CtrfReportFileNameRelativePathMustStayUnderResultsDirectory">
@@ -68,7 +68,7 @@ Example: 'MyReport_{tfm}.ctrf.json'.</source>
       </trans-unit>
       <trans-unit id="CtrfReportGeneratorDescription">
         <source>Produce a CTRF (Common Test Report Format) JSON report for the current test session (https://ctrf.io).</source>
-        <target state="needs-review-translation">現在のテスト セッション (https://ctrf.io) の CTRF (Common Test Report Format) JSON レポートを生成する</target>
+        <target state="new">Produce a CTRF (Common Test Report Format) JSON report for the current test session (https://ctrf.io).</target>
         <note>Do not localize {Locked="CTRF"}, {Locked="Common Test Report Format"}, {Locked="JSON"}, or {Locked="https://ctrf.io"}.</note>
       </trans-unit>
       <trans-unit id="CtrfReportGeneratorDisplayName">
@@ -83,7 +83,7 @@ Example: 'MyReport_{tfm}.ctrf.json'.</source>
       </trans-unit>
       <trans-unit id="CtrfReportOptionDescription">
         <source>Enable generating a CTRF (Common Test Report Format) JSON report.</source>
-        <target state="needs-review-translation">CTRF (Common Test Report Format) JSON レポートの生成を有効にする</target>
+        <target state="new">Enable generating a CTRF (Common Test Report Format) JSON report.</target>
         <note>Do not localize option name {Locked="--report-ctrf"} or format names {Locked="CTRF"}{Locked="Common Test Report Format"}{Locked="JSON"}.</note>
       </trans-unit>
       <trans-unit id="InvalidTestApplicationBuilderType">
