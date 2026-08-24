@@ -36,7 +36,9 @@ namespace MSTest.Analyzers;
 public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : DiagnosticAnalyzer
 {
     private const string LegacyFrameworkAssemblyName = "Microsoft.VisualStudio.TestPlatform.TestFramework";
+    private const string LegacyFrameworkExtensionsAssemblyName = "Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions";
     private const string CurrentFrameworkAssemblyName = "MSTest.TestFramework";
+    private const string CurrentFrameworkExtensionsAssemblyName = "MSTest.TestFramework.Extensions";
     private const string MSTestNamespace = "Microsoft.VisualStudio.TestTools.UnitTesting";
     private const string TestClassAttributeName = "TestClassAttribute";
     private const string InheritanceBehaviorTypeName = "InheritanceBehavior";
@@ -207,7 +209,7 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
             fallback ??= assembly;
         }
 
-        return HasGloballyVisibleFramework(compilation) ? null : fallback;
+        return fallback is null || HasGloballyVisibleFramework(compilation) ? null : fallback;
     }
 
     private static bool IsGloballyVisibleReference(Compilation compilation, IAssemblySymbol assembly)
@@ -319,7 +321,13 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
         => type.ContainingNamespace is { } containingNamespace
             && string.Equals(containingNamespace.ToDisplayString(), MSTestNamespace, StringComparison.Ordinal)
             && string.Equals(type.Name, "TestContext", StringComparison.Ordinal)
-            && IsKnownFrameworkAssembly(type.ContainingAssembly);
+            && IsKnownTestContextAssembly(type.ContainingAssembly);
+
+    private static bool IsKnownTestContextAssembly(IAssemblySymbol? assembly)
+        => assembly is not null
+            && (IsKnownFrameworkAssembly(assembly)
+                || string.Equals(assembly.Name, LegacyFrameworkExtensionsAssemblyName, StringComparison.Ordinal)
+                || string.Equals(assembly.Name, CurrentFrameworkExtensionsAssemblyName, StringComparison.Ordinal));
 
     // Reads InheritanceBehavior from the applied attribute's constructor arguments. When the legacy framework assembly
     // is entirely absent from the compilation the attribute constructor cannot bind and ConstructorArguments is empty,

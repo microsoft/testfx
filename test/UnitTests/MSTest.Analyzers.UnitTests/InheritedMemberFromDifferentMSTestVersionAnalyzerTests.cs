@@ -25,6 +25,7 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
     // v3 exposes its lifecycle/test attributes under a different type identity. This constant names the simulated v3
     // framework assembly; a base library that defines its own MSTest attributes there behaves like a v3-compiled base.
     private const string LegacyFrameworkAssemblyName = "Microsoft.VisualStudio.TestPlatform.TestFramework";
+    private const string LegacyFrameworkExtensionsAssemblyName = "Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions";
     private const string CurrentFrameworkAssemblyName = "MSTest.TestFramework";
 
     [TestMethod]
@@ -265,6 +266,66 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
 
         var test = new VerifyCS.Test { TestCode = consumerCode };
         AddLegacyFrameworkBaseProject(test, legacyBaseCode);
+
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(InheritedMemberFromDifferentMSTestVersionAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("BaseClassInitialize", "TestBase", "ClassInitialize", LegacyFrameworkAssemblyName));
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenInheritedClassInitializeUsesLegacyExtensionsTestContext_Diagnostic()
+    {
+        string legacyFrameworkCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public enum InheritanceBehavior { None, BeforeEachDerivedClass }
+
+                public sealed class ClassInitializeAttribute : System.Attribute
+                {
+                    public ClassInitializeAttribute(InheritanceBehavior inheritanceBehavior) { }
+                }
+            }
+            """;
+
+        string legacyExtensionsCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public class TestContext { }
+            }
+            """;
+
+        string baseLibraryCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                public abstract class TestBase
+                {
+                    [ClassInitialize(InheritanceBehavior.BeforeEachDerivedClass)]
+                    public static void BaseClassInitialize(TestContext context) { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                public class {|#0:SampleTests|} : TestBase
+                {
+                    [TestMethod]
+                    public void MyTest() { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddLegacyFrameworkExtensionsAndBaseProjects(test, legacyFrameworkCode, legacyExtensionsCode, baseLibraryCode);
 
         test.ExpectedDiagnostics.Add(
             VerifyCS.Diagnostic(InheritedMemberFromDifferentMSTestVersionAnalyzer.Rule)
@@ -3184,6 +3245,30 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
         test.TestState.AdditionalProjects.Add("BaseLibrary", baseLibraryProject);
         test.TestState.AdditionalProjectReferences.Add(LegacyFrameworkAssemblyName);
         test.TestState.AdditionalProjectReferences.Add("CustomAttributes");
+        test.TestState.AdditionalProjectReferences.Add("BaseLibrary");
+    }
+
+    private static void AddLegacyFrameworkExtensionsAndBaseProjects(
+        VerifyCS.Test test,
+        string legacyFrameworkCode,
+        string legacyExtensionsCode,
+        string baseLibraryCode)
+    {
+        var frameworkProject = new ProjectState(LegacyFrameworkAssemblyName, LanguageNames.CSharp, "/LegacyFramework/", "cs");
+        frameworkProject.Sources.Add(("LegacyFramework.cs", legacyFrameworkCode));
+        test.TestState.AdditionalProjects.Add(LegacyFrameworkAssemblyName, frameworkProject);
+
+        var extensionsProject = new ProjectState(LegacyFrameworkExtensionsAssemblyName, LanguageNames.CSharp, "/LegacyFrameworkExtensions/", "cs");
+        extensionsProject.Sources.Add(("LegacyFrameworkExtensions.cs", legacyExtensionsCode));
+        test.TestState.AdditionalProjects.Add(LegacyFrameworkExtensionsAssemblyName, extensionsProject);
+
+        var baseLibraryProject = new ProjectState("BaseLibrary", LanguageNames.CSharp, "/BaseLibrary/", "cs");
+        baseLibraryProject.Sources.Add(("BaseLibrary.cs", baseLibraryCode));
+        baseLibraryProject.AdditionalProjectReferences.Add(LegacyFrameworkAssemblyName);
+        baseLibraryProject.AdditionalProjectReferences.Add(LegacyFrameworkExtensionsAssemblyName);
+        test.TestState.AdditionalProjects.Add("BaseLibrary", baseLibraryProject);
+        test.TestState.AdditionalProjectReferences.Add(LegacyFrameworkAssemblyName);
+        test.TestState.AdditionalProjectReferences.Add(LegacyFrameworkExtensionsAssemblyName);
         test.TestState.AdditionalProjectReferences.Add("BaseLibrary");
     }
 
