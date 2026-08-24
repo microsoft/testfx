@@ -368,8 +368,9 @@ public sealed class AzureDevOpsLivePublishingTests
         AzureDevOpsTestCaseResult? result = AzureDevOpsTestResultsPublisher.CreateTestCaseResult(testNode, "tests.dll")?.Result;
 
         Assert.IsNotNull(result);
-        Assert.AreEqual("My.Namespace.MyType.MyMethod", result.AutomatedTestName);
-        Assert.AreEqual("MyMethod", result.TestCaseTitle);
+        AzureDevOpsTestCaseResult publishedResult = result!;
+        Assert.AreEqual("My.Namespace.MyType.MyMethod", publishedResult.AutomatedTestName);
+        Assert.AreEqual("MyMethod", publishedResult.TestCaseTitle);
     }
 
     [TestMethod]
