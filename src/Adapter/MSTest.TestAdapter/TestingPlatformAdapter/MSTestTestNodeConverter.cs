@@ -33,38 +33,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 internal static class MSTestTestNodeConverter
 {
     /// <summary>
-    /// Caches the parsed pieces of a <see cref="TestMethod"/>'s managed name.
+    /// Caches the immutable base representation used to create every node for a test element.
     /// </summary>
     /// <remarks>
-    /// The parse is a pure function of <see cref="TestMethod.ManagedTypeName"/> and
-    /// <see cref="TestMethod.ManagedMethodName"/>, both immutable for the lifetime of the instance, and it scans the
-    /// managed method signature and allocates the namespace/type substrings. The same <see cref="TestMethod"/> is
-    /// converted several times per executed test (the in-progress node, then one result node per data row), so the
-    /// parse is paid once per test method rather than once per node.
-    /// <para>
-    /// The resulting <see cref="TestMethodIdentifierProperty"/> is cached alongside the parse only for
-    /// parameterless test methods. That type publicly exposes its
-    /// <see cref="TestMethodIdentifierProperty.ParameterTypeFullNames"/> array, so sharing one instance is safe
-    /// exactly when that array is empty and therefore cannot be mutated; every other field is an immutable string
-    /// or int. A parameterized method must keep getting a fresh property carrying a fresh array copy, otherwise a
-    /// consumer that writes to the array would corrupt every other node built from the same test method (see
-    /// <see cref="ParsedManagedName.ToProperty"/>).
-    /// </para>
-    /// <para>
-    /// The cache lives here rather than as a lazy property on <see cref="TestMethod"/> (the way
-    /// <see cref="TestMethod.ManagedTypeName"/> caches itself) because <see cref="TestMethodIdentifierProperty"/>
-    /// is a Microsoft.Testing.Platform type, and MSTestAdapter.PlatformServices - where <see cref="TestMethod"/>
-    /// lives - does not reference the platform at all. Even within this assembly the platform is only reachable
-    /// from this folder, through the file-level RS0030 suppression above (see this project's BannedSymbols.txt).
-    /// </para>
-    /// <para>
-    /// The table holds only weak references to its keys, so entries disappear as soon as the
-    /// <see cref="TestMethod"/> becomes unreachable. <c>GetValue</c> is thread-safe: concurrent misses may each run
-    /// the factory, but a single value is published to every caller.
-    /// </para>
+    /// A conversion still creates a distinct <see cref="TestNode"/> and <see cref="PropertyBag"/> for every message.
+    /// Only immutable properties are shared. Properties that expose mutable arrays are materialized from private
+    /// snapshots for each node. The weak key naturally bounds the cache to the lifetime of the element.
     /// </remarks>
 #pragma warning disable IDE0028 // ConditionalWeakTable is not collection-expression-constructible on .NET Framework (CS9174).
-    private static readonly ConditionalWeakTable<TestMethod, ParsedManagedName> ParsedManagedNameCache = new();
+    private static readonly ConditionalWeakTable<UnitTestElement, BaseTestNodeData> BaseTestNodeDataCache = new();
 #pragma warning restore IDE0028
 
     /// <summary>
@@ -103,7 +80,7 @@ internal static class MSTestTestNodeConverter
     /// </summary>
     public static TestNode ToResultTestNode(UnitTestElement element, FrameworkTestResult result, DateTimeOffset startTime, DateTimeOffset endTime, bool isTrxEnabled, MSTestSettings settings)
     {
-        TestNode testNode = CreateBaseTestNode(element, isTrxEnabled, result.DisplayName, out TestMethodIdentifierProperty? testMethodIdentifier);
+        TestNode testNode = CreateBaseTestNode(element, isTrxEnabled, result.DisplayName, out BaseTestNodeData baseData);
 
         // Mirror TestResultExtensions.ToTestResult: the reported error message prefers the exception message and
         // falls back to the ignore reason; the stack trace comes straight from the framework result.
@@ -124,7 +101,7 @@ internal static class MSTestTestNodeConverter
 
         if (isTrxEnabled)
         {
-            AddTrxResultProperties(testNode, element, errorMessage, errorStackTrace, testMethodIdentifier);
+            AddTrxResultProperties(testNode, baseData, errorMessage, errorStackTrace);
         }
 
         AddMessagesAndOutput(testNode, result, isTrxEnabled);
@@ -144,74 +121,186 @@ internal static class MSTestTestNodeConverter
         return testNode;
     }
 
-    private static TestNode CreateBaseTestNode(UnitTestElement element, bool isTrxEnabled, string? displayNameOverride, out TestMethodIdentifierProperty? testMethodIdentifier)
+    private static TestNode CreateBaseTestNode(UnitTestElement element, bool isTrxEnabled, string? displayNameOverride, out BaseTestNodeData baseData)
     {
-        TestMethod testMethod = element.TestMethod;
+        baseData = BaseTestNodeDataCache.GetValue(element, BaseTestNodeData.Create);
 
         TestNode testNode = new()
         {
-            Uid = new TestNodeUid(element.GetTestId().ToString()),
-
-            // TestMethod.DisplayName is always initialized (the constructor sets it to displayName ?? name), so
-            // displayNameOverride is the only real fallback needed here.
-            DisplayName = displayNameOverride ?? testMethod.DisplayName,
+            Uid = baseData.Uid,
+            DisplayName = displayNameOverride ?? baseData.DisplayName,
         };
 
-        AddCategoriesAndTraits(testNode, element, isTrxEnabled);
-
-        if (element.DeclaringFilePath is not null)
-        {
-            var position = new LinePosition(element.DeclaringLineNumber ?? -1, -1);
-            testNode.Properties.Add(new TestFileLocationProperty(element.DeclaringFilePath, new(position, position)));
-        }
-
-        testMethodIdentifier = AddTestMethodIdentifier(testNode, testMethod);
+        baseData.AddProperties(testNode.Properties, isTrxEnabled);
 
         return testNode;
     }
 
-    private static void AddCategoriesAndTraits(TestNode testNode, UnitTestElement element, bool isTrxEnabled)
+    private sealed class BaseTestNodeData
     {
-        if (element.TestCategory is { Length: > 0 } categories)
+        private readonly TestMetadataProperty[] _categoryMetadata;
+        private readonly TestMetadataProperty[] _traitMetadata;
+        private readonly string[]? _trxCategories;
+        private readonly TestFileLocationProperty? _fileLocation;
+        private readonly ParsedManagedName? _parsedManagedName;
+        private readonly string _testMethodName;
+        private readonly string? _trxFullyQualifiedTypeName;
+        private TrxFullyQualifiedTypeNameProperty? _trxFullyQualifiedTypeNameProperty;
+        private TrxTestDefinitionName? _trxTestDefinitionName;
+
+        private BaseTestNodeData(
+            TestNodeUid uid,
+            string displayName,
+            TestMetadataProperty[] categoryMetadata,
+            TestMetadataProperty[] traitMetadata,
+            string[]? trxCategories,
+            TestFileLocationProperty? fileLocation,
+            ParsedManagedName? parsedManagedName,
+            string testMethodName,
+            string? trxFullyQualifiedTypeName)
         {
-            if (isTrxEnabled)
+            Uid = uid;
+            DisplayName = displayName;
+            _categoryMetadata = categoryMetadata;
+            _traitMetadata = traitMetadata;
+            _trxCategories = trxCategories;
+            _fileLocation = fileLocation;
+            _parsedManagedName = parsedManagedName;
+            _testMethodName = testMethodName;
+            _trxFullyQualifiedTypeName = trxFullyQualifiedTypeName;
+        }
+
+        public TestNodeUid Uid { get; }
+
+        public string DisplayName { get; }
+
+        public static BaseTestNodeData Create(UnitTestElement element)
+        {
+            TestMethod testMethod = element.TestMethod;
+
+            string[]? categories = element.TestCategory is { Length: > 0 } testCategories
+                ? [.. testCategories]
+                : null;
+            TestMetadataProperty[] categoryMetadata;
+            if (categories is null)
             {
-                testNode.Properties.Add(new TrxCategoriesProperty(categories));
+                categoryMetadata = [];
+            }
+            else
+            {
+                categoryMetadata = new TestMetadataProperty[categories.Length];
+                for (int i = 0; i < categoryMetadata.Length; i++)
+                {
+                    categoryMetadata[i] = new TestMetadataProperty(categories[i], string.Empty);
+                }
             }
 
-            foreach (string category in categories)
+            TestTrait[]? traits = element.Traits;
+            TestMetadataProperty[] traitMetadata;
+            if (traits is null)
             {
-                testNode.Properties.Add(new TestMetadataProperty(category, string.Empty));
+                traitMetadata = [];
+            }
+            else
+            {
+                traitMetadata = new TestMetadataProperty[traits.Length];
+                for (int i = 0; i < traitMetadata.Length; i++)
+                {
+                    traitMetadata[i] = new TestMetadataProperty(traits[i].Name, traits[i].Value);
+                }
+            }
+
+            TestFileLocationProperty? fileLocation = null;
+            if (element.DeclaringFilePath is not null)
+            {
+                var position = new LinePosition(element.DeclaringLineNumber ?? -1, -1);
+                fileLocation = new TestFileLocationProperty(element.DeclaringFilePath, new(position, position));
+            }
+
+            ParsedManagedName? parsedManagedName = GetParsedManagedName(testMethod);
+            string? trxFullyQualifiedTypeName = parsedManagedName?.FullyQualifiedTypeName;
+            if (trxFullyQualifiedTypeName is null && !StringEx.IsNullOrEmpty(testMethod.FullClassName))
+            {
+                trxFullyQualifiedTypeName = testMethod.FullClassName;
+            }
+
+            return new BaseTestNodeData(
+                new TestNodeUid(element.GetTestId().ToString()),
+                testMethod.DisplayName,
+                categoryMetadata,
+                traitMetadata,
+                categories,
+                fileLocation,
+                parsedManagedName,
+                testMethod.Name,
+                trxFullyQualifiedTypeName);
+        }
+
+        public void AddProperties(PropertyBag properties, bool isTrxEnabled)
+        {
+            if (isTrxEnabled && _trxCategories is not null)
+            {
+                properties.Add(new TrxCategoriesProperty([.. _trxCategories]));
+            }
+
+            for (int i = 0; i < _categoryMetadata.Length; i++)
+            {
+                properties.Add(_categoryMetadata[i]);
+            }
+
+            for (int i = 0; i < _traitMetadata.Length; i++)
+            {
+                properties.Add(_traitMetadata[i]);
+            }
+
+            if (_fileLocation is not null)
+            {
+                properties.Add(_fileLocation);
+            }
+
+            if (_parsedManagedName is not null)
+            {
+                properties.Add(_parsedManagedName.ToProperty());
             }
         }
 
-        if (element.Traits is { Length: > 0 } traits)
+        public TrxTestDefinitionName GetTrxTestDefinitionName()
         {
-            foreach (TestTrait trait in traits)
+            if (_trxTestDefinitionName is { } cached)
             {
-                testNode.Properties.Add(new TestMetadataProperty(trait.Name, trait.Value));
+                return cached;
             }
+
+            var created = new TrxTestDefinitionName(DisplayName);
+            return Interlocked.CompareExchange(ref _trxTestDefinitionName, created, null) ?? created;
+        }
+
+        public TrxFullyQualifiedTypeNameProperty GetTrxFullyQualifiedTypeNameProperty()
+        {
+            if (_trxFullyQualifiedTypeName is null)
+            {
+                throw new InvalidOperationException($"The test method '{_testMethodName}' does not have a fully qualified class name.");
+            }
+
+            if (_trxFullyQualifiedTypeNameProperty is { } cached)
+            {
+                return cached;
+            }
+
+            var created = new TrxFullyQualifiedTypeNameProperty(_trxFullyQualifiedTypeName);
+            return Interlocked.CompareExchange(ref _trxFullyQualifiedTypeNameProperty, created, null) ?? created;
         }
     }
 
-    private static TestMethodIdentifierProperty? AddTestMethodIdentifier(TestNode testNode, TestMethod testMethod)
-    {
-        // NOTE: ManagedMethodName, in case of MSTest, carries the parameter types, so we prefer it to display the
-        // parameter types in Test Explorer. This mirrors what the VSTest bridge did in AddAdditionalProperties.
-        if (!testMethod.HasManagedMethodAndTypeProperties || StringEx.IsNullOrEmpty(testMethod.ManagedTypeName))
-        {
-            return null;
-        }
-
-        // The method group conversion is cached by the compiler, so the lookup does not allocate a delegate.
-        TestMethodIdentifierProperty testMethodIdentifier = ParsedManagedNameCache.GetValue(testMethod, ParsedManagedName.Parse).ToProperty();
-        testNode.Properties.Add(testMethodIdentifier);
-        return testMethodIdentifier;
-    }
+    // ManagedMethodName carries the parameter types, so prefer it to match the VSTest bridge's test identity.
+    private static ParsedManagedName? GetParsedManagedName(TestMethod testMethod)
+        => !testMethod.HasManagedMethodAndTypeProperties || StringEx.IsNullOrEmpty(testMethod.ManagedTypeName)
+            ? null
+            : ParsedManagedName.Parse(testMethod);
 
     /// <summary>
-    /// The parsed pieces of a <see cref="TestMethod"/>'s managed type and method names, cached by
-    /// <see cref="ParsedManagedNameCache"/>.
+    /// The parsed pieces of a <see cref="TestMethod"/>'s managed type and method names, retained by
+    /// <see cref="BaseTestNodeData"/>.
     /// </summary>
     private sealed class ParsedManagedName
     {
@@ -263,8 +352,8 @@ internal static class MSTestTestNodeConverter
         {
             // A parameterless property is fully immutable - every field is a string or int, and the empty array
             // cannot be mutated - so the same instance is handed to every node. This is the common case, and the
-            // ParsedManagedName is cached per TestMethod, so the several nodes one executed test produces (the
-            // in-progress node, then one result node per data row and per in-process retry attempt) share it.
+            // ParsedManagedName is retained by the element's base descriptor, so the several nodes one executed
+            // test produces (the in-progress node, then one result node per data row and retry attempt) share it.
             if (_parameterlessProperty is not null)
             {
                 return _parameterlessProperty;
@@ -276,6 +365,9 @@ internal static class MSTestTestNodeConverter
             return new TestMethodIdentifierProperty(
                 assemblyFullName: string.Empty, _namespace, _typeName, _methodName, _arity, [.. _parameterTypeFullNames], returnTypeFullName: string.Empty);
         }
+
+        public string FullyQualifiedTypeName
+            => StringEx.IsNullOrEmpty(_namespace) ? _typeName : $"{_namespace}.{_typeName}";
     }
 
     private static void AddOutcome(TestNode testNode, TestOutcome outcome, string? errorMessage, string? errorStackTrace)
@@ -306,35 +398,15 @@ internal static class MSTestTestNodeConverter
         }
     }
 
-    private static void AddTrxResultProperties(TestNode testNode, UnitTestElement element, string? errorMessage, string? errorStackTrace, TestMethodIdentifierProperty? testMethodIdentifierProperty)
+    private static void AddTrxResultProperties(TestNode testNode, BaseTestNodeData baseData, string? errorMessage, string? errorStackTrace)
     {
         if (!StringEx.IsNullOrEmpty(errorMessage) || !StringEx.IsNullOrEmpty(errorStackTrace))
         {
             testNode.Properties.Add(new TrxExceptionProperty(errorMessage, errorStackTrace));
         }
 
-        TestMethod testMethod = element.TestMethod;
-
-        // TestMethod.DisplayName is always initialized (constructor sets it to displayName ?? name).
-        testNode.Properties.Add(new TrxTestDefinitionName(testMethod.DisplayName));
-
-        if (testMethodIdentifierProperty is not null)
-        {
-            testNode.Properties.Add(new TrxFullyQualifiedTypeNameProperty(
-                StringEx.IsNullOrEmpty(testMethodIdentifierProperty.Namespace)
-                    ? testMethodIdentifierProperty.TypeName
-                    : $"{testMethodIdentifierProperty.Namespace}.{testMethodIdentifierProperty.TypeName}"));
-        }
-        else if (!StringEx.IsNullOrEmpty(testMethod.FullClassName))
-        {
-            // FullClassName is the source of truth for the type name, so use it directly instead of re-parsing it out
-            // of a "FullClassName.Name" string.
-            testNode.Properties.Add(new TrxFullyQualifiedTypeNameProperty(testMethod.FullClassName));
-        }
-        else
-        {
-            throw new InvalidOperationException($"The test method '{testMethod.Name}' does not have a fully qualified class name.");
-        }
+        testNode.Properties.Add(baseData.GetTrxTestDefinitionName());
+        testNode.Properties.Add(baseData.GetTrxFullyQualifiedTypeNameProperty());
     }
 
     private static void AddMessagesAndOutput(TestNode testNode, FrameworkTestResult result, bool isTrxEnabled)

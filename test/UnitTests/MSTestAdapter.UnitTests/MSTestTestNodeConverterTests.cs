@@ -148,6 +148,171 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
             .Properties.Any<Testing.Extensions.TrxReport.Abstractions.TrxCategoriesProperty>().Should().BeTrue();
     }
 
+    public void RepeatedConversions_ReuseImmutableBaseProperties_WithoutSharingNodesOrPropertyBags()
+    {
+        UnitTestElement element = CreateElement();
+        element.DeclaringFilePath = "C:\\src\\MyClass.cs";
+        element.DeclaringLineNumber = 42;
+        element.TestCategory = ["CategoryA"];
+        element.Traits = [new TestTrait("Owner", "Alice")];
+
+        TestNode discovered = MSTestTestNodeConverter.ToDiscoveredTestNode(element, isTrxEnabled: false);
+        TestNode inProgress = MSTestTestNodeConverter.ToInProgressTestNode(element, isTrxEnabled: false);
+        TestNode result = MSTestTestNodeConverter.ToResultTestNode(
+            element,
+            new FrameworkTestResult { Outcome = UnitTestOutcome.Passed },
+            DateTimeOffset.Now,
+            DateTimeOffset.Now,
+            isTrxEnabled: false,
+            new MSTestSettings());
+
+        discovered.Should().NotBeSameAs(inProgress);
+        inProgress.Should().NotBeSameAs(result);
+        discovered.Properties.Should().NotBeSameAs(inProgress.Properties);
+        inProgress.Properties.Should().NotBeSameAs(result.Properties);
+
+        inProgress.Uid.Should().BeSameAs(discovered.Uid);
+        result.Uid.Should().BeSameAs(discovered.Uid);
+        inProgress.Properties.Single<TestFileLocationProperty>().Should().BeSameAs(discovered.Properties.Single<TestFileLocationProperty>());
+        result.Properties.Single<TestFileLocationProperty>().Should().BeSameAs(discovered.Properties.Single<TestFileLocationProperty>());
+        inProgress.Properties.OfType<TestMetadataProperty>().Should().Equal(discovered.Properties.OfType<TestMetadataProperty>());
+        result.Properties.OfType<TestMetadataProperty>().Should().Equal(discovered.Properties.OfType<TestMetadataProperty>());
+        inProgress.Properties.Single<TestMethodIdentifierProperty>().Should().BeSameAs(discovered.Properties.Single<TestMethodIdentifierProperty>());
+        result.Properties.Single<TestMethodIdentifierProperty>().Should().BeSameAs(discovered.Properties.Single<TestMethodIdentifierProperty>());
+
+        discovered.Properties.Add(new TestMetadataProperty("MessageOnly", "discovered"));
+        inProgress.Properties.Any<TestMetadataProperty>().Should().BeTrue();
+        inProgress.Properties.OfType<TestMetadataProperty>().Should().NotContain(p => p.Key == "MessageOnly");
+    }
+
+    public void TrxCategories_AreCopiedPerNode_AndCannotCrossMutate()
+    {
+        UnitTestElement element = CreateElement();
+        element.TestCategory = ["CategoryA", "CategoryB"];
+        element.Traits = [new TestTrait("Owner", "Alice")];
+
+        TestNode first = MSTestTestNodeConverter.ToDiscoveredTestNode(element, isTrxEnabled: true);
+        TestNode second = MSTestTestNodeConverter.ToInProgressTestNode(element, isTrxEnabled: true);
+
+        Testing.Extensions.TrxReport.Abstractions.TrxCategoriesProperty firstCategories =
+            first.Properties.Single<Testing.Extensions.TrxReport.Abstractions.TrxCategoriesProperty>();
+        Testing.Extensions.TrxReport.Abstractions.TrxCategoriesProperty secondCategories =
+            second.Properties.Single<Testing.Extensions.TrxReport.Abstractions.TrxCategoriesProperty>();
+
+        firstCategories.Should().NotBeSameAs(secondCategories);
+        firstCategories.Categories.Should().NotBeSameAs(secondCategories.Categories);
+        firstCategories.Categories[0] = "Mutated";
+        secondCategories.Categories.Should().Equal("CategoryA", "CategoryB");
+
+        TestMetadataProperty[] firstMetadata = first.Properties.OfType<TestMetadataProperty>();
+        TestMetadataProperty[] secondMetadata = second.Properties.OfType<TestMetadataProperty>();
+        secondMetadata.Should().Equal(firstMetadata);
+        for (int i = 0; i < firstMetadata.Length; i++)
+        {
+            secondMetadata[i].Should().BeSameAs(firstMetadata[i]);
+        }
+    }
+
+    public void ResultDisplayNameOverride_RemainsPerResult_WhileTrxDefinitionUsesTestDefinitionName()
+    {
+        UnitTestElement element = CreateElement();
+        element.TestMethod.DisplayName = "Test definition";
+
+        TestNode first = MSTestTestNodeConverter.ToResultTestNode(
+            element,
+            new FrameworkTestResult { Outcome = UnitTestOutcome.Passed, DisplayName = "Data row 1" },
+            DateTimeOffset.Now,
+            DateTimeOffset.Now,
+            isTrxEnabled: true,
+            new MSTestSettings());
+        TestNode second = MSTestTestNodeConverter.ToResultTestNode(
+            element,
+            new FrameworkTestResult { Outcome = UnitTestOutcome.Passed, DisplayName = "Data row 2" },
+            DateTimeOffset.Now,
+            DateTimeOffset.Now,
+            isTrxEnabled: true,
+            new MSTestSettings());
+
+        first.DisplayName.Should().Be("Data row 1");
+        second.DisplayName.Should().Be("Data row 2");
+        first.Properties.Single<Testing.Extensions.TrxReport.Abstractions.TrxTestDefinitionName>().TestDefinitionName.Should().Be("Test definition");
+        second.Properties.Single<Testing.Extensions.TrxReport.Abstractions.TrxTestDefinitionName>().TestDefinitionName.Should().Be("Test definition");
+    }
+
+    public void CloneSpecializedAsDataRow_DoesNotReuseParentCachedIdentityOrMetadata()
+    {
+        UnitTestElement element = CreateElement();
+        element.TestCategory = ["Parent"];
+        Guid parentId = element.GetTestId();
+        MSTestTestNodeConverter.ToDiscoveredTestNode(element, isTrxEnabled: false);
+
+        UnitTestElement dataRow = element.Clone();
+        dataRow.TestMethod.DisplayName = "Data row";
+        dataRow.TestMethod.DataType = DynamicDataType.ITestDataSource;
+        dataRow.TestMethod.TestCaseIndex = 1;
+        dataRow.TestCategory = ["Row"];
+
+        TestNode dataRowNode = MSTestTestNodeConverter.ToDiscoveredTestNode(dataRow, isTrxEnabled: false);
+
+        dataRowNode.Uid.Value.Should().NotBe(parentId.ToString());
+        dataRowNode.DisplayName.Should().Be("Data row");
+        dataRowNode.Properties.OfType<TestMetadataProperty>().Should().ContainSingle(p => p.Key == "Row");
+        dataRowNode.Properties.OfType<TestMetadataProperty>().Should().NotContain(p => p.Key == "Parent");
+    }
+
+    public void SourceUpdatedClone_DoesNotReuseOriginalCachedBaseData()
+    {
+        UnitTestElement element = CreateElement();
+        TestNode original = MSTestTestNodeConverter.ToDiscoveredTestNode(element, isTrxEnabled: false);
+
+        UnitTestElement relocated = element.CloneWithSource("OtherAssembly.dll");
+        relocated.DeclaringFilePath = "C:\\deployed\\MyClass.cs";
+        TestNode updated = MSTestTestNodeConverter.ToDiscoveredTestNode(relocated, isTrxEnabled: false);
+
+        updated.Uid.Value.Should().NotBe(original.Uid.Value);
+        updated.Properties.Single<TestFileLocationProperty>().FilePath.Should().Be("C:\\deployed\\MyClass.cs");
+    }
+
+    public void ConcurrentConversions_AreSafeAndPreserveIndependentMutableProperties()
+    {
+        UnitTestElement element = CreateElement(managedMethodName: "MyMethod(System.String)");
+        element.TestCategory = ["CategoryA"];
+        var nodes = new TestNode[128];
+
+        Parallel.For(0, nodes.Length, i => nodes[i] = MSTestTestNodeConverter.ToInProgressTestNode(element, isTrxEnabled: true));
+
+        nodes.Select(node => node.Uid.Value).Should().OnlyContain(uid => uid == nodes[0].Uid.Value);
+        nodes.Select(node => node.Properties).Distinct().Should().HaveCount(nodes.Length);
+
+        string[][] parameterTypes = [.. nodes.Select(node => node.Properties.Single<TestMethodIdentifierProperty>().ParameterTypeFullNames)];
+        parameterTypes.Distinct().Should().HaveCount(nodes.Length);
+
+        string[][] categories = [.. nodes.Select(node => node.Properties.Single<Testing.Extensions.TrxReport.Abstractions.TrxCategoriesProperty>().Categories)];
+        categories.Distinct().Should().HaveCount(nodes.Length);
+    }
+
+    public void BaseDataCache_DoesNotKeepElementAlive()
+    {
+        WeakReference elementReference = CreateWeakReferenceToConvertedElement();
+
+        for (int i = 0; elementReference.IsAlive && i < 5; i++)
+        {
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+        }
+
+        elementReference.IsAlive.Should().BeFalse();
+    }
+
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    private static WeakReference CreateWeakReferenceToConvertedElement()
+    {
+        UnitTestElement element = CreateElement();
+        MSTestTestNodeConverter.ToDiscoveredTestNode(element, isTrxEnabled: true);
+        return new WeakReference(element);
+    }
+
     // --- Result node: outcomes --------------------------------------------------------------------------------
     public void ToResultTestNode_MapsPassedOutcome()
     {
@@ -330,11 +495,11 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
         node.Properties.Any<Testing.Extensions.TrxReport.Abstractions.TrxMessagesProperty>().Should().BeFalse();
     }
 
-    // --- TestMethodIdentifier caching -------------------------------------------------------------------------
+    // --- Base-property caching ---------------------------------------------------------------------------------
     public void ToResultTestNode_ReusesCachedManagedNameParse_FromInProgressNode()
     {
-        // The managed-name parse is cached per TestMethod, so the in-progress node and every result node must
-        // still agree on every field of the identifier.
+        // The managed-name parse is retained by the element's base descriptor, so the in-progress node and every
+        // result node must still agree on every field of the identifier.
         UnitTestElement element = CreateElement();
 
         TestMethodIdentifierProperty inProgress = MSTestTestNodeConverter.ToInProgressTestNode(element, isTrxEnabled: false)
@@ -355,7 +520,7 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
     public void ToResultTestNode_ReusesTestMethodIdentifierInstance_ForParameterlessTestMethod()
     {
         // A parameterless identifier is fully immutable (readonly strings plus an empty parameter array, which
-        // cannot be mutated), so the cached parse hands back the very same property instance instead of
+        // cannot be mutated), so the cached descriptor hands back the very same property instance instead of
         // allocating a new one for every node built from the same test method.
         UnitTestElement element = CreateElement();
 
@@ -465,16 +630,14 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
         clone.CachedTestNodeUid.Should().BeNull();
     }
 
-    public void Clone_PreservesCachedTestId()
+    public void Clone_InvalidatesCachedTestId_SoTheCloneCanBeSpecializedAsADataRow()
     {
         UnitTestElement element = CreateElement();
-        Guid original = element.GetTestId();
+        element.GetTestId();
 
         UnitTestElement clone = element.Clone();
 
-        // Clone() does not touch any hash input, so the cached id must be preserved.
-        clone.CachedTestNodeUid.Should().Be(original);
-        clone.GetTestId().Should().Be(original);
+        clone.CachedTestNodeUid.Should().BeNull();
     }
 
     // --- Seams ------------------------------------------------------------------------------------------------
