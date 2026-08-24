@@ -716,8 +716,8 @@ Tenere presente ciò rallenta l'esecuzione del test.</target>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
 The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</source>
-        <target state="new">Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</target>
+        <target state="needs-review-translation">Abilita la registrazione diagnostica. Il livello di registro per impostazione predefinita è ''Trace''.
+Il file verrà scritto nella directory di output con il nome log_[yyMMddHHmmssfff].diag</target>
         <note>{Locked="Trace"}{Locked="log_[yyMMddHHmmssfff].diag"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -739,7 +739,7 @@ Se non specificata, il file verrà generato all'interno della directory 'TestRes
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
         <source>Replace '[log]_.' with the specified log file name prefix.</source>
-        <target state="new">Replace '[log]_.' with the specified log file name prefix.</target>
+        <target state="needs-review-translation">Prefisso per il nome del file di log che sostituirà '[log]_.'</target>
         <note>{Locked="[log]_."}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
@@ -921,7 +921,7 @@ Per altre informazioni sui codici di uscita, vedere https://learn.microsoft.com/
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDescription">
         <source>Microsoft Testing Platform command line provider.</source>
-        <target state="new">Microsoft Testing Platform command line provider.</target>
+        <target state="needs-review-translation">Provider della riga di comando di Microsoft Testing Platform</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDisplayName">
@@ -950,7 +950,7 @@ L’impostazione predefinita è TestResults nella directory che contiene l'appli
       </trans-unit>
       <trans-unit id="PlatformCommandLineSkipBuildersNumberCheckOptionDescription">
         <source>For testing purposes.</source>
-        <target state="new">For testing purposes.</target>
+        <target state="needs-review-translation">A scopo di test</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTestHostControllerPIDOptionDescription">

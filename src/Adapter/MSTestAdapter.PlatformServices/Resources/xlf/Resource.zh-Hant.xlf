@@ -124,7 +124,6 @@ but received {4} argument(s), with types '{5}'.</source>
       <trans-unit id="DependencyConfigurationNodeWithoutTest">
         <source>The dependency node at index {0} of the 'mstest:execution:dependencies:nodes' configuration section has no 'test' value and is ignored.</source>
         <target state="needs-review-translation">'mstest:execution:dependencies:nodes' 設定區段中索引 {0} 的相依性節點沒有 'test' 值，因此已忽略。</target>
-        <target state="translated">'mstest:execution:dependencies:nodes' 設定區段中索引 {0} 的相依性節點沒有 'test' 值，因此已忽略。</target>
         <note>{0} is the zero-based index of the node. {Locked="mstest:execution:dependencies:nodes"}{Locked="'test'"}</note>
       </trans-unit>
       <trans-unit id="DependsOnClassLevelCycle">

@@ -716,8 +716,8 @@ Poznámka: Toto zpomaluje provádění testu.</target>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
 The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</source>
-        <target state="new">Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</target>
+        <target state="needs-review-translation">Umožňuje povolit protokolování diagnostiky. Výchozí úroveň protokolování je Trace.
+Soubor se zapíše do výstupního adresáře s názvem log_[yyMMddHHmmssfff].diag.</target>
         <note>{Locked="Trace"}{Locked="log_[yyMMddHHmmssfff].diag"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -739,7 +739,7 @@ Pokud není zadaný, soubor se vygeneruje ve výchozím adresáři TestResults.<
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
         <source>Replace '[log]_.' with the specified log file name prefix.</source>
-        <target state="new">Replace '[log]_.' with the specified log file name prefix.</target>
+        <target state="needs-review-translation">Předpona pro název souboru protokolu, který nahradí [log]_.</target>
         <note>{Locked="[log]_."}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
@@ -921,7 +921,7 @@ For more information about exit codes, see https://learn.microsoft.com/dotnet/co
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDescription">
         <source>Microsoft Testing Platform command line provider.</source>
-        <target state="new">Microsoft Testing Platform command line provider.</target>
+        <target state="needs-review-translation">Zprostředkovatel příkazového řádku Microsoft Testing Platform</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDisplayName">
@@ -950,7 +950,7 @@ Výchozí hodnota je TestResults v adresáři, který obsahuje testovací aplika
       </trans-unit>
       <trans-unit id="PlatformCommandLineSkipBuildersNumberCheckOptionDescription">
         <source>For testing purposes.</source>
-        <target state="new">For testing purposes.</target>
+        <target state="needs-review-translation">Pro účely testování</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTestHostControllerPIDOptionDescription">
