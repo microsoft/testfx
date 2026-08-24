@@ -264,40 +264,24 @@ internal sealed partial class GitHubActionsSummaryReporter :
                 : 0;
             int markdownByteCount = Encoding.UTF8.GetByteCount(markdown);
 
-            // Final gate, on the *projected* size rather than the current one. The budgeting above aims the file
-            // at MaxSummaryLength, but it cannot bound what other tools append to the same file, so the file can
-            // still arrive here close enough to the limit that even a one-line verdict would cross it. GitHub
-            // discards an oversized summary silently and in full — including every section earlier projects
-            // wrote — so a write that would cross the limit is worse than no write at all.
-            if (GetSummaryLength(_fileSystem, path!, _logger) is long currentLength
+            // Fast path only. The authoritative check is inside the writer, which measures the file while holding
+            // the lock: two siblings that both measured here would both see the same length, both conclude they
+            // fit, and both append — landing over the cap, which costs the whole summary. Skipping the work early
+            // when the file is already visibly full is still worth it.
+            long? observedLength = GetSummaryLength(_fileSystem, path!, _logger);
+            if (observedLength is long currentLength
                 && currentLength + markdownByteCount + noticeLengthAllowance > GitHubActionsFailureDetails.EffectiveStepSummaryLimit)
             {
-                string overflowWarning = string.Format(
-                    CultureInfo.InvariantCulture,
-                    GitHubActionsResources.StepSummaryLimitExceededWarning,
-                    currentLength.ToString(CultureInfo.InvariantCulture),
-                    GitHubActionsFailureDetails.EffectiveStepSummaryLimit.ToString(CultureInfo.InvariantCulture));
-
-                if (_logger.IsEnabled(LogLevel.Warning))
-                {
-                    _logger.LogWarning(overflowWarning);
-                }
-
-                await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(overflowWarning), testSessionContext.CancellationToken).ConfigureAwait(false);
-
-                // This project's section is dropped entirely, which is exactly what the note at the top of the
-                // summary describes, so make sure it is there even if this project was not condensed. The note is
-                // a few hundred bytes and dropping the section frees far more room than it takes; if even that
-                // does not fit, the summary is genuinely full and silence is what keeps the rest rendered.
-                if (currentLength + Encoding.UTF8.GetByteCount(BuildTruncationNotice(int.MaxValue)) <= GitHubActionsFailureDetails.EffectiveStepSummaryLimit)
-                {
-                    await TryAppendSummaryAsync(path!, string.Empty, includeNotice: true, testSessionContext).ConfigureAwait(false);
-                }
-
+                await ReportSectionDroppedAsync(path!, currentLength, testSessionContext).ConfigureAwait(false);
                 return;
             }
 
-            await TryAppendSummaryAsync(path!, markdown, includeTruncationNotice, testSessionContext).ConfigureAwait(false);
+            if (!await TryAppendSummaryAsync(path!, markdown, includeTruncationNotice, GitHubActionsFailureDetails.EffectiveStepSummaryLimit, testSessionContext).ConfigureAwait(false))
+            {
+                // The writer refused under the lock: a sibling grew the file between the fast path above and the
+                // append. Report it the same way, and re-measure so the warning quotes what the file actually holds.
+                await ReportSectionDroppedAsync(path!, GetSummaryLength(_fileSystem, path!, _logger) ?? observedLength ?? 0, testSessionContext).ConfigureAwait(false);
+            }
         }
         catch (OperationCanceledException)
         {
@@ -310,21 +294,47 @@ internal sealed partial class GitHubActionsSummaryReporter :
     }
 
     /// <summary>
+    /// Warns that this project's section did not fit in the shared summary, and makes sure the note explaining
+    /// that the report is incomplete is present.
+    /// </summary>
+    private async Task ReportSectionDroppedAsync(string path, long currentLength, ITestSessionContext testSessionContext)
+    {
+        string overflowWarning = string.Format(
+            CultureInfo.InvariantCulture,
+            GitHubActionsResources.StepSummaryLimitExceededWarning,
+            currentLength.ToString(CultureInfo.InvariantCulture),
+            GitHubActionsFailureDetails.EffectiveStepSummaryLimit.ToString(CultureInfo.InvariantCulture));
+
+        if (_logger.IsEnabled(LogLevel.Warning))
+        {
+            _logger.LogWarning(overflowWarning);
+        }
+
+        await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(overflowWarning), testSessionContext.CancellationToken).ConfigureAwait(false);
+
+        // This project's section is dropped entirely, which is exactly what the note at the top of the summary
+        // describes, so make sure it is there even if this project was not condensed. The note is a few hundred
+        // bytes and dropping the section frees far more room than it takes; if even that does not fit, the writer
+        // refuses it and the summary is genuinely full, where silence is what keeps the rest rendered.
+        await TryAppendSummaryAsync(path, string.Empty, includeNotice: true, GitHubActionsFailureDetails.EffectiveStepSummaryLimit, testSessionContext).ConfigureAwait(false);
+    }
+
+    /// <summary>
     /// Writes this project's section to the shared summary file, best-effort: a failure to write the summary must
     /// not fail the test run, so it surfaces as a warning.
     /// </summary>
-    private async Task TryAppendSummaryAsync(string path, string markdown, bool includeNotice, ITestSessionContext testSessionContext)
+    /// <returns>
+    /// <see langword="false"/> only when the writer refused the content because it would have taken the file past
+    /// <paramref name="maxTotalBytes"/>. A write that failed for any other reason has already been reported and
+    /// returns <see langword="true"/>, so the caller does not warn about it twice.
+    /// </returns>
+    private async Task<bool> TryAppendSummaryAsync(string path, string markdown, bool includeNotice, long maxTotalBytes, ITestSessionContext testSessionContext)
     {
         try
         {
-            if (includeNotice)
-            {
-                await AppendStepSummaryWithLeadingNoticeAsync(_fileSystem, path, markdown, BuildTruncationNotice, StepSummaryMaxWriteAttempts, StepSummaryRetryDelay, testSessionContext.CancellationToken).ConfigureAwait(false);
-            }
-            else
-            {
-                await AppendStepSummaryWithRetryAsync(_fileSystem, path, markdown, StepSummaryMaxWriteAttempts, StepSummaryRetryDelay, testSessionContext.CancellationToken).ConfigureAwait(false);
-            }
+            return includeNotice
+                ? await AppendStepSummaryWithLeadingNoticeAsync(_fileSystem, path, markdown, BuildTruncationNotice, StepSummaryMaxWriteAttempts, StepSummaryRetryDelay, testSessionContext.CancellationToken, maxTotalBytes).ConfigureAwait(false)
+                : await AppendStepSummaryWithRetryAsync(_fileSystem, path, markdown, StepSummaryMaxWriteAttempts, StepSummaryRetryDelay, testSessionContext.CancellationToken, maxTotalBytes).ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -335,6 +345,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
             }
 
             await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), testSessionContext.CancellationToken).ConfigureAwait(false);
+            return true;
         }
     }
 

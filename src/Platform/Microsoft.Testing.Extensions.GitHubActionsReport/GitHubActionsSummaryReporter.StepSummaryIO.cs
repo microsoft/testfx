@@ -68,15 +68,30 @@ internal sealed partial class GitHubActionsSummaryReporter
     /// on top of it and corrupt the summary. Such a mid-write failure is therefore propagated straight to the
     /// caller's best-effort warning path instead of being retried.
     /// </para>
+    /// <para>
+    /// <paramref name="maxTotalBytes"/> bounds the size the file may reach. It is checked here, under the lock and
+    /// against the handle this process holds, rather than by the caller before the call: two sibling projects that
+    /// each measured the file before acquiring the lock would both see the same length, both conclude they fit, and
+    /// both append — landing over GitHub's cap, which discards the whole summary. The caller's pre-check remains a
+    /// cheap fast path; this one is the decision.
+    /// </para>
     /// </remarks>
-    internal static /* for testing */ async Task AppendStepSummaryWithRetryAsync(
+    /// <returns>
+    /// <see langword="true"/> if the content was appended; <see langword="false"/> if appending it would have taken
+    /// the file past <paramref name="maxTotalBytes"/>, in which case nothing was written.
+    /// </returns>
+    internal static /* for testing */ async Task<bool> AppendStepSummaryWithRetryAsync(
         IFileSystem fileSystem,
         string path,
         string content,
         int maxAttempts,
         TimeSpan retryDelay,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        long maxTotalBytes = long.MaxValue)
     {
+        var encoding = new UTF8Encoding(false);
+        int contentByteCount = encoding.GetByteCount(content);
+
         // Taken even for a plain append: the notice-hoisting path replaces the whole file, and an append that
         // slipped between its read and its swap would be silently overwritten.
         using IFileStream lockStream = await AcquireSummaryLockAsync(fileSystem, path, maxAttempts, retryDelay, cancellationToken).ConfigureAwait(false);
@@ -102,12 +117,19 @@ internal sealed partial class GitHubActionsSummaryReporter
             // write error (not contention) and must not be retried — a partial append followed by a full re-append
             // would corrupt the summary. Let it propagate to the caller's best-effort warning path.
             using (stream)
-            using (var writer = new StreamWriter(stream.Stream, new UTF8Encoding(false)))
             {
+                // A stream that cannot report its length cannot be gated; that only happens in tests, and writing
+                // is the behaviour that matters there.
+                if (stream.Stream.CanSeek && stream.Stream.Length + contentByteCount > maxTotalBytes)
+                {
+                    return false;
+                }
+
+                using var writer = new StreamWriter(stream.Stream, encoding);
                 await writer.WriteAsync(content).ConfigureAwait(false);
             }
 
-            return;
+            return true;
         }
     }
 
@@ -128,15 +150,25 @@ internal sealed partial class GitHubActionsSummaryReporter
     /// only shortened once the file is past the condense threshold, and from that point on no further full
     /// sections are added — so the number of them can no longer change.
     /// </para>
+    /// <para>
+    /// <paramref name="maxTotalBytes"/> is checked here rather than by the caller, for the same reason the plain
+    /// append path checks it here: the file is measured while this process holds it, so a sibling cannot have
+    /// grown it since.
+    /// </para>
     /// </remarks>
-    internal static /* for testing */ async Task AppendStepSummaryWithLeadingNoticeAsync(
+    /// <returns>
+    /// <see langword="true"/> if the file was updated; <see langword="false"/> if the result would have exceeded
+    /// <paramref name="maxTotalBytes"/>, in which case the file is left untouched.
+    /// </returns>
+    internal static /* for testing */ async Task<bool> AppendStepSummaryWithLeadingNoticeAsync(
         IFileSystem fileSystem,
         string path,
         string content,
         Func<int, string> noticeFactory,
         int maxAttempts,
         TimeSpan retryDelay,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        long maxTotalBytes = long.MaxValue)
     {
         var encoding = new UTF8Encoding(false);
 
@@ -188,6 +220,11 @@ internal sealed partial class GitHubActionsSummaryReporter
                 {
                     // The notice is already at the top, so this is a plain append and nothing existing is at risk.
                     byte[] appended = encoding.GetBytes(content);
+                    if (totalRead + appended.Length > maxTotalBytes)
+                    {
+                        return false;
+                    }
+
                     inner.Seek(0, SeekOrigin.End);
                     if (appended.Length > 0)
                     {
@@ -195,7 +232,7 @@ internal sealed partial class GitHubActionsSummaryReporter
                     }
 
                     await inner.FlushAsync(cancellationToken).ConfigureAwait(false);
-                    return;
+                    return true;
                 }
 
                 // Hoisting the notice means replacing the file, which is the one operation here that can destroy
@@ -208,6 +245,10 @@ internal sealed partial class GitHubActionsSummaryReporter
                 // The exclusive handle has to be released before the swap, because a file that is open cannot be
                 // replaced. The lock file held for this whole method is what keeps a sibling out of that gap.
                 pendingPayload = encoding.GetBytes(noticeFactory(CountProjectSections(existing)) + existing + content);
+                if (pendingPayload.Length > maxTotalBytes)
+                {
+                    return false;
+                }
             }
 
             string tempPath = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
@@ -235,7 +276,7 @@ internal sealed partial class GitHubActionsSummaryReporter
                 }
             }
 
-            return;
+            return true;
         }
     }
 
@@ -267,7 +308,15 @@ internal sealed partial class GitHubActionsSummaryReporter
         return count;
     }
 
-    internal static async Task UpsertStepSummaryWithRetryAsync(
+    /// <summary>
+    /// Replaces (or inserts) this run's section in the shared <c>GITHUB_STEP_SUMMARY</c> file.
+    /// </summary>
+    /// <returns>
+    /// <see langword="true"/> if the file was updated; <see langword="false"/> if the result would have exceeded
+    /// <paramref name="maxTotalBytes"/>, in which case the file is left untouched so the caller can retry with a
+    /// smaller rendering.
+    /// </returns>
+    internal static async Task<bool> UpsertStepSummaryWithRetryAsync(
         IFileSystem fileSystem,
         string path,
         string aggregationId,
@@ -275,7 +324,8 @@ internal sealed partial class GitHubActionsSummaryReporter
         int maxAttempts,
         TimeSpan retryDelay,
         CancellationToken cancellationToken,
-        string? leadingNotice = null)
+        string? leadingNotice = null,
+        long maxTotalBytes = long.MaxValue)
     {
         string startMarker = $"<!-- microsoft-testing-platform:{GitHubActionsSummaryArtifactPostProcessor.Provider}:{aggregationId}:start -->";
         string endMarker = $"<!-- microsoft-testing-platform:{GitHubActionsSummaryArtifactPostProcessor.Provider}:{aggregationId}:end -->";
@@ -353,6 +403,15 @@ internal sealed partial class GitHubActionsSummaryReporter
                         existing = leadingNotice + existing;
                     }
 
+                    // Measured in bytes, under the lock, against the content that is actually about to be written.
+                    // GitHub discards an oversized summary in full — including every section other steps wrote — so
+                    // leaving the file as it stands and letting the caller render something smaller is strictly
+                    // better than replacing it with a file that will be thrown away.
+                    if (Encoding.UTF8.GetByteCount(existing) > maxTotalBytes)
+                    {
+                        return false;
+                    }
+
                     using (IFileStream tempStream = fileSystem.NewFileStream(tempPath, FileMode.CreateNew, FileAccess.Write, FileShare.Read))
                     using (var writer = new StreamWriter(tempStream.Stream, new UTF8Encoding(false)))
                     {
@@ -382,7 +441,7 @@ internal sealed partial class GitHubActionsSummaryReporter
                 }
             }
 
-            return;
+            return true;
         }
     }
 }

@@ -77,7 +77,11 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
         string? stepSummaryPath = environment.GetEnvironmentVariable(StepSummaryEnvironmentVariable);
         if (!RoslynString.IsNullOrWhiteSpace(stepSummaryPath))
         {
-            await GitHubActionsSummaryReporter.UpsertStepSummaryWithRetryAsync(
+            // The step summary is shared with every other step in the job, so the rendered file can exceed
+            // GitHub's cap even though this section was budgeted. The writer refuses rather than replacing the
+            // file with one GitHub would discard in full; fall back to a verdict line per module, which is the
+            // smallest report that still names every test project.
+            if (!await GitHubActionsSummaryReporter.UpsertStepSummaryWithRetryAsync(
                 fileSystem,
                 stepSummaryPath!,
                 aggregationId,
@@ -85,7 +89,21 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
                 StepSummaryMaxWriteAttempts,
                 StepSummaryRetryDelay,
                 cancellationToken,
-                leadingNotice).ConfigureAwait(false);
+                leadingNotice,
+                GitHubActionsFailureDetails.EffectiveStepSummaryLimit).ConfigureAwait(false))
+            {
+                string condensed = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate, includeFailureDetails: false, out _, out _, condenseAllModules: true);
+                await GitHubActionsSummaryReporter.UpsertStepSummaryWithRetryAsync(
+                    fileSystem,
+                    stepSummaryPath!,
+                    aggregationId,
+                    condensed,
+                    StepSummaryMaxWriteAttempts,
+                    StepSummaryRetryDelay,
+                    cancellationToken,
+                    GitHubActionsSummaryReporter.BuildTruncationNotice(0),
+                    GitHubActionsFailureDetails.EffectiveStepSummaryLimit).ConfigureAwait(false);
+            }
         }
 
         return new ProcessedArtifact(

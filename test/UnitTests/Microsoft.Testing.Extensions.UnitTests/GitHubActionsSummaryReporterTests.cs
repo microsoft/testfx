@@ -574,6 +574,7 @@ public sealed class GitHubActionsSummaryReporterTests
     [DataRow(200)]
     [DataRow(600)]
     [DataRow(2000)]
+    [DataRow(5000)]
     public void BuildAggregateMarkdown_ScalesWithModuleCount_WithoutExceedingTheCap(int moduleCount)
     {
         // The aggregated path divides its detail budget by module count, so expanded diagnostics cannot grow
@@ -623,10 +624,13 @@ public sealed class GitHubActionsSummaryReporterTests
         string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate, includeFailureDetails: true, out int omitted);
         string notice = omitted > 0 ? GitHubActionsSummaryReporter.BuildAggregateTruncationNotice(omitted, moduleCount) : string.Empty;
 
+        // Measured in bytes: the cap GitHub enforces is on the file, and a char count understates any summary
+        // carrying non-ASCII text — which this one does, if only through its per-module status emoji.
+        int byteCount = Encoding.UTF8.GetByteCount(markdown) + Encoding.UTF8.GetByteCount(notice);
         Assert.IsLessThan(
             GitHubActionsFailureDetails.EffectiveStepSummaryLimit,
-            markdown.Length + notice.Length,
-            $"A {moduleCount}-module run renders {markdown.Length + notice.Length} characters, which GitHub discards in full.");
+            byteCount,
+            $"A {moduleCount}-module run renders {byteCount} bytes, which GitHub discards in full.");
     }
 
     [TestMethod]
@@ -843,6 +847,161 @@ public sealed class GitHubActionsSummaryReporterTests
 
         // Exactly one acquisition: a post-acquire write failure is not contention and must not be retried.
         fileSystem.Verify(f => f.NewFileStream("summary.md", FileMode.Append, FileAccess.Write, FileShare.Read), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task AppendStepSummaryWithRetryAsync_RefusesTheWrite_WhenItWouldCrossTheCap()
+    {
+        // The gate lives here rather than in the caller: two sibling projects that each measured the file before
+        // acquiring the lock would both see the same length, both conclude they fit, and both append — landing
+        // over GitHub's cap, which costs the whole summary rather than one section.
+        var buffer = new MemoryStream();
+        buffer.SetLength(90);
+        buffer.Seek(0, SeekOrigin.End);
+        Mock<IFileSystem> fileSystem = CreateFileSystemWritingTo(buffer);
+
+        bool written = await GitHubActionsSummaryReporter.AppendStepSummaryWithRetryAsync(
+            fileSystem.Object, "summary.md", "0123456789", maxAttempts: 5, retryDelay: TimeSpan.Zero, CancellationToken.None, maxTotalBytes: 99);
+
+        Assert.IsFalse(written);
+        Assert.HasCount(90, buffer.ToArray(), "Nothing may be appended once the write is refused.");
+
+        // One byte of headroom is enough: the gate refuses only what would actually cross the limit.
+        Assert.IsTrue(await GitHubActionsSummaryReporter.AppendStepSummaryWithRetryAsync(
+            fileSystem.Object, "summary.md", "0123456789", maxAttempts: 5, retryDelay: TimeSpan.Zero, CancellationToken.None, maxTotalBytes: 100));
+        Assert.HasCount(100, buffer.ToArray());
+    }
+
+    [TestMethod]
+    public async Task UpsertStepSummaryWithRetryAsync_LeavesTheFileUntouched_WhenTheResultWouldCrossTheCap()
+    {
+        string path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, "existing\n");
+            var fileSystem = new SystemFileSystem();
+
+            bool written = await GitHubActionsSummaryReporter.UpsertStepSummaryWithRetryAsync(
+                fileSystem, path, "run-1", "a section that does not fit", maxAttempts: 1, retryDelay: TimeSpan.Zero, CancellationToken.None, leadingNotice: null, maxTotalBytes: 16);
+
+            Assert.IsFalse(written);
+
+            // Replacing the file with one GitHub would discard in full is worse than writing nothing: everything
+            // other steps already wrote survives only if we leave it alone.
+            Assert.AreEqual("existing\n", File.ReadAllText(path));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public void BuildAggregateMarkdown_CondenseAllModules_RendersOnlyVerdictLines()
+    {
+        // The fallback the post-processor takes when the full rendering is refused: the smallest report that still
+        // names every test project.
+        var aggregate = new GitHubCiRunSummaryAggregate(
+            [
+                new GitHubCiRunSummaryModule
+                {
+                    AssemblyName = "Tests",
+                    ModulePath = "Tests.dll",
+                    TargetFramework = "net9.0",
+                    Architecture = "x64",
+                    SessionUid = "session",
+                    AttemptNumber = 1,
+                    ExitCode = AtLeastOneTestFailedExitCode,
+                    TotalTests = 2,
+                    FailedTests = 1,
+                    PassedTests = 1,
+                    Failures =
+                    [
+                        new GitHubCiRunSummaryTest
+                        {
+                            DisplayName = "Boom",
+                            FullyQualifiedName = "Tests.Boom",
+                            DurationTicks = TimeSpan.FromMilliseconds(1).Ticks,
+                            ErrorMessage = "assertion failed",
+                            ErrorType = "System.Exception",
+                        },
+                    ],
+                },
+            ],
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 2,
+            passedTests: 1,
+            failedTests: 1,
+            skippedTests: 0,
+            duration: TimeSpan.FromSeconds(1),
+            exitCode: AtLeastOneTestFailedExitCode,
+            hasAuthoritativeRunSummary: true,
+            isPartial: false);
+
+        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(
+            aggregate, includeFailureDetails: true, out _, out int condensedModules, condenseAllModules: true);
+
+        Assert.AreEqual(1, condensedModules);
+        Assert.Contains("❌ `Tests` (net9.0): 2 total", markdown);
+        Assert.DoesNotContain("assertion failed", markdown);
+        Assert.DoesNotContain("Tests.Boom", markdown);
+    }
+
+    [TestMethod]
+    public void BuildAggregateMarkdown_StaysUnderTheCap_WhenTheContentIsNonAscii()
+    {
+        // The cap GitHub enforces is on bytes, and this content is the non-ASCII-heavy kind: a UTF-16 char count
+        // understates a summary of Japanese test names by threefold, which is enough to render a file GitHub
+        // discards while every char-based check reports it as comfortably within budget. The module count is high
+        // enough to exhaust the listing bound too, so the tail of the run is reported as a count rather than as
+        // one line per project — the only rendering whose size does not grow with the run.
+        GitHubCiRunSummaryModule[] modules = Enumerable.Range(0, 3000).Select(i => new GitHubCiRunSummaryModule
+        {
+            AssemblyName = $"テストアセンブリの名前{i}",
+            ModulePath = $"Tests{i}.dll",
+            TargetFramework = "net9.0",
+            Architecture = "x64",
+            SessionUid = $"session-{i}",
+            AttemptNumber = 1,
+            ExitCode = AtLeastOneTestFailedExitCode,
+            TotalTests = 5,
+            FailedTests = 5,
+            Failures =
+            [
+                .. Enumerable.Range(0, 5).Select(j => new GitHubCiRunSummaryTest
+                {
+                    DisplayName = $"失敗したテスト{j}",
+                    FullyQualifiedName = $"テストアセンブリの名前{i}.とても長い名前空間.失敗したテスト{j}",
+                    DurationTicks = TimeSpan.FromMilliseconds(1).Ticks,
+                    ErrorMessage = "アサーションが失敗しました。期待値と実際の値が一致しません。",
+                    ErrorType = "System.Exception",
+                }),
+            ],
+        }).ToArray();
+
+        var aggregate = new GitHubCiRunSummaryAggregate(
+            modules,
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 15000,
+            passedTests: 0,
+            failedTests: 15000,
+            skippedTests: 0,
+            duration: TimeSpan.FromSeconds(10),
+            exitCode: AtLeastOneTestFailedExitCode,
+            hasAuthoritativeRunSummary: true,
+            isPartial: false);
+
+        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate, includeFailureDetails: true, out _, out int condensedModules);
+
+        int byteCount = Encoding.UTF8.GetByteCount(markdown);
+        Assert.IsGreaterThan(0, condensedModules, "This many modules must exhaust the budget, or the test is not exercising the bound.");
+        Assert.IsLessThan(
+            GitHubActionsFailureDetails.GitHubStepSummaryLimit,
+            byteCount,
+            $"A 3000-module run renders {byteCount} bytes, which GitHub discards in full.");
+
+        // Silently stopping the listing would leave a reader believing the run had only the projects shown.
+        Assert.Contains("further test project(s) are not listed", markdown);
     }
 
     [TestMethod]

@@ -220,6 +220,10 @@
     <value>This job summary was getting long, so it was shortened: it contains the full results of the first {0} test project(s), and the ones reported below as a single line had their results left out. GitHub discards a job summary larger than 1 MB in full rather than shortening it. See the workflow log or the test report for the complete results.</value>
     <comment>Note placed at the top of the job summary once its size forces whole test project sections to be replaced by a one-line verdict. {0} is the number of test projects whose full results are in the summary. "1 MB" is GitHub's documented job summary size limit.</comment>
   </data>
+  <data name="ModulesNotListed" xml:space="preserve">
+    <value>{0} further test project(s) are not listed because the job summary size limit was reached. GitHub discards a job summary larger than 1 MB in full rather than shortening it. See the workflow log or the test report for their results.</value>
+    <comment>Replaces the remaining test project verdicts once the combined job summary is close to GitHub's size limit. {0} is the number of test projects left out. "1 MB" is GitHub's documented job summary size limit.</comment>
+  </data>
   <data name="StepSummaryLimitExceededWarning" xml:space="preserve">
     <value>The GitHub job summary file is {0} bytes and appending this test project's section would exceed the {1}-byte limit GitHub enforces per step. GitHub discards an oversized job summary in full rather than truncating it, so appending would have lost every section, including those other test projects already wrote. This project's section was skipped to keep the rest of the summary intact. This usually means many test projects, or other tools, are writing to the same job summary; see the workflow log or the test report for this project's results.</value>
     <comment>{0} is the current size of the job summary file in bytes, {1} is the limit in bytes.</comment>

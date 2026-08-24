@@ -139,7 +139,8 @@ internal sealed partial class GitHubActionsSummaryReporter
         CiRunSummaryAggregate aggregate,
         bool includeFailureDetails,
         out int modulesWithOmittedDetails,
-        out int condensedModules)
+        out int condensedModules,
+        bool condenseAllModules = false)
     {
         bool failed = aggregate.ExitCode is int exitCode
             ? GitHubActionsExitCode.IndicatesFailure(exitCode)
@@ -194,16 +195,40 @@ internal sealed partial class GitHubActionsSummaryReporter
         modulesWithOmittedDetails = 0;
         condensedModules = 0;
 
+        // Tracked in bytes, not in StringBuilder.Length. The cap GitHub enforces is on the bytes on disk, and this
+        // content is the non-ASCII-heavy kind — assertion diffs, exception messages, and a status emoji per module,
+        // three bytes each in UTF-8 — so a UTF-16 char count can understate the rendered file by up to threefold in
+        // the one check that decides whether the summary survives at all. Only the newly appended chars are
+        // measured each round, so the whole loop stays linear.
+        int measuredChars = builder.Length;
+        int renderedByteCount = Encoding.UTF8.GetByteCount(builder.ToString());
+        int listedModules = 0;
+
         foreach (CiRunSummaryModule module in aggregate.Modules)
         {
+            if (builder.Length > measuredChars)
+            {
+                renderedByteCount += Encoding.UTF8.GetByteCount(builder.ToString(measuredChars, builder.Length - measuredChars));
+                measuredChars = builder.Length;
+            }
+
+            // Condensing bounds what a module costs, not how many of them there are: a run with thousands of test
+            // projects overruns the cap on verdict lines alone. Past this point the listing stops entirely and the
+            // remainder is reported as a count, which is the only rendering whose size does not grow with the run.
+            if (renderedByteCount >= GitHubActionsFailureDetails.MaxModuleListingLength)
+            {
+                break;
+            }
+
             // Dividing the detail budget bounds the diagnostics, but every module still costs a heading, a totals
             // table and its failure lines whether or not any budget is left. A run with enough test projects
             // therefore overruns GitHub's cap on that overhead alone, and an oversized summary is discarded in
             // full — so past this point a module reports only its verdict, exactly as the per-project path does.
-            if (builder.Length >= GitHubActionsFailureDetails.CondenseSummaryLength)
+            if (condenseAllModules || renderedByteCount >= GitHubActionsFailureDetails.CondenseSummaryLength)
             {
                 AppendCondensedModuleLine(builder, module);
                 condensedModules++;
+                listedModules++;
                 continue;
             }
 
@@ -228,6 +253,18 @@ internal sealed partial class GitHubActionsSummaryReporter
             }
 
             builder.Append("</details>\n\n");
+            listedModules++;
+        }
+
+        int unlistedModules = aggregate.Modules.Count - listedModules;
+        if (unlistedModules > 0)
+        {
+            builder.Append("> [!WARNING]\n> ")
+                .Append(EscapeInlineCode(string.Format(
+                    CultureInfo.InvariantCulture,
+                    GitHubActionsResources.ModulesNotListed,
+                    unlistedModules.ToString(CultureInfo.InvariantCulture))))
+                .Append("\n\n");
         }
 
         // The count is reported to the caller rather than written here: a note buried after dozens of collapsed

@@ -156,6 +156,19 @@ internal static class GitHubActionsFailureDetails
     internal const int CondenseSummaryLength = (int)(GitHubStepSummaryLimit * 0.6);
 
     /// <summary>
+    /// The share of <see cref="GitHubStepSummaryLimit"/> beyond which a combined summary stops listing test
+    /// projects at all, replacing the remainder with a single line counting them.
+    /// </summary>
+    /// <remarks>
+    /// This is the third and last threshold, and the only one that bounds the report by module count alone.
+    /// Condensing a project to a one-line verdict shrinks what each one costs, but it does not bound the total:
+    /// a run with thousands of test projects still overruns the cap on those lines. Since exceeding the cap costs
+    /// the whole summary rather than its tail, the listing stops here and says how many projects it left out. The
+    /// remaining tenth absorbs the top-of-file note and whatever other writers append after this extension runs.
+    /// </remarks>
+    internal const int MaxModuleListingLength = (int)(GitHubStepSummaryLimit * 0.9);
+
+    /// <summary>
     /// Characters reserved for one test project's non-detail content — heading, totals table, failure and
     /// slowest-test lines, truncation notes — so the budget bounds the <em>file</em> rather than just the
     /// expanded diagnostics. Without this reserve a job with many projects lands well over
