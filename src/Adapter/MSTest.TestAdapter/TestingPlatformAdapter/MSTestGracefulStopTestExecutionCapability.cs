@@ -11,7 +11,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 internal sealed class MSTestGracefulStopTestExecutionCapability : IGracefulStopTestExecutionResultCapability
 {
     private static readonly object Sync = new();
-    private static bool s_isExecutionActive;
+    private static ExecutionState s_executionState;
 
     private MSTestGracefulStopTestExecutionCapability()
     {
@@ -32,12 +32,20 @@ internal sealed class MSTestGracefulStopTestExecutionCapability : IGracefulStopT
     public Task<bool> TryStopTestExecutionAsync(CancellationToken cancellationToken)
         => Task.FromResult(TryRequestGracefulStop());
 
-    internal static void NotifyTestExecutionStarting()
+    internal static void NotifyTestExecutionPending()
     {
         lock (Sync)
         {
             PlatformServiceProvider.Instance.IsGracefulStopRequested = false;
-            s_isExecutionActive = true;
+            s_executionState = ExecutionState.Pending;
+        }
+    }
+
+    internal static void NotifyTestExecutionStarting()
+    {
+        lock (Sync)
+        {
+            s_executionState = ExecutionState.Active;
         }
     }
 
@@ -45,7 +53,7 @@ internal sealed class MSTestGracefulStopTestExecutionCapability : IGracefulStopT
     {
         lock (Sync)
         {
-            s_isExecutionActive = false;
+            s_executionState = ExecutionState.Completed;
         }
     }
 
@@ -53,7 +61,8 @@ internal sealed class MSTestGracefulStopTestExecutionCapability : IGracefulStopT
     {
         lock (Sync)
         {
-            if (!s_isExecutionActive || PlatformServiceProvider.Instance.IsGracefulStopRequested)
+            if (s_executionState == ExecutionState.Completed
+                || PlatformServiceProvider.Instance.IsGracefulStopRequested)
             {
                 return false;
             }
@@ -61,6 +70,13 @@ internal sealed class MSTestGracefulStopTestExecutionCapability : IGracefulStopT
             PlatformServiceProvider.Instance.IsGracefulStopRequested = true;
             return true;
         }
+    }
+
+    private enum ExecutionState
+    {
+        Pending,
+        Active,
+        Completed,
     }
 }
 #endif

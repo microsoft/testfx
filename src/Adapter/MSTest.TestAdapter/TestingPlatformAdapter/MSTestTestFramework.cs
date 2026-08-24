@@ -55,6 +55,7 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
         _configuration = new(serviceProvider.GetConfiguration());
         _loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         PlatformServiceProvider.Instance.AdapterTraceLogger = new MTPTraceLogger(_loggerFactory.CreateLogger("mstest-trace"));
+        MSTestGracefulStopTestExecutionCapability.NotifyTestExecutionPending();
 
         // Let the engine emit fixture/test-method spans that nest under the platform's test-case spans. This is a
         // no-op unless the OpenTelemetry extension is registered.

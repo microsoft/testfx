@@ -364,6 +364,20 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 #endif
         }
 
+        Task? activityIndicatorTask;
+        lock (_dumpLock)
+        {
+            // Timer.DisposeAsync waits for the timer callback, but TriggerDumpOnce returns as soon as it
+            // publishes the actual dump task. Capture and await that task before enumerating its artifacts.
+            _dumpTaken = 1;
+            activityIndicatorTask = _activityIndicatorTask;
+        }
+
+        if (activityIndicatorTask is not null)
+        {
+            await activityIndicatorTask.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false);
+        }
+
         if (!testHostProcessInformation.HasExitedGracefully)
         {
             _logger.LogDebug($"Testhost didn't exit gracefully '{testHostProcessInformation.ExitCode}')");
