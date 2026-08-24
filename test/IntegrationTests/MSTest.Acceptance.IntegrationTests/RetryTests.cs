@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -161,6 +161,166 @@ public class UnitTest1
     <CaptureTraceOutput>false</CaptureTraceOutput>
   </MSTest>
 </RunSettings>
+""";
+    }
+
+    public TestContext TestContext { get; set; }
+}
+
+[TestClass]
+public sealed class CustomRetryTests : AcceptanceTestBase<CustomRetryTests.TestAssetFixture>
+{
+    [TestMethod]
+    public async Task CustomRetryBaseAttribute_ControlsRetriesAndReportsEveryAttempt()
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
+        string markerDirectory = Path.Combine(Path.GetTempPath(), "mstest-custom-retry-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(markerDirectory);
+
+        try
+        {
+            TestHostResult testHostResult = await testHost.ExecuteAsync(
+                environmentVariables: new() { [TestAssetFixture.MarkerDirectoryEnvVar] = markerDirectory },
+                cancellationToken: TestContext.CancellationToken);
+
+            testHostResult.AssertExitCodeIs(ExitCode.Success);
+            testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+            testHostResult.AssertOutputContains("failed (try 1) FailsTwiceThenPasses");
+            testHostResult.AssertOutputContains("failed (try 2) FailsTwiceThenPasses");
+            testHostResult.AssertOutputContains("retried:");
+            testHostResult.AssertOutputContains("flaky: 1");
+
+            string markerFile = Path.Combine(markerDirectory, TestAssetFixture.MarkerFileName);
+            Assert.IsTrue(
+                File.Exists(markerFile),
+                $"Custom retry marker file not found. StandardOutput:\n{testHostResult.StandardOutput}");
+
+            string[] observations = File.ReadAllLines(markerFile);
+            Assert.Contains("TestExecutions=3", observations);
+            Assert.Contains("ExecuteAsyncCalls=1", observations);
+            Assert.Contains("ExecuteTaskGetterCalls=2", observations);
+            Assert.Contains("FirstRunResultCount=1", observations);
+            Assert.Contains("FirstRunOutcome=Failed", observations);
+        }
+        finally
+        {
+            try
+            {
+                Directory.Delete(markerDirectory, recursive: true);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // Best-effort cleanup of the temporary marker directory.
+            }
+        }
+    }
+
+    public sealed class TestAssetFixture() : TestAssetFixtureBase()
+    {
+        public const string ProjectName = "CustomRetryTests";
+
+        public const string MarkerDirectoryEnvVar = "CUSTOMRETRY_MARKER_DIR";
+
+        public const string MarkerFileName = "custom-retry.marker";
+
+        public string ProjectPath => GetAssetPath(ProjectName);
+
+        public override (string ID, string Name, string Code) GetAssetsToGenerate() => (ProjectName, ProjectName,
+                SourceCode
+                .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                .PatchCodeWithReplace("$MarkerDirectoryEnvVar$", MarkerDirectoryEnvVar)
+                .PatchCodeWithReplace("$MarkerFileName$", MarkerFileName));
+
+        private const string SourceCode = """
+#file CustomRetryTests.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+  </ItemGroup>
+</Project>
+
+#file UnitTest1.cs
+#pragma warning disable MSTESTEXP
+
+using System;
+using System.IO;
+using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+public sealed class RetryTwiceAttribute : RetryBaseAttribute
+{
+    public static int ExecuteAsyncCalls { get; private set; }
+
+    public static int ExecuteTaskGetterCalls { get; private set; }
+
+    public static int FirstRunResultCount { get; private set; }
+
+    public static UnitTestOutcome FirstRunOutcome { get; private set; }
+
+    protected override async Task<RetryResult> ExecuteAsync(RetryContext retryContext)
+    {
+        ExecuteAsyncCalls++;
+        FirstRunResultCount = retryContext.FirstRunResults.Length;
+        FirstRunOutcome = retryContext.FirstRunResults[0].Outcome;
+
+        var retryResult = new RetryResult();
+        for (int i = 0; i < 2; i++)
+        {
+            ExecuteTaskGetterCalls++;
+            retryResult.AddResult(await retryContext.ExecuteTaskGetter());
+        }
+
+        return retryResult;
+    }
+}
+
+[TestClass]
+public class CustomRetryTestClass
+{
+    private static int _testExecutions;
+
+    [TestMethod]
+    [RetryTwice]
+    public void FailsTwiceThenPasses()
+    {
+        _testExecutions++;
+        if (_testExecutions < 3)
+        {
+            Assert.Fail($"Custom failure from execution {_testExecutions}");
+        }
+    }
+
+    [ClassCleanup]
+    public static void ClassCleanup()
+    {
+        string markerDirectory = Environment.GetEnvironmentVariable("$MarkerDirectoryEnvVar$");
+        if (string.IsNullOrEmpty(markerDirectory))
+        {
+            return;
+        }
+
+        File.WriteAllLines(
+            Path.Combine(markerDirectory, "$MarkerFileName$"),
+            new[]
+            {
+                $"TestExecutions={_testExecutions}",
+                $"ExecuteAsyncCalls={RetryTwiceAttribute.ExecuteAsyncCalls}",
+                $"ExecuteTaskGetterCalls={RetryTwiceAttribute.ExecuteTaskGetterCalls}",
+                $"FirstRunResultCount={RetryTwiceAttribute.FirstRunResultCount}",
+                $"FirstRunOutcome={RetryTwiceAttribute.FirstRunOutcome}",
+            });
+    }
+}
 """;
     }
 
