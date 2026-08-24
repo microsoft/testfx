@@ -40,6 +40,7 @@ internal static class RuntimeRegistrationEmitter
         sb.AppendLine();
         sb.AppendLine("using System;");
         sb.AppendLine("using System.Collections.Generic;");
+        sb.AppendLine("using System.Diagnostics;");
         sb.AppendLine("using System.Diagnostics.CodeAnalysis;");
         sb.AppendLine("using System.Reflection;");
         sb.AppendLine("using System.Runtime.CompilerServices;");
@@ -162,7 +163,22 @@ internal static class RuntimeRegistrationEmitter
                     sb.AppendLine("methodInvokers[methodInfo] = method.Invoke;");
                     using (sb.Block("if (method.AreAttributesComplete)"))
                     {
-                        sb.AppendLine("methodAttributes[methodInfo] = method.Attributes;");
+                        sb.AppendLine("Attribute[] attributes = method.Attributes;");
+                        using (sb.Block("if (method.IsAsync)"))
+                        {
+                            sb.AppendLine("object[] asyncStateMachineAttributes = methodInfo.GetCustomAttributes(typeof(AsyncStateMachineAttribute), inherit: false);");
+                            sb.AppendLine("object[] debuggerStepThroughAttributes = methodInfo.GetCustomAttributes(typeof(DebuggerStepThroughAttribute), inherit: false);");
+                            using (sb.Block("if (asyncStateMachineAttributes.Length + debuggerStepThroughAttributes.Length > 0)"))
+                            {
+                                sb.AppendLine("var attributesWithCompilerMetadata = new Attribute[attributes.Length + asyncStateMachineAttributes.Length + debuggerStepThroughAttributes.Length];");
+                                sb.AppendLine("Array.Copy(attributes, attributesWithCompilerMetadata, attributes.Length);");
+                                sb.AppendLine("Array.Copy(asyncStateMachineAttributes, 0, attributesWithCompilerMetadata, attributes.Length, asyncStateMachineAttributes.Length);");
+                                sb.AppendLine("Array.Copy(debuggerStepThroughAttributes, 0, attributesWithCompilerMetadata, attributes.Length + asyncStateMachineAttributes.Length, debuggerStepThroughAttributes.Length);");
+                                sb.AppendLine("attributes = attributesWithCompilerMetadata;");
+                            }
+                        }
+
+                        sb.AppendLine("methodAttributes[methodInfo] = attributes;");
                     }
 
                     using (sb.Block("if (method.IsTestMethod)"))

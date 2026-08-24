@@ -68,8 +68,28 @@ public class UnitTest1
     }
 
     [TestMethod]
+    [TestCategory("AsyncGenerated")]
+    [DataRow(1, "small", true)]
+    public async Task TestMethod3(int size, string category, bool enabled)
+    {
+        await Task.Yield();
+        Assert.AreEqual(1, size);
+        Assert.AreEqual("small", category);
+        Assert.IsTrue(enabled);
+    }
+
+    [TestMethod]
+    [TestCategory("AsyncGenerated")]
+    [DataRow((object)new object[] { 1, 2 })]
+    public async Task TestMethod4(object[] values)
+    {
+        await Task.Yield();
+        CollectionAssert.AreEqual(new[] { 1, 2 }, values);
+    }
+
+    [TestMethod]
     [DynamicData(nameof(Data))]
-    public void TestMethod3(int a, int b)
+    public void TestMethod5(int a, int b)
     {
     }
 
@@ -78,6 +98,26 @@ public class UnitTest1
         {
            new object[] { 1, 2 }
         };
+}
+""";
+
+    private const string AsyncVoidSourceCode = """
+
+#file AsyncVoidTests.cs
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace MyTests;
+
+[TestClass]
+public sealed class AsyncVoidTests
+{
+#pragma warning disable MSTEST0003 // Deliberately invalid to verify generated async metadata preserves async-void rejection.
+    [TestMethod]
+    public async void InvalidAsyncVoidTest()
+    {
+        await Task.Yield();
+    }
+#pragma warning restore MSTEST0003
 }
 """;
 
@@ -114,8 +154,40 @@ public class UnitTest1
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "MSTestNativeAotTests", tfm, RID, Verb.publish);
 
         TestHostResult result = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
-        result.AssertOutputContainsSummary(failed: 0, passed: 3, skipped: 0);
+        result.AssertOutputContainsSummary(failed: 0, passed: 5, skipped: 0);
         result.AssertExitCodeIs(0);
+
+        TestHostResult asyncGeneratedResult = await testHost.ExecuteAsync(
+            "--filter TestCategory=AsyncGenerated",
+            cancellationToken: TestContext.CancellationToken);
+        asyncGeneratedResult.AssertOutputContainsSummary(failed: 0, passed: 2, skipped: 0);
+        asyncGeneratedResult.AssertExitCodeIs(0);
+    }
+
+    [TestMethod]
+    [OSCondition(ConditionMode.Exclude, OperatingSystems.OSX)]
+    [DataRow("net10.0")]
+    public async Task NativeAotTests_RejectsAsyncVoidTestMethods(string tfm)
+    {
+        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+            $"MSTestNativeAotAsyncVoidTests_{tfm}",
+            (SourceCode + AsyncVoidSourceCode)
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+            .PatchCodeWithReplace("$TargetFramework$", tfm)
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$MSTestSourceGenerationVersion$", MSTestSourceGenerationVersion),
+            addPublicFeeds: true);
+
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
+            $"publish {generator.TargetAssetPath} -r {RID} -f {tfm}",
+            warnAsError: true,
+            cancellationToken: TestContext.CancellationToken);
+        compilationResult.AssertOutputContains("Generating native code");
+
+        var testHost = TestHost.LocateFrom(generator.TargetAssetPath, "MSTestNativeAotTests", tfm, RID, Verb.publish);
+        TestHostResult result = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        result.AssertStandardErrorContains("UTA007: Method InvalidAsyncVoidTest");
+        result.AssertExitCodeIsNot(0);
     }
 
     public TestContext TestContext { get; set; }
