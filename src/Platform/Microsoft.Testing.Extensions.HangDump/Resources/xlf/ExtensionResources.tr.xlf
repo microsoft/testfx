@@ -84,7 +84,7 @@ Supports the following placeholders: {pname} (test application name), {pid} (pro
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
         <source>Generate a dump file if the test process hangs.</source>
-        <target state="needs-review-translation">Test işlemi kilitlenirse bir döküm dosyası oluşturun</target>
+        <target state="new">Generate a dump file if the test process hangs.</target>
         <note>Do not localize option name {Locked="--hangdump"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTimeoutExpired">
@@ -137,9 +137,9 @@ Zaman aşımı değeri, aşağıdaki biçimlerden biri ile belirtilir:
         <source>Specify the type of the dump.
 Valid values are {0}.
 Default type is 'Full'.</source>
-        <target state="needs-review-translation">Dökümün türünü belirtin.
-Geçerli değerler: {0}.
-Varsayılan tür: 'Full'</target>
+        <target state="new">Specify the type of the dump.
+Valid values are {0}.
+Default type is 'Full'.</target>
         <note>0 is the list of valid dump type values. Do not localize option name {Locked="--hangdump-type"} or default dump type {Locked="Full"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
