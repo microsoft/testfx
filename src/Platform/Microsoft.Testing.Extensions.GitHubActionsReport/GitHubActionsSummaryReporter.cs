@@ -51,6 +51,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
     private readonly ILogger _logger;
     private readonly Lazy<string> _targetFrameworkMoniker;
     private readonly bool _isEnabled;
+    private readonly GitHubActionsStepSummarySections _sections;
     private readonly Func<bool> _shouldDeferToArtifactPostProcessing;
 
 #if NET9_0_OR_GREATER
@@ -84,6 +85,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
         _logger = loggerFactory.CreateLogger<GitHubActionsSummaryReporter>();
         _targetFrameworkMoniker = new(TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform);
         _isEnabled = GitHubActionsFeature.IsEnabled(commandLineOptions, environment, GitHubActionsCommandLineOptions.GitHubActionsStepSummary);
+        _sections = GitHubActionsStepSummarySectionsParser.GetSections(commandLineOptions);
         _shouldDeferToArtifactPostProcessing = shouldDeferToArtifactPostProcessing;
     }
 
@@ -219,7 +221,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
                 return;
             }
 
-            string markdown = BuildMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value, exitCode);
+            string markdown = BuildMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value, exitCode, _sections);
 
             try
             {
@@ -250,7 +252,8 @@ internal sealed partial class GitHubActionsSummaryReporter :
         IReadOnlyList<TestRecord> records,
         string assemblyName,
         ITestSessionContext testSessionContext)
-        => CiRunSummaryAggregation.CreateModule(
+    {
+        CiRunSummaryModule module = CiRunSummaryAggregation.CreateModule(
             records,
             assemblyName,
             _testApplicationModuleInfo.GetCurrentTestApplicationFullPath(),
@@ -260,6 +263,9 @@ internal sealed partial class GitHubActionsSummaryReporter :
             testSessionContext.SessionUid.Value,
             GetAttemptNumber(),
             _testApplicationProcessExitCode.GetProcessExitCode());
+        module.GitHubActionsStepSummarySections = GitHubActionsStepSummarySectionsParser.ToPersistedValues(_sections);
+        return module;
+    }
 
     private int GetAttemptNumber()
         => int.TryParse(

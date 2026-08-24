@@ -47,6 +47,9 @@ internal sealed class CiRunSummaryModule
     public CiRunSummaryTest[] SlowestTests { get; set; } = [];
 
     public CiRunSummaryFailingClass[] TopFailingClasses { get; set; } = [];
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string[]? GitHubActionsStepSummarySections { get; set; }
 }
 
 internal sealed class CiRunSummaryTest
