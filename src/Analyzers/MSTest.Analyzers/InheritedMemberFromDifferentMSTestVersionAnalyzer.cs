@@ -191,12 +191,24 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
     }
 
     private static IAssemblySymbol? GetFrameworkAssembly(INamedTypeSymbol classSymbol)
-        => classSymbol.GetAttributes()
+    {
+        IAssemblySymbol? legacyFramework = null;
+        foreach (IAssemblySymbol assembly in classSymbol.GetAttributes()
             .Select(attribute => GetCanonicalMSTestAttribute(attribute.AttributeClass))
             .OfType<INamedTypeSymbol>()
             .Where(canonicalAttribute => string.Equals(canonicalAttribute.Name, TestClassAttributeName, StringComparison.Ordinal))
-            .Select(canonicalAttribute => canonicalAttribute.ContainingAssembly)
-            .FirstOrDefault();
+            .Select(canonicalAttribute => canonicalAttribute.ContainingAssembly))
+        {
+            if (string.Equals(assembly.Name, CurrentFrameworkAssemblyName, StringComparison.Ordinal))
+            {
+                return assembly;
+            }
+
+            legacyFramework ??= assembly;
+        }
+
+        return legacyFramework;
+    }
 
     // Walks the applied attribute's base chain and returns the first ancestor that is a well-known MSTest attribute
     // (TestClass or one of the inheritance-sensitive lifecycle/test attributes).

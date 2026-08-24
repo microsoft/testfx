@@ -2790,6 +2790,50 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenLegacyTestClassAttributePrecedesCurrentAttribute_Diagnostic()
+    {
+        string baseLibraryCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                public abstract class TestBase
+                {
+                    [TestInitialize]
+                    public void BaseInitialize() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            extern alias legacy;
+
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [legacy::Microsoft.VisualStudio.TestTools.UnitTesting.TestClass]
+                [TestClass]
+                public class {|#0:SampleTests|} : TestBase
+                {
+                    [TestMethod]
+                    public void MyTest() { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddAliasedLegacyFrameworkBaseLibrary(test, baseLibraryCode);
+
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(InheritedMemberFromDifferentMSTestVersionAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("BaseInitialize", "TestBase", "TestInitialize", LegacyFrameworkAssemblyName));
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
     public async Task WhenLegacyFrameworkIsAliasedAndTestContextPropertyIsInvalid_NoDiagnostic()
     {
         string baseLibraryCode = """
