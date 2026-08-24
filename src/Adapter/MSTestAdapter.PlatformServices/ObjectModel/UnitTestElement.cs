@@ -135,6 +135,9 @@ internal sealed class UnitTestElement
     {
         var clone = (UnitTestElement)MemberwiseClone();
         clone.TestMethod = TestMethod.Clone();
+        // Discovery specializes clones into individual data rows after cloning. Clear the cached id so changes to
+        // DataType/TestCaseIndex cannot reuse the parent test's identity when the parent was converted first.
+        clone.CachedTestNodeUid = null;
         return clone;
     }
 
