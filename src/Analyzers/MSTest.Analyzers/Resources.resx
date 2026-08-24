@@ -1020,7 +1020,7 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="TestClassConstructorShouldBeValidDescription" xml:space="preserve">
     <value>Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</value>
-    <comment>{Locked="TestContext"}{Locked="public"}{Locked="class"}</comment>
+    <comment>{Locked="TestContext"}{Locked="public"}</comment>
   </data>
   <data name="AvoidThreadSleepAndTaskWaitInTestsTitle" xml:space="preserve">
     <value>Avoid synchronously blocking calls such as 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' in test code</value>
@@ -1044,7 +1044,7 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="PreferAsyncAssertionDescription" xml:space="preserve">
     <value>When verifying exceptions from asynchronous code, use the async assertion methods instead of blocking the asynchronous operation with GetAwaiter().GetResult().</value>
-    <comment>{Locked="GetAwaiter().GetResult()"}{Locked="async"}</comment>
+    <comment>{Locked="GetAwaiter().GetResult()"}</comment>
   </data>
   <data name="IgnoreShouldHaveJustificationTitle" xml:space="preserve">
     <value>'[Ignore]' should specify a justification</value>
