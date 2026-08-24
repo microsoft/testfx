@@ -16,6 +16,9 @@ public sealed class DeadlineHelperTests
     [DataRow("   ")]
     [DataRow("not-a-date")]
     [DataRow("12345")]
+    [DataRow("01/02/2030 03:04:05")]
+    [DataRow("2030/01/02T03:04:05Z")]
+    [DataRow("January 2, 2030 03:04:05Z")]
     [DataRow("2030-13-01T00:00:00Z")] // invalid month
     public void TryGetDeadline_WhenUnsetOrMalformed_ReturnsFalse(string? raw)
     {
@@ -61,6 +64,19 @@ public sealed class DeadlineHelperTests
 
         Assert.IsTrue(result);
         Assert.AreEqual(new DateTimeOffset(2030, 1, 1, 0, 0, 0, TimeSpan.Zero), deadlineUtc);
+    }
+
+    [TestMethod]
+    [DataRow("2030-01-01T00:00:00.1Z")]
+    [DataRow("2030-01-01T00:00:00.1234567Z")]
+    public void TryGetDeadline_WhenInstantHasFractionalSeconds_ReturnsInstantInUtc(string raw)
+    {
+        IEnvironment environment = CreateEnvironment(EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE, raw);
+
+        bool result = DeadlineHelper.TryGetDeadline(environment, out DateTimeOffset deadlineUtc);
+
+        Assert.IsTrue(result);
+        Assert.AreEqual(TimeSpan.Zero, deadlineUtc.Offset);
     }
 
     [TestMethod]

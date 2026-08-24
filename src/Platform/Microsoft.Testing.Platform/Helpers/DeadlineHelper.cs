@@ -14,6 +14,12 @@ namespace Microsoft.Testing.Platform.Helpers;
 [Embedded]
 internal static class DeadlineHelper
 {
+    private static readonly string[] SupportedDeadlineFormats =
+    [
+        "yyyy-MM-dd'T'HH:mm:ssK",
+        "yyyy-MM-dd'T'HH:mm:ss.FFFFFFFK",
+    ];
+
     // Prototype defaults. stopMargin > dumpMargin so the graceful stop is attempted first and the
     // hang dump is the fallback for a host that did not stop in time.
     private static readonly TimeSpan DefaultStopMargin = TimeSpan.FromSeconds(60);
@@ -32,7 +38,12 @@ internal static class DeadlineHelper
             return false;
         }
 
-        if (!DateTimeOffset.TryParse(raw, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out DateTimeOffset parsed))
+        if (!DateTimeOffset.TryParseExact(
+                raw,
+                SupportedDeadlineFormats,
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
+                out DateTimeOffset parsed))
         {
             return false;
         }

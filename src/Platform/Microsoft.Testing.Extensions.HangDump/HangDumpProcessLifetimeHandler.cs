@@ -78,6 +78,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     /// are dumped; the healthy path answers in milliseconds.
     /// </summary>
     private static readonly TimeSpan InProgressTestsQueryTimeout = TimeSpan.FromSeconds(5);
+    private static readonly TimeSpan BestEffortDiagnosticsTimeout = TimeSpan.FromSeconds(1);
 
     private int _dumpTaken;
     private Task? _waitConnectionTask;
@@ -433,19 +434,16 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         // process tree. Loggers and output devices propagate exceptions, so letting one escape here would
         // fault the dump task and leave the wedged host alive with no dump at all -- the exact situation
         // this handler exists to resolve. Report the failure and take the dump anyway.
-        try
-        {
-            await _logger.LogInformationAsync($"{dumpReason}. Taking hang dump.").ConfigureAwait(false);
-            await _outputDisplay.DisplayAsync(
+        await RunBestEffortDiagnosticAsync(
+            () => _logger.LogInformationAsync($"{dumpReason}. Taking hang dump."),
+            BestEffortDiagnosticsTimeout).ConfigureAwait(false);
+        await RunBestEffortDiagnosticAsync(
+            () => _outputDisplay.DisplayAsync(
                 new ErrorMessageOutputDeviceData(triggeredByDeadline
                     ? ExtensionResources.HangDumpDeadlineApproaching
                     : string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTimeoutExpired, _activityTimerValue)),
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch (Exception e)
-        {
-            await LogBestEffortAsync("Could not announce the hang dump. Continuing with the dump.", e).ConfigureAwait(false);
-        }
+                cancellationToken),
+            BestEffortDiagnosticsTimeout).ConfigureAwait(false);
 
         using IProcess process = _processHandler.GetProcessById(_testHostProcessInformation.PID);
 
@@ -469,19 +467,27 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         {
             if (processTree.Count > 1)
             {
-                await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(ExtensionResources.DumpingProcessTree), cancellationToken).ConfigureAwait(false);
+                await RunBestEffortDiagnosticAsync(
+                    () => _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(ExtensionResources.DumpingProcessTree), cancellationToken),
+                    BestEffortDiagnosticsTimeout).ConfigureAwait(false);
 
                 foreach (ProcessTreeNode? p in processTree.OrderBy(t => t.Level))
                 {
-                    await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData($"{(p.Level != 0 ? " + " : " > ")}{new string('-', p.Level)} {p.Process!.Id} - {p.Process.Name}"), cancellationToken).ConfigureAwait(false);
+                    await RunBestEffortDiagnosticAsync(
+                        () => _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData($"{(p.Level != 0 ? " + " : " > ")}{new string('-', p.Level)} {p.Process!.Id} - {p.Process.Name}"), cancellationToken),
+                        BestEffortDiagnosticsTimeout).ConfigureAwait(false);
                 }
             }
             else
             {
-                await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.DumpingProcess, process.Id, process.Name)), cancellationToken).ConfigureAwait(false);
+                await RunBestEffortDiagnosticAsync(
+                    () => _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.DumpingProcess, process.Id, process.Name)), cancellationToken),
+                    BestEffortDiagnosticsTimeout).ConfigureAwait(false);
             }
 
-            await _logger.LogInformationAsync($"{dumpReason}.").ConfigureAwait(false);
+            await RunBestEffortDiagnosticAsync(
+                () => _logger.LogInformationAsync($"{dumpReason}."),
+                BestEffortDiagnosticsTimeout).ConfigureAwait(false);
 
             await QueryOnceAndDumpTreeAsync(
                 bottomUpTree,
@@ -494,8 +500,12 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
                     }
                     catch (Exception e)
                     {
-                        await _logger.LogErrorAsync($"Error while taking dump of process {p.Id} - {p.Name}", e).ConfigureAwait(false);
-                        await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.ErrorWhileDumpingProcess, p.Id, p.Name, e)), ct).ConfigureAwait(false);
+                        await RunBestEffortDiagnosticAsync(
+                            () => _logger.LogErrorAsync($"Error while taking dump of process {p.Id} - {p.Name}", e),
+                            BestEffortDiagnosticsTimeout).ConfigureAwait(false);
+                        await RunBestEffortDiagnosticAsync(
+                            () => _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.ErrorWhileDumpingProcess, p.Id, p.Name, e)), ct),
+                            BestEffortDiagnosticsTimeout).ConfigureAwait(false);
                     }
                 },
                 cancellationToken).ConfigureAwait(false);
@@ -525,8 +535,12 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
                 }
                 catch (Exception e)
                 {
-                    await _logger.LogErrorAsync($"Problem killing {p.Id} - {p.Name}", e).ConfigureAwait(false);
-                    await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.ErrorKillingProcess, p.Id, p.Name, e)), cancellationToken).ConfigureAwait(false);
+                    await RunBestEffortDiagnosticAsync(
+                        () => _logger.LogErrorAsync($"Problem killing {p.Id} - {p.Name}", e),
+                        BestEffortDiagnosticsTimeout).ConfigureAwait(false);
+                    await RunBestEffortDiagnosticAsync(
+                        () => _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.ErrorKillingProcess, p.Id, p.Name, e)), cancellationToken),
+                        BestEffortDiagnosticsTimeout).ConfigureAwait(false);
                 }
             }
         }
@@ -538,15 +552,19 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     /// typically a logger or output device that is already throwing.
     /// </summary>
     private async Task LogBestEffortAsync(string message, Exception exception)
+        => await RunBestEffortDiagnosticAsync(
+            () => _logger.LogErrorAsync(message, exception),
+            BestEffortDiagnosticsTimeout).ConfigureAwait(false);
+
+    internal static async Task RunBestEffortDiagnosticAsync(Func<Task> diagnosticAsync, TimeSpan timeout)
     {
         try
         {
-            await _logger.LogErrorAsync(message, exception).ConfigureAwait(false);
+            await diagnosticAsync().TimeoutAfterAsync(timeout).ConfigureAwait(false);
         }
         catch (Exception)
         {
-            // The logger is the thing that failed, so there is nothing left to report to. Swallowing is
-            // the whole point: the caller must continue to the dump and the process tree kill.
+            // Diagnostics must never prevent the dump or the process-tree kill.
         }
     }
 
@@ -643,14 +661,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             // The empty-list fallback is the whole point of this method, so it must survive a failing
             // diagnostic too. logFailureAsync is a logger call and logger providers can fail; letting that
             // throw would escape the caller, which is explicitly best-effort, and skip the dump entirely.
-            try
-            {
-                await logFailureAsync(ex).ConfigureAwait(false);
-            }
-            catch (Exception)
-            {
-                // Ignore: taking the dump matters more than recording why the query could not answer.
-            }
+            await RunBestEffortDiagnosticAsync(() => logFailureAsync(ex), timeout).ConfigureAwait(false);
 
             return [];
         }

@@ -47,7 +47,6 @@ public sealed class AbortAtDeadlineTests : AcceptanceTestBase<AbortAtDeadlineTes
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
         testResult.AssertExitCodeIs(ExitCode.TestExecutionStoppedAtDeadline);
-        testResult.AssertExitCodeIs(ExitCode.TestExecutionStoppedAtDeadline);
     }
 
     [TestMethod]

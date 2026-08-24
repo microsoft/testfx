@@ -254,6 +254,19 @@ public sealed class HangDumpTests
     }
 
     [TestMethod]
+    public async Task RunBestEffortDiagnostic_WhenDiagnosticNeverCompletes_ReturnsAfterTimeout()
+    {
+        Task diagnostic = HangDumpProcessLifetimeHandler.RunBestEffortDiagnosticAsync(
+            () => Task.Delay(Timeout.Infinite, TestContext.CancellationToken),
+            TimeSpan.FromMilliseconds(50));
+
+        Task completed = await Task.WhenAny(diagnostic, Task.Delay(TimeSpan.FromSeconds(30), TestContext.CancellationToken));
+
+        Assert.AreSame(diagnostic, completed);
+        await diagnostic;
+    }
+
+    [TestMethod]
     [DataRow("Mini")]
     [DataRow("Heap")]
     [DataRow("Full")]
