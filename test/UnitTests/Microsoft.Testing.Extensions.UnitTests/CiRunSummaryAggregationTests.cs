@@ -274,7 +274,13 @@ public sealed class CiRunSummaryAggregationTests
         CiCoverageSummaryData summary = CiCoverageSummary.Create(coverageResult.Object, sessionUid);
 
         Assert.AreEqual(1, summary.ReportingModuleCount);
+        Assert.IsEmpty(summary.Metrics);
         Assert.HasCount(1, summary.Thresholds);
+        Assert.AreEqual(CoverageMetric.Line, summary.Thresholds[0].Metric);
+        Assert.AreEqual(0, summary.Thresholds[0].ActualPercentage);
+        Assert.AreEqual(80, summary.Thresholds[0].RequiredPercentage);
+        Assert.IsFalse(summary.Thresholds[0].HasCoverableData);
+        Assert.AreEqual("threshold-only", summary.Thresholds[0].ProducerId);
     }
 
     [TestMethod]
