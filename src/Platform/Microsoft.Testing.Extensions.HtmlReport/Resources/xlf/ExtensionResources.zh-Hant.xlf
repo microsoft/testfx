@@ -4,27 +4,27 @@
     <body>
       <trans-unit id="HtmlArtifactPostProcessorDescription">
         <source>Merges HTML reports produced by Microsoft.Testing.Extensions.HtmlReport</source>
-        <target state="new">Merges HTML reports produced by Microsoft.Testing.Extensions.HtmlReport</target>
+        <target state="translated">合併由 Microsoft.Testing.Extensions.HtmlReport 產生的 HTML 報告</target>
         <note>Do not localize format name {Locked="HTML"} or assembly name {Locked="Microsoft.Testing.Extensions.HtmlReport"}.</note>
       </trans-unit>
       <trans-unit id="HtmlArtifactPostProcessorDisplayName">
         <source>HTML report merger</source>
-        <target state="new">HTML report merger</target>
+        <target state="translated">HTML 報告合併</target>
         <note>Do not localize format name {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlMergedArtifactDescription">
         <source>{0} HTML report files merged</source>
-        <target state="new">{0} HTML report files merged</target>
+        <target state="translated">已合併 {0} 個 HTML 報告檔案</target>
         <note>{0} is the number of merged files. Do not localize format name {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlMergedArtifactDisplayName">
         <source>HTML report (merged)</source>
-        <target state="new">HTML report (merged)</target>
+        <target state="translated">HTML 報告 (已合併)</target>
         <note>Do not localize format name {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlMergedReportName">
         <source>Merged HTML report</source>
-        <target state="new">Merged HTML report</target>
+        <target state="translated">已合併的 HTML 報告</target>
         <note>Do not localize format name {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportArtifactDescription">
@@ -83,7 +83,7 @@ Example: MyReport_{tfm}.html</source>
       </trans-unit>
       <trans-unit id="HtmlReportInputIsNotValid">
         <source>The input is not a valid HTML report produced by Microsoft.Testing.Extensions.HtmlReport.</source>
-        <target state="new">The input is not a valid HTML report produced by Microsoft.Testing.Extensions.HtmlReport.</target>
+        <target state="translated">輸入不是 Microsoft.Testing.Extensions.HtmlReport 產生的有效 HTML 報告。</target>
         <note>Do not localize format name {Locked="HTML"} or assembly name {Locked="Microsoft.Testing.Extensions.HtmlReport"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportIsNotValidForDiscovery">
@@ -98,7 +98,7 @@ Example: MyReport_{tfm}.html</source>
       </trans-unit>
       <trans-unit id="HtmlReportsRequired">
         <source>At least one HTML report is required to merge.</source>
-        <target state="new">At least one HTML report is required to merge.</target>
+        <target state="translated">至少需要一份 HTML 報告才能合併。</target>
         <note>Do not localize format name {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="InvalidTestApplicationBuilderType">
