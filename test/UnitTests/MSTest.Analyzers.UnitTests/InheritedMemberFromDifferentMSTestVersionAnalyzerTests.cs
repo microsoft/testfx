@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 
@@ -2892,9 +2891,7 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
         => AddLegacyFrameworkBaseProject(test.TestState, libraryCode);
 
     private static void AddLegacyFrameworkBaseProject(SolutionState testState, string libraryCode)
-    {
-        AddAdditionalProject(testState, LegacyFrameworkAssemblyName, libraryCode);
-    }
+        => AddAdditionalProject(testState, LegacyFrameworkAssemblyName, libraryCode);
 
     private static void AddAdditionalProject(SolutionState testState, string assemblyName, string source)
     {
@@ -2951,7 +2948,7 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
         MetadataReference baseLibrary = EmitAssembly("BaseLibrary", baseLibraryCode, legacyFramework);
 
         test.TestState.AdditionalReferences.Add(
-            legacyFramework.WithProperties(legacyFramework.Properties.WithAliases(ImmutableArray.Create("legacy"))));
+            legacyFramework.WithProperties(legacyFramework.Properties.WithAliases(["legacy"])));
         test.TestState.AdditionalReferences.Add(baseLibrary);
     }
 
