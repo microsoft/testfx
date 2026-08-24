@@ -38,7 +38,7 @@ internal sealed class StopPoliciesService : IStopPoliciesService
     private int _lastMaxFailedTests;
 
     // Read on the deadline timer thread and written on the host thread that runs the request, so it is
-    // volatile. It is monotonic (false -> true only), so no lock is needed to read it consistently.
+    // volatile. Server mode resets it before constructing the per-request deadline extension.
     private volatile bool _isTestExecutionCompleted;
 
     public StopPoliciesService(ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource)
@@ -69,6 +69,8 @@ internal sealed class StopPoliciesService : IStopPoliciesService
     }
 
     public bool IsTestExecutionCompleted => _isTestExecutionCompleted;
+
+    public void NotifyTestExecutionStarting() => _isTestExecutionCompleted = false;
 
     public void NotifyTestExecutionCompleted() => _isTestExecutionCompleted = true;
 

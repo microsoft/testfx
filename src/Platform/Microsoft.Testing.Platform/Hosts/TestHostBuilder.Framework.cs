@@ -21,6 +21,14 @@ internal sealed partial class TestHostBuilder
         ServiceProvider serviceProvider = testFrameworkBuilderData.ServiceProvider;
         serviceProvider.AddService(testFrameworkBuilderData.MessageBusProxy);
 
+        if (!testFrameworkBuilderData.IsForDiscoveryRequest)
+        {
+            // StopPoliciesService is application-scoped and therefore shared by server requests. A discovery
+            // request may have marked execution complete before the run request is built, so clear that gate
+            // before the per-run deadline timer can observe it.
+            serviceProvider.GetRequiredService<IStopPoliciesService>().NotifyTestExecutionStarting();
+        }
+
         IPushOnlyProtocolConsumer? pushOnlyProtocolDataConsumer = null;
         IPushOnlyProtocol? pushOnlyProtocol = serviceProvider.GetService<IPushOnlyProtocol>();
         if (pushOnlyProtocol?.IsServerMode == true)
@@ -112,10 +120,9 @@ internal sealed partial class TestHostBuilder
             dataConsumersBuilder.Add(abortForMaxFailedTestsExtension);
         }
 
-        // Deadline-aware graceful stop only makes sense for a console execution run. Skip it for
-        // server mode (BuildTestFrameworkAsync runs per request, which would re-arm the timer against
-        // an already-past deadline and fire on every request) and for discovery-only requests.
-        if (pushOnlyProtocol?.IsServerMode != true && !testFrameworkBuilderData.IsForDiscoveryRequest)
+        // Build one deadline extension for the active run request. In server mode the per-request service
+        // provider and message bus own and dispose it when that request ends; discovery requests never arm it.
+        if (!testFrameworkBuilderData.IsForDiscoveryRequest)
         {
             var abortAtDeadlineExtension = new AbortAtDeadlineExtension(
                 serviceProvider.GetEnvironment(),

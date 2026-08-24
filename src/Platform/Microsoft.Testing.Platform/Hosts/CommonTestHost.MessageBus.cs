@@ -46,8 +46,8 @@ internal abstract partial class CommonHost
                         // reached while the reporters finalize an already-executed run cannot mark it as
                         // truncated. The extension cannot do this from ITestSessionLifetimeHandler: it is an
                         // IDataConsumer, and consumer handlers run last in NotifyTestSessionEndAsync, after the
-                        // drains and after the reporters. Absent in server mode and for discovery, where the
-                        // extension is not registered.
+                        // drains and after the reporters. Absent for discovery requests, where the extension is
+                        // not registered.
                         serviceProvider.GetService<AbortAtDeadlineExtension>()?.NotifyTestExecutionCompleted();
                         serviceProvider.GetRequiredService<IStopPoliciesService>().NotifyTestExecutionCompleted();
                     }

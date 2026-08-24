@@ -33,6 +33,24 @@ public sealed class AbortAtDeadlineTests : AcceptanceTestBase<AbortAtDeadlineTes
     }
 
     [TestMethod]
+    public async Task WhenDeadlineIsInThePast_WithDotnetTest_GracefullyStopsImmediately()
+    {
+        DotnetMuxerResult testResult = await DotnetCli.RunAsync(
+            $"test --project \"{AssetFixture.TargetAssetPath}\" --no-build -c Release -f {TargetFrameworks.NetCurrent}",
+            environmentVariables: new()
+            {
+                ["TESTINGPLATFORM_DEADLINE"] = DateTimeOffset.UtcNow.AddMinutes(-5).ToString("o"),
+                ["TESTINGPLATFORM_DEADLINE_STOP_MARGIN"] = "0",
+                ["WAIT_FOR_STOP"] = "1",
+            },
+            workingDirectory: AssetFixture.TargetAssetPath,
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+        testResult.AssertExitCodeIs(ExitCode.TestExecutionStoppedAtDeadline);
+        testResult.AssertExitCodeIs(ExitCode.TestExecutionStoppedAtDeadline);
+    }
+
+    [TestMethod]
     public async Task WhenDeadlineIsInTheFuture_GracefullyStopsWhenReached()
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
