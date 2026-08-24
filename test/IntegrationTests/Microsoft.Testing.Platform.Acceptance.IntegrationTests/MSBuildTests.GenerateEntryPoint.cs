@@ -26,7 +26,7 @@ public class MSBuildTests_EntryPoint : AcceptanceTestBase<NopAssetFixture>
             $"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} -p:GenerateTestingPlatformEntryPoint=False {testAsset.TargetAssetPath} -v:n",
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
-        SL.Build binLog = SL.Serialization.Read(compilationResult.BinlogPath!);
+        SL.Build binLog = BinlogReader.Read(compilationResult.BinlogPath!);
 
         IEnumerable<SL.Target> generateTestingPlatformEntryPointTargets = binLog.FindChildrenRecursive<SL.Target>().Where(t => t.Name == "_GenerateTestingPlatformEntryPoint");
 
@@ -124,7 +124,7 @@ End Module'", "Vbc");
         DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
             $"build -c {BuildConfiguration.Debug} -p:GenerateTestingPlatformEntryPoint=false -p:GenerateTestingPlatformApplicationHelper=true -p:OutputType=Library {testAsset.TargetAssetPath} -v:n",
             cancellationToken: TestContext.CancellationToken);
-        SL.Build binLog = SL.Serialization.Read(buildResult.BinlogPath!);
+        SL.Build binLog = BinlogReader.Read(buildResult.BinlogPath!);
 
         SL.Task entryPointTask = binLog.FindChildrenRecursive<SL.Task>().Single(t => t.Name == "TestingPlatformEntryPointTask");
         string generatedSource = entryPointTask.FindChildrenRecursive<SL.Message>().Single(m => m.Text.Contains("Entrypoint source:")).Text;
@@ -176,7 +176,7 @@ module MicrosoftTestingPlatformEntryPoint =
         DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
             $"build -c {BuildConfiguration.Debug} {testAsset.TargetAssetPath} -v:n -nr:false",
             cancellationToken: TestContext.CancellationToken);
-        SL.Build binLog = SL.Serialization.Read(buildResult.BinlogPath!);
+        SL.Build binLog = BinlogReader.Read(buildResult.BinlogPath!);
         string taskAssembly = binLog.FindChildrenRecursive<SL.Task>()
             .Single(t => t.Name == "TestingPlatformEntryPointTask")
             .FromAssembly;
@@ -191,7 +191,7 @@ module MicrosoftTestingPlatformEntryPoint =
         buildResult = await DotnetCli.RunAsync(
             $"build -c {BuildConfiguration.Debug} {taskFolderProperty} {testAsset.TargetAssetPath} -v:n -nr:false",
             cancellationToken: TestContext.CancellationToken);
-        binLog = SL.Serialization.Read(buildResult.BinlogPath!);
+        binLog = BinlogReader.Read(buildResult.BinlogPath!);
 
         Assert.HasCount(1, binLog.FindChildrenRecursive<SL.Task>().Where(t => t.Name == "TestingPlatformEntryPointTask"));
         Assert.HasCount(1, binLog.FindChildrenRecursive<SL.Task>().Where(t => t.Name == "TestingPlatformSelfRegisteredExtensions"));
@@ -204,7 +204,7 @@ module MicrosoftTestingPlatformEntryPoint =
         buildResult = await DotnetCli.RunAsync(
             $"build -c {BuildConfiguration.Debug} {taskFolderProperty} {testAsset.TargetAssetPath} -v:n -nr:false",
             cancellationToken: TestContext.CancellationToken);
-        binLog = SL.Serialization.Read(buildResult.BinlogPath!);
+        binLog = BinlogReader.Read(buildResult.BinlogPath!);
 
         Assert.HasCount(1, binLog.FindChildrenRecursive<SL.Task>().Where(t => t.Name == "TestingPlatformEntryPointTask"));
         Assert.HasCount(1, binLog.FindChildrenRecursive<SL.Task>().Where(t => t.Name == "TestingPlatformSelfRegisteredExtensions"));
@@ -212,7 +212,7 @@ module MicrosoftTestingPlatformEntryPoint =
         buildResult = await DotnetCli.RunAsync(
             $"build -c {BuildConfiguration.Debug} {taskFolderProperty} {testAsset.TargetAssetPath} -v:n -nr:false",
             cancellationToken: TestContext.CancellationToken);
-        binLog = SL.Serialization.Read(buildResult.BinlogPath!);
+        binLog = BinlogReader.Read(buildResult.BinlogPath!);
 
         Assert.IsEmpty(binLog.FindChildrenRecursive<SL.Task>().Where(t => t.Name == "TestingPlatformEntryPointTask"));
         Assert.IsEmpty(binLog.FindChildrenRecursive<SL.Task>().Where(t => t.Name == "TestingPlatformSelfRegisteredExtensions"));
@@ -233,7 +233,7 @@ module MicrosoftTestingPlatformEntryPoint =
         buildResult = await DotnetCli.RunAsync(
             $"build -c {BuildConfiguration.Debug} {selfRegistrationOnlyProperties} {testAsset.TargetAssetPath} -v:n -nr:false",
             cancellationToken: TestContext.CancellationToken);
-        binLog = SL.Serialization.Read(buildResult.BinlogPath!);
+        binLog = BinlogReader.Read(buildResult.BinlogPath!);
 
         Assert.IsEmpty(binLog.FindChildrenRecursive<SL.Task>().Where(t => t.Name == "TestingPlatformEntryPointTask"));
         Assert.HasCount(1, binLog.FindChildrenRecursive<SL.Task>().Where(t => t.Name == "TestingPlatformSelfRegisteredExtensions"));
@@ -258,7 +258,7 @@ module MicrosoftTestingPlatformEntryPoint =
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(assetName, finalSourceCode);
 
         DotnetMuxerResult buildResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} {testAsset.TargetAssetPath} -v:n", cancellationToken: TestContext.CancellationToken);
-        SL.Build binLog = SL.Serialization.Read(buildResult.BinlogPath!);
+        SL.Build binLog = BinlogReader.Read(buildResult.BinlogPath!);
         SL.Target[] generateTestingPlatformEntryPointTargets = binLog.FindChildrenRecursive<SL.Target>().Where(t => t.Name == "_GenerateTestingPlatformEntryPoint").ToArray();
         Assert.HasCount(1, generateTestingPlatformEntryPointTargets, "Expected exactly one _GenerateTestingPlatformEntryPoint target");
         SL.Task[] testingPlatformEntryPointTasks = generateTestingPlatformEntryPointTargets[0].FindChildrenRecursive<SL.Task>().Where(t => t.Name == "TestingPlatformEntryPointTask").ToArray();
@@ -286,7 +286,7 @@ module MicrosoftTestingPlatformEntryPoint =
 
         File.Delete(buildResult.BinlogPath!);
         buildResult = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} {testAsset.TargetAssetPath} -v:n", cancellationToken: TestContext.CancellationToken);
-        binLog = SL.Serialization.Read(buildResult.BinlogPath!);
+        binLog = BinlogReader.Read(buildResult.BinlogPath!);
         generateTestingPlatformEntryPointTargets = binLog.FindChildrenRecursive<SL.Target>().Where(t => t.Name == "_GenerateTestingPlatformEntryPoint" && t.Children.Count > 0).ToArray();
         Assert.HasCount(1, generateTestingPlatformEntryPointTargets, "Expected exactly one _GenerateTestingPlatformEntryPoint target with children on rebuild");
         SL.Message[] skipMessages = generateTestingPlatformEntryPointTargets[0].FindChildrenRecursive<SL.Message>().Where(m => m.Text.Contains("Skipping target \"_GenerateTestingPlatformEntryPoint\" because all output files are up-to-date with respect to the input files.", StringComparison.OrdinalIgnoreCase)).ToArray();
