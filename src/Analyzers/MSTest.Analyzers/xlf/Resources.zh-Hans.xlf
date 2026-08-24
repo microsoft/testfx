@@ -428,11 +428,12 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="InheritedMemberFromDifferentMSTestVersionMessageFormat">
         <source>The inherited member '{1}.{0}' is annotated with a '[{2}]' attribute that resolves to a canonical MSTest attribute in '{3}', a different MSTest framework assembly than this test project uses; MSTest matches these attributes by exact type identity, so the inherited '[{2}]' is silently ignored at run time. Recompile the assembly that declares '{1}' and, for custom attributes, the assembly that defines '[{2}]', against the same MSTest version as the test project.</source>
         <target state="new">The inherited member '{1}.{0}' is annotated with a '[{2}]' attribute that resolves to a canonical MSTest attribute in '{3}', a different MSTest framework assembly than this test project uses; MSTest matches these attributes by exact type identity, so the inherited '[{2}]' is silently ignored at run time. Recompile the assembly that declares '{1}' and, for custom attributes, the assembly that defines '[{2}]', against the same MSTest version as the test project.</target>
+        <source>The inherited member '{1}.{0}' is annotated with a '[{2}]' attribute that resolves to a canonical MSTest attribute in '{3}', a different MSTest framework assembly than this test project uses; MSTest matches these attributes by exact type identity, so the inherited '[{2}]' is silently ignored at run time. Recompile the assembly that declares '{1}' against the same MSTest version as the test project.</source>
+        <target state="translated">继承成员 "{1}.{0}" 标注了 "[{2}]" 特性，该特性会解析为 "{3}" 中的规范 MSTest 特性，它与此测试项目使用的 MSTest 框架程序集不同；MSTest 通过完全相同的类型标识匹配这些特性，因此运行时会静默忽略继承的 "[{2}]"。请使用与测试项目相同的 MSTest 版本重新编译声明 "{1}" 的程序集。</target>
         <note>{0} is the inherited member name, {1} is the declaring base type name, {2} is the attribute name (for example TestInitialize), {3} is the MSTest framework assembly the attribute's type resolves to. {Locked="MSTest"}</note>
       </trans-unit>
       <trans-unit id="InheritedMemberFromDifferentMSTestVersionTitle">
         <source>A test class inherits a lifecycle or test method from a different MSTest version</source>
-        <target state="new">A test class inherits a lifecycle or test method from a different MSTest version</target>
         <target state="translated">测试类继承了来自不同 MSTest 版本的生命周期方法或测试方法</target>
         <note>{Locked="MSTest"}</note>
       </trans-unit>
@@ -1380,19 +1381,16 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="UseExecutableConditionAttributeInsteadOfProcessCheckDescription">
         <source>Test methods that use 'File.Exists' to skip a test before starting the same executable with 'Process.Start' should use the '[ExecutableCondition]' attribute instead. This attribute provides a declarative and discoverable tool requirement and reports an early return as a skipped test rather than a passed test.</source>
-        <target state="new">Test methods that use 'File.Exists' to skip a test before starting the same executable with 'Process.Start' should use the '[ExecutableCondition]' attribute instead. This attribute provides a declarative and discoverable tool requirement and reports an early return as a skipped test rather than a passed test.</target>
         <target state="translated">在使用 'Process.Start' 启动同一可执行文件之前使用 'File.Exists' 跳过测试的测试方法应改用 '[ExecutableCondition]' 属性。此属性提供声明性且可发现的工具要求，并将提前返回报告为跳过测试，而不是通过测试。</target>
         <note>{Locked="'File.Exists'"}{Locked="'Process.Start'"}{Locked="'[ExecutableCondition]'"}</note>
       </trans-unit>
       <trans-unit id="UseExecutableConditionAttributeInsteadOfProcessCheckMessageFormat">
         <source>Use '[ExecutableCondition]' attribute instead of checking for executable '{0}' before starting it</source>
-        <target state="new">Use '[ExecutableCondition]' attribute instead of checking for executable '{0}' before starting it</target>
         <target state="translated">在启动可执行文件“{0}”之前使用 '[ExecutableCondition]' 属性，而不是检查该文件</target>
         <note>{0} is the executable path. {Locked="'[ExecutableCondition]'"}</note>
       </trans-unit>
       <trans-unit id="UseExecutableConditionAttributeInsteadOfProcessCheckTitle">
         <source>Use '[ExecutableCondition]' attribute instead of 'File.Exists' checks before 'Process.Start'</source>
-        <target state="new">Use '[ExecutableCondition]' attribute instead of 'File.Exists' checks before 'Process.Start'</target>
         <target state="translated">在 'Process.Start' 之前使用 '[ExecutableCondition]' 属性而不是 'File.Exists' 检查</target>
         <note>{Locked="'[ExecutableCondition]'"}{Locked="'File.Exists'"}{Locked="'Process.Start'"}</note>
       </trans-unit>
