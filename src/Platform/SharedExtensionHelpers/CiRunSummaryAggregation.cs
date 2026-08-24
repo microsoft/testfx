@@ -236,7 +236,7 @@ internal static class CiCoverageSummary
         {
             Metrics = metrics,
             Thresholds = thresholds,
-            ReportingModuleCount = metrics.Length > 0 ? 1 : 0,
+            ReportingModuleCount = metrics.Length > 0 || thresholds.Length > 0 ? 1 : 0,
             TotalModuleCount = 1,
         };
     }
@@ -250,7 +250,7 @@ internal static class CiCoverageSummary
 
         foreach (CiRunSummaryModule module in modules)
         {
-            if (module.Coverage.Metrics.Length > 0)
+            if (module.Coverage.Metrics.Length > 0 || module.Coverage.Thresholds.Length > 0)
             {
                 reportingModuleCount++;
             }
@@ -418,7 +418,9 @@ internal static class CiCoverageSummary
     private static string GetThresholdLabel(CiCoverageThreshold threshold)
         => threshold.Aggregation == CoverageAggregation.None
             ? GetMetricLabel(threshold.Metric, threshold.CustomMetricName)
-            : $"{GetMetricLabel(threshold.Metric, threshold.CustomMetricName)} ({threshold.Aggregation} over {threshold.AggregatedOver})";
+            : threshold.AggregatedOver is { } aggregatedOver
+                ? $"{GetMetricLabel(threshold.Metric, threshold.CustomMetricName)} ({threshold.Aggregation} over {aggregatedOver})"
+                : $"{GetMetricLabel(threshold.Metric, threshold.CustomMetricName)} ({threshold.Aggregation})";
 
     private static string GetMetricLabel(CoverageMetric metric, string customMetricName)
         => metric == CoverageMetric.Custom && !RoslynString.IsNullOrEmpty(customMetricName)

@@ -164,6 +164,8 @@ public sealed class CiRunSummaryAggregationTests
             CiRunSummaryModule moduleB = CreateModule("B", passed: 1, failed: 0);
             moduleB.Coverage = CreateCoverage(10, 20);
             CiRunSummaryModule moduleWithoutCoverage = CreateModule("C", passed: 1, failed: 0);
+            CiRunSummaryModule thresholdOnlyModule = CreateModule("D", passed: 1, failed: 0);
+            thresholdOnlyModule.Coverage = CreateThresholdOnlyCoverage();
             string pathA = await CiRunSummaryAggregation.WriteFragmentAsync(
                 directory,
                 AzureDevOpsSummaryArtifactPostProcessor.Provider,
@@ -179,9 +181,19 @@ public sealed class CiRunSummaryAggregationTests
                 AzureDevOpsSummaryArtifactPostProcessor.Provider,
                 AzureDevOpsSummaryArtifactPostProcessor.ProviderSlug,
                 moduleWithoutCoverage);
+            string pathD = await CiRunSummaryAggregation.WriteFragmentAsync(
+                directory,
+                AzureDevOpsSummaryArtifactPostProcessor.Provider,
+                AzureDevOpsSummaryArtifactPostProcessor.ProviderSlug,
+                thresholdOnlyModule);
 
             CiRunSummaryAggregate aggregate = CiRunSummaryAggregation.ReadAndAggregate(
-                [CreateInput(pathA, moduleA), CreateInput(pathB, moduleB), CreateInput(pathC, moduleWithoutCoverage)],
+                [
+                    CreateInput(pathA, moduleA),
+                    CreateInput(pathB, moduleB),
+                    CreateInput(pathC, moduleWithoutCoverage),
+                    CreateInput(pathD, thresholdOnlyModule),
+                ],
                 AzureDevOpsSummaryArtifactPostProcessor.Provider,
                 new ArtifactPostProcessingContext(
                     ArtifactPostProcessingTruncationReason.None,
@@ -198,10 +210,11 @@ public sealed class CiRunSummaryAggregationTests
             Assert.HasCount(1, aggregate.Coverage.Metrics);
             Assert.AreEqual(90, aggregate.Coverage.Metrics[0].CoveredCount);
             Assert.AreEqual(120, aggregate.Coverage.Metrics[0].CoverableCount);
-            Assert.AreEqual(2, aggregate.Coverage.ReportingModuleCount);
+            Assert.AreEqual(3, aggregate.Coverage.ReportingModuleCount);
             Assert.AreEqual(4, aggregate.Coverage.TotalModuleCount);
             Assert.Contains("| Overall | Line | 90 | 120 | 75.0% |", markdown);
-            Assert.Contains("Coverage data was reported by 2 of 4 test modules.", markdown);
+            Assert.Contains("Coverage data was reported by 3 of 4 test modules.", markdown);
+            Assert.Contains("| D (net9.0) — Overall | Branch (Average) | No data | 80.0% | ❌ Failed |", markdown);
         }
         finally
         {
@@ -237,6 +250,31 @@ public sealed class CiRunSummaryAggregationTests
         Assert.AreEqual("producer-with-overall", summary.Metrics[0].ProducerId);
         Assert.AreEqual(CoverageScopeLevel.Module, summary.Metrics[1].ScopeLevel);
         Assert.AreEqual("module-only-producer", summary.Metrics[1].ProducerId);
+    }
+
+    [TestMethod]
+    public void CreateCoverageSummary_ThresholdOnlySessionCountsAsReporting()
+    {
+        var coverageResult = new Mock<ITestCoverageResult>();
+        var sessionUid = new SessionUid("session");
+        coverageResult.SetupGet(result => result.Scopes).Returns([]);
+        coverageResult.SetupGet(result => result.Thresholds).Returns(
+        [
+            new TestCoverageThresholdMessage(
+                sessionUid,
+                CoverageScope.Overall,
+                CoverageMetric.Line,
+                CoverageAggregation.None,
+                actualPercentage: 0,
+                requiredPercentage: 80,
+                hasCoverableData: false,
+                producerId: "threshold-only"),
+        ]);
+
+        CiCoverageSummaryData summary = CiCoverageSummary.Create(coverageResult.Object, sessionUid);
+
+        Assert.AreEqual(1, summary.ReportingModuleCount);
+        Assert.HasCount(1, summary.Thresholds);
     }
 
     [TestMethod]
@@ -451,6 +489,26 @@ public sealed class CiRunSummaryAggregationTests
                     ProducerId = "coverlet",
                     CoveredCount = covered,
                     CoverableCount = coverable,
+                },
+            ],
+            ReportingModuleCount = 1,
+            TotalModuleCount = 1,
+        };
+
+    private static CiCoverageSummaryData CreateThresholdOnlyCoverage()
+        => new()
+        {
+            Thresholds =
+            [
+                new CiCoverageThreshold
+                {
+                    ScopeLevel = CoverageScopeLevel.Overall,
+                    Metric = CoverageMetric.Branch,
+                    ProducerId = "threshold-only",
+                    Aggregation = CoverageAggregation.Average,
+                    RequiredPercentage = 80,
+                    HasCoverableData = false,
+                    Passed = false,
                 },
             ],
             ReportingModuleCount = 1,
