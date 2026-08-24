@@ -22,7 +22,9 @@ namespace Microsoft.Testing.Platform.UnitTests;
 public sealed class CommonHostTests
 {
     [TestMethod]
-    public async Task ExecuteRequestAsync_WhenSessionIsCancelled_UsesCancellationTokenNoneForDisplayAfterSessionEndRun()
+    [DataRow(false, 1)]
+    [DataRow(true, 0)]
+    public async Task ExecuteRequestAsync_WhenSessionIsCancelled_DisarmsStopPolicyOnlyForRun(bool isDiscoveryRequest, int expectedDisarmCount)
     {
         CancellationToken cancellationToken = new(canceled: true);
 
@@ -69,7 +71,8 @@ public sealed class CommonHostTests
             serviceProvider,
             baseMessageBusMock.Object,
             testFrameworkMock.Object,
-            client);
+            client,
+            isDiscoveryRequest);
 
         Assert.IsNotNull(displayAfterToken);
         Assert.IsFalse(displayAfterToken!.Value.CanBeCanceled);
@@ -80,7 +83,7 @@ public sealed class CommonHostTests
         // Disarming happens in a finally around the invoker, so it must also happen when the invoker threw
         // because the session was canceled. Otherwise a deadline reached while the reporters finalize an
         // already-canceled run would still mark it as truncated.
-        policiesServiceMock.Verify(x => x.NotifyTestExecutionCompleted(), Times.Once);
+        policiesServiceMock.Verify(x => x.NotifyTestExecutionCompleted(), Times.Exactly(expectedDisarmCount));
     }
 
     [TestMethod]
@@ -410,8 +413,9 @@ public sealed class CommonHostTests
             ServiceProvider serviceProvider,
             BaseMessageBus baseMessageBus,
             ITestFramework testFramework,
-            ClientInfo client)
-            => ExecuteRequestAsync(outputDevice, testSessionInfo, serviceProvider, baseMessageBus, testFramework, client);
+            ClientInfo client,
+            bool isDiscoveryRequest = false)
+            => ExecuteRequestAsync(outputDevice, testSessionInfo, serviceProvider, baseMessageBus, testFramework, client, isDiscoveryRequest);
 
         protected override Task<int> InternalRunAsync(CancellationToken cancellationToken)
             => Task.FromResult(0);

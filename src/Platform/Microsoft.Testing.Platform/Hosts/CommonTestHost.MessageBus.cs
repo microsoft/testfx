@@ -13,7 +13,8 @@ namespace Microsoft.Testing.Platform.Hosts;
 internal abstract partial class CommonHost
 {
     protected static async Task ExecuteRequestAsync(ProxyOutputDevice outputDevice, ITestSessionContext testSessionInfo,
-        ServiceProvider serviceProvider, BaseMessageBus baseMessageBus, ITestFramework testFramework, TestHost.ClientInfo client)
+        ServiceProvider serviceProvider, BaseMessageBus baseMessageBus, ITestFramework testFramework, TestHost.ClientInfo client,
+        bool isDiscoveryRequest)
     {
         // Reset the shared, application-scoped coverage accumulator at the start of every request here, in the
         // common host/request lifecycle, so it happens for all output modes (terminal, pipe, server, custom)
@@ -50,7 +51,11 @@ internal abstract partial class CommonHost
                         // not registered.
                         AbortAtDeadlineExtension? abortAtDeadlineExtension = serviceProvider.GetService<AbortAtDeadlineExtension>();
                         abortAtDeadlineExtension?.NotifyTestExecutionCompleted();
-                        serviceProvider.GetRequiredService<IStopPoliciesService>().NotifyTestExecutionCompleted();
+                        if (!isDiscoveryRequest)
+                        {
+                            serviceProvider.GetRequiredService<IStopPoliciesService>().NotifyTestExecutionCompleted();
+                        }
+
                         if (abortAtDeadlineExtension is not null)
                         {
                             // A successful stop can make the invoker return before the deadline handler records

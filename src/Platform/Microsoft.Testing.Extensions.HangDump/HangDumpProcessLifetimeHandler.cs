@@ -685,7 +685,9 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         {
             using var queryCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             queryCts.CancelAfter(timeout);
-            return await requestInProgressTestsAsync(queryCts.Token).ConfigureAwait(false);
+            Task<(string, int)[]> queryTask = requestInProgressTestsAsync(queryCts.Token);
+            await queryTask.TimeoutAfterAsync(timeout, cancellationToken).ConfigureAwait(false);
+            return await queryTask.ConfigureAwait(false);
         }
         catch (Exception ex)
         {

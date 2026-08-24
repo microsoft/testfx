@@ -146,7 +146,8 @@ internal sealed partial class ServerTestHost
                 perRequestServiceProvider,
                 perRequestServiceProvider.GetBaseMessageBus(),
                 perRequestTestFramework,
-                _client).ConfigureAwait(false);
+                _client,
+                method == JsonRpcMethods.TestingDiscoverTests).ConfigureAwait(false);
 
             // Check if there was a test adapter testSession failure
             ITestApplicationProcessExitCode testApplicationResult = perRequestServiceProvider.GetTestApplicationProcessExitCode();
