@@ -16,20 +16,23 @@ internal static partial class StackTraceHelper
 #else
     private static Regex? s_regex;
 
-    [MemberNotNull(nameof(s_regex))]
     public static Regex GetFrameRegex()
     {
-        if (s_regex is not null)
+        Regex? regex = Volatile.Read(ref s_regex);
+        if (regex is not null)
         {
-            return s_regex;
+            return regex;
         }
 
         // Specifying no timeout, the regex is linear. And the timeout does not measure the regex only, but measures also any
         // thread suspends, so the regex gets blamed incorrectly.
-        s_regex = new Regex(
+        regex = new Regex(
             StackTraceRegexHelper.CreateFrameRegexPattern(matchFramesWithoutLocation: true),
             RegexOptions.Compiled | RegexOptions.ExplicitCapture);
-        return s_regex;
+
+        // Racing callers may each build an instance. Publish the first one and let every caller share it, so callers
+        // always observe the same object and the expensive RegexOptions.Compiled construction is paid for once.
+        return Interlocked.CompareExchange(ref s_regex, regex, null) ?? regex;
     }
 #endif
 }

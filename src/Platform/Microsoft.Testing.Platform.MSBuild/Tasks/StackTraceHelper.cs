@@ -43,13 +43,13 @@ internal static class StackTraceHelper
 
     private static bool TryGetStackFrameLocation(string stackFrame, out int line, [NotNullWhen(true)] out string? file, out string? place)
     {
-        InitializeRegex();
+        Regex regex = GetOrCreateRegex();
 
         // stack frame looks like this '   at Program.<Main>$(String[] args) in S:\t\ConsoleApp81\ConsoleApp81\Program.cs:line 9'
         Match match;
         try
         {
-            match = s_regex.Match(stackFrame);
+            match = regex.Match(stackFrame);
         }
         catch (RegexMatchTimeoutException)
         {
@@ -78,18 +78,22 @@ internal static class StackTraceHelper
         return hasLocation;
     }
 
-    [MemberNotNull(nameof(s_regex))]
-    private static void InitializeRegex()
+    private static Regex GetOrCreateRegex()
     {
-        if (s_regex is not null)
+        Regex? regex = Volatile.Read(ref s_regex);
+        if (regex is not null)
         {
-            return;
+            return regex;
         }
 
         // Keep this location-only pattern because MSBuild only reports frames that can provide a file and line.
-        s_regex = new Regex(
+        regex = new Regex(
             StackTraceRegexHelper.CreateFrameRegexPattern(matchFramesWithoutLocation: false),
             RegexOptions.Compiled,
             StackTraceRegexHelper.MatchTimeout);
+
+        // Racing callers may each build an instance. Publish the first one and let every caller share it, so callers
+        // always observe the same object and the expensive RegexOptions.Compiled construction is paid for once.
+        return Interlocked.CompareExchange(ref s_regex, regex, null) ?? regex;
     }
 }
