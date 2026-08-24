@@ -83,8 +83,8 @@ Supports the following placeholders: {pname} (test application name), {pid} (pro
         <note>Do not localize option name {Locked="--hangdump-filename"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, or legacy token {Locked="%p"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
-        <source>Generate a dump file if the test process hangs</source>
-        <target state="translated">如果测试进程挂起，则生成转储文件</target>
+        <source>Generate a dump file if the test process hangs.</source>
+        <target state="needs-review-translation">如果测试进程挂起，则生成转储文件</target>
         <note>Do not localize option name {Locked="--hangdump"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTimeoutExpired">
@@ -136,8 +136,8 @@ The timeout value is specified in one of the following formats:
       <trans-unit id="HangDumpTypeOptionDescription">
         <source>Specify the type of the dump.
 Valid values are {0}.
-Default type is 'Full'</source>
-        <target state="translated">指定转储的类型。
+Default type is 'Full'.</source>
+        <target state="needs-review-translation">指定转储的类型。
 有效值为 {0}。
 默认类型为 "Full"</target>
         <note>0 is the list of valid dump type values. Do not localize option name {Locked="--hangdump-type"} or default dump type {Locked="Full"}.</note>

@@ -214,11 +214,11 @@
     <value>The retry extension is not supported on browser platform. Browser-based tests cannot be retried due to platform limitations.</value>
   </data>
   <data name="RetryFailedTestsMaxPercentageOptionDescription" xml:space="preserve">
-    <value>Disable retry mechanism if the percentage of failed tests is greater than the specified value</value>
+    <value>Disable retry mechanism if the percentage of failed tests is greater than the specified value.</value>
     <comment>Do not localize option name {Locked="--retry-failed-tests-max-percentage"}.</comment>
   </data>
   <data name="RetryFailedTestsMaxTestsOptionDescription" xml:space="preserve">
-    <value>Disable retry mechanism if the number of failed tests is greater than the specified value</value>
+    <value>Disable retry mechanism if the number of failed tests is greater than the specified value.</value>
     <comment>Do not localize option name {Locked="--retry-failed-tests-max-tests"}.</comment>
   </data>
   <data name="RetryFailedTestsNotSupportedInHotReloadErrorMessage" xml:space="preserve">
@@ -236,7 +236,7 @@
     <comment>Do not localize option name {Locked="--retry-failed-tests-delay"} or time examples {Locked="2147483647ms"}{Locked="200"}{Locked="500ms"}{Locked="1s"}{Locked="2.5m"}{Locked="1h"}{Locked="1d"}.</comment>
   </data>
   <data name="RetryFailedTestsOptionDescription" xml:space="preserve">
-    <value>Retry failed tests the given number of times</value>
+    <value>Retry failed tests the given number of times.</value>
     <comment>Do not localize option name {Locked="--retry-failed-tests"}.</comment>
   </data>
   <data name="RetryFailedTestsOptionIsMissingErrorMessage" xml:space="preserve">

@@ -23,8 +23,8 @@
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpDescription">
-        <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly</source>
-        <target state="translated">[somente net6.0+] Produzir arquivos de despejo de memória quando o processo de execução de teste falhar inesperadamente</target>
+        <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly.</source>
+        <target state="needs-review-translation">[somente net6.0+] Produzir arquivos de despejo de memória quando o processo de execução de teste falhar inesperadamente</target>
         <note>Do not localize target framework moniker {Locked="net6.0+"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpDisplayName">
@@ -50,8 +50,8 @@ Há suporte para os seguintes espaços reservados: {pname} (nome do executável 
         <note>Do not localize {Locked=".NET (Core)"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpOptionDescription">
-        <source>[net6.0+ only] Generate a dump file if the test process crashes</source>
-        <target state="translated">[somente net6.0+] Gerar um arquivo de despejo se o processo de teste falhar</target>
+        <source>[net6.0+ only] Generate a dump file if the test process crashes.</source>
+        <target state="needs-review-translation">[somente net6.0+] Gerar um arquivo de despejo se o processo de teste falhar</target>
         <note>Do not localize option name {Locked="--crashdump"} or target framework moniker {Locked="net6.0+"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashed">
@@ -107,8 +107,8 @@ Há suporte para os seguintes espaços reservados: {pname} (nome do executável 
       <trans-unit id="CrashDumpTypeOptionDescription">
         <source>Specify the type of the dump.
 Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'.
-For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</source>
-        <target state="translated">Especifique o tipo de despejo.
+For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps.</source>
+        <target state="needs-review-translation">Especifique o tipo de despejo.
 Os valores válidos são ''Mini'', ''Heap'', ''Triage'' ou ''Full''. O tipo padrão é 'Full'.
 Para obter mais informações, visite https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</target>
         <note>Do not localize option name {Locked="--crashdump-type"}, dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Triage"}{Locked="Full"}, or link {Locked="https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps"}.</note>
