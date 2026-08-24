@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform;
@@ -7,8 +7,36 @@ using Microsoft.Testing.Platform.Logging;
 
 namespace Microsoft.Testing.Extensions.GitHubActionsReport;
 
-internal sealed partial class GitHubActionsSummaryReporter
+/// <summary>
+/// Every write this extension makes to the shared <c>GITHUB_STEP_SUMMARY</c> file.
+/// </summary>
+/// <remarks>
+/// The file is shared: one test-host process per assembly and target framework appends to it, the aggregated
+/// <c>dotnet test</c> post-processor rewrites its own section in it, and other steps and test frameworks append
+/// their own content. Every access therefore needs the same file system, path, retry policy and lock, which is
+/// what this type holds so its methods can take only what actually varies between calls.
+/// </remarks>
+internal sealed class StepSummaryWriter
 {
+    private readonly IFileSystem _fileSystem;
+    private readonly ILogger _logger;
+    private readonly int _maxAttempts;
+    private readonly TimeSpan _retryDelay;
+
+    internal StepSummaryWriter(IFileSystem fileSystem, string path, ILogger logger, int maxAttempts, TimeSpan retryDelay)
+    {
+        _fileSystem = fileSystem;
+        Path = path;
+        _logger = logger;
+        _maxAttempts = maxAttempts;
+        _retryDelay = retryDelay;
+    }
+
+    /// <summary>
+    /// Gets the path of the shared summary file, for diagnostics that name it.
+    /// </summary>
+    internal string Path { get; }
+
     /// <summary>
     /// The lock every writer to the shared summary file takes for the duration of its update.
     /// </summary>
@@ -17,33 +45,29 @@ internal sealed partial class GitHubActionsSummaryReporter
     /// replace the file: a file cannot be replaced while it is open, so the handle must be released before the
     /// swap, and a sibling appending in that gap would have its section overwritten by content captured before it.
     /// A separate lock file closes that window because it is held across the whole read-modify-replace, and it is
-    /// the same lock the aggregated path already uses, so the two writing modes serialize against each other too.
+    /// the same lock the aggregated path uses, so the two writing modes serialize against each other too.
     /// </remarks>
-    private static string GetSummaryLockPath(string path)
-        => path + ".microsoft-testing-platform.lock";
+    private string GetSummaryLockPath()
+        => Path + ".microsoft-testing-platform.lock";
 
     /// <summary>
-    /// Acquires <see cref="GetSummaryLockPath(string)"/>, retrying while another writer holds it.
+    /// Acquires <see cref="GetSummaryLockPath"/>, retrying while another writer holds it.
     /// </summary>
-    private static async Task<IFileStream> AcquireSummaryLockAsync(
-        IFileSystem fileSystem,
-        string path,
-        int maxAttempts,
-        TimeSpan retryDelay,
+    private async Task<IFileStream> AcquireSummaryLockAsync(
         CancellationToken cancellationToken)
     {
-        string lockPath = GetSummaryLockPath(path);
+        string lockPath = GetSummaryLockPath();
         for (int attempt = 1; ; attempt++)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
             try
             {
-                return fileSystem.NewFileStream(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+                return _fileSystem.NewFileStream(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
             }
-            catch (IOException) when (attempt < maxAttempts)
+            catch (IOException) when (attempt < _maxAttempts)
             {
-                await Task.Delay(retryDelay, cancellationToken).ConfigureAwait(false);
+                await Task.Delay(_retryDelay, cancellationToken).ConfigureAwait(false);
             }
         }
     }
@@ -67,45 +91,37 @@ internal sealed partial class GitHubActionsSummaryReporter
     /// process appends alone, so contention can no longer occur; a failure that happens <em>during</em> the write
     /// (e.g. disk full) may already have appended a partial section, and retrying would re-append the full section
     /// on top of it and corrupt the summary. Such a mid-write failure is therefore propagated straight to the
-    /// caller's best-effort warning path instead of being retried.
+    /// caller's best-effort warning Path instead of being retried.
     /// </para>
     /// <para>
     /// <paramref name="maxTotalBytes"/> bounds the size the file may reach. It is checked here, under the lock and
     /// against the handle this process holds, rather than by the caller before the call: two sibling projects that
     /// each measured the file before acquiring the lock would both see the same length, both conclude they fit, and
     /// both append — landing over GitHub's cap, which discards the whole summary. The caller's pre-check remains a
-    /// cheap fast path; this one is the decision.
+    /// cheap fast Path; this one is the decision.
     /// </para>
     /// </remarks>
     /// <returns>
     /// <see langword="true"/> if the content was appended; <see langword="false"/> if appending it would have taken
     /// the file past <paramref name="maxTotalBytes"/>, in which case nothing was written.
     /// </returns>
-    internal static /* for testing */ async Task<bool> AppendStepSummaryWithRetryAsync(
-        IFileSystem fileSystem,
-        string path,
+    internal async Task<bool> AppendStepSummaryWithRetryAsync(
         string content,
-        int maxAttempts,
-        TimeSpan retryDelay,
         CancellationToken cancellationToken,
         long maxTotalBytes = long.MaxValue)
     {
-        // Taken even for a plain append: the notice-hoisting path replaces the whole file, and an append that
+        // Taken even for a plain append: the notice-hoisting Path replaces the whole file, and an append that
         // slipped between its read and its swap would be silently overwritten.
-        using IFileStream lockStream = await AcquireSummaryLockAsync(fileSystem, path, maxAttempts, retryDelay, cancellationToken).ConfigureAwait(false);
-        return await AppendCoreAsync(fileSystem, path, content, maxAttempts, retryDelay, cancellationToken, maxTotalBytes).ConfigureAwait(false);
+        using IFileStream lockStream = await AcquireSummaryLockAsync(cancellationToken).ConfigureAwait(false);
+        return await AppendCoreAsync(content, cancellationToken, maxTotalBytes).ConfigureAwait(false);
     }
 
     /// <summary>
     /// The body of <see cref="AppendStepSummaryWithRetryAsync"/>, minus the lock, so a caller that already holds
     /// it can render and write in one transaction.
     /// </summary>
-    private static async Task<bool> AppendCoreAsync(
-        IFileSystem fileSystem,
-        string path,
+    private async Task<bool> AppendCoreAsync(
         string content,
-        int maxAttempts,
-        TimeSpan retryDelay,
         CancellationToken cancellationToken,
         long maxTotalBytes)
     {
@@ -119,19 +135,19 @@ internal sealed partial class GitHubActionsSummaryReporter
             IFileStream stream;
             try
             {
-                stream = fileSystem.NewFileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read);
+                stream = _fileSystem.NewFileStream(Path, FileMode.Append, FileAccess.Write, FileShare.Read);
             }
-            catch (IOException) when (attempt < maxAttempts)
+            catch (IOException) when (attempt < _maxAttempts)
             {
                 // Another test-host process currently holds the summary file open for writing. Back off briefly
                 // and retry so this assembly's section is appended intact once the holder releases the file.
-                await Task.Delay(retryDelay, cancellationToken).ConfigureAwait(false);
+                await Task.Delay(_retryDelay, cancellationToken).ConfigureAwait(false);
                 continue;
             }
 
             // The exclusive append handle is acquired: from here on we append alone, so any failure is a genuine
             // write error (not contention) and must not be retried — a partial append followed by a full re-append
-            // would corrupt the summary. Let it propagate to the caller's best-effort warning path.
+            // would corrupt the summary. Let it propagate to the caller's best-effort warning Path.
             using (stream)
             {
                 // A stream that cannot report its length cannot be gated; that only happens in tests, and writing
@@ -168,7 +184,7 @@ internal sealed partial class GitHubActionsSummaryReporter
     /// </para>
     /// <para>
     /// <paramref name="maxTotalBytes"/> is checked here rather than by the caller, for the same reason the plain
-    /// append path checks it here: the file is measured while this process holds it, so a sibling cannot have
+    /// append Path checks it here: the file is measured while this process holds it, so a sibling cannot have
     /// grown it since.
     /// </para>
     /// </remarks>
@@ -176,33 +192,25 @@ internal sealed partial class GitHubActionsSummaryReporter
     /// <see langword="true"/> if the file was updated; <see langword="false"/> if the result would have exceeded
     /// <paramref name="maxTotalBytes"/>, in which case the file is left untouched.
     /// </returns>
-    internal static /* for testing */ async Task<bool> AppendStepSummaryWithLeadingNoticeAsync(
-        IFileSystem fileSystem,
-        string path,
+    internal async Task<bool> AppendStepSummaryWithLeadingNoticeAsync(
         string content,
         Func<int, string> noticeFactory,
-        int maxAttempts,
-        TimeSpan retryDelay,
         CancellationToken cancellationToken,
         long maxTotalBytes = long.MaxValue)
     {
         // Held across the whole read-modify-replace. The summary handle alone cannot cover it, because the file
         // has to be closed before it can be replaced, and a sibling appending in that gap would be overwritten.
-        using IFileStream lockStream = await AcquireSummaryLockAsync(fileSystem, path, maxAttempts, retryDelay, cancellationToken).ConfigureAwait(false);
-        return await AppendWithLeadingNoticeCoreAsync(fileSystem, path, content, noticeFactory, maxAttempts, retryDelay, cancellationToken, maxTotalBytes).ConfigureAwait(false);
+        using IFileStream lockStream = await AcquireSummaryLockAsync(cancellationToken).ConfigureAwait(false);
+        return await AppendWithLeadingNoticeCoreAsync(content, noticeFactory, cancellationToken, maxTotalBytes).ConfigureAwait(false);
     }
 
     /// <summary>
     /// The body of <see cref="AppendStepSummaryWithLeadingNoticeAsync"/>, minus the lock, so a caller that
     /// already holds it can render and write in one transaction.
     /// </summary>
-    private static async Task<bool> AppendWithLeadingNoticeCoreAsync(
-        IFileSystem fileSystem,
-        string path,
+    private async Task<bool> AppendWithLeadingNoticeCoreAsync(
         string content,
         Func<int, string> noticeFactory,
-        int maxAttempts,
-        TimeSpan retryDelay,
         CancellationToken cancellationToken,
         long maxTotalBytes)
     {
@@ -217,13 +225,13 @@ internal sealed partial class GitHubActionsSummaryReporter
             IFileStream stream;
             try
             {
-                stream = fileSystem.NewFileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
+                stream = _fileSystem.NewFileStream(Path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
             }
-            catch (IOException) when (attempt < maxAttempts)
+            catch (IOException) when (attempt < _maxAttempts)
             {
                 // Another test-host process currently holds the summary file. Back off briefly and retry, exactly
-                // as the plain append path does, so this project's section is written intact once it is released.
-                await Task.Delay(retryDelay, cancellationToken).ConfigureAwait(false);
+                // as the plain append Path does, so this project's section is written intact once it is released.
+                await Task.Delay(_retryDelay, cancellationToken).ConfigureAwait(false);
                 continue;
             }
 
@@ -275,7 +283,7 @@ internal sealed partial class GitHubActionsSummaryReporter
                 // content: everything earlier projects wrote only survives if the replacement completes.
                 // Truncating in place would leave the summary empty if the write were abandoned midway — on
                 // cancellation during session teardown, or a full disk — which is a worse outcome than the oversized
-                // summary this whole path exists to avoid, and a silent one. Build the new content in a temporary
+                // summary this whole Path exists to avoid, and a silent one. Build the new content in a temporary
                 // file and swap it in instead, so the summary is only ever replaced by a complete file.
                 //
                 // The exclusive handle has to be released before the swap, because a file that is open cannot be
@@ -287,10 +295,10 @@ internal sealed partial class GitHubActionsSummaryReporter
                 }
             }
 
-            string tempPath = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
+            string tempPath = Path + "." + Guid.NewGuid().ToString("N") + ".tmp";
             try
             {
-                using (IFileStream tempStream = fileSystem.NewFileStream(tempPath, FileMode.CreateNew, FileAccess.Write, FileShare.Read))
+                using (IFileStream tempStream = _fileSystem.NewFileStream(tempPath, FileMode.CreateNew, FileAccess.Write, FileShare.Read))
                 {
                     await tempStream.Stream.WriteAsync(pendingPayload, 0, pendingPayload.Length, cancellationToken).ConfigureAwait(false);
                     await tempStream.Stream.FlushAsync(cancellationToken).ConfigureAwait(false);
@@ -298,13 +306,13 @@ internal sealed partial class GitHubActionsSummaryReporter
 
                 // Past this point the replacement is complete on disk, so the swap either happens or it does not;
                 // the summary is never left half-written.
-                fileSystem.ReplaceFile(tempPath, path);
+                _fileSystem.ReplaceFile(tempPath, Path);
             }
             finally
             {
                 try
                 {
-                    fileSystem.DeleteFile(tempPath);
+                    _fileSystem.DeleteFile(tempPath);
                 }
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
                 {
@@ -333,26 +341,49 @@ internal sealed partial class GitHubActionsSummaryReporter
     /// into one where the first projects get everything and the others get nothing.
     /// </para>
     /// </remarks>
-    internal static /* for testing */ async Task<bool> AppendRenderedStepSummarySectionAsync(
-        IFileSystem fileSystem,
-        string path,
+    internal async Task<bool> AppendRenderedStepSummarySectionAsync(
         Func<long, (string Markdown, bool IncludeNotice)> render,
         Func<int, string> noticeFactory,
-        ILogger logger,
-        int maxAttempts,
-        TimeSpan retryDelay,
         CancellationToken cancellationToken,
         long maxTotalBytes = long.MaxValue)
     {
-        using IFileStream lockStream = await AcquireSummaryLockAsync(fileSystem, path, maxAttempts, retryDelay, cancellationToken).ConfigureAwait(false);
+        using IFileStream lockStream = await AcquireSummaryLockAsync(cancellationToken).ConfigureAwait(false);
 
         // Measured under the lock, so this is the length the write will actually land on.
-        long currentLength = GetSummaryLength(fileSystem, path, logger) ?? 0;
+        long currentLength = GetSummaryLength() ?? 0;
         (string markdown, bool includeNotice) = render(currentLength);
 
         return includeNotice
-            ? await AppendWithLeadingNoticeCoreAsync(fileSystem, path, markdown, noticeFactory, maxAttempts, retryDelay, cancellationToken, maxTotalBytes).ConfigureAwait(false)
-            : await AppendCoreAsync(fileSystem, path, markdown, maxAttempts, retryDelay, cancellationToken, maxTotalBytes).ConfigureAwait(false);
+            ? await AppendWithLeadingNoticeCoreAsync(markdown, noticeFactory, cancellationToken, maxTotalBytes).ConfigureAwait(false)
+            : await AppendCoreAsync(markdown, cancellationToken, maxTotalBytes).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Measures the shared summary file, or returns <see langword="null"/> when it does not exist or cannot be
+    /// read. Best-effort by design: the length sizes a budget and explains a refusal, so failing to read it must
+    /// degrade the report rather than fail the run.
+    /// </summary>
+    internal long? GetSummaryLength()
+    {
+        try
+        {
+            if (!_fileSystem.ExistFile(Path))
+            {
+                return null;
+            }
+
+            using IFileStream stream = _fileSystem.NewFileStream(Path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            return stream.Stream.Length;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException)
+        {
+            if (_logger.IsEnabled(LogLevel.Trace))
+            {
+                _logger.LogTrace($"Could not measure '{Path}': {ex.Message}");
+            }
+
+            return null;
+        }
     }
 
     /// <summary>
@@ -365,8 +396,8 @@ internal sealed partial class GitHubActionsSummaryReporter
     /// shortened summary that never says it was shortened. This reporter's own test suite refers to the marker
     /// by value, which makes that a live case rather than a hypothetical one.
     /// </remarks>
-    internal static /* for testing */ bool HasLeadingTruncationNotice(string summary)
-        => summary.StartsWith(TruncationNoticeMarker, StringComparison.Ordinal);
+    internal static bool HasLeadingTruncationNotice(string summary)
+        => summary.StartsWith(GitHubActionsSummaryReporter.TruncationNoticeMarker, StringComparison.Ordinal);
 
     /// <summary>
     /// Counts the full test project sections this extension has written to the shared summary file.
@@ -377,15 +408,15 @@ internal sealed partial class GitHubActionsSummaryReporter
     /// and this reporter's own test suite refers to the marker by value, which makes that a live case rather
     /// than a hypothetical one.
     /// </remarks>
-    internal static /* for testing */ int CountProjectSections(string summary)
+    internal static int CountProjectSections(string summary)
     {
         int count = 0;
-        for (int index = summary.IndexOf(ProjectSectionMarker, StringComparison.Ordinal);
+        for (int index = summary.IndexOf(GitHubActionsSummaryReporter.ProjectSectionMarker, StringComparison.Ordinal);
             index >= 0;
-            index = summary.IndexOf(ProjectSectionMarker, index + ProjectSectionMarker.Length, StringComparison.Ordinal))
+            index = summary.IndexOf(GitHubActionsSummaryReporter.ProjectSectionMarker, index + GitHubActionsSummaryReporter.ProjectSectionMarker.Length, StringComparison.Ordinal))
         {
             bool atLineStart = index == 0 || summary[index - 1] == '\n';
-            int end = index + ProjectSectionMarker.Length;
+            int end = index + GitHubActionsSummaryReporter.ProjectSectionMarker.Length;
             bool atLineEnd = end == summary.Length || summary[end] == '\n' || summary[end] == '\r';
             if (atLineStart && atLineEnd)
             {
@@ -404,13 +435,9 @@ internal sealed partial class GitHubActionsSummaryReporter
     /// <paramref name="maxTotalBytes"/>, in which case the file is left untouched so the caller can retry with a
     /// smaller rendering.
     /// </returns>
-    internal static async Task<bool> UpsertStepSummaryWithRetryAsync(
-        IFileSystem fileSystem,
-        string path,
+    internal async Task<bool> UpsertStepSummaryWithRetryAsync(
         string aggregationId,
         string content,
-        int maxAttempts,
-        TimeSpan retryDelay,
         CancellationToken cancellationToken,
         string? leadingNotice = null,
         long maxTotalBytes = long.MaxValue)
@@ -420,8 +447,8 @@ internal sealed partial class GitHubActionsSummaryReporter
         string section = $"{startMarker}\n{content.TrimEnd()}\n{endMarker}\n";
         // Keep one stable lock entry for the lifetime of the GitHub step. Deleting it after releasing the handle
         // would let a third writer create a new inode while a second writer still holds the unlinked old lock.
-        // This is the same lock the per-project path takes, so the two writing modes serialize against each other.
-        string lockPath = GetSummaryLockPath(path);
+        // This is the same lock the per-project Path takes, so the two writing modes serialize against each other.
+        string lockPath = GetSummaryLockPath();
 
         for (int attempt = 1; ; attempt++)
         {
@@ -430,26 +457,26 @@ internal sealed partial class GitHubActionsSummaryReporter
             IFileStream lockStream;
             try
             {
-                lockStream = fileSystem.NewFileStream(
+                lockStream = _fileSystem.NewFileStream(
                     lockPath,
                     FileMode.OpenOrCreate,
                     FileAccess.ReadWrite,
                     FileShare.None);
             }
-            catch (IOException) when (attempt < maxAttempts)
+            catch (IOException) when (attempt < _maxAttempts)
             {
-                await Task.Delay(retryDelay, cancellationToken).ConfigureAwait(false);
+                await Task.Delay(_retryDelay, cancellationToken).ConfigureAwait(false);
                 continue;
             }
 
-            string tempPath = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
+            string tempPath = Path + "." + Guid.NewGuid().ToString("N") + ".tmp";
             try
             {
                 using (lockStream)
                 {
                     string existing;
-                    using (IFileStream summaryStream = fileSystem.NewFileStream(
-                        path,
+                    using (IFileStream summaryStream = _fileSystem.NewFileStream(
+                        Path,
                         FileMode.OpenOrCreate,
                         FileAccess.Read,
                         FileShare.ReadWrite | FileShare.Delete))
@@ -500,7 +527,7 @@ internal sealed partial class GitHubActionsSummaryReporter
                         return false;
                     }
 
-                    using (IFileStream tempStream = fileSystem.NewFileStream(tempPath, FileMode.CreateNew, FileAccess.Write, FileShare.Read))
+                    using (IFileStream tempStream = _fileSystem.NewFileStream(tempPath, FileMode.CreateNew, FileAccess.Write, FileShare.Read))
                     using (var writer = new StreamWriter(tempStream.Stream, new UTF8Encoding(false)))
                     {
                         await writer.WriteAsync(existing).ConfigureAwait(false);
@@ -514,14 +541,14 @@ internal sealed partial class GitHubActionsSummaryReporter
                     }
 
                     cancellationToken.ThrowIfCancellationRequested();
-                    fileSystem.ReplaceFile(tempPath, path);
+                    _fileSystem.ReplaceFile(tempPath, Path);
                 }
             }
             finally
             {
                 try
                 {
-                    fileSystem.DeleteFile(tempPath);
+                    _fileSystem.DeleteFile(tempPath);
                 }
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
                 {

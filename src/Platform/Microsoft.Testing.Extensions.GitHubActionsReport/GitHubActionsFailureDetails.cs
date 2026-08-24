@@ -125,61 +125,68 @@ internal static class GitHubActionsFailureDetails
     internal const int EffectiveStepSummaryLimit = GitHubStepSummaryLimit - 2;
 
     /// <summary>
-    /// The share of <see cref="GitHubStepSummaryLimit"/> this extension will fill with expanded failure
-    /// diagnostics before it stops expanding them.
+    /// The three shares of <see cref="GitHubStepSummaryLimit"/> at which the report gives something up, named by
+    /// what they cost the reader rather than by the mechanism that enforces them.
     /// </summary>
     /// <remarks>
-    /// This is the first of two thresholds. Below it a failure is rendered as a collapsible section carrying its
-    /// message, exception type, source location and stack trace; at or above it every failure is still listed,
-    /// but only as its name and duration. The listing is what tells a reader which tests failed, and it costs a
-    /// line rather than a kilobyte, so it survives long after the diagnostics stop.
+    /// The gap between the last share and the cap is not spare capacity. This extension is not the only writer to
+    /// <c>GITHUB_STEP_SUMMARY</c>: test frameworks (TUnit, for one) append their own per-assembly block after this
+    /// reporter has run, measured at roughly 9 KB per test project in a failing run. This reporter can observe
+    /// what earlier projects wrote but cannot prevent what is written after it, so the remaining share absorbs
+    /// that co-writer output and keeps the file under the cap. Exceeding the cap costs the entire summary, not
+    /// its tail.
     /// </remarks>
-    internal const int MaxSummaryLength = (int)(GitHubStepSummaryLimit * 0.4);
+    internal const double DetailBudgetShare = 0.4;
+
+    /// <inheritdoc cref="DetailBudgetShare"/>
+    internal const double CondenseShare = 0.6;
+
+    /// <inheritdoc cref="DetailBudgetShare"/>
+    internal const double StopListingShare = 0.9;
 
     /// <summary>
-    /// The share of <see cref="GitHubStepSummaryLimit"/> beyond which a test project is reduced to a one-line
-    /// verdict instead of a full section.
+    /// Below this many bytes a failure is rendered as a collapsible section carrying its message, exception type,
+    /// source location and stack trace; at or above it every failure is still listed, but only as its name and
+    /// duration. The listing is what tells a reader which tests failed, and it costs a line rather than a
+    /// kilobyte, so it survives long after the diagnostics stop.
+    /// </summary>
+    internal const int DetailBudgetLength = (int)(GitHubStepSummaryLimit * DetailBudgetShare);
+
+    /// <summary>
+    /// At or above this many bytes a test project is reduced to a one-line verdict. Between it and
+    /// <see cref="DetailBudgetLength"/> a project still gets its heading, totals table and the names of its
+    /// failing tests; past it the file is close enough to the cap that even that costs too much.
+    /// </summary>
+    internal const int CondenseLength = (int)(GitHubStepSummaryLimit * CondenseShare);
+
+    /// <summary>
+    /// At or above this many bytes a combined summary stops listing test projects at all, replacing the remainder
+    /// with a single line counting them.
     /// </summary>
     /// <remarks>
-    /// This is the second threshold. Between it and <see cref="MaxSummaryLength"/> a project still gets its
-    /// heading, totals table and the names of its failing tests; at or above it the file is close enough to the
-    /// cap that even that costs too much, so the project reports only its counts.
-    /// <para>
-    /// The gap to the 1 MiB cap is not spare capacity. This extension is not the only writer to
-    /// <c>GITHUB_STEP_SUMMARY</c>: test frameworks (TUnit, for one) append their own per-assembly block after
-    /// this reporter has run, measured at roughly 9 KB per test project in a failing run. This reporter can
-    /// observe what earlier projects wrote but cannot prevent what is written after it, so the remaining share
-    /// absorbs that co-writer output — on the order of 40 further test projects — and keeps the file under the
-    /// cap. Exceeding the cap costs the entire summary, not its tail.
-    /// </para>
+    /// This is the only threshold that bounds the report by project count alone. Condensing a project to a
+    /// one-line verdict shrinks what each one costs, but it does not bound the total: a run with thousands of
+    /// test projects still overruns the cap on those lines.
     /// </remarks>
-    internal const int CondenseSummaryLength = (int)(GitHubStepSummaryLimit * 0.6);
+    internal const int StopListingLength = (int)(GitHubStepSummaryLimit * StopListingShare);
 
     /// <summary>
-    /// The share of <see cref="GitHubStepSummaryLimit"/> beyond which a combined summary stops listing test
-    /// projects at all, replacing the remainder with a single line counting them.
-    /// </summary>
-    /// <remarks>
-    /// This is the third and last threshold, and the only one that bounds the report by module count alone.
-    /// Condensing a project to a one-line verdict shrinks what each one costs, but it does not bound the total:
-    /// a run with thousands of test projects still overruns the cap on those lines. Since exceeding the cap costs
-    /// the whole summary rather than its tail, the listing stops here and says how many projects it left out. The
-    /// remaining tenth absorbs the top-of-file note and whatever other writers append after this extension runs.
-    /// </remarks>
-    internal const int MaxModuleListingLength = (int)(GitHubStepSummaryLimit * 0.9);
-
-    /// <summary>
-    /// Bytes reserved for one test project's non-detail content — heading, totals table, failure and
+    /// Bytes reserved for <em>one</em> test project's non-detail content — heading, totals table, failure and
     /// slowest-test lines, truncation notes — so the budget bounds the <em>file</em> rather than just the
     /// expanded diagnostics. Without this reserve a job with many projects lands well over
-    /// <see cref="MaxSummaryLength"/>: each project writes several kilobytes even when it expands nothing.
+    /// <see cref="DetailBudgetLength"/>: each project writes several kilobytes even when it expands nothing.
     /// </summary>
-    internal const int PerProjectOverheadReserve = 8_000;
+    /// <remarks>
+    /// The per-project path subtracts this once, for itself. The aggregate path multiplies it by the module count,
+    /// because it renders every project into one file. <see cref="SummaryBudget"/> is what keeps those two uses
+    /// apart, so the constant is a single project's overhead and never a total.
+    /// </remarks>
+    internal const int ProjectOverheadReserve = 8_000;
 
     /// <summary>
-    /// Maximum UTF-8 bytes of expanded failure detail available across the whole summary file.
+    /// Maximum UTF-8 bytes of expanded failure detail one test project may contribute.
     /// </summary>
-    internal const int MaxTotalDetailsLength = MaxSummaryLength - PerProjectOverheadReserve;
+    internal const int MaxTotalDetailsLength = DetailBudgetLength - ProjectOverheadReserve;
 
     /// <summary>
     /// Clips <paramref name="value"/> to <paramref name="maxLength"/> characters and <paramref name="maxRows"/>
@@ -230,10 +237,10 @@ internal static class GitHubActionsFailureDetails
     /// <param name="entries">The failures to render, already capped to the reporter's maximum.</param>
     /// <param name="totalFailedCount">The total number of failing tests, which may exceed <paramref name="entries"/>.</param>
     /// <param name="includeDetails">Whether expanded diagnostics are enabled.</param>
-    /// <param name="remainingBudget">
-    /// The UTF-8 bytes of expanded detail this section may still emit, decremented by what it renders. Passed by
-    /// reference so a caller rendering several project sections into one file shares a single budget across them
-    /// — the 1 MiB cap applies to the whole file, not to any one section.
+    /// <param name="budget">
+    /// The shared budget this section draws expanded diagnostics from. Passed rather than a raw count so a
+    /// caller rendering several project sections into one file shares one allowance across them — the 1 MiB cap
+    /// applies to the whole file, not to any one section.
     /// </param>
     /// <returns>
     /// The number of listed failures that were rendered without their diagnostics because the budget ran out, so
@@ -245,7 +252,7 @@ internal static class GitHubActionsFailureDetails
         IReadOnlyList<GitHubActionsFailureEntry> entries,
         long totalFailedCount,
         bool includeDetails,
-        ref int remainingBudget)
+        SummaryBudget budget)
     {
         if (entries.Count == 0)
         {
@@ -267,13 +274,11 @@ internal static class GitHubActionsFailureDetails
             var detailsBuilder = new StringBuilder();
             AppendDetailedEntry(detailsBuilder, entry);
 
-            // Charged in UTF-8 bytes, because that is what the budget is denominated in and what GitHub counts.
+            // Reserved in UTF-8 bytes, because that is what the budget is denominated in and what GitHub counts.
             // Charging UTF-16 chars would under-bill a failure carrying Japanese text or emoji by up to
-            // threefold, so a module would overshoot its share and force the whole rendering to be refused —
+            // threefold, so a project would overshoot its share and force the whole rendering to be refused —
             // trading a section that degrades gracefully for one that is dropped.
-            int detailsByteCount = Encoding.UTF8.GetByteCount(detailsBuilder.ToString());
-
-            if (detailsByteCount > remainingBudget)
+            if (!budget.TryReserveDetails(Encoding.UTF8.GetByteCount(detailsBuilder.ToString())))
             {
                 // The remaining budget cannot fit this failure's diagnostics. Degrade to the compact line rather
                 // than emitting a half-written <details> block, and account for it in the truncation note below.
@@ -282,7 +287,6 @@ internal static class GitHubActionsFailureDetails
                 continue;
             }
 
-            remainingBudget -= detailsByteCount;
             builder.Append(detailsBuilder);
         }
 
@@ -394,12 +398,25 @@ internal static class GitHubActionsFailureDetails
         return new string('`', Math.Max(3, longestRun + 1));
     }
 
-    private static string FormatDuration(TimeSpan duration)
+    /// <summary>
+    /// Formats a duration the way this reporter renders them, so the failure list and the slowest-test list
+    /// agree.
+    /// </summary>
+    internal static string FormatDuration(TimeSpan duration)
         => SummaryReporterHelpers.FormatDuration(duration, "{0}m {1:00}s", "{0}h {1:00}m {2:00}s");
 
-    private static string EscapeInlineCode(string value)
+    /// <summary>
+    /// Makes <paramref name="value"/> safe to place inside a single-backtick markdown span: a backtick would
+    /// close the span early, and a newline would end it entirely.
+    /// </summary>
+    internal static string EscapeInlineCode(string value)
         => RoslynString.IsNullOrEmpty(value) ? value : value.Replace("`", "'").Replace("\r", string.Empty).Replace("\n", " ");
 
-    private static string HtmlEncode(string value)
+    /// <summary>
+    /// Encodes <paramref name="value"/> for a context where markdown allows raw HTML — notably
+    /// <c>&lt;summary&gt;</c>, where a generic test name like <c>T.Map&lt;string,int&gt;</c> would otherwise
+    /// parse as a tag and swallow the rest of the line.
+    /// </summary>
+    internal static string HtmlEncode(string value)
         => System.Net.WebUtility.HtmlEncode(value);
 }

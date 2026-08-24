@@ -155,7 +155,7 @@ public sealed class GitHubActionsSummaryReporterTests
             hasAuthoritativeRunSummary: false,
             isPartial: false);
 
-        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate);
+        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate).Markdown;
 
         Assert.Contains("<summary>&lt;h1&gt;A&amp;B&lt;/h1&gt; (net9.0&lt;&amp;&gt;, x64&amp;arm64)</summary>", markdown);
         Assert.DoesNotContain("<summary><h1>", markdown);
@@ -200,7 +200,7 @@ public sealed class GitHubActionsSummaryReporterTests
             hasAuthoritativeRunSummary: true,
             isPartial: true);
 
-        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate);
+        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate).Markdown;
 
         Assert.StartsWith("## ❌ Overall Test Run Summary", markdown);
         Assert.Contains("attempt 1, session session-1", markdown);
@@ -330,7 +330,7 @@ public sealed class GitHubActionsSummaryReporterTests
         ];
 
         // Room for roughly two of the ~3.2 KB blocks, so the remaining failures must degrade.
-        string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "T", "net9.0", AtLeastOneTestFailedExitCode, includeFailureDetails: true, detailsBudget: 7000);
+        string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "T", "net9.0", AtLeastOneTestFailedExitCode, includeFailureDetails: true, budget: BudgetOf(7000));
 
         Assert.Contains("<details>", markdown);
         Assert.IsLessThan(records.Length, CountOccurrences(markdown, "<details>"));
@@ -357,7 +357,7 @@ public sealed class GitHubActionsSummaryReporterTests
                 new GitHubActionsTestFailureDetails("boom", "System.Exception", "at T.Test()", null, 0))),
         ];
 
-        string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "T", "net9.0", AtLeastOneTestFailedExitCode, includeFailureDetails: true, detailsBudget: 0);
+        string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "T", "net9.0", AtLeastOneTestFailedExitCode, includeFailureDetails: true, budget: BudgetOf(0));
 
         Assert.DoesNotContain("<details>", markdown);
         Assert.Contains("Failure details for 3 listed test(s) were omitted", markdown);
@@ -380,10 +380,10 @@ public sealed class GitHubActionsSummaryReporterTests
         ];
 
         int generous = CountOccurrences(
-            GitHubActionsSummaryReporter.BuildMarkdown(records, "T", "net9.0", AtLeastOneTestFailedExitCode, includeFailureDetails: true, detailsBudget: 100_000),
+            GitHubActionsSummaryReporter.BuildMarkdown(records, "T", "net9.0", AtLeastOneTestFailedExitCode, includeFailureDetails: true, budget: BudgetOf(100_000)),
             "<details>");
         int tight = CountOccurrences(
-            GitHubActionsSummaryReporter.BuildMarkdown(records, "T", "net9.0", AtLeastOneTestFailedExitCode, includeFailureDetails: true, detailsBudget: 5_000),
+            GitHubActionsSummaryReporter.BuildMarkdown(records, "T", "net9.0", AtLeastOneTestFailedExitCode, includeFailureDetails: true, budget: BudgetOf(5_000)),
             "<details>");
 
         Assert.AreEqual(10, generous);
@@ -421,7 +421,7 @@ public sealed class GitHubActionsSummaryReporterTests
 
     [TestMethod]
     public void GetRemainingDetailsBudget_EmptyFile_ReturnsFullBudget()
-        => Assert.AreEqual(GitHubActionsFailureDetails.MaxTotalDetailsLength, GitHubActionsSummaryReporter.GetRemainingDetailsBudget(0));
+        => Assert.AreEqual(GitHubActionsFailureDetails.MaxTotalDetailsLength, SummaryBudget.ForProject(0).DetailBytesAvailable);
 
     [TestMethod]
     public void GetRemainingDetailsBudget_ExistingContent_IsSubtracted()
@@ -429,7 +429,7 @@ public sealed class GitHubActionsSummaryReporterTests
         // A sibling test project already wrote to the shared summary file; this project may only claim the rest.
         const int AlreadyWritten = 100_000;
 
-        int budget = GitHubActionsSummaryReporter.GetRemainingDetailsBudget(AlreadyWritten);
+        int budget = SummaryBudget.ForProject(AlreadyWritten).DetailBytesAvailable;
 
         Assert.AreEqual(GitHubActionsFailureDetails.MaxTotalDetailsLength - AlreadyWritten, budget);
     }
@@ -437,7 +437,7 @@ public sealed class GitHubActionsSummaryReporterTests
     [TestMethod]
     public void GetRemainingDetailsBudget_FileAlreadyOverBudget_ReturnsZero()
     {
-        int budget = GitHubActionsSummaryReporter.GetRemainingDetailsBudget(GitHubActionsFailureDetails.MaxTotalDetailsLength + 1);
+        int budget = SummaryBudget.ForProject(GitHubActionsFailureDetails.MaxTotalDetailsLength + 1).DetailBytesAvailable;
 
         // Never negative: the caller uses this as a length, and a later project simply renders compact lines.
         Assert.AreEqual(0, budget);
@@ -474,7 +474,7 @@ public sealed class GitHubActionsSummaryReporterTests
 
         // Comfortably over the UTF-16 length of the block, but under its UTF-8 size: a char-charged budget would
         // expand it, a byte-charged one must not.
-        string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "T", "net9.0", AtLeastOneTestFailedExitCode, includeFailureDetails: true, detailsBudget: 700);
+        string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "T", "net9.0", AtLeastOneTestFailedExitCode, includeFailureDetails: true, budget: BudgetOf(700));
 
         Assert.DoesNotContain("<details>", markdown);
         Assert.Contains("テスト.失敗", markdown);
@@ -517,18 +517,13 @@ public sealed class GitHubActionsSummaryReporterTests
             var fileSystem = new SystemFileSystem();
             long observed = -1;
 
-            await GitHubActionsSummaryReporter.AppendRenderedStepSummarySectionAsync(
-                fileSystem,
-                path,
+            await NewWriter(fileSystem, path, 1).AppendRenderedStepSummarySectionAsync(
                 currentLength =>
                 {
                     observed = currentLength;
                     return ("## Section\n", false);
                 },
                 GitHubActionsSummaryReporter.BuildTruncationNotice,
-                new Mock<ILogger>().Object,
-                maxAttempts: 1,
-                retryDelay: TimeSpan.Zero,
                 CancellationToken.None);
 
             // The rendering decision has to see the same length the write lands on. Measuring before taking the
@@ -558,8 +553,8 @@ public sealed class GitHubActionsSummaryReporterTests
 
         // The two degradation thresholds must be ordered and must both leave headroom below the point of no
         // return, since co-writer output keeps accumulating after this reporter has degraded.
-        Assert.IsLessThan(GitHubActionsFailureDetails.CondenseSummaryLength, GitHubActionsFailureDetails.MaxSummaryLength);
-        Assert.IsLessThan(GitHubActionsFailureDetails.EffectiveStepSummaryLimit, GitHubActionsFailureDetails.CondenseSummaryLength);
+        Assert.IsLessThan(GitHubActionsFailureDetails.CondenseLength, GitHubActionsFailureDetails.DetailBudgetLength);
+        Assert.IsLessThan(GitHubActionsFailureDetails.EffectiveStepSummaryLimit, GitHubActionsFailureDetails.CondenseLength);
     }
 
     [TestMethod]
@@ -568,14 +563,14 @@ public sealed class GitHubActionsSummaryReporterTests
         // first, while the list of which tests failed is a line each and survives until whole sections have to
         // go. Reversing them would drop the names of failing tests while still expanding stack traces.
         => Assert.IsLessThan(
-            GitHubActionsFailureDetails.CondenseSummaryLength,
+            GitHubActionsFailureDetails.CondenseLength,
             GitHubActionsFailureDetails.MaxTotalDetailsLength);
 
     [TestMethod]
     public void GetRemainingDetailsBudget_FileOverGitHubLimit_ReturnsZero()
         // A file this large is already beyond saving: GitHub will discard it. The budget must bottom out at zero
         // rather than going negative, which is what stops this project expanding into a file already lost.
-        => Assert.AreEqual(0, GitHubActionsSummaryReporter.GetRemainingDetailsBudget(GitHubActionsFailureDetails.EffectiveStepSummaryLimit + 1024));
+        => Assert.AreEqual(0, SummaryBudget.ForProject(GitHubActionsFailureDetails.EffectiveStepSummaryLimit + 1024).DetailBytesAvailable);
 
     [TestMethod]
     public void BuildMinimalMarkdown_IsSmallEnoughThatTheProjectedSizeGateIsMeaningful()
@@ -653,7 +648,9 @@ public sealed class GitHubActionsSummaryReporterTests
             hasAuthoritativeRunSummary: true,
             isPartial: false);
 
-        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate, includeFailureDetails: true, out int omitted);
+        GitHubActionsSummaryReporter.AggregateRenderResult result = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate);
+        string markdown = result.Markdown;
+        int omitted = result.ModulesWithOmittedDetails;
         string notice = omitted > 0 ? GitHubActionsSummaryReporter.BuildAggregateTruncationNotice(omitted, moduleCount) : string.Empty;
 
         // Measured in bytes: the cap GitHub enforces is on the file, and a char count understates any summary
@@ -709,7 +706,9 @@ public sealed class GitHubActionsSummaryReporterTests
             hasAuthoritativeRunSummary: true,
             isPartial: false);
 
-        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate, includeFailureDetails: true, out int modulesWithOmittedDetails);
+        GitHubActionsSummaryReporter.AggregateRenderResult result = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate);
+        string markdown = result.Markdown;
+        int modulesWithOmittedDetails = result.ModulesWithOmittedDetails;
 
         // The whole point of the shared budget: the file stays under GitHub's cap no matter the module count.
         Assert.IsLessThan(GitHubActionsFailureDetails.GitHubStepSummaryLimit, markdown.Length);
@@ -805,7 +804,7 @@ public sealed class GitHubActionsSummaryReporterTests
             hasAuthoritativeRunSummary: true,
             isPartial: false);
 
-        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate);
+        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate).Markdown;
 
         Assert.Contains("<summary><code>T.Boom</code> — 2.00s</summary>", markdown);
         Assert.Contains("**Exception:** `System.Exception`", markdown);
@@ -819,8 +818,7 @@ public sealed class GitHubActionsSummaryReporterTests
         var buffer = new MemoryStream();
         Mock<IFileSystem> fileSystem = CreateFileSystemWritingTo(buffer);
 
-        await GitHubActionsSummaryReporter.AppendStepSummaryWithRetryAsync(
-            fileSystem.Object, "summary.md", "hello world", maxAttempts: 5, retryDelay: TimeSpan.Zero, CancellationToken.None);
+        await NewWriter(fileSystem.Object, "summary.md", 5).AppendStepSummaryWithRetryAsync("hello world", CancellationToken.None);
 
         // UTF8Encoding(false) is used by the reporter, so there is no BOM to strip.
         Assert.AreEqual("hello world", Encoding.UTF8.GetString(buffer.ToArray()));
@@ -840,8 +838,7 @@ public sealed class GitHubActionsSummaryReporterTests
             .Throws(new IOException("The process cannot access the file because it is being used by another process."))
             .Returns(fileStream.Object);
 
-        await GitHubActionsSummaryReporter.AppendStepSummaryWithRetryAsync(
-            fileSystem.Object, "summary.md", "second-wins", maxAttempts: 5, retryDelay: TimeSpan.Zero, CancellationToken.None);
+        await NewWriter(fileSystem.Object, "summary.md", 5).AppendStepSummaryWithRetryAsync("second-wins", CancellationToken.None);
 
         Assert.AreEqual("second-wins", Encoding.UTF8.GetString(buffer.ToArray()));
         fileSystem.Verify(f => f.NewFileStream("summary.md", FileMode.Append, FileAccess.Write, FileShare.Read), Times.Exactly(2));
@@ -856,8 +853,7 @@ public sealed class GitHubActionsSummaryReporterTests
 
         // After exhausting the bounded attempts the final IOException propagates so the caller can surface its
         // best-effort warning rather than looping forever.
-        await Assert.ThrowsExactlyAsync<IOException>(() => GitHubActionsSummaryReporter.AppendStepSummaryWithRetryAsync(
-            fileSystem.Object, "summary.md", "never-written", maxAttempts: 3, retryDelay: TimeSpan.Zero, CancellationToken.None));
+        await Assert.ThrowsExactlyAsync<IOException>(() => NewWriter(fileSystem.Object, "summary.md", 3).AppendStepSummaryWithRetryAsync("never-written", CancellationToken.None));
 
         fileSystem.Verify(f => f.NewFileStream("summary.md", FileMode.Append, FileAccess.Write, FileShare.Read), Times.Exactly(3));
     }
@@ -874,8 +870,7 @@ public sealed class GitHubActionsSummaryReporterTests
         fileSystem.Setup(f => f.NewFileStream("summary.md", FileMode.Append, FileAccess.Write, FileShare.Read))
             .Returns(fileStream.Object);
 
-        await Assert.ThrowsExactlyAsync<IOException>(() => GitHubActionsSummaryReporter.AppendStepSummaryWithRetryAsync(
-            fileSystem.Object, "summary.md", "partial", maxAttempts: 5, retryDelay: TimeSpan.Zero, CancellationToken.None));
+        await Assert.ThrowsExactlyAsync<IOException>(() => NewWriter(fileSystem.Object, "summary.md", 5).AppendStepSummaryWithRetryAsync("partial", CancellationToken.None));
 
         // Exactly one acquisition: a post-acquire write failure is not contention and must not be retried.
         fileSystem.Verify(f => f.NewFileStream("summary.md", FileMode.Append, FileAccess.Write, FileShare.Read), Times.Once);
@@ -892,15 +887,13 @@ public sealed class GitHubActionsSummaryReporterTests
         buffer.Seek(0, SeekOrigin.End);
         Mock<IFileSystem> fileSystem = CreateFileSystemWritingTo(buffer);
 
-        bool written = await GitHubActionsSummaryReporter.AppendStepSummaryWithRetryAsync(
-            fileSystem.Object, "summary.md", "0123456789", maxAttempts: 5, retryDelay: TimeSpan.Zero, CancellationToken.None, maxTotalBytes: 99);
+        bool written = await NewWriter(fileSystem.Object, "summary.md", 5).AppendStepSummaryWithRetryAsync("0123456789", CancellationToken.None, maxTotalBytes: 99);
 
         Assert.IsFalse(written);
         Assert.HasCount(90, buffer.ToArray(), "Nothing may be appended once the write is refused.");
 
         // One byte of headroom is enough: the gate refuses only what would actually cross the limit.
-        Assert.IsTrue(await GitHubActionsSummaryReporter.AppendStepSummaryWithRetryAsync(
-            fileSystem.Object, "summary.md", "0123456789", maxAttempts: 5, retryDelay: TimeSpan.Zero, CancellationToken.None, maxTotalBytes: 100));
+        Assert.IsTrue(await NewWriter(fileSystem.Object, "summary.md", 5).AppendStepSummaryWithRetryAsync("0123456789", CancellationToken.None, maxTotalBytes: 100));
         Assert.HasCount(100, buffer.ToArray());
     }
 
@@ -913,8 +906,7 @@ public sealed class GitHubActionsSummaryReporterTests
             File.WriteAllText(path, "existing\n");
             var fileSystem = new SystemFileSystem();
 
-            bool written = await GitHubActionsSummaryReporter.UpsertStepSummaryWithRetryAsync(
-                fileSystem, path, "run-1", "a section that does not fit", maxAttempts: 1, retryDelay: TimeSpan.Zero, CancellationToken.None, leadingNotice: null, maxTotalBytes: 16);
+            bool written = await NewWriter(fileSystem, path, 1).UpsertStepSummaryWithRetryAsync("run-1", "a section that does not fit", CancellationToken.None, leadingNotice: null, maxTotalBytes: 16);
 
             Assert.IsFalse(written);
 
@@ -970,8 +962,9 @@ public sealed class GitHubActionsSummaryReporterTests
             hasAuthoritativeRunSummary: true,
             isPartial: false);
 
-        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(
-            aggregate, includeFailureDetails: true, out _, out int condensedModules, out _, condenseAllModules: true);
+        GitHubActionsSummaryReporter.AggregateRenderResult result = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate, condenseAllModules: true);
+        string markdown = result.Markdown;
+        int condensedModules = result.CondensedModules;
 
         Assert.AreEqual(1, condensedModules);
         Assert.Contains("❌ `Tests` (net9.0): 2 total", markdown);
@@ -1023,7 +1016,10 @@ public sealed class GitHubActionsSummaryReporterTests
             hasAuthoritativeRunSummary: true,
             isPartial: false);
 
-        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate, includeFailureDetails: true, out _, out int condensedModules, out int unlistedModules);
+        GitHubActionsSummaryReporter.AggregateRenderResult result = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate);
+        string markdown = result.Markdown;
+        int condensedModules = result.CondensedModules;
+        int unlistedModules = result.UnlistedModules;
 
         int byteCount = Encoding.UTF8.GetByteCount(markdown);
         Assert.IsGreaterThan(0, condensedModules, "This many modules must exhaust the budget, or the test is not exercising the bound.");
@@ -1091,7 +1087,7 @@ public sealed class GitHubActionsSummaryReporterTests
             Assert.IsNull(slowest.ErrorMessage);
 
             // Rendering it end to end is what proves the diagnostics survived in a usable shape.
-            string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate);
+            string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate).Markdown;
             Assert.Contains("**Exception:** `System.InvalidOperationException`", markdown);
             Assert.Contains("**Location:** `src/T.cs:42`", markdown);
             Assert.Contains("assertion failed", markdown);
@@ -1108,8 +1104,8 @@ public sealed class GitHubActionsSummaryReporterTests
         // Failure messages are copied verbatim into the summary, so a test whose output contains the marker text
         // must not be mistaken for the notice — that would suppress the real warning and leave a shortened
         // summary that never says it was shortened.
-        Assert.IsTrue(GitHubActionsSummaryReporter.HasLeadingTruncationNotice(GitHubActionsSummaryReporter.BuildTruncationNotice(3)));
-        Assert.IsFalse(GitHubActionsSummaryReporter.HasLeadingTruncationNotice(
+        Assert.IsTrue(StepSummaryWriter.HasLeadingTruncationNotice(GitHubActionsSummaryReporter.BuildTruncationNotice(3)));
+        Assert.IsFalse(StepSummaryWriter.HasLeadingTruncationNotice(
             $"## Tests\n\n```text\nExpected the summary to contain {GitHubActionsSummaryReporter.TruncationNoticeMarker}\n```\n"));
     }
 
@@ -1123,8 +1119,7 @@ public sealed class GitHubActionsSummaryReporterTests
             File.WriteAllText(path, $"## Tests\n\n```text\nexpected {GitHubActionsSummaryReporter.TruncationNoticeMarker}\n```\n");
             var fileSystem = new SystemFileSystem();
 
-            await GitHubActionsSummaryReporter.AppendStepSummaryWithLeadingNoticeAsync(
-                fileSystem, path, "## More\n", GitHubActionsSummaryReporter.BuildTruncationNotice, maxAttempts: 1, retryDelay: TimeSpan.Zero, CancellationToken.None);
+            await NewWriter(fileSystem, path, 1).AppendStepSummaryWithLeadingNoticeAsync("## More\n", GitHubActionsSummaryReporter.BuildTruncationNotice, CancellationToken.None);
 
             Assert.StartsWith(GitHubActionsSummaryReporter.TruncationNoticeMarker, File.ReadAllText(path));
         }
@@ -1143,10 +1138,8 @@ public sealed class GitHubActionsSummaryReporterTests
             File.WriteAllText(path, "existing\n");
             var fileSystem = new SystemFileSystem();
 
-            await GitHubActionsSummaryReporter.UpsertStepSummaryWithRetryAsync(
-                fileSystem, path, "run-1", "first", maxAttempts: 1, retryDelay: TimeSpan.Zero, CancellationToken.None);
-            await GitHubActionsSummaryReporter.UpsertStepSummaryWithRetryAsync(
-                fileSystem, path, "run-1", "second", maxAttempts: 1, retryDelay: TimeSpan.Zero, CancellationToken.None);
+            await NewWriter(fileSystem, path, 1).UpsertStepSummaryWithRetryAsync("run-1", "first", CancellationToken.None);
+            await NewWriter(fileSystem, path, 1).UpsertStepSummaryWithRetryAsync("run-1", "second", CancellationToken.None);
 
             string summary = File.ReadAllText(path);
             Assert.Contains("existing", summary);
@@ -1192,8 +1185,8 @@ public sealed class GitHubActionsSummaryReporterTests
             "net9.0",
             exitCode: 0);
 
-        Assert.AreEqual(0, GitHubActionsSummaryReporter.CountProjectSections(condensed));
-        Assert.AreEqual(2, GitHubActionsSummaryReporter.CountProjectSections(full + condensed + full));
+        Assert.AreEqual(0, StepSummaryWriter.CountProjectSections(condensed));
+        Assert.AreEqual(2, StepSummaryWriter.CountProjectSections(full + condensed + full));
     }
 
     [TestMethod]
@@ -1205,10 +1198,8 @@ public sealed class GitHubActionsSummaryReporterTests
             File.WriteAllText(path, "earlier-project\n");
             var fileSystem = new SystemFileSystem();
 
-            await GitHubActionsSummaryReporter.AppendStepSummaryWithLeadingNoticeAsync(
-                fileSystem, path, "first-project\n", GitHubActionsSummaryReporter.BuildTruncationNotice, maxAttempts: 1, retryDelay: TimeSpan.Zero, CancellationToken.None);
-            await GitHubActionsSummaryReporter.AppendStepSummaryWithLeadingNoticeAsync(
-                fileSystem, path, "second-project\n", GitHubActionsSummaryReporter.BuildTruncationNotice, maxAttempts: 1, retryDelay: TimeSpan.Zero, CancellationToken.None);
+            await NewWriter(fileSystem, path, 1).AppendStepSummaryWithLeadingNoticeAsync("first-project\n", GitHubActionsSummaryReporter.BuildTruncationNotice, CancellationToken.None);
+            await NewWriter(fileSystem, path, 1).AppendStepSummaryWithLeadingNoticeAsync("second-project\n", GitHubActionsSummaryReporter.BuildTruncationNotice, CancellationToken.None);
 
             string summary = File.ReadAllText(path);
 
@@ -1238,16 +1229,14 @@ public sealed class GitHubActionsSummaryReporterTests
             File.WriteAllText(path, string.Empty);
             var fileSystem = new SystemFileSystem();
 
-            await GitHubActionsSummaryReporter.AppendStepSummaryWithLeadingNoticeAsync(
-                fileSystem, path, "first-project\n", GitHubActionsSummaryReporter.BuildTruncationNotice, maxAttempts: 1, retryDelay: TimeSpan.Zero, CancellationToken.None);
+            await NewWriter(fileSystem, path, 1).AppendStepSummaryWithLeadingNoticeAsync("first-project\n", GitHubActionsSummaryReporter.BuildTruncationNotice, CancellationToken.None);
 
             // This extension is not the only writer to GITHUB_STEP_SUMMARY: a test framework appends its own block
             // after the reporter runs. Appending cannot dislodge a note that sits at the top, which is the reason
             // it goes there rather than at the end.
             File.AppendAllText(path, "### framework's own section\n");
 
-            await GitHubActionsSummaryReporter.AppendStepSummaryWithLeadingNoticeAsync(
-                fileSystem, path, "second-project\n", GitHubActionsSummaryReporter.BuildTruncationNotice, maxAttempts: 1, retryDelay: TimeSpan.Zero, CancellationToken.None);
+            await NewWriter(fileSystem, path, 1).AppendStepSummaryWithLeadingNoticeAsync("second-project\n", GitHubActionsSummaryReporter.BuildTruncationNotice, CancellationToken.None);
 
             string summary = File.ReadAllText(path);
 
@@ -1274,8 +1263,7 @@ public sealed class GitHubActionsSummaryReporterTests
             var fileSystem = new SystemFileSystem();
             string notice = GitHubActionsSummaryReporter.BuildAggregateTruncationNotice(2, 5);
 
-            await GitHubActionsSummaryReporter.UpsertStepSummaryWithRetryAsync(
-                fileSystem, path, "run-1", "aggregate block", maxAttempts: 1, retryDelay: TimeSpan.Zero, CancellationToken.None, notice);
+            await NewWriter(fileSystem, path, 1).UpsertStepSummaryWithRetryAsync("run-1", "aggregate block", CancellationToken.None, notice);
 
             string summary = File.ReadAllText(path);
             Assert.StartsWith(GitHubActionsSummaryReporter.TruncationNoticeMarker, summary);
@@ -1284,8 +1272,7 @@ public sealed class GitHubActionsSummaryReporterTests
             AssertSingleNotice(summary);
 
             // Re-running the same aggregation replaces its block; the warning must not be duplicated with it.
-            await GitHubActionsSummaryReporter.UpsertStepSummaryWithRetryAsync(
-                fileSystem, path, "run-1", "aggregate block v2", maxAttempts: 1, retryDelay: TimeSpan.Zero, CancellationToken.None, notice);
+            await NewWriter(fileSystem, path, 1).UpsertStepSummaryWithRetryAsync("run-1", "aggregate block v2", CancellationToken.None, notice);
 
             summary = File.ReadAllText(path);
             Assert.Contains("aggregate block v2", summary);
@@ -1310,7 +1297,7 @@ public sealed class GitHubActionsSummaryReporterTests
 
         string withMarkerInProse = full + $"- `SomeTest_Mentioning_{GitHubActionsSummaryReporter.ProjectSectionMarker}_InItsName` — 1ms\n";
 
-        Assert.AreEqual(1, GitHubActionsSummaryReporter.CountProjectSections(withMarkerInProse));
+        Assert.AreEqual(1, StepSummaryWriter.CountProjectSections(withMarkerInProse));
     }
 
     [TestMethod]
@@ -1349,8 +1336,8 @@ public sealed class GitHubActionsSummaryReporterTests
                 });
 
             await Assert.ThrowsExactlyAsync<IOException>(() =>
-                GitHubActionsSummaryReporter.AppendStepSummaryWithLeadingNoticeAsync(
-                    fileSystem.Object, path, "second-project\n", GitHubActionsSummaryReporter.BuildTruncationNotice, maxAttempts: 1, retryDelay: TimeSpan.Zero, CancellationToken.None));
+                NewWriter(fileSystem.Object, path, 1).AppendStepSummaryWithLeadingNoticeAsync(
+                    "second-project\n", GitHubActionsSummaryReporter.BuildTruncationNotice, CancellationToken.None));
 
             // The pre-existing content is still there: the failed write never touched the summary itself.
             Assert.AreEqual(Original, File.ReadAllText(path));
@@ -1368,6 +1355,16 @@ public sealed class GitHubActionsSummaryReporterTests
         Assert.IsGreaterThanOrEqualTo(0, first);
         Assert.AreEqual(-1, summary.IndexOf(marker, first + marker.Length, StringComparison.Ordinal));
     }
+
+    private static StepSummaryWriter NewWriter(IFileSystem fileSystem, string path, int maxAttempts)
+        => new(fileSystem, path, new Mock<ILogger>().Object, maxAttempts, TimeSpan.Zero);
+
+    /// <summary>
+    /// A budget whose detail allowance is exactly <paramref name="detailBytes"/>, so a test can pin the one
+    /// number it is exercising without depending on the file-size arithmetic.
+    /// </summary>
+    private static SummaryBudget BudgetOf(int detailBytes)
+        => SummaryBudget.ForProject(GitHubActionsFailureDetails.DetailBudgetLength - GitHubActionsFailureDetails.ProjectOverheadReserve - detailBytes);
 
     private static Mock<IFileSystem> CreateFileSystemWritingTo(Stream target)
     {

@@ -2,7 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.GitHubActionsReport.Resources;
-using Microsoft.Testing.Platform;
+
+using static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFailureDetails;
 
 namespace Microsoft.Testing.Extensions.GitHubActionsReport;
 
@@ -14,7 +15,7 @@ internal sealed partial class GitHubActionsSummaryReporter
     /// </summary>
     internal const string ProjectSectionMarker = "<!-- microsoft-testing-platform:github:project-section -->";
 
-    internal static /* for testing */ string BuildMarkdown(IReadOnlyList<TestRecord> records, string assemblyName, string targetFrameworkMoniker, int exitCode, bool includeFailureDetails = true, int detailsBudget = GitHubActionsFailureDetails.MaxTotalDetailsLength)
+    internal static /* for testing */ string BuildMarkdown(IReadOnlyList<TestRecord> records, string assemblyName, string targetFrameworkMoniker, int exitCode, bool includeFailureDetails = true, SummaryBudget? budget = null)
     {
         int total = records.Count;
         int passed = 0;
@@ -78,7 +79,6 @@ internal sealed partial class GitHubActionsSummaryReporter
 
         if (failures.Count > 0)
         {
-            int remainingBudget = detailsBudget;
             GitHubActionsFailureDetails.AppendFailuresSection(
                 builder,
                 "###",
@@ -92,7 +92,7 @@ internal sealed partial class GitHubActionsSummaryReporter
                     failure.Failure?.LineNumber ?? 0))],
                 failed,
                 includeFailureDetails,
-                ref remainingBudget);
+                budget ?? SummaryBudget.ForProject(0));
         }
 
         IEnumerable<TestRecord> slowest = records
@@ -120,28 +120,53 @@ internal sealed partial class GitHubActionsSummaryReporter
         return builder.ToString();
     }
 
-    internal static string BuildAggregateMarkdown(CiRunSummaryAggregate aggregate)
-        => BuildAggregateMarkdown(aggregate, includeFailureDetails: true, out _);
+    /// <summary>
+    /// What a combined <c>dotnet test</c> rendering produced, and what it had to give up to fit GitHub's cap.
+    /// </summary>
+    internal readonly struct AggregateRenderResult
+    {
+        internal AggregateRenderResult(string markdown, int modulesWithOmittedDetails, int condensedModules, int unlistedModules)
+        {
+            Markdown = markdown;
+            ModulesWithOmittedDetails = modulesWithOmittedDetails;
+            CondensedModules = condensedModules;
+            UnlistedModules = unlistedModules;
+        }
 
-    internal static string BuildAggregateMarkdown(CiRunSummaryAggregate aggregate, bool includeFailureDetails)
-        => BuildAggregateMarkdown(aggregate, includeFailureDetails, out _);
+        /// <summary>Gets the rendered summary.</summary>
+        internal string Markdown { get; }
 
-    internal static string BuildAggregateMarkdown(CiRunSummaryAggregate aggregate, bool includeFailureDetails, out int modulesWithOmittedDetails)
-        => BuildAggregateMarkdown(aggregate, includeFailureDetails, out modulesWithOmittedDetails, out _, out _);
+        /// <summary>Gets the number of test projects that kept their section but lost their expanded diagnostics.</summary>
+        internal int ModulesWithOmittedDetails { get; }
+
+        /// <summary>Gets the number of test projects reduced to a one-line verdict.</summary>
+        internal int CondensedModules { get; }
+
+        /// <summary>Gets the number of test projects that did not fit at all, reported only as a count.</summary>
+        internal int UnlistedModules { get; }
+
+        /// <summary>
+        /// Returns how many of <paramref name="totalModules"/> got a full section, which is what the top-of-file
+        /// note quotes — so it excludes both the condensed and the unlisted.
+        /// </summary>
+        internal int FullyReportedModules(int totalModules)
+            => totalModules - CondensedModules - UnlistedModules;
+    }
 
     /// <summary>
-    /// Renders the combined summary for a whole <c>dotnet test</c> run, reporting through
-    /// <paramref name="modulesWithOmittedDetails"/> how many test projects lost their expanded diagnostics,
-    /// through <paramref name="condensedModules"/> how many were reduced to a one-line verdict, and through
-    /// <paramref name="unlistedModules"/> how many did not fit at all, so the caller can state that at the top of
-    /// the file rather than at the end of this block.
+    /// Renders the combined summary for a whole <c>dotnet test</c> run. What the rendering had to give up is
+    /// reported back rather than written here, because a note buried after dozens of collapsed module sections is
+    /// easy to miss and belongs at the top of the file.
     /// </summary>
-    internal static string BuildAggregateMarkdown(
+    /// <param name="aggregate">The fragments collected from every test project in the run.</param>
+    /// <param name="includeFailureDetails">Whether failures may be expanded into collapsible diagnostics.</param>
+    /// <param name="condenseAllModules">
+    /// Renders every test project as a one-line verdict regardless of the budget. This is the fallback when the
+    /// full rendering was refused for being too large.
+    /// </param>
+    internal static AggregateRenderResult BuildAggregateMarkdown(
         CiRunSummaryAggregate aggregate,
-        bool includeFailureDetails,
-        out int modulesWithOmittedDetails,
-        out int condensedModules,
-        out int unlistedModules,
+        bool includeFailureDetails = true,
         bool condenseAllModules = false)
     {
         bool failed = aggregate.ExitCode is int exitCode
@@ -185,39 +210,30 @@ internal sealed partial class GitHubActionsSummaryReporter
             builder.Append("> [!WARNING]\n> ").Append(EscapeInlineCode(calloutText)).Append("\n\n");
         }
 
-        // The 1 MiB cap applies to the whole file, so the budget is shared across every module rather than
-        // granted per module. Reserve each module's non-detail overhead (heading, tables, failure lines) up
-        // front so the rendered file lands near MaxSummaryLength rather than that much detail *plus* overhead,
-        // then divide the rest so an early module with many large failures cannot starve the later ones.
-        int moduleCount = Math.Max(1, aggregate.Modules.Count);
-        int overheadReserve = moduleCount * GitHubActionsFailureDetails.PerProjectOverheadReserve;
-        int detailsBudget = Math.Max(0, GitHubActionsFailureDetails.MaxSummaryLength - overheadReserve);
-        int perModuleBudget = detailsBudget / moduleCount;
-        int remainingBudget = 0;
-        modulesWithOmittedDetails = 0;
-        condensedModules = 0;
-
-        // Tracked in bytes, not in StringBuilder.Length. The cap GitHub enforces is on the bytes on disk, and this
-        // content is the non-ASCII-heavy kind — assertion diffs, exception messages, and a status emoji per module,
-        // three bytes each in UTF-8 — so a UTF-16 char count can understate the rendered file by up to threefold in
-        // the one check that decides whether the summary survives at all. Only the newly appended chars are
-        // measured each round, so the whole loop stays linear.
+        // One shared budget, byte-denominated, drives every decision below: which shape each module is rendered
+        // in, and how much expanded detail it may spend. Only the newly appended chars are measured each round,
+        // so the loop stays linear.
+        int moduleCount = aggregate.Modules.Count;
         int measuredChars = builder.Length;
-        int renderedByteCount = Encoding.UTF8.GetByteCount(builder.ToString());
+        var budget = SummaryBudget.ForAggregate(Encoding.UTF8.GetByteCount(builder.ToString()), moduleCount);
+        int modulesWithOmittedDetails = 0;
+        int condensedModules = 0;
         int listedModules = 0;
 
         foreach (CiRunSummaryModule module in aggregate.Modules)
         {
             if (builder.Length > measuredChars)
             {
-                renderedByteCount += Encoding.UTF8.GetByteCount(builder.ToString(measuredChars, builder.Length - measuredChars));
+                budget.Consume(Encoding.UTF8.GetByteCount(builder.ToString(measuredChars, builder.Length - measuredChars)));
                 measuredChars = builder.Length;
             }
+
+            SummaryStage stage = condenseAllModules ? SummaryStage.Condensed : budget.Stage;
 
             // Condensing bounds what a module costs, not how many of them there are: a run with thousands of test
             // projects overruns the cap on verdict lines alone. Past this point the listing stops entirely and the
             // remainder is reported as a count, which is the only rendering whose size does not grow with the run.
-            if (renderedByteCount >= GitHubActionsFailureDetails.MaxModuleListingLength)
+            if (stage == SummaryStage.Unlisted)
             {
                 break;
             }
@@ -226,7 +242,7 @@ internal sealed partial class GitHubActionsSummaryReporter
             // table and its failure lines whether or not any budget is left. A run with enough test projects
             // therefore overruns GitHub's cap on that overhead alone, and an oversized summary is discarded in
             // full — so past this point a module reports only its verdict, exactly as the per-project path does.
-            if (condenseAllModules || renderedByteCount >= GitHubActionsFailureDetails.CondenseSummaryLength)
+            if (stage == SummaryStage.Condensed)
             {
                 AppendCondensedModuleLine(builder, module);
                 condensedModules++;
@@ -247,9 +263,9 @@ internal sealed partial class GitHubActionsSummaryReporter
 
             builder.Append(")</summary>\n\n");
 
-            // Top up with this module's share, keeping whatever earlier modules left unspent.
-            remainingBudget += perModuleBudget;
-            if (AppendModuleMarkdown(builder, module, headingLevel: 3, includeFailureDetails, ref remainingBudget) > 0)
+            // Hand this module its share, keeping whatever earlier modules left unspent.
+            budget.GrantModuleShare(moduleCount - listedModules);
+            if (AppendModuleMarkdown(builder, module, headingLevel: 3, includeFailureDetails, budget) > 0)
             {
                 modulesWithOmittedDetails++;
             }
@@ -258,39 +274,51 @@ internal sealed partial class GitHubActionsSummaryReporter
             listedModules++;
         }
 
-        int unlisted = aggregate.Modules.Count - listedModules;
-        unlistedModules = unlisted;
-        if (unlisted > 0)
+        int unlistedModules = moduleCount - listedModules;
+        if (unlistedModules > 0)
         {
             builder.Append("> [!WARNING]\n> ")
                 .Append(EscapeInlineCode(string.Format(
                     CultureInfo.InvariantCulture,
                     GitHubActionsResources.ModulesNotListed,
-                    unlisted.ToString(CultureInfo.InvariantCulture))))
+                    unlistedModules.ToString(CultureInfo.InvariantCulture))))
                 .Append("\n\n");
         }
 
-        // The count is reported to the caller rather than written here: a note buried after dozens of collapsed
-        // module sections is easy to miss, so it belongs at the top of the file.
-        return builder.ToString();
+        return new AggregateRenderResult(builder.ToString(), modulesWithOmittedDetails, condensedModules, unlistedModules);
     }
+
+    /// <summary>
+    /// Renders the one-line verdict a test project is reduced to when the shared summary file is near GitHub's
+    /// cap. Both writing modes reach this: the aggregate path condenses a module, and the per-project path
+    /// condenses itself, so they render through one method rather than two that must be kept in step.
+    /// </summary>
+    private static string BuildCondensedLine(string assemblyName, string targetFramework, long total, long passed, long failed, long skipped, bool runFailed)
+        => string.Format(
+            CultureInfo.InvariantCulture,
+            "{0} `{1}` ({2}): {3} total, {4} passed, {5} failed, {6} skipped — {7}\n\n",
+            runFailed ? "❌" : "✅",
+            EscapeInlineCode(assemblyName),
+            EscapeInlineCode(targetFramework),
+            total.ToString(CultureInfo.InvariantCulture),
+            passed.ToString(CultureInfo.InvariantCulture),
+            failed.ToString(CultureInfo.InvariantCulture),
+            skipped.ToString(CultureInfo.InvariantCulture),
+            GitHubActionsResources.SummaryCondensed);
 
     /// <summary>
     /// Renders one module as a single-line verdict, for when the combined summary has grown too large to give it
     /// a section of its own.
     /// </summary>
     private static void AppendCondensedModuleLine(StringBuilder builder, CiRunSummaryModule module)
-    {
-        bool runFailed = module.FailedTests > 0 || GitHubActionsExitCode.IndicatesFailure(module.ExitCode);
-        builder.Append(runFailed ? "❌" : "✅").Append(" `")
-            .Append(EscapeInlineCode(module.AssemblyName)).Append("` (")
-            .Append(EscapeInlineCode(module.TargetFramework)).Append("): ")
-            .Append(module.TotalTests.ToString(CultureInfo.InvariantCulture)).Append(" total, ")
-            .Append(module.PassedTests.ToString(CultureInfo.InvariantCulture)).Append(" passed, ")
-            .Append(module.FailedTests.ToString(CultureInfo.InvariantCulture)).Append(" failed, ")
-            .Append(module.SkippedTests.ToString(CultureInfo.InvariantCulture)).Append(" skipped — ")
-            .Append(GitHubActionsResources.SummaryCondensed).Append("\n\n");
-    }
+        => builder.Append(BuildCondensedLine(
+            module.AssemblyName,
+            module.TargetFramework,
+            module.TotalTests,
+            module.PassedTests,
+            module.FailedTests,
+            module.SkippedTests,
+            module.FailedTests > 0 || GitHubActionsExitCode.IndicatesFailure(module.ExitCode)));
 
     /// <summary>
     /// Renders the top-of-file warning for a combined <c>dotnet test</c> summary whose modules lost their expanded
@@ -374,25 +402,21 @@ internal sealed partial class GitHubActionsSummaryReporter
             }
         }
 
-        bool runFailed = failed > 0 || GitHubActionsExitCode.IndicatesFailure(exitCode);
-        return string.Format(
-            CultureInfo.InvariantCulture,
-            "{0} `{1}` ({2}): {3} total, {4} passed, {5} failed, {6} skipped — {7}\n\n",
-            runFailed ? "❌" : "✅",
-            EscapeInlineCode(assemblyName),
-            EscapeInlineCode(targetFrameworkMoniker),
-            records.Count.ToString(CultureInfo.InvariantCulture),
-            passed.ToString(CultureInfo.InvariantCulture),
-            failed.ToString(CultureInfo.InvariantCulture),
-            skipped.ToString(CultureInfo.InvariantCulture),
-            GitHubActionsResources.SummaryCondensed);
+        return BuildCondensedLine(
+            assemblyName,
+            targetFrameworkMoniker,
+            records.Count,
+            passed,
+            failed,
+            skipped,
+            failed > 0 || GitHubActionsExitCode.IndicatesFailure(exitCode));
     }
 
     /// <summary>
     /// Renders one module's section, returning the number of its listed failures whose diagnostics did not fit
     /// the shared budget.
     /// </summary>
-    private static int AppendModuleMarkdown(StringBuilder builder, CiRunSummaryModule module, int headingLevel, bool includeFailureDetails, ref int remainingBudget)
+    private static int AppendModuleMarkdown(StringBuilder builder, CiRunSummaryModule module, int headingLevel, bool includeFailureDetails, SummaryBudget budget)
     {
         string heading = new('#', headingLevel);
         bool runFailed = module.FailedTests > 0 || GitHubActionsExitCode.IndicatesFailure(module.ExitCode);
@@ -428,7 +452,7 @@ internal sealed partial class GitHubActionsSummaryReporter
                     failure.LineNumber ?? 0))],
                 module.FailedTests,
                 includeFailureDetails,
-                ref remainingBudget);
+                budget);
         }
 
         if (module.SlowestTests.Length > 0)
@@ -445,15 +469,6 @@ internal sealed partial class GitHubActionsSummaryReporter
 
         return omittedDetails;
     }
-
-    private static string FormatDuration(TimeSpan duration)
-        => SummaryReporterHelpers.FormatDuration(duration, "{0}m {1:00}s", "{0}h {1:00}m {2:00}s");
-
-    private static string EscapeInlineCode(string value)
-        => RoslynString.IsNullOrEmpty(value) ? value : value.Replace("`", "'").Replace("\r", string.Empty).Replace("\n", " ");
-
-    private static string HtmlEncode(string value)
-        => System.Net.WebUtility.HtmlEncode(value);
 
     private static bool HasDuplicateModuleIdentity(IReadOnlyList<CiRunSummaryModule> modules, CiRunSummaryModule module)
         => modules.Count(candidate =>
