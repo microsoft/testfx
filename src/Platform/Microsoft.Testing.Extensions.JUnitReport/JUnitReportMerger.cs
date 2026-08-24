@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform;
+using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Extensions.JUnitReport;
 
@@ -355,9 +356,7 @@ internal static class JUnitReportMerger
         var identity = new StringBuilder();
         foreach (string? component in components)
         {
-            identity.Append(component?.Length ?? -1)
-                .Append(':')
-                .Append(component);
+            IdentityKeyBuilder.AppendLengthPrefixedComponent(identity, component);
         }
 
         return identity.ToString();

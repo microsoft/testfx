@@ -196,10 +196,12 @@ static Microsoft.Testing.Platform.Services.ArtifactNamingHelper.ResolveAndSaniti
 static Microsoft.Testing.Platform.Services.CoverageThresholdExitCodePolicy.Apply(int exitCode, System.IServiceProvider! serviceProvider) -> int
 static Microsoft.Testing.Platform.Services.ExitCodeIgnorePolicy.Apply(int exitCode, Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> int
 Microsoft.Testing.Platform.Helpers.RuntimeFeatureHelper
+Microsoft.Testing.Platform.Helpers.IdentityKeyBuilder
 Microsoft.Testing.Platform.Logging.FileLogger.FileLogger(Microsoft.Testing.Platform.Logging.FileLoggerOptions! options, Microsoft.Testing.Platform.Logging.LogLevel logLevel, Microsoft.Testing.Platform.Helpers.IClock! clock, Microsoft.Testing.Platform.Helpers.ITask! task, Microsoft.Testing.Platform.Helpers.IConsole! console, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Helpers.IFileStreamFactory! fileStreamFactory, System.TimeSpan? flushTimeout = null) -> void
 Microsoft.Testing.Platform.Logging.FileLogger.IsFileHandleReleased.get -> bool
 Microsoft.Testing.Platform.Messages.SingleConsumerUnboundedChannel<T>.WaitToRead() -> bool
 static Microsoft.Testing.Platform.Helpers.RuntimeFeatureHelper.IsMultiThreaded.get -> bool
+static Microsoft.Testing.Platform.Helpers.IdentityKeyBuilder.AppendLengthPrefixedComponent(System.Text.StringBuilder! builder, string? component) -> void
 const Microsoft.Testing.Platform.ServerMode.JsonRpcStrings.IsStateful = "isStateful" -> string!
 const Microsoft.Testing.Platform.ServerMode.JsonRpcStrings.SupportsTestCoverageMessages = "supportsTestCoverageMessages" -> string!
 Microsoft.Testing.Platform.Hosts.TestHostControlledHost.TestHostControlledHost(Microsoft.Testing.Platform.IPC.NamedPipeClient! testHostControllerPipeClient, Microsoft.Testing.Platform.Hosts.IHost! innerHost, System.Threading.CancellationToken cancellationToken, Microsoft.Testing.Platform.Services.TestApplicationResult? testApplicationResult = null) -> void
