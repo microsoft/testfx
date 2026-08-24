@@ -19,6 +19,23 @@ internal sealed partial class TrxReportEngine
     /// cannot be relocated is dropped rather than left dangling or pointing outside the deployment root.
     /// </summary>
     private static void RelocateAttachments(IReadOnlyList<string> inputPaths, IReadOnlyList<XDocument> reports, string outputDirectory, Guid runId, string runName, CancellationToken cancellationToken)
+        => RelocateAttachments(
+            inputPaths,
+            reports,
+            outputDirectory,
+            runId,
+            runName,
+            cancellationToken,
+            static path => File.GetAttributes(path));
+
+    private static void RelocateAttachments(
+        IReadOnlyList<string> inputPaths,
+        IReadOnlyList<XDocument> reports,
+        string outputDirectory,
+        Guid runId,
+        string runName,
+        CancellationToken cancellationToken,
+        Func<string, FileAttributes> getAttributes)
     {
         string outputFull = Path.GetFullPath(outputDirectory);
         string mergedDeploymentRoot = GetConfinedDeploymentRootLeaf(runId, runName);
@@ -40,7 +57,17 @@ internal sealed partial class TrxReportEngine
         // On a reused output directory the merged 'In' root could pre-exist as a junction/symlink that
         // would redirect every copy below it outside the confined merged root. Remove such a link so a
         // fresh, real directory is created instead.
-        if (Directory.Exists(mergedInRoot) && IsReparsePoint(mergedInRoot))
+        bool? mergedInRootIsReparsePoint = GetReparsePointStatus(
+            mergedInRoot,
+            getAttributes);
+        if (mergedInRootIsReparsePoint is null)
+        {
+            // Do not delete an entry whose type cannot be established, and do not write through it.
+            DropAllReferences(reports);
+            return;
+        }
+
+        if (mergedInRootIsReparsePoint is true)
         {
             try
             {
