@@ -71,8 +71,9 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
             ? null
             : new StepSummaryWriter(fileSystem, stepSummaryPath!, logger, StepSummaryMaxWriteAttempts, StepSummaryRetryDelay);
 
-        // The artifact is a standalone file with no size limit, so it always gets the complete rendering. Only the
-        // job summary is capped, and only it degrades.
+        // The artifact is a standalone file, so what other steps wrote to the job summary is none of its business:
+        // it is rendered without that contribution. Its own size still degrades it on the same thresholds, which
+        // also keeps a pathological run from building a multi-hundred-megabyte string.
         GitHubActionsSummaryReporter.AggregateRenderResult artifact = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate, _includeFailureDetails);
         await CiRunSummaryAggregation.WriteOutputAsync(outputPath, artifact.Markdown).ConfigureAwait(false);
 
