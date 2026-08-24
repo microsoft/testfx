@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## <a name="4.4.0" />[4.4.0] - UNRELEASED
 
-See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4.3.3...v4.4.0)
+See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4.3.3...main)
 
 ### Added
 
