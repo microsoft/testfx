@@ -641,11 +641,12 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
     public void Clone_InvalidatesCachedTestId_SoTheCloneCanBeSpecializedAsADataRow()
     {
         UnitTestElement element = CreateElement();
-        element.GetTestId();
+        Guid original = element.GetTestId();
 
         UnitTestElement clone = element.Clone();
 
         clone.CachedTestNodeUid.Should().BeNull();
+        element.CachedTestNodeUid.Should().Be(original);
     }
 
     // --- Seams ------------------------------------------------------------------------------------------------
