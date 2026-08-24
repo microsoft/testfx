@@ -119,16 +119,17 @@ internal sealed class TrxProcessLifetimeHandler :
 
     [UnsupportedOSPlatform("BROWSER")]
     private void BeforeTestHostProcessStartCore(CancellationToken cancellationToken)
-        => _waitConnectionTask = _task.Run(
-            async () =>
-            {
-                _singleConnectionNamedPipeServer = new(_pipeNameDescription, CallbackAsync, _environment, _logger, _task, cancellationToken);
-                _singleConnectionNamedPipeServer.RegisterSerializer(new ReportFileNameRequestSerializer(), typeof(ReportFileNameRequest));
-                _singleConnectionNamedPipeServer.RegisterSerializer(new TestAdapterInformationRequestSerializer(), typeof(TestAdapterInformationRequest));
-                _singleConnectionNamedPipeServer.RegisterSerializer(new TrxStreamLocationRequestSerializer(), typeof(TrxStreamLocationRequest));
-                _singleConnectionNamedPipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
-                await _singleConnectionNamedPipeServer.WaitConnectionAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken).ConfigureAwait(false);
-            }, cancellationToken);
+    {
+        _singleConnectionNamedPipeServer = new(_pipeNameDescription, CallbackAsync, _environment, _logger, _task, cancellationToken);
+        _singleConnectionNamedPipeServer.RegisterSerializer(new ReportFileNameRequestSerializer(), typeof(ReportFileNameRequest));
+        _singleConnectionNamedPipeServer.RegisterSerializer(new TestAdapterInformationRequestSerializer(), typeof(TestAdapterInformationRequest));
+        _singleConnectionNamedPipeServer.RegisterSerializer(new TrxStreamLocationRequestSerializer(), typeof(TrxStreamLocationRequest));
+        _singleConnectionNamedPipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
+
+        _waitConnectionTask = _task.Run(
+            () => _singleConnectionNamedPipeServer.WaitConnectionAsync(cancellationToken).TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout, cancellationToken),
+            cancellationToken);
+    }
 
     public async Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken)
     {
