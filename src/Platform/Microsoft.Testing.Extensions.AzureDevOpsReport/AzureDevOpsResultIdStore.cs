@@ -291,10 +291,11 @@ internal sealed class AzureDevOpsResultIdStore
         }
     }
 
+    // Match PublishTestResults@2: the original execution is Attempt# 0, while sequence ids are 1-based.
     private static AzureDevOpsTestSubResult ToSubResult(AzureDevOpsTestCaseResult result, int sequenceId)
         => new(
             sequenceId,
-            result.TestCaseTitle,
+            $"Attempt# {(sequenceId - 1).ToString(CultureInfo.InvariantCulture)} - {result.TestCaseTitle}",
             result.Outcome,
             result.DurationInMs,
             result.ErrorMessage,
