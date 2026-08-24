@@ -920,8 +920,8 @@ For more information about exit codes, see https://learn.microsoft.com/dotnet/co
         <note>{0} is the option name without the leading dashes.</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDescription">
-        <source>Microsoft Testing Platform command line provider</source>
-        <target state="translated">Provider della riga di comando di Microsoft Testing Platform</target>
+        <source>Microsoft Testing Platform command line provider.</source>
+        <target state="needs-review-translation">Provider della riga di comando di Microsoft Testing Platform</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDisplayName">

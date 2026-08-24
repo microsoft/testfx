@@ -132,7 +132,7 @@
     <value>Crash dump file</value>
   </data>
   <data name="CrashDumpDescription" xml:space="preserve">
-    <value>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly</value>
+    <value>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly.</value>
     <comment>Do not localize target framework moniker {Locked="net6.0+"}.</comment>
   </data>
   <data name="CrashDumpDisplayName" xml:space="preserve">

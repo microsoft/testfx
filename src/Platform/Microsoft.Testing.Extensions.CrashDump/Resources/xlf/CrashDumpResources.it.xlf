@@ -23,8 +23,8 @@
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpDescription">
-        <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly</source>
-        <target state="translated">[solo net6.0+] Generazione di file di dump di arresto anomalo quando il processo di esecuzione del test si arresta in modo imprevisto</target>
+        <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly.</source>
+        <target state="needs-review-translation">[solo net6.0+] Generazione di file di dump di arresto anomalo quando il processo di esecuzione del test si arresta in modo imprevisto</target>
         <note>Do not localize target framework moniker {Locked="net6.0+"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpDisplayName">

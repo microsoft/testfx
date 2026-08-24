@@ -33,8 +33,8 @@
         <note>0 is the first option name without the leading {Locked="--"}. 1 is the second option name without the leading {Locked="--"}.</note>
       </trans-unit>
       <trans-unit id="TrxComparerToolDescription">
-        <source>This tool allows to compare and highlights differences between 2 TRX reports</source>
-        <target state="translated">這項工具可比較並強調 2 份 TRX 報告之間的差異</target>
+        <source>This tool allows to compare and highlights differences between 2 TRX reports.</source>
+        <target state="needs-review-translation">這項工具可比較並強調 2 份 TRX 報告之間的差異</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxComparerToolDisplayName">
@@ -58,8 +58,8 @@
         <note>{0} is the {Locked="TRX"} report file path.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolDescription">
-        <source>Merges multiple TRX files into one from the command line</source>
-        <target state="translated">從命令列將多個 TRX 檔案合併成一個</target>
+        <source>Merges multiple TRX files into one from the command line.</source>
+        <target state="needs-review-translation">從命令列將多個 TRX 檔案合併成一個</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolDisplayName">
@@ -157,8 +157,8 @@ Example: 'MyReport_{tfm}.trx'.</source>
         <note>Do not localize method names {Locked="BeforeTestHostProcessStartAsync"}{Locked="OnTestHostProcessStartedAsync"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportGeneratorDescription">
-        <source>Produce a TRX report for the current test session</source>
-        <target state="translated">產生目前測試工作階段的 TRX 報告</target>
+        <source>Produce a TRX report for the current test session.</source>
+        <target state="needs-review-translation">產生目前測試工作階段的 TRX 報告</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportGeneratorDisplayName">

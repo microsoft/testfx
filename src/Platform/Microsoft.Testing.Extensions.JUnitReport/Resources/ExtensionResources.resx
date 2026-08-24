@@ -180,7 +180,7 @@ Example: 'MyReport_{tfm}.xml'.</value>
     <comment>Do not localize option names {Locked="--report-junit-filename"}{Locked="--report-junit"}.</comment>
   </data>
   <data name="JUnitReportGeneratorDescription" xml:space="preserve">
-    <value>Produce a JUnit XML report for the current test session</value>
+    <value>Produce a JUnit XML report for the current test session.</value>
     <comment>Do not localize {Locked="JUnit"} or {Locked="XML"}.</comment>
   </data>
   <data name="JUnitReportGeneratorDisplayName" xml:space="preserve">

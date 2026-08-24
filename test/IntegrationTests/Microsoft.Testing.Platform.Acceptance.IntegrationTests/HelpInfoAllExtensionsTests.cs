@@ -273,7 +273,7 @@ Built-in command line providers:
   PlatformCommandLineProvider
     Name: Platform command line provider
     Version: *
-    Description: Microsoft Testing Platform command line provider
+    Description: Microsoft Testing Platform command line provider.
     Options:
       --?
         Arity: 0
@@ -536,7 +536,7 @@ Registered command line providers:
   CrashDumpCommandLineProvider
     Name: Crash dump
     Version: *
-    Description: [net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly
+    Description: [net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly.
     Options:
       --crash-report
         Arity: 0
@@ -570,7 +570,7 @@ Registered command line providers:
   CtrfReportGeneratorCommandLine
     Name: CTRF report generator
     Version: *
-    Description: Produce a CTRF (Common Test Report Format) JSON report for the current test session (https://ctrf.io)
+    Description: Produce a CTRF (Common Test Report Format) JSON report for the current test session (https://ctrf.io).
     Options:
       --report-ctrf
         Arity: 0
@@ -650,7 +650,7 @@ Registered command line providers:
   HtmlReportGeneratorCommandLine
     Name: HTML report generator
     Version: *
-    Description: Produce a self-contained HTML report for the current test session
+    Description: Produce a self-contained HTML report for the current test session.
     Options:
       --report-html
         Arity: 0
@@ -665,7 +665,7 @@ Registered command line providers:
   JUnitReportGeneratorCommandLine
     Name: JUnit XML report generator
     Version: *
-    Description: Produce a JUnit XML report for the current test session
+    Description: Produce a JUnit XML report for the current test session.
     Options:
       --report-junit
         Arity: 0
@@ -714,7 +714,7 @@ Registered command line providers:
   TrxReportGeneratorCommandLine
     Name: TRX report generator
     Version: *
-    Description: Produce a TRX report for the current test session
+    Description: Produce a TRX report for the current test session.
     Options:
       --report-trx
         Arity: 0
@@ -760,12 +760,12 @@ Registered tools:
     Command: merge-trx
     Name: TRX report merge tool
     Version: *
-    Description: Merges multiple TRX files into one from the command line
+    Description: Merges multiple TRX files into one from the command line.
     Tool command line providers:
       Microsoft.Testing.Extensions.TrxReport.MergeTool
         Name: TRX report merge tool
         Version: *
-        Description: Merges multiple TRX files into one from the command line
+        Description: Merges multiple TRX files into one from the command line.
         Options:
           --input
             Arity: 2..N
@@ -779,12 +779,12 @@ Registered tools:
     Command: ms-trxcompare
     Name: TRX comparer tool
     Version: *
-    Description: This tool allows to compare and highlights differences between 2 TRX reports
+    Description: This tool allows to compare and highlights differences between 2 TRX reports.
     Tool command line providers:
       TrxCompareTool
         Name: TRX comparer tool
         Version: *
-        Description: This tool allows to compare and highlights differences between 2 TRX reports
+        Description: This tool allows to compare and highlights differences between 2 TRX reports.
         Options:
           --baseline-trx
             Arity: 1

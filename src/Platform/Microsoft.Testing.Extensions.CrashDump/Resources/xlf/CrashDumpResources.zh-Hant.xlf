@@ -23,8 +23,8 @@
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpDescription">
-        <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly</source>
-        <target state="translated">[net6.0+ only] 測試執行流程意外損毀時會產生損毀傾印檔案</target>
+        <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly.</source>
+        <target state="needs-review-translation">[net6.0+ only] 測試執行流程意外損毀時會產生損毀傾印檔案</target>
         <note>Do not localize target framework moniker {Locked="net6.0+"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpDisplayName">

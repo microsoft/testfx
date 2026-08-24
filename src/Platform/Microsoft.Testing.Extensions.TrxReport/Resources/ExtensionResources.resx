@@ -138,7 +138,7 @@
     <comment>0 is the first option name without the leading {Locked="--"}. 1 is the second option name without the leading {Locked="--"}.</comment>
   </data>
   <data name="TrxComparerToolDescription" xml:space="preserve">
-    <value>This tool allows to compare and highlights differences between 2 TRX reports</value>
+    <value>This tool allows to compare and highlights differences between 2 TRX reports.</value>
     <comment>Do not localize format name {Locked="TRX"}.</comment>
   </data>
   <data name="TrxComparerToolDisplayName" xml:space="preserve">
@@ -162,7 +162,7 @@
     <comment>{0} is the {Locked="TRX"} report file path.</comment>
   </data>
   <data name="TrxMergeToolDescription" xml:space="preserve">
-    <value>Merges multiple TRX files into one from the command line</value>
+    <value>Merges multiple TRX files into one from the command line.</value>
     <comment>Do not localize format name {Locked="TRX"}.</comment>
   </data>
   <data name="TrxMergeToolDisplayName" xml:space="preserve">
@@ -239,7 +239,7 @@ Example: 'MyReport_{tfm}.trx'.</value>
     <comment>Do not localize method names {Locked="BeforeTestHostProcessStartAsync"}{Locked="OnTestHostProcessStartedAsync"}.</comment>
   </data>
   <data name="TrxReportGeneratorDescription" xml:space="preserve">
-    <value>Produce a TRX report for the current test session</value>
+    <value>Produce a TRX report for the current test session.</value>
     <comment>Do not localize format name {Locked="TRX"}.</comment>
   </data>
   <data name="TrxReportGeneratorDisplayName" xml:space="preserve">

@@ -77,8 +77,8 @@ Example: 'MyReport_{tfm}.xml'.</source>
         <note>Do not localize option names {Locked="--report-junit-filename"}{Locked="--report-junit"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportGeneratorDescription">
-        <source>Produce a JUnit XML report for the current test session</source>
-        <target state="translated">現在のテスト セッションの JUnit XML レポートを生成する</target>
+        <source>Produce a JUnit XML report for the current test session.</source>
+        <target state="needs-review-translation">現在のテスト セッションの JUnit XML レポートを生成する</target>
         <note>Do not localize {Locked="JUnit"} or {Locked="XML"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportGeneratorDisplayName">

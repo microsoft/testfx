@@ -67,8 +67,8 @@ Beispiel: MyReport_{tfm}.ctrf.json</target>
         <note>Do not localize option names {Locked="--report-ctrf-filename"}{Locked="--report-ctrf"}.</note>
       </trans-unit>
       <trans-unit id="CtrfReportGeneratorDescription">
-        <source>Produce a CTRF (Common Test Report Format) JSON report for the current test session (https://ctrf.io)</source>
-        <target state="translated">Einen CTRF-JSON-Bericht (Common Test Report Format) für die aktuelle Testsitzung (https://ctrf.io) erstellen</target>
+        <source>Produce a CTRF (Common Test Report Format) JSON report for the current test session (https://ctrf.io).</source>
+        <target state="needs-review-translation">Einen CTRF-JSON-Bericht (Common Test Report Format) für die aktuelle Testsitzung (https://ctrf.io) erstellen</target>
         <note>Do not localize {Locked="CTRF"}, {Locked="Common Test Report Format"}, {Locked="JSON"}, or {Locked="https://ctrf.io"}.</note>
       </trans-unit>
       <trans-unit id="CtrfReportGeneratorDisplayName">

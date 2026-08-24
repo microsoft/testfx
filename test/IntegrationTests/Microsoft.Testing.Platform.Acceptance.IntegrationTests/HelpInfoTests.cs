@@ -167,7 +167,7 @@ Built-in command line providers:
   PlatformCommandLineProvider
     Name: Platform command line provider
     Version: .+
-    Description: Microsoft Testing Platform command line provider
+    Description: Microsoft Testing Platform command line provider.
     Options:
       --\?
         Arity: 0

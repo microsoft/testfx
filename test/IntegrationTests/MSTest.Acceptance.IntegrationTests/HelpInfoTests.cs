@@ -130,7 +130,7 @@ Extension options:
   MSTestExtension
     Name: MSTest
     Version: {MSTestVersion}
-    Description: MSTest Framework for Microsoft Testing Platform
+    Description: MSTest Framework for Microsoft Testing Platform.
     Options:
       --settings
         Arity: 1

@@ -605,7 +605,7 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
     <comment>{0} is the option name without the leading dashes.</comment>
   </data>
   <data name="PlatformCommandLineProviderDescription" xml:space="preserve">
-    <value>Microsoft Testing Platform command line provider</value>
+    <value>Microsoft Testing Platform command line provider.</value>
   </data>
   <data name="PlatformCommandLineProviderDisplayName" xml:space="preserve">
     <value>Platform command line provider</value>

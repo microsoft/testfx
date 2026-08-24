@@ -23,8 +23,8 @@
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpDescription">
-        <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly</source>
-        <target state="translated">[仅限 net6.0+]在测试执行进程意外崩溃时生成故障转储文件</target>
+        <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly.</source>
+        <target state="needs-review-translation">[仅限 net6.0+]在测试执行进程意外崩溃时生成故障转储文件</target>
         <note>Do not localize target framework moniker {Locked="net6.0+"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpDisplayName">

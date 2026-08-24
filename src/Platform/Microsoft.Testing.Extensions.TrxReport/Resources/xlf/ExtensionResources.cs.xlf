@@ -33,8 +33,8 @@
         <note>0 is the first option name without the leading {Locked="--"}. 1 is the second option name without the leading {Locked="--"}.</note>
       </trans-unit>
       <trans-unit id="TrxComparerToolDescription">
-        <source>This tool allows to compare and highlights differences between 2 TRX reports</source>
-        <target state="translated">Tento nástroj umožňuje porovnat rozdíly mezi 2 sestavami TRX a zobrazit přehled těchto rozdílů.</target>
+        <source>This tool allows to compare and highlights differences between 2 TRX reports.</source>
+        <target state="needs-review-translation">Tento nástroj umožňuje porovnat rozdíly mezi 2 sestavami TRX a zobrazit přehled těchto rozdílů.</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxComparerToolDisplayName">
@@ -58,8 +58,8 @@
         <note>{0} is the {Locked="TRX"} report file path.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolDescription">
-        <source>Merges multiple TRX files into one from the command line</source>
-        <target state="translated">Sloučí z příkazového řádku několik souborů TRX do jednoho</target>
+        <source>Merges multiple TRX files into one from the command line.</source>
+        <target state="needs-review-translation">Sloučí z příkazového řádku několik souborů TRX do jednoho</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolDisplayName">
@@ -157,8 +157,8 @@ Příklad: MyReport_{tfm}.trx</target>
         <note>Do not localize method names {Locked="BeforeTestHostProcessStartAsync"}{Locked="OnTestHostProcessStartedAsync"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportGeneratorDescription">
-        <source>Produce a TRX report for the current test session</source>
-        <target state="translated">Vytvořit sestavu TRX pro aktuální testovací relaci</target>
+        <source>Produce a TRX report for the current test session.</source>
+        <target state="needs-review-translation">Vytvořit sestavu TRX pro aktuální testovací relaci</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportGeneratorDisplayName">

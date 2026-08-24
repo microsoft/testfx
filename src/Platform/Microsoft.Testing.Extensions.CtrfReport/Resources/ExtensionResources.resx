@@ -109,7 +109,7 @@ Example: 'MyReport_{tfm}.ctrf.json'.</value>
     <comment>Do not localize option names {Locked="--report-ctrf-filename"}{Locked="--report-ctrf"}.</comment>
   </data>
   <data name="CtrfReportGeneratorDescription" xml:space="preserve">
-    <value>Produce a CTRF (Common Test Report Format) JSON report for the current test session (https://ctrf.io)</value>
+    <value>Produce a CTRF (Common Test Report Format) JSON report for the current test session (https://ctrf.io).</value>
     <comment>Do not localize {Locked="CTRF"}, {Locked="Common Test Report Format"}, {Locked="JSON"}, or {Locked="https://ctrf.io"}.</comment>
   </data>
   <data name="CtrfReportGeneratorDisplayName" xml:space="preserve">

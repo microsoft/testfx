@@ -23,8 +23,8 @@
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpDescription">
-        <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly</source>
-        <target state="translated">[somente net6.0+] Produzir arquivos de despejo de memória quando o processo de execução de teste falhar inesperadamente</target>
+        <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly.</source>
+        <target state="needs-review-translation">[somente net6.0+] Produzir arquivos de despejo de memória quando o processo de execução de teste falhar inesperadamente</target>
         <note>Do not localize target framework moniker {Locked="net6.0+"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpDisplayName">

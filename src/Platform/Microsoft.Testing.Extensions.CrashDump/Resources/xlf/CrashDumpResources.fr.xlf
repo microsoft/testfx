@@ -23,8 +23,8 @@
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpDescription">
-        <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly</source>
-        <target state="translated">[net6.0+ uniquement] Produire des fichiers de vidage sur incident lorsque le processus d’exécution des tests se bloque de manière inattendue</target>
+        <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly.</source>
+        <target state="needs-review-translation">[net6.0+ uniquement] Produire des fichiers de vidage sur incident lorsque le processus d’exécution des tests se bloque de manière inattendue</target>
         <note>Do not localize target framework moniker {Locked="net6.0+"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpDisplayName">

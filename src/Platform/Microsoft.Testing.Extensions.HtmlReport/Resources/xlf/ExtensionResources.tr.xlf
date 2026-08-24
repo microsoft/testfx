@@ -72,8 +72,8 @@ Example: 'MyReport_{tfm}.html'.</source>
         <note>Do not localize option names {Locked="--report-html-filename"}{Locked="--report-html"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportGeneratorDescription">
-        <source>Produce a self-contained HTML report for the current test session</source>
-        <target state="translated">Geçerli test oturumu için bağımsız bir HTML raporu oluşturun</target>
+        <source>Produce a self-contained HTML report for the current test session.</source>
+        <target state="needs-review-translation">Geçerli test oturumu için bağımsız bir HTML raporu oluşturun</target>
         <note>Do not localize {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportGeneratorDisplayName">

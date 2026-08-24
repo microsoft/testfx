@@ -33,8 +33,8 @@
         <note>0 is the first option name without the leading {Locked="--"}. 1 is the second option name without the leading {Locked="--"}.</note>
       </trans-unit>
       <trans-unit id="TrxComparerToolDescription">
-        <source>This tool allows to compare and highlights differences between 2 TRX reports</source>
-        <target state="translated">Esta herramienta permite comparar y resaltar las diferencias entre dos informes TRX</target>
+        <source>This tool allows to compare and highlights differences between 2 TRX reports.</source>
+        <target state="needs-review-translation">Esta herramienta permite comparar y resaltar las diferencias entre dos informes TRX</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxComparerToolDisplayName">
@@ -58,8 +58,8 @@
         <note>{0} is the {Locked="TRX"} report file path.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolDescription">
-        <source>Merges multiple TRX files into one from the command line</source>
-        <target state="translated">Combina varios archivos TRX en uno desde la línea de comandos</target>
+        <source>Merges multiple TRX files into one from the command line.</source>
+        <target state="needs-review-translation">Combina varios archivos TRX en uno desde la línea de comandos</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxMergeToolDisplayName">
@@ -157,8 +157,8 @@ Ejemplo: MyReport_{tfm}.trx</target>
         <note>Do not localize method names {Locked="BeforeTestHostProcessStartAsync"}{Locked="OnTestHostProcessStartedAsync"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportGeneratorDescription">
-        <source>Produce a TRX report for the current test session</source>
-        <target state="translated">Generar un informe TRX para la sesión de prueba actual</target>
+        <source>Produce a TRX report for the current test session.</source>
+        <target state="needs-review-translation">Generar un informe TRX para la sesión de prueba actual</target>
         <note>Do not localize format name {Locked="TRX"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportGeneratorDisplayName">

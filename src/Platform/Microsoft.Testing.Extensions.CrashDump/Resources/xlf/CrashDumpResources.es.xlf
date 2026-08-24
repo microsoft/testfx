@@ -23,8 +23,8 @@
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpDescription">
-        <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly</source>
-        <target state="translated">[solo net6.0+ ] Generar archivos de volcado de memoria cuando el proceso de ejecución de pruebas se bloquea inesperadamente</target>
+        <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly.</source>
+        <target state="needs-review-translation">[solo net6.0+ ] Generar archivos de volcado de memoria cuando el proceso de ejecución de pruebas se bloquea inesperadamente</target>
         <note>Do not localize target framework moniker {Locked="net6.0+"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpDisplayName">

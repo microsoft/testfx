@@ -2,6 +2,11 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="it" original="../PlatformAdapterResources.resx">
     <body>
+      <trans-unit id="MSTestExtensionDescription">
+        <source>MSTest Framework for Microsoft Testing Platform.</source>
+        <target state="new">MSTest Framework for Microsoft Testing Platform.</target>
+        <note>Do not localize {Locked="MSTest"} or {Locked="Microsoft Testing Platform"}.</note>
+      </trans-unit>
       <trans-unit id="MissingRunSettingsAttribute">
         <source>Invalid .runsettings file, '&lt;RunSettings&gt;' attribute is missing</source>
         <target state="translated">File .runsettings non valido. Attributo '&lt;RunSettings&gt;' mancante</target>

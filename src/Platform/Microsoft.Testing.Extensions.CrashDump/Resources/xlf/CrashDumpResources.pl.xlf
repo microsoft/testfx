@@ -23,8 +23,8 @@
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpDescription">
-        <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly</source>
-        <target state="translated">[tylko net6.0+ ] Tworzenie plików zrzutu awaryjnego w przypadku nieoczekiwanej awarii procesu wykonywania testu</target>
+        <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly.</source>
+        <target state="needs-review-translation">[tylko net6.0+ ] Tworzenie plików zrzutu awaryjnego w przypadku nieoczekiwanej awarii procesu wykonywania testu</target>
         <note>Do not localize target framework moniker {Locked="net6.0+"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpDisplayName">
