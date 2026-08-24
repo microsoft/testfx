@@ -453,7 +453,23 @@ An MTP class (`Microsoft.Testing.Platform.Extensions.Messages.PropertyBag`) that
 
 ### Retry
 
-An MTP extension (`Microsoft.Testing.Extensions.Retry`) that automatically re-runs failed tests a configurable number of times. Useful for reducing flakiness in CI environments.
+An MTP extension (`Microsoft.Testing.Extensions.Retry`) that automatically re-runs failed tests a configurable number of times by restarting the test host and filtering each new run to the tests that failed previously. It is independent from MSTest's in-process [`RetryAttribute`](#retryattribute) and [`RetryBaseAttribute`](#retrybaseattribute). When both mechanisms are enabled, their attempt counts multiply, so avoid combining them unless that is intended.
+
+### RetryAttribute
+
+An MSTest attribute (`Microsoft.VisualStudio.TestTools.UnitTesting.RetryAttribute`) that retries a failed or timed-out test within the same test-host run. It can be applied to a test method or test class and supports a maximum retry count, a delay between attempts, and constant or exponential backoff. It derives from [`RetryBaseAttribute`](#retrybaseattribute), which can be used to implement a custom retry policy. See also the process-level [`Microsoft.Testing.Extensions.Retry`](#retry) extension.
+
+### RetryBaseAttribute
+
+An experimental MSTest extensibility point (`Microsoft.VisualStudio.TestTools.UnitTesting.RetryBaseAttribute`, `[Experimental("MSTESTEXP")]`) for implementing custom in-process retry policies. A derived attribute overrides `ExecuteAsync(RetryContext)`, inspects the initial failed results, invokes the supplied test delegate for each retry attempt, and returns every attempt in a [`RetryResult`](#retryresult). The implementation owns the retry loop and decides when to stop. The attribute can be applied to a test method or test class; a method-level attribute takes precedence over a class-level attribute, and class-level attributes are not inherited.
+
+### RetryContext
+
+An experimental MSTest structure (`Microsoft.VisualStudio.TestTools.UnitTesting.RetryContext`, `[Experimental("MSTESTEXP")]`) passed to `RetryBaseAttribute.ExecuteAsync`. `FirstRunResults` contains the results from the initial failed or timed-out execution, and `ExecuteTaskGetter` re-executes the test and returns the next attempt's results. See also [`RetryBaseAttribute`](#retrybaseattribute) and [`RetryResult`](#retryresult).
+
+### RetryResult
+
+An experimental MSTest class (`Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult`, `[Experimental("MSTESTEXP")]`) used by custom [`RetryBaseAttribute`](#retrybaseattribute) implementations to return retry attempts in execution order through `AddResult`. `AllResults` exposes every added attempt. Under Microsoft.Testing.Platform, earlier attempts are reported as superseded and the last attempt determines the test outcome; VSTest receives only the final attempt.
 
 ### RFC
 
