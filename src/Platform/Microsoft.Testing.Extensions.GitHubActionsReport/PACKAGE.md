@@ -40,7 +40,7 @@ The extension activates when the test run is on GitHub Actions (`GITHUB_ACTIONS=
 | `--report-gh` | Master switch that turns the extension on (required, in addition to running on GitHub Actions) | off |
 | `--report-gh-groups on\|off` | Per-assembly log groups | on |
 | `--report-gh-annotations on\|off` | Failure and skip annotations | on |
-| `--report-gh-step-summary on\|off` | Markdown job summary | on |
+| `--report-gh-step-summary on\|off\|on-failure` | Markdown job summary; `on-failure` writes it only when the test invocation fails | on |
 | `--report-gh-slow-test-notices on\|off` | Slow-test notices | on |
 | `--report-gh-slow-test-threshold <duration>` | Time before a slow-test notice is emitted; accepts a bare number of seconds or a unit suffix such as `90s`, `2m`, `1.5h` | 60s |
 

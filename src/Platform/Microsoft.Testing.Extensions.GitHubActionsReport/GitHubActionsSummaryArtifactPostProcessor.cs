@@ -64,7 +64,15 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
         await CiRunSummaryAggregation.WriteOutputAsync(outputPath, markdown).ConfigureAwait(false);
 
         string? stepSummaryPath = environment.GetEnvironmentVariable(StepSummaryEnvironmentVariable);
-        if (!RoslynString.IsNullOrWhiteSpace(stepSummaryPath))
+        bool writeOnFailureOnly = aggregate.Modules.Count > 0
+            && aggregate.Modules.All(static module => module.WriteOnFailureOnly);
+        bool runFailed = aggregate.IsPartial
+            || aggregate.FailedTests > 0
+            || (aggregate.ExitCode is int exitCode
+                ? GitHubActionsExitCode.IndicatesFailure(exitCode)
+                : aggregate.Modules.Any(static module => GitHubActionsExitCode.IndicatesFailure(module.ExitCode)));
+        if (!RoslynString.IsNullOrWhiteSpace(stepSummaryPath)
+            && (!writeOnFailureOnly || runFailed))
         {
             await GitHubActionsSummaryReporter.UpsertStepSummaryWithRetryAsync(
                 fileSystem,

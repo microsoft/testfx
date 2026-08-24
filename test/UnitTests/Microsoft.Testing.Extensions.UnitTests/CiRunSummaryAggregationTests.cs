@@ -14,6 +14,8 @@ using Microsoft.Testing.Platform.OutputDevice;
 
 using Moq;
 
+using GitHubCiRunSummaryAggregation = ghactions::Microsoft.Testing.Extensions.CiRunSummaryAggregation;
+using GitHubCiRunSummaryModule = ghactions::Microsoft.Testing.Extensions.CiRunSummaryModule;
 using GitHubSummaryPostProcessor = ghactions::Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryArtifactPostProcessor;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
@@ -303,6 +305,74 @@ public sealed class CiRunSummaryAggregationTests
     }
 
     [TestMethod]
+    [DataRow(0, false)]
+    [DataRow(2, true)]
+    public async Task GitHubPostProcessor_OnFailureOnly_WritesStepSummaryOnlyForFailureAsync(int exitCode, bool shouldWriteSummary)
+    {
+        int failedTests = shouldWriteSummary ? 1 : 0;
+        var runSummary = new ArtifactPostProcessingRunSummary(
+            totalTests: 1,
+            passedTests: 1 - failedTests,
+            failedTests: failedTests,
+            skippedTests: 0,
+            duration: TimeSpan.FromSeconds(1),
+            exitCode: exitCode,
+            testModuleCount: 1);
+
+        string? summary = await RunGitHubPostProcessorAsync(
+            moduleExitCode: exitCode,
+            failedTests: failedTests,
+            writeOnFailureOnly: true,
+            context: new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None, runSummary));
+
+        Assert.AreEqual(shouldWriteSummary, summary is not null);
+        if (shouldWriteSummary)
+        {
+            Assert.IsNotNull(summary);
+            Assert.Contains("❌ Overall Test Run Summary", summary);
+        }
+    }
+
+    [TestMethod]
+    public async Task GitHubPostProcessor_OnFailureOnly_UsesModuleExitCodeWhenRunSummaryIsUnavailableAsync()
+    {
+        string? summary = await RunGitHubPostProcessorAsync(
+            moduleExitCode: 8,
+            failedTests: 0,
+            writeOnFailureOnly: true,
+            context: new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None));
+
+        Assert.IsNotNull(summary);
+        Assert.Contains("⚠️ Overall Test Run Summary", summary);
+    }
+
+    [TestMethod]
+    public async Task GitHubPostProcessor_OnFailureOnly_WritesPartialSummaryForTruncatedRunAsync()
+    {
+        string? summary = await RunGitHubPostProcessorAsync(
+            moduleExitCode: 0,
+            failedTests: 0,
+            writeOnFailureOnly: true,
+            context: new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.Timeout));
+
+        Assert.IsNotNull(summary);
+        Assert.Contains("This summary is partial because the test run was truncated.", summary);
+    }
+
+    [TestMethod]
+    public async Task GitHubPostProcessor_AlwaysMode_WritesSuccessfulSummaryAsync()
+    {
+        string? summary = await RunGitHubPostProcessorAsync(
+            moduleExitCode: 0,
+            failedTests: 0,
+            writeOnFailureOnly: false,
+            context: new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None));
+
+        Assert.IsNotNull(summary);
+        Assert.Contains("⚠️ Overall Test Run Summary", summary);
+    }
+
+    [TestMethod]
     public async Task WriteFragmentAsync_BoundsLongFileNameAsync()
     {
         string directory = CreateDirectory();
@@ -358,6 +428,70 @@ public sealed class CiRunSummaryAggregationTests
             module.TargetFramework,
             module.Architecture,
             module.ExecutionId);
+
+    private static async Task<string?> RunGitHubPostProcessorAsync(
+        int moduleExitCode,
+        int failedTests,
+        bool writeOnFailureOnly,
+        ArtifactPostProcessingContext context)
+    {
+        string directory = CreateDirectory();
+        try
+        {
+            string stepSummaryPath = Path.Combine(directory, "step-summary.md");
+            var module = new GitHubCiRunSummaryModule
+            {
+                AssemblyName = "Tests",
+                ModulePath = Path.Combine(directory, "Tests.dll"),
+                TargetFramework = "net9.0",
+                Architecture = "x64",
+                ExecutionId = "execution",
+                SessionUid = "session",
+                AttemptNumber = 1,
+                ExitCode = moduleExitCode,
+                TotalTests = 1,
+                PassedTests = 1 - failedTests,
+                FailedTests = failedTests,
+                WriteOnFailureOnly = writeOnFailureOnly,
+            };
+            string fragmentPath = await GitHubCiRunSummaryAggregation.WriteFragmentAsync(
+                directory,
+                GitHubSummaryPostProcessor.Provider,
+                GitHubSummaryPostProcessor.ProviderSlug,
+                module);
+            var environment = new Mock<IEnvironment>();
+            environment.Setup(item => item.GetEnvironmentVariable("GITHUB_STEP_SUMMARY")).Returns(stepSummaryPath);
+            var processor = new GitHubSummaryPostProcessor(
+                new TestCommandLineOptions(new()
+                {
+                    ["manifest"] = ["manifest.json"],
+                }),
+                environment.Object,
+                new SystemFileSystem());
+
+            ProcessedArtifact? result = await processor.ProcessAsync(
+                [
+                    new InputArtifact(
+                        fragmentPath,
+                        GitHubSummaryPostProcessor.FragmentArtifactKind,
+                        module.ModulePath,
+                        module.TargetFramework,
+                        module.Architecture,
+                        module.ExecutionId),
+                ],
+                directory,
+                context,
+                CancellationToken.None);
+
+            Assert.IsNotNull(result);
+            Assert.IsTrue(File.Exists(result.Path));
+            return File.Exists(stepSummaryPath) ? File.ReadAllText(stepSummaryPath) : null;
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
 
     private static string CreateDirectory()
     {

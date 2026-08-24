@@ -51,6 +51,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
     private readonly ILogger _logger;
     private readonly Lazy<string> _targetFrameworkMoniker;
     private readonly bool _isEnabled;
+    private readonly bool _writeOnFailureOnly;
     private readonly Func<bool> _shouldDeferToArtifactPostProcessing;
 
 #if NET9_0_OR_GREATER
@@ -84,6 +85,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
         _logger = loggerFactory.CreateLogger<GitHubActionsSummaryReporter>();
         _targetFrameworkMoniker = new(TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform);
         _isEnabled = GitHubActionsFeature.IsEnabled(commandLineOptions, environment, GitHubActionsCommandLineOptions.GitHubActionsStepSummary);
+        _writeOnFailureOnly = GitHubActionsFeature.IsStepSummaryOnFailureOnly(commandLineOptions);
         _shouldDeferToArtifactPostProcessing = shouldDeferToArtifactPostProcessing;
     }
 
@@ -219,6 +221,13 @@ internal sealed partial class GitHubActionsSummaryReporter :
                 return;
             }
 
+            if (_writeOnFailureOnly
+                && !snapshot.Any(static record => record.Kind == TerminalKind.Failed)
+                && !GitHubActionsExitCode.IndicatesFailure(exitCode))
+            {
+                return;
+            }
+
             string markdown = BuildMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value, exitCode);
 
             try
@@ -259,7 +268,8 @@ internal sealed partial class GitHubActionsSummaryReporter :
             _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID),
             testSessionContext.SessionUid.Value,
             GetAttemptNumber(),
-            _testApplicationProcessExitCode.GetProcessExitCode());
+            _testApplicationProcessExitCode.GetProcessExitCode(),
+            writeOnFailureOnly: _writeOnFailureOnly);
 
     private int GetAttemptNumber()
         => int.TryParse(

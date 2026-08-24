@@ -12,5 +12,6 @@ internal static class GitHubActionsCommandLineOptions
     public const string GitHubActionsSlowTestNotices = "report-gh-slow-test-notices";
     public const string GitHubActionsSlowTestThreshold = "report-gh-slow-test-threshold";
 
+    public const string StepSummaryOnFailureValue = "on-failure";
     public const int SlowTestThresholdDefaultSeconds = 60;
 }

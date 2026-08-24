@@ -28,6 +28,8 @@ internal sealed class CiRunSummaryModule
 
     public string RequestedOutputPath { get; set; } = string.Empty;
 
+    public bool WriteOnFailureOnly { get; set; }
+
     public int AttemptNumber { get; set; }
 
     public int ExitCode { get; set; }
@@ -131,7 +133,8 @@ internal static partial class CiRunSummaryAggregation
         string sessionUid,
         int attemptNumber,
         int exitCode,
-        string? requestedOutputPath = null)
+        string? requestedOutputPath = null,
+        bool writeOnFailureOnly = false)
     {
         long passed = 0;
         long failed = 0;
@@ -169,6 +172,7 @@ internal static partial class CiRunSummaryAggregation
             ExecutionId = executionId ?? string.Empty,
             SessionUid = sessionUid,
             RequestedOutputPath = requestedOutputPath ?? string.Empty,
+            WriteOnFailureOnly = writeOnFailureOnly,
             AttemptNumber = attemptNumber,
             ExitCode = exitCode,
             TotalTests = checked(passed + failed + skipped),

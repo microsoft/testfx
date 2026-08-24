@@ -127,6 +127,11 @@
         <target state="translated">Ungültiger Wert: „{0}“. Der Schwellenwert für langsame Tests muss eine positive Dauer aufweisen, z. B. „60“, „90 Sek.“ oder „2 Min.“.</target>
         <note>{Locked="s"}{Locked="m"}</note>
       </trans-unit>
+      <trans-unit id="InvalidStepSummaryValue">
+        <source>Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1'), 'off' (or 'false', 'disable', '0'), or 'on-failure'.</source>
+        <target state="new">Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1'), 'off' (or 'false', 'disable', '0'), or 'on-failure'.</target>
+        <note>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="'on-failure'"}{0} is the invalid value.</note>
+      </trans-unit>
       <trans-unit id="NoFailureMessageFallback">
         <source>The test failed without providing a failure message.</source>
         <target state="translated">Fehler beim Test ohne Angabe einer Fehlermeldung.</target>
@@ -168,9 +173,9 @@
         <note>{Locked="s"}{Locked="m"}{Locked="h"}</note>
       </trans-unit>
       <trans-unit id="StepSummaryOptionDescription">
-        <source>Enable or disable writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</source>
-        <target state="new">Enable or disable writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</target>
-        <note>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="GITHUB_STEP_SUMMARY"}</note>
+        <source>Control writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1'), 'off' (also accepts 'false', 'disable', '0'), or 'on-failure' to write only when the test invocation fails. Defaults to 'on' when running on GitHub Actions.</source>
+        <target state="new">Control writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1'), 'off' (also accepts 'false', 'disable', '0'), or 'on-failure' to write only when the test invocation fails. Defaults to 'on' when running on GitHub Actions.</target>
+        <note>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="'on-failure'"}{Locked="GITHUB_STEP_SUMMARY"}</note>
       </trans-unit>
       <trans-unit id="StepSummaryWriteFailedWarning">
         <source>Failed to write the GitHub Actions job summary to '{0}': {1}</source>

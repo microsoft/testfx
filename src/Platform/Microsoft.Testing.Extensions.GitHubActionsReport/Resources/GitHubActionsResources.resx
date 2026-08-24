@@ -80,8 +80,8 @@
     <value>The test was skipped without providing a reason.</value>
   </data>
   <data name="StepSummaryOptionDescription" xml:space="preserve">
-    <value>Enable or disable writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</value>
-    <comment>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="GITHUB_STEP_SUMMARY"}</comment>
+    <value>Control writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1'), 'off' (also accepts 'false', 'disable', '0'), or 'on-failure' to write only when the test invocation fails. Defaults to 'on' when running on GitHub Actions.</value>
+    <comment>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="'on-failure'"}{Locked="GITHUB_STEP_SUMMARY"}</comment>
   </data>
   <data name="StepSummaryWriteFailedWarning" xml:space="preserve">
     <value>Failed to write the GitHub Actions job summary to '{0}': {1}</value>
@@ -121,6 +121,10 @@
   <data name="InvalidOnOffValue" xml:space="preserve">
     <value>Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</value>
     <comment>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</comment>
+  </data>
+  <data name="InvalidStepSummaryValue" xml:space="preserve">
+    <value>Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1'), 'off' (or 'false', 'disable', '0'), or 'on-failure'.</value>
+    <comment>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="'on-failure'"}{0} is the invalid value.</comment>
   </data>
   <data name="SubOptionsRequireReportGh" xml:space="preserve">
     <value>The GitHub Actions report sub-options require '--{0}' to be specified.</value>
