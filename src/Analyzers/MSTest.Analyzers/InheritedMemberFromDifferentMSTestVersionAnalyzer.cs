@@ -80,7 +80,7 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
     private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol? taskSymbol, INamedTypeSymbol? valueTaskSymbol, bool canDiscoverInternals)
     {
         var classSymbol = (INamedTypeSymbol)context.Symbol;
-        IAssemblySymbol? referenceAssembly = GetFrameworkAssembly(classSymbol);
+        IAssemblySymbol? referenceAssembly = GetFrameworkAssembly(context.Compilation, classSymbol);
 
         // A test class the adapter cannot discover never runs, so no inherited member can run for it: abstract and
         // generic types are rejected — including a concrete class nested in a generic container, which cannot be
@@ -190,25 +190,31 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
         return false;
     }
 
-    private static IAssemblySymbol? GetFrameworkAssembly(INamedTypeSymbol classSymbol)
+    private static IAssemblySymbol? GetFrameworkAssembly(Compilation compilation, INamedTypeSymbol classSymbol)
     {
-        IAssemblySymbol? legacyFramework = null;
+        IAssemblySymbol? fallback = null;
         foreach (IAssemblySymbol assembly in classSymbol.GetAttributes()
             .Select(attribute => GetCanonicalMSTestAttribute(attribute.AttributeClass))
             .OfType<INamedTypeSymbol>()
             .Where(canonicalAttribute => string.Equals(canonicalAttribute.Name, TestClassAttributeName, StringComparison.Ordinal))
             .Select(canonicalAttribute => canonicalAttribute.ContainingAssembly))
         {
-            if (string.Equals(assembly.Name, CurrentFrameworkAssemblyName, StringComparison.Ordinal))
+            if (IsGloballyVisibleReference(compilation, assembly))
             {
                 return assembly;
             }
 
-            legacyFramework ??= assembly;
+            fallback ??= assembly;
         }
 
-        return legacyFramework;
+        return fallback;
     }
+
+    private static bool IsGloballyVisibleReference(Compilation compilation, IAssemblySymbol assembly)
+        => compilation.References.Any(reference =>
+            SymbolEqualityComparer.Default.Equals(compilation.GetAssemblyOrModuleSymbol(reference), assembly)
+            && (reference.Properties.Aliases.IsDefaultOrEmpty
+                || reference.Properties.Aliases.Contains("global", StringComparer.Ordinal)));
 
     // Walks the applied attribute's base chain and returns the first ancestor that is a well-known MSTest attribute
     // (TestClass or one of the inheritance-sensitive lifecycle/test attributes).

@@ -25,6 +25,7 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
     // v3 exposes its lifecycle/test attributes under a different type identity. This constant names the simulated v3
     // framework assembly; a base library that defines its own MSTest attributes there behaves like a v3-compiled base.
     private const string LegacyFrameworkAssemblyName = "Microsoft.VisualStudio.TestPlatform.TestFramework";
+    private const string CurrentFrameworkAssemblyName = "MSTest.TestFramework";
 
     [TestMethod]
     public async Task WhenInheritedTestInitializeComesFromDifferentFrameworkAssembly_Diagnostic()
@@ -2834,6 +2835,50 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenCurrentTestClassAttributeIsAliasedInLegacyProject_Diagnostic()
+    {
+        string baseLibraryCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                public abstract class TestBase
+                {
+                    [TestInitialize]
+                    public void BaseInitialize() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            extern alias current;
+
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                [current::Microsoft.VisualStudio.TestTools.UnitTesting.TestClass]
+                public class {|#0:SampleTests|} : TestBase
+                {
+                    [TestMethod]
+                    public void MyTest() { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddAliasedCurrentFrameworkBaseLibrary(test, baseLibraryCode);
+
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(InheritedMemberFromDifferentMSTestVersionAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("BaseInitialize", "TestBase", "TestInitialize", CurrentFrameworkAssemblyName));
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
     public async Task WhenLegacyFrameworkIsAliasedAndTestContextPropertyIsInvalid_NoDiagnostic()
     {
         string baseLibraryCode = """
@@ -2994,6 +3039,25 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
         test.TestState.AdditionalReferences.Add(
             legacyFramework.WithProperties(legacyFramework.Properties.WithAliases(["legacy"])));
         test.TestState.AdditionalReferences.Add(baseLibrary);
+    }
+
+    private static void AddAliasedCurrentFrameworkBaseLibrary(VerifyCS.Test test, string baseLibraryCode)
+    {
+        MetadataReference currentFramework = MetadataReference.CreateFromFile(typeof(ParallelizeAttribute).Assembly.Location);
+        MetadataReference legacyFramework = EmitAssembly(LegacyFrameworkAssemblyName, LegacyFrameworkSource);
+        MetadataReference baseLibrary = EmitAssembly("BaseLibrary", baseLibraryCode, currentFramework);
+
+        test.TestState.AdditionalReferences.Add(legacyFramework);
+        test.TestState.AdditionalReferences.Add(baseLibrary);
+        test.SolutionTransforms.Add((solution, projectId) =>
+        {
+            Project project = solution.GetProject(projectId)!;
+            IEnumerable<MetadataReference> references = project.MetadataReferences.Select(reference =>
+                string.Equals(Path.GetFileName(reference.Display), "MSTest.TestFramework.dll", StringComparison.OrdinalIgnoreCase)
+                    ? reference.WithProperties(reference.Properties.WithAliases(["current"]))
+                    : reference);
+            return project.WithMetadataReferences(references).Solution;
+        });
     }
 
     private static void AddSeparateCustomAttributeBaseProjects(
