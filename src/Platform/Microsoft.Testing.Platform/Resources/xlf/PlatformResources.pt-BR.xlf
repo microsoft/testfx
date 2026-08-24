@@ -716,8 +716,8 @@ Observe que isso está diminuindo a execução do teste.</target>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
 The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</source>
-        <target state="needs-review-translation">Habilite o registro de diagnóstico. O nível de log padrão é 'Trace'.
-O arquivo será gravado no diretório de saída com o nome log_[yyMMddHHmmssfff].diag</target>
+        <target state="new">Enable the diagnostic logging. The default log level is 'Trace'.
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</target>
         <note>{Locked="Trace"}{Locked="log_[yyMMddHHmmssfff].diag"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -739,7 +739,7 @@ Se não for especificado, o arquivo será gerado dentro do diretório padrão �
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
         <source>Replace '[log]_.' with the specified log file name prefix.</source>
-        <target state="needs-review-translation">Prefixo do nome do arquivo de log que substituirá '[log]_.'</target>
+        <target state="new">Replace '[log]_.' with the specified log file name prefix.</target>
         <note>{Locked="[log]_."}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
@@ -921,7 +921,7 @@ Para obter mais informações sobre os códigos de saída, veja https://learn.mi
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDescription">
         <source>Microsoft Testing Platform command line provider.</source>
-        <target state="needs-review-translation">Provedor de linha de comando da Plataforma de Teste da Microsoft</target>
+        <target state="new">Microsoft Testing Platform command line provider.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDisplayName">
@@ -950,7 +950,7 @@ O padrão é TestResults no diretório que contém o aplicativo de teste.</targe
       </trans-unit>
       <trans-unit id="PlatformCommandLineSkipBuildersNumberCheckOptionDescription">
         <source>For testing purposes.</source>
-        <target state="needs-review-translation">Para fins de teste</target>
+        <target state="new">For testing purposes.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTestHostControllerPIDOptionDescription">
