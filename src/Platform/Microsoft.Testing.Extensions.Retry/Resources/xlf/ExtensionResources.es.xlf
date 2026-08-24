@@ -25,11 +25,13 @@
       <trans-unit id="RetryArtifactPostProcessorFailed">
         <source>Retry artifact post-processor '{0}' failed: {1}</source>
         <target state="new">Retry artifact post-processor '{0}' failed: {1}</target>
+        <target state="translated">Error al reintentar el procesador posterior al artefacto "{0}": {1}</target>
         <note>{0} is the processor UID. {1} is the exception message.</note>
       </trans-unit>
       <trans-unit id="RetryArtifactsPublished">
         <source>Retry: published {0} result file(s) to '{1}'</source>
         <target state="new">Retry: published {0} result file(s) to '{1}'</target>
+        <target state="translated">Reintentar: archivos de resultados publicados {0} en "{1}"</target>
         <note>{0} is the number of files published. {1} is the destination result directory.</note>
       </trans-unit>
       <trans-unit id="RetryAttemptFailedWillRetry">

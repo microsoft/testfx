@@ -4,27 +4,27 @@
     <body>
       <trans-unit id="HtmlArtifactPostProcessorDescription">
         <source>Merges HTML reports produced by Microsoft.Testing.Extensions.HtmlReport</source>
-        <target state="new">Merges HTML reports produced by Microsoft.Testing.Extensions.HtmlReport</target>
+        <target state="translated">Combina informes HTML generados por Microsoft.Testing.Extensions.HtmlReport</target>
         <note>Do not localize format name {Locked="HTML"} or assembly name {Locked="Microsoft.Testing.Extensions.HtmlReport"}.</note>
       </trans-unit>
       <trans-unit id="HtmlArtifactPostProcessorDisplayName">
         <source>HTML report merger</source>
-        <target state="new">HTML report merger</target>
+        <target state="translated">Fusión de informes HTML</target>
         <note>Do not localize format name {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlMergedArtifactDescription">
         <source>{0} HTML report files merged</source>
-        <target state="new">{0} HTML report files merged</target>
+        <target state="translated">{0} Archivos de informe HTML combinados</target>
         <note>{0} is the number of merged files. Do not localize format name {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlMergedArtifactDisplayName">
         <source>HTML report (merged)</source>
-        <target state="new">HTML report (merged)</target>
+        <target state="translated">Informe HTML (combinado)</target>
         <note>Do not localize format name {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlMergedReportName">
         <source>Merged HTML report</source>
-        <target state="new">Merged HTML report</target>
+        <target state="translated">Informe HTML combinado</target>
         <note>Do not localize format name {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportArtifactDescription">
@@ -83,7 +83,7 @@ Ejemplo: MyReport_{tfm}.html</target>
       </trans-unit>
       <trans-unit id="HtmlReportInputIsNotValid">
         <source>The input is not a valid HTML report produced by Microsoft.Testing.Extensions.HtmlReport.</source>
-        <target state="new">The input is not a valid HTML report produced by Microsoft.Testing.Extensions.HtmlReport.</target>
+        <target state="translated">La entrada no es un informe HTML válido generado por Microsoft.Testing.Extensions.HtmlReport.</target>
         <note>Do not localize format name {Locked="HTML"} or assembly name {Locked="Microsoft.Testing.Extensions.HtmlReport"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportIsNotValidForDiscovery">
@@ -98,7 +98,7 @@ Ejemplo: MyReport_{tfm}.html</target>
       </trans-unit>
       <trans-unit id="HtmlReportsRequired">
         <source>At least one HTML report is required to merge.</source>
-        <target state="new">At least one HTML report is required to merge.</target>
+        <target state="translated">Se requiere al menos un informe HTML para la combinación.</target>
         <note>Do not localize format name {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="InvalidTestApplicationBuilderType">
