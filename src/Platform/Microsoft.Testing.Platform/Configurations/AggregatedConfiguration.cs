@@ -68,12 +68,9 @@ internal sealed class AggregatedConfiguration(
 
         AddChildKeys(ConfigurationProviderHelpers.GetChildKeys(ComputedConfigurationKeys, parentPath));
 
-        foreach (IConfigurationProvider provider in _configurationProviders)
+        foreach (IHierarchicalConfigurationProvider hierarchicalProvider in _configurationProviders.OfType<IHierarchicalConfigurationProvider>())
         {
-            if (provider is IHierarchicalConfigurationProvider hierarchicalProvider)
-            {
-                AddChildKeys(hierarchicalProvider.GetChildKeys(parentPath));
-            }
+            AddChildKeys(hierarchicalProvider.GetChildKeys(parentPath));
         }
 
         childKeys.Sort(ConfigurationKeyComparer.Instance);
@@ -103,11 +100,11 @@ internal sealed class AggregatedConfiguration(
 
     internal bool TryGetSectionValue(string key, out string? value)
     {
-        if (key is PlatformConfigurationConstants.PlatformResultDirectory
-            or PlatformConfigurationConstants.PlatformCurrentWorkingDirectory
-            or PlatformConfigurationConstants.PlatformTestHostWorkingDirectory)
+        string? computedKey = ComputedConfigurationKeys.FirstOrDefault(
+            computedKey => string.Equals(computedKey, key, StringComparison.OrdinalIgnoreCase));
+        if (computedKey is not null)
         {
-            value = this[key];
+            value = this[computedKey];
             return true;
         }
 

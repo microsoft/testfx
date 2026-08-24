@@ -11,12 +11,12 @@ public interface IConfigurationRoot : IConfiguration
     /// <summary>
     /// Gets the configuration section at the specified path.
     /// </summary>
-    /// <param name="key">The section path relative to the configuration root.</param>
+    /// <param name="key">The section path relative to the current configuration root or section.</param>
     /// <returns>The requested configuration section.</returns>
     IConfigurationSection GetSection(string key);
 
     /// <summary>
-    /// Gets the immediate child sections of the configuration root.
+    /// Gets the immediate child sections of the current configuration root or section.
     /// </summary>
     /// <remarks>
     /// Configuration providers must implement <see cref="IHierarchicalConfigurationProvider"/> for their keys

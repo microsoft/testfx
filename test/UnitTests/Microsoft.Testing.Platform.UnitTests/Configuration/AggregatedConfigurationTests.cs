@@ -313,6 +313,23 @@ public sealed class AggregatedConfigurationTests
     }
 
     [TestMethod]
+    public void GetSection_ComputedPlatformConfigurationIsCaseInsensitive()
+    {
+        _testApplicationModuleInfoMock.Setup(x => x.GetCurrentTestApplicationDirectory()).Returns("TestAppDir");
+        AggregatedConfiguration configuration = new(
+            [],
+            _testApplicationModuleInfoMock.Object,
+            _fileSystemMock.Object,
+            _environmentMock.Object,
+            CommandLineParseResult.Empty);
+
+        IConfigurationSection resultDirectory = configuration.GetSection("PLATFORMOPTIONS:RESULTDIRECTORY");
+
+        Assert.IsTrue(resultDirectory.HasValue);
+        Assert.AreEqual(Path.Combine("TestAppDir", "TestResults"), resultDirectory.Value);
+    }
+
+    [TestMethod]
     public void GetSection_LegacyProviderValueRemainsAddressableWithoutEnumeration()
     {
         ScalarOnlyConfigurationProvider provider = new("custom:value", "from legacy provider");
