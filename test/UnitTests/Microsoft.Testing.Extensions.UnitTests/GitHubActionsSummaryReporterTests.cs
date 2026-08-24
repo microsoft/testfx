@@ -973,6 +973,48 @@ public sealed class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
+    public void BuildAggregateMarkdown_CondenseAllModules_StillStopsListing_WhenEvenVerdictLinesWouldOverflow()
+    {
+        // This rendering is the fallback the post-processor reaches *after* the full one was refused for size.
+        // If it rendered a verdict line per project without bound, a large enough run would have both renderings
+        // refused and contribute nothing at all — the outcome the stop-listing bound exists to prevent.
+        GitHubCiRunSummaryModule[] modules = Enumerable.Range(0, 6000).Select(i => new GitHubCiRunSummaryModule
+        {
+            AssemblyName = $"Contoso.Some.Reasonably.Long.Test.Assembly.Name{i}",
+            ModulePath = $"Tests{i}.dll",
+            TargetFramework = "net9.0",
+            Architecture = "x64",
+            SessionUid = $"session-{i}",
+            AttemptNumber = 1,
+            ExitCode = AtLeastOneTestFailedExitCode,
+            TotalTests = 5,
+            FailedTests = 5,
+        }).ToArray();
+
+        var aggregate = new GitHubCiRunSummaryAggregate(
+            modules,
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 30000,
+            passedTests: 0,
+            failedTests: 30000,
+            skippedTests: 0,
+            duration: TimeSpan.FromSeconds(10),
+            exitCode: AtLeastOneTestFailedExitCode,
+            hasAuthoritativeRunSummary: true,
+            isPartial: false);
+
+        GitHubActionsSummaryReporter.AggregateRenderResult result = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate, condenseAllModules: true);
+
+        int byteCount = Encoding.UTF8.GetByteCount(result.Markdown);
+        Assert.IsGreaterThan(0, result.UnlistedModules, "The fallback must stop listing, or it is unbounded.");
+        Assert.IsLessThan(
+            GitHubActionsFailureDetails.EffectiveStepSummaryLimit,
+            byteCount,
+            $"The condensed fallback renders {byteCount} bytes, which GitHub discards in full.");
+        Assert.Contains("further test project(s) are not listed", result.Markdown);
+    }
+
+    [TestMethod]
     public void BuildAggregateMarkdown_StaysUnderTheCap_WhenTheContentIsNonAscii()
     {
         // The cap GitHub enforces is on bytes, and this content is the non-ASCII-heavy kind: a UTF-16 char count

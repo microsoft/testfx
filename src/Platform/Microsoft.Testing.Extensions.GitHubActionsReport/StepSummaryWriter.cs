@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform;
@@ -91,14 +91,14 @@ internal sealed class StepSummaryWriter
     /// process appends alone, so contention can no longer occur; a failure that happens <em>during</em> the write
     /// (e.g. disk full) may already have appended a partial section, and retrying would re-append the full section
     /// on top of it and corrupt the summary. Such a mid-write failure is therefore propagated straight to the
-    /// caller's best-effort warning Path instead of being retried.
+    /// caller's best-effort warning path instead of being retried.
     /// </para>
     /// <para>
     /// <paramref name="maxTotalBytes"/> bounds the size the file may reach. It is checked here, under the lock and
     /// against the handle this process holds, rather than by the caller before the call: two sibling projects that
     /// each measured the file before acquiring the lock would both see the same length, both conclude they fit, and
     /// both append — landing over GitHub's cap, which discards the whole summary. The caller's pre-check remains a
-    /// cheap fast Path; this one is the decision.
+    /// cheap fast path; this one is the decision.
     /// </para>
     /// </remarks>
     /// <returns>
@@ -110,7 +110,7 @@ internal sealed class StepSummaryWriter
         CancellationToken cancellationToken,
         long maxTotalBytes = long.MaxValue)
     {
-        // Taken even for a plain append: the notice-hoisting Path replaces the whole file, and an append that
+        // Taken even for a plain append: the notice-hoisting path replaces the whole file, and an append that
         // slipped between its read and its swap would be silently overwritten.
         using IFileStream lockStream = await AcquireSummaryLockAsync(cancellationToken).ConfigureAwait(false);
         return await AppendCoreAsync(content, cancellationToken, maxTotalBytes).ConfigureAwait(false);
@@ -147,7 +147,7 @@ internal sealed class StepSummaryWriter
 
             // The exclusive append handle is acquired: from here on we append alone, so any failure is a genuine
             // write error (not contention) and must not be retried — a partial append followed by a full re-append
-            // would corrupt the summary. Let it propagate to the caller's best-effort warning Path.
+            // would corrupt the summary. Let it propagate to the caller's best-effort warning path.
             using (stream)
             {
                 // A stream that cannot report its length cannot be gated; that only happens in tests, and writing
@@ -184,7 +184,7 @@ internal sealed class StepSummaryWriter
     /// </para>
     /// <para>
     /// <paramref name="maxTotalBytes"/> is checked here rather than by the caller, for the same reason the plain
-    /// append Path checks it here: the file is measured while this process holds it, so a sibling cannot have
+    /// append path checks it here: the file is measured while this process holds it, so a sibling cannot have
     /// grown it since.
     /// </para>
     /// </remarks>
@@ -230,7 +230,7 @@ internal sealed class StepSummaryWriter
             catch (IOException) when (attempt < _maxAttempts)
             {
                 // Another test-host process currently holds the summary file. Back off briefly and retry, exactly
-                // as the plain append Path does, so this project's section is written intact once it is released.
+                // as the plain append path does, so this project's section is written intact once it is released.
                 await Task.Delay(_retryDelay, cancellationToken).ConfigureAwait(false);
                 continue;
             }
@@ -283,7 +283,7 @@ internal sealed class StepSummaryWriter
                 // content: everything earlier projects wrote only survives if the replacement completes.
                 // Truncating in place would leave the summary empty if the write were abandoned midway — on
                 // cancellation during session teardown, or a full disk — which is a worse outcome than the oversized
-                // summary this whole Path exists to avoid, and a silent one. Build the new content in a temporary
+                // summary this whole path exists to avoid, and a silent one. Build the new content in a temporary
                 // file and swap it in instead, so the summary is only ever replaced by a complete file.
                 //
                 // The exclusive handle has to be released before the swap, because a file that is open cannot be
@@ -447,7 +447,7 @@ internal sealed class StepSummaryWriter
         string section = $"{startMarker}\n{content.TrimEnd()}\n{endMarker}\n";
         // Keep one stable lock entry for the lifetime of the GitHub step. Deleting it after releasing the handle
         // would let a third writer create a new inode while a second writer still holds the unlinked old lock.
-        // This is the same lock the per-project Path takes, so the two writing modes serialize against each other.
+        // This is the same lock the per-project path takes, so the two writing modes serialize against each other.
         string lockPath = GetSummaryLockPath();
 
         for (int attempt = 1; ; attempt++)

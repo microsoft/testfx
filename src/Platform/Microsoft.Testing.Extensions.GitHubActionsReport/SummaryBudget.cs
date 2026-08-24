@@ -58,13 +58,15 @@ internal sealed class SummaryBudget
     /// Gets the shape the next test project may be rendered in, given everything consumed so far.
     /// </summary>
     /// <remarks>
-    /// This never returns <see cref="SummaryStage.NoDetails"/>: whether a given failure keeps its diagnostics is
-    /// decided one failure at a time by <see cref="TryReserveDetails(int)"/>, so that a project whose budget runs
-    /// out midway still expands what it could afford rather than dropping the lot.
+    /// <see cref="SummaryStage.NoDetails"/> reports that the detail allowance is spent while the file still has
+    /// room for a full section. Whether any <em>individual</em> failure keeps its diagnostics is still decided one
+    /// failure at a time by <see cref="TryReserveDetails(int)"/>, so a project whose allowance runs out midway
+    /// expands what it could afford rather than dropping the lot.
     /// </remarks>
     internal SummaryStage Stage
         => _consumedBytes >= GitHubActionsFailureDetails.StopListingLength ? SummaryStage.Unlisted
             : _consumedBytes >= GitHubActionsFailureDetails.CondenseLength ? SummaryStage.Condensed
+            : _detailBytesAvailable <= 0 && _detailBytesUngranted <= 0 ? SummaryStage.NoDetails
             : SummaryStage.Full;
 
     /// <summary>
@@ -135,6 +137,11 @@ internal sealed class SummaryBudget
     /// <remarks>
     /// All-or-nothing on purpose: a partially reserved detail block would be a half-written
     /// <c>&lt;details&gt;</c> element, which renders as broken markup rather than as a shortened report.
+    /// <para>
+    /// Only the allowance is drawn down here. The reserved bytes end up in the same builder the caller measures,
+    /// so charging them to the consumed total as well would count them twice and push the report past its
+    /// degradation thresholds at roughly half the real file size.
+    /// </para>
     /// </remarks>
     internal bool TryReserveDetails(int bytes)
     {
@@ -144,7 +151,6 @@ internal sealed class SummaryBudget
         }
 
         _detailBytesAvailable -= bytes;
-        _consumedBytes += bytes;
         return true;
     }
 }

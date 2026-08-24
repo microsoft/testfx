@@ -389,17 +389,6 @@ internal sealed partial class GitHubActionsSummaryReporter :
                 : 1;
 
     /// <summary>
-    /// Captures the diagnostics of a failing test — explanation/exception message, exception type, stack trace and
-    /// the source location — so the job summary can expand the failure beyond its name.
-    /// </summary>
-    /// <remarks>
-    /// The location is resolved the same way <see cref="GitHubActionsAnnotationReporter"/> resolves it: prefer the
-    /// exception's call site (it pinpoints the failing statement) and fall back to the location the test framework
-    /// reported for the test itself, so frameworks without a usable stack trace still get a location. Values are
-    /// clipped here rather than at render time so an enormous stack trace never reaches the aggregation fragment
-    /// written to disk.
-    /// </remarks>
-    /// <summary>
     /// Extracts the explanation and exception a failing state carries, or <see langword="null"/> for a state
     /// that is not a failure. Separate from <see cref="CaptureFailureDetails"/> so each state shape can be
     /// covered without standing up a whole reporter.
@@ -416,6 +405,17 @@ internal sealed partial class GitHubActionsSummaryReporter :
             _ => null,
         };
 
+    /// <summary>
+    /// Captures the diagnostics of a failing test — explanation/exception message, exception type, stack trace and
+    /// the source location — so the job summary can expand the failure beyond its name.
+    /// </summary>
+    /// <remarks>
+    /// The location is resolved the same way <see cref="GitHubActionsAnnotationReporter"/> resolves it: prefer the
+    /// exception's call site (it pinpoints the failing statement) and fall back to the location the test framework
+    /// reported for the test itself, so frameworks without a usable stack trace still get a location. Values are
+    /// clipped here rather than at render time so an enormous stack trace never reaches the aggregation fragment
+    /// written to disk.
+    /// </remarks>
     private TestFailureDetails? CaptureFailureDetails(TestNode testNode, TestNodeStateProperty? state)
     {
         (string? Explanation, Exception? Exception)? failure = TryGetFailureInfo(state);

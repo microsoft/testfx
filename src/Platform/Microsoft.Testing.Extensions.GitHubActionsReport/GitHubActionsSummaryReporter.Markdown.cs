@@ -228,7 +228,14 @@ internal sealed partial class GitHubActionsSummaryReporter
                 measuredChars = builder.Length;
             }
 
-            SummaryStage stage = condenseAllModules ? SummaryStage.Condensed : budget.Stage;
+            // The stop-listing bound applies even here: this is the fallback the post-processor reaches *after*
+            // the full rendering was refused for size, so if it too rendered a line per project without bound, a
+            // large enough run would have both renderings refused and contribute nothing at all.
+            SummaryStage stage = budget.Stage;
+            if (condenseAllModules && stage != SummaryStage.Unlisted)
+            {
+                stage = SummaryStage.Condensed;
+            }
 
             // Condensing bounds what a module costs, not how many of them there are: a run with thousands of test
             // projects overruns the cap on verdict lines alone. Past this point the listing stops entirely and the
