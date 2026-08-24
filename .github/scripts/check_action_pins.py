@@ -636,10 +636,28 @@ def audit_manifest_consistency(
 
     errors: list[str] = []
     for path, pins in manifest_pins.items():
-        for repo, expected_sha in pins.items():
+        references_by_repo = by_path_and_repo.get(path, {})
+        manifest_repos = set(pins)
+        reference_repos = set(references_by_repo)
+
+        for repo in sorted(manifest_repos - reference_repos):
+            errors.append(
+                f"{path.relative_to(REPO_ROOT).as_posix()}: `gh-aw-manifest` records `{repo}`, "
+                "but the generated workflow has no matching action reference."
+            )
+
+        for repo in sorted(reference_repos - manifest_repos):
+            locations = ", ".join(reference.location for reference in references_by_repo[repo][:3])
+            errors.append(
+                f"{path.relative_to(REPO_ROOT).as_posix()}: generated action `{repo}` is missing "
+                f"from `gh-aw-manifest`. References: {locations}."
+            )
+
+        for repo in sorted(manifest_repos & reference_repos):
+            expected_sha = pins[repo]
             mismatches = [
                 reference
-                for reference in by_path_and_repo[path].get(repo, [])
+                for reference in references_by_repo[repo]
                 if reference.ref != expected_sha
             ]
             if not mismatches:
@@ -684,8 +702,13 @@ def main(argv: list[str] | None = None) -> int:
         text = path.read_text(encoding="utf-8")
         file_manifest_pins, manifest_errors = collect_manifest_pins(path, text)
         file_references, file_errors = collect_references(path)
-        if file_manifest_pins:
+        has_manifest = any(MANIFEST_RE.match(line) for line in text.splitlines())
+        if has_manifest:
             manifest_pins[path] = file_manifest_pins
+        elif path.name.endswith(GENERATED_SUFFIX):
+            manifest_errors.append(
+                f"{path.relative_to(REPO_ROOT).as_posix()}: generated lock file has no `gh-aw-manifest` header."
+            )
         references.extend(file_references)
         structural_errors.extend(manifest_errors)
         structural_errors.extend(file_errors)
