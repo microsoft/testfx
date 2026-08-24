@@ -186,12 +186,12 @@ internal static class CiCoverageSummary
             .. coverageResult.Scopes.Where(scope =>
                 string.Equals(scope.SessionUid.Value, sessionUid.Value, StringComparison.Ordinal)),
         ];
-        HashSet<string> producersWithOverall =
+        HashSet<(string ProducerId, CoverageMetric Metric, string? CustomMetricName)> overallMetricKeys =
         [
             .. scopes
                 .Where(scope => scope.Scope.Level == CoverageScopeLevel.Overall)
                 .SelectMany(scope => scope.Metrics)
-                .Select(metric => metric.ProducerId),
+                .Select(metric => (metric.ProducerId, metric.Metric, metric.CustomMetricName)),
         ];
         CiCoverageMetric[] metrics =
         [
@@ -200,7 +200,7 @@ internal static class CiCoverageSummary
                 .SelectMany(scope => scope.Metrics
                     .Where(metric =>
                         scope.Scope.Level == CoverageScopeLevel.Overall
-                        || !producersWithOverall.Contains(metric.ProducerId))
+                        || !overallMetricKeys.Contains((metric.ProducerId, metric.Metric, metric.CustomMetricName)))
                     .Select(metric => new CiCoverageMetric
                     {
                         ScopeLevel = scope.Scope.Level,

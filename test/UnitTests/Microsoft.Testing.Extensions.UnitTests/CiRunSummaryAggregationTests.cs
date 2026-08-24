@@ -238,18 +238,22 @@ public sealed class CiRunSummaryAggregationTests
                 new CoverageScope(CoverageScopeLevel.Module, "A.dll"),
                 [
                     new CoverageMetricResult(CoverageMetric.Line, 40, 50, "producer-with-overall"),
-                    new CoverageMetricResult(CoverageMetric.Branch, 20, 25, "module-only-producer"),
+                    new CoverageMetricResult(CoverageMetric.Branch, 20, 25, "producer-with-overall"),
+                    new CoverageMetricResult(CoverageMetric.Statement, 30, 40, "module-only-producer"),
                 ]),
         ]);
         coverageResult.SetupGet(result => result.Thresholds).Returns([]);
 
         CiCoverageSummaryData summary = CiCoverageSummary.Create(coverageResult.Object, sessionUid);
 
-        Assert.HasCount(2, summary.Metrics);
+        Assert.HasCount(3, summary.Metrics);
         Assert.AreEqual(CoverageScopeLevel.Overall, summary.Metrics[0].ScopeLevel);
         Assert.AreEqual("producer-with-overall", summary.Metrics[0].ProducerId);
         Assert.AreEqual(CoverageScopeLevel.Module, summary.Metrics[1].ScopeLevel);
-        Assert.AreEqual("module-only-producer", summary.Metrics[1].ProducerId);
+        Assert.AreEqual(CoverageMetric.Branch, summary.Metrics[1].Metric);
+        Assert.AreEqual("producer-with-overall", summary.Metrics[1].ProducerId);
+        Assert.AreEqual(CoverageScopeLevel.Module, summary.Metrics[2].ScopeLevel);
+        Assert.AreEqual("module-only-producer", summary.Metrics[2].ProducerId);
     }
 
     [TestMethod]
