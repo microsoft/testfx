@@ -467,16 +467,16 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         {
             if (processTree.Count > 1)
             {
+                string processTreeDisplay = string.Join(
+                    Environment.NewLine,
+                    processTree
+                        .OrderBy(t => t.Level)
+                        .Select(p => $"{(p.Level != 0 ? " + " : " > ")}{new string('-', p.Level)} {p.Process!.Id} - {p.Process.Name}"));
                 await RunBestEffortDiagnosticAsync(
-                    () => _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(ExtensionResources.DumpingProcessTree), cancellationToken),
+                    () => _outputDisplay.DisplayAsync(
+                        new ErrorMessageOutputDeviceData($"{ExtensionResources.DumpingProcessTree}{Environment.NewLine}{processTreeDisplay}"),
+                        cancellationToken),
                     BestEffortDiagnosticsTimeout).ConfigureAwait(false);
-
-                foreach (ProcessTreeNode? p in processTree.OrderBy(t => t.Level))
-                {
-                    await RunBestEffortDiagnosticAsync(
-                        () => _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData($"{(p.Level != 0 ? " + " : " > ")}{new string('-', p.Level)} {p.Process!.Id} - {p.Process.Name}"), cancellationToken),
-                        BestEffortDiagnosticsTimeout).ConfigureAwait(false);
-                }
             }
             else
             {
@@ -711,11 +711,17 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
                 using (FileStream fs = File.OpenWrite(hangTestsFileName))
                 using (StreamWriter sw = new(fs))
                 {
-                    await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(ExtensionResources.RunningTestsWhileDumping), cancellationToken).ConfigureAwait(false);
+                    string inProgressTestsDisplay = string.Join(
+                        Environment.NewLine,
+                        inProgressTests.Select(test => $"[{TimeSpan.FromSeconds(test.Item2)}] {test.Item1}"));
+                    await RunBestEffortDiagnosticAsync(
+                        () => _outputDisplay.DisplayAsync(
+                            new ErrorMessageOutputDeviceData($"{ExtensionResources.RunningTestsWhileDumping}{Environment.NewLine}{inProgressTestsDisplay}"),
+                            cancellationToken),
+                        BestEffortDiagnosticsTimeout).ConfigureAwait(false);
                     foreach ((string testName, int seconds) in inProgressTests)
                     {
                         await sw.WriteLineAsync($"[{TimeSpan.FromSeconds(seconds)}] {testName}").ConfigureAwait(false);
-                        await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData($"[{TimeSpan.FromSeconds(seconds)}] {testName}"), cancellationToken).ConfigureAwait(false);
                     }
                 }
 
@@ -724,13 +730,19 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             catch (Exception ex)
             {
                 // Writing the list is a convenience; it must never block taking the dump and killing the tree.
-                await _logger.LogDebugAsync($"Could not write the in-progress tests next to the dump of process {process.Id}. Continuing with the dump. {ex}").ConfigureAwait(false);
+                await RunBestEffortDiagnosticAsync(
+                    () => _logger.LogDebugAsync($"Could not write the in-progress tests next to the dump of process {process.Id}. Continuing with the dump. {ex}"),
+                    BestEffortDiagnosticsTimeout).ConfigureAwait(false);
             }
         }
 
-        await _logger.LogInformationAsync($"Creating dump filename {finalDumpFileName}").ConfigureAwait(false);
+        await RunBestEffortDiagnosticAsync(
+            () => _logger.LogInformationAsync($"Creating dump filename {finalDumpFileName}"),
+            BestEffortDiagnosticsTimeout).ConfigureAwait(false);
 
-        await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.CreatingDumpFile, finalDumpFileName)), cancellationToken).ConfigureAwait(false);
+        await RunBestEffortDiagnosticAsync(
+            () => _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.CreatingDumpFile, finalDumpFileName)), cancellationToken),
+            BestEffortDiagnosticsTimeout).ConfigureAwait(false);
 
 #if NETCOREAPP
         DiagnosticsClient diagnosticsClient = new(process.Id);
