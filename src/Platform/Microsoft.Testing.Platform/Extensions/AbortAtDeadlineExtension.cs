@@ -339,16 +339,8 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
             return;
         }
 
-        // Diagnostics are best-effort and must never prevent the graceful stop below: MTP's logger
-        // and output device both propagate provider exceptions, so a failure here would otherwise
-        // skip the deadline handling entirely.
-        await TryReportAsync(
-            () => _logger.LogInformationAsync($"Deadline approaching (stop scheduled at {_stopAt:o}). Requesting graceful stop of test execution."),
-            "Failed to report the approaching deadline.").ConfigureAwait(false);
-
-        // Request the stop atomically against NotifyTestExecutionCompleted. Everything above -- the yield that
-        // got us off the timer callback, and the logging -- runs while the invoker may still return. Calling the
-        // capability under the lock means there is no claimed-but-not-requested window.
+        // Request the stop atomically against NotifyTestExecutionCompleted. Calling the capability under the
+        // lock means there is no claimed-but-not-requested window.
         Task<bool>? stopTask;
         try
         {
@@ -369,6 +361,12 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
                 "Failed to report the graceful-stop failure.").ConfigureAwait(false);
             return;
         }
+
+        // Diagnostics are best-effort and run only after the framework has received the stop request. A wedged
+        // logger therefore cannot consume the remaining deadline margin before graceful shutdown starts.
+        await TryReportAsync(
+            () => _logger.LogInformationAsync($"Deadline approaching (stop scheduled at {_stopAt:o}). Requesting graceful stop of test execution."),
+            "Failed to report the approaching deadline.").ConfigureAwait(false);
 
         bool stopAccepted = false;
         try

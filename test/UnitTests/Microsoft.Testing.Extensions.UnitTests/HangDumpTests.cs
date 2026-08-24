@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.Diagnostics;
+using Microsoft.Testing.Extensions.Diagnostics.Helpers;
 using Microsoft.Testing.Extensions.Diagnostics.Resources;
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
@@ -264,6 +265,34 @@ public sealed class HangDumpTests
 
         Assert.AreSame(diagnostic, completed);
         await diagnostic;
+    }
+
+    [TestMethod]
+    public async Task GetProcessTreeWithTimeout_WhenEnumerationNeverCompletes_FallsBackToRootProcess()
+    {
+        TaskCompletionSource<bool> neverCompletes = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        IProcess rootProcess = Mock.Of<IProcess>();
+
+        try
+        {
+            List<ProcessTreeNode> processTree = await HangDumpProcessLifetimeHandler.GetProcessTreeWithTimeoutAsync(
+                async _ =>
+                {
+                    await neverCompletes.Task;
+                    return [];
+                },
+                TimeSpan.FromMilliseconds(50),
+                _ => Task.CompletedTask,
+                rootProcess,
+                TestContext.CancellationToken);
+
+            Assert.HasCount(1, processTree);
+            Assert.AreSame(rootProcess, processTree[0].Process);
+        }
+        finally
+        {
+            neverCompletes.TrySetResult(true);
+        }
     }
 
     [TestMethod]

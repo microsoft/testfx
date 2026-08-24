@@ -463,19 +463,19 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
         using IProcess process = _processHandler.GetProcessById(_testHostProcessInformation.PID);
 
-        // Walking the tree writes diagnostics through the same logger and output device, so it can fail
-        // for the same reason. Fall back to the root test host process: dumping and killing at least that
-        // one is what unblocks the run.
-        List<ProcessTreeNode> processTree;
-        try
-        {
-            processTree = (await process.GetProcessTreeAsync(_logger, _outputDisplay, cancellationToken).ConfigureAwait(false)).Where(p => p.Process?.Name is not null and not "conhost" and not "WerFault").ToList();
-        }
-        catch (Exception e)
-        {
-            await LogBestEffortAsync("Could not enumerate the test host process tree. Falling back to the root test host process.", e).ConfigureAwait(false);
-            processTree = [new ProcessTreeNode { Process = process, Level = 0 }];
-        }
+        // Walking the tree writes diagnostics through the same logger and output device, so deadline-driven
+        // enumeration gets a short bound. Fall back to the root test host process: dumping and killing at least
+        // that one is what unblocks the run.
+        TimeSpan processTreeTimeout = triggeredByDeadline
+            ? BestEffortDiagnosticsTimeout
+            : TimeoutHelper.DefaultHangTimeSpanTimeout;
+        List<ProcessTreeNode> processTree = await GetProcessTreeWithTimeoutAsync(
+            token => process.GetProcessTreeAsync(_logger, _outputDisplay, token),
+            processTreeTimeout,
+            ex => _logger.LogErrorAsync("Could not enumerate the test host process tree. Falling back to the root test host process.", ex),
+            process,
+            cancellationToken).ConfigureAwait(false);
+        processTree = processTree.Where(p => p.Process?.Name is not null and not "conhost" and not "WerFault").ToList();
 
         IEnumerable<IProcess> bottomUpTree = processTree.OrderByDescending(t => t.Level).Select(t => t.Process).OfType<IProcess>();
 
@@ -562,16 +562,6 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         }
     }
 
-    /// <summary>
-    /// Reports a failure from a step that must never stop a dump from being taken or a wedged process
-    /// tree from being killed. Logging is itself best-effort here, because the failure being reported is
-    /// typically a logger or output device that is already throwing.
-    /// </summary>
-    private async Task LogBestEffortAsync(string message, Exception exception)
-        => await RunBestEffortDiagnosticAsync(
-            () => _logger.LogErrorAsync(message, exception),
-            BestEffortDiagnosticsTimeout).ConfigureAwait(false);
-
     internal static async Task RunBestEffortDiagnosticAsync(Func<Task> diagnosticAsync, TimeSpan timeout)
     {
         try
@@ -581,6 +571,31 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         catch (Exception)
         {
             // Diagnostics must never prevent the dump or the process-tree kill.
+        }
+    }
+
+    internal static async Task<List<ProcessTreeNode>> GetProcessTreeWithTimeoutAsync(
+        Func<CancellationToken, Task<List<ProcessTreeNode>>> getProcessTreeAsync,
+        TimeSpan timeout,
+        Func<Exception, Task> logFailureAsync,
+        IProcess rootProcess,
+        CancellationToken cancellationToken)
+    {
+        using var timeoutCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeoutCancellationTokenSource.CancelAfter(timeout);
+
+        try
+        {
+            Task<List<ProcessTreeNode>> processTreeTask = getProcessTreeAsync(timeoutCancellationTokenSource.Token);
+            await processTreeTask.TimeoutAfterAsync(timeout, cancellationToken).ConfigureAwait(false);
+            return await processTreeTask.ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            await RunBestEffortDiagnosticAsync(
+                () => logFailureAsync(ex),
+                BestEffortDiagnosticsTimeout).ConfigureAwait(false);
+            return [new ProcessTreeNode { Process = rootProcess, Level = 0 }];
         }
     }
 

@@ -163,53 +163,47 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
     }
 
     [TestMethod]
-    public async Task WhenTestExecutionCompletesWhileTheDeadlineIsBeingReported_TheVerdictIsNotCommitted()
+    public async Task WhenTheApproachingDeadlineLogNeverCompletes_TheGracefulStopIsRequestedFirst()
     {
-        // The overlap the checks above cannot catch. The handler does not run on the timer callback: it yields
-        // and then reports, and the test framework invoker can return during exactly that window. Checking
-        // completion only before starting the handler would therefore still let the deadline commit its
-        // verdict and request a stop for a run in which every test had already finished (exit code 15 on a
-        // complete run). Gate the handler inside its reporting to make that window deterministic.
         TaskCompletionSource<bool> reporting = new(TaskCreationOptions.RunContinuationsAsynchronously);
         TaskCompletionSource<bool> release = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        TaskCompletionSource<bool> abandoned = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> stopped = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        _capability
+            .Setup(x => x.TryStopTestExecutionAsync(It.IsAny<CancellationToken>()))
+            .Returns(() =>
+            {
+                stopped.TrySetResult(true);
+                return Task.FromResult(true);
+            });
 
         using AbortAtDeadlineExtension extension = CreateExtension(
             deadlineIn: TimeSpan.Zero,
             onLog: async logLevel =>
             {
-                switch (logLevel)
+                if (logLevel == LogLevel.Information)
                 {
-                    // "Deadline approaching ...", written before the verdict is committed.
-                    case LogLevel.Information:
-                        reporting.TrySetResult(true);
-                        await release.Task;
-                        break;
-
-                    // "... abandoning the graceful stop.", the only thing the handler does once it sees that
-                    // test execution won the race.
-                    case LogLevel.Debug:
-                        abandoned.TrySetResult(true);
-                        break;
+                    reporting.TrySetResult(true);
+                    await release.Task;
                 }
             });
 
-        // Park the handler mid-report, then let the invoker return underneath it.
-        await WaitForAsync(reporting.Task);
-        extension.NotifyTestExecutionCompleted();
-        release.SetResult(true);
-
-        await WaitForAsync(abandoned.Task);
-        _policiesService.Verify(x => x.ExecuteDeadlineCallbacksAsync(), Times.Never);
-        _capability.Verify(x => x.TryStopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Never);
+        try
+        {
+            await WaitForAsync(reporting.Task);
+            await WaitForAsync(stopped.Task);
+            _capability.Verify(x => x.TryStopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            release.TrySetResult(true);
+        }
     }
 
     [TestMethod]
     public async Task WhenTestExecutionCompletesAfterTheDeadlineClaimedTheRun_TheVerdictStands()
     {
-        // The mirror image of the test above, and the reason completion cannot simply revert the verdict: the
-        // graceful stop is what makes execution finish, so the completion that follows a claimed deadline is
-        // the stop taking effect, not a run that got there on its own.
+        // Completion cannot simply revert the verdict: the graceful stop is what makes execution finish, so
+        // completion after a claimed deadline is the stop taking effect, not a run that got there on its own.
         TaskCompletionSource<bool> stopping = new(TaskCreationOptions.RunContinuationsAsynchronously);
         TaskCompletionSource<bool> release = new(TaskCreationOptions.RunContinuationsAsynchronously);
         _capability
@@ -291,7 +285,16 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
         await WaitForAsync(stopped.Task);
         _capability.Verify(x => x.TryStopTestExecutionAsync(It.IsAny<CancellationToken>()), Times.Once);
 
-        neverCompletes.SetResult(true);
+        Task handling = extension.WaitForDeadlineHandlingAsync();
+        try
+        {
+            await WaitForAsync(handling);
+            Assert.IsFalse(neverCompletes.Task.IsCompleted);
+        }
+        finally
+        {
+            neverCompletes.TrySetResult(true);
+        }
     }
 
     private async Task WaitForAsync(Task task)
