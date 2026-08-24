@@ -1015,6 +1015,58 @@ public sealed class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
+    public void BuildAggregateMarkdown_AccountsForWhatTheSharedFileAlreadyHolds()
+    {
+        // The rendering is appended to a file other steps also write to, and it is that file GitHub measures.
+        // A budget that only bounded this section's own size would let a job whose earlier steps already wrote
+        // several hundred kilobytes produce a section that is refused — including the condensed fallback, which
+        // would leave the run contributing nothing at all.
+        GitHubCiRunSummaryModule[] modules = Enumerable.Range(0, 400).Select(i => new GitHubCiRunSummaryModule
+        {
+            AssemblyName = $"Contoso.Some.Reasonably.Long.Test.Assembly.Name{i}",
+            ModulePath = $"Tests{i}.dll",
+            TargetFramework = "net9.0",
+            Architecture = "x64",
+            SessionUid = $"session-{i}",
+            AttemptNumber = 1,
+            ExitCode = AtLeastOneTestFailedExitCode,
+            TotalTests = 5,
+            FailedTests = 5,
+        }).ToArray();
+
+        var aggregate = new GitHubCiRunSummaryAggregate(
+            modules,
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: 2000,
+            passedTests: 0,
+            failedTests: 2000,
+            skippedTests: 0,
+            duration: TimeSpan.FromSeconds(10),
+            exitCode: AtLeastOneTestFailedExitCode,
+            hasAuthoritativeRunSummary: true,
+            isPartial: false);
+
+        GitHubActionsSummaryReporter.AggregateRenderResult onEmptyFile = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate);
+        GitHubActionsSummaryReporter.AggregateRenderResult onFullFile = GitHubActionsSummaryReporter.BuildAggregateMarkdown(
+            aggregate,
+            includeFailureDetails: true,
+            condenseAllModules: false,
+            alreadyWrittenBytes: GitHubActionsFailureDetails.StopListingLength);
+
+        // Same run, but appended to a nearly-full file: the rendering must shrink rather than ignore the file.
+        Assert.AreEqual(0, onEmptyFile.UnlistedModules);
+        Assert.IsGreaterThan(0, onFullFile.UnlistedModules);
+        Assert.IsLessThan(
+            Encoding.UTF8.GetByteCount(onEmptyFile.Markdown),
+            Encoding.UTF8.GetByteCount(onFullFile.Markdown));
+
+        // And the whole file — what is already there plus what we add — stays under the cap.
+        Assert.IsLessThan(
+            GitHubActionsFailureDetails.EffectiveStepSummaryLimit,
+            GitHubActionsFailureDetails.StopListingLength + Encoding.UTF8.GetByteCount(onFullFile.Markdown));
+    }
+
+    [TestMethod]
     public void BuildAggregateMarkdown_StaysUnderTheCap_WhenTheContentIsNonAscii()
     {
         // The cap GitHub enforces is on bytes, and this content is the non-ASCII-heavy kind: a UTF-16 char count

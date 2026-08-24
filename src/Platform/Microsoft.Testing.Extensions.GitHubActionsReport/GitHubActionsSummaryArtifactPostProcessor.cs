@@ -64,8 +64,24 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
 
         CiRunSummaryAggregate aggregate = CiRunSummaryAggregation.ReadAndAggregate(inputs, Provider, context);
         string aggregationId = CiRunSummaryAggregation.CreateAggregationId(inputs);
-        GitHubActionsSummaryReporter.AggregateRenderResult rendered = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate, _includeFailureDetails);
         string outputPath = CiRunSummaryAggregation.GetMergedOutputPath(outputDirectory, ProviderSlug, aggregationId);
+        string? stepSummaryPath = environment.GetEnvironmentVariable(StepSummaryEnvironmentVariable);
+        ILogger logger = loggerFactory.CreateLogger<GitHubActionsSummaryArtifactPostProcessor>();
+        StepSummaryWriter? writer = RoslynString.IsNullOrWhiteSpace(stepSummaryPath)
+            ? null
+            : new StepSummaryWriter(fileSystem, stepSummaryPath!, logger, StepSummaryMaxWriteAttempts, StepSummaryRetryDelay);
+
+        // Bounding this rendering against its own size alone would be useless: it is appended to a file other
+        // steps also write to, and it is that file GitHub measures. Seeding the budget with what is already there
+        // is what makes the degradation actually bound the artifact GitHub sees.
+        long alreadyWritten = writer?.GetSummaryLength() ?? 0;
+
+        GitHubActionsSummaryReporter.AggregateRenderResult rendered = GitHubActionsSummaryReporter.BuildAggregateMarkdown(
+            aggregate,
+            _includeFailureDetails,
+            condenseAllModules: false,
+            alreadyWritten);
+
         await CiRunSummaryAggregation.WriteOutputAsync(outputPath, rendered.Markdown).ConfigureAwait(false);
 
         // Losing whole project sections is a different loss from losing their diagnostics, so say whichever
@@ -76,12 +92,8 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
                 ? GitHubActionsSummaryReporter.BuildAggregateTruncationNotice(rendered.ModulesWithOmittedDetails, aggregate.Modules.Count)
                 : null;
 
-        string? stepSummaryPath = environment.GetEnvironmentVariable(StepSummaryEnvironmentVariable);
-        if (!RoslynString.IsNullOrWhiteSpace(stepSummaryPath))
+        if (writer is not null)
         {
-            ILogger logger = loggerFactory.CreateLogger<GitHubActionsSummaryArtifactPostProcessor>();
-            var writer = new StepSummaryWriter(fileSystem, stepSummaryPath!, logger, StepSummaryMaxWriteAttempts, StepSummaryRetryDelay);
-
             // The step summary is shared with every other step in the job, so the rendered file can exceed
             // GitHub's cap even though this section was budgeted. The writer refuses rather than replacing the
             // file with one GitHub would discard in full; fall back to a verdict line per test project, which is
@@ -97,7 +109,8 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
                 GitHubActionsSummaryReporter.AggregateRenderResult condensed = GitHubActionsSummaryReporter.BuildAggregateMarkdown(
                     aggregate,
                     includeFailureDetails: false,
-                    condenseAllModules: true);
+                    condenseAllModules: true,
+                    alreadyWritten);
 
                 if (!await writer.UpsertStepSummaryWithRetryAsync(
                     aggregationId,

@@ -164,10 +164,17 @@ internal sealed partial class GitHubActionsSummaryReporter
     /// Renders every test project as a one-line verdict regardless of the budget. This is the fallback when the
     /// full rendering was refused for being too large.
     /// </param>
+    /// <param name="alreadyWrittenBytes">
+    /// What the shared <c>GITHUB_STEP_SUMMARY</c> file already holds. The rendering's own bounds are useless
+    /// without it: they would stop this section at its share of the cap while the file it is appended to is
+    /// measured against the whole cap, so a job whose other steps already wrote a few hundred kilobytes would
+    /// have every rendering refused, including the fallback, and contribute nothing at all.
+    /// </param>
     internal static AggregateRenderResult BuildAggregateMarkdown(
         CiRunSummaryAggregate aggregate,
         bool includeFailureDetails = true,
-        bool condenseAllModules = false)
+        bool condenseAllModules = false,
+        long alreadyWrittenBytes = 0)
     {
         bool failed = aggregate.ExitCode is int exitCode
             ? GitHubActionsExitCode.IndicatesFailure(exitCode)
@@ -215,7 +222,7 @@ internal sealed partial class GitHubActionsSummaryReporter
         // so the loop stays linear.
         int moduleCount = aggregate.Modules.Count;
         int measuredChars = builder.Length;
-        var budget = SummaryBudget.ForAggregate(Encoding.UTF8.GetByteCount(builder.ToString()), moduleCount);
+        var budget = SummaryBudget.ForAggregate(alreadyWrittenBytes + Encoding.UTF8.GetByteCount(builder.ToString()), moduleCount);
         int modulesWithOmittedDetails = 0;
         int condensedModules = 0;
         int listedModules = 0;

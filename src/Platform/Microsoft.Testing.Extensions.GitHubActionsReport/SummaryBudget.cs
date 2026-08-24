@@ -98,7 +98,8 @@ internal sealed class SummaryBudget
 
     /// <summary>
     /// Creates the budget for a combined <c>dotnet test</c> rendering covering <paramref name="moduleCount"/>
-    /// test projects, having already rendered <paramref name="headerBytes"/> of run-level preamble.
+    /// test projects, with <paramref name="consumedBytes"/> already accounted for — whatever the shared file
+    /// holds plus this rendering's own run-level preamble.
     /// </summary>
     /// <remarks>
     /// The detail allowance is divided across the modules rather than granted to each, because the cap applies to
@@ -107,11 +108,11 @@ internal sealed class SummaryBudget
     /// <em>plus</em> the overhead. Nothing is available until <see cref="GrantModuleShare(int)"/> hands out a
     /// share, which is what stops an early module with many large failures starving the rest.
     /// </remarks>
-    internal static SummaryBudget ForAggregate(long headerBytes, int moduleCount)
+    internal static SummaryBudget ForAggregate(long consumedBytes, int moduleCount)
         => new(
-            headerBytes,
+            consumedBytes,
             detailBytesAvailable: 0,
-            GitHubActionsFailureDetails.DetailBudgetLength - ((long)Math.Max(1, moduleCount) * GitHubActionsFailureDetails.ProjectOverheadReserve));
+            GitHubActionsFailureDetails.DetailBudgetLength - consumedBytes - ((long)Math.Max(1, moduleCount) * GitHubActionsFailureDetails.ProjectOverheadReserve));
 
     /// <summary>
     /// Makes one module's share of the detail allowance available to spend, keeping whatever earlier modules
