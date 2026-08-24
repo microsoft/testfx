@@ -295,9 +295,8 @@ If the capability is missing/or false the server should assume that the client w
 lazy locations and send the full location.
 
 > [!NOTE]
-> Discovery/Run requests, as well as TestNode format specified in the initial release of the protocol
-> should be supported by all clients/servers.
-> As such, they're not expressed via capabilities.
+> The TestNode format specified in the initial release of the protocol should be supported by all
+> clients and servers. As such, it is not expressed via capabilities.
 
 ## Discovery and run requests
 
