@@ -725,8 +725,8 @@ Note that this is slowing down the test execution.</source>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</source>
-        <target state="translated">Включить ведение журнала диагностики. Уровень журнала по умолчанию — "Trace".
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</source>
+        <target state="needs-review-translation">Включить ведение журнала диагностики. Уровень журнала по умолчанию — "Trace".
 Файл с именем log_[yyMMddHHmmssfff].diag будет записан в выходной каталог</target>
         <note>{Locked="Trace"}{Locked="log_[yyMMddHHmmssfff].diag"}</note>
       </trans-unit>
@@ -748,8 +748,8 @@ If not specified the file will be generated inside the default 'TestResults' dir
         <note>{Locked="TestResults"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
-        <source>Prefix for the log file name that will replace '[log]_.'</source>
-        <target state="translated">Префикс для имени файла журнала, который заменит "[log]_."</target>
+        <source>Replace '[log]_.' with the specified log file name prefix.</source>
+        <target state="needs-review-translation">Префикс для имени файла журнала, который заменит "[log]_."</target>
         <note>{Locked="[log]_."}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
@@ -930,8 +930,8 @@ For more information about exit codes, see https://learn.microsoft.com/dotnet/co
         <note>{0} is the option name without the leading dashes.</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDescription">
-        <source>Microsoft Testing Platform command line provider</source>
-        <target state="translated">Поставщик командной строки платформы тестирования Майкрософт</target>
+        <source>Microsoft Testing Platform command line provider.</source>
+        <target state="needs-review-translation">Поставщик командной строки платформы тестирования Майкрософт</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDisplayName">
@@ -959,8 +959,8 @@ The default is TestResults in the directory that contains the test application.<
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineSkipBuildersNumberCheckOptionDescription">
-        <source>For testing purposes</source>
-        <target state="translated">Для тестирования</target>
+        <source>For testing purposes.</source>
+        <target state="needs-review-translation">Для тестирования</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTestHostControllerPIDOptionDescription">

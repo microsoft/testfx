@@ -6,12 +6,16 @@ extern alias ghactions;
 using ghactions::Microsoft.Testing.Extensions.GitHubActionsReport;
 
 using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
 
 using Moq;
 
 using GitHubActionsTerminalKind = ghactions::Microsoft.Testing.Extensions.TerminalKind;
 using GitHubActionsTestRecord = ghactions::Microsoft.Testing.Extensions.TestRecord;
+using GitHubCiCoverageMetric = ghactions::Microsoft.Testing.Extensions.CiCoverageMetric;
+using GitHubCiCoverageSummaryData = ghactions::Microsoft.Testing.Extensions.CiCoverageSummaryData;
+using GitHubCiCoverageThreshold = ghactions::Microsoft.Testing.Extensions.CiCoverageThreshold;
 using GitHubCiRunSummaryAggregate = ghactions::Microsoft.Testing.Extensions.CiRunSummaryAggregate;
 using GitHubCiRunSummaryModule = ghactions::Microsoft.Testing.Extensions.CiRunSummaryModule;
 
@@ -137,6 +141,35 @@ public sealed class GitHubActionsSummaryReporterTests
             ExecutionId = "execution",
             SessionUid = "session",
             AttemptNumber = 1,
+            Coverage = new GitHubCiCoverageSummaryData
+            {
+                Metrics =
+                [
+                    new GitHubCiCoverageMetric
+                    {
+                        ScopeLevel = CoverageScopeLevel.Overall,
+                        Metric = CoverageMetric.Branch,
+                        ProducerId = "coverlet",
+                        CoveredCount = 0,
+                        CoverableCount = 0,
+                    },
+                ],
+                Thresholds =
+                [
+                    new GitHubCiCoverageThreshold
+                    {
+                        ScopeLevel = CoverageScopeLevel.Overall,
+                        Metric = CoverageMetric.Line,
+                        ProducerId = "coverlet",
+                        ActualPercentage = 82,
+                        RequiredPercentage = 80,
+                        HasCoverableData = true,
+                        Passed = true,
+                    },
+                ],
+                ReportingModuleCount = 1,
+                TotalModuleCount = 1,
+            },
         };
         var aggregate = new GitHubCiRunSummaryAggregate(
             [module],
@@ -154,6 +187,8 @@ public sealed class GitHubActionsSummaryReporterTests
 
         Assert.Contains("<summary>&lt;h1&gt;A&amp;B&lt;/h1&gt; (net9.0&lt;&amp;&gt;, x64&amp;arm64)</summary>", markdown);
         Assert.DoesNotContain("<summary><h1>", markdown);
+        Assert.Contains("| Overall | Branch | 0 | 0 | No data |", markdown);
+        Assert.Contains("| &lt;h1&gt;A&amp;B&lt;/h1&gt; (net9.0&lt;&amp;&gt;) — Overall | Line | 82.0% | 80.0% | ✅ Passed |", markdown);
     }
 
     [TestMethod]

@@ -31,9 +31,9 @@ Options:
         Allows to pause execution in order to attach to the process for debug purposes.
     --diagnostic
         Enable the diagnostic logging. The default log level is 'Trace'.
-        The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag
+        The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.
     --diagnostic-file-prefix
-        Prefix for the log file name that will replace '[log]_.'
+        Replace '[log]_.' with the specified log file name prefix.
     --diagnostic-output-directory
         Output directory of the diagnostic logging.
         If not specified the file will be generated inside the default 'TestResults' directory.
@@ -167,7 +167,7 @@ Built-in command line providers:
   PlatformCommandLineProvider
     Name: Platform command line provider
     Version: .+
-    Description: Microsoft Testing Platform command line provider
+    Description: Microsoft Testing Platform command line provider.
     Options:
       --\?
         Arity: 0
@@ -193,11 +193,11 @@ Built-in command line providers:
         Arity: 0
         Hidden: False
         Description: Enable the diagnostic logging\. The default log level is 'Trace'\.
-        The file will be written in the output directory with the name log_\[yyMMddHHmmssfff\]\.diag
+        The file will be written in the output directory with the name log_\[yyMMddHHmmssfff\]\.diag\.
       --diagnostic-file-prefix
         Arity: 1
         Hidden: False
-        Description: Prefix for the log file name that will replace '\[log\]_\.'
+        Description: Replace '\[log\]_\.' with the specified log file name prefix\.
       --diagnostic-output-directory
         Arity: 1
         Hidden: False
@@ -263,7 +263,7 @@ Built-in command line providers:
       --internal-testingplatform-skipbuildercheck
         Arity: 0
         Hidden: True
-        Description: For testing purposes
+        Description: For testing purposes\.
       --list-tests
         Arity: 0..1
         Hidden: False

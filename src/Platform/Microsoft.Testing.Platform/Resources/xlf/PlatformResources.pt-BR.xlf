@@ -725,8 +725,8 @@ Observe que isso está diminuindo a execução do teste.</target>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</source>
-        <target state="translated">Habilite o registro de diagnóstico. O nível de log padrão é 'Trace'.
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</source>
+        <target state="needs-review-translation">Habilite o registro de diagnóstico. O nível de log padrão é 'Trace'.
 O arquivo será gravado no diretório de saída com o nome log_[yyMMddHHmmssfff].diag</target>
         <note>{Locked="Trace"}{Locked="log_[yyMMddHHmmssfff].diag"}</note>
       </trans-unit>
@@ -748,8 +748,8 @@ Se não for especificado, o arquivo será gerado dentro do diretório padrão �
         <note>{Locked="TestResults"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
-        <source>Prefix for the log file name that will replace '[log]_.'</source>
-        <target state="translated">Prefixo do nome do arquivo de log que substituirá '[log]_.'</target>
+        <source>Replace '[log]_.' with the specified log file name prefix.</source>
+        <target state="needs-review-translation">Prefixo do nome do arquivo de log que substituirá '[log]_.'</target>
         <note>{Locked="[log]_."}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
@@ -930,8 +930,8 @@ Para obter mais informações sobre os códigos de saída, veja https://learn.mi
         <note>{0} is the option name without the leading dashes.</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDescription">
-        <source>Microsoft Testing Platform command line provider</source>
-        <target state="translated">Provedor de linha de comando da Plataforma de Teste da Microsoft</target>
+        <source>Microsoft Testing Platform command line provider.</source>
+        <target state="needs-review-translation">Provedor de linha de comando da Plataforma de Teste da Microsoft</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDisplayName">
@@ -959,8 +959,8 @@ O padrão é TestResults no diretório que contém o aplicativo de teste.</targe
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineSkipBuildersNumberCheckOptionDescription">
-        <source>For testing purposes</source>
-        <target state="translated">Para fins de teste</target>
+        <source>For testing purposes.</source>
+        <target state="needs-review-translation">Para fins de teste</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTestHostControllerPIDOptionDescription">

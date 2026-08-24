@@ -725,8 +725,8 @@ Tenga en cuenta que esto ralentiza la ejecución de pruebas.</target>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</source>
-        <target state="translated">Habilite el registro de diagnóstico. El nivel de registro predeterminado es "Trace".
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</source>
+        <target state="needs-review-translation">Habilite el registro de diagnóstico. El nivel de registro predeterminado es "Trace".
 El archivo se escribirá en el directorio de salida con el nombre log_[yyMMddHHmmssfff].diag</target>
         <note>{Locked="Trace"}{Locked="log_[yyMMddHHmmssfff].diag"}</note>
       </trans-unit>
@@ -748,8 +748,8 @@ Si no se especifica, el archivo se generará dentro del directorio predeterminad
         <note>{Locked="TestResults"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
-        <source>Prefix for the log file name that will replace '[log]_.'</source>
-        <target state="translated">Prefijo del nombre del archivo de registro que reemplazará a '[log]_.'</target>
+        <source>Replace '[log]_.' with the specified log file name prefix.</source>
+        <target state="needs-review-translation">Prefijo del nombre del archivo de registro que reemplazará a '[log]_.'</target>
         <note>{Locked="[log]_."}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
@@ -930,8 +930,8 @@ Para obtener más información sobre los códigos de salida, consulte https://le
         <note>{0} is the option name without the leading dashes.</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDescription">
-        <source>Microsoft Testing Platform command line provider</source>
-        <target state="translated">Proveedor de línea de comandos de la plataforma de pruebas de Microsoft</target>
+        <source>Microsoft Testing Platform command line provider.</source>
+        <target state="needs-review-translation">Proveedor de línea de comandos de la plataforma de pruebas de Microsoft</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDisplayName">
@@ -959,8 +959,8 @@ El valor predeterminado es TestResults en el directorio que contiene la aplicaci
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineSkipBuildersNumberCheckOptionDescription">
-        <source>For testing purposes</source>
-        <target state="translated">Con fines de prueba</target>
+        <source>For testing purposes.</source>
+        <target state="needs-review-translation">Con fines de prueba</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTestHostControllerPIDOptionDescription">

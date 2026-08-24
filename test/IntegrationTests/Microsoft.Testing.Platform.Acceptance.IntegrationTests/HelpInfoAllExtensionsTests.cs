@@ -31,9 +31,9 @@ Options:
         Allows to pause execution in order to attach to the process for debug purposes.
     --diagnostic
         Enable the diagnostic logging. The default log level is 'Trace'.
-        The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag
+        The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.
     --diagnostic-file-prefix
-        Prefix for the log file name that will replace '[log]_.'
+        Replace '[log]_.' with the specified log file name prefix.
     --diagnostic-output-directory
         Output directory of the diagnostic logging.
         If not specified the file will be generated inside the default 'TestResults' directory.
@@ -119,16 +119,16 @@ Extension options:
         The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
         Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
     --crashdump
-        [net6.0+ only] Generate a dump file if the test process crashes
+        [net6.0+ only] Generate a dump file if the test process crashes.
     --crashdump-filename
         Specify the name of the dump file.
         Supports the following placeholders: {pname} (process executable name, deferred to the .NET runtime as "%e"), {pid} (process ID, deferred to the .NET runtime as "%p"), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp when the crashdump environment is configured). The legacy %p / %e / %h / %t tokens consumed directly by the .NET runtime's createdump are also supported.
     --crashdump-type
         Specify the type of the dump.
         Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'.
-        For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps
+        For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps.
     --hangdump
-        Generate a dump file if the test process hangs
+        Generate a dump file if the test process hangs.
     --hangdump-filename
         Specify the name of the dump file.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.
@@ -145,7 +145,7 @@ Extension options:
     --hangdump-type
         Specify the type of the dump.
         Valid values are {{GetExpectedHangDumpDescriptionOptions(tfm)}}.
-        Default type is 'Full'
+        Default type is 'Full'.
     --hangdump-type-if-supported
         Same as '--hangdump-type' but silently falls back (with an informational message) to the closest supported dump type when the requested type is not available on the current runtime (e.g. 'Triage' is only supported on .NET Core and falls back to 'Mini' on .NET Framework). Use this option to keep the same command line across CI matrices that mix .NET Framework and .NET. Valid values are 'Mini', 'Heap', 'Full', 'Triage', 'None'. Mutually exclusive with '--hangdump-type'.
     --publish-azdo-run-name
@@ -185,11 +185,11 @@ Extension options:
     --report-azdo-upload-artifacts
         Upload test result files and/or add build tags to Azure DevOps. Options are: off (default), tags-only, files, and all.
     --report-ctrf
-        Enable generating a CTRF (Common Test Report Format) JSON report
+        Enable generating a CTRF (Common Test Report Format) JSON report.
     --report-ctrf-filename
         The name of the generated CTRF report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
-        Example: MyReport_{tfm}.ctrf.json
+        Example: 'MyReport_{tfm}.ctrf.json'.
     --report-gh
         Enable GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.
     --report-gh-annotations
@@ -203,31 +203,31 @@ Extension options:
     --report-gh-step-summary
         Enable or disable writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.
     --report-html
-        Enable generating an HTML report
+        Enable generating an HTML report.
     --report-html-filename
         The name of the generated HTML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
-        Example: MyReport_{tfm}.html
+        Example: 'MyReport_{tfm}.html'.
     --report-junit
-        Enable generating a JUnit XML report
+        Enable generating a JUnit XML report.
     --report-junit-filename
         The name of the generated JUnit XML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
-        Example: MyReport_{tfm}.xml
+        Example: 'MyReport_{tfm}.xml'.
     --report-trx
-        Enable generating TRX report
+        Enable generating TRX report.
     --report-trx-filename
         The name of the generated TRX report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
-        Example: MyReport_{tfm}.trx
+        Example: 'MyReport_{tfm}.trx'.
     --retry-failed-tests
-        Retry failed tests the given number of times
+        Retry failed tests the given number of times.
     --retry-failed-tests-delay
         Add a delay between retries. The delay is expressed as a time value, e.g. 200, 500ms, 1s, 2.5m, 1h, 1d. Default unit is milliseconds.
     --retry-failed-tests-max-percentage
-        Disable retry mechanism if the percentage of failed tests is greater than the specified value
+        Disable retry mechanism if the percentage of failed tests is greater than the specified value.
     --retry-failed-tests-max-tests
-        Disable retry mechanism if the number of failed tests is greater than the specified value
+        Disable retry mechanism if the number of failed tests is greater than the specified value.
 """;
 
         testHostResult.AssertOutputMatchesLines(wildcardPattern);
@@ -273,7 +273,7 @@ Built-in command line providers:
   PlatformCommandLineProvider
     Name: Platform command line provider
     Version: *
-    Description: Microsoft Testing Platform command line provider
+    Description: Microsoft Testing Platform command line provider.
     Options:
       --?
         Arity: 0
@@ -299,11 +299,11 @@ Built-in command line providers:
         Arity: 0
         Hidden: False
         Description: Enable the diagnostic logging. The default log level is 'Trace'.
-        The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag
+        The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.
       --diagnostic-file-prefix
         Arity: 1
         Hidden: False
-        Description: Prefix for the log file name that will replace '[log]_.'
+        Description: Replace '[log]_.' with the specified log file name prefix.
       --diagnostic-output-directory
         Arity: 1
         Hidden: False
@@ -369,7 +369,7 @@ Built-in command line providers:
       --internal-testingplatform-skipbuildercheck
         Arity: 0
         Hidden: True
-        Description: For testing purposes
+        Description: For testing purposes.
       --list-tests
         Arity: 0..1
         Hidden: False
@@ -536,7 +536,7 @@ Registered command line providers:
   CrashDumpCommandLineProvider
     Name: Crash dump
     Version: *
-    Description: [net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly
+    Description: [net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly.
     Options:
       --crash-report
         Arity: 0
@@ -555,7 +555,7 @@ Registered command line providers:
       --crashdump
         Arity: 0
         Hidden: False
-        Description: [net6.0+ only] Generate a dump file if the test process crashes
+        Description: [net6.0+ only] Generate a dump file if the test process crashes.
       --crashdump-filename
         Arity: 1
         Hidden: False
@@ -566,22 +566,22 @@ Registered command line providers:
         Hidden: False
         Description: Specify the type of the dump.
         Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'.
-        For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps
+        For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps.
   CtrfReportGeneratorCommandLine
     Name: CTRF report generator
     Version: *
-    Description: Produce a CTRF (Common Test Report Format) JSON report for the current test session (https://ctrf.io)
+    Description: Produce a CTRF (Common Test Report Format) JSON report for the current test session (https://ctrf.io).
     Options:
       --report-ctrf
         Arity: 0
         Hidden: False
-        Description: Enable generating a CTRF (Common Test Report Format) JSON report
+        Description: Enable generating a CTRF (Common Test Report Format) JSON report.
       --report-ctrf-filename
         Arity: 1
         Hidden: False
         Description: The name of the generated CTRF report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
-        Example: MyReport_{tfm}.ctrf.json
+        Example: 'MyReport_{tfm}.ctrf.json'.
   GitHubActionsCommandLineProvider
     Name: GitHub Actions report generator
     Version: *
@@ -619,7 +619,7 @@ Registered command line providers:
       --hangdump
         Arity: 0
         Hidden: False
-        Description: Generate a dump file if the test process hangs
+        Description: Generate a dump file if the test process hangs.
       --hangdump-filename
         Arity: 1
         Hidden: False
@@ -642,7 +642,7 @@ Registered command line providers:
         Hidden: False
         Description: Specify the type of the dump.
         Valid values are {{GetExpectedHangDumpDescriptionOptions(tfm)}}.
-        Default type is 'Full'
+        Default type is 'Full'.
       --hangdump-type-if-supported
         Arity: 1
         Hidden: False
@@ -650,42 +650,42 @@ Registered command line providers:
   HtmlReportGeneratorCommandLine
     Name: HTML report generator
     Version: *
-    Description: Produce a self-contained HTML report for the current test session
+    Description: Produce a self-contained HTML report for the current test session.
     Options:
       --report-html
         Arity: 0
         Hidden: False
-        Description: Enable generating an HTML report
+        Description: Enable generating an HTML report.
       --report-html-filename
         Arity: 1
         Hidden: False
         Description: The name of the generated HTML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
-        Example: MyReport_{tfm}.html
+        Example: 'MyReport_{tfm}.html'.
   JUnitReportGeneratorCommandLine
     Name: JUnit XML report generator
     Version: *
-    Description: Produce a JUnit XML report for the current test session
+    Description: Produce a JUnit XML report for the current test session.
     Options:
       --report-junit
         Arity: 0
         Hidden: False
-        Description: Enable generating a JUnit XML report
+        Description: Enable generating a JUnit XML report.
       --report-junit-filename
         Arity: 1
         Hidden: False
         Description: The name of the generated JUnit XML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
-        Example: MyReport_{tfm}.xml
+        Example: 'MyReport_{tfm}.xml'.
   MSBuildCommandLineProvider
     Name: MSBuild integration
     Version: *
-    Description: Extension used to pass parameters from MSBuild node and the hosts
+    Description: Extension used to pass parameters from MSBuild node and the hosts.
     Options:
       --internal-msbuild-node
         Arity: 1
         Hidden: True
-        Description: Used to pass the MSBuild node handle
+        Description: Used to pass the MSBuild node handle.
   RetryCommandLineOptionsProvider
     Name: Retry failed tests
     Version: *
@@ -698,7 +698,7 @@ Registered command line providers:
       --retry-failed-tests
         Arity: 1
         Hidden: False
-        Description: Retry failed tests the given number of times
+        Description: Retry failed tests the given number of times.
       --retry-failed-tests-delay
         Arity: 1
         Hidden: False
@@ -706,26 +706,26 @@ Registered command line providers:
       --retry-failed-tests-max-percentage
         Arity: 1
         Hidden: False
-        Description: Disable retry mechanism if the percentage of failed tests is greater than the specified value
+        Description: Disable retry mechanism if the percentage of failed tests is greater than the specified value.
       --retry-failed-tests-max-tests
         Arity: 1
         Hidden: False
-        Description: Disable retry mechanism if the number of failed tests is greater than the specified value
+        Description: Disable retry mechanism if the number of failed tests is greater than the specified value.
   TrxReportGeneratorCommandLine
     Name: TRX report generator
     Version: *
-    Description: Produce a TRX report for the current test session
+    Description: Produce a TRX report for the current test session.
     Options:
       --report-trx
         Arity: 0
         Hidden: False
-        Description: Enable generating TRX report
+        Description: Enable generating TRX report.
       --report-trx-filename
         Arity: 1
         Hidden: False
         Description: The name of the generated TRX report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
-        Example: MyReport_{tfm}.trx
+        Example: 'MyReport_{tfm}.trx'.
   VideoRecorderCommandLineProvider
     Name: Video recorder
     Version: *
@@ -760,40 +760,40 @@ Registered tools:
     Command: merge-trx
     Name: TRX report merge tool
     Version: *
-    Description: Merges multiple TRX files into one from the command line
+    Description: Merges multiple TRX files into one from the command line.
     Tool command line providers:
       Microsoft.Testing.Extensions.TrxReport.MergeTool
         Name: TRX report merge tool
         Version: *
-        Description: Merges multiple TRX files into one from the command line
+        Description: Merges multiple TRX files into one from the command line.
         Options:
           --input
             Arity: 2..N
             Hidden: False
-            Description: Two or more input TRX file paths
+            Description: Two or more input TRX file paths.
           --output-trx
             Arity: 1
             Hidden: False
-            Description: The output TRX file path
+            Description: The output TRX file path.
   TrxCompareTool
     Command: ms-trxcompare
     Name: TRX comparer tool
     Version: *
-    Description: This tool allows to compare and highlights differences between 2 TRX reports
+    Description: This tool allows to compare and highlights differences between 2 TRX reports.
     Tool command line providers:
       TrxCompareTool
         Name: TRX comparer tool
         Version: *
-        Description: This tool allows to compare and highlights differences between 2 TRX reports
+        Description: This tool allows to compare and highlights differences between 2 TRX reports.
         Options:
           --baseline-trx
             Arity: 1
             Hidden: False
-            Description: The baseline TRX file
+            Description: The baseline TRX file.
           --trx-to-compare
             Arity: 1
             Hidden: False
-            Description: The TRX file to compare with the baseline
+            Description: The TRX file to compare with the baseline.
 """;
 
         testHostResult.AssertOutputMatchesLines(wildcardPattern);

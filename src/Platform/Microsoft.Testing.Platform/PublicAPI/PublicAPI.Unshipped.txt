@@ -1,6 +1,18 @@
 #nullable enable
 [TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.IGracefulStopTestExecutionResultCapability
 [TPEXP]Microsoft.Testing.Platform.Capabilities.TestFramework.IGracefulStopTestExecutionResultCapability.TryStopTestExecutionAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Platform.Configurations.IConfigurationRoot
+Microsoft.Testing.Platform.Configurations.IConfigurationRoot.GetChildren() -> System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Configurations.IConfigurationSection!>!
+Microsoft.Testing.Platform.Configurations.IConfigurationRoot.GetSection(string! key) -> Microsoft.Testing.Platform.Configurations.IConfigurationSection!
+Microsoft.Testing.Platform.Configurations.IConfigurationSection
+Microsoft.Testing.Platform.Configurations.IConfigurationSection.HasValue.get -> bool
+Microsoft.Testing.Platform.Configurations.IConfigurationSection.Key.get -> string!
+Microsoft.Testing.Platform.Configurations.IConfigurationSection.Path.get -> string!
+Microsoft.Testing.Platform.Configurations.IConfigurationSection.Value.get -> string?
+[TPEXP]Microsoft.Testing.Platform.Configurations.IHierarchicalConfigurationProvider
+[TPEXP]Microsoft.Testing.Platform.Configurations.IHierarchicalConfigurationProvider.GetChildKeys(string? parentPath) -> System.Collections.Generic.IEnumerable<string!>!
+[TPEXP]Microsoft.Testing.Platform.Configurations.IHierarchicalConfigurationProvider.TryGetScalar(string! key, out string? value) -> bool
+static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.GetConfigurationRoot(this System.IServiceProvider! serviceProvider) -> Microsoft.Testing.Platform.Configurations.IConfigurationRoot!
 [TPEXP]Microsoft.Testing.Platform.Requests.CompositeTestExecutionFilter
 [TPEXP]Microsoft.Testing.Platform.Requests.CompositeTestExecutionFilter.CompositeTestExecutionFilter(Microsoft.Testing.Platform.Requests.TestExecutionFilterOperator operator, params Microsoft.Testing.Platform.Requests.ITestExecutionFilter![]! filters) -> void
 [TPEXP]Microsoft.Testing.Platform.Requests.CompositeTestExecutionFilter.Filters.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Requests.ITestExecutionFilter!>!

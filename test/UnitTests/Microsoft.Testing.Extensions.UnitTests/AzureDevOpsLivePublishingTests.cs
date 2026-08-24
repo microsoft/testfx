@@ -1969,9 +1969,11 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.IsNotNull(parent.SubResults);
         Assert.HasCount(2, parent.SubResults);
         Assert.AreEqual(1, parent.SubResults[0].SequenceId);
+        Assert.AreEqual("Attempt# 0 - MyTest", parent.SubResults[0].DisplayName);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.FailedTestOutcome, parent.SubResults[0].Outcome);
         Assert.AreEqual("boom", parent.SubResults[0].ErrorMessage);
         Assert.AreEqual(2, parent.SubResults[1].SequenceId);
+        Assert.AreEqual("Attempt# 1 - MyTest", parent.SubResults[1].DisplayName);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, parent.SubResults[1].Outcome);
     }
 

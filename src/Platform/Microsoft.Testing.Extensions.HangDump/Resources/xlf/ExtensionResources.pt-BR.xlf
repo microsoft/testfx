@@ -88,8 +88,8 @@ Dá suporte aos seguintes espaços reservados: {pname} (nome do aplicativo de te
         <note>Do not localize option name {Locked="--hangdump-filename"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, or legacy token {Locked="%p"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
-        <source>Generate a dump file if the test process hangs</source>
-        <target state="translated">Gerar um arquivo de despejo se o processo de teste travar</target>
+        <source>Generate a dump file if the test process hangs.</source>
+        <target state="new">Generate a dump file if the test process hangs.</target>
         <note>Do not localize option name {Locked="--hangdump"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTimeoutExpired">
@@ -141,10 +141,10 @@ O valor de tempo limite é especificado em um dos seguintes formatos:
       <trans-unit id="HangDumpTypeOptionDescription">
         <source>Specify the type of the dump.
 Valid values are {0}.
-Default type is 'Full'</source>
-        <target state="translated">Especifique o tipo do despejar.
-Os valores válidos são {0}.
-O tipo padrão é "Full"</target>
+Default type is 'Full'.</source>
+        <target state="new">Specify the type of the dump.
+Valid values are {0}.
+Default type is 'Full'.</target>
         <note>0 is the list of valid dump type values. Do not localize option name {Locked="--hangdump-type"} or default dump type {Locked="Full"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">

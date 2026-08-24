@@ -14,8 +14,15 @@ internal sealed class AggregatedConfiguration(
     ITestApplicationModuleInfo testApplicationModuleInfo,
     IFileSystem fileSystem,
     IEnvironment environment,
-    CommandLineParseResult commandLineParseResult) : IConfiguration
+    CommandLineParseResult commandLineParseResult) : IConfigurationRoot
 {
+    private static readonly string[] ComputedConfigurationKeys =
+    [
+        PlatformConfigurationConstants.PlatformCurrentWorkingDirectory,
+        PlatformConfigurationConstants.PlatformResultDirectory,
+        PlatformConfigurationConstants.PlatformTestHostWorkingDirectory,
+    ];
+
     public const string DefaultTestResultFolderName = "TestResults";
     private readonly IConfigurationProvider[] _configurationProviders = configurationProviders;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
@@ -44,6 +51,80 @@ internal sealed class AggregatedConfiguration(
             // Fallback to calculating from configuration providers.
             return CalculateFromConfigurationProviders(key);
         }
+    }
+
+    public IConfigurationSection GetSection(string key)
+    {
+        _ = key ?? throw new ArgumentNullException(nameof(key));
+        return new ConfigurationSection(this, key);
+    }
+
+    public IEnumerable<IConfigurationSection> GetChildren() => GetChildren(parentPath: null);
+
+    internal IEnumerable<IConfigurationSection> GetChildren(string? parentPath)
+    {
+        List<string> childKeys = [];
+        HashSet<string> seenChildKeys = [with(StringComparer.OrdinalIgnoreCase)];
+
+        AddChildKeys(ConfigurationProviderHelpers.GetChildKeys(ComputedConfigurationKeys, parentPath));
+
+        foreach (IHierarchicalConfigurationProvider hierarchicalProvider in _configurationProviders.OfType<IHierarchicalConfigurationProvider>())
+        {
+            AddChildKeys(hierarchicalProvider.GetChildKeys(parentPath));
+        }
+
+        childKeys.Sort(ConfigurationKeyComparer.Instance);
+
+        var children = new IConfigurationSection[childKeys.Count];
+        for (int i = 0; i < childKeys.Count; i++)
+        {
+            string path = parentPath is null
+                ? childKeys[i]
+                : parentPath + PlatformConfigurationConstants.KeyDelimiter + childKeys[i];
+            children[i] = new ConfigurationSection(this, path);
+        }
+
+        return children;
+
+        void AddChildKeys(IEnumerable<string> keys)
+        {
+            foreach (string childKey in keys)
+            {
+                if (seenChildKeys.Add(childKey))
+                {
+                    childKeys.Add(childKey);
+                }
+            }
+        }
+    }
+
+    internal bool TryGetSectionValue(string key, out string? value)
+    {
+        string? computedKey = ComputedConfigurationKeys.FirstOrDefault(
+            computedKey => string.Equals(computedKey, key, StringComparison.OrdinalIgnoreCase));
+        if (computedKey is not null)
+        {
+            value = this[computedKey];
+            return true;
+        }
+
+        foreach (IConfigurationProvider provider in _configurationProviders)
+        {
+            if (provider is IHierarchicalConfigurationProvider hierarchicalProvider)
+            {
+                if (hierarchicalProvider.TryGetScalar(key, out value))
+                {
+                    return true;
+                }
+            }
+            else if (provider.TryGet(key, out value))
+            {
+                return true;
+            }
+        }
+
+        value = null;
+        return false;
     }
 
     private string? CalculateFromConfigurationProviders(string key)
@@ -287,5 +368,45 @@ internal sealed class AggregatedConfiguration(
 
         // then fallback to the actual working directory.
         return _testApplicationModuleInfo.GetCurrentTestApplicationDirectory();
+    }
+
+    private sealed class ConfigurationKeyComparer : IComparer<string>
+    {
+        public static readonly ConfigurationKeyComparer Instance = new();
+
+        public int Compare(string? x, string? y)
+        {
+            if (ReferenceEquals(x, y))
+            {
+                return 0;
+            }
+
+            if (x is null)
+            {
+                return -1;
+            }
+
+            if (y is null)
+            {
+                return 1;
+            }
+
+            bool xIsInteger = int.TryParse(x, NumberStyles.None, CultureInfo.InvariantCulture, out int xInteger);
+            bool yIsInteger = int.TryParse(y, NumberStyles.None, CultureInfo.InvariantCulture, out int yInteger);
+
+            if (xIsInteger && yIsInteger)
+            {
+                int integerComparison = xInteger.CompareTo(yInteger);
+                return integerComparison != 0
+                    ? integerComparison
+                    : StringComparer.OrdinalIgnoreCase.Compare(x, y);
+            }
+
+            return xIsInteger
+                ? -1
+                : yIsInteger
+                    ? 1
+                    : StringComparer.OrdinalIgnoreCase.Compare(x, y);
+        }
     }
 }
