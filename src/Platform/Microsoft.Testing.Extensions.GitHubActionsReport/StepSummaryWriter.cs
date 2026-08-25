@@ -216,6 +216,7 @@ internal sealed class StepSummaryWriter
     {
         var encoding = new UTF8Encoding(false);
 
+        bool appendOnly = false;
         for (int attempt = 1; ; attempt++)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -261,7 +262,7 @@ internal sealed class StepSummaryWriter
                 // weaker "diagnostics were dropped" note must not suppress a later "whole sections were removed"
                 // note — that would leave results missing with nothing saying so.
                 string pendingNotice = noticeFactory(CountProjectSections(existing));
-                if (GetLeadingNoticeStrength(existing) >= GetLeadingNoticeStrength(pendingNotice))
+                if (appendOnly || GetLeadingNoticeStrength(existing) >= GetLeadingNoticeStrength(pendingNotice))
                 {
                     // Nothing to hoist or upgrade, so this is a plain append and nothing existing is at risk.
                     byte[] appended = encoding.GetBytes(content);
@@ -280,10 +281,6 @@ internal sealed class StepSummaryWriter
                     return true;
                 }
 
-                // Hoisting or upgrading the notice means replacing the file, which is the one operation here that
-                // can destroy content: everything earlier projects wrote only survives if the replacement
-                // completes. Truncating in place would leave the summary empty if the write were abandoned midway
-                // — on cancellation during session teardown, or a full disk — which is a worse outcome than the
                 // Hoisting or upgrading the notice means replacing the file, which is the one operation here that
                 // can destroy content: everything earlier projects wrote only survives if the replacement
                 // completes. Rewriting in place would leave the summary garbled — or, if it were truncated first,
@@ -315,10 +312,18 @@ internal sealed class StepSummaryWriter
                 // in that gap is not excluded by it. Re-measure and start over if the file moved, so an append
                 // that landed during staging is carried into the next attempt instead of being overwritten by a
                 // snapshot taken before it.
-                if (GetSummaryLength() is long lengthBeforeSwap
-                    && lengthBeforeSwap != lengthAtCapture
-                    && attempt < _maxAttempts)
+                if (GetSummaryLength() is long lengthBeforeSwap && lengthBeforeSwap != lengthAtCapture)
                 {
+                    if (attempt < _maxAttempts)
+                    {
+                        continue;
+                    }
+
+                    // Out of attempts and the file is still moving under us. Swapping now would delete whatever
+                    // landed while this payload was staged, so stop trying to hoist the notice and just append this
+                    // project's section on one more pass. An understated leading notice is recoverable — the next
+                    // writer re-evaluates it — whereas another writer's deleted block is not.
+                    appendOnly = true;
                     continue;
                 }
 

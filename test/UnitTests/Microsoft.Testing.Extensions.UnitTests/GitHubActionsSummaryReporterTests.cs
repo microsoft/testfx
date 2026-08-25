@@ -1844,6 +1844,39 @@ public sealed class GitHubActionsSummaryReporterTests
         Assert.AreEqual(-1, summary.IndexOf(marker, first + marker.Length, StringComparison.Ordinal));
     }
 
+    [TestMethod]
+    public async Task AppendStepSummaryWithLeadingNoticeAsync_DoesNotOverwriteAForeignAppendWhenAttemptsRunOut()
+    {
+        // The summary handle has to be released before the staged replacement can be swapped in, and another
+        // writer can append in that gap. Once retries are exhausted the swap must be abandoned rather than
+        // carried out against a stale snapshot: an understated leading notice is recoverable, a deleted block
+        // written by someone else is not.
+        string path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, "existing\n");
+            var fileSystem = new InterferingFileSystem(path, "foreign\n");
+
+            bool written = await NewWriter(fileSystem, path, 2)
+                .AppendStepSummaryWithLeadingNoticeAsync("mine\n", static _ => GitHubActionsSummaryReporter.BuildTruncationNotice(3), CancellationToken.None);
+
+            Assert.IsTrue(written);
+            Assert.IsGreaterThan(0, fileSystem.Interferences, "The test is vacuous unless the foreign append actually landed.");
+
+            string summary = File.ReadAllText(path);
+            Assert.Contains("existing", summary);
+            Assert.Contains("mine", summary);
+            Assert.AreEqual(
+                fileSystem.Interferences,
+                summary.Split(["foreign"], StringSplitOptions.None).Length - 1,
+                "Every foreign append has to survive.");
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
     private static StepSummaryWriter NewWriter(IFileSystem fileSystem, string path, int maxAttempts)
         => new(fileSystem, path, new Mock<ILogger>().Object, maxAttempts, TimeSpan.Zero);
 
@@ -1863,6 +1896,60 @@ public sealed class GitHubActionsSummaryReporterTests
         fileSystem.Setup(f => f.NewFileStream(It.IsAny<string>(), FileMode.Append, FileAccess.Write, FileShare.Read))
             .Returns(fileStream.Object);
         return fileSystem;
+    }
+
+    /// <summary>
+    /// The real file system, plus another writer appending to the summary in the window between staging the
+    /// replacement and swapping it in — the window this extension's own lock cannot cover, because a file that is
+    /// open cannot be replaced.
+    /// </summary>
+    private sealed class InterferingFileSystem(string summaryPath, string foreignAppend) : IFileSystem
+    {
+        private readonly SystemFileSystem _inner = new();
+
+        public int Interferences { get; private set; }
+
+        public IFileStream NewFileStream(string path, FileMode mode, FileAccess access, FileShare share)
+        {
+            IFileStream stream = _inner.NewFileStream(path, mode, access, share);
+            if (path.EndsWith(".tmp", StringComparison.Ordinal) && mode == FileMode.CreateNew)
+            {
+                // The replacement is being staged, so the summary handle is already released. Land an append now.
+                File.AppendAllText(summaryPath, foreignAppend);
+                Interferences++;
+            }
+
+            return stream;
+        }
+
+        public bool ExistFile(string path) => _inner.ExistFile(path);
+
+        public bool ExistDirectory(string? path) => _inner.ExistDirectory(path);
+
+        public string CreateDirectory(string path) => _inner.CreateDirectory(path);
+
+        public void MoveFile(string sourceFileName, string destFileName, bool overwrite = false)
+            => _inner.MoveFile(sourceFileName, destFileName, overwrite);
+
+        public void ReplaceFile(string sourceFileName, string destFileName)
+            => _inner.ReplaceFile(sourceFileName, destFileName);
+
+        public IFileStream NewFileStream(string path, FileMode mode) => _inner.NewFileStream(path, mode);
+
+        public IFileStream NewFileStream(string path, FileMode mode, FileAccess access)
+            => _inner.NewFileStream(path, mode, access);
+
+        public string ReadAllText(string path) => _inner.ReadAllText(path);
+
+        public Task<string> ReadAllTextAsync(string path) => _inner.ReadAllTextAsync(path);
+
+        public void CopyFile(string sourceFileName, string destFileName, bool overwrite = false)
+            => _inner.CopyFile(sourceFileName, destFileName, overwrite);
+
+        public void DeleteFile(string path) => _inner.DeleteFile(path);
+
+        public string[] GetFiles(string path, string searchPattern, SearchOption searchOption)
+            => _inner.GetFiles(path, searchPattern, searchOption);
     }
 
     private static GitHubCiRunSummaryModule CreateAggregateModule(
