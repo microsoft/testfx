@@ -34,11 +34,6 @@ safe-outputs:
     target: "*"
     max: 1
     pull-requests: false
-  update-issue:
-    status:
-    body: false
-    target: "*"
-    max: 1
   create-issue:
     expires: 2d
     title-prefix: "[quality-improver] "
@@ -405,10 +400,10 @@ Then decide:
 - **A closed issue covers it and the underlying problem is fixed** — verify in
   the working tree that the code actually changed, then file nothing.
 - **A closed issue covers it and the code is unchanged** — if it is this
-  workflow's own auto-expired report, reopen it with `update_issue` by setting
-  its status to `open`, then add the new evidence with `add_comment`. Do not
-  restate it as a new issue. Do not reopen an issue that a maintainer closed for
-  another reason.
+  workflow's own auto-expired report, leave it closed and add the new evidence
+  with `add_comment`. The expiration marker will close it again if it is
+  reopened. Do not restate it as a new issue, and do not comment on an issue
+  that a maintainer closed for another reason.
 - **Nothing covers it** — proceed to Phase 2.
 
 Filing nothing is a supported outcome (`noop: report-as-issue: false`). Prefer it
