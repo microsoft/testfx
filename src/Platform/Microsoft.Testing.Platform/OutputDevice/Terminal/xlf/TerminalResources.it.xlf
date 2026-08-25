@@ -469,6 +469,30 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an 
 I valori validi sono 'All', 'Failed', 'None'. L'impostazione predefinita è 'All' (o 'Failed' quando viene rilevato un ambiente agente LLM/IA).</target>
         <note>{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
       </trans-unit>
+      <trans-unit id="TerminalShowTestResultsOptionAllOrNoneCombinedInvalidArgument">
+        <source>--show-test-results value 'all' or 'none' cannot be combined with any other value.</source>
+        <target state="new">--show-test-results value 'all' or 'none' cannot be combined with any other value.</target>
+        <note>{Locked="--show-test-results"}{Locked="'all'"}{Locked="'none'"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowTestResultsOptionDescription">
+        <source>Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
+Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
+Default is 'failed' and 'skipped' (or 'all' when --output is 'Detailed'). An explicit --show-test-results always takes precedence over --output, regardless of the order they are passed in.</source>
+        <target state="new">Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
+Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
+Default is 'failed' and 'skipped' (or 'all' when --output is 'Detailed'). An explicit --show-test-results always takes precedence over --output, regardless of the order they are passed in.</target>
+        <note>Do not localize the values {Locked="'passed'"}{Locked="'failed'"}{Locked="'skipped'"}{Locked="'all'"}{Locked="'none'"}{Locked="--output"}{Locked="'Detailed'"}{Locked="--show-test-results"}.</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowTestResultsOptionEmptySelectionInvalidArgument">
+        <source>--show-test-results requires at least one value from 'passed', 'failed', 'skipped', 'all', or 'none'.</source>
+        <target state="new">--show-test-results requires at least one value from 'passed', 'failed', 'skipped', 'all', or 'none'.</target>
+        <note>{Locked="--show-test-results"}{Locked="'passed'"}{Locked="'failed'"}{Locked="'skipped'"}{Locked="'all'"}{Locked="'none'"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowTestResultsOptionUnknownValueInvalidArgument">
+        <source>--show-test-results expects one or more comma- or space-separated values from 'passed', 'failed', 'skipped', 'all', or 'none'.</source>
+        <target state="new">--show-test-results expects one or more comma- or space-separated values from 'passed', 'failed', 'skipped', 'all', or 'none'.</target>
+        <note>{Locked="--show-test-results"}{Locked="'passed'"}{Locked="'failed'"}{Locked="'skipped'"}{Locked="'all'"}{Locked="'none'"}</note>
+      </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
         <source>Writes test results to terminal.</source>
         <target state="translated">Scrive i risultati del test nel terminale.</target>

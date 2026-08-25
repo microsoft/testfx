@@ -153,7 +153,7 @@ public sealed class TerminalTestReporterTests
         var stringBuilderConsole = new StringBuilderConsole();
         var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
-            ShowPassedTests = () => true,
+            ShowTestResults = TestResultVisibility.All,
 
             // Like --no-ansi in commandline, should disable ANSI altogether.
             AnsiMode = AnsiMode.NoAnsi,
@@ -249,7 +249,7 @@ public sealed class TerminalTestReporterTests
         var stringBuilderConsole = new StringBuilderConsole();
         var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
-            ShowPassedTests = () => true,
+            ShowTestResults = TestResultVisibility.All,
             AnsiMode = AnsiMode.NoAnsi,
             ShowProgress = () => false,
         });
@@ -306,7 +306,7 @@ public sealed class TerminalTestReporterTests
         var stringBuilderConsole = new StringBuilderConsole();
         var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
-            ShowPassedTests = () => true,
+            ShowTestResults = TestResultVisibility.All,
 
             // Like if we autodetect that we are in CI (e.g. by looking at TF_BUILD, and we don't disable ANSI.
             AnsiMode = AnsiMode.SimpleAnsi,
@@ -402,7 +402,7 @@ public sealed class TerminalTestReporterTests
         var stringBuilderConsole = new StringBuilderConsole();
         var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
-            ShowPassedTests = () => true,
+            ShowTestResults = TestResultVisibility.All,
             // Like if we autodetect that we are in ANSI capable terminal.
             AnsiMode = AnsiMode.ForceAnsi,
 
@@ -496,7 +496,7 @@ public sealed class TerminalTestReporterTests
         var stringBuilderConsole = new StringBuilderConsole();
         var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
-            ShowPassedTests = () => true,
+            ShowTestResults = TestResultVisibility.All,
             AnsiMode = AnsiMode.ForceAnsi,
             ShowProgress = () => false,
         });
@@ -527,7 +527,7 @@ public sealed class TerminalTestReporterTests
         var stopwatchFactory = new StopwatchFactory();
         var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
-            ShowPassedTests = () => true,
+            ShowTestResults = TestResultVisibility.All,
             // Like if we autodetect that we are in ANSI capable terminal.
             AnsiMode = AnsiMode.ForceAnsi,
 
@@ -931,7 +931,7 @@ public sealed class TerminalTestReporterTests
         var stringBuilderConsole = new StringBuilderConsole();
         var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
-            ShowPassedTests = () => true,
+            ShowTestResults = TestResultVisibility.All,
             AnsiMode = AnsiMode.NoAnsi,
             ShowProgress = () => false,
             ShowStdout = OutputShowMode.None,
@@ -969,7 +969,7 @@ public sealed class TerminalTestReporterTests
         var stringBuilderConsole = new StringBuilderConsole();
         var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
-            ShowPassedTests = () => true,
+            ShowTestResults = TestResultVisibility.All,
             AnsiMode = AnsiMode.NoAnsi,
             ShowProgress = () => false,
             ShowStdout = OutputShowMode.Failed,
@@ -998,6 +998,142 @@ public sealed class TerminalTestReporterTests
         // stdout/stderr for failed tests SHOULD appear
         Assert.Contains("failed-stdout", output);
         Assert.Contains("failed-stderr", output);
+    }
+
+    // --show-test-results defaults (no explicit --output/--show-test-results): failed + skipped are rendered,
+    // passed is not. This mirrors the resolution TerminalOutputDevice.GetShowTestResultsVisibility falls back to
+    // when neither option is present.
+    [TestMethod]
+    public void TerminalTestReporter_ShowTestResultsFailedAndSkipped_HidesPassedResultBlockAndItsAttachedOutput()
+    {
+        string assembly = "assembly.dll";
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
+        {
+            ShowTestResults = TestResultVisibility.Failed | TestResultVisibility.Skipped,
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+
+            // All/All so that a leaking passed-test stream can only be explained by a rendering bug, not by
+            // --show-stdout/--show-stderr filtering.
+            ShowStdout = OutputShowMode.All,
+            ShowStderr = OutputShowMode.All,
+        });
+
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, 1, isDiscovery: false, isHelp: false, isRetry: false);
+        terminalReporter.AssemblyRunStarted(assembly, "net8.0", "x64", "0", "0");
+
+        terminalReporter.TestCompleted("0", testNodeUid: "PassedTest1", "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(1),
+            informativeMessage: "passed-info", errorMessage: null, exception: null, expected: null, actual: null, standardOutput: "passed-stdout", errorOutput: "passed-stderr");
+        terminalReporter.TestCompleted("0", testNodeUid: "FailedTest1", "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(1),
+            informativeMessage: null, errorMessage: "boom", exception: null, expected: null, actual: null, standardOutput: "failed-stdout", errorOutput: "failed-stderr");
+        terminalReporter.TestCompleted("0", testNodeUid: "SkippedTest1", "SkippedTest1", TestOutcome.Skipped, TimeSpan.FromSeconds(1),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: "skipped-stdout", errorOutput: "skipped-stderr");
+
+        terminalReporter.AssemblyRunCompleted("0");
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: null);
+
+        string output = stringBuilderConsole.Output;
+
+        // The whole passed-test block is suppressed, including its informative message and attached streams: a
+        // hidden outcome must not leave an orphan "Standard output"/"Error output" section behind.
+        Assert.DoesNotContain("PassedTest1", output);
+        Assert.DoesNotContain("passed-info", output);
+        Assert.DoesNotContain("passed-stdout", output);
+        Assert.DoesNotContain("passed-stderr", output);
+
+        // Failed and skipped results, and their attached output, are rendered in full.
+        Assert.Contains("FailedTest1", output);
+        Assert.Contains("failed-stdout", output);
+        Assert.Contains("failed-stderr", output);
+        Assert.Contains("SkippedTest1", output);
+        Assert.Contains("skipped-stdout", output);
+        Assert.Contains("skipped-stderr", output);
+
+        // Summary counts are unaffected by the hidden outcome: bookkeeping runs before the visibility check.
+        Assert.Contains("  total: 3", output);
+        Assert.Contains("  failed: 1", output);
+        Assert.Contains("  succeeded: 1", output);
+        Assert.Contains("  skipped: 1", output);
+    }
+
+    // --show-test-results failed groups TestOutcome.Fail, Error, Timeout, and Canceled together: all four
+    // "failure-like" outcomes render, or are suppressed, as one unit. The parameter is typed object (rather than
+    // the internal TestOutcome) because a public/internal-parameter mismatch (CS0051) is not allowed even within
+    // the same assembly, and MSTest's own [TestMethod] discovery requires a public method.
+    [TestMethod]
+    [DataRow(TestOutcome.Fail)]
+    [DataRow(TestOutcome.Error)]
+    [DataRow(TestOutcome.Timeout)]
+    [DataRow(TestOutcome.Canceled)]
+    public void TerminalTestReporter_ShowTestResultsFailedOnly_RendersEveryFailureLikeOutcome(object outcomeArg)
+    {
+        var outcome = (TestOutcome)outcomeArg;
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
+        {
+            ShowTestResults = TestResultVisibility.Failed,
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+        });
+
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, 1, isDiscovery: false, isHelp: false, isRetry: false);
+        terminalReporter.AssemblyRunStarted("assembly.dll", "net8.0", "x64", "0", "0");
+
+        terminalReporter.TestCompleted("0", testNodeUid: "PassedTest1", "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(1),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+        terminalReporter.TestCompleted("0", testNodeUid: "SkippedTest1", "SkippedTest1", TestOutcome.Skipped, TimeSpan.FromSeconds(1),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+        terminalReporter.TestCompleted("0", testNodeUid: "FailureLikeTest1", "FailureLikeTest1", outcome, TimeSpan.FromSeconds(1),
+            informativeMessage: null, errorMessage: "boom", exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+
+        terminalReporter.AssemblyRunCompleted("0");
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: null);
+
+        string output = stringBuilderConsole.Output;
+
+        Assert.DoesNotContain("PassedTest1", output);
+        Assert.DoesNotContain("SkippedTest1", output);
+        Assert.Contains("FailureLikeTest1", output);
+    }
+
+    // 'none' (modeled here as TestResultVisibility.None, the flags union the parser resolves 'none' to) suppresses
+    // every per-test result block while leaving the run summary — verdict and total/failed/succeeded/skipped
+    // counts — untouched.
+    [TestMethod]
+    public void TerminalTestReporter_ShowTestResultsNone_SuppressesEveryResultBlockButKeepsSummary()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
+        {
+            ShowTestResults = TestResultVisibility.None,
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+        });
+
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, 1, isDiscovery: false, isHelp: false, isRetry: false);
+        terminalReporter.AssemblyRunStarted("assembly.dll", "net8.0", "x64", "0", "0");
+
+        terminalReporter.TestCompleted("0", testNodeUid: "PassedTest1", "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(1),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+        terminalReporter.TestCompleted("0", testNodeUid: "FailedTest1", "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(1),
+            informativeMessage: null, errorMessage: "boom", exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+        terminalReporter.TestCompleted("0", testNodeUid: "SkippedTest1", "SkippedTest1", TestOutcome.Skipped, TimeSpan.FromSeconds(1),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+
+        terminalReporter.AssemblyRunCompleted("0");
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: null);
+
+        string output = stringBuilderConsole.Output;
+
+        Assert.DoesNotContain("PassedTest1", output);
+        Assert.DoesNotContain("FailedTest1", output);
+        Assert.DoesNotContain("SkippedTest1", output);
+
+        Assert.Contains("  total: 3", output);
+        Assert.Contains("  failed: 1", output);
+        Assert.Contains("  succeeded: 1", output);
+        Assert.Contains("  skipped: 1", output);
     }
 
     [TestMethod]
@@ -1346,7 +1482,7 @@ public sealed class TerminalTestReporterTests
     private static TerminalTestReporter CreateCoverageReporter(StringBuilderConsole console, AnsiMode ansiMode = AnsiMode.NoAnsi)
         => new(console, static () => false, new TerminalTestReporterOptions
         {
-            ShowPassedTests = () => true,
+            ShowTestResults = TestResultVisibility.All,
             AnsiMode = ansiMode,
             ShowProgress = () => false,
         });
@@ -1626,7 +1762,7 @@ public sealed class TerminalTestReporterTests
         var stringBuilderConsole = new StringBuilderConsole();
         var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
-            ShowPassedTests = () => true,
+            ShowTestResults = TestResultVisibility.All,
             AnsiMode = AnsiMode.NoAnsi,
             ShowProgress = () => false,
         });
@@ -1706,7 +1842,7 @@ public sealed class TerminalTestReporterTests
         var stringBuilderConsole = new StringBuilderConsole();
         var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
-            ShowPassedTests = () => true,
+            ShowTestResults = TestResultVisibility.All,
             AnsiMode = AnsiMode.NoAnsi,
             ShowProgress = () => false,
         });
@@ -2205,7 +2341,7 @@ public sealed class TerminalTestReporterTests
         var stringBuilderConsole = new StringBuilderConsole();
         var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
-            ShowPassedTests = () => false,
+            ShowTestResults = TestResultVisibility.Failed | TestResultVisibility.Skipped,
             AnsiMode = AnsiMode.NoAnsi,
             ShowProgress = () => false,
         });
@@ -2237,7 +2373,7 @@ public sealed class TerminalTestReporterTests
         var stringBuilderConsole = new StringBuilderConsole();
         var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
-            ShowPassedTests = () => false,
+            ShowTestResults = TestResultVisibility.Failed | TestResultVisibility.Skipped,
             AnsiMode = AnsiMode.NoAnsi,
             ShowProgress = () => false,
         });
@@ -2286,7 +2422,7 @@ public sealed class TerminalTestReporterTests
         var stopwatchFactory = new StopwatchFactory();
         var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
-            ShowPassedTests = () => true,
+            ShowTestResults = TestResultVisibility.All,
             AnsiMode = AnsiMode.ForceAnsi,
             ShowActiveTests = true,
             ShowProgress = () => true,
@@ -2340,7 +2476,7 @@ public sealed class TerminalTestReporterTests
         var stringBuilderConsole = new StringBuilderConsole();
         var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
-            ShowPassedTests = () => false,
+            ShowTestResults = TestResultVisibility.Failed | TestResultVisibility.Skipped,
             AnsiMode = AnsiMode.NoAnsi,
             ShowProgress = () => false,
         });
@@ -2665,7 +2801,7 @@ public sealed class TerminalTestReporterTests
         {
             AnsiMode = AnsiMode.NoAnsi,
             ShowProgress = () => false,
-            ShowPassedTests = () => true,
+            ShowTestResults = TestResultVisibility.All,
             ShowAssembly = true,
             ShowAssemblyStartAndComplete = true,
         });
@@ -2720,7 +2856,7 @@ public sealed class TerminalTestReporterTests
         {
             AnsiMode = AnsiMode.NoAnsi,
             ShowProgress = () => false,
-            ShowPassedTests = () => true,
+            ShowTestResults = TestResultVisibility.All,
             ShowAssembly = true,
             ShowAssemblyStartAndComplete = true,
         });
@@ -2756,7 +2892,7 @@ public sealed class TerminalTestReporterTests
         {
             AnsiMode = AnsiMode.NoAnsi,
             ShowProgress = () => false,
-            ShowPassedTests = () => true,
+            ShowTestResults = TestResultVisibility.All,
             ShowAssembly = true,
             ShowAssemblyStartAndComplete = true,
         });
@@ -2797,7 +2933,7 @@ public sealed class TerminalTestReporterTests
         {
             AnsiMode = AnsiMode.NoAnsi,
             ShowProgress = () => false,
-            ShowPassedTests = () => true,
+            ShowTestResults = TestResultVisibility.All,
             ShowAssembly = true,
             ShowAssemblyStartAndComplete = true,
             ShowFlakyTests = false,
@@ -2860,7 +2996,7 @@ public sealed class TerminalTestReporterTests
         {
             AnsiMode = AnsiMode.NoAnsi,
             ShowProgress = () => false,
-            ShowPassedTests = () => true,
+            ShowTestResults = TestResultVisibility.All,
             SlowestTestsCount = 5,
             ShowRunSummary = false,
         });
@@ -2917,7 +3053,7 @@ public sealed class TerminalTestReporterTests
         {
             AnsiMode = AnsiMode.NoAnsi,
             ShowProgress = () => false,
-            ShowPassedTests = () => true,
+            ShowTestResults = TestResultVisibility.All,
         });
 
         terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: false);
@@ -3475,7 +3611,7 @@ public sealed class TerminalTestReporterTests
         var stringBuilderConsole = new StringBuilderConsole();
         var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
-            ShowPassedTests = () => false,
+            ShowTestResults = TestResultVisibility.Failed | TestResultVisibility.Skipped,
             AnsiMode = AnsiMode.NoAnsi,
             ShowProgress = () => false,
         });
@@ -3561,7 +3697,7 @@ public sealed class TerminalTestReporterTests
         var stopwatchFactory = new StopwatchFactory();
         var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
-            ShowPassedTests = () => true,
+            ShowTestResults = TestResultVisibility.All,
             AnsiMode = AnsiMode.ForceAnsi,
 
             // Intentionally do NOT enable ShowActiveTests: the optimization is per-line and we keep
@@ -3642,7 +3778,7 @@ public sealed class TerminalTestReporterTests
         var stopwatchFactory = new StopwatchFactory();
         var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
-            ShowPassedTests = () => true,
+            ShowTestResults = TestResultVisibility.All,
             AnsiMode = AnsiMode.ForceAnsi,
             ShowActiveTests = true,
             ShowProgress = () => true,

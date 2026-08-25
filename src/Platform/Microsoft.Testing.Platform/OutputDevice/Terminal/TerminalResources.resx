@@ -295,6 +295,24 @@ Passing the option without a value turns it on.</value>
     <value>--show-flaky-tests expects no parameter, or a single 'on' or 'off' parameter.</value>
     <comment>{Locked="--show-flaky-tests"}{Locked="on"}{Locked="off"}</comment>
   </data>
+  <data name="TerminalShowTestResultsOptionDescription" xml:space="preserve">
+    <value>Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
+Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
+Default is 'failed' and 'skipped' (or 'all' when --output is 'Detailed'). An explicit --show-test-results always takes precedence over --output, regardless of the order they are passed in.</value>
+    <comment>Do not localize the values {Locked="'passed'"}{Locked="'failed'"}{Locked="'skipped'"}{Locked="'all'"}{Locked="'none'"}{Locked="--output"}{Locked="'Detailed'"}{Locked="--show-test-results"}.</comment>
+  </data>
+  <data name="TerminalShowTestResultsOptionUnknownValueInvalidArgument" xml:space="preserve">
+    <value>--show-test-results expects one or more comma- or space-separated values from 'passed', 'failed', 'skipped', 'all', or 'none'.</value>
+    <comment>{Locked="--show-test-results"}{Locked="'passed'"}{Locked="'failed'"}{Locked="'skipped'"}{Locked="'all'"}{Locked="'none'"}</comment>
+  </data>
+  <data name="TerminalShowTestResultsOptionEmptySelectionInvalidArgument" xml:space="preserve">
+    <value>--show-test-results requires at least one value from 'passed', 'failed', 'skipped', 'all', or 'none'.</value>
+    <comment>{Locked="--show-test-results"}{Locked="'passed'"}{Locked="'failed'"}{Locked="'skipped'"}{Locked="'all'"}{Locked="'none'"}</comment>
+  </data>
+  <data name="TerminalShowTestResultsOptionAllOrNoneCombinedInvalidArgument" xml:space="preserve">
+    <value>--show-test-results value 'all' or 'none' cannot be combined with any other value.</value>
+    <comment>{Locked="--show-test-results"}{Locked="'all'"}{Locked="'none'"}</comment>
+  </data>
   <data name="StandardError" xml:space="preserve">
     <value>Error output</value>
   </data>

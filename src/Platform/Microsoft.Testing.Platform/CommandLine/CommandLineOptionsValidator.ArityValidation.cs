@@ -18,17 +18,20 @@ internal static partial class CommandLineOptionsValidator
         StringBuilder? stringBuilder = null;
         foreach (IGrouping<string, CommandLineParseOption> groupedOptions in parseResult.Options.GroupBy(x => x.Name, StringComparer.OrdinalIgnoreCase))
         {
-            // getting the arguments count for an option.
-            int arity = 0;
-            foreach (CommandLineParseOption optionEntry in groupedOptions)
-            {
-                arity += optionEntry.Arguments.Length;
-            }
-
             string optionName = groupedOptions.Key;
             (ICommandLineOptionsProvider provider, CommandLineOption option) = providerAndOptionByOptionName[optionName];
 
-            AppendArityErrorIfNeeded(stringBuilder: ref stringBuilder, arity, optionName, provider, option, jsonPrefix: false);
+            // Each option occurrence must satisfy its minimum, while the maximum applies across all occurrences.
+            // Report at most one error per option, preferring a missing argument to an aggregate maximum violation.
+            int arity = groupedOptions.Sum(optionEntry => optionEntry.Arguments.Length);
+            int minimumOccurrenceArity = groupedOptions.Min(optionEntry => optionEntry.Arguments.Length);
+            AppendArityErrorIfNeeded(
+                ref stringBuilder,
+                minimumOccurrenceArity < option.Arity.Min ? minimumOccurrenceArity : arity,
+                optionName,
+                provider,
+                option,
+                jsonPrefix: false);
         }
 
         // Apply the same arity rules to entries sourced from testconfig.json. We skip

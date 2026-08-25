@@ -250,6 +250,231 @@ public sealed class TerminalTestReporterCommandLineOptionsProviderTests
         Assert.AreEqual(0, TerminalOutputDevice.GetSlowestTestsCount(options));
     }
 
+    [TestMethod]
+    public void GetCommandLineOptions_IncludesShowTestResultsOption()
+    {
+        CommandLineOption option = GetOption(TerminalTestReporterCommandLineOptionsProvider.ShowTestResultsOption);
+
+        Assert.AreEqual(ArgumentArity.OneOrMore, option.Arity);
+        Assert.IsFalse(option.IsHidden);
+        Assert.IsTrue(option.IsBuiltIn);
+    }
+
+    [TestMethod]
+    [DataRow("passed")]
+    [DataRow("PASSED")]
+    [DataRow("failed")]
+    [DataRow("skipped")]
+    [DataRow("all")]
+    [DataRow("none")]
+    [DataRow(" passed ")]
+    public async Task ValidateOptionArguments_ShowTestResultsOption_AcceptsSingleValidValue(string value)
+    {
+        CommandLineOption option = GetOption(TerminalTestReporterCommandLineOptionsProvider.ShowTestResultsOption);
+
+        ValidationResult result = await _provider.ValidateOptionArgumentsAsync(option, [value]);
+
+        Assert.IsTrue(result.IsValid, $"Expected '{value}' to be a valid --show-test-results value, but got: {result.ErrorMessage}");
+    }
+
+    // A single comma-separated token, several space-separated tokens (one per array entry, as the CLI parser
+    // hands them over), and repeated option occurrences (also merged into one array by the CLI parser before
+    // validation runs) must all be accepted and treated identically. Multiple raw tokens are DataRow-encoded as a
+    // single '|'-joined string (rather than a string[] DataRow argument) to sidestep IDE0300's "simplify to
+    // collection expression" suggestion, which does not apply cleanly inside an attribute argument list.
+    [TestMethod]
+    [DataRow("passed,failed")]
+    [DataRow("passed|failed")]
+    [DataRow("failed|skipped")]
+    [DataRow("passed,failed,skipped")]
+    [DataRow("passed|failed,skipped")]
+    public async Task ValidateOptionArguments_ShowTestResultsOption_AcceptsCommaAndSpaceSeparatedCombinations(string joinedArguments)
+    {
+        string[] arguments = joinedArguments.Split('|');
+        CommandLineOption option = GetOption(TerminalTestReporterCommandLineOptionsProvider.ShowTestResultsOption);
+
+        ValidationResult result = await _provider.ValidateOptionArgumentsAsync(option, arguments);
+
+        Assert.IsTrue(result.IsValid, $"Expected '{string.Join(" / ", arguments)}' to be a valid --show-test-results value, but got: {result.ErrorMessage}");
+    }
+
+    [TestMethod]
+    [DataRow("bogus")]
+    [DataRow("passing")]
+    [DataRow("Fails")]
+    public async Task ValidateOptionArguments_ShowTestResultsOption_RejectsUnknownValue(string value)
+    {
+        CommandLineOption option = GetOption(TerminalTestReporterCommandLineOptionsProvider.ShowTestResultsOption);
+
+        ValidationResult result = await _provider.ValidateOptionArgumentsAsync(option, [value]);
+
+        Assert.IsFalse(result.IsValid, $"Expected '{value}' to be rejected as a --show-test-results value but it was accepted.");
+        Assert.AreEqual(TerminalResources.TerminalShowTestResultsOptionUnknownValueInvalidArgument, result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("")]
+    [DataRow(",")]
+    [DataRow(" , ")]
+    [DataRow(",|,")]
+    public async Task ValidateOptionArguments_ShowTestResultsOption_RejectsEmptySelection(string joinedArguments)
+    {
+        string[] arguments = joinedArguments.Split('|');
+        CommandLineOption option = GetOption(TerminalTestReporterCommandLineOptionsProvider.ShowTestResultsOption);
+
+        ValidationResult result = await _provider.ValidateOptionArgumentsAsync(option, arguments);
+
+        Assert.IsFalse(result.IsValid, $"Expected '{string.Join(" / ", arguments)}' to be rejected as an empty --show-test-results selection but it was accepted.");
+        Assert.AreEqual(TerminalResources.TerminalShowTestResultsOptionEmptySelectionInvalidArgument, result.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("all,failed")]
+    [DataRow("none|passed")]
+    [DataRow("all|none")]
+    [DataRow("passed,all")]
+    public async Task ValidateOptionArguments_ShowTestResultsOption_RejectsAllOrNoneCombinedWithOtherValues(string joinedArguments)
+    {
+        string[] arguments = joinedArguments.Split('|');
+        CommandLineOption option = GetOption(TerminalTestReporterCommandLineOptionsProvider.ShowTestResultsOption);
+
+        ValidationResult result = await _provider.ValidateOptionArgumentsAsync(option, arguments);
+
+        Assert.IsFalse(result.IsValid, $"Expected '{string.Join(" / ", arguments)}' to be rejected but it was accepted.");
+        Assert.AreEqual(TerminalResources.TerminalShowTestResultsOptionAllOrNoneCombinedInvalidArgument, result.ErrorMessage);
+    }
+
+    // Ordinary values are unioned and de-duplicated (case-insensitively) into the resolved flag set.
+    [TestMethod]
+    public void TryParseShowTestResultsArguments_WhenOrdinaryValuesRepeatAndVary_UnionsAndDedupes()
+    {
+        bool success = TerminalTestReporterCommandLineOptionsProvider.TryParseShowTestResultsArguments(
+            ["Failed", "skipped", "failed,SKIPPED"], out TestResultVisibility visibility, out ShowTestResultsValidationError error);
+
+        Assert.IsTrue(success);
+        Assert.AreEqual(ShowTestResultsValidationError.None, error);
+        Assert.AreEqual(TestResultVisibility.Failed | TestResultVisibility.Skipped, visibility);
+    }
+
+    [TestMethod]
+    public void TryParseShowTestResultsArguments_WhenAll_ResolvesToEveryOutcome()
+    {
+        bool success = TerminalTestReporterCommandLineOptionsProvider.TryParseShowTestResultsArguments(
+            ["all"], out TestResultVisibility visibility, out _);
+
+        Assert.IsTrue(success);
+        Assert.AreEqual(TestResultVisibility.All, visibility);
+    }
+
+    [TestMethod]
+    public void TryParseShowTestResultsArguments_WhenNone_ResolvesToNoOutcome()
+    {
+        bool success = TerminalTestReporterCommandLineOptionsProvider.TryParseShowTestResultsArguments(
+            ["none"], out TestResultVisibility visibility, out _);
+
+        Assert.IsTrue(success);
+        Assert.AreEqual(TestResultVisibility.None, visibility);
+    }
+
+    [TestMethod]
+    public void GetShowTestResultsVisibility_WhenOptionAbsent_ReturnsNull()
+    {
+        var options = new Helpers.TestCommandLineOptions([]);
+
+        Assert.IsNull(TerminalTestReporterCommandLineOptionsProvider.GetShowTestResultsVisibility(options));
+    }
+
+    [TestMethod]
+    public void GetShowTestResultsVisibility_WhenOptionPresent_ReturnsParsedFlags()
+    {
+        var options = new Helpers.TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [TerminalTestReporterCommandLineOptionsProvider.ShowTestResultsOption] = ["passed,skipped"],
+        });
+
+        Assert.AreEqual(TestResultVisibility.Passed | TestResultVisibility.Skipped, TerminalTestReporterCommandLineOptionsProvider.GetShowTestResultsVisibility(options));
+    }
+
+    [TestMethod]
+    public void GetShowTestResultsVisibility_WhenPresentValueWasNotValidated_Throws()
+    {
+        var options = new Helpers.TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [TerminalTestReporterCommandLineOptionsProvider.ShowTestResultsOption] = ["invalid"],
+        });
+
+        InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(
+            () => TerminalTestReporterCommandLineOptionsProvider.GetShowTestResultsVisibility(options));
+        Assert.AreEqual("The --show-test-results option was not validated.", exception.Message);
+    }
+
+    // TerminalOutputDevice.GetShowTestResultsVisibility resolution/precedence: an explicit --show-test-results
+    // always wins over --output; absent it, --output's 'Detailed' maps to 'all' and everything else (including no
+    // --output at all) maps to 'failed'+'skipped'. Since both options are read independently by name from the
+    // same options bag, the resolution cannot depend on which one a user typed first on the command line.
+    //
+    // Comparisons cast to int: TerminalOutputDevice itself is not compiled into this test project (only the
+    // OutputDevice\Terminal folder is, via the Compile Include in the .csproj), so its return value is the
+    // Microsoft.Testing.Platform.dll copy of TestResultVisibility (reached through InternalsVisibleTo), a distinct
+    // CLR type from the TestResultVisibility compiled locally into this assembly that TestResultVisibility.All
+    // etc. below resolve to. Assert.AreEqual<T> can't unify the two identically-named-but-distinct enum types, so
+    // the comparison is done on the underlying int instead.
+    [TestMethod]
+    public void GetShowTestResultsVisibility_WhenNeitherOptionSet_DefaultsToFailedAndSkipped()
+    {
+        var options = new Helpers.TestCommandLineOptions([]);
+
+        Assert.AreEqual((int)(TestResultVisibility.Failed | TestResultVisibility.Skipped), (int)TerminalOutputDevice.GetShowTestResultsVisibility(options));
+    }
+
+    [TestMethod]
+    public void GetShowTestResultsVisibility_WhenOutputDetailed_DefaultsToAll()
+    {
+        var options = new Helpers.TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [TerminalTestReporterCommandLineOptionsProvider.OutputOption] = ["detailed"],
+        });
+
+        Assert.AreEqual((int)TestResultVisibility.All, (int)TerminalOutputDevice.GetShowTestResultsVisibility(options));
+    }
+
+    [TestMethod]
+    public void GetShowTestResultsVisibility_WhenOutputNormal_DefaultsToFailedAndSkipped()
+    {
+        var options = new Helpers.TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [TerminalTestReporterCommandLineOptionsProvider.OutputOption] = ["normal"],
+        });
+
+        Assert.AreEqual((int)(TestResultVisibility.Failed | TestResultVisibility.Skipped), (int)TerminalOutputDevice.GetShowTestResultsVisibility(options));
+    }
+
+    [TestMethod]
+    public void GetShowTestResultsVisibility_WhenExplicitAndOutputDetailedBothSet_ExplicitWins()
+    {
+        // --output detailed alone would resolve to 'all'; the explicit, narrower --show-test-results must still
+        // win, regardless of the fact that --output would have produced a different (wider) default.
+        var options = new Helpers.TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [TerminalTestReporterCommandLineOptionsProvider.OutputOption] = ["detailed"],
+            [TerminalTestReporterCommandLineOptionsProvider.ShowTestResultsOption] = ["passed"],
+        });
+
+        Assert.AreEqual((int)TestResultVisibility.Passed, (int)TerminalOutputDevice.GetShowTestResultsVisibility(options));
+    }
+
+    [TestMethod]
+    public void GetShowTestResultsVisibility_WhenExplicitAndOutputNormalBothSet_ExplicitWins()
+    {
+        var options = new Helpers.TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [TerminalTestReporterCommandLineOptionsProvider.OutputOption] = ["normal"],
+            [TerminalTestReporterCommandLineOptionsProvider.ShowTestResultsOption] = ["all"],
+        });
+
+        Assert.AreEqual((int)TestResultVisibility.All, (int)TerminalOutputDevice.GetShowTestResultsVisibility(options));
+    }
+
     private CommandLineOption GetOption(string name)
         => _provider.GetCommandLineOptions().Single(o => o.Name == name);
 }

@@ -97,6 +97,10 @@ Options:
     --show-stdout
         Determines when to show captured standard output of a test.
         Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).
+    --show-test-results
+        Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
+        Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
+        Default is 'failed' and 'skipped' (or 'all' when --output is 'Detailed'). An explicit --show-test-results always takes precedence over --output, regardless of the order they are passed in.
     --timeout
         A global test execution timeout.
         Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.
