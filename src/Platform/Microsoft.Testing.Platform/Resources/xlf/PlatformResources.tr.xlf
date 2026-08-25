@@ -84,7 +84,7 @@
       </trans-unit>
       <trans-unit id="ArtifactPostProcessingManifestRunSummaryInvalid">
         <source>The artifact post-processing manifest runSummary must contain valid totalTests, passedTests, failedTests, skippedTests, durationTicks, exitCode, and testModuleCount values.</source>
-        <target state="new">The artifact post-processing manifest runSummary must contain valid totalTests, passedTests, failedTests, skippedTests, durationTicks, exitCode, and testModuleCount values.</target>
+        <target state="translated">Yapıt işlem sonrası bildirim runSummary'si, geçerli totalTests, passedTests, failedTests, skippedTests, durationTicks, exitCode ve testModuleCount değerlerini içermelidir.</target>
         <note>Do not localize property names {Locked="runSummary"}{Locked="totalTests"}{Locked="passedTests"}{Locked="failedTests"}{Locked="skippedTests"}{Locked="durationTicks"}{Locked="exitCode"}{Locked="testModuleCount"}.</note>
       </trans-unit>
       <trans-unit id="ArtifactPostProcessorCapabilityContainsSeparator">
@@ -329,27 +329,27 @@
       </trans-unit>
       <trans-unit id="DynamicExtensionAssemblyLoadFailedErrorMessage">
         <source>The assembly '{0}' of the extension '{1}' declared in the extension manifest '{2}' could not be loaded.</source>
-        <target state="new">The assembly '{0}' of the extension '{1}' declared in the extension manifest '{2}' could not be loaded.</target>
+        <target state="translated">“{2}” uzantı bildiriminde bildirilen “{1}” uzantısının “{0}” derlemesi yüklenemedi.</target>
         <note>{0} is the resolved assembly path. {1} is the extension display name. {2} is the manifest file path.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionAssemblyNotFoundErrorMessage">
         <source>The assembly '{0}' of the extension '{1}' declared in the extension manifest '{2}' was not found.</source>
-        <target state="new">The assembly '{0}' of the extension '{1}' declared in the extension manifest '{2}' was not found.</target>
+        <target state="translated">“{2}” uzantı bildiriminde bildirilen “{1}” uzantısının “{0}” derlemesi bulunamadı.</target>
         <note>{0} is the resolved assembly path. {1} is the extension display name. {2} is the manifest file path.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionCannotRegisterTestFrameworkErrorMessage">
         <source>The extension '{0}' declared in the extension manifest '{1}' tried to register a test framework. Dynamically loaded extensions must not replace the test framework, because that would silently change which tests run and what results they report.</source>
-        <target state="new">The extension '{0}' declared in the extension manifest '{1}' tried to register a test framework. Dynamically loaded extensions must not replace the test framework, because that would silently change which tests run and what results they report.</target>
+        <target state="translated">“{1}” uzantı bildiriminde bildirilen “{0}” uzantısı bir test çerçevesi kaydetmeye çalıştı. Dinamik olarak yüklenen uzantılar test çerçevesini değiştirmemelidir; çünkü bu, hangi testlerin çalıştığını ve hangi sonuçları bildirdiklerini sessizce değiştirir.</target>
         <note>{0} is the extension display name. {1} is the manifest file path.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionDuplicateIdConflictErrorMessage">
         <source>The extension id '{0}' is declared twice with different content: '{1}' in the extension manifest '{2}' and '{3}' in the extension manifest '{4}'. Ids must identify the same extension, otherwise one declaration would silently replace the other.</source>
-        <target state="new">The extension id '{0}' is declared twice with different content: '{1}' in the extension manifest '{2}' and '{3}' in the extension manifest '{4}'. Ids must identify the same extension, otherwise one declaration would silently replace the other.</target>
+        <target state="translated">“{0}” uzantı kimliği farklı içerikle iki kez bildirildi: “{2}” uzantı bildiriminde “{1}” ve “{4}” uzantı bildiriminde “{3}”. Kimlikler aynı uzantıyı tanımlamalıdır; aksi takdirde bir bildirim diğerinin yerine sessizce geçer.</target>
         <note>{0} is the extension id. {1} and {3} are 'assembly path' plus 'type full name' descriptions of the conflicting declarations. {2} and {4} are manifest file paths.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionHookFailedErrorMessage">
         <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' failed.</source>
-        <target state="new">The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' failed.</target>
+        <target state="translated">“{3}” uzantı bildiriminde bildirilen “{2}” derlemesindeki “{0}.{1}” uzantı kancası başarısız oldu.</target>
         <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionHookMustNotBeAsyncVoidErrorMessage">
@@ -369,92 +369,92 @@
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestDirectoryNotReadableErrorMessage">
         <source>The directory '{0}' could not be searched for extension manifests, so the platform cannot tell whether any extension had to be loaded. Remove '{1}' from the command line to skip extension manifest discovery.</source>
-        <target state="new">The directory '{0}' could not be searched for extension manifests, so the platform cannot tell whether any extension had to be loaded. Remove '{1}' from the command line to skip extension manifest discovery.</target>
+        <target state="translated">‘{0}' dizini, uzantı bildirimleri için aranamadı; bu nedenle platform, herhangi bir uzantının yüklenmesi gerekip gerekmediğini belirleyemez. Uzantı bildirimini keşfetmeyi atlamak için komut satırından '{1}' öğesini kaldırın.</target>
         <note>{0} is the directory path. {1} is the command line option that enables the feature.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestDuplicatePropertyErrorMessage">
         <source>The extension manifest '{0}' is invalid: the '{1}' property is declared more than once, so one of the declarations would be discarded.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the '{1}' property is declared more than once, so one of the declarations would be discarded.</target>
+        <target state="translated">Derleme bildirimi '{0}' geçersiz: '{1}' özelliği birden fazla kez bildirildiğinden bildirimlerden biri atılacaktır.</target>
         <note>{0} is the manifest file path. {1} is the name of the duplicated JSON property.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestEntryDuplicatePropertyErrorMessage">
         <source>The extension manifest '{0}' is invalid: the extension at index {1} declares the '{2}' property more than once, so one of the declarations would be discarded.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the extension at index {1} declares the '{2}' property more than once, so one of the declarations would be discarded.</target>
+        <target state="translated">‘{0}' uzantı bildirimi geçersiz: dizin {1} konumundaki uzantı '{2}' özelliğini birden fazla kez bildiriyor, bu nedenle bildirimlerden biri atılacaktır.</target>
         <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the duplicated JSON property.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestEntryInvalidAssemblyPathErrorMessage">
         <source>The extension manifest '{0}' is invalid: the assembly path '{2}' of the extension at index {1} is not a valid path.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the assembly path '{2}' of the extension at index {1} is not a valid path.</target>
+        <target state="translated">“{0}” uzantı bildirimi geçersiz: dizin {1} konumundaki uzantının “{2}” derleme yolu geçerli bir yol değil.</target>
         <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the invalid assembly path.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestEntryMissingPropertyErrorMessage">
         <source>The extension manifest '{0}' is invalid: the extension at index {1} is missing the required '{2}' property, or its value is empty.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the extension at index {1} is missing the required '{2}' property, or its value is empty.</target>
+        <target state="translated">Uzantı bildirimi '{0}' geçersiz: dizin {1} konumundaki uzantının gerekli '{2}' özelliği eksik veya değeri boş.</target>
         <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the missing JSON property.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestEntryNotObjectErrorMessage">
         <source>The extension manifest '{0}' is invalid: the element at index {1} of '{2}' must be a JSON object.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the element at index {1} of '{2}' must be a JSON object.</target>
+        <target state="translated">“{0}” uzantı bildirimi geçersiz: “{2}” içindeki {1} indeksindeki öğe bir JSON nesnesi olmalıdır.</target>
         <note>{0} is the manifest file path. {1} is the zero-based index of the element. {2} is the name of the JSON array property.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestEntryPropertyNotBooleanErrorMessage">
         <source>The extension manifest '{0}' is invalid: the '{2}' property of the extension at index {1} must be a JSON boolean.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the '{2}' property of the extension at index {1} must be a JSON boolean.</target>
+        <target state="translated">“{0}” uzantı bildirimi geçersiz: dizin {1} konumundaki uzantının “{2}” özelliği bir JSON boole değeri olmalıdır.</target>
         <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the JSON property.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestEntryPropertyNotStringErrorMessage">
         <source>The extension manifest '{0}' is invalid: the '{2}' property of the extension at index {1} must be a JSON string.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the '{2}' property of the extension at index {1} must be a JSON string.</target>
+        <target state="translated">“{0}” uzantı bildirimi geçersiz: dizin {1} konumundaki uzantının “{2}” özelliği bir JSON dizesi olmalıdır.</target>
         <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the JSON property.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestExtensionsPropertyNotArrayErrorMessage">
         <source>The extension manifest '{0}' is invalid: the '{1}' property must be a JSON array.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the '{1}' property must be a JSON array.</target>
+        <target state="translated">‘{0}' uzantı bildirimi geçersiz: '{1}' özelliği bir JSON dizisi olmalıdır.</target>
         <note>{0} is the manifest file path. {1} is the name of the JSON property that has the wrong type.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestInvalidJsonErrorMessage">
         <source>The extension manifest '{0}' is not valid JSON. {1}</source>
-        <target state="new">The extension manifest '{0}' is not valid JSON. {1}</target>
+        <target state="translated">Uzantı bildirimi '{0}' geçersiz JSON. {1}</target>
         <note>{0} is the manifest file path. {1} is the underlying JSON parser error message.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestMissingExtensionsPropertyErrorMessage">
         <source>The extension manifest '{0}' is invalid: the required '{1}' property is missing.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the required '{1}' property is missing.</target>
+        <target state="translated">Uzantı bildirimi '{0}' geçersiz: gerekli '{1}' özelliği eksik.</target>
         <note>{0} is the manifest file path. {1} is the name of the missing JSON property.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestReadFailedErrorMessage">
         <source>The extension manifest '{0}' could not be read.</source>
-        <target state="new">The extension manifest '{0}' could not be read.</target>
+        <target state="translated">Uzantı bildirimi '{0}' okunamadı.</target>
         <note>{0} is the manifest file path.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestRootNotObjectErrorMessage">
         <source>The extension manifest '{0}' is invalid: the top-level JSON element must be an object but '{1}' was found.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the top-level JSON element must be an object but '{1}' was found.</target>
+        <target state="translated">Uzantı bildirimi '{0}' geçersiz: en üst düzey JSON öğesi bir nesne olmalıdır, ancak '{1}' bulundu.</target>
         <note>{0} is the manifest file path. {1} is the JSON value kind that was found.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestTrailingContentErrorMessage">
         <source>Unexpected content after the top-level JSON object.</source>
-        <target state="new">Unexpected content after the top-level JSON object.</target>
+        <target state="translated">En üst düzey JSON nesnesinden sonra beklenmeyen içerik var.</target>
         <note>Used as the parser-error detail when a manifest contains text after its closing brace.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionTypeNotFoundErrorMessage">
         <source>The type '{0}' was not found in the assembly '{1}' declared in the extension manifest '{2}'.</source>
-        <target state="new">The type '{0}' was not found in the assembly '{1}' declared in the extension manifest '{2}'.</target>
+        <target state="translated">“{2}” uzantı bildiriminde bildirilen “{1}” derlemesinde “{0}” türü bulunamadı.</target>
         <note>{0} is the full type name. {1} is the resolved assembly path. {2} is the manifest file path.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionsLoadedEntry">
         <source>  {0} -&gt; {1} ({2}), declared in {3}</source>
-        <target state="new">  {0} -&gt; {1} ({2}), declared in {3}</target>
+        <target state="translated">  {0} -&gt; {1} ({2}), {3} içinde bildirildi</target>
         <note>{0} is the extension display name. {1} is the resolved assembly path. {2} is the full type name of the hook. {3} is the manifest file path.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionsLoadedHeader">
         <source>Dynamically loaded test platform extensions ({0}):</source>
-        <target state="new">Dynamically loaded test platform extensions ({0}):</target>
+        <target state="translated">Dinamik olarak yüklenen test platformu uzantıları ({0}):</target>
         <note>{0} is the number of extensions that were loaded.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionsNotSupportedOnCurrentRuntimeErrorMessage">
         <source>The extension manifest '{0}' declares extensions to load, but the current runtime does not support loading assemblies dynamically (for example when published with native AOT). Set the '{1}' property of each extension to 'false', remove the manifest, or remove '{2}' from the command line.</source>
-        <target state="new">The extension manifest '{0}' declares extensions to load, but the current runtime does not support loading assemblies dynamically (for example when published with native AOT). Set the '{1}' property of each extension to 'false', remove the manifest, or remove '{2}' from the command line.</target>
+        <target state="translated">Uzantı bildirimi '{0}', yüklemek için uzantılar bildiriyor, ancak geçerli clr çalışma zamanı derlemeleri dinamik olarak yüklemeyi desteklemiyor (örneğin, native AOT ile yayımlandığında). Her uzantının '{1}' özelliğini 'false' olarak ayarlayın, bildirimi kaldırın veya komut satırından '{2}' seçeneğini kaldırın.</target>
         <note>{0} is the manifest file path. {1} is the name of the JSON property that disables an extension. {2} is the command line option that enables the feature. {Locked="'false'"}</note>
       </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
@@ -715,9 +715,9 @@ Bunun test yürütmesini yavaşlatacağını unutmayın.</target>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</source>
-        <target state="translated">Tanılama günlük kaydını etkinleştirir. Varsayılan günlük düzeyi: 'Trace'.
-Dosya, çıkış dizinine log_[yyMMddHHmmssfff].diag adıyla yazılır</target>
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</source>
+        <target state="new">Enable the diagnostic logging. The default log level is 'Trace'.
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</target>
         <note>{Locked="Trace"}{Locked="log_[yyMMddHHmmssfff].diag"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -738,8 +738,8 @@ Belirtilmezse dosya varsayılan 'TestResults' dizini içinde oluşturulur.</targ
         <note>{Locked="TestResults"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
-        <source>Prefix for the log file name that will replace '[log]_.'</source>
-        <target state="translated">'[log]_.' öğesinin yerini alan günlük dosyası adına önek uygular.</target>
+        <source>Replace '[log]_.' with the specified log file name prefix.</source>
+        <target state="new">Replace '[log]_.' with the specified log file name prefix.</target>
         <note>{Locked="[log]_."}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
@@ -823,7 +823,7 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
       </trans-unit>
       <trans-unit id="PlatformCommandLineEnableDynamicExtensionsOptionDescription">
         <source>Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.</source>
-        <target state="new">Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.</target>
+        <target state="translated">Test uygulamasının yanında bulunan '*.testingplatformextensions.json' bildirimleri tarafından bildirilen test platformu uzantılarının yüklenmesini etkinleştirin. Varsayılan olarak devre dışıdır.</target>
         <note>{Locked="'*.testingplatformextensions.json'"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
@@ -862,9 +862,9 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
         <source>Do not report a non-successful exit value for the specified exit codes.
 For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
 For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</source>
-        <target state="new">Do not report a non-successful exit value for the specified exit codes.
-For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
-For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</target>
+        <target state="translated">Belirtilen çıkış kodları için başarı dışı bir çıkış değeri bildirmeyin.
+Örneğin, '--ignore-exit-code 8;9' 8 ve 9 çıkış kodlarını yoksayar ve bu durumlarda 0 döndürür.
+Çıkış kodları hakkında daha fazla bilgi için https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes adresine bakın.</target>
         <note>{Locked="'--ignore-exit-code 8;9'"} {Locked="https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
@@ -920,8 +920,8 @@ For more information about exit codes, see https://learn.microsoft.com/dotnet/co
         <note>{0} is the option name without the leading dashes.</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDescription">
-        <source>Microsoft Testing Platform command line provider</source>
-        <target state="translated">Microsoft Testing Platform komut satırı sağlayıcısı</target>
+        <source>Microsoft Testing Platform command line provider.</source>
+        <target state="new">Microsoft Testing Platform command line provider.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDisplayName">
@@ -949,8 +949,8 @@ Varsayılan değer, test uygulamasını içeren dizindeki TestResults'dır.</tar
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineSkipBuildersNumberCheckOptionDescription">
-        <source>For testing purposes</source>
-        <target state="translated">Test amacıyla</target>
+        <source>For testing purposes.</source>
+        <target state="new">For testing purposes.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTestHostControllerPIDOptionDescription">
@@ -1204,7 +1204,7 @@ Microsoft Test Platformu telemetrisi hakkında daha fazla bilgi edinin: https://
       </trans-unit>
       <trans-unit id="TestHostControllerConnectionInvalidAuthorizedSecurityIdentityErrorMessage">
         <source>The test host launcher '{0}' (UID: {1}) asked to authorize the security identity '{2}' on the test host controller connection, but only the identity of a single sandboxed application (on Windows, a security identifier of the form 'S-1-15-2-...') can be authorized. Users, groups and the catch-all '{3}' security identifier are never granted access.</source>
-        <target state="new">The test host launcher '{0}' (UID: {1}) asked to authorize the security identity '{2}' on the test host controller connection, but only the identity of a single sandboxed application (on Windows, a security identifier of the form 'S-1-15-2-...') can be authorized. Users, groups and the catch-all '{3}' security identifier are never granted access.</target>
+        <target state="translated">Test konağı başlatıcısı '{0}' (UID: {1}) '{2}' güvenlik kimliğinin test konağı denetleyici bağlantısında yetkilendirilmesini istedi, ancak yalnızca korumalı tek bir uygulama (Windows'da, 'S-1-15-2-...' biçiminde bir güvenlik tanımlayıcısı) yetkilendirilebilir. Kullanıcılara, gruplara ve kapsayıcı '{3}' güvenlik tanımlayıcısına hiçbir zaman erişim izni verilmez.</target>
         <note>{0} is the launcher display name, {1} is the launcher unique identifier, {2} is the rejected security identity, {3} is the well-known 'ALL APPLICATION PACKAGES' security identifier. {Locked="'S-1-15-2-...'"}</note>
       </trans-unit>
       <trans-unit id="TestHostControllerProcessRestartNotSupportedOnWebAssembly">

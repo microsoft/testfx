@@ -5,8 +5,11 @@ using System.Threading.Tasks;
 
 using AwesomeAssertions;
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using TestFramework.ForTestingMSTest;
 
@@ -217,6 +220,31 @@ public sealed class SourceGeneratedReflectionOperationsTests : TestContainer
         operations.GetAttributes<MarkerAttribute>(method).Should().ContainSingle().Which.Should().BeSameAs(generated);
     }
 
+    public void RegisteredAsyncMethodAttributes_PreserveDeclaredAttributesAndRejectAsyncVoid()
+    {
+        MethodInfo method = typeof(AsyncAttributedSample).GetMethod(nameof(AsyncAttributedSample.AsyncVoidMethod))!;
+        var generatedMarker = new MarkerAttribute("generated");
+        AsyncStateMachineAttribute asyncStateMachineAttribute = method.GetCustomAttribute<AsyncStateMachineAttribute>()!;
+        var debuggerStepThroughAttribute = new DebuggerStepThroughAttribute();
+        var provider = new SourceGeneratedReflectionDataProvider
+        {
+            TypeMethodAttributes = new Dictionary<MethodInfo, Attribute[]>
+            {
+                [method] = [new TestMethodAttribute(), generatedMarker, asyncStateMachineAttribute, debuggerStepThroughAttribute],
+            },
+        };
+        var operations = new SourceGeneratedReflectionOperations(provider);
+
+        operations.GetAttributes<MarkerAttribute>(method).Should().ContainSingle().Which.Should().BeSameAs(generatedMarker);
+        operations.GetFirstAttributeOrDefault<AsyncStateMachineAttribute>(method).Should().BeSameAs(asyncStateMachineAttribute);
+        operations.GetFirstAttributeOrDefault<DebuggerStepThroughAttribute>(method).Should().BeSameAs(debuggerStepThroughAttribute);
+
+        var validator = new TestMethodValidator(new SourceGeneratedReflectHelper(operations), discoverInternals: false);
+        var warnings = new List<string>();
+        validator.IsValidTestMethod(method, typeof(AsyncAttributedSample), warnings).Should().BeFalse();
+        warnings.Should().ContainSingle();
+    }
+
     public void MethodAttributeHelpers_GetSingleAttributeOrDefault_ThrowsLocalizedErrorOnDuplicates()
     {
         MethodInfo method = typeof(AttributedSample).GetMethod(nameof(AttributedSample.AttributedMethod))!;
@@ -337,4 +365,20 @@ public sealed class SourceGeneratedReflectionOperationsTests : TestContainer
     }
 
     private sealed class DerivedMarkerAttribute(string value) : MarkerAttribute(value);
+
+    private sealed class SourceGeneratedReflectHelper(SourceGeneratedReflectionOperations operations) : ReflectHelper
+    {
+        public override bool IsAttributeDefined<TAttribute>(ICustomAttributeProvider attributeProvider)
+            => operations.IsAttributeDefined<TAttribute>(attributeProvider);
+
+        public override TAttribute? GetFirstAttributeOrDefault<TAttribute>(ICustomAttributeProvider attributeProvider)
+            where TAttribute : class
+            => operations.GetFirstAttributeOrDefault<TAttribute>(attributeProvider);
+    }
+
+    private sealed class AsyncAttributedSample
+    {
+        [SuppressMessage("Usage", "VSTHRD100:Avoid async void methods", Justification = "Verifies async-void rejection.")]
+        public async void AsyncVoidMethod() => await Task.Yield();
+    }
 }

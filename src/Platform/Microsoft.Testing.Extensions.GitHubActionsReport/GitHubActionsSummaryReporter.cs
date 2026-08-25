@@ -48,9 +48,12 @@ internal sealed partial class GitHubActionsSummaryReporter :
     private readonly IOutputDevice _outputDevice;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
     private readonly ITestApplicationProcessExitCode _testApplicationProcessExitCode;
+    private readonly ITestCoverageResult _testCoverageResult;
     private readonly ILogger _logger;
     private readonly Lazy<string> _targetFrameworkMoniker;
     private readonly bool _isEnabled;
+    private readonly bool _writeOnFailureOnly;
+    private readonly GitHubActionsStepSummarySections _sections;
     private readonly bool _includeFailureDetails;
     private readonly Func<bool> _shouldDeferToArtifactPostProcessing;
 
@@ -72,6 +75,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
         IOutputDevice outputDevice,
         ITestApplicationModuleInfo testApplicationModuleInfo,
         ITestApplicationProcessExitCode testApplicationProcessExitCode,
+        ITestCoverageResult testCoverageResult,
         ILoggerFactory loggerFactory,
         Func<bool> shouldDeferToArtifactPostProcessing)
     {
@@ -82,9 +86,12 @@ internal sealed partial class GitHubActionsSummaryReporter :
         _outputDevice = outputDevice;
         _testApplicationModuleInfo = testApplicationModuleInfo;
         _testApplicationProcessExitCode = testApplicationProcessExitCode;
+        _testCoverageResult = testCoverageResult;
         _logger = loggerFactory.CreateLogger<GitHubActionsSummaryReporter>();
         _targetFrameworkMoniker = new(TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform);
         _isEnabled = GitHubActionsFeature.IsEnabled(commandLineOptions, environment, GitHubActionsCommandLineOptions.GitHubActionsStepSummary);
+        _writeOnFailureOnly = GitHubActionsFeature.IsStepSummaryOnFailureOnly(commandLineOptions);
+        _sections = GitHubActionsStepSummarySectionsParser.GetSections(commandLineOptions);
         _includeFailureDetails = GitHubActionsFeature.IsKnobEnabled(commandLineOptions, GitHubActionsCommandLineOptions.GitHubActionsFailureDetails);
         _shouldDeferToArtifactPostProcessing = shouldDeferToArtifactPostProcessing;
     }
@@ -204,11 +211,12 @@ internal sealed partial class GitHubActionsSummaryReporter :
 
             string assemblyName = _testApplicationModuleInfo.TryGetAssemblyName() ?? "unknown assembly name";
             int exitCode = _testApplicationProcessExitCode.GetProcessExitCode();
+            CiCoverageSummaryData coverage = CiCoverageSummary.Create(_testCoverageResult, testSessionContext.SessionUid);
             if (_shouldDeferToArtifactPostProcessing()
                 && _configuration.GetTestResultDirectory() is { } resultsDirectory
                 && !RoslynString.IsNullOrWhiteSpace(resultsDirectory))
             {
-                CiRunSummaryModule module = CreateModule(snapshot, assemblyName, testSessionContext);
+                CiRunSummaryModule module = CreateModule(snapshot, assemblyName, testSessionContext, coverage);
                 string fragmentPath = await CiRunSummaryAggregation.WriteFragmentAsync(
                     resultsDirectory,
                     GitHubActionsSummaryArtifactPostProcessor.Provider,
@@ -225,8 +233,15 @@ internal sealed partial class GitHubActionsSummaryReporter :
                 return;
             }
 
+            if (_writeOnFailureOnly
+                && !snapshot.Any(static record => record.Kind == TerminalKind.Failed)
+                && !GitHubActionsExitCode.IndicatesFailure(exitCode))
+            {
+                return;
+            }
+
             // The 1 MiB cap applies to the whole GITHUB_STEP_SUMMARY file, which every test project in the job
-            // appends to, so this reporter degrades in two stages as the shared file fills up:
+            // appends to, so this reporter degrades in stages as the shared file fills up:
             //
             //   below 40%  full section, failures expanded into collapsible diagnostics
             //   40% - 60%  full section, but failures listed as name and duration only
@@ -241,7 +256,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
             // report where every project degrades gracefully into one where the first get everything and the rest
             // get nothing.
             var writer = new StepSummaryWriter(_fileSystem, path!, _logger, StepSummaryMaxWriteAttempts, StepSummaryRetryDelay);
-            if (!await TryAppendRenderedSummaryAsync(writer, snapshot, assemblyName, exitCode, testSessionContext).ConfigureAwait(false))
+            if (!await TryAppendRenderedSummaryAsync(writer, snapshot, assemblyName, exitCode, coverage, testSessionContext).ConfigureAwait(false))
             {
                 await ReportSectionDroppedAsync(writer, testSessionContext).ConfigureAwait(false);
             }
@@ -271,6 +286,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
         IReadOnlyList<TestRecord> snapshot,
         string assemblyName,
         int exitCode,
+        CiCoverageSummaryData coverage,
         ITestSessionContext testSessionContext)
     {
         try
@@ -282,7 +298,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
                     bool condense = budget.Stage is SummaryStage.Condensed or SummaryStage.Unlisted;
                     string markdown = condense
                         ? BuildMinimalMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value, exitCode)
-                        : BuildMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value, exitCode, _includeFailureDetails, budget);
+                        : BuildMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value, exitCode, coverage, _sections, _includeFailureDetails, budget);
 
                     // The note is only warranted once whole project sections start disappearing. Dropping the
                     // expanded diagnostics leaves every project and every failing test still named, which is a
@@ -366,8 +382,10 @@ internal sealed partial class GitHubActionsSummaryReporter :
     private CiRunSummaryModule CreateModule(
         IReadOnlyList<TestRecord> records,
         string assemblyName,
-        ITestSessionContext testSessionContext)
-        => CiRunSummaryAggregation.CreateModule(
+        ITestSessionContext testSessionContext,
+        CiCoverageSummaryData coverage)
+    {
+        CiRunSummaryModule module = CiRunSummaryAggregation.CreateModule(
             records,
             assemblyName,
             _testApplicationModuleInfo.GetCurrentTestApplicationFullPath(),
@@ -376,7 +394,12 @@ internal sealed partial class GitHubActionsSummaryReporter :
             _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID),
             testSessionContext.SessionUid.Value,
             GetAttemptNumber(),
-            _testApplicationProcessExitCode.GetProcessExitCode());
+            _testApplicationProcessExitCode.GetProcessExitCode(),
+            coverage: coverage,
+            writeOnFailureOnly: _writeOnFailureOnly);
+        module.GitHubActionsStepSummarySections = GitHubActionsStepSummarySectionsParser.ToPersistedValues(_sections);
+        return module;
+    }
 
     private int GetAttemptNumber()
         => int.TryParse(

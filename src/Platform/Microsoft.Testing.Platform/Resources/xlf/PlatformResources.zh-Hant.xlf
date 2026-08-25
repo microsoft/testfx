@@ -84,7 +84,7 @@
       </trans-unit>
       <trans-unit id="ArtifactPostProcessingManifestRunSummaryInvalid">
         <source>The artifact post-processing manifest runSummary must contain valid totalTests, passedTests, failedTests, skippedTests, durationTicks, exitCode, and testModuleCount values.</source>
-        <target state="new">The artifact post-processing manifest runSummary must contain valid totalTests, passedTests, failedTests, skippedTests, durationTicks, exitCode, and testModuleCount values.</target>
+        <target state="translated">成品後置處理資訊清單 runSummary 必須包含有效的 totalTests、passedTests、failedTests、skippedTests、durationTicks、exitCode 和 testModuleCount 值。</target>
         <note>Do not localize property names {Locked="runSummary"}{Locked="totalTests"}{Locked="passedTests"}{Locked="failedTests"}{Locked="skippedTests"}{Locked="durationTicks"}{Locked="exitCode"}{Locked="testModuleCount"}.</note>
       </trans-unit>
       <trans-unit id="ArtifactPostProcessorCapabilityContainsSeparator">
@@ -329,132 +329,132 @@
       </trans-unit>
       <trans-unit id="DynamicExtensionAssemblyLoadFailedErrorMessage">
         <source>The assembly '{0}' of the extension '{1}' declared in the extension manifest '{2}' could not be loaded.</source>
-        <target state="new">The assembly '{0}' of the extension '{1}' declared in the extension manifest '{2}' could not be loaded.</target>
+        <target state="translated">無法載入延伸模組資訊清單 '{2}' 中宣告的延伸模組 '{1}' 所屬組件 '{0}'。</target>
         <note>{0} is the resolved assembly path. {1} is the extension display name. {2} is the manifest file path.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionAssemblyNotFoundErrorMessage">
         <source>The assembly '{0}' of the extension '{1}' declared in the extension manifest '{2}' was not found.</source>
-        <target state="new">The assembly '{0}' of the extension '{1}' declared in the extension manifest '{2}' was not found.</target>
+        <target state="translated">找不到在延伸模組資訊清單 '{2}' 中宣告的延伸模組 '{1}' 所屬組件 '{0}'。</target>
         <note>{0} is the resolved assembly path. {1} is the extension display name. {2} is the manifest file path.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionCannotRegisterTestFrameworkErrorMessage">
         <source>The extension '{0}' declared in the extension manifest '{1}' tried to register a test framework. Dynamically loaded extensions must not replace the test framework, because that would silently change which tests run and what results they report.</source>
-        <target state="new">The extension '{0}' declared in the extension manifest '{1}' tried to register a test framework. Dynamically loaded extensions must not replace the test framework, because that would silently change which tests run and what results they report.</target>
+        <target state="translated">延伸模組資訊清單 '{1}' 中宣告的延伸模組 '{0}' 嘗試註冊測試架構。動態載入的延伸模組不得取代測試架構，因為這會在不通知的情況下變更會執行的測試及其回報的結果。</target>
         <note>{0} is the extension display name. {1} is the manifest file path.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionDuplicateIdConflictErrorMessage">
         <source>The extension id '{0}' is declared twice with different content: '{1}' in the extension manifest '{2}' and '{3}' in the extension manifest '{4}'. Ids must identify the same extension, otherwise one declaration would silently replace the other.</source>
-        <target state="new">The extension id '{0}' is declared twice with different content: '{1}' in the extension manifest '{2}' and '{3}' in the extension manifest '{4}'. Ids must identify the same extension, otherwise one declaration would silently replace the other.</target>
+        <target state="translated">延伸模組識別碼 '{0}' 宣告了兩次，但內容不同: '{1}' 位於延伸模組資訊清單 '{2}'，而 '{3}' 位於延伸模組資訊清單 '{4}'。識別碼必須表示同一個延伸模組，否則其中一個宣告會在不通知的情況下取代另一個。</target>
         <note>{0} is the extension id. {1} and {3} are 'assembly path' plus 'type full name' descriptions of the conflicting declarations. {2} and {4} are manifest file paths.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionHookFailedErrorMessage">
         <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' failed.</source>
-        <target state="new">The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' failed.</target>
+        <target state="translated">延伸模組資訊清單 '{3}' 中所宣告、來自組件 '{2}' 的 '{0}.{1}' 延伸模組掛鉤失敗。</target>
         <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionHookMustNotBeAsyncVoidErrorMessage">
         <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' is declared 'async void'. The platform invokes the hook synchronously, so it would return at its first await: anything it registers after that point would race the test application's own setup, and any failure would be lost. Make the hook synchronous.</source>
-        <target state="new">The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' is declared 'async void'. The platform invokes the hook synchronously, so it would return at its first await: anything it registers after that point would race the test application's own setup, and any failure would be lost. Make the hook synchronous.</target>
+        <target state="translated">延伸模組資訊清單 '{3}' 中所宣告、來自組件 '{2}' 的 '{0}.{1}' 延伸模組掛鉤宣告為 'async void'。平台會同步叫用此掛鉤，因此它會在第一次 await 時返回: 之後註冊的任何內容都會和測試應用程式本身的設定發生競爭，而任何失敗都會遺失。請將此掛鉤改為同步。</target>
         <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {Locked="'async void'"}</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionHookMustReturnVoidErrorMessage">
         <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' returns '{4}' but must return 'void'. The platform invokes the hook synchronously, so a return value is never observed; a returned task in particular would never be awaited, and its registrations and failures would be lost.</source>
-        <target state="new">The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' returns '{4}' but must return 'void'. The platform invokes the hook synchronously, so a return value is never observed; a returned task in particular would never be awaited, and its registrations and failures would be lost.</target>
+        <target state="translated">延伸模組資訊清單 '{3}' 中所宣告、來自組件 '{2}' 的 '{0}.{1}' 延伸模組掛鉤傳回 '{4}'，但需傳回 'void'。平台會同步叫用此掛鉤，因此永遠不會觀察到傳回值；尤其是，傳回的工作不會被等待，其註冊和失敗都會遺失。</target>
         <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {4} is the actual return type name. {Locked="'void'"}</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionHookNotFoundErrorMessage">
         <source>The type '{0}' in the assembly '{1}' declared in the extension manifest '{2}' does not expose a 'public static void' method named '{3}' taking an 'ITestApplicationBuilder' and a 'string[]'.</source>
-        <target state="new">The type '{0}' in the assembly '{1}' declared in the extension manifest '{2}' does not expose a 'public static void' method named '{3}' taking an 'ITestApplicationBuilder' and a 'string[]'.</target>
+        <target state="translated">在延伸模組資訊清單 '{2}' 中宣告的組件 '{1}' 內的類型 '{0}' 未公開名為 '{3}' 的 'public static void' 方法，而該方法必須接受 'ITestApplicationBuilder' 和 'string[]'。</target>
         <note>{0} is the full type name. {1} is the resolved assembly path. {2} is the manifest file path. {3} is the expected method name. {Locked="'public static void'"}{Locked="'ITestApplicationBuilder'"}{Locked="'string[]'"}</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestDirectoryNotReadableErrorMessage">
         <source>The directory '{0}' could not be searched for extension manifests, so the platform cannot tell whether any extension had to be loaded. Remove '{1}' from the command line to skip extension manifest discovery.</source>
-        <target state="new">The directory '{0}' could not be searched for extension manifests, so the platform cannot tell whether any extension had to be loaded. Remove '{1}' from the command line to skip extension manifest discovery.</target>
+        <target state="translated">無法搜尋目錄 '{0}' 中的延伸模組資訊清單，因此平台無法判斷是否需要載入任何延伸模組。若要略過延伸模組資訊清單探索，請從命令列移除 '{1}'。</target>
         <note>{0} is the directory path. {1} is the command line option that enables the feature.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestDuplicatePropertyErrorMessage">
         <source>The extension manifest '{0}' is invalid: the '{1}' property is declared more than once, so one of the declarations would be discarded.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the '{1}' property is declared more than once, so one of the declarations would be discarded.</target>
+        <target state="translated">延伸模組資訊清單 '{0}' 無效: '{1}' 屬性宣告了不只一次，因此會捨棄其中一個宣告。</target>
         <note>{0} is the manifest file path. {1} is the name of the duplicated JSON property.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestEntryDuplicatePropertyErrorMessage">
         <source>The extension manifest '{0}' is invalid: the extension at index {1} declares the '{2}' property more than once, so one of the declarations would be discarded.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the extension at index {1} declares the '{2}' property more than once, so one of the declarations would be discarded.</target>
+        <target state="translated">延伸模組資訊清單 '{0}' 無效: 索引 '{1}' 處的延伸模組宣告 '{2}' 屬性一次以上，因此會捨棄其中一個宣告。</target>
         <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the duplicated JSON property.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestEntryInvalidAssemblyPathErrorMessage">
         <source>The extension manifest '{0}' is invalid: the assembly path '{2}' of the extension at index {1} is not a valid path.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the assembly path '{2}' of the extension at index {1} is not a valid path.</target>
+        <target state="translated">延伸模組資訊清單 '{0}' 無效: 索引 {1} 處延伸模組的組件路徑 '{2}' 不是有效的路徑。</target>
         <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the invalid assembly path.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestEntryMissingPropertyErrorMessage">
         <source>The extension manifest '{0}' is invalid: the extension at index {1} is missing the required '{2}' property, or its value is empty.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the extension at index {1} is missing the required '{2}' property, or its value is empty.</target>
+        <target state="translated">延伸模組資訊清單 '{0}' 無效: 索引 {1} 處的延伸模組缺少必要的 '{2}' 屬性，或其值為空。</target>
         <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the missing JSON property.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestEntryNotObjectErrorMessage">
         <source>The extension manifest '{0}' is invalid: the element at index {1} of '{2}' must be a JSON object.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the element at index {1} of '{2}' must be a JSON object.</target>
+        <target state="translated">延伸模組資訊清單 '{0}' 無效: '{2}' 的索引 {1} 處的元素必須是 JSON 物件。</target>
         <note>{0} is the manifest file path. {1} is the zero-based index of the element. {2} is the name of the JSON array property.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestEntryPropertyNotBooleanErrorMessage">
         <source>The extension manifest '{0}' is invalid: the '{2}' property of the extension at index {1} must be a JSON boolean.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the '{2}' property of the extension at index {1} must be a JSON boolean.</target>
+        <target state="translated">延伸模組資訊清單 '{0}' 無效: 索引 {1} 處延伸模組的 '{2}' 屬性必須是 JSON 布林值。</target>
         <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the JSON property.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestEntryPropertyNotStringErrorMessage">
         <source>The extension manifest '{0}' is invalid: the '{2}' property of the extension at index {1} must be a JSON string.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the '{2}' property of the extension at index {1} must be a JSON string.</target>
+        <target state="translated">延伸模組資訊清單 '{0}' 無效: 索引 {1} 處延伸模組的 '{2}' 屬性必須是 JSON 字串。</target>
         <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the JSON property.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestExtensionsPropertyNotArrayErrorMessage">
         <source>The extension manifest '{0}' is invalid: the '{1}' property must be a JSON array.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the '{1}' property must be a JSON array.</target>
+        <target state="translated">延伸模組資訊清單 '{0}' 無效: '{1}' 屬性必須是 JSON 陣列。</target>
         <note>{0} is the manifest file path. {1} is the name of the JSON property that has the wrong type.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestInvalidJsonErrorMessage">
         <source>The extension manifest '{0}' is not valid JSON. {1}</source>
-        <target state="new">The extension manifest '{0}' is not valid JSON. {1}</target>
+        <target state="translated">延伸模組資訊清單 '{0}' 不是有效的 JSON。 {1}</target>
         <note>{0} is the manifest file path. {1} is the underlying JSON parser error message.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestMissingExtensionsPropertyErrorMessage">
         <source>The extension manifest '{0}' is invalid: the required '{1}' property is missing.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the required '{1}' property is missing.</target>
+        <target state="translated">延伸模組資訊清單 '{0}' 無效: 缺少必要的 '{1}' 屬性。</target>
         <note>{0} is the manifest file path. {1} is the name of the missing JSON property.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestReadFailedErrorMessage">
         <source>The extension manifest '{0}' could not be read.</source>
-        <target state="new">The extension manifest '{0}' could not be read.</target>
+        <target state="translated">無法讀取延伸模組資訊清單 '{0}'。</target>
         <note>{0} is the manifest file path.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestRootNotObjectErrorMessage">
         <source>The extension manifest '{0}' is invalid: the top-level JSON element must be an object but '{1}' was found.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the top-level JSON element must be an object but '{1}' was found.</target>
+        <target state="translated">延伸模組資訊清單 '{0}' 無效: 最上層 JSON 元素必須是物件，但找到 '{1}'。</target>
         <note>{0} is the manifest file path. {1} is the JSON value kind that was found.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestTrailingContentErrorMessage">
         <source>Unexpected content after the top-level JSON object.</source>
-        <target state="new">Unexpected content after the top-level JSON object.</target>
+        <target state="translated">最上層 JSON 物件之後有未預期的內容。</target>
         <note>Used as the parser-error detail when a manifest contains text after its closing brace.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionTypeNotFoundErrorMessage">
         <source>The type '{0}' was not found in the assembly '{1}' declared in the extension manifest '{2}'.</source>
-        <target state="new">The type '{0}' was not found in the assembly '{1}' declared in the extension manifest '{2}'.</target>
+        <target state="translated">在延伸模組資訊清單 '{2}' 中宣告的組件 '{1}' 中，找不到類型 '{0}'。</target>
         <note>{0} is the full type name. {1} is the resolved assembly path. {2} is the manifest file path.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionsLoadedEntry">
         <source>  {0} -&gt; {1} ({2}), declared in {3}</source>
-        <target state="new">  {0} -&gt; {1} ({2}), declared in {3}</target>
+        <target state="translated">  {0} -&gt; {1} ({2})，在 {3} 中宣告</target>
         <note>{0} is the extension display name. {1} is the resolved assembly path. {2} is the full type name of the hook. {3} is the manifest file path.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionsLoadedHeader">
         <source>Dynamically loaded test platform extensions ({0}):</source>
-        <target state="new">Dynamically loaded test platform extensions ({0}):</target>
+        <target state="translated">動態載入的測試平台延伸模組 ({0}):</target>
         <note>{0} is the number of extensions that were loaded.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionsNotSupportedOnCurrentRuntimeErrorMessage">
         <source>The extension manifest '{0}' declares extensions to load, but the current runtime does not support loading assemblies dynamically (for example when published with native AOT). Set the '{1}' property of each extension to 'false', remove the manifest, or remove '{2}' from the command line.</source>
-        <target state="new">The extension manifest '{0}' declares extensions to load, but the current runtime does not support loading assemblies dynamically (for example when published with native AOT). Set the '{1}' property of each extension to 'false', remove the manifest, or remove '{2}' from the command line.</target>
+        <target state="translated">延伸模組資訊清單 '{0}' 宣告了要載入的延伸模組，但目前的執行階段不支援動態載入組件 (例如以原生 AOT 發佈時)。請將每個延伸模組的 '{1}' 屬性設為 'false'，移除資訊清單，或從命令列中移除 '{2}'。</target>
         <note>{0} is the manifest file path. {1} is the name of the JSON property that disables an extension. {2} is the command line option that enables the feature. {Locked="'false'"}</note>
       </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
@@ -715,9 +715,9 @@ Note that this is slowing down the test execution.</source>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</source>
-        <target state="translated">啟用診斷記錄。預設記錄層級為 'Trace'。
-檔案將以 log_[yyMMddHHmmssfff].diag 名稱寫入輸出目錄中</target>
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</source>
+        <target state="new">Enable the diagnostic logging. The default log level is 'Trace'.
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</target>
         <note>{Locked="Trace"}{Locked="log_[yyMMddHHmmssfff].diag"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -738,8 +738,8 @@ If not specified the file will be generated inside the default 'TestResults' dir
         <note>{Locked="TestResults"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
-        <source>Prefix for the log file name that will replace '[log]_.'</source>
-        <target state="translated">將取代 '[log]_.' 的記錄檔名稱前置詞</target>
+        <source>Replace '[log]_.' with the specified log file name prefix.</source>
+        <target state="new">Replace '[log]_.' with the specified log file name prefix.</target>
         <note>{Locked="[log]_."}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
@@ -823,7 +823,7 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
       </trans-unit>
       <trans-unit id="PlatformCommandLineEnableDynamicExtensionsOptionDescription">
         <source>Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.</source>
-        <target state="new">Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.</target>
+        <target state="translated">啟用載入測試應用程式旁 '*.testingplatformextensions.json' 資訊清單所宣告的測試平台延伸模組。預設為停用。</target>
         <note>{Locked="'*.testingplatformextensions.json'"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
@@ -862,9 +862,9 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
         <source>Do not report a non-successful exit value for the specified exit codes.
 For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
 For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</source>
-        <target state="new">Do not report a non-successful exit value for the specified exit codes.
-For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
-For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</target>
+        <target state="translated">請勿針對指定的結束碼報告非成功的結束值。
+例如，'--ignore-exit-code 8;9' 會忽略結束碼 8 和 9，並在這些情況下傳回 0。
+如需結束碼的詳細資訊，請參閱 https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes。</target>
         <note>{Locked="'--ignore-exit-code 8;9'"} {Locked="https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
@@ -920,8 +920,8 @@ For more information about exit codes, see https://learn.microsoft.com/dotnet/co
         <note>{0} is the option name without the leading dashes.</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDescription">
-        <source>Microsoft Testing Platform command line provider</source>
-        <target state="translated">Microsoft Testing Platform 命令列提供者</target>
+        <source>Microsoft Testing Platform command line provider.</source>
+        <target state="new">Microsoft Testing Platform command line provider.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDisplayName">
@@ -949,8 +949,8 @@ The default is TestResults in the directory that contains the test application.<
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineSkipBuildersNumberCheckOptionDescription">
-        <source>For testing purposes</source>
-        <target state="translated">測試用</target>
+        <source>For testing purposes.</source>
+        <target state="new">For testing purposes.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTestHostControllerPIDOptionDescription">
@@ -1204,7 +1204,7 @@ Microsoft 測試平台會收集使用量資料，以協助我們改善您的體�
       </trans-unit>
       <trans-unit id="TestHostControllerConnectionInvalidAuthorizedSecurityIdentityErrorMessage">
         <source>The test host launcher '{0}' (UID: {1}) asked to authorize the security identity '{2}' on the test host controller connection, but only the identity of a single sandboxed application (on Windows, a security identifier of the form 'S-1-15-2-...') can be authorized. Users, groups and the catch-all '{3}' security identifier are never granted access.</source>
-        <target state="new">The test host launcher '{0}' (UID: {1}) asked to authorize the security identity '{2}' on the test host controller connection, but only the identity of a single sandboxed application (on Windows, a security identifier of the form 'S-1-15-2-...') can be authorized. Users, groups and the catch-all '{3}' security identifier are never granted access.</target>
+        <target state="translated">測試主機啟動器 '{0}' (UID: {1}) 要求在測試主機控制器連線上授權安全性識別 '{2}'，但只能授權單一受沙箱保護的應用程式身分識別 (在 Windows 上，格式為 'S-1-15-2-...' 的安全性識別碼)。使用者、群組，以及萬用 '{3}' 安全性識別碼，絕不會獲得存取權。</target>
         <note>{0} is the launcher display name, {1} is the launcher unique identifier, {2} is the rejected security identity, {3} is the well-known 'ALL APPLICATION PACKAGES' security identifier. {Locked="'S-1-15-2-...'"}</note>
       </trans-unit>
       <trans-unit id="TestHostControllerProcessRestartNotSupportedOnWebAssembly">

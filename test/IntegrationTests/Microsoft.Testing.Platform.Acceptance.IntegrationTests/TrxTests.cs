@@ -38,6 +38,32 @@ Out of process file artifacts produced:
         await AssertTrxReportWasGeneratedAsync(testHostResult, trxPathPattern, 1);
     }
 
+    [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task Trx_WhenOutOfProcessReportHasNoSelectedTests_LifetimeHandshakeCompletes(string tfm)
+    {
+        string fileName = $"{Guid.NewGuid():N}.trx";
+        string testResultsPath = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            $"--filter-uid 2 --ignore-exit-code 8 --crashdump --report-trx --report-trx-filename {fileName} --results-directory \"{testResultsPath}\"",
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        testHostResult.AssertOutputDoesNotContain("The operation has timed out.");
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 0, skipped: 0);
+
+        string[] trxFiles = Directory.GetFiles(testResultsPath, fileName, SearchOption.AllDirectories);
+        Assert.HasCount(1, trxFiles, $"Expected exactly one trx file but found {trxFiles.Length}: {string.Join(", ", trxFiles)}");
+
+        var trxDocument = XDocument.Parse(File.ReadAllText(trxFiles[0]));
+        XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+        XElement counters = trxDocument.Descendants(ns + "Counters").Single();
+        Assert.AreEqual("0", counters.Attribute("total")?.Value, trxDocument.ToString());
+        Assert.AreEqual("0", counters.Attribute("executed")?.Value, trxDocument.ToString());
+    }
+
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
     public async Task Trx_WhenReportTrxAndResultsDirectoryAreSpecifiedWithArtifact_ArtifactIsCopiedUnderRelativeResultsDirectory(string tfm)
@@ -341,6 +367,7 @@ using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.Requests;
 using Microsoft.Testing.Platform.Services;
 
 public class Program
@@ -391,6 +418,14 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         if (Environment.GetEnvironmentVariable("CRASHPROCESS") == "1")
         {
             Environment.FailFast("CRASHPROCESS");
+        }
+
+        TestExecutionRequest request = (TestExecutionRequest)context.Request;
+        if (request.Filter is TestNodeUidListFilter uidFilter &&
+            !uidFilter.TestNodeUids.Any(nodeUid => nodeUid.Value == "0"))
+        {
+            context.Complete();
+            return;
         }
 
         var testMethodIdentifier = new TestMethodIdentifierProperty(string.Empty, string.Empty, "DummyClassName", "Test", 0, Array.Empty<string>(), string.Empty);

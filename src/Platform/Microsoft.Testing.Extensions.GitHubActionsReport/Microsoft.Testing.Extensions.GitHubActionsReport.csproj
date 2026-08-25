@@ -19,7 +19,11 @@
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReporterLoggingExtensions.cs" Link="Helpers\ReporterLoggingExtensions.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\TestNodeIdentity.cs" Link="Helpers\TestNodeIdentity.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\SummaryReporterHelpers.cs" Link="Helpers\SummaryReporterHelpers.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\CiCoverageSummary.cs" Link="Helpers\CiCoverageSummary.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\CiRunSummaryAggregateReader.cs" Link="Helpers\CiRunSummaryAggregateReader.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\CiRunSummaryAggregation.cs" Link="Helpers\CiRunSummaryAggregation.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\CiRunSummaryFragmentIo.cs" Link="Helpers\CiRunSummaryFragmentIo.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\CiRunSummaryModels.cs" Link="Helpers\CiRunSummaryModels.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\StackTraceSourceLocationResolver.cs" Link="Helpers\StackTraceSourceLocationResolver.cs" />
     <Compile Include="$(RepoRoot)\test\Utilities\Microsoft.Testing.TestInfrastructure\RootFinder.cs" Link="RootFinder.cs" />
   </ItemGroup>

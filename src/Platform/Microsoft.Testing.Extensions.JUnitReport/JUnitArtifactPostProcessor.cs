@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 
 using Microsoft.Testing.Extensions.JUnitReport.Resources;
 using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
+using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Extensions.JUnitReport;
 
@@ -48,7 +49,7 @@ internal sealed class JUnitArtifactPostProcessor : IArtifactPostProcessor
 
         InputArtifact[] orderedInputs = context.Mode == ArtifactPostProcessingMode.RetryAttempts
             ? [.. inputs]
-            : [.. OrderInputs(inputs)];
+            : [.. ArtifactPostProcessingHelper.OrderInputs(inputs, includeModuleMetadata: true)];
 
         string mergedDirectory = Path.Combine(outputDirectory, MergedReportDirectoryName);
         try
@@ -85,7 +86,9 @@ internal sealed class JUnitArtifactPostProcessor : IArtifactPostProcessor
     }
 
     internal static string CreateMergeId(IReadOnlyList<InputArtifact> inputs)
-        => CreateMergeIdFromOrderedInputs(OrderInputs(inputs), ArtifactPostProcessingMode.TestModules);
+        => CreateMergeIdFromOrderedInputs(
+            ArtifactPostProcessingHelper.OrderInputs(inputs, includeModuleMetadata: true),
+            ArtifactPostProcessingMode.TestModules);
 
     private static string CreateMergeIdFromOrderedInputs(
         IEnumerable<InputArtifact> orderedInputs,
@@ -94,11 +97,11 @@ internal sealed class JUnitArtifactPostProcessor : IArtifactPostProcessor
         var identity = new StringBuilder(mode.ToString());
         foreach (InputArtifact input in orderedInputs)
         {
-            AppendIdentityPart(identity, Path.GetFullPath(input.Path));
-            AppendIdentityPart(identity, input.ProducingTestModule);
-            AppendIdentityPart(identity, input.TargetFramework);
-            AppendIdentityPart(identity, input.Architecture);
-            AppendIdentityPart(identity, input.ExecutionId);
+            IdentityKeyBuilder.AppendLengthPrefixedComponent(identity, Path.GetFullPath(input.Path));
+            IdentityKeyBuilder.AppendLengthPrefixedComponent(identity, input.ProducingTestModule);
+            IdentityKeyBuilder.AppendLengthPrefixedComponent(identity, input.TargetFramework);
+            IdentityKeyBuilder.AppendLengthPrefixedComponent(identity, input.Architecture);
+            IdentityKeyBuilder.AppendLengthPrefixedComponent(identity, input.ExecutionId);
         }
 
         using var sha256 = SHA256.Create();
@@ -110,25 +113,5 @@ internal sealed class JUnitArtifactPostProcessor : IArtifactPostProcessor
         }
 
         return result.ToString();
-    }
-
-    private static IOrderedEnumerable<InputArtifact> OrderInputs(IEnumerable<InputArtifact> inputs)
-        => inputs.OrderBy(input => Path.GetFullPath(input.Path), StringComparer.Ordinal)
-            .ThenBy(input => input.ProducingTestModule, StringComparer.Ordinal)
-            .ThenBy(input => input.TargetFramework, StringComparer.Ordinal)
-            .ThenBy(input => input.Architecture, StringComparer.Ordinal)
-            .ThenBy(input => input.ExecutionId, StringComparer.Ordinal);
-
-    private static void AppendIdentityPart(StringBuilder builder, string? value)
-    {
-        if (value is null)
-        {
-            builder.Append("-1:");
-            return;
-        }
-
-        builder.Append(value.Length.ToString(CultureInfo.InvariantCulture));
-        builder.Append(':');
-        builder.Append(value);
     }
 }

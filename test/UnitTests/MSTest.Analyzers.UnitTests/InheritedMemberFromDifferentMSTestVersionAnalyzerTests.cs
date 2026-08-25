@@ -25,6 +25,8 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
     // v3 exposes its lifecycle/test attributes under a different type identity. This constant names the simulated v3
     // framework assembly; a base library that defines its own MSTest attributes there behaves like a v3-compiled base.
     private const string LegacyFrameworkAssemblyName = "Microsoft.VisualStudio.TestPlatform.TestFramework";
+    private const string LegacyFrameworkExtensionsAssemblyName = "Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions";
+    private const string CurrentFrameworkAssemblyName = "MSTest.TestFramework";
 
     [TestMethod]
     public async Task WhenInheritedTestInitializeComesFromDifferentFrameworkAssembly_Diagnostic()
@@ -264,6 +266,66 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
 
         var test = new VerifyCS.Test { TestCode = consumerCode };
         AddLegacyFrameworkBaseProject(test, legacyBaseCode);
+
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(InheritedMemberFromDifferentMSTestVersionAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("BaseClassInitialize", "TestBase", "ClassInitialize", LegacyFrameworkAssemblyName));
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenInheritedClassInitializeUsesLegacyExtensionsTestContext_Diagnostic()
+    {
+        string legacyFrameworkCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public enum InheritanceBehavior { None, BeforeEachDerivedClass }
+
+                public sealed class ClassInitializeAttribute : System.Attribute
+                {
+                    public ClassInitializeAttribute(InheritanceBehavior inheritanceBehavior) { }
+                }
+            }
+            """;
+
+        string legacyExtensionsCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public class TestContext { }
+            }
+            """;
+
+        string baseLibraryCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                public abstract class TestBase
+                {
+                    [ClassInitialize(InheritanceBehavior.BeforeEachDerivedClass)]
+                    public static void BaseClassInitialize(TestContext context) { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                public class {|#0:SampleTests|} : TestBase
+                {
+                    [TestMethod]
+                    public void MyTest() { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddLegacyFrameworkExtensionsAndBaseProjects(test, legacyFrameworkCode, legacyExtensionsCode, baseLibraryCode);
 
         test.ExpectedDiagnostics.Add(
             VerifyCS.Diagnostic(InheritedMemberFromDifferentMSTestVersionAnalyzer.Rule)
@@ -2181,10 +2243,10 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenInheritedGenericTestMethodWithUninferableTypeParameterComesFromDifferentFrameworkAssembly_NoDiagnostic()
+    public async Task WhenInheritedGenericTestMethodWithUninferableTypeParameterComesFromDifferentFrameworkAssembly_Diagnostic()
     {
-        // A generic test method whose type parameter cannot be inferred from the parameters is never discovered
-        // (MSTEST0003 rejects it), so it would not run even after recompiling the base.
+        // Generic method definitions are discovered even when type inference later fails during execution. Recompiling
+        // the base therefore changes this test from silently absent to a discovered failing test.
         string legacyBaseCode = """
             namespace Microsoft.VisualStudio.TestTools.UnitTesting
             {
@@ -2209,7 +2271,7 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
             namespace Repro
             {
                 [TestClass]
-                public class SampleTests : TestBase
+                public class {|#0:SampleTests|} : TestBase
                 {
                 }
             }
@@ -2217,6 +2279,11 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
 
         var test = new VerifyCS.Test { TestCode = consumerCode };
         AddLegacyFrameworkBaseProject(test, legacyBaseCode);
+
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(InheritedMemberFromDifferentMSTestVersionAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("Run", "TestBase", "TestMethod", LegacyFrameworkAssemblyName));
 
         await test.RunAsync();
     }
@@ -2603,6 +2670,438 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
         await test.RunAsync();
     }
 
+    [TestMethod]
+    public async Task WhenTestClassHasInvalidStaticTestContextProperty_NoDiagnostic()
+    {
+        string legacyBaseCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public sealed class TestInitializeAttribute : System.Attribute { }
+            }
+
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                public abstract class TestBase
+                {
+                    [TestInitialize]
+                    public void BaseInitialize() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                public class SampleTests : TestBase
+                {
+                    public static TestContext TestContext { get; }
+
+                    [TestMethod]
+                    public void MyTest() { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddLegacyFrameworkBaseProject(test, legacyBaseCode);
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenTestClassHasNestedLookalikeTestContextProperty_Diagnostic()
+    {
+        string legacyBaseCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public sealed class TestInitializeAttribute : System.Attribute { }
+            }
+
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                public abstract class TestBase
+                {
+                    [TestInitialize]
+                    public void BaseInitialize() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public static class Outer
+                {
+                    public sealed class TestContext { }
+                }
+            }
+
+            namespace Repro
+            {
+                [TestClass]
+                public class {|#0:SampleTests|} : TestBase
+                {
+                    public static Outer.TestContext TestContext { get; }
+
+                    [TestMethod]
+                    public void MyTest() { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddLegacyFrameworkBaseProject(test, legacyBaseCode);
+
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(InheritedMemberFromDifferentMSTestVersionAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("BaseInitialize", "TestBase", "TestInitialize", LegacyFrameworkAssemblyName));
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenLookalikeAttributeComesFromUnrelatedAssembly_NoDiagnostic()
+    {
+        string lookalikeBaseCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public sealed class TestInitializeAttribute : System.Attribute { }
+            }
+
+            namespace Repro
+            {
+                using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+                public abstract class TestBase
+                {
+                    [TestInitialize]
+                    public void BaseInitialize() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                public class SampleTests : TestBase
+                {
+                    [TestMethod]
+                    public void MyTest() { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddAdditionalProject(test.TestState, "Contoso.Helpers", lookalikeBaseCode);
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenLegacyFrameworkIsAlsoReferencedThroughAlias_Diagnostic()
+    {
+        string baseLibraryCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                public abstract class TestBase
+                {
+                    [TestInitialize]
+                    public void BaseInitialize() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                public class {|#0:SampleTests|} : TestBase
+                {
+                    [TestMethod]
+                    public void MyTest() { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddAliasedLegacyFrameworkBaseLibrary(test, baseLibraryCode);
+
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(InheritedMemberFromDifferentMSTestVersionAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("BaseInitialize", "TestBase", "TestInitialize", LegacyFrameworkAssemblyName));
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenLegacyTestClassAttributePrecedesCurrentAttribute_Diagnostic()
+    {
+        string baseLibraryCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                public abstract class TestBase
+                {
+                    [TestInitialize]
+                    public void BaseInitialize() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            extern alias legacy;
+
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [legacy::Microsoft.VisualStudio.TestTools.UnitTesting.TestClass]
+                [TestClass]
+                public class {|#0:SampleTests|} : TestBase
+                {
+                    [TestMethod]
+                    public void MyTest() { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddAliasedLegacyFrameworkBaseLibrary(test, baseLibraryCode);
+
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(InheritedMemberFromDifferentMSTestVersionAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("BaseInitialize", "TestBase", "TestInitialize", LegacyFrameworkAssemblyName));
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenCurrentTestClassAttributeIsAliasedInLegacyProject_Diagnostic()
+    {
+        string baseLibraryCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                public abstract class TestBase
+                {
+                    [TestInitialize]
+                    public void BaseInitialize() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            extern alias current;
+
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                [current::Microsoft.VisualStudio.TestTools.UnitTesting.TestClass]
+                public class {|#0:SampleTests|} : TestBase
+                {
+                    [TestMethod]
+                    public void MyTest() { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddAliasedCurrentFrameworkBaseLibrary(test, baseLibraryCode);
+
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(InheritedMemberFromDifferentMSTestVersionAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("BaseInitialize", "TestBase", "TestInitialize", CurrentFrameworkAssemblyName));
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenOnlyLegacyTestClassAttributeIsAppliedInCurrentProject_NoDiagnostic()
+    {
+        string baseLibraryCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                public abstract class TestBase
+                {
+                    [TestInitialize]
+                    public void BaseInitialize() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            extern alias legacy;
+
+            namespace Repro
+            {
+                [legacy::Microsoft.VisualStudio.TestTools.UnitTesting.TestClass]
+                public class SampleTests : TestBase
+                {
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddAliasedLegacyFrameworkWithCurrentBaseLibrary(test, baseLibraryCode);
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenOnlyCurrentTestClassAttributeIsAppliedInLegacyProject_NoDiagnostic()
+    {
+        string baseLibraryCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                public abstract class TestBase
+                {
+                    [TestInitialize]
+                    public void BaseInitialize() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            extern alias current;
+
+            namespace Repro
+            {
+                [current::Microsoft.VisualStudio.TestTools.UnitTesting.TestClass]
+                public class SampleTests : TestBase
+                {
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddAliasedCurrentFrameworkWithLegacyBaseLibrary(test, baseLibraryCode);
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenLegacyFrameworkIsAliasedAndTestContextPropertyIsInvalid_NoDiagnostic()
+    {
+        string baseLibraryCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                public abstract class TestBase
+                {
+                    [TestInitialize]
+                    public void BaseInitialize() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            extern alias legacy;
+
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                public class SampleTests : TestBase
+                {
+                    public static legacy::Microsoft.VisualStudio.TestTools.UnitTesting.TestContext TestContext { get; }
+
+                    [TestMethod]
+                    public void MyTest() { }
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddAliasedLegacyFrameworkBaseLibrary(test, baseLibraryCode);
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenCustomAttributeIsDeclaredInSeparateLegacyLibrary_Diagnostic()
+    {
+        string legacyFrameworkCode = """
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public class TestMethodAttribute : System.Attribute { }
+            }
+            """;
+
+        string customAttributeCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro.Attributes
+            {
+                public sealed class RetryTestAttribute : TestMethodAttribute { }
+            }
+            """;
+
+        string baseLibraryCode = """
+            using Repro.Attributes;
+
+            namespace Repro
+            {
+                public abstract class TestBase
+                {
+                    [RetryTest]
+                    public void InheritedTest() { }
+                }
+            }
+            """;
+
+        string consumerCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Repro
+            {
+                [TestClass]
+                public class {|#0:SampleTests|} : TestBase
+                {
+                }
+            }
+            """;
+
+        var test = new VerifyCS.Test { TestCode = consumerCode };
+        AddSeparateCustomAttributeBaseProjects(test, legacyFrameworkCode, customAttributeCode, baseLibraryCode);
+
+        test.ExpectedDiagnostics.Add(
+            VerifyCS.Diagnostic(InheritedMemberFromDifferentMSTestVersionAnalyzer.Rule)
+                .WithLocation(0)
+                .WithArguments("InheritedTest", "TestBase", "RetryTest", LegacyFrameworkAssemblyName));
+
+        await test.RunAsync();
+    }
+
     // Adds a base library whose MSTest lifecycle/test attributes are defined in an assembly named like the legacy v3
     // framework. It deliberately does NOT reference the real framework, so the attributes it applies bind to its own
     // types, reproducing the different-type-identity situation from issue #10505.
@@ -2610,11 +3109,14 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
         => AddLegacyFrameworkBaseProject(test.TestState, libraryCode);
 
     private static void AddLegacyFrameworkBaseProject(SolutionState testState, string libraryCode)
+        => AddAdditionalProject(testState, LegacyFrameworkAssemblyName, libraryCode);
+
+    private static void AddAdditionalProject(SolutionState testState, string assemblyName, string source)
     {
-        var libraryProject = new ProjectState(LegacyFrameworkAssemblyName, LanguageNames.CSharp, "/LegacyBase/", "cs");
-        libraryProject.Sources.Add(("LegacyBase.cs", libraryCode));
-        testState.AdditionalProjects.Add(LegacyFrameworkAssemblyName, libraryProject);
-        testState.AdditionalProjectReferences.Add(LegacyFrameworkAssemblyName);
+        var project = new ProjectState(assemblyName, LanguageNames.CSharp, $"/{assemblyName}/", "cs");
+        project.Sources.Add(($"{assemblyName}.cs", source));
+        testState.AdditionalProjects.Add(assemblyName, project);
+        testState.AdditionalProjectReferences.Add(assemblyName);
     }
 
     // Adds a legacy framework assembly plus a base library that references it, and links only the base library into the
@@ -2658,6 +3160,118 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
         test.TestState.AdditionalReferences.Add(baseLibrary);
     }
 
+    private static void AddAliasedLegacyFrameworkBaseLibrary(VerifyCS.Test test, string baseLibraryCode)
+    {
+        MetadataReference legacyFramework = EmitAssembly(LegacyFrameworkAssemblyName, LegacyFrameworkSource);
+        MetadataReference baseLibrary = EmitAssembly("BaseLibrary", baseLibraryCode, legacyFramework);
+
+        test.TestState.AdditionalReferences.Add(
+            legacyFramework.WithProperties(legacyFramework.Properties.WithAliases(["legacy"])));
+        test.TestState.AdditionalReferences.Add(baseLibrary);
+    }
+
+    private static void AddAliasedLegacyFrameworkWithCurrentBaseLibrary(VerifyCS.Test test, string baseLibraryCode)
+    {
+        MetadataReference currentFramework = MetadataReference.CreateFromFile(typeof(ParallelizeAttribute).Assembly.Location);
+        MetadataReference legacyFramework = EmitAssembly(LegacyFrameworkAssemblyName, LegacyFrameworkSource);
+        MetadataReference baseLibrary = EmitAssembly("BaseLibrary", baseLibraryCode, currentFramework);
+
+        test.TestState.AdditionalReferences.Add(
+            legacyFramework.WithProperties(legacyFramework.Properties.WithAliases(["legacy"])));
+        test.TestState.AdditionalReferences.Add(baseLibrary);
+    }
+
+    private static void AddAliasedCurrentFrameworkBaseLibrary(VerifyCS.Test test, string baseLibraryCode)
+    {
+        MetadataReference currentFramework = MetadataReference.CreateFromFile(typeof(ParallelizeAttribute).Assembly.Location);
+        MetadataReference legacyFramework = EmitAssembly(LegacyFrameworkAssemblyName, LegacyFrameworkSource);
+        MetadataReference baseLibrary = EmitAssembly("BaseLibrary", baseLibraryCode, currentFramework);
+
+        test.TestState.AdditionalReferences.Add(legacyFramework);
+        test.TestState.AdditionalReferences.Add(baseLibrary);
+        test.SolutionTransforms.Add((solution, projectId) =>
+        {
+            Project project = solution.GetProject(projectId)!;
+            IEnumerable<MetadataReference> references = project.MetadataReferences.Select(reference =>
+                IsCurrentFrameworkReference(reference)
+                    ? reference.WithProperties(reference.Properties.WithAliases(["current"]))
+                    : reference);
+            return project.WithMetadataReferences(references).Solution;
+        });
+    }
+
+    private static void AddAliasedCurrentFrameworkWithLegacyBaseLibrary(VerifyCS.Test test, string baseLibraryCode)
+    {
+        MetadataReference currentFramework = MetadataReference.CreateFromFile(typeof(ParallelizeAttribute).Assembly.Location);
+        MetadataReference legacyFramework = EmitAssembly(LegacyFrameworkAssemblyName, LegacyFrameworkSource);
+        MetadataReference baseLibrary = EmitAssembly("BaseLibrary", baseLibraryCode, legacyFramework);
+
+        test.TestState.AdditionalReferences.Add(legacyFramework);
+        test.TestState.AdditionalReferences.Add(baseLibrary);
+        test.SolutionTransforms.Add((solution, projectId) =>
+        {
+            Project project = solution.GetProject(projectId)!;
+            IEnumerable<MetadataReference> references = project.MetadataReferences.Select(reference =>
+                IsCurrentFrameworkReference(reference)
+                    ? reference.WithProperties(reference.Properties.WithAliases(["current"]))
+                    : reference);
+            return project.WithMetadataReferences(references).Solution;
+        });
+    }
+
+    private static bool IsCurrentFrameworkReference(MetadataReference reference)
+        => reference is PortableExecutableReference { FilePath: { } filePath }
+            && string.Equals(Path.GetFileName(filePath), "MSTest.TestFramework.dll", StringComparison.OrdinalIgnoreCase);
+
+    private static void AddSeparateCustomAttributeBaseProjects(
+        VerifyCS.Test test,
+        string legacyFrameworkCode,
+        string customAttributeCode,
+        string baseLibraryCode)
+    {
+        var frameworkProject = new ProjectState(LegacyFrameworkAssemblyName, LanguageNames.CSharp, "/LegacyFramework/", "cs");
+        frameworkProject.Sources.Add(("LegacyFramework.cs", legacyFrameworkCode));
+        test.TestState.AdditionalProjects.Add(LegacyFrameworkAssemblyName, frameworkProject);
+
+        var customAttributeProject = new ProjectState("CustomAttributes", LanguageNames.CSharp, "/CustomAttributes/", "cs");
+        customAttributeProject.Sources.Add(("CustomAttributes.cs", customAttributeCode));
+        customAttributeProject.AdditionalProjectReferences.Add(LegacyFrameworkAssemblyName);
+        test.TestState.AdditionalProjects.Add("CustomAttributes", customAttributeProject);
+
+        var baseLibraryProject = new ProjectState("BaseLibrary", LanguageNames.CSharp, "/BaseLibrary/", "cs");
+        baseLibraryProject.Sources.Add(("BaseLibrary.cs", baseLibraryCode));
+        baseLibraryProject.AdditionalProjectReferences.Add("CustomAttributes");
+        baseLibraryProject.AdditionalProjectReferences.Add(LegacyFrameworkAssemblyName);
+        test.TestState.AdditionalProjects.Add("BaseLibrary", baseLibraryProject);
+        test.TestState.AdditionalProjectReferences.Add(LegacyFrameworkAssemblyName);
+        test.TestState.AdditionalProjectReferences.Add("CustomAttributes");
+        test.TestState.AdditionalProjectReferences.Add("BaseLibrary");
+    }
+
+    private static void AddLegacyFrameworkExtensionsAndBaseProjects(
+        VerifyCS.Test test,
+        string legacyFrameworkCode,
+        string legacyExtensionsCode,
+        string baseLibraryCode)
+    {
+        var frameworkProject = new ProjectState(LegacyFrameworkAssemblyName, LanguageNames.CSharp, "/LegacyFramework/", "cs");
+        frameworkProject.Sources.Add(("LegacyFramework.cs", legacyFrameworkCode));
+        test.TestState.AdditionalProjects.Add(LegacyFrameworkAssemblyName, frameworkProject);
+
+        var extensionsProject = new ProjectState(LegacyFrameworkExtensionsAssemblyName, LanguageNames.CSharp, "/LegacyFrameworkExtensions/", "cs");
+        extensionsProject.Sources.Add(("LegacyFrameworkExtensions.cs", legacyExtensionsCode));
+        test.TestState.AdditionalProjects.Add(LegacyFrameworkExtensionsAssemblyName, extensionsProject);
+
+        var baseLibraryProject = new ProjectState("BaseLibrary", LanguageNames.CSharp, "/BaseLibrary/", "cs");
+        baseLibraryProject.Sources.Add(("BaseLibrary.cs", baseLibraryCode));
+        baseLibraryProject.AdditionalProjectReferences.Add(LegacyFrameworkAssemblyName);
+        baseLibraryProject.AdditionalProjectReferences.Add(LegacyFrameworkExtensionsAssemblyName);
+        test.TestState.AdditionalProjects.Add("BaseLibrary", baseLibraryProject);
+        test.TestState.AdditionalProjectReferences.Add(LegacyFrameworkAssemblyName);
+        test.TestState.AdditionalProjectReferences.Add(LegacyFrameworkExtensionsAssemblyName);
+        test.TestState.AdditionalProjectReferences.Add("BaseLibrary");
+    }
+
     private static MetadataReference EmitAssembly(string assemblyName, string source, params MetadataReference[] additionalReferences)
     {
         var compilation = CSharpCompilation.Create(
@@ -2697,6 +3311,10 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzerTests
             public class TestContext { }
 
             public enum InheritanceBehavior { None, BeforeEachDerivedClass }
+
+            public class TestClassAttribute : System.Attribute { }
+
+            public class TestMethodAttribute : System.Attribute { }
 
             public sealed class TestInitializeAttribute : System.Attribute { }
 

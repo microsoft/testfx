@@ -15,7 +15,105 @@ internal sealed partial class GitHubActionsSummaryReporter
     /// </summary>
     internal const string ProjectSectionMarker = "<!-- microsoft-testing-platform:github:project-section -->";
 
-    internal static /* for testing */ string BuildMarkdown(IReadOnlyList<TestRecord> records, string assemblyName, string targetFrameworkMoniker, int exitCode, bool includeFailureDetails = true, SummaryBudget? budget = null)
+    /// <summary>
+    /// Marks the start of the truncation note in the shared summary file so a later test project can find the
+    /// note it (or a sibling) already wrote and replace it, rather than appending a second copy.
+    /// </summary>
+    internal const string TruncationNoticeMarker = "<!-- microsoft-testing-platform:github:summary-truncated -->";
+
+    /// <summary>
+    /// Marks the end of the truncation note. The note carries a project count, so its length varies and it
+    /// cannot be located by its text alone.
+    /// </summary>
+    internal const string TruncationNoticeEndMarker = "<!-- /microsoft-testing-platform:github:summary-truncated -->";
+
+    /// <summary>
+    /// What a combined <c>dotnet test</c> rendering produced, and what it had to give up to fit GitHub's cap.
+    /// </summary>
+    internal readonly struct AggregateRenderResult
+    {
+        internal AggregateRenderResult(string markdown, int modulesWithOmittedDetails, int condensedModules, int unlistedModules)
+        {
+            Markdown = markdown;
+            ModulesWithOmittedDetails = modulesWithOmittedDetails;
+            CondensedModules = condensedModules;
+            UnlistedModules = unlistedModules;
+        }
+
+        /// <summary>Gets the rendered summary.</summary>
+        internal string Markdown { get; }
+
+        /// <summary>Gets the number of test projects that kept their section but lost their expanded diagnostics.</summary>
+        internal int ModulesWithOmittedDetails { get; }
+
+        /// <summary>Gets the number of test projects reduced to a one-line verdict.</summary>
+        internal int CondensedModules { get; }
+
+        /// <summary>Gets the number of test projects that did not fit at all, reported only as a count.</summary>
+        internal int UnlistedModules { get; }
+
+        /// <summary>
+        /// Returns how many of <paramref name="totalModules"/> got a full section, which is what the top-of-file
+        /// note quotes — so it excludes both the condensed and the unlisted.
+        /// </summary>
+        internal int FullyReportedModules(int totalModules)
+            => totalModules - CondensedModules - UnlistedModules;
+    }
+
+    internal static /* for testing */ string BuildMarkdown(
+        IReadOnlyList<TestRecord> records,
+        string assemblyName,
+        string targetFrameworkMoniker,
+        int exitCode,
+        GitHubActionsStepSummarySections sections = GitHubActionsStepSummarySections.All)
+        => BuildMarkdown(records, assemblyName, targetFrameworkMoniker, exitCode, new CiCoverageSummaryData(), sections);
+
+    internal static /* for testing */ string BuildMarkdown(
+        IReadOnlyList<TestRecord> records,
+        string assemblyName,
+        string targetFrameworkMoniker,
+        int exitCode,
+        bool includeFailureDetails,
+        SummaryBudget? budget = null)
+        => BuildMarkdownCore(
+            records,
+            assemblyName,
+            targetFrameworkMoniker,
+            exitCode,
+            new CiCoverageSummaryData(),
+            GitHubActionsStepSummarySections.All,
+            includeFailureDetails,
+            budget ?? SummaryBudget.ForProject(0));
+
+    internal static /* for testing */ string BuildMarkdown(
+        IReadOnlyList<TestRecord> records,
+        string assemblyName,
+        string targetFrameworkMoniker,
+        int exitCode,
+        CiCoverageSummaryData coverage,
+        GitHubActionsStepSummarySections sections,
+        bool includeFailureDetails,
+        SummaryBudget? budget = null)
+        => BuildMarkdownCore(records, assemblyName, targetFrameworkMoniker, exitCode, coverage, sections, includeFailureDetails, budget ?? SummaryBudget.ForProject(0));
+
+    private static string BuildMarkdown(
+        IReadOnlyList<TestRecord> records,
+        string assemblyName,
+        string targetFrameworkMoniker,
+        int exitCode,
+        CiCoverageSummaryData coverage,
+        GitHubActionsStepSummarySections sections)
+        => BuildMarkdownCore(records, assemblyName, targetFrameworkMoniker, exitCode, coverage, sections, includeFailureDetails: true, SummaryBudget.ForProject(0));
+
+    private static string BuildMarkdownCore(
+        IReadOnlyList<TestRecord> records,
+        string assemblyName,
+        string targetFrameworkMoniker,
+        int exitCode,
+        CiCoverageSummaryData coverage,
+        GitHubActionsStepSummarySections sections,
+        bool includeFailureDetails,
+        SummaryBudget budget)
     {
         int total = records.Count;
         int passed = 0;
@@ -54,128 +152,93 @@ internal sealed partial class GitHubActionsSummaryReporter
         var builder = new StringBuilder();
         builder.Append(ProjectSectionMarker).Append('\n');
         builder.Append("## ").Append(statusIcon).Append(" Test Run Summary — ").Append(assemblyName).Append(" (").Append(targetFrameworkMoniker).Append(")\n\n");
-        builder.Append("| Total | Passed | Failed | Skipped | Duration |\n");
-        builder.Append("|---:|---:|---:|---:|---:|\n");
-        builder.Append("| ").Append(total.ToString(CultureInfo.InvariantCulture))
-            .Append(" | ").Append(passed.ToString(CultureInfo.InvariantCulture))
-            .Append(" | ").Append(failed.ToString(CultureInfo.InvariantCulture))
-            .Append(" | ").Append(skipped.ToString(CultureInfo.InvariantCulture))
-            .Append(" | ").Append(FormatDuration(totalDuration)).Append(" |\n\n");
-
-        // Surface a non-test-result failure that this reporter can observe once the session has finished
-        // (zero tests, --minimum-expected-tests, --maximum-failed-tests, test-adapter session failure) as a
-        // GitHub alert callout. Plain pass / at-least-one-failed outcomes are already conveyed by the totals
-        // table and the failures section, so no callout is added for them.
-        if (!GitHubActionsExitCode.IsTestResultOutcome(exitCode))
+        if ((sections & GitHubActionsStepSummarySections.TestResults) != 0)
         {
-            string calloutText = string.Format(
-                CultureInfo.InvariantCulture,
-                GitHubActionsResources.ExitCodeCallout,
-                exitCode.ToString(CultureInfo.InvariantCulture),
-                GitHubActionsExitCode.GetName(exitCode),
-                GitHubActionsExitCode.GetReason(exitCode));
-            builder.Append("> [!WARNING]\n> ").Append(EscapeInlineCode(calloutText)).Append("\n\n");
+            builder.Append("| Total | Passed | Failed | Skipped | Duration |\n");
+            builder.Append("|---:|---:|---:|---:|---:|\n");
+            builder.Append("| ").Append(total.ToString(CultureInfo.InvariantCulture))
+                .Append(" | ").Append(passed.ToString(CultureInfo.InvariantCulture))
+                .Append(" | ").Append(failed.ToString(CultureInfo.InvariantCulture))
+                .Append(" | ").Append(skipped.ToString(CultureInfo.InvariantCulture))
+                .Append(" | ").Append(FormatDuration(totalDuration)).Append(" |\n\n");
         }
 
-        if (failures.Count > 0)
+        if ((sections & GitHubActionsStepSummarySections.Coverage) != 0)
         {
-            GitHubActionsFailureDetails.AppendFailuresSection(
-                builder,
-                "###",
-                [.. failures.Select(static failure => new GitHubActionsFailureEntry(
-                    failure.FullyQualifiedName,
-                    failure.Duration,
-                    failure.Failure?.Message,
-                    failure.Failure?.ExceptionType,
-                    failure.Failure?.StackTrace,
-                    failure.Failure?.FilePath,
-                    failure.Failure?.LineNumber ?? 0))],
-                failed,
-                includeFailureDetails,
-                budget ?? SummaryBudget.ForProject(0));
+            CiCoverageSummary.AppendMarkdown(builder, coverage, headingLevel: 3);
         }
 
-        IEnumerable<TestRecord> slowest = records
-            .Where(static r => r.Duration > TimeSpan.Zero)
-            .OrderByDescending(static r => r.Duration)
-            .Take(MaxSlowestTests);
-
-        bool slowestEmitted = false;
-        foreach (TestRecord record in slowest)
+        if ((sections & GitHubActionsStepSummarySections.TestResults) != 0)
         {
-            if (!slowestEmitted)
+            // Surface a non-test-result failure that this reporter can observe once the session has finished
+            // (zero tests, --minimum-expected-tests, --maximum-failed-tests, test-adapter session failure) as a
+            // GitHub alert callout. Plain pass / at-least-one-failed outcomes are already conveyed by the totals
+            // table and the failures section, so no callout is added for them.
+            if (!GitHubActionsExitCode.IsTestResultOutcome(exitCode))
             {
-                builder.Append("### ⏱ Slowest tests\n\n");
-                slowestEmitted = true;
+                string calloutText = string.Format(
+                    CultureInfo.InvariantCulture,
+                    GitHubActionsResources.ExitCodeCallout,
+                    exitCode.ToString(CultureInfo.InvariantCulture),
+                    GitHubActionsExitCode.GetName(exitCode),
+                    GitHubActionsExitCode.GetReason(exitCode));
+                builder.Append("> [!WARNING]\n> ").Append(EscapeInlineCode(calloutText)).Append("\n\n");
             }
 
-            builder.Append("- `").Append(EscapeInlineCode(record.FullyQualifiedName)).Append("` — ").Append(FormatDuration(record.Duration)).Append('\n');
+            if (failures.Count > 0)
+            {
+                GitHubActionsFailureDetails.AppendFailuresSection(
+                    builder,
+                    "###",
+                    [.. failures.Select(static failure => new GitHubActionsFailureEntry(
+                        failure.FullyQualifiedName,
+                        failure.Duration,
+                        failure.Failure?.Message,
+                        failure.Failure?.ExceptionType,
+                        failure.Failure?.StackTrace,
+                        failure.Failure?.FilePath,
+                        failure.Failure?.LineNumber ?? 0))],
+                    failed,
+                    includeFailureDetails,
+                    budget);
+            }
         }
 
-        if (slowestEmitted)
+        if ((sections & GitHubActionsStepSummarySections.SlowTests) != 0)
         {
-            builder.Append('\n');
+            IEnumerable<TestRecord> slowest = records
+                .Where(static r => r.Duration > TimeSpan.Zero)
+                .OrderByDescending(static r => r.Duration)
+                .Take(MaxSlowestTests);
+
+            bool slowestEmitted = false;
+            foreach (TestRecord record in slowest)
+            {
+                if (!slowestEmitted)
+                {
+                    builder.Append("### ⏱ Slowest tests\n\n");
+                    slowestEmitted = true;
+                }
+
+                builder.Append("- `").Append(EscapeInlineCode(record.FullyQualifiedName)).Append("` — ").Append(FormatDuration(record.Duration)).Append('\n');
+            }
+
+            if (slowestEmitted)
+            {
+                builder.Append('\n');
+            }
         }
 
         return builder.ToString();
     }
 
-    /// <summary>
-    /// What a combined <c>dotnet test</c> rendering produced, and what it had to give up to fit GitHub's cap.
-    /// </summary>
-    internal readonly struct AggregateRenderResult
-    {
-        internal AggregateRenderResult(string markdown, int modulesWithOmittedDetails, int condensedModules, int unlistedModules)
-        {
-            Markdown = markdown;
-            ModulesWithOmittedDetails = modulesWithOmittedDetails;
-            CondensedModules = condensedModules;
-            UnlistedModules = unlistedModules;
-        }
-
-        /// <summary>Gets the rendered summary.</summary>
-        internal string Markdown { get; }
-
-        /// <summary>Gets the number of test projects that kept their section but lost their expanded diagnostics.</summary>
-        internal int ModulesWithOmittedDetails { get; }
-
-        /// <summary>Gets the number of test projects reduced to a one-line verdict.</summary>
-        internal int CondensedModules { get; }
-
-        /// <summary>Gets the number of test projects that did not fit at all, reported only as a count.</summary>
-        internal int UnlistedModules { get; }
-
-        /// <summary>
-        /// Returns how many of <paramref name="totalModules"/> got a full section, which is what the top-of-file
-        /// note quotes — so it excludes both the condensed and the unlisted.
-        /// </summary>
-        internal int FullyReportedModules(int totalModules)
-            => totalModules - CondensedModules - UnlistedModules;
-    }
-
-    /// <summary>
-    /// Renders the combined summary for a whole <c>dotnet test</c> run. What the rendering had to give up is
-    /// reported back rather than written here, because a note buried after dozens of collapsed module sections is
-    /// easy to miss and belongs at the top of the file.
-    /// </summary>
-    /// <param name="aggregate">The fragments collected from every test project in the run.</param>
-    /// <param name="includeFailureDetails">Whether failures may be expanded into collapsible diagnostics.</param>
-    /// <param name="condenseAllModules">
-    /// Renders every test project as a one-line verdict regardless of the budget. This is the fallback when the
-    /// full rendering was refused for being too large.
-    /// </param>
-    /// <param name="alreadyWrittenBytes">
-    /// What the shared <c>GITHUB_STEP_SUMMARY</c> file already holds. The rendering's own bounds are useless
-    /// without it: they would stop this section at its share of the cap while the file it is appended to is
-    /// measured against the whole cap, so a job whose other steps already wrote a few hundred kilobytes would
-    /// have every rendering refused, including the fallback, and contribute nothing at all.
-    /// </param>
     internal static AggregateRenderResult BuildAggregateMarkdown(
         CiRunSummaryAggregate aggregate,
         bool includeFailureDetails = true,
         bool condenseAllModules = false,
         long alreadyWrittenBytes = 0)
     {
+        GitHubActionsStepSummarySections sections = GitHubActionsStepSummarySectionsParser.GetAggregateSections(aggregate.Modules);
         bool failed = aggregate.ExitCode is int exitCode
             ? GitHubActionsExitCode.IndicatesFailure(exitCode)
             : aggregate.FailedTests > 0;
@@ -188,33 +251,44 @@ internal sealed partial class GitHubActionsSummaryReporter
 
         var builder = new StringBuilder();
         builder.Append("## ").Append(statusIcon).Append(" Overall Test Run Summary\n\n");
-        builder.Append("| Total | Passed | Failed | Skipped | Duration |\n");
-        builder.Append("|---:|---:|---:|---:|---:|\n");
-        builder.Append("| ").Append(aggregate.TotalTests.ToString(CultureInfo.InvariantCulture))
-            .Append(" | ").Append(aggregate.PassedTests.ToString(CultureInfo.InvariantCulture))
-            .Append(" | ").Append(aggregate.FailedTests.ToString(CultureInfo.InvariantCulture))
-            .Append(" | ").Append(aggregate.SkippedTests.ToString(CultureInfo.InvariantCulture))
-            .Append(" | ").Append(duration).Append(" |\n\n");
-
-        if (aggregate.IsPartial)
+        if ((sections & GitHubActionsStepSummarySections.TestResults) != 0)
         {
-            builder.Append("> [!WARNING]\n> This summary is partial because the test run was truncated.\n\n");
-        }
-        else if (!aggregate.HasAuthoritativeRunSummary)
-        {
-            builder.Append("> [!NOTE]\n> Counts reflect the observed module fragments. The outer `dotnet test` duration and exit verdict were not supplied by the SDK.\n\n");
+            builder.Append("| Total | Passed | Failed | Skipped | Duration |\n");
+            builder.Append("|---:|---:|---:|---:|---:|\n");
+            builder.Append("| ").Append(aggregate.TotalTests.ToString(CultureInfo.InvariantCulture))
+                .Append(" | ").Append(aggregate.PassedTests.ToString(CultureInfo.InvariantCulture))
+                .Append(" | ").Append(aggregate.FailedTests.ToString(CultureInfo.InvariantCulture))
+                .Append(" | ").Append(aggregate.SkippedTests.ToString(CultureInfo.InvariantCulture))
+                .Append(" | ").Append(duration).Append(" |\n\n");
         }
 
-        if (aggregate.ExitCode is int authoritativeExitCode
-            && !GitHubActionsExitCode.IsTestResultOutcome(authoritativeExitCode))
+        if ((sections & GitHubActionsStepSummarySections.Coverage) != 0)
         {
-            string calloutText = string.Format(
-                CultureInfo.InvariantCulture,
-                GitHubActionsResources.ExitCodeCallout,
-                authoritativeExitCode.ToString(CultureInfo.InvariantCulture),
-                GitHubActionsExitCode.GetName(authoritativeExitCode),
-                GitHubActionsExitCode.GetReason(authoritativeExitCode));
-            builder.Append("> [!WARNING]\n> ").Append(EscapeInlineCode(calloutText)).Append("\n\n");
+            CiCoverageSummary.AppendMarkdown(builder, aggregate.Coverage, headingLevel: 3);
+        }
+
+        if ((sections & GitHubActionsStepSummarySections.TestResults) != 0)
+        {
+            if (aggregate.IsPartial)
+            {
+                builder.Append("> [!WARNING]\n> This summary is partial because the test run was truncated.\n\n");
+            }
+            else if (!aggregate.HasAuthoritativeRunSummary)
+            {
+                builder.Append("> [!NOTE]\n> Counts reflect the observed module fragments. The outer `dotnet test` duration and exit verdict were not supplied by the SDK.\n\n");
+            }
+
+            if (aggregate.ExitCode is int authoritativeExitCode
+                && !GitHubActionsExitCode.IsTestResultOutcome(authoritativeExitCode))
+            {
+                string calloutText = string.Format(
+                    CultureInfo.InvariantCulture,
+                    GitHubActionsResources.ExitCodeCallout,
+                    authoritativeExitCode.ToString(CultureInfo.InvariantCulture),
+                    GitHubActionsExitCode.GetName(authoritativeExitCode),
+                    GitHubActionsExitCode.GetReason(authoritativeExitCode));
+                builder.Append("> [!WARNING]\n> ").Append(EscapeInlineCode(calloutText)).Append("\n\n");
+            }
         }
 
         // One shared budget, byte-denominated, drives every decision below: which shape each module is rendered
@@ -235,9 +309,9 @@ internal sealed partial class GitHubActionsSummaryReporter
                 measuredChars = builder.Length;
             }
 
-            // The stop-listing bound applies even here: this is the fallback the post-processor reaches *after*
-            // the full rendering was refused for size, so if it too rendered a line per project without bound, a
-            // large enough run would have both renderings refused and contribute nothing at all.
+            // The stop-listing bound applies even in the condensed fallback: it is the rendering the
+            // post-processor reaches *after* the full one was refused for size, so if it too rendered a line per
+            // project without bound, a large enough run would have both refused and contribute nothing at all.
             SummaryStage stage = budget.Stage;
             if (condenseAllModules && stage != SummaryStage.Unlisted)
             {
@@ -279,7 +353,7 @@ internal sealed partial class GitHubActionsSummaryReporter
 
             // Hand this module its share, keeping whatever earlier modules left unspent.
             budget.GrantModuleShare(moduleCount - listedModules);
-            if (AppendModuleMarkdown(builder, module, headingLevel: 3, includeFailureDetails, budget) > 0)
+            if (AppendModuleMarkdown(builder, module, headingLevel: 3, sections, includeFailureDetails, budget) > 0)
             {
                 modulesWithOmittedDetails++;
             }
@@ -356,18 +430,6 @@ internal sealed partial class GitHubActionsSummaryReporter
     }
 
     /// <summary>
-    /// Marks the start of the truncation note in the shared summary file so a later test project can find the
-    /// note it (or a sibling) already wrote and replace it, rather than appending a second copy.
-    /// </summary>
-    internal const string TruncationNoticeMarker = "<!-- microsoft-testing-platform:github:summary-truncated -->";
-
-    /// <summary>
-    /// Marks the end of the truncation note. The note carries a project count, so its length varies and it
-    /// cannot be located by its text alone.
-    /// </summary>
-    internal const string TruncationNoticeEndMarker = "<!-- /microsoft-testing-platform:github:summary-truncated -->";
-
-    /// <summary>
     /// Renders the note that tells the reader the summary was shortened on purpose, and how many test projects
     /// did get their full results in before that happened.
     /// </summary>
@@ -430,46 +492,64 @@ internal sealed partial class GitHubActionsSummaryReporter
     /// Renders one module's section, returning the number of its listed failures whose diagnostics did not fit
     /// the shared budget.
     /// </summary>
-    private static int AppendModuleMarkdown(StringBuilder builder, CiRunSummaryModule module, int headingLevel, bool includeFailureDetails, SummaryBudget budget)
+    private static int AppendModuleMarkdown(
+        StringBuilder builder,
+        CiRunSummaryModule module,
+        int headingLevel,
+        GitHubActionsStepSummarySections sections,
+        bool includeFailureDetails,
+        SummaryBudget budget)
     {
         string heading = new('#', headingLevel);
         bool runFailed = module.FailedTests > 0 || GitHubActionsExitCode.IndicatesFailure(module.ExitCode);
         builder.Append(heading).Append(' ').Append(runFailed ? "❌" : "✅").Append(' ')
             .Append(EscapeInlineCode(module.AssemblyName)).Append("\n\n");
-        builder.Append("| Total | Passed | Failed | Skipped | Test duration |\n");
-        builder.Append("|---:|---:|---:|---:|---:|\n");
-        builder.Append("| ").Append(module.TotalTests.ToString(CultureInfo.InvariantCulture))
-            .Append(" | ").Append(module.PassedTests.ToString(CultureInfo.InvariantCulture))
-            .Append(" | ").Append(module.FailedTests.ToString(CultureInfo.InvariantCulture))
-            .Append(" | ").Append(module.SkippedTests.ToString(CultureInfo.InvariantCulture))
-            .Append(" | ").Append(FormatDuration(TimeSpan.FromTicks(module.TestDurationTicks))).Append(" |\n\n");
-
-        if (!GitHubActionsExitCode.IsTestResultOutcome(module.ExitCode))
+        if ((sections & GitHubActionsStepSummarySections.TestResults) != 0)
         {
-            builder.Append("> Module exit code: `").Append(module.ExitCode.ToString(CultureInfo.InvariantCulture)).Append("` (")
-                .Append(EscapeInlineCode(GitHubActionsExitCode.GetName(module.ExitCode))).Append(")\n\n");
+            builder.Append("| Total | Passed | Failed | Skipped | Test duration |\n");
+            builder.Append("|---:|---:|---:|---:|---:|\n");
+            builder.Append("| ").Append(module.TotalTests.ToString(CultureInfo.InvariantCulture))
+                .Append(" | ").Append(module.PassedTests.ToString(CultureInfo.InvariantCulture))
+                .Append(" | ").Append(module.FailedTests.ToString(CultureInfo.InvariantCulture))
+                .Append(" | ").Append(module.SkippedTests.ToString(CultureInfo.InvariantCulture))
+                .Append(" | ").Append(FormatDuration(TimeSpan.FromTicks(module.TestDurationTicks))).Append(" |\n\n");
+        }
+
+        if ((sections & GitHubActionsStepSummarySections.Coverage) != 0)
+        {
+            CiCoverageSummary.AppendMarkdown(builder, module.Coverage, headingLevel + 1);
         }
 
         int omittedDetails = 0;
-        if (module.Failures.Length > 0)
+        if ((sections & GitHubActionsStepSummarySections.TestResults) != 0)
         {
-            omittedDetails = GitHubActionsFailureDetails.AppendFailuresSection(
-                builder,
-                heading + "#",
-                [.. module.Failures.Select(static failure => new GitHubActionsFailureEntry(
-                    failure.FullyQualifiedName,
-                    TimeSpan.FromTicks(failure.DurationTicks),
-                    failure.ErrorMessage,
-                    failure.ErrorType,
-                    failure.StackTrace,
-                    failure.FilePath,
-                    failure.LineNumber ?? 0))],
-                module.FailedTests,
-                includeFailureDetails,
-                budget);
+            if (!GitHubActionsExitCode.IsTestResultOutcome(module.ExitCode))
+            {
+                builder.Append("> Module exit code: `").Append(module.ExitCode.ToString(CultureInfo.InvariantCulture)).Append("` (")
+                    .Append(EscapeInlineCode(GitHubActionsExitCode.GetName(module.ExitCode))).Append(")\n\n");
+            }
+
+            if (module.Failures.Length > 0)
+            {
+                omittedDetails = GitHubActionsFailureDetails.AppendFailuresSection(
+                    builder,
+                    heading + "#",
+                    [.. module.Failures.Select(static failure => new GitHubActionsFailureEntry(
+                        failure.FullyQualifiedName,
+                        TimeSpan.FromTicks(failure.DurationTicks),
+                        failure.ErrorMessage,
+                        failure.ErrorType,
+                        failure.StackTrace,
+                        failure.FilePath,
+                        failure.LineNumber ?? 0))],
+                    module.FailedTests,
+                    includeFailureDetails,
+                    budget);
+            }
         }
 
-        if (module.SlowestTests.Length > 0)
+        if ((sections & GitHubActionsStepSummarySections.SlowTests) != 0
+            && module.SlowestTests.Length > 0)
         {
             builder.Append(heading).Append("# ⏱ Slowest tests\n\n");
             foreach (CiRunSummaryTest test in module.SlowestTests)

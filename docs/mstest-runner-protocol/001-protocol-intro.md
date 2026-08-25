@@ -221,30 +221,14 @@ interface InitializeParams {
         // This reduces collisions with other LSP capabilities.
         testing: {
             // If true, the client supports the client/attachDebugger and client/launchDebugger requests.
-            debuggerProvider: true,
-
-            // If true, the client can receive a batch of log messages under client/log request.
-            batchLoggingSupport: true,
-
-            // If true, the client supports the testing/testUpdates/attachments request.
-            attachmentsSupport: true,
+            debuggerProvider: boolean,
 
             // If true, the client is stateful: it persists an addressable set of test nodes for the
             // whole session and keeps each node in its last-known state until it is explicitly updated
             // (for example, an IDE test explorer). If false or missing, the client is stateless: it
             // consumes test updates as a stream and does not retain node state after the run
             // (for example, `dotnet test`). Defaults to false.
-            isStateful: true,
-
-            // If true, the client support a port to which child processes
-            // can connect to.
-            // Note: The test runner is expected to ensure the synchronization of messages
-            // for instance if additional processes are sending test updates
-            // or attachment updates, these must complete before the
-            // test runner sends the completion notification.
-            callbackProvider: {
-                port: integer
-            }
+            isStateful?: boolean,
         },
     }
 }
@@ -256,6 +240,9 @@ Response:
 
 ```typescript
 interface InitializeResponse {
+    // The process Id of the server.
+    processId: PID,
+
     serverInfo: {
         // The name of the server.
         name: string,
@@ -265,22 +252,32 @@ interface InitializeResponse {
     },
     capabilities: {
         testing: {
+            // If true, the server supports test discovery.
+            supportsDiscovery: boolean;
+
             // Experimental: The client currently uses this variable to determine if the test runner process can
             // handle multiple discover/run requests. If true, then the client can keep the process alive.
             // This has a potential performance benefit, where startup time and time to load test assemblies/sources
             // only needs to occur once.
             experimental_multiRequestSupport: boolean;
 
+            // If true, the server uses the VSTest test-node properties.
+            vstestProvider: boolean;
+
             // If true, the server will send attachments, on top
             // of test updates during test runs.
             // The client will then wait on both to complete,
             // before it marks a test run as completed.
-            attachmentsProvider?: boolean;
+            attachmentsSupport: boolean;
+
+            // If true, this server is an additional connection that sends test updates directly
+            // to the client rather than accepting discovery and run requests.
+            multipleConnectionProvider: boolean;
 
             // If true, the server understands the first-class test-coverage message contract.
             // This advertises protocol support only; it does not imply that an enabled extension
-            // will produce coverage during the run.
-            supportsTestCoverageMessages?: boolean;
+            // will produce coverage during the run. The current server always advertises true.
+            supportsTestCoverageMessages: true;
         },
     }
 }
@@ -298,18 +295,8 @@ If the capability is missing/or false the server should assume that the client w
 lazy locations and send the full location.
 
 > [!NOTE]
-> Discovery/Run requests, as well as TestNode format specified in the initial release of the protocol
-> should be supported by all clients/servers.
-> As such, they're not expressed via capabilities.
-
-## Callback provider
-
-In some cases the test runner might want to start additional child processes. If client has the `testing.callbackProvider` capability, the client
-will provide a port for multiple connections.
-
-This allows for instance for the test runner to start multiple child processes that it distributes test run over, while each of these child processes can directly send callbacks to the client with test node updates, rather than have to relay all information via the main test runner node.
-
-Another use case is the collection of hang dumps, crash dumps, in which case the test runner node might crash, while the hang dump watcher process can still send back the hang dump/crash dump attachment, even after the crash.
+> The TestNode format specified in the initial release of the protocol should be supported by all
+> clients and servers. As such, it is not expressed via capabilities.
 
 ## Discovery and run requests
 
@@ -787,37 +774,11 @@ Messages are logged to the output window.
 Notification:
 
 - method: `client/log`
-- params: `LogMessageParams | BatchLogMessageParams` defined as follows:
-- capability: If `testing.batchLoggingSupport` is true, the server can send BatchLogMessageParams instead.
-  The client will check the existence of `messages` property to determine if a batch was sent instead of a single
-  message. If `testing.batchLoggingSupport` is false, the server cannot send `BatchLogMessageParams` messages to the client.
+- params: `LogMessageParams` defined as follows:
 
 ```typescript
 interface LogMessageParams {
     level: TestingPlatformLogLevel;
-    message: string;
-}
-```
-
-```typescript
-interface BatchLogMessageParams {
-    // If specified the message batch should be attributed to a specific run.
-    // Specifically, combined with the nodeUid, property the client should attribute
-    // the messages to a specific TestNode, rather than render them globally.
-    runId?: GUID;
-
-    // List of messages to log.
-    messages: LogMessage[];
-}
-
-interface LogMessage {
-    // If a log message should be attributed to a single node, rather than be global.
-    nodeUid?: GUID;
-
-    // The level of a single log message.
-    // Messages can have different log levels within a batch.
-    level: TestingPlatformLogLevel;
-
     message: string;
 }
 ```

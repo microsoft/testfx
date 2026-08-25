@@ -1,4 +1,24 @@
 #nullable enable
+Microsoft.Testing.Platform.Configurations.AggregatedConfiguration.GetChildren() -> System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Configurations.IConfigurationSection!>!
+Microsoft.Testing.Platform.Configurations.AggregatedConfiguration.GetChildren(string? parentPath) -> System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Configurations.IConfigurationSection!>!
+Microsoft.Testing.Platform.Configurations.AggregatedConfiguration.GetSection(string! key) -> Microsoft.Testing.Platform.Configurations.IConfigurationSection!
+Microsoft.Testing.Platform.Configurations.AggregatedConfiguration.TryGetSectionValue(string! key, out string? value) -> bool
+Microsoft.Testing.Platform.Configurations.CommandLineConfigurationProvider.GetChildKeys(string? parentPath) -> System.Collections.Generic.IEnumerable<string!>!
+Microsoft.Testing.Platform.Configurations.CommandLineConfigurationProvider.TryGetScalar(string! key, out string? value) -> bool
+Microsoft.Testing.Platform.Configurations.ConfigurationProviderHelpers
+Microsoft.Testing.Platform.Configurations.ConfigurationSection
+Microsoft.Testing.Platform.Configurations.ConfigurationSection.ConfigurationSection(Microsoft.Testing.Platform.Configurations.AggregatedConfiguration! root, string! path) -> void
+Microsoft.Testing.Platform.Configurations.ConfigurationSection.GetChildren() -> System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Configurations.IConfigurationSection!>!
+Microsoft.Testing.Platform.Configurations.ConfigurationSection.GetSection(string! key) -> Microsoft.Testing.Platform.Configurations.IConfigurationSection!
+Microsoft.Testing.Platform.Configurations.ConfigurationSection.HasValue.get -> bool
+Microsoft.Testing.Platform.Configurations.ConfigurationSection.Key.get -> string!
+Microsoft.Testing.Platform.Configurations.ConfigurationSection.Path.get -> string!
+Microsoft.Testing.Platform.Configurations.ConfigurationSection.Value.get -> string?
+Microsoft.Testing.Platform.Configurations.ConfigurationSection.this[string! key].get -> string?
+Microsoft.Testing.Platform.Configurations.EnvironmentVariablesConfigurationProvider.GetChildKeys(string? parentPath) -> System.Collections.Generic.IEnumerable<string!>!
+Microsoft.Testing.Platform.Configurations.EnvironmentVariablesConfigurationProvider.TryGetScalar(string! key, out string? value) -> bool
+Microsoft.Testing.Platform.Configurations.JsonConfigurationSource.JsonConfigurationProvider.GetChildKeys(string? parentPath) -> System.Collections.Generic.IEnumerable<string!>!
+static Microsoft.Testing.Platform.Configurations.ConfigurationProviderHelpers.GetChildKeys(System.Collections.Generic.IEnumerable<string!>! keys, string? parentPath) -> System.Collections.Generic.IEnumerable<string!>!
 Microsoft.Testing.Platform.Helpers.IConsole.Write(System.Text.StringBuilder! value) -> void
 Microsoft.Testing.Platform.Helpers.IFileSystem.ReplaceFile(string! sourceFileName, string! destFileName) -> void
 Microsoft.Testing.Platform.Helpers.SystemConsole.Write(System.Text.StringBuilder! value) -> void
@@ -196,10 +216,12 @@ static Microsoft.Testing.Platform.Services.ArtifactNamingHelper.ResolveAndSaniti
 static Microsoft.Testing.Platform.Services.CoverageThresholdExitCodePolicy.Apply(int exitCode, System.IServiceProvider! serviceProvider) -> int
 static Microsoft.Testing.Platform.Services.ExitCodeIgnorePolicy.Apply(int exitCode, Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> int
 Microsoft.Testing.Platform.Helpers.RuntimeFeatureHelper
+Microsoft.Testing.Platform.Helpers.IdentityKeyBuilder
 Microsoft.Testing.Platform.Logging.FileLogger.FileLogger(Microsoft.Testing.Platform.Logging.FileLoggerOptions! options, Microsoft.Testing.Platform.Logging.LogLevel logLevel, Microsoft.Testing.Platform.Helpers.IClock! clock, Microsoft.Testing.Platform.Helpers.ITask! task, Microsoft.Testing.Platform.Helpers.IConsole! console, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Helpers.IFileStreamFactory! fileStreamFactory, System.TimeSpan? flushTimeout = null) -> void
 Microsoft.Testing.Platform.Logging.FileLogger.IsFileHandleReleased.get -> bool
 Microsoft.Testing.Platform.Messages.SingleConsumerUnboundedChannel<T>.WaitToRead() -> bool
 static Microsoft.Testing.Platform.Helpers.RuntimeFeatureHelper.IsMultiThreaded.get -> bool
+static Microsoft.Testing.Platform.Helpers.IdentityKeyBuilder.AppendLengthPrefixedComponent(System.Text.StringBuilder! builder, string? component) -> void
 const Microsoft.Testing.Platform.ServerMode.JsonRpcStrings.IsStateful = "isStateful" -> string!
 const Microsoft.Testing.Platform.ServerMode.JsonRpcStrings.SupportsTestCoverageMessages = "supportsTestCoverageMessages" -> string!
 Microsoft.Testing.Platform.Hosts.TestHostControlledHost.TestHostControlledHost(Microsoft.Testing.Platform.IPC.NamedPipeClient! testHostControllerPipeClient, Microsoft.Testing.Platform.Hosts.IHost! innerHost, System.Threading.CancellationToken cancellationToken, Microsoft.Testing.Platform.Services.TestApplicationResult? testApplicationResult = null) -> void

@@ -15,7 +15,7 @@ namespace Microsoft.Testing.Extensions;
 /// Microsoft.Testing.Platform integration.
 /// </summary>
 [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "The shared helper is linked into projects that are allowed to use MTP APIs")]
-internal abstract class RunSettingsConfigurationProviderBase : IConfigurationSource, IConfigurationProvider
+internal abstract class RunSettingsConfigurationProviderBase : IConfigurationSource, IHierarchicalConfigurationProvider
 {
     private string? _runSettingsFileContent;
 
@@ -61,6 +61,20 @@ internal abstract class RunSettingsConfigurationProviderBase : IConfigurationSou
         value = null;
         return false;
     }
+
+    /// <inheritdoc />
+    public IEnumerable<string> GetChildKeys(string? parentPath)
+        => !TryGet(PlatformConfigurationConstants.PlatformResultDirectory, out _)
+            ? []
+            : parentPath switch
+            {
+                null => ["platformOptions"],
+                "platformOptions" => ["resultDirectory"],
+                _ => [],
+            };
+
+    /// <inheritdoc />
+    public bool TryGetScalar(string key, out string? value) => TryGet(key, out value);
 
     /// <inheritdoc />
     public Task<IConfigurationProvider> BuildAsync(CommandLineParseResult commandLineParseResult)

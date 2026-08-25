@@ -64,6 +64,16 @@ public sealed class GitHubActionsReportTests : AcceptanceTestBase<GitHubActionsR
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
+    public async Task WhenRunPassesAndSummaryIsOnFailure_SummaryIsNotCreated(string tfm)
+    {
+        (TestHostResult result, string summary) = await RunAsync(tfm, testMode: "pass", extraArgs: "--report-gh-step-summary on-failure");
+
+        result.AssertExitCodeIs(ExitCode.Success);
+        Assert.AreEqual(string.Empty, summary);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task WhenFailureDetailsAreDisabled_SummaryKeepsTheCompactFailureList(string tfm)
     {
         (TestHostResult result, string summary) = await RunAsync(tfm, testMode: "failex", extraArgs: "--report-gh-failure-details off");
@@ -73,6 +83,16 @@ public sealed class GitHubActionsReportTests : AcceptanceTestBase<GitHubActionsR
         Assert.Contains("### ❌ Failures (1)", summary);
         Assert.DoesNotContain("<details>", summary);
         Assert.DoesNotContain("**Exception:**", summary);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task WhenTestFailsAndSummaryIsOnFailure_SummaryIsCreated(string tfm)
+    {
+        (TestHostResult result, string summary) = await RunAsync(tfm, testMode: "fail", extraArgs: "--report-gh-step-summary on-failure");
+
+        result.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
+        Assert.Contains("❌ Test Run Summary", summary);
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -88,6 +108,17 @@ public sealed class GitHubActionsReportTests : AcceptanceTestBase<GitHubActionsR
         result.AssertOutputContains("ZeroTests");
         Assert.Contains("❌ Test Run Summary", summary);
         Assert.Contains("[!WARNING]", summary);
+        Assert.Contains("ZeroTests", summary);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task WhenZeroTestsRanAndSummaryIsOnFailure_SummaryIsCreated(string tfm)
+    {
+        (TestHostResult result, string summary) = await RunAsync(tfm, testMode: "zero", extraArgs: "--report-gh-step-summary on-failure");
+
+        result.AssertExitCodeIs(ExitCode.ZeroTests);
+        Assert.Contains("❌ Test Run Summary", summary);
         Assert.Contains("ZeroTests", summary);
     }
 

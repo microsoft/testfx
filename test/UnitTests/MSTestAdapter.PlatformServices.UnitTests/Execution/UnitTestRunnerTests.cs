@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -91,6 +91,50 @@ public sealed class UnitTestRunnerTests : TestContainer
         UnitTestRunner unitTestRunner = CreateUnitTestRunner([unitTestElement]);
         Func<Task> func = () => unitTestRunner.RunSingleTestAsync(unitTestElement, null!, null!);
         await func.Should().ThrowAsync<ArgumentNullException>();
+    }
+
+    public void CombineRetryAttempts_WhenRetriesProduceResults_FlattensAndTagsAttempts()
+    {
+        var initialFailure = new TestResult { Outcome = UnitTestOutcome.Failed };
+        var firstRetryFailure = new TestResult { Outcome = UnitTestOutcome.Timeout };
+        var finalSuccess = new TestResult { Outcome = UnitTestOutcome.Passed };
+        var retryResult = new RetryResult();
+        retryResult.AddResult([firstRetryFailure]);
+        retryResult.AddResult([finalSuccess]);
+
+        TestResult[] combined = UnitTestRunner.CombineRetryAttempts([initialFailure], retryResult);
+
+        combined.Should().Equal(initialFailure, firstRetryFailure, finalSuccess);
+        combined.Select(result => result.RetryAttemptNumber).Should().Equal(1, 2, 3);
+        combined.Select(result => result.IsSupersededRetryAttempt).Should().Equal(true, true, false);
+    }
+
+    public void CombineRetryAttempts_WhenLastRetryProducesNoResults_ReturnsEmptyResult()
+    {
+        var initialFailure = new TestResult { Outcome = UnitTestOutcome.Failed };
+        var retryFailure = new TestResult { Outcome = UnitTestOutcome.Failed };
+        var retryResult = new RetryResult();
+        retryResult.AddResult([retryFailure]);
+        retryResult.AddResult([]);
+
+        TestResult[] combined = UnitTestRunner.CombineRetryAttempts([initialFailure], retryResult);
+
+        combined.Should().BeEmpty();
+        // The empty final attempt returns before tagging, so the supplied results must remain unchanged.
+        initialFailure.IsSupersededRetryAttempt.Should().BeFalse();
+        retryFailure.IsSupersededRetryAttempt.Should().BeFalse();
+    }
+
+    public void CombineRetryAttempts_WhenRetryProducesNoAttempts_ThrowsUnreachableException()
+    {
+        Action act = () => UnitTestRunner.CombineRetryAttempts(
+            [new TestResult { Outcome = UnitTestOutcome.Failed }],
+            new RetryResult());
+
+        Exception exception = act.Should().Throw<Exception>().Which;
+        // UnreachableException is an internal, per-assembly polyfill on non-NETCOREAPP TFMs, so a generic type
+        // assertion would compare the adapter's copy with this test assembly's copy and fail on type identity.
+        exception.GetType().FullName.Should().Be("System.Diagnostics.UnreachableException");
     }
 
     public async Task RunSingleTestShouldReturnTestResultIndicateATestNotFoundIfTestMethodCannotBeFound()

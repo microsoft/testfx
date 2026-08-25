@@ -4,57 +4,57 @@
     <body>
       <trans-unit id="ActivationArgumentsInvalidArgumentCount">
         <source>The Microsoft Testing Platform activation-argument payload has an invalid argument count.</source>
-        <target state="new">The Microsoft Testing Platform activation-argument payload has an invalid argument count.</target>
+        <target state="translated">Datová část argumentu aktivace platformy Microsoft Testing Platform má neplatný počet argumentů.</target>
         <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
       </trans-unit>
       <trans-unit id="ActivationArgumentsInvalidArgumentLength">
         <source>The Microsoft Testing Platform activation-argument payload has an invalid argument length.</source>
-        <target state="new">The Microsoft Testing Platform activation-argument payload has an invalid argument length.</target>
+        <target state="translated">Datová část argumentu aktivace platformy Microsoft Testing Platform má neplatnou délku argumentu.</target>
         <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
       </trans-unit>
       <trans-unit id="ActivationArgumentsInvalidFileKey">
         <source>The Microsoft Testing Platform activation arguments contain an invalid file payload key.</source>
-        <target state="new">The Microsoft Testing Platform activation arguments contain an invalid file payload key.</target>
+        <target state="translated">Argumenty aktivace platformy Microsoft Testing Platform obsahují neplatný klíč datové části souboru.</target>
         <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
       </trans-unit>
       <trans-unit id="ActivationArgumentsInvalidFileReference">
         <source>The Microsoft Testing Platform activation arguments contain an invalid file payload reference.</source>
-        <target state="new">The Microsoft Testing Platform activation arguments contain an invalid file payload reference.</target>
+        <target state="translated">Argumenty aktivace platformy Microsoft Testing Platform obsahují neplatný odkaz na datovou část souboru.</target>
         <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
       </trans-unit>
       <trans-unit id="ActivationArgumentsInvalidInlinePayload">
         <source>The Microsoft Testing Platform activation arguments contain an invalid inline payload.</source>
-        <target state="new">The Microsoft Testing Platform activation arguments contain an invalid inline payload.</target>
+        <target state="translated">Argumenty aktivace platformy Microsoft Testing Platform obsahují neplatnou vloženou datovou část.</target>
         <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
       </trans-unit>
       <trans-unit id="ActivationArgumentsMissingPayload">
         <source>The launch activation does not contain Microsoft Testing Platform arguments.</source>
-        <target state="new">The launch activation does not contain Microsoft Testing Platform arguments.</target>
+        <target state="translated">Aktivace spuštění neobsahuje argumenty platformy Microsoft Testing Platform.</target>
         <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
       </trans-unit>
       <trans-unit id="ActivationArgumentsPayloadAuthenticationFailed">
         <source>The Microsoft Testing Platform activation-argument payload failed authentication.</source>
-        <target state="new">The Microsoft Testing Platform activation-argument payload failed authentication.</target>
+        <target state="translated">Ověření datové části argumentu aktivace platformy Microsoft Testing Platform se nepovedlo.</target>
         <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
       </trans-unit>
       <trans-unit id="ActivationArgumentsPayloadReadFailed">
         <source>The Microsoft Testing Platform activation-argument payload could not be read.</source>
-        <target state="new">The Microsoft Testing Platform activation-argument payload could not be read.</target>
+        <target state="translated">Datovou část argumentu aktivace platformy Microsoft Testing Platform se nepovedlo přečíst.</target>
         <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
       </trans-unit>
       <trans-unit id="ActivationArgumentsPayloadTooLarge">
         <source>The Microsoft Testing Platform activation-argument payload is too large.</source>
-        <target state="new">The Microsoft Testing Platform activation-argument payload is too large.</target>
+        <target state="translated">Datová část argumentu aktivace platformy Microsoft Testing Platform je příliš velká.</target>
         <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
       </trans-unit>
       <trans-unit id="ActivationArgumentsPayloadTruncated">
         <source>The Microsoft Testing Platform activation-argument payload is truncated.</source>
-        <target state="new">The Microsoft Testing Platform activation-argument payload is truncated.</target>
+        <target state="translated">Datová část argumentu aktivace platformy Microsoft Testing Platform je zkrácená.</target>
         <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
       </trans-unit>
       <trans-unit id="ActivationArgumentsTrailingData">
         <source>The Microsoft Testing Platform activation-argument payload contains trailing data.</source>
-        <target state="new">The Microsoft Testing Platform activation-argument payload contains trailing data.</target>
+        <target state="translated">Datová část argumentu aktivace platformy Microsoft Testing Platform obsahuje nadbytečná data na konci.</target>
         <note>Do not localize the technology name {Locked="Microsoft Testing Platform"}.</note>
       </trans-unit>
       <trans-unit id="AmbiguousAppxManifestApplication">
@@ -74,7 +74,7 @@
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDescription">
         <source>Registers a packaged MSIX test host and activates it by Application User Model ID (Windows build), delivering Microsoft Testing Platform arguments through argv for packagedClassicApp/win32App hosts (including classic AppContainer hosts) or launch activation for windowsApp/UWP hosts. When opted in through TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=always, it also deploys a non-packaged (loose-layout) Windows test host to an isolated directory and launches it from there. Enabled only for a packaged layout by default, so an unpackaged app is left on the default launch path. End-to-end AppContainer execution additionally requires controller-pipe authorization. See https://github.com/microsoft/testfx/issues/10486.</source>
-        <target state="needs-review-translation">Registruje zabalený, plně důvěryhodný desktopový testovací host MSIX a aktivuje ho pomocí Application User Model ID (Windows sestavení) – a když je povolen prostřednictvím TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=always, nasadí nezabalený (loose-layout) testovací host Windows do izolovaného adresáře a spustí ho odtud. Ve výchozím nastavení je povolené jenom pro zabalené rozložení, takže na výchozí cestě spuštění zůstane nezabalené aplikace. Skuteční hostitelé UWP/AppContainer nejsou podporováni. Viz https://github.com/microsoft/testfx/issues/9933.</target>
+        <target state="translated">Zaregistruje zabaleného testovacího hostitele MSIX a aktivuje ho pomocí Application User Model ID (sestavení Windows). Argumenty platformy Microsoft Testing Platform předá přes argv hostitelům packagedClassicApp/win32App (včetně klasických hostitelů AppContainer) nebo pomocí aktivace spuštění hostitelům windowsApp/UWP. Když se tato možnost zapne pomocí TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER=always, nasadí také nezabaleného testovacího hostitele Windows (s volným rozložením) do izolovaného adresáře a spustí ho z něj. Ve výchozím nastavení je povolené jenom pro zabalené rozložení, takže na výchozí cestě spuštění zůstane nezabalené aplikace. Kompletní spuštění v AppContainer navíc vyžaduje autorizaci kanálu kontroleru. Viz https://github.com/microsoft/testfx/issues/10486.</target>
         <note>Do not localize the environment variable name or its value {Locked="TESTINGPLATFORM_PACKAGEDAPP_LAUNCHER"}{Locked="always"}, nor the technology names {Locked="Microsoft Testing Platform"}{Locked="MSIX"}{Locked="Application User Model ID"}{Locked="Windows"}{Locked="packagedClassicApp"}{Locked="win32App"}{Locked="windowsApp"}{Locked="UWP"}{Locked="AppContainer"}.</note>
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDisplayName">

@@ -67,7 +67,17 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
         string outputPath = CiRunSummaryAggregation.GetMergedOutputPath(outputDirectory, ProviderSlug, aggregationId);
         string? stepSummaryPath = environment.GetEnvironmentVariable(StepSummaryEnvironmentVariable);
         ILogger logger = loggerFactory.CreateLogger<GitHubActionsSummaryArtifactPostProcessor>();
-        StepSummaryWriter? writer = RoslynString.IsNullOrWhiteSpace(stepSummaryPath)
+
+        // Honour the modules' own on-failure preference: only skip the summary when every module asked for it and
+        // the run actually passed.
+        bool writeOnFailureOnly = aggregate.Modules.Count > 0
+            && aggregate.Modules.All(static module => module.WriteOnFailureOnly);
+        bool runFailed = aggregate.IsPartial
+            || aggregate.FailedTests > 0
+            || (aggregate.ExitCode is int exitCode
+                ? GitHubActionsExitCode.IndicatesFailure(exitCode)
+                : aggregate.Modules.Any(static module => GitHubActionsExitCode.IndicatesFailure(module.ExitCode)));
+        StepSummaryWriter? writer = RoslynString.IsNullOrWhiteSpace(stepSummaryPath) || (writeOnFailureOnly && !runFailed)
             ? null
             : new StepSummaryWriter(fileSystem, stepSummaryPath!, logger, StepSummaryMaxWriteAttempts, StepSummaryRetryDelay);
 

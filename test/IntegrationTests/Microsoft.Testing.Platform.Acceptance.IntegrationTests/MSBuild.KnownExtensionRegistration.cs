@@ -42,7 +42,7 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase<NopAss
         testHostResult.AssertOutputContains("--retry-failed-tests");
         testHostResult.AssertOutputContains("--capture-video");
 
-        SL.Build binLog = SL.Serialization.Read(binlogFile);
+        SL.Build binLog = BinlogReader.Read(binlogFile);
         SL.Target generateSelfRegisteredExtensions = binLog.FindChildrenRecursive<SL.Target>().Single(t => t.Name == "_GenerateSelfRegisteredExtensions");
         SL.Task testingPlatformSelfRegisteredExtensions = generateSelfRegisteredExtensions.FindChildrenRecursive<SL.Task>().Single(t => t.Name == "TestingPlatformSelfRegisteredExtensions");
         SL.Message generatedSource = testingPlatformSelfRegisteredExtensions.FindChildrenRecursive<SL.Message>().Single(m => m.Text.Contains("SelfRegisteredExtensions source:"));
@@ -80,7 +80,7 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase<NopAss
         result.AssertOutputContains("Duplicate 'TestingPlatformBuilderHook' item with Include 'CONFLICT-HOOK-ID' has conflicting metadata.");
 
         // Ensure no self-registered extensions source file was generated when validation failed.
-        SL.Build binLog = SL.Serialization.Read(result.BinlogPath!);
+        SL.Build binLog = BinlogReader.Read(result.BinlogPath!);
         SL.Target? generateSelfRegisteredExtensions = binLog.FindChildrenRecursive<SL.Target>().SingleOrDefault(t => t.Name == "_GenerateSelfRegisteredExtensions");
         Assert.IsNotNull(generateSelfRegisteredExtensions);
         SL.Task testingPlatformSelfRegisteredExtensions = generateSelfRegisteredExtensions.FindChildrenRecursive<SL.Task>().Single(t => t.Name == "TestingPlatformSelfRegisteredExtensions");

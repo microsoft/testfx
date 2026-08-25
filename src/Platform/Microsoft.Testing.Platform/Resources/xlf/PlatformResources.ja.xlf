@@ -84,7 +84,7 @@
       </trans-unit>
       <trans-unit id="ArtifactPostProcessingManifestRunSummaryInvalid">
         <source>The artifact post-processing manifest runSummary must contain valid totalTests, passedTests, failedTests, skippedTests, durationTicks, exitCode, and testModuleCount values.</source>
-        <target state="new">The artifact post-processing manifest runSummary must contain valid totalTests, passedTests, failedTests, skippedTests, durationTicks, exitCode, and testModuleCount values.</target>
+        <target state="translated">アーティファクト ポスト プロセス マニフェスト runSummary には、有効な totalTests、passedTests、failedTests、skippedTests、durationTicks、exitCode、testModuleCount の値が含まれている必要があります。</target>
         <note>Do not localize property names {Locked="runSummary"}{Locked="totalTests"}{Locked="passedTests"}{Locked="failedTests"}{Locked="skippedTests"}{Locked="durationTicks"}{Locked="exitCode"}{Locked="testModuleCount"}.</note>
       </trans-unit>
       <trans-unit id="ArtifactPostProcessorCapabilityContainsSeparator">
@@ -329,132 +329,132 @@
       </trans-unit>
       <trans-unit id="DynamicExtensionAssemblyLoadFailedErrorMessage">
         <source>The assembly '{0}' of the extension '{1}' declared in the extension manifest '{2}' could not be loaded.</source>
-        <target state="new">The assembly '{0}' of the extension '{1}' declared in the extension manifest '{2}' could not be loaded.</target>
+        <target state="translated">拡張機能マニフェスト '{2}' で宣言されている拡張機能 '{1}' のアセンブリ '{0}' を読み込めませんでした。</target>
         <note>{0} is the resolved assembly path. {1} is the extension display name. {2} is the manifest file path.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionAssemblyNotFoundErrorMessage">
         <source>The assembly '{0}' of the extension '{1}' declared in the extension manifest '{2}' was not found.</source>
-        <target state="new">The assembly '{0}' of the extension '{1}' declared in the extension manifest '{2}' was not found.</target>
+        <target state="translated">拡張機能マニフェスト '{2}' で宣言されている拡張機能 '{1}' のアセンブリ '{0}' が見つかりませんでした。</target>
         <note>{0} is the resolved assembly path. {1} is the extension display name. {2} is the manifest file path.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionCannotRegisterTestFrameworkErrorMessage">
         <source>The extension '{0}' declared in the extension manifest '{1}' tried to register a test framework. Dynamically loaded extensions must not replace the test framework, because that would silently change which tests run and what results they report.</source>
-        <target state="new">The extension '{0}' declared in the extension manifest '{1}' tried to register a test framework. Dynamically loaded extensions must not replace the test framework, because that would silently change which tests run and what results they report.</target>
+        <target state="translated">拡張機能マニフェスト '{1}' で宣言されている拡張機能 '{0}' は、テスト フレームワークを登録しようとしました。動的に読み込まれる拡張機能は、テスト フレームワークを置き換えてはいけません。置き換えると、実行されるテストと報告される結果が変わってしまい、通知も届きません。</target>
         <note>{0} is the extension display name. {1} is the manifest file path.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionDuplicateIdConflictErrorMessage">
         <source>The extension id '{0}' is declared twice with different content: '{1}' in the extension manifest '{2}' and '{3}' in the extension manifest '{4}'. Ids must identify the same extension, otherwise one declaration would silently replace the other.</source>
-        <target state="new">The extension id '{0}' is declared twice with different content: '{1}' in the extension manifest '{2}' and '{3}' in the extension manifest '{4}'. Ids must identify the same extension, otherwise one declaration would silently replace the other.</target>
+        <target state="translated">拡張機能 ID '{0}' は、異なる内容で 2 回宣言されています: 拡張機能マニフェスト '{2}' の '{1}' と、拡張機能マニフェスト '{4}' の '{3}' です。ID は同じ拡張機能を識別する必要があります。そうでないと、一方の宣言がもう一方を通知なしに置き換えます。</target>
         <note>{0} is the extension id. {1} and {3} are 'assembly path' plus 'type full name' descriptions of the conflicting declarations. {2} and {4} are manifest file paths.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionHookFailedErrorMessage">
         <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' failed.</source>
-        <target state="new">The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' failed.</target>
+        <target state="translated">拡張マニフェスト '{3}' で宣言されている、アセンブリ '{2}' の '{0}.{1}' 拡張フックが失敗しました。</target>
         <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionHookMustNotBeAsyncVoidErrorMessage">
         <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' is declared 'async void'. The platform invokes the hook synchronously, so it would return at its first await: anything it registers after that point would race the test application's own setup, and any failure would be lost. Make the hook synchronous.</source>
-        <target state="new">The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' is declared 'async void'. The platform invokes the hook synchronously, so it would return at its first await: anything it registers after that point would race the test application's own setup, and any failure would be lost. Make the hook synchronous.</target>
+        <target state="translated">拡張マニフェスト '{3}' で宣言されている、アセンブリ '{2}' の '{0}.{1}' 拡張フックは 'async void' として宣言されています。プラットフォームはフックを同期的に呼び出すため、最初の待機時に戻ります。その時点以降に登録する内容は、テスト アプリケーションのセットアップと競合し、失敗は失われます。フックを同期にします。</target>
         <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {Locked="'async void'"}</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionHookMustReturnVoidErrorMessage">
         <source>The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' returns '{4}' but must return 'void'. The platform invokes the hook synchronously, so a return value is never observed; a returned task in particular would never be awaited, and its registrations and failures would be lost.</source>
-        <target state="new">The '{0}.{1}' extension hook from the assembly '{2}' declared in the extension manifest '{3}' returns '{4}' but must return 'void'. The platform invokes the hook synchronously, so a return value is never observed; a returned task in particular would never be awaited, and its registrations and failures would be lost.</target>
+        <target state="translated">拡張マニフェスト '{3}' で宣言されている、アセンブリ '{2}' の '{0}.{1}' 拡張フックは '{4}' を返しますが、'void' を返す必要があります。プラットフォームはフックを同期的に呼び出すため、戻り値は使用されません。特に、返されたタスクは待機されず、その登録と失敗は失われます。</target>
         <note>{0} is the full type name. {1} is the hook method name. {2} is the resolved assembly path. {3} is the manifest file path. {4} is the actual return type name. {Locked="'void'"}</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionHookNotFoundErrorMessage">
         <source>The type '{0}' in the assembly '{1}' declared in the extension manifest '{2}' does not expose a 'public static void' method named '{3}' taking an 'ITestApplicationBuilder' and a 'string[]'.</source>
-        <target state="new">The type '{0}' in the assembly '{1}' declared in the extension manifest '{2}' does not expose a 'public static void' method named '{3}' taking an 'ITestApplicationBuilder' and a 'string[]'.</target>
+        <target state="translated">拡張機能マニフェスト '{2}' で宣言されているアセンブリ '{1}' の型 '{0}' は、'ITestApplicationBuilder' と 'string[]' を受け取る '{3}' という名前の 'public static void' メソッドを公開していません。</target>
         <note>{0} is the full type name. {1} is the resolved assembly path. {2} is the manifest file path. {3} is the expected method name. {Locked="'public static void'"}{Locked="'ITestApplicationBuilder'"}{Locked="'string[]'"}</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestDirectoryNotReadableErrorMessage">
         <source>The directory '{0}' could not be searched for extension manifests, so the platform cannot tell whether any extension had to be loaded. Remove '{1}' from the command line to skip extension manifest discovery.</source>
-        <target state="new">The directory '{0}' could not be searched for extension manifests, so the platform cannot tell whether any extension had to be loaded. Remove '{1}' from the command line to skip extension manifest discovery.</target>
+        <target state="translated">ディレクトリ '{0}' で拡張機能マニフェストを検索できなかったため、プラットフォームは、拡張機能の読み込みが必要だったかどうかを判断できません。拡張機能マニフェストの検出をスキップするには、コマンド ラインから '{1}' を削除してください。</target>
         <note>{0} is the directory path. {1} is the command line option that enables the feature.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestDuplicatePropertyErrorMessage">
         <source>The extension manifest '{0}' is invalid: the '{1}' property is declared more than once, so one of the declarations would be discarded.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the '{1}' property is declared more than once, so one of the declarations would be discarded.</target>
+        <target state="translated">拡張機能マニフェスト '{0}' が無効です: '{1}' プロパティが複数回宣言されているため、宣言の 1 つが破棄されます。</target>
         <note>{0} is the manifest file path. {1} is the name of the duplicated JSON property.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestEntryDuplicatePropertyErrorMessage">
         <source>The extension manifest '{0}' is invalid: the extension at index {1} declares the '{2}' property more than once, so one of the declarations would be discarded.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the extension at index {1} declares the '{2}' property more than once, so one of the declarations would be discarded.</target>
+        <target state="translated">拡張機能マニフェスト '{0}' が無効です: インデックス {1} の拡張機能が '{2}' プロパティを複数回宣言しているため、宣言の 1 つが破棄されます。</target>
         <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the duplicated JSON property.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestEntryInvalidAssemblyPathErrorMessage">
         <source>The extension manifest '{0}' is invalid: the assembly path '{2}' of the extension at index {1} is not a valid path.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the assembly path '{2}' of the extension at index {1} is not a valid path.</target>
+        <target state="translated">拡張機能マニフェスト '{0}' が無効です: インデックス {1} にある拡張機能のアセンブリ パス '{2}' は有効なパスではありません。</target>
         <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the invalid assembly path.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestEntryMissingPropertyErrorMessage">
         <source>The extension manifest '{0}' is invalid: the extension at index {1} is missing the required '{2}' property, or its value is empty.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the extension at index {1} is missing the required '{2}' property, or its value is empty.</target>
+        <target state="translated">拡張機能マニフェスト '{0}' が無効です: インデックス {1} の拡張機能に必要な '{2}' プロパティがないか、その値が空です。</target>
         <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the missing JSON property.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestEntryNotObjectErrorMessage">
         <source>The extension manifest '{0}' is invalid: the element at index {1} of '{2}' must be a JSON object.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the element at index {1} of '{2}' must be a JSON object.</target>
+        <target state="translated">拡張機能マニフェスト '{0}' が無効です: '{2}' のインデックス {1} にある要素は JSON オブジェクトである必要があります。</target>
         <note>{0} is the manifest file path. {1} is the zero-based index of the element. {2} is the name of the JSON array property.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestEntryPropertyNotBooleanErrorMessage">
         <source>The extension manifest '{0}' is invalid: the '{2}' property of the extension at index {1} must be a JSON boolean.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the '{2}' property of the extension at index {1} must be a JSON boolean.</target>
+        <target state="translated">拡張機能マニフェスト '{0}' が無効です: インデックス {1} にある拡張機能の '{2}' プロパティは JSON ブール値である必要があります。</target>
         <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the JSON property.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestEntryPropertyNotStringErrorMessage">
         <source>The extension manifest '{0}' is invalid: the '{2}' property of the extension at index {1} must be a JSON string.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the '{2}' property of the extension at index {1} must be a JSON string.</target>
+        <target state="translated">拡張機能マニフェスト '{0}' が無効です: インデックス {1} にある拡張機能の '{2}' プロパティは JSON 文字列である必要があります。</target>
         <note>{0} is the manifest file path. {1} is the zero-based index of the extension. {2} is the name of the JSON property.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestExtensionsPropertyNotArrayErrorMessage">
         <source>The extension manifest '{0}' is invalid: the '{1}' property must be a JSON array.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the '{1}' property must be a JSON array.</target>
+        <target state="translated">拡張機能マニフェスト '{0}' が無効です: '{1}' プロパティは JSON 配列である必要があります。</target>
         <note>{0} is the manifest file path. {1} is the name of the JSON property that has the wrong type.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestInvalidJsonErrorMessage">
         <source>The extension manifest '{0}' is not valid JSON. {1}</source>
-        <target state="new">The extension manifest '{0}' is not valid JSON. {1}</target>
+        <target state="translated">拡張機能マニフェスト '{0}' は有効な JSON ではありません。{1}</target>
         <note>{0} is the manifest file path. {1} is the underlying JSON parser error message.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestMissingExtensionsPropertyErrorMessage">
         <source>The extension manifest '{0}' is invalid: the required '{1}' property is missing.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the required '{1}' property is missing.</target>
+        <target state="translated">拡張機能マニフェスト '{0}' が無効です: 必要な '{1}' プロパティがありません。</target>
         <note>{0} is the manifest file path. {1} is the name of the missing JSON property.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestReadFailedErrorMessage">
         <source>The extension manifest '{0}' could not be read.</source>
-        <target state="new">The extension manifest '{0}' could not be read.</target>
+        <target state="translated">拡張機能マニフェスト '{0}' を読み取れませんでした。</target>
         <note>{0} is the manifest file path.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestRootNotObjectErrorMessage">
         <source>The extension manifest '{0}' is invalid: the top-level JSON element must be an object but '{1}' was found.</source>
-        <target state="new">The extension manifest '{0}' is invalid: the top-level JSON element must be an object but '{1}' was found.</target>
+        <target state="translated">拡張機能マニフェスト '{0}' が無効です: 最上位の JSON 要素はオブジェクトである必要がありますが、'{1}' が見つかりました。</target>
         <note>{0} is the manifest file path. {1} is the JSON value kind that was found.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionManifestTrailingContentErrorMessage">
         <source>Unexpected content after the top-level JSON object.</source>
-        <target state="new">Unexpected content after the top-level JSON object.</target>
+        <target state="translated">最上位の JSON オブジェクトの後に予期しないコンテンツがあります。</target>
         <note>Used as the parser-error detail when a manifest contains text after its closing brace.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionTypeNotFoundErrorMessage">
         <source>The type '{0}' was not found in the assembly '{1}' declared in the extension manifest '{2}'.</source>
-        <target state="new">The type '{0}' was not found in the assembly '{1}' declared in the extension manifest '{2}'.</target>
+        <target state="translated">型 '{0}' が、拡張機能マニフェスト '{2}' で宣言されているアセンブリ '{1}' に見つかりませんでした。</target>
         <note>{0} is the full type name. {1} is the resolved assembly path. {2} is the manifest file path.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionsLoadedEntry">
         <source>  {0} -&gt; {1} ({2}), declared in {3}</source>
-        <target state="new">  {0} -&gt; {1} ({2}), declared in {3}</target>
+        <target state="translated">  {0} -&gt; {1} ({2})、{3} で宣言されています</target>
         <note>{0} is the extension display name. {1} is the resolved assembly path. {2} is the full type name of the hook. {3} is the manifest file path.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionsLoadedHeader">
         <source>Dynamically loaded test platform extensions ({0}):</source>
-        <target state="new">Dynamically loaded test platform extensions ({0}):</target>
+        <target state="translated">動的に読み込まれたテスト プラットフォーム拡張機能 ({0}):</target>
         <note>{0} is the number of extensions that were loaded.</note>
       </trans-unit>
       <trans-unit id="DynamicExtensionsNotSupportedOnCurrentRuntimeErrorMessage">
         <source>The extension manifest '{0}' declares extensions to load, but the current runtime does not support loading assemblies dynamically (for example when published with native AOT). Set the '{1}' property of each extension to 'false', remove the manifest, or remove '{2}' from the command line.</source>
-        <target state="new">The extension manifest '{0}' declares extensions to load, but the current runtime does not support loading assemblies dynamically (for example when published with native AOT). Set the '{1}' property of each extension to 'false', remove the manifest, or remove '{2}' from the command line.</target>
+        <target state="translated">拡張マニフェスト '{0}' は読み込む拡張機能を宣言していますが、現在のランタイムはアセンブリの動的読み込みをサポートしていません(例: ネイティブ AOT で公開した場合)。各拡張機能の '{1}' プロパティを 'false' に設定するか、マニフェストを削除するか、コマンド ラインから '{2}' を削除してください。</target>
         <note>{0} is the manifest file path. {1} is the name of the JSON property that disables an extension. {2} is the command line option that enables the feature. {Locked="'false'"}</note>
       </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
@@ -715,9 +715,9 @@ Note that this is slowing down the test execution.</source>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</source>
-        <target state="translated">診断ログを有効にします。既定のログ レベルは 'Trace' です。
-ファイルは、出力ディレクトリに log_[yyMMddHHmmssfff].diag という名前で書き込まれます。</target>
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</source>
+        <target state="new">Enable the diagnostic logging. The default log level is 'Trace'.
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</target>
         <note>{Locked="Trace"}{Locked="log_[yyMMddHHmmssfff].diag"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -738,8 +738,8 @@ If not specified the file will be generated inside the default 'TestResults' dir
         <note>{Locked="TestResults"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
-        <source>Prefix for the log file name that will replace '[log]_.'</source>
-        <target state="translated">'[log]_.' を置き換えるログ ファイル名のプレフィックス。</target>
+        <source>Replace '[log]_.' with the specified log file name prefix.</source>
+        <target state="new">Replace '[log]_.' with the specified log file name prefix.</target>
         <note>{Locked="[log]_."}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
@@ -823,14 +823,13 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
       </trans-unit>
       <trans-unit id="PlatformCommandLineEnableDynamicExtensionsOptionDescription">
         <source>Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.</source>
-        <target state="new">Enable loading test platform extensions declared by '*.testingplatformextensions.json' manifests found next to the test application. Disabled by default.</target>
+        <target state="translated">テスト アプリケーションの横にある '*.testingplatformextensions.json' マニフェストで宣言されたテスト プラットフォーム拡張機能の読み込みを有効にします。既定では無効になっています。</target>
         <note>{Locked="'*.testingplatformextensions.json'"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
         <source>Invalid PID '{0}'
 {1}</source>
-        <target state="translated">PID '{0}'
- が無効です
+        <target state="translated">PID '{0}' が無効です
 {1}</target>
         <note>{0} is the invalid process ID. {1} is the exception message.</note>
       </trans-unit>
@@ -863,9 +862,9 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
         <source>Do not report a non-successful exit value for the specified exit codes.
 For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
 For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</source>
-        <target state="new">Do not report a non-successful exit value for the specified exit codes.
-For example, '--ignore-exit-code 8;9' ignores exit codes 8 and 9 and returns 0 in those cases.
-For more information about exit codes, see https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes.</target>
+        <target state="translated">指定された終了コードについて、非成功の終了値を報告しないでください。
+たとえば、'--ignore-exit-code 8;9' では終了コード 8 および 9 を無視して 0 を返します。
+終了コードの詳細については、https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes を参照してください。</target>
         <note>{Locked="'--ignore-exit-code 8;9'"} {Locked="https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
@@ -921,8 +920,8 @@ For more information about exit codes, see https://learn.microsoft.com/dotnet/co
         <note>{0} is the option name without the leading dashes.</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDescription">
-        <source>Microsoft Testing Platform command line provider</source>
-        <target state="translated">Microsoft テスト プラットフォーム コマンド ライン プロバイダー</target>
+        <source>Microsoft Testing Platform command line provider.</source>
+        <target state="new">Microsoft Testing Platform command line provider.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDisplayName">
@@ -950,8 +949,8 @@ The default is TestResults in the directory that contains the test application.<
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineSkipBuildersNumberCheckOptionDescription">
-        <source>For testing purposes</source>
-        <target state="translated">テスト目的</target>
+        <source>For testing purposes.</source>
+        <target state="new">For testing purposes.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTestHostControllerPIDOptionDescription">
@@ -1205,7 +1204,7 @@ Microsoft Testing Platform テレメトリの詳細: https://aka.ms/testingplatf
       </trans-unit>
       <trans-unit id="TestHostControllerConnectionInvalidAuthorizedSecurityIdentityErrorMessage">
         <source>The test host launcher '{0}' (UID: {1}) asked to authorize the security identity '{2}' on the test host controller connection, but only the identity of a single sandboxed application (on Windows, a security identifier of the form 'S-1-15-2-...') can be authorized. Users, groups and the catch-all '{3}' security identifier are never granted access.</source>
-        <target state="new">The test host launcher '{0}' (UID: {1}) asked to authorize the security identity '{2}' on the test host controller connection, but only the identity of a single sandboxed application (on Windows, a security identifier of the form 'S-1-15-2-...') can be authorized. Users, groups and the catch-all '{3}' security identifier are never granted access.</target>
+        <target state="translated">テスト ホスト ランチャー '{0}' (UID: {1}) は、テスト ホスト コントローラー接続でセキュリティ ID '{2}' の認可を要求しましたが、認可できるのは 1 つのサンドボックス化されたアプリケーションの ID (Windows では 'S-1-15-2-...' 形式のセキュリティ ID) のみです。ユーザー、グループ、包括的な '{3}' セキュリティ ID には、アクセスが付与されません。</target>
         <note>{0} is the launcher display name, {1} is the launcher unique identifier, {2} is the rejected security identity, {3} is the well-known 'ALL APPLICATION PACKAGES' security identifier. {Locked="'S-1-15-2-...'"}</note>
       </trans-unit>
       <trans-unit id="TestHostControllerProcessRestartNotSupportedOnWebAssembly">

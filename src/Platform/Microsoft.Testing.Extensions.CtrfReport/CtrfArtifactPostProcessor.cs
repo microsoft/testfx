@@ -50,9 +50,7 @@ internal sealed class CtrfArtifactPostProcessor : IArtifactPostProcessor
             ? [.. inputs]
             :
             [
-                .. inputs
-                    .OrderBy(input => Path.GetFullPath(input.Path), StringComparer.Ordinal)
-                    .ThenBy(input => input.ExecutionId, StringComparer.Ordinal),
+                .. ArtifactPostProcessingHelper.OrderInputs(inputs, includeModuleMetadata: false),
             ];
         string[] inputPaths = [.. orderedInputs.Select(input => input.Path)];
         string[] identityInputs =

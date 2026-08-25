@@ -31,6 +31,7 @@ public static class GitHubActionsExtensions
                 serviceProvider.GetOutputDevice(),
                 serviceProvider.GetTestApplicationModuleInfo(),
                 serviceProvider.GetTestApplicationProcessExitCode(),
+                serviceProvider.GetRequiredService<ITestCoverageResult>(),
                 serviceProvider.GetLoggerFactory(),
                 () => serviceProvider.GetService<IPushOnlyProtocol>() is DotnetTestConnection
                 {
