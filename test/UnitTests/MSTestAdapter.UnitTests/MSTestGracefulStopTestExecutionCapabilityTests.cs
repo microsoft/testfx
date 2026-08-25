@@ -128,6 +128,7 @@ public sealed class MSTestGracefulStopTestExecutionCapabilityTests : TestContain
     {
         var pendingRun = MSTestGracefulStopTestExecutionCapability.Create();
         var overlappingRun = MSTestGracefulStopTestExecutionCapability.Create();
+        var nextRun = MSTestGracefulStopTestExecutionCapability.Create();
 
         try
         {
@@ -140,11 +141,20 @@ public sealed class MSTestGracefulStopTestExecutionCapabilityTests : TestContain
             PlatformServiceProvider.Instance.IsGracefulStopRequested.Should().BeTrue();
 
             pendingRun.NotifyTestExecutionStarting();
+            PlatformServiceProvider.Instance.IsGracefulStopRequested.Should().BeTrue();
+
+            pendingRun.NotifyTestExecutionCompleted();
+            overlappingRun.NotifyTestExecutionCompleted();
+            nextRun.NotifyTestExecutionPending();
+            nextRun.NotifyTestExecutionStarting();
+
+            PlatformServiceProvider.Instance.IsGracefulStopRequested.Should().BeFalse();
         }
         finally
         {
             pendingRun.NotifyTestExecutionCompleted();
             overlappingRun.NotifyTestExecutionCompleted();
+            nextRun.NotifyTestExecutionCompleted();
             PlatformServiceProvider.Instance.IsGracefulStopRequested = false;
         }
     }

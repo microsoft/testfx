@@ -48,6 +48,7 @@ public sealed class StopPoliciesServiceTests : IDisposable
     {
         StopPoliciesService service = new(_cancellationTokenSource.Object);
 
+        service.NotifyTestExecutionStarting();
         service.NotifyTestExecutionCompleted();
 
         Assert.IsTrue(service.IsTestExecutionCompleted);

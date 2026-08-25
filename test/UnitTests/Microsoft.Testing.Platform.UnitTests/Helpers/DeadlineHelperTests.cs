@@ -64,18 +64,20 @@ public sealed class DeadlineHelperTests
 
         Assert.IsTrue(result);
         Assert.AreEqual(new DateTimeOffset(2030, 1, 1, 0, 0, 0, TimeSpan.Zero), deadlineUtc);
+        Assert.AreEqual(TimeSpan.Zero, deadlineUtc.Offset);
     }
 
     [TestMethod]
-    [DataRow("2030-01-01T00:00:00.1Z")]
-    [DataRow("2030-01-01T00:00:00.1234567Z")]
-    public void TryGetDeadline_WhenInstantHasFractionalSeconds_ReturnsInstantInUtc(string raw)
+    [DataRow("2030-01-01T00:00:00.1Z", 1_000_000L)]
+    [DataRow("2030-01-01T00:00:00.1234567Z", 1_234_567L)]
+    public void TryGetDeadline_WhenInstantHasFractionalSeconds_ReturnsInstantInUtc(string raw, long fractionalTicks)
     {
         IEnvironment environment = CreateEnvironment(EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE, raw);
 
         bool result = DeadlineHelper.TryGetDeadline(environment, out DateTimeOffset deadlineUtc);
 
         Assert.IsTrue(result);
+        Assert.AreEqual(new DateTimeOffset(2030, 1, 1, 0, 0, 0, TimeSpan.Zero).AddTicks(fractionalTicks), deadlineUtc);
         Assert.AreEqual(TimeSpan.Zero, deadlineUtc.Offset);
     }
 
