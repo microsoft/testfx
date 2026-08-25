@@ -64,7 +64,7 @@ internal sealed class MSTestGracefulStopTestExecutionCapability : IGracefulStopT
                 PlatformServiceProvider.Instance.IsGracefulStopRequested = false;
             }
 
-            s_activeExecutionCount++;
+            RegisterActiveExecution();
             _executionState = ExecutionState.Active;
         }
     }
@@ -75,7 +75,7 @@ internal sealed class MSTestGracefulStopTestExecutionCapability : IGracefulStopT
         {
             if (_executionState == ExecutionState.Active)
             {
-                s_activeExecutionCount--;
+                UnregisterActiveExecution();
             }
 
             _executionState = ExecutionState.Completed;
@@ -96,6 +96,12 @@ internal sealed class MSTestGracefulStopTestExecutionCapability : IGracefulStopT
             return true;
         }
     }
+
+    private static void RegisterActiveExecution()
+        => s_activeExecutionCount++;
+
+    private static void UnregisterActiveExecution()
+        => s_activeExecutionCount--;
 
     private enum ExecutionState
     {
