@@ -427,6 +427,92 @@ public sealed class HtmlArtifactPostProcessorTests
         }
     }
 
+#if NETCOREAPP
+    [TestMethod]
+    public async Task ProcessAsync_WhenMergedDirectoryIsAReparsePoint_DoesNotMerge()
+    {
+        // 'merged' is a fixed, predictable child name under the orchestrator-supplied output directory.
+        // A symlink or junction planted at that name becomes the base the merge writes into, redirecting
+        // the merged report to wherever the link points and letting the run write outside the directory it
+        // was given, so the processor must refuse rather than write through it.
+        string root = CreateTemporaryDirectory();
+        string resultsDirectory = Path.Combine(root, "results");
+        string outsideDirectory = Path.Combine(root, "outside");
+        Directory.CreateDirectory(resultsDirectory);
+        Directory.CreateDirectory(outsideDirectory);
+        try
+        {
+            try
+            {
+                Directory.CreateSymbolicLink(Path.Combine(resultsDirectory, "merged"), outsideDirectory);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PlatformNotSupportedException)
+            {
+                // Creating a directory symlink needs elevation or Developer Mode on Windows.
+                Assert.Inconclusive("Host cannot create directory symbolic links.");
+                return;
+            }
+
+            string firstPath = Path.Combine(resultsDirectory, "first.html");
+            string secondPath = Path.Combine(resultsDirectory, "second.html");
+            File.WriteAllText(firstPath, CreateReport("first.dll", "MSTest", Epoch, Epoch, Test("a", "A", "passed", 1)));
+            File.WriteAllText(secondPath, CreateReport("second.dll", "MSTest", Epoch, Epoch, Test("b", "B", "passed", 2)));
+
+            ProcessedArtifact? output = await new HtmlArtifactPostProcessor().ProcessAsync(
+                [CreateInput(firstPath), CreateInput(secondPath)],
+                resultsDirectory,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+                CancellationToken.None);
+
+            Assert.IsNull(output);
+            Assert.IsEmpty(Directory.GetFileSystemEntries(outsideDirectory));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task ProcessAsync_WhenMergedDirectoryIsADanglingReparsePoint_DoesNotMerge()
+    {
+        string root = CreateTemporaryDirectory();
+        string resultsDirectory = Path.Combine(root, "results");
+        string missingDirectory = Path.Combine(root, "missing");
+        Directory.CreateDirectory(resultsDirectory);
+        try
+        {
+            try
+            {
+                Directory.CreateSymbolicLink(Path.Combine(resultsDirectory, "merged"), missingDirectory);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PlatformNotSupportedException)
+            {
+                Assert.Inconclusive("Host cannot create directory symbolic links.");
+                return;
+            }
+
+            string firstPath = Path.Combine(resultsDirectory, "first.html");
+            string secondPath = Path.Combine(resultsDirectory, "second.html");
+            File.WriteAllText(firstPath, CreateReport("first.dll", "MSTest", Epoch, Epoch, Test("a", "A", "passed", 1)));
+            File.WriteAllText(secondPath, CreateReport("second.dll", "MSTest", Epoch, Epoch, Test("b", "B", "passed", 2)));
+
+            ProcessedArtifact? output = await new HtmlArtifactPostProcessor().ProcessAsync(
+                [CreateInput(firstPath), CreateInput(secondPath)],
+                resultsDirectory,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+                CancellationToken.None);
+
+            Assert.IsNull(output);
+            Assert.IsFalse(Directory.Exists(missingDirectory));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+#endif
+
     [TestMethod]
     public void CreateMergeId_IncludesExecutionProvenance()
     {

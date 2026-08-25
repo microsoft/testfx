@@ -58,6 +58,12 @@ tools:
     - dotnet
 
 safe-outputs:
+  # Pin the detector: the default `detection` alias has emitted Markdown-wrapped
+  # result JSON that gh-aw cannot parse (#10711). Same fix as #10684.
+  threat-detection:
+    engine:
+      id: copilot
+      model: gpt-5-mini
   report-failure-as-issue: false
   missing-tool:
     create-issue: false

@@ -47,6 +47,12 @@ updates:
       # updated via `gh aw upgrade` / the Agentic Maintenance workflow instead.
       - dependency-name: "github/gh-aw-actions/*"
       - dependency-name: "github/gh-aw/actions/setup"
+      # DavidAnson/markdownlint-cli2-action pins the CLI version it bundles, and
+      # `.github/workflows/markdown-linter.md` installs that same version by hand so the
+      # scheduled report and the pull request gate apply identical rules. Dependabot can
+      # only see the action, so letting it bump alone would silently give the two different
+      # rule sets. Move both pins together, by hand, when updating the action.
+      - dependency-name: "DavidAnson/markdownlint-cli2-action"
     commit-message:
       prefix: '[main] '
     cooldown:

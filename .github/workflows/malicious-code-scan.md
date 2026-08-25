@@ -25,8 +25,13 @@ safe-outputs:
     report-as-issue: false
   create-code-scanning-alert:
     driver: "Malicious Code Scanner"
+  # Pin the detector: the default `detection` alias has emitted Markdown-wrapped
+  # result JSON that gh-aw cannot parse (#10711). Same fix as #10684.
   threat-detection:
     continue-on-error: true
+    engine:
+      id: copilot
+      model: gpt-5-mini
 
 source: githubnext/agentics/workflows/malicious-code-scan.md@main
 ---
