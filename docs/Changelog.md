@@ -27,6 +27,8 @@ See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4
 * Support testing unpackaged WinUI applications under Microsoft.Testing.Platform by @Evangelink in [#10330](https://github.com/microsoft/testfx/pull/10330)
 * Report assertion expected/actual values through a dedicated platform property so IDEs and reporters can consume structured assertion details by @Evangelink in [#10353](https://github.com/microsoft/testfx/pull/10353)
 * Emit OpenTelemetry spans for MSTest tests and fixture methods as part of the expanded testing semantic conventions by @Evangelink in [#10358](https://github.com/microsoft/testfx/pull/10358)
+* Add MSTEST0082 to detect lifecycle and test members inherited from a base class compiled against a different major MSTest framework version, where the assembly rename between v3 and v4 would otherwise make those members silently undiscoverable, by @nohwnd and @Evangelink in [#10508](https://github.com/microsoft/testfx/pull/10508) and [#10637](https://github.com/microsoft/testfx/pull/10637)
+* Add MSTEST0083 and a code fix to replace executable-file guards before matching `Process.Start` calls with `[ExecutableCondition]`, by @Evangelink in [#10634](https://github.com/microsoft/testfx/pull/10634)
 
 ### Changed
 
@@ -34,6 +36,13 @@ See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4
 * Make MSTest's Microsoft.Testing.Platform path native-only: `MSTest.TestAdapter` no longer depends on `Microsoft.Testing.Extensions.VSTestBridge` and now references `Microsoft.Testing.Extensions.TrxReport.Abstractions`, `Microsoft.Testing.Extensions.Telemetry`, and `Microsoft.TestPlatform.ObjectModel` directly by @Evangelink in [#9755](https://github.com/microsoft/testfx/pull/9755)
 * Make `DynamicData` and reflection-free source-generation metadata safer under trimming and Native AOT, reducing trim warnings and retaining the members needed for discovery and execution by @Evangelink in [#9832](https://github.com/microsoft/testfx/pull/9832), [#9861](https://github.com/microsoft/testfx/pull/9861) and [#10136](https://github.com/microsoft/testfx/pull/10136)
 * Clarify the `[Retry]` documentation that a data-driven attempt continues retrying while any row failed or timed out; an inconclusive row only stops retrying when no sibling row in that attempt failed or timed out, by @Evangelink in [#9936](https://github.com/microsoft/testfx/pull/9936)
+* Graduate `MSTest.SourceGeneration` from its independently versioned alpha line so it ships at the MSTest version. Non-NativeAOT MSTest.Sdk projects can opt in with `<EnableMSTestSourceGeneration>true</EnableMSTestSourceGeneration>`, by @Evangelink in [#10477](https://github.com/microsoft/testfx/pull/10477)
+* Reduce data-driven display-name allocations by formatting scalar and recursively nested array arguments into one buffer while preserving existing display names and culture-sensitive formatting, by @Evangelink in [#10528](https://github.com/microsoft/testfx/pull/10528)
+* Reduce reflection-free source-generation startup time and generated output size by removing unused metadata and streamlining runtime registration, by @Evangelink in [#10545](https://github.com/microsoft/testfx/pull/10545)
+* Reduce assertion telemetry contention during parallel test execution, by @Evangelink in [#10560](https://github.com/microsoft/testfx/pull/10560)
+* Make non-generic `ICollection` overloads of `Assert.HasCount` and `Assert.IsEmpty` use the collection's O(1) `Count` instead of enumerating it, by @Evangelink in [#10575](https://github.com/microsoft/testfx/pull/10575)
+* Reuse string-pattern regular expressions in `Assert.Matches` and `Assert.DoesNotMatch` through a bounded, culture-aware cache, by @Evangelink in [#10661](https://github.com/microsoft/testfx/pull/10661)
+* Cache immutable Microsoft.Testing.Platform node properties when converting MSTest test elements, reducing per-message allocations while preserving isolated mutable property bags, by @Evangelink in [#10694](https://github.com/microsoft/testfx/pull/10694)
 
 ### Fixed
 
@@ -42,6 +51,9 @@ See full log [of v4.3.3...v4.4.0](https://github.com/microsoft/testfx/compare/v4
 * Skip adapter telemetry on `wasi-wasm` to avoid a `PlatformNotSupportedException` from SHA-256 during test startup by @Evangelink in [#9930](https://github.com/microsoft/testfx/pull/9930)
 * Fix live MSTest output deadlocking when test execution and output forwarding contend during completion by @Evangelink in [#10169](https://github.com/microsoft/testfx/pull/10169)
 * Fix MSTEST0024 not reporting coalesce (`s_testContext ??= tc`) and deconstruction (`(s_testContext, _) = (tc, 0)`) assignments of a `TestContext` parameter to a static member. Projects treating warnings as errors may see new MSTEST0024 diagnostics on code that previously went unreported by @Evangelink in [#10244](https://github.com/microsoft/testfx/pull/10244)
+* Prevent long-running .NET Framework tests from losing cross-AppDomain assembly-resolution logging after the remoting lease expires, and keep fallback diagnostics from being misclassified as MSBuild errors, by @Evangelink and @nohwnd in [#10532](https://github.com/microsoft/testfx/pull/10532) and [#10604](https://github.com/microsoft/testfx/pull/10604)
+* Preserve user-declared source-generated method attributes for async tests while merging only compiler-generated async metadata at runtime, by @Evangelink in [#10700](https://github.com/microsoft/testfx/pull/10700)
+* Mark `MSTestAdapter.PlatformServices` as non-packable because it is embedded in `MSTest.TestAdapter`, preventing direct pack invocations from producing an unintended standalone package, by @Evangelink in [#10728](https://github.com/microsoft/testfx/pull/10728)
 
 ## <a name="4.3.3" />[4.3.3] - 2026-07-28
 
