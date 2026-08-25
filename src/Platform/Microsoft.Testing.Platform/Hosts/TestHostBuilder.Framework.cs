@@ -20,8 +20,7 @@ internal sealed partial class TestHostBuilder
     {
         if (!testFrameworkBuilderData.IsForDiscoveryRequest)
         {
-            // StopPoliciesService is application-scoped and therefore shared by server requests. Register this
-            // run before its per-request deadline timer can observe the aggregate active-execution state.
+            // Register the run before its deadline timer can observe the execution-completion state.
             IStopPoliciesService stopPoliciesService = testFrameworkBuilderData.ServiceProvider.GetRequiredService<IStopPoliciesService>();
             stopPoliciesService.NotifyTestExecutionStarting();
             try

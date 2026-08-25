@@ -181,6 +181,7 @@ Microsoft.Testing.Platform.Services.StopPoliciesService.IsTestExecutionCompleted
 Microsoft.Testing.Platform.Services.StopPoliciesService.NotifyTestExecutionStarting() -> void
 Microsoft.Testing.Platform.Services.StopPoliciesService.NotifyTestExecutionCompleted() -> void
 Microsoft.Testing.Platform.Services.StopPoliciesService.IsDeadlineTriggered.get -> bool
+Microsoft.Testing.Platform.Services.StopPoliciesService.Dispose() -> void
 Microsoft.Testing.Platform.Services.StopPoliciesService.RegisterOnDeadlineCallbackAsync(System.Func<System.Threading.Tasks.Task!>! callback) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Platform.Services.StopPoliciesService.ExecuteDeadlineCallbacksAsync() -> System.Threading.Tasks.Task!
 Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporter.AppendCoverageSummary(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Services.CoverageScopeSummary!>! scopes, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage!>! thresholds) -> void

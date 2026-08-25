@@ -166,6 +166,22 @@ public sealed class TestApplicationResultTests : IDisposable
     }
 
     [TestMethod]
+    public async Task GetProcessExitCode_WithOverlappingRequestDeadline_IsolatedPerRequest()
+    {
+        Mock<ITestApplicationCancellationTokenSource> cancellationTokenSource = new();
+        cancellationTokenSource.SetupGet(x => x.CancellationToken).Returns(CancellationToken.None);
+        StopPoliciesService firstRequestPolicies = new(cancellationTokenSource.Object);
+        StopPoliciesService secondRequestPolicies = new(cancellationTokenSource.Object);
+        using TestApplicationResult firstRequestResult = CreateTestApplicationResult(firstRequestPolicies);
+        using TestApplicationResult secondRequestResult = CreateTestApplicationResult(secondRequestPolicies);
+
+        await firstRequestPolicies.ExecuteDeadlineCallbacksAsync();
+
+        Assert.AreEqual((int)ExitCode.TestExecutionStoppedAtDeadline, firstRequestResult.GetProcessExitCode());
+        Assert.AreEqual((int)ExitCode.ZeroTests, secondRequestResult.GetProcessExitCode());
+    }
+
+    [TestMethod]
     public void GetProcessExitCode_WithMinimumExpectedTestsViolationAndDeadline_ReturnsDeadline()
     {
         Mock<IStopPoliciesService> policiesService = new();

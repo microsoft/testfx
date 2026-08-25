@@ -17,8 +17,7 @@ internal interface IStopPoliciesService
     /// </summary>
     /// <remarks>
     /// This is the gate that stops a deadline elapsing during reporting from marking an already-finished run as
-    /// deadline-truncated. Server mode resets the gate before each execution request because the service is
-    /// application-scoped.
+    /// deadline-truncated. Server mode creates a separate policy service for each request.
     /// </remarks>
     bool IsTestExecutionCompleted { get; }
 
@@ -26,9 +25,7 @@ internal interface IStopPoliciesService
     /// Records that a test execution request is starting.
     /// </summary>
     /// <remarks>
-    /// Server mode reuses this application-scoped service across requests. A discovery request can therefore
-    /// complete before the run request starts, and the run must clear the completion gate before arming its
-    /// deadline.
+    /// A new execution must clear the completion gate before arming its deadline.
     /// </remarks>
     void NotifyTestExecutionStarting();
 

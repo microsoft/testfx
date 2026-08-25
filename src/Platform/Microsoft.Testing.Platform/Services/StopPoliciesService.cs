@@ -5,9 +5,10 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Services;
 
-internal sealed class StopPoliciesService : IStopPoliciesService
+internal sealed class StopPoliciesService : IStopPoliciesService, IDisposable
 {
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
+    private readonly CancellationTokenRegistration _abortRegistration;
 
     private readonly ConcurrentQueue<Func<int, CancellationToken, Task>> _maxFailedTestsCallbacks = new();
     private readonly ConcurrentQueue<Func<Task>> _abortCallbacks = new();
@@ -35,8 +36,8 @@ internal sealed class StopPoliciesService : IStopPoliciesService
 #pragma warning restore IDE0032
     private int _lastMaxFailedTests;
 
-    // Server requests can overlap. Track all active run requests so completing one request does not
-    // make another request's deadline extension believe that every execution has finished.
+    // One policy service can observe nested execution starts, so count active executions rather than using
+    // a Boolean completion flag.
     private int _activeTestExecutions;
     private volatile bool _hasTestExecutionStarted;
 
@@ -46,7 +47,7 @@ internal sealed class StopPoliciesService : IStopPoliciesService
 
 #pragma warning disable VSTHRD101 // Avoid unsupported async delegates
         // Note: If cancellation already requested, Register will still invoke the callback.
-        testApplicationCancellationTokenSource.CancellationToken.Register(async () => await ExecuteAbortCallbacksAsync().ConfigureAwait(false));
+        _abortRegistration = testApplicationCancellationTokenSource.CancellationToken.Register(async () => await ExecuteAbortCallbacksAsync().ConfigureAwait(false));
 #pragma warning restore VSTHRD101 // Avoid unsupported async delegates
     }
 
@@ -91,6 +92,9 @@ internal sealed class StopPoliciesService : IStopPoliciesService
         }
         while (Interlocked.CompareExchange(ref _activeTestExecutions, activeExecutions - 1, activeExecutions) != activeExecutions);
     }
+
+    public void Dispose()
+        => _abortRegistration.Dispose();
 
     public async Task ExecuteMaxFailedTestsCallbacksAsync(int maxFailedTests, CancellationToken cancellationToken)
     {

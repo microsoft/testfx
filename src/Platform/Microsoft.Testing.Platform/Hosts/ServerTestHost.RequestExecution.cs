@@ -69,6 +69,19 @@ internal sealed partial class ServerTestHost
     {
         DateTimeOffset requestStart = _clock.UtcNow;
         ITestSessionContext perRequestTestSessionContext = perRequestServiceProvider.GetTestSessionContext();
+        StopPoliciesService applicationPoliciesService = perRequestServiceProvider.GetRequiredService<StopPoliciesService>();
+        StopPoliciesService requestPoliciesService = new(perRequestServiceProvider.GetTestApplicationCancellationTokenSource())
+        {
+            ProcessRole = applicationPoliciesService.ProcessRole,
+        };
+        perRequestServiceProvider.ReplaceService<IStopPoliciesService>(requestPoliciesService);
+        perRequestServiceProvider.ReplaceService<ITestApplicationProcessExitCode>(new TestApplicationResult(
+            perRequestServiceProvider.GetOutputDevice(),
+            perRequestServiceProvider.GetCommandLineOptions(),
+            perRequestServiceProvider.GetEnvironment(),
+            requestPoliciesService,
+            perRequestServiceProvider.GetPlatformOTelService(),
+            perRequestServiceProvider.GetRequiredService<ITestCoverageResult>()));
 
         // Verify request cancellation, above the chain the exception will be
         // catch and propagated as correct json rpc error
@@ -110,40 +123,43 @@ internal sealed partial class ServerTestHost
         TestHostTestFrameworkInvoker invoker = new(perRequestServiceProvider);
         PerRequestServerDataConsumer testNodeUpdateProcessor = new(perRequestServiceProvider, this, args.RunId, perRequestServiceProvider.GetTask());
 
-        // Add the client info service to the per request service provider
-        RoslynDebug.Assert(_clientInfoService is not null, "Request should only have been called after initialization");
-        perRequestServiceProvider.TryAddService(_clientInfoService);
-
         DateTimeOffset adapterLoadStart = _clock.UtcNow;
-
-        ProxyOutputDevice outputDevice = ServiceProvider.GetRequiredService<ProxyOutputDevice>();
-        await outputDevice.InitializeAsync(this).ConfigureAwait(false);
-
-        // Build the per request adapter
-        ITestFramework perRequestTestFramework = await _buildTestFrameworkAsync(new TestFrameworkBuilderData(
-            perRequestServiceProvider,
-            requestFactory,
-            invoker,
-            filterFactory,
-            outputDevice.OriginalOutputDevice,
-            [testNodeUpdateProcessor],
-            _testFrameworkManager,
-            _testSessionManager,
-            new MessageBusProxy(),
-            method == JsonRpcMethods.TestingDiscoverTests,
-            isServerRequest: true)).ConfigureAwait(false);
-        IGracefulStopTestExecutionCapability? perRequestGracefulStopCapability =
-            perRequestServiceProvider.GetTestFrameworkCapabilities().GetCapability<IGracefulStopTestExecutionCapability>();
-        if (perRequestGracefulStopCapability is not null)
-        {
-            RegisterActiveGracefulStopCapability(perRequestGracefulStopCapability);
-        }
-
-        DateTimeOffset adapterLoadStop = _clock.UtcNow;
-        DateTimeOffset requestExecuteStart = _clock.UtcNow;
+        DateTimeOffset adapterLoadStop;
+        DateTimeOffset requestExecuteStart;
         DateTimeOffset? requestExecuteStop = null;
+        IGracefulStopTestExecutionCapability? perRequestGracefulStopCapability = null;
         try
         {
+            // Add the client info service to the per request service provider
+            RoslynDebug.Assert(_clientInfoService is not null, "Request should only have been called after initialization");
+            perRequestServiceProvider.TryAddService(_clientInfoService);
+
+            ProxyOutputDevice outputDevice = ServiceProvider.GetRequiredService<ProxyOutputDevice>();
+            await outputDevice.InitializeAsync(this).ConfigureAwait(false);
+
+            // Build the per request adapter
+            ITestFramework perRequestTestFramework = await _buildTestFrameworkAsync(new TestFrameworkBuilderData(
+                perRequestServiceProvider,
+                requestFactory,
+                invoker,
+                filterFactory,
+                outputDevice.OriginalOutputDevice,
+                [testNodeUpdateProcessor],
+                _testFrameworkManager,
+                _testSessionManager,
+                new MessageBusProxy(),
+                method == JsonRpcMethods.TestingDiscoverTests,
+                isServerRequest: true)).ConfigureAwait(false);
+            perRequestGracefulStopCapability =
+                perRequestServiceProvider.GetTestFrameworkCapabilities().GetCapability<IGracefulStopTestExecutionCapability>();
+            if (perRequestGracefulStopCapability is not null)
+            {
+                RegisterActiveGracefulStopCapability(perRequestGracefulStopCapability);
+            }
+
+            adapterLoadStop = _clock.UtcNow;
+            requestExecuteStart = _clock.UtcNow;
+
             RoslynDebug.Assert(_client is not null, "Request should only have been called after initialization");
 
             // Execute the request
