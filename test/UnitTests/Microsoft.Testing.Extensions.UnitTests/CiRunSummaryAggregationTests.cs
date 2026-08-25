@@ -17,6 +17,9 @@ using Microsoft.Testing.Platform.TestHost;
 
 using Moq;
 
+using GitHubActionsStepSummarySections = ghactions::Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsStepSummarySections;
+using GitHubActionsStepSummarySectionsParser = ghactions::Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsStepSummarySectionsParser;
+using GitHubCiRunSummaryAggregate = ghactions::Microsoft.Testing.Extensions.CiRunSummaryAggregate;
 using GitHubCiRunSummaryAggregation = ghactions::Microsoft.Testing.Extensions.CiRunSummaryAggregation;
 using GitHubCiRunSummaryModule = ghactions::Microsoft.Testing.Extensions.CiRunSummaryModule;
 using GitHubSummaryPostProcessor = ghactions::Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryArtifactPostProcessor;
@@ -156,6 +159,39 @@ public sealed class CiRunSummaryAggregationTests
     }
 
     [TestMethod]
+    public async Task GitHubFragment_RoundTripsStepSummarySectionsAsync()
+    {
+        string directory = CreateDirectory();
+        try
+        {
+            GitHubCiRunSummaryModule module = CreateGitHubModule("Selected");
+            module.GitHubActionsStepSummarySections = ["test-results"];
+            string path = await GitHubCiRunSummaryAggregation.WriteFragmentAsync(
+                directory,
+                GitHubSummaryPostProcessor.Provider,
+                GitHubSummaryPostProcessor.ProviderSlug,
+                module);
+
+            string json = File.ReadAllText(path);
+            GitHubCiRunSummaryAggregate aggregate = GitHubCiRunSummaryAggregation.ReadAndAggregate(
+                [CreateGitHubInput(path, module)],
+                GitHubSummaryPostProcessor.Provider,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None));
+            string[] persistedSections = aggregate.Modules.Single().GitHubActionsStepSummarySections!;
+
+            Assert.Contains("\"gitHubActionsStepSummarySections\"", json);
+            Assert.AreSequenceEqual(["test-results"], persistedSections);
+            Assert.AreEqual(
+                GitHubActionsStepSummarySections.TestResults,
+                GitHubActionsStepSummarySectionsParser.GetAggregateSections(aggregate.Modules));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
     public async Task ReadAndAggregate_AggregatesCoverageAndReportsMissingModulesAsync()
     {
         string directory = CreateDirectory();
@@ -217,6 +253,37 @@ public sealed class CiRunSummaryAggregationTests
             Assert.Contains("| Overall | Line | 90 | 120 | 75.0% |", markdown);
             Assert.Contains("Coverage data was reported by 3 of 4 test modules.", markdown);
             Assert.Contains("| D (net9.0) — Overall | Branch (Average) | No data | 80.0% | ❌ Failed |", markdown);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task GitHubFragment_LegacyPayloadWithoutStepSummarySections_DefaultsToAllAsync()
+    {
+        string directory = CreateDirectory();
+        try
+        {
+            GitHubCiRunSummaryModule module = CreateGitHubModule("Legacy");
+            string path = await GitHubCiRunSummaryAggregation.WriteFragmentAsync(
+                directory,
+                GitHubSummaryPostProcessor.Provider,
+                GitHubSummaryPostProcessor.ProviderSlug,
+                module);
+
+            string json = File.ReadAllText(path);
+            GitHubCiRunSummaryAggregate aggregate = GitHubCiRunSummaryAggregation.ReadAndAggregate(
+                [CreateGitHubInput(path, module)],
+                GitHubSummaryPostProcessor.Provider,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None));
+
+            Assert.DoesNotContain("githubActionsStepSummarySections", json);
+            Assert.IsNull(aggregate.Modules.Single().GitHubActionsStepSummarySections);
+            Assert.AreEqual(
+                GitHubActionsStepSummarySections.All,
+                GitHubActionsStepSummarySectionsParser.GetAggregateSections(aggregate.Modules));
         }
         finally
         {
@@ -667,6 +734,28 @@ public sealed class CiRunSummaryAggregationTests
             Directory.Delete(directory, recursive: true);
         }
     }
+
+    private static GitHubCiRunSummaryModule CreateGitHubModule(string assemblyName)
+        => new()
+        {
+            AssemblyName = assemblyName,
+            ModulePath = Path.Combine(Path.GetTempPath(), assemblyName + ".dll"),
+            TargetFramework = "net9.0",
+            Architecture = "x64",
+            ExecutionId = "execution-" + assemblyName,
+            SessionUid = "session-" + assemblyName,
+            AttemptNumber = 1,
+            ExitCode = 0,
+        };
+
+    private static InputArtifact CreateGitHubInput(string path, GitHubCiRunSummaryModule module)
+        => new(
+            path,
+            GitHubSummaryPostProcessor.FragmentArtifactKind,
+            module.ModulePath,
+            module.TargetFramework,
+            module.Architecture,
+            module.ExecutionId);
 
     private static string CreateDirectory()
     {

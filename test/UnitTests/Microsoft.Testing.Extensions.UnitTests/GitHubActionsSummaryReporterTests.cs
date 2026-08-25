@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 extern alias ghactions;
@@ -166,6 +166,68 @@ public sealed class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
+    public void BuildMarkdown_TestResultsOnly_OmitsSlowTestsSection()
+    {
+        GitHubActionsTestRecord[] records =
+        [
+            new("Pass", "T.Pass", GitHubActionsTerminalKind.Passed, TimeSpan.FromSeconds(70)),
+            new("Fail", "T.Fail", GitHubActionsTerminalKind.Failed, TimeSpan.FromSeconds(5)),
+        ];
+
+        string markdown = GitHubActionsSummaryReporter.BuildMarkdown(
+            records,
+            "T",
+            "net9.0",
+            AtLeastOneTestFailedExitCode,
+            GitHubActionsStepSummarySections.TestResults);
+
+        Assert.Contains("| 2 | 1 | 1 | 0 | 1m 15s |", markdown);
+        Assert.Contains("### ❌ Failures (1)", markdown);
+        Assert.Contains("`T.Fail`", markdown);
+        Assert.DoesNotContain("### ⏱ Slowest tests", markdown);
+        Assert.DoesNotContain("`T.Pass`", markdown);
+    }
+
+    [TestMethod]
+    public void BuildMarkdown_SlowTestsOnly_OmitsTestResultsSection()
+    {
+        GitHubActionsTestRecord[] records =
+        [
+            new("Slow", "T.Slow", GitHubActionsTerminalKind.Passed, TimeSpan.FromSeconds(65)),
+            new("Fail", "T.Fail", GitHubActionsTerminalKind.Failed, TimeSpan.FromSeconds(5)),
+        ];
+
+        string markdown = GitHubActionsSummaryReporter.BuildMarkdown(
+            records,
+            "T",
+            "net9.0",
+            ZeroTestsExitCode,
+            GitHubActionsStepSummarySections.SlowTests);
+
+        Assert.Contains("## ❌ Test Run Summary — T (net9.0)", markdown);
+        Assert.Contains("### ⏱ Slowest tests", markdown);
+        Assert.Contains("`T.Slow` — 1m 05s", markdown);
+        Assert.DoesNotContain("| Total | Passed | Failed | Skipped | Duration |", markdown);
+        Assert.DoesNotContain("### ❌ Failures", markdown);
+        Assert.DoesNotContain("[!WARNING]", markdown);
+    }
+
+    [TestMethod]
+    public void BuildMarkdown_DefaultSections_IncludeTestResultsAndSlowTests()
+    {
+        GitHubActionsTestRecord[] records =
+        [
+            new("Slow", "T.Slow", GitHubActionsTerminalKind.Passed, TimeSpan.FromSeconds(65)),
+        ];
+
+        string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "T", "net9.0", SuccessExitCode);
+
+        Assert.Contains("| 1 | 1 | 0 | 0 | 1m 05s |", markdown);
+        Assert.Contains("### ⏱ Slowest tests", markdown);
+        Assert.Contains("`T.Slow` — 1m 05s", markdown);
+    }
+
+    [TestMethod]
     public void BuildMarkdown_NoTests_StillEmitsHeaderAndZeroTotals()
     {
         string markdown = GitHubActionsSummaryReporter.BuildMarkdown([], "Empty", "net9.0", SuccessExitCode);
@@ -311,6 +373,67 @@ public sealed class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
+    public void BuildAggregateMarkdown_UnionsSelectionsAcrossModules()
+    {
+        GitHubCiRunSummaryModule testResultsModule = CreateAggregateModule(
+            "TestResults",
+            ["test-results"],
+            "TestResults.Slow");
+        GitHubCiRunSummaryModule slowTestsModule = CreateAggregateModule(
+            "SlowTests",
+            ["slow-tests"],
+            "SlowTests.Slow");
+        GitHubCiRunSummaryAggregate aggregate = CreateAggregate([testResultsModule, slowTestsModule]);
+
+        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate);
+
+        Assert.Contains("| Total | Passed | Failed | Skipped | Duration |", markdown);
+        Assert.Contains("| Total | Passed | Failed | Skipped | Test duration |", markdown);
+        Assert.Contains("#### ⏱ Slowest tests", markdown);
+        Assert.Contains("`TestResults.Slow` — 2.00s", markdown);
+        Assert.Contains("`SlowTests.Slow` — 2.00s", markdown);
+    }
+
+    [TestMethod]
+    public void BuildAggregateMarkdown_CoverageOnly_OmitsOtherSections()
+    {
+        GitHubCiRunSummaryModule module = CreateAggregateModule(
+            "Coverage",
+            ["coverage"],
+            "Coverage.Slow");
+        module.Coverage = CreateCoverageSummary();
+        GitHubCiRunSummaryAggregate aggregate = CreateAggregate([module]);
+
+        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate);
+
+        Assert.Contains("### Code coverage", markdown);
+        Assert.Contains("#### Code coverage", markdown);
+        Assert.Contains("| Overall | Line | 80 | 100 | 80.0% |", markdown);
+        Assert.DoesNotContain("| Total | Passed | Failed | Skipped | Duration |", markdown);
+        Assert.DoesNotContain("| Total | Passed | Failed | Skipped | Test duration |", markdown);
+        Assert.DoesNotContain("Slowest tests", markdown);
+    }
+
+    [TestMethod]
+    public void BuildAggregateMarkdown_LegacyModuleWithoutSelection_DefaultsToAll()
+    {
+        GitHubCiRunSummaryModule legacyModule = CreateAggregateModule(
+            "Legacy",
+            sections: null,
+            slowTestName: "Legacy.Slow");
+        legacyModule.Coverage = CreateCoverageSummary();
+        GitHubCiRunSummaryAggregate aggregate = CreateAggregate([legacyModule]);
+
+        string markdown = GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate);
+
+        Assert.Contains("| Total | Passed | Failed | Skipped | Duration |", markdown);
+        Assert.Contains("### Code coverage", markdown);
+        Assert.Contains("| Total | Passed | Failed | Skipped | Test duration |", markdown);
+        Assert.Contains("#### ⏱ Slowest tests", markdown);
+        Assert.Contains("`Legacy.Slow` — 2.00s", markdown);
+    }
+
+    [TestMethod]
     public async Task AppendStepSummaryWithRetryAsync_WritesContent_OnFirstAttempt()
     {
         var buffer = new MemoryStream();
@@ -417,6 +540,66 @@ public sealed class GitHubActionsSummaryReporterTests
             .Returns(fileStream.Object);
         return fileSystem;
     }
+
+    private static GitHubCiRunSummaryModule CreateAggregateModule(
+        string assemblyName,
+        string[]? sections,
+        string slowTestName)
+        => new()
+        {
+            AssemblyName = assemblyName,
+            ModulePath = $"{assemblyName}.dll",
+            TargetFramework = "net9.0",
+            Architecture = "x64",
+            ExecutionId = $"execution-{assemblyName}",
+            SessionUid = $"session-{assemblyName}",
+            AttemptNumber = 1,
+            ExitCode = SuccessExitCode,
+            TotalTests = 1,
+            PassedTests = 1,
+            TestDurationTicks = TimeSpan.FromSeconds(2).Ticks,
+            SlowestTests =
+            [
+                new()
+                {
+                    DisplayName = slowTestName,
+                    FullyQualifiedName = slowTestName,
+                    DurationTicks = TimeSpan.FromSeconds(2).Ticks,
+                },
+            ],
+            GitHubActionsStepSummarySections = sections,
+        };
+
+    private static GitHubCiCoverageSummaryData CreateCoverageSummary()
+        => new()
+        {
+            Metrics =
+            [
+                new GitHubCiCoverageMetric
+                {
+                    ScopeLevel = CoverageScopeLevel.Overall,
+                    Metric = CoverageMetric.Line,
+                    ProducerId = "coverage",
+                    CoveredCount = 80,
+                    CoverableCount = 100,
+                },
+            ],
+            ReportingModuleCount = 1,
+            TotalModuleCount = 1,
+        };
+
+    private static GitHubCiRunSummaryAggregate CreateAggregate(IReadOnlyList<GitHubCiRunSummaryModule> modules)
+        => new(
+            modules,
+            new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None),
+            totalTests: modules.Sum(module => module.TotalTests),
+            passedTests: modules.Sum(module => module.PassedTests),
+            failedTests: modules.Sum(module => module.FailedTests),
+            skippedTests: modules.Sum(module => module.SkippedTests),
+            duration: TimeSpan.FromTicks(modules.Sum(module => module.TestDurationTicks)),
+            exitCode: SuccessExitCode,
+            hasAuthoritativeRunSummary: true,
+            isPartial: false);
 
     // A writable stream that fails on any attempt to write or flush, simulating a mid-write I/O error (e.g. disk full)
     // after the exclusive append handle has already been acquired.

@@ -53,6 +53,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
     private readonly Lazy<string> _targetFrameworkMoniker;
     private readonly bool _isEnabled;
     private readonly bool _writeOnFailureOnly;
+    private readonly GitHubActionsStepSummarySections _sections;
     private readonly Func<bool> _shouldDeferToArtifactPostProcessing;
 
 #if NET9_0_OR_GREATER
@@ -89,6 +90,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
         _targetFrameworkMoniker = new(TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform);
         _isEnabled = GitHubActionsFeature.IsEnabled(commandLineOptions, environment, GitHubActionsCommandLineOptions.GitHubActionsStepSummary);
         _writeOnFailureOnly = GitHubActionsFeature.IsStepSummaryOnFailureOnly(commandLineOptions);
+        _sections = GitHubActionsStepSummarySectionsParser.GetSections(commandLineOptions);
         _shouldDeferToArtifactPostProcessing = shouldDeferToArtifactPostProcessing;
     }
 
@@ -232,7 +234,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
                 return;
             }
 
-            string markdown = BuildMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value, exitCode, coverage);
+            string markdown = BuildMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value, exitCode, coverage, _sections);
 
             try
             {
@@ -264,7 +266,8 @@ internal sealed partial class GitHubActionsSummaryReporter :
         string assemblyName,
         ITestSessionContext testSessionContext,
         CiCoverageSummaryData coverage)
-        => CiRunSummaryAggregation.CreateModule(
+    {
+        CiRunSummaryModule module = CiRunSummaryAggregation.CreateModule(
             records,
             assemblyName,
             _testApplicationModuleInfo.GetCurrentTestApplicationFullPath(),
@@ -276,6 +279,9 @@ internal sealed partial class GitHubActionsSummaryReporter :
             _testApplicationProcessExitCode.GetProcessExitCode(),
             coverage: coverage,
             writeOnFailureOnly: _writeOnFailureOnly);
+        module.GitHubActionsStepSummarySections = GitHubActionsStepSummarySectionsParser.ToPersistedValues(_sections);
+        return module;
+    }
 
     private int GetAttemptNumber()
         => int.TryParse(

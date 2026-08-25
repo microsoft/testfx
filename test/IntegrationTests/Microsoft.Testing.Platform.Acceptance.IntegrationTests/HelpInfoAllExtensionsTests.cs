@@ -202,6 +202,8 @@ Extension options:
         The duration a test may run before a GitHub Actions slow-test notice is emitted. Accepts a bare number of seconds or a value with a unit suffix such as '90s', '2m', or '1.5h'. Defaults to 60s.
     --report-gh-step-summary
         Control writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1'), 'off' (also accepts 'false', 'disable', '0'), or 'on-failure' to write only when the test invocation fails. Defaults to 'on' when running on GitHub Actions.
+    --report-gh-step-summary-sections
+        Select the content included in the GitHub Actions job summary. Specify one or more values, repeated, space-separated, or comma-separated: 'test-results', 'slow-tests', 'coverage', or 'all'. Defaults to 'all'. Requires '--report-gh'.
     --report-html
         Enable generating an HTML report.
     --report-html-filename
@@ -611,6 +613,10 @@ Registered command line providers:
         Arity: 1
         Hidden: False
         Description: Control writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1'), 'off' (also accepts 'false', 'disable', '0'), or 'on-failure' to write only when the test invocation fails. Defaults to 'on' when running on GitHub Actions.
+      --report-gh-step-summary-sections
+        Arity: 1..N
+        Hidden: False
+        Description: Select the content included in the GitHub Actions job summary. Specify one or more values, repeated, space-separated, or comma-separated: 'test-results', 'slow-tests', 'coverage', or 'all'. Defaults to 'all'. Requires '--report-gh'.
   HangDumpCommandLineProvider
     Name: Hang dump
     Version: *

@@ -128,6 +128,24 @@ public sealed class GitHubActionsSlowTestReporterTests
     }
 
     [TestMethod]
+    public async Task ScanOnce_StepSummarySelectionDoesNotSuppressNoticesAsync()
+    {
+        CapturingOutputDevice outputDevice = new();
+        Dictionary<string, string[]> options = new(StringComparer.OrdinalIgnoreCase)
+        {
+            [GitHubActionsCommandLineOptions.GitHubActionsStepSummarySections] = ["test-results"],
+        };
+        GitHubActionsSlowTestReporter reporter = CreateReporter(outputDevice, githubActions: true, options);
+        await reporter.OnTestSessionStartingAsync(new TestSessionContextStub()).ConfigureAwait(false);
+        await reporter.ConsumeAsync(null!, CreateMessage("u1", "Ns.T1", new InProgressTestNodeStateProperty()), CancellationToken.None).ConfigureAwait(false);
+
+        await reporter.ScanOnceAsync(Start + TimeSpan.FromSeconds(90), CancellationToken.None).ConfigureAwait(false);
+
+        Assert.HasCount(1, outputDevice.Lines);
+        Assert.Contains("::notice title=Slow test%3A Ns.T1", outputDevice.Lines[0]);
+    }
+
+    [TestMethod]
     public async Task ScanOnce_ParameterizedTests_EmitDistinctLabelsAsync()
     {
         CapturingOutputDevice outputDevice = new();
