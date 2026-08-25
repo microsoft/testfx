@@ -34,7 +34,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         }
     }
 
-    private async Task UploadResultAttachmentsAsync(int testCaseResultId, IReadOnlyList<AzureDevOpsTestResultAttachment> attachments, CancellationToken cancellationToken)
+    private async Task UploadResultAttachmentsAsync(int testCaseResultId, int? testSubResultId, IReadOnlyList<AzureDevOpsTestResultAttachment> attachments, CancellationToken cancellationToken)
     {
         if (_publishConfiguration is null || CurrentRunId is null || attachments.Count == 0)
         {
@@ -45,7 +45,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         {
             try
             {
-                await _client.UploadTestResultAttachmentAsync(_publishConfiguration, CurrentRunId.Value, testCaseResultId, attachment, cancellationToken).ConfigureAwait(false);
+                await _client.UploadTestResultAttachmentAsync(_publishConfiguration, CurrentRunId.Value, testCaseResultId, testSubResultId, attachment, cancellationToken).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
@@ -127,7 +127,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
                 // orchestrated run has a store, so an ordinary run takes the create path for everything.
                 List<AzureDevOpsTestCaseResultWithAttachments> creations = [];
                 List<(AzureDevOpsPublishedResult Published, AzureDevOpsTestCaseResultWithAttachments Attempt)> updateCandidates = [];
-                List<(int ResultId, IReadOnlyList<AzureDevOpsTestResultAttachment> Attachments)> deferredAttachments = [];
+                List<(int ResultId, int? TestSubResultId, IReadOnlyList<AzureDevOpsTestResultAttachment> Attachments)> deferredAttachments = [];
                 foreach (AzureDevOpsTestCaseResultWithAttachments item in batch)
                 {
                     if (_resultIdStore?.TryGet(item.Result) is { } published)
@@ -231,10 +231,10 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
     /// </returns>
     private async Task<bool> TryCreateResultsAsync(
         List<AzureDevOpsTestCaseResultWithAttachments> batch,
-        List<(int ResultId, IReadOnlyList<AzureDevOpsTestResultAttachment> Attachments)> deferredAttachments,
+        List<(int ResultId, int? TestSubResultId, IReadOnlyList<AzureDevOpsTestResultAttachment> Attachments)> deferredAttachments,
         CancellationToken cancellationToken)
     {
-        IReadOnlyList<int>? resultIds;
+        IReadOnlyList<AzureDevOpsPublishedTestResult>? publishedResults;
         try
         {
             if (_coordinatedRun is not null && _runIdCoordinator is not null)
@@ -245,10 +245,16 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
             var resultsOnly = new AzureDevOpsTestCaseResult[batch.Count];
             for (int i = 0; i < batch.Count; i++)
             {
-                resultsOnly[i] = batch[i].Result;
+                resultsOnly[i] = _resultIdStore is not null && batch[i].Attachments.Count > 0
+                    ? batch[i].Result with
+                    {
+                        ResultGroupType = AzureDevOpsLivePublishingConstants.RerunResultGroupType,
+                        SubResults = [AzureDevOpsResultIdStore.CreateFirstAttempt(batch[i].Result)],
+                    }
+                    : batch[i].Result;
             }
 
-            resultIds = await _client.PublishTestResultsAsync(_publishConfiguration!, CurrentRunId!.Value, resultsOnly, cancellationToken).ConfigureAwait(false);
+            publishedResults = await _client.PublishTestResultsWithSubResultsAsync(_publishConfiguration!, CurrentRunId!.Value, resultsOnly, cancellationToken).ConfigureAwait(false);
             _lastFlushTime = _clock.UtcNow;
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
@@ -263,7 +269,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         // POST succeeded. If we couldn't parse the response we cannot upload result-level attachments for
         // this batch, nor remember the ids for a later attempt, but we MUST NOT republish (that would
         // create duplicate result rows in AzDO).
-        if (resultIds is null)
+        if (publishedResults is null)
         {
             if (BatchHasAttachments(batch))
             {
@@ -277,22 +283,44 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         // Record the whole accepted batch before any cancellable attachment upload. Azure DevOps accepted
         // every result in one operation, so the map must describe all of them even if cancellation
         // interrupts the best-effort attachment phase.
+        bool failedToResolveSubResultId = false;
         for (int i = 0; i < batch.Count; i++)
         {
             // Folded data-driven rows share one uid. A failure in any row retries the whole uid, including
             // rows that passed or were skipped, so every row must retain its own result id and history.
             if (_resultIdStore is not null)
             {
-                _resultIdStore.RecordCreated(batch[i].Result, resultIds[i]);
-                _claimedResultIds.Add(resultIds[i]);
+                _resultIdStore.RecordCreated(batch[i].Result, publishedResults[i].Id);
+                _claimedResultIds.Add(publishedResults[i].Id);
             }
 
             if (batch[i].Attachments.Count > 0)
             {
+                int? testSubResultId = null;
+                int resolvedSubResultId = 0;
+                if (_resultIdStore is not null
+                    && !publishedResults[i].TryGetSubResultId(sequenceId: 1, out resolvedSubResultId))
+                {
+                    Interlocked.Add(ref _failedAttachmentCount, batch[i].Attachments.Count);
+                    failedToResolveSubResultId = true;
+                    continue;
+                }
+
+                if (_resultIdStore is not null)
+                {
+                    testSubResultId = resolvedSubResultId;
+                }
+
                 deferredAttachments.Add((
-                    resultIds[i],
-                    _resultIdStore is null ? batch[i].Attachments : RenameForAttempt(batch[i].Attachments, attemptNumber: 1)));
+                    publishedResults[i].Id,
+                    testSubResultId,
+                    batch[i].Attachments));
             }
+        }
+
+        if (failedToResolveSubResultId)
+        {
+            TryLogWarning(AzureDevOpsResources.AzureDevOpsLivePublishingResultIdParseFailedWarning);
         }
 
         return true;
@@ -311,7 +339,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
     /// </remarks>
     private async Task<bool> TryUpdateResultsAsync(
         List<(AzureDevOpsPublishedResult Published, AzureDevOpsTestCaseResultWithAttachments Attempt)> updates,
-        List<(int ResultId, IReadOnlyList<AzureDevOpsTestResultAttachment> Attachments)> deferredAttachments,
+        List<(int ResultId, int? TestSubResultId, IReadOnlyList<AzureDevOpsTestResultAttachment> Attachments)> deferredAttachments,
         CancellationToken cancellationToken)
     {
         var parents = new AzureDevOpsTestCaseResult[updates.Count];
@@ -338,6 +366,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
             };
         }
 
+        IReadOnlyList<AzureDevOpsPublishedTestResult>? publishedResults;
         try
         {
             if (_coordinatedRun is not null && _runIdCoordinator is not null)
@@ -345,7 +374,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
                 await _runIdCoordinator.RenewLeaseAsync(_coordinatedRun, cancellationToken).ConfigureAwait(false);
             }
 
-            await _client.UpdateTestResultsAsync(_publishConfiguration!, CurrentRunId!.Value, parents, cancellationToken).ConfigureAwait(false);
+            publishedResults = await _client.UpdateTestResultsWithSubResultsAsync(_publishConfiguration!, CurrentRunId!.Value, parents, cancellationToken).ConfigureAwait(false);
             _lastFlushTime = _clock.UtcNow;
         }
         catch (Exception ex)
@@ -377,54 +406,43 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
                 completedDates[i]);
         }
 
+        bool failedToResolveSubResultId = false;
         for (int i = 0; i < updates.Count; i++)
         {
             if (updates[i].Attempt.Attachments.Count > 0)
             {
+                int sequenceId = attemptHistories[i][^1].SequenceId;
+                if (publishedResults is null
+                    || !publishedResults[i].TryGetSubResultId(sequenceId, out int testSubResultId))
+                {
+                    Interlocked.Add(ref _failedAttachmentCount, updates[i].Attempt.Attachments.Count);
+                    failedToResolveSubResultId = true;
+                    continue;
+                }
+
                 deferredAttachments.Add((
                     updates[i].Published.Id,
-                    RenameForAttempt(updates[i].Attempt.Attachments, attemptHistories[i][^1].SequenceId)));
+                    testSubResultId,
+                    updates[i].Attempt.Attachments));
             }
+        }
+
+        if (failedToResolveSubResultId)
+        {
+            TryLogWarning(AzureDevOpsResources.AzureDevOpsLivePublishingResultIdParseFailedWarning);
         }
 
         return true;
     }
 
     private async Task UploadDeferredAttachmentsAsync(
-        List<(int ResultId, IReadOnlyList<AzureDevOpsTestResultAttachment> Attachments)> deferredAttachments,
+        List<(int ResultId, int? TestSubResultId, IReadOnlyList<AzureDevOpsTestResultAttachment> Attachments)> deferredAttachments,
         CancellationToken cancellationToken)
     {
-        foreach ((int resultId, IReadOnlyList<AzureDevOpsTestResultAttachment> attachments) in deferredAttachments)
+        foreach ((int resultId, int? testSubResultId, IReadOnlyList<AzureDevOpsTestResultAttachment> attachments) in deferredAttachments)
         {
-            await UploadAttachmentsForResultAsync(resultId, attachments, cancellationToken).ConfigureAwait(false);
+            await UploadAttachmentsForResultAsync(resultId, testSubResultId, attachments, cancellationToken).ConfigureAwait(false);
         }
-    }
-
-    /// <summary>
-    /// Qualifies attachment names with the attempt that produced them.
-    /// </summary>
-    /// <remarks>
-    /// Every attempt uploads against the same parent result, where Azure DevOps accumulates attachments
-    /// rather than replacing them, so two attempts would otherwise both contribute a <c>stdout.log</c> with
-    /// no way to tell them apart.
-    /// </remarks>
-    private static IReadOnlyList<AzureDevOpsTestResultAttachment> RenameForAttempt(IReadOnlyList<AzureDevOpsTestResultAttachment> attachments, int attemptNumber)
-    {
-        if (attachments.Count == 0)
-        {
-            return attachments;
-        }
-
-        var renamed = new AzureDevOpsTestResultAttachment[attachments.Count];
-        for (int i = 0; i < attachments.Count; i++)
-        {
-            string fileName = attachments[i].FileName;
-            string extension = Path.GetExtension(fileName);
-            renamed[i] = attachments[i].WithFileName(
-                $"{Path.GetFileNameWithoutExtension(fileName)}.attempt-{attemptNumber.ToString(CultureInfo.InvariantCulture)}{extension}");
-        }
-
-        return renamed;
     }
 
     private static DateTimeOffset? Min(DateTimeOffset? left, DateTimeOffset? right)
@@ -433,7 +451,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
     private static DateTimeOffset? Max(DateTimeOffset? left, DateTimeOffset? right)
         => left is null ? right : right is null || left >= right ? left : right;
 
-    private async Task UploadAttachmentsForResultAsync(int testCaseResultId, IReadOnlyList<AzureDevOpsTestResultAttachment> attachments, CancellationToken cancellationToken)
+    private async Task UploadAttachmentsForResultAsync(int testCaseResultId, int? testSubResultId, IReadOnlyList<AzureDevOpsTestResultAttachment> attachments, CancellationToken cancellationToken)
     {
         if (attachments.Count == 0)
         {
@@ -447,7 +465,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
                 await _runIdCoordinator.RenewLeaseAsync(_coordinatedRun, cancellationToken).ConfigureAwait(false);
             }
 
-            await UploadResultAttachmentsAsync(testCaseResultId, attachments, cancellationToken).ConfigureAwait(false);
+            await UploadResultAttachmentsAsync(testCaseResultId, testSubResultId, attachments, cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {
