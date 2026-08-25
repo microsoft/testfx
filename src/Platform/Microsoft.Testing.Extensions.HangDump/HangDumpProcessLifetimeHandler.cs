@@ -190,7 +190,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
         if (_commandLineOptions.TryGetOptionArgumentList(HangDumpCommandLineProvider.HangDumpFileNameOptionName, out string[]? fileName))
         {
-            _dumpFileNamePattern = fileName[0];
+            _dumpFileNamePattern = EnsureProcessIdPlaceholder(fileName[0]);
         }
 
         await _logger.LogInformationAsync($"Hang dump timeout setup {_activityTimerValue}.").ConfigureAwait(false);
@@ -653,6 +653,22 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         }
 
         await task.WhenAll([.. dumpTasks]).ConfigureAwait(false);
+    }
+
+    internal static string EnsureProcessIdPlaceholder(string pattern)
+    {
+        if (pattern.Contains("%p", StringComparison.Ordinal) || pattern.Contains("{pid}", StringComparison.Ordinal))
+        {
+            return pattern;
+        }
+
+        string? directory = Path.GetDirectoryName(pattern);
+        string fileName = Path.GetFileNameWithoutExtension(pattern);
+        string extension = Path.GetExtension(pattern);
+        string uniqueFileName = $"{fileName}_%p{extension}";
+        return directory is null or ""
+            ? uniqueFileName
+            : Path.Combine(directory, uniqueFileName);
     }
 
     /// <summary>

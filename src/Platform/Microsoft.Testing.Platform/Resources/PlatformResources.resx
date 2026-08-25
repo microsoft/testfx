@@ -956,6 +956,18 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
   <data name="AbortAtDeadlineMessage" xml:space="preserve">
     <value>Deadline approaching: gracefully stopping the test run so reports can be finalized before the CI hard-cancel.</value>
   </data>
+  <data name="AbortAtDeadlineInvalidDeadlineWarning" xml:space="preserve">
+    <value>Environment variable '{0}' is set to '{1}' but is not a valid absolute ISO 8601 instant. Deadline-aware cancellation is disabled.</value>
+    <comment>{0} is the environment variable name. {1} is the invalid value. {Locked="ISO 8601"}</comment>
+  </data>
+  <data name="AbortAtDeadlineInvalidMarginOrderWarning" xml:space="preserve">
+    <value>Deadline dump margin ({0}) is greater than or equal to the stop margin ({1}). The hang dump may start before the graceful stop.</value>
+    <comment>{0} is the dump margin. {1} is the stop margin.</comment>
+  </data>
+  <data name="AbortAtDeadlineCapabilityUnavailableWarning" xml:space="preserve">
+    <value>Environment variable '{0}' is set, but the test framework does not support '{1}'. The platform cannot stop the test run before the deadline.</value>
+    <comment>{0} is the environment variable name. {1} is the capability interface name.</comment>
+  </data>
   <data name="ReachedMaxFailedTestsMessage" xml:space="preserve">
     <value>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</value>
     <comment>{0} is the number of max failed tests. {Locked="--maximum-failed-tests"}</comment>

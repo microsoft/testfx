@@ -107,10 +107,21 @@ public sealed class HangDumpTests
         TimeSpan secondInterval = HangDumpProcessLifetimeHandler.GetTimerDueTime(deadline, now + firstInterval);
 
         Assert.AreEqual(maxTimerDueTime, firstInterval);
-        Assert.IsTrue(deadline - now > firstInterval);
+        Assert.IsGreaterThan(firstInterval, deadline - now);
         Assert.IsGreaterThan(TimeSpan.Zero, secondInterval);
         Assert.AreEqual(TimeSpan.Zero, HangDumpProcessLifetimeHandler.GetTimerDueTime(deadline, deadline));
     }
+
+    [TestMethod]
+    [DataRow("hang.dmp", "hang_%p.dmp")]
+    [DataRow("hang", "hang_%p")]
+    [DataRow("subdirectory/hang.dmp", "subdirectory/hang_%p.dmp")]
+    [DataRow("hang_%p.dmp", "hang_%p.dmp")]
+    [DataRow("hang_{pid}.dmp", "hang_{pid}.dmp")]
+    public void EnsureProcessIdPlaceholder_MakesCustomDumpPathUnique(string pattern, string expected)
+        => Assert.AreEqual(
+            expected.Replace('/', Path.DirectorySeparatorChar),
+            HangDumpProcessLifetimeHandler.EnsureProcessIdPlaceholder(pattern));
 
     [TestMethod]
     [DataRow(HangDumpCommandLineProvider.HangDumpFileNameOptionName)]

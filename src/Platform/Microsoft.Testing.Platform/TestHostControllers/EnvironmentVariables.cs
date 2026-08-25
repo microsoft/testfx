@@ -10,7 +10,12 @@ namespace Microsoft.Testing.Platform.TestHostControllers;
 internal sealed class EnvironmentVariables(ILoggerFactory loggerFactory) : IEnvironmentVariables
 {
     private const string StrippedSecretValue = "*****";
-    private readonly Dictionary<string, OwnedEnvironmentVariable> _environmentVariables = [];
+    private readonly Dictionary<string, OwnedEnvironmentVariable> _environmentVariables = new(
+        0,
+        RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? StringComparer.OrdinalIgnoreCase
+            : StringComparer.Ordinal);
+
     private readonly ILogger<EnvironmentVariables> _logger = loggerFactory.CreateLogger<EnvironmentVariables>();
 
     public ITestHostEnvironmentVariableProvider? CurrentProvider { get; set; }

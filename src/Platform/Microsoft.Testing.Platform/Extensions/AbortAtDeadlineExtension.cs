@@ -41,6 +41,7 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
     private readonly IOutputDevice _outputDevice;
     private readonly ILogger _logger;
     private readonly IClock _clock;
+    private readonly List<string> _startupWarnings = [];
     private readonly DateTimeOffset? _stopAt;
     private readonly Timer? _timer;
 
@@ -56,6 +57,7 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
     private readonly object _lock = new();
 #endif
     private int _handled;
+    private int _startupWarningsDisplayed;
     private volatile bool _disposed;
 
     // Which of "test execution finished" and "the deadline took the run" happened first. Both transitions are
@@ -113,6 +115,11 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
             if (!RoslynString.IsNullOrWhiteSpace(raw))
             {
                 TryLog(() => _logger.LogWarning($"Environment variable '{EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE}' is set to '{raw}' but could not be parsed as an absolute ISO 8601 instant. Deadline-aware cancellation is disabled."));
+                _startupWarnings.Add(string.Format(
+                    CultureInfo.InvariantCulture,
+                    PlatformResources.AbortAtDeadlineInvalidDeadlineWarning,
+                    EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE,
+                    raw));
             }
 
             return;
@@ -133,6 +140,11 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
             if (dumpMargin >= stopMargin)
             {
                 _logger.LogWarning($"Deadline dump margin ({dumpMargin}) is greater than or equal to the stop margin ({stopMargin}). The graceful stop is meant to run before the hang dump; with these margins the hang dump may fire first.");
+                _startupWarnings.Add(string.Format(
+                    CultureInfo.InvariantCulture,
+                    PlatformResources.AbortAtDeadlineInvalidMarginOrderWarning,
+                    dumpMargin,
+                    stopMargin));
             }
         });
 
@@ -141,6 +153,11 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
             // A deadline is configured but this framework cannot stop gracefully, so nothing is armed.
             // Surface it rather than silently doing nothing.
             TryLog(() => _logger.LogWarning($"Environment variable '{EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE}' is set but the test framework does not support graceful stop ('{nameof(IGracefulStopTestExecutionCapability)}'); the platform cannot stop early at the deadline."));
+            _startupWarnings.Add(string.Format(
+                CultureInfo.InvariantCulture,
+                PlatformResources.AbortAtDeadlineCapabilityUnavailableWarning,
+                EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE,
+                nameof(IGracefulStopTestExecutionCapability)));
             return;
         }
 
@@ -212,7 +229,23 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
     public string Description { get; } = PlatformResources.AbortAtDeadlineDescription;
 
     /// <inheritdoc />
-    public Task<bool> IsEnabledAsync() => Task.FromResult(_stopAt.HasValue && _capability is not null);
+    public async Task<bool> IsEnabledAsync()
+    {
+        if (Interlocked.Exchange(ref _startupWarningsDisplayed, 1) == 0)
+        {
+            foreach (string warning in _startupWarnings)
+            {
+                await TryReportAsync(
+                    () => _outputDevice.DisplayAsync(
+                        this,
+                        new WarningMessageOutputDeviceData(warning),
+                        _cancellationTokenSource.CancellationToken),
+                    "Failed to display a deadline configuration warning.").ConfigureAwait(false);
+            }
+        }
+
+        return _stopAt.HasValue && _capability is not null;
+    }
 
     /// <inheritdoc />
     public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)

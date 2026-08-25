@@ -204,9 +204,57 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
         TimeSpan secondInterval = AbortAtDeadlineExtension.GetTimerDueTime(deadline, Now + firstInterval);
 
         Assert.AreEqual(maxTimerDueTime, firstInterval);
-        Assert.IsTrue(deadline - Now > firstInterval);
+        Assert.IsGreaterThan(firstInterval, deadline - Now);
         Assert.IsGreaterThan(TimeSpan.Zero, secondInterval);
         Assert.AreEqual(TimeSpan.Zero, AbortAtDeadlineExtension.GetTimerDueTime(deadline, deadline));
+    }
+
+    [TestMethod]
+    public async Task InvalidDeadlineIsVisibleWithoutDiagnosticLogging()
+    {
+        List<IOutputDeviceData> displayedData = [];
+        using AbortAtDeadlineExtension extension = CreateExtension(
+            deadlineIn: TimeSpan.Zero,
+            onDisplayData: displayedData.Add,
+            deadlineValue: "not-a-deadline");
+
+        Assert.IsFalse(await extension.IsEnabledAsync());
+        Assert.HasCount(1, displayedData);
+        WarningMessageOutputDeviceData warning = Assert.IsInstanceOfType<WarningMessageOutputDeviceData>(displayedData[0]);
+        Assert.Contains(EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE, warning.Message);
+    }
+
+    [TestMethod]
+    public async Task InvertedMarginsAreVisibleWithoutDiagnosticLogging()
+    {
+        List<IOutputDeviceData> displayedData = [];
+        using AbortAtDeadlineExtension extension = CreateExtension(
+            deadlineIn: TimeSpan.FromMinutes(1),
+            onDisplayData: displayedData.Add,
+            stopMargin: "10",
+            dumpMargin: "30");
+
+        Assert.IsTrue(await extension.IsEnabledAsync());
+        Assert.HasCount(1, displayedData);
+        WarningMessageOutputDeviceData warning = Assert.IsInstanceOfType<WarningMessageOutputDeviceData>(displayedData[0]);
+        Assert.Contains("00:00:30", warning.Message);
+        Assert.Contains("00:00:10", warning.Message);
+    }
+
+    [TestMethod]
+    public async Task MissingGracefulStopCapabilityIsVisibleWithoutDiagnosticLogging()
+    {
+        List<IOutputDeviceData> displayedData = [];
+        using AbortAtDeadlineExtension extension = CreateExtension(
+            deadlineIn: TimeSpan.FromMinutes(1),
+            onDisplayData: displayedData.Add,
+            stopMargin: "60",
+            hasCapability: false);
+
+        Assert.IsFalse(await extension.IsEnabledAsync());
+        Assert.HasCount(1, displayedData);
+        WarningMessageOutputDeviceData warning = Assert.IsInstanceOfType<WarningMessageOutputDeviceData>(displayedData[0]);
+        Assert.Contains(nameof(IGracefulStopTestExecutionCapability), warning.Message);
     }
 
     [TestMethod]
@@ -382,19 +430,26 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
         Func<Task>? onDisplay = null,
         Action<IOutputDeviceData>? onDisplayData = null,
         TimeSpan? reportTimeout = null,
-        IGracefulStopTestExecutionCapability? capability = null)
+        IGracefulStopTestExecutionCapability? capability = null,
+        string? deadlineValue = null,
+        string stopMargin = "0",
+        string? dumpMargin = null,
+        bool hasCapability = true)
     {
         Mock<IEnvironment> environment = new();
         _ = environment.Setup(x => x.GetEnvironmentVariable(It.IsAny<string>())).Returns((string?)null);
         _ = environment
             .Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE))
-            .Returns((Now + deadlineIn).ToString("o", CultureInfo.InvariantCulture));
+            .Returns(deadlineValue ?? (Now + deadlineIn).ToString("o", CultureInfo.InvariantCulture));
 
         // A zero stop margin makes the stop instant the deadline itself, so deadlineIn is exactly how long the
         // timer waits (measured against the fixed clock below, not wall-clock time when the test starts).
         _ = environment
             .Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE_STOP_MARGIN))
-            .Returns("0");
+            .Returns(stopMargin);
+        _ = environment
+            .Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE_DUMP_MARGIN))
+            .Returns(dumpMargin);
 
         var stopwatch = Stopwatch.StartNew();
         Mock<IClock> clock = new();
@@ -423,7 +478,7 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
         return new AbortAtDeadlineExtension(
             environment.Object,
             clock.Object,
-            capability ?? _capability.Object,
+            hasCapability ? capability ?? _capability.Object : null,
             _policiesService.Object,
             cancellationTokenSource.Object,
             outputDevice.Object,
