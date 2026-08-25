@@ -3446,47 +3446,38 @@ public sealed class AzureDevOpsLivePublishingTests
     {
         FakeTask task = new();
         FakeClock clock = new() { UtcNow = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero) };
-        var contents = new ThrowingHttpContent[3];
-        var responses = new HttpResponseMessage[3];
-        var handlers = new Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>>[3];
-        for (int i = 0; i < responses.Length; i++)
+        using ThrowingHttpContent content1 = new(new IOException("response stream failed 1"));
+        using HttpResponseMessage response1 = new(HttpStatusCode.BadRequest)
         {
-            contents[i] = new ThrowingHttpContent(new IOException($"response stream failed {i}"));
-            responses[i] = new HttpResponseMessage(HttpStatusCode.BadRequest)
-            {
-                Content = contents[i],
-            };
-            int responseIndex = i;
-            handlers[i] = (_, _) => Task.FromResult(responses[responseIndex]);
-        }
-
-        try
+            Content = content1,
+        };
+        using ThrowingHttpContent content2 = new(new IOException("response stream failed 2"));
+        using HttpResponseMessage response2 = new(HttpStatusCode.BadRequest)
         {
-            QueueHttpMessageHandler handler = new(handlers);
-            using HttpClient httpClient = new(handler)
-            {
-                Timeout = Timeout.InfiniteTimeSpan,
-            };
-            AzureDevOpsTestResultsClient client = new(httpClient, task, clock);
-            AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "tests.dll", "results");
-
-            HttpRequestException exception = await Assert.ThrowsExactlyAsync<HttpRequestException>(
-                () => client.CreateTestRunAsync(configuration, CancellationToken.None));
-            Assert.IsInstanceOfType<IOException>(exception.InnerException);
-            Assert.IsTrue(contents.All(static content => content.IsDisposed));
-        }
-        finally
+            Content = content2,
+        };
+        using ThrowingHttpContent content3 = new(new IOException("response stream failed 3"));
+        using HttpResponseMessage response3 = new(HttpStatusCode.BadRequest)
         {
-            foreach (HttpResponseMessage response in responses)
-            {
-                response.Dispose();
-            }
+            Content = content3,
+        };
+        QueueHttpMessageHandler handler = new(
+            (_, _) => Task.FromResult(response1),
+            (_, _) => Task.FromResult(response2),
+            (_, _) => Task.FromResult(response3));
+        using HttpClient httpClient = new(handler)
+        {
+            Timeout = Timeout.InfiniteTimeSpan,
+        };
+        AzureDevOpsTestResultsClient client = new(httpClient, task, clock);
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "tests.dll", "results");
 
-            foreach (ThrowingHttpContent content in contents)
-            {
-                content.Dispose();
-            }
-        }
+        HttpRequestException exception = await Assert.ThrowsExactlyAsync<HttpRequestException>(
+            () => client.CreateTestRunAsync(configuration, CancellationToken.None));
+        Assert.IsInstanceOfType<IOException>(exception.InnerException);
+        Assert.IsTrue(content1.IsDisposed);
+        Assert.IsTrue(content2.IsDisposed);
+        Assert.IsTrue(content3.IsDisposed);
     }
 
     [TestMethod]
