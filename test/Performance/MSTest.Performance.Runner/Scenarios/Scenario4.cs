@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.TestInfrastructure;
@@ -93,6 +93,7 @@ internal class Scenario4 : IStep<NoInputOutput, SingleProject>
                       [System.Runtime.CompilerServices.MethodImplAttribute(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
                       public static void ClassCleanup()
                       {
+                          System.GC.KeepAlive(_classState);
                           _classState = 0;
                       }
                   """);
