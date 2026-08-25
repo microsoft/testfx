@@ -451,7 +451,7 @@ internal sealed partial class GitHubActionsSummaryReporter
             modulesWithOmittedDetails.ToString(CultureInfo.InvariantCulture),
             totalModules.ToString(CultureInfo.InvariantCulture));
 
-        return $"{TruncationNoticeMarker}{BuildNoticeStrengthToken(DetailsOmittedNoticeStrength)}\n> [!WARNING]\n> {message}\n{TruncationNoticeEndMarker}\n\n";
+        return $"{TruncationNoticeMarker}\n{BuildNoticeStrengthToken(DetailsOmittedNoticeStrength)}\n> [!WARNING]\n> {message}\n{TruncationNoticeEndMarker}\n\n";
     }
 
     /// <summary>
@@ -475,7 +475,7 @@ internal sealed partial class GitHubActionsSummaryReporter
             GitHubActionsResources.SummaryTruncatedNotice,
             reportedProjectCount.ToString(CultureInfo.InvariantCulture));
 
-        return $"{TruncationNoticeMarker}{BuildNoticeStrengthToken(SectionsRemovedNoticeStrength)}\n> [!WARNING]\n> {message}\n{TruncationNoticeEndMarker}\n\n";
+        return $"{TruncationNoticeMarker}\n{BuildNoticeStrengthToken(SectionsRemovedNoticeStrength)}\n> [!WARNING]\n> {message}\n{TruncationNoticeEndMarker}\n\n";
     }
 
     /// <summary>

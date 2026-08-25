@@ -896,6 +896,24 @@ public sealed class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
+    public void TruncationNotices_KeepTheMarkerOnALineOfItsOwn()
+    {
+        // Consumers match the marker as a whole line — this repo's own validation workflow greps
+        // '^<!-- ...summary-truncated -->$'. Anything appended to that line, such as the strength token, silently
+        // stops the notice being recognised, so the token belongs on the next line.
+        foreach (string notice in new[]
+        {
+            GitHubActionsSummaryReporter.BuildTruncationNotice(3),
+            GitHubActionsSummaryReporter.BuildAggregateTruncationNotice(2, 5),
+        })
+        {
+            string[] lines = notice.Split('\n');
+            Assert.AreEqual(GitHubActionsSummaryReporter.TruncationNoticeMarker, lines[0]);
+            Assert.Contains(GitHubActionsSummaryReporter.TruncationNoticeEndMarker, lines);
+        }
+    }
+
+    [TestMethod]
     public void TruncationNotices_ShareOneMarker_SoASummaryCannotCarryTwoWarnings()
     {
         // The per-project and aggregated writing modes describe different losses, and only one of them runs in a
