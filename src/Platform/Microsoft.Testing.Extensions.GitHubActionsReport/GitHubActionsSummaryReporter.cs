@@ -52,6 +52,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
     private readonly ILogger _logger;
     private readonly Lazy<string> _targetFrameworkMoniker;
     private readonly bool _isEnabled;
+    private readonly bool _writeOnFailureOnly;
     private readonly GitHubActionsStepSummarySections _sections;
     private readonly Func<bool> _shouldDeferToArtifactPostProcessing;
 
@@ -88,6 +89,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
         _logger = loggerFactory.CreateLogger<GitHubActionsSummaryReporter>();
         _targetFrameworkMoniker = new(TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform);
         _isEnabled = GitHubActionsFeature.IsEnabled(commandLineOptions, environment, GitHubActionsCommandLineOptions.GitHubActionsStepSummary);
+        _writeOnFailureOnly = GitHubActionsFeature.IsStepSummaryOnFailureOnly(commandLineOptions);
         _sections = GitHubActionsStepSummarySectionsParser.GetSections(commandLineOptions);
         _shouldDeferToArtifactPostProcessing = shouldDeferToArtifactPostProcessing;
     }
@@ -225,6 +227,13 @@ internal sealed partial class GitHubActionsSummaryReporter :
                 return;
             }
 
+            if (_writeOnFailureOnly
+                && !snapshot.Any(static record => record.Kind == TerminalKind.Failed)
+                && !GitHubActionsExitCode.IndicatesFailure(exitCode))
+            {
+                return;
+            }
+
             string markdown = BuildMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value, exitCode, coverage, _sections);
 
             try
@@ -268,7 +277,8 @@ internal sealed partial class GitHubActionsSummaryReporter :
             testSessionContext.SessionUid.Value,
             GetAttemptNumber(),
             _testApplicationProcessExitCode.GetProcessExitCode(),
-            coverage: coverage);
+            coverage: coverage,
+            writeOnFailureOnly: _writeOnFailureOnly);
         module.GitHubActionsStepSummarySections = GitHubActionsStepSummarySectionsParser.ToPersistedValues(_sections);
         return module;
     }
