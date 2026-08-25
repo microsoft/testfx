@@ -68,6 +68,27 @@ public sealed class MSTestGracefulStopTestExecutionCapabilityTests : TestContain
         }
     }
 
+    public async Task LegacyStopTestExecutionAsync_DoesNotReassertStopAfterExecutionCompleted()
+    {
+        var capability = MSTestGracefulStopTestExecutionCapability.Create();
+        try
+        {
+            capability.NotifyTestExecutionPending();
+            capability.NotifyTestExecutionStarting();
+            capability.NotifyTestExecutionCompleted();
+            PlatformServiceProvider.Instance.IsGracefulStopRequested = false;
+
+            await capability.StopTestExecutionAsync(CancellationToken.None);
+
+            PlatformServiceProvider.Instance.IsGracefulStopRequested.Should().BeFalse();
+        }
+        finally
+        {
+            capability.NotifyTestExecutionCompleted();
+            PlatformServiceProvider.Instance.IsGracefulStopRequested = false;
+        }
+    }
+
     public async Task OverlappingRunCannotClearAnActiveRunsStopRequest()
     {
         var firstRun = MSTestGracefulStopTestExecutionCapability.Create();

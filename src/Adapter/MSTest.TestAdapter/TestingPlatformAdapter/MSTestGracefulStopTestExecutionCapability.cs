@@ -28,12 +28,7 @@ internal sealed class MSTestGracefulStopTestExecutionCapability : IGracefulStopT
 
     public Task StopTestExecutionAsync(CancellationToken cancellationToken)
     {
-        lock (Sync)
-        {
-            RegisterPendingStopOwner(_executionState == ExecutionState.Pending && !_isStopRequested);
-            _isStopRequested = true;
-            PlatformServiceProvider.Instance.IsGracefulStopRequested = true;
-        }
+        _ = TryRequestGracefulStop();
 
         return Task.CompletedTask;
     }
