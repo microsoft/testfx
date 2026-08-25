@@ -17,6 +17,7 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : CommandLi
     public const string NoAnsiOption = "no-ansi";
     public const string AnsiOption = "ansi";
     public const string OutputOption = "output";
+    public const string OutputOptionMinimalArgument = "minimal";
     public const string OutputOptionNormalArgument = "normal";
     public const string OutputOptionDetailedArgument = "detailed";
     public const string ShowStdoutOption = "show-stdout";
@@ -66,7 +67,9 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : CommandLi
             AnsiOption => arguments.Length == 1 && CommandLineOptionArgumentValidator.IsValidBooleanAutoArgument(arguments[0])
                 ? ValidationResult.ValidTask
                 : ValidationResult.InvalidTask(TerminalResources.TerminalAnsiOptionInvalidArgument),
-            OutputOption => arguments.Length == 1 && (OutputOptionNormalArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase) || OutputOptionDetailedArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase))
+            OutputOption => arguments.Length == 1 && (OutputOptionMinimalArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase)
+                || OutputOptionNormalArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase)
+                || OutputOptionDetailedArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase))
                 ? ValidationResult.ValidTask
                 : ValidationResult.InvalidTask(TerminalResources.TerminalOutputOptionInvalidArgument),
             ShowStdoutOption or ShowStderrOption => arguments.Length == 1 && IsValidShowOutputArgument(arguments[0])

@@ -1095,6 +1095,10 @@ public sealed class TerminalTestReporterTests
         Assert.DoesNotContain("PassedTest1", output);
         Assert.DoesNotContain("SkippedTest1", output);
         Assert.Contains("FailureLikeTest1", output);
+        Assert.Contains("  total: 3", output);
+        Assert.Contains("  failed: 1", output);
+        Assert.Contains("  succeeded: 1", output);
+        Assert.Contains("  skipped: 1", output);
     }
 
     // 'none' (modeled here as TestResultVisibility.None, the flags union the parser resolves 'none' to) suppresses

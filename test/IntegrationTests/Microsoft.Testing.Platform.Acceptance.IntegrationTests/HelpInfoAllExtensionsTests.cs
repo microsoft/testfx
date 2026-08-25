@@ -68,8 +68,8 @@ Options:
     --no-progress
         [Deprecated, use '--progress off' instead] Disable reporting progress to screen.
     --output
-        Output verbosity when reporting tests.
-        Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
+        Preset the per-test result blocks shown in the terminal.
+        Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.
     --progress
         Control whether progress is reported to screen.
         Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
@@ -94,7 +94,7 @@ Options:
     --show-test-results
         Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
         Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
-        Default is 'failed' and 'skipped' (or 'all' when --output is 'Detailed'). An explicit --show-test-results always takes precedence over --output, regardless of the order they are passed in.
+        Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it is 'Normal' or omitted, and 'all' when it is 'Detailed'. An explicit '--show-test-results' always takes precedence over '--output', regardless of the order they are passed in.
     --timeout
         A global test execution timeout.
         Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.
@@ -432,8 +432,8 @@ Built-in command line providers:
       --output
         Arity: 1
         Hidden: False
-        Description: Output verbosity when reporting tests.
-        Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
+        Description: Preset the per-test result blocks shown in the terminal.
+        Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.
       --progress
         Arity: 1
         Hidden: False
@@ -466,7 +466,7 @@ Built-in command line providers:
         Hidden: False
         Description: Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
         Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
-        Default is 'failed' and 'skipped' (or 'all' when --output is 'Detailed'). An explicit --show-test-results always takes precedence over --output, regardless of the order they are passed in.
+        Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it is 'Normal' or omitted, and 'all' when it is 'Detailed'. An explicit '--show-test-results' always takes precedence over '--output', regardless of the order they are passed in.
 Registered command line providers:
   AzureDevOpsCommandLineProvider
     Name: Azure DevOps report generator

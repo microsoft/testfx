@@ -209,9 +209,9 @@ internal sealed partial class TerminalOutputDevice
     // Resolves which per-test terminal blocks are rendered. An explicit --show-test-results always wins over
     // --output, regardless of the order the two options appear on the command line (only --show-test-results is
     // consulted for the override, via TerminalTestReporterCommandLineOptionsProvider.GetShowTestResultsVisibility).
-    // Absent --show-test-results, the default mirrors the historical --output behavior: 'detailed' shows every
-    // outcome, and everything else (including no --output at all) shows only failed and skipped results (passed
-    // tests stay hidden). Internal for unit testing the parse seam that feeds
+    // Absent --show-test-results, 'minimal' shows only failed results, 'detailed' shows every outcome, and
+    // everything else (including no --output at all) shows failed and skipped results (passed tests stay hidden).
+    // Internal for unit testing the parse seam that feeds
     // TerminalTestReporterOptions.ShowTestResults.
     internal static TestResultVisibility GetShowTestResultsVisibility(ICommandLineOptions commandLineOptions)
     {
@@ -220,11 +220,17 @@ internal sealed partial class TerminalOutputDevice
             return explicitVisibility;
         }
 
-        bool isDetailedOutput = commandLineOptions.TryGetOptionArgumentList(TerminalTestReporterCommandLineOptionsProvider.OutputOption, out string[]? outputArguments)
+        string? outputArgument = commandLineOptions.TryGetOptionArgumentList(TerminalTestReporterCommandLineOptionsProvider.OutputOption, out string[]? outputArguments)
             && outputArguments is { Length: > 0 }
-            && TerminalTestReporterCommandLineOptionsProvider.OutputOptionDetailedArgument.Equals(outputArguments[0], StringComparison.OrdinalIgnoreCase);
+                ? outputArguments[0]
+                : null;
 
-        return isDetailedOutput ? TestResultVisibility.All : TestResultVisibility.Failed | TestResultVisibility.Skipped;
+        return outputArgument switch
+        {
+            string s when TerminalTestReporterCommandLineOptionsProvider.OutputOptionMinimalArgument.Equals(s, StringComparison.OrdinalIgnoreCase) => TestResultVisibility.Failed,
+            string s when TerminalTestReporterCommandLineOptionsProvider.OutputOptionDetailedArgument.Equals(s, StringComparison.OrdinalIgnoreCase) => TestResultVisibility.All,
+            _ => TestResultVisibility.Failed | TestResultVisibility.Skipped,
+        };
     }
 
     private enum AnsiOverride

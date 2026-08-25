@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.CommandLine;
@@ -128,6 +128,36 @@ public sealed class TerminalTestReporterCommandLineOptionsProviderTests
         Assert.AreEqual(ArgumentArity.Zero, option.Arity);
         Assert.IsFalse(option.IsHidden);
         Assert.IsTrue(option.IsBuiltIn);
+    }
+
+    [TestMethod]
+    [DataRow("minimal")]
+    [DataRow("MINIMAL")]
+    [DataRow("normal")]
+    [DataRow("NORMAL")]
+    [DataRow("detailed")]
+    [DataRow("DETAILED")]
+    public async Task ValidateOptionArguments_OutputOption_AcceptsPresetValuesCaseInsensitively(string value)
+    {
+        CommandLineOption option = GetOption(TerminalTestReporterCommandLineOptionsProvider.OutputOption);
+
+        ValidationResult result = await _provider.ValidateOptionArgumentsAsync(option, [value]);
+
+        Assert.IsTrue(result.IsValid, $"Expected '{value}' to be a valid --output value, but got: {result.ErrorMessage}");
+    }
+
+    [TestMethod]
+    [DataRow("")]
+    [DataRow("quiet")]
+    [DataRow("diagnostic")]
+    public async Task ValidateOptionArguments_OutputOption_RejectsUnsupportedValues(string value)
+    {
+        CommandLineOption option = GetOption(TerminalTestReporterCommandLineOptionsProvider.OutputOption);
+
+        ValidationResult result = await _provider.ValidateOptionArgumentsAsync(option, [value]);
+
+        Assert.IsFalse(result.IsValid, $"Expected '{value}' to be rejected as a --output value but it was accepted.");
+        Assert.AreEqual(TerminalResources.TerminalOutputOptionInvalidArgument, result.ErrorMessage);
     }
 
     [TestMethod]
@@ -409,8 +439,8 @@ public sealed class TerminalTestReporterCommandLineOptionsProviderTests
     }
 
     // TerminalOutputDevice.GetShowTestResultsVisibility resolution/precedence: an explicit --show-test-results
-    // always wins over --output; absent it, --output's 'Detailed' maps to 'all' and everything else (including no
-    // --output at all) maps to 'failed'+'skipped'. Since both options are read independently by name from the
+    // always wins over --output; absent it, --output's 'Minimal' maps to 'failed', 'Detailed' maps to 'all', and
+    // everything else (including no --output at all) maps to 'failed'+'skipped'. Since both options are read independently by name from the
     // same options bag, the resolution cannot depend on which one a user typed first on the command line.
     //
     // Comparisons cast to int: TerminalOutputDevice itself is not compiled into this test project (only the
@@ -450,6 +480,19 @@ public sealed class TerminalTestReporterCommandLineOptionsProviderTests
     }
 
     [TestMethod]
+    [DataRow("minimal")]
+    [DataRow("MINIMAL")]
+    public void GetShowTestResultsVisibility_WhenOutputMinimal_DefaultsToFailed(string outputValue)
+    {
+        var options = new Helpers.TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [TerminalTestReporterCommandLineOptionsProvider.OutputOption] = [outputValue],
+        });
+
+        Assert.AreEqual((int)TestResultVisibility.Failed, (int)TerminalOutputDevice.GetShowTestResultsVisibility(options));
+    }
+
+    [TestMethod]
     public void GetShowTestResultsVisibility_WhenExplicitAndOutputDetailedBothSet_ExplicitWins()
     {
         // --output detailed alone would resolve to 'all'; the explicit, narrower --show-test-results must still
@@ -473,6 +516,18 @@ public sealed class TerminalTestReporterCommandLineOptionsProviderTests
         });
 
         Assert.AreEqual((int)TestResultVisibility.All, (int)TerminalOutputDevice.GetShowTestResultsVisibility(options));
+    }
+
+    [TestMethod]
+    public void GetShowTestResultsVisibility_WhenExplicitAndOutputMinimalBothSet_ExplicitWins()
+    {
+        var options = new Helpers.TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [TerminalTestReporterCommandLineOptionsProvider.OutputOption] = ["minimal"],
+            [TerminalTestReporterCommandLineOptionsProvider.ShowTestResultsOption] = ["skipped"],
+        });
+
+        Assert.AreEqual((int)TestResultVisibility.Skipped, (int)TerminalOutputDevice.GetShowTestResultsVisibility(options));
     }
 
     private CommandLineOption GetOption(string name)

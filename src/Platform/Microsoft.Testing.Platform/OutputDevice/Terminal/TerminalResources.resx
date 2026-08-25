@@ -256,13 +256,13 @@ This option takes precedence over the deprecated --no-progress flag.</value>
     <value>Terminal test reporter</value>
   </data>
   <data name="TerminalOutputOptionDescription" xml:space="preserve">
-    <value>Output verbosity when reporting tests.
-Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</value>
-    <comment>{Locked="Normal"}{Locked="Detailed"}</comment>
+    <value>Preset the per-test result blocks shown in the terminal.
+Valid values are 'Minimal', 'Normal', 'Detailed'. Default is 'Normal'. Use '--show-test-results' for precise outcome selection.</value>
+    <comment>{Locked="'Minimal'"}{Locked="'Normal'"}{Locked="'Detailed'"}{Locked="'--show-test-results'"}</comment>
   </data>
   <data name="TerminalOutputOptionInvalidArgument" xml:space="preserve">
-    <value>--output expects a single parameter with value 'Normal' or 'Detailed'.</value>
-    <comment>{Locked="--output"}{Locked="Normal"}{Locked="Detailed"}</comment>
+    <value>--output expects a single parameter with value 'Minimal', 'Normal', or 'Detailed'.</value>
+    <comment>{Locked="--output"}{Locked="'Minimal'"}{Locked="'Normal'"}{Locked="'Detailed'"}</comment>
   </data>
   <data name="TerminalShowStdoutOptionDescription" xml:space="preserve">
     <value>Determines when to show captured standard output of a test.
@@ -298,8 +298,8 @@ Passing the option without a value turns it on.</value>
   <data name="TerminalShowTestResultsOptionDescription" xml:space="preserve">
     <value>Selects which test outcomes render a per-test result block (with its informative details, stack trace, and captured output) in the terminal.
 Valid values are 'passed', 'failed' (also covers errored, timed out, and canceled tests), 'skipped', 'all', and 'none'. Combine multiple values as a comma- or space-separated list, or by repeating the option; 'all' and 'none' cannot be combined with any other value.
-Default is 'failed' and 'skipped' (or 'all' when --output is 'Detailed'). An explicit --show-test-results always takes precedence over --output, regardless of the order they are passed in.</value>
-    <comment>Do not localize the values {Locked="'passed'"}{Locked="'failed'"}{Locked="'skipped'"}{Locked="'all'"}{Locked="'none'"}{Locked="--output"}{Locked="'Detailed'"}{Locked="--show-test-results"}.</comment>
+Default is 'failed' when '--output' is 'Minimal', 'failed' and 'skipped' when it is 'Normal' or omitted, and 'all' when it is 'Detailed'. An explicit '--show-test-results' always takes precedence over '--output', regardless of the order they are passed in.</value>
+    <comment>Do not localize the values {Locked="'passed'"}{Locked="'failed'"}{Locked="'skipped'"}{Locked="'all'"}{Locked="'none'"}{Locked="'--output'"}{Locked="'Minimal'"}{Locked="'Normal'"}{Locked="'Detailed'"}{Locked="'--show-test-results'"}.</comment>
   </data>
   <data name="TerminalShowTestResultsOptionUnknownValueInvalidArgument" xml:space="preserve">
     <value>--show-test-results expects one or more comma- or space-separated values from 'passed', 'failed', 'skipped', 'all', or 'none'.</value>
