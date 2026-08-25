@@ -83,6 +83,18 @@
     <value>Enable or disable writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</value>
     <comment>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="GITHUB_STEP_SUMMARY"}</comment>
   </data>
+  <data name="StepSummarySectionsOptionDescription" xml:space="preserve">
+    <value>Select the content included in the GitHub Actions job summary. Specify one or more values, repeated, space-separated, or comma-separated: 'test-results', 'slow-tests', 'coverage', or 'all'. Defaults to 'all'. Requires '--report-gh'.</value>
+    <comment>{Locked="'test-results'"}{Locked="'slow-tests'"}{Locked="'coverage'"}{Locked="'all'"}{Locked="'--report-gh'"}</comment>
+  </data>
+  <data name="EmptyStepSummarySections" xml:space="preserve">
+    <value>At least one GitHub Actions job-summary section is required. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'.</value>
+    <comment>{Locked="'test-results'"}{Locked="'slow-tests'"}{Locked="'coverage'"}{Locked="'all'"}</comment>
+  </data>
+  <data name="InvalidStepSummarySection" xml:space="preserve">
+    <value>Invalid GitHub Actions job-summary section '{0}'. Valid values are 'test-results', 'slow-tests', 'coverage', or 'all'. Values can be repeated, space-separated, or comma-separated.</value>
+    <comment>{0} is the invalid section name. {Locked="'test-results'"}{Locked="'slow-tests'"}{Locked="'coverage'"}{Locked="'all'"}</comment>
+  </data>
   <data name="StepSummaryWriteFailedWarning" xml:space="preserve">
     <value>Failed to write the GitHub Actions job summary to '{0}': {1}</value>
     <comment>{0} is the file path, {1} is the error message.</comment>
