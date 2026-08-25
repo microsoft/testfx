@@ -3349,9 +3349,10 @@ public sealed class AzureDevOpsLivePublishingTests
     {
         FakeTask task = new();
         FakeClock clock = new() { UtcNow = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero) };
+        TaskCompletionSource<bool> responseBodyReadStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
         using HttpResponseMessage response = new(HttpStatusCode.OK)
         {
-            Content = new BlockingHttpContent(),
+            Content = new BlockingHttpContent(responseBodyReadStarted),
         };
         QueueHttpMessageHandler handler = new(
             (_, _) => Task.FromResult(response));
@@ -3366,10 +3367,20 @@ public sealed class AzureDevOpsLivePublishingTests
             Id = 777,
         };
         using CancellationTokenSource cancellationTokenSource = new();
-        cancellationTokenSource.CancelAfter(TimeSpan.FromMilliseconds(100));
+        Task<IReadOnlyList<AzureDevOpsPublishedTestResult>?> updateTask =
+            client.UpdateTestResultsWithSubResultsAsync(configuration, runId: 42, [result], cancellationTokenSource.Token);
+
+        await responseBodyReadStarted.Task;
+#if NET
+        await cancellationTokenSource.CancelAsync();
+#else
+#pragma warning disable VSTHRD103 // CancelAsync is only available on .NET 8+; this project also targets .NET Framework.
+        cancellationTokenSource.Cancel();
+#pragma warning restore VSTHRD103
+#endif
 
         await Assert.ThrowsAsync<OperationCanceledException>(
-            () => client.UpdateTestResultsWithSubResultsAsync(configuration, runId: 42, [result], cancellationTokenSource.Token));
+            () => updateTask);
     }
 
     [TestMethod]
@@ -4133,16 +4144,24 @@ public sealed class AzureDevOpsLivePublishingTests
 
     private sealed class BlockingHttpContent : HttpContent
     {
+        private readonly TaskCompletionSource<bool> _responseBodyReadStarted;
+
+        public BlockingHttpContent(TaskCompletionSource<bool> responseBodyReadStarted)
+            => _responseBodyReadStarted = responseBodyReadStarted;
+
 #if NET
         protected override Task SerializeToStreamAsync(Stream stream, TransportContext? context, CancellationToken cancellationToken)
-            => Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+        {
+            _responseBodyReadStarted.TrySetResult(true);
+            return Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+        }
 #endif
 
         protected override Task SerializeToStreamAsync(Stream stream, TransportContext? context)
             => Task.CompletedTask;
 
         protected override Task<Stream> CreateContentReadStreamAsync()
-            => Task.FromResult<Stream>(new BlockingReadStream());
+            => Task.FromResult<Stream>(new BlockingReadStream(_responseBodyReadStarted));
 
         protected override bool TryComputeLength(out long length)
         {
@@ -4153,6 +4172,11 @@ public sealed class AzureDevOpsLivePublishingTests
 
     private sealed class BlockingReadStream : Stream
     {
+        private readonly TaskCompletionSource<bool> _responseBodyReadStarted;
+
+        public BlockingReadStream(TaskCompletionSource<bool> responseBodyReadStarted)
+            => _responseBodyReadStarted = responseBodyReadStarted;
+
         public override bool CanRead => true;
 
         public override bool CanSeek => false;
@@ -4180,6 +4204,7 @@ public sealed class AzureDevOpsLivePublishingTests
 
         public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
+            _responseBodyReadStarted.TrySetResult(true);
             await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
             return 0;
         }
