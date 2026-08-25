@@ -14,32 +14,115 @@ public sealed class MSTestGracefulStopTestExecutionCapabilityTests : TestContain
 {
     public async Task TryStopTestExecutionAsync_DistinguishesPendingActiveAndCompletedExecution()
     {
+        var capability = MSTestGracefulStopTestExecutionCapability.Create();
         try
         {
-            MSTestGracefulStopTestExecutionCapability.NotifyTestExecutionPending();
+            capability.NotifyTestExecutionPending();
 
-            bool pendingStopAccepted = await MSTestGracefulStopTestExecutionCapability.Instance.TryStopTestExecutionAsync(CancellationToken.None);
+            bool pendingStopAccepted = await capability.TryStopTestExecutionAsync(CancellationToken.None);
 
             pendingStopAccepted.Should().BeTrue();
             PlatformServiceProvider.Instance.IsGracefulStopRequested.Should().BeTrue();
 
-            MSTestGracefulStopTestExecutionCapability.NotifyTestExecutionPending();
-            MSTestGracefulStopTestExecutionCapability.NotifyTestExecutionStarting();
+            capability = MSTestGracefulStopTestExecutionCapability.Create();
+            capability.NotifyTestExecutionPending();
+            capability.NotifyTestExecutionStarting();
 
-            bool activeStopAccepted = await MSTestGracefulStopTestExecutionCapability.Instance.TryStopTestExecutionAsync(CancellationToken.None);
+            bool activeStopAccepted = await capability.TryStopTestExecutionAsync(CancellationToken.None);
 
             activeStopAccepted.Should().BeTrue();
 
-            MSTestGracefulStopTestExecutionCapability.NotifyTestExecutionCompleted();
+            capability.NotifyTestExecutionCompleted();
 
-            bool completedStopAccepted = await MSTestGracefulStopTestExecutionCapability.Instance.TryStopTestExecutionAsync(CancellationToken.None);
+            bool completedStopAccepted = await capability.TryStopTestExecutionAsync(CancellationToken.None);
 
             completedStopAccepted.Should().BeFalse();
         }
         finally
         {
-            MSTestGracefulStopTestExecutionCapability.NotifyTestExecutionPending();
-            MSTestGracefulStopTestExecutionCapability.NotifyTestExecutionStarting();
+            PlatformServiceProvider.Instance.IsGracefulStopRequested = false;
+        }
+    }
+
+    public async Task DiscoveryCapabilityCannotClearAnActiveRunsStopRequest()
+    {
+        var runCapability = MSTestGracefulStopTestExecutionCapability.Create();
+        var discoveryCapability = MSTestGracefulStopTestExecutionCapability.Create();
+
+        try
+        {
+            runCapability.NotifyTestExecutionPending();
+            runCapability.NotifyTestExecutionStarting();
+            (await runCapability.TryStopTestExecutionAsync(CancellationToken.None)).Should().BeTrue();
+
+            discoveryCapability.NotifyTestExecutionPending();
+
+            PlatformServiceProvider.Instance.IsGracefulStopRequested.Should().BeTrue();
+            (await runCapability.TryStopTestExecutionAsync(CancellationToken.None)).Should().BeFalse();
+        }
+        finally
+        {
+            runCapability.NotifyTestExecutionCompleted();
+            PlatformServiceProvider.Instance.IsGracefulStopRequested = false;
+        }
+    }
+
+    public async Task OverlappingRunCannotClearAnActiveRunsStopRequest()
+    {
+        var firstRun = MSTestGracefulStopTestExecutionCapability.Create();
+        var overlappingRun = MSTestGracefulStopTestExecutionCapability.Create();
+        var nextRun = MSTestGracefulStopTestExecutionCapability.Create();
+
+        try
+        {
+            firstRun.NotifyTestExecutionPending();
+            firstRun.NotifyTestExecutionStarting();
+            (await firstRun.TryStopTestExecutionAsync(CancellationToken.None)).Should().BeTrue();
+
+            overlappingRun.NotifyTestExecutionPending();
+            overlappingRun.NotifyTestExecutionStarting();
+
+            PlatformServiceProvider.Instance.IsGracefulStopRequested.Should().BeTrue();
+
+            firstRun.NotifyTestExecutionCompleted();
+            PlatformServiceProvider.Instance.IsGracefulStopRequested.Should().BeTrue();
+
+            overlappingRun.NotifyTestExecutionCompleted();
+            nextRun.NotifyTestExecutionPending();
+            nextRun.NotifyTestExecutionStarting();
+
+            PlatformServiceProvider.Instance.IsGracefulStopRequested.Should().BeFalse();
+        }
+        finally
+        {
+            firstRun.NotifyTestExecutionCompleted();
+            overlappingRun.NotifyTestExecutionCompleted();
+            nextRun.NotifyTestExecutionCompleted();
+            PlatformServiceProvider.Instance.IsGracefulStopRequested = false;
+        }
+    }
+
+    public async Task OverlappingRunCannotClearAPendingRunsStopRequest()
+    {
+        var pendingRun = MSTestGracefulStopTestExecutionCapability.Create();
+        var overlappingRun = MSTestGracefulStopTestExecutionCapability.Create();
+
+        try
+        {
+            pendingRun.NotifyTestExecutionPending();
+            (await pendingRun.TryStopTestExecutionAsync(CancellationToken.None)).Should().BeTrue();
+
+            overlappingRun.NotifyTestExecutionPending();
+            overlappingRun.NotifyTestExecutionStarting();
+            pendingRun.NotifyTestExecutionStarting();
+
+            PlatformServiceProvider.Instance.IsGracefulStopRequested.Should().BeTrue();
+        }
+        finally
+        {
+            pendingRun.NotifyTestExecutionCompleted();
+            overlappingRun.NotifyTestExecutionCompleted();
+            PlatformServiceProvider.Instance.IsGracefulStopRequested = false;
         }
     }
 }

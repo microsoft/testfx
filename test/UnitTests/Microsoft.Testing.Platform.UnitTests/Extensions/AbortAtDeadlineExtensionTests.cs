@@ -163,6 +163,20 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
     }
 
     [TestMethod]
+    public void FarFutureDeadlineIsScheduledInMultipleTimerIntervals()
+    {
+        DateTimeOffset deadline = Now + TimeSpan.FromDays(60);
+
+        TimeSpan firstInterval = AbortAtDeadlineExtension.GetTimerDueTime(deadline, Now);
+        TimeSpan secondInterval = AbortAtDeadlineExtension.GetTimerDueTime(deadline, Now + firstInterval);
+
+        Assert.IsGreaterThan(TimeSpan.Zero, firstInterval);
+        Assert.IsLessThan(deadline - Now, firstInterval);
+        Assert.IsGreaterThan(TimeSpan.Zero, secondInterval);
+        Assert.AreEqual(TimeSpan.Zero, AbortAtDeadlineExtension.GetTimerDueTime(deadline, deadline));
+    }
+
+    [TestMethod]
     public async Task WhenTheApproachingDeadlineLogNeverCompletes_TheGracefulStopIsRequestedFirst()
     {
         TaskCompletionSource<bool> reporting = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -323,8 +337,9 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
             .Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE_STOP_MARGIN))
             .Returns("0");
 
+        var stopwatch = Stopwatch.StartNew();
         Mock<IClock> clock = new();
-        _ = clock.SetupGet(x => x.UtcNow).Returns(Now);
+        _ = clock.SetupGet(x => x.UtcNow).Returns(() => Now + stopwatch.Elapsed);
 
         Mock<ILogger> logger = new();
         _ = logger

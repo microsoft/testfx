@@ -22,10 +22,37 @@ internal abstract partial class CommonHost
         // thresholds would be reprinted and its threshold-failure verdict could poison a later session.
         serviceProvider.GetRequiredService<TestCoverageResult>().Reset();
 
-        await DisplayBeforeSessionStartAsync(outputDevice, testSessionInfo).ConfigureAwait(false);
         CancellationToken cancellationToken = testSessionInfo.CancellationToken;
+        bool executionCompletedNotified = false;
+
+        async Task NotifyTestExecutionCompletedAsync()
+        {
+            if (executionCompletedNotified)
+            {
+                return;
+            }
+
+            AbortAtDeadlineExtension? abortAtDeadlineExtension = serviceProvider.GetService<AbortAtDeadlineExtension>();
+            abortAtDeadlineExtension?.NotifyTestExecutionCompleted();
+            if (!isDiscoveryRequest)
+            {
+                serviceProvider.GetRequiredService<IStopPoliciesService>().NotifyTestExecutionCompleted();
+            }
+
+            executionCompletedNotified = true;
+            if (abortAtDeadlineExtension is not null)
+            {
+                // A successful stop can make the invoker return before the deadline handler records
+                // its verdict, while an asynchronously rejected stop must release its claim. Resolve
+                // either outcome before reporters and exit-code consumers inspect the run.
+                await abortAtDeadlineExtension.WaitForDeadlineHandlingAsync().ConfigureAwait(false);
+            }
+        }
+
         try
         {
+            await DisplayBeforeSessionStartAsync(outputDevice, testSessionInfo).ConfigureAwait(false);
+
             try
             {
                 IPlatformOpenTelemetryService? otelService = serviceProvider.GetPlatformOTelService();
@@ -49,20 +76,7 @@ internal abstract partial class CommonHost
                         // IDataConsumer, and consumer handlers run last in NotifyTestSessionEndAsync, after the
                         // drains and after the reporters. Absent for discovery requests, where the extension is
                         // not registered.
-                        AbortAtDeadlineExtension? abortAtDeadlineExtension = serviceProvider.GetService<AbortAtDeadlineExtension>();
-                        abortAtDeadlineExtension?.NotifyTestExecutionCompleted();
-                        if (!isDiscoveryRequest)
-                        {
-                            serviceProvider.GetRequiredService<IStopPoliciesService>().NotifyTestExecutionCompleted();
-                        }
-
-                        if (abortAtDeadlineExtension is not null)
-                        {
-                            // A successful stop can make the invoker return before the deadline handler records
-                            // its verdict, while an asynchronously rejected stop must release its claim. Resolve
-                            // either outcome before reporters and exit-code consumers inspect the run.
-                            await abortAtDeadlineExtension.WaitForDeadlineHandlingAsync().ConfigureAwait(false);
-                        }
+                        await NotifyTestExecutionCompletedAsync().ConfigureAwait(false);
                     }
                 }
 
@@ -82,6 +96,10 @@ internal abstract partial class CommonHost
         }
         finally
         {
+            // Session startup can fail before the invoker is entered. Complete the run registration on that
+            // path too, otherwise one failed server request leaves the application-scoped active count stuck.
+            await NotifyTestExecutionCompletedAsync().ConfigureAwait(false);
+
             // The message bus shutdown handshake must complete before the services - and with them every
             // IDataConsumer - get disposed, otherwise a consumer can still be inside ConsumeAsync while it is
             // being disposed. NotifyTestSessionEndAsync does it on the happy path, but it is skipped whenever the

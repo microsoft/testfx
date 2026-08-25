@@ -63,8 +63,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
     /// <summary>
     /// <see cref="Timer"/> throws for due times above ~49.7 days (its internal limit is
-    /// <see cref="uint.MaxValue"/> milliseconds). A deadline that far out is effectively "never"
-    /// for a test run, so we clamp to this maximum instead of throwing during setup.
+    /// <see cref="uint.MaxValue"/> milliseconds).
     /// </summary>
     private static readonly TimeSpan MaxTimerDueTime = TimeSpan.FromMilliseconds(uint.MaxValue - 1);
 
@@ -94,6 +93,36 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     // because cancellation runs the waiters' continuations inline and those continue into the handshake,
     // which takes _dumpLock again on its way out.
     private CancellationTokenSource? _handshakeCancellationTokenSource;
+
+    internal static TimeSpan GetTimerDueTime(DateTimeOffset deadline, DateTimeOffset now)
+    {
+        TimeSpan remaining = deadline - now;
+        return remaining <= TimeSpan.Zero
+            ? TimeSpan.Zero
+            : remaining > MaxTimerDueTime
+                ? MaxTimerDueTime
+                : remaining;
+    }
+
+    private void OnDeadlineTimerElapsed(CancellationToken cancellationToken)
+    {
+        TimeSpan dueTime = GetTimerDueTime(_deadlineDumpAt!.Value, _clock.UtcNow);
+        if (dueTime > TimeSpan.Zero)
+        {
+            try
+            {
+                _deadlineTimer!.Change(dueTime, Timeout.InfiniteTimeSpan);
+            }
+            catch (ObjectDisposedException)
+            {
+                // Teardown won the race with this timer callback.
+            }
+
+            return;
+        }
+
+        TriggerDumpOnce(cancellationToken, triggeredByDeadline: true);
+    }
 
     public HangDumpProcessLifetimeHandler(
         PipeNameDescription pipeNameDescription,
@@ -261,23 +290,12 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             // consumer pipe) is best-effort and skipped when the pipe never connected.
             if (_deadlineDumpAt is { } deadlineDumpAt)
             {
-                TimeSpan dueTime = deadlineDumpAt - _clock.UtcNow;
-                if (dueTime < TimeSpan.Zero)
-                {
-                    dueTime = TimeSpan.Zero;
-                }
-                else if (dueTime > MaxTimerDueTime)
-                {
-                    // Clamp far-future deadlines so the Timer ctor does not throw. The run (and this
-                    // timer) is disposed long before the clamped due time elapses, so it never fires early.
-                    dueTime = MaxTimerDueTime;
-                }
-
                 _deadlineTimer = new Timer(
-                    _ => TriggerDumpOnce(cancellationToken, triggeredByDeadline: true),
+                    _ => OnDeadlineTimerElapsed(cancellationToken),
                     null,
-                    dueTime,
+                    Timeout.InfiniteTimeSpan,
                     TimeSpan.FromMilliseconds(-1));
+                _deadlineTimer.Change(GetTimerDueTime(deadlineDumpAt, _clock.UtcNow), Timeout.InfiniteTimeSpan);
             }
 
             // Once a dump has started, the test host is being dumped and killed out from under this

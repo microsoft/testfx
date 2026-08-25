@@ -40,6 +40,7 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
     private readonly ITestApplicationCancellationTokenSource _cancellationTokenSource;
     private readonly IOutputDevice _outputDevice;
     private readonly ILogger _logger;
+    private readonly IClock _clock;
     private readonly DateTimeOffset? _stopAt;
     private readonly Timer? _timer;
 
@@ -82,8 +83,7 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
 
     /// <summary>
     /// <see cref="Timer"/> throws for due times above ~49.7 days (its internal limit is
-    /// <see cref="uint.MaxValue"/> milliseconds). A deadline that far out is effectively "never"
-    /// for a test run, so we clamp to this maximum instead of throwing at construction.
+    /// <see cref="uint.MaxValue"/> milliseconds). Longer delays are scheduled in chunks.
     /// </summary>
     private static readonly TimeSpan MaxTimerDueTime = TimeSpan.FromMilliseconds(uint.MaxValue - 1);
 
@@ -102,6 +102,7 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
         _cancellationTokenSource = cancellationTokenSource;
         _outputDevice = outputDevice;
         _logger = loggerFactory.CreateLogger(nameof(AbortAtDeadlineExtension));
+        _clock = clock;
         _reportTimeout = reportTimeout ?? DefaultReportTimeout;
 
         if (!DeadlineHelper.TryGetDeadline(environment, out DateTimeOffset deadline))
@@ -145,21 +146,10 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
 
         _stopAt = stopAt;
 
-        // The deadline is absolute wall-clock time, so we can arm a one-shot timer now. If the
-        // computed instant is already in the past, fire as soon as possible. If it is farther
-        // out than a Timer can represent, clamp it: the run (and this timer) will be disposed
-        // long before the clamped due time elapses, so the timer never fires early in practice.
-        TimeSpan dueTime = stopAt - clock.UtcNow;
-        if (dueTime < TimeSpan.Zero)
-        {
-            dueTime = TimeSpan.Zero;
-        }
-        else if (dueTime > MaxTimerDueTime)
-        {
-            dueTime = MaxTimerDueTime;
-        }
-
-        _timer = new Timer(static state => ((AbortAtDeadlineExtension)state!).OnDeadlineReached(), this, dueTime, Timeout.InfiniteTimeSpan);
+        // Timer cannot represent delays above ~49.7 days. Arm it in bounded chunks and re-check the
+        // absolute instant on every callback so a far-future deadline never fires early.
+        _timer = new Timer(static state => ((AbortAtDeadlineExtension)state!).OnTimerElapsed(), this, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        _timer.Change(GetTimerDueTime(stopAt, clock.UtcNow), Timeout.InfiniteTimeSpan);
     }
 
     private static void TryLog(Action logAction)
@@ -173,6 +163,35 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
             // Construction-time diagnostics are best-effort: a logger failure must never break test
             // framework construction.
         }
+    }
+
+    internal static TimeSpan GetTimerDueTime(DateTimeOffset deadline, DateTimeOffset now)
+    {
+        TimeSpan remaining = deadline - now;
+        return remaining <= TimeSpan.Zero
+            ? TimeSpan.Zero
+            : remaining > MaxTimerDueTime
+                ? MaxTimerDueTime
+                : remaining;
+    }
+
+    private void OnTimerElapsed()
+    {
+        TimeSpan dueTime = GetTimerDueTime(_stopAt!.Value, _clock.UtcNow);
+        if (dueTime > TimeSpan.Zero)
+        {
+            lock (_lock)
+            {
+                if (!_disposed && _state == RunState.Running)
+                {
+                    _timer!.Change(dueTime, Timeout.InfiniteTimeSpan);
+                }
+            }
+
+            return;
+        }
+
+        OnDeadlineReached();
     }
 
     // No message types are consumed: this extension implements IDataConsumer only to keep a live

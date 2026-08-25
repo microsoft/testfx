@@ -202,7 +202,11 @@ internal class DummyTestFramework : ITestFramework, IDataProducer
         // times out; the StopMessage and exit-code assertions still catch a stop that never happened.
         if (Environment.GetEnvironmentVariable("WAIT_FOR_STOP") == "1")
         {
-            await Task.WhenAny(GracefulStop.Instance.TCS.Task, Task.Delay(TimeSpan.FromMinutes(2)));
+            Task completed = await Task.WhenAny(GracefulStop.Instance.TCS.Task, Task.Delay(TimeSpan.FromMinutes(2)));
+            if (completed != GracefulStop.Instance.TCS.Task)
+            {
+                throw new TimeoutException("Timed out waiting for graceful stop.");
+            }
         }
 
         context.Complete();

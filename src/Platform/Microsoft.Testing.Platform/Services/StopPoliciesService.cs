@@ -35,9 +35,10 @@ internal sealed class StopPoliciesService : IStopPoliciesService
 #pragma warning restore IDE0032
     private int _lastMaxFailedTests;
 
-    // Read on the deadline timer thread and written on the host thread that runs the request, so it is
-    // volatile. Server mode resets it before constructing the per-request deadline extension.
-    private volatile bool _isTestExecutionCompleted;
+    // Server requests can overlap. Track all active run requests so completing one request does not
+    // make another request's deadline extension believe that every execution has finished.
+    private int _activeTestExecutions;
+    private volatile bool _hasTestExecutionStarted;
 
     public StopPoliciesService(ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource)
     {
@@ -66,11 +67,30 @@ internal sealed class StopPoliciesService : IStopPoliciesService
         }
     }
 
-    public bool IsTestExecutionCompleted => _isTestExecutionCompleted;
+    public bool IsTestExecutionCompleted
+        => _hasTestExecutionStarted && Volatile.Read(ref _activeTestExecutions) == 0;
 
-    public void NotifyTestExecutionStarting() => _isTestExecutionCompleted = false;
+    public void NotifyTestExecutionStarting()
+    {
+        Interlocked.Increment(ref _activeTestExecutions);
+        _hasTestExecutionStarted = true;
+    }
 
-    public void NotifyTestExecutionCompleted() => _isTestExecutionCompleted = true;
+    public void NotifyTestExecutionCompleted()
+    {
+        _hasTestExecutionStarted = true;
+
+        int activeExecutions;
+        do
+        {
+            activeExecutions = Volatile.Read(ref _activeTestExecutions);
+            if (activeExecutions == 0)
+            {
+                return;
+            }
+        }
+        while (Interlocked.CompareExchange(ref _activeTestExecutions, activeExecutions - 1, activeExecutions) != activeExecutions);
+    }
 
     public async Task ExecuteMaxFailedTestsCallbacksAsync(int maxFailedTests, CancellationToken cancellationToken)
     {

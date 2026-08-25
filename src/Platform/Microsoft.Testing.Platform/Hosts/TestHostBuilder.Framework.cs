@@ -18,16 +18,30 @@ internal sealed partial class TestHostBuilder
 {
     private static async Task<ITestFramework> BuildTestFrameworkAsync(TestFrameworkBuilderData testFrameworkBuilderData)
     {
-        ServiceProvider serviceProvider = testFrameworkBuilderData.ServiceProvider;
-        serviceProvider.AddService(testFrameworkBuilderData.MessageBusProxy);
-
         if (!testFrameworkBuilderData.IsForDiscoveryRequest)
         {
-            // StopPoliciesService is application-scoped and therefore shared by server requests. A discovery
-            // request may have marked execution complete before the run request is built, so clear that gate
-            // before the per-run deadline timer can observe it.
-            serviceProvider.GetRequiredService<IStopPoliciesService>().NotifyTestExecutionStarting();
+            // StopPoliciesService is application-scoped and therefore shared by server requests. Register this
+            // run before its per-request deadline timer can observe the aggregate active-execution state.
+            IStopPoliciesService stopPoliciesService = testFrameworkBuilderData.ServiceProvider.GetRequiredService<IStopPoliciesService>();
+            stopPoliciesService.NotifyTestExecutionStarting();
+            try
+            {
+                return await BuildTestFrameworkCoreAsync(testFrameworkBuilderData).ConfigureAwait(false);
+            }
+            catch
+            {
+                stopPoliciesService.NotifyTestExecutionCompleted();
+                throw;
+            }
         }
+
+        return await BuildTestFrameworkCoreAsync(testFrameworkBuilderData).ConfigureAwait(false);
+    }
+
+    private static async Task<ITestFramework> BuildTestFrameworkCoreAsync(TestFrameworkBuilderData testFrameworkBuilderData)
+    {
+        ServiceProvider serviceProvider = testFrameworkBuilderData.ServiceProvider;
+        serviceProvider.AddService(testFrameworkBuilderData.MessageBusProxy);
 
         IPushOnlyProtocolConsumer? pushOnlyProtocolDataConsumer = null;
         IPushOnlyProtocol? pushOnlyProtocol = serviceProvider.GetService<IPushOnlyProtocol>();
@@ -43,7 +57,17 @@ internal sealed partial class TestHostBuilder
         await RegisterAsServiceOrConsumerOrBothAsync(testFrameworkBuilderData.TestExecutionRequestInvoker, serviceProvider, dataConsumersBuilder).ConfigureAwait(false);
         await RegisterAsServiceOrConsumerOrBothAsync(testFrameworkBuilderData.TestExecutionFilterFactory, serviceProvider, dataConsumersBuilder).ConfigureAwait(false);
 
-        ITestFrameworkCapabilities testFrameworkCapabilities = serviceProvider.GetTestFrameworkCapabilities();
+        // Capabilities can contain request lifecycle state (for example graceful-stop pending/active/completed).
+        // The application service provider is cloned for server requests, so replace the cloned application
+        // instance with one produced for this request. The framework and its per-request extensions then observe
+        // the same capability instance without sharing request state with concurrent calls.
+        ITestFrameworkCapabilities testFrameworkCapabilities = testFrameworkBuilderData.TestFrameworkManager.TestFrameworkCapabilitiesFactory(serviceProvider);
+        if (testFrameworkCapabilities is IAsyncInitializableExtension testFrameworkCapabilitiesAsyncInitializable)
+        {
+            await testFrameworkCapabilitiesAsyncInitializable.InitializeAsync().ConfigureAwait(false);
+        }
+
+        serviceProvider.ReplaceService(testFrameworkCapabilities);
         ITestFramework testFramework = testFrameworkBuilderData.TestFrameworkManager.TestFrameworkFactory(testFrameworkCapabilities, serviceProvider);
         await testFramework.TryInitializeAsync().ConfigureAwait(false);
         if (testFramework is IDataProducer dataProducer)

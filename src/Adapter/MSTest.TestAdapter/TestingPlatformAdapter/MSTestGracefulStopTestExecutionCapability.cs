@@ -13,7 +13,9 @@ internal sealed class MSTestGracefulStopTestExecutionCapability : IGracefulStopT
 #pragma warning disable IDE0330 // Use 'System.Threading.Lock' - not available on all target frameworks of this project.
     private static readonly object Sync = new();
 #pragma warning restore IDE0330
-    private static ExecutionState s_executionState;
+    private static int s_activeExecutionCount;
+    private ExecutionState _executionState;
+    private bool _isStopRequested;
 
     private MSTestGracefulStopTestExecutionCapability()
     {
@@ -21,10 +23,13 @@ internal sealed class MSTestGracefulStopTestExecutionCapability : IGracefulStopT
 
     public static MSTestGracefulStopTestExecutionCapability Instance { get; } = new();
 
+    internal static MSTestGracefulStopTestExecutionCapability Create() => new();
+
     public Task StopTestExecutionAsync(CancellationToken cancellationToken)
     {
         lock (Sync)
         {
+            _isStopRequested = true;
             PlatformServiceProvider.Instance.IsGracefulStopRequested = true;
         }
 
@@ -34,41 +39,59 @@ internal sealed class MSTestGracefulStopTestExecutionCapability : IGracefulStopT
     public Task<bool> TryStopTestExecutionAsync(CancellationToken cancellationToken)
         => Task.FromResult(TryRequestGracefulStop());
 
-    internal static void NotifyTestExecutionPending()
+    internal void NotifyTestExecutionPending()
     {
         lock (Sync)
         {
-            PlatformServiceProvider.Instance.IsGracefulStopRequested = false;
-            s_executionState = ExecutionState.Pending;
+            _isStopRequested = false;
+            _executionState = ExecutionState.Pending;
         }
     }
 
-    internal static void NotifyTestExecutionStarting()
+    internal void NotifyTestExecutionStarting()
     {
         lock (Sync)
         {
-            s_executionState = ExecutionState.Active;
+            // Preserve a stop accepted while the run was pending. Otherwise this is a new run, so clear
+            // the process-wide engine flag left by a previous request, but only when no overlapping run
+            // still owns that flag. Discovery never reaches this path.
+            if (_isStopRequested)
+            {
+                PlatformServiceProvider.Instance.IsGracefulStopRequested = true;
+            }
+            else if (s_activeExecutionCount == 0)
+            {
+                PlatformServiceProvider.Instance.IsGracefulStopRequested = false;
+            }
+
+            s_activeExecutionCount++;
+            _executionState = ExecutionState.Active;
         }
     }
 
-    internal static void NotifyTestExecutionCompleted()
+    internal void NotifyTestExecutionCompleted()
     {
         lock (Sync)
         {
-            s_executionState = ExecutionState.Completed;
+            if (_executionState == ExecutionState.Active)
+            {
+                s_activeExecutionCount--;
+            }
+
+            _executionState = ExecutionState.Completed;
         }
     }
 
-    private static bool TryRequestGracefulStop()
+    private bool TryRequestGracefulStop()
     {
         lock (Sync)
         {
-            if (s_executionState == ExecutionState.Completed
-                || PlatformServiceProvider.Instance.IsGracefulStopRequested)
+            if (_executionState == ExecutionState.Completed || _isStopRequested)
             {
                 return false;
             }
 
+            _isStopRequested = true;
             PlatformServiceProvider.Instance.IsGracefulStopRequested = true;
             return true;
         }

@@ -87,6 +87,38 @@ public sealed class CommonHostTests
     }
 
     [TestMethod]
+    public async Task ExecuteRequestAsync_WhenSessionStartupFails_DisarmsStopPolicy()
+    {
+        Mock<IPlatformOutputDevice> outputDeviceMock = new();
+        outputDeviceMock
+            .Setup(x => x.DisplayBeforeSessionStartAsync(It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("session startup failure"));
+
+        Mock<ITestSessionContext> sessionContextMock = new();
+        sessionContextMock.SetupGet(x => x.CancellationToken).Returns(CancellationToken.None);
+
+        Mock<IStopPoliciesService> policiesServiceMock = new();
+        ServiceProvider serviceProvider = new();
+        serviceProvider.AddService(new TestCoverageResult());
+        serviceProvider.AddService(policiesServiceMock.Object);
+
+        Mock<BaseMessageBus> baseMessageBusMock = new();
+        baseMessageBusMock.Setup(x => x.DisableAsync()).Returns(Task.CompletedTask);
+
+        InvalidOperationException ex = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            async () => await TestableCommonHost.ExecuteRequestForTestingAsync(
+                new ProxyOutputDevice(outputDeviceMock.Object, null),
+                sessionContextMock.Object,
+                serviceProvider,
+                baseMessageBusMock.Object,
+                new Mock<ITestFramework>().Object,
+                new ClientInfo("client", "1.0.0")));
+
+        Assert.AreEqual("session startup failure", ex.Message);
+        policiesServiceMock.Verify(x => x.NotifyTestExecutionCompleted(), Times.Once);
+    }
+
+    [TestMethod]
     public async Task RunAsync_WhenTestHostApplicationLifetimeIsAsyncCleanable_CleansUpOnce()
     {
         ServiceProvider serviceProvider = new();

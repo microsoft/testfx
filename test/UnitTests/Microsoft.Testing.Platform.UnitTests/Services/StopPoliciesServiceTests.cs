@@ -65,6 +65,22 @@ public sealed class StopPoliciesServiceTests : IDisposable
     }
 
     [TestMethod]
+    public void NotifyTestExecutionCompleted_WithAnotherExecutionActive_DoesNotSetIsTestExecutionCompleted()
+    {
+        StopPoliciesService service = new(_cancellationTokenSource.Object);
+        service.NotifyTestExecutionStarting();
+        service.NotifyTestExecutionStarting();
+
+        service.NotifyTestExecutionCompleted();
+
+        Assert.IsFalse(service.IsTestExecutionCompleted);
+
+        service.NotifyTestExecutionCompleted();
+
+        Assert.IsTrue(service.IsTestExecutionCompleted);
+    }
+
+    [TestMethod]
     public void NotifyTestExecutionCompleted_DoesNotAffectDeadlineTriggered()
     {
         StopPoliciesService service = new(_cancellationTokenSource.Object);
