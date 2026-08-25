@@ -839,6 +839,17 @@ public sealed class GitHubActionsSummaryReporterTests
             GitHubActionsFailureDetails.EffectiveStepSummaryLimit,
             byteCount,
             $"A {moduleCount}-module run renders {byteCount} bytes, which GitHub discards in full.");
+
+        if (moduleCount >= 200)
+        {
+            // Staying under the cap is not on its own evidence that the budget did anything: a regression that
+            // stopped degrading but happened to fit would pass the size check alone. At these counts at least one
+            // stage has to have engaged.
+            Assert.IsGreaterThan(
+                0,
+                result.ModulesWithOmittedDetails + result.CondensedModules + result.UnlistedModules,
+                $"A {moduleCount}-module run must exercise at least one degradation stage.");
+        }
     }
 
     [TestMethod]
@@ -1315,6 +1326,14 @@ public sealed class GitHubActionsSummaryReporterTests
         // Same run, but appended to a nearly-full file: the rendering must shrink rather than ignore the file.
         Assert.AreEqual(0, onEmptyFile.UnlistedModules);
         Assert.IsGreaterThan(0, onFullFile.UnlistedModules);
+
+        // Shrinking alone would not say the budget engaged for the right reason, so assert the degradation
+        // counters moved too, and that the reader is told the listing stopped.
+        Assert.IsGreaterThan(
+            onEmptyFile.CondensedModules + onEmptyFile.UnlistedModules,
+            onFullFile.CondensedModules + onFullFile.UnlistedModules);
+        Assert.Contains("further test project(s) are not listed", onFullFile.Markdown);
+
         Assert.IsLessThan(
             Encoding.UTF8.GetByteCount(onEmptyFile.Markdown),
             Encoding.UTF8.GetByteCount(onFullFile.Markdown));
@@ -1384,6 +1403,12 @@ public sealed class GitHubActionsSummaryReporterTests
 
         // Silently stopping the listing would leave a reader believing the run had only the projects shown.
         Assert.Contains("further test project(s) are not listed", markdown);
+
+        // And "not listed" has to mean it: the tail of the run must genuinely be absent, not merely condensed,
+        // while the head is still rendered in full. Pinning both sides is what makes this a bound rather than
+        // just "something was dropped".
+        Assert.Contains("失敗したテスト0", markdown, "The first module is inside the bound, so its failures are still listed.");
+        Assert.DoesNotContain("テストアセンブリの名前2999", markdown, "The last module falls past the listing bound, so it must not be rendered at all.");
     }
 
     [TestMethod]
