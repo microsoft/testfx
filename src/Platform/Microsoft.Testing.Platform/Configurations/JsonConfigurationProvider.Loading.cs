@@ -15,7 +15,7 @@ internal sealed partial class JsonConfigurationSource
         ITestApplicationModuleInfo testApplicationModuleInfo,
         IFileSystem fileSystem,
         CommandLineParseResult commandLineParseResult,
-        ILogger? logger) : IConfigurationProvider
+        ILogger? logger) : IHierarchicalConfigurationProvider
     {
         private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
         private readonly IFileSystem _fileSystem = fileSystem;
@@ -94,6 +94,26 @@ internal sealed partial class JsonConfigurationSource
         {
             value = null;
             return (_singleValueData != null && _singleValueData.TryGetValue(key, out value)) || (_propertyToAllChildren != null && _propertyToAllChildren.TryGetValue(key, out value));
+        }
+
+        public IEnumerable<string> GetChildKeys(string? parentPath)
+        {
+            IEnumerable<string> singleValueKeys = _singleValueData?.Keys ?? Enumerable.Empty<string>();
+            IEnumerable<string> propertyKeys = _propertyToAllChildren?.Keys ?? Enumerable.Empty<string>();
+            return ConfigurationProviderHelpers.GetChildKeys(singleValueKeys.Concat(propertyKeys), parentPath);
+        }
+
+        bool IHierarchicalConfigurationProvider.TryGetScalar(string key, out string? value)
+        {
+            if (_singleValueData is not null
+                && _singleValueData.TryGetValue(key, out value)
+                && value is not null)
+            {
+                return true;
+            }
+
+            value = null;
+            return false;
         }
     }
 }

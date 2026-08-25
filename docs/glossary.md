@@ -158,7 +158,7 @@ An MTP extension (`Microsoft.Testing.Extensions.GitHubActionsReport`) that emits
 
 - **Per-assembly log groups** (`--report-gh-groups`): emits `::group::`/`::endgroup::` workflow commands so each test assembly's output is collapsed by default in the runner UI.
 - **Failure and skip annotations** (`--report-gh-annotations`): emits a `::error` workflow command for each failing test and a `::warning` workflow command for each skipped test; both surface in the workflow **Annotations** tab. The `file:line` location is taken from the failure's exception stack trace when a frame resolves inside the workspace, and otherwise from the test's own `TestFileLocationProperty` (the only location available for a skipped test), so annotations also appear on the PR "Files changed" diff gutter. `TestFileLocationProperty` is populated by the MSTest adapter and by the [VSTestBridge](#vstestbridge), which covers xUnit/NUnit and other bridged frameworks that report source information.
-- **Job summary** (`--report-gh-step-summary`): writes a markdown roll-up (totals, failures, slowest tests) to the file pointed to by `GITHUB_STEP_SUMMARY`, which GitHub renders on the workflow run summary page. A capable SDK aggregates multi-module `dotnet test` runs into one authoritative overall section with per-assembly detail through artifact post-processing; older SDKs retain direct per-assembly sections.
+- **Job summary** (`--report-gh-step-summary`): writes a markdown roll-up to the file pointed to by `GITHUB_STEP_SUMMARY`, which GitHub renders on the workflow run summary page. Set it to `on-failure` to write only when the test invocation fails. `--report-gh-step-summary-sections` independently selects `test-results`, `coverage`, `slow-tests`, or any combination (`all`, the default); values may be repeated, space-separated, or comma-separated. A capable SDK aggregates multi-module `dotnet test` runs into one authoritative overall section with per-assembly detail through artifact post-processing; mixed module selections are combined so the aggregate includes every requested section, and older fragments retain full output.
 - **Slow-test notices** (`--report-gh-slow-test-notices`): emits a `::notice` workflow command for any test running past a configured threshold (default 60 seconds; set with `--report-gh-slow-test-threshold`).
 
 When using [MSTest.Sdk](#mstestsdk), opt in with `<EnableMicrosoftTestingExtensionsGitHubActionsReport>true</EnableMicrosoftTestingExtensionsGitHubActionsReport>`; the extension is enabled automatically when `TestingExtensionsProfile` is set to `AllMicrosoft`. It is not supported in NativeAOT mode (MSTest.Sdk emits a build warning) or VSTest mode. Introduced in [PR #9541](https://github.com/microsoft/testfx/pull/9541); skipped-test `::warning` annotations were added in [PR #9641](https://github.com/microsoft/testfx/pull/9641).
@@ -453,7 +453,23 @@ An MTP class (`Microsoft.Testing.Platform.Extensions.Messages.PropertyBag`) that
 
 ### Retry
 
-An MTP extension (`Microsoft.Testing.Extensions.Retry`) that automatically re-runs failed tests a configurable number of times. Useful for reducing flakiness in CI environments.
+An MTP extension (`Microsoft.Testing.Extensions.Retry`) that automatically re-runs failed tests a configurable number of times by restarting the test host and filtering each new run to the tests that failed previously. It is independent from MSTest's in-process [`RetryAttribute`](#retryattribute) and [`RetryBaseAttribute`](#retrybaseattribute). When both mechanisms are enabled, their attempt counts multiply: a test using `[Retry(n)]` can run up to `(n + 1) * (--retry-failed-tests + 1)` times, so avoid combining them unless that is intended.
+
+### RetryAttribute
+
+An MSTest attribute (`Microsoft.VisualStudio.TestTools.UnitTesting.RetryAttribute`) that retries a failed or timed-out test within the same test-host run. It can be applied to a test method or test class and supports a maximum retry count, a delay between attempts, and constant or exponential backoff. It derives from [`RetryBaseAttribute`](#retrybaseattribute), which can be used to implement a custom retry policy. See also the process-level [`Microsoft.Testing.Extensions.Retry`](#retry) extension.
+
+### RetryBaseAttribute
+
+An MSTest extensibility point (`Microsoft.VisualStudio.TestTools.UnitTesting.RetryBaseAttribute`) for implementing custom in-process retry policies. A derived attribute overrides the experimental `[Experimental("MSTESTEXP")]` method `ExecuteAsync(RetryContext)`, inspects the initial failed results, invokes the supplied test delegate for each retry attempt, and returns every attempt in a [`RetryResult`](#retryresult). The implementation owns the retry loop and decides when to stop. The attribute can be applied to a test method or test class; a method-level attribute takes precedence over a class-level attribute, and class-level attributes are not inherited.
+
+### RetryContext
+
+An experimental MSTest structure (`Microsoft.VisualStudio.TestTools.UnitTesting.RetryContext`, `[Experimental("MSTESTEXP")]`) passed to `RetryBaseAttribute.ExecuteAsync`. `FirstRunResults` contains the results from the initial failed or timed-out execution, and `ExecuteTaskGetter` re-executes the test and returns the next attempt's results. See also [`RetryBaseAttribute`](#retrybaseattribute) and [`RetryResult`](#retryresult).
+
+### RetryResult
+
+An experimental MSTest class (`Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult`, `[Experimental("MSTESTEXP")]`) used by custom [`RetryBaseAttribute`](#retrybaseattribute) implementations to return retry attempts in execution order through `AddResult`. `AllResults` exposes every added attempt. Under Microsoft.Testing.Platform, earlier attempts are reported as superseded and the last attempt determines the test outcome; VSTest receives only the final attempt.
 
 ### RFC
 

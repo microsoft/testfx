@@ -26,6 +26,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Sou
 /// </remarks>
 internal static class TestClassModelBuilder
 {
+    private const string AsyncStateMachineAttributeName = "global::System.Runtime.CompilerServices.AsyncStateMachineAttribute";
+    private const string DebuggerStepThroughAttributeName = "global::System.Diagnostics.DebuggerStepThroughAttribute";
+
     public static TestClassModel Build(INamedTypeSymbol typeSymbol, List<DiagnosticInfo> diagnostics)
     {
         // Methods / properties are walked across the full inheritance chain (excluding
@@ -157,24 +160,29 @@ internal static class TestClassModelBuilder
         bool returnsVoid = returnType.SpecialType == SpecialType.System_Void;
 
         ImmutableArray<AttributeData> inheritedAttributes = AttributeMaterializationHelper.CollectInheritedAttributes(method);
+        ImmutableArray<AttributeData> attributesToMaterialize = method.IsAsync
+            ? inheritedAttributes.Where(static attribute => !IsCompilerSpecialAsyncAttribute(attribute)).ToImmutableArray()
+            : inheritedAttributes;
         AttributeMaterializationHelper.AttributeMaterializationResult methodAttributes =
-            AttributeMaterializationHelper.BuildAttributesWithCompleteness(inheritedAttributes, consumingAssembly);
+            AttributeMaterializationHelper.BuildAttributesWithCompleteness(attributesToMaterialize, consumingAssembly);
 
         return new TestMethodModel(
             Name: method.Name,
             IsStatic: method.IsStatic,
+            IsAsync: method.IsAsync,
             ReturnsTask: returnsTask,
             ReturnsValueTask: returnsValueTask,
             ReturnsVoid: returnsVoid,
             IsTestMethod: TestMemberValidationHelper.IsTestMethodAttributePresent(method),
             Parameters: BuildParameters(method),
             Attributes: methodAttributes.Attributes,
-            // AsyncStateMachineAttribute is synthesized during lowering and is not returned by
-            // IMethodSymbol.GetAttributes(). Keep async entries non-authoritative so runtime
-            // reflection can observe it, including when rejecting async-void test methods.
-            AreAttributesComplete: methodAttributes.IsComplete && !method.IsAsync,
+            AreAttributesComplete: methodAttributes.IsComplete,
             DynamicDataSources: DynamicDataSourceBuilder.BuildDynamicDataSources(inheritedAttributes, method, consumingAssembly));
     }
+
+    private static bool IsCompilerSpecialAsyncAttribute(AttributeData attribute)
+        => attribute.AttributeClass?.ToDisplayString(SymbolDisplayFormats.FullyQualified) is
+            AsyncStateMachineAttributeName or DebuggerStepThroughAttributeName;
 
     private static TestPropertyModel BuildProperty(IPropertySymbol property, IAssemblySymbol consumingAssembly)
         => new(

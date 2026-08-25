@@ -37,7 +37,8 @@ updates:
     schedule:
       interval: weekly
     ignore:
-      # The github/gh-aw-actions/* actions are pinned by `gh aw compile` and
+      # The github/gh-aw-actions/* and github/gh-aw/actions/setup actions are
+      # pinned by `gh aw compile` and
       # MUST move in lockstep with the gh-aw CLI version that generated the
       # `.lock.yml` files (and `.github/aw/actions-lock.json`). Letting
       # Dependabot bump just the `uses:` SHAs drifts them away from the
@@ -45,6 +46,7 @@ updates:
       # `awf: command not found` -> parse_error (see #10203). These are
       # updated via `gh aw upgrade` / the Agentic Maintenance workflow instead.
       - dependency-name: "github/gh-aw-actions/*"
+      - dependency-name: "github/gh-aw/actions/setup"
       # DavidAnson/markdownlint-cli2-action pins the CLI version it bundles, and
       # `.github/workflows/markdown-linter.md` installs that same version by hand so the
       # scheduled report and the pull request gate apply identical rules. Dependabot can

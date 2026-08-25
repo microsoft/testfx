@@ -115,6 +115,8 @@ When making change to resource files, you MUST:
 
 When you add a new CLI option, rename an existing one, or change the description/arguments of an existing one (typically by editing an `ICommandLineOptionsProvider` implementation such as `PlatformCommandLineProvider`, `TerminalTestReporterCommandLineOptionsProvider`, `MSTestExtension`'s options provider, or a `*CommandLineOptionsProvider`), you MUST update the corresponding `--help` and `--info` acceptance test expectations so they keep matching the actual output.
 
+All CLI option and extension descriptions must end with terminal punctuation (normally a period).
+
 The wildcard-match expectations live in:
 
 - [`test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/HelpInfoTests.cs`](../test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/HelpInfoTests.cs) — MTP help/info with no extensions registered.

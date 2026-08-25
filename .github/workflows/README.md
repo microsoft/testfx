@@ -66,6 +66,7 @@ Agentic workflows authenticate through repository secrets:
 | --- | --- | --- |
 | `COPILOT_GITHUB_TOKEN` | GitHub Copilot CLI (model inference) | Fine-grained PAT. **Preferably replaced** by the `copilot-requests: write` permission — see below. |
 | `GH_AW_GITHUB_TOKEN` | GitHub MCP reads / safe-output writes that need more than the default `GITHUB_TOKEN` | Fine-grained PAT and the token that used to be forced by lockdown mode. **Preferably replaced** by a GitHub App — see below. **Currently unset**: the compiler's token chain (`GH_AW_GITHUB_MCP_SERVER_TOKEN` \|\| `GH_AW_GITHUB_TOKEN` \|\| `GITHUB_TOKEN`) falls back to the per-run `GITHUB_TOKEN` when this secret is absent, so leave it unset unless a workflow needs elevated access. |
+| `BACKPORT_MACHINE_USER_PAT` | ResourceLock safe-output PR creation and existing deterministic automation PRs | Existing machine-user PAT that pushes automation branches to `nohwnd-bot/testfx` and opens PRs against `microsoft/testfx`, avoiding the repository policy that prevents the default `GITHUB_TOKEN` from creating PRs. Its scopes and rotation are managed outside this repository; replace it with the GitHub App below when that App is provisioned for both repositories. |
 
 > [!IMPORTANT]
 > **Fine-grained PATs expire, and the `Microsoft Open Source` enterprise now hard-rejects any
@@ -73,14 +74,17 @@ Agentic workflows authenticate through repository secrets:
 > at the token's settings page). A PAT-based setup therefore breaks on a short cycle: when the
 > token lapses — or simply outlives the 8-day window — every workflow that depends on it fails at
 > once (e.g. the `Checkout PR branch` step 403s on the collaborator-permission and PR lookups) and
-> files a burst of `[aw] … failed` issues. Prefer the two PAT-free options below — together they
-> let this repo run agentic workflows with **no long-lived PAT at all**.
+> files a burst of `[aw] … failed` issues. Prefer the two PAT-free options below for normal gh-aw
+> authentication. `resource-lock-refactoring` is currently an explicit exception: repository policy
+> prevents its run-scoped `GITHUB_TOKEN` from creating pull requests, so it reuses
+> `BACKPORT_MACHINE_USER_PAT` until the GitHub App is provisioned for both the upstream repository
+> and the automation fork.
 >
 > **Fast unblock:** delete the `GH_AW_GITHUB_TOKEN` secret (run `gh secret delete GH_AW_GITHUB_TOKEN --repo microsoft/testfx`).
-> Because no source workflow forces a custom PAT anymore (`lockdown` was
-> removed repo-wide and all declare `min-integrity: none`), every workflow then degrades gracefully
-> to the built-in `GITHUB_TOKEN`. The only case that still needs elevated auth is a write-back on a
-> **fork** PR (where `GITHUB_TOKEN` is read-only) — use the GitHub App below for those.
+> Because no source workflow forces `GH_AW_GITHUB_TOKEN` anymore (`lockdown` was removed repo-wide
+> and all declare `min-integrity: none`), general GitHub reads and writes then degrade gracefully to
+> the built-in `GITHUB_TOKEN`. Workflows that explicitly name another credential, including
+> `resource-lock-refactoring`, are unaffected by deleting `GH_AW_GITHUB_TOKEN`.
 
 ### Preferred: eliminate the expiring PATs
 

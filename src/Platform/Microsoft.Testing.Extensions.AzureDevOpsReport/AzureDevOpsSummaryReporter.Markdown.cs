@@ -7,7 +7,17 @@ namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 
 internal sealed partial class AzureDevOpsSummaryReporter
 {
-    internal static /* for testing */ string BuildMarkdown(IReadOnlyList<TestRecord> records, string assemblyName, string targetFrameworkMoniker)
+    internal static /* for testing */ string BuildMarkdown(
+        IReadOnlyList<TestRecord> records,
+        string assemblyName,
+        string targetFrameworkMoniker)
+        => BuildMarkdown(records, assemblyName, targetFrameworkMoniker, new CiCoverageSummaryData());
+
+    private static string BuildMarkdown(
+        IReadOnlyList<TestRecord> records,
+        string assemblyName,
+        string targetFrameworkMoniker,
+        CiCoverageSummaryData coverage)
     {
         int total = records.Count;
         int passed = 0;
@@ -51,6 +61,7 @@ internal sealed partial class AzureDevOpsSummaryReporter
         builder.Append("| Skipped | ").Append(skipped.ToString(CultureInfo.InvariantCulture)).Append(" |\n");
         builder.Append("| Total duration | ").Append(FormatDuration(totalDuration)).Append(" |\n");
         builder.Append('\n');
+        CiCoverageSummary.AppendMarkdown(builder, coverage, headingLevel: 2);
 
         if (failingByClass.Count > 0)
         {
@@ -122,6 +133,7 @@ internal sealed partial class AzureDevOpsSummaryReporter
         }
 
         builder.Append('\n');
+        CiCoverageSummary.AppendMarkdown(builder, aggregate.Coverage, headingLevel: 2);
         if (aggregate.IsPartial)
         {
             builder.Append("> **Partial summary:** the test run was truncated.\n\n");
@@ -163,6 +175,7 @@ internal sealed partial class AzureDevOpsSummaryReporter
         builder.Append("| Skipped | ").Append(module.SkippedTests.ToString(CultureInfo.InvariantCulture)).Append(" |\n");
         builder.Append("| Test duration | ").Append(FormatDuration(TimeSpan.FromTicks(module.TestDurationTicks))).Append(" |\n");
         builder.Append("| Module exit code | ").Append(module.ExitCode.ToString(CultureInfo.InvariantCulture)).Append(" |\n\n");
+        CiCoverageSummary.AppendMarkdown(builder, module.Coverage, headingLevel: 3);
 
         if (module.TopFailingClasses.Length > 0)
         {

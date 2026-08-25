@@ -34,6 +34,7 @@ public sealed class AzureDevOpsSummaryReporterTests
     private readonly Mock<ITestApplicationModuleInfo> _testApplicationModuleInfoMock = new();
     private readonly Mock<ILoggerFactory> _loggerFactoryMock = new();
     private readonly Mock<ITestApplicationProcessExitCode> _testApplicationProcessExitCodeMock = new();
+    private readonly Mock<ITestCoverageResult> _testCoverageResultMock = new();
     private readonly List<IOutputDeviceData> _outputData = [];
 
     public AzureDevOpsSummaryReporterTests()
@@ -41,6 +42,8 @@ public sealed class AzureDevOpsSummaryReporterTests
         _ = _configurationMock.SetupGet(c => c[PlatformConfigurationConstants.PlatformResultDirectory]).Returns(ResultsDirectory);
         _ = _testApplicationModuleInfoMock.Setup(info => info.TryGetAssemblyName()).Returns("MyAssembly");
         _ = _loggerFactoryMock.Setup(loggerFactory => loggerFactory.CreateLogger(It.IsAny<string>())).Returns(Mock.Of<ILogger>());
+        _ = _testCoverageResultMock.SetupGet(result => result.Scopes).Returns([]);
+        _ = _testCoverageResultMock.SetupGet(result => result.Thresholds).Returns([]);
         _ = _outputDeviceMock
             .Setup(outputDevice => outputDevice.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()))
             .Callback<IOutputDeviceDataProducer, IOutputDeviceData, CancellationToken>((_, data, _) => _outputData.Add(data))
@@ -153,6 +156,35 @@ public sealed class AzureDevOpsSummaryReporterTests
             ExecutionId = "execution",
             SessionUid = "session",
             AttemptNumber = 1,
+            Coverage = new CiCoverageSummaryData
+            {
+                Metrics =
+                [
+                    new CiCoverageMetric
+                    {
+                        ScopeLevel = CoverageScopeLevel.Overall,
+                        Metric = CoverageMetric.Line,
+                        ProducerId = "coverlet",
+                        CoveredCount = 82,
+                        CoverableCount = 100,
+                    },
+                ],
+                Thresholds =
+                [
+                    new CiCoverageThreshold
+                    {
+                        ScopeLevel = CoverageScopeLevel.Overall,
+                        Metric = CoverageMetric.Line,
+                        ProducerId = "coverlet",
+                        ActualPercentage = 82,
+                        RequiredPercentage = 85,
+                        HasCoverableData = true,
+                        Passed = false,
+                    },
+                ],
+                ReportingModuleCount = 1,
+                TotalModuleCount = 1,
+            },
         };
         var aggregate = new CiRunSummaryAggregate(
             [module],
@@ -170,6 +202,8 @@ public sealed class AzureDevOpsSummaryReporterTests
 
         Assert.Contains("<summary>&lt;h1&gt;A&amp;B&lt;/h1&gt; (net9.0&lt;&amp;&gt;, x64&amp;arm64)</summary>", markdown);
         Assert.DoesNotContain("<summary><h1>", markdown);
+        Assert.Contains("| Overall | Line | 82 | 100 | 82.0% |", markdown);
+        Assert.Contains("| &lt;h1&gt;A&amp;B&lt;/h1&gt; (net9.0&lt;&amp;&gt;) — Overall | Line | 82.0% | 85.0% | ❌ Failed |", markdown);
     }
 
     [TestMethod]
@@ -256,6 +290,7 @@ public sealed class AzureDevOpsSummaryReporterTests
             _outputDeviceMock.Object,
             _testApplicationModuleInfoMock.Object,
             _testApplicationProcessExitCodeMock.Object,
+            _testCoverageResultMock.Object,
             _loggerFactoryMock.Object,
             static () => false);
 

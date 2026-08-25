@@ -48,9 +48,12 @@ internal sealed partial class GitHubActionsSummaryReporter :
     private readonly IOutputDevice _outputDevice;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
     private readonly ITestApplicationProcessExitCode _testApplicationProcessExitCode;
+    private readonly ITestCoverageResult _testCoverageResult;
     private readonly ILogger _logger;
     private readonly Lazy<string> _targetFrameworkMoniker;
     private readonly bool _isEnabled;
+    private readonly bool _writeOnFailureOnly;
+    private readonly GitHubActionsStepSummarySections _sections;
     private readonly Func<bool> _shouldDeferToArtifactPostProcessing;
 
 #if NET9_0_OR_GREATER
@@ -71,6 +74,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
         IOutputDevice outputDevice,
         ITestApplicationModuleInfo testApplicationModuleInfo,
         ITestApplicationProcessExitCode testApplicationProcessExitCode,
+        ITestCoverageResult testCoverageResult,
         ILoggerFactory loggerFactory,
         Func<bool> shouldDeferToArtifactPostProcessing)
     {
@@ -81,9 +85,12 @@ internal sealed partial class GitHubActionsSummaryReporter :
         _outputDevice = outputDevice;
         _testApplicationModuleInfo = testApplicationModuleInfo;
         _testApplicationProcessExitCode = testApplicationProcessExitCode;
+        _testCoverageResult = testCoverageResult;
         _logger = loggerFactory.CreateLogger<GitHubActionsSummaryReporter>();
         _targetFrameworkMoniker = new(TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform);
         _isEnabled = GitHubActionsFeature.IsEnabled(commandLineOptions, environment, GitHubActionsCommandLineOptions.GitHubActionsStepSummary);
+        _writeOnFailureOnly = GitHubActionsFeature.IsStepSummaryOnFailureOnly(commandLineOptions);
+        _sections = GitHubActionsStepSummarySectionsParser.GetSections(commandLineOptions);
         _shouldDeferToArtifactPostProcessing = shouldDeferToArtifactPostProcessing;
     }
 
@@ -198,11 +205,12 @@ internal sealed partial class GitHubActionsSummaryReporter :
 
             string assemblyName = _testApplicationModuleInfo.TryGetAssemblyName() ?? "unknown assembly name";
             int exitCode = _testApplicationProcessExitCode.GetProcessExitCode();
+            CiCoverageSummaryData coverage = CiCoverageSummary.Create(_testCoverageResult, testSessionContext.SessionUid);
             if (_shouldDeferToArtifactPostProcessing()
                 && _configuration.GetTestResultDirectory() is { } resultsDirectory
                 && !RoslynString.IsNullOrWhiteSpace(resultsDirectory))
             {
-                CiRunSummaryModule module = CreateModule(snapshot, assemblyName, testSessionContext);
+                CiRunSummaryModule module = CreateModule(snapshot, assemblyName, testSessionContext, coverage);
                 string fragmentPath = await CiRunSummaryAggregation.WriteFragmentAsync(
                     resultsDirectory,
                     GitHubActionsSummaryArtifactPostProcessor.Provider,
@@ -219,7 +227,14 @@ internal sealed partial class GitHubActionsSummaryReporter :
                 return;
             }
 
-            string markdown = BuildMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value, exitCode);
+            if (_writeOnFailureOnly
+                && !snapshot.Any(static record => record.Kind == TerminalKind.Failed)
+                && !GitHubActionsExitCode.IndicatesFailure(exitCode))
+            {
+                return;
+            }
+
+            string markdown = BuildMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value, exitCode, coverage, _sections);
 
             try
             {
@@ -249,8 +264,10 @@ internal sealed partial class GitHubActionsSummaryReporter :
     private CiRunSummaryModule CreateModule(
         IReadOnlyList<TestRecord> records,
         string assemblyName,
-        ITestSessionContext testSessionContext)
-        => CiRunSummaryAggregation.CreateModule(
+        ITestSessionContext testSessionContext,
+        CiCoverageSummaryData coverage)
+    {
+        CiRunSummaryModule module = CiRunSummaryAggregation.CreateModule(
             records,
             assemblyName,
             _testApplicationModuleInfo.GetCurrentTestApplicationFullPath(),
@@ -259,7 +276,12 @@ internal sealed partial class GitHubActionsSummaryReporter :
             _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID),
             testSessionContext.SessionUid.Value,
             GetAttemptNumber(),
-            _testApplicationProcessExitCode.GetProcessExitCode());
+            _testApplicationProcessExitCode.GetProcessExitCode(),
+            coverage: coverage,
+            writeOnFailureOnly: _writeOnFailureOnly);
+        module.GitHubActionsStepSummarySections = GitHubActionsStepSummarySectionsParser.ToPersistedValues(_sections);
+        return module;
+    }
 
     private int GetAttemptNumber()
         => int.TryParse(

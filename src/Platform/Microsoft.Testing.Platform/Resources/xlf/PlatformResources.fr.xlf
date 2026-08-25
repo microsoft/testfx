@@ -715,9 +715,9 @@ Notez que cela ralentit l’exécution du test.</target>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</source>
-        <target state="translated">Activer la journalisation des diagnostics. Le niveau de consignation par défaut est « Trace ».
-Le fichier sera écrit dans le répertoire de sortie avec le nom log_[yyMMddHHmmssfff].diag</target>
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</source>
+        <target state="new">Enable the diagnostic logging. The default log level is 'Trace'.
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag.</target>
         <note>{Locked="Trace"}{Locked="log_[yyMMddHHmmssfff].diag"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -738,8 +738,8 @@ S’il n’est pas spécifié, le fichier est généré dans le répertoire « 
         <note>{Locked="TestResults"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
-        <source>Prefix for the log file name that will replace '[log]_.'</source>
-        <target state="translated">Préfixe du nom du fichier journal qui remplacera « [log]_. ».</target>
+        <source>Replace '[log]_.' with the specified log file name prefix.</source>
+        <target state="new">Replace '[log]_.' with the specified log file name prefix.</target>
         <note>{Locked="[log]_."}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
@@ -920,8 +920,8 @@ Pour découvrir plus d’informations sur les codes de sortie, consultez https:/
         <note>{0} is the option name without the leading dashes.</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDescription">
-        <source>Microsoft Testing Platform command line provider</source>
-        <target state="translated">Fournisseur de ligne de commande de la plateforme de test Microsoft</target>
+        <source>Microsoft Testing Platform command line provider.</source>
+        <target state="new">Microsoft Testing Platform command line provider.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDisplayName">
@@ -949,8 +949,8 @@ La valeur par défaut est TestResults dans le répertoire qui contient l’appli
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineSkipBuildersNumberCheckOptionDescription">
-        <source>For testing purposes</source>
-        <target state="translated">Pour test uniquement</target>
+        <source>For testing purposes.</source>
+        <target state="new">For testing purposes.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTestHostControllerPIDOptionDescription">

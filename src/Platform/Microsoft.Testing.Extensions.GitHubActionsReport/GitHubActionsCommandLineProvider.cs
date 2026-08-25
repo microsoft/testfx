@@ -22,6 +22,7 @@ internal sealed class GitHubActionsCommandLineProvider : CommandLineOptionsProvi
                 new CommandLineOption(GitHubActionsCommandLineOptions.GitHubActionsGroups, GitHubActionsResources.GroupsOptionDescription, ArgumentArity.ExactlyOne, false),
                 new CommandLineOption(GitHubActionsCommandLineOptions.GitHubActionsAnnotations, GitHubActionsResources.AnnotationsOptionDescription, ArgumentArity.ExactlyOne, false),
                 new CommandLineOption(GitHubActionsCommandLineOptions.GitHubActionsStepSummary, GitHubActionsResources.StepSummaryOptionDescription, ArgumentArity.ExactlyOne, false),
+                new CommandLineOption(GitHubActionsCommandLineOptions.GitHubActionsStepSummarySections, GitHubActionsResources.StepSummarySectionsOptionDescription, ArgumentArity.OneOrMore, false),
                 new CommandLineOption(GitHubActionsCommandLineOptions.GitHubActionsSlowTestNotices, GitHubActionsResources.SlowTestNoticesOptionDescription, ArgumentArity.ExactlyOne, false),
                 new CommandLineOption(GitHubActionsCommandLineOptions.GitHubActionsSlowTestThreshold, GitHubActionsResources.SlowTestThresholdOptionDescription, ArgumentArity.ExactlyOne, false),
                 new CommandLineOption(GitHubActionsCommandLineOptions.GitHubActionsOptionName, GitHubActionsResources.OptionDescription, ArgumentArity.Zero, false),
@@ -32,12 +33,22 @@ internal sealed class GitHubActionsCommandLineProvider : CommandLineOptionsProvi
     public override Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
         => commandOption.Name switch
         {
-            GitHubActionsCommandLineOptions.GitHubActionsGroups or GitHubActionsCommandLineOptions.GitHubActionsAnnotations or GitHubActionsCommandLineOptions.GitHubActionsStepSummary or GitHubActionsCommandLineOptions.GitHubActionsSlowTestNotices
+            GitHubActionsCommandLineOptions.GitHubActionsStepSummary
+                when !CommandLineOptionArgumentValidator.IsValidBooleanArgument(arguments[0])
+                    && !arguments[0].Equals(GitHubActionsCommandLineOptions.StepSummaryOnFailureValue, StringComparison.OrdinalIgnoreCase)
+                => ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.InvalidStepSummaryValue, arguments[0])),
+            GitHubActionsCommandLineOptions.GitHubActionsGroups or GitHubActionsCommandLineOptions.GitHubActionsAnnotations or GitHubActionsCommandLineOptions.GitHubActionsSlowTestNotices
                 when !CommandLineOptionArgumentValidator.IsValidBooleanArgument(arguments[0])
                 => ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.InvalidOnOffValue, arguments[0])),
             GitHubActionsCommandLineOptions.GitHubActionsSlowTestThreshold
                 when !(TimeSpanParser.TryParse(arguments[0], TimeSpanDefaultUnit.Seconds, out TimeSpan threshold) && threshold > TimeSpan.Zero)
                 => ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.InvalidSlowTestThreshold, arguments[0])),
+            GitHubActionsCommandLineOptions.GitHubActionsStepSummarySections
+                when !GitHubActionsStepSummarySectionsParser.TryParse(arguments, out _, out string? invalidValue, out bool hasEmptyValue)
+                => ValidationResult.InvalidTask(
+                    hasEmptyValue
+                        ? GitHubActionsResources.EmptyStepSummarySections
+                        : string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.InvalidStepSummarySection, invalidValue)),
             _ => ValidationResult.ValidTask,
         };
 
@@ -48,6 +59,7 @@ internal sealed class GitHubActionsCommandLineProvider : CommandLineOptionsProvi
                 GitHubActionsCommandLineOptions.GitHubActionsGroups,
                 GitHubActionsCommandLineOptions.GitHubActionsAnnotations,
                 GitHubActionsCommandLineOptions.GitHubActionsStepSummary,
+                GitHubActionsCommandLineOptions.GitHubActionsStepSummarySections,
                 GitHubActionsCommandLineOptions.GitHubActionsSlowTestNotices,
                 GitHubActionsCommandLineOptions.GitHubActionsSlowTestThreshold,
             ],
