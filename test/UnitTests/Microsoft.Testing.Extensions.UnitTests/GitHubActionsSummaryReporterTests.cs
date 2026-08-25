@@ -1601,6 +1601,25 @@ public sealed class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
+    public void TrimToRenderedFailures_BreaksNameTiesByUid()
+    {
+        // Distinct tests can share both names — duplicate parameterized cases most obviously. The retained set
+        // and the rendered set are chosen by two different code paths (this trim, and the snapshot's sort), so
+        // unless the order is total they can disagree about which of the tied failures is inside the cap. The
+        // loser would then render with no diagnostics and no note saying why.
+        var pending = new Dictionary<string, GitHubActionsSummaryReporter.PendingFailure>(StringComparer.Ordinal);
+        foreach (string uid in new[] { "uid-c", "uid-a", "uid-d", "uid-b" })
+        {
+            pending[uid] = new GitHubActionsSummaryReporter.PendingFailure("T.Same", "Same", "boom", new InvalidOperationException("boom"), null, 0);
+        }
+
+        GitHubActionsSummaryReporter.TrimToRenderedFailures(pending, 2);
+
+        // Ordinal by uid, so the survivors are decidable rather than whatever the dictionary happened to yield.
+        Assert.AreSequenceEqual(["uid-a", "uid-b"], [.. pending.Keys.OrderBy(static key => key, StringComparer.Ordinal)]);
+    }
+
+    [TestMethod]
     public void ApplyPendingFailure_ReleasesTheSlotWhenARetryRecovers()
     {
         // In-process retries reuse the UID, so a test that failed and then passed must not keep occupying one of

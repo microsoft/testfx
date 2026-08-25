@@ -345,10 +345,29 @@ internal sealed partial class GitHubActionsSummaryReporter :
     /// Orders failures the way the rendered summary does, so "the ones that will be shown" is decidable before
     /// the session ends.
     /// </summary>
-    private static int CompareForRendering(string leftFullyQualifiedName, string leftDisplayName, string rightFullyQualifiedName, string rightDisplayName)
+    /// <remarks>
+    /// The uid is the final tie-break, and it is what makes the order total. Distinct tests can share both names —
+    /// duplicate parameterized cases most obviously — and without it their relative order comes from dictionary
+    /// enumeration in one caller and an unstable sort in the other. Retention and rendering could then disagree
+    /// about which of the tied failures falls inside the first <see cref="MaxFailures"/>, so one would be shown
+    /// stripped of its diagnostics while the other held diagnostics that are never rendered.
+    /// </remarks>
+    private static int CompareForRendering(
+        string leftUid,
+        string leftFullyQualifiedName,
+        string leftDisplayName,
+        string rightUid,
+        string rightFullyQualifiedName,
+        string rightDisplayName)
     {
         int result = StringComparer.Ordinal.Compare(leftFullyQualifiedName, rightFullyQualifiedName);
-        return result != 0 ? result : StringComparer.Ordinal.Compare(leftDisplayName, rightDisplayName);
+        if (result != 0)
+        {
+            return result;
+        }
+
+        result = StringComparer.Ordinal.Compare(leftDisplayName, rightDisplayName);
+        return result != 0 ? result : StringComparer.Ordinal.Compare(leftUid, rightUid);
     }
 
     /// <summary>
@@ -391,7 +410,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
             foreach (KeyValuePair<string, PendingFailure> candidate in pending)
             {
                 if (worstKey is null
-                    || CompareForRendering(candidate.Value.FullyQualifiedName, candidate.Value.DisplayName, worst.FullyQualifiedName, worst.DisplayName) > 0)
+                    || CompareForRendering(candidate.Key, candidate.Value.FullyQualifiedName, candidate.Value.DisplayName, worstKey, worst.FullyQualifiedName, worst.DisplayName) > 0)
                 {
                     worstKey = candidate.Key;
                     worst = candidate.Value;
@@ -424,7 +443,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
         }
 
         entries.Sort(static (left, right)
-            => CompareForRendering(left.Value.FullyQualifiedName, left.Value.DisplayName, right.Value.FullyQualifiedName, right.Value.DisplayName));
+            => CompareForRendering(left.Key, left.Value.FullyQualifiedName, left.Value.DisplayName, right.Key, right.Value.FullyQualifiedName, right.Value.DisplayName));
 
         var snapshot = new List<TestRecord>(entries.Count);
         int expanded = 0;
