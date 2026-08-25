@@ -231,7 +231,7 @@ internal sealed class Program
         {
             Environment.SetEnvironmentVariable(
                 "TESTINGPLATFORM_DEADLINE",
-                DateTimeOffset.UtcNow.AddSeconds(1).ToString("o"));
+                DateTimeOffset.UtcNow.AddSeconds(15).ToString("o"));
         }
 
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
