@@ -49,9 +49,7 @@ internal sealed class TrxArtifactPostProcessor : IArtifactPostProcessor
 
         InputArtifact[] orderedInputs =
         [
-            .. inputs
-                .OrderBy(input => Path.GetFullPath(input.Path), StringComparer.Ordinal)
-                .ThenBy(input => input.ExecutionId, StringComparer.Ordinal),
+            .. ArtifactPostProcessingHelper.OrderInputs(inputs, includeModuleMetadata: false),
         ];
         string[] inputPaths = [.. orderedInputs.Select(input => input.Path)];
         Guid runId = TrxReportEngine.CreateMergeRunId(inputPaths, [.. orderedInputs.Select(input => input.ExecutionId)]);
