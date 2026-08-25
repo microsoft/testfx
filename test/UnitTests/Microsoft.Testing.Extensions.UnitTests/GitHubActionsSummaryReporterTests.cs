@@ -1552,6 +1552,28 @@ public sealed class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
+    public void TrimToRenderedFailures_KeepsOnlyTheFailuresThatWillBeRendered()
+    {
+        // A run can fail thousands of tests while only MaxFailures are ever expanded. Retention has to be bounded
+        // to those, or a high-failure run holds diagnostics for output it discards.
+        var pending = new Dictionary<string, GitHubActionsSummaryReporter.PendingFailure>(StringComparer.Ordinal);
+        for (int i = 0; i < 500; i++)
+        {
+            string name = $"T.Test{i:D4}";
+            pending[name] = new GitHubActionsSummaryReporter.PendingFailure(name, name, "boom", new InvalidOperationException("boom"), null, 0);
+            GitHubActionsSummaryReporter.TrimToRenderedFailures(pending, 20);
+
+            // Bounded at every step, not just at the end — the point is never to hold more than this.
+            Assert.IsLessThanOrEqualTo(20, pending.Count);
+        }
+
+        // And the ones kept are those that sort first, which is the order the summary renders in.
+        Assert.AreSequenceEqual(
+            [.. Enumerable.Range(0, 20).Select(static i => $"T.Test{i:D4}")],
+            [.. pending.Values.Select(static f => f.FullyQualifiedName).OrderBy(static name => name, StringComparer.Ordinal)]);
+    }
+
+    [TestMethod]
     public async Task UpsertStepSummaryWithRetryAsync_ReplacesMatchingSection()
     {
         string path = Path.GetTempFileName();

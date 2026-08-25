@@ -69,14 +69,17 @@ internal sealed partial class GitHubActionsSummaryReporter :
     /// The raw inputs for each failed test's diagnostics, held until session end.
     /// </summary>
     /// <remarks>
-    /// Only references already allocated by the test framework are kept here. Turning them into rendered
-    /// diagnostics — formatting <see cref="Exception.StackTrace"/>, walking it for a source location, and
-    /// clipping the result — costs far more than it looks, and only <see cref="MaxFailures"/> of them are ever
-    /// rendered. A run with thousands of failures would otherwise pay that cost, and retain tens of megabytes of
-    /// clipped text, for diagnostics it immediately discards.
+    /// Only what rendering actually needs is kept: the explanation, the exception (already allocated by the test
+    /// framework), and the declared source location read out of the node's property bag. The <see cref="TestNode"/>
+    /// itself is deliberately not retained — its property bag can carry unbounded captured standard output and
+    /// error, so holding one per failure would retain a run's entire output to render at most
+    /// <see cref="MaxFailures"/> of them.
+    /// <para>
+    /// The map is also bounded to <see cref="MaxFailures"/> entries, ordered the same way the snapshot is, so a
+    /// run with thousands of failures retains only the diagnostics that will actually be rendered.
+    /// </para>
     /// </remarks>
-    private readonly Dictionary<string, (string? Explanation, Exception? Exception, TestNode TestNode)> _pendingFailures
-        = new Dictionary<string, (string?, Exception?, TestNode)>(StringComparer.Ordinal);
+    private readonly Dictionary<string, PendingFailure> _pendingFailures = new Dictionary<string, PendingFailure>(StringComparer.Ordinal);
 #pragma warning restore IDE0028
 
     public GitHubActionsSummaryReporter(
@@ -172,10 +175,11 @@ internal sealed partial class GitHubActionsSummaryReporter :
 
             TimeSpan duration = timing?.GlobalTiming.Duration ?? TimeSpan.Zero;
 
-            // Capture only what is cheap to hold: the explanation and the exception reference, both of which
-            // already exist. Formatting Exception.StackTrace, resolving its source location and clipping the
-            // result is the expensive part, and at most MaxFailures of these are ever rendered — so that work is
-            // deferred to session end and done only for the failures actually selected.
+            // Capture only what is cheap to hold and small: the explanation, the exception reference, and the
+            // declared source location read out of the property bag now — the node itself is not retained, since
+            // its bag can carry a run's entire captured output. Formatting Exception.StackTrace, walking it for a
+            // location and clipping the result is the expensive part, and at most MaxFailures of these are ever
+            // rendered, so that work is deferred to session end and done only for the failures selected.
             (string? Explanation, Exception? Exception)? pendingFailure = kind == TerminalKind.Failed && _includeFailureDetails
                 ? TryGetFailureInfo(state)
                 : null;
@@ -185,7 +189,15 @@ internal sealed partial class GitHubActionsSummaryReporter :
                 _records[uid] = new TestRecord(displayName, fullyQualifiedName, kind, duration);
                 if (pendingFailure is { } failure)
                 {
-                    _pendingFailures[uid] = (failure.Explanation, failure.Exception, update.TestNode);
+                    TestFileLocationProperty? declared = update.TestNode.Properties.FirstOrDefault<TestFileLocationProperty>();
+                    _pendingFailures[uid] = new PendingFailure(
+                        fullyQualifiedName,
+                        displayName,
+                        failure.Explanation,
+                        failure.Exception,
+                        declared?.FilePath,
+                        declared?.LineSpan.Start.Line ?? 0);
+                    TrimToRenderedFailures(_pendingFailures, MaxFailures);
                 }
             }
         }
@@ -290,6 +302,68 @@ internal sealed partial class GitHubActionsSummaryReporter :
     }
 
     /// <summary>
+    /// What rendering a failure's diagnostics needs, without retaining the test node it came from.
+    /// </summary>
+    internal readonly struct PendingFailure
+    {
+        internal PendingFailure(string fullyQualifiedName, string displayName, string? explanation, Exception? exception, string? declaredFilePath, int declaredLine)
+        {
+            FullyQualifiedName = fullyQualifiedName;
+            DisplayName = displayName;
+            Explanation = explanation;
+            Exception = exception;
+            DeclaredFilePath = declaredFilePath;
+            DeclaredLine = declaredLine;
+        }
+
+        internal string FullyQualifiedName { get; }
+
+        internal string DisplayName { get; }
+
+        internal string? Explanation { get; }
+
+        internal Exception? Exception { get; }
+
+        internal string? DeclaredFilePath { get; }
+
+        internal int DeclaredLine { get; }
+    }
+
+    /// <summary>
+    /// Orders failures the way the rendered summary does, so "the ones that will be shown" is decidable before
+    /// the session ends.
+    /// </summary>
+    private static int CompareForRendering(string leftFullyQualifiedName, string leftDisplayName, string rightFullyQualifiedName, string rightDisplayName)
+    {
+        int result = StringComparer.Ordinal.Compare(leftFullyQualifiedName, rightFullyQualifiedName);
+        return result != 0 ? result : StringComparer.Ordinal.Compare(leftDisplayName, rightDisplayName);
+    }
+
+    /// <summary>
+    /// Drops the entries that sort last once more than <paramref name="keep"/> are held, so retention stays
+    /// bounded however many tests fail.
+    /// </summary>
+    internal static /* for testing */ void TrimToRenderedFailures(Dictionary<string, PendingFailure> pending, int keep)
+    {
+        while (pending.Count > keep)
+        {
+            string? worstKey = null;
+            PendingFailure worst = default;
+            foreach (KeyValuePair<string, PendingFailure> candidate in pending)
+            {
+                if (worstKey is null
+                    || CompareForRendering(candidate.Value.FullyQualifiedName, candidate.Value.DisplayName, worst.FullyQualifiedName, worst.DisplayName) > 0)
+                {
+                    worstKey = candidate.Key;
+                    worst = candidate.Value;
+                }
+            }
+
+            pending.Remove(worstKey!);
+        }
+    }
+
+    /// <summary>
     /// Takes the recorded tests in a deterministic order and attaches diagnostics to the failures that will
     /// actually be rendered.
     /// </summary>
@@ -303,18 +377,15 @@ internal sealed partial class GitHubActionsSummaryReporter :
     private List<TestRecord> BuildSnapshot()
     {
         List<KeyValuePair<string, TestRecord>> entries;
-        Dictionary<string, (string? Explanation, Exception? Exception, TestNode TestNode)> pending;
+        Dictionary<string, PendingFailure> pending;
         lock (_stateLock)
         {
             entries = [.. _records];
-            pending = new Dictionary<string, (string?, Exception?, TestNode)>(_pendingFailures, StringComparer.Ordinal);
+            pending = new Dictionary<string, PendingFailure>(_pendingFailures, StringComparer.Ordinal);
         }
 
-        entries.Sort(static (left, right) =>
-        {
-            int result = StringComparer.Ordinal.Compare(left.Value.FullyQualifiedName, right.Value.FullyQualifiedName);
-            return result != 0 ? result : StringComparer.Ordinal.Compare(left.Value.DisplayName, right.Value.DisplayName);
-        });
+        entries.Sort(static (left, right)
+            => CompareForRendering(left.Value.FullyQualifiedName, left.Value.DisplayName, right.Value.FullyQualifiedName, right.Value.DisplayName));
 
         var snapshot = new List<TestRecord>(entries.Count);
         int expanded = 0;
@@ -323,7 +394,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
             TestRecord record = entry.Value;
             if (record.Kind == TerminalKind.Failed
                 && expanded < MaxFailures
-                && pending.TryGetValue(entry.Key, out (string? Explanation, Exception? Exception, TestNode TestNode) failure))
+                && pending.TryGetValue(entry.Key, out PendingFailure failure))
             {
                 expanded++;
                 record = new TestRecord(
@@ -331,7 +402,7 @@ internal sealed partial class GitHubActionsSummaryReporter :
                     record.FullyQualifiedName,
                     record.Kind,
                     record.Duration,
-                    CaptureFailureDetails(failure.TestNode, failure.Explanation, failure.Exception));
+                    CaptureFailureDetails(failure));
             }
 
             snapshot.Add(record);
@@ -503,8 +574,9 @@ internal sealed partial class GitHubActionsSummaryReporter :
     /// clipped here rather than at render time so an enormous stack trace never reaches the aggregation fragment
     /// written to disk.
     /// </remarks>
-    private TestFailureDetails? CaptureFailureDetails(TestNode testNode, string? explanationInput, Exception? exception)
+    private TestFailureDetails? CaptureFailureDetails(PendingFailure failure)
     {
+        Exception? exception = failure.Exception;
         string repoRoot = GitHubActionsRepositoryRoot.Resolve(_environment) ?? string.Empty;
         (string RelativeNormalizedPath, int LineNumber)? stackLocation = StackTraceSourceLocationResolver.TryResolve(
             exception?.StackTrace,
@@ -514,13 +586,13 @@ internal sealed partial class GitHubActionsSummaryReporter :
             StackTraceSourceLocationResolver.SkipAssertionFramesForCurrentRuntime);
         GitHubActionsSourceLocation? location = stackLocation is { } resolved
             ? new GitHubActionsSourceLocation(resolved.RelativeNormalizedPath, resolved.LineNumber)
-            : GitHubActionsAnnotationReporter.TryResolveDeclaredLocation(testNode, repoRoot, _fileSystem);
+            : ResolveDeclaredLocation(failure, repoRoot);
 
         // Fall back on whitespace, not just null: Clip treats a whitespace-only value as absent, so an empty
         // explanation would otherwise discard a perfectly good exception message.
-        string? explanation = RoslynString.IsNullOrWhiteSpace(explanationInput)
+        string? explanation = RoslynString.IsNullOrWhiteSpace(failure.Explanation)
             ? exception?.Message
-            : explanationInput;
+            : failure.Explanation;
 
         return new TestFailureDetails(
             GitHubActionsFailureDetails.Clip(explanation, GitHubActionsFailureDetails.MaxMessageLength, GitHubActionsFailureDetails.MaxMessageRows),
@@ -528,5 +600,26 @@ internal sealed partial class GitHubActionsSummaryReporter :
             GitHubActionsFailureDetails.Clip(exception?.StackTrace, GitHubActionsFailureDetails.MaxStackTraceLength, GitHubActionsFailureDetails.MaxStackTraceRows),
             location?.RelativeNormalizedPath,
             location?.LineNumber ?? 0);
+    }
+
+    /// <summary>
+    /// Resolves the location the test framework declared for the test, from the file and line read out of its
+    /// property bag at capture time. Mirrors <see cref="GitHubActionsAnnotationReporter.TryResolveDeclaredLocation"/>,
+    /// but works from the two small values kept rather than from the node, which is not retained.
+    /// </summary>
+    private GitHubActionsSourceLocation? ResolveDeclaredLocation(PendingFailure failure, string repoRoot)
+    {
+        if (RoslynString.IsNullOrWhiteSpace(failure.DeclaredFilePath))
+        {
+            return null;
+        }
+
+        string? relativeNormalizedPath = StackTraceSourceLocationResolver.TryMakeWorkspaceRelative(failure.DeclaredFilePath!, repoRoot, _fileSystem);
+
+        // A framework that knows the file but not the line reports a sentinel (-1) or 0; GitHub accepts a
+        // 'file'-only annotation, so drop the line rather than emitting an invalid one.
+        return relativeNormalizedPath is null
+            ? null
+            : new GitHubActionsSourceLocation(relativeNormalizedPath, failure.DeclaredLine > 0 ? failure.DeclaredLine : 0);
     }
 }
