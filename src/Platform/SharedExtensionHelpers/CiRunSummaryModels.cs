@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Text.Json.Serialization;
+
 using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 using Microsoft.Testing.Platform.Extensions.Messages;
 
@@ -45,6 +47,9 @@ internal sealed class CiRunSummaryModule
     public CiRunSummaryFailingClass[] TopFailingClasses { get; set; } = [];
 
     public CiCoverageSummaryData Coverage { get; set; } = new();
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string[]? GitHubActionsStepSummarySections { get; set; }
 }
 
 internal sealed class CiRunSummaryTest

@@ -19,6 +19,7 @@ public sealed class GitHubActionsCommandLineProviderTests
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsGroups)]
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsAnnotations)]
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsStepSummary)]
+    [DataRow(GitHubActionsCommandLineOptions.GitHubActionsStepSummarySections)]
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsSlowTestNotices)]
     [DataRow(GitHubActionsCommandLineOptions.GitHubActionsSlowTestThreshold)]
     public async Task ValidateCommandLineOptionsAsync_ReturnsInvalid_WhenSubOptionIsUsedWithoutReportGhAsync(string subOption)
@@ -48,6 +49,19 @@ public sealed class GitHubActionsCommandLineProviderTests
         {
             [GitHubActionsCommandLineOptions.GitHubActionsOptionName] = [],
             [subOption] = ["off"],
+        })).ConfigureAwait(false);
+
+        Assert.IsTrue(validationResult.IsValid, validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ValidateCommandLineOptionsAsync_ReturnsValid_WhenStepSummarySectionsIsUsedWithReportGhAsync()
+    {
+        GitHubActionsCommandLineProvider provider = new();
+        ValidationResult validationResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [GitHubActionsCommandLineOptions.GitHubActionsOptionName] = [],
+            [GitHubActionsCommandLineOptions.GitHubActionsStepSummarySections] = ["test-results"],
         })).ConfigureAwait(false);
 
         Assert.IsTrue(validationResult.IsValid, validationResult.ErrorMessage);
@@ -102,6 +116,98 @@ public sealed class GitHubActionsCommandLineProviderTests
 
         Assert.IsFalse(validationResult.IsValid);
     }
+
+    [TestMethod]
+    [DataRow("test-results")]
+    [DataRow("SLOW-TESTS")]
+    [DataRow("coverage")]
+    [DataRow("all")]
+    [DataRow("test-results|slow-tests")]
+    [DataRow("test-results,slow-tests,coverage")]
+    [DataRow("test-results|TEST-RESULTS")]
+    public async Task ValidateOptionArgumentsAsync_ReturnsValid_ForStepSummarySectionsAsync(string value)
+    {
+        GitHubActionsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == GitHubActionsCommandLineOptions.GitHubActionsStepSummarySections);
+        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, value.Split('|')).ConfigureAwait(false);
+
+        Assert.IsTrue(validationResult.IsValid, validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("")]
+    [DataRow(" ")]
+    [DataRow("test-results,")]
+    public async Task ValidateOptionArgumentsAsync_ReturnsLocalizedError_WhenStepSummarySectionsIsEmptyAsync(string value)
+    {
+        GitHubActionsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == GitHubActionsCommandLineOptions.GitHubActionsStepSummarySections);
+        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, [value]).ConfigureAwait(false);
+
+        Assert.IsFalse(validationResult.IsValid);
+        Assert.AreEqual(GitHubActionsResources.EmptyStepSummarySections, validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow("unknown", "unknown")]
+    [DataRow("all|unknown", "unknown")]
+    [DataRow("test-results,bogus", "bogus")]
+    public async Task ValidateOptionArgumentsAsync_ReturnsLocalizedError_WhenStepSummarySectionIsUnknownAsync(string value, string invalidValue)
+    {
+        GitHubActionsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == GitHubActionsCommandLineOptions.GitHubActionsStepSummarySections);
+        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, value.Split('|')).ConfigureAwait(false);
+
+        Assert.IsFalse(validationResult.IsValid);
+        Assert.AreEqual(
+            string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.InvalidStepSummarySection, invalidValue),
+            validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public void TryParseStepSummarySections_IsCaseInsensitiveAndDuplicateSafe()
+    {
+        bool parsed = GitHubActionsStepSummarySectionsParser.TryParse(
+            [" TEST-RESULTS ", "slow-tests,SLOW-TESTS", "coverage,COVERAGE", "test-results"],
+            out GitHubActionsStepSummarySections sections,
+            out string? invalidValue,
+            out bool hasEmptyValue);
+
+        Assert.IsTrue(parsed);
+        Assert.AreEqual(GitHubActionsStepSummarySections.All, sections);
+        Assert.IsNull(invalidValue);
+        Assert.IsFalse(hasEmptyValue);
+    }
+
+    [TestMethod]
+    public void TryParseStepSummarySections_RejectsEmptySet()
+    {
+        bool parsed = GitHubActionsStepSummarySectionsParser.TryParse(
+            [],
+            out GitHubActionsStepSummarySections sections,
+            out string? invalidValue,
+            out bool hasEmptyValue);
+
+        Assert.IsFalse(parsed);
+        Assert.AreEqual(GitHubActionsStepSummarySections.None, sections);
+        Assert.IsNull(invalidValue);
+        Assert.IsTrue(hasEmptyValue);
+    }
+
+    [TestMethod]
+    public void GetSections_DefaultsToAll_WhenOptionIsAbsent()
+    {
+        GitHubActionsStepSummarySections sections = GitHubActionsStepSummarySectionsParser.GetSections(
+            new TestCommandLineOptions([]));
+
+        Assert.AreEqual(GitHubActionsStepSummarySections.All, sections);
+    }
+
+    [TestMethod]
+    public void ToPersistedValues_AllIncludesCoverage()
+        => Assert.AreSequenceEqual(
+            ["test-results", "slow-tests", "coverage"],
+            GitHubActionsStepSummarySectionsParser.ToPersistedValues(GitHubActionsStepSummarySections.All));
 
     [TestMethod]
     public async Task ValidateOptionArgumentsAsync_ReturnsInvalid_WhenSlowTestNoticesValueIsNotOnOrOffAsync()
