@@ -14,8 +14,8 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 /// </summary>
 /// <remarks>
 /// <see cref="Directory.SetCurrentDirectory(string)"/> is process-global, so both tests declare
-/// <see cref="WellKnownResources.CurrentDirectory"/> to serialize against any other test in this
-/// assembly that touches the current directory. Each test restores the original value in a
+/// <see cref="WellKnownResources.CurrentDirectory"/> to serialize against readers and writers that
+/// declare the same resource. Each test restores the original value in a
 /// <see langword="finally"/> block, so a class-wide <see cref="ResourceLockAttribute"/> (reacquired per
 /// test under method-level parallelization) is sufficient; no state survives across tests.
 /// </remarks>
