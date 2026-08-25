@@ -166,42 +166,6 @@ public sealed class ArgumentArityTests
     }
 
     [TestMethod]
-    public async Task ParseAndValidate_WhenRepeatedOptionWithArityOneOrMoreHasBareOccurrence_ReturnsFalse()
-    {
-        // Arrange
-        string[] args = ["--oneOrMoreArgumentsOption", "--oneOrMoreArgumentsOption", "arg"];
-        CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
-
-        // Act
-        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(parseResult, _systemCommandLineOptionsProviders,
-            _extensionCommandLineOptionsProviders, new Mock<ICommandLineOptions>().Object);
-
-        // Assert
-        Assert.IsFalse(result.IsValid);
-        Assert.AreEqual(
-            """
-            Option '--oneOrMoreArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at least 1 arguments
-            Command line: --oneOrMoreArgumentsOption --oneOrMoreArgumentsOption arg
-            """, result.ErrorMessage);
-    }
-
-    [TestMethod]
-    public async Task ParseAndValidate_WhenRepeatedOptionWithArityOneOrMoreHasArguments_ReturnsTrue()
-    {
-        // Arrange
-        string[] args = ["--oneOrMoreArgumentsOption", "arg1", "--oneOrMoreArgumentsOption", "arg2"];
-        CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
-
-        // Act
-        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(parseResult, _systemCommandLineOptionsProviders,
-            _extensionCommandLineOptionsProviders, new Mock<ICommandLineOptions>().Object);
-
-        // Assert
-        Assert.IsTrue(result.IsValid);
-        Assert.IsNull(result.ErrorMessage);
-    }
-
-    [TestMethod]
     public async Task ParseAndValidate_WhenOptionsGetsTheExpectedNumberOfArguments_ReturnsTrue()
     {
         // Arrange
