@@ -74,6 +74,8 @@
   -->
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.Testing" ExcludeAssets="all" />
+    <PackageReference Include="Microsoft.Build.Framework" VersionOverride="18.9.6" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" VersionOverride="18.9.6" />
     <PackageReference Include="Microsoft.Playwright.MSTest.v4" ExcludeAssets="all" />
   </ItemGroup>
 
