@@ -31,6 +31,12 @@ imports:
 - shared/formatting.md
 - shared/reporting.md
 safe-outputs:
+  # Pin the detector: the default `detection` alias has emitted Markdown-wrapped
+  # result JSON that gh-aw cannot parse (#10711). Same fix as #10684.
+  threat-detection:
+    engine:
+      id: copilot
+      model: gpt-5-mini
   create-pull-request:
     expires: 1d
     labels:
