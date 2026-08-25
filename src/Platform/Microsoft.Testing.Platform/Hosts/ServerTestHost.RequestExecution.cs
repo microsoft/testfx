@@ -74,63 +74,67 @@ internal sealed partial class ServerTestHost
         cancellationToken.ThrowIfCancellationRequested();
 
         ITestSessionContext perRequestTestSessionContext = perRequestServiceProvider.GetTestSessionContext();
-        StopPoliciesService applicationPoliciesService = perRequestServiceProvider.GetRequiredService<StopPoliciesService>();
-        StopPoliciesService requestPoliciesService = new(perRequestServiceProvider.GetTestApplicationCancellationTokenSource())
-        {
-            ProcessRole = applicationPoliciesService.ProcessRole,
-        };
-        perRequestServiceProvider.ReplaceService<IStopPoliciesService>(requestPoliciesService);
-        perRequestServiceProvider.ReplaceService<ITestApplicationProcessExitCode>(new TestApplicationResult(
-            perRequestServiceProvider.GetOutputDevice(),
-            perRequestServiceProvider.GetCommandLineOptions(),
-            perRequestServiceProvider.GetEnvironment(),
-            requestPoliciesService,
-            perRequestServiceProvider.GetPlatformOTelService(),
-            perRequestServiceProvider.GetRequiredService<ITestCoverageResult>()));
-
-        // The JSON-RPC payload owns server request selection. Providers receive a server-origin
-        // context so they can explicitly opt out; non-empty contributions are rejected below.
-        ServerTestExecutionRequestFactory requestFactory = new(async (session, requestCancellationToken) =>
-        {
-            ICollection<TestNode>? testNodes = args.TestNodes;
-            string? filter = args.GraphFilter;
-            ITestExecutionFilter executionFilter = testNodes is not null
-                ? new TestNodeUidListFilter(testNodes.Select(node => node.Uid).ToArray())
-                : filter is not null
-                    ? new TreeNodeFilter(filter)
-                    : new NopFilter();
-
-            TestExecutionRequestKind requestKind = method switch
-            {
-                JsonRpcMethods.TestingRunTests => TestExecutionRequestKind.Run,
-                JsonRpcMethods.TestingDiscoverTests => TestExecutionRequestKind.Discovery,
-                _ => throw new NotImplementedException($"Request not implemented '{method}'"),
-            };
-
-            executionFilter = await TestExecutionFilterComposer.ComposeAsync(
-                executionFilter,
-                [.. perRequestServiceProvider.Services.OfType<ITestExecutionFilterProvider>()],
-                new TestExecutionFilterContext(requestKind, TestExecutionRequestOrigin.Server),
-                allowProviderContributions: false,
-                requestCancellationToken).ConfigureAwait(false);
-
-            return requestKind == TestExecutionRequestKind.Run
-                ? new RunTestExecutionRequest(session, executionFilter)
-                : new DiscoverTestExecutionRequest(session, executionFilter);
-        });
-
-        // Build the per request objects
-        ServerTestExecutionFilterFactory filterFactory = new();
-        TestHostTestFrameworkInvoker invoker = new(perRequestServiceProvider);
-        PerRequestServerDataConsumer testNodeUpdateProcessor = new(perRequestServiceProvider, this, args.RunId, perRequestServiceProvider.GetTask());
-
-        DateTimeOffset adapterLoadStart = _clock.UtcNow;
-        DateTimeOffset adapterLoadStop;
-        DateTimeOffset requestExecuteStart;
+        StopPoliciesService? requestPoliciesService = null;
+        PerRequestServerDataConsumer? testNodeUpdateProcessor = null;
+        DateTimeOffset adapterLoadStart = default;
+        DateTimeOffset adapterLoadStop = default;
+        DateTimeOffset requestExecuteStart = default;
         DateTimeOffset? requestExecuteStop = null;
         IGracefulStopTestExecutionCapability? perRequestGracefulStopCapability = null;
         try
         {
+            StopPoliciesService applicationPoliciesService = perRequestServiceProvider.GetRequiredService<StopPoliciesService>();
+            requestPoliciesService = new(perRequestServiceProvider.GetTestApplicationCancellationTokenSource())
+            {
+                ProcessRole = applicationPoliciesService.ProcessRole,
+            };
+            perRequestServiceProvider.ReplaceService<IStopPoliciesService>(requestPoliciesService);
+            perRequestServiceProvider.ReplaceService<ITestApplicationProcessExitCode>(new TestApplicationResult(
+                perRequestServiceProvider.GetOutputDevice(),
+                perRequestServiceProvider.GetCommandLineOptions(),
+                perRequestServiceProvider.GetEnvironment(),
+                requestPoliciesService,
+                perRequestServiceProvider.GetPlatformOTelService(),
+                perRequestServiceProvider.GetRequiredService<ITestCoverageResult>()));
+
+            // The JSON-RPC payload owns server request selection. Providers receive a server-origin
+            // context so they can explicitly opt out; non-empty contributions are rejected below.
+            ServerTestExecutionRequestFactory requestFactory = new(async (session, requestCancellationToken) =>
+            {
+                ICollection<TestNode>? testNodes = args.TestNodes;
+                string? filter = args.GraphFilter;
+                ITestExecutionFilter executionFilter = testNodes is not null
+                    ? new TestNodeUidListFilter(testNodes.Select(node => node.Uid).ToArray())
+                    : filter is not null
+                        ? new TreeNodeFilter(filter)
+                        : new NopFilter();
+
+                TestExecutionRequestKind requestKind = method switch
+                {
+                    JsonRpcMethods.TestingRunTests => TestExecutionRequestKind.Run,
+                    JsonRpcMethods.TestingDiscoverTests => TestExecutionRequestKind.Discovery,
+                    _ => throw new NotImplementedException($"Request not implemented '{method}'"),
+                };
+
+                executionFilter = await TestExecutionFilterComposer.ComposeAsync(
+                    executionFilter,
+                    [.. perRequestServiceProvider.Services.OfType<ITestExecutionFilterProvider>()],
+                    new TestExecutionFilterContext(requestKind, TestExecutionRequestOrigin.Server),
+                    allowProviderContributions: false,
+                    requestCancellationToken).ConfigureAwait(false);
+
+                return requestKind == TestExecutionRequestKind.Run
+                    ? new RunTestExecutionRequest(session, executionFilter)
+                    : new DiscoverTestExecutionRequest(session, executionFilter);
+            });
+
+            // Build the per request objects
+            ServerTestExecutionFilterFactory filterFactory = new();
+            TestHostTestFrameworkInvoker invoker = new(perRequestServiceProvider);
+            testNodeUpdateProcessor = new(perRequestServiceProvider, this, args.RunId, perRequestServiceProvider.GetTask());
+
+            adapterLoadStart = _clock.UtcNow;
+
             // Add the client info service to the per request service provider
             RoslynDebug.Assert(_clientInfoService is not null, "Request should only have been called after initialization");
             perRequestServiceProvider.TryAddService(_clientInfoService);
@@ -196,9 +200,17 @@ internal sealed partial class ServerTestHost
                 UnregisterActiveGracefulStopCapability(perRequestGracefulStopCapability);
             }
 
+            bool requestPoliciesServiceOwnedByProvider =
+                requestPoliciesService is not null && perRequestServiceProvider.Services.Contains(requestPoliciesService);
+
             // Cleanup all services
             // We skip all services that are "cloned" per call because are reused and will be disposed on shutdown.
             await DisposeServiceProviderAsync(perRequestServiceProvider, obj => !ServiceProvider.Services.Contains(obj)).ConfigureAwait(false);
+
+            if (!requestPoliciesServiceOwnedByProvider)
+            {
+                requestPoliciesService?.Dispose();
+            }
 
             // We need to dispose this service manually because the shared DisposeServiceProviderAsync skip some special service like the ITestApplicationCooperativeLifetimeService
             // that needs to be disposed at process exits.
@@ -208,6 +220,7 @@ internal sealed partial class ServerTestHost
 
         DateTimeOffset requestStop = _clock.UtcNow;
         RoslynDebug.Assert(requestExecuteStop != null);
+        RoslynDebug.Assert(testNodeUpdateProcessor is not null);
 
         bool isRunRequest = method switch
         {
