@@ -46,7 +46,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     private readonly bool _traceEnabled;
     private readonly ILogger<HangDumpProcessLifetimeHandler> _logger;
     private readonly ManualResetEventSlim _waitConsumerPipeName = new(false);
-    private readonly List<string> _dumpFiles = [];
+    private readonly ConcurrentQueue<string> _dumpFiles = [];
 
     // Guards the "take the dump only once" gate (_dumpTaken) together with publishing the running
     // dump task (_activityIndicatorTask), so disposal always observes and awaits the winning dump.
@@ -525,6 +525,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
             await QueryOnceAndDumpTreeAsync(
                 bottomUpTree,
+                _task,
                 GetInProgressTestsAsync,
                 async (p, inProgressTests, ct) =>
                 {
@@ -632,6 +633,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     /// </remarks>
     internal static async Task QueryOnceAndDumpTreeAsync(
         IEnumerable<IProcess> bottomUpTree,
+        ITask task,
         Func<CancellationToken, Task<(string, int)[]>> queryInProgressTestsAsync,
         Func<IProcess, (string, int)[], CancellationToken, Task> dumpProcessAsync,
         CancellationToken cancellationToken)
@@ -647,10 +649,10 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         List<Task> dumpTasks = [];
         foreach (IProcess p in bottomUpTree)
         {
-            dumpTasks.Add(dumpProcessAsync(p, inProgressTests, cancellationToken));
+            dumpTasks.Add(task.Run(() => dumpProcessAsync(p, inProgressTests, cancellationToken), CancellationToken.None));
         }
 
-        await Task.WhenAll(dumpTasks).ConfigureAwait(false);
+        await task.WhenAll([.. dumpTasks]).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -818,7 +820,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             if (dumpType.HasValue)
             {
                 diagnosticsClient.WriteDump(dumpType.Value, dumpFileNames.WriteDumpFileName, logDumpGeneration: false);
-                _dumpFiles.Add(dumpFileNames.ArtifactDumpFileName);
+                _dumpFiles.Enqueue(dumpFileNames.ArtifactDumpFileName);
             }
         }
         catch (Exception e)
@@ -843,7 +845,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             if (miniDumpTypeOption.HasValue)
             {
                 MiniDumpWriteDump.CollectDumpUsingMiniDumpWriteDump(process.Id, finalDumpFileName, miniDumpTypeOption.Value);
-                _dumpFiles.Add(finalDumpFileName);
+                _dumpFiles.Enqueue(finalDumpFileName);
             }
         }
         catch (Exception e)

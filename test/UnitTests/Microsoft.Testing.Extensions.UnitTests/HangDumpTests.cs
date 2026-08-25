@@ -167,11 +167,13 @@ public sealed class HangDumpTests
         // the tree, so a six-process tree must still pay it exactly once and then dump every process.
         int queryCount = 0;
         IProcess[] bottomUpTree = [.. Enumerable.Range(0, 6).Select(_ => Mock.Of<IProcess>())];
-        List<IProcess> dumped = [];
-        List<(string, int)[]> annotations = [];
+        ConcurrentQueue<IProcess> dumped = [];
+        ConcurrentQueue<(string, int)[]> annotations = [];
+        (string, int)[] expectedAnnotations = [];
 
         await HangDumpProcessLifetimeHandler.QueryOnceAndDumpTreeAsync(
             bottomUpTree,
+            new SystemTask(),
             cancellationToken =>
             {
                 Interlocked.Increment(ref queryCount);
@@ -182,7 +184,7 @@ public sealed class HangDumpTests
                     async queryCancellationToken =>
                     {
                         await Task.Delay(Timeout.Infinite, queryCancellationToken);
-                        return [];
+                        return expectedAnnotations;
                     },
                     TimeSpan.FromMilliseconds(50),
                     _ => Task.CompletedTask,
@@ -190,20 +192,24 @@ public sealed class HangDumpTests
             },
             (process, inProgressTests, _) =>
             {
-                dumped.Add(process);
-                annotations.Add(inProgressTests);
+                dumped.Enqueue(process);
+                annotations.Enqueue(inProgressTests);
                 return Task.CompletedTask;
             },
             CancellationToken.None);
 
         Assert.AreEqual(1, queryCount);
-        Assert.AreSequenceEqual(bottomUpTree, dumped);
+        Assert.HasCount(bottomUpTree.Length, dumped);
+        foreach (IProcess process in bottomUpTree)
+        {
+            Assert.Contains(process, dumped);
+        }
 
         // Every dump is annotated with the answer from that one query, so no process triggers another.
         Assert.HasCount(bottomUpTree.Length, annotations);
         foreach ((string, int)[] annotation in annotations)
         {
-            Assert.AreSame(annotations[0], annotation);
+            Assert.AreSame(expectedAnnotations, annotation);
         }
     }
 
@@ -212,11 +218,12 @@ public sealed class HangDumpTests
     {
         IProcess[] bottomUpTree = [.. Enumerable.Range(0, 6).Select(_ => Mock.Of<IProcess>())];
         TaskCompletionSource<bool> allDumpsStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        TaskCompletionSource<bool> releaseDumps = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        using ManualResetEventSlim releaseDumps = new();
         int startedDumpCount = 0;
 
         Task dumpTreeTask = HangDumpProcessLifetimeHandler.QueryOnceAndDumpTreeAsync(
             bottomUpTree,
+            new SystemTask(),
             _ => Task.FromResult<(string, int)[]>([]),
             (_, _, _) =>
             {
@@ -225,7 +232,8 @@ public sealed class HangDumpTests
                     allDumpsStarted.TrySetResult(true);
                 }
 
-                return releaseDumps.Task;
+                releaseDumps.Wait(TestContext.CancellationToken);
+                return Task.CompletedTask;
             },
             CancellationToken.None);
 
@@ -237,7 +245,7 @@ public sealed class HangDumpTests
         }
         finally
         {
-            releaseDumps.TrySetResult(true);
+            releaseDumps.Set();
         }
 
         await dumpTreeTask;
