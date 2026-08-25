@@ -27,6 +27,7 @@ safe-outputs:
     report-as-issue: false
   create-issue:
     expires: 2d
+    title-prefix: "[quality-improver] "
     labels: [type/tech-debt, type/automation]
     max: 1
 
@@ -69,7 +70,23 @@ The history file should contain:
       "date": "2024-01-15",
       "focus_area": "code-quality",
       "custom": false,
-      "description": "Static analysis and code quality metrics"
+      "description": "Static analysis and code quality metrics",
+      "findings": [
+        {
+          "issue": 10577,
+          "slug": "obsolete-api-missing-diagnosticid",
+          "files": [
+            "src/Platform/Microsoft.Testing.Platform/TestHost/ITestHostManager.cs",
+            "src/Platform/Microsoft.Testing.Platform/Messages/TestNodeStateProperties.cs",
+            "src/Adapter/MSTest.TestAdapter/VSTestAdapter/MSTestExecutor.cs"
+          ],
+          "symbols": [
+            "ITestHostManager.AddTestSessionLifetimeHandle",
+            "CancelledTestNodeStateProperty",
+            "MSTestExecutor.RunTests"
+          ]
+        }
+      ]
     }
   ],
   "recent_areas": ["code-quality", "documentation", "testing", "security", "performance"],
@@ -81,6 +98,15 @@ The history file should contain:
   }
 }
 ```
+
+`findings` is the part that matters for deduplication. Each entry records what a
+run actually filed — the issue number, a short stable slug, and the concrete
+anchors the finding rests on (repo-relative file paths and fully-qualified
+symbol names). `focus_area` is a label the agent invents and is **not** a
+reliable identity for a finding.
+
+Read the `findings` of **every** run in the file, not just the runs covered by
+`recent_areas`. `recent_areas` is a 5-entry window; findings are not windowed.
 
 ### 0.2 Select Focus Area
 
@@ -118,6 +144,41 @@ Choose a focus area based on the following strategy to maximize diversity and re
 - **Else if number ≤ 90**: Select a standard category that hasn't been used in the last 3 runs
 - **Else**: Reuse the most common or impactful focus area from the last 10 runs
 - Update the history file with the selected focus area, whether it was custom, and a brief description
+
+### 0.3 Reject Candidate Findings You Have Already Filed
+
+This is a gate you apply **after** Phase 1 has produced a candidate finding, but
+it is stated here because it decides whether the focus area you just picked is
+usable at all. Come back to this section before writing any report.
+
+Compare the candidate against the `findings` recorded in `history.json`.
+
+Compare by **anchors**, never by focus-area name:
+
+- **File overlap** — do the candidate's file paths intersect a recorded finding's `files`?
+- **Symbol overlap** — does it name any of the same types, members or attributes as a recorded finding's `symbols`?
+
+If a recorded finding shares its central files and symbols with the candidate,
+it is the same finding. A new focus-area name, a new title, a different metric
+count, and a different task breakdown do not make it a new finding.
+
+> Comparing focus-area names is what this workflow used to do, and it does not
+> work, because the name is invented fresh on each run. Worked example:
+> `obsolete-api-diagnostic-metadata-gap` (#10577, 50 `[Obsolete]` sites) and
+> `obsolete-attribute-deprecation-consistency` (#10660, 51 `[Obsolete]` sites)
+> passed the name check eight days apart. They were the same audit: both named
+> `ITestHostManager.AddTestSessionLifetimeHandle`, the `#else` branch of
+> `CancelledTestNodeStateProperty`, and the `#if DEBUG`-gated
+> `MSTestExecutor.RunTests` that is invisible in Release builds.
+
+When the candidate matches a recorded finding:
+
+1. Prefer commenting on the recorded issue, but only if this run genuinely adds
+   something the issue does not already say.
+2. Otherwise discard the candidate and go back to 0.2 for a different area.
+3. If no unfiled finding survives, file nothing. `noop` is configured with
+   `report-as-issue: false`, so producing no output is a supported, correct
+   result. A run that files nothing is better than a run that refiles.
 
 ## Phase 1: Conduct Analysis
 
@@ -278,6 +339,47 @@ ls .github/ISSUE_TEMPLATE/ 2>/dev/null
 find .github/workflows -name "*.yml" -exec wc -l {} \; | sort -rn | head -5
 ```
 
+## Phase 1.5: Check the Issue Tracker Before Filing
+
+The cache in Phase 0 is a convenience, not the record. It can be evicted, and it
+only knows about runs of this workflow. The issue tracker is the durable check,
+so run it every time, even when Phase 0.3 found nothing.
+
+First, check if a duplicate already exists, and if so, consider adding a comment
+to the existing issue instead of creating a new one, if you have something new
+to add.
+
+Search **both open and recently closed** issues. Closed issues matter here more
+than usual: `create-issue` is configured with `expires: 2d`, so this workflow's
+own reports are closed automatically about 48 hours after filing whether or not
+anybody read them. A closed issue is therefore not evidence that the finding was
+seen, rejected, or fixed — treat an auto-expired report as still-open work.
+
+Use the GitHub issue-search tools for this (the `github` toolset is available and
+the workflow has `issues: read`). Run two searches, both with state `all`:
+
+1. **This workflow's own back catalogue** — search for
+   `gh-aw-workflow-call-id: ${{ github.repository }}/repository-quality-improver`,
+   which every report it has ever filed carries in a trailing HTML comment.
+2. **The rest of the tracker** — search for the finding's anchors: the symbol
+   names and file names it rests on.
+
+Search for **anchors**, not for the wording of your title. Titles are written
+fresh each run and will not match each other.
+
+Then decide:
+
+- **An open issue already covers it** — comment there if you have something new,
+  otherwise file nothing.
+- **A closed issue covers it and the underlying problem is fixed** — verify in
+  the working tree that the code actually changed, then file nothing.
+- **A closed issue covers it and the code is unchanged** — the report expired
+  unread. Do not restate it as a new issue. Comment on the existing issue.
+- **Nothing covers it** — proceed to Phase 2.
+
+Filing nothing is a supported outcome (`noop: report-as-issue: false`). Prefer it
+over a near-duplicate.
+
 ## Phase 2: Generate Improvement Report
 
 Write a comprehensive report as a GitHub issue with the following structure:
@@ -375,10 +477,20 @@ mkdir -p /tmp/gh-aw/cache-memory-focus-areas/
 ```
 
 The JSON should include:
-- All previous runs (preserve existing history)
+- All previous runs (preserve existing history, including their `findings`)
 - The new run: date, focus_area, custom (true/false), description, tasks_generated
+- The new run's `findings` — one entry per finding filed, each with:
+  - `issue`: the number of the issue created (omit if this run filed nothing)
+  - `slug`: a short, stable identifier for the finding itself
+  - `files`: the repo-relative paths the finding rests on, e.g. `src/Adapter/MSTest.TestAdapter/VSTestAdapter/MSTestExecutor.cs`
+  - `symbols`: the fully-qualified types and members it names, e.g. `ITestHostManager.AddTestSessionLifetimeHandle`
 - Updated `recent_areas` (last 5)
 - Updated statistics (total_runs, custom_rate, unique_areas_explored)
+
+Record `findings` even when you decide not to file, so a later run knows the
+ground was already covered. Never truncate or drop `findings` from older runs:
+`recent_areas` is a 5-run window, but a finding stays relevant long after it
+leaves that window, and dropping it is what lets the same audit be filed twice.
 
 ## Success Criteria
 
@@ -386,15 +498,16 @@ A successful quality improvement run:
 - ✅ Selects a focus area using the diversity algorithm (60% custom, 30% standard, 10% reuse)
 - ✅ Determines the repository's primary language(s) and adapts analysis accordingly
 - ✅ Conducts thorough analysis of the selected area
-- ✅ Generates exactly one issue with the report
+- ✅ Checks the candidate finding against `history.json` findings and the issue tracker before filing
+- ✅ Generates at most one issue, and none at all when the finding is already filed
 - ✅ Includes 3–5 actionable tasks
-- ✅ Updates cache memory with run history
+- ✅ Updates cache memory with run history, including per-finding file paths and symbols
 - ✅ Maintains high diversity rate (aim for 60%+ custom or varied strategies)
 
 ## Important Guidelines
 
 - **Prioritize Custom Areas**: 60% of runs should invent new, repository-specific focus areas
-- **Avoid Repetition**: Don't select the same area in consecutive runs
+- **Avoid Repetition**: Don't select the same area in consecutive runs, and don't refile a finding already recorded in `history.json` or already present in the issue tracker. Compare by file paths and symbol names (Phase 0.3), not by focus-area name — renaming the area is how a repeat slips through.
 - **Be Creative**: Think beyond the standard categories — what unique aspects of this project need attention?
 - **Be Thorough**: Collect relevant metrics and perform meaningful analysis
 - **Be Specific**: Provide exact file paths, line numbers, and code examples where relevant
