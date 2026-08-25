@@ -249,8 +249,9 @@ bundle that every run downloads to `${{ runner.temp }}/gh-aw/actions`.
 **Status.** Mitigated by pinning the detector to a model that does not add the emphasis, rather than
 by changing the parser. `safe-outputs.threat-detection.engine.model: gpt-5-mini` was applied to the
 expert-review workflows in [#10684](https://github.com/microsoft/testfx/pull/10684) and to every
-remaining workflow that runs threat detection. Runs after the pin locate and parse the marker with
-no error.
+remaining workflow that runs threat detection in
+[#10729](https://github.com/microsoft/testfx/pull/10729). Runs after the pin locate and parse the
+marker with no error.
 
 **What to do.** Check that the workflow's source, or a `shared/*.md` it imports, declares the pin,
 and add it if a newly added workflow was missed:
