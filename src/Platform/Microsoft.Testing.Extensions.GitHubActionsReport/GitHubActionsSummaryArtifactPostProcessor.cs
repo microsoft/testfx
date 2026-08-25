@@ -100,7 +100,7 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
         // other steps also write to, and it is that file GitHub measures. Seeding the budget with what is already
         // there is what makes the degradation bound the artifact GitHub sees. Measured once — a refused write
         // leaves the file untouched, so the fallback below faces the same length.
-        long alreadyWritten = writer.GetSummaryLength() ?? 0;
+        long alreadyWritten = writer.GetSummaryLengthExcludingSection(aggregationId);
         GitHubActionsSummaryReporter.AggregateRenderResult rendered = alreadyWritten == 0
             ? artifact
             : GitHubActionsSummaryReporter.BuildAggregateMarkdown(aggregate, _includeFailureDetails, condenseAllModules: false, alreadyWritten);

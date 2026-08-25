@@ -221,11 +221,12 @@ internal sealed class StepSummaryWriter
             cancellationToken.ThrowIfCancellationRequested();
 
             byte[] pendingPayload;
+            long lengthAtCapture;
 
             IFileStream stream;
             try
             {
-                stream = _fileSystem.NewFileStream(Path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
+                stream = _fileSystem.NewFileStream(Path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
             }
             catch (IOException) when (attempt < _maxAttempts)
             {
@@ -283,16 +284,21 @@ internal sealed class StepSummaryWriter
                 // can destroy content: everything earlier projects wrote only survives if the replacement
                 // completes. Truncating in place would leave the summary empty if the write were abandoned midway
                 // — on cancellation during session teardown, or a full disk — which is a worse outcome than the
-                // oversized summary this whole path exists to avoid, and a silent one. Build the new content in a
-                // temporary file and swap it in instead, so the summary is only ever replaced by a complete file.
-                //
-                // The exclusive handle has to be released before the swap, because a file that is open cannot be
-                // replaced. The lock file held for this whole method is what keeps a sibling out of that gap.
+                // Hoisting or upgrading the notice means replacing the file, which is the one operation here that
+                // can destroy content: everything earlier projects wrote only survives if the replacement
+                // completes. Rewriting in place would leave the summary garbled — or, if it were truncated first,
+                // empty — when the write is abandoned midway on a full disk or during session teardown. Build the
+                // new content in a temporary file and swap it in instead, so the summary is only ever replaced by
+                // a complete file.
                 pendingPayload = encoding.GetBytes(pendingNotice + StripLeadingTruncationNotice(existing) + content);
                 if (pendingPayload.Length > maxTotalBytes)
                 {
                     return false;
                 }
+
+                // Measured while this process still holds the file exclusively, so it describes exactly the
+                // content the payload was built from.
+                lengthAtCapture = inner.Length;
             }
 
             string tempPath = Path + "." + Guid.NewGuid().ToString("N") + ".tmp";
@@ -302,6 +308,18 @@ internal sealed class StepSummaryWriter
                 {
                     await tempStream.Stream.WriteAsync(pendingPayload, 0, pendingPayload.Length, cancellationToken).ConfigureAwait(false);
                     await tempStream.Stream.FlushAsync(cancellationToken).ConfigureAwait(false);
+                }
+
+                // The handle has to be released before the swap, because a file that is open cannot be replaced,
+                // and this extension's lock only covers its own writers — a test framework appending its own block
+                // in that gap is not excluded by it. Re-measure and start over if the file moved, so an append
+                // that landed during staging is carried into the next attempt instead of being overwritten by a
+                // snapshot taken before it.
+                if (GetSummaryLength() is long lengthBeforeSwap
+                    && lengthBeforeSwap != lengthAtCapture
+                    && attempt < _maxAttempts)
+                {
+                    continue;
                 }
 
                 // Past this point the replacement is complete on disk, so the swap either happens or it does not;
@@ -449,24 +467,79 @@ internal sealed class StepSummaryWriter
     }
 
     /// <summary>
-    /// Counts the full test project sections this extension has written to the shared summary file.
+    /// Measures the shared summary file, discounting the section this run is about to replace.
     /// </summary>
     /// <remarks>
-    /// Failing tests' messages and stack traces are copied verbatim into the summary inside fenced code blocks,
-    /// so the marker text can appear there — on its own line — as ordinary user-controlled content. Only a marker
-    /// occupying a whole line <em>outside</em> a fence counts, otherwise a test could inflate the project count
-    /// the truncation note reports simply by printing the marker.
+    /// Reprocessing writes over its own previous output rather than adding to it, so counting that output as
+    /// occupied space would make a re-run condense or drop modules that fit perfectly well once the old block
+    /// is gone.
     /// </remarks>
-    internal static int CountProjectSections(string summary)
+    internal long GetSummaryLengthExcludingSection(string aggregationId)
     {
-        int count = 0;
-        int fenceLength = 0;
-        foreach (string rawLine in summary.Split('\n'))
+        try
         {
-            string line = rawLine.TrimEnd('\r');
+            if (!_fileSystem.ExistFile(Path))
+            {
+                return 0;
+            }
 
-            // Fences are chosen longer than the longest backtick run in the body they wrap, so a fence only ever
-            // closes on a run at least as long as the one that opened it.
+            string existing;
+            using (IFileStream stream = _fileSystem.NewFileStream(Path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
+            using (var reader = new StreamReader(stream.Stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true))
+            {
+                existing = reader.ReadToEnd();
+            }
+
+            int start = IndexOfMarkerLine(existing, BuildSectionStartMarker(aggregationId));
+            if (start < 0)
+            {
+                return Encoding.UTF8.GetByteCount(existing);
+            }
+
+            string endMarker = BuildSectionEndMarker(aggregationId);
+            int end = IndexOfMarkerLine(existing, endMarker, start);
+            return end < 0
+                ? Encoding.UTF8.GetByteCount(existing)
+                : Encoding.UTF8.GetByteCount(existing.Remove(start, end + endMarker.Length - start));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException)
+        {
+            if (_logger.IsEnabled(LogLevel.Trace))
+            {
+                _logger.LogTrace($"Could not measure '{Path}': {ex.Message}");
+            }
+
+            return 0;
+        }
+    }
+
+    private static string BuildSectionStartMarker(string aggregationId)
+        => $"<!-- microsoft-testing-platform:{GitHubActionsSummaryArtifactPostProcessor.Provider}:{aggregationId}:start -->";
+
+    private static string BuildSectionEndMarker(string aggregationId)
+        => $"<!-- microsoft-testing-platform:{GitHubActionsSummaryArtifactPostProcessor.Provider}:{aggregationId}:end -->";
+
+    /// <summary>
+    /// Enumerates the lines of <paramref name="content"/> that are <em>not</em> inside a fenced code block,
+    /// yielding each line's start offset and its text.
+    /// </summary>
+    /// <remarks>
+    /// Rendered failure messages and stack traces are copied verbatim into fenced blocks, so anything this
+    /// extension uses as a structural marker can also appear there as ordinary user-controlled text. Every
+    /// structural scan of the summary therefore has to skip fenced content, or a test could forge a marker.
+    /// Fences are chosen longer than the longest backtick run in the body they wrap, so a fence only closes on a
+    /// run at least as long as the one that opened it.
+    /// </remarks>
+    private static IEnumerable<(int Start, string Line)> EnumerateUnfencedLines(string content)
+    {
+        int fenceLength = 0;
+        int start = 0;
+        while (start <= content.Length)
+        {
+            int newline = content.IndexOf('\n', start);
+            int end = newline < 0 ? content.Length : newline;
+            string line = content.Substring(start, end - start).TrimEnd('\r');
+
             int backticks = 0;
             while (backticks < line.Length && line[backticks] == '`')
             {
@@ -478,19 +551,55 @@ internal sealed class StepSummaryWriter
                 if (backticks >= 3)
                 {
                     fenceLength = backticks;
-                    continue;
                 }
-            }
-            else
-            {
-                if (backticks >= fenceLength && line.Length == backticks)
+                else
                 {
-                    fenceLength = 0;
+                    yield return (start, line);
                 }
-
-                continue;
+            }
+            else if (backticks >= fenceLength && line.Length == backticks)
+            {
+                fenceLength = 0;
             }
 
+            if (newline < 0)
+            {
+                yield break;
+            }
+
+            start = newline + 1;
+        }
+    }
+
+    /// <summary>
+    /// Returns the offset of the first line equal to <paramref name="marker"/> that is not inside a fenced code
+    /// block, or <c>-1</c>.
+    /// </summary>
+    private static int IndexOfMarkerLine(string content, string marker, int searchFrom = 0)
+    {
+        foreach ((int start, string line) in EnumerateUnfencedLines(content))
+        {
+            if (start >= searchFrom && string.Equals(line, marker, StringComparison.Ordinal))
+            {
+                return start;
+            }
+        }
+
+        return -1;
+    }
+
+    /// <summary>
+    /// Counts the full test project sections this extension has written to the shared summary file.
+    /// </summary>
+    /// <remarks>
+    /// Only a marker occupying a whole line outside a fenced block counts, otherwise a test could inflate the
+    /// project count the truncation note reports simply by printing the marker in its failure output.
+    /// </remarks>
+    internal static int CountProjectSections(string summary)
+    {
+        int count = 0;
+        foreach ((_, string line) in EnumerateUnfencedLines(summary))
+        {
             if (string.Equals(line, GitHubActionsSummaryReporter.ProjectSectionMarker, StringComparison.Ordinal))
             {
                 count++;
@@ -515,8 +624,8 @@ internal sealed class StepSummaryWriter
         string? leadingNotice = null,
         long maxTotalBytes = long.MaxValue)
     {
-        string startMarker = $"<!-- microsoft-testing-platform:{GitHubActionsSummaryArtifactPostProcessor.Provider}:{aggregationId}:start -->";
-        string endMarker = $"<!-- microsoft-testing-platform:{GitHubActionsSummaryArtifactPostProcessor.Provider}:{aggregationId}:end -->";
+        string startMarker = BuildSectionStartMarker(aggregationId);
+        string endMarker = BuildSectionEndMarker(aggregationId);
         string section = $"{startMarker}\n{content.TrimEnd()}\n{endMarker}\n";
         // Keep one stable lock entry for the lifetime of the GitHub step. Deleting it after releasing the handle
         // would let a third writer create a new inode while a second writer still holds the unlinked old lock.
@@ -564,10 +673,14 @@ internal sealed class StepSummaryWriter
 #endif
                     }
 
-                    int start = existing.IndexOf(startMarker, StringComparison.Ordinal);
+                    // Both markers are written on lines of their own, and are matched that way — outside fenced
+                    // blocks. The section now carries rendered failure messages, so a test can print the exact
+                    // end-marker text inside its diagnostics; matching it anywhere would end the block early and
+                    // leave its stale tail behind on the next upsert.
+                    int start = IndexOfMarkerLine(existing, startMarker);
                     if (start >= 0)
                     {
-                        int end = existing.IndexOf(endMarker, start, StringComparison.Ordinal);
+                        int end = IndexOfMarkerLine(existing, endMarker, start);
                         if (end < 0)
                         {
                             throw new FormatException("The existing GitHub step summary contains an incomplete Microsoft Testing Platform summary section.");

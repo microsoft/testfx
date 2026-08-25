@@ -145,3 +145,4 @@ const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryRepor
 const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.SectionsRemovedNoticeStrength = 2 -> int
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.BuildNoticeStrengthToken(int strength) -> string!
 static Microsoft.Testing.Extensions.GitHubActionsReport.StepSummaryWriter.GetLeadingNoticeStrength(string! summary) -> int
+Microsoft.Testing.Extensions.GitHubActionsReport.StepSummaryWriter.GetSummaryLengthExcludingSection(string! aggregationId) -> long
