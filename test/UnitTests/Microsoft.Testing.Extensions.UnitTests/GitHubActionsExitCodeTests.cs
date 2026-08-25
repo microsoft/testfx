@@ -64,7 +64,11 @@ public sealed class GitHubActionsExitCodeTests
     {
         // 15 is the newest arm, so it is the one most likely to be dropped and silently answered by the
         // unknown fallback. Pin it to its own text so that regression is visible.
-        Assert.AreNotEqual(GitHubActionsExitCode.GetReason(255), GitHubActionsExitCode.GetReason(15));
+        string deadlineReason = GitHubActionsExitCode.GetReason(15);
+
+        Assert.AreNotEqual(GitHubActionsExitCode.GetReason(255), deadlineReason);
+        Assert.AreNotEqual(GitHubActionsExitCode.GetReason(13), deadlineReason);
+        Assert.IsFalse(string.IsNullOrWhiteSpace(deadlineReason));
         Assert.AreEqual("TestExecutionStoppedAtDeadline", GitHubActionsExitCode.GetName(15));
     }
 

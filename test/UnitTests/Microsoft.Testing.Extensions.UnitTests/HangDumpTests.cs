@@ -104,11 +104,13 @@ public sealed class HangDumpTests
         var maxTimerDueTime = TimeSpan.FromMilliseconds(uint.MaxValue - 1);
 
         TimeSpan firstInterval = HangDumpProcessLifetimeHandler.GetTimerDueTime(deadline, now);
-        TimeSpan secondInterval = HangDumpProcessLifetimeHandler.GetTimerDueTime(deadline, now + firstInterval);
+        DateTimeOffset afterFirstInterval = now + firstInterval;
+        TimeSpan secondInterval = HangDumpProcessLifetimeHandler.GetTimerDueTime(deadline, afterFirstInterval);
 
         Assert.AreEqual(maxTimerDueTime, firstInterval);
-        Assert.IsGreaterThan(firstInterval, deadline - now);
         Assert.IsGreaterThan(TimeSpan.Zero, secondInterval);
+        Assert.IsGreaterThan(secondInterval, firstInterval);
+        Assert.AreEqual(TimeSpan.Zero, HangDumpProcessLifetimeHandler.GetTimerDueTime(deadline, afterFirstInterval + secondInterval));
         Assert.AreEqual(TimeSpan.Zero, HangDumpProcessLifetimeHandler.GetTimerDueTime(deadline, deadline));
     }
 
