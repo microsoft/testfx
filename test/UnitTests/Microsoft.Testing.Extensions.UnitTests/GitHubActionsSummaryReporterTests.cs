@@ -667,9 +667,14 @@ public sealed class GitHubActionsSummaryReporterTests
         void AssertCarries(TestNodeStateProperty state, string expectedExplanation)
         {
             (string? Explanation, Exception? Exception)? info = GitHubActionsSummaryReporter.TryGetFailureInfo(state);
-            Assert.IsNotNull(info);
-            Assert.AreEqual(expectedExplanation, info.Value.Explanation);
-            Assert.AreSame(exception, info.Value.Exception);
+            if (info is not { } failureInfo)
+            {
+                Assert.Fail($"Expected {state.GetType().Name} to carry failure info.");
+                return;
+            }
+
+            Assert.AreEqual(expectedExplanation, failureInfo.Explanation);
+            Assert.AreSame(exception, failureInfo.Exception);
         }
     }
 
@@ -1443,6 +1448,62 @@ public sealed class GitHubActionsSummaryReporterTests
             await NewWriter(fileSystem, path, 1).AppendStepSummaryWithLeadingNoticeAsync("## More\n", GitHubActionsSummaryReporter.BuildTruncationNotice, CancellationToken.None);
 
             Assert.StartsWith(GitHubActionsSummaryReporter.TruncationNoticeMarker, File.ReadAllText(path));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public async Task AppendStepSummaryWithLeadingNoticeAsync_UpgradesAWeakerNotice_WhenSectionsAreRemoved()
+    {
+        string path = Path.GetTempFileName();
+        try
+        {
+            // An aggregate step already said "diagnostics were dropped". A later project whose whole section is
+            // condensed describes a worse loss: results are missing, not merely shortened. The weaker note must
+            // not suppress it, or the summary never says anything is gone.
+            File.WriteAllText(path, GitHubActionsSummaryReporter.BuildAggregateTruncationNotice(2, 5) + "## Earlier\n");
+            var fileSystem = new SystemFileSystem();
+
+            await NewWriter(fileSystem, path, 1).AppendStepSummaryWithLeadingNoticeAsync(
+                "## Later\n", GitHubActionsSummaryReporter.BuildTruncationNotice, CancellationToken.None);
+
+            string summary = File.ReadAllText(path);
+            Assert.StartsWith(GitHubActionsSummaryReporter.TruncationNoticeMarker, summary);
+            Assert.AreEqual(
+                GitHubActionsSummaryReporter.SectionsRemovedNoticeStrength,
+                StepSummaryWriter.GetLeadingNoticeStrength(summary));
+
+            // Exactly one notice survives: upgrading replaces, it does not stack.
+            AssertSingleNotice(summary);
+            Assert.Contains("## Earlier", summary);
+            Assert.Contains("## Later", summary);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    public async Task AppendStepSummaryWithLeadingNoticeAsync_KeepsTheStrongerNotice_WhenAWeakerOneFollows()
+    {
+        string path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, GitHubActionsSummaryReporter.BuildTruncationNotice(3) + "## Earlier\n");
+            var fileSystem = new SystemFileSystem();
+
+            await NewWriter(fileSystem, path, 1).AppendStepSummaryWithLeadingNoticeAsync(
+                "## Later\n", static _ => GitHubActionsSummaryReporter.BuildAggregateTruncationNotice(1, 4), CancellationToken.None);
+
+            string summary = File.ReadAllText(path);
+            Assert.AreEqual(
+                GitHubActionsSummaryReporter.SectionsRemovedNoticeStrength,
+                StepSummaryWriter.GetLeadingNoticeStrength(summary));
+            AssertSingleNotice(summary);
         }
         finally
         {

@@ -254,15 +254,15 @@ internal sealed class StepSummaryWriter
                 }
 
                 string existing = encoding.GetString(existingBytes, 0, totalRead);
-                // The marker must be at the very start of the file, which is the only place this code puts it.
-                // Failure messages are copied verbatim into the summary, so a test whose diagnostics contain the
-                // marker text would otherwise be mistaken for the notice and suppress the real warning — leaving
-                // a shortened summary that never says it was shortened.
-                bool noticeAlreadyPresent = HasLeadingTruncationNotice(existing);
 
-                if (noticeAlreadyPresent)
+                // The note already there only wins if it describes a loss at least as bad as this one. Two
+                // different losses share one marker so the summary never carries contradictory warnings, but a
+                // weaker "diagnostics were dropped" note must not suppress a later "whole sections were removed"
+                // note — that would leave results missing with nothing saying so.
+                string pendingNotice = noticeFactory(CountProjectSections(existing));
+                if (GetLeadingNoticeStrength(existing) >= GetLeadingNoticeStrength(pendingNotice))
                 {
-                    // The notice is already at the top, so this is a plain append and nothing existing is at risk.
+                    // Nothing to hoist or upgrade, so this is a plain append and nothing existing is at risk.
                     byte[] appended = encoding.GetBytes(content);
                     if (totalRead + appended.Length > maxTotalBytes)
                     {
@@ -279,16 +279,16 @@ internal sealed class StepSummaryWriter
                     return true;
                 }
 
-                // Hoisting the notice means replacing the file, which is the one operation here that can destroy
-                // content: everything earlier projects wrote only survives if the replacement completes.
-                // Truncating in place would leave the summary empty if the write were abandoned midway — on
-                // cancellation during session teardown, or a full disk — which is a worse outcome than the oversized
-                // summary this whole path exists to avoid, and a silent one. Build the new content in a temporary
-                // file and swap it in instead, so the summary is only ever replaced by a complete file.
+                // Hoisting or upgrading the notice means replacing the file, which is the one operation here that
+                // can destroy content: everything earlier projects wrote only survives if the replacement
+                // completes. Truncating in place would leave the summary empty if the write were abandoned midway
+                // — on cancellation during session teardown, or a full disk — which is a worse outcome than the
+                // oversized summary this whole path exists to avoid, and a silent one. Build the new content in a
+                // temporary file and swap it in instead, so the summary is only ever replaced by a complete file.
                 //
                 // The exclusive handle has to be released before the swap, because a file that is open cannot be
                 // replaced. The lock file held for this whole method is what keeps a sibling out of that gap.
-                pendingPayload = encoding.GetBytes(noticeFactory(CountProjectSections(existing)) + existing + content);
+                pendingPayload = encoding.GetBytes(pendingNotice + StripLeadingTruncationNotice(existing) + content);
                 if (pendingPayload.Length > maxTotalBytes)
                 {
                     return false;
@@ -400,6 +400,55 @@ internal sealed class StepSummaryWriter
         => summary.StartsWith(GitHubActionsSummaryReporter.TruncationNoticeMarker, StringComparison.Ordinal);
 
     /// <summary>
+    /// Returns how much loss the note at the top of <paramref name="summary"/> describes, or <c>0</c> when there
+    /// is no note. A note written before strengths were recorded reads as the weakest.
+    /// </summary>
+    internal static int GetLeadingNoticeStrength(string summary)
+    {
+        if (!HasLeadingTruncationNotice(summary))
+        {
+            return 0;
+        }
+
+        int end = summary.IndexOf(GitHubActionsSummaryReporter.TruncationNoticeEndMarker, StringComparison.Ordinal);
+        string head = end < 0 ? summary : summary.Substring(0, end);
+        for (int strength = GitHubActionsSummaryReporter.SectionsRemovedNoticeStrength; strength >= GitHubActionsSummaryReporter.DetailsOmittedNoticeStrength; strength--)
+        {
+            if (head.IndexOf(GitHubActionsSummaryReporter.BuildNoticeStrengthToken(strength), StringComparison.Ordinal) >= 0)
+            {
+                return strength;
+            }
+        }
+
+        return GitHubActionsSummaryReporter.DetailsOmittedNoticeStrength;
+    }
+
+    /// <summary>
+    /// Removes the note at the top of <paramref name="summary"/>, so a stronger one can take its place.
+    /// </summary>
+    private static string StripLeadingTruncationNotice(string summary)
+    {
+        if (!HasLeadingTruncationNotice(summary))
+        {
+            return summary;
+        }
+
+        int end = summary.IndexOf(GitHubActionsSummaryReporter.TruncationNoticeEndMarker, StringComparison.Ordinal);
+        if (end < 0)
+        {
+            return summary;
+        }
+
+        int after = end + GitHubActionsSummaryReporter.TruncationNoticeEndMarker.Length;
+        while (after < summary.Length && (summary[after] == '\n' || summary[after] == '\r'))
+        {
+            after++;
+        }
+
+        return summary.Substring(after);
+    }
+
+    /// <summary>
     /// Counts the full test project sections this extension has written to the shared summary file.
     /// </summary>
     /// <remarks>
@@ -509,13 +558,15 @@ internal sealed class StepSummaryWriter
                             : existing.TrimEnd() + "\n\n" + section;
                     }
 
-                    // Put the warning at the very top, where the reader meets it before the results it qualifies,
-                    // and only if no warning is there yet — the two writing modes share one marker so a summary
-                    // can never carry two of them.
+                    // Put the warning at the very top, where the reader meets it before the results it qualifies.
+                    // The two writing modes share one marker so a summary can never carry two of them, but a note
+                    // already there only wins if it describes a loss at least as bad as this one — otherwise a
+                    // weaker note would suppress a stronger one and the summary would never say results are
+                    // missing.
                     if (!RoslynString.IsNullOrWhiteSpace(leadingNotice)
-                        && !HasLeadingTruncationNotice(existing))
+                        && GetLeadingNoticeStrength(existing) < GetLeadingNoticeStrength(leadingNotice!))
                     {
-                        existing = leadingNotice + existing;
+                        existing = leadingNotice + StripLeadingTruncationNotice(existing);
                     }
 
                     // Measured in bytes, under the lock, against the content that is actually about to be written.

@@ -141,3 +141,7 @@ Microsoft.Testing.Extensions.GitHubActionsReport.StepSummaryWriter.AppendRendere
 Microsoft.Testing.Extensions.GitHubActionsReport.StepSummaryWriter.GetSummaryLength() -> long?
 static Microsoft.Testing.Extensions.GitHubActionsReport.StepSummaryWriter.HasLeadingTruncationNotice(string! summary) -> bool
 static Microsoft.Testing.Extensions.GitHubActionsReport.StepSummaryWriter.CountProjectSections(string! summary) -> int
+const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.DetailsOmittedNoticeStrength = 1 -> int
+const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.SectionsRemovedNoticeStrength = 2 -> int
+static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.BuildNoticeStrengthToken(int strength) -> string!
+static Microsoft.Testing.Extensions.GitHubActionsReport.StepSummaryWriter.GetLeadingNoticeStrength(string! summary) -> int

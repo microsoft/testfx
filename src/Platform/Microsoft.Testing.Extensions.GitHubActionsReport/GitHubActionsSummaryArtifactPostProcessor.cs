@@ -137,19 +137,17 @@ internal sealed class GitHubActionsSummaryArtifactPostProcessor(
                 condensed.Markdown,
                 cancellationToken,
                 GitHubActionsSummaryReporter.BuildTruncationNotice(0),
-                GitHubActionsFailureDetails.EffectiveStepSummaryLimit).ConfigureAwait(false))
+                GitHubActionsFailureDetails.EffectiveStepSummaryLimit).ConfigureAwait(false)
+                && logger.IsEnabled(LogLevel.Warning))
             {
                 // Both renderings were refused, so this run contributed nothing to the job summary. Saying so is
                 // the whole point of the refusal: the alternative is a summary that is silently missing a
                 // section, indistinguishable from a run that produced none.
-                if (logger.IsEnabled(LogLevel.Warning))
-                {
-                    logger.LogWarning(string.Format(
-                        CultureInfo.InvariantCulture,
-                        GitHubActionsResources.StepSummaryLimitExceededWarning,
-                        (writer.GetSummaryLength() ?? 0).ToString(CultureInfo.InvariantCulture),
-                        GitHubActionsFailureDetails.EffectiveStepSummaryLimit.ToString(CultureInfo.InvariantCulture)));
-                }
+                logger.LogWarning(string.Format(
+                    CultureInfo.InvariantCulture,
+                    GitHubActionsResources.StepSummaryLimitExceededWarning,
+                    (writer.GetSummaryLength() ?? 0).ToString(CultureInfo.InvariantCulture),
+                    GitHubActionsFailureDetails.EffectiveStepSummaryLimit.ToString(CultureInfo.InvariantCulture)));
             }
         }
 

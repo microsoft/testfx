@@ -65,10 +65,12 @@ internal readonly struct GitHubActionsFailureEntry
 /// <item>each value is clipped by line count (<see cref="MaxMessageRows"/> / <see cref="MaxStackTraceRows"/>),
 /// because a 200-line trace of one-word frames is under the character cap yet unreadable;</item>
 /// <item>the failure list itself is capped by the caller;</item>
-/// <item>expansion stops once the caller's remaining character budget is exhausted.</item>
+/// <item>expansion stops once the caller's remaining byte budget is exhausted.</item>
 /// </list>
 /// The budget is supplied by the caller rather than being a per-section constant, because the 1 MiB cap
-/// applies to the whole file — which several test projects share — not to one project's section.
+/// applies to the whole file — which several test projects share — not to one project's section. It is
+/// denominated in UTF-8 bytes, because that is what GitHub counts: a character budget would under-bill
+/// non-ASCII diagnostics by up to threefold.
 /// </remarks>
 internal static class GitHubActionsFailureDetails
 {

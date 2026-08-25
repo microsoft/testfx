@@ -28,6 +28,31 @@ internal sealed partial class GitHubActionsSummaryReporter
     internal const string TruncationNoticeEndMarker = "<!-- /microsoft-testing-platform:github:summary-truncated -->";
 
     /// <summary>
+    /// The note that says expanded diagnostics were dropped. The weaker of the two: every project and every
+    /// failing test is still named.
+    /// </summary>
+    internal const int DetailsOmittedNoticeStrength = 1;
+
+    /// <summary>
+    /// The note that says whole test project sections were reduced to a one-line verdict, or dropped. Stronger
+    /// than <see cref="DetailsOmittedNoticeStrength"/>, because results are missing rather than merely shortened.
+    /// </summary>
+    internal const int SectionsRemovedNoticeStrength = 2;
+
+    /// <summary>
+    /// Records how much the summary gave up, so a later writer can tell whether the note already in the file
+    /// still describes the worst loss.
+    /// </summary>
+    /// <remarks>
+    /// The two notices share a start marker so a summary can never carry two contradictory warnings, but they do
+    /// not describe the same loss. Without this token the first note written would win outright: an aggregate
+    /// step that only dropped diagnostics would suppress a later project's "whole sections were removed" note,
+    /// and the summary would never say that results are missing.
+    /// </remarks>
+    internal static string BuildNoticeStrengthToken(int strength)
+        => $"<!-- microsoft-testing-platform:github:truncation-strength:{strength.ToString(CultureInfo.InvariantCulture)} -->";
+
+    /// <summary>
     /// What a combined <c>dotnet test</c> rendering produced, and what it had to give up to fit GitHub's cap.
     /// </summary>
     internal readonly struct AggregateRenderResult
@@ -426,7 +451,7 @@ internal sealed partial class GitHubActionsSummaryReporter
             modulesWithOmittedDetails.ToString(CultureInfo.InvariantCulture),
             totalModules.ToString(CultureInfo.InvariantCulture));
 
-        return $"{TruncationNoticeMarker}\n> [!WARNING]\n> {message}\n{TruncationNoticeEndMarker}\n\n";
+        return $"{TruncationNoticeMarker}{BuildNoticeStrengthToken(DetailsOmittedNoticeStrength)}\n> [!WARNING]\n> {message}\n{TruncationNoticeEndMarker}\n\n";
     }
 
     /// <summary>
@@ -450,7 +475,7 @@ internal sealed partial class GitHubActionsSummaryReporter
             GitHubActionsResources.SummaryTruncatedNotice,
             reportedProjectCount.ToString(CultureInfo.InvariantCulture));
 
-        return $"{TruncationNoticeMarker}\n> [!WARNING]\n> {message}\n{TruncationNoticeEndMarker}\n\n";
+        return $"{TruncationNoticeMarker}{BuildNoticeStrengthToken(SectionsRemovedNoticeStrength)}\n> [!WARNING]\n> {message}\n{TruncationNoticeEndMarker}\n\n";
     }
 
     /// <summary>
