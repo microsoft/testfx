@@ -191,6 +191,7 @@ stages:
           "/p:MSBuildCachePackageEnabled=true",
           "/p:MSBuildCacheEnabled=true",
           "/p:MSBuildCacheRemoteCacheIsReadOnly=false",
+          "/p:RestoreUseStaticGraphEvaluation=true",
           "/p:MSBuildCacheLogDirectory=$(Agent.TempDirectory)\MSBuildCache"
         )
 
@@ -301,178 +302,6 @@ stages:
       inputs:
         PathtoPublish: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
         ArtifactName: Build_Binlogs_MSBuildCacheSeed_$(_BuildConfig)_Attempt$(System.JobAttempt)
-      condition: always()
-      continueOnError: true
-
-- stage: restore_cache_warmup
-  displayName: Warm NuGet package cache for restore benchmark
-  dependsOn: []
-  condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
-  jobs:
-  - job: Windows
-    displayName: Populate package cache
-    timeoutInMinutes: 30
-    pool:
-      name: NetCore-Public
-      demands: ImageOverride -equals windows.vs2026preview.scout.amd64.open
-    variables:
-      - template: /eng/pipelines/variables/test-env-vars.yml
-    steps:
-    - checkout: self
-      clean: true
-
-    - template: /eng/pipelines/steps/install-windows-prereqs.yml
-
-    # Cache@2 saves this directory in its automatic post-job step. The benchmark stage depends on this stage,
-    # so both package-cache variants measure a warm cache even on the first run of this experimental PR.
-    - task: Cache@2
-      displayName: Restore or initialize NuGet package cache
-      inputs:
-        key: '"testfx-restore-benchmark" | "v1" | "$(Agent.OS)" | "$(Agent.OSArchitecture)" | global.json | NuGet.config | Directory.Packages.props | eng/Versions.props | eng/Version.Details.xml'
-        restoreKeys: |
-          "testfx-restore-benchmark" | "v1" | "$(Agent.OS)" | "$(Agent.OSArchitecture)"
-        path: '$(NUGET_PACKAGES)'
-        cacheHitVar: NuGetPackagesCacheRestored
-
-    - pwsh: |
-        $pwsh = Join-Path $PSHOME "pwsh.exe"
-        & $pwsh `
-          -NoLogo `
-          -NoProfile `
-          -File ./eng/common/msbuild.ps1 `
-          -prepareMachine `
-          -warnAsError:`$false `
-          ./TestFx.slnx `
-          /m `
-          /nr:false `
-          /t:Restore `
-          /v:minimal `
-          /p:Configuration=Release `
-          /p:ContinuousIntegrationBuild=true `
-          /p:RepoRoot=$(Build.SourcesDirectory)\
-        exit $LASTEXITCODE
-      displayName: Populate packages with regular restore
-      env:
-        DOTNET_CLI_TELEMETRY_OPTOUT: 1
-
-- stage: restore_cache_benchmark
-  displayName: Benchmark NuGet restore optimizations
-  dependsOn: restore_cache_warmup
-  condition: succeeded()
-  jobs:
-  - job: Windows
-    displayName: Windows
-    timeoutInMinutes: 30
-    pool:
-      name: NetCore-Public
-      demands: ImageOverride -equals windows.vs2026preview.scout.amd64.open
-    variables:
-      - template: /eng/pipelines/variables/test-env-vars.yml
-      - name: NuGetPackagesCacheRestored
-        value: not-used
-    strategy:
-      matrix:
-        Baseline:
-          _BenchmarkName: Baseline
-          _UseNuGetPackageCache: 'false'
-          _UseStaticGraphRestore: 'false'
-        PackageCache:
-          _BenchmarkName: PackageCache
-          _UseNuGetPackageCache: 'true'
-          _UseStaticGraphRestore: 'false'
-        StaticGraph:
-          _BenchmarkName: StaticGraph
-          _UseNuGetPackageCache: 'false'
-          _UseStaticGraphRestore: 'true'
-        PackageCacheAndStaticGraph:
-          _BenchmarkName: PackageCacheAndStaticGraph
-          _UseNuGetPackageCache: 'true'
-          _UseStaticGraphRestore: 'true'
-    steps:
-    - checkout: self
-      clean: true
-
-    - template: /eng/pipelines/steps/install-windows-prereqs.yml
-
-    # Start after common prerequisites so the end-to-end number covers only the optional Cache@2 download and
-    # NuGet restore. Each matrix leg runs on a clean agent with otherwise identical inputs.
-    - pwsh: |
-        $started = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
-        Write-Host "##vso[task.setvariable variable=RestoreBenchmarkStartMilliseconds]$started"
-      displayName: Start restore benchmark
-
-    - task: Cache@2
-      displayName: Restore NuGet package cache
-      condition: and(succeeded(), eq(variables['_UseNuGetPackageCache'], 'true'))
-      inputs:
-        key: '"testfx-restore-benchmark" | "v1" | "$(Agent.OS)" | "$(Agent.OSArchitecture)" | global.json | NuGet.config | Directory.Packages.props | eng/Versions.props | eng/Version.Details.xml'
-        restoreKeys: |
-          "testfx-restore-benchmark" | "v1" | "$(Agent.OS)" | "$(Agent.OSArchitecture)"
-        path: '$(NUGET_PACKAGES)'
-        cacheHitVar: NuGetPackagesCacheRestored
-
-    - pwsh: |
-        $binlogDirectory = "$(Build.SourcesDirectory)\artifacts\log\RestoreBenchmark\$(_BenchmarkName)"
-        New-Item $binlogDirectory -ItemType Directory -Force | Out-Null
-
-        $logPath = Join-Path $binlogDirectory "restore.log"
-        $binlogPath = Join-Path $binlogDirectory "restore.binlog"
-        $pwsh = Join-Path $PSHOME "pwsh.exe"
-        $graphStopwatch = [Diagnostics.Stopwatch]::StartNew()
-
-        & $pwsh `
-          -NoLogo `
-          -NoProfile `
-          -File ./eng/common/msbuild.ps1 `
-          -prepareMachine `
-          -warnAsError:`$false `
-          ./TestFx.slnx `
-          /m `
-          /nr:false `
-          /t:Restore `
-          /v:minimal `
-          "/bl:$binlogPath" `
-          /p:Configuration=Release `
-          /p:ContinuousIntegrationBuild=true `
-          /p:RepoRoot=$(Build.SourcesDirectory)\ `
-          /p:RestoreUseStaticGraphEvaluation=$(_UseStaticGraphRestore) |
-          Tee-Object -FilePath $logPath
-        $exitCode = $LASTEXITCODE
-        $graphStopwatch.Stop()
-
-        $started = [DateTimeOffset]::FromUnixTimeMilliseconds([long]"$(RestoreBenchmarkStartMilliseconds)")
-        $endToEndSeconds = ([DateTimeOffset]::UtcNow - $started).TotalSeconds
-        $packageCacheResult = "$(NuGetPackagesCacheRestored)"
-
-        $summaryPath = Join-Path $binlogDirectory "summary.md"
-        @"
-        # Restore benchmark: $(_BenchmarkName)
-
-        | Metric | Value |
-        | --- | ---: |
-        | NuGet package cache enabled | $(_UseNuGetPackageCache) |
-        | NuGet package cache result | $packageCacheResult |
-        | Static-graph restore enabled | $(_UseStaticGraphRestore) |
-        | Cache download + restore | $([Math]::Round($endToEndSeconds, 2)) s |
-        | Restore command | $([Math]::Round($graphStopwatch.Elapsed.TotalSeconds, 2)) s |
-        | Exit code | $exitCode |
-
-        The first duration includes the `Cache@2` restore when enabled. Prerequisite installation and the
-        cache warm-up job are excluded from every variant.
-        "@ | Set-Content -Path $summaryPath
-
-        Write-Host "##vso[task.uploadsummary]$summaryPath"
-        Write-Host "RESTORE_BENCHMARK variant=$(_BenchmarkName) packageCache=$(_UseNuGetPackageCache) packageCacheResult=$packageCacheResult staticGraph=$(_UseStaticGraphRestore) endToEndSeconds=$([Math]::Round($endToEndSeconds, 2)) restoreSeconds=$([Math]::Round($graphStopwatch.Elapsed.TotalSeconds, 2)) exitCode=$exitCode"
-        exit $exitCode
-      displayName: Measure $(_BenchmarkName) restore
-      env:
-        DOTNET_CLI_TELEMETRY_OPTOUT: 1
-
-    - task: PublishBuildArtifacts@1
-      displayName: Publish restore benchmark
-      inputs:
-        PathtoPublish: '$(Build.SourcesDirectory)/artifacts/log/RestoreBenchmark/$(_BenchmarkName)'
-        ArtifactName: RestoreBenchmark_$(_BenchmarkName)_Attempt$(System.JobAttempt)
       condition: always()
       continueOnError: true
 
@@ -645,6 +474,7 @@ stages:
               "/p:MSBuildCachePackageEnabled=true",
               "/p:MSBuildCacheEnabled=true",
               "/p:MSBuildCacheRemoteCacheIsReadOnly=true",
+              "/p:RestoreUseStaticGraphEvaluation=true",
               "/p:MSBuildCacheLogDirectory=$(Agent.TempDirectory)\MSBuildCache"
             )
 
