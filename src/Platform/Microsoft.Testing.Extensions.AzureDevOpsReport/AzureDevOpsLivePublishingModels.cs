@@ -99,8 +99,10 @@ internal sealed record AzureDevOpsTestCaseResult(
     /// </summary>
     /// <remarks>
     /// Declared as properties rather than positional parameters so that adding them does not change the
-    /// record's constructor and deconstructor signatures. All three are absent from a freshly created
-    /// result and are only populated when a retry attempt turns an existing result into a rerun.
+    /// record's constructor and deconstructor signatures. <see cref="Id"/> is populated only when updating
+    /// an existing result. <see cref="ResultGroupType"/> and <see cref="SubResults"/> are also populated on
+    /// a freshly created, attachment-bearing result when retry tracking is enabled, so its attachments can
+    /// target the first attempt.
     /// </remarks>
     [JsonPropertyName("id")]
     public int? Id { get; init; }

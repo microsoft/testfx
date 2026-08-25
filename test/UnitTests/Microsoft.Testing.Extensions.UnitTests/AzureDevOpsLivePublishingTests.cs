@@ -3185,23 +3185,24 @@ public sealed class AzureDevOpsLivePublishingTests
     // bytes actually sent: the verb, the results URI, and the camelCase resultGroupType the service
     // expects (it rejects the PascalCase spelling used by the client SDK's enum).
     [TestMethod]
-    public async Task AzureDevOpsTestResultsClient_UpdateTestResults_PatchesTheResultsUriWithARerunPayload()
+    public async Task AzureDevOpsTestResultsClient_UpdateTestResults_PatchesRerunAndMapsReorderedSubResults()
     {
         FakeTask task = new();
         FakeClock clock = new() { UtcNow = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero) };
         string? capturedBody = null;
         HttpMethod? capturedMethod = null;
         Uri? capturedUri = null;
+        using HttpResponseMessage response = new(HttpStatusCode.OK)
+        {
+            Content = new StringContent("{\"count\":1,\"value\":[{\"id\":777,\"subResults\":[{\"id\":1002,\"sequenceId\":2},{\"id\":1001,\"sequenceId\":1}]}]}"),
+        };
         QueueHttpMessageHandler handler = new(
             async (request, cancellationToken) =>
             {
                 capturedMethod = request.Method;
                 capturedUri = request.RequestUri;
                 capturedBody = await ReadRequestBodyAsync(request, cancellationToken);
-                return new HttpResponseMessage(HttpStatusCode.OK)
-                {
-                    Content = new StringContent("{\"count\":1,\"value\":[{\"id\":777,\"subResults\":[{\"id\":1001},{\"id\":1002}]}]}"),
-                };
+                return response;
             });
         using HttpClient httpClient = new(handler)
         {
@@ -3243,8 +3244,10 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.AreEqual("boom", subResults[0].GetProperty("errorMessage").GetString());
         Assert.AreEqual(2, subResults[1].GetProperty("sequenceId").GetInt32());
         Assert.IsNotNull(publishedResults);
-        Assert.IsTrue(publishedResults[0].TryGetSubResultId(sequenceId: 2, out int subResultId));
-        Assert.AreEqual(1002, subResultId);
+        Assert.IsTrue(publishedResults[0].TryGetSubResultId(sequenceId: 1, out int firstSubResultId));
+        Assert.IsTrue(publishedResults[0].TryGetSubResultId(sequenceId: 2, out int secondSubResultId));
+        Assert.AreEqual(1001, firstSubResultId);
+        Assert.AreEqual(1002, secondSubResultId);
     }
 
     [TestMethod]
@@ -3253,14 +3256,15 @@ public sealed class AzureDevOpsLivePublishingTests
         FakeTask task = new();
         FakeClock clock = new() { UtcNow = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero) };
         Uri? capturedUri = null;
+        using HttpResponseMessage response = new(HttpStatusCode.OK)
+        {
+            Content = new StringContent("{}"),
+        };
         QueueHttpMessageHandler handler = new(
             (request, _) =>
             {
                 capturedUri = request.RequestUri;
-                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
-                {
-                    Content = new StringContent("{}"),
-                });
+                return Task.FromResult(response);
             });
         using HttpClient httpClient = new(handler)
         {
@@ -3282,11 +3286,12 @@ public sealed class AzureDevOpsLivePublishingTests
     {
         FakeTask task = new();
         FakeClock clock = new() { UtcNow = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero) };
+        using HttpResponseMessage response = new(HttpStatusCode.OK)
+        {
+            Content = new StringContent("{\"count\":1,\"value\":[{\"id\":777,\"automatedTestName\":\"MyTest\"}]}"),
+        };
         QueueHttpMessageHandler handler = new(
-            (_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent("{\"count\":1,\"value\":[{\"id\":777,\"automatedTestName\":\"MyTest\"}]}"),
-            }));
+            (_, _) => Task.FromResult(response));
         using HttpClient httpClient = new(handler)
         {
             Timeout = Timeout.InfiniteTimeSpan,
@@ -3307,6 +3312,7 @@ public sealed class AzureDevOpsLivePublishingTests
 
         Assert.IsNotNull(publishedResults);
         Assert.AreEqual(777, publishedResults[0].Id);
+        Assert.IsEmpty(publishedResults[0].SubResultIdsBySequenceId);
         Assert.IsFalse(publishedResults[0].TryGetSubResultId(sequenceId: 1, out _));
     }
 
@@ -3315,11 +3321,12 @@ public sealed class AzureDevOpsLivePublishingTests
     {
         FakeTask task = new();
         FakeClock clock = new() { UtcNow = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero) };
+        using HttpResponseMessage response = new(HttpStatusCode.OK)
+        {
+            Content = new ThrowingHttpContent(new IOException("response stream failed")),
+        };
         QueueHttpMessageHandler handler = new(
-            (_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new ThrowingHttpContent(new IOException("response stream failed")),
-            }));
+            (_, _) => Task.FromResult(response));
         using HttpClient httpClient = new(handler)
         {
             Timeout = Timeout.InfiniteTimeSpan,
@@ -3338,19 +3345,48 @@ public sealed class AzureDevOpsLivePublishingTests
     }
 
     [TestMethod]
+    public async Task AzureDevOpsTestResultsClient_UpdateTestResults_ResponseBodyReadHonorsCancellation()
+    {
+        FakeTask task = new();
+        FakeClock clock = new() { UtcNow = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero) };
+        using HttpResponseMessage response = new(HttpStatusCode.OK)
+        {
+            Content = new BlockingHttpContent(),
+        };
+        QueueHttpMessageHandler handler = new(
+            (_, _) => Task.FromResult(response));
+        using HttpClient httpClient = new(handler)
+        {
+            Timeout = Timeout.InfiniteTimeSpan,
+        };
+        AzureDevOpsTestResultsClient client = new(httpClient, task, clock);
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "tests.dll", "results");
+        AzureDevOpsTestCaseResult result = new("MyTest", "tests", "MyTest", AzureDevOpsLivePublishingConstants.PassedTestOutcome, 5, null, null, null, null)
+        {
+            Id = 777,
+        };
+        using CancellationTokenSource cancellationTokenSource = new();
+        cancellationTokenSource.CancelAfter(TimeSpan.FromMilliseconds(100));
+
+        await Assert.ThrowsAsync<OperationCanceledException>(
+            () => client.UpdateTestResultsWithSubResultsAsync(configuration, runId: 42, [result], cancellationTokenSource.Token));
+    }
+
+    [TestMethod]
     public async Task AzureDevOpsTestResultsClient_UploadTestResultAttachment_TargetsTheParentWhenSubResultIsNotSpecified()
     {
         FakeTask task = new();
         FakeClock clock = new() { UtcNow = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero) };
         Uri? capturedUri = null;
+        using HttpResponseMessage response = new(HttpStatusCode.OK)
+        {
+            Content = new StringContent("{}"),
+        };
         QueueHttpMessageHandler handler = new(
             (request, _) =>
             {
                 capturedUri = request.RequestUri;
-                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
-                {
-                    Content = new StringContent("{}"),
-                });
+                return Task.FromResult(response);
             });
         using HttpClient httpClient = new(handler)
         {
@@ -3952,6 +3988,65 @@ public sealed class AzureDevOpsLivePublishingTests
             length = 0;
             return false;
         }
+    }
+
+    private sealed class BlockingHttpContent : HttpContent
+    {
+#if NET
+        protected override Task SerializeToStreamAsync(Stream stream, TransportContext? context, CancellationToken cancellationToken)
+            => Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+#endif
+
+        protected override Task SerializeToStreamAsync(Stream stream, TransportContext? context)
+            => Task.CompletedTask;
+
+        protected override Task<Stream> CreateContentReadStreamAsync()
+            => Task.FromResult<Stream>(new BlockingReadStream());
+
+        protected override bool TryComputeLength(out long length)
+        {
+            length = 0;
+            return false;
+        }
+    }
+
+    private sealed class BlockingReadStream : Stream
+    {
+        public override bool CanRead => true;
+
+        public override bool CanSeek => false;
+
+        public override bool CanWrite => false;
+
+        public override long Length => throw new NotSupportedException();
+
+        public override long Position
+        {
+            get => throw new NotSupportedException();
+            set => throw new NotSupportedException();
+        }
+
+        public override void Flush()
+        {
+        }
+
+        public override int Read(byte[] buffer, int offset, int count)
+            => throw new NotSupportedException();
+
+        public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+            return 0;
+        }
+
+        public override long Seek(long offset, SeekOrigin origin)
+            => throw new NotSupportedException();
+
+        public override void SetLength(long value)
+            => throw new NotSupportedException();
+
+        public override void Write(byte[] buffer, int offset, int count)
+            => throw new NotSupportedException();
     }
 
     private sealed class TestDirectory : IDisposable

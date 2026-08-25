@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
@@ -297,17 +297,15 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
             if (batch[i].Attachments.Count > 0)
             {
                 int? testSubResultId = null;
-                int resolvedSubResultId = 0;
-                if (_resultIdStore is not null
-                    && !publishedResults[i].TryGetSubResultId(sequenceId: 1, out resolvedSubResultId))
-                {
-                    Interlocked.Add(ref _failedAttachmentCount, batch[i].Attachments.Count);
-                    failedToResolveSubResultId = true;
-                    continue;
-                }
-
                 if (_resultIdStore is not null)
                 {
+                    if (!publishedResults[i].TryGetSubResultId(sequenceId: 1, out int resolvedSubResultId))
+                    {
+                        Interlocked.Add(ref _failedAttachmentCount, batch[i].Attachments.Count);
+                        failedToResolveSubResultId = true;
+                        continue;
+                    }
+
                     testSubResultId = resolvedSubResultId;
                 }
 

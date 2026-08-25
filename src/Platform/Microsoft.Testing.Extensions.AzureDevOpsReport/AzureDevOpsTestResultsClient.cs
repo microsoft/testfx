@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Net;
@@ -304,17 +304,28 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
                 && published.SubResults is { } publishedSubResults
                 && publishedSubResults.Length == submittedSubResults.Count)
             {
+                var submittedSequenceIds = new HashSet<int>();
                 for (int j = 0; j < submittedSubResults.Count; j++)
                 {
-                    int subResultId = publishedSubResults[j].Id;
-                    int sequenceId = submittedSubResults[j].SequenceId;
-                    if (subResultId <= 0 || subResultIdsBySequenceId.ContainsKey(sequenceId))
+                    if (!submittedSequenceIds.Add(submittedSubResults[j].SequenceId))
                     {
-                        subResultIdsBySequenceId.Clear();
                         break;
                     }
+                }
 
-                    subResultIdsBySequenceId.Add(sequenceId, subResultId);
+                if (submittedSequenceIds.Count == submittedSubResults.Count)
+                {
+                    for (int j = 0; j < publishedSubResults.Length; j++)
+                    {
+                        PublishedTestSubResult publishedSubResult = publishedSubResults[j];
+                        if (publishedSubResult.Id <= 0 || !submittedSequenceIds.Remove(publishedSubResult.SequenceId))
+                        {
+                            subResultIdsBySequenceId.Clear();
+                            break;
+                        }
+
+                        subResultIdsBySequenceId.Add(publishedSubResult.SequenceId, publishedSubResult.Id);
+                    }
                 }
             }
 
@@ -556,12 +567,29 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
         => content.ReadAsByteArrayAsync();
 #endif
 
-    private static Task<string> ReadAsStringAsync(HttpContent content, CancellationToken cancellationToken)
+    private static async Task<string> ReadAsStringAsync(HttpContent content, CancellationToken cancellationToken)
+    {
 #if NET
-        => content.ReadAsStringAsync(cancellationToken);
+        return await content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
 #else
-        => content.ReadAsStringAsync();
+        using Stream contentStream = await content.ReadAsStreamAsync().ConfigureAwait(false);
+        using MemoryStream bufferedContent = new();
+        byte[] buffer = new byte[81920];
+        int bytesRead;
+        while ((bytesRead = await contentStream.ReadAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false)) > 0)
+        {
+            await bufferedContent.WriteAsync(buffer, 0, bytesRead, cancellationToken).ConfigureAwait(false);
+        }
+
+        bufferedContent.Position = 0;
+        string? charset = content.Headers.ContentType?.CharSet;
+        Encoding encoding = charset is { Length: > 0 }
+            ? Encoding.GetEncoding(charset.Trim('"'))
+            : Encoding.UTF8;
+        using StreamReader reader = new(bufferedContent, encoding, detectEncodingFromByteOrderMarks: true);
+        return await reader.ReadToEndAsync().ConfigureAwait(false);
 #endif
+    }
 
     private sealed record CreateTestRunRequest(
         [property: JsonPropertyName("name")] string Name,
@@ -604,7 +632,9 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
         [property: JsonPropertyName("automatedTestName")] string? AutomatedTestName,
         [property: JsonPropertyName("subResults")] PublishedTestSubResult[]? SubResults);
 
-    private sealed record PublishedTestSubResult([property: JsonPropertyName("id")] int Id);
+    private sealed record PublishedTestSubResult(
+        [property: JsonPropertyName("id")] int Id,
+        [property: JsonPropertyName("sequenceId")] int SequenceId);
 
     private sealed record AttachmentRequest(
         [property: JsonPropertyName("stream")] string Stream,
