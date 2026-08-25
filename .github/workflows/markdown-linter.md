@@ -42,11 +42,11 @@ jobs:
     runs-on: ubuntu-latest
     # A stalled npm install or linter would otherwise inherit GitHub's six-hour default and
     # hold the workflow's concurrency group. A job timeout kills the step outright, so the
-    # steps below cap their own commands at 3 minutes each and report the stall instead. This
-    # job cap is the backstop, and it has to stay above both command caps plus the checkout
-    # and artifact upload: 3 + 3 = 6 minutes of commands leaves 4 minutes of headroom, so the
-    # second command's failure marker still gets written and uploaded. Keep that arithmetic
-    # true if you change any of the three numbers. The job takes about 15 seconds in practice.
+    # steps below cap their own commands and report the stall instead. This job cap is the
+    # backstop, and it has to stay above both command caps plus the checkout and artifact
+    # upload: 3m + 30s of kill grace, twice, is 7 minutes and leaves 3 minutes of headroom, so
+    # the second command's failure marker still gets written and uploaded. Keep that
+    # arithmetic true if you change any of the numbers. The job takes about 15 seconds.
     timeout-minutes: 10
     steps:
     - name: Checkout repository
@@ -68,12 +68,15 @@ jobs:
       # agent would be skipped. `timeout` exits 124 instead, which the check below treats
       # like any other failure, so a stalled install still gets reported. 3 minutes is about
       # 45x the observed install time and leaves room for the lint step's own cap.
+      # --kill-after matters: `timeout` alone only sends SIGTERM, so a process that ignores it
+      # keeps running and the job cap kills the job before anything is marked. The grace period
+      # forces SIGKILL, which surfaces as 137 rather than 124.
       run: |
         status=0
-        timeout 3m npm install --global markdownlint-cli2@0.23.2 > install.log 2>&1 || status=$?
+        timeout --kill-after=30s 3m npm install --global markdownlint-cli2@0.23.2 > install.log 2>&1 || status=$?
         cat install.log
         if [ "$status" -ne 0 ]; then
-          if [ "$status" -eq 124 ]; then
+          if [ "$status" -eq 124 ] || [ "$status" -eq 137 ]; then
             echo "::error::Installing markdownlint-cli2@0.23.2 timed out after 3 minutes."
           else
             echo "::error::Installing markdownlint-cli2@0.23.2 failed (exit $status)."
@@ -85,7 +88,7 @@ jobs:
           {
             echo "MARKDOWNLINT_RUN_FAILED"
             echo "npm install of markdownlint-cli2@0.23.2 failed with exit code $status."
-            if [ "$status" -eq 124 ]; then
+            if [ "$status" -eq 124 ] || [ "$status" -eq 137 ]; then
               echo "The install timed out after 3 minutes."
             fi
             echo "No Markdown files were linted."
@@ -100,27 +103,28 @@ jobs:
       # "ignores" list. The command-level timeout sits below the job's 10 minute cap for the
       # same reason as the install step: a job-level timeout would kill this script before it
       # could mark the log, leaving the agent skipped and the run silent. 3 minutes is about
-      # 18x the observed lint time, and 3 + 3 stays clear of the job cap.
+      # 18x the observed lint time, and the caps stay clear of the job cap. --kill-after forces
+      # SIGKILL if the linter ignores SIGTERM, which surfaces as 137 rather than 124.
       run: |
         status=0
-        timeout 3m markdownlint-cli2 "**/*.md" > markdownlint.log 2>&1 || status=$?
+        timeout --kill-after=30s 3m markdownlint-cli2 "**/*.md" > markdownlint.log 2>&1 || status=$?
         cat markdownlint.log
         echo "markdownlint-cli2 exit code: $status (0 = clean, 1 = violations found)"
         # Exit 1 means violations, which are what the agent reports on. Anything above that is
-        # markdownlint-cli2 failing to run at all (2 = execution or configuration error, 124 =
-        # timed out), so the log holds a stack trace or nothing rather than lint results. Mark
-        # it so the agent reports a workflow failure instead of "no issues", and keep the job
-        # green either way: the agent job needs this one, so failing here would skip the
+        # markdownlint-cli2 failing to run at all (2 = execution or configuration error, 124 or
+        # 137 = timed out), so the log holds a stack trace or nothing rather than lint results.
+        # Mark it so the agent reports a workflow failure instead of "no issues", and keep the
+        # job green either way: the agent job needs this one, so failing here would skip the
         # reporting chain and say nothing.
         if [ "$status" -gt 1 ]; then
-          if [ "$status" -eq 124 ]; then
+          if [ "$status" -eq 124 ] || [ "$status" -eq 137 ]; then
             echo "::error::markdownlint-cli2 timed out after 3 minutes."
           else
             echo "::error::markdownlint-cli2 could not complete (exit $status); see the log above."
           fi
           {
             echo "MARKDOWNLINT_RUN_FAILED"
-            if [ "$status" -eq 124 ]; then
+            if [ "$status" -eq 124 ] || [ "$status" -eq 137 ]; then
               echo "markdownlint-cli2 timed out after 3 minutes without producing lint results."
             else
               echo "markdownlint-cli2 exited $status without producing lint results."
