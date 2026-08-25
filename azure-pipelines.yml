@@ -815,13 +815,11 @@ stages:
               ArtifactName: Integration_Tests_Windows_Binlogs_$(_BuildConfig)
             condition: and(always(), eq(variables._BuildConfig, 'Debug'), eq(variables.HasIntegrationTestBinlogs, 'true'))
 
-          # artifacts/CrashDumps only exists when a test host actually crashed, and PublishBuildArtifacts@1
-          # hard-fails when PathtoPublish does not exist. Every failed run that produced no dump therefore
-          # added a red step of its own on top of the real failure, the same way the missing TestResults
-          # folder did in https://dev.azure.com/dnceng/internal/_build/results?buildId=3057151. Probe for the
-          # folder so the publish skips when there are no dumps. The probe runs on every outcome so the
-          # variable is set whichever way the job goes; the publish still only runs on a failed run, and when
-          # there are dumps it publishes them exactly as before.
+          # "Enable local dumps" creates artifacts/CrashDumps before the build, but an earlier failure can skip
+          # that setup step. PublishBuildArtifacts@1 then hard-fails because PathtoPublish does not exist, adding
+          # another red step on top of the real failure. Probe for the folder so the publish skips when the setup
+          # step did not create it. The probe runs on every outcome so the variable is set whichever way the job
+          # goes; the publish still only runs on a failed run and publishes the folder exactly as before.
           - pwsh: |
               $crashDumps = Join-Path '$(Build.SourcesDirectory)' 'artifacts/CrashDumps'
               $hasCrashDumps = 'false'
