@@ -156,7 +156,7 @@
     templates) and are not otherwise consumed by a restored project, so that Dependabot can
     discover and update them. They are referenced only inside the SDK feature targets
     (Sdk/Features/*.targets, which Dependabot doesn't restore); their only Dependabot-visible
-    reference from a repo project is the inert anchor described in condition 2 below.
+    reference from a repo project is the restore-isolated anchor described in condition 2 below.
 
     Two conditions must BOTH hold for Dependabot to bump one of these, and missing either one
     silently stops the updates:
@@ -170,8 +170,8 @@
          Dependabot only updates a CPM PackageVersion that is actually referenced by a project;
          an "orphan" PackageVersion (declared here but referenced nowhere) is ignored. Because
          these packages are only baked into the shipped SDK templates (Sdk/Features/*.targets)
-         and never referenced by a built project, we add inert anchor references in
-         test/IntegrationTests/MSTest.Acceptance.IntegrationTests/MSTest.Acceptance.IntegrationTests.csproj.
+         and never referenced by a built project, we add restore-isolated anchor references in
+         eng/Dependabot.Dependencies/Dependabot.Dependencies.csproj.
          The anchor MUST be a PackageReference (ExcludeAssets="all" is fine - it only stops the
          package's assets from flowing into the project; it does NOT hide the reference from
          Dependabot, which reads the PackageReference XML node, not the asset-flow rules). It must
