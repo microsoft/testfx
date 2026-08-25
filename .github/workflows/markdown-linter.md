@@ -40,6 +40,11 @@ jobs:
     permissions:
       contents: read
     runs-on: ubuntu-latest
+    # A stalled npm install or linter would otherwise inherit GitHub's six-hour default and
+    # hold the workflow's concurrency group. A timeout fails this job, and the agent job needs
+    # it, so that would also skip the reporting chain -- the silence this workflow exists to
+    # remove. The pull request gate finishes in seconds with a 5 minute cap; 10 leaves headroom.
+    timeout-minutes: 10
     steps:
     - name: Checkout repository
       uses: actions/checkout@v7.0.1
