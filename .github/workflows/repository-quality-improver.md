@@ -17,8 +17,7 @@ tools:
     - id: focus-areas
       key: quality-focus-repository-quality-improver
   github:
-    toolsets:
-      - default
+    mode: gh-proxy
 
 safe-outputs:
   # Pin the detector: the default `detection` alias has emitted Markdown-wrapped
@@ -34,6 +33,7 @@ safe-outputs:
   add-comment:
     target: "*"
     max: 1
+    pull-requests: false
   update-issue:
     status:
     target: "*"
@@ -373,17 +373,26 @@ own reports are closed automatically about 48 hours after filing whether or not
 anybody read them. A closed issue is therefore not evidence that the finding was
 seen, rejected, or fixed — treat an auto-expired report as still-open work.
 
-Use the GitHub issue-search tools for this (the `github` toolset is available and
-the workflow has `issues: read`). Run two searches, both with state `all`.
-Pass `perPage: 10` explicitly, start with page 1, and continue through every
-page until the response reports no next page or the returned count reaches
-`total_count`. Never deduplicate against only the first page:
+Use lexical GitHub issue search through `gh api --method GET search/issues`
+(`github` runs in `gh-proxy` mode and the workflow has `issues: read`). Add
+`repo:${{ github.repository }} is:issue` to every query and omit a state
+qualifier so the results include both open and closed issues. Pass
+`per_page=10` explicitly, start with `page=1`, and continue until the number of
+results inspected reaches `total_count`. Inspect every result's returned
+`state`; never infer state from search parameters and never deduplicate against
+only the first page.
+
+Run two searches:
 
 1. **This workflow's own back catalogue** — search for
-   `gh-aw-workflow-call-id: ${{ github.repository }}/repository-quality-improver`,
-   which every report it has ever filed carries in a trailing HTML comment.
+   the exact quoted marker
+   `"gh-aw-workflow-call-id: ${{ github.repository }}/repository-quality-improver"`
+   in issue bodies, which every report it has ever filed carries in a trailing
+   HTML comment. Do not use semantic issue search for this exact marker.
 2. **The rest of the tracker** — search for the finding's anchors: the symbol
-   names and file names it rests on.
+   names and file names it rests on. Search each concrete anchor lexically;
+   semantic search is optional supplementary discovery, not the exhaustive
+   duplicate check.
 
 Search for **anchors**, not for the wording of your title. Titles are written
 fresh each run and will not match each other.
