@@ -218,6 +218,57 @@ Never hand-edit a `.lock.yml`, inject a toolcache path through `engine.command`,
 detection to avoid the installer. Those changes are brittle, overwritten by compilation, or remove
 a security control.
 
+### `detection` job succeeds but the run is recorded as `parse_error`
+
+**Symptom.** The `detection` job **succeeds** and `safe_outputs` runs normally, but the
+`[aw] Detection Runs` tracker still records the run as `warning | parse_error`. The job log shows
+that the marker was found and then failed to parse:
+
+```text
+📄 Lines containing THREAT_DETECTION_RESULT (1 of 194):
+   [155] **THREAT_DETECTION_RESULT:{"prompt_injection":false,"secret_leak":false,…**
+🔎 Parsing THREAT_DETECTION_RESULT from detection log...
+##[error]❌ Failed to parse detection result: Unexpected token 'T', "T:{"prompt"... is not valid JSON
+```
+
+**Telling the two `parse_error` causes apart.** Read the line immediately above the parse error:
+
+- `Lines containing THREAT_DETECTION_RESULT (1 of N)` means the marker is present, so the detection
+  model ran and answered. That is the formatting cause described here.
+- `No THREAT_DETECTION_RESULT found` means no result was ever written. That is the installer failure
+  in [the previous section](#detection-job-fails-at-install-github-copilot-cli), or another
+  job-level failure that stopped the model before it answered.
+
+**Why.** The model wrapped its result line in Markdown emphasis, so the line starts with
+`**THREAT_…` instead of `THREAT_…`. gh-aw's parser slices the JSON at a fixed offset from the start
+of the line instead of from the index of the marker it just located, so the two extra characters
+move the cut two positions into `RESULT` and it tries to parse `T:{"prompt"…`. This cannot be fixed
+in this repository: the parser is `parse_threat_detection_results.cjs` inside the gh-aw actions
+bundle that every run downloads to `${{ runner.temp }}/gh-aw/actions`.
+
+**Status.** Mitigated by pinning the detector to a model that does not add the emphasis, rather than
+by changing the parser. `safe-outputs.threat-detection.engine.model: gpt-5-mini` was applied to the
+expert-review workflows in [#10684](https://github.com/microsoft/testfx/pull/10684) and to every
+remaining workflow that runs threat detection in
+[#10729](https://github.com/microsoft/testfx/pull/10729). Runs after the pin locate and parse the
+marker with no error.
+
+**What to do.** Check that the workflow's source, or a `shared/*.md` it imports, declares the pin,
+and add it if a newly added workflow was missed:
+
+```yaml
+safe-outputs:
+  threat-detection:
+    engine:
+      id: copilot
+      model: gpt-5-mini
+```
+
+Then recompile with `gh aw compile --strict` and confirm the regenerated lock reports
+`COPILOT_MODEL: gpt-5-mini`. Never hand-edit a `.lock.yml` and never disable threat detection to
+avoid the parse failure. The detection run itself was clean; only its result line was unreadable,
+so turning the check off would remove a security control that is working.
+
 ## Catalog
 
 ### Agentic workflows
@@ -312,7 +363,7 @@ Reusable agentic-workflow snippets imported via `imports:` in workflow frontmatt
 - **One change, one compile.** After editing an agentic workflow source, run `gh aw compile <workflow-id>` and commit the regenerated `.lock.yml` in the same change.
 - **Same applies to Dependabot updates** that touch generated manifests (e.g. `package.json` / `requirements.txt` / `go.mod`) if `gh aw compile` ever emits them under `.github/workflows/`: never merge those PRs directly; update the source `.md` files and rerun `gh aw compile --dependabot` to bundle the fixes.
 - **Pinned actions only.** Strict mode pins every `uses:` reference to a SHA; the compiler enforces this, and [`check-action-pins.yml`](./check-action-pins.yml) verifies it independently of the compiler.
-- **Compile on the pinned toolchain.** A locally installed `gh aw` build can emit corrupted pins ([#10258](https://github.com/microsoft/testfx/issues/10258)); always review the diff of a local compile and run `python .github/scripts/check_action_pins.py` before pushing.
+- **Compile on the pinned toolchain.** A locally installed `gh aw` build can emit corrupted pins ([#10258](https://github.com/microsoft/testfx/issues/10258)); always review the diff of a local compile and run `python .github/scripts/check_action_pins.py` before pushing. A matching `compiler_version` is not sufficient: a local `gh aw` whose version equals the one in the lock headers can still rewrite `github/gh-aw-actions/setup@<sha>` in [`agentic_commands.yml`](./agentic_commands.yml) back to the mutable `@v<version>` tag, even though it pins the `.lock.yml` files correctly. Check that file specifically, and restore it if only its pin changed.
 - **Minimal permissions.** Workflows declare the least privilege they need; write capabilities flow through gh-aw `safe-outputs:` rather than direct `permissions: write-all`.
 
 [gh-aw]: https://github.com/github/gh-aw
