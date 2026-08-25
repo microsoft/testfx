@@ -108,13 +108,23 @@ public sealed class GitHubActionsCommandLineProviderTests
     }
 
     [TestMethod]
-    public async Task ValidateOptionArgumentsAsync_ReturnsInvalid_WhenStepSummaryValueIsNotOnOrOffAsync()
+    public async Task ValidateOptionArgumentsAsync_ReturnsInvalid_WhenStepSummaryValueIsNotSupportedAsync()
     {
         GitHubActionsCommandLineProvider provider = new();
         CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == GitHubActionsCommandLineOptions.GitHubActionsStepSummary);
         ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, ["maybe"]).ConfigureAwait(false);
 
         Assert.IsFalse(validationResult.IsValid);
+    }
+
+    [TestMethod]
+    public async Task ValidateOptionArgumentsAsync_ReturnsValid_WhenStepSummaryValueIsOnFailureAsync()
+    {
+        GitHubActionsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == GitHubActionsCommandLineOptions.GitHubActionsStepSummary);
+        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, [GitHubActionsCommandLineOptions.StepSummaryOnFailureValue]).ConfigureAwait(false);
+
+        Assert.IsTrue(validationResult.IsValid, validationResult.ErrorMessage);
     }
 
     [TestMethod]

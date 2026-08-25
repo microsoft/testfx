@@ -5,9 +5,16 @@ extern alias ghactions;
 
 using ghactions::Microsoft.Testing.Extensions.GitHubActionsReport;
 
+using Microsoft.Testing.Extensions.UnitTests.Helpers;
+using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.Messages;
+using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.TestHost;
 
 using Moq;
 
@@ -17,7 +24,9 @@ using GitHubCiCoverageMetric = ghactions::Microsoft.Testing.Extensions.CiCoverag
 using GitHubCiCoverageSummaryData = ghactions::Microsoft.Testing.Extensions.CiCoverageSummaryData;
 using GitHubCiCoverageThreshold = ghactions::Microsoft.Testing.Extensions.CiCoverageThreshold;
 using GitHubCiRunSummaryAggregate = ghactions::Microsoft.Testing.Extensions.CiRunSummaryAggregate;
+using GitHubCiRunSummaryAggregation = ghactions::Microsoft.Testing.Extensions.CiRunSummaryAggregation;
 using GitHubCiRunSummaryModule = ghactions::Microsoft.Testing.Extensions.CiRunSummaryModule;
+using GitHubSummaryPostProcessor = ghactions::Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryArtifactPostProcessor;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
 
@@ -33,6 +42,69 @@ public sealed class GitHubActionsSummaryReporterTests
     // ExitCode.ZeroTests (8) and MinimumExpectedTestsPolicyViolation (9): non-test-result failures.
     private const int ZeroTestsExitCode = 8;
     private const int MinimumExpectedTestsExitCode = 9;
+
+    [TestMethod]
+    public async Task SessionFinishing_WhenDeferred_PersistsOnFailurePolicyInFragmentAsync()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"github-summary-reporter-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var configuration = new Mock<IConfiguration>();
+            configuration.SetupGet(item => item[PlatformConfigurationConstants.PlatformResultDirectory]).Returns(directory);
+            var environment = new Mock<IEnvironment>();
+            environment.Setup(item => item.GetEnvironmentVariable("GITHUB_ACTIONS")).Returns("true");
+            environment.Setup(item => item.GetEnvironmentVariable("GITHUB_STEP_SUMMARY")).Returns(Path.Combine(directory, "step-summary.md"));
+            var moduleInfo = new Mock<ITestApplicationModuleInfo>();
+            moduleInfo.Setup(item => item.TryGetAssemblyName()).Returns("Tests");
+            moduleInfo.Setup(item => item.GetCurrentTestApplicationFullPath()).Returns(Path.Combine(directory, "Tests.dll"));
+            var coverage = new Mock<ITestCoverageResult>();
+            coverage.SetupGet(item => item.Scopes).Returns([]);
+            coverage.SetupGet(item => item.Thresholds).Returns([]);
+            var messageBus = new Mock<IMessageBus>();
+            SessionFileArtifact? artifact = null;
+            messageBus
+                .Setup(item => item.PublishAsync(It.IsAny<IDataProducer>(), It.IsAny<IData>()))
+                .Callback<IDataProducer, IData>((_, data) => artifact = (SessionFileArtifact)data)
+                .Returns(Task.CompletedTask);
+            var loggerFactory = new Mock<ILoggerFactory>();
+            loggerFactory.Setup(item => item.CreateLogger(It.IsAny<string>())).Returns(Mock.Of<ILogger>());
+            GitHubActionsSummaryReporter reporter = new(
+                new TestCommandLineOptions(new()
+                {
+                    [GitHubActionsCommandLineOptions.GitHubActionsOptionName] = [],
+                    [GitHubActionsCommandLineOptions.GitHubActionsStepSummary] = [GitHubActionsCommandLineOptions.StepSummaryOnFailureValue],
+                }),
+                configuration.Object,
+                environment.Object,
+                new SystemFileSystem(),
+                messageBus.Object,
+                Mock.Of<IOutputDevice>(),
+                moduleInfo.Object,
+                Mock.Of<ITestApplicationProcessExitCode>(),
+                coverage.Object,
+                loggerFactory.Object,
+                static () => true);
+            var context = new Mock<ITestSessionContext>();
+            context.SetupGet(item => item.SessionUid).Returns(new SessionUid("session"));
+            context.SetupGet(item => item.CancellationToken).Returns(CancellationToken.None);
+
+            await reporter.OnTestSessionStartingAsync(context.Object);
+            await reporter.OnTestSessionFinishingAsync(context.Object);
+
+            Assert.IsNotNull(artifact);
+            var input = new InputArtifact(artifact.FileInfo.FullName, artifact.Kind, null, null, null, null);
+            GitHubCiRunSummaryAggregate aggregate = GitHubCiRunSummaryAggregation.ReadAndAggregate(
+                [input],
+                GitHubSummaryPostProcessor.Provider,
+                new ArtifactPostProcessingContext(ArtifactPostProcessingTruncationReason.None));
+            Assert.IsTrue(aggregate.Modules.Single().WriteOnFailureOnly);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
 
     [TestMethod]
     public void BuildMarkdown_AllPassing_UsesSuccessIconAndTotals()

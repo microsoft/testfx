@@ -24,6 +24,7 @@ static Microsoft.Testing.Extensions.MergeOutputFileHelper.EnsureOutputDoesNotAli
 static Microsoft.Testing.Extensions.MergeOutputFileHelper.WriteViaTemporarySiblingAsync(string! outputPath, System.Func<string!, System.Threading.Tasks.Task!>! writeToTempAsync) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Extensions.ArtifactPostProcessingHelper
 static Microsoft.Testing.Extensions.ArtifactPostProcessingHelper.IsReparsePoint(string! path) -> bool
+static Microsoft.Testing.Extensions.ArtifactPostProcessingHelper.OrderInputs(System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>! inputs, bool includeModuleMetadata) -> System.Linq.IOrderedEnumerable<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>!
 virtual Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.ArtifactKind.get -> string?
 static Microsoft.Testing.Platform.Resources.PlatformResources.NamedPipeDirectoryNotWritableErrorMessage.get -> string!
 static Microsoft.Testing.Platform.Resources.PlatformResources.NamedPipePathTooLongErrorMessage.get -> string!

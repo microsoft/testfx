@@ -26,6 +26,8 @@ internal sealed class CiRunSummaryModule
 
     public string RequestedOutputPath { get; set; } = string.Empty;
 
+    public bool WriteOnFailureOnly { get; set; }
+
     public int AttemptNumber { get; set; }
 
     public int ExitCode { get; set; }

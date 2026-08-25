@@ -6,6 +6,7 @@ abstract Microsoft.Testing.Extensions.SlowTestReporterBase.GetDisplayLabel(Micro
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsAnnotationReporter.GitHubActionsAnnotationReporter(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLine, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDisplay, Microsoft.Testing.Platform.Services.ITestApplicationProcessExitCode! testApplicationProcessExitCode, Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory) -> void
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsAnnotationReporter.OnTestSessionFinishingAsync(Microsoft.Testing.Platform.Services.ITestSessionContext! testSessionContext) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsAnnotationReporter.OnTestSessionStartingAsync(Microsoft.Testing.Platform.Services.ITestSessionContext! testSessionContext) -> System.Threading.Tasks.Task!
+const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsCommandLineOptions.StepSummaryOnFailureValue = "on-failure" -> string!
 override Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsCommandLineProvider.ValidateCommandLineOptionsAsync(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsExitCode
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsStepSummarySections
@@ -23,6 +24,7 @@ static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsExitCode.Ge
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsExitCode.GetReason(int exitCode) -> string!
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsExitCode.IndicatesFailure(int exitCode) -> bool
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsExitCode.IsTestResultOutcome(int exitCode) -> bool
+static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFeature.IsStepSummaryOnFailureOnly(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLine) -> bool
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSlowTestReporter.BuildNoticeLine(string! testLabel, System.TimeSpan elapsed) -> string!
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsStepSummarySectionsParser.GetAggregateSections(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.CiRunSummaryModule!>! modules) -> Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsStepSummarySections
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsStepSummarySectionsParser.GetSections(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsStepSummarySections

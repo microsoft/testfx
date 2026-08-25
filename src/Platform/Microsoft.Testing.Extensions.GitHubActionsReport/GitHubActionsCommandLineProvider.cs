@@ -33,7 +33,11 @@ internal sealed class GitHubActionsCommandLineProvider : CommandLineOptionsProvi
     public override Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
         => commandOption.Name switch
         {
-            GitHubActionsCommandLineOptions.GitHubActionsGroups or GitHubActionsCommandLineOptions.GitHubActionsAnnotations or GitHubActionsCommandLineOptions.GitHubActionsStepSummary or GitHubActionsCommandLineOptions.GitHubActionsSlowTestNotices
+            GitHubActionsCommandLineOptions.GitHubActionsStepSummary
+                when !CommandLineOptionArgumentValidator.IsValidBooleanArgument(arguments[0])
+                    && !arguments[0].Equals(GitHubActionsCommandLineOptions.StepSummaryOnFailureValue, StringComparison.OrdinalIgnoreCase)
+                => ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.InvalidStepSummaryValue, arguments[0])),
+            GitHubActionsCommandLineOptions.GitHubActionsGroups or GitHubActionsCommandLineOptions.GitHubActionsAnnotations or GitHubActionsCommandLineOptions.GitHubActionsSlowTestNotices
                 when !CommandLineOptionArgumentValidator.IsValidBooleanArgument(arguments[0])
                 => ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.InvalidOnOffValue, arguments[0])),
             GitHubActionsCommandLineOptions.GitHubActionsSlowTestThreshold
