@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Net;
@@ -95,6 +95,15 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
     [UnconditionalSuppressMessage("Aot", "IL3050", Justification = "Response types are internal, fixed, and controlled by this extension.")]
     public async Task<IReadOnlyList<int>?> PublishTestResultsAsync(AzureDevOpsPublishConfiguration configuration, int runId, IReadOnlyList<AzureDevOpsTestCaseResult> results, CancellationToken cancellationToken)
     {
+        IReadOnlyList<AzureDevOpsPublishedTestResult>? publishedResults =
+            await PublishTestResultsWithSubResultsAsync(configuration, runId, results, cancellationToken).ConfigureAwait(false);
+        return publishedResults?.Select(static result => result.Id).ToArray();
+    }
+
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification = "Response types are internal, fixed, and controlled by this extension.")]
+    [UnconditionalSuppressMessage("Aot", "IL3050", Justification = "Response types are internal, fixed, and controlled by this extension.")]
+    public async Task<IReadOnlyList<AzureDevOpsPublishedTestResult>?> PublishTestResultsWithSubResultsAsync(AzureDevOpsPublishConfiguration configuration, int runId, IReadOnlyList<AzureDevOpsTestCaseResult> results, CancellationToken cancellationToken)
+    {
         using HttpRequestMessage request = CreateRequest(
             HttpMethod.Post,
             BuildResultsUri(configuration.CollectionUri, configuration.Project, runId),
@@ -105,33 +114,19 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
         using var requestTimeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         requestTimeoutSource.CancelAfter(RequestTimeout);
         using HttpResponseMessage response = await SendCoreAsync(request, requestTimeoutSource.Token, cancellationToken, AttemptTimeout).ConfigureAwait(false);
-        string payload = await ReadAsStringAsync(response.Content, requestTimeoutSource.Token).ConfigureAwait(false);
 
         // From this point on the AzDO server has accepted the results. Failing to parse the response
         // must not cause the caller to retry the publish (that would duplicate result rows).
         try
         {
-            PublishTestResultsResponse? parsed = JsonSerializer.Deserialize<PublishTestResultsResponse>(payload, JsonSerializerOptions);
-            if (parsed?.Value is null || parsed.Value.Length != results.Count)
-            {
-                return null;
-            }
-
-            int[] ids = new int[results.Count];
-            for (int i = 0; i < results.Count; i++)
-            {
-                if (parsed.Value[i].Id <= 0
-                    || !string.Equals(parsed.Value[i].AutomatedTestName, results[i].AutomatedTestName, StringComparison.Ordinal))
-                {
-                    return null;
-                }
-
-                ids[i] = parsed.Value[i].Id;
-            }
-
-            return ids;
+            string payload = await ReadAsStringAsync(response.Content, requestTimeoutSource.Token).ConfigureAwait(false);
+            return ParsePublishedResults(payload, results, validateAutomatedTestName: true);
         }
-        catch (JsonException)
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return null;
+        }
+        catch (Exception ex) when (ex is JsonException or HttpRequestException or IOException or InvalidOperationException or ArgumentException)
         {
             return null;
         }
@@ -141,12 +136,12 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
     /// Updates results that were already published to the run, folding a further attempt of the same test
     /// into the result that represents it.
     /// </summary>
-    /// <remarks>
-    /// Deliberately does not surface the response body. Azure DevOps returns the updated results, but the
-    /// caller already knows the ids it sent (that is how it addressed them), and the sub-result ids in the
-    /// response are not needed: attachments for every attempt are uploaded against the parent result.
-    /// </remarks>
     public async Task UpdateTestResultsAsync(AzureDevOpsPublishConfiguration configuration, int runId, IReadOnlyList<AzureDevOpsTestCaseResult> results, CancellationToken cancellationToken)
+        => _ = await UpdateTestResultsWithSubResultsAsync(configuration, runId, results, cancellationToken).ConfigureAwait(false);
+
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification = "Response types are internal, fixed, and controlled by this extension.")]
+    [UnconditionalSuppressMessage("Aot", "IL3050", Justification = "Response types are internal, fixed, and controlled by this extension.")]
+    public async Task<IReadOnlyList<AzureDevOpsPublishedTestResult>?> UpdateTestResultsWithSubResultsAsync(AzureDevOpsPublishConfiguration configuration, int runId, IReadOnlyList<AzureDevOpsTestCaseResult> results, CancellationToken cancellationToken)
     {
         using HttpRequestMessage request = CreateRequest(
             PatchMethod,
@@ -155,10 +150,26 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
             results,
             UpdateJsonSerializerOptions);
 
-        await SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using var requestTimeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        requestTimeoutSource.CancelAfter(RequestTimeout);
+        using HttpResponseMessage response = await SendCoreAsync(request, requestTimeoutSource.Token, cancellationToken, AttemptTimeout).ConfigureAwait(false);
+
+        try
+        {
+            string payload = await ReadAsStringAsync(response.Content, requestTimeoutSource.Token).ConfigureAwait(false);
+            return ParsePublishedResults(payload, results, validateAutomatedTestName: false);
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return null;
+        }
+        catch (Exception ex) when (ex is JsonException or HttpRequestException or IOException or InvalidOperationException or ArgumentException)
+        {
+            return null;
+        }
     }
 
-    public async Task UploadTestResultAttachmentAsync(AzureDevOpsPublishConfiguration configuration, int runId, int testCaseResultId, AzureDevOpsTestResultAttachment attachment, CancellationToken cancellationToken)
+    public async Task UploadTestResultAttachmentAsync(AzureDevOpsPublishConfiguration configuration, int runId, int testCaseResultId, int? testSubResultId, AzureDevOpsTestResultAttachment attachment, CancellationToken cancellationToken)
     {
         AttachmentRequest? payload = TryBuildAttachmentRequest(attachment);
         if (payload is null)
@@ -168,7 +179,7 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
 
         using HttpRequestMessage request = CreateRequest(
             HttpMethod.Post,
-            BuildResultAttachmentsUri(configuration.CollectionUri, configuration.Project, runId, testCaseResultId),
+            BuildResultAttachmentsUri(configuration.CollectionUri, configuration.Project, runId, testCaseResultId, testSubResultId),
             configuration.AccessToken,
             payload);
 
@@ -250,11 +261,79 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
     private static Uri BuildResultsUri(string collectionUri, string project, int runId)
         => new(new Uri(collectionUri, UriKind.Absolute), $"{Uri.EscapeDataString(project)}/_apis/test/runs/{runId}/results?api-version={ApiVersion}");
 
-    private static Uri BuildResultAttachmentsUri(string collectionUri, string project, int runId, int testCaseResultId)
-        => new(new Uri(collectionUri, UriKind.Absolute), $"{Uri.EscapeDataString(project)}/_apis/test/runs/{runId}/results/{testCaseResultId}/attachments?api-version={ApiVersion}");
+    private static Uri BuildResultAttachmentsUri(string collectionUri, string project, int runId, int testCaseResultId, int? testSubResultId)
+    {
+        string query = testSubResultId is null
+            ? $"api-version={ApiVersion}"
+            : $"testSubResultId={testSubResultId.Value.ToString(CultureInfo.InvariantCulture)}&api-version={ApiVersion}";
+        return new(new Uri(collectionUri, UriKind.Absolute), $"{Uri.EscapeDataString(project)}/_apis/test/runs/{runId}/results/{testCaseResultId}/attachments?{query}");
+    }
 
     private static Uri BuildRunAttachmentsUri(string collectionUri, string project, int runId)
         => new(new Uri(collectionUri, UriKind.Absolute), $"{Uri.EscapeDataString(project)}/_apis/test/runs/{runId}/attachments?api-version={ApiVersion}");
+
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification = "Response types are internal, fixed, and controlled by this extension.")]
+    [UnconditionalSuppressMessage("Aot", "IL3050", Justification = "Response types are internal, fixed, and controlled by this extension.")]
+    private static IReadOnlyList<AzureDevOpsPublishedTestResult>? ParsePublishedResults(
+        string payload,
+        IReadOnlyList<AzureDevOpsTestCaseResult> submittedResults,
+        bool validateAutomatedTestName)
+    {
+        PublishTestResultsResponse? parsed = JsonSerializer.Deserialize<PublishTestResultsResponse>(payload, JsonSerializerOptions);
+        if (parsed?.Value is null || parsed.Value.Length != submittedResults.Count)
+        {
+            return null;
+        }
+
+        var publishedResults = new AzureDevOpsPublishedTestResult[submittedResults.Count];
+        for (int i = 0; i < submittedResults.Count; i++)
+        {
+            PublishedTestResult published = parsed.Value[i];
+            AzureDevOpsTestCaseResult submitted = submittedResults[i];
+            if (published.Id <= 0
+                || (validateAutomatedTestName
+                    ? !string.Equals(published.AutomatedTestName, submitted.AutomatedTestName, StringComparison.Ordinal)
+                    : submitted.Id != published.Id))
+            {
+                return null;
+            }
+
+            IReadOnlyList<AzureDevOpsTestSubResult>? submittedSubResults = submitted.SubResults;
+            Dictionary<int, int> subResultIdsBySequenceId = [];
+            if (submittedSubResults is { Count: > 0 }
+                && published.SubResults is { } publishedSubResults
+                && publishedSubResults.Length == submittedSubResults.Count)
+            {
+                var submittedSequenceIds = new HashSet<int>();
+                for (int j = 0; j < submittedSubResults.Count; j++)
+                {
+                    if (!submittedSequenceIds.Add(submittedSubResults[j].SequenceId))
+                    {
+                        break;
+                    }
+                }
+
+                if (submittedSequenceIds.Count == submittedSubResults.Count)
+                {
+                    for (int j = 0; j < publishedSubResults.Length; j++)
+                    {
+                        PublishedTestSubResult publishedSubResult = publishedSubResults[j];
+                        if (publishedSubResult.Id <= 0 || !submittedSequenceIds.Remove(publishedSubResult.SequenceId))
+                        {
+                            subResultIdsBySequenceId.Clear();
+                            break;
+                        }
+
+                        subResultIdsBySequenceId.Add(publishedSubResult.SequenceId, publishedSubResult.Id);
+                    }
+                }
+            }
+
+            publishedResults[i] = new AzureDevOpsPublishedTestResult(published.Id, subResultIdsBySequenceId);
+        }
+
+        return publishedResults;
+    }
 
     private static AttachmentRequest? TryBuildAttachmentRequest(AzureDevOpsTestResultAttachment attachment)
     {
@@ -376,21 +455,28 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
 
                 try
                 {
-                    HttpResponseMessage response = await _httpClient.SendAsync(currentRequest, attemptTimeoutSource.Token).ConfigureAwait(false);
+                    HttpResponseMessage response = await _httpClient.SendAsync(currentRequest, HttpCompletionOption.ResponseHeadersRead, attemptTimeoutSource.Token).ConfigureAwait(false);
                     if (response.IsSuccessStatusCode)
                     {
                         return response;
                     }
 
-                    if (!ShouldRetry(response.StatusCode, attempt))
+                    TimeSpan delay;
+                    try
                     {
-                        string responseBody = await ReadAsStringAsync(response.Content, requestCancellationToken).ConfigureAwait(false);
+                        if (!ShouldRetry(response.StatusCode, attempt))
+                        {
+                            string responseBody = await ReadAsStringAsync(response.Content, requestCancellationToken).ConfigureAwait(false);
+                            throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingHttpError, (int)response.StatusCode, responseBody));
+                        }
+
+                        delay = GetDelay(response, attempt);
+                    }
+                    finally
+                    {
                         response.Dispose();
-                        throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingHttpError, (int)response.StatusCode, responseBody));
                     }
 
-                    TimeSpan delay = GetDelay(response, attempt);
-                    response.Dispose();
                     await _task.Delay(delay, requestCancellationToken).ConfigureAwait(false);
                 }
                 catch (Exception ex) when (ShouldRetry(ex, userCancellationToken, requestCancellationToken, attempt))
@@ -488,12 +574,29 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
         => content.ReadAsByteArrayAsync();
 #endif
 
-    private static Task<string> ReadAsStringAsync(HttpContent content, CancellationToken cancellationToken)
+    private static async Task<string> ReadAsStringAsync(HttpContent content, CancellationToken cancellationToken)
+    {
 #if NET
-        => content.ReadAsStringAsync(cancellationToken);
+        return await content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
 #else
-        => content.ReadAsStringAsync();
+        using Stream contentStream = await content.ReadAsStreamAsync().ConfigureAwait(false);
+        using MemoryStream bufferedContent = new();
+        byte[] buffer = new byte[81920];
+        int bytesRead;
+        while ((bytesRead = await contentStream.ReadAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false)) > 0)
+        {
+            await bufferedContent.WriteAsync(buffer, 0, bytesRead, cancellationToken).ConfigureAwait(false);
+        }
+
+        bufferedContent.Position = 0;
+        string? charset = content.Headers.ContentType?.CharSet;
+        Encoding encoding = charset is { Length: > 0 }
+            ? Encoding.GetEncoding(charset.Trim('"'))
+            : Encoding.UTF8;
+        using StreamReader reader = new(bufferedContent, encoding, detectEncodingFromByteOrderMarks: true);
+        return await reader.ReadToEndAsync().ConfigureAwait(false);
 #endif
+    }
 
     private sealed record CreateTestRunRequest(
         [property: JsonPropertyName("name")] string Name,
@@ -533,7 +636,12 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
 
     private sealed record PublishedTestResult(
         [property: JsonPropertyName("id")] int Id,
-        [property: JsonPropertyName("automatedTestName")] string? AutomatedTestName);
+        [property: JsonPropertyName("automatedTestName")] string? AutomatedTestName,
+        [property: JsonPropertyName("subResults")] PublishedTestSubResult[]? SubResults);
+
+    private sealed record PublishedTestSubResult(
+        [property: JsonPropertyName("id")] int Id,
+        [property: JsonPropertyName("sequenceId")] int SequenceId);
 
     private sealed record AttachmentRequest(
         [property: JsonPropertyName("stream")] string Stream,
