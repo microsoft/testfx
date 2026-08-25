@@ -8,7 +8,19 @@ namespace Microsoft.Testing.Extensions.GitHubActionsReport;
 
 internal sealed partial class GitHubActionsSummaryReporter
 {
-    internal static /* for testing */ string BuildMarkdown(IReadOnlyList<TestRecord> records, string assemblyName, string targetFrameworkMoniker, int exitCode)
+    internal static /* for testing */ string BuildMarkdown(
+        IReadOnlyList<TestRecord> records,
+        string assemblyName,
+        string targetFrameworkMoniker,
+        int exitCode)
+        => BuildMarkdown(records, assemblyName, targetFrameworkMoniker, exitCode, new CiCoverageSummaryData());
+
+    private static string BuildMarkdown(
+        IReadOnlyList<TestRecord> records,
+        string assemblyName,
+        string targetFrameworkMoniker,
+        int exitCode,
+        CiCoverageSummaryData coverage)
     {
         int total = records.Count;
         int passed = 0;
@@ -53,6 +65,7 @@ internal sealed partial class GitHubActionsSummaryReporter
             .Append(" | ").Append(failed.ToString(CultureInfo.InvariantCulture))
             .Append(" | ").Append(skipped.ToString(CultureInfo.InvariantCulture))
             .Append(" | ").Append(FormatDuration(totalDuration)).Append(" |\n\n");
+        CiCoverageSummary.AppendMarkdown(builder, coverage, headingLevel: 3);
 
         // Surface a non-test-result failure that this reporter can observe once the session has finished
         // (zero tests, --minimum-expected-tests, --maximum-failed-tests, test-adapter session failure) as a
@@ -126,6 +139,7 @@ internal sealed partial class GitHubActionsSummaryReporter
             .Append(" | ").Append(aggregate.FailedTests.ToString(CultureInfo.InvariantCulture))
             .Append(" | ").Append(aggregate.SkippedTests.ToString(CultureInfo.InvariantCulture))
             .Append(" | ").Append(duration).Append(" |\n\n");
+        CiCoverageSummary.AppendMarkdown(builder, aggregate.Coverage, headingLevel: 3);
 
         if (aggregate.IsPartial)
         {
@@ -182,6 +196,7 @@ internal sealed partial class GitHubActionsSummaryReporter
             .Append(" | ").Append(module.FailedTests.ToString(CultureInfo.InvariantCulture))
             .Append(" | ").Append(module.SkippedTests.ToString(CultureInfo.InvariantCulture))
             .Append(" | ").Append(FormatDuration(TimeSpan.FromTicks(module.TestDurationTicks))).Append(" |\n\n");
+        CiCoverageSummary.AppendMarkdown(builder, module.Coverage, headingLevel + 1);
 
         if (!GitHubActionsExitCode.IsTestResultOutcome(module.ExitCode))
         {

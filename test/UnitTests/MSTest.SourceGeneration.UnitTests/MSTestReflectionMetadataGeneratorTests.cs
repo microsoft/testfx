@@ -3017,7 +3017,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
-    public void GeneratedMethodAttributes_MarkAsyncMetadataIncomplete()
+    public void GeneratedMethodAttributes_KeepAsyncDeclaredMetadataComplete()
     {
         const string userCode = """
             using System.Threading.Tasks;
@@ -3029,7 +3029,9 @@ public sealed class MSTestReflectionMetadataGeneratorTests
                 public sealed class Tests
                 {
                     [TestMethod]
-                    public async Task AsyncTaskTest()
+                    [TestCategory("Async")]
+                    [DataRow(1, "small", true)]
+                    public async Task AsyncTaskTest(int size, string category, bool enabled)
                         => await Task.Yield();
 
                     [TestMethod]
@@ -3045,12 +3047,58 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         string registry = GetRegistry(result);
         int asyncTaskIndex = registry.IndexOf("Name = \"AsyncTaskTest\"", System.StringComparison.Ordinal);
         int asyncVoidIndex = registry.IndexOf("Name = \"AsyncVoidTest\"", System.StringComparison.Ordinal);
-        int asyncTaskIncompleteIndex = registry.IndexOf("AreAttributesComplete = false", asyncTaskIndex, System.StringComparison.Ordinal);
-        int asyncVoidIncompleteIndex = registry.IndexOf("AreAttributesComplete = false", asyncVoidIndex, System.StringComparison.Ordinal);
+        int asyncTaskCompleteIndex = registry.IndexOf("AreAttributesComplete = true", asyncTaskIndex, System.StringComparison.Ordinal);
+        int asyncVoidCompleteIndex = registry.IndexOf("AreAttributesComplete = true", asyncVoidIndex, System.StringComparison.Ordinal);
         asyncTaskIndex.Should().BeGreaterThan(-1);
         asyncVoidIndex.Should().BeGreaterThan(asyncTaskIndex);
-        asyncTaskIncompleteIndex.Should().BeGreaterThan(asyncTaskIndex).And.BeLessThan(asyncVoidIndex);
-        asyncVoidIncompleteIndex.Should().BeGreaterThan(asyncVoidIndex);
+        asyncTaskCompleteIndex.Should().BeGreaterThan(asyncTaskIndex).And.BeLessThan(asyncVoidIndex);
+        asyncVoidCompleteIndex.Should().BeGreaterThan(asyncVoidIndex);
+        registry.Should().Contain("IsAsync = true");
+        registry.Should().Contain("new global::Microsoft.VisualStudio.TestTools.UnitTesting.TestCategoryAttribute(\"Async\")");
+        registry.Should().Contain("new global::Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute(1, new object[] { \"small\", true })");
+        string registration = result.GeneratedSources
+            .Single(s => s.HintName == "MSTestReflectionMetadata.Registration.g.cs")
+            .SourceText.ToString();
+        registration.Should().Contain("if (method.IsAsync)");
+        registration.Should().Contain("methodInfo.GetCustomAttributes(typeof(AsyncStateMachineAttribute), inherit: false)");
+        registration.Should().Contain("methodInfo.GetCustomAttributes(typeof(DebuggerStepThroughAttribute), inherit: false)");
+        registration.Should().Contain("attributesWithCompilerMetadata");
+    }
+
+    [TestMethod]
+    public void GeneratedMethodAttributes_LeaveExplicitCompilerSpecialAsyncMetadataToTargetedReflection()
+    {
+        const string userCode = """
+            using System.Diagnostics;
+            using System.Runtime.CompilerServices;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public sealed class Tests
+                {
+                    [TestMethod]
+                    [AsyncStateMachine(typeof(Tests))]
+                    [DebuggerStepThrough]
+                    public async Task AsyncTaskTest()
+                        => await Task.Yield();
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+
+        outputCompilation.GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error)
+            .Should().BeEmpty();
+        string registry = outputCompilation.SyntaxTrees
+            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", System.StringComparison.Ordinal))
+            .ToString();
+        registry.Should().NotContain("new global::System.Runtime.CompilerServices.AsyncStateMachineAttribute");
+        registry.Should().NotContain("new global::System.Diagnostics.DebuggerStepThroughAttribute");
+        registry.Should().Contain("AreAttributesComplete = true");
     }
 
     [TestMethod]
@@ -3079,7 +3127,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         registration.Should().Contain("var methodAttributes = new Dictionary<MethodInfo, Attribute[]>(");
         int resolvedGuard = registration.IndexOf("if (methodInfo is not null)", System.StringComparison.Ordinal);
         int completenessGuard = registration.IndexOf("if (method.AreAttributesComplete)", resolvedGuard, System.StringComparison.Ordinal);
-        int assignment = registration.IndexOf("methodAttributes[methodInfo] = method.Attributes;", completenessGuard, System.StringComparison.Ordinal);
+        int assignment = registration.IndexOf("methodAttributes[methodInfo] = attributes;", completenessGuard, System.StringComparison.Ordinal);
         resolvedGuard.Should().BeGreaterThan(-1);
         completenessGuard.Should().BeGreaterThan(resolvedGuard);
         assignment.Should().BeGreaterThan(completenessGuard);
@@ -3151,7 +3199,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
 
         registry.Should().Contain("Attributes = Array.Empty<Attribute>()");
         registry.Should().Contain("AreAttributesComplete = true");
-        registration.Should().Contain("methodAttributes[methodInfo] = method.Attributes;");
+        registration.Should().Contain("methodAttributes[methodInfo] = attributes;");
     }
 
     [TestMethod]

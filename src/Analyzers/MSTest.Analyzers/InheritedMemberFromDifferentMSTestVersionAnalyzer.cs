@@ -35,6 +35,10 @@ namespace MSTest.Analyzers;
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : DiagnosticAnalyzer
 {
+    private const string LegacyFrameworkAssemblyName = "Microsoft.VisualStudio.TestPlatform.TestFramework";
+    private const string LegacyFrameworkExtensionsAssemblyName = "Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions";
+    private const string CurrentFrameworkAssemblyName = "MSTest.TestFramework";
+    private const string CurrentFrameworkExtensionsAssemblyName = "MSTest.TestFramework.Extensions";
     private const string MSTestNamespace = "Microsoft.VisualStudio.TestTools.UnitTesting";
     private const string TestClassAttributeName = "TestClassAttribute";
     private const string InheritanceBehaviorTypeName = "InheritanceBehavior";
@@ -66,41 +70,34 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
 
         context.RegisterCompilationStartAction(context =>
         {
-            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute, out INamedTypeSymbol? testClassAttributeSymbol))
-            {
-                INamedTypeSymbol? taskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask);
-                INamedTypeSymbol? valueTaskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask);
-                bool canDiscoverInternals = context.Compilation.CanDiscoverInternals();
-                context.RegisterSymbolAction(
-                    context => AnalyzeSymbol(context, testClassAttributeSymbol, taskSymbol, valueTaskSymbol, canDiscoverInternals),
-                    SymbolKind.NamedType);
-            }
+            INamedTypeSymbol? taskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask);
+            INamedTypeSymbol? valueTaskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask);
+            bool canDiscoverInternals = context.Compilation.CanDiscoverInternals();
+            context.RegisterSymbolAction(
+                context => AnalyzeSymbol(context, taskSymbol, valueTaskSymbol, canDiscoverInternals),
+                SymbolKind.NamedType);
         });
     }
 
-    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testClassAttributeSymbol, INamedTypeSymbol? taskSymbol, INamedTypeSymbol? valueTaskSymbol, bool canDiscoverInternals)
+    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol? taskSymbol, INamedTypeSymbol? valueTaskSymbol, bool canDiscoverInternals)
     {
         var classSymbol = (INamedTypeSymbol)context.Symbol;
+        IAssemblySymbol? referenceAssembly = GetFrameworkAssembly(context.Compilation, classSymbol);
 
         // A test class the adapter cannot discover never runs, so no inherited member can run for it: abstract and
         // generic types are rejected — including a concrete class nested in a generic container, which cannot be
         // constructed without the container's type arguments — and the type must be visible enough to be discovered
         // (public, or internal when the assembly opts into DiscoverInternals). Concrete, accessible, non-generic derived
         // classes are analyzed separately and still get the warning.
-        if (!classSymbol.IsTestClass(testClassAttributeSymbol)
+        if (referenceAssembly is null
             || classSymbol.IsAbstract
             || classSymbol.IsGenericType
             || IsNestedInGenericType(classSymbol)
-            || !IsDiscoverableTestClassVisibility(classSymbol, canDiscoverInternals))
+            || !IsDiscoverableTestClassVisibility(classSymbol, canDiscoverInternals)
+            || !classSymbol.HasCorrectTestContextSignature())
         {
             return;
         }
-
-        // The test project compiles against exactly one MSTest framework assembly. Anchor on the canonical
-        // TestClassAttribute found in the applied attribute's base chain rather than the concrete attribute itself,
-        // so a custom [TestClass] subclass (a supported extensibility point) resolves to the framework assembly and
-        // does not produce a false positive.
-        IAssemblySymbol referenceAssembly = GetFrameworkAssembly(classSymbol) ?? testClassAttributeSymbol.ContainingAssembly;
 
         for (INamedTypeSymbol? baseType = classSymbol.BaseType;
             baseType is not null && baseType.SpecialType != SpecialType.System_Object;
@@ -195,13 +192,39 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
         return false;
     }
 
-    private static IAssemblySymbol? GetFrameworkAssembly(INamedTypeSymbol classSymbol)
-        => classSymbol.GetAttributes()
+    private static IAssemblySymbol? GetFrameworkAssembly(Compilation compilation, INamedTypeSymbol classSymbol)
+    {
+        IAssemblySymbol? fallback = null;
+        foreach (IAssemblySymbol assembly in classSymbol.GetAttributes()
             .Select(attribute => GetCanonicalMSTestAttribute(attribute.AttributeClass))
             .OfType<INamedTypeSymbol>()
             .Where(canonicalAttribute => string.Equals(canonicalAttribute.Name, TestClassAttributeName, StringComparison.Ordinal))
-            .Select(canonicalAttribute => canonicalAttribute.ContainingAssembly)
-            .FirstOrDefault();
+            .Select(canonicalAttribute => canonicalAttribute.ContainingAssembly))
+        {
+            if (IsGloballyVisibleReference(compilation, assembly))
+            {
+                return assembly;
+            }
+
+            fallback ??= assembly;
+        }
+
+        return fallback is null || HasGloballyVisibleFramework(compilation) ? null : fallback;
+    }
+
+    private static bool IsGloballyVisibleReference(Compilation compilation, IAssemblySymbol assembly)
+        => compilation.References.Any(reference =>
+            SymbolEqualityComparer.Default.Equals(compilation.GetAssemblyOrModuleSymbol(reference), assembly)
+            && (reference.Properties.Aliases.IsDefaultOrEmpty
+                || reference.Properties.Aliases.Contains("global", StringComparer.Ordinal)));
+
+    private static bool HasGloballyVisibleFramework(Compilation compilation)
+        => compilation.References.Any(reference =>
+            compilation.GetAssemblyOrModuleSymbol(reference) is IAssemblySymbol assembly
+            && IsKnownFrameworkAssembly(assembly)
+            && assembly.GetTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute) is not null
+            && (reference.Properties.Aliases.IsDefaultOrEmpty
+                || reference.Properties.Aliases.Contains("global", StringComparer.Ordinal)));
 
     // Walks the applied attribute's base chain and returns the first ancestor that is a well-known MSTest attribute
     // (TestClass or one of the inheritance-sensitive lifecycle/test attributes).
@@ -211,7 +234,8 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
         {
             if (type.ContainingNamespace is { } containingNamespace
                 && string.Equals(containingNamespace.ToDisplayString(), MSTestNamespace, StringComparison.Ordinal)
-                && IsCanonicalAttributeName(type.Name))
+                && IsCanonicalAttributeName(type.Name)
+                && IsKnownFrameworkAssembly(type.ContainingAssembly))
             {
                 return type;
             }
@@ -219,6 +243,11 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
 
         return null;
     }
+
+    private static bool IsKnownFrameworkAssembly(IAssemblySymbol? assembly)
+        => assembly is not null
+            && (string.Equals(assembly.Name, LegacyFrameworkAssemblyName, StringComparison.Ordinal)
+                || string.Equals(assembly.Name, CurrentFrameworkAssemblyName, StringComparison.Ordinal));
 
     private static bool IsCanonicalAttributeName(string name)
         => string.Equals(name, TestClassAttributeName, StringComparison.Ordinal)
@@ -244,12 +273,11 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
             && kind switch
             {
                 // Test methods must be public instance methods that return void/Task/ValueTask (parameters are allowed
-                // for data-driven tests). A generic test method is still discovered and constructed from its data as long
-                // as every type parameter is inferable from the parameters, matching MSTEST0003.
+                // for data-driven tests). Generic method definitions are discovered even when type inference later
+                // fails during execution.
                 MSTestMemberKind.TestMethod
                     => !method.IsStatic
-                        && ReturnsVoidTaskOrValueTask(method, taskSymbol, valueTaskSymbol)
-                        && (!method.IsGenericMethod || AllGenericTypeParametersAreInferable(method)),
+                        && ReturnsVoidTaskOrValueTask(method, taskSymbol, valueTaskSymbol),
 
                 // Instance fixtures must be public, non-static, non-generic, parameterless, and return void/Task/ValueTask.
                 MSTestMemberKind.InstanceFixture
@@ -275,16 +303,6 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
                 _ => false,
             };
 
-    // A generic test method is only discoverable when every type parameter can be inferred from the parameter list,
-    // mirroring MSTEST0003's rule (e.g. 'T' must appear as 'T', 'T[]', or 'List&lt;T&gt;' in some parameter).
-    private static bool AllGenericTypeParametersAreInferable(IMethodSymbol method)
-        => method.TypeParameters.All(typeParameter => method.Parameters.Any(parameter => IsOrHasTypeParameter(parameter.Type, typeParameter)));
-
-    private static bool IsOrHasTypeParameter(ITypeSymbol type, ITypeParameterSymbol typeParameter)
-        => SymbolEqualityComparer.Default.Equals(type, typeParameter)
-            || (type is IArrayTypeSymbol array && IsOrHasTypeParameter(array.ElementType, typeParameter))
-            || (type is INamedTypeSymbol namedType && namedType.TypeArguments.Any(typeArgument => IsOrHasTypeParameter(typeArgument, typeParameter)));
-
     // A fixture/test method must return void (non-async), non-generic Task, or non-generic ValueTask. Comparing against
     // the resolved Task/ValueTask symbols rejects Task&lt;T&gt;/ValueTask&lt;T&gt;, and the async check rejects async void.
     private static bool ReturnsVoidTaskOrValueTask(IMethodSymbol method, INamedTypeSymbol? taskSymbol, INamedTypeSymbol? valueTaskSymbol)
@@ -302,7 +320,14 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
     private static bool IsTestContext(ITypeSymbol type)
         => type.ContainingNamespace is { } containingNamespace
             && string.Equals(containingNamespace.ToDisplayString(), MSTestNamespace, StringComparison.Ordinal)
-            && string.Equals(type.Name, "TestContext", StringComparison.Ordinal);
+            && string.Equals(type.Name, "TestContext", StringComparison.Ordinal)
+            && IsKnownTestContextAssembly(type.ContainingAssembly);
+
+    private static bool IsKnownTestContextAssembly(IAssemblySymbol? assembly)
+        => assembly is not null
+            && (IsKnownFrameworkAssembly(assembly)
+                || string.Equals(assembly.Name, LegacyFrameworkExtensionsAssemblyName, StringComparison.Ordinal)
+                || string.Equals(assembly.Name, CurrentFrameworkExtensionsAssemblyName, StringComparison.Ordinal));
 
     // Reads InheritanceBehavior from the applied attribute's constructor arguments. When the legacy framework assembly
     // is entirely absent from the compilation the attribute constructor cannot bind and ConstructorArguments is empty,
@@ -431,14 +456,13 @@ public sealed class InheritedMemberFromDifferentMSTestVersionAnalyzer : Diagnost
 
     // Mirrors the adapter's IsValidTestMethod for the purpose of discovery de-duplication: a method only shadows an
     // inherited test when it is itself discoverable — instance, discoverable accessibility (public, or non-private when
-    // the assembly opts into DiscoverInternals), returns void/Task/ValueTask, has inferable generics, and carries a
+    // the assembly opts into DiscoverInternals), returns void/Task/ValueTask, and carries a
     // [TestMethod]/[DataTestMethod] from the current framework (a legacy-version attribute is not recognized by the
     // current adapter, so it would not be discovered either).
     private static bool IsDiscoverableTestMethod(IMethodSymbol method, IAssemblySymbol referenceAssembly, bool canDiscoverInternals, INamedTypeSymbol? taskSymbol, INamedTypeSymbol? valueTaskSymbol)
         => !method.IsStatic
             && HasDiscoverableTestMethodAccessibility(method, canDiscoverInternals)
             && ReturnsVoidTaskOrValueTask(method, taskSymbol, valueTaskSymbol)
-            && (!method.IsGenericMethod || AllGenericTypeParametersAreInferable(method))
             && method.GetAttributes().Any(attribute =>
                 GetCanonicalMSTestAttribute(attribute.AttributeClass) is { } canonicalAttribute
                 && GetMemberKind(canonicalAttribute.Name) == MSTestMemberKind.TestMethod

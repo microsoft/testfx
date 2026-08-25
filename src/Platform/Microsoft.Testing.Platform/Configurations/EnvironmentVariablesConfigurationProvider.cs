@@ -7,7 +7,7 @@ namespace Microsoft.Testing.Platform.Configurations;
 
 // Taken and adapted from https://github.com/dotnet/runtime/blob/main/src/libraries/Microsoft.Extensions.Configuration.EnvironmentVariables/src/EnvironmentVariablesConfigurationProvider.cs
 [ExcludeFromCodeCoverage]
-internal sealed class EnvironmentVariablesConfigurationProvider : IConfigurationProvider
+internal sealed class EnvironmentVariablesConfigurationProvider : IHierarchicalConfigurationProvider
 {
     public static readonly string KeyDelimiter = ":";
     private const string MySqlServerPrefix = "MYSQLCONNSTR_";
@@ -78,6 +78,11 @@ internal sealed class EnvironmentVariablesConfigurationProvider : IConfiguration
         Ensure.NotEmpty(key);
         return _data.TryGetValue(key, out value);
     }
+
+    public IEnumerable<string> GetChildKeys(string? parentPath)
+        => ConfigurationProviderHelpers.GetChildKeys(_data.Keys, parentPath);
+
+    public bool TryGetScalar(string key, out string? value) => TryGet(key, out value);
 
     private void HandleMatchedConnectionStringPrefix(Dictionary<string, string?> data, string connectionStringPrefix, string? provider, string fullKey, string? value)
     {

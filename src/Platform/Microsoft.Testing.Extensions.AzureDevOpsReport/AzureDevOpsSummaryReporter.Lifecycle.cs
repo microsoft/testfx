@@ -141,11 +141,12 @@ internal sealed partial class AzureDevOpsSummaryReporter
             }
 
             string assemblyName = _testApplicationModuleInfo.TryGetAssemblyName() ?? "unknown";
+            CiCoverageSummaryData coverage = CiCoverageSummary.Create(_testCoverageResult, testSessionContext.SessionUid);
             if (_shouldDeferToArtifactPostProcessing()
                 && _configuration.GetTestResultDirectory() is { } resultsDirectory
                 && !RoslynString.IsNullOrWhiteSpace(resultsDirectory))
             {
-                CiRunSummaryModule module = CreateModule(snapshot, assemblyName, testSessionContext);
+                CiRunSummaryModule module = CreateModule(snapshot, assemblyName, testSessionContext, coverage);
                 string fragmentPath = await CiRunSummaryAggregation.WriteFragmentAsync(
                     resultsDirectory,
                     AzureDevOpsSummaryArtifactPostProcessor.Provider,
@@ -162,7 +163,7 @@ internal sealed partial class AzureDevOpsSummaryReporter
                 return;
             }
 
-            string markdown = BuildMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value);
+            string markdown = BuildMarkdown(snapshot, assemblyName, _targetFrameworkMoniker.Value, coverage);
             string? path = ResolveSummaryPath();
             if (path is null)
             {
@@ -214,7 +215,8 @@ internal sealed partial class AzureDevOpsSummaryReporter
     private CiRunSummaryModule CreateModule(
         IReadOnlyList<TestRecord> records,
         string assemblyName,
-        ITestSessionContext testSessionContext)
+        ITestSessionContext testSessionContext,
+        CiCoverageSummaryData coverage)
         => CiRunSummaryAggregation.CreateModule(
             records,
             assemblyName,
@@ -225,7 +227,8 @@ internal sealed partial class AzureDevOpsSummaryReporter
             testSessionContext.SessionUid.Value,
             GetAttemptNumber(),
             _testApplicationProcessExitCode.GetProcessExitCode(),
-            ResolveExplicitSummaryPath(_commandLineOptions));
+            ResolveExplicitSummaryPath(_commandLineOptions),
+            coverage);
 
     private int GetAttemptNumber()
         => int.TryParse(
