@@ -13,11 +13,14 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 /// Guards the long-path handling that TRX attachment copies depend on.
 /// </summary>
 /// <remarks>
-/// <see cref="Directory.SetCurrentDirectory(string)"/> is process-global, so this class must never run
-/// alongside other tests.
+/// <see cref="Directory.SetCurrentDirectory(string)"/> is process-global, so both tests declare
+/// <see cref="WellKnownResources.CurrentDirectory"/> to serialize against any other test in this
+/// assembly that touches the current directory. Each test restores the original value in a
+/// <see langword="finally"/> block, so a class-wide <see cref="ResourceLockAttribute"/> (reacquired per
+/// test under method-level parallelization) is sufficient; no state survives across tests.
 /// </remarks>
 [TestClass]
-[DoNotParallelize]
+[ResourceLock(WellKnownResources.CurrentDirectory)]
 public class TrxLongPathHelperTests
 {
     /// <summary>
