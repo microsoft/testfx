@@ -3373,6 +3373,148 @@ public sealed class AzureDevOpsLivePublishingTests
     }
 
     [TestMethod]
+    public async Task AzureDevOpsTestResultsClient_PublishTestResults_InvalidCharsetReturnsNullWithoutReplay()
+    {
+        FakeTask task = new();
+        FakeClock clock = new() { UtcNow = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero) };
+        using StringContent responseContent = new("{\"count\":1,\"value\":[{\"id\":777,\"automatedTestName\":\"MyTest\"}]}");
+        responseContent.Headers.ContentType!.CharSet = "unsupported-charset";
+        using HttpResponseMessage response = new(HttpStatusCode.OK)
+        {
+            Content = responseContent,
+        };
+        int sendCount = 0;
+        QueueHttpMessageHandler handler = new(
+            (_, _) =>
+            {
+                sendCount++;
+                return Task.FromResult(response);
+            });
+        using HttpClient httpClient = new(handler)
+        {
+            Timeout = Timeout.InfiniteTimeSpan,
+        };
+        AzureDevOpsTestResultsClient client = new(httpClient, task, clock);
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "tests.dll", "results");
+        AzureDevOpsTestCaseResult result = new("MyTest", "tests", "MyTest", AzureDevOpsLivePublishingConstants.PassedTestOutcome, 5, null, null, null, null);
+
+        IReadOnlyList<AzureDevOpsPublishedTestResult>? publishedResults =
+            await client.PublishTestResultsWithSubResultsAsync(configuration, runId: 42, [result], CancellationToken.None);
+
+        Assert.IsNull(publishedResults);
+        Assert.AreEqual(1, sendCount);
+    }
+
+    [TestMethod]
+    public async Task AzureDevOpsTestResultsClient_UpdateTestResults_InvalidCharsetReturnsNullWithoutReplay()
+    {
+        FakeTask task = new();
+        FakeClock clock = new() { UtcNow = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero) };
+        using StringContent responseContent = new("{\"count\":1,\"value\":[{\"id\":777}]}");
+        responseContent.Headers.ContentType!.CharSet = "unsupported-charset";
+        using HttpResponseMessage response = new(HttpStatusCode.OK)
+        {
+            Content = responseContent,
+        };
+        int sendCount = 0;
+        QueueHttpMessageHandler handler = new(
+            (_, _) =>
+            {
+                sendCount++;
+                return Task.FromResult(response);
+            });
+        using HttpClient httpClient = new(handler)
+        {
+            Timeout = Timeout.InfiniteTimeSpan,
+        };
+        AzureDevOpsTestResultsClient client = new(httpClient, task, clock);
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "tests.dll", "results");
+        AzureDevOpsTestCaseResult result = new("MyTest", "tests", "MyTest", AzureDevOpsLivePublishingConstants.PassedTestOutcome, 5, null, null, null, null)
+        {
+            Id = 777,
+        };
+
+        IReadOnlyList<AzureDevOpsPublishedTestResult>? publishedResults =
+            await client.UpdateTestResultsWithSubResultsAsync(configuration, runId: 42, [result], CancellationToken.None);
+
+        Assert.IsNull(publishedResults);
+        Assert.AreEqual(1, sendCount);
+    }
+
+    [TestMethod]
+    public async Task AzureDevOpsTestResultsClient_NonSuccessResponse_BodyReadThrows_DisposesResponse()
+    {
+        FakeTask task = new();
+        FakeClock clock = new() { UtcNow = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero) };
+        var contents = new ThrowingHttpContent[3];
+        var responses = new HttpResponseMessage[3];
+        var handlers = new Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>>[3];
+        for (int i = 0; i < responses.Length; i++)
+        {
+            contents[i] = new ThrowingHttpContent(new IOException($"response stream failed {i}"));
+            responses[i] = new HttpResponseMessage(HttpStatusCode.BadRequest)
+            {
+                Content = contents[i],
+            };
+            int responseIndex = i;
+            handlers[i] = (_, _) => Task.FromResult(responses[responseIndex]);
+        }
+
+        try
+        {
+            QueueHttpMessageHandler handler = new(handlers);
+            using HttpClient httpClient = new(handler)
+            {
+                Timeout = Timeout.InfiniteTimeSpan,
+            };
+            AzureDevOpsTestResultsClient client = new(httpClient, task, clock);
+            AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "tests.dll", "results");
+
+            HttpRequestException exception = await Assert.ThrowsExactlyAsync<HttpRequestException>(
+                () => client.CreateTestRunAsync(configuration, CancellationToken.None));
+            Assert.IsInstanceOfType<IOException>(exception.InnerException);
+            Assert.IsTrue(contents.All(static content => content.IsDisposed));
+        }
+        finally
+        {
+            foreach (HttpResponseMessage response in responses)
+            {
+                response.Dispose();
+            }
+
+            foreach (ThrowingHttpContent content in contents)
+            {
+                content.Dispose();
+            }
+        }
+    }
+
+    [TestMethod]
+    public async Task AzureDevOpsTestResultsClient_RetryableResponse_DelayThrows_DisposesResponse()
+    {
+        FakeTask task = new(delayCallback: _ => throw new IOException("delay failed"));
+        FakeClock clock = new() { UtcNow = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero) };
+        using ThrowingHttpContent content = new(new InvalidOperationException("content should not be read"));
+        using HttpResponseMessage response = new(HttpStatusCode.ServiceUnavailable)
+        {
+            Content = content,
+        };
+        QueueHttpMessageHandler handler = new(
+            (_, _) => Task.FromResult(response));
+        using HttpClient httpClient = new(handler)
+        {
+            Timeout = Timeout.InfiniteTimeSpan,
+        };
+        AzureDevOpsTestResultsClient client = new(httpClient, task, clock);
+        AzureDevOpsPublishConfiguration configuration = new("https://dev.azure.com/org/", "project", "token", 123, "run", "tests.dll", "results");
+
+        await Assert.ThrowsExactlyAsync<IOException>(
+            () => client.CreateTestRunAsync(configuration, CancellationToken.None));
+
+        Assert.IsTrue(content.IsDisposed);
+    }
+
+    [TestMethod]
     public async Task AzureDevOpsTestResultsClient_UploadTestResultAttachment_TargetsTheParentWhenSubResultIsNotSpecified()
     {
         FakeTask task = new();
@@ -3980,8 +4122,16 @@ public sealed class AzureDevOpsLivePublishingTests
 
     private sealed class ThrowingHttpContent(Exception exception) : HttpContent
     {
+        public bool IsDisposed { get; private set; }
+
         protected override Task SerializeToStreamAsync(Stream stream, TransportContext? context)
             => Task.FromException(exception);
+
+        protected override void Dispose(bool disposing)
+        {
+            IsDisposed = true;
+            base.Dispose(disposing);
+        }
 
         protected override bool TryComputeLength(out long length)
         {
@@ -4023,7 +4173,11 @@ public sealed class AzureDevOpsLivePublishingTests
         public override long Position
         {
             get => throw new NotSupportedException();
-            set => throw new NotSupportedException();
+            set
+            {
+                _ = value;
+                throw new NotSupportedException();
+            }
         }
 
         public override void Flush()

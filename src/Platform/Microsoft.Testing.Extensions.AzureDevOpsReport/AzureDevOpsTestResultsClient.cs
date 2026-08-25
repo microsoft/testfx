@@ -126,7 +126,7 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
         {
             return null;
         }
-        catch (Exception ex) when (ex is JsonException or HttpRequestException or IOException)
+        catch (Exception ex) when (ex is JsonException or HttpRequestException or IOException or InvalidOperationException or ArgumentException)
         {
             return null;
         }
@@ -163,7 +163,7 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
         {
             return null;
         }
-        catch (Exception ex) when (ex is JsonException or HttpRequestException or IOException)
+        catch (Exception ex) when (ex is JsonException or HttpRequestException or IOException or InvalidOperationException or ArgumentException)
         {
             return null;
         }
@@ -461,15 +461,22 @@ internal sealed class AzureDevOpsTestResultsClient : IAzureDevOpsTestResultsClie
                         return response;
                     }
 
-                    if (!ShouldRetry(response.StatusCode, attempt))
+                    TimeSpan delay;
+                    try
                     {
-                        string responseBody = await ReadAsStringAsync(response.Content, requestCancellationToken).ConfigureAwait(false);
+                        if (!ShouldRetry(response.StatusCode, attempt))
+                        {
+                            string responseBody = await ReadAsStringAsync(response.Content, requestCancellationToken).ConfigureAwait(false);
+                            throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingHttpError, (int)response.StatusCode, responseBody));
+                        }
+
+                        delay = GetDelay(response, attempt);
+                    }
+                    finally
+                    {
                         response.Dispose();
-                        throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingHttpError, (int)response.StatusCode, responseBody));
                     }
 
-                    TimeSpan delay = GetDelay(response, attempt);
-                    response.Dispose();
                     await _task.Delay(delay, requestCancellationToken).ConfigureAwait(false);
                 }
                 catch (Exception ex) when (ShouldRetry(ex, userCancellationToken, requestCancellationToken, attempt))
