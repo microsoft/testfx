@@ -34,6 +34,10 @@ safe-outputs:
   add-comment:
     target: "*"
     max: 1
+  update-issue:
+    status:
+    target: "*"
+    max: 1
   create-issue:
     expires: 2d
     title-prefix: "[quality-improver] "
@@ -167,9 +171,14 @@ Compare by **anchors**, never by focus-area name:
 - **File overlap** — do the candidate's file paths intersect a recorded finding's `files`?
 - **Symbol overlap** — does it name any of the same types, members or attributes as a recorded finding's `symbols`?
 
-If a recorded finding shares its central files and symbols with the candidate,
-it is the same finding. A new focus-area name, a new title, a different metric
-count, and a different task breakdown do not make it a new finding.
+Use anchor overlap to locate a possible duplicate, not to prove identity. Before
+suppressing the candidate, compare its stable slug and underlying claim with the
+recorded finding, then inspect the current implementation. Treat it as the same
+finding only when the slug or underlying claim matches and the original problem
+is still present. A different defect or a regression after the original problem
+was fixed is a new finding even when it names the same files and symbols. A new
+focus-area name, title, metric count, or task breakdown alone does not make an
+otherwise identical finding new.
 
 > Comparing focus-area names is what this workflow used to do, and it does not
 > work, because the name is invented fresh on each run. Worked example:
@@ -365,7 +374,10 @@ anybody read them. A closed issue is therefore not evidence that the finding was
 seen, rejected, or fixed — treat an auto-expired report as still-open work.
 
 Use the GitHub issue-search tools for this (the `github` toolset is available and
-the workflow has `issues: read`). Run two searches, both with state `all`:
+the workflow has `issues: read`). Run two searches, both with state `all`.
+Pass `perPage: 10` explicitly, start with page 1, and continue through every
+page until the response reports no next page or the returned count reaches
+`total_count`. Never deduplicate against only the first page:
 
 1. **This workflow's own back catalogue** — search for
    `gh-aw-workflow-call-id: ${{ github.repository }}/repository-quality-improver`,
@@ -382,8 +394,11 @@ Then decide:
   otherwise file nothing.
 - **A closed issue covers it and the underlying problem is fixed** — verify in
   the working tree that the code actually changed, then file nothing.
-- **A closed issue covers it and the code is unchanged** — the report expired
-  unread. Do not restate it as a new issue. Comment on the existing issue.
+- **A closed issue covers it and the code is unchanged** — if it is this
+  workflow's own auto-expired report, reopen it with `update_issue` by setting
+  its status to `open`, then add the new evidence with `add_comment`. Do not
+  restate it as a new issue. Do not reopen an issue that a maintainer closed for
+  another reason.
 - **Nothing covers it** — proceed to Phase 2.
 
 Filing nothing is a supported outcome (`noop: report-as-issue: false`). Prefer it
