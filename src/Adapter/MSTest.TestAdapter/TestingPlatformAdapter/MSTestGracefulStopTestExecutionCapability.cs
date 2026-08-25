@@ -14,6 +14,7 @@ internal sealed class MSTestGracefulStopTestExecutionCapability : IGracefulStopT
     private static readonly object Sync = new();
 #pragma warning restore IDE0330
     private static int s_activeExecutionCount;
+    private static int s_pendingStopOwnerCount;
     private ExecutionState _executionState;
     private bool _isStopRequested;
 
@@ -29,6 +30,7 @@ internal sealed class MSTestGracefulStopTestExecutionCapability : IGracefulStopT
     {
         lock (Sync)
         {
+            RegisterPendingStopOwner();
             _isStopRequested = true;
             PlatformServiceProvider.Instance.IsGracefulStopRequested = true;
         }
@@ -43,6 +45,7 @@ internal sealed class MSTestGracefulStopTestExecutionCapability : IGracefulStopT
     {
         lock (Sync)
         {
+            UnregisterPendingStopOwner();
             _isStopRequested = false;
             _executionState = ExecutionState.Pending;
         }
@@ -57,9 +60,10 @@ internal sealed class MSTestGracefulStopTestExecutionCapability : IGracefulStopT
             // still owns that flag. Discovery never reaches this path.
             if (_isStopRequested)
             {
+                UnregisterPendingStopOwner();
                 PlatformServiceProvider.Instance.IsGracefulStopRequested = true;
             }
-            else if (s_activeExecutionCount == 0)
+            else if (s_activeExecutionCount == 0 && s_pendingStopOwnerCount == 0)
             {
                 PlatformServiceProvider.Instance.IsGracefulStopRequested = false;
             }
@@ -77,6 +81,10 @@ internal sealed class MSTestGracefulStopTestExecutionCapability : IGracefulStopT
             {
                 UnregisterActiveExecution();
             }
+            else
+            {
+                UnregisterPendingStopOwner();
+            }
 
             _executionState = ExecutionState.Completed;
         }
@@ -91,6 +99,7 @@ internal sealed class MSTestGracefulStopTestExecutionCapability : IGracefulStopT
                 return false;
             }
 
+            RegisterPendingStopOwner();
             _isStopRequested = true;
             PlatformServiceProvider.Instance.IsGracefulStopRequested = true;
             return true;
@@ -102,6 +111,22 @@ internal sealed class MSTestGracefulStopTestExecutionCapability : IGracefulStopT
 
     private static void UnregisterActiveExecution()
         => s_activeExecutionCount--;
+
+    private void RegisterPendingStopOwner()
+    {
+        if (_executionState == ExecutionState.Pending && !_isStopRequested)
+        {
+            s_pendingStopOwnerCount++;
+        }
+    }
+
+    private void UnregisterPendingStopOwner()
+    {
+        if (_executionState == ExecutionState.Pending && _isStopRequested)
+        {
+            s_pendingStopOwnerCount--;
+        }
+    }
 
     private enum ExecutionState
     {

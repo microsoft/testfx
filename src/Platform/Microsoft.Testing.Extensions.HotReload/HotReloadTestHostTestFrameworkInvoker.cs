@@ -43,6 +43,17 @@ internal sealed class HotReloadTestHostTestFrameworkInvoker : TestHostTestFramew
         // Using the output device here rather than Console WriteLine ensures that we don't break live logger output.
         IOutputDevice outputDevice = ServiceProvider.GetOutputDevice();
         var hotReloadHandler = new HotReloadHandler(ServiceProvider.GetConsole(), outputDevice, this);
+        await _stopPoliciesService.RegisterOnDeadlineCallbackAsync(() =>
+        {
+            HotReloadHandler.RequestShutdown();
+            return Task.CompletedTask;
+        }).ConfigureAwait(false);
+        _stopPoliciesService.RegisterDeadlineStopFallback(() =>
+        {
+            HotReloadHandler.RequestShutdown();
+            return Task.FromResult(true);
+        });
+
         TaskCompletionSource<int>? executionCompleted = null;
         while (!_stopPoliciesService.IsDeadlineTriggered
             && await hotReloadHandler.ShouldRunAsync(executionCompleted?.Task, cancellationToken).ConfigureAwait(false))

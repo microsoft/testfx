@@ -77,6 +77,25 @@ public sealed class AbortAtDeadlineTests : AcceptanceTestBase<AbortAtDeadlineTes
     }
 
     [TestMethod]
+    public async Task WhenDeadlineStopsIdleHotReload_ReportersFinalize()
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            environmentVariables: new()
+            {
+                ["TESTINGPLATFORM_DEADLINE_STOP_MARGIN"] = "0",
+                ["TESTINGPLATFORM_HOTRELOAD_ENABLED"] = "1",
+                ["TESTINGPLATFORM_TEST_SET_DEADLINE_ON_START"] = "1",
+                ["REJECT_STOP_AFTER_EXECUTION"] = "1",
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.TestExecutionStoppedAtDeadline);
+        testHostResult.AssertOutputContains(StopMessage);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+    }
+
+    [TestMethod]
     public async Task WhenDeadlineIsInTheFuture_GracefullyStopsWhenReached()
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
@@ -239,6 +258,7 @@ internal class DummyTestFramework : ITestFramework, IDataProducer
             }
         }
 
+        GracefulStop.Instance.NotifyExecutionCompleted();
         context.Complete();
     }
 
@@ -273,11 +293,20 @@ internal sealed class GracefulStop : IGracefulStopTestExecutionResultCapability
 
     public TaskCompletionSource TCS { get; } = new();
 
+    private bool _executionCompleted;
+
+    public void NotifyExecutionCompleted()
+        => _executionCompleted = true;
+
     public Task StopTestExecutionAsync(CancellationToken cancellationToken)
         => TryStopTestExecutionAsync(cancellationToken);
 
     public Task<bool> TryStopTestExecutionAsync(CancellationToken cancellationToken)
-        => Task.FromResult(TCS.TrySetResult());
+        => Task.FromResult(
+            Environment.GetEnvironmentVariable("REJECT_STOP_AFTER_EXECUTION") != "1"
+            || !_executionCompleted
+                ? TCS.TrySetResult()
+                : false);
 }
 
 """;

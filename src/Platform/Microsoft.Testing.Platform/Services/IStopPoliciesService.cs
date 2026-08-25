@@ -41,9 +41,13 @@ internal interface IStopPoliciesService
 
     Task RegisterOnDeadlineCallbackAsync(Func<Task> callback);
 
+    void RegisterDeadlineStopFallback(Func<Task<bool>> callback);
+
     Task ExecuteMaxFailedTestsCallbacksAsync(int maxFailedTests, CancellationToken cancellationToken);
 
     Task ExecuteAbortCallbacksAsync();
 
     Task ExecuteDeadlineCallbacksAsync();
+
+    Task<bool> TryExecuteDeadlineStopFallbackAsync();
 }

@@ -24,6 +24,7 @@ public sealed class MSTestGracefulStopTestExecutionCapabilityTests : TestContain
             pendingStopAccepted.Should().BeTrue();
             PlatformServiceProvider.Instance.IsGracefulStopRequested.Should().BeTrue();
 
+            capability.NotifyTestExecutionCompleted();
             capability = MSTestGracefulStopTestExecutionCapability.Create();
             capability.NotifyTestExecutionPending();
             capability.NotifyTestExecutionStarting();
@@ -114,9 +115,10 @@ public sealed class MSTestGracefulStopTestExecutionCapabilityTests : TestContain
 
             overlappingRun.NotifyTestExecutionPending();
             overlappingRun.NotifyTestExecutionStarting();
-            pendingRun.NotifyTestExecutionStarting();
 
             PlatformServiceProvider.Instance.IsGracefulStopRequested.Should().BeTrue();
+
+            pendingRun.NotifyTestExecutionStarting();
         }
         finally
         {

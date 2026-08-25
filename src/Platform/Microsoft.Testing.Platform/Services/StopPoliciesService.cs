@@ -25,6 +25,7 @@ internal sealed class StopPoliciesService : IStopPoliciesService, IDisposable
     private readonly object _deadlineLock = new();
 #endif
     private readonly List<Func<Task>> _deadlineCallbacks = [];
+    private Func<Task<bool>>? _deadlineStopFallback;
 
     // Whether the callbacks have run. This is the one-shot gate and it is never cleared: once the callbacks
     // have run, a second trigger must not run them again and a late registration must be invoked on the spot.
@@ -156,6 +157,25 @@ internal sealed class StopPoliciesService : IStopPoliciesService, IDisposable
             // current usage anyway and the APIs around this are all internal for now.
             await callback.Invoke().ConfigureAwait(false);
         }
+    }
+
+    public void RegisterDeadlineStopFallback(Func<Task<bool>> callback)
+    {
+        lock (_deadlineLock)
+        {
+            _deadlineStopFallback = callback;
+        }
+    }
+
+    public Task<bool> TryExecuteDeadlineStopFallbackAsync()
+    {
+        Func<Task<bool>>? deadlineStopFallback;
+        lock (_deadlineLock)
+        {
+            deadlineStopFallback = _deadlineStopFallback;
+        }
+
+        return deadlineStopFallback?.Invoke() ?? Task.FromResult(false);
     }
 
     public async Task RegisterOnMaxFailedTestsCallbackAsync(Func<int, CancellationToken, Task> callback)

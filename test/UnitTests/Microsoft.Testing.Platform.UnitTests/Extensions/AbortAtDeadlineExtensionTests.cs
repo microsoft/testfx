@@ -120,6 +120,34 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
     }
 
     [TestMethod]
+    public async Task WhenFrameworkStopIsRejected_FallbackStopCommitsDeadlineVerdict()
+    {
+        _capability
+            .Setup(x => x.TryStopTestExecutionAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        TaskCompletionSource<bool> fallbackStopped = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> deadlineCommitted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        _policiesService
+            .Setup(x => x.ExecuteDeadlineCallbacksAsync())
+            .Callback(() => deadlineCommitted.TrySetResult(true))
+            .Returns(Task.CompletedTask);
+
+        _policiesService
+            .Setup(x => x.TryExecuteDeadlineStopFallbackAsync())
+            .Returns(() =>
+            {
+                fallbackStopped.TrySetResult(true);
+                return Task.FromResult(true);
+            });
+        using AbortAtDeadlineExtension extension = CreateExtension(deadlineIn: TimeSpan.FromMilliseconds(300));
+
+        await WaitForAsync(deadlineCommitted.Task);
+
+        Assert.IsTrue(fallbackStopped.Task.IsCompleted);
+        _policiesService.Verify(x => x.ExecuteDeadlineCallbacksAsync(), Times.Once);
+    }
+
+    [TestMethod]
     public async Task WhenTestExecutionCompleted_TheDeadlineDoesNotTrigger()
     {
         TaskCompletionSource<bool> triggered = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -170,11 +198,12 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
     public void FarFutureDeadlineIsScheduledInMultipleTimerIntervals()
     {
         DateTimeOffset deadline = Now + TimeSpan.FromDays(60);
+        var maxTimerDueTime = TimeSpan.FromMilliseconds(uint.MaxValue - 1);
 
         TimeSpan firstInterval = AbortAtDeadlineExtension.GetTimerDueTime(deadline, Now);
         TimeSpan secondInterval = AbortAtDeadlineExtension.GetTimerDueTime(deadline, Now + firstInterval);
 
-        Assert.IsGreaterThan(TimeSpan.Zero, firstInterval);
+        Assert.AreEqual(maxTimerDueTime, firstInterval);
         Assert.IsLessThan(deadline - Now, firstInterval);
         Assert.IsGreaterThan(TimeSpan.Zero, secondInterval);
         Assert.AreEqual(TimeSpan.Zero, AbortAtDeadlineExtension.GetTimerDueTime(deadline, deadline));
@@ -239,6 +268,31 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
         extension.NotifyTestExecutionCompleted();
         release.SetResult(true);
         await WaitForAsync(extension.WaitForDeadlineHandlingAsync());
+
+        _policiesService.Verify(x => x.ExecuteDeadlineCallbacksAsync(), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task WhenFrameworkWaitsSynchronouslyForExecutionCompletion_DeadlineHandlingDoesNotDeadlock()
+    {
+        AbortAtDeadlineExtension? extension = null;
+        TaskCompletionSource<bool> stopping = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        _capability
+            .Setup(x => x.TryStopTestExecutionAsync(It.IsAny<CancellationToken>()))
+            .Returns(() =>
+            {
+                stopping.TrySetResult(true);
+#pragma warning disable VSTHRD103 // Intentionally simulate a capability that synchronously waits for teardown.
+                Task.Run(() => extension!.NotifyTestExecutionCompleted(), TestContext.CancellationToken).GetAwaiter().GetResult();
+#pragma warning restore VSTHRD103
+                return Task.FromResult(true);
+            });
+
+        using (extension = CreateExtension(deadlineIn: TimeSpan.FromMilliseconds(300)))
+        {
+            await WaitForAsync(stopping.Task);
+            await WaitForAsync(extension.WaitForDeadlineHandlingAsync());
+        }
 
         _policiesService.Verify(x => x.ExecuteDeadlineCallbacksAsync(), Times.Once);
     }

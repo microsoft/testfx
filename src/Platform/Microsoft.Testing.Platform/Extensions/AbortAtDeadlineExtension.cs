@@ -240,10 +240,10 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
     /// then the consumer handlers in registration order, and this extension is a consumer appended after the
     /// reporters. A deadline reached anywhere in that window would still mark a fully-executed run as
     /// truncated (exit code 15).
-    /// The transition is made under the same lock that invokes the graceful-stop capability, and only out of
-    /// <see cref="RunState.Running"/>, so it is atomic against requesting the stop: either this call wins and
-    /// the handler abandons the stop, or the handler invokes the capability first and this call records the
-    /// completion produced by that request without undoing it.
+    /// The transition is made under the same lock that claims the deadline, and only out of
+    /// <see cref="RunState.Running"/>, so it is atomic against claiming the stop. Completion after the deadline
+    /// claim is recorded separately so a rejected stop can restore the completed state without invoking
+    /// framework code while holding the lock.
     /// The timer itself is left to be disposed at host teardown; the state is what makes any late fire a no-op.
     /// </remarks>
     public void NotifyTestExecutionCompleted()
@@ -253,6 +253,10 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
             if (_state == RunState.Running)
             {
                 _state = RunState.Completed;
+            }
+            else if (_state == RunState.DeadlineClaimed)
+            {
+                _state = RunState.DeadlineClaimedAndCompleted;
             }
         }
     }
@@ -269,26 +273,23 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
     }
 
     /// <summary>
-    /// Atomically requests the framework stop while test execution is still running.
+    /// Atomically claims the deadline while test execution is still running.
     /// </summary>
     /// <remarks>
-    /// Invoking the capability under the same lock as <see cref="NotifyTestExecutionCompleted"/> removes the
-    /// gap between claiming the run and actually requesting the stop. The returned task is awaited outside
-    /// the lock; the host waits for the whole deadline handler before end-of-session reporting.
+    /// Framework code is invoked only after releasing the lock. Completion that occurs after the claim is
+    /// tracked by <see cref="RunState.DeadlineClaimedAndCompleted"/> and reconciled if the stop is rejected.
     /// </remarks>
-    private Task<bool>? TryRequestGracefulStopAsync(IGracefulStopTestExecutionCapability capability)
+    private bool TryClaimDeadline()
     {
         lock (_lock)
         {
             if (_disposed || _state != RunState.Running || _policiesService.IsTestExecutionCompleted)
             {
-                return null;
+                return false;
             }
 
             _state = RunState.DeadlineClaimed;
-            return capability is IGracefulStopTestExecutionResultCapability resultCapability
-                ? resultCapability.TryStopTestExecutionAsync(_cancellationTokenSource.CancellationToken)
-                : RequestGracefulStopAsync(capability, _cancellationTokenSource.CancellationToken);
+            return true;
         }
     }
 
@@ -328,7 +329,7 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
             // acquiring the lock (the timer fired while the reporters are finalizing a fully-completed run). In
             // either case there is nothing left to stop, and marking the run deadline-truncated would wrongly
             // force exit code 15 on a run that actually completed. This is only an early-out: the handler
-            // invokes the graceful-stop capability under this same lock, which closes the race.
+            // claims the deadline under this same lock before invoking the graceful-stop capability.
             if (_disposed || _state != RunState.Running || _policiesService.IsTestExecutionCompleted)
             {
                 return;
@@ -348,8 +349,7 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
         // first await: the logger and output device can return already-completed tasks, which would otherwise
         // run the handler synchronously before _handleDeadlineTask is published. Yield first so control returns
         // to the caller, _handleDeadlineTask is observed, and _lock is released before the handler starts.
-        // The graceful-stop capability is later invoked under _lock to make the request atomic with completion;
-        // capability implementations must return their task without synchronously waiting for session teardown.
+        // The deadline is later claimed under _lock, but framework code is invoked after releasing the lock.
         // Task.Yield is cooperative and safe even on a single-threaded runtime (browser/WASI).
         await Task.Yield();
 
@@ -358,19 +358,20 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
             return;
         }
 
-        // Request the stop atomically against NotifyTestExecutionCompleted. Calling the capability under the
-        // lock means there is no claimed-but-not-requested window.
-        Task<bool>? stopTask;
+        if (!TryClaimDeadline())
+        {
+            await TryReportAsync(
+                () => _logger.LogDebugAsync("Test execution completed while the approaching deadline was being reported; abandoning the graceful stop."),
+                "Failed to report the abandoned deadline stop.").ConfigureAwait(false);
+            return;
+        }
+
+        Task<bool> stopTask;
         try
         {
-            stopTask = TryRequestGracefulStopAsync(capability);
-            if (stopTask is null)
-            {
-                await TryReportAsync(
-                    () => _logger.LogDebugAsync("Test execution completed while the approaching deadline was being reported; abandoning the graceful stop."),
-                    "Failed to report the abandoned deadline stop.").ConfigureAwait(false);
-                return;
-            }
+            stopTask = capability is IGracefulStopTestExecutionResultCapability resultCapability
+                ? resultCapability.TryStopTestExecutionAsync(_cancellationTokenSource.CancellationToken)
+                : RequestGracefulStopAsync(capability, _cancellationTokenSource.CancellationToken);
         }
         catch (Exception ex)
         {
@@ -394,7 +395,12 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
             stopAccepted = await stopTask.ConfigureAwait(false);
             if (!stopAccepted)
             {
-                return;
+                if (!await _policiesService.TryExecuteDeadlineStopFallbackAsync().ConfigureAwait(false))
+                {
+                    return;
+                }
+
+                stopAccepted = true;
             }
 
             // Commit only after the framework accepted the stop. The host awaits this handler after the
@@ -442,6 +448,10 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
             if (_state == RunState.DeadlineClaimed)
             {
                 _state = RunState.Running;
+            }
+            else if (_state == RunState.DeadlineClaimedAndCompleted)
+            {
+                _state = RunState.Completed;
             }
         }
     }
@@ -537,8 +547,9 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
 #endif
 
     /// <summary>
-    /// Which of test execution finishing and the deadline firing took the run. Transitions happen only out of
-    /// <see cref="Running"/> and only under the extension's lock, so the two are mutually exclusive.
+    /// Which of test execution finishing and the deadline firing took the run. The winner is claimed only out
+    /// of <see cref="Running"/> and under the extension's lock; completion during a deadline claim is recorded
+    /// separately so a rejected stop can restore the completed state.
     /// </summary>
     private enum RunState
     {
@@ -558,5 +569,11 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
         /// afterwards is the stop taking effect, so it must not take the verdict back.
         /// </summary>
         DeadlineClaimed,
+
+        /// <summary>
+        /// Test execution completed after the deadline claim but before the framework accepted the stop. If the
+        /// framework rejects the stop, the run returns to <see cref="Completed"/> rather than <see cref="Running"/>.
+        /// </summary>
+        DeadlineClaimedAndCompleted,
     }
 }
