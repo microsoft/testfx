@@ -96,6 +96,24 @@ public sealed class AbortAtDeadlineTests : AcceptanceTestBase<AbortAtDeadlineTes
     }
 
     [TestMethod]
+    public async Task WhenPastDeadlineStopIsRejectedBeforeHotReloadStarts_FallbackStopsHost()
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            environmentVariables: new()
+            {
+                ["TESTINGPLATFORM_DEADLINE"] = DateTimeOffset.UtcNow.AddMinutes(-5).ToString("o"),
+                ["TESTINGPLATFORM_DEADLINE_STOP_MARGIN"] = "0",
+                ["TESTINGPLATFORM_HOTRELOAD_ENABLED"] = "1",
+                ["REJECT_STOP"] = "1",
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.TestExecutionStoppedAtDeadline);
+        testHostResult.AssertOutputContains(StopMessage);
+    }
+
+    [TestMethod]
     public async Task WhenDeadlineIsInTheFuture_GracefullyStopsWhenReached()
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
@@ -302,11 +320,18 @@ internal sealed class GracefulStop : IGracefulStopTestExecutionResultCapability
         => TryStopTestExecutionAsync(cancellationToken);
 
     public Task<bool> TryStopTestExecutionAsync(CancellationToken cancellationToken)
-        => Task.FromResult(
+    {
+        if (Environment.GetEnvironmentVariable("REJECT_STOP") == "1")
+        {
+            return Task.FromResult(false);
+        }
+
+        return Task.FromResult(
             Environment.GetEnvironmentVariable("REJECT_STOP_AFTER_EXECUTION") != "1"
             || !_executionCompleted
                 ? TCS.TrySetResult()
                 : false);
+    }
 }
 
 """;

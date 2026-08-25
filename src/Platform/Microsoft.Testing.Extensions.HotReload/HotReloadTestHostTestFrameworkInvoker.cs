@@ -24,6 +24,11 @@ internal sealed class HotReloadTestHostTestFrameworkInvoker : TestHostTestFramew
         if (_isHotReloadEnabled)
         {
             ((SystemRuntimeFeature)serviceProvider.GetRuntimeFeature()).EnableHotReload();
+            _stopPoliciesService.RegisterDeadlineStopFallback(() =>
+            {
+                HotReloadHandler.RequestShutdown();
+                return Task.FromResult(true);
+            });
         }
     }
 
@@ -48,12 +53,6 @@ internal sealed class HotReloadTestHostTestFrameworkInvoker : TestHostTestFramew
             HotReloadHandler.RequestShutdown();
             return Task.CompletedTask;
         }).ConfigureAwait(false);
-        _stopPoliciesService.RegisterDeadlineStopFallback(() =>
-        {
-            HotReloadHandler.RequestShutdown();
-            return Task.FromResult(true);
-        });
-
         TaskCompletionSource<int>? executionCompleted = null;
         while (!_stopPoliciesService.IsDeadlineTriggered
             && await hotReloadHandler.ShouldRunAsync(executionCompleted?.Task, cancellationToken).ConfigureAwait(false))
