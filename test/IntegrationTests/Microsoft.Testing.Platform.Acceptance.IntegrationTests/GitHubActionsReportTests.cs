@@ -85,6 +85,17 @@ public sealed class GitHubActionsReportTests : AcceptanceTestBase<GitHubActionsR
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
+    public async Task WhenZeroTestsRanAndSummaryIsOnFailure_SummaryIsCreated(string tfm)
+    {
+        (TestHostResult result, string summary) = await RunAsync(tfm, testMode: "zero", extraArgs: "--report-gh-step-summary on-failure");
+
+        result.AssertExitCodeIs(ExitCode.ZeroTests);
+        Assert.Contains("❌ Test Run Summary", summary);
+        Assert.Contains("ZeroTests", summary);
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
     public async Task WhenMinimumExpectedTestsViolated_EmitsExitCodeAnnotationAndCalloutEvenThoughTestPassed(string tfm)
     {
         (TestHostResult result, string summary) = await RunAsync(tfm, testMode: "pass", extraArgs: "--minimum-expected-tests 5");

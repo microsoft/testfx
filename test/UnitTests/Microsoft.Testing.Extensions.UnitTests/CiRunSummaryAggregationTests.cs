@@ -442,11 +442,11 @@ public sealed class CiRunSummaryAggregationTests
     }
 
     [TestMethod]
-    [DataRow(0, false)]
-    [DataRow(2, true)]
-    public async Task GitHubPostProcessor_OnFailureOnly_WritesStepSummaryOnlyForFailureAsync(int exitCode, bool shouldWriteSummary)
+    [DataRow(0, 0, false)]
+    [DataRow(2, 1, true)]
+    [DataRow(8, 0, true)]
+    public async Task GitHubPostProcessor_OnFailureOnly_WritesStepSummaryOnlyForFailureAsync(int exitCode, int failedTests, bool shouldWriteSummary)
     {
-        int failedTests = shouldWriteSummary ? 1 : 0;
         var runSummary = new ArtifactPostProcessingRunSummary(
             totalTests: 1,
             passedTests: 1 - failedTests,
