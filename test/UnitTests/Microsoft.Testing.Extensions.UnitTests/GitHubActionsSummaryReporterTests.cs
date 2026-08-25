@@ -458,8 +458,12 @@ public sealed class GitHubActionsSummaryReporterTests
 
         string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "T", "net9.0", AtLeastOneTestFailedExitCode);
 
-        Assert.Contains("````text", markdown);
+        // The fence has to survive intact, and so does the collapsible wrapper around it: a body that closed our
+        // fence early would leave the block open and swallow everything after it.
+        Assert.Contains("<details>\n<summary><code>T.Boom</code> — ", markdown);
+        Assert.Contains("</summary>\n\n````text\n", markdown);
         Assert.Contains("injected", markdown);
+        Assert.Contains("\n````\n\n</details>\n", markdown);
     }
 
     [TestMethod]
@@ -721,7 +725,11 @@ public sealed class GitHubActionsSummaryReporterTests
 
         // The margin must stay negligible: a large one would silently cost users summary content for no reason.
         Assert.IsLessThan(1024, GitHubActionsFailureDetails.GitHubStepSummaryLimit - GitHubActionsFailureDetails.EffectiveStepSummaryLimit);
+    }
 
+    [TestMethod]
+    public void DegradationThresholds_AreOrderedWithHeadroom()
+    {
         // The two degradation thresholds must be ordered and must both leave headroom below the point of no
         // return, since co-writer output keeps accumulating after this reporter has degraded.
         Assert.IsLessThan(GitHubActionsFailureDetails.CondenseLength, GitHubActionsFailureDetails.DetailBudgetLength);
@@ -882,7 +890,9 @@ public sealed class GitHubActionsSummaryReporterTests
         int modulesWithOmittedDetails = result.ModulesWithOmittedDetails;
 
         // The whole point of the shared budget: the file stays under GitHub's cap no matter the module count.
-        Assert.IsLessThan(GitHubActionsFailureDetails.GitHubStepSummaryLimit, markdown.Length);
+        // Measured in UTF-8 bytes, which is what the budget counts and what GitHub weighs — a char count would
+        // understate a summary carrying non-ASCII assertion diffs by up to three times.
+        Assert.IsLessThan(GitHubActionsFailureDetails.GitHubStepSummaryLimit, Encoding.UTF8.GetByteCount(markdown));
 
         // The shortfall is reported to the caller rather than buried at the end of the block, so it can be stated
         // at the top of the file where the reader will actually see it. The per-module notes inside each module's
