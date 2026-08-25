@@ -187,18 +187,20 @@ internal sealed partial class GitHubActionsSummaryReporter :
             lock (_stateLock)
             {
                 _records[uid] = new TestRecord(displayName, fullyQualifiedName, kind, duration);
-                if (pendingFailure is { } failure)
+                PendingFailure? failure = null;
+                if (pendingFailure is { } info)
                 {
                     TestFileLocationProperty? declared = update.TestNode.Properties.FirstOrDefault<TestFileLocationProperty>();
-                    _pendingFailures[uid] = new PendingFailure(
+                    failure = new PendingFailure(
                         fullyQualifiedName,
                         displayName,
-                        failure.Explanation,
-                        failure.Exception,
+                        info.Explanation,
+                        info.Exception,
                         declared?.FilePath,
                         declared?.LineSpan.Start.Line ?? 0);
-                    TrimToRenderedFailures(_pendingFailures, MaxFailures);
                 }
+
+                ApplyPendingFailure(_pendingFailures, uid, failure, MaxFailures);
             }
         }
         catch (OperationCanceledException)
@@ -337,6 +339,33 @@ internal sealed partial class GitHubActionsSummaryReporter :
     {
         int result = StringComparer.Ordinal.Compare(leftFullyQualifiedName, rightFullyQualifiedName);
         return result != 0 ? result : StringComparer.Ordinal.Compare(leftDisplayName, rightDisplayName);
+    }
+
+    /// <summary>
+    /// Records the diagnostics for a test's latest terminal state, keeping retention bounded to
+    /// <paramref name="keep"/> entries.
+    /// </summary>
+    /// <remarks>
+    /// A <see langword="null"/> <paramref name="failure"/> clears whatever was held for the UID. In-process retries
+    /// reuse the same UID, so a test that failed and then recovered has to give its retained slot back — leaving it
+    /// would let a passing test evict the diagnostics of one that is still failing, and that failure would then
+    /// render as a bare line with nothing explaining why its details are missing.
+    /// </remarks>
+    internal static /* for testing */ void ApplyPendingFailure(
+        Dictionary<string, PendingFailure> pending,
+        string uid,
+        PendingFailure? failure,
+        int keep)
+    {
+        if (failure is { } value)
+        {
+            pending[uid] = value;
+            TrimToRenderedFailures(pending, keep);
+        }
+        else
+        {
+            pending.Remove(uid);
+        }
     }
 
     /// <summary>

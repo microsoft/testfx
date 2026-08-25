@@ -901,13 +901,12 @@ public sealed class GitHubActionsSummaryReporterTests
         // Consumers match the marker as a whole line — this repo's own validation workflow greps
         // '^<!-- ...summary-truncated -->$'. Anything appended to that line, such as the strength token, silently
         // stops the notice being recognised, so the token belongs on the next line.
-        foreach (string notice in new[]
+        foreach (string[] lines in new[]
         {
             GitHubActionsSummaryReporter.BuildTruncationNotice(3),
             GitHubActionsSummaryReporter.BuildAggregateTruncationNotice(2, 5),
-        })
+        }.Select(static notice => notice.Split('\n')))
         {
-            string[] lines = notice.Split('\n');
             Assert.AreEqual(GitHubActionsSummaryReporter.TruncationNoticeMarker, lines[0]);
             Assert.Contains(GitHubActionsSummaryReporter.TruncationNoticeEndMarker, lines);
         }
@@ -1588,6 +1587,33 @@ public sealed class GitHubActionsSummaryReporterTests
         // And the ones kept are those that sort first, which is the order the summary renders in.
         Assert.AreSequenceEqual(
             [.. Enumerable.Range(0, 20).Select(static i => $"T.Test{i:D4}")],
+            [.. pending.Values.Select(static f => f.FullyQualifiedName).OrderBy(static name => name, StringComparer.Ordinal)]);
+    }
+
+    [TestMethod]
+    public void ApplyPendingFailure_ReleasesTheSlotWhenARetryRecovers()
+    {
+        // In-process retries reuse the UID, so a test that failed and then passed must not keep occupying one of
+        // the retained slots — doing so would evict a test that is still failing.
+        var pending = new Dictionary<string, GitHubActionsSummaryReporter.PendingFailure>(StringComparer.Ordinal);
+        static GitHubActionsSummaryReporter.PendingFailure Failure(string name)
+            => new(name, name, "boom", new InvalidOperationException("boom"), null, 0);
+
+        // Two failures, room for exactly two.
+        GitHubActionsSummaryReporter.ApplyPendingFailure(pending, "uid-a", Failure("T.A"), 2);
+        GitHubActionsSummaryReporter.ApplyPendingFailure(pending, "uid-b", Failure("T.B"), 2);
+        Assert.HasCount(2, pending);
+
+        // "T.A" is retried and passes: no failure details this time round.
+        GitHubActionsSummaryReporter.ApplyPendingFailure(pending, "uid-a", null, 2);
+        Assert.HasCount(1, pending);
+        Assert.IsFalse(pending.ContainsKey("uid-a"));
+
+        // So a test that really is still failing keeps its diagnostics instead of being crowded out by the
+        // recovered one, which sorts first and would otherwise have won the slot.
+        GitHubActionsSummaryReporter.ApplyPendingFailure(pending, "uid-c", Failure("T.C"), 2);
+        Assert.AreSequenceEqual(
+            ["T.B", "T.C"],
             [.. pending.Values.Select(static f => f.FullyQualifiedName).OrderBy(static name => name, StringComparer.Ordinal)]);
     }
 
