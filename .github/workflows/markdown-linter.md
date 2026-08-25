@@ -39,16 +39,36 @@ jobs:
       uses: actions/checkout@v7.0.1
       with:
         persist-credentials: false
-    - name: Install markdownlint-cli2
+    - id: install
+      name: Install markdownlint-cli2
       # Pinned to the markdownlint-cli2 version bundled by
       # DavidAnson/markdownlint-cli2-action@v24.2.0, which .github/workflows/markdownlint.yml
       # runs on every pull request, so this scheduled report and the pull request gate apply
-      # exactly the same rules. Bump this together with that action.
-      # Installed in its own step so that a registry outage or a bad version fails the job
-      # here. npx exits 1 for those too, which the lint step below cannot tell apart from
+      # exactly the same rules. Both pins are ignored by Dependabot (see .github/dependabot.yml)
+      # so they can only move together, by hand.
+      # Installed in its own step so that a registry outage or a bad version is caught here.
+      # npx exits 1 for those too, which the lint step below cannot tell apart from
       # "violations found", and it would report an npm error log as if it were lint results.
-      run: npm install --global markdownlint-cli2@0.23.2
+      run: |
+        status=0
+        npm install --global markdownlint-cli2@0.23.2 > install.log 2>&1 || status=$?
+        cat install.log
+        if [ "$status" -ne 0 ]; then
+          echo "::error::Installing markdownlint-cli2@0.23.2 failed (exit $status)."
+          echo "failed=true" >> "$GITHUB_OUTPUT"
+          # Hand the agent a marked log instead of failing the job. The agent job needs this
+          # one, so a red job here would skip the whole reporting chain and produce silence,
+          # which is the unattended failure this workflow exists to remove.
+          {
+            echo "MARKDOWNLINT_RUN_FAILED"
+            echo "npm install of markdownlint-cli2@0.23.2 failed with exit code $status."
+            echo "No Markdown files were linted."
+            echo
+            cat install.log
+          } > markdownlint.log
+        fi
     - id: markdownlint
+      if: steps.install.outputs.failed != 'true'
       name: Run markdownlint-cli2
       # Configuration comes from .markdownlint-cli2.jsonc in the repo root, including its
       # "ignores" list.
@@ -57,13 +77,20 @@ jobs:
         markdownlint-cli2 "**/*.md" > markdownlint.log 2>&1 || status=$?
         cat markdownlint.log
         echo "markdownlint-cli2 exit code: $status (0 = clean, 1 = violations found)"
-        # Exit 1 means violations, which are what the agent reports on, so the job stays green.
-        # Anything above that is markdownlint-cli2 failing to run at all (2 = execution or
-        # configuration error). The log then holds a stack trace rather than lint results, so
-        # fail instead of letting the agent report "no issues" over a run that never linted.
+        # Exit 1 means violations, which are what the agent reports on. Anything above that is
+        # markdownlint-cli2 failing to run at all (2 = execution or configuration error), so the
+        # log holds a stack trace rather than lint results. Mark it so the agent reports a
+        # workflow failure instead of "no issues", and keep the job green either way: the agent
+        # job needs this one, so failing here would skip the reporting chain and say nothing.
         if [ "$status" -gt 1 ]; then
           echo "::error::markdownlint-cli2 could not complete (exit $status); see the log above."
-          exit "$status"
+          {
+            echo "MARKDOWNLINT_RUN_FAILED"
+            echo "markdownlint-cli2 exited $status without producing lint results."
+            echo
+            cat markdownlint.log
+          } > markdownlint.log.tmp
+          mv markdownlint.log.tmp markdownlint.log
         fi
     - if: always()
       name: Upload markdownlint log
@@ -98,7 +125,14 @@ You are an expert documentation quality analyst. Your task is to analyze the mar
 ## Your Task
 
 1. **Read the linter output** from `/tmp/gh-aw/markdownlint.log` using the bash tool
-2. **Analyze the findings**:
+2. **Check the first line for `MARKDOWNLINT_RUN_FAILED` before anything else.** If it is there,
+   markdownlint-cli2 never produced lint results — the rest of the file is an npm or runtime
+   error, not findings. Do not analyze it as lint output and do not report a clean run. Instead
+   create an issue titled
+   "Markdown Linter workflow failure - [Date] - markdownlint-cli2 did not run",
+   quoting the log and stating that Markdown went unlinted on this run so the result says
+   nothing about the repository's Markdown quality. Then stop; the steps below do not apply.
+3. **Analyze the findings**:
    - Categorize errors by severity (critical, high, medium, low)
    - Identify patterns in the errors
    - Determine which errors are most important to fix first
@@ -106,7 +140,7 @@ You are an expert documentation quality analyst. Your task is to analyze the mar
      `.markdownlint-cli2.jsonc` rules. The same rules gate every pull request through
      `.github/workflows/markdownlint.yml`, so anything reported here also blocks new pull
      requests. Rules that file disables (for example MD013 line length) are not violations.
-3. **Create a detailed issue** with the following structure:
+4. **Create a detailed issue** with the following structure:
 
 ### Issue Title
 Use format: "Markdown Quality Report - [Date] - [X] issues found"
