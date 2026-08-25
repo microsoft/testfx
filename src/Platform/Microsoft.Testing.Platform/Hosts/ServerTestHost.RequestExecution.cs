@@ -68,6 +68,11 @@ internal sealed partial class ServerTestHost
     private async Task<ResponseArgsBase> ExecuteRequestAsync(RequestArgsBase args, string method, ServiceProvider perRequestServiceProvider, CancellationToken cancellationToken)
     {
         DateTimeOffset requestStart = _clock.UtcNow;
+
+        // Avoid allocating request-scoped services that register cancellation callbacks when the request
+        // was already cancelled before execution started.
+        cancellationToken.ThrowIfCancellationRequested();
+
         ITestSessionContext perRequestTestSessionContext = perRequestServiceProvider.GetTestSessionContext();
         StopPoliciesService applicationPoliciesService = perRequestServiceProvider.GetRequiredService<StopPoliciesService>();
         StopPoliciesService requestPoliciesService = new(perRequestServiceProvider.GetTestApplicationCancellationTokenSource())
@@ -82,10 +87,6 @@ internal sealed partial class ServerTestHost
             requestPoliciesService,
             perRequestServiceProvider.GetPlatformOTelService(),
             perRequestServiceProvider.GetRequiredService<ITestCoverageResult>()));
-
-        // Verify request cancellation, above the chain the exception will be
-        // catch and propagated as correct json rpc error
-        cancellationToken.ThrowIfCancellationRequested();
 
         // The JSON-RPC payload owns server request selection. Providers receive a server-origin
         // context so they can explicitly opt out; non-empty contributions are rejected below.
