@@ -57,17 +57,21 @@ internal sealed partial class TestHostBuilder
         await RegisterAsServiceOrConsumerOrBothAsync(testFrameworkBuilderData.TestExecutionRequestInvoker, serviceProvider, dataConsumersBuilder).ConfigureAwait(false);
         await RegisterAsServiceOrConsumerOrBothAsync(testFrameworkBuilderData.TestExecutionFilterFactory, serviceProvider, dataConsumersBuilder).ConfigureAwait(false);
 
-        // Capabilities can contain request lifecycle state (for example graceful-stop pending/active/completed).
-        // The application service provider is cloned for server requests, so replace the cloned application
-        // instance with one produced for this request. The framework and its per-request extensions then observe
-        // the same capability instance without sharing request state with concurrent calls.
-        ITestFrameworkCapabilities testFrameworkCapabilities = testFrameworkBuilderData.TestFrameworkManager.TestFrameworkCapabilitiesFactory(serviceProvider);
-        if (testFrameworkCapabilities is IAsyncInitializableExtension testFrameworkCapabilitiesAsyncInitializable)
+        ITestFrameworkCapabilities testFrameworkCapabilities = serviceProvider.GetTestFrameworkCapabilities();
+        if (testFrameworkBuilderData.IsServerRequest)
         {
-            await testFrameworkCapabilitiesAsyncInitializable.InitializeAsync().ConfigureAwait(false);
+            // Capabilities can contain request lifecycle state (for example graceful-stop pending/active/completed).
+            // Replace the application capability copied into a server request's cloned provider. The framework and
+            // its per-request extensions then share one fresh capability without affecting the console host.
+            testFrameworkCapabilities = testFrameworkBuilderData.TestFrameworkManager.TestFrameworkCapabilitiesFactory(serviceProvider);
+            if (testFrameworkCapabilities is IAsyncInitializableExtension testFrameworkCapabilitiesAsyncInitializable)
+            {
+                await testFrameworkCapabilitiesAsyncInitializable.InitializeAsync().ConfigureAwait(false);
+            }
+
+            serviceProvider.ReplaceService(testFrameworkCapabilities);
         }
 
-        serviceProvider.ReplaceService(testFrameworkCapabilities);
         ITestFramework testFramework = testFrameworkBuilderData.TestFrameworkManager.TestFrameworkFactory(testFrameworkCapabilities, serviceProvider);
         await testFramework.TryInitializeAsync().ConfigureAwait(false);
         if (testFramework is IDataProducer dataProducer)

@@ -130,7 +130,8 @@ internal sealed partial class ServerTestHost
             _testFrameworkManager,
             _testSessionManager,
             new MessageBusProxy(),
-            method == JsonRpcMethods.TestingDiscoverTests)).ConfigureAwait(false);
+            method == JsonRpcMethods.TestingDiscoverTests,
+            isServerRequest: true)).ConfigureAwait(false);
 
         DateTimeOffset adapterLoadStop = _clock.UtcNow;
         DateTimeOffset requestExecuteStart = _clock.UtcNow;
