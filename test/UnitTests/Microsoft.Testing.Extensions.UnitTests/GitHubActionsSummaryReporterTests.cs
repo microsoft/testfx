@@ -738,12 +738,33 @@ public sealed class GitHubActionsSummaryReporterTests
 
     [TestMethod]
     public void DegradationThresholds_ShedDiagnosticsBeforeWholeSections()
+    {
         // The order of the two thresholds is the whole design: diagnostics are kilobytes per failure and go
         // first, while the list of which tests failed is a line each and survives until whole sections have to
         // go. Reversing them would drop the names of failing tests while still expanding stack traces.
-        => Assert.IsLessThan(
+        Assert.IsLessThan(
             GitHubActionsFailureDetails.CondenseLength,
             GitHubActionsFailureDetails.MaxTotalDetailsLength);
+
+        // And that ordering has to hold in the rendering, not just between the constants. At a budget past the
+        // detail allowance but short of the condense point, the failing test must still be named while its
+        // diagnostics are gone — the reader keeps what tells them which test broke.
+        GitHubActionsTestRecord[] records =
+        [
+            new(
+                "Boom",
+                "T.Boom",
+                GitHubActionsTerminalKind.Failed,
+                TimeSpan.FromMilliseconds(1),
+                new GitHubActionsTestFailureDetails("kaboom", "System.Exception", "at T.Boom()", null, 0)),
+        ];
+
+        string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "T", "net9.0", AtLeastOneTestFailedExitCode, includeFailureDetails: true, budget: BudgetOf(0));
+
+        Assert.Contains("T.Boom", markdown);
+        Assert.DoesNotContain("<details>", markdown);
+        Assert.DoesNotContain("kaboom", markdown);
+    }
 
     [TestMethod]
     public void GetRemainingDetailsBudget_FileOverGitHubLimit_ReturnsZero()
@@ -934,13 +955,42 @@ public sealed class GitHubActionsSummaryReporterTests
     }
 
     [TestMethod]
-    public void TruncationNotices_ShareOneMarker_SoASummaryCannotCarryTwoWarnings()
+    public async Task TruncationNotices_ShareOneMarker_SoASummaryCannotCarryTwoWarnings()
     {
         // The per-project and aggregated writing modes describe different losses, and only one of them runs in a
-        // given test process — but a workflow can mix them across steps. They share a marker so whichever warning
-        // is written first is the only one, rather than the reader meeting two contradictory warnings.
-        Assert.StartsWith(GitHubActionsSummaryReporter.TruncationNoticeMarker, GitHubActionsSummaryReporter.BuildTruncationNotice(3));
-        Assert.StartsWith(GitHubActionsSummaryReporter.TruncationNoticeMarker, GitHubActionsSummaryReporter.BuildAggregateTruncationNotice(2, 5));
+        // given test process — but a workflow can mix them across steps. They share a marker so the reader meets
+        // one warning rather than two contradictory ones, which only means anything if writing both really does
+        // leave one behind.
+        string path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, string.Empty);
+            var fileSystem = new SystemFileSystem();
+
+            // The weaker "failure details were omitted" note, then the stronger "whole sections were removed" one.
+            await NewWriter(fileSystem, path, 1).AppendStepSummaryWithLeadingNoticeAsync(
+                "first\n",
+                static _ => GitHubActionsSummaryReporter.BuildAggregateTruncationNotice(2, 5),
+                CancellationToken.None);
+            await NewWriter(fileSystem, path, 1).AppendStepSummaryWithLeadingNoticeAsync(
+                "second\n",
+                static _ => GitHubActionsSummaryReporter.BuildTruncationNotice(3),
+                CancellationToken.None);
+
+            string summary = File.ReadAllText(path);
+
+            Assert.AreEqual(1, CountOccurrences(summary, GitHubActionsSummaryReporter.TruncationNoticeMarker));
+            Assert.AreEqual(1, CountOccurrences(summary, GitHubActionsSummaryReporter.TruncationNoticeEndMarker));
+
+            // The one left is the stronger, and neither section was lost to the replacement.
+            Assert.AreEqual(GitHubActionsSummaryReporter.SectionsRemovedNoticeStrength, StepSummaryWriter.GetLeadingNoticeStrength(summary));
+            Assert.Contains("first", summary);
+            Assert.Contains("second", summary);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
     }
 
     private static int CountOccurrences(string haystack, string needle)
