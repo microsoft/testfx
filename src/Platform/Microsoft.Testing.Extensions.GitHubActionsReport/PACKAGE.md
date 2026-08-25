@@ -16,7 +16,7 @@ This package extends Microsoft.Testing.Platform with:
 
 - **Per-assembly log groups**: emits `::group::` / `::endgroup::` workflow commands so each test assembly's output is collapsed by default in the runner UI
 - **Failure annotations**: emits an `::error` workflow command for each failing test so failures appear in the workflow Annotations tab and, when the source location can be resolved, on the pull request's "Files changed" diff gutter. Skipped tests are surfaced as `::warning` annotations so they are visible in the Annotations tab too. When the test session completes with a non-test-result failure — a `--minimum-expected-tests` violation, a run that discovered zero tests, a `--maximum-failed-tests` stop, or a test-adapter session failure — a single run-level `::error` is emitted describing the [Microsoft.Testing.Platform exit code](https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes)
-- **Job summary**: writes one markdown roll-up (totals, failures, slowest tests) to the file pointed to by `GITHUB_STEP_SUMMARY`, which GitHub renders on the workflow run summary page. Use `--report-gh-step-summary-sections` to select `test-results`, `slow-tests`, or both; `all` keeps every currently supported section and is the default. With an SDK that supports required artifact post-processing, multi-module `dotnet test` runs produce one authoritative overall section using the SDK's outer duration and exit verdict, with deterministic per-assembly details underneath. Older SDKs preserve the per-assembly sections. A non-test-result failure exit code is called out so a failure is not hidden behind a green ✅
+- **Job summary**: writes one markdown roll-up (totals, failures, coverage, slowest tests) to the file pointed to by `GITHUB_STEP_SUMMARY`, which GitHub renders on the workflow run summary page. Use `--report-gh-step-summary-sections` to select `test-results`, `coverage`, `slow-tests`, or any combination; `all` keeps every currently supported section and is the default. With an SDK that supports required artifact post-processing, multi-module `dotnet test` runs produce one authoritative overall section using the SDK's outer duration and exit verdict, with deterministic per-assembly details underneath. Older SDKs preserve the per-assembly sections. A non-test-result failure exit code is called out so a failure is not hidden behind a green ✅
 - **Slow-test notices**: emits a `::notice` workflow command for any test still running past a threshold (default 60 seconds)
 
 > [!NOTE]
@@ -41,7 +41,7 @@ The extension activates when the test run is on GitHub Actions (`GITHUB_ACTIONS=
 | `--report-gh-groups on\|off` | Per-assembly log groups | on |
 | `--report-gh-annotations on\|off` | Failure and skip annotations | on |
 | `--report-gh-step-summary on\|off` | Markdown job summary | on |
-| `--report-gh-step-summary-sections <section>...` | Job-summary content: `test-results`, `slow-tests`, or `all`; accepts repeated, space-separated, and comma-separated values | `all` |
+| `--report-gh-step-summary-sections <section>...` | Job-summary content: `test-results`, `coverage`, `slow-tests`, or `all`; accepts repeated, space-separated, and comma-separated values | `all` |
 | `--report-gh-slow-test-notices on\|off` | Slow-test notices | on |
 | `--report-gh-slow-test-threshold <duration>` | Time before a slow-test notice is emitted; accepts a bare number of seconds or a unit suffix such as `90s`, `2m`, `1.5h` | 60s |
 

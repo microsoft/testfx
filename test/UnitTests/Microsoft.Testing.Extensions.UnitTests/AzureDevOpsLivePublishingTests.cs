@@ -354,7 +354,27 @@ public sealed class AzureDevOpsLivePublishingTests
     }
 
     [TestMethod]
-    public async Task CreatePublisher_UsesSanitizedRunNameAndStorageWithoutExtension()
+    public void CreateTestCaseResult_UsesFullyQualifiedNameAsAutomatedTestName()
+    {
+        TestNode testNode = new()
+        {
+            Uid = new TestNodeUid("opaque-test-node-uid"),
+            DisplayName = "MyMethod",
+            Properties = new PropertyBag(
+                new PassedTestNodeStateProperty(),
+                new TestMethodIdentifierProperty("tests.dll", "My.Namespace", "MyType", "MyMethod", 0, [], "System.Void")),
+        };
+
+        AzureDevOpsTestCaseResult? result = AzureDevOpsTestResultsPublisher.CreateTestCaseResult(testNode, "tests.dll")?.Result;
+
+        Assert.IsNotNull(result);
+        AzureDevOpsTestCaseResult publishedResult = result!;
+        Assert.AreEqual("My.Namespace.MyType.MyMethod", publishedResult.AutomatedTestName);
+        Assert.AreEqual("MyMethod", publishedResult.TestCaseTitle);
+    }
+
+    [TestMethod]
+    public async Task CreatePublisher_UsesSanitizedRunNameAndStorageFileName()
     {
         using TestDirectory directory = CreateTestDirectory();
         Mock<IEnvironment> environment = CreateEnvironmentMock(processId: GetAliveProcessId(), stageName: new string('s', 240) + "/stage", jobName: "job\r\nline\u0001");
@@ -370,7 +390,7 @@ public sealed class AzureDevOpsLivePublishingTests
 
         Assert.IsNotNull(capturedConfiguration);
         AzureDevOpsPublishConfiguration configuration = capturedConfiguration!;
-        Assert.AreEqual("MyTests", configuration.AutomatedTestStorage);
+        Assert.AreEqual("mytests.dll", configuration.AutomatedTestStorage);
         Assert.DoesNotContain("/", configuration.RunName);
         Assert.DoesNotContain("\r", configuration.RunName);
         Assert.DoesNotContain("\n", configuration.RunName);
@@ -1969,9 +1989,11 @@ public sealed class AzureDevOpsLivePublishingTests
         Assert.IsNotNull(parent.SubResults);
         Assert.HasCount(2, parent.SubResults);
         Assert.AreEqual(1, parent.SubResults[0].SequenceId);
+        Assert.AreEqual("Attempt# 0 - MyTest", parent.SubResults[0].DisplayName);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.FailedTestOutcome, parent.SubResults[0].Outcome);
         Assert.AreEqual("boom", parent.SubResults[0].ErrorMessage);
         Assert.AreEqual(2, parent.SubResults[1].SequenceId);
+        Assert.AreEqual("Attempt# 1 - MyTest", parent.SubResults[1].DisplayName);
         Assert.AreEqual(AzureDevOpsLivePublishingConstants.PassedTestOutcome, parent.SubResults[1].Outcome);
     }
 
@@ -2388,7 +2410,7 @@ public sealed class AzureDevOpsLivePublishingTests
         await otherPublisher.OnTestSessionFinishingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
 
         Assert.HasCount(1, created);
-        Assert.AreEqual("OtherTests", created[0].AutomatedTestStorage);
+        Assert.AreEqual("othertests.dll", created[0].AutomatedTestStorage);
         Assert.AreEqual("MyTest", created[0].AutomatedTestName);
         Assert.IsEmpty(client.UpdateTestResultsCalls, "A different assembly is a different test, not another attempt.");
     }
@@ -3445,7 +3467,9 @@ public sealed class AzureDevOpsLivePublishingTests
 
     private static TestNode CreateNode(string uid, IProperty state, DateTimeOffset startTime, TimingProperty? timing = null, string? displayName = null)
     {
-        PropertyBag properties = timing is null ? new PropertyBag(state) : new PropertyBag(state, timing);
+        PropertyBag properties = timing is null
+            ? new PropertyBag(state, new SerializableKeyValuePairStringProperty("vstest.TestCase.FullyQualifiedName", uid))
+            : new PropertyBag(state, timing, new SerializableKeyValuePairStringProperty("vstest.TestCase.FullyQualifiedName", uid));
         return new TestNode
         {
             Uid = new TestNodeUid(uid),

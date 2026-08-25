@@ -14,6 +14,15 @@ internal sealed partial class GitHubActionsSummaryReporter
         string targetFrameworkMoniker,
         int exitCode,
         GitHubActionsStepSummarySections sections = GitHubActionsStepSummarySections.All)
+        => BuildMarkdown(records, assemblyName, targetFrameworkMoniker, exitCode, new CiCoverageSummaryData(), sections);
+
+    private static string BuildMarkdown(
+        IReadOnlyList<TestRecord> records,
+        string assemblyName,
+        string targetFrameworkMoniker,
+        int exitCode,
+        CiCoverageSummaryData coverage,
+        GitHubActionsStepSummarySections sections)
     {
         int total = records.Count;
         int passed = 0;
@@ -60,7 +69,15 @@ internal sealed partial class GitHubActionsSummaryReporter
                 .Append(" | ").Append(failed.ToString(CultureInfo.InvariantCulture))
                 .Append(" | ").Append(skipped.ToString(CultureInfo.InvariantCulture))
                 .Append(" | ").Append(FormatDuration(totalDuration)).Append(" |\n\n");
+        }
 
+        if ((sections & GitHubActionsStepSummarySections.Coverage) != 0)
+        {
+            CiCoverageSummary.AppendMarkdown(builder, coverage, headingLevel: 3);
+        }
+
+        if ((sections & GitHubActionsStepSummarySections.TestResults) != 0)
+        {
             // Surface a non-test-result failure that this reporter can observe once the session has finished
             // (zero tests, --minimum-expected-tests, --maximum-failed-tests, test-adapter session failure) as a
             // GitHub alert callout. Plain pass / at-least-one-failed outcomes are already conveyed by the totals
@@ -140,7 +157,15 @@ internal sealed partial class GitHubActionsSummaryReporter
                 .Append(" | ").Append(aggregate.FailedTests.ToString(CultureInfo.InvariantCulture))
                 .Append(" | ").Append(aggregate.SkippedTests.ToString(CultureInfo.InvariantCulture))
                 .Append(" | ").Append(duration).Append(" |\n\n");
+        }
 
+        if ((sections & GitHubActionsStepSummarySections.Coverage) != 0)
+        {
+            CiCoverageSummary.AppendMarkdown(builder, aggregate.Coverage, headingLevel: 3);
+        }
+
+        if ((sections & GitHubActionsStepSummarySections.TestResults) != 0)
+        {
             if (aggregate.IsPartial)
             {
                 builder.Append("> [!WARNING]\n> This summary is partial because the test run was truncated.\n\n");
@@ -203,7 +228,15 @@ internal sealed partial class GitHubActionsSummaryReporter
                 .Append(" | ").Append(module.FailedTests.ToString(CultureInfo.InvariantCulture))
                 .Append(" | ").Append(module.SkippedTests.ToString(CultureInfo.InvariantCulture))
                 .Append(" | ").Append(FormatDuration(TimeSpan.FromTicks(module.TestDurationTicks))).Append(" |\n\n");
+        }
 
+        if ((sections & GitHubActionsStepSummarySections.Coverage) != 0)
+        {
+            CiCoverageSummary.AppendMarkdown(builder, module.Coverage, headingLevel + 1);
+        }
+
+        if ((sections & GitHubActionsStepSummarySections.TestResults) != 0)
+        {
             if (!GitHubActionsExitCode.IsTestResultOutcome(module.ExitCode))
             {
                 builder.Append("> Module exit code: `").Append(module.ExitCode.ToString(CultureInfo.InvariantCulture)).Append("` (")

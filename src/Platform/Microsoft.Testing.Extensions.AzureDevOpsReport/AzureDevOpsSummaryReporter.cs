@@ -35,6 +35,7 @@ internal sealed partial class AzureDevOpsSummaryReporter : IDataConsumer, IDataP
     private readonly ILogger _logger;
     private readonly Lazy<string> _targetFrameworkMoniker;
     private readonly ITestApplicationProcessExitCode _testApplicationProcessExitCode;
+    private readonly ITestCoverageResult _testCoverageResult;
     private readonly Func<bool> _shouldDeferToArtifactPostProcessing;
 
 #if NET9_0_OR_GREATER
@@ -58,6 +59,7 @@ internal sealed partial class AzureDevOpsSummaryReporter : IDataConsumer, IDataP
         IOutputDevice outputDevice,
         ITestApplicationModuleInfo testApplicationModuleInfo,
         ITestApplicationProcessExitCode testApplicationProcessExitCode,
+        ITestCoverageResult testCoverageResult,
         ILoggerFactory loggerFactory,
         Func<bool> shouldDeferToArtifactPostProcessing)
     {
@@ -69,6 +71,7 @@ internal sealed partial class AzureDevOpsSummaryReporter : IDataConsumer, IDataP
         _outputDevice = outputDevice;
         _testApplicationModuleInfo = testApplicationModuleInfo;
         _testApplicationProcessExitCode = testApplicationProcessExitCode;
+        _testCoverageResult = testCoverageResult;
         _logger = loggerFactory.CreateLogger<AzureDevOpsSummaryReporter>();
         _isEnabled = commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsSummary);
         _targetFrameworkMoniker = new(TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform);

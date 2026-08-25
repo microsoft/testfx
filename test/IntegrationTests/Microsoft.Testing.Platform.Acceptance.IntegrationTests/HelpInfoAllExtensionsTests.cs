@@ -203,7 +203,7 @@ Extension options:
     --report-gh-step-summary
         Enable or disable writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.
     --report-gh-step-summary-sections
-        Select the content included in the GitHub Actions job summary. Specify one or more values, repeated, space-separated, or comma-separated: 'test-results', 'slow-tests', or 'all'. Defaults to 'all'. Requires '--report-gh'.
+        Select the content included in the GitHub Actions job summary. Specify one or more values, repeated, space-separated, or comma-separated: 'test-results', 'slow-tests', 'coverage', or 'all'. Defaults to 'all'. Requires '--report-gh'.
     --report-html
         Enable generating an HTML report.
     --report-html-filename
@@ -616,7 +616,7 @@ Registered command line providers:
       --report-gh-step-summary-sections
         Arity: 1..N
         Hidden: False
-        Description: Select the content included in the GitHub Actions job summary. Specify one or more values, repeated, space-separated, or comma-separated: 'test-results', 'slow-tests', or 'all'. Defaults to 'all'. Requires '--report-gh'.
+        Description: Select the content included in the GitHub Actions job summary. Specify one or more values, repeated, space-separated, or comma-separated: 'test-results', 'slow-tests', 'coverage', or 'all'. Defaults to 'all'. Requires '--report-gh'.
   HangDumpCommandLineProvider
     Name: Hang dump
     Version: *

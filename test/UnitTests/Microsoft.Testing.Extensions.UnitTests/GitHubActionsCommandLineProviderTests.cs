@@ -120,9 +120,10 @@ public sealed class GitHubActionsCommandLineProviderTests
     [TestMethod]
     [DataRow("test-results")]
     [DataRow("SLOW-TESTS")]
+    [DataRow("coverage")]
     [DataRow("all")]
     [DataRow("test-results|slow-tests")]
-    [DataRow("test-results,slow-tests")]
+    [DataRow("test-results,slow-tests,coverage")]
     [DataRow("test-results|TEST-RESULTS")]
     public async Task ValidateOptionArgumentsAsync_ReturnsValid_ForStepSummarySectionsAsync(string value)
     {
@@ -167,7 +168,7 @@ public sealed class GitHubActionsCommandLineProviderTests
     public void TryParseStepSummarySections_IsCaseInsensitiveAndDuplicateSafe()
     {
         bool parsed = GitHubActionsStepSummarySectionsParser.TryParse(
-            [" TEST-RESULTS ", "slow-tests,SLOW-TESTS", "test-results"],
+            [" TEST-RESULTS ", "slow-tests,SLOW-TESTS", "coverage,COVERAGE", "test-results"],
             out GitHubActionsStepSummarySections sections,
             out string? invalidValue,
             out bool hasEmptyValue);
@@ -201,6 +202,12 @@ public sealed class GitHubActionsCommandLineProviderTests
 
         Assert.AreEqual(GitHubActionsStepSummarySections.All, sections);
     }
+
+    [TestMethod]
+    public void ToPersistedValues_AllIncludesCoverage()
+        => Assert.AreSequenceEqual(
+            ["test-results", "slow-tests", "coverage"],
+            GitHubActionsStepSummarySectionsParser.ToPersistedValues(GitHubActionsStepSummarySections.All));
 
     [TestMethod]
     public async Task ValidateOptionArgumentsAsync_ReturnsInvalid_WhenSlowTestNoticesValueIsNotOnOrOffAsync()

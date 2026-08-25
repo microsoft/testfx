@@ -24,12 +24,14 @@ internal enum GitHubActionsStepSummarySections
     None = 0,
     TestResults = 1,
     SlowTests = 2,
-    All = TestResults | SlowTests,
+    Coverage = 4,
+    All = TestResults | SlowTests | Coverage,
 }
 
 internal static class GitHubActionsStepSummarySectionsParser
 {
     internal const string AllSectionName = "all";
+    internal const string CoverageSectionName = "coverage";
     internal const string SlowTestsSectionName = "slow-tests";
     internal const string TestResultsSectionName = "test-results";
 
@@ -55,9 +57,8 @@ internal static class GitHubActionsStepSummarySectionsParser
         foreach (string argument in arguments)
         {
             string[] values = argument.Split(',');
-            foreach (string value in values)
+            foreach (string normalizedValue in values.Select(static value => value.Trim()))
             {
-                string normalizedValue = value.Trim();
                 if (normalizedValue.Length == 0)
                 {
                     hasEmptyValue = true;
@@ -71,6 +72,9 @@ internal static class GitHubActionsStepSummarySectionsParser
                         break;
                     case SlowTestsSectionName:
                         sections |= GitHubActionsStepSummarySections.SlowTests;
+                        break;
+                    case CoverageSectionName:
+                        sections |= GitHubActionsStepSummarySections.Coverage;
                         break;
                     case AllSectionName:
                         sections = GitHubActionsStepSummarySections.All;
@@ -102,6 +106,11 @@ internal static class GitHubActionsStepSummarySectionsParser
         if ((sections & GitHubActionsStepSummarySections.SlowTests) != 0)
         {
             values.Add(SlowTestsSectionName);
+        }
+
+        if ((sections & GitHubActionsStepSummarySections.Coverage) != 0)
+        {
+            values.Add(CoverageSectionName);
         }
 
         return [.. values];

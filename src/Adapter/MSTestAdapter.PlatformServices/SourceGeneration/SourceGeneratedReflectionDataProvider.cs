@@ -78,7 +78,9 @@ internal class SourceGeneratedReflectionDataProvider
 
     /// <summary>
     /// Gets complete attribute sets for successfully resolved methods, keyed by the
-    /// <see cref="MethodInfo"/> instance that the source generator resolved at startup. Keying by
+    /// <see cref="MethodInfo"/> instance that the source generator resolved at startup. These sets
+    /// contain source-generated user-declared attributes plus required compiler-synthesized metadata
+    /// merged during registration. Keying by
     /// <see cref="MethodInfo"/> (rather than method name) distinguishes overloads. Dictionary
     /// presence is authoritative, including an empty array; missing entries require reflection
     /// fallback because resolution or complete materialization was unavailable.
