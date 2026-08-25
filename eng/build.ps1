@@ -7,6 +7,7 @@ Param(
   [string] $msbuildEngine = $null,
   [bool] $warnAsError = $true,
   [bool] $nodeReuse = $true,
+  [bool][Alias('mt')]$msbuildMultiThreaded = $false,
   [switch][Alias('r')]$restore,
   [switch] $deployDeps,
   [switch][Alias('b')]$build,
@@ -81,5 +82,9 @@ if ($installWindowsSdk) {
 # Remove extra parameters that are not used by the common build script
 $null = $PSBoundParameters.Remove("vs")
 $null = $PSBoundParameters.Remove("installWindowsSdk")
+
+if (-not $PSBoundParameters.ContainsKey("msbuildMultiThreaded")) {
+    $PSBoundParameters["msbuildMultiThreaded"] = -not $ci
+}
 
 & $PSScriptRoot\common\Build.ps1 @PSBoundParameters

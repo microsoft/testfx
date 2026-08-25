@@ -172,6 +172,7 @@ stages:
           "-NoProfile",
           "-File", "./eng/common/msbuild.ps1",
           "-prepareMachine",
+          "-msbuildMultiThreaded:`$true",
           "-warnAsError:`$false",
           "./TestFx.slnx",
           "/restore",
@@ -258,6 +259,7 @@ stages:
 
     - script: eng\common\CIBuild.cmd
         -configuration $(_BuildConfig)
+        -msbuildMultiThreaded 1
         -prepareMachine
         /p:Publish=false
         /p:Test=false
@@ -276,6 +278,7 @@ stages:
             -ci `
             -disablePipelineSetResult `
             -configuration $(_BuildConfig) `
+            -msbuildMultiThreaded $true `
             -binaryLogName "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\SignPack.binlog" `
             -restore `
             -sign `
@@ -454,6 +457,7 @@ stages:
               "-NoProfile",
               "-File", "./eng/common/msbuild.ps1",
               "-prepareMachine",
+              "-msbuildMultiThreaded:`$true",
               "-warnAsError:`$false",
               "./TestFx.slnx",
               "/restore",
@@ -597,6 +601,7 @@ stages:
               "-ci",
               "-disablePipelineSetResult",
               "-configuration", "$(_BuildConfig)",
+              "-msbuildMultiThreaded:`$true",
               "-binaryLogName", "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\SignPack.binlog",
               "-restore",
               "-sign",
@@ -707,6 +712,7 @@ stages:
         # outputs; also skipped when they failed with build errors, because this step would only reproduce them.
         - script: eng\common\CIBuild.cmd
             -configuration $(_BuildConfig)
+            -msbuildMultiThreaded 1
             -prepareMachine
             /p:Publish=false
             /p:Test=false
@@ -850,6 +856,7 @@ stages:
         steps:
         - script: eng/common/cibuild.sh
             -configuration $(_BuildConfig)
+            -msbuildMultiThreaded true
             -prepareMachine
             /p:Test=false
             /p:Publish=false
@@ -889,6 +896,7 @@ stages:
         steps:
         - script: eng/common/cibuild.sh
             -configuration $(_BuildConfig)
+            -msbuildMultiThreaded true
             -prepareMachine
             /p:Test=false
             /p:Publish=false
