@@ -69,7 +69,15 @@ internal sealed class TrxArtifactPostProcessor : IArtifactPostProcessor
         // outside the supplied output directory (Directory.CreateDirectory succeeds on an existing link).
         // Materialize the directory here and refuse to merge through a reparse point instead. Returning
         // null leaves the per-module reports untouched, matching the never-fail-the-run invariant.
-        Directory.CreateDirectory(mergedDirectory);
+        try
+        {
+            Directory.CreateDirectory(mergedDirectory);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
+
         if (ArtifactPostProcessingHelper.IsReparsePoint(mergedDirectory))
         {
             return null;
