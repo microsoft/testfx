@@ -410,7 +410,7 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, ITestSessionLife
             await TryReportAsync(
                 () => _outputDevice.DisplayAsync(
                     this,
-                    new FormattedTextOutputDeviceData(PlatformResources.AbortAtDeadlineMessage),
+                    new SessionMessageOutputDeviceData(PlatformResources.AbortAtDeadlineMessage),
                     _cancellationTokenSource.CancellationToken),
                 "Failed to report the approaching deadline.").ConfigureAwait(false);
         }

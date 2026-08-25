@@ -14,11 +14,13 @@ namespace Microsoft.Testing.Extensions.Hosting;
 internal sealed class HotReloadTestHostTestFrameworkInvoker : TestHostTestFrameworkInvoker
 {
     private readonly bool _isHotReloadEnabled;
+    private readonly IStopPoliciesService _stopPoliciesService;
 
     public HotReloadTestHostTestFrameworkInvoker(IServiceProvider serviceProvider)
         : base(serviceProvider)
     {
         _isHotReloadEnabled = IsHotReloadEnabled(serviceProvider.GetEnvironment());
+        _stopPoliciesService = serviceProvider.GetRequiredService<IStopPoliciesService>();
         if (_isHotReloadEnabled)
         {
             ((SystemRuntimeFeature)serviceProvider.GetRuntimeFeature()).EnableHotReload();
@@ -42,7 +44,8 @@ internal sealed class HotReloadTestHostTestFrameworkInvoker : TestHostTestFramew
         IOutputDevice outputDevice = ServiceProvider.GetOutputDevice();
         var hotReloadHandler = new HotReloadHandler(ServiceProvider.GetConsole(), outputDevice, this);
         TaskCompletionSource<int>? executionCompleted = null;
-        while (await hotReloadHandler.ShouldRunAsync(executionCompleted?.Task, cancellationToken).ConfigureAwait(false))
+        while (!_stopPoliciesService.IsDeadlineTriggered
+            && await hotReloadHandler.ShouldRunAsync(executionCompleted?.Task, cancellationToken).ConfigureAwait(false))
         {
             executionCompleted = new();
 

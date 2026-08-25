@@ -65,6 +65,7 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
     public async Task WhenGracefulStopSucceeds_TheDeadlineVerdictIsKept()
     {
         TaskCompletionSource<bool> stopped = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        IOutputDeviceData? displayedData = null;
         _capability
             .Setup(x => x.TryStopTestExecutionAsync(It.IsAny<CancellationToken>()))
             .Returns(() =>
@@ -73,11 +74,14 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
                 return Task.FromResult(true);
             });
 
-        using AbortAtDeadlineExtension extension = CreateExtension(deadlineIn: TimeSpan.Zero);
+        using AbortAtDeadlineExtension extension = CreateExtension(
+            deadlineIn: TimeSpan.Zero,
+            onDisplayData: data => displayedData = data);
 
         await WaitForAsync(stopped.Task);
         await WaitForAsync(extension.WaitForDeadlineHandlingAsync());
         _policiesService.Verify(x => x.ExecuteDeadlineCallbacksAsync(), Times.Once);
+        Assert.IsInstanceOfType<SessionMessageOutputDeviceData>(displayedData);
     }
 
     [TestMethod]
@@ -322,6 +326,7 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
         TimeSpan deadlineIn,
         Func<LogLevel, Task>? onLog = null,
         Func<Task>? onDisplay = null,
+        Action<IOutputDeviceData>? onDisplayData = null,
         TimeSpan? reportTimeout = null,
         IGracefulStopTestExecutionCapability? capability = null)
     {
@@ -352,7 +357,11 @@ public sealed class AbortAtDeadlineExtensionTests : IDisposable
         Mock<IOutputDevice> outputDevice = new();
         _ = outputDevice
             .Setup(x => x.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()))
-            .Returns(() => onDisplay is null ? Task.CompletedTask : onDisplay());
+            .Returns((IOutputDeviceDataProducer _, IOutputDeviceData data, CancellationToken _) =>
+            {
+                onDisplayData?.Invoke(data);
+                return onDisplay is null ? Task.CompletedTask : onDisplay();
+            });
 
         Mock<ITestApplicationCancellationTokenSource> cancellationTokenSource = new();
         _ = cancellationTokenSource.SetupGet(x => x.CancellationToken).Returns(_cts.Token);

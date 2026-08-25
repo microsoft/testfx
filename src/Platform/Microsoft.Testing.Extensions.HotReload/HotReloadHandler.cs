@@ -102,7 +102,7 @@ internal sealed class HotReloadHandler
             // We're closing
         }
 
-        if (!IsClearNotSupported())
+        if (!_console.IsOutputRedirected && !IsClearNotSupported())
         {
             _console.Clear();
         }

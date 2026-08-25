@@ -48,12 +48,32 @@ public sealed class AbortAtDeadlineTests : AcceptanceTestBase<AbortAtDeadlineTes
             cancellationToken: TestContext.CancellationToken);
 
         testResult.AssertExitCodeIs(ExitCode.TestExecutionStoppedAtDeadline);
+        testResult.AssertOutputContains(StopMessage);
         testResult.AssertOutputContains("Test run summary: Failed!");
         testResult.AssertOutputContains("error: 1");
         testResult.AssertOutputContains("total: 1");
         testResult.AssertOutputContains("failed: 0");
         testResult.AssertOutputContains("succeeded: 1");
         testResult.AssertOutputContains("skipped: 0");
+    }
+
+    [TestMethod]
+    public async Task WhenDeadlineStopsAHotReloadRun_ReportersFinalize()
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            environmentVariables: new()
+            {
+                ["TESTINGPLATFORM_DEADLINE"] = DateTimeOffset.UtcNow.AddSeconds(1).ToString("o"),
+                ["TESTINGPLATFORM_DEADLINE_STOP_MARGIN"] = "0",
+                ["TESTINGPLATFORM_HOTRELOAD_ENABLED"] = "1",
+                ["WAIT_FOR_STOP"] = "1",
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.TestExecutionStoppedAtDeadline);
+        testHostResult.AssertOutputContains(StopMessage);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
     }
 
     [TestMethod]
@@ -150,6 +170,7 @@ public sealed class AbortAtDeadlineTests : AcceptanceTestBase<AbortAtDeadlineTes
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+    <PackageReference Include="Microsoft.Testing.Extensions.HotReload" Version="$MicrosoftTestingPlatformVersion$" />
   </ItemGroup>
 </Project>
 
@@ -158,6 +179,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
@@ -170,6 +192,7 @@ internal sealed class Program
     {
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
         builder.RegisterTestFramework(_ => new Capabilities(), (_, __) => new DummyTestFramework());
+        builder.AddHotReloadProvider();
         using ITestApplication app = await builder.BuildAsync();
         return await app.RunAsync();
     }
