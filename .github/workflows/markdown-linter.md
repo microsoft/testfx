@@ -60,12 +60,20 @@ jobs:
       # Installed in its own step so that a registry outage or a bad version is caught here.
       # npx exits 1 for those too, which the lint step below cannot tell apart from
       # "violations found", and it would report an npm error log as if it were lint results.
+      # The command-level timeout sits below the job's 10 minute cap on purpose: a job-level
+      # timeout kills this script outright, so nothing would be marked or uploaded and the
+      # agent would be skipped. `timeout` exits 124 instead, which the check below treats
+      # like any other failure, so a stalled install still gets reported.
       run: |
         status=0
-        npm install --global markdownlint-cli2@0.23.2 > install.log 2>&1 || status=$?
+        timeout 5m npm install --global markdownlint-cli2@0.23.2 > install.log 2>&1 || status=$?
         cat install.log
         if [ "$status" -ne 0 ]; then
-          echo "::error::Installing markdownlint-cli2@0.23.2 failed (exit $status)."
+          if [ "$status" -eq 124 ]; then
+            echo "::error::Installing markdownlint-cli2@0.23.2 timed out after 5 minutes."
+          else
+            echo "::error::Installing markdownlint-cli2@0.23.2 failed (exit $status)."
+          fi
           echo "failed=true" >> "$GITHUB_OUTPUT"
           # Hand the agent a marked log instead of failing the job. The agent job needs this
           # one, so a red job here would skip the whole reporting chain and produce silence,
@@ -73,6 +81,9 @@ jobs:
           {
             echo "MARKDOWNLINT_RUN_FAILED"
             echo "npm install of markdownlint-cli2@0.23.2 failed with exit code $status."
+            if [ "$status" -eq 124 ]; then
+              echo "The install timed out after 5 minutes."
+            fi
             echo "No Markdown files were linted."
             echo
             cat install.log
@@ -82,22 +93,33 @@ jobs:
       if: steps.install.outputs.failed != 'true'
       name: Run markdownlint-cli2
       # Configuration comes from .markdownlint-cli2.jsonc in the repo root, including its
-      # "ignores" list.
+      # "ignores" list. The command-level timeout sits below the job's 10 minute cap for the
+      # same reason as the install step: a job-level timeout would kill this script before it
+      # could mark the log, leaving the agent skipped and the run silent.
       run: |
         status=0
-        markdownlint-cli2 "**/*.md" > markdownlint.log 2>&1 || status=$?
+        timeout 5m markdownlint-cli2 "**/*.md" > markdownlint.log 2>&1 || status=$?
         cat markdownlint.log
         echo "markdownlint-cli2 exit code: $status (0 = clean, 1 = violations found)"
         # Exit 1 means violations, which are what the agent reports on. Anything above that is
-        # markdownlint-cli2 failing to run at all (2 = execution or configuration error), so the
-        # log holds a stack trace rather than lint results. Mark it so the agent reports a
-        # workflow failure instead of "no issues", and keep the job green either way: the agent
-        # job needs this one, so failing here would skip the reporting chain and say nothing.
+        # markdownlint-cli2 failing to run at all (2 = execution or configuration error, 124 =
+        # timed out), so the log holds a stack trace or nothing rather than lint results. Mark
+        # it so the agent reports a workflow failure instead of "no issues", and keep the job
+        # green either way: the agent job needs this one, so failing here would skip the
+        # reporting chain and say nothing.
         if [ "$status" -gt 1 ]; then
-          echo "::error::markdownlint-cli2 could not complete (exit $status); see the log above."
+          if [ "$status" -eq 124 ]; then
+            echo "::error::markdownlint-cli2 timed out after 5 minutes."
+          else
+            echo "::error::markdownlint-cli2 could not complete (exit $status); see the log above."
+          fi
           {
             echo "MARKDOWNLINT_RUN_FAILED"
-            echo "markdownlint-cli2 exited $status without producing lint results."
+            if [ "$status" -eq 124 ]; then
+              echo "markdownlint-cli2 timed out after 5 minutes without producing lint results."
+            else
+              echo "markdownlint-cli2 exited $status without producing lint results."
+            fi
             echo
             cat markdownlint.log
           } > markdownlint.log.tmp
