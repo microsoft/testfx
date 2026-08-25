@@ -12,15 +12,17 @@ internal sealed partial class GitHubActionsSummaryReporter
         IReadOnlyList<TestRecord> records,
         string assemblyName,
         string targetFrameworkMoniker,
-        int exitCode)
-        => BuildMarkdown(records, assemblyName, targetFrameworkMoniker, exitCode, new CiCoverageSummaryData());
+        int exitCode,
+        GitHubActionsStepSummarySections sections = GitHubActionsStepSummarySections.All)
+        => BuildMarkdown(records, assemblyName, targetFrameworkMoniker, exitCode, new CiCoverageSummaryData(), sections);
 
     private static string BuildMarkdown(
         IReadOnlyList<TestRecord> records,
         string assemblyName,
         string targetFrameworkMoniker,
         int exitCode,
-        CiCoverageSummaryData coverage)
+        CiCoverageSummaryData coverage,
+        GitHubActionsStepSummarySections sections)
     {
         int total = records.Count;
         int passed = 0;
@@ -58,61 +60,74 @@ internal sealed partial class GitHubActionsSummaryReporter
 
         var builder = new StringBuilder();
         builder.Append("## ").Append(statusIcon).Append(" Test Run Summary — ").Append(assemblyName).Append(" (").Append(targetFrameworkMoniker).Append(")\n\n");
-        builder.Append("| Total | Passed | Failed | Skipped | Duration |\n");
-        builder.Append("|---:|---:|---:|---:|---:|\n");
-        builder.Append("| ").Append(total.ToString(CultureInfo.InvariantCulture))
-            .Append(" | ").Append(passed.ToString(CultureInfo.InvariantCulture))
-            .Append(" | ").Append(failed.ToString(CultureInfo.InvariantCulture))
-            .Append(" | ").Append(skipped.ToString(CultureInfo.InvariantCulture))
-            .Append(" | ").Append(FormatDuration(totalDuration)).Append(" |\n\n");
-        CiCoverageSummary.AppendMarkdown(builder, coverage, headingLevel: 3);
-
-        // Surface a non-test-result failure that this reporter can observe once the session has finished
-        // (zero tests, --minimum-expected-tests, --maximum-failed-tests, test-adapter session failure) as a
-        // GitHub alert callout. Plain pass / at-least-one-failed outcomes are already conveyed by the totals
-        // table and the failures section, so no callout is added for them.
-        if (!GitHubActionsExitCode.IsTestResultOutcome(exitCode))
+        if ((sections & GitHubActionsStepSummarySections.TestResults) != 0)
         {
-            string calloutText = string.Format(
-                CultureInfo.InvariantCulture,
-                GitHubActionsResources.ExitCodeCallout,
-                exitCode.ToString(CultureInfo.InvariantCulture),
-                GitHubActionsExitCode.GetName(exitCode),
-                GitHubActionsExitCode.GetReason(exitCode));
-            builder.Append("> [!WARNING]\n> ").Append(EscapeInlineCode(calloutText)).Append("\n\n");
+            builder.Append("| Total | Passed | Failed | Skipped | Duration |\n");
+            builder.Append("|---:|---:|---:|---:|---:|\n");
+            builder.Append("| ").Append(total.ToString(CultureInfo.InvariantCulture))
+                .Append(" | ").Append(passed.ToString(CultureInfo.InvariantCulture))
+                .Append(" | ").Append(failed.ToString(CultureInfo.InvariantCulture))
+                .Append(" | ").Append(skipped.ToString(CultureInfo.InvariantCulture))
+                .Append(" | ").Append(FormatDuration(totalDuration)).Append(" |\n\n");
         }
 
-        if (failures.Count > 0)
+        if ((sections & GitHubActionsStepSummarySections.Coverage) != 0)
         {
-            builder.Append("### ❌ Failures (").Append(failed.ToString(CultureInfo.InvariantCulture)).Append(")\n\n");
-            foreach (TestRecord failure in failures)
+            CiCoverageSummary.AppendMarkdown(builder, coverage, headingLevel: 3);
+        }
+
+        if ((sections & GitHubActionsStepSummarySections.TestResults) != 0)
+        {
+            // Surface a non-test-result failure that this reporter can observe once the session has finished
+            // (zero tests, --minimum-expected-tests, --maximum-failed-tests, test-adapter session failure) as a
+            // GitHub alert callout. Plain pass / at-least-one-failed outcomes are already conveyed by the totals
+            // table and the failures section, so no callout is added for them.
+            if (!GitHubActionsExitCode.IsTestResultOutcome(exitCode))
             {
-                builder.Append("- `").Append(EscapeInlineCode(failure.FullyQualifiedName)).Append("`\n");
+                string calloutText = string.Format(
+                    CultureInfo.InvariantCulture,
+                    GitHubActionsResources.ExitCodeCallout,
+                    exitCode.ToString(CultureInfo.InvariantCulture),
+                    GitHubActionsExitCode.GetName(exitCode),
+                    GitHubActionsExitCode.GetReason(exitCode));
+                builder.Append("> [!WARNING]\n> ").Append(EscapeInlineCode(calloutText)).Append("\n\n");
             }
 
-            builder.Append('\n');
+            if (failures.Count > 0)
+            {
+                builder.Append("### ❌ Failures (").Append(failed.ToString(CultureInfo.InvariantCulture)).Append(")\n\n");
+                foreach (TestRecord failure in failures)
+                {
+                    builder.Append("- `").Append(EscapeInlineCode(failure.FullyQualifiedName)).Append("`\n");
+                }
+
+                builder.Append('\n');
+            }
         }
 
-        IEnumerable<TestRecord> slowest = records
-            .Where(static r => r.Duration > TimeSpan.Zero)
-            .OrderByDescending(static r => r.Duration)
-            .Take(MaxSlowestTests);
-
-        bool slowestEmitted = false;
-        foreach (TestRecord record in slowest)
+        if ((sections & GitHubActionsStepSummarySections.SlowTests) != 0)
         {
-            if (!slowestEmitted)
+            IEnumerable<TestRecord> slowest = records
+                .Where(static r => r.Duration > TimeSpan.Zero)
+                .OrderByDescending(static r => r.Duration)
+                .Take(MaxSlowestTests);
+
+            bool slowestEmitted = false;
+            foreach (TestRecord record in slowest)
             {
-                builder.Append("### ⏱ Slowest tests\n\n");
-                slowestEmitted = true;
+                if (!slowestEmitted)
+                {
+                    builder.Append("### ⏱ Slowest tests\n\n");
+                    slowestEmitted = true;
+                }
+
+                builder.Append("- `").Append(EscapeInlineCode(record.FullyQualifiedName)).Append("` — ").Append(FormatDuration(record.Duration)).Append('\n');
             }
 
-            builder.Append("- `").Append(EscapeInlineCode(record.FullyQualifiedName)).Append("` — ").Append(FormatDuration(record.Duration)).Append('\n');
-        }
-
-        if (slowestEmitted)
-        {
-            builder.Append('\n');
+            if (slowestEmitted)
+            {
+                builder.Append('\n');
+            }
         }
 
         return builder.ToString();
@@ -120,6 +135,7 @@ internal sealed partial class GitHubActionsSummaryReporter
 
     internal static string BuildAggregateMarkdown(CiRunSummaryAggregate aggregate)
     {
+        GitHubActionsStepSummarySections sections = GitHubActionsStepSummarySectionsParser.GetAggregateSections(aggregate.Modules);
         bool failed = aggregate.ExitCode is int exitCode
             ? GitHubActionsExitCode.IndicatesFailure(exitCode)
             : aggregate.FailedTests > 0;
@@ -132,34 +148,44 @@ internal sealed partial class GitHubActionsSummaryReporter
 
         var builder = new StringBuilder();
         builder.Append("## ").Append(statusIcon).Append(" Overall Test Run Summary\n\n");
-        builder.Append("| Total | Passed | Failed | Skipped | Duration |\n");
-        builder.Append("|---:|---:|---:|---:|---:|\n");
-        builder.Append("| ").Append(aggregate.TotalTests.ToString(CultureInfo.InvariantCulture))
-            .Append(" | ").Append(aggregate.PassedTests.ToString(CultureInfo.InvariantCulture))
-            .Append(" | ").Append(aggregate.FailedTests.ToString(CultureInfo.InvariantCulture))
-            .Append(" | ").Append(aggregate.SkippedTests.ToString(CultureInfo.InvariantCulture))
-            .Append(" | ").Append(duration).Append(" |\n\n");
-        CiCoverageSummary.AppendMarkdown(builder, aggregate.Coverage, headingLevel: 3);
-
-        if (aggregate.IsPartial)
+        if ((sections & GitHubActionsStepSummarySections.TestResults) != 0)
         {
-            builder.Append("> [!WARNING]\n> This summary is partial because the test run was truncated.\n\n");
-        }
-        else if (!aggregate.HasAuthoritativeRunSummary)
-        {
-            builder.Append("> [!NOTE]\n> Counts reflect the observed module fragments. The outer `dotnet test` duration and exit verdict were not supplied by the SDK.\n\n");
+            builder.Append("| Total | Passed | Failed | Skipped | Duration |\n");
+            builder.Append("|---:|---:|---:|---:|---:|\n");
+            builder.Append("| ").Append(aggregate.TotalTests.ToString(CultureInfo.InvariantCulture))
+                .Append(" | ").Append(aggregate.PassedTests.ToString(CultureInfo.InvariantCulture))
+                .Append(" | ").Append(aggregate.FailedTests.ToString(CultureInfo.InvariantCulture))
+                .Append(" | ").Append(aggregate.SkippedTests.ToString(CultureInfo.InvariantCulture))
+                .Append(" | ").Append(duration).Append(" |\n\n");
         }
 
-        if (aggregate.ExitCode is int authoritativeExitCode
-            && !GitHubActionsExitCode.IsTestResultOutcome(authoritativeExitCode))
+        if ((sections & GitHubActionsStepSummarySections.Coverage) != 0)
         {
-            string calloutText = string.Format(
-                CultureInfo.InvariantCulture,
-                GitHubActionsResources.ExitCodeCallout,
-                authoritativeExitCode.ToString(CultureInfo.InvariantCulture),
-                GitHubActionsExitCode.GetName(authoritativeExitCode),
-                GitHubActionsExitCode.GetReason(authoritativeExitCode));
-            builder.Append("> [!WARNING]\n> ").Append(EscapeInlineCode(calloutText)).Append("\n\n");
+            CiCoverageSummary.AppendMarkdown(builder, aggregate.Coverage, headingLevel: 3);
+        }
+
+        if ((sections & GitHubActionsStepSummarySections.TestResults) != 0)
+        {
+            if (aggregate.IsPartial)
+            {
+                builder.Append("> [!WARNING]\n> This summary is partial because the test run was truncated.\n\n");
+            }
+            else if (!aggregate.HasAuthoritativeRunSummary)
+            {
+                builder.Append("> [!NOTE]\n> Counts reflect the observed module fragments. The outer `dotnet test` duration and exit verdict were not supplied by the SDK.\n\n");
+            }
+
+            if (aggregate.ExitCode is int authoritativeExitCode
+                && !GitHubActionsExitCode.IsTestResultOutcome(authoritativeExitCode))
+            {
+                string calloutText = string.Format(
+                    CultureInfo.InvariantCulture,
+                    GitHubActionsResources.ExitCodeCallout,
+                    authoritativeExitCode.ToString(CultureInfo.InvariantCulture),
+                    GitHubActionsExitCode.GetName(authoritativeExitCode),
+                    GitHubActionsExitCode.GetReason(authoritativeExitCode));
+                builder.Append("> [!WARNING]\n> ").Append(EscapeInlineCode(calloutText)).Append("\n\n");
+            }
         }
 
         foreach (CiRunSummaryModule module in aggregate.Modules)
@@ -176,46 +202,61 @@ internal sealed partial class GitHubActionsSummaryReporter
             }
 
             builder.Append(")</summary>\n\n");
-            AppendModuleMarkdown(builder, module, headingLevel: 3);
+            AppendModuleMarkdown(builder, module, headingLevel: 3, sections);
             builder.Append("</details>\n\n");
         }
 
         return builder.ToString();
     }
 
-    private static void AppendModuleMarkdown(StringBuilder builder, CiRunSummaryModule module, int headingLevel)
+    private static void AppendModuleMarkdown(
+        StringBuilder builder,
+        CiRunSummaryModule module,
+        int headingLevel,
+        GitHubActionsStepSummarySections sections)
     {
         string heading = new('#', headingLevel);
         bool runFailed = module.FailedTests > 0 || GitHubActionsExitCode.IndicatesFailure(module.ExitCode);
         builder.Append(heading).Append(' ').Append(runFailed ? "❌" : "✅").Append(' ')
             .Append(EscapeInlineCode(module.AssemblyName)).Append("\n\n");
-        builder.Append("| Total | Passed | Failed | Skipped | Test duration |\n");
-        builder.Append("|---:|---:|---:|---:|---:|\n");
-        builder.Append("| ").Append(module.TotalTests.ToString(CultureInfo.InvariantCulture))
-            .Append(" | ").Append(module.PassedTests.ToString(CultureInfo.InvariantCulture))
-            .Append(" | ").Append(module.FailedTests.ToString(CultureInfo.InvariantCulture))
-            .Append(" | ").Append(module.SkippedTests.ToString(CultureInfo.InvariantCulture))
-            .Append(" | ").Append(FormatDuration(TimeSpan.FromTicks(module.TestDurationTicks))).Append(" |\n\n");
-        CiCoverageSummary.AppendMarkdown(builder, module.Coverage, headingLevel + 1);
-
-        if (!GitHubActionsExitCode.IsTestResultOutcome(module.ExitCode))
+        if ((sections & GitHubActionsStepSummarySections.TestResults) != 0)
         {
-            builder.Append("> Module exit code: `").Append(module.ExitCode.ToString(CultureInfo.InvariantCulture)).Append("` (")
-                .Append(EscapeInlineCode(GitHubActionsExitCode.GetName(module.ExitCode))).Append(")\n\n");
+            builder.Append("| Total | Passed | Failed | Skipped | Test duration |\n");
+            builder.Append("|---:|---:|---:|---:|---:|\n");
+            builder.Append("| ").Append(module.TotalTests.ToString(CultureInfo.InvariantCulture))
+                .Append(" | ").Append(module.PassedTests.ToString(CultureInfo.InvariantCulture))
+                .Append(" | ").Append(module.FailedTests.ToString(CultureInfo.InvariantCulture))
+                .Append(" | ").Append(module.SkippedTests.ToString(CultureInfo.InvariantCulture))
+                .Append(" | ").Append(FormatDuration(TimeSpan.FromTicks(module.TestDurationTicks))).Append(" |\n\n");
         }
 
-        if (module.Failures.Length > 0)
+        if ((sections & GitHubActionsStepSummarySections.Coverage) != 0)
         {
-            builder.Append(heading).Append("# ❌ Failures (").Append(module.FailedTests.ToString(CultureInfo.InvariantCulture)).Append(")\n\n");
-            foreach (CiRunSummaryTest failure in module.Failures)
+            CiCoverageSummary.AppendMarkdown(builder, module.Coverage, headingLevel + 1);
+        }
+
+        if ((sections & GitHubActionsStepSummarySections.TestResults) != 0)
+        {
+            if (!GitHubActionsExitCode.IsTestResultOutcome(module.ExitCode))
             {
-                builder.Append("- `").Append(EscapeInlineCode(failure.FullyQualifiedName)).Append("`\n");
+                builder.Append("> Module exit code: `").Append(module.ExitCode.ToString(CultureInfo.InvariantCulture)).Append("` (")
+                    .Append(EscapeInlineCode(GitHubActionsExitCode.GetName(module.ExitCode))).Append(")\n\n");
             }
 
-            builder.Append('\n');
+            if (module.Failures.Length > 0)
+            {
+                builder.Append(heading).Append("# ❌ Failures (").Append(module.FailedTests.ToString(CultureInfo.InvariantCulture)).Append(")\n\n");
+                foreach (CiRunSummaryTest failure in module.Failures)
+                {
+                    builder.Append("- `").Append(EscapeInlineCode(failure.FullyQualifiedName)).Append("`\n");
+                }
+
+                builder.Append('\n');
+            }
         }
 
-        if (module.SlowestTests.Length > 0)
+        if ((sections & GitHubActionsStepSummarySections.SlowTests) != 0
+            && module.SlowestTests.Length > 0)
         {
             builder.Append(heading).Append("# ⏱ Slowest tests\n\n");
             foreach (CiRunSummaryTest test in module.SlowestTests)

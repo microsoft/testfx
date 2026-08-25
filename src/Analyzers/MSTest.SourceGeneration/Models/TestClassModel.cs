@@ -66,6 +66,7 @@ internal sealed record DynamicDataSourceModel(
 internal sealed record TestMethodModel(
     string Name,
     bool IsStatic,
+    bool IsAsync,
     bool ReturnsTask,
     bool ReturnsValueTask,
     bool ReturnsVoid,
