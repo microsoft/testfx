@@ -36,6 +36,7 @@ safe-outputs:
     pull-requests: false
   update-issue:
     status:
+    body: false
     target: "*"
     max: 1
   create-issue:
