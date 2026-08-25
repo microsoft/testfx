@@ -93,7 +93,7 @@ internal class Scenario4 : IStep<NoInputOutput, SingleProject>
                       [System.Runtime.CompilerServices.MethodImplAttribute(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
                       public static void ClassCleanup()
                       {
-                          System.GC.KeepAlive(_classState);
+                          _ = _classState;
                           _classState = 0;
                       }
                   """);
