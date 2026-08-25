@@ -644,10 +644,13 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         // before the child process is done dumping. This way if the parent is waiting for the children to exit,
         // we will be dumping it before it observes the child exiting and we get a more accurate results. If we did not
         // do this, then parent that is awaiting child might exit before we get to dumping it.
+        List<Task> dumpTasks = [];
         foreach (IProcess p in bottomUpTree)
         {
-            await dumpProcessAsync(p, inProgressTests, cancellationToken).ConfigureAwait(false);
+            dumpTasks.Add(dumpProcessAsync(p, inProgressTests, cancellationToken));
         }
+
+        await Task.WhenAll(dumpTasks).ConfigureAwait(false);
     }
 
     /// <summary>

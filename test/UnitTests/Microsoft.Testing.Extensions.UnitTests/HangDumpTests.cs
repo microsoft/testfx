@@ -208,6 +208,44 @@ public sealed class HangDumpTests
     }
 
     [TestMethod]
+    public async Task QueryOnceAndDumpTree_StartsEveryDumpBeforeAwaitingCompletion()
+    {
+        IProcess[] bottomUpTree = [.. Enumerable.Range(0, 6).Select(_ => Mock.Of<IProcess>())];
+        TaskCompletionSource<bool> allDumpsStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> releaseDumps = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        int startedDumpCount = 0;
+
+        Task dumpTreeTask = HangDumpProcessLifetimeHandler.QueryOnceAndDumpTreeAsync(
+            bottomUpTree,
+            _ => Task.FromResult<(string, int)[]>([]),
+            (_, _, _) =>
+            {
+                if (Interlocked.Increment(ref startedDumpCount) == bottomUpTree.Length)
+                {
+                    allDumpsStarted.TrySetResult(true);
+                }
+
+                return releaseDumps.Task;
+            },
+            CancellationToken.None);
+
+        try
+        {
+            Task completed = await Task.WhenAny(allDumpsStarted.Task, Task.Delay(TimeSpan.FromSeconds(30), TestContext.CancellationToken));
+            Assert.AreSame(allDumpsStarted.Task, completed, "A dump was awaited before the remaining process dumps were started.");
+            Assert.IsFalse(dumpTreeTask.IsCompleted);
+        }
+        finally
+        {
+            releaseDumps.TrySetResult(true);
+        }
+
+        await dumpTreeTask;
+
+        Assert.AreEqual(bottomUpTree.Length, startedDumpCount);
+    }
+
+    [TestMethod]
     public async Task QueryInProgressTestsWithTimeout_WhenTheReplyNeverArrives_ReturnsEmptyList()
     {
         // A connected-but-wedged host accepts the request and never replies, and the application token is
